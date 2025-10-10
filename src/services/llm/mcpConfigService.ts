@@ -7,9 +7,25 @@
  * - Mode hybride par défaut : OpenAPI (Scrivia) + MCP (Factoria)
  */
 
-import { McpServerConfig, AgentMcpConfig, createMcpTool } from '@/types/mcp';
+import { McpServerConfig, AgentMcpConfig, ExternalMcpServer, externalServerToMcpTool, createMcpTool } from '@/types/mcp';
 import { simpleLogger as logger } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
+
+/**
+ * Résultat de la jointure agent_mcp_servers -> mcp_servers
+ */
+interface McpServerLink {
+  priority: number;
+  is_active: boolean;
+  mcp_servers: {
+    id: string;
+    name: string;
+    description: string | null;
+    url: string;
+    header: string;
+    api_key: string;
+  } | null;
+}
 
 /**
  * Service de gestion des configurations MCP pour les agents
@@ -32,21 +48,25 @@ export class McpConfigService {
   }
 
   /**
-   * Récupère la configuration MCP d'un agent depuis Factoria
+   * Récupère la configuration MCP d'un agent depuis la DB
+   * Lit depuis mcp_servers via agent_mcp_servers
    */
   async getAgentMcpConfig(agentId: string): Promise<AgentMcpConfig | null> {
     try {
-      // Récupérer les serveurs MCP liés à cet agent
+      // Récupérer les serveurs MCP via la jointure
       const { data: links, error } = await this.supabase
         .from('agent_mcp_servers')
         .select(`
-          is_active,
           priority,
+          is_active,
           mcp_servers (
             id,
             name,
-            deployment_url,
-            config
+            description,
+            url,
+            header,
+            api_key,
+            is_active
           )
         `)
         .eq('agent_id', agentId)
@@ -54,27 +74,39 @@ export class McpConfigService {
         .order('priority');
 
       if (error) {
-        logger.error('[McpConfigService] Erreur récupération liaisons MCP:', error);
+        logger.error('[McpConfigService] Erreur récupération serveurs MCP:', error);
         return null;
       }
 
       if (!links || links.length === 0) {
-        logger.dev('[McpConfigService] Aucun serveur MCP lié à cet agent');
+        logger.dev('[McpConfigService] Aucun serveur MCP configuré pour cet agent');
         return null;
       }
 
-      // Construire la config MCP depuis les liaisons
-      const servers: McpServerConfig[] = links.map((link: any) => {
-        const server = link.mcp_servers;
-        const config = server.config || {};
-        
-        return {
-          type: 'mcp',
-          server_label: server.name.toLowerCase().replace(/\s+/g, '-'),
-          server_url: server.deployment_url,
-          headers: config.apiKey ? { 'x-api-key': config.apiKey } : undefined
-        };
-      });
+      // Convertir en tools MCP Groq
+      const servers: McpServerConfig[] = (links as unknown as McpServerLink[])
+        .filter(link => 
+          link.mcp_servers && 
+          link.mcp_servers.url
+        )
+        .map(link => {
+          const server = link.mcp_servers!; // Non-null après le filter
+          return {
+            type: 'mcp' as const,
+            server_label: server.name?.toLowerCase().replace(/\s+/g, '-') || 'unnamed',
+            server_url: server.url,
+            headers: server.header && server.api_key 
+              ? { [server.header]: server.api_key }
+              : undefined
+          };
+        });
+
+      if (servers.length === 0) {
+        logger.dev('[McpConfigService] Aucun serveur MCP valide trouvé');
+        return null;
+      }
+
+      logger.dev(`[McpConfigService] ✅ ${servers.length} serveurs MCP trouvés pour cet agent`);
 
       return {
         enabled: true,
@@ -99,8 +131,11 @@ export class McpConfigService {
   async buildHybridTools(
     agentId: string,
     userId: string,
-    openApiTools: any[]
-  ): Promise<any[]> {
+    openApiTools: Array<{ type: 'function'; function: { name: string; description: string; parameters: any } }>
+  ): Promise<Array<
+    | { type: 'function'; function: { name: string; description: string; parameters: any } }
+    | McpServerConfig
+  >> {
     const mcpConfig = await this.getAgentMcpConfig(agentId);
     
     if (!mcpConfig || !mcpConfig.enabled || mcpConfig.servers.length === 0) {

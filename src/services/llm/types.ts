@@ -11,6 +11,7 @@ export interface AppContext {
   name: string;
   content?: string;
   metadata?: Record<string, any>;
+  uiContext?: any; // ✅ Support pour le contexte UI (UIContext from ContextCollector)
 }
 
 export interface ChatMessage {

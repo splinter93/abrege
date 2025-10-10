@@ -11,6 +11,8 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { ChatMessage } from '@/types/chat';
 import { agentTemplateService, AgentTemplateConfig, RenderedTemplate } from '../agentTemplateService';
 import { UIContext } from '../ContextCollector';
+import { mcpConfigService } from '../mcpConfigService';
+import { getOpenAPIV2Tools } from '@/services/openApiToolsGenerator';
 
 export interface ChatResponse {
   success: boolean;
@@ -83,11 +85,40 @@ export class SimpleChatOrchestrator {
     let isFirstPass = true;
 
     try {
+      // ✅ Boucle agentic standard : Le LLM décide quand s'arrêter
       while (toolCallsCount < maxToolCalls) {
-        const response = await this.callLLM(currentMessage, updatedHistory, context, 'auto', llmProvider);
+        // Appeler le LLM (TOUJOURS avec tool_choice:auto)
+        let response: LLMResponse;
+        try {
+          response = await this.callLLM(currentMessage, updatedHistory, context, 'auto', llmProvider);
+        } catch (llmError) {
+          // ✅ Erreur Groq (424, 500, etc.) → Traiter comme un tool result avec erreur
+          const errorMsg = llmError instanceof Error ? llmError.message : String(llmError);
+          logger.error(`[Orchestrator] ❌ Erreur LLM (sera réinjecté pour retry):`, errorMsg);
+          
+          // Si première itération, on ne peut pas retry car pas d'historique
+          if (toolCallsCount === 0) {
+            throw llmError; // Remonter l'erreur
+          }
+          
+          // Créer un message system avec l'erreur pour que le LLM réessaye
+          updatedHistory.push({
+            id: `msg-error-${Date.now()}`,
+            role: 'system',
+            content: `⚠️ Previous LLM call failed with error: ${errorMsg}\n\nPlease try again with a simpler approach or fewer tools at once.`,
+            timestamp: new Date().toISOString()
+          });
+          
+          toolCallsCount++;
+          logger.warn(`[Orchestrator] 🔁 Retry après erreur LLM (${toolCallsCount}/${maxToolCalls})`);
+          continue; // Retry la boucle
+        }
+        
         const newToolCalls = this.convertToolCalls(response.tool_calls || []);
         
+        // ✅ Si le LLM ne retourne pas de tool_calls, il a fini
         if (newToolCalls.length === 0) {
+          logger.info(`[Orchestrator] ✅ LLM a terminé (pas de nouveaux tools)`);
           return { 
             success: true, 
             content: response.content, 
@@ -98,8 +129,37 @@ export class SimpleChatOrchestrator {
           };
         }
 
-        const toolResults = await this.toolExecutor.executeSimple(newToolCalls, context.userToken, context.sessionId);
-        allToolCalls.push(...newToolCalls);
+        // ✅ Déduplication : Filtrer les tool calls identiques déjà appelés
+        const dedupedToolCalls = this.deduplicateToolCalls(newToolCalls, allToolCalls);
+        
+        if (dedupedToolCalls.length === 0) {
+          logger.warn(`[Orchestrator] ⚠️ Tous les tool calls sont des doublons, demande de réponse finale`);
+          // Forcer le LLM à donner une réponse finale
+          const finalResponse = await this.callLLM(
+            "You've already called these tools. Please provide your final answer based on the previous results.",
+            updatedHistory,
+            context,
+            'auto',
+            llmProvider
+          );
+          return {
+            success: true,
+            content: finalResponse.content,
+            toolCalls: allToolCalls,
+            toolResults: allToolResults,
+            reasoning: finalResponse.reasoning,
+            error: undefined
+          };
+        }
+
+        if (dedupedToolCalls.length < newToolCalls.length) {
+          logger.warn(`[Orchestrator] ⚠️ ${newToolCalls.length - dedupedToolCalls.length} tool calls en double ignorés`);
+        }
+
+        // ✅ Exécuter les tools (dédupliqués)
+        logger.dev(`[Orchestrator] 🔧 Exécution de ${dedupedToolCalls.length} tools...`);
+        const toolResults = await this.toolExecutor.executeSimple(dedupedToolCalls, context.userToken, context.sessionId);
+        allToolCalls.push(...dedupedToolCalls); // ✅ Pousser les dédupliqués, pas tous
         allToolResults.push(...toolResults);
         
         // Validation des tool results avant injection dans l'historique
@@ -124,39 +184,42 @@ export class SimpleChatOrchestrator {
           timestamp: new Date().toISOString()
         }));
         
+        // ✅ Log des erreurs pour debugging (mais on continue)
+        const errorCount = toolResults.filter(r => !r.success).length;
+        if (errorCount > 0) {
+          logger.warn(`[Orchestrator] ⚠️ ${errorCount}/${toolResults.length} tools ont échoué (le LLM va analyser)`);
+        }
+        
+        // ✅ Construire l'historique avec les résultats (succès ET erreurs)
         const historyContext = {
           systemContent: '', // Pas de nouveau message système
           userMessage: isFirstPass ? message : '',
           cleanedHistory: updatedHistory,
-          toolCalls: newToolCalls,
+          toolCalls: dedupedToolCalls, // ✅ Utiliser les dédupliqués
           toolResults: convertedToolResults
         };
         
         const historyResult = this.historyBuilder.buildSecondCallHistory(historyContext);
         updatedHistory = historyResult.messages;
         
-        currentMessage = "Please continue with the answer based on the tool results.";
         toolCallsCount++;
-        logger.dev(`[Orchestrator] 🔁 Loop ${toolCallsCount}/${maxToolCalls}, ${newToolCalls.length} new tools.`);
+        logger.dev(`[Orchestrator] 🔁 Iteration ${toolCallsCount}/${maxToolCalls}`);
 
+        // ✅ Pas de message spécial, juste continuer la boucle
+        // Le LLM verra les résultats et décidera de la suite
+        currentMessage = ''; // Vide = utiliser juste l'historique
         isFirstPass = false;
-
-        // Appel LLM forcé en mode texte uniquement (tool_choice:none)
-        const secondResponse = await this.callLLM(currentMessage, updatedHistory, context, 'none', llmProvider);
-        if (secondResponse.content && secondResponse.content.trim().length > 0) {
-          return {
-            success: true,
-            content: secondResponse.content,
-            toolCalls: allToolCalls,
-            toolResults: allToolResults,
-            reasoning: secondResponse.reasoning,
-            error: undefined
-          };
-        }
       }
 
-      logger.warn(`[Orchestrator] ⚠️ Tool call limit (${maxToolCalls}) reached.`);
-      const finalResponse = await this.callLLM("Summarize tool actions and give a final answer.", updatedHistory, context, 'auto', llmProvider);
+      // ✅ Max iterations atteint, forcer une réponse finale
+      logger.warn(`[Orchestrator] ⚠️ Max iterations (${maxToolCalls}) atteint, demande de réponse finale`);
+      const finalResponse = await this.callLLM(
+        "Maximum iterations reached. Please provide your final answer based on what you've accomplished so far.",
+        updatedHistory,
+        context,
+        'auto', // Même ici, laisser le LLM décider
+        llmProvider
+      );
       return { 
         success: true, 
         content: finalResponse.content, 
@@ -167,11 +230,23 @@ export class SimpleChatOrchestrator {
       };
 
     } catch (error) {
-      logger.error(`[Orchestrator] ❌ Error processing message:`, error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
+      logger.error(`[Orchestrator] ❌ Error processing message:`, {
+        message: errorMessage,
+        stack: errorStack,
+        sessionId: context.sessionId,
+        agentId: context.agentConfig?.id
+      });
+      
+      // ✅ Retourner une erreur détaillée pour debugging
       return {
-        success: false, content: "An error occurred. Please try again.",
-        toolCalls: [], toolResults: [],
-        error: error instanceof Error ? error.message : 'Unknown error'
+        success: false, 
+        content: `Une erreur s'est produite lors du traitement de votre message.\n\nDétails : ${errorMessage}\n\nVeuillez réessayer ou reformuler votre demande.`,
+        toolCalls: allToolCalls, // Retourner les tools déjà appelés
+        toolResults: allToolResults, // Retourner les résultats déjà obtenus
+        error: errorMessage
       };
     }
   }
@@ -225,32 +300,69 @@ export class SimpleChatOrchestrator {
       );
     }
 
-    // ✅ NOUVEAU: Support MCP natif Groq
-    let tools: any[];
+    // ✅ Support MCP natif Groq : Toujours vérifier s'il y a des serveurs MCP liés
+    const openApiTools = await getOpenAPIV2Tools();
     
-    if (agentConfig?.mcp_config?.enabled) {
-      // Mode MCP : utiliser les serveurs MCP directement
-      const { mcpConfigService } = await import('../mcpConfigService');
-      const { getOpenAPIV2Tools } = await import('@/services/openApiToolsGenerator');
-      const openApiTools = await getOpenAPIV2Tools();
-      
-      // Construire les tools (MCP seul ou hybride MCP + OpenAPI)
-      tools = await mcpConfigService.buildHybridTools(
-        agentConfig.id || 'default',
-        context.userToken, // userId
-        openApiTools
-      );
-      
-      logger.dev(`[Orchestrator] 🔧 ${tools.filter(t => t.type === 'mcp').length} serveurs MCP + ${tools.filter(t => t.type === 'function').length} tools OpenAPI`);
+    // Construire les tools (hybride si l'agent a des MCP, sinon OpenAPI pur)
+    const tools = await mcpConfigService.buildHybridTools(
+      agentConfig?.id || 'default',
+      context.userToken, // userId
+      openApiTools
+    );
+    
+    const mcpCount = tools.filter(t => t.type === 'mcp').length;
+    const openapiCount = tools.filter(t => t.type === 'function').length;
+    
+    if (mcpCount > 0) {
+      logger.dev(`[Orchestrator] 🔀 Mode hybride: ${mcpCount} MCP + ${openapiCount} OpenAPI`);
     } else {
-      // Mode classique : OpenAPI tools seulement
-      const { getOpenAPIV2Tools } = await import('@/services/openApiToolsGenerator');
-      tools = await getOpenAPIV2Tools();
-      logger.dev(`[Orchestrator] 🔧 ${tools.length} tools OpenAPI (mode classique)`);
+      logger.dev(`[Orchestrator] 📦 Mode OpenAPI: ${openapiCount} tools`);
     }
 
     // ✅ FIX: Utiliser le provider passé en paramètre (avec la config de l'agent)
     return llmProvider.callWithMessages(messages, tools);
+  }
+
+  /**
+   * Déduplique les tool calls pour éviter les appels identiques
+   * Compare : function.name + arguments (normalisés)
+   */
+  private deduplicateToolCalls(newToolCalls: ToolCall[], allPreviousToolCalls: ToolCall[]): ToolCall[] {
+    const seen = new Set<string>();
+    
+    // Ajouter tous les appels précédents au Set
+    for (const prevCall of allPreviousToolCalls) {
+      const key = this.getToolCallKey(prevCall);
+      seen.add(key);
+    }
+    
+    // Filtrer les nouveaux appels
+    const deduped = newToolCalls.filter(call => {
+      const key = this.getToolCallKey(call);
+      if (seen.has(key)) {
+        logger.warn(`[Orchestrator] 🔁 Tool call en double ignoré: ${call.function.name}`);
+        return false; // Doublon, ignorer
+      }
+      seen.add(key);
+      return true;
+    });
+    
+    return deduped;
+  }
+
+  /**
+   * Génère une clé unique pour un tool call (name + args normalisés)
+   */
+  private getToolCallKey(toolCall: ToolCall): string {
+    try {
+      // Parser et re-stringifier pour normaliser les args
+      const args = JSON.parse(toolCall.function.arguments);
+      const normalizedArgs = JSON.stringify(args, Object.keys(args).sort());
+      return `${toolCall.function.name}:${normalizedArgs}`;
+    } catch {
+      // Si parsing échoue, utiliser les args bruts
+      return `${toolCall.function.name}:${toolCall.function.arguments}`;
+    }
   }
 
   /**

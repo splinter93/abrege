@@ -90,3 +90,33 @@ export function createAgentMcpConfig(
   };
 }
 
+/**
+ * Serveur MCP externe (de la DB external_mcp_servers)
+ */
+export interface ExternalMcpServer {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  url: string;
+  auth_header: string;
+  api_key: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Helper pour convertir un serveur externe en outil MCP Groq
+ */
+export function externalServerToMcpTool(server: ExternalMcpServer): McpServerConfig {
+  return {
+    type: 'mcp',
+    server_label: server.name.toLowerCase().replace(/\s+/g, '-'),
+    server_url: server.url,
+    headers: server.auth_header && server.api_key 
+      ? { [server.auth_header]: server.api_key }
+      : undefined
+  };
+}
+

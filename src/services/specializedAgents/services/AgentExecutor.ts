@@ -12,7 +12,7 @@ import {
   GroqMultimodalPayload
 } from '../types/AgentTypes';
 import { MultimodalHandler } from '../multimodalHandler';
-import { simpleChatOrchestrator } from '@/services/llm/services/SimpleChatOrchestrator';
+import { agenticOrchestrator } from '@/services/llm/services/AgenticOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 
 export class AgentExecutor {
@@ -188,8 +188,8 @@ export class AgentExecutor {
         ]
       };
 
-      // Appel à l'orchestrateur
-      const orchestratorResult = await simpleChatOrchestrator.processMessage(
+      // ✨ Appel à l'orchestrateur agentique V2
+      const orchestratorResult = await agenticOrchestrator.processMessage(
         userMessage,
         [], // Pas d'historique pour les agents spécialisés
         {

@@ -4,7 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { simpleChatOrchestrator } from '@/services/llm/services/SimpleChatOrchestrator';
+import { agenticOrchestrator } from '@/services/llm/services/AgenticOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 import { SchemaValidator } from './schemaValidator';
 import { MultimodalHandler } from './multimodalHandler';
@@ -40,7 +40,7 @@ export class SpecializedAgentManager {
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
-    // Utilise maintenant SimpleChatOrchestrator (singleton)
+    // ✨ Utilise maintenant AgenticOrchestrator V2 (singleton)
   }
 
   /**
@@ -1404,7 +1404,7 @@ Modèle utilisé : ${model}`;
       api_v2_capabilities: agent.api_v2_capabilities || ['get_note', 'update_note', 'search_notes', 'list_notes', 'create_note', 'delete_note']
     };
 
-    const orchestratorResult = await simpleChatOrchestrator.processMessage(
+    const orchestratorResult = await agenticOrchestrator.processMessage(
       userMessage,
       [],
       {

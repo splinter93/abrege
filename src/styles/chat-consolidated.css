@@ -539,10 +539,9 @@
   width: 100%;
 }
 
-/* Bulles */
+/* Bulles - Base (sans max-width, géré par chaque type) */
 .chatgpt-message-bubble,
 .chat-message-bubble {
-  max-width: 85%;
   padding: var(--chat-space-md) var(--chat-space-lg);
   border-radius: var(--chat-radius-lg);
   word-wrap: break-word;
@@ -556,16 +555,16 @@
 
 /* Responsive pour les bulles de messages */
 @media (max-width: 768px) {
-  .chatgpt-message-bubble,
-  .chat-message-bubble {
+  .chatgpt-message-bubble-user,
+  .chat-message-bubble-user {
     max-width: calc(100% - 30px);
     padding: 12px 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .chatgpt-message-bubble,
-  .chat-message-bubble {
+  .chatgpt-message-bubble-user,
+  .chat-message-bubble-user {
     max-width: calc(100% - 20px);
     padding: 8px 12px;
     font-size: var(--chat-font-size-sm);
@@ -1597,8 +1596,8 @@
     margin-bottom: 4px;
   }
   
-  .chatgpt-message-bubble,
-  .chat-message-bubble {
+  .chatgpt-message-bubble-user,
+  .chat-message-bubble-user {
     font-size: var(--chat-font-size-sm);
     padding: 8px 12px;
     max-width: calc(100% - 20px);
@@ -1680,8 +1679,8 @@
   
   /* ✅ Paddings gérés dans la section RESPONSIVE: PADDINGS ADAPTATIFS ci-dessus */
   
-  .chatgpt-message-bubble,
-  .chat-message-bubble {
+  .chatgpt-message-bubble-user,
+  .chat-message-bubble-user {
     max-width: calc(100% - 30px);
     word-wrap: break-word;
     overflow-wrap: break-word;
