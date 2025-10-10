@@ -1,330 +1,262 @@
 /**
- * Hook React pour la gestion des agents spécialisés
- * Interface utilisateur pour interagir avec le système d'agents spécialisés
+ * Hook pour la gestion des agents spécialisés
+ * Production-ready avec TypeScript strict
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  SpecializedAgentConfig, 
-  SpecializedAgentResponse, 
-  CreateSpecializedAgentRequest,
-  CreateSpecializedAgentResponse,
-  UseSpecializedAgentsReturn 
-} from '@/types/specializedAgents';
+import { SpecializedAgentConfig, CreateSpecializedAgentRequest } from '@/types/specializedAgents';
+import { agentsService } from '@/services/agents/agentsService';
 import { simpleLogger as logger } from '@/utils/logger';
 
-export const useSpecializedAgents = (): UseSpecializedAgentsReturn => {
-  const [agents, setAgents] = useState<SpecializedAgentConfig[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * État du hook
+ */
+interface UseSpecializedAgentsState {
+  agents: SpecializedAgentConfig[];
+  loading: boolean;
+  error: string | null;
+  selectedAgent: SpecializedAgentConfig | null;
+}
+
+/**
+ * Valeur de retour du hook
+ */
+interface UseSpecializedAgentsReturn extends UseSpecializedAgentsState {
+  // Actions sur les agents
+  loadAgents: () => Promise<void>;
+  getAgent: (agentId: string) => Promise<SpecializedAgentConfig | null>;
+  createAgent: (agentData: CreateSpecializedAgentRequest) => Promise<SpecializedAgentConfig | null>;
+  updateAgent: (agentId: string, updates: Partial<SpecializedAgentConfig>) => Promise<SpecializedAgentConfig | null>;
+  patchAgent: (agentId: string, updates: Partial<SpecializedAgentConfig>) => Promise<SpecializedAgentConfig | null>;
+  deleteAgent: (agentId: string) => Promise<boolean>;
+  selectAgent: (agent: SpecializedAgentConfig | null) => void;
+  refreshAgent: (agentId: string) => Promise<void>;
+}
+
+/**
+ * Hook pour gérer les agents spécialisés
+ */
+export function useSpecializedAgents(): UseSpecializedAgentsReturn {
+  const [state, setState] = useState<UseSpecializedAgentsState>({
+    agents: [],
+    loading: false,
+    error: null,
+    selectedAgent: null,
+  });
 
   /**
-   * Charger la liste des agents spécialisés
+   * Charge tous les agents
    */
-  const refreshAgents = useCallback(async () => {
+  const loadAgents = useCallback(async (): Promise<void> => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch('/api/ui/agents/specialized');
-      const data = await response.json();
-
-      if (data.success) {
-        setAgents(data.agents || []);
-        logger.dev('[useSpecializedAgents] ✅ Agents chargés:', data.agents?.length || 0);
-      } else {
-        throw new Error(data.error || 'Erreur lors du chargement des agents');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(errorMessage);
-      logger.error('[useSpecializedAgents] ❌ Erreur refreshAgents:', err);
-    } finally {
-      setLoading(false);
+      const agents = await agentsService.listAgents();
+      setState(prev => ({
+        ...prev,
+        agents,
+        loading: false,
+      }));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors du chargement des agents';
+      logger.error('useSpecializedAgents.loadAgents:', error);
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: errorMessage,
+      }));
     }
   }, []);
 
   /**
-   * Exécuter un agent spécialisé
+   * Récupère un agent spécifique
    */
-  const executeAgent = useCallback(async (
-    agentId: string, 
-    input: Record<string, unknown>
-  ): Promise<SpecializedAgentResponse> => {
+  const getAgent = useCallback(async (agentId: string): Promise<SpecializedAgentConfig | null> => {
     try {
-      setError(null);
-
-      const response = await fetch(`/api/v2/agents/${agentId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(input)
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        logger.dev('[useSpecializedAgents] ✅ Agent exécuté:', agentId);
-        return {
-          success: true,
-          result: data,
-          metadata: data.metadata
-        };
-      } else {
-        const errorMessage = data.error || `Erreur HTTP ${response.status}`;
-        logger.error('[useSpecializedAgents] ❌ Erreur exécution agent:', errorMessage);
-        return {
-          success: false,
-          error: errorMessage,
-          metadata: data.metadata
-        };
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur de connexion';
-      logger.error('[useSpecializedAgents] ❌ Erreur fatale exécution agent:', err);
-      return {
-        success: false,
-        error: errorMessage
-      };
+      const agent = await agentsService.getAgent(agentId);
+      return agent;
+    } catch (error) {
+      logger.error('useSpecializedAgents.getAgent:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Erreur lors de la récupération de l\'agent',
+      }));
+      return null;
     }
   }, []);
 
   /**
-   * Créer un nouvel agent spécialisé
+   * Crée un nouvel agent
    */
   const createAgent = useCallback(async (
-    config: CreateSpecializedAgentRequest
-  ): Promise<CreateSpecializedAgentResponse> => {
+    agentData: CreateSpecializedAgentRequest
+  ): Promise<SpecializedAgentConfig | null> => {
+    setState(prev => ({ ...prev, error: null }));
+
     try {
-      setError(null);
+      const newAgent = await agentsService.createAgent(agentData);
+      
+      // Ajouter le nouvel agent à la liste
+      setState(prev => ({
+        ...prev,
+        agents: [...prev.agents, newAgent],
+      }));
 
-      const response = await fetch('/api/ui/agents/specialized', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(config)
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Rafraîchir la liste des agents
-        await refreshAgents();
-        logger.dev('[useSpecializedAgents] ✅ Agent créé:', data.agent?.slug);
-        return data;
-      } else {
-        const errorMessage = data.error || `Erreur HTTP ${response.status}`;
-        logger.error('[useSpecializedAgents] ❌ Erreur création agent:', errorMessage);
-        return {
-          success: false,
-          error: errorMessage
-        };
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur de connexion';
-      logger.error('[useSpecializedAgents] ❌ Erreur fatale création agent:', err);
-      return {
-        success: false,
-        error: errorMessage
-      };
+      return newAgent;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la création de l\'agent';
+      logger.error('useSpecializedAgents.createAgent:', error);
+      setState(prev => ({
+        ...prev,
+        error: errorMessage,
+      }));
+      return null;
     }
-  }, [refreshAgents]);
-
-  /**
-   * Mettre à jour un agent spécialisé
-   */
-  const updateAgent = useCallback(async (
-    agentId: string, 
-    updates: Partial<SpecializedAgentConfig>
-  ): Promise<boolean> => {
-    try {
-      setError(null);
-
-      const response = await fetch(`/api/ui/agents/${agentId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates)
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Rafraîchir la liste des agents
-        await refreshAgents();
-        logger.dev('[useSpecializedAgents] ✅ Agent mis à jour:', agentId);
-        return true;
-      } else {
-        const errorMessage = data.error || `Erreur HTTP ${response.status}`;
-        setError(errorMessage);
-        logger.error('[useSpecializedAgents] ❌ Erreur mise à jour agent:', errorMessage);
-        return false;
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur de connexion';
-      setError(errorMessage);
-      logger.error('[useSpecializedAgents] ❌ Erreur fatale mise à jour agent:', err);
-      return false;
-    }
-  }, [refreshAgents]);
-
-  /**
-   * Supprimer un agent spécialisé
-   */
-  const deleteAgent = useCallback(async (agentId: string): Promise<boolean> => {
-    try {
-      setError(null);
-
-      const response = await fetch(`/api/ui/agents/${agentId}`, {
-        method: 'DELETE'
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Rafraîchir la liste des agents
-        await refreshAgents();
-        logger.dev('[useSpecializedAgents] ✅ Agent supprimé:', agentId);
-        return true;
-      } else {
-        const errorMessage = data.error || `Erreur HTTP ${response.status}`;
-        setError(errorMessage);
-        logger.error('[useSpecializedAgents] ❌ Erreur suppression agent:', errorMessage);
-        return false;
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur de connexion';
-      setError(errorMessage);
-      logger.error('[useSpecializedAgents] ❌ Erreur fatale suppression agent:', err);
-      return false;
-    }
-  }, [refreshAgents]);
-
-  // Charger les agents au montage du composant
-  useEffect(() => {
-    refreshAgents();
-  }, [refreshAgents]);
-
-  return {
-    agents,
-    loading,
-    error,
-    executeAgent,
-    createAgent,
-    updateAgent,
-    deleteAgent,
-    refreshAgents
-  };
-};
-
-/**
- * Hook pour exécuter un agent spécifique
- */
-export const useAgentExecution = (agentId: string) => {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<SpecializedAgentResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const execute = useCallback(async (input: Record<string, unknown>) => {
-    try {
-      setLoading(true);
-      setError(null);
-      setResult(null);
-
-      const response = await fetch(`/api/v2/agents/${agentId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(input)
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setResult({
-          success: true,
-          result: data,
-          metadata: data.metadata
-        });
-      } else {
-        const errorMessage = data.error || `Erreur HTTP ${response.status}`;
-        setError(errorMessage);
-        setResult({
-          success: false,
-          error: errorMessage,
-          metadata: data.metadata
-        });
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur de connexion';
-      setError(errorMessage);
-      setResult({
-        success: false,
-        error: errorMessage
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [agentId]);
-
-  const reset = useCallback(() => {
-    setResult(null);
-    setError(null);
   }, []);
 
-  return {
-    execute,
-    reset,
-    loading,
-    result,
-    error
-  };
-};
+  /**
+   * Met à jour complètement un agent (PUT)
+   */
+  const updateAgent = useCallback(async (
+    agentId: string,
+    updates: Partial<SpecializedAgentConfig>
+  ): Promise<SpecializedAgentConfig | null> => {
+    setState(prev => ({ ...prev, error: null }));
 
-/**
- * Hook pour obtenir les informations d'un agent
- */
-export const useAgentInfo = (agentId: string) => {
-  const [agent, setAgent] = useState<SpecializedAgentConfig | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchInfo = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
+      const updatedAgent = await agentsService.updateAgent(agentId, updates);
+      
+      // Mettre à jour l'agent dans la liste
+      setState(prev => ({
+        ...prev,
+        agents: prev.agents.map(agent =>
+          agent.id === updatedAgent.id || agent.slug === agentId ? updatedAgent : agent
+        ),
+        selectedAgent: prev.selectedAgent?.id === updatedAgent.id ? updatedAgent : prev.selectedAgent,
+      }));
 
-      const response = await fetch(`/api/v2/agents/${agentId}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setAgent(data);
-      } else {
-        throw new Error(data.error || `Erreur HTTP ${response.status}`);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur de connexion';
-      setError(errorMessage);
-      logger.error('[useAgentInfo] ❌ Erreur récupération info agent:', err);
-    } finally {
-      setLoading(false);
+      return updatedAgent;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la mise à jour de l\'agent';
+      logger.error('useSpecializedAgents.updateAgent:', error);
+      setState(prev => ({
+        ...prev,
+        error: errorMessage,
+      }));
+      return null;
     }
-  }, [agentId]);
+  }, []);
 
+  /**
+   * Met à jour partiellement un agent (PATCH)
+   */
+  const patchAgent = useCallback(async (
+    agentId: string,
+    updates: Partial<SpecializedAgentConfig>
+  ): Promise<SpecializedAgentConfig | null> => {
+    setState(prev => ({ ...prev, error: null }));
+
+    try {
+      const patchedAgent = await agentsService.patchAgent(agentId, updates);
+      
+      // Mettre à jour l'agent dans la liste
+      setState(prev => ({
+        ...prev,
+        agents: prev.agents.map(agent =>
+          agent.id === patchedAgent.id || agent.slug === agentId ? patchedAgent : agent
+        ),
+        selectedAgent: prev.selectedAgent?.id === patchedAgent.id ? patchedAgent : prev.selectedAgent,
+      }));
+
+      return patchedAgent;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la mise à jour de l\'agent';
+      logger.error('useSpecializedAgents.patchAgent:', error);
+      setState(prev => ({
+        ...prev,
+        error: errorMessage,
+      }));
+      return null;
+    }
+  }, []);
+
+  /**
+   * Supprime un agent
+   */
+  const deleteAgent = useCallback(async (agentId: string): Promise<boolean> => {
+    setState(prev => ({ ...prev, error: null }));
+
+    try {
+      await agentsService.deleteAgent(agentId);
+      
+      // Retirer l'agent de la liste
+      setState(prev => ({
+        ...prev,
+        agents: prev.agents.filter(agent => agent.id !== agentId && agent.slug !== agentId),
+        selectedAgent: prev.selectedAgent?.id === agentId ? null : prev.selectedAgent,
+      }));
+
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de la suppression de l\'agent';
+      logger.error('useSpecializedAgents.deleteAgent:', error);
+      setState(prev => ({
+        ...prev,
+        error: errorMessage,
+      }));
+      return false;
+    }
+  }, []);
+
+  /**
+   * Sélectionne un agent
+   */
+  const selectAgent = useCallback((agent: SpecializedAgentConfig | null): void => {
+    setState(prev => ({
+      ...prev,
+      selectedAgent: agent,
+    }));
+  }, []);
+
+  /**
+   * Rafraîchit un agent spécifique
+   */
+  const refreshAgent = useCallback(async (agentId: string): Promise<void> => {
+    try {
+      const agent = await agentsService.getAgent(agentId);
+      
+      setState(prev => ({
+        ...prev,
+        agents: prev.agents.map(a =>
+          a.id === agent.id || a.slug === agentId ? agent : a
+        ),
+        selectedAgent: prev.selectedAgent?.id === agent.id ? agent : prev.selectedAgent,
+      }));
+    } catch (error) {
+      logger.error('useSpecializedAgents.refreshAgent:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Erreur lors du rafraîchissement de l\'agent',
+      }));
+    }
+  }, []);
+
+  /**
+   * Charge les agents au montage
+   */
   useEffect(() => {
-    if (agentId) {
-      fetchInfo();
-    }
-  }, [agentId, fetchInfo]);
+    loadAgents();
+  }, [loadAgents]);
 
   return {
-    agent,
-    loading,
-    error,
-    refetch: fetchInfo
+    ...state,
+    loadAgents,
+    getAgent,
+    createAgent,
+    updateAgent,
+    patchAgent,
+    deleteAgent,
+    selectAgent,
+    refreshAgent,
   };
-};
+}

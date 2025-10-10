@@ -112,34 +112,49 @@ export interface SynesiaPayload {
 }
 
 export interface Agent {
+  // Identification
   id: string;
+  user_id?: string;
   name: string;
+  slug?: string;
+  display_name?: string;
+  
+  // Configuration LLM
   provider: string;
-  profile_picture?: string;
+  model: string;
   temperature: number;
   top_p: number;
-  instructions?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  // Nouvelles colonnes pour le système template
-  model: string;
   max_tokens: number;
+  
+  // Instructions et comportement
   system_instructions?: string;
-  context_template?: string;
-  api_config: Record<string, any>;
   personality?: string;
   expertise?: string[];
+  context_template?: string;
+  
+  // Type et état
+  is_active: boolean;
+  is_chat_agent?: boolean;
+  is_endpoint_agent?: boolean;
+  priority: number;
+  
+  // Schémas
+  input_schema?: Record<string, any>;
+  output_schema?: Record<string, any>;
+  
+  // Capacités
   capabilities: string[];
+  api_v2_capabilities?: string[];
+  
+  // Apparence
+  profile_picture?: string;
+  description?: string;
+  
+  // Métadonnées
   version: string;
   is_default: boolean;
-  priority: number;
-  // Capacités API v2
-  api_v2_capabilities?: string[];
-  // Nouveaux paramètres LLM configurables
-  model_variant?: '120b' | '20b';
-  max_completion_tokens?: number;
-  stream?: boolean;
-  reasoning_effort?: 'low' | 'medium' | 'high';
-  stop_sequences?: string[];
+  api_config: Record<string, any>;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
 } 

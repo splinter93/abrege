@@ -1,0 +1,605 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import UnifiedSidebar from "@/components/UnifiedSidebar";
+import UnifiedPageTitle from "@/components/UnifiedPageTitle";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import AuthGuard from "@/components/AuthGuard";
+import { useSpecializedAgents } from "@/hooks/useSpecializedAgents";
+import { SpecializedAgentConfig } from "@/types/specializedAgents";
+import { GROQ_MODELS_BY_CATEGORY, getModelInfo } from "@/constants/groqModels";
+import { Bot, Trash2, Save, X } from "lucide-react";
+import "@/styles/main.css";
+import "./agents.css";
+
+/**
+ * Page de gestion des agents spécialisés
+ */
+export default function AgentsPage() {
+  return (
+    <ErrorBoundary>
+      <AuthGuard>
+        <AgentsPageContent />
+      </AuthGuard>
+    </ErrorBoundary>
+  );
+}
+
+/**
+ * Contenu de la page (séparé pour AuthGuard)
+ */
+function AgentsPageContent() {
+  const {
+    agents,
+    loading,
+    error,
+    selectedAgent,
+    selectAgent,
+    getAgent,
+    updateAgent,
+    patchAgent,
+    deleteAgent,
+    loadAgents,
+  } = useSpecializedAgents();
+
+  const [editedAgent, setEditedAgent] = useState<Partial<SpecializedAgentConfig> | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  
+  // Ref pour suivre si la sélection initiale a été faite
+  const initialSelectionDone = useRef(false);
+
+  /**
+   * Synchronise editedAgent quand selectedAgent change (ex: après une mise à jour)
+   */
+  useEffect(() => {
+    if (selectedAgent && !hasChanges) {
+      setEditedAgent({ ...selectedAgent });
+    }
+  }, [selectedAgent, hasChanges]);
+
+  /**
+   * Sélectionne automatiquement le premier agent au chargement (une seule fois)
+   */
+  useEffect(() => {
+    if (!loading && agents.length > 0 && !selectedAgent && !initialSelectionDone.current) {
+      initialSelectionDone.current = true;
+      handleSelectAgent(agents[0]);
+    }
+  }, [loading, agents.length, selectedAgent]);
+
+  /**
+   * Sélectionne un agent et charge ses détails complets
+   */
+  const handleSelectAgent = async (agent: SpecializedAgentConfig) => {
+    setHasChanges(false);
+    setLoadingDetails(true);
+    
+    try {
+      // Charger les détails complets de l'agent (incluant system_instructions)
+      const agentId = agent.slug || agent.id;
+      const fullAgent = await getAgent(agentId);
+      
+      if (fullAgent) {
+        selectAgent(fullAgent); // Mettre à jour avec les détails complets
+        setEditedAgent({ ...fullAgent });
+      } else {
+        selectAgent(agent);
+        setEditedAgent({ ...agent });
+      }
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  /**
+   * Annule les modifications
+   */
+  const handleCancelEdit = () => {
+    if (!selectedAgent) return;
+    setEditedAgent({ ...selectedAgent });
+    setHasChanges(false);
+  };
+
+  /**
+   * Sauvegarde les modifications
+   */
+  const handleSaveEdit = async () => {
+    if (!selectedAgent || !editedAgent || !hasChanges) return;
+
+    const agentId = selectedAgent.slug || selectedAgent.id;
+    const updated = await patchAgent(agentId, editedAgent);
+
+    if (updated) {
+      selectAgent(updated);
+      setEditedAgent({ ...updated });
+      setHasChanges(false);
+    }
+  };
+
+  /**
+   * Supprime un agent
+   */
+  const handleDeleteAgent = async () => {
+    if (!selectedAgent) return;
+
+    const agentId = selectedAgent.slug || selectedAgent.id;
+    const success = await deleteAgent(agentId);
+
+    if (success) {
+      selectAgent(null);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  /**
+   * Met à jour un champ de l'agent édité
+   */
+  const updateField = <K extends keyof SpecializedAgentConfig>(
+    field: K,
+    value: SpecializedAgentConfig[K]
+  ) => {
+    setEditedAgent(prev => prev ? { ...prev, [field]: value } : null);
+    setHasChanges(true);
+  };
+
+  if (loading && agents.length === 0) {
+    return (
+      <div className="page-wrapper">
+        <aside className="page-sidebar-fixed">
+          <UnifiedSidebar />
+        </aside>
+        <main className="page-content-area">
+          <div className="loading-state">
+            <div className="loading-spinner" />
+            <p>Chargement des agents...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-wrapper">
+      <aside className="page-sidebar-fixed">
+        <UnifiedSidebar />
+      </aside>
+
+      <main className="page-content-area">
+        <UnifiedPageTitle
+          icon={Bot}
+          title="Agents Spécialisés"
+          subtitle="Gérez et configurez vos agents IA personnalisés"
+        />
+
+        <div className="main-dashboard">
+          {error && (
+            <motion.div 
+              className="error-banner"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <span className="error-icon">⚠️</span>
+              <span>{error}</span>
+            </motion.div>
+          )}
+
+          <div className="agents-layout">
+          {/* Liste des agents */}
+          <motion.div
+            className="agents-list-panel"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="panel-header">
+              <h2 className="panel-title">Agents disponibles</h2>
+              <button 
+                className="btn-icon"
+                onClick={loadAgents}
+                title="Rafraîchir"
+              >
+                🔄
+              </button>
+            </div>
+
+            <div className="agents-list">
+              {agents.length === 0 ? (
+                <div className="empty-state">
+                  <Bot size={48} className="empty-icon" />
+                  <p>Aucun agent disponible</p>
+                </div>
+              ) : (
+                agents.map((agent) => (
+                  <motion.button
+                    key={agent.id}
+                    className={`agent-card ${selectedAgent?.id === agent.id ? 'selected' : ''}`}
+                    onClick={() => handleSelectAgent(agent)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="agent-card-header">
+                      <div className="agent-header-left">
+                        {agent.profile_picture && (
+                          <img 
+                            src={agent.profile_picture} 
+                            alt={agent.display_name || agent.name}
+                            className="agent-avatar-small"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
+                        <h3 className="agent-name">
+                          {agent.display_name || agent.name}
+                        </h3>
+                      </div>
+                      <div className={`agent-status ${agent.is_active ? 'active' : 'inactive'}`}>
+                        {agent.is_active ? '●' : '○'}
+                      </div>
+                    </div>
+                    <p className="agent-description">
+                      {agent.description || 'Aucune description'}
+                    </p>
+                    <div className="agent-meta">
+                      <span className="agent-model">{agent.model}</span>
+                      <span className="agent-slug">{agent.slug}</span>
+                    </div>
+                  </motion.button>
+                ))
+              )}
+            </div>
+          </motion.div>
+
+          {/* Panneau de détails/édition */}
+          <motion.div
+            className="agent-details-panel"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {selectedAgent ? (
+              loadingDetails ? (
+                <div className="loading-state">
+                  <div className="loading-spinner" />
+                  <p style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Chargement des détails...</p>
+                </div>
+              ) : (
+              <div className="agent-details">
+                <div className="details-header">
+                  <h2 className="details-title">
+                    Configuration de l'agent
+                    {hasChanges && <span className="changes-indicator">●</span>}
+                  </h2>
+                  <div className="details-actions">
+                    {hasChanges && (
+                      <>
+                        <button
+                          className="btn-primary"
+                          onClick={handleSaveEdit}
+                        >
+                          <Save size={16} />
+                          <span>Sauvegarder</span>
+                        </button>
+                        <button
+                          className="btn-secondary"
+                          onClick={handleCancelEdit}
+                        >
+                          <X size={16} />
+                          <span>Annuler</span>
+                        </button>
+                      </>
+                    )}
+                    <button
+                      className="btn-danger"
+                      onClick={() => setShowDeleteConfirm(true)}
+                    >
+                      <Trash2 size={16} />
+                      <span>Supprimer</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="details-content">
+                  {/* Informations générales */}
+                  <div className="detail-section">
+                    <h3 className="section-title">Informations générales</h3>
+                    
+                    <div className="field-group">
+                      <label className="field-label">Nom d'affichage</label>
+                      <input
+                        type="text"
+                        className="field-input"
+                        value={editedAgent?.display_name || ''}
+                        onChange={(e) => updateField('display_name', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Slug</label>
+                      <p className="field-value field-readonly">{selectedAgent.slug}</p>
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Description</label>
+                      <textarea
+                        className="field-textarea"
+                        value={editedAgent?.description || ''}
+                        onChange={(e) => updateField('description', e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Image de profil (URL)</label>
+                      <input
+                        type="text"
+                        className="field-input"
+                        value={editedAgent?.profile_picture || ''}
+                        onChange={(e) => updateField('profile_picture', e.target.value)}
+                        placeholder="https://example.com/avatar.png"
+                      />
+                      {editedAgent?.profile_picture && (
+                        <div style={{ marginTop: '0.5rem' }}>
+                          <img 
+                            src={editedAgent.profile_picture} 
+                            alt="Avatar de l'agent"
+                            style={{ 
+                              width: '48px', 
+                              height: '48px', 
+                              borderRadius: '50%',
+                              objectFit: 'cover',
+                              border: '2px solid rgba(255, 255, 255, 0.2)'
+                            }}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Personnalité</label>
+                      <textarea
+                        className="field-textarea"
+                        value={editedAgent?.personality || ''}
+                        onChange={(e) => updateField('personality', e.target.value)}
+                        rows={2}
+                        placeholder="Ex: Professionnel, amical, technique..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Configuration LLM */}
+                  <div className="detail-section">
+                    <h3 className="section-title">Configuration LLM</h3>
+
+                    <div className="field-group">
+                      <label className="field-label">Modèle LLM</label>
+                      <select
+                        className="field-select"
+                        value={editedAgent?.model || ''}
+                        onChange={(e) => updateField('model', e.target.value)}
+                      >
+                        {!editedAgent?.model && (
+                          <option value="">-- Sélectionner un modèle --</option>
+                        )}
+                        {Object.entries(GROQ_MODELS_BY_CATEGORY).map(([category, models]) => (
+                          <optgroup key={category} label={category}>
+                            {models.map(model => (
+                              <option key={model.id} value={model.id}>
+                                {model.name} {model.recommended ? '⭐' : ''} • {model.speed} TPS
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                      {editedAgent?.model && getModelInfo(editedAgent.model) && (
+                        <p className="field-help">
+                          💡 {getModelInfo(editedAgent.model)?.description}
+                          <br/>
+                          💰 Prix: {getModelInfo(editedAgent.model)?.pricing.input} input / {getModelInfo(editedAgent.model)?.pricing.output} output
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Provider</label>
+                      <p className="field-value field-readonly">{selectedAgent.provider}</p>
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Température ({editedAgent?.temperature || 0})</label>
+                      <input
+                        type="range"
+                        className="field-range"
+                        min="0"
+                        max="2"
+                        step="0.1"
+                        value={editedAgent?.temperature || 0}
+                        onChange={(e) => updateField('temperature', parseFloat(e.target.value))}
+                      />
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Top P ({editedAgent?.top_p || 1})</label>
+                      <input
+                        type="range"
+                        className="field-range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={editedAgent?.top_p || 1}
+                        onChange={(e) => updateField('top_p', parseFloat(e.target.value))}
+                      />
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Max Tokens</label>
+                      <input
+                        type="number"
+                        className="field-input"
+                        value={editedAgent?.max_tokens || 0}
+                        onChange={(e) => updateField('max_tokens', parseInt(e.target.value))}
+                        min="1"
+                        max="100000"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Instructions système */}
+                  <div className="detail-section">
+                    <h3 className="section-title">Instructions système</h3>
+                    
+                    <div className="field-group">
+                      <textarea
+                        className="field-textarea code"
+                        value={editedAgent?.system_instructions || ''}
+                        onChange={(e) => updateField('system_instructions', e.target.value)}
+                        rows={8}
+                        placeholder="Instructions système pour l'agent..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Capacités et expertise */}
+                  <div className="detail-section">
+                    <h3 className="section-title">Capacités et expertise</h3>
+
+                    <div className="field-group">
+                      <label className="field-label">Expertise (séparées par des virgules)</label>
+                      <input
+                        type="text"
+                        className="field-input"
+                        value={editedAgent?.expertise?.join(', ') || ''}
+                        onChange={(e) => updateField('expertise', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                        placeholder="Ex: analyse, rédaction, synthèse"
+                      />
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Capacités API V2 actuelles</label>
+                      <div className="capabilities-tags">
+                        {(editedAgent?.api_v2_capabilities || []).map((cap, index) => (
+                          <span key={index} className="capability-tag">{cap}</span>
+                        ))}
+                        {(!editedAgent?.api_v2_capabilities || editedAgent.api_v2_capabilities.length === 0) && (
+                          <span style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.8rem' }}>Aucune capacité définie</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* État et métadonnées */}
+                  <div className="detail-section">
+                    <h3 className="section-title">État et métadonnées</h3>
+
+                    <div className="field-group">
+                      <label className="field-label">Actif</label>
+                      <label className="field-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={editedAgent?.is_active || false}
+                          onChange={(e) => updateField('is_active', e.target.checked)}
+                        />
+                        <span>Agent actif</span>
+                      </label>
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Priorité</label>
+                      <input
+                        type="number"
+                        className="field-input"
+                        value={editedAgent?.priority || 0}
+                        onChange={(e) => updateField('priority', parseInt(e.target.value))}
+                      />
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Type d'agent</label>
+                      <p className="field-value">
+                        {selectedAgent.is_chat_agent ? '💬 Chat' : '🔌 Endpoint'}
+                      </p>
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Version</label>
+                      <p className="field-value field-readonly">{selectedAgent.version || '1.0.0'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              )
+            ) : (
+              <div className="empty-state">
+                <Bot size={64} className="empty-icon" />
+                <h3>Sélectionnez un agent</h3>
+                <p>Choisissez un agent dans la liste pour voir ses détails</p>
+              </div>
+            )}
+          </motion.div>
+          </div>
+
+          {/* Modal de confirmation de suppression */}
+        <AnimatePresence>
+          {showDeleteConfirm && selectedAgent && (
+            <motion.div
+              className="modal-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              <motion.div
+                className="modal-content"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="modal-header">
+                  <h3>⚠️ Confirmer la suppression</h3>
+                  <button
+                    className="modal-close"
+                    onClick={() => setShowDeleteConfirm(false)}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                <div className="modal-body">
+                  <p>
+                    Êtes-vous sûr de vouloir supprimer l'agent{' '}
+                    <strong>{selectedAgent.display_name || selectedAgent.name}</strong> ?
+                  </p>
+                  <p className="warning-text">
+                    Cette action est irréversible.
+                  </p>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    className="btn-secondary"
+                    onClick={() => setShowDeleteConfirm(false)}
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    className="btn-danger"
+                    onClick={handleDeleteAgent}
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        </div>
+      </main>
+    </div>
+  );
+}
+

@@ -27,13 +27,10 @@ export default function AgentsPage() {
         expertise: selectedAgent.expertise,
         capabilities: selectedAgent.capabilities,
         api_v2_capabilities: selectedAgent.api_v2_capabilities,
-        model_variant: selectedAgent.model_variant,
+        model: selectedAgent.model,
         temperature: selectedAgent.temperature,
-        max_completion_tokens: selectedAgent.max_completion_tokens,
-        top_p: selectedAgent.top_p,
-        stream: selectedAgent.stream,
-        reasoning_effort: selectedAgent.reasoning_effort,
-        stop_sequences: selectedAgent.stop_sequences
+        max_tokens: selectedAgent.max_tokens,
+        top_p: selectedAgent.top_p
       });
     }
   }, [selectedAgent]);
@@ -51,16 +48,11 @@ export default function AgentsPage() {
         expertise: newConfig.expertise,
         capabilities: newConfig.capabilities,
         api_v2_capabilities: newConfig.api_v2_capabilities,
+        model: newConfig.model,
         temperature: newConfig.temperature,
+        max_tokens: newConfig.max_tokens,
         top_p: newConfig.top_p
       };
-
-      // Ajouter les champs avancés LLM
-      if (newConfig.model_variant) updateData.model_variant = newConfig.model_variant;
-      if (newConfig.max_completion_tokens) updateData.max_completion_tokens = newConfig.max_completion_tokens;
-      if (newConfig.stream !== undefined) updateData.stream = newConfig.stream;
-      if (newConfig.reasoning_effort) updateData.reasoning_effort = newConfig.reasoning_effort;
-      if (newConfig.stop_sequences) updateData.stop_sequences = newConfig.stop_sequences;
 
 
 

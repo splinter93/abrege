@@ -1,253 +1,128 @@
 /**
- * Modèles Groq supportés par l'API
- * Basé sur la liste officielle des modèles disponibles
+ * Modèles Groq disponibles avec leurs caractéristiques
+ * Source officielle: https://groq.com/pricing (mise à jour Oct 2025)
  */
 
-export const GROQ_MODELS = {
-  // Modèles préférentiels - Nos modèles référence
-  'openai/gpt-oss-20b': {
-    name: 'OpenAI GPT-OSS 20B',
-    inputPrice: 0.10,
-    outputPrice: 0.50,
-    category: 'preferred',
-    description: 'Excellent modèle généraliste, fiable et performant',
-    capabilities: {
-      reasoningEffort: true,
-      parallelToolCalls: true,
-      serviceTier: true,
-      imageSupport: false,
-      multimodalContent: false
-    }
-  },
-  'openai/gpt-oss-120b': {
-    name: 'OpenAI GPT-OSS 120B',
-    inputPrice: 0.15,
-    outputPrice: 0.75,
-    category: 'preferred',
-    description: 'Modèle généraliste plus puissant',
-    capabilities: {
-      reasoningEffort: true,
-      parallelToolCalls: true,
-      serviceTier: true,
-      imageSupport: false,
-      multimodalContent: false
-    }
-  },
-  'meta-llama/llama-4-scout-17b-16e-instruct': {
-    name: 'Llama 4 Scout',
-    inputPrice: 0.11,
-    outputPrice: 0.34,
-    category: 'preferred',
-    description: 'Puissant pour la génération de texte créative et structurée',
-    capabilities: {
-      reasoningEffort: false,
-      parallelToolCalls: true,
-      serviceTier: true,
-      imageSupport: true,
-      multimodalContent: true
-    }
-  },
-  'meta-llama/llama-4-maverick-17b-128e-instruct': {
-    name: 'Llama 4 Maverick',
-    inputPrice: 0.20,
-    outputPrice: 0.60,
-    category: 'preferred',
-    description: 'Puissant pour la génération de texte créative et structurée (Premium)',
-    capabilities: {
-      reasoningEffort: false,
-      parallelToolCalls: true,
-      serviceTier: true,
-      imageSupport: true,
-      multimodalContent: true
-    }
-  },
-
-  // Modèles alternatifs
-  'kimi-k2-0905': {
-    name: 'Kimi K2-0905',
-    inputPrice: 1.00,
-    outputPrice: 3.00,
-    category: 'alternative',
-    description: 'Modèle classique performant',
-    capabilities: {
-      reasoningEffort: false,
-      parallelToolCalls: true,
-      serviceTier: true,
-      imageSupport: false,
-      multimodalContent: false
-    }
-  },
-  'deepseek-r1-distill-llama-70b': {
-    name: 'DeepSeek R1 Distill Llama 70B',
-    inputPrice: 0.75,
-    outputPrice: 0.99,
-    category: 'reasoning',
-    description: 'Modèle de réflexion avancée',
-    capabilities: {
-      reasoningEffort: true,
-      parallelToolCalls: true,
-      serviceTier: true,
-      imageSupport: false,
-      multimodalContent: false
-    }
-  },
-
-  'qwen/qwen-3-32b-instruct': {
-    name: 'Qwen3-32B',
-    inputPrice: 0.29,
-    outputPrice: 0.59,
-    category: 'alternative',
-    description: 'Bon compromis selon le contexte',
-    capabilities: {
-      reasoningEffort: false,
-      parallelToolCalls: true,
-      serviceTier: true,
-      imageSupport: false,
-      multimodalContent: false
-    }
-  },
-  'meta-llama/llama-3.3-70b-versatile': {
-    name: 'Llama 3.3 70B Versatile',
-    inputPrice: 0.59,
-    outputPrice: 0.79,
-    category: 'alternative',
-    description: 'Modèle Llama polyvalent',
-    capabilities: {
-      reasoningEffort: false,
-      parallelToolCalls: true,
-      serviceTier: true,
-      imageSupport: true,
-      multimodalContent: true
-    }
-  },
-
-  // Modèles de sécurité
-  'meta-llama/llama-guard-4-12b': {
-    name: 'Llama Guard 4 12B',
-    inputPrice: 0.20,
-    outputPrice: 0.20,
-    category: 'safety',
-    description: 'Modèle de sécurité et modération',
-    capabilities: {
-      reasoningEffort: false,
-      parallelToolCalls: true,
-      serviceTier: true,
-      imageSupport: false,
-      multimodalContent: false
-    }
-  }
-} as const;
-
-/**
- * Types TypeScript pour les modèles Groq
- */
-export type GroqModelId = keyof typeof GROQ_MODELS;
-
-/**
- * Interface pour les capacités d'un modèle
- */
-export interface GroqModelCapabilities {
-  reasoningEffort: boolean;
-  parallelToolCalls: boolean;
-  serviceTier: boolean;
-  imageSupport: boolean;
-  multimodalContent: boolean;
-}
-export type GroqModelCategory = 'preferred' | 'reasoning' | 'alternative' | 'safety';
-
-/**
- * Interface pour les informations d'un modèle
- */
 export interface GroqModelInfo {
+  id: string;
   name: string;
-  inputPrice: number;
-  outputPrice: number;
-  category: GroqModelCategory;
+  category: 'gpt-oss' | 'llama' | 'qwen' | 'whisper' | 'tts' | 'other';
+  capabilities: string[];
+  contextWindow: number;
+  maxOutput: number;
+  speed: number; // TPS (Tokens Per Second)
+  pricing: {
+    input: string; // Prix par million de tokens
+    output: string;
+  };
   description: string;
-  capabilities: GroqModelCapabilities;
+  recommended?: boolean;
 }
 
-/**
- * Vérifie si un modèle est supporté par Groq
- */
-export function isGroqModelSupported(modelId: string): modelId is GroqModelId {
-  return modelId in GROQ_MODELS;
-}
-
-/**
- * Obtient les informations d'un modèle Groq
- */
-export function getGroqModelInfo(modelId: string): GroqModelInfo | null {
-  if (isGroqModelSupported(modelId)) {
-    return GROQ_MODELS[modelId];
-  }
-  return null;
-}
-
-/**
- * Vérifie si un modèle supporte une capacité spécifique
- */
-export function modelSupportsCapability(modelId: string, capability: keyof GroqModelCapabilities): boolean {
-  const modelInfo = getGroqModelInfo(modelId);
-  return modelInfo?.capabilities?.[capability] ?? false;
-}
-
-/**
- * Vérifie si un modèle supporte reasoning_effort
- */
-export function modelSupportsReasoningEffort(modelId: string): boolean {
-  return modelSupportsCapability(modelId, 'reasoningEffort');
-}
-
-/**
- * Vérifie si un modèle supporte parallel_tool_calls
- */
-export function modelSupportsParallelToolCalls(modelId: string): boolean {
-  return modelSupportsCapability(modelId, 'parallelToolCalls');
-}
-
-/**
- * Vérifie si un modèle supporte service_tier
- */
-export function modelSupportsServiceTier(modelId: string): boolean {
-  return modelSupportsCapability(modelId, 'serviceTier');
-}
-
-/**
- * Vérifie si un modèle supporte les images
- */
-export function modelSupportsImages(modelId: string): boolean {
-  return modelSupportsCapability(modelId, 'imageSupport');
-}
-
-/**
- * Vérifie si un modèle supporte le contenu multimodal
- */
-export function modelSupportsMultimodalContent(modelId: string): boolean {
-  return modelSupportsCapability(modelId, 'multimodalContent');
-}
-
-/**
- * Liste des modèles préférentiels (nos modèles référence)
- */
-export const PREFERRED_GROQ_MODELS: GroqModelId[] = [
-  'openai/gpt-oss-20b',
-  'openai/gpt-oss-120b',
-  'meta-llama/llama-4-scout-17b-16e-instruct',
-  'meta-llama/llama-4-maverick-17b-128e-instruct'
+export const GROQ_MODELS: GroqModelInfo[] = [
+  // GPT-OSS Models - Recommandés pour la production
+  {
+    id: 'openai/gpt-oss-20b',
+    name: 'GPT-OSS 20B 128k',
+    category: 'gpt-oss',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'prompt_caching'],
+    contextWindow: 131072,
+    maxOutput: 8000,
+    speed: 1000,
+    pricing: { input: '$0.10', output: '$0.50' },
+    description: 'Le plus rapide (1000 TPS), économique, idéal pour la production',
+    recommended: true
+  },
+  {
+    id: 'openai/gpt-oss-120b',
+    name: 'GPT-OSS 120B 128k',
+    category: 'gpt-oss',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'prompt_caching'],
+    contextWindow: 131072,
+    maxOutput: 8000,
+    speed: 500,
+    pricing: { input: '$0.15', output: '$0.75' },
+    description: 'Le plus puissant, excellent pour les tâches complexes',
+    recommended: true
+  },
+  
+  // Llama 4 Models (Multimodal)
+  {
+    id: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    name: 'Llama 4 Scout (17Bx16E) 128k',
+    category: 'llama',
+    capabilities: ['text', 'images', 'function_calling', 'tool_use', 'json_mode'],
+    contextWindow: 131072,
+    maxOutput: 8192,
+    speed: 594,
+    pricing: { input: '$0.11', output: '$0.34' },
+    description: 'Multimodal avec 16 experts, raisonnement et analyse d\'images',
+    recommended: true
+  },
+  {
+    id: 'meta-llama/llama-4-maverick-17b-128e-instruct',
+    name: 'Llama 4 Maverick (17Bx128E) 128k',
+    category: 'llama',
+    capabilities: ['text', 'images', 'function_calling', 'tool_use', 'json_mode'],
+    contextWindow: 131072,
+    maxOutput: 8192,
+    speed: 562,
+    pricing: { input: '$0.20', output: '$0.60' },
+    description: 'Multimodal avec 128 experts, images complexes et contexte long'
+  },
+  
+  // Qwen3
+  {
+    id: 'qwen/qwen3-32b',
+    name: 'Qwen3 32B 131k',
+    category: 'qwen',
+    capabilities: ['text', 'function_calling', 'streaming'],
+    contextWindow: 131072,
+    maxOutput: 8192,
+    speed: 662,
+    pricing: { input: '$0.29', output: '$0.59' },
+    description: 'Très rapide (662 TPS), excellent rapport qualité/prix'
+  },
+  
+  // Kimi K2
+  {
+    id: 'moonshotai/kimi-k2-instruct-0905',
+    name: 'Kimi K2-0905 1T 256k',
+    category: 'other',
+    capabilities: ['text', 'structured_output', 'prompt_caching'],
+    contextWindow: 262144,
+    maxOutput: 8000,
+    speed: 200,
+    pricing: { input: '$1.00', output: '$3.00' },
+    description: 'Contexte ultra-long (256k), structured outputs, prompt caching'
+  },
 ];
 
 /**
- * Liste de tous les modèles supportés
+ * Tous les modèles sont des LLM (pas de Whisper ni TTS dans cette liste)
  */
-export const ALL_GROQ_MODELS: GroqModelId[] = Object.keys(GROQ_MODELS) as GroqModelId[];
+export const LLM_MODELS = GROQ_MODELS;
 
 /**
- * Modèles par catégorie
+ * Grouper les modèles par catégorie pour le menu déroulant
  */
 export const GROQ_MODELS_BY_CATEGORY = {
-  preferred: PREFERRED_GROQ_MODELS,
-  reasoning: ['deepseek-r1-distill-llama-70b'] as GroqModelId[],
-  alternative: ['kimi-k2-0905', 'qwen/qwen-3-32b-instruct', 'meta-llama/llama-3.3-70b-versatile'] as GroqModelId[],
-  safety: ['meta-llama/llama-guard-4-12b'] as GroqModelId[]
-} as const;
+  'GPT-OSS (Recommandé)': GROQ_MODELS.filter(m => m.category === 'gpt-oss'),
+  'Llama 4 (Multimodal)': GROQ_MODELS.filter(m => m.category === 'llama'),
+  'Qwen3': GROQ_MODELS.filter(m => m.category === 'qwen'),
+  'Kimi K2': GROQ_MODELS.filter(m => m.category === 'other'),
+};
+
+/**
+ * Obtenir les informations d'un modèle
+ */
+export function getModelInfo(modelId: string): GroqModelInfo | undefined {
+  return GROQ_MODELS.find(m => m.id === modelId);
+}
+
+/**
+ * Obtenir les modèles recommandés
+ */
+export function getRecommendedModels(): GroqModelInfo[] {
+  return GROQ_MODELS.filter(m => m.recommended);
+}

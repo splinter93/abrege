@@ -7,22 +7,22 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { contextCollector, UIContext } from './ContextCollector';
 
 export interface AgentTemplateConfig {
+  // Instructions et comportement
   system_instructions?: string;
   context_template?: string;
   personality?: string;
   expertise?: string[];
+  
+  // Capacités
   capabilities?: string[];
   api_v2_capabilities?: string[];
-  // Nouveaux paramètres LLM configurables
-  model?: string; // ✅ FIX: Nom complet du modèle (ex: meta-llama/llama-4-maverick-17b-128e-instruct)
-  model_variant?: '120b' | '20b';
+  
+  // Paramètres LLM
+  model?: string;
   temperature?: number;
-  max_tokens?: number; // ✅ FIX: Support de max_tokens
-  max_completion_tokens?: number;
+  max_tokens?: number;
   top_p?: number;
-  stream?: boolean;
-  reasoning_effort?: 'low' | 'medium' | 'high';
-  stop_sequences?: string[];
+  
   // Support MCP natif
   mcp_config?: {
     enabled: boolean;
@@ -31,12 +31,12 @@ export interface AgentTemplateConfig {
       server_url: string;
       headers?: Record<string, string>;
     }>;
-    hybrid_mode?: boolean; // Si true, combine MCP + OpenAPI tools
+    hybrid_mode?: boolean;
   };
-  // Compat héritage
-  instructions?: string;
-  name?: string; // ✅ FIX: Nom de l'agent pour les logs
-  id?: string; // ID de l'agent
+  
+  // Métadonnées (pour les logs)
+  name?: string;
+  id?: string;
 }
 
 export interface RenderedTemplate {
