@@ -5,7 +5,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import AgentMcpManager from './AgentMcpManager';
 
 interface SidebarUltraCleanProps {
   isOpen: boolean;
@@ -23,8 +22,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const { agents, loading: agentsLoading } = useAgents();
   const [searchQuery, setSearchQuery] = useState('');
   const [agentsOpen, setAgentsOpen] = useState(true);
-  const [mcpManagerOpen, setMcpManagerOpen] = useState(false);
-  const [selectedAgentForMcp, setSelectedAgentForMcp] = useState<any>(null);
 
   // Fonctions de gestion
   const handleCreateNewSession = async () => {
@@ -46,17 +43,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
     if (!isDesktop) {
       onClose();
     }
-  };
-
-  const handleOpenMcpManager = (agent: any, e: React.MouseEvent) => {
-    e.stopPropagation(); // Empêcher la sélection de l'agent
-    setSelectedAgentForMcp(agent);
-    setMcpManagerOpen(true);
-  };
-
-  const handleCloseMcpManager = () => {
-    setMcpManagerOpen(false);
-    setSelectedAgentForMcp(null);
   };
 
   // Filtrage des sessions
@@ -137,13 +123,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                   </div>
                   <span>{agent.name}</span>
                 </button>
-                <button
-                  onClick={(e) => handleOpenMcpManager(agent, e)}
-                  className="agent-mcp-btn"
-                  title="Gérer les serveurs MCP"
-                >
-                  🏭
-                </button>
               </div>
             ))
           )}
@@ -196,19 +175,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
         </button>
       </div>
 
-      {/* Modal MCP Manager */}
-      {mcpManagerOpen && selectedAgentForMcp && (
-        <div className="mcp-modal-overlay" onClick={handleCloseMcpManager}>
-          <div onClick={(e) => e.stopPropagation()}>
-            <AgentMcpManager
-              agentId={selectedAgentForMcp.id}
-              agentSlug={selectedAgentForMcp.slug}
-              agentName={selectedAgentForMcp.name}
-              onClose={handleCloseMcpManager}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
