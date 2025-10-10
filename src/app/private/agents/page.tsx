@@ -7,9 +7,10 @@ import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import { useSpecializedAgents } from "@/hooks/useSpecializedAgents";
+import { useMcpServers } from "@/hooks/useMcpServers";
 import { SpecializedAgentConfig } from "@/types/specializedAgents";
 import { GROQ_MODELS_BY_CATEGORY, getModelInfo } from "@/constants/groqModels";
-import { Bot, Trash2, Save, X } from "lucide-react";
+import { Bot, Trash2, Save, X, ExternalLink, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import "@/styles/main.css";
 import "./agents.css";
 
@@ -43,10 +44,22 @@ function AgentsPageContent() {
     loadAgents,
   } = useSpecializedAgents();
 
+  const {
+    allServers: mcpServers,
+    agentServers: agentMcpServers,
+    loading: mcpLoading,
+    linkServer,
+    unlinkServer,
+    isServerLinked,
+    loadAgentServers: reloadAgentMcpServers,
+  } = useMcpServers(selectedAgent?.id);
+
   const [editedAgent, setEditedAgent] = useState<Partial<SpecializedAgentConfig> | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [showMcpDropdown, setShowMcpDropdown] = useState(false);
+  const [showParameters, setShowParameters] = useState(false);
   
   // Ref pour suivre si la sélection initiale a été faite
   const initialSelectionDone = useRef(false);
@@ -474,10 +487,10 @@ function AgentsPageContent() {
                       {editedAgent?.model && getModelInfo(editedAgent.model) && (
                         <div className="model-info">
                           <div className="model-insight">
-                            💡 {getModelInfo(editedAgent.model)?.description}
+                            {getModelInfo(editedAgent.model)?.description}
                           </div>
                           <div className="model-pricing">
-                            💰 {getModelInfo(editedAgent.model)?.pricing.input} input • {getModelInfo(editedAgent.model)?.pricing.output} output
+                            {getModelInfo(editedAgent.model)?.pricing.input} input • {getModelInfo(editedAgent.model)?.pricing.output} output
                           </div>
                         </div>
                       )}
@@ -491,45 +504,157 @@ function AgentsPageContent() {
 
                   {/* Paramètres LLM */}
                   <div className="detail-section">
-                    <h3 className="section-title">Paramètres</h3>
+                    <h3 
+                      className="section-title section-title-collapsible"
+                      onClick={() => setShowParameters(!showParameters)}
+                    >
+                      Paramètres
+                      {showParameters ? (
+                        <ChevronUp size={16} className="section-chevron" />
+                      ) : (
+                        <ChevronDown size={16} className="section-chevron" />
+                      )}
+                    </h3>
 
-                    <div className="field-group">
-                      <label className="field-label">Température ({editedAgent?.temperature || 0})</label>
-                      <input
-                        type="range"
-                        className="field-range"
-                        min="0"
-                        max="2"
-                        step="0.1"
-                        value={editedAgent?.temperature || 0}
-                        onChange={(e) => updateField('temperature', parseFloat(e.target.value))}
-                      />
-                    </div>
+                    {showParameters && (
+                      <>
+                        <div className="field-group">
+                          <label className="field-label">Température ({editedAgent?.temperature || 0})</label>
+                          <input
+                            type="range"
+                            className="field-range"
+                            min="0"
+                            max="2"
+                            step="0.1"
+                            value={editedAgent?.temperature || 0}
+                            onChange={(e) => updateField('temperature', parseFloat(e.target.value))}
+                          />
+                        </div>
 
-                    <div className="field-group">
-                      <label className="field-label">Top P ({editedAgent?.top_p || 1})</label>
-                      <input
-                        type="range"
-                        className="field-range"
-                        min="0"
-                        max="1"
-                        step="0.05"
-                        value={editedAgent?.top_p || 1}
-                        onChange={(e) => updateField('top_p', parseFloat(e.target.value))}
-                      />
-                    </div>
+                        <div className="field-group">
+                          <label className="field-label">Top P ({editedAgent?.top_p || 1})</label>
+                          <input
+                            type="range"
+                            className="field-range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={editedAgent?.top_p || 1}
+                            onChange={(e) => updateField('top_p', parseFloat(e.target.value))}
+                          />
+                        </div>
 
-                    <div className="field-group">
-                      <label className="field-label">Max Tokens</label>
-                      <input
-                        type="number"
-                        className="field-input"
-                        value={editedAgent?.max_tokens || 0}
-                        onChange={(e) => updateField('max_tokens', parseInt(e.target.value))}
-                        min="1"
-                        max="100000"
-                      />
-                    </div>
+                        <div className="field-group">
+                          <label className="field-label">Max Tokens</label>
+                          <input
+                            type="number"
+                            className="field-input"
+                            value={editedAgent?.max_tokens || 0}
+                            onChange={(e) => updateField('max_tokens', parseInt(e.target.value))}
+                            min="1"
+                            max="100000"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* MCP Tools */}
+                  <div className="detail-section">
+                    <h3 className="section-title">
+                      MCP Tools
+                      <a 
+                        href="https://console.groq.com/docs/mcp" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="section-doc-link"
+                        title="Documentation Groq MCP"
+                      >
+                        <ExternalLink size={14} />
+                      </a>
+                    </h3>
+
+                    {mcpLoading ? (
+                      <div style={{ padding: '1rem', textAlign: 'center' }}>
+                        <div className="loading-spinner" style={{ width: '24px', height: '24px', margin: '0 auto' }} />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="field-group">
+                          <div className="mcp-add-header">
+                            <label className="field-label">Ajouter un outil</label>
+                            <button
+                              className="btn-mcp-add"
+                              onClick={() => setShowMcpDropdown(!showMcpDropdown)}
+                              title="Ajouter un MCP Tool"
+                            >
+                              <Plus size={16} />
+                            </button>
+                          </div>
+                          
+                          {showMcpDropdown && mcpServers.length > 0 && (
+                            <div className="mcp-dropdown">
+                              {mcpServers
+                                .filter(server => !isServerLinked(server.id))
+                                .map(server => (
+                                  <div
+                                    key={server.id}
+                                    className="mcp-dropdown-item"
+                                    onClick={() => {
+                                      if (selectedAgent) {
+                                        linkServer(selectedAgent.id, server.id);
+                                        setShowMcpDropdown(false);
+                                      }
+                                    }}
+                                  >
+                                    <div className="mcp-dropdown-name">{server.name}</div>
+                                    {server.description && (
+                                      <div className="mcp-dropdown-desc">{server.description}</div>
+                                    )}
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+
+                          {mcpServers.length === 0 && (
+                            <p className="empty-text" style={{ marginTop: '0.5rem' }}>
+                              Aucun serveur MCP configuré dans la base de données.
+                            </p>
+                          )}
+                        </div>
+
+                        {agentMcpServers.length > 0 && (
+                          <div className="field-group">
+                            <label className="field-label">
+                              Outils actifs ({agentMcpServers.length})
+                            </label>
+                            <div className="mcp-linked-servers">
+                              {agentMcpServers.map(link => (
+                                <div key={link.id} className="mcp-linked-item">
+                                  <div className="mcp-linked-info">
+                                    <div className="mcp-linked-name">{link.mcp_server.name}</div>
+                                    {link.mcp_server.description && (
+                                      <div className="mcp-linked-desc">{link.mcp_server.description}</div>
+                                    )}
+                                  </div>
+                                  <button
+                                    className="btn-mcp-remove"
+                                    onClick={() => {
+                                      if (selectedAgent) {
+                                        unlinkServer(selectedAgent.id, link.mcp_server_id);
+                                      }
+                                    }}
+                                    title="Retirer ce serveur"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
 
                   {/* État */}

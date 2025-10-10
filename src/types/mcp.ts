@@ -1,105 +1,18 @@
 /**
- * Types pour Model Context Protocol (MCP)
- * Support natif Groq pour les serveurs MCP
+ * Types pour le système MCP (Model Context Protocol)
+ * Basé sur la spécification Groq MCP: https://console.groq.com/docs/mcp
  */
 
 /**
- * Configuration d'un serveur MCP pour Groq
+ * Serveur MCP configuré
  */
-export interface McpServerConfig {
-  /** Type de tool (toujours 'mcp' pour les serveurs MCP) */
-  type: 'mcp';
-  
-  /** Label du serveur (nom lisible) */
-  server_label: string;
-  
-  /** URL du serveur MCP */
-  server_url: string;
-  
-  /** Headers d'authentification pour le serveur MCP */
-  headers?: Record<string, string>;
-}
-
-/**
- * Configuration MCP pour un agent
- */
-export interface AgentMcpConfig {
-  /** Activer le support MCP natif pour cet agent */
-  enabled: boolean;
-  
-  /** Serveurs MCP disponibles pour cet agent */
-  servers: McpServerConfig[];
-  
-  /** Mode hybride : utiliser à la fois MCP et OpenAPI tools */
-  hybrid_mode?: boolean;
-}
-
-/**
- * Payload Groq avec support MCP
- */
-export interface GroqPayloadWithMcp {
-  model: string;
-  messages: any[];
-  temperature: number;
-  max_completion_tokens: number;
-  top_p: number;
-  stream: boolean;
-  reasoning_effort?: 'low' | 'medium' | 'high';
-  stop?: string[] | null;
-  
-  /** Tools : peut contenir à la fois des functions et des serveurs MCP */
-  tools?: Array<
-    | { type: 'function'; function: { name: string; description: string; parameters: any } }
-    | McpServerConfig
-  >;
-  
-  tool_choice?: 'auto' | 'none' | { type: 'function'; function: { name: string } };
-}
-
-/**
- * Helper pour créer un outil MCP Groq
- */
-export function createMcpTool(
-  serverLabel: string,
-  serverUrl: string,
-  headers?: Record<string, string>
-): McpServerConfig {
-  return {
-    type: 'mcp',
-    server_label: serverLabel,
-    server_url: serverUrl,
-    headers
-  };
-}
-
-/**
- * Helper pour créer la config MCP d'un agent
- */
-export function createAgentMcpConfig(
-  servers: Array<{ label: string; url: string; apiKey?: string }>,
-  hybridMode: boolean = false
-): AgentMcpConfig {
-  return {
-    enabled: true,
-    servers: servers.map(s => createMcpTool(
-      s.label,
-      s.url,
-      s.apiKey ? { 'x-api-key': s.apiKey } : undefined
-    )),
-    hybrid_mode: hybridMode
-  };
-}
-
-/**
- * Serveur MCP externe (de la DB external_mcp_servers)
- */
-export interface ExternalMcpServer {
+export interface McpServer {
   id: string;
   user_id: string;
   name: string;
   description: string | null;
   url: string;
-  auth_header: string;
+  header: string;
   api_key: string;
   is_active: boolean;
   created_at: string;
@@ -107,16 +20,87 @@ export interface ExternalMcpServer {
 }
 
 /**
- * Helper pour convertir un serveur externe en outil MCP Groq
+ * Liaison entre un agent et un serveur MCP
  */
-export function externalServerToMcpTool(server: ExternalMcpServer): McpServerConfig {
-  return {
-    type: 'mcp',
-    server_label: server.name.toLowerCase().replace(/\s+/g, '-'),
-    server_url: server.url,
-    headers: server.auth_header && server.api_key 
-      ? { [server.auth_header]: server.api_key }
-      : undefined
-  };
+export interface AgentMcpServer {
+  id: string;
+  agent_id: string;
+  mcp_server_id: string;
+  priority: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
+/**
+ * Serveur MCP avec informations de liaison (JOIN)
+ */
+export interface AgentMcpServerWithDetails extends AgentMcpServer {
+  mcp_server: McpServer;
+}
+
+/**
+ * Configuration MCP pour une requête Groq (selon la spec)
+ */
+export interface GroqMcpToolConfig {
+  type: 'mcp';
+  server_label: string;
+  server_url: string;
+  headers?: Record<string, string>;
+  require_approval?: 'never' | 'always' | 'auto';
+  allowed_tools?: string[];
+}
+
+/**
+ * Requête pour lier un serveur MCP à un agent
+ */
+export interface LinkMcpServerRequest {
+  agent_id: string;
+  mcp_server_id: string;
+  priority?: number;
+  is_active?: boolean;
+}
+
+/**
+ * Requête pour créer un serveur MCP
+ */
+export interface CreateMcpServerRequest {
+  name: string;
+  description?: string;
+  url: string;
+  header?: string;
+  api_key: string;
+}
+
+/**
+ * Liste des serveurs MCP populaires (exemples de la doc Groq)
+ */
+export const POPULAR_MCP_SERVERS = {
+  HUGGINGFACE: {
+    name: 'Hugging Face',
+    url: 'https://huggingface.co/mcp',
+    description: 'Recherche de modèles ML trending sur Hugging Face',
+    requiresAuth: false,
+  },
+  STRIPE: {
+    name: 'Stripe',
+    url: 'https://mcp.stripe.com',
+    description: 'Création de factures, gestion des paiements',
+    requiresAuth: true,
+    header: 'Authorization',
+  },
+  EXA: {
+    name: 'Exa',
+    url: 'https://api.exa.ai/mcp',
+    description: 'Recherche web avancée et extraction de contenu',
+    requiresAuth: true,
+    header: 'x-api-key',
+  },
+  NOTION: {
+    name: 'Notion',
+    url: 'https://mcp.notion.com/mcp',
+    description: 'Gestion de pages et bases de données Notion',
+    requiresAuth: true,
+    header: 'Authorization',
+  },
+} as const;
