@@ -63,6 +63,8 @@
   --chatgpt-font-weight-bold: 700;
   
   --chatgpt-line-height-normal: 1.5;
+  --chatgpt-line-height-relaxed: 1.75; /* ✅ ChatGPT style pour texte */
+  --chatgpt-line-height-tight: 1.3; /* ✅ Pour les titres */
   
   /* ========================================
      ESPACEMENTS
@@ -437,7 +439,8 @@
   font-weight: var(--chatgpt-font-weight-semibold);
   color: var(--chatgpt-text-primary);
   margin: var(--chatgpt-space-lg) 0 var(--chatgpt-space-md) 0;
-  line-height: var(--chatgpt-line-height-tight);
+  line-height: 1.4; /* ✅ Line height ChatGPT pour titres */
+  letter-spacing: -0.01em; /* ✅ Letter spacing subtil pour titres */
 }
 
 .chatgpt-message-content h1 {
@@ -457,21 +460,24 @@
 }
 
 .chatgpt-message-content p {
-  margin: var(--chatgpt-space-md) 0;
+  margin: 0 0 1.25rem 0; /* ✅ Espacement ChatGPT */
   color: var(--chatgpt-text-primary);
-  line-height: var(--chatgpt-line-height-relaxed);
+  line-height: 1.75; /* ✅ Line height ChatGPT */
+  letter-spacing: 0; /* ✅ Pas de letter-spacing */
 }
 
 .chatgpt-message-content ul,
 .chatgpt-message-content ol {
-  margin: var(--chatgpt-space-md) 0;
+  margin: 1.25rem 0; /* ✅ Espacement ChatGPT */
   padding-left: var(--chatgpt-space-xl);
   color: var(--chatgpt-text-primary);
+  line-height: 1.75; /* ✅ Line height ChatGPT */
 }
 
 .chatgpt-message-content li {
-  margin: var(--chatgpt-space-xs) 0;
-  line-height: var(--chatgpt-line-height-normal);
+  margin: 0.375rem 0; /* ✅ Espacement compact */
+  line-height: 1.75; /* ✅ Line height ChatGPT */
+  letter-spacing: 0; /* ✅ Pas de letter-spacing */
 }
 
 .chatgpt-message-content blockquote {
@@ -480,8 +486,10 @@
   background: var(--chatgpt-bg-tertiary);
   border-left: 4px solid var(--chatgpt-accent-primary);
   border-radius: var(--chatgpt-radius-md);
-  font-style: italic;
+  font-style: normal; /* ✅ ChatGPT n'italicise pas les citations */
   color: var(--chatgpt-text-secondary);
+  line-height: 1.75; /* ✅ Line height ChatGPT */
+  letter-spacing: 0; /* ✅ Pas de letter-spacing */
 }
 
 .chatgpt-message-content code {

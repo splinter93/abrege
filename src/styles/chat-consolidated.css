@@ -71,8 +71,8 @@
   --chat-font-weight-bold: 700;
   
   --chat-line-height-normal: 1.5;
-  --chat-line-height-relaxed: 1.6;
-  --chat-line-height-tight: 1.4;
+  --chat-line-height-relaxed: 1.75; /* ✅ ChatGPT style */
+  --chat-line-height-tight: 1.3; /* ✅ Pour titres */
   
   /* ========================================
      ESPACEMENTS

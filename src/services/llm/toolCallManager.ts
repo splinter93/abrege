@@ -2,6 +2,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { OpenApiToolExecutor } from './openApiToolExecutor';
 import { ApiV2ToolExecutor } from './executors/ApiV2ToolExecutor';
 import { ChatMessage } from '@/types/chat';
+import { createHash } from 'crypto';
 
 export interface ToolCallResult {
   tool_call_id: string;
@@ -16,8 +17,11 @@ export class ToolCallManager {
   private openApiExecutor: OpenApiToolExecutor;
   private apiV2ToolExecutor: ApiV2ToolExecutor;
   
-  // ✅ SIMPLE: Historique des IDs déjà exécutés (évite la double exécution)
-  private executedCallIds: Set<string> = new Set();
+  // ✅ Protection contre les duplications
+  private executedCallIds: Set<string> = new Set(); // Par ID
+  private executedFunctionHashes: Set<string> = new Set(); // ✅ Par contenu (hash)
+  private executionLocks: Map<string, Promise<ToolCallResult>> = new Map(); // ✅ Locks atomiques
+  private duplicateAttempts: Map<string, number> = new Map(); // ✅ Monitoring
 
   static getInstance(): ToolCallManager {
     if (!ToolCallManager.instance) {
@@ -32,7 +36,26 @@ export class ToolCallManager {
   }
 
   /**
-   * ✅ SIMPLE: Exécuter un tool call sans complexité inutile
+   * 🔒 Calculer un hash unique basé sur le contenu de la fonction (nom + arguments)
+   * Permet de détecter les doublons même si les IDs sont différents
+   */
+  private getFunctionHash(toolCall: any): string {
+    try {
+      const { name, arguments: args } = toolCall.function;
+      // Parser et normaliser les arguments pour éviter les différences de formatting
+      const parsed = typeof args === 'string' ? JSON.parse(args) : args;
+      const normalized = JSON.stringify({ name, args: parsed });
+      return createHash('sha256').update(normalized).digest('hex');
+    } catch (error) {
+      // En cas d'erreur de parsing, utiliser la string brute
+      const { name, arguments: args } = toolCall.function;
+      return createHash('sha256').update(`${name}:${args}`).digest('hex');
+    }
+  }
+
+  /**
+   * ✅ Exécuter un tool call avec protection contre les duplications
+   * Protection par ID ET par contenu (hash) + locks atomiques
    */
   async executeToolCall(
     toolCall: any,
@@ -46,29 +69,103 @@ export class ToolCallManager {
       throw new Error('Tool call invalide: nom de fonction manquant');
     }
 
-    // ✅ SIMPLE: Empêcher la double exécution du même tool_call_id
-    if (this.executedCallIds.has(id)) {
-      logger.warn(`[ToolCallManager] ⚠️ Tool call ${id} déjà exécuté - évitement de double exécution`);
+    // 🔒 Calculer le hash du contenu pour détecter les doublons sémantiques
+    const contentHash = this.getFunctionHash(toolCall);
+
+    // ✅ PROTECTION 1: Vérifier par ID ET par contenu
+    if (this.executedCallIds.has(id) || this.executedFunctionHashes.has(contentHash)) {
+      // Incrémenter le compteur de tentatives de duplication
+      const count = (this.duplicateAttempts.get(contentHash) || 0) + 1;
+      this.duplicateAttempts.set(contentHash, count);
+      
+      // Logger avec niveau approprié selon la fréquence
+      if (count >= 3) {
+        logger.error(`[ToolCallManager] 🚨 DUPLICATION CRITIQUE: ${count}x tentatives pour ${func.name}`, {
+          id,
+          contentHash: contentHash.substring(0, 16) + '...',
+          args: func.arguments?.substring(0, 100)
+        });
+      } else {
+        logger.warn(`[ToolCallManager] ⚠️ Duplication détectée (${count}x): ${func.name} [ID: ${id}]`, {
+          byId: this.executedCallIds.has(id),
+          byContent: this.executedFunctionHashes.has(contentHash)
+        });
+      }
+      
       return {
         tool_call_id: id,
         name: func.name,
-        result: { success: false, error: 'Tool call déjà exécuté' },
+        result: { 
+          success: false, 
+          error: `Tool call déjà exécuté (tentative ${count})`,
+          duplicate_count: count,
+          detected_by: this.executedCallIds.has(id) ? 'id' : 'content'
+        },
         success: false,
         timestamp: new Date().toISOString()
       };
     }
 
-    // ✅ SIMPLE: Marquer comme exécuté
-    this.executedCallIds.add(id);
+    // ✅ PROTECTION 2: Lock atomique pour éviter les race conditions
+    if (this.executionLocks.has(contentHash)) {
+      logger.warn(`[ToolCallManager] ⏳ Tool call ${func.name} déjà en cours d'exécution, attente du résultat...`);
+      try {
+        return await this.executionLocks.get(contentHash)!;
+      } catch (error) {
+        logger.error(`[ToolCallManager] ❌ Erreur lors de l'attente du lock:`, error);
+        throw error;
+      }
+    }
 
-    // ✅ SIMPLE: Nettoyer l'ID après 5 minutes
+    // 🔒 Créer le lock et démarrer l'exécution
+    const executionPromise = this._executeToolCallInternal(toolCall, userToken, maxRetries, options, contentHash);
+    this.executionLocks.set(contentHash, executionPromise);
+
+    try {
+      const result = await executionPromise;
+      return result;
+    } finally {
+      // ✅ Libérer le lock après un court délai (pour les appels concurrents rapides)
+      setTimeout(() => {
+        this.executionLocks.delete(contentHash);
+      }, 1000);
+    }
+  }
+
+  /**
+   * 🔧 Exécution interne du tool call (appelée avec lock)
+   */
+  private async _executeToolCallInternal(
+    toolCall: any,
+    userToken: string,
+    maxRetries: number = 3,
+    options?: { batchId?: string },
+    contentHash?: string
+  ): Promise<ToolCallResult> {
+    const { id, function: func } = toolCall;
+    const hash = contentHash || this.getFunctionHash(toolCall);
+
+    // ✅ Marquer comme exécuté (par ID ET par contenu)
+    this.executedCallIds.add(id);
+    this.executedFunctionHashes.add(hash);
+    
+    // ✅ Réinitialiser le compteur de duplication après exécution réussie
+    this.duplicateAttempts.delete(hash);
+
+    // ✅ Nettoyer après 5 minutes
     setTimeout(() => {
       this.executedCallIds.delete(id);
+      this.executedFunctionHashes.delete(hash);
     }, 5 * 60 * 1000);
 
     try {
-      // 🔧 CORRECTION: Utiliser l'ApiV2ToolExecutor pour l'exécution directe
-      logger.info(`[ToolCallManager] 🔧 Exécution de ${func.name} via ApiV2ToolExecutor...`);
+      // 📊 Log de début d'exécution avec hash pour tracking
+      const executionStart = Date.now();
+      logger.info(`[ToolCallManager] 🔧 Exécution de ${func.name} via ApiV2ToolExecutor...`, {
+        id: id.substring(0, 16) + '...',
+        contentHash: hash.substring(0, 16) + '...',
+        batchId: options?.batchId
+      });
       
       const args = this.parseArguments(func.arguments);
       logger.dev(`[ToolCallManager] 📋 Arguments parsés:`, args);
@@ -86,7 +183,17 @@ export class ToolCallManager {
         userToken
       );
       
-      logger.info(`[ToolCallManager] ✅ Tool ${func.name} exécuté avec succès via ApiV2ToolExecutor`);
+      const executionDuration = Date.now() - executionStart;
+      logger.info(`[ToolCallManager] ✅ Tool ${func.name} exécuté avec succès (${executionDuration}ms)`, {
+        success: toolResult.success,
+        hash: hash.substring(0, 16) + '...'
+      });
+      
+      // 📊 Logger les stats si plus de 5 exécutions
+      if (this.executedCallIds.size >= 5) {
+        const stats = this.getDuplicationStats();
+        logger.dev(`[ToolCallManager] 📊 Stats actuelles:`, stats);
+      }
       
       return {
         tool_call_id: id,
@@ -170,6 +277,10 @@ export class ToolCallManager {
 
   clearExecutionHistory(): void {
     this.executedCallIds.clear();
+    this.executedFunctionHashes.clear();
+    this.executionLocks.clear();
+    this.duplicateAttempts.clear();
+    logger.dev('[ToolCallManager] 🔄 Historique d\'exécution réinitialisé (IDs, hashs, locks, compteurs)');
   }
 
   /**
@@ -177,5 +288,22 @@ export class ToolCallManager {
    */
   getExecutionHistorySize(): number {
     return this.executedCallIds.size;
+  }
+
+  /**
+   * 📊 Obtenir les statistiques de duplication
+   */
+  getDuplicationStats(): {
+    totalExecuted: number;
+    uniqueByContent: number;
+    duplicateAttempts: number;
+    activeLocks: number;
+  } {
+    return {
+      totalExecuted: this.executedCallIds.size,
+      uniqueByContent: this.executedFunctionHashes.size,
+      duplicateAttempts: Array.from(this.duplicateAttempts.values()).reduce((sum, count) => sum + count, 0),
+      activeLocks: this.executionLocks.size
+    };
   }
 } 

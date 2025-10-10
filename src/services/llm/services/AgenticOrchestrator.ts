@@ -96,8 +96,8 @@ const DEFAULT_AGENTIC_CONFIG: AgenticConfig = {
       'executeAgent': 'searchContent'
     }
   },
-  streamThinking: false, // À activer pour le streaming
-  streamProgress: false, // À activer pour le streaming
+  streamThinking: true, // ✅ ACTIVÉ : Thinking interleaved visible
+  streamProgress: true, // ✅ ACTIVÉ : Progress updates visibles
   enableParallelization: true,
   toolTimeout: 30000,
   enableCache: false // À activer plus tard
@@ -217,10 +217,61 @@ export class AgenticOrchestrator {
   }
 
   /**
-   * Récupérer les métadonnées d'un outil
+   * Récupérer les métadonnées d'un outil avec auto-détection
    */
   private getToolMetadata(toolName: string): ToolMetadata {
-    return TOOL_REGISTRY[toolName] || {
+    // 1. Chercher dans le registry explicite
+    if (TOOL_REGISTRY[toolName]) {
+      return TOOL_REGISTRY[toolName];
+    }
+    
+    // 2. ✅ NOUVEAU : Auto-détection par convention de nommage
+    const nameLower = toolName.toLowerCase();
+    
+    // READ operations (parallélisables)
+    if (nameLower.startsWith('get') || nameLower.startsWith('list') || nameLower.startsWith('fetch')) {
+      logger.dev(`[AgenticOrchestrator] 🔍 Auto-détecté comme READ: ${toolName}`);
+      return {
+        name: toolName,
+        category: ToolCategory.READ,
+        parallelizable: true,
+        cacheable: true,
+        timeout: 5000,
+        priority: 2
+      };
+    }
+    
+    // SEARCH operations (parallélisables)
+    if (nameLower.startsWith('search') || nameLower.startsWith('find') || nameLower.startsWith('query')) {
+      logger.dev(`[AgenticOrchestrator] 🔍 Auto-détecté comme SEARCH: ${toolName}`);
+      return {
+        name: toolName,
+        category: ToolCategory.SEARCH,
+        parallelizable: true,
+        cacheable: true,
+        timeout: 10000,
+        priority: 1
+      };
+    }
+    
+    // WRITE operations (séquentiels)
+    if (nameLower.startsWith('create') || nameLower.startsWith('update') || 
+        nameLower.startsWith('delete') || nameLower.startsWith('insert') ||
+        nameLower.startsWith('modify') || nameLower.startsWith('remove')) {
+      logger.dev(`[AgenticOrchestrator] 🔍 Auto-détecté comme WRITE: ${toolName}`);
+      return {
+        name: toolName,
+        category: ToolCategory.WRITE,
+        parallelizable: false,
+        cacheable: false,
+        timeout: 10000,
+        priority: 1
+      };
+    }
+    
+    // 3. Default: séquentiel pour sécurité
+    logger.warn(`[AgenticOrchestrator] ⚠️ Tool ${toolName} non reconnu, traité comme UNKNOWN (séquentiel)`);
+    return {
       name: toolName,
       category: ToolCategory.UNKNOWN,
       parallelizable: false, // Par défaut, séquentiel pour la sécurité
@@ -476,6 +527,11 @@ export class AgenticOrchestrator {
     const allToolCalls: ToolCall[] = [];
     const allToolResults: ToolResult[] = [];
     let isFirstPass = true;
+    
+    // ✅ NOUVEAU : Compteurs pour éviter les boucles infinies
+    let consecutiveServerErrors = 0;
+    const MAX_SERVER_ERROR_RETRIES = 3;
+    const previousHistoryPatterns: string[] = [];
 
     try {
       while (toolCallsCount < maxToolCalls) {
@@ -485,6 +541,10 @@ export class AgenticOrchestrator {
         let response: LLMResponse;
         try {
           response = await this.callLLM(currentMessage, updatedHistory, context, 'auto', llmProvider);
+          
+          // ✅ NOUVEAU : Reset compteur d'erreurs serveur après un appel réussi
+          consecutiveServerErrors = 0;
+          
         } catch (llmError) {
           const errorMessage = llmError instanceof Error ? llmError.message : String(llmError);
           logger.error(`[AgenticOrchestrator] ❌ LLM error:`, errorMessage);
@@ -492,17 +552,79 @@ export class AgenticOrchestrator {
           // 🔧 Parser l'erreur Groq pour donner des détails au LLM
           const parsedError = this.parseGroqError(errorMessage);
           
-          // ✅ AMÉLIORATION : Même à la première itération, on essaie de corriger
-          // Sauf si c'est une erreur fatale (auth, config, etc.)
+          // ✅ NOUVEAU : Identifier le type d'erreur
+          const isServerError = errorMessage.includes('500') || 
+                               errorMessage.includes('502') || 
+                               errorMessage.includes('503') ||
+                               errorMessage.includes('Internal Server Error');
+          
           const isFatalError = errorMessage.includes('401') || 
                               errorMessage.includes('403') || 
                               errorMessage.includes('API key') ||
                               errorMessage.includes('Configuration');
           
+          const isRateLimitError = errorMessage.includes('429') || 
+                                  errorMessage.includes('rate limit');
+          
+          // ❌ Erreurs fatales : Abandon immédiat
           if (isFatalError) {
             logger.error(`[AgenticOrchestrator] 💀 Erreur fatale détectée, abandon`);
             throw llmError;
           }
+          
+          // 🚨 NOUVEAU : Gestion spéciale des erreurs serveur (500, 502, 503)
+          if (isServerError) {
+            consecutiveServerErrors++;
+            
+            // ❌ Trop d'erreurs serveur consécutives → ABANDON avec fallback
+            if (consecutiveServerErrors > MAX_SERVER_ERROR_RETRIES) {
+              logger.error(`[AgenticOrchestrator] 💀 Trop d'erreurs serveur consécutives (${consecutiveServerErrors}), fallback`);
+              
+              // Retourner une réponse de fallback intelligente
+              const sessionDuration = Date.now() - sessionStart;
+              return {
+                success: true, // ✅ Succès pour ne pas bloquer l'UI
+                content: "Je rencontre actuellement des difficultés techniques temporaires avec le service d'IA. Les serveurs sont peut-être surchargés. Veuillez réessayer dans quelques instants ou reformuler votre question différemment.",
+                toolCalls: allToolCalls,
+                toolResults: allToolResults,
+                thinking: this.thinkingBlocks,
+                progress: this.progressUpdates,
+                reasoning: `Erreur serveur Groq persistante après ${consecutiveServerErrors} tentatives. Réponse de fallback pour maintenir l'expérience utilisateur.`,
+                metadata: {
+                  iterations: toolCallsCount,
+                  duration: sessionDuration,
+                  retries: this.metrics.totalRetries,
+                  consecutiveServerErrors,
+                  isGroqFallback: true
+                }
+              };
+            }
+            
+            // ✅ Backoff exponentiel pour erreurs serveur
+            const backoffDelay = Math.min(1000 * Math.pow(2, consecutiveServerErrors - 1), 10000);
+            logger.warn(`[AgenticOrchestrator] ⏳ Erreur serveur ${consecutiveServerErrors}/${MAX_SERVER_ERROR_RETRIES}, attente ${backoffDelay}ms avant retry`);
+            
+            await new Promise(resolve => setTimeout(resolve, backoffDelay));
+            
+            // ✅ NE PAS polluer l'historique avec des messages d'erreur serveur répétés
+            // Les erreurs serveur ne peuvent pas être corrigées par le LLM
+            
+            toolCallsCount++;
+            logger.warn(`[AgenticOrchestrator] 🔁 Retry après erreur serveur (${toolCallsCount}/${maxToolCalls})`);
+            
+            // Vider currentMessage pour forcer l'utilisation de l'historique
+            currentMessage = '';
+            continue;
+          }
+          
+          // 🔄 Gestion spéciale rate limit
+          if (isRateLimitError) {
+            logger.error(`[AgenticOrchestrator] 🚫 Rate limit atteint, abandon`);
+            throw new Error('Rate limit Groq atteint. Veuillez réessayer dans quelques minutes.');
+          }
+          
+          // ✅ AMÉLIORATION : Pour les autres erreurs (400, validation, etc.)
+          // Le LLM peut apprendre et corriger → Ajouter à l'historique
           
           // Injecter l'erreur détaillée et demander une correction
           if (isFirstPass) {
@@ -533,12 +655,78 @@ export class AgenticOrchestrator {
         
         const newToolCalls = this.convertToolCalls(response.tool_calls || []);
         
+        // ✅ NOUVEAU : Détection de boucle infinie (pattern répété)
+        if (newToolCalls.length > 0) {
+          const toolPattern = newToolCalls.map(tc => tc.function.name).sort().join('|');
+          const patternCount = previousHistoryPatterns.filter(p => p === toolPattern).length;
+          
+          if (patternCount >= 2) {
+            logger.error(`[AgenticOrchestrator] 🔁 BOUCLE INFINIE détectée: même pattern 3x`, {
+              pattern: toolPattern,
+              occurrences: patternCount + 1,
+              toolCalls: newToolCalls.map(tc => tc.function.name)
+            });
+            
+            // Forcer une réponse finale
+            const finalResponse = await this.callLLM(
+              "Tu es dans une boucle : tu as demandé ces mêmes outils plusieurs fois. STOP et donne ta réponse finale maintenant avec ce que tu as déjà.",
+              updatedHistory,
+              context,
+              'none', // ✅ Désactiver les tools pour forcer la réponse
+              llmProvider
+            );
+            
+            const sessionDuration = Date.now() - sessionStart;
+            return {
+              success: true,
+              content: finalResponse.content || "Je n'ai pas pu traiter complètement votre demande en raison d'une boucle de traitement. Voici ce que j'ai pu faire.",
+              toolCalls: allToolCalls,
+              toolResults: allToolResults,
+              thinking: this.thinkingBlocks,
+              progress: this.progressUpdates,
+              reasoning: `Boucle infinie détectée (pattern répété ${patternCount + 1}x). Arrêt forcé.`,
+              metadata: {
+                iterations: toolCallsCount,
+                duration: sessionDuration,
+                retries: this.metrics.totalRetries,
+                infiniteLoopDetected: true,
+                loopPattern: toolPattern
+              }
+            };
+          }
+          
+          previousHistoryPatterns.push(toolPattern);
+          if (previousHistoryPatterns.length > 10) {
+            previousHistoryPatterns.shift(); // Garder seulement les 10 derniers
+          }
+        }
+        
         // ✅ Terminé ?
         if (newToolCalls.length === 0) {
           logger.info(`[AgenticOrchestrator] ✅ LLM finished`);
           
           const sessionDuration = Date.now() - sessionStart;
           this.updateMetrics('session', sessionDuration);
+          
+          // 📊 Calculer les métriques finales de duplication
+          const toolCallsByName = allToolCalls.reduce((acc, tc) => {
+            const name = tc.function.name;
+            acc[name] = (acc[name] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+          
+          const duplicatesDetected = Object.entries(toolCallsByName)
+            .filter(([_, count]) => count > 1)
+            .map(([name, count]) => ({ tool: name, count }));
+          
+          logger.info(`[AgenticOrchestrator] 🏁 Session terminée:`, {
+            iterations: toolCallsCount,
+            duration: sessionDuration,
+            totalToolCalls: allToolCalls.length,
+            uniqueToolNames: Object.keys(toolCallsByName).length,
+            duplicatesDetected: duplicatesDetected.length > 0 ? duplicatesDetected : 'Aucun',
+            retries: this.metrics.totalRetries
+          });
           
           return {
             success: true,
@@ -559,7 +747,8 @@ export class AgenticOrchestrator {
               sequentialCalls: allToolResults.filter((_, idx) => {
                 const strategy = this.categorizeToolCalls([allToolCalls[idx]]);
                 return strategy.sequential.length > 0;
-              }).length
+              }).length,
+              duplicatesDetected: duplicatesDetected.length
             }
           };
         }
@@ -571,7 +760,14 @@ export class AgenticOrchestrator {
         const dedupedToolCalls = this.deduplicateToolCalls(newToolCalls, allToolCalls);
         
         if (dedupedToolCalls.length === 0) {
-          logger.warn(`[AgenticOrchestrator] ⚠️ All tools are duplicates`);
+          logger.warn(`[AgenticOrchestrator] ⚠️ All tools are duplicates - ${newToolCalls.length} tool(s) filtered`, {
+            attemptedTools: newToolCalls.map(tc => ({
+              name: tc.function.name,
+              args: tc.function.arguments.substring(0, 100)
+            })),
+            totalPreviousTools: allToolCalls.length
+          });
+          
           const finalResponse = await this.callLLM(
             "Tu as déjà appelé ces outils. Donne ta réponse finale basée sur les résultats précédents.",
             updatedHistory,
@@ -603,7 +799,13 @@ export class AgenticOrchestrator {
         
         // 4️⃣ 🔀 PARALLÉLISATION : Catégoriser les outils
         const strategy = this.categorizeToolCalls(dedupedToolCalls);
-        logger.dev(`[AgenticOrchestrator] 🔀 Strategy: ${strategy.parallel.length} parallel, ${strategy.sequential.length} sequential`);
+        logger.info(`[AgenticOrchestrator] 🔀 Strategy: ${strategy.parallel.length} parallel, ${strategy.sequential.length} sequential`, {
+          parallel: strategy.parallel.map(tc => tc.function.name),
+          sequential: strategy.sequential.map(tc => tc.function.name),
+          dedupedCount: dedupedToolCalls.length,
+          originalCount: newToolCalls.length,
+          filteredCount: newToolCalls.length - dedupedToolCalls.length
+        });
         
         // 5️⃣ ⚡ Exécuter en parallèle
         const parallelResults = await Promise.allSettled(
@@ -626,22 +828,87 @@ export class AgenticOrchestrator {
           }
         });
         
-        // 6️⃣ 📝 Exécuter en séquentiel
+        // 6️⃣ 📝 Exécuter en séquentiel avec court-circuit sur échec critique
         const sequentialToolResults: ToolResult[] = [];
         for (const tc of strategy.sequential) {
           const result = await this.executeWithRetry(tc, context.userToken, context.sessionId);
           sequentialToolResults.push(result);
+          
+          // ✅ NOUVEAU : Court-circuit si échec critique sur un tool WRITE/DATABASE
+          if (!result.success && this.isCriticalTool(tc.function.name)) {
+            logger.error(`[AgenticOrchestrator] ❌ Critical tool failed: ${tc.function.name}, aborting sequence`, {
+              remaining: strategy.sequential.length - sequentialToolResults.length,
+              failedTool: tc.function.name
+            });
+            
+            // Ajouter des résultats d'erreur pour les tools restants (pour maintenir la correspondance)
+            const remainingTools = strategy.sequential.slice(sequentialToolResults.length);
+            for (const remainingTc of remainingTools) {
+              sequentialToolResults.push({
+                tool_call_id: remainingTc.id,
+                name: remainingTc.function.name,
+                content: JSON.stringify({ 
+                  error: `Skipped due to previous critical failure: ${tc.function.name}`,
+                  skipped: true 
+                }),
+                success: false
+              });
+            }
+            
+            break; // ✅ Sortir de la boucle
+          }
         }
         
-        // 7️⃣ Collecter tous les résultats
-        const toolResults = [...parallelToolResults, ...sequentialToolResults];
+        // 7️⃣ 🔧 CORRECTION CRITIQUE : Réordonner les résultats pour correspondre à l'ordre des tool_calls
+        // Créer un mapping tool_call_id → result
+        const resultsMap = new Map<string, ToolResult>();
+        [...parallelToolResults, ...sequentialToolResults].forEach(r => {
+          resultsMap.set(r.tool_call_id, r);
+        });
+        
+        // Réordonner selon l'ordre exact des dedupedToolCalls
+        const toolResults = dedupedToolCalls.map(tc => {
+          const result = resultsMap.get(tc.id);
+          if (!result) {
+            logger.error(`[AgenticOrchestrator] ❌ Result manquant pour tool call ${tc.id} (${tc.function.name})`);
+            // Créer un résultat d'erreur de fallback
+            return {
+              tool_call_id: tc.id,
+              name: tc.function.name,
+              content: JSON.stringify({ 
+                error: 'Tool result not found in results map',
+                tool_call_id: tc.id 
+              }),
+              success: false
+            };
+          }
+          return result;
+        });
+        
+        logger.dev(`[AgenticOrchestrator] ✅ Tool results réordonnés : ${toolResults.length} résultats dans l'ordre des tool_calls`);
+        
         allToolCalls.push(...dedupedToolCalls);
         allToolResults.push(...toolResults);
         
-        // 8️⃣ 💬 Log du résumé
+        // 8️⃣ 💬 Log du résumé détaillé
         const successCount = toolResults.filter(r => r.success).length;
         const failedCount = toolResults.filter(r => !r.success).length;
-        logger.info(`[AgenticOrchestrator] 📊 Results: ${successCount} success, ${failedCount} failed`);
+        const duplicateErrors = toolResults.filter(r => 
+          !r.success && r.content?.includes?.('déjà exécuté')
+        ).length;
+        
+        logger.info(`[AgenticOrchestrator] 📊 Iteration ${toolCallsCount} Results:`, {
+          success: successCount,
+          failed: failedCount,
+          duplicates: duplicateErrors,
+          totalToolCalls: allToolCalls.length,
+          totalResults: allToolResults.length,
+          tools: toolResults.map(r => ({
+            name: r.name,
+            success: r.success,
+            isDuplicate: !r.success && r.content?.includes?.('déjà exécuté')
+          }))
+        });
         
         // 9️⃣ Injecter dans l'historique
         const historyContext = {
@@ -649,7 +916,10 @@ export class AgenticOrchestrator {
           userMessage: isFirstPass ? message : '',
           cleanedHistory: updatedHistory,
           toolCalls: dedupedToolCalls,
-          toolResults: toolResults.map(r => ({ ...r, timestamp: new Date().toISOString() }))
+          toolResults: toolResults.map(r => ({ 
+            ...r, 
+            timestamp: r.timestamp || new Date().toISOString() // ✅ CORRECTION: Préserver le timestamp original
+          }))
         };
         
         const historyResult = this.historyBuilder.buildSecondCallHistory(historyContext);
@@ -814,30 +1084,48 @@ export class AgenticOrchestrator {
    */
   private deduplicateToolCalls(newToolCalls: ToolCall[], allPreviousToolCalls: ToolCall[]): ToolCall[] {
     const seen = new Set<string>();
+    const seenByName = new Map<string, number>(); // Compteur par nom de tool
     
-    logger.dev(`[AgenticOrchestrator] 🔍 Déduplication : ${newToolCalls.length} nouveaux vs ${allPreviousToolCalls.length} précédents`);
+    logger.info(`[AgenticOrchestrator] 🔍 Déduplication : ${newToolCalls.length} nouveaux vs ${allPreviousToolCalls.length} précédents`);
     
-    // Ajouter tous les appels précédents
+    // Ajouter tous les appels précédents avec compteurs
     for (const prevCall of allPreviousToolCalls) {
       const key = this.getToolCallKey(prevCall);
       seen.add(key);
-      logger.dev(`[AgenticOrchestrator] 📝 Previous key: ${key.substring(0, 100)}${key.length > 100 ? '...' : ''}`);
+      
+      const toolName = prevCall.function.name;
+      seenByName.set(toolName, (seenByName.get(toolName) || 0) + 1);
+      
+      logger.dev(`[AgenticOrchestrator] 📝 Previous: ${toolName} | Key: ${key.substring(0, 80)}${key.length > 80 ? '...' : ''}`);
+    }
+    
+    // Log des stats avant déduplication
+    if (allPreviousToolCalls.length > 0) {
+      logger.dev(`[AgenticOrchestrator] 📊 Previous tools by name:`, Object.fromEntries(seenByName));
     }
     
     // Filtrer les nouveaux appels
+    const duplicateDetails: Array<{tool: string; reason: string; key: string}> = [];
     const deduped = newToolCalls.filter(call => {
       const key = this.getToolCallKey(call);
       const isDuplicate = seen.has(key);
       
       if (isDuplicate) {
+        duplicateDetails.push({
+          tool: call.function.name,
+          reason: 'exact_match',
+          key: key.substring(0, 100)
+        });
+        
         logger.warn(`[AgenticOrchestrator] 🔁 DUPLICATE DETECTED:`, {
           tool: call.function.name,
-          key: key.substring(0, 150),
-          arguments: call.function.arguments.substring(0, 200),
-          allPreviousKeys: Array.from(seen).map(k => k.substring(0, 100))
+          id: call.id,
+          key: key.substring(0, 100) + '...',
+          arguments: call.function.arguments.substring(0, 150) + '...',
+          matchedAgainst: 'previous_tool_calls'
         });
       } else {
-        logger.dev(`[AgenticOrchestrator] ✅ New tool: ${key.substring(0, 100)}${key.length > 100 ? '...' : ''}`);
+        logger.dev(`[AgenticOrchestrator] ✅ New tool: ${call.function.name} | Key: ${key.substring(0, 80)}${key.length > 80 ? '...' : ''}`);
       }
       
       if (!isDuplicate) {
@@ -849,7 +1137,18 @@ export class AgenticOrchestrator {
     
     const duplicateCount = newToolCalls.length - deduped.length;
     if (duplicateCount > 0) {
-      logger.info(`[AgenticOrchestrator] 📊 Déduplication: ${newToolCalls.length} → ${deduped.length} (${duplicateCount} doublons éliminés)`);
+      logger.warn(`[AgenticOrchestrator] 🚨 DUPLICATION REPORT:`, {
+        original: newToolCalls.length,
+        deduped: deduped.length,
+        filtered: duplicateCount,
+        duplicatesByTool: duplicateDetails.reduce((acc, d) => {
+          acc[d.tool] = (acc[d.tool] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
+        details: duplicateDetails
+      });
+    } else {
+      logger.info(`[AgenticOrchestrator] ✅ Déduplication: ${newToolCalls.length} tools, 0 doublons`);
     }
     
     return deduped;
@@ -1083,6 +1382,16 @@ Réessaye avec une approche plus simple :
    */
   clearCache(): void {
     this.cache.clear();
+  }
+
+  /**
+   * ✅ NOUVEAU : Vérifier si un tool est critique (échec = abort sequence)
+   */
+  private isCriticalTool(toolName: string): boolean {
+    const metadata = this.getToolMetadata(toolName);
+    return metadata.category === ToolCategory.WRITE || 
+           metadata.category === ToolCategory.DATABASE ||
+           metadata.category === ToolCategory.AGENT;
   }
 }
 

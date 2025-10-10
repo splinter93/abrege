@@ -53,6 +53,9 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
     } : undefined;
 
     // ✨ Utiliser l'orchestrateur Agentique V2 (singleton)
+    logger.info(`[Groq API] 🎯 Lancement AgenticOrchestrator pour session ${sessionId}`);
+    const orchestratorStart = Date.now();
+    
     const chatResult = await agenticOrchestrator.processMessage(
       params.message,
       params.sessionHistory || [],
@@ -64,6 +67,9 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
         maxToolCalls: 10 // ✨ Augmenté de 5 à 10 pour les tâches complexes
       }
     );
+    
+    const orchestratorDuration = Date.now() - orchestratorStart;
+    logger.info(`[Groq API] ⏱️ AgenticOrchestrator terminé en ${orchestratorDuration}ms`);
 
     // ✅ Log détaillé de la session (succès ou erreur)
     if (!chatResult.success) {
@@ -76,13 +82,28 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
       });
     } else {
       // ✨ Log des nouvelles métriques agentiques
-      logger.info(`[Groq API] ✅ Session terminée avec succès:`, {
+      const toolCallsByName = chatResult.toolCalls?.reduce((acc, tc) => {
+        const name = tc.function.name;
+        acc[name] = (acc[name] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) || {};
+      
+      const hasMultipleSameTool = Object.values(toolCallsByName).some(count => count > 1);
+      
+      logger.info(`[Groq API] ✅ Session terminée avec succès (${orchestratorDuration}ms):`, {
         toolCallsCount: chatResult.toolCalls?.length || 0,
         toolResultsCount: chatResult.toolResults?.length || 0,
         thinkingBlocksCount: chatResult.thinking?.length || 0,
         progressUpdatesCount: chatResult.progress?.length || 0,
+        toolCallsByName,
+        hasMultipleSameTool: hasMultipleSameTool ? '⚠️ ATTENTION: Duplications possibles' : 'OK',
         metadata: chatResult.metadata
       });
+      
+      // 🚨 Alerte si plusieurs appels du même tool
+      if (hasMultipleSameTool) {
+        logger.warn(`[Groq API] 🚨 ALERTE DUPLICATION: Plusieurs appels du même tool détectés:`, toolCallsByName);
+      }
       
       // ✨ Log du thinking et progress si présents (pour debugging)
       if (chatResult.thinking && chatResult.thinking.length > 0) {
