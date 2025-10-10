@@ -1,5 +1,13 @@
 # 📝 CHANGELOG
 
+## [Session 10 Oct 2025 PM] - Nettoyage MCP + Corrections
+
+### 🧹 Nettoyage Système MCP
+- **Supprimé 13 fichiers MCP cassés** : APIs, UI, guides, scripts
+- Problème : Schémas incompatibles (deployment_url vs url)
+- Gardé : Migration SQL + mcpConfigService (schéma cohérent)
+- Impact : -2,875 lignes de code mort, 0 erreur
+
 ## [Session 10 Oct 2025 PM] - Corrections & Optimisations
 
 ### ✅ Corrections CSS
