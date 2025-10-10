@@ -187,7 +187,7 @@ function AgentsPageContent() {
           )}
 
           <div className="agents-layout">
-          {/* Liste des agents */}
+          {/* Colonne 1: Liste des agents */}
           <motion.div
             className="agents-list-panel"
             initial={{ opacity: 0, x: -20 }}
@@ -253,12 +253,12 @@ function AgentsPageContent() {
             </div>
           </motion.div>
 
-          {/* Panneau de détails/édition */}
+          {/* Colonne 2: Configuration de l'agent (milieu) */}
           <motion.div
             className="agent-details-panel"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
           >
             {selectedAgent ? (
               loadingDetails ? (
@@ -305,7 +305,7 @@ function AgentsPageContent() {
                 <div className="details-content">
                   {/* Informations générales */}
                   <div className="detail-section">
-                    <h3 className="section-title">Informations générales</h3>
+                    <h3 className="section-title">Informations</h3>
                     
                     <div className="field-group">
                       <label className="field-label">Nom d'affichage</label>
@@ -329,17 +329,18 @@ function AgentsPageContent() {
                         value={editedAgent?.description || ''}
                         onChange={(e) => updateField('description', e.target.value)}
                         rows={3}
+                        placeholder="Description de l'agent..."
                       />
                     </div>
 
                     <div className="field-group">
-                      <label className="field-label">Image de profil (URL)</label>
+                      <label className="field-label">Image de profil (URL ou emoji)</label>
                       <input
                         type="text"
                         className="field-input"
                         value={editedAgent?.profile_picture || ''}
                         onChange={(e) => updateField('profile_picture', e.target.value)}
-                        placeholder="https://example.com/avatar.png"
+                        placeholder="🤖 ou https://example.com/avatar.png"
                       />
                       {editedAgent?.profile_picture && (
                         <div style={{ marginTop: '0.5rem' }}>
@@ -373,12 +374,85 @@ function AgentsPageContent() {
                     </div>
                   </div>
 
-                  {/* Configuration LLM */}
+                  {/* Instructions système */}
                   <div className="detail-section">
-                    <h3 className="section-title">Configuration LLM</h3>
+                    <h3 className="section-title">Instructions système</h3>
+                    
+                    <div className="field-group">
+                      <textarea
+                        className="field-textarea code"
+                        value={editedAgent?.system_instructions || ''}
+                        onChange={(e) => updateField('system_instructions', e.target.value)}
+                        rows={10}
+                        placeholder="Instructions système pour l'agent..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Capacités et expertise */}
+                  <div className="detail-section">
+                    <h3 className="section-title">Expertise</h3>
 
                     <div className="field-group">
-                      <label className="field-label">Modèle LLM</label>
+                      <label className="field-label">Domaines d'expertise (séparés par des virgules)</label>
+                      <input
+                        type="text"
+                        className="field-input"
+                        value={editedAgent?.expertise?.join(', ') || ''}
+                        onChange={(e) => updateField('expertise', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                        placeholder="Ex: analyse, rédaction, synthèse"
+                      />
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Capacités API V2</label>
+                      <div className="capabilities-tags">
+                        {(editedAgent?.api_v2_capabilities || []).map((cap, index) => (
+                          <span key={index} className="capability-tag">{cap}</span>
+                        ))}
+                        {(!editedAgent?.api_v2_capabilities || editedAgent.api_v2_capabilities.length === 0) && (
+                          <span style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.8rem' }}>Aucune capacité définie</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              )
+            ) : (
+              <div className="empty-state">
+                <Bot size={64} className="empty-icon" />
+                <h3>Sélectionnez un agent</h3>
+                <p>Choisissez un agent dans la liste pour voir ses détails</p>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Colonne 3: Réglages (droite) */}
+          <motion.div
+            className="agent-settings-panel"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            {selectedAgent ? (
+              loadingDetails ? (
+                <div className="loading-state">
+                  <div className="loading-spinner" />
+                </div>
+              ) : (
+              <div className="agent-settings">
+                <div className="panel-header">
+                  <h2 className="panel-title">Réglages</h2>
+                </div>
+
+                <div className="settings-content">
+                  {/* Modèle LLM */}
+                  <div className="detail-section">
+                    <h3 className="section-title">Modèle LLM</h3>
+
+                    <div className="field-group">
+                      <label className="field-label">Modèle</label>
                       <select
                         className="field-select"
                         value={editedAgent?.model || ''}
@@ -398,11 +472,14 @@ function AgentsPageContent() {
                         ))}
                       </select>
                       {editedAgent?.model && getModelInfo(editedAgent.model) && (
-                        <p className="field-help">
-                          💡 {getModelInfo(editedAgent.model)?.description}
-                          <br/>
-                          💰 Prix: {getModelInfo(editedAgent.model)?.pricing.input} input / {getModelInfo(editedAgent.model)?.pricing.output} output
-                        </p>
+                        <div className="model-info">
+                          <div className="model-insight">
+                            💡 {getModelInfo(editedAgent.model)?.description}
+                          </div>
+                          <div className="model-pricing">
+                            💰 {getModelInfo(editedAgent.model)?.pricing.input} input • {getModelInfo(editedAgent.model)?.pricing.output} output
+                          </div>
+                        </div>
                       )}
                     </div>
 
@@ -410,6 +487,11 @@ function AgentsPageContent() {
                       <label className="field-label">Provider</label>
                       <p className="field-value field-readonly">{selectedAgent.provider}</p>
                     </div>
+                  </div>
+
+                  {/* Paramètres LLM */}
+                  <div className="detail-section">
+                    <h3 className="section-title">Paramètres</h3>
 
                     <div className="field-group">
                       <label className="field-label">Température ({editedAgent?.temperature || 0})</label>
@@ -450,55 +532,11 @@ function AgentsPageContent() {
                     </div>
                   </div>
 
-                  {/* Instructions système */}
+                  {/* État */}
                   <div className="detail-section">
-                    <h3 className="section-title">Instructions système</h3>
-                    
-                    <div className="field-group">
-                      <textarea
-                        className="field-textarea code"
-                        value={editedAgent?.system_instructions || ''}
-                        onChange={(e) => updateField('system_instructions', e.target.value)}
-                        rows={8}
-                        placeholder="Instructions système pour l'agent..."
-                      />
-                    </div>
-                  </div>
-
-                  {/* Capacités et expertise */}
-                  <div className="detail-section">
-                    <h3 className="section-title">Capacités et expertise</h3>
+                    <h3 className="section-title">État</h3>
 
                     <div className="field-group">
-                      <label className="field-label">Expertise (séparées par des virgules)</label>
-                      <input
-                        type="text"
-                        className="field-input"
-                        value={editedAgent?.expertise?.join(', ') || ''}
-                        onChange={(e) => updateField('expertise', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-                        placeholder="Ex: analyse, rédaction, synthèse"
-                      />
-                    </div>
-
-                    <div className="field-group">
-                      <label className="field-label">Capacités API V2 actuelles</label>
-                      <div className="capabilities-tags">
-                        {(editedAgent?.api_v2_capabilities || []).map((cap, index) => (
-                          <span key={index} className="capability-tag">{cap}</span>
-                        ))}
-                        {(!editedAgent?.api_v2_capabilities || editedAgent.api_v2_capabilities.length === 0) && (
-                          <span style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.8rem' }}>Aucune capacité définie</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* État et métadonnées */}
-                  <div className="detail-section">
-                    <h3 className="section-title">État et métadonnées</h3>
-
-                    <div className="field-group">
-                      <label className="field-label">Actif</label>
                       <label className="field-checkbox">
                         <input
                           type="checkbox"
@@ -507,6 +545,13 @@ function AgentsPageContent() {
                         />
                         <span>Agent actif</span>
                       </label>
+                    </div>
+
+                    <div className="field-group">
+                      <label className="field-label">Type d'agent</label>
+                      <p className="field-value">
+                        {selectedAgent.is_chat_agent ? '💬 Chat' : '🔌 Endpoint'}
+                      </p>
                     </div>
 
                     <div className="field-group">
@@ -520,13 +565,6 @@ function AgentsPageContent() {
                     </div>
 
                     <div className="field-group">
-                      <label className="field-label">Type d'agent</label>
-                      <p className="field-value">
-                        {selectedAgent.is_chat_agent ? '💬 Chat' : '🔌 Endpoint'}
-                      </p>
-                    </div>
-
-                    <div className="field-group">
                       <label className="field-label">Version</label>
                       <p className="field-value field-readonly">{selectedAgent.version || '1.0.0'}</p>
                     </div>
@@ -535,10 +573,8 @@ function AgentsPageContent() {
               </div>
               )
             ) : (
-              <div className="empty-state">
-                <Bot size={64} className="empty-icon" />
-                <h3>Sélectionnez un agent</h3>
-                <p>Choisissez un agent dans la liste pour voir ses détails</p>
+              <div className="empty-state-compact">
+                <p className="empty-text">Sélectionnez un agent</p>
               </div>
             )}
           </motion.div>
