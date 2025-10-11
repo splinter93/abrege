@@ -219,7 +219,7 @@
 .chatgpt-header,
 .chat-header {
   height: 48px;
-  background: #1a1a1a;
+  background: var(--chat-bg-primary);
   backdrop-filter: var(--chat-blur-light);
   -webkit-backdrop-filter: var(--chat-blur-light);
   border-bottom: none;

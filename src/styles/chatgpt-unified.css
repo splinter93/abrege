@@ -130,7 +130,7 @@
 
 .chatgpt-header {
   height: 48px;
-  background: #1a1a1a;
+  background: var(--chatgpt-bg-primary);
   backdrop-filter: var(--chatgpt-blur-light);
   -webkit-backdrop-filter: var(--chatgpt-blur-light);
   border-bottom: none;
@@ -650,13 +650,14 @@
 }
 
 .chatgpt-message-content img {
-  border-radius: var(--chatgpt-radius-md);
+  border-radius: var(--chatgpt-radius-lg);
   max-width: 100%;
   height: auto;
   display: block;
   margin: var(--chatgpt-space-md) 0;
-  box-shadow: var(--chatgpt-shadow-soft);
+  box-shadow: none;
   transition: transform var(--chatgpt-transition-fast);
+  border: none;
 }
 
 .chatgpt-message-content img:hover {
@@ -1661,7 +1662,7 @@
   }
   
   .chatgpt-header {
-    background: #1e1e1e;
+    background: var(--chatgpt-bg-primary);
     border-bottom: none;
   }
 }

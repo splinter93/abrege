@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOpenAPIV2Tools } from '@/services/openApiToolsGenerator';
+// TODO: Réactiver quand le service sera créé
+// import { getOpenAPIV2Tools } from '@/services/openApiToolsGenerator';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -14,8 +15,9 @@ export async function GET(request: NextRequest) {
   try {
     console.log('[OpenAPI Tools API] 🔧 Demande des tools OpenAPI V2');
     
+    // TODO: Réactiver quand le service sera créé
     // Générer les tools depuis le schéma OpenAPI V2
-    const tools = getOpenAPIV2Tools();
+    const tools: any[] = []; // getOpenAPIV2Tools();
     
     console.log(`[OpenAPI Tools API] ✅ ${tools.length} tools générés`);
     

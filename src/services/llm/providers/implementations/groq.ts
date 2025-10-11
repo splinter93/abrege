@@ -476,7 +476,17 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
               .filter((c: any) => c.type === 'reasoning_text')
               .map((c: any) => c.text);
             reasoning = reasoningTexts.join('\n');
-            logger.dev(`[GroqProvider] 🧠 Reasoning: ${reasoning.substring(0, 100)}...`);
+            logger.dev(`[GroqProvider] 🧠 Reasoning: ${reasoning.substring(0, 200)}...`);
+            
+            // ✅ NOUVEAU: Extraire aussi les reasonings comme "commentary" pour l'UI
+            // Pour afficher le raisonnement entre les tool calls
+            if (!mcpCalls.find(c => c.type === 'commentary')) {
+              mcpCalls.push({
+                type: 'commentary',
+                content: reasoning,
+                timestamp: new Date().toISOString()
+              });
+            }
           }
           break;
           
@@ -820,12 +830,16 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    */
   getFunctionCallTools(): any[] {
     try {
+      // TODO: Réactiver quand le service sera créé
       // Importer dynamiquement les tools OpenAPI V2
-      const { getOpenAPIV2Tools } = require('@/services/openApiToolsGenerator');
-      const tools = getOpenAPIV2Tools();
+      // const { getOpenAPIV2Tools } = require('@/services/openApiToolsGenerator');
+      // const tools = getOpenAPIV2Tools();
       
-      logger.dev(`[GroqProvider] 🔧 ${tools.length} tools OpenAPI V2 chargés`);
-      return tools;
+      // logger.dev(`[GroqProvider] 🔧 ${tools.length} tools OpenAPI V2 chargés`);
+      // return tools;
+      
+      // Retourner un tableau vide temporairement
+      return [];
     } catch (error) {
       logger.warn('[GroqProvider] ⚠️ Erreur lors du chargement des tools OpenAPI V2:', error);
       return [];

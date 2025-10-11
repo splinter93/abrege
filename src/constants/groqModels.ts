@@ -126,3 +126,15 @@ export function getModelInfo(modelId: string): GroqModelInfo | undefined {
 export function getRecommendedModels(): GroqModelInfo[] {
   return GROQ_MODELS.filter(m => m.recommended);
 }
+
+/**
+ * Vérifier si un modèle est supporté
+ */
+export function isGroqModelSupported(modelId: string): boolean {
+  return GROQ_MODELS.some(m => m.id === modelId);
+}
+
+/**
+ * Obtenir les informations d'un modèle (alias pour compatibilité)
+ */
+export const getGroqModelInfo = getModelInfo;
