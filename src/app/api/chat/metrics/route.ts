@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { agenticOrchestrator } from '@/services/llm/services/AgenticOrchestrator';
 import { circuitBreakerManager } from '@/services/circuitBreaker';
 import { toolCallsRateLimiter, chatRateLimiter, apiRateLimiter } from '@/services/rateLimiter';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -12,9 +11,6 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Obtenir les métriques de l'orchestrateur
-    const orchestratorMetrics = agenticOrchestrator.getMetrics();
-    
     // Obtenir les statistiques des circuit breakers
     const circuitBreakerStats = circuitBreakerManager.getGlobalStats();
     const failedServices = circuitBreakerManager.getFailedServices();
@@ -27,7 +23,6 @@ export async function GET(request: NextRequest) {
     };
     
     // Calculer quelques statistiques supplémentaires
-    const now = Date.now();
     const uptime = process.uptime();
     
     const response = {
@@ -37,7 +32,6 @@ export async function GET(request: NextRequest) {
         seconds: Math.floor(uptime),
         formatted: formatUptime(uptime)
       },
-      orchestrator: orchestratorMetrics,
       circuitBreakers: {
         stats: circuitBreakerStats,
         failedServices,
@@ -79,23 +73,19 @@ export async function GET(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // Réinitialiser l'orchestrateur
-    agenticOrchestrator.resetMetrics();
-    agenticOrchestrator.clearCache();
-    
     // Réinitialiser les circuit breakers
     circuitBreakerManager.resetAll();
     
-    logger.info('[Metrics] 🔄 Métriques et cache réinitialisés');
+    logger.info('[Metrics] 🔄 Circuit breakers réinitialisés');
     
     return NextResponse.json({
       success: true,
-      message: 'Métriques, cache et circuit breakers réinitialisés',
+      message: 'Circuit breakers réinitialisés',
       timestamp: new Date().toISOString()
     });
     
   } catch (error) {
-    logger.error('[Metrics] ❌ Erreur réinitialisation métriques:', error);
+    logger.error('[Metrics] ❌ Erreur réinitialisation:', error);
     
     return NextResponse.json(
       {

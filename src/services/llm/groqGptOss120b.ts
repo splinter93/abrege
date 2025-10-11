@@ -1,19 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { GroqRoundParams, GroqRoundResult } from './types/groqTypes';
 import { DEFAULT_GROQ_LIMITS } from './types/groqTypes';
-import { agenticOrchestrator } from './services/AgenticOrchestrator';
+import { simpleOrchestrator } from './services/SimpleOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
- * Point d'entrée refactorisé pour l'API Groq GPT OSS 120B
- * 
- * Cette version utilise l'AgenticOrchestrator V2 avec :
- * - 🧠 Thinking interleaved : Réflexion entre chaque outil
- * - 💬 Communication transparente : Progress updates en temps réel
- * - 🔀 Parallélisation automatique : 2-3x plus rapide
- * - 🔁 Retry intelligent : Backoff + fallback (+40% succès)
- * - ⚡ Enchainement robuste : Continue même avec erreurs partielles
- * - 📊 Métriques complètes : Monitoring détaillé
+ * Point d'entrée pour l'API Groq GPT OSS 120B avec MCP
  */
 export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<NextResponse<GroqRoundResult>> {
   const { sessionId } = params;
@@ -52,95 +44,54 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
         : (params.agentConfig.reasoning_effort || 'high' as const)
     } : undefined;
 
-    // ✨ Utiliser l'orchestrateur Agentique V2 (singleton)
-    logger.info(`[Groq API] 🎯 Lancement AgenticOrchestrator pour session ${sessionId}`);
+    // Utiliser l'orchestrateur simple
+    logger.info(`[Groq API] 🎯 Lancement SimpleOrchestrator pour session ${sessionId}`);
     const orchestratorStart = Date.now();
     
-    const chatResult = await agenticOrchestrator.processMessage(
+    const chatResult = await simpleOrchestrator.processMessage(
       params.message,
-      params.sessionHistory || [],
       {
         userToken: params.userToken,
         sessionId: params.sessionId,
         agentConfig: normalizedAgentConfig,
         uiContext: params.appContext?.uiContext,
-        maxToolCalls: 10 // ✨ Augmenté de 5 à 10 pour les tâches complexes
-      }
+        maxToolCalls: 50
+      },
+      params.sessionHistory || []
     );
     
     const orchestratorDuration = Date.now() - orchestratorStart;
-    logger.info(`[Groq API] ⏱️ AgenticOrchestrator terminé en ${orchestratorDuration}ms`);
+    logger.info(`[Groq API] ✅ Session terminée (${orchestratorDuration}ms):`, {
+      toolCallsCount: chatResult.toolCalls?.length || 0,
+      toolResultsCount: chatResult.toolResults?.length || 0,
+      finishReason: chatResult.finishReason
+    });
 
-    // ✅ Log détaillé de la session (succès ou erreur)
-    if (!chatResult.success) {
-      logger.error(`[Groq API] ❌ L'orchestrateur a retourné une erreur:`, {
-        error: chatResult.error,
-        content: chatResult.content,
-        toolCallsCount: chatResult.toolCalls?.length || 0,
-        toolResultsCount: chatResult.toolResults?.length || 0,
-        metadata: chatResult.metadata
-      });
-    } else {
-      // ✨ Log des nouvelles métriques agentiques
-      const toolCallsByName = chatResult.toolCalls?.reduce((acc, tc) => {
-        const name = tc.function.name;
-        acc[name] = (acc[name] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>) || {};
-      
-      const hasMultipleSameTool = Object.values(toolCallsByName).some(count => count > 1);
-      
-      logger.info(`[Groq API] ✅ Session terminée avec succès (${orchestratorDuration}ms):`, {
-        toolCallsCount: chatResult.toolCalls?.length || 0,
-        toolResultsCount: chatResult.toolResults?.length || 0,
-        thinkingBlocksCount: chatResult.thinking?.length || 0,
-        progressUpdatesCount: chatResult.progress?.length || 0,
-        toolCallsByName,
-        hasMultipleSameTool: hasMultipleSameTool ? '⚠️ ATTENTION: Duplications possibles' : 'OK',
-        metadata: chatResult.metadata
-      });
-      
-      // 🚨 Alerte si plusieurs appels du même tool
-      if (hasMultipleSameTool) {
-        logger.warn(`[Groq API] 🚨 ALERTE DUPLICATION: Plusieurs appels du même tool détectés:`, toolCallsByName);
-      }
-      
-      // ✨ Log du thinking et progress si présents (pour debugging)
-      if (chatResult.thinking && chatResult.thinking.length > 0) {
-        logger.dev(`[Groq API] 🧠 Thinking blocks:`, chatResult.thinking);
-      }
-      if (chatResult.progress && chatResult.progress.length > 0) {
-        logger.dev(`[Groq API] 💬 Progress updates:`, chatResult.progress);
-      }
-    }
-
-    // Convertir le résultat SimpleChat vers le format GroqRoundResult
+    // Convertir le résultat vers le format GroqRoundResult
     const result: GroqRoundResult = {
-      success: chatResult.success,
-      content: chatResult.content,
+      success: true,
+      content: chatResult.content || '',
+      tool_calls: chatResult.toolCalls || [],
       tool_results: chatResult.toolResults?.map(tr => ({
         tool_call_id: tr.tool_call_id,
         name: tr.name,
         content: tr.content,
         success: tr.success,
-        timestamp: new Date().toISOString() // ✅ Toujours ajouter un timestamp
+        timestamp: new Date().toISOString()
       })) || [],
-      reasoning: chatResult.reasoning,
-      sessionId: params.sessionId, // ✅ Ajouter sessionId obligatoire
-      status: chatResult.success ? 200 : 500,
-      error: chatResult.error // ✅ Passer l'erreur
+      thinking: [],
+      progress: [],
+      // is_relance = true si on a du contenu final (fin de conversation)
+      // Même sans tool calls, si on a du contenu, c'est une réponse finale
+      is_relance: true,
+      sessionId: params.sessionId,
+      status: 200
     };
 
-    // Retourner la réponse appropriée
-    if (result.success) {
-      return NextResponse.json(result);
-    } else {
-      // ✅ Retourner un 200 même en cas d'erreur pour que le frontend reçoive le message
-      return NextResponse.json(result, { status: 200 });
-    }
+    return NextResponse.json(result);
 
   } catch (error) {
-    logger.error(`[Groq API] ❌ Erreur fatale:`, {
+    logger.dev(`[Groq API] ❌ Erreur fatale:`, {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       errorType: error instanceof Error ? error.constructor.name : typeof error,

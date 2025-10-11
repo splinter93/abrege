@@ -16,23 +16,17 @@ export interface GroqRoundResult {
   success: boolean;
   content?: string;
   reasoning?: string;
-  // 🎼 Canaux Harmony séparés
-  harmony_analysis?: string;
-  harmony_commentary?: string;
-  harmony_final?: string;
   tool_calls?: ToolCall[];
   tool_results?: ToolResult[];
   sessionId: string;
   is_relance?: boolean;
-  has_new_tool_calls?: boolean;
-  has_failed_tools?: boolean;
   error?: string;
   details?: string;
   status?: number;
-  isFallback?: boolean; // Marqueur pour identifier les réponses de fallback
 }
 
-// 🎯 Types pour la construction d'historique
+// 🎯 Types pour la construction d'historique - OBSOLÈTE (gardé temporairement pour compatibilité)
+// TODO: Supprimer après nettoyage de GroqHistoryBuilder
 export interface HistoryBuildContext {
   systemContent: string;
   userMessage: string;

@@ -1986,3 +1986,29 @@
   }
 }
 
+/* ========================================
+   THINKING & PROGRESS CONTAINERS
+   ======================================== */
+
+/* Containers pour thinking blocks et progress updates */
+.thinking-blocks-container {
+  margin: 8px 0 12px 0;
+}
+
+.progress-updates-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0 12px 0;
+}
+
+/* Spacing entre thinking/progress et le reste du contenu */
+.thinking-blocks-container + .tool-call-message,
+.progress-updates-container + .tool-call-message {
+  margin-top: 4px;
+}
+
+.thinking-blocks-container + .chatgpt-message-reasoning,
+.progress-updates-container + .chatgpt-message-reasoning {
+  margin-top: 4px;
+}

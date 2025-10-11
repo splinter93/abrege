@@ -9,7 +9,6 @@ import ReasoningDropdown from './ReasoningDropdown';
 import { useChatStore } from '@/store/useChatStore';
 import { useStreamingPreferences } from '@/hooks/useStreamingPreferences';
 import { simpleLogger as logger } from '@/utils/logger';
-// import StreamingLineByLine from './StreamingLineByLine'; // Supprimé - faux streaming
 import './ReasoningDropdown.css';
 import './ToolCallMessage.css';
 
@@ -28,13 +27,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   animateContent = false 
 }) => {
   const [displayedContent, setDisplayedContent] = useState('');
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [isStreamingComplete, setIsStreamingComplete] = useState(false);
   
-  // Hook pour les préférences de streaming - SUPPRIMÉ (faux streaming)
-  // const { preferences, getAdjustedDelay } = useStreamingPreferences();
-  
-  // Vérification de sécurité
   if (!message) {
     logger.warn('ChatMessage: message is undefined');
     return null;
@@ -42,23 +35,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   
   const { role, content, reasoning } = message;
 
-  // Masquer les observations internes de l'assistant
-  if (role === 'assistant' && (message as any).name === 'observation') {
-    return null;
-  }
-  // Ne pas afficher les messages 'tool' en tant que bulle dédiée
-  if (role === 'tool') {
-    return null;
-  }
+  // Masquer les observations internes et messages tool
+  if (role === 'assistant' && (message as any).name === 'observation') return null;
+  if (role === 'tool') return null;
 
-  // ✅ SUPPRIMÉ: Animation du contenu (faux streaming)
   useEffect(() => {
-    if (content) {
-      setDisplayedContent(content);
-    }
+    if (content) setDisplayedContent(content);
   }, [content]);
-
-  // ✅ SUPPRIMÉ: Gestion du faux streaming
 
   const parseSuccessFromContent = (raw: string | null | undefined): boolean | undefined => {
     if (!raw) return undefined;
@@ -78,14 +61,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     return undefined;
   };
 
-  // Pour les messages assistant avec tool_calls, utiliser tool_results directement
   const getToolResultsForAssistant = () => {
     if (role === 'assistant' && message.tool_calls && message.tool_calls.length > 0) {
-      // Utiliser d'abord les results attachés au message si présents
       if (message.tool_results && message.tool_results.length > 0) {
         return message.tool_results;
       }
-      // Fallback: chercher les tool messages correspondants dans le thread courant
       const currentSession = useChatStore.getState().currentSession;
       if (currentSession) {
         return currentSession.thread
@@ -121,14 +101,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           />
         )}
 
-        {/* Contenu markdown - affiché APRÈS le reasoning */}
+        {/* Contenu markdown */}
         {content && (
           <div className="chatgpt-message-content">
             <EnhancedMarkdownMessage content={content} />
           </div>
         )}
         
-        {/* Indicateur de frappe pour le vrai streaming */}
+        {/* Indicateur de chargement */}
         {isStreaming && !displayedContent && (
           <div className="chatgpt-message-loading">
             <div className="chatgpt-message-loading-dots">
@@ -136,12 +116,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               <div className="chatgpt-message-loading-dot"></div>
               <div className="chatgpt-message-loading-dot"></div>
             </div>
-            <span>En cours de frappe...</span>
+            <span>En cours de traitement...</span>
           </div>
         )}
       </div>
       
-      {/* Boutons d'action sous la bulle (comme ChatGPT) - UNIQUEMENT */}
+      {/* Boutons d'action */}
       {content && (
         <div className="chatgpt-message-actions">
           <BubbleButtons

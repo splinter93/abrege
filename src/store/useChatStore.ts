@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Agent, ChatMessage } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
+import { sessionSyncService } from '@/services/sessionSyncService';
 
 export interface ChatSession {
   id: string;
@@ -75,7 +76,6 @@ export const useChatStore = create<ChatStore>()(
       // ⚡ Actions avec fonctionnalités essentielles
       syncSessions: async () => {
         try {
-          const { sessionSyncService } = await import('@/services/sessionSyncService');
           const result = await sessionSyncService.syncSessionsFromDB();
           if (result.success && result.sessions) {
             get().setSessions(result.sessions);
@@ -87,15 +87,11 @@ export const useChatStore = create<ChatStore>()(
 
       createSession: async (name: string = 'Nouvelle conversation') => {
         try {
-          const { sessionSyncService } = await import('@/services/sessionSyncService');
           const result = await sessionSyncService.createSessionAndSync(name);
           if (result.success && result.session) {
-            // ✅ FIX: Ajouter la nouvelle session à la liste SANS re-synchroniser toutes les sessions
-            // Cela évite une race condition qui pourrait charger l'ancienne session
             const currentSessions = get().sessions;
             const updatedSessions = [result.session, ...currentSessions];
             
-            // Mettre à jour la liste ET la session courante en une seule fois
             set({ 
               sessions: updatedSessions,
               currentSession: result.session
@@ -184,7 +180,6 @@ export const useChatStore = create<ChatStore>()(
 
           // Persister en DB si demandé
           if (options?.persist !== false) {
-            const { sessionSyncService } = await import('@/services/sessionSyncService');
             await sessionSyncService.addMessageAndSync(currentSession.id, message);
           }
         } catch (error) {
@@ -196,7 +191,6 @@ export const useChatStore = create<ChatStore>()(
 
       deleteSession: async (sessionId: string) => {
         try {
-          const { sessionSyncService } = await import('@/services/sessionSyncService');
           await sessionSyncService.deleteSessionAndSync(sessionId);
           get().syncSessions();
         } catch (error) {
@@ -206,7 +200,6 @@ export const useChatStore = create<ChatStore>()(
 
       updateSession: async (sessionId: string, data: { name?: string; history_limit?: number }) => {
         try {
-          const { sessionSyncService } = await import('@/services/sessionSyncService');
           await sessionSyncService.updateSessionAndSync(sessionId, data);
           get().syncSessions();
         } catch (error) {

@@ -2,15 +2,13 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { debounce } from 'lodash';
 import { useChatStore } from '@/store/useChatStore';
-
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useAppContext } from '@/hooks/useAppContext';
 import { useUIContext } from '@/hooks/useUIContext';
 import { useChatResponse } from '@/hooks/useChatResponse';
 import { useChatScroll } from '@/hooks/useChatScroll';
-// import { useAtomicToolCalls } from '@/hooks/useAtomicToolCalls'; // Fichier supprimé
-import { useAuth } from '@/hooks/useAuth';
-// useToolCallDebugger supprimé
+import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { supabase } from '@/supabaseClient';
 import { tokenManager } from '@/utils/tokenManager';
 import ChatInput from './ChatInput';
@@ -18,21 +16,23 @@ import ChatMessage from './ChatMessage';
 import ChatKebabMenu from './ChatKebabMenu';
 import SidebarUltraClean from './SidebarUltraClean';
 import { simpleLogger as logger } from '@/utils/logger';
+import Link from 'next/link';
 
 import './ToolCallMessage.css';
 import '@/styles/chat-consolidated.css';
 import '@/styles/sidebar-collapsible.css';
-import Link from 'next/link';
 
 const ChatFullscreenV2: React.FC = () => {
   // 🎯 Hooks optimisés
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Toujours fermée par défaut
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [wideMode, setWideMode] = useState(false);
+  
+  // 🎯 Auth centralisée
+  const { requireAuth, user, loading: authLoading, isAuthenticated } = useAuthGuard();
   
   // 🎯 Contexte et store
   const appContext = useAppContext();
-  const { user, loading: authLoading } = useAuth();
   
   // 🎯 Contexte UI pour l'injection
   const uiContext = useUIContext({
@@ -59,11 +59,12 @@ const ChatFullscreenV2: React.FC = () => {
 
 
 
-  // 🎯 Refs optimisées
+  // 🎯 Refs
   const toolFlowActiveRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previousSessionIdRef = useRef<string | null>(null);
 
-  // 🎯 Hook de scroll optimisé avec autoscroll
+  // 🎯 Hook de scroll optimisé
   const { messagesEndRef, scrollToBottom, isNearBottom } = useChatScroll({
     scrollThreshold: 300,
     scrollDelay: 100,
@@ -71,292 +72,16 @@ const ChatFullscreenV2: React.FC = () => {
     messages: currentSession?.thread || []
   });
 
-  // ✅ SUPPRIMÉ: Hook de streaming (faux streaming)
-  // Le chat utilise maintenant l'API standard sans streaming
+  // 🎯 Handlers centralisés
+  const {
+    handleComplete,
+    handleError,
+    handleToolCalls,
+    handleToolResult,
+    handleToolExecutionComplete
+  } = useChatHandlers();
 
-  // 🎯 Hook pour le debugger des tool calls - SUPPRIMÉ
-  // Code mort nettoyé pour la production
-
-  // 🎼 Activation automatique d'Harmony pour GPT OSS 20b et 120b
-
-  // 🎯 Hook pour les tool calls atomiques
-  // const { addToolResult, isProcessing: isProcessingToolCalls } = useAtomicToolCalls(); // Hook supprimé
-
-  // ✅ CORRECTION: Sidebar TOUJOURS fermée par défaut, sauf si l'utilisateur l'a ouverte explicitement
-  // ✅ État initial de la sidebar (seulement au premier mount)
-  useEffect(() => {
-    // Sidebar fermée par défaut au chargement initial
-    setSidebarOpen(false);
-  }, []); // ✅ Dependencies vides = exécuté seulement au mount
-
-  // 🎯 Fermer la sidebar sur mobile après sélection d'une nouvelle session
-  const previousSessionIdRef = useRef<string | null>(null);
-  
-  useEffect(() => {
-    // Fermer seulement si la session a CHANGÉ (pas juste au mount)
-    if (!isDesktop && sidebarOpen && currentSession) {
-      const currentId = currentSession.id;
-      
-      if (previousSessionIdRef.current !== null && previousSessionIdRef.current !== currentId) {
-        // La session a changé → auto-fermer après 300ms
-        const timer = setTimeout(() => {
-          setSidebarOpen(false);
-        }, 300);
-        previousSessionIdRef.current = currentId;
-        return () => clearTimeout(timer);
-      }
-      
-      previousSessionIdRef.current = currentId;
-    }
-  }, [currentSession?.id, isDesktop, sidebarOpen]);
-
-  const handleComplete = useCallback(async (
-    fullContent: string, 
-    fullReasoning: string, 
-    toolCalls?: any[], 
-    toolResults?: any[], 
-    harmonyChannels?: {
-      analysis?: string;
-      commentary?: string;
-      final?: string;
-    }
-  ) => {
-    // Vérifier l'authentification avant de continuer
-    if (authLoading) {
-      logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
-      return;
-    }
-    
-    if (!user) {
-      logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de traiter la réponse finale');
-      return;
-    }
-
-    const safeContent = fullContent?.trim();
-    logger.dev('[ChatFullscreenV2] 🎯 handleComplete appelé:', {
-      fullContent: fullContent?.substring(0, 100) + '...',
-      safeContent: safeContent?.substring(0, 100) + '...',
-      hasContent: !!safeContent,
-      reasoning: fullReasoning?.substring(0, 50) + '...',
-      hasHarmonyChannels: !!harmonyChannels,
-      harmonyAnalysis: harmonyChannels?.analysis?.substring(0, 50) + '...',
-      harmonyCommentary: harmonyChannels?.commentary?.substring(0, 50) + '...',
-      harmonyFinal: harmonyChannels?.final?.substring(0, 50) + '...'
-    });
-
-    if (!safeContent) {
-      logger.warn('[ChatFullscreenV2] ⚠️ Contenu vide, pas de message à ajouter');
-      return;
-    }
-      
-    // ✅ Message final complet (avec tool calls et reasoning)
-    const messageToAdd = {
-      role: 'assistant' as const,
-      content: safeContent,
-      reasoning: fullReasoning,
-      tool_calls: toolCalls || [],
-      tool_results: toolResults || [],
-      timestamp: new Date().toISOString(),
-      channel: 'final' as const,
-      // 🎼 Ajouter les canaux Harmony si disponibles
-      ...(harmonyChannels && {
-        harmony_analysis: harmonyChannels.analysis,
-        harmony_commentary: harmonyChannels.commentary,
-        harmony_final: harmonyChannels.final
-      })
-    };
-
-    logger.dev('[ChatFullscreenV2] 📝 Ajout du message final complet:', {
-      content: safeContent?.substring(0, 100) + '...',
-      reasoning: fullReasoning?.substring(0, 50) + '...',
-      toolCalls: toolCalls?.length || 0,
-      toolResults: toolResults?.length || 0
-    });
-    
-    // ✅ Remplacer le message temporaire par le message final
-    await addMessage(messageToAdd, { 
-      persist: true, 
-      updateExisting: true // Remplacer le message temporaire
-    });
-    
-    logger.dev('[ChatFullscreenV2] ✅ Message final ajouté avec succès');
-    
-    toolFlowActiveRef.current = false;
-    // Autoscroll géré automatiquement par useChatScroll
-  }, [addMessage, scrollToBottom, user, authLoading]);
-
-
-
-  const handleError = useCallback((errorMessage: string) => {
-    // Vérifier l'authentification avant de continuer
-    if (authLoading) {
-      logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
-      return;
-    }
-    
-    if (!user) {
-      logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de traiter l\'erreur');
-      return;
-    }
-
-    addMessage({
-      role: 'assistant',
-      content: `Erreur: ${errorMessage}`,
-      timestamp: new Date().toISOString(),
-      channel: 'final'
-    });
-  }, [addMessage, user, authLoading]);
-
-  const handleToolCalls = useCallback(async (toolCalls: any[], toolName: string) => {
-    // Vérifier l'authentification avant de continuer
-    if (authLoading) {
-      logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
-      return;
-    }
-    
-    if (!user) {
-      logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de traiter les tool calls');
-      await addMessage({
-        role: 'assistant',
-        content: '⚠️ Vous devez être connecté pour utiliser cette fonctionnalité.',
-        timestamp: new Date().toISOString()
-      }, { persist: false });
-      return;
-    }
-
-    logger.dev('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
-    logger.tool('[ChatFullscreenV2] 🔧 Tool calls détectés:', { toolCalls, toolName });
-    
-    // ✅ Tool calls traités (debugger supprimé pour la production)
-    
-    toolFlowActiveRef.current = true;
-    
-    // ✅ Créer un message temporaire avec tool calls pour l'affichage immédiat
-    const toolCallMessage = {
-      role: 'assistant' as const,
-      content: '🔧 Exécution des outils en cours...',
-      tool_calls: toolCalls,
-      timestamp: new Date().toISOString(),
-      channel: 'analysis' as const // Canal temporaire pour l'affichage
-    };
-      
-    await addMessage(toolCallMessage, { persist: true }); // Persister pour l'affichage
-    // Autoscroll géré automatiquement par useChatScroll
-  }, [addMessage, scrollToBottom, user, authLoading]);
-
-  const handleToolResult = useCallback(async (toolName: string, result: any, success: boolean, toolCallId?: string) => {
-    try {
-      // Vérifier l'authentification avant de continuer
-      if (authLoading) {
-        logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
-        return;
-      }
-      
-      if (!user) {
-        logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de traiter le tool result');
-        await addMessage({
-          role: 'assistant',
-          content: '⚠️ Vous devez être connecté pour utiliser cette fonctionnalité.',
-          timestamp: new Date().toISOString()
-        }, { persist: false });
-        return;
-      }
-
-      logger.dev('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
-      logger.tool('[ChatFullscreenV2] ✅ Tool result reçu:', { toolName, success });
-      
-      // Normaliser le résultat du tool
-      const normalizeResult = (res: unknown, ok: boolean): string => {
-        try {
-          if (typeof res === 'string') {
-            try {
-              const parsed = JSON.parse(res);
-              if (parsed && typeof parsed === 'object' && !('success' in parsed)) {
-                return JSON.stringify({ success: !!ok, ...parsed });
-              }
-              return JSON.stringify(parsed);
-            } catch {
-              return JSON.stringify({ success: !!ok, message: res });
-            }
-          }
-          if (res && typeof res === 'object') {
-            const obj = res as Record<string, unknown>;
-            if (!('success' in obj)) {
-              return JSON.stringify({ success: !!ok, ...obj });
-            }
-            return JSON.stringify(obj);
-          }
-          return JSON.stringify({ success: !!ok, value: res });
-        } catch (e) {
-          return JSON.stringify({ success: !!ok, error: 'tool_result_serialization_error' });
-        }
-      };
-
-      // Créer le tool result normalisé
-      const normalizedToolResult = {
-        tool_call_id: toolCallId || `call_${Date.now()}`,
-        name: toolName || 'unknown_tool',
-        content: normalizeResult(result, !!success),
-        success: !!success
-      };
-
-      // ✅ Tool result traité (debugger supprimé pour la production)
-      
-      // Créer le message à afficher
-      const toolResultMessage = {
-        role: 'tool' as const,
-        ...normalizedToolResult,
-        timestamp: new Date().toISOString()
-      };
-
-      // Ajouter le message à l'interface
-      await addMessage(toolResultMessage, { persist: true });
-      
-      logger.dev('[ChatFullscreenV2] ✅ Tool result traité et affiché avec succès');
-      
-    } catch (error) {
-      logger.error('[ChatFullscreenV2] ❌ Erreur lors du traitement du tool result:', error);
-      
-      // Gérer les erreurs d'authentification
-      if (error instanceof Error && error.message.includes('Authentification')) {
-        await addMessage({
-          role: 'assistant',
-          content: '⚠️ Erreur d\'authentification. Veuillez vous reconnecter pour continuer.',
-          timestamp: new Date().toISOString()
-        }, { persist: false });
-      } else {
-        // Erreur générique
-        await addMessage({
-          role: 'assistant',
-          content: '❌ Erreur lors du traitement du résultat de l\'outil.',
-          timestamp: new Date().toISOString()
-        }, { persist: false });
-      }
-    }
-    // Autoscroll géré automatiquement par useChatScroll
-  }, [addMessage, scrollToBottom, user, authLoading]);
-
-  // 🎯 Hook de chat optimisé avec callbacks mémorisés
-  const handleToolExecutionComplete = useCallback(async (toolResults: any[]) => {
-    // ✅ L'API fait déjà la relance automatique, pas besoin de relance manuelle
-    logger.dev('[ChatFullscreenV2] ✅ Exécution des tools terminée, attente de la réponse automatique de l\'API');
-    
-    // Traiter les tool results si nécessaire pour l'affichage
-    if (toolResults && toolResults.length > 0) {
-      for (const result of toolResults) {
-        if (result.success) {
-          logger.dev(`[ChatFullscreenV2] ✅ Tool ${result.name} exécuté avec succès`);
-        } else {
-          logger.warn(`[ChatFullscreenV2] ⚠️ Tool ${result.name} a échoué:`, result.result?.error || 'Erreur inconnue');
-        }
-      }
-    }
-    
-    // L'API va automatiquement relancer le LLM et retourner la réponse finale
-    // Pas besoin d'appeler sendMessage ici
-  }, []);
-
-  // 🎯 Hook de chat avec callbacks mémorisés
+  // 🎯 Hook de chat
   const { isProcessing, sendMessage } = useChatResponse({
     onComplete: handleComplete,
     onError: handleError,
@@ -364,6 +89,26 @@ const ChatFullscreenV2: React.FC = () => {
     onToolResult: handleToolResult,
     onToolExecutionComplete: handleToolExecutionComplete
   });
+
+  // 🎯 Sidebar fermée par défaut
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, []);
+
+  // 🎯 Fermer sidebar sur mobile après changement de session
+  useEffect(() => {
+    if (!isDesktop && sidebarOpen && currentSession) {
+      const currentId = currentSession.id;
+      
+      if (previousSessionIdRef.current !== null && previousSessionIdRef.current !== currentId) {
+        const timer = setTimeout(() => setSidebarOpen(false), 300);
+        previousSessionIdRef.current = currentId;
+        return () => clearTimeout(timer);
+      }
+      
+      previousSessionIdRef.current = currentId;
+    }
+  }, [currentSession?.id, isDesktop, sidebarOpen]);
 
 
   // 🎯 Affichage de l'état d'authentification
@@ -528,35 +273,20 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 Handlers optimisés
   const handleSendMessage = useCallback(async (message: string) => {
     if (!message.trim() || loading) return;
-    
-    // Vérifier l'authentification avant d'envoyer le message
-    if (!user) {
-      logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible d\'envoyer le message');
-      return;
-    }
+    if (!requireAuth()) return;
     
     setLoading(true);
     
     try {
       if (!currentSession) {
-        // Vérifier l'authentification avant de créer une session
-        if (!user) {
-          logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de créer une session');
-          setLoading(false);
-          return;
-        }
-        
         await createSession();
+        setLoading(false);
         return;
       }
 
-      // 🔧 FIX: Lire l'historique AVANT d'ajouter le message pour éviter la race condition
       const historyBeforeNewMessage = currentSession.thread || [];
-      
-      // Pour l'API LLM, limiter l'historique selon history_limit
       const limitedHistoryForLLM = historyBeforeNewMessage.slice(-(currentSession.history_limit || 30));
       
-      // Message utilisateur optimiste
       const userMessage = {
         role: 'user' as const,
         content: message,
@@ -564,59 +294,19 @@ const ChatFullscreenV2: React.FC = () => {
       };
       await addMessage(userMessage);
 
-      // 🔐 TOKEN AVEC REFRESH AUTOMATIQUE
-      logger.dev('[ChatFullscreenV2] 🔐 Récupération et validation du token...');
       const tokenResult = await tokenManager.getValidToken();
-      
       if (!tokenResult.isValid || !tokenResult.token) {
-        throw new Error(tokenResult.error || 'Token d\'authentification manquant ou invalide');
+        throw new Error(tokenResult.error || 'Token invalide');
       }
       
-      const token = tokenResult.token;
-      
-      // 🔍 LOG DE DIAGNOSTIC
-      logger.info('[ChatFullscreenV2] 🔐 Token validé:', {
-        wasRefreshed: tokenResult.wasRefreshed,
-        expiresAt: tokenResult.expiresAt ? new Date(tokenResult.expiresAt * 1000).toISOString() : 'unknown',
-        userId: tokenResult.userId,
-        tokenLength: token.length,
-      });
-
-      // Contexte optimisé avec UI Context
       const contextWithSessionId = {
         ...appContext,
         sessionId: currentSession.id,
         agentId: selectedAgent?.id,
-        uiContext // ✅ CORRECTION : Ajouter le contexte UI
+        uiContext
       };
 
-      // Log optimisé
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev('[ChatFullscreenV2] 🎯 Contexte:', {
-          sessionId: currentSession.id,
-          agentId: selectedAgent?.id,
-          agentName: selectedAgent?.name,
-          agentModel: selectedAgent?.model
-        });
-      }
-      
-      // Utiliser l'API standard (sans streaming)
-      const sendFunction = sendMessage;
-      
-      logger.dev('[ChatFullscreenV2] 🎼 Envoi du message:', {
-        message: message.substring(0, 50) + '...',
-        sessionId: currentSession.id,
-        agentId: selectedAgent?.id,
-        historyLength: limitedHistoryForLLM.length,
-        lastMessageInHistory: limitedHistoryForLLM[limitedHistoryForLLM.length - 1]?.role,
-        last3Messages: limitedHistoryForLLM.slice(-3).map(m => ({
-          role: m.role,
-          content: m.content?.substring(0, 30) + '...',
-          timestamp: m.timestamp
-        }))
-      });
-
-      await sendFunction(message, currentSession.id, contextWithSessionId, limitedHistoryForLLM, token);
+      await sendMessage(message, currentSession.id, contextWithSessionId, limitedHistoryForLLM, tokenResult.token);
 
     } catch (error) {
       logger.error('Erreur lors de l\'appel LLM:', error);
@@ -628,21 +318,10 @@ const ChatFullscreenV2: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [loading, currentSession, createSession, addMessage, selectedAgent, appContext, sendMessage, setLoading, user]);
+  }, [loading, currentSession, createSession, addMessage, selectedAgent, appContext, sendMessage, setLoading, requireAuth]);
 
   const handleHistoryLimitChange = useCallback(async (newLimit: number) => {
-    // Vérifier l'authentification avant de continuer
-    if (authLoading) {
-      logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
-      return;
-    }
-    
-    if (!user) {
-      logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de modifier la limite d\'historique');
-      return;
-    }
-
-    if (!currentSession) return;
+    if (!requireAuth() || !currentSession) return;
     
     try {
       await updateSession(currentSession.id, { history_limit: newLimit });
@@ -650,43 +329,23 @@ const ChatFullscreenV2: React.FC = () => {
       logger.error('[ChatFullscreenV2] ❌ Erreur mise à jour history_limit:', error);
       setError('Erreur lors de la mise à jour de la limite d\'historique');
     }
-  }, [currentSession, updateSession, setError, user, authLoading]);
+  }, [currentSession, updateSession, setError, requireAuth]);
 
   const handleSidebarToggle = useCallback(() => {
-    // Vérifier l'authentification avant de continuer
-    if (authLoading) {
-      logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
-      return;
-    }
-    
-    if (!user) {
-      logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de modifier la sidebar');
-      return;
-    }
+    if (!requireAuth()) return;
 
     setSidebarOpen(prev => {
       const newState = !prev;
-      // Sauvegarder la préférence de l'utilisateur
       localStorage.setItem('sidebar-interacted', 'true');
       localStorage.setItem('sidebar-preference', newState ? 'open' : 'closed');
       return newState;
     });
-  }, [user, authLoading]);
+  }, [requireAuth]);
 
   const handleWideModeToggle = useCallback(() => {
-    // Vérifier l'authentification avant de continuer
-    if (authLoading) {
-      logger.dev('[ChatFullscreenV2] ⏳ Vérification de l\'authentification en cours...');
-      return;
-    }
-    
-    if (!user) {
-      logger.warn('[ChatFullscreenV2] ⚠️ Utilisateur non authentifié, impossible de modifier le mode large');
-      return;
-    }
-
+    if (!requireAuth()) return;
     setWideMode(prev => !prev);
-  }, [user, authLoading]);
+  }, [requireAuth]);
 
 
   // 🎯 Rendu optimisé

@@ -11,13 +11,9 @@ export type ToolCall = {
 
 export type ChatMessage = {
   id: string;
-  role: 'user' | 'assistant' | 'system' | 'tool' | 'developer';
+  role: 'user' | 'assistant' | 'system' | 'tool';
   content: string | null;
   reasoning?: string | null;
-  // 🎼 Canaux Harmony séparés
-  harmony_analysis?: string;
-  harmony_commentary?: string;
-  harmony_final?: string;
   timestamp: string;
   tool_calls?: ToolCall[];
   tool_call_id?: string;
@@ -29,7 +25,6 @@ export type ChatMessage = {
     success?: boolean;
   }>;
   isStreaming?: boolean;
-  channel?: 'analysis' | 'commentary' | 'final';
 };
 
 export interface ChatSession {
@@ -88,7 +83,6 @@ export interface HistoryConfig {
   maxMessages: number;
   includeSystemMessages?: boolean;
   truncateStrategy?: 'keep_latest' | 'keep_oldest' | 'keep_middle';
-  excludeChannels?: Array<'analysis' | 'commentary' | 'final'>;
 }
 
 export interface ProcessedHistory {

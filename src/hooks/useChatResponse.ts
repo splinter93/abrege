@@ -2,7 +2,12 @@ import { useState, useCallback } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 
 interface UseChatResponseOptions {
-  onComplete?: (fullContent: string, fullReasoning: string, toolCalls?: any[], toolResults?: any[]) => void;
+  onComplete?: (
+    fullContent: string, 
+    fullReasoning: string, 
+    toolCalls?: any[], 
+    toolResults?: any[]
+  ) => void;
   onError?: (error: string) => void;
   onToolCalls?: (toolCalls: Array<{ id: string; name: string; arguments: Record<string, unknown> }>, toolName: string) => void;
   onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
@@ -78,19 +83,11 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
         }
         
-        // 🔧 Logging amélioré avec sérialisation JSON sécurisée
-        let safeErrorData: string;
-        try {
-          safeErrorData = JSON.stringify(errorData, null, 2);
-        } catch (e) {
-          safeErrorData = `[Error serializing data: ${e instanceof Error ? e.message : 'Unknown error'}]`;
-        }
-        
-        logger.error('[useChatResponse] ❌ Réponse HTTP non-OK:', {
+        logger.dev('[useChatResponse] ❌ Réponse HTTP non-OK:', {
           status: response.status,
           statusText: response.statusText,
           errorText: errorText.substring(0, 500),
-          errorData: safeErrorData
+          errorData: errorData
         });
         
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
@@ -114,9 +111,13 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           contentLength: data?.content?.length || 0
         });
       } catch (parseError) {
-        logger.error('[useChatResponse] ❌ Erreur parsing JSON:', parseError instanceof Error ? parseError.message : String(parseError));
+        logger.dev('[useChatResponse] ❌ Erreur parsing JSON:', {
+          error: parseError instanceof Error ? parseError.message : String(parseError)
+        });
         const textResponse = await response.text();
-        logger.error('[useChatResponse] ❌ Réponse texte brute:', textResponse.substring(0, 500));
+        logger.dev('[useChatResponse] ❌ Réponse texte brute:', {
+          response: textResponse.substring(0, 500)
+        });
         throw new Error('Erreur parsing JSON de la réponse');
       }
 
@@ -160,6 +161,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           
           // ✅ Toujours appeler onComplete pour une réponse finale
           logger.dev('[useChatResponse] 🎯 Appel onComplete (réponse finale)');
+          
           onComplete?.(
             data.content || '', 
             data.reasoning || '', 
@@ -219,6 +221,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         // 🎯 PRIORITÉ 3 : Réponse simple sans tool calls
         logger.dev('[useChatResponse] ✅ Réponse simple sans tool calls');
         logger.dev('[useChatResponse] 🎯 Appel onComplete (réponse simple)');
+        
         onComplete?.(
           data.content || '', 
           data.reasoning || '', 
@@ -239,18 +242,21 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         }
       }
     } catch (error) {
-      // 🔧 AMÉLIORATION: Gestion d'erreur plus robuste
+      // Gestion d'erreur
       let errorMessage: string;
       
       if (error instanceof Error) {
         errorMessage = error.message;
-        logger.error('[useChatResponse] ❌ Erreur Error:', error);
+        logger.dev('[useChatResponse] ❌ Erreur:', {
+          message: error.message,
+          stack: error.stack
+        });
       } else if (typeof error === 'string') {
         errorMessage = error;
-        logger.error('[useChatResponse] ❌ Erreur string:', error);
+        logger.dev('[useChatResponse] ❌ Erreur:', { error });
       } else {
         errorMessage = 'Erreur inconnue';
-        logger.error('[useChatResponse] ❌ Erreur inconnue:', error);
+        logger.dev('[useChatResponse] ❌ Erreur:', { error: String(error) });
       }
       
       // Appeler le callback d'erreur si disponible

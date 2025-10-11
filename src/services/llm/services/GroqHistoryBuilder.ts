@@ -1,9 +1,14 @@
 import type { ChatMessage } from '@/types/chat';
-import type { HistoryBuildContext, HistoryBuildResult, GroqLimits } from '../types/groqTypes';
+import type { GroqLimits } from '../types/groqTypes';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
- * Service responsable de la construction et validation de l'historique pour Groq
+ * Service simple pour la construction de l'historique Groq
+ * 
+ * Ce service fait juste ce qui est nécessaire :
+ * - Construire l'historique initial (system + history + user message)
+ * - Nettoyer les noms de tools des suffixes de channels legacy
+ * - Limiter la taille de l'historique selon les limits Groq
  */
 export class GroqHistoryBuilder {
   private limits: GroqLimits;
@@ -13,18 +18,17 @@ export class GroqHistoryBuilder {
   }
 
   /**
-   * Construit l'historique pour le premier appel au LLM
+   * Construit l'historique pour l'appel au LLM
    */
   buildInitialHistory(
     systemContent: string,
     userMessage: string,
     cleanedHistory: ChatMessage[]
   ): ChatMessage[] {
-    const historyWithoutOldCoTs = this.purgeOldCoTs(cleanedHistory);
-
+    const cleanedMessages = this.cleanHistory(cleanedHistory);
     const messages: ChatMessage[] = [];
 
-    // 1. Message système (uniquement si contenu non vide) — pas de channel pour system
+    // 1. Message système (si présent)
     if (systemContent && systemContent.trim().length > 0) {
       messages.push({
         id: `msg-system-${Date.now()}`,
@@ -34,11 +38,11 @@ export class GroqHistoryBuilder {
       });
     }
 
-    // 2. Historique sans CoT, borné
-    const contextMessages = historyWithoutOldCoTs.slice(-this.limits.maxContextMessages);
+    // 2. Historique nettoyé et limité
+    const contextMessages = cleanedMessages.slice(-this.limits.maxContextMessages);
     messages.push(...contextMessages);
 
-    // 3. Message utilisateur — pas de channel pour user
+    // 3. Message utilisateur
     messages.push({
       id: `msg-user-${Date.now()}`,
       role: 'user',
@@ -46,266 +50,50 @@ export class GroqHistoryBuilder {
       timestamp: new Date().toISOString()
     });
 
-    logger.dev?.(`[GroqHistoryBuilder] 🔧 Historique initial construit: ${messages.length} messages`);
-    logger.dev?.(`[GroqHistoryBuilder] 📊 Détail de l'historique:`, {
-      total: messages.length,
-      system: messages.filter(m => m.role === 'system').length,
-      user: messages.filter(m => m.role === 'user').length,
-      assistant: messages.filter(m => m.role === 'assistant').length,
-      lastUserMessage: userMessage.substring(0, 50) + '...',
-      last3Messages: messages.slice(-3).map(m => ({
-        role: m.role,
-        content: m.content?.substring(0, 30) + '...'
-      }))
-    });
+    logger.dev(`[GroqHistoryBuilder] ✅ Historique construit: ${messages.length} messages`);
     return messages;
   }
 
   /**
-   * Construit l'historique pour le second appel (après exécution des tools)
+   * Nettoie l'historique :
+   * - Supprime les suffixes de channels dans les noms de tools
+   * - Garde tous les messages importants
    */
-  buildSecondCallHistory(context: HistoryBuildContext): HistoryBuildResult {
-    const { systemContent, userMessage, cleanedHistory, toolCalls, toolResults } = context;
-    const historyWithoutOldCoTs = this.purgeOldCoTs(cleanedHistory);
-    const validationErrors: string[] = [];
-
-    // 1. Message système (optionnel si vide) — pas de channel pour system
-    const baseMessages: ChatMessage[] = [];
-    if (systemContent && systemContent.trim().length > 0) {
-      const systemMessage: ChatMessage = {
-        id: `msg-system-${Date.now()}`,
-        role: 'system',
-        content: systemContent,
-        timestamp: new Date().toISOString()
-      };
-      baseMessages.push(systemMessage);
-    }
-
-    // 2. Contexte de conversation (sans CoT), borné
-    const contextMessages = historyWithoutOldCoTs.slice(-this.limits.maxContextMessages);
-    baseMessages.push(...contextMessages);
-
-    // 3. Injecter le message utilisateur si non vide — pas de channel pour user
-    if (userMessage && userMessage.trim().length > 0) {
-      baseMessages.push({
-        id: `msg-user-${Date.now()}`,
-        role: 'user',
-        content: userMessage,
-        timestamp: new Date().toISOString()
-      });
-    }
-    // 5. Message assistant avec tool calls
-    const assistantMessage: ChatMessage = {
-      id: `msg-assistant-${Date.now()}`,
-      role: 'assistant',
-      content: '', // Toujours une string pour compat API
-      tool_calls: toolCalls.map(tc => ({
-        id: tc.id,
-        type: 'function' as const,
-        function: tc.function
-      })),
-      timestamp: new Date().toISOString(),
-      channel: 'commentary'
-    };
-    // 6. Construire les messages tool
-    const toolMessages = this.buildToolMessages(toolResults, validationErrors);
-    
-    // 7. Assembler l'historique final
-    const finalMessages = this.insertToolMessages([...baseMessages, assistantMessage], toolMessages);
-
-    // 7. Validation finale
-    const isValid = validationErrors.length === 0;
-    if (!isValid) {
-      logger.warn('[GroqHistoryBuilder] ⚠️ Erreurs de validation détectées:', validationErrors);
-    }
-
-    return {
-      messages: finalMessages,
-      validationErrors,
-      isValid
-    };
+  private cleanHistory(history: ChatMessage[]): ChatMessage[] {
+    return history.map(msg => this.cleanToolNames(msg));
   }
 
   /**
-   * Construit les messages tool à partir des résultats
+   * Nettoie les noms de tools qui contiennent des suffixes de channels
+   * Ex: "toolName<|channel|>commentary" -> "toolName"
    */
-  private buildToolMessages(toolResults: any[], validationErrors: string[]): ChatMessage[] {
-    logger.dev(`[GroqHistoryBuilder] 🔧 Construction de ${toolResults.length} messages tool`);
+  private cleanToolNames(msg: ChatMessage): ChatMessage {
+    const cleaned = { ...msg };
     
-    return toolResults
-      .map((toolResult, index) => {
-        const toolCallId = toolResult.tool_call_id;
-        const toolName = toolResult.tool_name || toolResult.name;
-        
-        // ✅ CORRECTION: SimpleToolExecutor retourne directement le contenu dans 'content'
-        const payload = toolResult.content || toolResult.details || toolResult.result;
-
-        logger.dev(`[GroqHistoryBuilder] Tool ${index + 1}: ${toolName}`, {
-          toolCallId,
-          toolName,
-          hasContent: !!payload,
-          contentLength: typeof payload === 'string' ? payload.length : 'N/A'
-        });
-
-        if (!toolCallId || !toolName || payload === undefined) {
-          validationErrors.push(`Résultat d'outil invalide: ${JSON.stringify(toolResult)}`);
-          return null;
+    // Nettoyer les tool_calls des messages assistant
+    if (cleaned.tool_calls && Array.isArray(cleaned.tool_calls)) {
+      cleaned.tool_calls = cleaned.tool_calls.map(tc => ({
+        ...tc,
+        function: {
+          ...tc.function,
+          name: this.stripChannelSuffix(tc.function.name)
         }
-
-        const normalizedTimestamp =
-          typeof toolResult.timestamp === 'string'
-            ? toolResult.timestamp
-            : new Date().toISOString();
-
-        return {
-          id: `msg-tool-${toolCallId}`,
-          role: 'tool',
-          tool_call_id: toolCallId,
-          name: toolName,
-          content: typeof payload === 'string' ? payload : JSON.stringify(payload),
-          timestamp: normalizedTimestamp
-        } as ChatMessage;
-      })
-      .filter((msg): msg is ChatMessage => msg !== null);
-  }
-
-  /**
-   * Purge les anciens messages de CoT (canal 'analysis') de l'historique.
-   * C'est une optimisation clé pour GPT-OSS.
-   */
-  private purgeOldCoTs(history: ChatMessage[]): ChatMessage[] {
-    const purgedHistory = history.filter(msg => msg.channel !== 'analysis');
-    const removedCount = history.length - purgedHistory.length;
-    if (removedCount > 0) {
-      logger.dev?.(`[GroqHistoryBuilder] 🧹 ${removedCount} message(s) CoT ('analysis') purgé(s) de l'historique`);
-    }
-    return purgedHistory;
-  }
-
-  /**
-   * Valide un résultat de tool
-   */
-  private validateToolResult(result: any, validationErrors: string[]): boolean {
-    if (!result.tool_call_id || typeof result.tool_call_id !== 'string') {
-      validationErrors.push(`Tool result sans tool_call_id valide: ${JSON.stringify(result)}`);
-      return false;
-    }
-
-    if (!result.name || typeof result.name !== 'string') {
-      validationErrors.push(`Tool result sans nom valide: ${JSON.stringify(result)}`);
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Insère les messages tool après le message assistant correspondant
-   */
-  private insertToolMessages(baseMessages: ChatMessage[], toolMessages: ChatMessage[]): ChatMessage[] {
-    if (toolMessages.length === 0) {
-      return baseMessages;
-    }
-
-    const finalMessages = [...baseMessages];
-    
-    let assistantIndex = -1;
-    for (let i = finalMessages.length - 1; i >= 0; i--) {
-      const m: any = finalMessages[i];
-      if (m.role === 'assistant' && m.tool_calls && m.tool_calls.length > 0) {
-        assistantIndex = i;
-        break;
-      }
+      }));
     }
     
-    if (assistantIndex !== -1) {
-      // Insérer les messages tool juste après
-      finalMessages.splice(assistantIndex + 1, 0, ...toolMessages);
-      logger.dev?.(`[GroqHistoryBuilder] 🔧 Messages tool insérés à l'index ${assistantIndex + 1}`);
-    } else {
-      // Fallback: ajouter à la fin
-      finalMessages.push(...toolMessages);
-      logger.warn(`[GroqHistoryBuilder] ⚠️ Message assistant avec tool_calls non trouvé, messages tool ajoutés à la fin`);
+    // Nettoyer le nom des messages tool
+    if (cleaned.role === 'tool' && cleaned.name) {
+      cleaned.name = this.stripChannelSuffix(cleaned.name);
     }
-
-    return finalMessages;
-  }
-
-  /**
-   * Valide les messages finaux avant envoi à l'API
-   */
-  validateMessages(messages: ChatMessage[]): HistoryBuildResult {
-    const validationErrors: string[] = [];
-    const validatedMessages: ChatMessage[] = [];
-
-    for (let i = 0; i < messages.length; i++) {
-      const msg = messages[i];
-      
-      if (!this.validateMessage(msg, i, validationErrors)) {
-        continue;
-      }
-      
-      validatedMessages.push(msg);
-    }
-
-    const isValid = validationErrors.length === 0;
     
-    if (!isValid) {
-      logger.warn(`[GroqHistoryBuilder] ⚠️ Validation des messages échouée:`, {
-        originalCount: messages.length,
-        validatedCount: validatedMessages.length,
-        errors: validationErrors
-      });
-    }
-
-    return {
-      messages: validatedMessages,
-      validationErrors,
-      isValid
-    };
+    return cleaned;
   }
 
   /**
-   * Valide un message individuel
+   * Supprime le suffixe de channel d'un nom de tool
+   * Ex: "toolName<|channel|>commentary" -> "toolName"
    */
-  private validateMessage(msg: any, index: number, validationErrors: string[]): boolean {
-    if (!msg || typeof msg !== 'object') {
-      validationErrors.push(`Message invalide à l'index ${index}: ${JSON.stringify(msg)}`);
-      return false;
-    }
-
-    if (!msg.role || typeof msg.role !== 'string') {
-      validationErrors.push(`Message sans role valide à l'index ${index}: ${JSON.stringify(msg)}`);
-      return false;
-    }
-
-    // Validation spéciale pour les messages tool
-    if (msg.role === 'tool') {
-      if (!msg.tool_call_id || typeof msg.tool_call_id !== 'string') {
-        validationErrors.push(`Message tool sans tool_call_id valide à l'index ${index}`);
-        return false;
-      }
-      if (!msg.name || typeof msg.name !== 'string') {
-        validationErrors.push(`Message tool sans nom valide à l'index ${index}`);
-        return false;
-      }
-      if (!msg.content || typeof msg.content !== 'string') {
-        validationErrors.push(`Message tool sans contenu valide à l'index ${index}`);
-        return false;
-      }
-    }
-
-    if (msg.role === 'system' || msg.role === 'user' || msg.role === 'assistant') {
-      if (typeof msg.content !== 'string') {
-        validationErrors.push(`Message ${msg.role} sans contenu de type string à l'index ${index}`);
-        return false;
-      }
-      if ((msg.role === 'system' || msg.role === 'user') && msg.content.trim().length === 0) {
-        validationErrors.push(`Message ${msg.role} avec contenu vide à l'index ${index}`);
-        return false;
-      }
-    }
-
-    return true;
+  private stripChannelSuffix(toolName: string): string {
+    return toolName.replace(/<\|channel\|>[a-z]+$/i, '');
   }
 }

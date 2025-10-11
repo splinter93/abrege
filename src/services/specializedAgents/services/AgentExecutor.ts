@@ -12,7 +12,7 @@ import {
   GroqMultimodalPayload
 } from '../types/AgentTypes';
 import { MultimodalHandler } from '../multimodalHandler';
-import { agenticOrchestrator } from '@/services/llm/services/AgenticOrchestrator';
+import { simpleOrchestrator } from '@/services/llm/services/SimpleOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 
 export class AgentExecutor {

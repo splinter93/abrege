@@ -92,7 +92,7 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   
   // Groq spécifique
   serviceTier: 'on_demand', // ✅ Gratuit au lieu de 'auto' (payant)
-  parallelToolCalls: true,
+  parallelToolCalls: false, // ✅ DÉSACTIVÉ pour éviter executed_tools
   reasoningEffort: 'high', // ✅ Maximum pour générer du reasoning
   
   // ✅ Configuration audio par défaut
@@ -213,6 +213,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue un appel à l'API Groq avec une liste de messages déjà préparée
    * ✅ OPTIMISATION: Les messages sont déjà formatés par GroqHistoryBuilder
+   * ✅ MIGRATION MCP: Utilise l'API Responses pour les tools MCP
    */
   async callWithMessages(messages: ChatMessage[], tools: any[]): Promise<LLMResponse> {
     if (!this.isAvailable()) {
@@ -220,7 +221,16 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     }
 
     try {
-      logger.dev(`[GroqProvider] 🚀 Appel direct avec ${messages.length} messages`);
+      // ✅ DÉTECTION MCP: Router vers l'API appropriée
+      const hasMcpTools = tools && tools.some((t: any) => t.type === 'mcp');
+      
+      if (hasMcpTools) {
+        logger.dev(`[GroqProvider] 🔀 Détection de ${tools.filter((t: any) => t.type === 'mcp').length} tools MCP → API Responses`);
+        return await this.callWithResponsesApi(messages, tools);
+      }
+      
+      // ✅ CHAT COMPLETIONS: Pour les tools classiques (function)
+      logger.dev(`[GroqProvider] 🚀 Appel Chat Completions avec ${messages.length} messages`);
       
       // ✅ OPTIMISATION: Conversion directe des ChatMessage vers le format API
       const apiMessages = this.convertChatMessagesToApiFormat(messages);
@@ -230,7 +240,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const response = await this.makeApiCall(payload);
       const result = this.extractResponse(response);
       
-      logger.dev('[GroqProvider] ✅ Appel direct réussi');
+      logger.dev('[GroqProvider] ✅ Appel Chat Completions réussi');
       
       return {
         content: result.content || '',
@@ -242,7 +252,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('[GroqProvider] ❌ Erreur lors de l\'appel direct:', { message: errorMessage });
+      logger.error('[GroqProvider] ❌ Erreur lors de l\'appel:', { message: errorMessage });
       throw error;
     }
   }
@@ -272,6 +282,262 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
 
       return messageObj;
     });
+  }
+
+  /**
+   * ✅ MIGRATION MCP: Appel avec l'API Responses pour les tools MCP
+   * 
+   * L'API Responses de Groq supporte nativement les serveurs MCP et fait la découverte
+   * automatique des tools disponibles.
+   * 
+   * Voir: https://console.groq.com/docs/mcp
+   */
+  private async callWithResponsesApi(messages: ChatMessage[], tools: any[]): Promise<LLMResponse> {
+    try {
+      logger.dev(`[GroqProvider] 🔄 Appel Responses API avec ${messages.length} messages et ${tools.length} tools`);
+      
+      // ✅ Convertir les messages en format "input" pour Responses API
+      const input = this.convertMessagesToInput(messages);
+      
+      // ✅ Préparer le payload pour Responses API
+      const payload = {
+        model: this.config.model,
+        input, // 'input' au lieu de 'messages'
+        tools, // Serveurs MCP passés tels quels
+        temperature: this.config.temperature,
+        top_p: this.config.topP,
+        // Note: max_tokens n'est pas supporté par Responses API
+      };
+      
+      logger.dev('[GroqProvider] 📤 Payload Responses API:', {
+        model: payload.model,
+        inputType: typeof input,
+        inputLength: typeof input === 'string' ? input.length : input.length,
+        toolsCount: tools.length,
+        mcpServers: tools.filter((t: any) => t.type === 'mcp').map((t: any) => t.server_label)
+      });
+      
+      // ✅ DEBUG: Logger le payload complet pour identifier le problème
+      logger.dev('[GroqProvider] 🔍 Payload complet:', JSON.stringify(payload, null, 2));
+      
+      // ✅ Appel à l'endpoint /responses
+      const response = await fetch(`${this.config.baseUrl}/responses`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(this.config.timeout)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        
+        // ✅ Parser l'erreur pour extraire les détails
+        let errorDetails: any = {};
+        try {
+          errorDetails = JSON.parse(errorText);
+        } catch {
+          errorDetails = { error: { message: errorText } };
+        }
+        
+        logger.error('[GroqProvider] ❌ Erreur Responses API:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorDetails
+        });
+        
+        // ✅ NOUVEAU: Pour les erreurs 400 (validation), retourner une réponse structurée
+        // au lieu de throw, pour permettre au LLM de corriger
+        if (response.status === 400 && errorDetails.error?.code === 'tool_use_failed') {
+          logger.dev('[GroqProvider] 🔄 Erreur de validation tool call, retour au LLM pour correction');
+          
+          const errorMessage = errorDetails.error?.message || 'Tool call validation failed';
+          const failedGeneration = errorDetails.error?.failed_generation;
+          
+          // Retourner une réponse avec l'erreur pour que le LLM puisse corriger
+          return {
+            content: '',
+            tool_calls: [],
+            reasoning: '',
+            model: this.config.model,
+            usage: {},
+            // ✅ Marquer comme erreur réessayable
+            validation_error: {
+              message: errorMessage,
+              failed_generation: failedGeneration,
+              recoverable: true
+            }
+          } as any;
+        }
+        
+        // Pour les autres erreurs, throw normalement
+        throw new Error(`Groq Responses API error: ${response.status} - ${errorText}`);
+      }
+
+      const responseData = await response.json();
+      logger.dev('[GroqProvider] 📥 Réponse Responses API:', {
+        id: responseData.id,
+        status: responseData.status,
+        outputCount: responseData.output?.length || 0
+      });
+      
+      // ✅ Parser la réponse Responses API
+      const result = this.parseResponsesOutput(responseData);
+      
+      logger.dev('[GroqProvider] ✅ Responses API parsée:', {
+        hasContent: !!result.content,
+        contentLength: result.content?.length || 0,
+        toolCallsCount: result.tool_calls?.length || 0,
+        hasReasoning: !!result.reasoning
+      });
+      
+      return result;
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('[GroqProvider] ❌ Erreur Responses API:', { message: errorMessage });
+      throw error;
+    }
+  }
+
+  /**
+   * ✅ Convertit les messages en format "input" pour Responses API
+   * 
+   * L'API Responses accepte soit:
+   * - Un string simple (pour une requête unique)
+   * - Un array de messages (pour maintenir l'historique)
+   * 
+   * ⚠️ IMPORTANT: Responses API ne supporte QUE les roles: user, assistant, system, developer
+   * Les messages 'tool' doivent être filtrés ou convertis
+   */
+  private convertMessagesToInput(messages: ChatMessage[]): string | any[] {
+    // Si on a juste un message user, on peut simplifier
+    if (messages.length === 1 && messages[0].role === 'user') {
+      return messages[0].content || '';
+    }
+    
+    // ✅ FILTRER les messages 'tool' pour Responses API
+    // L'API Responses ne supporte pas le role 'tool'
+    const filteredMessages = messages.filter(msg => msg.role !== 'tool');
+    
+    // ✅ Nettoyer COMPLÈTEMENT l'historique pour Responses API
+    // - Supprimer les tool_calls (le LLM ne doit pas apprendre des anciens patterns)
+    // - Supprimer les tool_call_id
+    // - Nettoyer les suffixes legacy <|channel|>xxx dans le contenu
+    const cleanedMessages = filteredMessages.map(msg => {
+      const cleanMsg: any = {
+        role: msg.role as 'user' | 'assistant' | 'system' | 'developer',
+        content: msg.content
+      };
+      
+      // ✅ CRITIQUE: Ne pas inclure les tool_calls de l'historique
+      // Sinon le LLM apprend des anciens formats (avec <|channel|>xxx)
+      // et essaie de les reproduire !
+      
+      return cleanMsg;
+    });
+    
+    logger.dev(`[GroqProvider] 🧹 Messages nettoyés pour Responses API: ${messages.length} → ${cleanedMessages.length} (${messages.length - cleanedMessages.length} messages 'tool' filtrés)`);
+    
+    return cleanedMessages;
+  }
+
+  /**
+   * ✅ Parse la réponse de l'API Responses
+   * 
+   * La réponse contient un array "output" avec différents types:
+   * - mcp_list_tools: Découverte des tools
+   * - reasoning: Raisonnement du modèle
+   * - mcp_call: Exécution d'un tool MCP
+   * - message: Réponse finale
+   */
+  private parseResponsesOutput(responseData: any): LLMResponse {
+    const output = responseData.output || [];
+    
+    let finalContent = '';
+    let reasoning = '';
+    const tool_calls: any[] = [];
+    const mcpCalls: any[] = [];
+    
+    // ✅ Parser chaque élément de l'output
+    for (const item of output) {
+      switch (item.type) {
+        case 'mcp_list_tools':
+          // Découverte des tools - juste pour info
+          logger.dev(`[GroqProvider] 🔍 MCP tools découverts depuis "${item.server_label}": ${item.tools?.length || 0} tools`);
+          break;
+          
+        case 'reasoning':
+          // Raisonnement du modèle
+          if (item.content && Array.isArray(item.content)) {
+            const reasoningTexts = item.content
+              .filter((c: any) => c.type === 'reasoning_text')
+              .map((c: any) => c.text);
+            reasoning = reasoningTexts.join('\n');
+            logger.dev(`[GroqProvider] 🧠 Reasoning: ${reasoning.substring(0, 100)}...`);
+          }
+          break;
+          
+        case 'mcp_call':
+          // Exécution d'un tool MCP
+          // ✅ WORKAROUND HARMONY: Nettoyer les suffixes <|channel|>xxx si présents
+          const cleanedName = item.name.replace(/<\|channel\|>\w+$/i, '');
+          
+          logger.dev(`[GroqProvider] 🔧 MCP call: ${cleanedName} sur ${item.server_label}` + 
+            (cleanedName !== item.name ? ` (nettoyé de "${item.name}")` : ''));
+          
+          mcpCalls.push({
+            server_label: item.server_label,
+            name: cleanedName,
+            arguments: item.arguments,
+            output: item.output
+          });
+          
+          // ✅ Convertir en format tool_call standard pour compatibilité
+          tool_calls.push({
+            id: `mcp_${Date.now()}_${tool_calls.length}`,
+            type: 'function' as const,
+            function: {
+              name: `${item.server_label}_${cleanedName}`,
+              arguments: item.arguments || '{}'
+            }
+          });
+          break;
+          
+        case 'message':
+          // Message final de l'assistant
+          if (item.role === 'assistant' && item.content) {
+            if (Array.isArray(item.content)) {
+              const outputTexts = item.content
+                .filter((c: any) => c.type === 'output_text' || c.type === 'text')
+                .map((c: any) => c.text);
+              finalContent = outputTexts.join('\n');
+            } else if (typeof item.content === 'string') {
+              finalContent = item.content;
+            }
+            logger.dev(`[GroqProvider] 💬 Message final: ${finalContent.substring(0, 100)}...`);
+          }
+          break;
+          
+        default:
+          logger.dev(`[GroqProvider] ❓ Type d'output inconnu: ${item.type}`);
+      }
+    }
+    
+    return {
+      content: finalContent,
+      tool_calls,
+      reasoning,
+      model: responseData.model,
+      usage: responseData.usage,
+      // ✅ Ajouter les infos MCP en extra
+      x_groq: {
+        ...responseData.x_groq,
+        mcp_calls: mcpCalls
+      }
+    } as any;
   }
 
   /**
@@ -349,7 +615,8 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       temperature: this.config.temperature,
       max_completion_tokens: this.config.maxTokens,
       top_p: this.config.topP,
-      stream: false
+      stream: false,
+      parallel_tool_calls: false // ✅ CRITICAL: Désactiver l'exécution native de Groq
     };
 
     if (tools && tools.length > 0) {
