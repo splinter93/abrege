@@ -5,6 +5,7 @@ import { useMarkdownRender } from '../../hooks/editor/useMarkdownRender';
 import { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from './mermaidService';
 import MermaidRenderer from '@/components/mermaid/MermaidRenderer';
 import { createRoot, Root } from 'react-dom/client';
+import { simpleLogger as logger } from '@/utils/logger';
 import '@/styles/mermaid.css';
 import '@/styles/unified-blocks.css';
 
@@ -27,7 +28,7 @@ const useSafeReactRoots = () => {
       rootsRef.current.set(element, root);
       return root;
     } catch (error) {
-      console.warn('Error creating React root:', error);
+      logger.warn('Error creating React root:', error);
       return null;
     }
   }, []);
@@ -39,7 +40,7 @@ const useSafeReactRoots = () => {
       root.render(element);
       return true;
     } catch (error) {
-      console.warn('Error rendering to React root:', error);
+      logger.warn('Error rendering to React root:', error);
       return false;
     }
   }, []);
@@ -58,7 +59,7 @@ const useSafeReactRoots = () => {
         } catch (error) {
           // Ignorer silencieusement les erreurs de démontage pendant le rendu
           if (process.env.NODE_ENV === 'development') {
-            console.warn('Error unmounting root:', error);
+            logger.warn('Error unmounting root:', error);
           }
         }
       });
@@ -203,7 +204,7 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
       
       return doc.body.innerHTML;
     } catch (error) {
-      console.error('Erreur lors du traitement des code blocks:', error);
+      logger.error('Erreur lors du traitement des code blocks:', error);
       // ✅ SÉCURITÉ: Fallback sécurisé en cas d'erreur (avec support des tableaux)
       return DOMPurify.sanitize(htmlContent, {
         ALLOWED_TAGS: [

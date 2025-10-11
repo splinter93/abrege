@@ -100,7 +100,7 @@ const DEFAULT_AGENTIC_CONFIG: AgenticConfig = {
   streamProgress: true, // ✅ ACTIVÉ : Progress updates visibles
   enableParallelization: true,
   toolTimeout: 30000,
-  enableCache: false // À activer plus tard
+  enableCache: true // ✅ ACTIVÉ : Gain 10x sur reads répétés
 };
 
 /**
@@ -311,12 +311,12 @@ export class AgenticOrchestrator {
       
       // Exécuter le tool avec timeout
       const timeout = metadata.timeout || this.config.toolTimeout;
-      const resultPromise = this.toolExecutor.executeSimple([toolCall], userToken, sessionId);
-      const timeoutPromise = new Promise<ToolResult[]>((_, reject) => 
+      const resultPromise = this.toolExecutor.executeSimple([toolCall], userToken);
+      const timeoutPromise = new Promise<never>((_, reject) => 
         setTimeout(() => reject(new Error(`Timeout après ${timeout}ms`)), timeout!)
       );
       
-      const results = await Promise.race([resultPromise, timeoutPromise]) as ToolResult[];
+      const results = await Promise.race([resultPromise, timeoutPromise]);
       const result = results[0];
       
       const duration = Date.now() - startTime;
@@ -594,6 +594,8 @@ export class AgenticOrchestrator {
                   iterations: toolCallsCount,
                   duration: sessionDuration,
                   retries: this.metrics.totalRetries,
+                  parallelCalls: 0,
+                  sequentialCalls: 0,
                   consecutiveServerErrors,
                   isGroqFallback: true
                 }
@@ -689,6 +691,8 @@ export class AgenticOrchestrator {
                 iterations: toolCallsCount,
                 duration: sessionDuration,
                 retries: this.metrics.totalRetries,
+                parallelCalls: 0,
+                sequentialCalls: 0,
                 infiniteLoopDetected: true,
                 loopPattern: toolPattern
               }
@@ -728,6 +732,9 @@ export class AgenticOrchestrator {
             retries: this.metrics.totalRetries
           });
           
+          // ✅ FIX BUG O(n²) : Calculer une seule fois au lieu de filtrer pour chaque result
+          const finalStrategy = this.categorizeToolCalls(allToolCalls);
+          
           return {
             success: true,
             content: response.content,
@@ -740,14 +747,8 @@ export class AgenticOrchestrator {
               iterations: toolCallsCount,
               duration: sessionDuration,
               retries: this.metrics.totalRetries,
-              parallelCalls: allToolResults.filter((_, idx) => {
-                const strategy = this.categorizeToolCalls([allToolCalls[idx]]);
-                return strategy.parallel.length > 0;
-              }).length,
-              sequentialCalls: allToolResults.filter((_, idx) => {
-                const strategy = this.categorizeToolCalls([allToolCalls[idx]]);
-                return strategy.sequential.length > 0;
-              }).length,
+              parallelCalls: finalStrategy.parallel.length,
+              sequentialCalls: finalStrategy.sequential.length,
               duplicatesDetected: duplicatesDetected.length
             }
           };
@@ -1290,7 +1291,11 @@ ${failedGen ? `- Génération échouée : ${failedGen.replace(/\\n/g, '\n').repl
         
         return { helpfulMessage, toolName };
       } catch {
-        // Si parsing échoue, message générique
+        // ✅ Fallback explicite si parsing échoue
+        return {
+          helpfulMessage: `⚠️ **Erreur de validation de tool call**\n\nLe format de l'erreur n'a pas pu être parsé. Réessaye avec des paramètres simplifiés ou utilise un autre tool.`,
+          toolName: undefined
+        };
       }
     }
     

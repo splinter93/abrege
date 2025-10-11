@@ -276,7 +276,8 @@ export async function POST(request: NextRequest) {
       userId: userId,
       sessionId,
       agentName: finalAgentConfig.name,
-      agentModel: finalAgentConfig.model
+      agentModel: finalAgentConfig.model,
+      hasJWT: !!userToken
     });
     
     const result = await handleGroqGptOss120b({
@@ -287,7 +288,7 @@ export async function POST(request: NextRequest) {
       },
       sessionHistory: history,
       agentConfig: finalAgentConfig, // ✅ Récupéré depuis la base, par ID si fourni
-      userToken: userId, // ✅ FIX CRITIQUE: Passer userId au lieu du JWT
+      userToken: userToken!, // ✅ FIX MCP: Passer le JWT original pour l'authentification MCP (pas le userId)
       sessionId
     });
     

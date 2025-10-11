@@ -124,6 +124,21 @@ export interface AgenticResponse {
     
     /** Nombre de tool calls séquentiels */
     sequentialCalls: number;
+    
+    /** Nombre d'erreurs serveur consécutives (optionnel) */
+    consecutiveServerErrors?: number;
+    
+    /** Indique si c'est une réponse de fallback Groq (optionnel) */
+    isGroqFallback?: boolean;
+    
+    /** Boucle infinie détectée (optionnel) */
+    infiniteLoopDetected?: boolean;
+    
+    /** Pattern de la boucle détectée (optionnel) */
+    loopPattern?: string;
+    
+    /** Nombre de duplications détectées (optionnel) */
+    duplicatesDetected?: number;
   };
 }
 

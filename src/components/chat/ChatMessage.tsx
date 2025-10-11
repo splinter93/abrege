@@ -8,6 +8,7 @@ import BubbleButtons from './BubbleButtons';
 import ReasoningDropdown from './ReasoningDropdown';
 import { useChatStore } from '@/store/useChatStore';
 import { useStreamingPreferences } from '@/hooks/useStreamingPreferences';
+import { simpleLogger as logger } from '@/utils/logger';
 // import StreamingLineByLine from './StreamingLineByLine'; // Supprimé - faux streaming
 import './ReasoningDropdown.css';
 import './ToolCallMessage.css';
@@ -35,7 +36,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   
   // Vérification de sécurité
   if (!message) {
-    console.warn('ChatMessage: message is undefined');
+    logger.warn('ChatMessage: message is undefined');
     return null;
   }
   
@@ -151,10 +152,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 await navigator.clipboard.writeText(content);
                 // Optionnel: feedback visuel
               } catch (err) {
-                console.error('Failed to copy text: ', err);
+                logger.error('Failed to copy text: ', err);
               }
             }}
-            onEdit={() => console.log('Édition du message')}
+            onEdit={() => logger.debug('Édition du message')}
             className={role === 'user' ? 'bubble-buttons-user' : ''}
           />
         </div>

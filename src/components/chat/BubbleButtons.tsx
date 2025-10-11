@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { simpleLogger as logger } from '@/utils/logger';
 import './BubbleButtons.css';
 import { FiCopy, FiCheck, FiEdit3 } from 'react-icons/fi';
 
@@ -30,7 +31,7 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
       // Reset the copied state after 2 seconds
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy text: ', err);
+      logger.error('Failed to copy text: ', err);
     }
   };
 

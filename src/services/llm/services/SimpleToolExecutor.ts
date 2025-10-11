@@ -21,6 +21,7 @@ export interface ToolResult {
   content: string;
   success: boolean;
   error?: string;
+  timestamp?: string;
 }
 
 export interface ExecutionContext {

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { simpleLogger as logger } from '@/utils/logger';
 
 // ========================================
 // VALIDATION DES PROPS DES COMPOSANTS CHAT
@@ -155,7 +156,7 @@ export function usePropsValidation<T>(
   if (process.env.NODE_ENV === 'development') {
     const validation = validateProps(schema, props);
     if (!validation.success) {
-      console.warn(
+      logger.warn(
         `[${componentName}] Props validation failed:`,
         validation.error,
         '\nProps received:',

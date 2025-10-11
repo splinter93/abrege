@@ -127,10 +127,14 @@ export class McpConfigService {
    * - MCP Factoria : Pour les serveurs MCP personnalisés
    * 
    * ⚠️ TOUJOURS en mode hybride pour garder l'accès aux données Scrivia
+   * 
+   * @param agentId - ID de l'agent
+   * @param userToken - JWT de l'utilisateur authentifié (pour remplacer {{USER_JWT}})
+   * @param openApiTools - Tools OpenAPI à combiner avec les serveurs MCP
    */
   async buildHybridTools(
     agentId: string,
-    userId: string,
+    userToken: string,
     openApiTools: Array<{ type: 'function'; function: { name: string; description: string; parameters: any } }>
   ): Promise<Array<
     | { type: 'function'; function: { name: string; description: string; parameters: any } }
@@ -145,7 +149,27 @@ export class McpConfigService {
     }
 
     // ✅ Mode hybride : OpenAPI + MCP Factoria
-    const mcpServers = mcpConfig.servers;
+    // Injecter le JWT de l'utilisateur dans les serveurs qui utilisent {{USER_JWT}}
+    const mcpServers = mcpConfig.servers.map(server => {
+      if (server.headers) {
+        const processedHeaders: Record<string, string> = {};
+        for (const [key, value] of Object.entries(server.headers)) {
+          // Remplacer {{USER_JWT}} par le vrai JWT de l'utilisateur
+          if (value === '{{USER_JWT}}' && userToken) {
+            processedHeaders[key] = `Bearer ${userToken}`;
+            logger.dev(`[McpConfigService] 🔑 JWT injecté pour serveur: ${server.server_label}`);
+          } else {
+            processedHeaders[key] = value;
+          }
+        }
+        return {
+          ...server,
+          headers: processedHeaders
+        };
+      }
+      return server;
+    });
+    
     logger.dev(`[McpConfigService] 🔀 Mode hybride: ${openApiTools.length} OpenAPI (Scrivia) + ${mcpServers.length} MCP (Factoria)`);
     
     // Retourner tous les tools : OpenAPI + serveurs MCP

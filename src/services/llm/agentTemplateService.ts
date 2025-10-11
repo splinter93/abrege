@@ -21,7 +21,9 @@ export interface AgentTemplateConfig {
   model?: string;
   temperature?: number;
   max_tokens?: number;
+  max_completion_tokens?: number;
   top_p?: number;
+  reasoning_effort?: 'low' | 'medium' | 'high';
   
   // Support MCP natif
   mcp_config?: {
