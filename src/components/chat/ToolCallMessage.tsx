@@ -18,9 +18,10 @@ interface ToolCallMessageProps {
     success?: boolean;
   }>;
   className?: string;
+  onRetry?: (toolCall: { id: string; function: { name: string; arguments: string } }) => void;
 }
 
-const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResults = [], className = '' }) => {
+const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResults = [], className = '', onRetry }) => {
   const [collapsed, setCollapsed] = React.useState(true);
   
   if (!toolCalls || toolCalls.length === 0) return null;
@@ -188,8 +189,22 @@ const ToolCallMessage: React.FC<ToolCallMessageProps> = ({ toolCalls, toolResult
                           if ((parsed && parsed.success === false) || parsed?.error) {
                             const errMsg = (parsed?.message || parsed?.error || 'Erreur').toString();
                             return (
-                              <div className="tool-call-result-error-details">
-                                ❌ {errMsg}
+                              <div className="tool-call-result-error-section">
+                                <div className="tool-call-result-error-details">
+                                  ❌ {errMsg}
+                                </div>
+                                {onRetry && (
+                                  <button
+                                    className="tool-call-retry-button"
+                                    onClick={() => onRetry(toolCall)}
+                                    title="Réessayer ce tool call"
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <path d="M21 2v6h-6M3 22v-6h6M21 8a9 9 0 0 1-9 13M3 16a9 9 0 0 1 9-13"/>
+                                    </svg>
+                                    Réessayer
+                                  </button>
+                                )}
                               </div>
                             );
                           }

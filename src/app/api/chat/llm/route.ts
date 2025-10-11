@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import { handleGroqGptOss120b } from '@/services/llm/groqGptOss120b';
 import { simpleLogger as logger } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
+import { chatRateLimiter, toolCallsRateLimiter } from '@/services/rateLimiter';
 
 // Client Supabase admin pour accéder aux agents
 const supabase = createClient(
@@ -115,6 +116,35 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+    
+    // ✅ SÉCURITÉ: Rate limiting par utilisateur
+    const chatLimit = await chatRateLimiter.check(userId);
+    
+    if (!chatLimit.allowed) {
+      const resetDate = new Date(chatLimit.resetTime);
+      logger.warn(`[LLM Route] ⛔ Rate limit dépassé pour userId ${userId.substring(0, 8)}...`);
+      
+      return NextResponse.json(
+        {
+          error: 'Rate limit dépassé',
+          message: `Vous avez atteint la limite de ${chatLimit.limit} messages par minute. Veuillez réessayer dans quelques instants.`,
+          remaining: chatLimit.remaining,
+          resetTime: chatLimit.resetTime,
+          resetDate: resetDate.toISOString()
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': chatLimit.limit.toString(),
+            'X-RateLimit-Remaining': chatLimit.remaining.toString(),
+            'X-RateLimit-Reset': chatLimit.resetTime.toString(),
+            'Retry-After': Math.ceil((chatLimit.resetTime - Date.now()) / 1000).toString()
+          }
+        }
+      );
+    }
+    
+    logger.dev(`[LLM Route] ✅ Rate limit OK: ${chatLimit.remaining}/${chatLimit.limit} restants`);
     
     // Extraire les valeurs nécessaires depuis le contexte
     const { sessionId: extractedSessionId, agentId, uiContext } = context;

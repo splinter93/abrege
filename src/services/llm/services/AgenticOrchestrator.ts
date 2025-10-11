@@ -19,6 +19,7 @@ import { agentTemplateService, AgentTemplateConfig } from '../agentTemplateServi
 import { UIContext } from '../ContextCollector';
 import { mcpConfigService } from '../mcpConfigService';
 import { getOpenAPIV2Tools } from '@/services/openApiToolsGenerator';
+import { groqCircuitBreaker } from '@/services/circuitBreaker';
 import {
   ThinkingBlock,
   ProgressUpdate,
@@ -528,9 +529,7 @@ export class AgenticOrchestrator {
     const allToolResults: ToolResult[] = [];
     let isFirstPass = true;
     
-    // ✅ NOUVEAU : Compteurs pour éviter les boucles infinies
-    let consecutiveServerErrors = 0;
-    const MAX_SERVER_ERROR_RETRIES = 3;
+    // ✅ Compteurs pour éviter les boucles infinies
     const previousHistoryPatterns: string[] = [];
 
     try {
@@ -540,10 +539,10 @@ export class AgenticOrchestrator {
         
         let response: LLMResponse;
         try {
-          response = await this.callLLM(currentMessage, updatedHistory, context, 'auto', llmProvider);
-          
-          // ✅ NOUVEAU : Reset compteur d'erreurs serveur après un appel réussi
-          consecutiveServerErrors = 0;
+          // ✅ Utiliser le circuit breaker global pour Groq
+          response = await groqCircuitBreaker.execute(async () => {
+            return await this.callLLM(currentMessage, updatedHistory, context, 'auto', llmProvider);
+          });
           
         } catch (llmError) {
           const errorMessage = llmError instanceof Error ? llmError.message : String(llmError);
@@ -572,49 +571,40 @@ export class AgenticOrchestrator {
             throw llmError;
           }
           
-          // 🚨 NOUVEAU : Gestion spéciale des erreurs serveur (500, 502, 503)
+          // 🚨 Gestion erreurs serveur avec circuit breaker
           if (isServerError) {
-            consecutiveServerErrors++;
+            // Le circuit breaker gérera automatiquement les erreurs répétées
+            logger.warn(`[AgenticOrchestrator] ⚠️ Erreur serveur Groq détectée (géré par circuit breaker)`);
             
-            // ❌ Trop d'erreurs serveur consécutives → ABANDON avec fallback
-            if (consecutiveServerErrors > MAX_SERVER_ERROR_RETRIES) {
-              logger.error(`[AgenticOrchestrator] 💀 Trop d'erreurs serveur consécutives (${consecutiveServerErrors}), fallback`);
+            // Vérifier l'état du circuit breaker
+            if (groqCircuitBreaker.isOpen()) {
+              logger.error(`[AgenticOrchestrator] 🔴 Circuit breaker OPEN pour Groq`);
               
-              // Retourner une réponse de fallback intelligente
+              // Retourner fallback immédiat
               const sessionDuration = Date.now() - sessionStart;
               return {
-                success: true, // ✅ Succès pour ne pas bloquer l'UI
-                content: "Je rencontre actuellement des difficultés techniques temporaires avec le service d'IA. Les serveurs sont peut-être surchargés. Veuillez réessayer dans quelques instants ou reformuler votre question différemment.",
+                success: true,
+                content: "Le service d'IA est temporairement indisponible en raison d'un trop grand nombre d'erreurs. Le système se rétablira automatiquement dans quelques instants. Veuillez réessayer.",
                 toolCalls: allToolCalls,
                 toolResults: allToolResults,
                 thinking: this.thinkingBlocks,
                 progress: this.progressUpdates,
-                reasoning: `Erreur serveur Groq persistante après ${consecutiveServerErrors} tentatives. Réponse de fallback pour maintenir l'expérience utilisateur.`,
+                reasoning: 'Circuit breaker Groq OPEN - Service temporairement indisponible',
                 metadata: {
                   iterations: toolCallsCount,
                   duration: sessionDuration,
                   retries: this.metrics.totalRetries,
                   parallelCalls: 0,
                   sequentialCalls: 0,
-                  consecutiveServerErrors,
+                  circuitBreakerOpen: true,
                   isGroqFallback: true
                 }
               };
             }
             
-            // ✅ Backoff exponentiel pour erreurs serveur
-            const backoffDelay = Math.min(1000 * Math.pow(2, consecutiveServerErrors - 1), 10000);
-            logger.warn(`[AgenticOrchestrator] ⏳ Erreur serveur ${consecutiveServerErrors}/${MAX_SERVER_ERROR_RETRIES}, attente ${backoffDelay}ms avant retry`);
-            
-            await new Promise(resolve => setTimeout(resolve, backoffDelay));
-            
-            // ✅ NE PAS polluer l'historique avec des messages d'erreur serveur répétés
-            // Les erreurs serveur ne peuvent pas être corrigées par le LLM
-            
+            // Backoff simple
+            await new Promise(resolve => setTimeout(resolve, 2000));
             toolCallsCount++;
-            logger.warn(`[AgenticOrchestrator] 🔁 Retry après erreur serveur (${toolCallsCount}/${maxToolCalls})`);
-            
-            // Vider currentMessage pour forcer l'utilisation de l'historique
             currentMessage = '';
             continue;
           }
@@ -1170,11 +1160,27 @@ export class AgenticOrchestrator {
       
       return `${toolCall.function.name}:${normalizedArgs}`;
     } catch (error) {
-      // Si parsing échoue, normaliser quand même la string brute
-      logger.warn(`[AgenticOrchestrator] ⚠️ Failed to parse tool call arguments:`, error);
-      const cleanArgs = toolCall.function.arguments.replace(/\s+/g, '');
-      return `${toolCall.function.name}:${cleanArgs}`;
+      // ✅ AMÉLIORATION: Fallback plus robuste avec hash du contenu
+      logger.warn(`[AgenticOrchestrator] ⚠️ Failed to parse tool call arguments, using hash:`, error);
+      
+      // Utiliser un hash simple du contenu brut pour éviter les faux positifs
+      const hash = this.simpleHash(toolCall.function.arguments);
+      
+      return `${toolCall.function.name}:hash_${hash}`;
     }
+  }
+
+  /**
+   * Hash simple et rapide d'une chaîne
+   */
+  private simpleHash(str: string): string {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36);
   }
 
   /**

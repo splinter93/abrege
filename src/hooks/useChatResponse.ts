@@ -93,14 +93,6 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           errorData: safeErrorData
         });
         
-        // 🔧 TEMPORAIRE: Log direct dans la console pour debug
-        console.error('🔍 DEBUG - Réponse d\'erreur complète:', JSON.stringify({
-          status: response.status,
-          statusText: response.statusText,
-          errorText: errorText,
-          errorData: errorData
-        }, null, 2));
-        
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -133,59 +125,21 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         throw new Error('Réponse vide du serveur');
       }
 
-      // ✅ RESTAURATION: Logique originale qui fonctionnait
+      // ✅ NOUVELLE LOGIQUE CLAIRE ET ROBUSTE
       if (data.success) {
-        // 🔧 DEBUG: Logger la structure de la réponse
         logger.dev('[useChatResponse] 🔍 Structure de la réponse:', {
           success: data.success,
-          has_new_tool_calls: data.has_new_tool_calls,
-          tool_calls: data.tool_calls,
+          is_relance: data.is_relance,
           tool_calls_length: data.tool_calls?.length || 0,
-          content: data.content?.substring(0, 100) + '...',
-          content_length: data.content?.length || 0,
-          is_relance: data.is_relance
+          tool_results_length: data.tool_results?.length || 0,
+          content_length: data.content?.length || 0
         });
 
-        // 🎯 Gérer le cas des nouveaux tool calls (continuation du cycle)
-        if (data.has_new_tool_calls && data.tool_calls && data.tool_calls.length > 0) {
-          logger.dev('[useChatResponse] 🔄 Nouveaux tool calls détectés, continuation du cycle');
-          logger.tool('[useChatResponse] 🔄 Nouveaux tool calls détectés, continuation du cycle');
-          
-          // Traiter les nouveaux tool calls
-          const toolCallIds = data.tool_calls.map((tc: { id: string }) => tc.id);
-          setPendingToolCalls(new Set(toolCallIds));
-          
-          onToolCalls?.(data.tool_calls, 'tool_chain');
-          
-          // Si on a des tool results, les traiter immédiatement
-          if (data.tool_results && data.tool_results.length > 0) {
-            for (const toolResult of data.tool_results) {
-              onToolResult?.(
-                toolResult.name,
-                toolResult.result,
-                toolResult.success,
-                toolResult.tool_call_id
-              );
-              
-              // Marquer ce tool call comme terminé
-              setPendingToolCalls(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(toolResult.tool_call_id);
-                return newSet;
-              });
-            }
-          }
-          
-          // 🎯 IMPORTANT: Ne pas appeler onComplete ici car le cycle continue
-          // L'utilisateur doit attendre la réponse finale
-          return;
-        }
-        
-        // 🎯 Gérer le cas de la relance automatique (LLM a répondu après tool calls)
-        // PRIORITÉ: Vérifier is_relance AVANT de vérifier tool_calls
-        if (data.is_relance && !data.has_new_tool_calls) {
-          logger.dev('[useChatResponse] ✅ Relance automatique terminée, réponse finale reçue');
-          logger.tool('[useChatResponse] ✅ Relance automatique terminée, réponse finale reçue');
+        // 🎯 PRIORITÉ 1 : Réponse finale (is_relance = true)
+        // Le LLM a terminé son traitement après avoir utilisé des tools
+        if (data.is_relance) {
+          logger.dev('[useChatResponse] ✅ Réponse finale après tool calls reçue');
+          logger.tool('[useChatResponse] ✅ Réponse finale reçue');
           
           // Traiter les tool results si présents
           if (data.tool_results && data.tool_results.length > 0) {
@@ -199,39 +153,36 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
             }
           }
           
-          // 🎯 NOUVEAU: Informer si des tools ont échoué mais ont été gérés intelligemment
+          // Informer si des tools ont échoué
           if (data.has_failed_tools) {
             logger.dev('[useChatResponse] ⚠️ Des tools ont échoué mais le LLM a géré intelligemment');
-            // Optionnel: Ajouter un indicateur visuel pour l'utilisateur
           }
           
-          // Appeler onComplete avec la réponse finale (avec tool calls pour l'affichage)
-          logger.dev('[useChatResponse] 🎯 Appel onComplete (relance automatique):', {
-            content: data.content?.substring(0, 100) + '...',
-            reasoning: data.reasoning?.substring(0, 50) + '...',
-            tool_calls: data.tool_calls?.length || 0,
-            tool_results: data.tool_results?.length || 0
-          });
-          onComplete?.(data.content || '', data.reasoning || '', data.tool_calls || [], data.tool_results || []);
+          // ✅ Toujours appeler onComplete pour une réponse finale
+          logger.dev('[useChatResponse] 🎯 Appel onComplete (réponse finale)');
+          onComplete?.(
+            data.content || '', 
+            data.reasoning || '', 
+            data.tool_calls || [], 
+            data.tool_results || []
+          );
           return;
         }
         
-        // Gérer les tool calls normaux si présents (premier appel)
-        if (data.tool_calls && data.tool_calls.length > 0 && !data.is_relance) {
-          // 🔧 AMÉLIORATION: Gestion des multiples tool calls
+        // 🎯 PRIORITÉ 2 : Tool calls en cours (is_relance = false)
+        if (data.tool_calls && data.tool_calls.length > 0) {
           const toolCallIds = data.tool_calls.map((tc: { id: string }) => tc.id);
           setPendingToolCalls(new Set(toolCallIds));
           
-          // 🔧 NOUVEAU: Log spécial pour les multiples tool calls
           if (data.tool_calls.length > 10) {
-            logger.dev(`[useChatResponse] ⚡ Multiple tool calls détectés: ${data.tool_calls.length} tools`);
-            logger.tool(`[useChatResponse] ⚡ Multiple tool calls détectés: ${data.tool_calls.length} tools`);
+            logger.tool(`[useChatResponse] ⚡ ${data.tool_calls.length} tool calls détectés`);
+          } else {
+            logger.tool(`[useChatResponse] 🔧 ${data.tool_calls.length} tool call(s) détecté(s)`);
           }
           
-          logger.tool(`[useChatResponse] 🔧 Tool calls détectés: ${data.tool_calls.length} tools`);
           onToolCalls?.(data.tool_calls, 'tool_chain');
           
-          // Si on a des tool results, les traiter immédiatement
+          // Traiter les tool results s'ils sont déjà disponibles
           if (data.tool_results && data.tool_results.length > 0) {
             for (const toolResult of data.tool_results) {
               onToolResult?.(
@@ -249,30 +200,32 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
               });
             }
 
-            // 🔧 AMÉLIORATION: Gestion intelligente de la relance pour multiples tools
-            if (data.tool_results.length === data.tool_calls.length) {
-              logger.dev(`[useChatResponse] ✅ Tous les ${data.tool_calls.length} tool calls sont terminés`);
+            // Logger la progression
+            const completedCount = data.tool_results.length;
+            const totalCount = data.tool_calls.length;
+            
+            if (completedCount === totalCount) {
+              logger.dev(`[useChatResponse] ✅ Tous les ${totalCount} tool calls terminés`);
               onToolExecutionComplete?.(data.tool_results);
             } else {
-              logger.dev(`[useChatResponse] ⏳ ${data.tool_results.length}/${data.tool_calls.length} tool calls terminés`);
+              logger.dev(`[useChatResponse] ⏳ ${completedCount}/${totalCount} tool calls terminés`);
             }
           }
-        } else {
-          // Pas de tool calls ou réponse finale, appeler onComplete directement
-          logger.dev('[useChatResponse] ✅ Réponse simple sans tool calls, appel onComplete');
-          logger.dev('[useChatResponse] 📄 Contenu:', { 
-            content: data.content?.substring(0, 100) + '...', 
-            contentLength: data.content?.length || 0,
-            reasoning: data.reasoning?.substring(0, 50) + '...'
-          });
-          logger.dev('[useChatResponse] 🎯 Appel onComplete (réponse simple):', {
-            content: data.content?.substring(0, 100) + '...',
-            reasoning: data.reasoning?.substring(0, 50) + '...',
-            hasReasoning: !!data.reasoning,
-            reasoningLength: data.reasoning?.length || 0
-          });
-          onComplete?.(data.content || '', data.reasoning || '', data.tool_calls || [], data.tool_results || []);
+          
+          // ❌ NE PAS appeler onComplete ici - attendre la réponse finale
+          return;
         }
+        
+        // 🎯 PRIORITÉ 3 : Réponse simple sans tool calls
+        logger.dev('[useChatResponse] ✅ Réponse simple sans tool calls');
+        logger.dev('[useChatResponse] 🎯 Appel onComplete (réponse simple)');
+        onComplete?.(
+          data.content || '', 
+          data.reasoning || '', 
+          [], 
+          []
+        );
+        return;
       } else {
         // 🔧 AMÉLIORATION: Gestion des erreurs serveur
         if (data.error) {

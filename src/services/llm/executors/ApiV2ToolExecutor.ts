@@ -6,6 +6,7 @@
 import { ToolCall, ToolResult } from '../types/apiV2Types';
 import { ApiV2HttpClient } from '../clients/ApiV2HttpClient';
 import { simpleLogger as logger } from '@/utils/logger';
+import { validateToolArgs } from '../validation/toolSchemas';
 
 /**
  * Exécuteur de tools simplifié
@@ -30,8 +31,8 @@ export class ApiV2ToolExecutor {
     try {
       logger.info(`[ApiV2ToolExecutor] 🚀 Executing tool: ${func.name}`);
 
-      // Parser les arguments
-      const args = this.parseArguments(func.arguments);
+      // Parser et valider les arguments avec Zod
+      const args = this.parseArguments(func.arguments, func.name);
       
       // Exécuter le tool
       const result = await this.executeToolFunction(func.name, args, userToken);
@@ -158,16 +159,47 @@ export class ApiV2ToolExecutor {
   }
 
   /**
-   * Parser les arguments JSON
+   * Parser et valider les arguments JSON avec Zod
    */
-  private parseArguments(argumentsStr: string): Record<string, unknown> {
+  private parseArguments(argumentsStr: string, toolName: string): Record<string, unknown> {
     try {
+      // 1. Parser le JSON
       const parsed = JSON.parse(argumentsStr || '{}');
       
-      // 🔧 CORRECTION: Nettoyer les paramètres null pour éviter les erreurs Groq
-      return this.cleanNullParameters(parsed);
+      // 2. Nettoyer les paramètres null
+      const cleaned = this.cleanNullParameters(parsed);
+      
+      // 3. Valider avec Zod
+      const validation = validateToolArgs(toolName, cleaned);
+      
+      if (!validation.success) {
+        // Extraire les erreurs de validation de manière lisible
+        const errors = validation.error.errors.map(e => {
+          const path = e.path.length > 0 ? `${e.path.join('.')}` : 'racine';
+          return `${path}: ${e.message}`;
+        }).join(', ');
+        
+        logger.error(`[ApiV2ToolExecutor] ❌ Validation Zod échouée pour ${toolName}:`, {
+          errors: validation.error.errors,
+          args: cleaned
+        });
+        
+        throw new Error(`Arguments invalides pour ${toolName}: ${errors}`);
+      }
+      
+      logger.dev(`[ApiV2ToolExecutor] ✅ Arguments validés pour ${toolName}`);
+      
+      // 4. Retourner les données validées et typées
+      return validation.data;
+      
     } catch (error) {
-      throw new Error('Arguments JSON invalides');
+      if (error instanceof SyntaxError) {
+        logger.error('[ApiV2ToolExecutor] ❌ JSON parse error:', error);
+        throw new Error(`JSON invalide: ${error.message}`);
+      }
+      
+      // Relancer l'erreur de validation Zod
+      throw error;
     }
   }
 
