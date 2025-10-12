@@ -5,6 +5,7 @@ import { createSupabaseClient } from '@/utils/supabaseClient';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
 import { canPerformAction } from '@/utils/scopeValidation';
+import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -120,13 +121,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       logApi.warn(`⚠️ Fallback slug utilisé: ${slug}`, e);
     }
 
+    // 🛡️ SÉCURITÉ : Sanitizer le markdown pour empêcher les injections HTML
+    const safeMarkdown = sanitizeMarkdownContent(validatedData.markdown_content || '');
+
     // Créer la note directement dans la base de données
     const { data: note, error: createError } = await supabase
       .from('articles')
       .insert({
         source_title: validatedData.source_title,
-        markdown_content: validatedData.markdown_content || '',
-        html_content: validatedData.markdown_content || '', // Pour l'instant, on met le même contenu
+        markdown_content: safeMarkdown,
+        html_content: safeMarkdown, // Pour l'instant, on met le même contenu
         header_image: validatedData.header_image,
         folder_id: validatedData.folder_id,
         classeur_id: classeurId, // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id

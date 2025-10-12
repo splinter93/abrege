@@ -26,13 +26,36 @@ export function replaceTildeInTables(markdown: string): string {
 /**
  * Prétraitement complet du Markdown avant insertion dans l'éditeur
  * 
- * @param markdown - Le contenu Markdown brut
- * @returns Le Markdown prétraité et sécurisé
+ * @description Applique diverses transformations au Markdown pour corriger
+ * les problèmes connus:
+ * 1. Dé-échappe les entités HTML (sécurité bidirectionnelle serveur/client)
+ * 2. Remplace les ~ dans les tables (fix bug LLM)
+ * 
+ * @param markdown - Le contenu Markdown brut depuis la DB
+ * @returns Le Markdown prétraité et sécurisé pour Tiptap
  */
 export function preprocessMarkdown(markdown: string): string {
   if (!markdown) return markdown;
   
   let processed = markdown;
+  
+  // 🔓 ÉTAPE 0 : Dé-échapper les entités HTML (DB → Éditeur)
+  // Dé-échappement basique des entités HTML
+  // Le HTML échappé côté serveur doit être dé-échappé côté client
+  // pour que Tiptap puisse le gérer correctement
+  const hasHtmlEntities = /&(?:lt|gt|amp|quot|#039);/i.test(processed);
+  if (hasHtmlEntities) {
+    processed = processed
+      .replace(/&#039;/g, "'")   // Dé-échapper '
+      .replace(/&quot;/g, '"')   // Dé-échapper "
+      .replace(/&gt;/g, '>')     // Dé-échapper >
+      .replace(/&lt;/g, '<')     // Dé-échapper <
+      .replace(/&amp;/g, '&');   // Dé-échapper & en dernier
+      
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[markdownPreprocessor] 🔓 Entités HTML dé-échappées pour l\'éditeur');
+    }
+  }
   
   // 1. Remplacer les ~ par ≈ dans les tables (fix bug LLM)
   processed = replaceTildeInTables(processed);

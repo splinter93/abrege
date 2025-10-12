@@ -32,18 +32,19 @@ import { logApi } from './logger';
 export function sanitizeMarkdownContent(content: string): string {
   if (!content) return content;
 
-  // Détecter si du HTML brut est présent
-  const hasRawHtml = /<[a-z][\s\S]*?>/i.test(content);
+  // Détecter si des caractères HTML potentiellement dangereux sont présents
+  // On échappe si on trouve des balises HTML OU des caractères dangereux isolés
+  const hasHtmlChars = /<|>|&(?!(?:lt|gt|amp|quot|#039);)/.test(content);
   
-  if (!hasRawHtml) {
-    // Pas de HTML brut, retourner tel quel
+  if (!hasHtmlChars) {
+    // Pas de caractères HTML, retourner tel quel
     return content;
   }
 
-  // ⚠️ HTML brut détecté → échapper automatiquement
+  // ⚠️ HTML/caractères dangereux détectés → échapper automatiquement
   logApi.warn('⚠️ [SANITIZER] HTML brut détecté dans markdown_content, échappement automatique appliqué');
   
-  // Échapper tout le HTML
+  // Échapper tous les caractères HTML (dans l'ordre correct: & en premier)
   return content
     .replace(/&/g, '&amp;')   // Échapper & en premier
     .replace(/</g, '&lt;')    // Échapper <
