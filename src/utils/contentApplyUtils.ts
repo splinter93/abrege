@@ -200,38 +200,74 @@ export class ContentApplier {
   } | null {
     const { path, level, heading_id } = heading;
     
-    // Construire le pattern regex pour le heading
-    let pattern = '';
-    
-    if (level) {
-      pattern = `^#{${level}}\\s+`;
-    } else {
-      pattern = `^#{1,6}\\s+`;
-    }
-    
-    // Ajouter le chemin
-    const escapedPath = path.map(p => this.escapeRegExp(p)).join('.*?');
-    pattern += `(${escapedPath})`;
-    
-    // Ajouter l'ID si spécifié
+    // ✅ FIX: Si heading_id est fourni, chercher directement par slug
     if (heading_id) {
-      pattern += `(?:\\s*\\{#${this.escapeRegExp(heading_id)}\\})?`;
-    }
-    
-    const regex = new RegExp(pattern, 'im');
-    const match = content.match(regex);
-    
-    if (!match) {
+      // Le heading_id correspond au slug du heading
+      // Chercher un heading dont le contenu génère ce slug
+      const headingPattern = level 
+        ? `^#{${level}}\\s+(.+)$`
+        : `^#{1,6}\\s+(.+)$`;
+      
+      const headingRegex = new RegExp(headingPattern, 'gm');
+      let match;
+      
+      while ((match = headingRegex.exec(content)) !== null) {
+        const headingText = match[1].trim();
+        const generatedSlug = this.generateSlug(headingText);
+        
+        if (generatedSlug === heading_id) {
+          const start = match.index;
+          const end = start + match[0].length;
+          
+          return {
+            matches: [match[0]],
+            ranges: [{ start, end }]
+          };
+        }
+      }
+      
       return null;
     }
     
-    const start = content.indexOf(match[0]);
-    const end = start + match[0].length;
+    // ✅ FIX: Si path est fourni, chercher le dernier élément du path
+    // (le système hiérarchique complet est complexe, on simplifie)
+    if (path && path.length > 0) {
+      const targetTitle = path[path.length - 1]; // Prendre le dernier élément du path
+      const pattern = level 
+        ? `^#{${level}}\\s+${this.escapeRegExp(targetTitle)}.*$`
+        : `^#{1,6}\\s+${this.escapeRegExp(targetTitle)}.*$`;
+      
+      const regex = new RegExp(pattern, 'm');
+      const match = content.match(regex);
+      
+      if (!match) {
+        return null;
+      }
+      
+      const start = content.indexOf(match[0]);
+      const end = start + match[0].length;
+      
+      return {
+        matches: [match[0]],
+        ranges: [{ start, end }]
+      };
+    }
     
-    return {
-      matches: [match[0]],
-      ranges: [{ start, end }]
-    };
+    return null;
+  }
+  
+  /**
+   * Génère un slug à partir d'un titre de heading
+   */
+  private generateSlug(text: string): string {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Enlever les accents
+      .replace(/[^\w\s-]/g, '') // Enlever les caractères spéciaux
+      .replace(/\s+/g, '-') // Espaces -> tirets
+      .replace(/-+/g, '-') // Multiples tirets -> un seul
+      .replace(/^-+|-+$/g, ''); // Enlever tirets début/fin
   }
 
   /**
@@ -511,21 +547,27 @@ export class ContentApplier {
     where: string
   ): string {
     const before = content.substring(0, range.start);
+    const match = content.substring(range.start, range.end); // ✅ FIX: Extraire le match
     const after = content.substring(range.end);
     
     switch (where) {
       case 'before':
-        return before + newContent + content.substring(range.start);
+        // Insérer AVANT le match, puis le match, puis ce qui suit
+        return before + newContent + match + after;
       case 'after':
-        return before + content.substring(range.start) + newContent + after;
+        // ✅ FIX: Préserver le match, insérer après
+        return before + match + newContent + after;
       case 'inside_start':
-        return before + newContent + content.substring(range.start);
+        // Insérer au début de la section matchée
+        return before + match + '\n' + newContent + after;
       case 'inside_end':
-        return before + content.substring(range.start) + newContent + after;
+        // Insérer à la fin de la section matchée
+        return before + match + newContent + '\n' + after;
       case 'at':
+        // Remplacer complètement le match
         return before + newContent + after;
       case 'replace_match':
-        // Pour replace_match, on remplace le contenu dans la plage spécifiée
+        // Remplacer le contenu dans la plage spécifiée
         return before + newContent + after;
       default:
         return content;
