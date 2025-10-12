@@ -204,10 +204,13 @@ export const contentApplyV2Schema = z.object({
         errorMap: () => ({ message: 'Type de cible doit être heading, regex, position ou anchor' })
       }),
       heading: z.object({
-        path: z.array(z.string().min(1)).min(1, 'Chemin de heading requis'),
+        path: z.array(z.string().min(1)).min(1).optional(), // ✅ FIX: path maintenant optionnel
         level: z.number().int().min(1).max(6).optional(),
         heading_id: z.string().min(1).optional()
-      }).optional(),
+      }).refine(
+        (data) => data.path || data.heading_id,
+        { message: 'Au moins path ou heading_id requis' }
+      ).optional(),
       regex: z.object({
         pattern: z.string().min(1).max(1000, 'Pattern regex trop long'),
         flags: z.string().max(10, 'Flags regex trop long').optional(),
