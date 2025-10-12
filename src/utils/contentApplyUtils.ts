@@ -123,27 +123,46 @@ export class ContentApplier {
    * Applique une opération individuelle
    */
   private async applyOperation(content: string, op: ContentOperation): Promise<OperationResult> {
-    const target = await this.findTarget(content, op.target);
+    // Exception pour upsert_section : permettre 0 match (création de section)
+    // Vérifier AVANT de chercher la cible
+    const isUpsert = op.action === 'upsert_section';
     
-    if (!target) {
+    const target = await this.findTarget(content, op.target, isUpsert);
+    
+    if (!target || target.matches.length === 0) {
+      if (isUpsert) {
+        // Pour upsert, 0 match signifie "créer la section"
+        logApi.info('[applyOperation] upsert_section avec 0 match, création de section');
+        const emptyRange = { start: content.length, end: content.length };
+        const result = this.executeOperation(content, op, '', emptyRange);
+        
+        const contentLength = op.content?.length || 0;
+        this.charDiff.added += contentLength;
+        
+        return {
+          id: op.id,
+          status: 'applied',
+          matches: 0, // 0 match mais opération réussie
+          range_before: emptyRange,
+          range_after: {
+            start: emptyRange.start,
+            end: emptyRange.start + contentLength
+          },
+          preview: this.generatePreview(result.newContent, emptyRange.start, 80),
+          newContent: result.newContent
+        };
+      }
+      
+      // Pour les autres actions, skip si cible non trouvée
       return {
         id: op.id,
         status: 'skipped',
         matches: 0,
-        error: 'Cible non trouvée'
+        error: !target ? 'Cible non trouvée' : 'Aucune correspondance trouvée'
       };
     }
 
     const { matches, ranges } = target;
-    
-    if (matches.length === 0) {
-      return {
-        id: op.id,
-        status: 'skipped',
-        matches: 0,
-        error: 'Aucune correspondance trouvée'
-      };
-    }
 
     // Appliquer l'opération sur la première correspondance
     const match = matches[0];
@@ -175,13 +194,17 @@ export class ContentApplier {
   /**
    * Trouve la cible selon le type
    */
-  private async findTarget(content: string, target: ContentOperation['target']): Promise<{
+  private async findTarget(
+    content: string, 
+    target: ContentOperation['target'], 
+    allowEmpty: boolean = false
+  ): Promise<{
     matches: string[];
     ranges: Array<{ start: number; end: number }>;
   } | null> {
     switch (target.type) {
       case 'heading':
-        return this.findHeadingTarget(content, target.heading!);
+        return this.findHeadingTarget(content, target.heading!, allowEmpty);
       case 'regex':
         return await this.findRegexTarget(content, target.regex!);
       case 'position':
@@ -196,7 +219,11 @@ export class ContentApplier {
   /**
    * Trouve une cible de type heading
    */
-  private findHeadingTarget(content: string, heading: NonNullable<ContentOperation['target']['heading']>): {
+  private findHeadingTarget(
+    content: string, 
+    heading: NonNullable<ContentOperation['target']['heading']>,
+    allowEmpty: boolean = false
+  ): {
     matches: string[];
     ranges: Array<{ start: number; end: number }>;
   } | null {
@@ -228,6 +255,15 @@ export class ContentApplier {
         }
       }
       
+      // Si allowEmpty (pour upsert), retourner un résultat vide au lieu de null
+      if (allowEmpty) {
+        logApi.info('[findHeadingTarget] Heading non trouvé mais allowEmpty=true, retour vide');
+        return {
+          matches: [],
+          ranges: []
+        };
+      }
+      
       return null;
     }
     
@@ -243,6 +279,14 @@ export class ContentApplier {
       const match = content.match(regex);
       
       if (!match) {
+        // Si allowEmpty (pour upsert), retourner un résultat vide au lieu de null
+        if (allowEmpty) {
+          logApi.info('[findHeadingTarget] Heading non trouvé mais allowEmpty=true, retour vide');
+          return {
+            matches: [],
+            ranges: []
+          };
+        }
         return null;
       }
       
@@ -252,6 +296,15 @@ export class ContentApplier {
       return {
         matches: [match[0]],
         ranges: [{ start, end }]
+      };
+    }
+    
+    // Si aucun critère n'est fourni
+    if (allowEmpty) {
+      logApi.info('[findHeadingTarget] Aucun critère mais allowEmpty=true, retour vide');
+      return {
+        matches: [],
+        ranges: []
       };
     }
     
@@ -599,7 +652,11 @@ export class ContentApplier {
   }
 
   /**
-   * Upsert une section
+   * Upsert une section (UPDATE si existe, INSERT si n'existe pas)
+   * 
+   * Comportement :
+   * - Si section trouvée : remplace TOUTE la section (heading + contenu jusqu'à la prochaine section)
+   * - Si section non trouvée : ajoute la nouvelle section à la fin du document
    */
   private upsertSection(
     content: string, 
@@ -607,12 +664,51 @@ export class ContentApplier {
     newContent: string, 
     where: string
   ): string {
-    // Pour upsert_section, on fait un replace si on trouve la section, sinon insert
+    // CAS 1 : Section non trouvée → Créer à la fin du document
     if (range.start === range.end) {
-      return this.insertContent(content, range, newContent, where);
-    } else {
+      logApi.info('[upsertSection] Section non trouvée, création à la fin du document');
+      
+      // Ajouter 2 sauts de ligne avant la nouvelle section si le document ne se termine pas par \n\n
+      const needsSpacing = content.length > 0 && !content.endsWith('\n\n');
+      const spacing = needsSpacing ? '\n\n' : (content.endsWith('\n') ? '\n' : '\n\n');
+      
+      return content + spacing + newContent.trim() + '\n';
+    }
+    
+    // CAS 2 : Section trouvée → Remplacer TOUTE la section
+    logApi.info('[upsertSection] Section trouvée, remplacement du contenu complet');
+    
+    // Trouver le niveau du heading ciblé
+    const headingMatch = content.substring(range.start, range.end).match(/^(#{1,6})\s/);
+    if (!headingMatch) {
+      // Pas un heading, faire un simple replace
       return this.replaceContent(content, range, newContent);
     }
+    
+    const targetLevel = headingMatch[1].length;
+    
+    // Trouver la fin de la section (prochain heading de niveau égal ou supérieur)
+    const afterHeading = range.end;
+    const remainingContent = content.substring(afterHeading);
+    
+    // Regex pour trouver le prochain heading de niveau égal ou supérieur
+    const nextSectionPattern = new RegExp(`^#{1,${targetLevel}}\\s`, 'm');
+    const nextSectionMatch = remainingContent.match(nextSectionPattern);
+    
+    let sectionEnd: number;
+    if (nextSectionMatch && nextSectionMatch.index !== undefined) {
+      // Trouvé le prochain heading → fin de section juste avant
+      sectionEnd = afterHeading + nextSectionMatch.index;
+    } else {
+      // Pas de prochain heading → fin du document
+      sectionEnd = content.length;
+    }
+    
+    // Remplacer toute la section
+    const before = content.substring(0, range.start);
+    const after = content.substring(sectionEnd);
+    
+    return before + newContent.trim() + '\n' + after;
   }
 
   // ✅ FONCTION SUPPRIMÉE: updateContentWithResult
