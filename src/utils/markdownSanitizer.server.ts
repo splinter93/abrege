@@ -44,13 +44,39 @@ export function sanitizeMarkdownContent(content: string): string {
   // ⚠️ HTML/caractères dangereux détectés → échapper automatiquement
   logApi.warn('⚠️ [SANITIZER] HTML brut détecté dans markdown_content, échappement automatique appliqué');
   
-  // Échapper tous les caractères HTML (dans l'ordre correct: & en premier)
-  return content
+  // 🔒 ÉTAPE 1: Protéger les blocs de code (ne doivent pas être échappés)
+  // Les blocs de code markdown ne sont jamais exécutés comme du HTML
+  const codeBlocks: string[] = [];
+  const codeBlockPlaceholder = '___CODE_BLOCK_PLACEHOLDER_';
+  
+  // Extraire les blocs de code avec backticks triples
+  let processed = content.replace(/(```[\s\S]*?```)/g, (match) => {
+    const index = codeBlocks.length;
+    codeBlocks.push(match);
+    return `${codeBlockPlaceholder}${index}___`;
+  });
+  
+  // Extraire les blocs de code inline (backticks simples)
+  processed = processed.replace(/(`[^`\n]+?`)/g, (match) => {
+    const index = codeBlocks.length;
+    codeBlocks.push(match);
+    return `${codeBlockPlaceholder}${index}___`;
+  });
+  
+  // 🔒 ÉTAPE 2: Échapper tous les caractères HTML dans le contenu restant
+  processed = processed
     .replace(/&/g, '&amp;')   // Échapper & en premier
     .replace(/</g, '&lt;')    // Échapper <
     .replace(/>/g, '&gt;')    // Échapper >
     .replace(/"/g, '&quot;')  // Échapper "
     .replace(/'/g, '&#039;'); // Échapper '
+  
+  // 🔒 ÉTAPE 3: Restaurer les blocs de code (non échappés)
+  processed = processed.replace(new RegExp(`${codeBlockPlaceholder}(\\d+)___`, 'g'), (_, index) => {
+    return codeBlocks[parseInt(index)];
+  });
+  
+  return processed;
 }
 
 /**

@@ -175,14 +175,13 @@ describe('Cycle complet serveur → client', () => {
     expect(unescaped).toBe(table);
   });
 
-  it('devrait gérer le code inline avec <>', () => {
+  it('devrait préserver le code inline avec <>', () => {
     const code = 'Use `<Component>` in your code';
     
     const escaped = sanitizeMarkdownContent(code);
-    expect(escaped).toContain('&lt;Component&gt;');
-    
-    const unescaped = unescapeHtmlEntities(escaped);
-    expect(unescaped).toBe(code);
+    // Les blocs de code inline doivent être préservés (pas échappés)
+    expect(escaped).toContain('`<Component>`');
+    expect(escaped).not.toContain('&lt;Component&gt;');
   });
 
   it('devrait gérer les blocs de code', () => {
