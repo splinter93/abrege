@@ -26,14 +26,14 @@
 
 :root {
   /* FALLBACKS - Éviter le flash blanc */
-  --background: var(--color-bg-primary, #0f0f12);
-  --foreground: var(--color-text-primary, #f8f9fa);
+  --background: var(--color-bg-primary, #121212);
+  --foreground: var(--color-text-primary, #d0d0d0);
 }
 
 /* Réassigner après chargement complet */
 :root {
-  --background: var(--color-bg-primary, #0f0f12);
-  --foreground: var(--color-text-primary, #f8f9fa);
+  --background: var(--color-bg-primary, #121212);
+  --foreground: var(--color-text-primary, #d0d0d0);
 }
 
 @theme inline {
@@ -45,20 +45,20 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: var(--color-bg-primary, #0f0f12);
-    --foreground: var(--color-text-primary, #f8f9fa);
+    --background: var(--color-bg-primary, #121212);
+    --foreground: var(--color-text-primary, #d0d0d0);
   }
 }
 
 body {
-  color: var(--color-text-primary, #f8f9fa);
-  background: var(--color-bg-primary, #0f0f12);
+  color: var(--color-text-primary, #d0d0d0);
+  background: var(--color-bg-primary, #121212);
   height: 100vh;
 }
 
 @media (prefers-color-scheme: dark) {
   body {
-    background-color: var(--color-bg-primary, #0f0f12);
+    background-color: var(--color-bg-primary, #121212);
     background-image: radial-gradient(at 27% 37%, hsla(215, 98%, 11%, 0.3) 0px, transparent 50%),
       radial-gradient(at 97% 21%, hsla(125, 98%, 11%, 0.3) 0px, transparent 50%),
       radial-gradient(at 52% 99%, hsla(355, 98%, 11%, 0.3) 0px, transparent 50%),
