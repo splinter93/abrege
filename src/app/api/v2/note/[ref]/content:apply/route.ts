@@ -101,7 +101,10 @@ export async function POST(
       return createValidationErrorResponse(validationResult);
     }
 
-    const { ops, dry_run, transaction, conflict_strategy, return: returnType, idempotency_key } = validationResult.data;
+    const { ops, transaction, conflict_strategy, return: returnType, idempotency_key } = validationResult.data;
+    
+    // ✅ SIMPLIFICATION: dry_run supprimé (inutile et confus)
+    // Si besoin de preview: utiliser return: "diff" et annuler manuellement
 
     // 🔒 Vérifier l'ETag si fourni
     const ifMatch = request.headers.get('If-Match');
@@ -154,27 +157,6 @@ export async function POST(
     const applier = new ContentApplier(currentNote.markdown_content);
     const result = await applier.applyOperations(sanitizedOps);
 
-    // 🚫 Si c'est un dry-run, retourner les résultats sans sauvegarder
-    if (dry_run) {
-      const apiTime = Date.now() - startTime;
-      logApi.info(`✅ Dry-run terminé en ${apiTime}ms`, context);
-
-      return NextResponse.json({
-        data: {
-          note_id: noteId,
-          ops_results: result.results,
-          etag: calculateETag(currentNote.markdown_content),
-          diff: returnType === 'diff' ? generateDiff(currentNote.markdown_content, result.content) : undefined,
-          content: returnType === 'content' ? result.content : undefined
-        },
-        meta: {
-          dry_run: true,
-          char_diff: result.charDiff,
-          execution_time: apiTime
-        }
-      });
-    }
-
     // 🛡️ Le contenu est déjà sanitizé (chaque op a été sanitizée ligne 150)
     // Pas besoin de re-sanitizer ici (causerait un double échappement)
     const safeContent = result.content;
@@ -219,7 +201,6 @@ export async function POST(
         etag: calculateETag(result.content)
       },
       meta: {
-        dry_run: false,
         char_diff: result.charDiff,
         execution_time: apiTime
       }
