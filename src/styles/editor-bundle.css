@@ -7,10 +7,9 @@
  */
 
 /* === VARIABLES DE BASE === */
-@import './design-system.css';
-@import './themes.css';
-@import './typography.css';
 @import './variables.css';
+@import './design-system.css';
+@import './typography.css';
 @import './glassmorphism-variables.css';
 
 /* === UTILITAIRES ÉDITEUR === */

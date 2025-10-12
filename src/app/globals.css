@@ -3,8 +3,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* Import des variables unifiées en premier */
-@import '../styles/variables-unified.css';
+/* Import des variables en premier */
+@import '../styles/variables.css';
 
 /* Import du système glassmorphism centralisé */
 @import '../styles/glassmorphism-system.css';

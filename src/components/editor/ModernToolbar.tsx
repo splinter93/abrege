@@ -33,10 +33,9 @@ import SimpleAlignButton from './SimpleAlignButton';
 import BlockquoteButton from './BlockquoteButton';
 import CodeBlockButton from './CodeBlockButton';
 // Ordre critique : variables de base en premier
-import '@/styles/design-system.css';
-import '@/styles/themes.css';
-import '@/styles/typography.css';
 import '@/styles/variables.css';
+import '@/styles/design-system.css';
+import '@/styles/typography.css';
 import '@/styles/glassmorphism-variables.css';
 import './modern-toolbar.css';
 import '@/styles/simple-editor-components.css';

@@ -3,14 +3,12 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Noto_Sans } from "next/font/google";
 // Ordre critique : variables de base en premier
-import "../styles/design-system.css";
-import "../styles/themes.css";
-import "../styles/typography.css";
 import "../styles/variables.css";
+import "../styles/design-system.css";
+import "../styles/typography.css";
 import "../styles/glassmorphism-variables.css";
 import "./globals.css";
 import "../styles/markdown.css";
-import "../styles/variables-consolidated.css";
 import "../styles/editor.css";
 import "../styles/page-title-containers.css";
 import "../styles/unified-page-title.css";

@@ -1,472 +1,42 @@
 /*
-  VARIABLES CSS UNIFIÉES - SYSTÈME DE DESIGN CENTRALISÉ
-  =====================================================
-  Consolidation de toutes les variables CSS de l'application
-  - design-system.css
-  - glassmorphism-variables.css  
-  - chatgpt-unified.css
+  VARIABLES CSS UNIFIÉES - COULEURS UNIQUEMENT
+  =============================================
+  Toutes les couleurs de l'application centralisées ici
+  - Backgrounds
+  - Textes
+  - Accents
+  - Bordures
+  - États
+  
+  Les espacements, rayons, ombres sont dans design-system.css
 */
 
-:root {
-  /* ==========================================================================
-     COULEURS DE BASE - LIGHT THEME
-     ========================================================================== */
-
-  /* Couleurs primaires */
-  --color-primary: #e55a2c;
-  --color-primary-rgb: 229, 90, 44;
-  --color-primary-light: #ff6b3d;
-  --color-primary-dark: #d44a1a;
-
-  /* Backgrounds principaux - Compatibilité typography.css */
-  /* --color-bg-primary: var(--surface-background); */ /* DÉSACTIVÉ - Écrasait le noir #0f0f12 avec du gris */
-  --color-bg-header: var(--surface-primary);
-
-  /* Couleurs secondaires */
-  --color-secondary: #3b82f6;
-  --color-secondary-rgb: 59, 130, 246;
-  --color-purple: #9b59b6;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
-
-  /* Couleurs neutres */
-  --color-white: #ffffff;
-  --color-black: #000000;
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111827;
-
-  /* ==========================================================================
-     SÉMANTIQUE DES COMPOSANTS - LIGHT THEME
-     ========================================================================== */
-
-  /* Surfaces */
-  --surface-primary: var(--color-white);
-  --surface-secondary: var(--color-gray-50);
-  --surface-tertiary: var(--color-gray-100);
-  --surface-elevated: var(--color-gray-100);
-  --surface-background: var(--color-gray-50);
-  --surface-hover: var(--color-gray-200);
-
-  /* Textes */
-  --text-primary: var(--color-gray-900);
-  --text-secondary: var(--color-gray-600);
-  --text-tertiary: var(--color-gray-500);
-  --text-disabled: var(--color-gray-400);
-  --text-on-primary: var(--color-white);
-  --text-on-accent: var(--color-white);
-
-  /* Bordures */
-  --border-subtle: var(--color-gray-200);
-  --border-medium: var(--color-gray-300);
-  --border-strong: var(--color-gray-400);
-  --border-accent: var(--color-primary);
-
-  /* Accents */
-  --accent-primary: var(--color-primary);
-  --accent-primary-rgb: var(--color-primary-rgb);
-  --accent-hover: var(--color-primary-light);
-  --accent-subtle: rgba(229, 90, 44, 0.1);
-  --accent-faded: rgba(229, 90, 44, 0.07);
-
-  /* ==========================================================================
-     GLASSMORPHISM - VARIABLES UNIVERSELLES SOBRES
-     ========================================================================== */
-
-  /* Backgrounds glassmorphism - Version sobre et moderne */
-  --glass-bg-primary: rgba(255, 255, 255, 0.08);
-  --glass-bg-secondary: rgba(255, 255, 255, 0.05);
-  --glass-bg-tertiary: rgba(255, 255, 255, 0.03);
-  --glass-bg-hover: rgba(255, 255, 255, 0.12);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.04);
-  --glass-bg-medium: rgba(255, 255, 255, 0.07);
-  --glass-bg-heavy: rgba(255, 255, 255, 0.15);
-  --glass-bg-accent: rgba(229, 90, 44, 0.12);
-  --glass-bg-accent-hover: rgba(229, 90, 44, 0.18);
-  --glass-bg-elevated: rgba(255, 255, 255, 0.10);
-  --glass-bg-overlay: rgba(0, 0, 0, 0.4);
-
-  /* Bordures glassmorphism - Version sobre et fine */
-  --glass-border-primary: rgba(255, 255, 255, 0.12);
-  --glass-border-secondary: rgba(255, 255, 255, 0.08);
-  --glass-border-tertiary: rgba(255, 255, 255, 0.05);
-  --glass-border-hover: rgba(255, 255, 255, 0.18);
-  --glass-border-subtle: rgba(255, 255, 255, 0.06);
-  --glass-border-light: rgba(255, 255, 255, 0.10);
-  --glass-border-heavy: rgba(255, 255, 255, 0.20);
-  --glass-border-accent: rgba(229, 90, 44, 0.25);
-  --glass-border-accent-hover: rgba(229, 90, 44, 0.35);
-  --glass-border-focus: rgba(229, 90, 44, 0.40);
-
-  /* Ombres glassmorphism - Version subtile et moderne */
-  --glass-shadow-subtle: 0 2px 12px rgba(0, 0, 0, 0.08);
-  --glass-shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.12);
-  --glass-shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.16);
-  --glass-shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.10);
-  --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.20);
-  --glass-shadow-focus: 0 0 0 3px rgba(229, 90, 44, 0.15);
-  --glass-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.05);
-
-  /* Effets de flou glassmorphism */
-  --glass-blur-light: blur(8px);
-  --glass-blur-medium: blur(12px);
-  --glass-blur-heavy: blur(20px);
-  --glass-blur-extra: blur(24px);
-
-  /* ==========================================================================
-     COULEURS SPÉCIFIQUES PAR PAGE
-     ========================================================================== */
-
-  /* Page Dossiers - Rouge */
-  --dossiers-primary: #e55a2c;
-  --dossiers-primary-light: rgba(229, 90, 44, 0.15);
-  --dossiers-primary-hover: #d1451f;
-  --dossiers-text-primary: #f8fafc;
-  --dossiers-text-secondary: #94a3b8;
-  --dossiers-text-muted: #64748b;
-
-  /* Page Fichiers - Orange */
-  --files-primary: #f97316;
-  --files-primary-light: rgba(249, 115, 22, 0.15);
-  --files-primary-hover: #ea580c;
-  --files-text-primary: #f8fafc;
-  --files-text-secondary: #94a3b8;
-  --files-text-muted: #64748b;
-
-  /* Page Classeurs - Bleu */
-  --classeurs-primary: #3b82f6;
-  --classeurs-primary-light: rgba(59, 130, 246, 0.15);
-  --classeurs-primary-hover: #2563eb;
-  --classeurs-text-primary: #f8fafc;
-  --classeurs-text-secondary: #94a3b8;
-  --classeurs-text-muted: #64748b;
-
-  /* Page Settings - Violet */
-  --settings-primary: #8b5cf6;
-  --settings-primary-light: rgba(139, 92, 246, 0.15);
-  --settings-primary-hover: #7c3aed;
-  --settings-text-primary: #f8fafc;
-  --settings-text-secondary: #94a3b8;
-  --settings-text-muted: #64748b;
-
-  /* Page Corbeille - Rouge */
-  --trash-primary: #ef4444;
-  --trash-primary-light: rgba(239, 68, 68, 0.15);
-  --trash-primary-hover: #dc2626;
-  --trash-text-primary: #f8fafc;
-  --trash-text-secondary: #94a3b8;
-  --trash-text-muted: #64748b;
-
-  /* ==========================================================================
-     TYPOGRAPHIE UNIFIÉE - GLASSMORPHISM
-     ========================================================================== */
-
-  --font-family-base: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
-  --font-family-chat: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-
-  /* Alias glassmorphism pour compatibilité */
-  --glass-font-family: var(--font-family-base);
-  --glass-font-mono: var(--font-family-mono);
-
-  /* Tailles de police */
-  --font-size-xs: 0.75rem;    /* 12px */
-  --font-size-sm: 0.875rem;   /* 14px */
-  --font-size-base: 1rem;     /* 16px */
-  --font-size-lg: 1.125rem;   /* 18px */
-  --font-size-xl: 1.25rem;    /* 20px */
-  --font-size-2xl: 1.5rem;    /* 24px */
-  --font-size-3xl: 1.875rem;  /* 30px */
-  --font-size-4xl: 2.25rem;   /* 36px */
-
-  /* Alias glassmorphism pour compatibilité */
-  --glass-text-xs: var(--font-size-xs);
-  --glass-text-sm: var(--font-size-sm);
-  --glass-text-base: var(--font-size-base);
-  --glass-text-lg: var(--font-size-lg);
-  --glass-text-xl: var(--font-size-xl);
-  --glass-text-2xl: var(--font-size-2xl);
-  --glass-text-3xl: var(--font-size-3xl);
-  --glass-text-4xl: var(--font-size-4xl);
-
-  /* Line heights */
-  --line-height-tight: 1.25;
-  --line-height-normal: 1.5;
-  --line-height-relaxed: 1.75;
-
-  /* Poids de police */
-  --font-light: 300;
-  --font-normal: 400;
-  --font-medium: 500;
-  --font-semibold: 600;
-  --font-bold: 700;
-  --font-extrabold: 800;
-  --font-black: 900;
-
-  /* Alias glassmorphism pour compatibilité */
-  --glass-font-light: var(--font-light);
-  --glass-font-normal: var(--font-normal);
-  --glass-font-medium: var(--font-medium);
-  --glass-font-semibold: var(--font-semibold);
-  --glass-font-bold: var(--font-bold);
-  --glass-font-extrabold: var(--font-extrabold);
-  --glass-font-black: var(--font-black);
-
-  /* ==========================================================================
-     ESPACEMENTS UNIFIÉS - GLASSMORPHISM
-     ========================================================================== */
-
-  /* Espacements principaux */
-  --spacing-xs: 0.25rem;      /* 4px */
-  --spacing-sm: 0.5rem;       /* 8px */
-  --spacing-md: 1rem;         /* 16px */
-  --spacing-lg: 1.5rem;       /* 24px */
-  --spacing-xl: 2rem;         /* 32px */
-  --spacing-2xl: 3rem;        /* 48px */
-  --spacing-3xl: 4rem;        /* 64px */
-  --spacing-4xl: 6rem;        /* 96px */
-
-  /* Alias glassmorphism pour compatibilité */
-  --glass-space-xs: var(--spacing-xs);
-  --glass-space-sm: var(--spacing-sm);
-  --glass-space-md: var(--spacing-md);
-  --glass-space-lg: var(--spacing-lg);
-  --glass-space-xl: var(--spacing-xl);
-  --glass-space-2xl: var(--spacing-2xl);
-  --glass-space-3xl: var(--spacing-3xl);
-  --glass-space-4xl: var(--spacing-4xl);
-
-  /* ==========================================================================
-     RAYONS DE BORDURE UNIFIÉS - GLASSMORPHISM
-     ========================================================================== */
-
-  /* Rayons principaux */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --radius-3xl: 24px;
-  --radius-full: 50%;
-
-  /* Alias glassmorphism pour compatibilité */
-  --glass-radius-xs: var(--radius-xs);
-  --glass-radius-sm: var(--radius-sm);
-  --glass-radius-md: var(--radius-md);
-  --glass-radius-lg: var(--radius-lg);
-  --glass-radius-xl: var(--radius-xl);
-  --glass-radius-2xl: var(--radius-2xl);
-  --glass-radius-3xl: var(--radius-3xl);
-  --glass-radius-full: var(--radius-full);
-
-  /* ==========================================================================
-     TRANSITIONS UNIFIÉES - GLASSMORPHISM
-     ========================================================================== */
-
-  /* Transitions principales */
-  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-bounce: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --transition-spring: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-  /* Alias glassmorphism pour compatibilité */
-  --glass-transition-fast: var(--transition-fast);
-  --glass-transition-normal: var(--transition-normal);
-  --glass-transition-slow: var(--transition-slow);
-  --glass-transition-bounce: var(--transition-bounce);
-  --glass-transition-spring: var(--transition-spring);
-
-  /* ==========================================================================
-     OMBRES UNIFIÉES
-     ========================================================================== */
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
-
-  /* ==========================================================================
-     Z-INDEX UNIFIÉS - GLASSMORPHISM
-     ========================================================================== */
-
-  --z-dropdown: 1000;
-  --z-sidebar: 1001;
-  --z-modal: 1002;
-  --z-overlay: 999;
-  --z-tooltip: 1003;
-  --z-notification: 1004;
-
-  /* Alias glassmorphism pour compatibilité */
-  --glass-z-base: 1;
-  --glass-z-dropdown: var(--z-dropdown);
-  --glass-z-sidebar: var(--z-sidebar);
-  --glass-z-modal: var(--z-modal);
-  --glass-z-overlay: var(--z-overlay);
-  --glass-z-tooltip: var(--z-tooltip);
-  --glass-z-notification: var(--z-notification);
-
-  /* ==========================================================================
-     LAYOUT UNIFIÉ
-     ========================================================================== */
-
-  /* Sidebar */
-  --sidebar-width: 280px;
-  --sidebar-width-collapsed: 64px;
-  --sidebar-bg: var(--surface-primary);
-  --sidebar-border: var(--border-subtle);
-
-  /* Pages communes */
-  --page-padding: var(--spacing-xl);
-  --page-gap: var(--spacing-lg);
-  --page-header-height: 80px;
-
-  /* ==========================================================================
-     VARIABLES CHATGPT (PRÉFIXÉES)
-     ========================================================================== */
-
-  /* Couleurs ChatGPT */
-  --chatgpt-bg-primary: #0f0f0f;
-  --chatgpt-bg-secondary: #1a1a1a;
-  --chatgpt-bg-tertiary: #2a2a2a;
-  --chatgpt-bg-elevated: #222222;
-  --chatgpt-bg-hover: rgba(255, 255, 255, 0.05);
-
-  --chatgpt-text-primary: #ffffff;
-  --chatgpt-text-secondary: #d1d5db;
-  --chatgpt-text-muted: #9ca3af;
-
-  --chatgpt-accent-primary: #e55a2b; /* Orange adouci pour les liens */
-  --chatgpt-accent-hover: #f5652c; /* Orange plus vif au survol */
-  --chatgpt-accent-light: #34d399;
-
-  --chatgpt-border-subtle: rgba(255, 255, 255, 0.1);
-  --chatgpt-border-soft: rgba(255, 255, 255, 0.15);
-  --chatgpt-border-medium: rgba(255, 255, 255, 0.2);
-
-  --chatgpt-glass-subtle: rgba(255, 255, 255, 0.03);
-  --chatgpt-glass-soft: rgba(255, 255, 255, 0.06);
-  --chatgpt-glass-medium: rgba(255, 255, 255, 0.09);
-  --chatgpt-glass-strong: rgba(255, 255, 255, 0.12);
-
-  --chatgpt-shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --chatgpt-shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --chatgpt-shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --chatgpt-shadow-strong: 0 16px 48px rgba(0, 0, 0, 0.6);
-
-  --chatgpt-blur-light: blur(8px);
-  --chatgpt-blur-medium: blur(12px);
-  --chatgpt-blur-heavy: blur(20px);
-
-  /* Espacements ChatGPT */
-  --chatgpt-space-xs: 4px;
-  --chatgpt-space-sm: 8px;
-  --chatgpt-space-md: 12px;
-  --chatgpt-space-lg: 16px;
-  --chatgpt-space-xl: 24px;
-  --chatgpt-space-2xl: 32px;
-
-  /* Rayons ChatGPT */
-  --chatgpt-radius-sm: 6px;
-  --chatgpt-radius-md: 8px;
-  --chatgpt-radius-lg: 12px;
-  --chatgpt-radius-xl: 16px;
-  --chatgpt-radius-2xl: 20px;
-  --chatgpt-radius-full: 50%;
-
-  /* Transitions ChatGPT */
-  --chatgpt-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --chatgpt-transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --chatgpt-transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* ==========================================================================
-     COMPATIBILITÉ - VARIABLES LEGACY
-     ========================================================================== */
-
-  /* Variables legacy pour compatibilité (à supprimer progressivement) */
-  --bg-main: var(--surface-background);
-  --bg-base: var(--surface-primary);
-  --bg-surface: var(--surface-secondary);
-  --bg-elevated: var(--surface-elevated);
-  --bg-hover: var(--surface-hover);
-  --bg-surface-hover: var(--surface-hover);
-  --bg-contrast: var(--color-black);
-
-  --text-1: var(--text-primary);
-  --text-2: var(--text-secondary);
-  --text-3: var(--text-tertiary);
-  --text-on-contrast: var(--text-on-primary);
-
-  --surface-0: var(--surface-background);
-  --surface-1: var(--surface-primary);
-  --surface-2: var(--surface-secondary);
-  --surface-3: var(--surface-tertiary);
-
-  --border-color: var(--border-subtle);
-  --border-strong: var(--border-medium);
-
-  --accent-primary: var(--color-primary);
-  --accent-primary-rgb: var(--color-primary-rgb);
-  --accent-hover: var(--color-primary-light);
-  --accent-secondary: var(--color-secondary);
-  --accent-purple: var(--color-purple);
-  --accent-subtle: rgba(229, 90, 44, 0.1);
-  --accent-primary-faded: rgba(229, 90, 44, 0.07);
-  --accent-text: var(--color-primary);
-
-  --background-hover: var(--surface-hover);
-
-  --success: var(--color-success);
-  --error: var(--color-error);
-  --info: var(--color-info);
-
-  --spacing-unit: var(--spacing-sm);
-  --main-content-padding: var(--spacing-xl);
-  --card-padding: var(--spacing-lg);
-
-  --border-radius: var(--radius-lg);
-  --border-radius-sm: var(--radius-sm);
-  --border-radius-md: var(--radius-md);
-  --border-radius-lg: var(--radius-lg);
-  --border-radius-xl: var(--radius-xl);
-
-  --transition-speed: var(--transition-normal);
-
-  --surface-error: rgba(239, 68, 68, 0.1);
-  --text-error: var(--color-error);
-  --surface-2-rgb: 240, 240, 244;
-
-  --ui-font-size-xs: var(--font-size-xs);
-  --ui-font-size-sm: var(--font-size-sm);
-  --ui-font-size-md: var(--font-size-base);
-  --ui-font-size-lg: var(--font-size-lg);
-  --ui-font-size-xl: var(--font-size-xl);
-  --ui-font-size-2xl: var(--font-size-2xl);
-
-  --font-main: var(--font-family-base);
-}
-
 /* ==========================================================================
-   THÈME SOMBRE
+   :ROOT - THÈME SOMBRE PAR DÉFAUT (évite flash gris en SSR/build)
    ========================================================================== */
-.dark {
-  /* Couleurs de base (dark theme) */
+:root {
+  /* ========================================
+     COULEURS PRIMAIRES
+     ======================================== */
+  
   --color-primary: #e55a2c;
   --color-primary-rgb: 229, 90, 44;
   --color-primary-light: #ff6b3d;
   --color-primary-dark: #d44a1a;
 
-  /* Surfaces (dark theme) - DÉFINIR EN PREMIER */
+  /* ========================================
+     BACKGROUNDS - SOMBRE PAR DÉFAUT
+     ======================================== */
+  
+  --color-bg-primary: #121212;
+  --color-bg-secondary: #171717;
+  --color-bg-tertiary: #1c1c1c;
+  --color-bg-elevated: #2C2C2C;
+  --color-bg-content: #202020;
+  --color-bg-hover: rgba(255, 255, 255, 0.05);
+  --color-bg-header: #171717;
+  
+  /* Surfaces (alias) */
   --surface-primary: #171717;
   --surface-secondary: #1c1c1c;
   --surface-tertiary: #212121;
@@ -474,11 +44,16 @@
   --surface-background: #121212;
   --surface-hover: #212121;
 
-  /* Backgrounds principaux - VALEURS DIRECTES (pas de référence circulaire) */
-  --color-bg-primary: #121212; /* ✅ DIRECT - équilibré */
-  --color-bg-header: #171717; /* ✅ DIRECT - surface primary */
-
-  /* Textes (dark theme) */
+  /* ========================================
+     TEXTES - SOMBRE PAR DÉFAUT
+     ======================================== */
+  
+  --color-text-primary: #d0d0d0;
+  --color-text-secondary: #A0A0A0;
+  --color-text-muted: #6A6A6A;
+  --color-text-danger: #FF5C5C;
+  
+  /* Alias texte */
   --text-primary: #d0d0d0;
   --text-secondary: #a3a3a3;
   --text-tertiary: #737373;
@@ -486,83 +61,99 @@
   --text-on-primary: #121212;
   --text-on-accent: #ffffff;
 
-  /* Bordures (dark theme) */
-  --border-subtle: #2a2a2c;
-  --border-medium: #3a3a3c;
-  --border-strong: #4a4a4c;
-  --border-accent: #e55a2c;
-
-  /* Accents (dark theme) */
+  /* ========================================
+     ACCENTS
+     ======================================== */
+  
+  --color-accent: #e55a2b;
+  --color-accent-primary: #e55a2b;
+  --color-accent-hover: #f5652c;
+  
   --accent-primary: #e55a2c;
   --accent-primary-rgb: 229, 90, 44;
   --accent-hover: #ff6b3d;
   --accent-subtle: rgba(229, 90, 44, 0.15);
   --accent-faded: rgba(229, 90, 44, 0.1);
 
-  /* Variables legacy pour compatibilité (dark theme) */
-  --bg-main: var(--surface-background);
-  --bg-base: var(--surface-primary);
-  --bg-surface: var(--surface-primary);
-  --bg-elevated: var(--surface-secondary);
-  --bg-hover: var(--surface-hover);
-  --bg-surface-hover: var(--surface-hover);
-  --bg-contrast: var(--color-white);
+  /* ========================================
+     BORDURES
+     ======================================== */
+  
+  --color-border-primary: #2a2a2c;
+  --color-border-secondary: #3a3a3c;
+  --color-border-focus: #e55a2c;
+  
+  --border-subtle: #2a2a2c;
+  --border-medium: #3a3a3c;
+  --border-strong: #4a4a4c;
+  --border-accent: #e55a2c;
 
-  --text-1: var(--text-primary);
-  --text-2: var(--text-secondary);
-  --text-3: var(--text-tertiary);
-  --text-on-contrast: var(--text-on-primary);
+  /* ========================================
+     ÉTATS
+     ======================================== */
+  
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
 
-  --surface-0: var(--surface-background);
-  --surface-1: var(--surface-primary);
-  --surface-2: var(--surface-secondary);
-  --surface-3: var(--surface-tertiary);
-
-  --border-color: var(--border-subtle);
-  --border-strong: var(--border-medium);
-
-  --accent-primary: var(--color-primary);
-  --accent-primary-rgb: var(--color-primary-rgb);
-  --accent-hover: var(--color-primary-light);
-  --accent-secondary: var(--color-secondary);
-  --accent-purple: var(--color-purple);
-  --accent-subtle: rgba(229, 90, 44, 0.15);
-  --accent-primary-faded: rgba(229, 90, 44, 0.1);
-  --accent-text: var(--color-primary);
-
-  --background-hover: var(--surface-hover);
-
-  --success: var(--color-success);
-  --error: var(--color-error);
-  --info: var(--color-info);
-
-  --surface-error: rgba(239, 68, 68, 0.15);
-  --surface-2-rgb: 28, 28, 28;
-
-  --font-main: var(--font-family-base);
-
-  /* Glassmorphism dark theme - Variables harmonisées */
-  --glass-bg-primary: rgba(255, 255, 255, 0.06);
-  --glass-bg-secondary: rgba(255, 255, 255, 0.04);
-  --glass-bg-tertiary: rgba(255, 255, 255, 0.02);
-  --glass-bg-hover: rgba(255, 255, 255, 0.08);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.03);
-  --glass-bg-medium: rgba(255, 255, 255, 0.05);
-  --glass-bg-heavy: rgba(255, 255, 255, 0.10);
-  --glass-bg-elevated: rgba(255, 255, 255, 0.08);
-  --glass-bg-overlay: rgba(0, 0, 0, 0.6);
-
-  --glass-border-primary: rgba(255, 255, 255, 0.10);
-  --glass-border-secondary: rgba(255, 255, 255, 0.06);
-  --glass-border-tertiary: rgba(255, 255, 255, 0.04);
-  --glass-border-hover: rgba(255, 255, 255, 0.15);
-  --glass-border-subtle: rgba(255, 255, 255, 0.05);
-  --glass-border-light: rgba(255, 255, 255, 0.08);
-  --glass-border-heavy: rgba(255, 255, 255, 0.15);
-
-  --glass-shadow-subtle: 0 2px 12px rgba(0, 0, 0, 0.15);
-  --glass-shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.20);
-  --glass-shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.25);
-  --glass-shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.18);
-  --glass-shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.30);
+  /* ========================================
+     ALIAS LEGACY (compatibilité)
+     ======================================== */
+  
+  --bg-primary: #121212;
+  --bg-secondary: #171717;
+  --bg-tertiary: #1c1c1c;
+  --bg-main: #121212;
+  --bg-base: #171717;
+  --bg-surface: #1c1c1c;
+  --bg-elevated: #202020;
+  --bg-hover: #212121;
+  
+  --text-1: #d0d0d0;
+  --text-2: #a3a3a3;
+  --text-3: #737373;
+  
+  --surface-0: #121212;
+  --surface-1: #171717;
+  --surface-2: #1c1c1c;
+  --surface-3: #212121;
 }
+
+/* ==========================================================================
+   THÈME CLAIR (override si nécessaire - pas utilisé actuellement)
+   ========================================================================== */
+.theme-light {
+  /* Couleurs de base */
+  --color-primary: #e55a2c;
+  --color-primary-rgb: 229, 90, 44;
+  
+  /* Backgrounds */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --surface-background: #f9fafb;
+  --surface-primary: #ffffff;
+  
+  /* Textes */
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
+  --text-primary: #111827;
+  
+  /* Bordures */
+  --border-subtle: #e5e7eb;
+  --border-medium: #d1d5db;
+}
+
+/* ==========================================================================
+   ALIAS .dark ET .theme-dark (compatibilité)
+   ========================================================================== */
+.dark,
+.theme-dark,
+html.dark,
+body.dark {
+  /* Les valeurs sont déjà dans :root, pas besoin de redéfinir */
+  /* Mais on garde pour compatibilité si du code vérifie .dark */
+}
+
