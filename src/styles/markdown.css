@@ -736,8 +736,10 @@ a {
     font-weight: 500;
   }
 
-  .markdown-body strong { /* font-weight géré par typography.css */ color: var(--color-text-primary); }
-  .markdown-body em { font-style: italic; color: var(--color-text-primary); }
+  .markdown-body strong { /* font-weight géré par typography.css */ color: #d0d0d0; }
+  .markdown-body em { font-style: italic; color: #d0d0d0; }
+  .markdown-body b { color: #d0d0d0; }
+  .markdown-body i { font-style: italic; color: #d0d0d0; }
   .markdown-body del { text-decoration: line-through; color: var(--text-3); opacity: 0.8; }
 
   /* Abréviations + kbd + sup/sub */

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Background Gris - Page Publique</title>
+</head>
+<body style="background: #000; color: #fff; font-family: monospace; padding: 20px;">
+    <h1>🔍 DEBUG BACKGROUND GRIS</h1>
+    <p><strong>Ouvre ta page publique et colle ce script dans la console (F12)</strong></p>
+    
+    <hr style="margin: 20px 0;">
+    
+    <h2>SCRIPT À COLLER DANS LA CONSOLE :</h2>
+    
+    <pre style="background: #111; padding: 20px; border-radius: 8px; overflow-x: auto;">
+<code>
+// ============================================
+// SCRIPT DE DEBUG BACKGROUND GRIS
+// ============================================
+
+console.log('🔍 DEBUG BACKGROUND - DÉBUT\n');
+
+// 1. HTML
+const html = document.documentElement;
+console.log('1️⃣ HTML:');
+console.log('  Classes:', html.className);
+console.log('  Computed BG:', getComputedStyle(html).backgroundColor);
+console.log('  Inline style:', html.style.backgroundColor);
+console.log('  --color-bg-primary:', getComputedStyle(html).getPropertyValue('--color-bg-primary').trim());
+console.log('  --surface-background:', getComputedStyle(html).getPropertyValue('--surface-background').trim());
+console.log('  --bg-main:', getComputedStyle(html).getPropertyValue('--bg-main').trim());
+console.log('');
+
+// 2. BODY
+const body = document.body;
+console.log('2️⃣ BODY:');
+console.log('  Classes:', body.className);
+console.log('  Computed BG:', getComputedStyle(body).backgroundColor);
+console.log('  Inline style:', body.style.backgroundColor);
+console.log('');
+
+// 3. APP-LAYOUT
+const appLayout = document.querySelector('.app-layout');
+if (appLayout) {
+  console.log('3️⃣ .app-layout:');
+  console.log('  Computed BG:', getComputedStyle(appLayout).backgroundColor);
+  console.log('  CSS rules:', Array.from(document.styleSheets)
+    .flatMap(sheet => {
+      try { return Array.from(sheet.cssRules); } catch(e) { return []; }
+    })
+    .filter(rule => rule.selectorText && rule.selectorText.includes('.app-layout'))
+    .map(rule => rule.cssText)
+  );
+} else {
+  console.log('3️⃣ .app-layout: ❌ NON TROUVÉ');
+}
+console.log('');
+
+// 4. PUBLIC-NOTE-CONTAINER
+const container = document.querySelector('.public-note-container');
+if (container) {
+  console.log('4️⃣ .public-note-container:');
+  console.log('  Computed BG:', getComputedStyle(container).backgroundColor);
+  console.log('  Inline style:', container.style.backgroundColor);
+  console.log('');
+} else {
+  console.log('4️⃣ .public-note-container: ❌ NON TROUVÉ');
+}
+
+// 5. CHERCHER TOUS LES ÉLÉMENTS AVEC BACKGROUND GRIS
+console.log('5️⃣ ÉLÉMENTS AVEC BACKGROUND GRIS:');
+const allElements = document.querySelectorAll('*');
+const grayElements = [];
+allElements.forEach(el => {
+  const bg = getComputedStyle(el).backgroundColor;
+  // Détecter gris clair (rgb > 200)
+  const match = bg.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (match) {
+    const [_, r, g, b] = match.map(Number);
+    if (r > 200 && g > 200 && b > 200) {
+      grayElements.push({
+        tag: el.tagName,
+        class: el.className,
+        bg: bg,
+        element: el
+      });
+    }
+  }
+});
+console.log('  Éléments gris trouvés:', grayElements.length);
+grayElements.slice(0, 10).forEach(el => {
+  console.log(`  - ${el.tag}.${el.class}: ${el.bg}`);
+});
+
+// 6. VÉRIFIER L'ORDRE DES STYLESHEETS
+console.log('');
+console.log('6️⃣ STYLESHEETS CHARGÉES (ordre):');
+Array.from(document.styleSheets).forEach((sheet, i) => {
+  try {
+    console.log(`  ${i}. ${sheet.href || 'inline'}`);
+  } catch(e) {}
+});
+
+console.log('\n✅ DEBUG TERMINÉ - COPIE CES RÉSULTATS ET ENVOIE-LES MOI');
+</code></pre>
+
+    <hr style="margin: 20px 0;">
+    
+    <h2>📋 INSTRUCTIONS</h2>
+    <ol>
+        <li>Va sur ta page publique (http://localhost:3002/@ton-username/ta-note)</li>
+        <li>Ouvre DevTools (F12)</li>
+        <li>Va dans l'onglet "Console"</li>
+        <li>Copie-colle TOUT le script ci-dessus</li>
+        <li>Appuie sur Entrée</li>
+        <li>Copie TOUS les résultats</li>
+        <li>Envoie-moi les résultats</li>
+    </ol>
+    
+    <hr style="margin: 20px 0;">
+    
+    <h2>🎯 CE QUE JE CHERCHE</h2>
+    <ul>
+        <li>✅ Si <code>html</code> a la classe <code>.dark</code></li>
+        <li>✅ La valeur computed de <code>--color-bg-primary</code></li>
+        <li>✅ Quel élément a le background gris</li>
+        <li>✅ L'ordre de chargement des CSS</li>
+    </ul>
+    
+    <p><strong>Avec ces infos, je trouverai EXACTEMENT le coupable !</strong> 🎯</p>
+</body>
+</html>
+

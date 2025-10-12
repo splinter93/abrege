@@ -9,11 +9,11 @@ module.exports = {
     extend: {
       // Couleurs du chat existantes
       colors: {
-        // Backgrounds
-        'chat-bg-primary': '#0f0f12',
-        'chat-bg-secondary': '#1a1a1f',
-        'chat-bg-tertiary': '#1f1f25',
-        'chat-bg-elevated': '#1a1a1f',
+        // Backgrounds - Équilibrés pour cohérence avec --color-bg-primary
+        'chat-bg-primary': '#121212',
+        'chat-bg-secondary': '#171717',
+        'chat-bg-tertiary': '#1c1c1c',
+        'chat-bg-elevated': '#171717',
         
         // Textes
         'chat-text-primary': '#f8f9fa',

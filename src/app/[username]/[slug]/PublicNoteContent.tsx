@@ -79,11 +79,12 @@ export default function PublicNoteContent({ note, slug, username, currentUser: p
     document.documentElement.classList.add('public-note-page');
     document.body.classList.add('public-note-page');
     
-    // Forcer le background sombre directement sur le DOM
-    document.documentElement.style.backgroundColor = '#141414';
-    document.documentElement.style.background = '#141414';
-    document.body.style.backgroundColor = '#141414';
-    document.body.style.background = '#141414';
+    // Forcer le background sombre directement sur le DOM avec la bonne couleur
+    const bgColor = '#101010'; // ✅ ULTRA-SOMBRE - cohérent avec --color-bg-primary
+    document.documentElement.style.backgroundColor = bgColor;
+    document.documentElement.style.background = bgColor;
+    document.body.style.backgroundColor = bgColor;
+    document.body.style.background = bgColor;
     
     // Cleanup lors du démontage
     return () => {
@@ -109,7 +110,7 @@ export default function PublicNoteContent({ note, slug, username, currentUser: p
       note={note} 
       currentUserId={currentUser?.id}
       fallback={
-        <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#141414', color: '#F5F5DC' }}>
+        <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#101010', color: '#F5F5DC' }}>
           <div style={{ marginLeft: '4px', display: 'inline-block' }}>
             <LogoHeader size="medium" position="center" />
           </div>
@@ -125,11 +126,6 @@ export default function PublicNoteContent({ note, slug, username, currentUser: p
     >
       <div 
         className="public-note-container"
-        style={{
-          backgroundColor: '#141414',
-          background: '#141414',
-          color: '#F5F5DC'
-        }}
       >
         {/* Le Header est déjà injecté par AppMainContent */}
         

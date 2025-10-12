@@ -95,7 +95,7 @@ body.chat-active {
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
-  background: var(--bg-main);
+  background: var(--color-bg-primary); /* ✅ TOUJOURS SOMBRE */
   box-sizing: border-box;
 }
 

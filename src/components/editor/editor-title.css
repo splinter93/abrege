@@ -9,7 +9,7 @@
   margin-right: 0;
   font-size: var(--editor-title-size);
   /* font-weight géré par typography.css */
-  color: var(--editor-text-color);
+  color: #d0d0d0;              /* Gris clair adouci - direct */
   letter-spacing: -0.02em;
   line-height: 1.1;
   cursor: text;
@@ -63,7 +63,7 @@ textarea.editor-title-field {
   font-size: var(--editor-title-size);
   /* font-weight géré par typography.css */
   line-height: 1.1;
-  color: var(--editor-text-color);
+  color: #d0d0d0;              /* Gris clair adouci - direct */
   background: none;
   border: none;
   outline: none;

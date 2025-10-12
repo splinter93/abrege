@@ -1,0 +1,117 @@
+/* ==========================================================================
+   CLASSES UTILITAIRES ÉDITEUR
+   ==========================================================================
+   Classes utilitaires pour l'éditeur afin d'éviter les conflits de background
+   et garantir une cohérence avec le système de design unifié.
+*/
+
+/* ==========================================================================
+   BACKGROUNDS UTILITAIRES
+   ========================================================================== */
+
+.editor-bg-surface-1 {
+  background: var(--surface-1);
+}
+
+.editor-bg-primary {
+  background: var(--color-bg-primary);
+}
+
+.editor-bg-secondary {
+  background: var(--color-bg-secondary);
+}
+
+.editor-bg-tertiary {
+  background: var(--color-bg-tertiary);
+}
+
+.editor-bg-transparent {
+  background: none;
+}
+
+.editor-bg-elevated {
+  background: var(--surface-elevated);
+}
+
+/* ==========================================================================
+   LAYOUT UTILITAIRES
+   ========================================================================== */
+
+.editor-full-width {
+  width: 100%;
+}
+
+.editor-full-height {
+  height: 100%;
+  min-height: 100vh;
+}
+
+.editor-flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-text-left {
+  text-align: left;
+}
+
+.editor-text-center {
+  text-align: center;
+}
+
+.editor-text-right {
+  text-align: right;
+}
+
+/* ==========================================================================
+   WIDTH CONTAINERS UTILITAIRES
+   ========================================================================== */
+
+.editor-container-width {
+  width: 100%;
+  max-width: var(--editor-content-width);
+  margin: 0 auto;
+}
+
+.editor-content-width {
+  width: 100%;
+  max-width: var(--editor-content-width);
+}
+
+.editor-image-container-width {
+  width: 100%;
+  max-width: var(--editor-image-width, var(--editor-content-width));
+}
+
+.editor-add-image-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ==========================================================================
+   RESPONSIVE UTILITIES
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .editor-container-width,
+  .editor-content-width {
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-container-width,
+  .editor-content-width {
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+  }
+}
+

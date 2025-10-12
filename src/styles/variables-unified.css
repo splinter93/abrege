@@ -14,9 +14,9 @@
      ======================================== */
   
   /* Backgrounds */
-  --color-bg-primary: #0f0f12;        /* Fond principal, très sombre (COHÉRENT avec themes.css) */
-  --color-bg-secondary: #1a1a1f;      /* Pour la sidebar, légèrement plus clair (COHÉRENT avec themes.css) */
-  --color-bg-tertiary: #1f1f25;       /* Pour les survols et éléments actifs (COHÉRENT avec themes.css) */
+  --color-bg-primary: #121212;        /* Fond principal, équilibré (COHÉRENT avec themes.css) */
+  --color-bg-secondary: #171717;      /* Pour la sidebar, légèrement plus clair (COHÉRENT avec themes.css) */
+  --color-bg-tertiary: #1c1c1c;       /* Pour les survols et éléments actifs (COHÉRENT avec themes.css) */
   --color-bg-elevated: #2C2C2C;       /* Pour les éléments "surélevés" comme les menus */
   --color-bg-content: #202020;         /* Pour les éléments de contenu : code, blockquotes, tableaux, etc. */
   --color-bg-table-alternate: rgba(0, 0, 0, 0.15); /* Pour l'alternance des lignes de tableau */
@@ -29,7 +29,7 @@
   --color-bg-warning-soft: rgba(245, 158, 11, 0.15);
 
   /* Textes */
-  --color-text-primary: #EAEAEA;      /* Texte principal, blanc cassé */
+  --color-text-primary: #d0d0d0;      /* Texte principal, gris clair adouci - confortable */
   --color-text-secondary: #A0A0A0;    /* Texte secondaire, gris clair */
   --color-text-muted: #6A6A6A;      /* Texte discret, gris plus foncé */
   --color-text-danger: #FF5C5C;

@@ -466,20 +466,20 @@
   --color-primary-light: #ff6b3d;
   --color-primary-dark: #d44a1a;
 
-  /* Backgrounds principaux - Compatibilité typography.css (dark theme) */
-  --color-bg-primary: var(--surface-background);
-  --color-bg-header: var(--surface-primary);
-
-  /* Surfaces (dark theme) */
-  --surface-primary: #141414;
+  /* Surfaces (dark theme) - DÉFINIR EN PREMIER */
+  --surface-primary: #171717;
   --surface-secondary: #1c1c1c;
   --surface-tertiary: #212121;
   --surface-elevated: #1c1c1c;
-  --surface-background: #0f0f12;
+  --surface-background: #121212;
   --surface-hover: #212121;
 
+  /* Backgrounds principaux - VALEURS DIRECTES (pas de référence circulaire) */
+  --color-bg-primary: #121212; /* ✅ DIRECT - équilibré */
+  --color-bg-header: #171717; /* ✅ DIRECT - surface primary */
+
   /* Textes (dark theme) */
-  --text-primary: #f5f5f5;
+  --text-primary: #d0d0d0;
   --text-secondary: #a3a3a3;
   --text-tertiary: #737373;
   --text-disabled: #666666;
