@@ -175,8 +175,9 @@ export async function POST(
       });
     }
 
-    // 🛡️ Sanitizer le contenu final avant sauvegarde
-    const safeContent = sanitizeMarkdownContent(result.content);
+    // 🛡️ Le contenu est déjà sanitizé (chaque op a été sanitizée ligne 150)
+    // Pas besoin de re-sanitizer ici (causerait un double échappement)
+    const safeContent = result.content;
     
     // 💾 Sauvegarder les modifications
     const { data: updatedNote, error: updateError } = await supabase
