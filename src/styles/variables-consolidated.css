@@ -52,9 +52,9 @@
   --text-muted: #737373;
   
   /* Couleurs de texte */
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #d1d5db;
-  --color-text-muted: #9ca3af;
+  --color-text-primary: #d0d0d0;
+  --color-text-secondary: #a3a3a3;
+  --color-text-muted: #737373;
   
   /* ========================================
      BORDURES
