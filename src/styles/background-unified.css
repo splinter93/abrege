@@ -15,14 +15,14 @@
 :root {
   /* Background principal avec dégradé sophistiqué */
   --background-primary: linear-gradient(135deg, 
-    #0a0a0c 0%, 
-    #1a1a1e 15%, 
-    #2a2a2e 30%, 
-    #1e1e22 45%, 
-    #141418 60%, 
-    #1c1c20 75%, 
-    #0f0f12 90%, 
-    #0a0a0c 100%);
+    #0f0f0f 0%, 
+    #151515 15%, 
+    #1a1a1a 30%, 
+    #151515 45%, 
+    #121212 60%, 
+    #161616 75%, 
+    #111111 90%, 
+    #0f0f0f 100%);
   
   /* Effets de texture avec couleurs d'accent */
   --background-texture: 
@@ -41,11 +41,11 @@
 
 .dark {
   --background-primary: linear-gradient(135deg, 
-    #0a0a0c 0%, 
-    #1a1a1e 25%, 
-    #141418 50%, 
-    #1c1c20 75%, 
-    #0a0a0c 100%);
+    #0f0f0f 0%, 
+    #151515 25%, 
+    #121212 50%, 
+    #161616 75%, 
+    #0f0f0f 100%);
   
   --background-texture: 
     radial-gradient(circle at 20% 80%, rgba(229, 90, 44, 0.05) 0%, transparent 50%),
