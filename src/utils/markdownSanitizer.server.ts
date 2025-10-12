@@ -44,23 +44,31 @@ export function sanitizeMarkdownContent(content: string): string {
   // ⚠️ HTML/caractères dangereux détectés → échapper automatiquement
   logApi.warn('⚠️ [SANITIZER] HTML brut détecté dans markdown_content, échappement automatique appliqué');
   
-  // 🔒 ÉTAPE 1: Protéger les blocs de code (ne doivent pas être échappés)
-  // Les blocs de code markdown ne sont jamais exécutés comme du HTML
-  const codeBlocks: string[] = [];
-  const codeBlockPlaceholder = '___CODE_BLOCK_PLACEHOLDER_';
+  // 🔒 ÉTAPE 1: Protéger les blocs de code ET les blockquotes markdown
+  // Ces éléments markdown ne sont jamais exécutés comme du HTML
+  const protectedBlocks: string[] = [];
+  const placeholder = '___PROTECTED_BLOCK_';
   
   // Extraire les blocs de code avec backticks triples
   let processed = content.replace(/(```[\s\S]*?```)/g, (match) => {
-    const index = codeBlocks.length;
-    codeBlocks.push(match);
-    return `${codeBlockPlaceholder}${index}___`;
+    const index = protectedBlocks.length;
+    protectedBlocks.push(match);
+    return `${placeholder}${index}___`;
   });
   
   // Extraire les blocs de code inline (backticks simples)
   processed = processed.replace(/(`[^`\n]+?`)/g, (match) => {
-    const index = codeBlocks.length;
-    codeBlocks.push(match);
-    return `${codeBlockPlaceholder}${index}___`;
+    const index = protectedBlocks.length;
+    protectedBlocks.push(match);
+    return `${placeholder}${index}___`;
+  });
+  
+  // Extraire les blockquotes markdown (lignes commençant par >)
+  // Protège les > en début de ligne qui sont des marqueurs de quote markdown
+  processed = processed.replace(/(^>.*$)/gm, (match) => {
+    const index = protectedBlocks.length;
+    protectedBlocks.push(match);
+    return `${placeholder}${index}___`;
   });
   
   // 🔒 ÉTAPE 2: Échapper tous les caractères HTML dans le contenu restant
@@ -71,9 +79,9 @@ export function sanitizeMarkdownContent(content: string): string {
     .replace(/"/g, '&quot;')  // Échapper "
     .replace(/'/g, '&#039;'); // Échapper '
   
-  // 🔒 ÉTAPE 3: Restaurer les blocs de code (non échappés)
-  processed = processed.replace(new RegExp(`${codeBlockPlaceholder}(\\d+)___`, 'g'), (_, index) => {
-    return codeBlocks[parseInt(index)];
+  // 🔒 ÉTAPE 3: Restaurer les blocs protégés (non échappés)
+  processed = processed.replace(new RegExp(`${placeholder}(\\d+)___`, 'g'), (_, index) => {
+    return protectedBlocks[parseInt(index)];
   });
   
   return processed;
