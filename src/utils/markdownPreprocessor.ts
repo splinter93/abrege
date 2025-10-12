@@ -39,23 +39,10 @@ export function preprocessMarkdown(markdown: string): string {
   
   let processed = markdown;
   
-  // 🔓 ÉTAPE 0 : Dé-échapper les entités HTML (DB → Éditeur)
-  // Dé-échappement basique des entités HTML
-  // Le HTML échappé côté serveur doit être dé-échappé côté client
-  // pour que Tiptap puisse le gérer correctement
-  const hasHtmlEntities = /&(?:lt|gt|amp|quot|#039);/i.test(processed);
-  if (hasHtmlEntities) {
-    processed = processed
-      .replace(/&#039;/g, "'")   // Dé-échapper '
-      .replace(/&quot;/g, '"')   // Dé-échapper "
-      .replace(/&gt;/g, '>')     // Dé-échapper >
-      .replace(/&lt;/g, '<')     // Dé-échapper <
-      .replace(/&amp;/g, '&');   // Dé-échapper & en dernier
-      
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[markdownPreprocessor] 🔓 Entités HTML dé-échappées pour l\'éditeur');
-    }
-  }
+  // ⚠️ NE PAS DÉ-ÉCHAPPER ICI !
+  // Tiptap doit recevoir les entités HTML échappées (&lt;, &gt;, etc.)
+  // pour les afficher comme du texte, pas comme du HTML.
+  // Si on dé-échappe, Tiptap va essayer de parser <script> comme une vraie balise HTML.
   
   // 1. Remplacer les ~ par ≈ dans les tables (fix bug LLM)
   processed = replaceTildeInTables(processed);
