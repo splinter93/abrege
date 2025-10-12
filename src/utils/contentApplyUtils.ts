@@ -49,6 +49,7 @@ export interface OperationResult {
   range_after?: { start: number; end: number };
   preview?: string;
   error?: string;
+  newContent?: string; // ✅ FIX: Ajouter le contenu résultant
 }
 
 export interface ContentApplyResult {
@@ -97,9 +98,9 @@ export class ContentApplier {
         const result = await this.applyOperation(currentContent, op);
         this.results.push(result);
         
-        if (result.status === 'applied' && result.range_before && result.range_after) {
-          // Mettre à jour le contenu avec le résultat de l'opération
-          currentContent = this.updateContentWithResult(currentContent, result, op);
+        // ✅ FIX: Utiliser directement le contenu retourné par executeOperation
+        if (result.status === 'applied' && result.newContent !== undefined) {
+          currentContent = result.newContent;
         }
       } catch (error) {
         this.results.push({
@@ -166,7 +167,8 @@ export class ContentApplier {
         start: range.start,
         end: range.start + contentLength
       },
-      preview: this.generatePreview(result.newContent, range.start, 80)
+      preview: this.generatePreview(result.newContent, range.start, 80),
+      newContent: result.newContent // ✅ FIX: Retourner le contenu résultant
     };
   }
 
@@ -613,24 +615,9 @@ export class ContentApplier {
     }
   }
 
-  /**
-   * Met à jour le contenu avec le résultat d'une opération
-   */
-  private updateContentWithResult(
-    content: string, 
-    result: OperationResult, 
-    op: ContentOperation
-  ): string {
-    if (!result.range_before || !result.range_after) {
-      return content;
-    }
-    
-    const before = content.substring(0, result.range_before.start);
-    const after = content.substring(result.range_before.end);
-    const newContent = op.content || '';
-    
-    return before + newContent + after;
-  }
+  // ✅ FONCTION SUPPRIMÉE: updateContentWithResult
+  // Maintenant on utilise directement result.newContent de executeOperation
+  // Plus besoin de reconstruire le contenu (causait l'écrasement du match)
 
   /**
    * Génère un aperçu du contenu
