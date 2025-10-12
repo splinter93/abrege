@@ -31,10 +31,10 @@
      ======================================== */
   
   /* Arrière-plans principaux */
-  --bg-primary: #212121;
-  --bg-secondary: #2d2d2d;
-  --bg-tertiary: #3c3c3c;
-  --bg-elevated: #404040;
+  --bg-primary: #121212;
+  --bg-secondary: #171717;
+  --bg-tertiary: #1c1c1c;
+  --bg-elevated: #202020;
   --bg-hover: rgba(255, 255, 255, 0.05);
   
   /* Arrière-plans de contenu */
@@ -47,9 +47,9 @@
      ======================================== */
   
   /* Textes principaux */
-  --text-primary: #ffffff;
-  --text-secondary: #d1d5db;
-  --text-muted: #9ca3af;
+  --text-primary: #d0d0d0;
+  --text-secondary: #a3a3a3;
+  --text-muted: #737373;
   
   /* Couleurs de texte */
   --color-text-primary: #ffffff;
