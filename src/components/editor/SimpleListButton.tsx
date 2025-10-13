@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { FiCheckSquare, FiChevronDown } from 'react-icons/fi';
+import { FiCheckSquare } from 'react-icons/fi';
 import Tooltip from '@/components/Tooltip';
 
 // Icônes personnalisées pour les listes - Design moderne et épuré
@@ -110,7 +110,6 @@ const SimpleListButton: React.FC<SimpleListButtonProps> = ({ editor }) => {
           aria-label="Listes"
         >
           <CurrentIcon size={16} />
-          <FiChevronDown size={12} className={`chevron ${isOpen ? 'open' : ''}`} />
         </button>
       </Tooltip>
       

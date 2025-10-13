@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { FiChevronDown, FiType } from 'react-icons/fi';
+import { FiType } from 'react-icons/fi';
 import Tooltip from '@/components/Tooltip';
 
 interface SimpleHeadingButtonProps {
@@ -61,7 +61,6 @@ const SimpleHeadingButton: React.FC<SimpleHeadingButtonProps> = ({ editor }) => 
           aria-label="Titres et paragraphes"
         >
           <FiType size={16} />
-          <FiChevronDown size={12} className={`chevron ${isOpen ? 'open' : ''}`} />
         </button>
       </Tooltip>
       
