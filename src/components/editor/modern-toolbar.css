@@ -156,14 +156,14 @@
 }
 
 .toolbar-btn.active {
-  background: var(--accent-primary);
+  background: #ff6b35;
   color: white;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(var(--accent-primary-rgb, 99, 102, 241), 0.3);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
 }
 
 .toolbar-btn.active:hover {
-  background: var(--accent-hover);
+  background: #ff5722;
   transform: scale(var(--toolbar-hover-scale));
 }
 
