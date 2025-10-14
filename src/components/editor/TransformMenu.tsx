@@ -1,17 +1,9 @@
 /**
- * Sous-menu pour transformer le type de bloc de texte
+ * Sous-menu pour transformer le type de bloc de texte (H1, P, etc.)
  */
 import React from 'react';
 import type { Editor } from '@tiptap/react';
-import { 
-  FiType, 
-  FiMessageSquare, 
-  FiCode,
-  FiCheckSquare,
-  FiAlertCircle
-} from 'react-icons/fi';
-import { MdFormatQuote, MdGridOn } from 'react-icons/md';
-import { AiOutlineOrderedList, AiOutlineUnorderedList } from 'react-icons/ai';
+import { FiType, FiMessageSquare } from 'react-icons/fi';
 import './transform-menu.css';
 
 interface TransformMenuProps {
@@ -49,66 +41,12 @@ const TransformMenu: React.FC<TransformMenuProps> = ({ editor, onClose }) => {
       action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
       isActive: () => editor.isActive('heading', { level: 3 }),
     },
-    {
-      id: 'bulletList',
-      label: 'Liste à puces',
-      icon: AiOutlineUnorderedList,
-      action: () => editor.chain().focus().toggleBulletList().run(),
-      isActive: () => editor.isActive('bulletList'),
-    },
-    {
-      id: 'orderedList',
-      label: 'Liste numérotée',
-      icon: AiOutlineOrderedList,
-      action: () => editor.chain().focus().toggleOrderedList().run(),
-      isActive: () => editor.isActive('orderedList'),
-    },
-    {
-      id: 'taskList',
-      label: 'Liste de tâches',
-      icon: FiCheckSquare,
-      action: () => editor.chain().focus().toggleTaskList().run(),
-      isActive: () => editor.isActive('taskList'),
-    },
-    {
-      id: 'blockquote',
-      label: 'Citation',
-      icon: MdFormatQuote,
-      action: () => editor.chain().focus().toggleBlockquote().run(),
-      isActive: () => editor.isActive('blockquote'),
-    },
-    {
-      id: 'codeBlock',
-      label: 'Bloc de code',
-      icon: FiCode,
-      action: () => editor.chain().focus().toggleCodeBlock().run(),
-      isActive: () => editor.isActive('codeBlock'),
-    },
-    {
-      id: 'callout',
-      label: 'Callout',
-      icon: FiAlertCircle,
-      action: () => editor.chain().focus().setCallout().run(),
-      isActive: () => editor.isActive('callout'),
-    },
-    {
-      id: 'table',
-      label: 'Tableau',
-      icon: MdGridOn,
-      action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
-      isActive: () => editor.isActive('table'),
-    },
   ];
 
   const handleSelect = (action: () => void) => {
     action();
     onClose();
   };
-
-  // Organiser les options par catégories
-  const textOptions = transformOptions.slice(0, 4); // Texte, H1, H2, H3
-  const listOptions = transformOptions.slice(4, 7); // Listes
-  const blockOptions = transformOptions.slice(7); // Citation, code, callout, tableau
 
   return (
     <div className="transform-menu">
@@ -117,42 +55,13 @@ const TransformMenu: React.FC<TransformMenuProps> = ({ editor, onClose }) => {
         <span>Transformer en</span>
       </div>
       <div className="transform-menu-list">
-        {/* Textes et titres */}
-        {textOptions.map((option) => (
+        {transformOptions.map((option) => (
           <button
             key={option.id}
             className={`transform-menu-item ${option.isActive() ? 'active' : ''}`}
             onClick={() => handleSelect(option.action)}
           >
             <option.icon size={16} className={`heading-icon-${option.id.slice(-1)}`} />
-            <span>{option.label}</span>
-          </button>
-        ))}
-        
-        <div className="transform-menu-divider" />
-        
-        {/* Listes */}
-        {listOptions.map((option) => (
-          <button
-            key={option.id}
-            className={`transform-menu-item ${option.isActive() ? 'active' : ''}`}
-            onClick={() => handleSelect(option.action)}
-          >
-            <option.icon size={16} />
-            <span>{option.label}</span>
-          </button>
-        ))}
-        
-        <div className="transform-menu-divider" />
-        
-        {/* Blocs */}
-        {blockOptions.map((option) => (
-          <button
-            key={option.id}
-            className={`transform-menu-item ${option.isActive() ? 'active' : ''}`}
-            onClick={() => handleSelect(option.action)}
-          >
-            <option.icon size={16} />
             <span>{option.label}</span>
           </button>
         ))}

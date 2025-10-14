@@ -145,30 +145,6 @@
   transform: rotate(180deg);
 }
 
-/* Ask AI Button - Orange Theme */
-.floating-menu-button.ask-ai-dropdown-button {
-  padding: 8px 12px;
-  color: #ff6b35;
-}
-
-.floating-menu-button.ask-ai-dropdown-button span {
-  display: inline;
-  font-size: 13px;
-}
-
-.floating-menu-button.ask-ai-dropdown-button:hover {
-  background: rgba(255, 107, 53, 0.1);
-  color: #ff5722;
-}
-
-.ask-ai-dropdown-button[aria-expanded="true"] .chevron-icon {
-  transform: rotate(180deg);
-}
-
-.ask-ai-dropdown-button svg {
-  color: currentColor;
-}
-
 /* =========================
    SÉPARATEUR
    ========================= */
@@ -186,13 +162,6 @@
   position: absolute;
   top: calc(100% + 6px); /* Position below the main menu */
   left: 0;
-  z-index: 10;
-}
-
-.ask-ai-menu-container {
-  position: absolute;
-  top: calc(100% + 6px); /* Position below the main menu */
-  left: 120px; /* Position à droite du bouton Ask AI */
   z-index: 10;
 }
 

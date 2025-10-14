@@ -1,0 +1,161 @@
+/*
+  VARIABLES CSS UNIFIÉES - COULEURS UNIQUEMENT
+  =============================================
+  Toutes les couleurs de l'application centralisées ici
+  - Backgrounds
+  - Textes
+  - Accents
+  - Bordures
+  - États
+  
+  Les espacements, rayons, ombres sont dans design-system.css
+*/
+
+/* ==========================================================================
+   :ROOT - THÈME SOMBRE PAR DÉFAUT (évite flash gris en SSR/build)
+   ========================================================================== */
+:root {
+  /* ========================================
+     COULEURS PRIMAIRES
+     ======================================== */
+  
+  --color-primary: #e55a2c;
+  --color-primary-rgb: 229, 90, 44;
+  --color-primary-light: #ff6b3d;
+  --color-primary-dark: #d44a1a;
+
+  /* ========================================
+     BACKGROUNDS - SOMBRE PAR DÉFAUT
+     ======================================== */
+  
+  --color-bg-primary: #121212;
+  --color-bg-secondary: #171717;
+  --color-bg-tertiary: #1c1c1c;
+  --color-bg-elevated: #2C2C2C;
+  --color-bg-content: #202020;
+  --color-bg-hover: rgba(255, 255, 255, 0.05);
+  --color-bg-header: #171717;
+  
+  /* Surfaces (alias) */
+  --surface-primary: #171717;
+  --surface-secondary: #1c1c1c;
+  --surface-tertiary: #212121;
+  --surface-elevated: #1c1c1c;
+  --surface-background: #121212;
+  --surface-hover: #212121;
+
+  /* ========================================
+     TEXTES - SOMBRE PAR DÉFAUT
+     ======================================== */
+  
+  --color-text-primary: #d0d0d0;
+  --color-text-secondary: #A0A0A0;
+  --color-text-muted: #6A6A6A;
+  --color-text-danger: #FF5C5C;
+  
+  /* Alias texte */
+  --text-primary: #d0d0d0;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #737373;
+  --text-disabled: #666666;
+  --text-on-primary: #121212;
+  --text-on-accent: #ffffff;
+
+  /* ========================================
+     ACCENTS
+     ======================================== */
+  
+  --color-accent: #e55a2b;
+  --color-accent-primary: #e55a2b;
+  --color-accent-hover: #f5652c;
+  
+  --accent-primary: #e55a2c;
+  --accent-primary-rgb: 229, 90, 44;
+  --accent-hover: #ff6b3d;
+  --accent-subtle: rgba(229, 90, 44, 0.15);
+  --accent-faded: rgba(229, 90, 44, 0.1);
+
+  /* ========================================
+     BORDURES
+     ======================================== */
+  
+  --color-border-primary: #2a2a2c;
+  --color-border-secondary: #3a3a3c;
+  --color-border-focus: #e55a2c;
+  
+  --border-subtle: #2a2a2c;
+  --border-medium: #3a3a3c;
+  --border-strong: #4a4a4c;
+  --border-accent: #e55a2c;
+
+  /* ========================================
+     ÉTATS
+     ======================================== */
+  
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+
+  /* ========================================
+     ALIAS LEGACY (compatibilité)
+     ======================================== */
+  
+  --bg-primary: #121212;
+  --bg-secondary: #171717;
+  --bg-tertiary: #1c1c1c;
+  --bg-main: #121212;
+  --bg-base: #171717;
+  --bg-surface: #1c1c1c;
+  --bg-elevated: #202020;
+  --bg-hover: #212121;
+  
+  --text-1: #d0d0d0;
+  --text-2: #a3a3a3;
+  --text-3: #737373;
+  
+  --surface-0: #121212;
+  --surface-1: #171717;
+  --surface-2: #1c1c1c;
+  --surface-3: #212121;
+}
+
+/* ==========================================================================
+   THÈME CLAIR (override si nécessaire - pas utilisé actuellement)
+   ========================================================================== */
+.theme-light {
+  /* Couleurs de base */
+  --color-primary: #e55a2c;
+  --color-primary-rgb: 229, 90, 44;
+  
+  /* Backgrounds */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --surface-background: #f9fafb;
+  --surface-primary: #ffffff;
+  
+  /* Textes */
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
+  --text-primary: #111827;
+  
+  /* Bordures */
+  --border-subtle: #e5e7eb;
+  --border-medium: #d1d5db;
+}
+
+/* ==========================================================================
+   ALIAS .dark ET .theme-dark (compatibilité)
+   ========================================================================== */
+.dark,
+.theme-dark,
+html.dark,
+body.dark {
+  /* Les valeurs sont déjà dans :root, pas besoin de redéfinir */
+  /* Mais on garde pour compatibilité si du code vérifie .dark */
+}
+
+
+

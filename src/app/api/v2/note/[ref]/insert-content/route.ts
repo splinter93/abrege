@@ -18,6 +18,7 @@ import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { z } from 'zod';
 import { updateArticleInsight } from '@/utils/insightUpdater';
+import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';

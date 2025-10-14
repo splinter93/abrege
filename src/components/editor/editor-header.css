@@ -214,15 +214,14 @@
 }
 
 /* Ajouter un séparateur subtil entre les groupes */
-/* Séparateurs gérés manuellement dans ModernToolbar */
-/* .toolbar-group:not(:last-child)::after {
+.toolbar-group:not(:last-child)::after {
   content: '';
   width: 1px;
   height: 16px;
   background: var(--border-subtle);
   margin: 0 8px;
   opacity: 0.6;
-} */
+}
 
 /* Style pour pousser le dernier groupe (outils IA) à droite */
 .toolbar-group-right {

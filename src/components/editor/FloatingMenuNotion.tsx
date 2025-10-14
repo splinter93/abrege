@@ -21,7 +21,6 @@ import {
 } from 'react-icons/fi';
 import './floating-menu-notion.css';
 import TransformMenu from './TransformMenu';
-import AskAIMenu from './AskAIMenu';
 
 interface FloatingMenuNotionProps {
   editor: Editor | null;
@@ -48,7 +47,6 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
   const [selectedText, setSelectedText] = useState('');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isTransformMenuOpen, setTransformMenuOpen] = useState(false);
-  const [isAskAIMenuOpen, setAskAIMenuOpen] = useState(false);
   const isDraggingRef = useRef(false);
 
   // Mise à jour de la position du menu avec délai
@@ -167,11 +165,10 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
     }, 150);
   };
 
-  // Fermer les sous-menus si le menu principal se ferme
+  // Fermer le sous-menu si le menu principal se ferme
   useEffect(() => {
     if (!position.visible) {
       setTransformMenuOpen(false);
-      setAskAIMenuOpen(false);
     }
   }, [position.visible]);
 
@@ -247,6 +244,13 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
   // Commandes de formatage
   const formatCommands = React.useMemo(() => [
     {
+      id: 'ask-ai',
+      icon: FiZap,
+      label: 'Ask AI',
+      action: () => onAskAI?.(selectedText),
+      className: 'ask-ai-button'
+    },
+    {
       id: 'bold',
       icon: FiBold,
       label: 'Gras',
@@ -320,27 +324,10 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
       <div className="floating-menu-content">
         <button
           className="floating-menu-button transform-button"
-          onClick={() => {
-            setTransformMenuOpen(!isTransformMenuOpen);
-            setAskAIMenuOpen(false);
-          }}
-          aria-expanded={isTransformMenuOpen}
+          onClick={() => setTransformMenuOpen(!isTransformMenuOpen)}
         >
           <FiType size={16} />
           <span>Transformer</span>
-          <FiChevronDown size={14} className="chevron-icon" />
-        </button>
-
-        <button
-          className="floating-menu-button ask-ai-dropdown-button"
-          onClick={() => {
-            setAskAIMenuOpen(!isAskAIMenuOpen);
-            setTransformMenuOpen(false);
-          }}
-          aria-expanded={isAskAIMenuOpen}
-        >
-          <FiZap size={16} />
-          <span>Ask AI</span>
           <FiChevronDown size={14} className="chevron-icon" />
         </button>
 
@@ -367,16 +354,6 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
       {isTransformMenuOpen && editor && (
         <div className="transform-menu-container">
           <TransformMenu editor={editor} onClose={() => setTransformMenuOpen(false)} />
-        </div>
-      )}
-      {isAskAIMenuOpen && editor && (
-        <div className="ask-ai-menu-container">
-          <AskAIMenu 
-            editor={editor} 
-            selectedText={selectedText}
-            onClose={() => setAskAIMenuOpen(false)}
-            onAskAI={(prompt, text) => onAskAI?.(`${prompt}: ${text}`)}
-          />
         </div>
       )}
     </div>

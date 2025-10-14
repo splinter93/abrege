@@ -1,0 +1,170 @@
+/*
+  DESIGN SYSTEM - SYSTÈME UNIQUEMENT
+  ===================================
+  Espacements, rayons, ombres, transitions, z-index, classes utilitaires
+  Les COULEURS sont dans variables.css
+*/
+
+/* ==========================================================================
+   ESPACEMENTS - SYSTÈME 8PT
+   ========================================================================== */
+:root {
+  --spacing-xs: 0.25rem;    /* 4px */
+  --spacing-sm: 0.5rem;     /* 8px */
+  --spacing-md: 1rem;       /* 16px */
+  --spacing-lg: 1.5rem;     /* 24px */
+  --spacing-xl: 2rem;       /* 32px */
+  --spacing-2xl: 3rem;      /* 48px */
+  --spacing-3xl: 4rem;      /* 64px */
+  
+  /* Alias */
+  --spacing-unit: var(--spacing-sm);
+  --main-content-padding: var(--spacing-xl);
+  --card-padding: var(--spacing-lg);
+}
+
+/* ==========================================================================
+   RAYONS DE BORDURE
+   ========================================================================== */
+:root {
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-full: 50%;
+  
+  /* Alias */
+  --border-radius: var(--radius-lg);
+  --border-radius-sm: var(--radius-sm);
+  --border-radius-md: var(--radius-md);
+  --border-radius-lg: var(--radius-lg);
+  --border-radius-xl: var(--radius-xl);
+}
+
+/* ==========================================================================
+   OMBRES
+   ========================================================================== */
+:root {
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.25);
+  --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* ==========================================================================
+   TRANSITIONS
+   ========================================================================== */
+:root {
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-spring: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  /* Alias */
+  --transition-speed: var(--transition-normal);
+}
+
+/* ==========================================================================
+   Z-INDEX - HIÉRARCHIE
+   ========================================================================== */
+:root {
+  --z-dropdown: 1000;
+  --z-sidebar: 1001;
+  --z-modal: 1002;
+  --z-tooltip: 1003;
+  --z-overlay: 999;
+  --z-notification: 1004;
+}
+
+/* ==========================================================================
+   TAILLES
+   ========================================================================== */
+:root {
+  --size-button-sm: 28px;
+  --size-button-md: 32px;
+  --size-button-lg: 36px;
+  --size-button-xl: 40px;
+  --size-header: 48px;
+  --size-input: 60px;
+  
+  /* Sidebar */
+  --sidebar-width: 280px;
+  --sidebar-width-collapsed: 64px;
+  
+  /* Pages */
+  --page-padding: var(--spacing-xl);
+  --page-gap: var(--spacing-lg);
+  --page-header-height: 80px;
+}
+
+/* ==========================================================================
+   TYPOGRAPHIE - TAILLES ET POIDS
+   ========================================================================== */
+:root {
+  /* Tailles de police */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-md: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  
+  /* Alias UI */
+  --ui-font-size-xs: var(--font-size-xs);
+  --ui-font-size-sm: var(--font-size-sm);
+  --ui-font-size-md: var(--font-size-base);
+  --ui-font-size-lg: var(--font-size-lg);
+  --ui-font-size-xl: var(--font-size-xl);
+  --ui-font-size-2xl: var(--font-size-2xl);
+  
+  /* Poids de police */
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
+  
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+  
+  /* Line heights */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+}
+
+/* ==========================================================================
+   CLASSES UTILITAIRES
+   ========================================================================== */
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  background: var(--color-bg-primary);
+}
+
+.app-main-content {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+
+
