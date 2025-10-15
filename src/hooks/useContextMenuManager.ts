@@ -15,6 +15,7 @@ interface UseContextMenuManagerReturn {
   handleOpen: () => void;
   handleRename: () => void;
   handleDelete: () => void;
+  handleCopyId: () => void;
   closeContextMenu: () => void;
 }
 
@@ -84,6 +85,20 @@ export const useContextMenuManager = ({
     closeContextMenu();
   }, [contextMenuState.item, deleteFolder, deleteFile]);
 
+  // Handler pour copier l'ID de l'élément
+  const handleCopyId = useCallback(async () => {
+    if (!contextMenuState.item) return;
+    
+    try {
+      await navigator.clipboard.writeText(contextMenuState.item.id);
+      // Optionnel : afficher un toast de confirmation
+      console.log('✅ ID copié:', contextMenuState.item.id);
+    } catch (err) {
+      console.error('❌ Erreur lors de la copie de l\'ID:', err);
+    }
+    closeContextMenu();
+  }, [contextMenuState.item]);
+
   // Handler pour fermer le menu contextuel
   const closeContextMenu = useCallback(() => {
     setContextMenuState(cm => ({ ...cm, visible: false }));
@@ -95,6 +110,7 @@ export const useContextMenuManager = ({
     handleOpen,
     handleRename,
     handleDelete,
+    handleCopyId,
     closeContextMenu
   };
 }; 

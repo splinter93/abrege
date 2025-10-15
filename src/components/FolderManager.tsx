@@ -216,6 +216,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
     handleOpen,
     handleRename,
     handleDelete,
+    handleCopyId,
     closeContextMenu
   } = useContextMenuManager({
     onFolderOpen,
@@ -308,6 +309,8 @@ const FolderManager: React.FC<FolderManagerProps> = ({
             options={[
               { label: 'Ouvrir', onClick: handleOpen },
               { label: 'Renommer', onClick: handleRename },
+              // Ajouter "Copier l'ID" seulement pour les fichiers (notes)
+              ...(!('name' in contextMenuState.item) ? [{ label: 'Copier l\'ID', onClick: handleCopyId }] : []),
               { label: 'Supprimer', onClick: handleDelete }
             ]}
             onClose={closeContextMenu}
