@@ -288,6 +288,18 @@ const RecentFilesList: React.FC<RecentFilesListProps> = ({
     closeContextMenu();
   }, [contextMenu.file, getAccessToken, closeContextMenu]);
 
+  const handleCopyId = useCallback(async () => {
+    if (!contextMenu.file) return;
+    
+    try {
+      await navigator.clipboard.writeText(contextMenu.file.id);
+      logger.dev('[RecentFilesList] ✅ ID copié:', contextMenu.file.id);
+    } catch (err) {
+      logger.error('[RecentFilesList] ❌ Erreur lors de la copie de l\'ID:', err);
+    }
+    closeContextMenu();
+  }, [contextMenu.file, closeContextMenu]);
+
   // Fermer le menu contextuel avec la touche Escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -470,6 +482,7 @@ const RecentFilesList: React.FC<RecentFilesListProps> = ({
         options={[
           { label: 'Ouvrir', onClick: handleOpenFile },
           { label: 'Renommer', onClick: handleRenameFile },
+          { label: 'Copier l\'ID', onClick: handleCopyId },
           { label: 'Supprimer', onClick: handleDeleteFile }
         ]}
         onClose={closeContextMenu}
