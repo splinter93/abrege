@@ -245,6 +245,7 @@
   font-weight: 500;
   letter-spacing: 0.02em;
   transition: color var(--unified-transition-fast);
+  color: inherit; /* Hérite toujours de la couleur du parent */
 }
 
 /* ========================================

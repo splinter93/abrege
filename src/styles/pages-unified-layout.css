@@ -73,7 +73,7 @@
   flex: 1;
   margin-left: var(--sidebar-width);
   min-height: 100vh;
-  padding: var(--glass-space-xl);
+  padding: var(--spacing-xl) !important; /* Force le padding même en cas de conflit CSS */
   background: transparent;
   position: relative;
 }
@@ -541,7 +541,7 @@
 
 @media (max-width: 1024px) {
   .page-content-area {
-    padding: var(--glass-space-lg);
+    padding: var(--spacing-lg) !important;
   }
   
   .page-title-content {
@@ -590,7 +590,7 @@
   
   .page-content-area {
     margin-left: 0;
-    padding: var(--glass-space-md);
+    padding: var(--spacing-md) !important;
     order: 1;
   }
   
@@ -642,7 +642,7 @@
 
 @media (max-width: 480px) {
   .page-content-area {
-    padding: var(--glass-space-sm);
+    padding: var(--spacing-sm) !important;
   }
   
   .page-title-container-glass {

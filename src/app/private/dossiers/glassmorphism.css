@@ -334,10 +334,10 @@
 .classeur-content-glassmorphism .classeur-title {
   font-size: 22px;
   font-weight: 600;
-  color: var(--text-primary, rgba(0, 0, 0, 0.9));
+  color: var(--text-primary, rgba(255, 255, 255, 0.95)) !important; /* Force blanc */
   margin: 0;
   line-height: 1.2;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Breadcrumb dans le container glassmorphism */
@@ -560,4 +560,22 @@
   0% { transform: scale(1.1); }
   50% { transform: scale(1.3); }
   100% { transform: scale(1.2); }
+}
+
+/* ==========================================================================
+   FIX FINAL - FORCE LES COULEURS BLANCHES POUR TOUS LES TEXTES
+   ========================================================================== */
+
+/* Force les couleurs blanches pour éviter les conflits de variables CSS */
+.classeur-title,
+.classeur-content-glassmorphism .classeur-title,
+h1.classeur-title,
+.folder-content-header .classeur-title {
+  color: #ffffff !important;
+}
+
+.classeur-name,
+.classeur-tab-glassmorphism .classeur-name,
+span.classeur-name {
+  color: inherit !important;
 }

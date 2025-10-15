@@ -61,7 +61,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-xl) !important; /* Force le padding même en cas de conflit CSS */
   gap: var(--spacing-lg);
   position: relative;
 }
@@ -311,7 +311,7 @@
 
 @media (max-width: 1024px) {
   .page-content-area {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-lg) !important;
   }
   
   .page-title-container-glass {
@@ -360,7 +360,7 @@
 
 @media (max-width: 768px) {
   .page-content-area {
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) !important;
     margin-left: 0;
   }
   
@@ -428,7 +428,7 @@
 
 @media (max-width: 480px) {
   .page-content-area {
-    padding: var(--spacing-sm);
+    padding: var(--spacing-sm) !important;
   }
   
   .page-title-container-glass {

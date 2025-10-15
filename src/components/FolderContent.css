@@ -95,7 +95,7 @@
 .classeur-title {
   font-size: 22px;
   font-weight: 600;
-  color: var(--text-primary, #111827);
+  color: var(--text-primary, rgba(255, 255, 255, 0.95)) !important; /* Force blanc */
   margin: 0;
   line-height: 1.2;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -418,3 +418,13 @@
   }
 
 } 
+/* ==========================================================================
+   FIX FINAL - FORCE BLANC POUR TOUS LES TITRES DE CLASSEURS
+   ========================================================================== */
+
+.classeur-title,
+h1.classeur-title,
+.folder-content-header .classeur-title,
+.classeur-content-glassmorphism .classeur-title {
+  color: #ffffff !important;
+}
