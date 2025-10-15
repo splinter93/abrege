@@ -359,6 +359,18 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
     closeContextMenu();
   };
 
+  const handleCopyId = async () => {
+    if (!contextMenu.note) return;
+    
+    try {
+      await navigator.clipboard.writeText(contextMenu.note.id);
+      logger.dev('[NotesCarouselNotion] ✅ ID copié:', contextMenu.note.id);
+    } catch (err) {
+      logger.error('[NotesCarouselNotion] ❌ Erreur lors de la copie de l\'ID:', err);
+    }
+    closeContextMenu();
+  };
+
   // Formatage des dates
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -554,6 +566,7 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
         options={[
           { label: 'Ouvrir', onClick: handleOpenNote },
           { label: 'Renommer', onClick: handleRenameNote },
+          { label: 'Copier l\'ID', onClick: handleCopyId },
           { label: 'Supprimer', onClick: handleDeleteNote }
         ]}
         onClose={closeContextMenu}
