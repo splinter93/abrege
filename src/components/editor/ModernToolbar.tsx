@@ -19,7 +19,6 @@ import CodeBlockButton from './CodeBlockButton';
 import FontSelector from './FontSelector';
 import AIButton from './AIButton';
 import ToolbarGroup from './ToolbarGroup';
-import ToolbarSeparator from './ToolbarSeparator';
 import './modern-toolbar.css';
 import type { FullEditorInstance } from '@/types/editor';
 
@@ -60,8 +59,6 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
           <ModernFormatButton editor={editor} format="underline" title="Souligné" shortcut="Ctrl+U" />
         </ToolbarGroup>
 
-        <ToolbarSeparator />
-
         {/* Groupe centre - Structure */}
         <ToolbarGroup align="center">
           <SimpleHeadingButton editor={editor} />
@@ -69,8 +66,6 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
           <BlockquoteButton editor={editor} />
           <CodeBlockButton editor={editor} />
         </ToolbarGroup>
-
-        <ToolbarSeparator />
 
         {/* Groupe droite - Outils avancés */}
         <ToolbarGroup align="right">
@@ -99,6 +94,7 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
           <Tooltip text="Dictaphone IA">
             <AudioRecorder 
               onTranscriptionComplete={onTranscriptionComplete || (() => {})}
+              onError={(error) => console.error('Audio error:', error)}
               disabled={isReadonly}
               variant="toolbar"
             />
