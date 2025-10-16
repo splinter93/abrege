@@ -77,7 +77,7 @@ const SimpleAlignButton: React.FC<SimpleAlignButtonProps> = ({ editor }) => {
     <div className="simple-dropdown" ref={dropdownRef}>
       <Tooltip text="Alignement du texte">
         <button
-          className={`toolbar-btn ${isOpen ? 'active' : ''}`}
+          className="toolbar-btn dropdown-btn"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Alignement du texte"
         >

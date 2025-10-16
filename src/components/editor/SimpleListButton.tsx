@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
+import { FiCheckSquare } from 'react-icons/fi';
 import Tooltip from '@/components/Tooltip';
 
 // Icônes personnalisées pour les listes - Design moderne et épuré
@@ -104,7 +105,7 @@ const SimpleListButton: React.FC<SimpleListButtonProps> = ({ editor }) => {
     <div className="simple-dropdown" ref={dropdownRef}>
       <Tooltip text="Listes">
         <button
-          className={`toolbar-btn ${isOpen ? 'active' : ''}`}
+          className="toolbar-btn dropdown-btn"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Listes"
         >

@@ -56,7 +56,7 @@ const SimpleHeadingButton: React.FC<SimpleHeadingButtonProps> = ({ editor }) => 
     <div className="simple-dropdown" ref={dropdownRef}>
       <Tooltip text="Titres et paragraphes">
         <button
-          className={`toolbar-btn ${isOpen ? 'active' : ''}`}
+          className="toolbar-btn dropdown-btn"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Titres et paragraphes"
         >
