@@ -51,20 +51,19 @@
 }
 ```
 
-#### 3. Design moderne des dropdowns (Glassmorphism)
+#### 3. Design ultra clean des dropdowns (Zero Shadow)
 
 ```css
 .dropdown-menu {
-  /* Glassmorphism premium */
-  backdrop-filter: blur(12px) saturate(150%);
-  border-radius: 10px;
+  /* Design flat minimaliste */
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
   
-  /* Shadow multi-couches pour profondeur */
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 2px 8px rgba(0, 0, 0, 0.08);
+  /* ZERO shadow - clarté maximale */
+  /* ZERO blur - design flat pur */
   
-  /* Animation smooth */
+  /* Animation smooth conservée */
   animation: dropdown-slide 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 ```
@@ -92,18 +91,19 @@
 }
 ```
 
-#### 5. Micro-interactions premium
+#### 5. Micro-interactions ultra clean
 
 ```css
-/* État actif avec glow */
+/* État actif sans shadow - design flat pur */
 .toolbar-btn.active {
   background: var(--accent-primary);
   color: white;
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);
+  /* ZERO shadow - le background suffit */
 }
 
 .toolbar-btn.active:hover {
-  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+  background: var(--accent-hover);
+  /* ZERO shadow - simplicité absolue */
 }
 
 /* Indicateur visuel pour item actif */
@@ -125,26 +125,29 @@
 - ❌ Chevrons sur tous les dropdowns
 - ❌ Alignement irrégulier
 - ❌ Transitions basiques
-- ❌ Shadows simples
+- ❌ Shadows partout
 - ❌ Espacement inconsistant
+- ❌ Effets visuels surchargés
 
-### Après (v3.0)
+### Après (v3.0 Ultra Clean)
 - ✅ Design ultra épuré sans chevrons
 - ✅ Alignement pixel-perfect
 - ✅ Animations cubic-bezier fluides
-- ✅ Glassmorphism premium
+- ✅ **ZERO shadow** - Design 100% flat
+- ✅ **ZERO blur** - Clarté maximale
 - ✅ Espacement uniforme (6-8px)
 - ✅ Micro-interactions subtiles
-- ✅ UX Notion-like premium
+- ✅ Minimalisme absolu
 
 ## 🎨 Principes de design appliqués
 
-1. **Minimalisme** - Suppression de tout élément non essentiel
-2. **Cohérence** - Taille et spacing uniformes partout
-3. **Feedback visuel** - États actifs/hover clairs mais subtils
-4. **Fluidité** - Animations douces et naturelles
-5. **Profondeur** - Glassmorphism et shadows multi-couches
-6. **Hiérarchie** - Groupement logique des fonctions
+1. **Minimalisme absolu** - Suppression de tout élément non essentiel
+2. **Flat design** - ZERO shadow, ZERO blur, ZERO effet 3D
+3. **Cohérence** - Taille et spacing uniformes partout (8px)
+4. **Feedback visuel** - États actifs/hover clairs mais subtils
+5. **Fluidité** - Animations douces et naturelles
+6. **Clarté** - Design repose uniquement sur couleurs et spacing
+7. **Hiérarchie** - Groupement logique des fonctions
 
 ## 🚀 Métriques
 
