@@ -152,12 +152,11 @@
 }
 
 .toolbar-btn:hover:not(:disabled) {
-  background: var(--surface-2);
   color: var(--text-primary);
 }
 
 .toolbar-btn:active:not(:disabled) {
-  opacity: 0.7;
+  color: var(--text-primary);
 }
 
 .toolbar-btn.active {
@@ -192,7 +191,6 @@
 }
 
 .toolbar-btn--more:hover {
-  background: transparent;
   color: var(--accent-primary);
 }
 
@@ -210,12 +208,10 @@
 }
 
 .toolbar-btn--ai:hover {
-  background: rgba(255, 107, 53, 0.15);
   color: #ff5722 !important;
 }
 
 .toolbar-btn--ai:active {
-  opacity: 0.7;
   color: #ff4500 !important;
 }
 
@@ -283,8 +279,7 @@
 }
 
 .font-selector__trigger:hover:not(:disabled) {
-  background: var(--surface-3);
-  border-color: #ff6b35;
+  border-color: var(--accent-primary);
 }
 
 .font-selector__trigger:disabled {
@@ -379,7 +374,6 @@
 }
 
 .font-selector__scope-btn:hover {
-  background: var(--surface-hover);
   color: var(--text-primary);
 }
 
@@ -429,9 +423,7 @@
   font-size: 14px;
 }
 
-.font-selector__item:hover {
-  background: var(--surface-2);
-}
+/* Hover removed for minimal design */
 
 .font-selector__item.selected {
   background: var(--accent-primary);
@@ -517,7 +509,6 @@
 }
 
 .dropdown-item:hover {
-  background: var(--surface-2);
   color: var(--accent-primary);
 }
 
