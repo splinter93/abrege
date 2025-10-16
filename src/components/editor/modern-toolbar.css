@@ -1,556 +1,242 @@
-/* ==========================================================================
-   MODERN TOOLBAR - DESIGN ULTRA MODERNE ET ÉPURÉ
+/**
+ * MODERN TOOLBAR - DESIGN SYSTEM
+ * Architecture CSS modulaire et maintenable
+ */
+
+/* =============================================================================
+   DESIGN TOKENS - Toolbar
+   ========================================================================== */
+
+:root {
+  /* Spacing */
+  --toolbar-gap-small: 4px;
+  --toolbar-gap-medium: 8px;
+  --toolbar-gap-large: 16px;
+  
+  /* Sizing */
+  --toolbar-btn-size: 32px;
+  --toolbar-btn-size-md: 28px;
+  --toolbar-btn-size-sm: 24px;
+  --toolbar-btn-size-xs: 20px;
+  
+  /* Border Radius */
+  --toolbar-radius: 6px;
+  --toolbar-radius-lg: 8px;
+  
+  /* Transitions */
+  --toolbar-transition: all 0.15s ease;
+  --toolbar-transition-slow: all 0.2s ease;
+  
+  /* Separator */
+  --toolbar-separator-height: 20px;
+  --toolbar-separator-opacity: 0.6;
+  
+  /* Glassmorphism */
+  --toolbar-glass-bg: rgba(255, 255, 255, 0.05);
+  --toolbar-glass-border: rgba(255, 255, 255, 0.1);
+  --toolbar-glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --toolbar-glass-blur: 10px;
+  
+  /* Hover Effects */
+  --toolbar-hover-scale: 1.02;
+  --toolbar-active-scale: 0.98;
+  --toolbar-hover-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --toolbar-glass-bg: rgba(0, 0, 0, 0.3);
+    --toolbar-glass-border: rgba(255, 255, 255, 0.08);
+    --toolbar-glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* =============================================================================
+   LAYOUT - Conteneur Principal
    ========================================================================== */
 
 .modern-toolbar {
   display: flex;
   flex-direction: column;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  padding: 0;
-  margin: 0;
-  box-shadow: none;
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: visible;
   width: 100%;
   height: 100%;
   justify-content: center;
   align-items: center;
+  position: relative;
+  overflow: visible;
 }
 
-/* Section principale */
 .toolbar-main {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 16px;
   flex-wrap: nowrap;
   min-height: 40px;
   width: 100%;
-  padding: 0;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
 }
 
-/* Groupes de la toolbar */
-.toolbar-group-left,
-.toolbar-group-center,
-.toolbar-group-right {
-  display: flex;
+/* =============================================================================
+   GROUPES - Organisation des boutons
+   ========================================================================== */
+
+.toolbar-group {
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--toolbar-gap-small);
   position: relative;
+  height: var(--toolbar-btn-size);
+  min-height: var(--toolbar-btn-size);
 }
 
-.toolbar-group-left {
+.toolbar-group--left {
   justify-content: flex-start;
 }
 
-.toolbar-group-center {
-  justify-content: center;
-  flex: 1;
+.toolbar-group--center {
+  justify-content: flex-start;
+  margin-left: 0;
 }
 
-.toolbar-group-right {
+.toolbar-group--right {
   justify-content: flex-end;
+  margin-left: auto;
 }
 
-/* Séparateur élégant */
+/* =============================================================================
+   SÉPARATEUR
+   ========================================================================== */
+
 .toolbar-separator {
   width: 1px;
-  height: 20px;
+  height: var(--toolbar-separator-height);
   background: var(--border-subtle);
-  margin: 0 8px;
-  opacity: 0.6;
+  margin: 0 12px;
+  opacity: var(--toolbar-separator-opacity);
+  flex-shrink: 0;
 }
 
-/* Boutons de base - Design ultra moderne - SÉLECTEURS SPÉCIFIQUES */
-.modern-toolbar .toolbar-btn,
-.editor-header .toolbar-btn {
-  display: flex;
+/* =============================================================================
+   BOUTONS - Style de base
+   ========================================================================== */
+
+.toolbar-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: var(--toolbar-btn-size);
+  height: var(--toolbar-btn-size);
+  min-width: var(--toolbar-btn-size);
+  min-height: var(--toolbar-btn-size);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--toolbar-radius);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: var(--toolbar-transition);
   font-size: 14px;
   font-weight: 500;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
   outline: none;
+  padding: 0;
+  vertical-align: middle;
 }
 
-.modern-toolbar .toolbar-btn:hover,
-.editor-header .toolbar-btn:hover {
+.toolbar-btn:hover:not(:disabled) {
   background: var(--surface-2);
   color: var(--text-primary);
+  transform: scale(var(--toolbar-hover-scale));
+  box-shadow: var(--toolbar-hover-shadow);
 }
 
-.modern-toolbar .toolbar-btn:active,
-.editor-header .toolbar-btn:active {
-  transform: scale(0.95);
+.toolbar-btn:active:not(:disabled) {
+  transform: scale(var(--toolbar-active-scale));
 }
 
-.modern-toolbar .toolbar-btn.active,
-.editor-header .toolbar-btn.active {
+.toolbar-btn.active {
   background: var(--accent-primary);
   color: white;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(var(--accent-primary-rgb, 99, 102, 241), 0.3);
 }
 
-.modern-toolbar .toolbar-btn.active:hover,
-.editor-header .toolbar-btn.active:hover {
+.toolbar-btn.active:hover {
   background: var(--accent-hover);
+  transform: scale(var(--toolbar-hover-scale));
 }
 
-.modern-toolbar .toolbar-btn:disabled,
-.editor-header .toolbar-btn:disabled {
+.toolbar-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
-  transform: none;
 }
 
-.modern-toolbar .toolbar-btn:disabled:hover,
-.editor-header .toolbar-btn:disabled:hover {
+.toolbar-btn:disabled:hover {
   background: transparent;
   color: var(--text-muted);
   transform: none;
 }
 
-/* Focus visible pour l'accessibilité - SUPPRIMÉ */
+/* =============================================================================
+   BOUTONS SPÉCIAUX
+   ========================================================================== */
 
-/* Bouton "Plus" spécial */
-.more-btn {
+/* Bouton "Plus" */
+.toolbar-btn--more {
   background: transparent;
   color: var(--text-primary);
-  font-weight: 500;
-  border: none;
 }
 
-.more-btn:hover {
+.toolbar-btn--more:hover {
   background: transparent;
   color: var(--accent-primary);
-  border: none;
   transform: scale(1.05);
 }
 
-.more-btn.active {
+.toolbar-btn--more.active {
   background: transparent;
   color: var(--accent-primary);
-  border: none;
   transform: rotate(45deg) scale(1.05);
 }
 
-/* Section des outils avancés */
-.toolbar-advanced {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: var(--surface-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  margin-top: 8px;
-  animation: slideDown 0.2s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Section de police */
-.font-section {
-  position: relative;
-}
-
-.font-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  width: auto;
-  min-width: 100px;
-  height: 32px;
-  justify-content: space-between;
-  background: var(--surface-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-}
-
-.font-btn:hover {
-  background: var(--surface-3);
-  border-color: var(--accent-hover);
-}
-
-.font-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-primary);
-  flex: 1;
-  text-align: left;
-}
-
-.chevron {
-  transition: transform 0.2s ease;
-}
-
-.font-btn:hover .chevron {
-  transform: rotate(180deg);
-}
-
-/* Dropdown de police */
-.font-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 1000;
-  background: var(--surface-1);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 200px;
-  margin-top: 4px;
-  overflow: hidden;
-  animation: dropdownSlide 0.2s ease-out;
-}
-
-@keyframes dropdownSlide {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Recherche de police */
-.font-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-2);
-}
-
-.font-search svg {
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.font-search-input {
+/* Bouton IA - Orange Vibrant */
+.toolbar-btn--ai {
   background: transparent;
+  color: #ff6b35 !important;
   border: none;
-  color: var(--text-primary);
-  font-size: 14px;
-  width: 100%;
-  outline: none;
-  padding: 0;
 }
 
-.font-search-input::placeholder {
-  color: var(--text-muted);
+.toolbar-btn--ai:hover {
+  background: rgba(255, 107, 53, 0.15);
+  color: #ff5722 !important;
+  transform: scale(1.1);
 }
 
-/* Options de scope */
-.font-scope-options {
-  display: flex;
-  gap: 2px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-2);
-}
-
-.font-scope-btn {
-  flex: 1;
-  padding: 6px 8px;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: center;
-}
-
-.font-scope-btn:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.font-scope-btn.active {
-  background: var(--accent-primary);
-  color: white;
-  font-weight: 600;
-}
-
-/* Liste des polices */
-.font-list {
-  max-height: 200px;
-  overflow-y: auto;
-  padding: 4px 0;
-}
-
-.font-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: left;
-  font-size: 14px;
-}
-
-.font-item:hover {
-  background: var(--surface-2);
-}
-
-.font-item.selected {
-  background: var(--accent-primary);
-  color: white;
-}
-
-.font-name {
-  font-weight: 500;
-  flex: 1;
-}
-
-.font-category {
-  font-size: 11px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-}
-
-.font-item.selected .font-category {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.font-empty {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 14px;
-  padding: 16px;
-  font-style: italic;
-}
-
-/* Boutons Undo/Redo */
-.undo-redo-btn {
-  position: relative;
-  transition: all 0.2s ease;
-}
-
-.undo-redo-btn:hover:not(:disabled) {
-  transform: scale(1.05);
-}
-
-.undo-redo-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Boutons de formatage */
-.format-btn {
-  position: relative;
-  overflow: hidden;
-  font-weight: 500;
-}
-
-.format-btn:hover {
-  background: var(--surface-2);
-  color: var(--text-primary);
-}
-
-.format-btn.active {
-  background: var(--accent-primary);
-  color: white;
-  font-weight: 600;
-}
-
-.format-btn.active:hover {
-  background: var(--accent-hover);
-}
-
-/* Menus déroulants simplifiés */
-.simple-dropdown {
-  position: relative;
-}
-
-.dropdown-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  width: auto;
-  min-width: 50px;
-  height: 32px;
-  justify-content: space-between;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-
-.dropdown-btn:hover {
-  background: var(--surface-2);
-}
-
-.dropdown-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  min-width: 20px;
-  text-align: center;
-}
-
-.chevron {
-  transition: transform 0.2s ease;
-  color: var(--text-muted);
-}
-
-.chevron.open {
-  transform: rotate(180deg);
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 1000;
-  background: var(--surface-1);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 100px;
-  margin-top: 4px;
-  overflow: hidden;
-  animation: dropdownSlide 0.2s ease-out;
-}
-
-/* Menu d'alignement spécial */
-.align-menu {
-  min-width: 120px;
-}
-
-/* Menu de couleurs spécial */
-.color-menu {
-  min-width: 160px;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: left;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.dropdown-item:hover {
-  background: var(--surface-2);
-  color: var(--text-primary);
-}
-
-.dropdown-item.active {
-  background: var(--accent-primary);
-  color: white;
-  font-weight: 600;
-}
-
-.dropdown-item-label {
-  font-weight: 500;
-  flex: 1;
-  text-align: left;
-}
-
-.dropdown-item svg {
-  flex-shrink: 0;
-  opacity: 0.8;
-}
-
-.dropdown-item:hover svg {
-  opacity: 1;
-}
-
-.dropdown-item.active svg {
-  opacity: 1;
-}
-
-/* Boutons spéciaux */
-.ai-btn {
-  background: transparent !important;
-  color: #ff6b35 !important; /* Orange */
-  font-weight: 500;
-  border: none !important;
-}
-
-.ai-btn:hover {
-  background: transparent !important;
-  color: #ff5722 !important; /* Orange plus foncé au hover */
-  transform: scale(1.05);
-}
-
-.ai-btn:active {
+.toolbar-btn--ai:active {
   transform: scale(0.95);
-  color: #e64a19 !important; /* Orange encore plus foncé */
+  color: #ff4500 !important;
 }
 
-.ai-btn svg {
-  color: #ff6b35 !important; /* Orange pour l'icône SVG */
+.toolbar-btn--ai svg {
+  color: currentColor !important;
 }
 
-.ai-btn:hover svg {
-  color: #ff5722 !important; /* Orange plus foncé au hover */
+.toolbar-btn--ai:disabled {
+  opacity: 0.3;
+  color: #ff6b35 !important;
 }
 
-.ai-btn:active svg {
-  color: #e64a19 !important; /* Orange encore plus foncé */
-}
-
-/* États spéciaux pour AudioRecorder */
+/* États pour AudioRecorder */
 .toolbar-btn.processing {
-  background: rgba(59, 130, 246, 0.1) !important;
-  color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
   animation: pulse-blue 1.5s ease-in-out infinite;
 }
 
 .toolbar-btn.recording {
-  background: rgba(239, 68, 68, 0.1) !important;
-  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
   animation: pulse-red 1.5s ease-in-out infinite;
 }
 
@@ -564,142 +250,440 @@
   50% { opacity: 0.7; }
 }
 
-/* Scrollbar personnalisée */
-.font-list::-webkit-scrollbar {
+/* =============================================================================
+   FONT SELECTOR - BEM Architecture
+   ========================================================================== */
+
+.font-selector {
+  position: relative;
+}
+
+/* Trigger Button */
+.font-selector__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--toolbar-gap-medium);
+  padding: 0 12px;
+  width: auto;
+  min-width: 100px;
+  height: var(--toolbar-btn-size);
+  min-height: var(--toolbar-btn-size);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--toolbar-radius);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--toolbar-transition);
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.font-selector__trigger:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: #ff6b35;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+}
+
+.font-selector__trigger:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.font-selector__label {
+  flex: 1;
+  text-align: center;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dropdown */
+.font-selector__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 1000;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--toolbar-radius-lg);
+  box-shadow: var(--toolbar-glass-shadow);
+  min-width: 200px;
+  overflow: hidden;
+  animation: dropdown-slide 0.2s ease-out;
+  backdrop-filter: blur(var(--toolbar-glass-blur));
+}
+
+@keyframes dropdown-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Search */
+.font-selector__search {
+  display: flex;
+  align-items: center;
+  gap: var(--toolbar-gap-medium);
+  padding: var(--toolbar-gap-medium) 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+}
+
+.font-selector__search svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.font-selector__search-input {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  width: 100%;
+  outline: none;
+  padding: 0;
+}
+
+.font-selector__search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Scope */
+.font-selector__scope {
+  display: flex;
+  gap: 2px;
+  padding: var(--toolbar-gap-medium) 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-2);
+}
+
+.font-selector__scope-btn {
+  flex: 1;
+  padding: 6px var(--toolbar-gap-medium);
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--toolbar-transition);
+  text-align: center;
+}
+
+.font-selector__scope-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.font-selector__scope-btn.active {
+  background: var(--accent-primary);
+  color: white;
+  font-weight: 600;
+}
+
+/* List */
+.font-selector__list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.font-selector__list::-webkit-scrollbar {
   width: 4px;
 }
 
-.font-list::-webkit-scrollbar-track {
+.font-selector__list::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.font-list::-webkit-scrollbar-thumb {
+.font-selector__list::-webkit-scrollbar-thumb {
   background: var(--border-subtle);
   border-radius: 2px;
 }
 
-.font-list::-webkit-scrollbar-thumb:hover {
+.font-selector__list::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .modern-toolbar {
-    padding: 0;
+/* Item */
+.font-selector__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--toolbar-gap-medium) 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--toolbar-transition);
+  text-align: left;
+  font-size: 14px;
+}
+
+.font-selector__item:hover {
+  background: var(--surface-2);
+}
+
+.font-selector__item.selected {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.font-selector__item-name {
+  font-weight: 500;
+  flex: 1;
+}
+
+.font-selector__item-category {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.font-selector__item.selected .font-selector__item-category {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.font-selector__empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: var(--toolbar-gap-large);
+  font-style: italic;
+}
+
+/* =============================================================================
+   DROPDOWNS SIMPLIFIÉS
+   ========================================================================== */
+
+.simple-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: var(--toolbar-btn-size);
+}
+
+.dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--toolbar-btn-size);
+  min-width: var(--toolbar-btn-size);
+  height: var(--toolbar-btn-size);
+  min-height: var(--toolbar-btn-size);
+  padding: 0;
+  vertical-align: middle;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 1000;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--toolbar-radius-lg);
+  box-shadow: var(--toolbar-glass-shadow);
+  min-width: 120px;
+  overflow: hidden;
+  animation: dropdown-slide 0.2s ease-out;
+  backdrop-filter: blur(var(--toolbar-glass-blur));
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--toolbar-gap-medium);
+  width: 100%;
+  padding: var(--toolbar-gap-medium) 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--toolbar-transition);
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.dropdown-item:hover {
+  background: var(--surface-2);
+}
+
+.dropdown-item.active {
+  background: var(--accent-primary);
+  color: white;
+  font-weight: 600;
+}
+
+/* =============================================================================
+   SECTION AVANCÉE (Collapsible)
+   ========================================================================== */
+
+.toolbar-advanced {
+  display: flex;
+  align-items: center;
+  gap: var(--toolbar-gap-medium);
+  padding: 12px var(--toolbar-gap-large);
+  background: var(--surface-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--toolbar-radius-lg);
+  margin-top: var(--toolbar-gap-medium);
+  animation: slide-down 0.2s ease-out;
+  backdrop-filter: blur(var(--toolbar-glass-blur));
+  box-shadow: var(--toolbar-glass-shadow);
+}
+
+.toolbar-advanced-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: var(--toolbar-gap-medium);
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
   }
-  
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =============================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+/* Tablettes */
+@media (max-width: 1024px) {
   .toolbar-main {
     padding: 6px 12px;
     gap: 12px;
   }
   
-  .modern-toolbar .toolbar-btn,
-  .editor-header .toolbar-btn {
-    width: 28px;
-    height: 28px;
+  .toolbar-btn {
+    width: var(--toolbar-btn-size-md);
+    height: var(--toolbar-btn-size-md);
   }
   
-  .font-btn {
+  .font-selector__trigger {
     min-width: 80px;
-    padding: 4px 8px;
+    padding: 4px var(--toolbar-gap-medium);
   }
   
-  .font-dropdown {
+  .font-selector__dropdown {
     min-width: 180px;
   }
 }
 
+/* Mobile large */
 @media (max-width: 768px) {
   .modern-toolbar {
     margin: 0 0 12px 0;
   }
   
   .toolbar-main {
-    padding: 4px 8px;
-    gap: 8px;
+    padding: 4px var(--toolbar-gap-medium);
+    gap: var(--toolbar-gap-medium);
     min-height: 36px;
   }
   
-  .modern-toolbar .toolbar-btn,
-  .editor-header .toolbar-btn {
-    width: 24px;
-    height: 24px;
+  .toolbar-btn {
+    width: var(--toolbar-btn-size-sm);
+    height: var(--toolbar-btn-size-sm);
   }
   
-  .modern-toolbar .toolbar-btn svg,
-  .editor-header .toolbar-btn svg {
+  .toolbar-btn svg {
     width: 14px;
     height: 14px;
   }
   
-  .font-btn {
+  .font-selector__trigger {
     min-width: 60px;
     padding: 2px 6px;
     font-size: 12px;
   }
   
-  .font-label {
+  .font-selector__label {
     font-size: 12px;
   }
   
-  .font-dropdown {
+  .font-selector__dropdown {
     min-width: 160px;
   }
   
   .toolbar-advanced {
     flex-wrap: wrap;
-    gap: 4px;
-    padding: 8px 12px;
+    gap: var(--toolbar-gap-small);
+    padding: var(--toolbar-gap-medium) 12px;
   }
 }
 
+/* Mobile petit */
 @media (max-width: 480px) {
   .modern-toolbar {
-    margin: 0 0 8px 0;
+    margin: 0 0 var(--toolbar-gap-medium) 0;
   }
   
   .toolbar-main {
     padding: 4px 6px;
-    gap: 4px;
+    gap: var(--toolbar-gap-small);
     min-height: 32px;
   }
   
-  .modern-toolbar .toolbar-btn,
-  .editor-header .toolbar-btn {
-    width: 20px;
-    height: 20px;
+  .toolbar-btn {
+    width: var(--toolbar-btn-size-xs);
+    height: var(--toolbar-btn-size-xs);
   }
   
-  .modern-toolbar .toolbar-btn svg,
-  .editor-header .toolbar-btn svg {
+  .toolbar-btn svg {
     width: 12px;
     height: 12px;
   }
   
-  .font-btn {
+  .font-selector__trigger {
     min-width: 50px;
     padding: 1px 4px;
   }
   
-  .font-label {
+  .font-selector__label {
     display: none;
   }
   
-  .font-dropdown {
+  .font-selector__dropdown {
     min-width: 140px;
   }
 }
 
-/* Focus et accessibilité - SUPPRIMÉ */
+/* =============================================================================
+   DARK MODE
+   ========================================================================== */
 
-/* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   .modern-toolbar {
     background: transparent;
     border-color: var(--border-subtle);
   }
   
-  .font-dropdown {
+  .font-selector__dropdown {
     background: var(--surface-1);
     border-color: var(--border-subtle);
   }
