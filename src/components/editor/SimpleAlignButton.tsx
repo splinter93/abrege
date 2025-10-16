@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { FiAlignLeft, FiAlignCenter, FiAlignRight, FiAlignJustify, FiChevronDown } from 'react-icons/fi';
+import { FiAlignLeft, FiAlignCenter, FiAlignRight, FiAlignJustify } from 'react-icons/fi';
 import Tooltip from '@/components/Tooltip';
 
 interface SimpleAlignButtonProps {
@@ -77,12 +77,11 @@ const SimpleAlignButton: React.FC<SimpleAlignButtonProps> = ({ editor }) => {
     <div className="simple-dropdown" ref={dropdownRef}>
       <Tooltip text="Alignement du texte">
         <button
-          className="toolbar-btn dropdown-btn"
+          className={`toolbar-btn ${isOpen ? 'active' : ''}`}
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Alignement du texte"
         >
           <CurrentIcon size={16} />
-          <FiChevronDown size={12} className={`chevron ${isOpen ? 'open' : ''}`} />
         </button>
       </Tooltip>
       

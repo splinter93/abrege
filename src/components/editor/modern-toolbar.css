@@ -69,11 +69,12 @@
 .toolbar-main {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 8px;
   flex-wrap: nowrap;
-  min-height: 40px;
+  min-height: 48px;
   width: 100%;
+  padding: 4px 8px;
 }
 
 /* =============================================================================
@@ -83,19 +84,26 @@
 .toolbar-group {
   display: inline-flex;
   align-items: center;
-  gap: var(--toolbar-gap-small);
+  gap: 6px;
   position: relative;
   height: var(--toolbar-btn-size);
   min-height: var(--toolbar-btn-size);
+  padding: 0 8px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.toolbar-group:hover {
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .toolbar-group--left {
   justify-content: flex-start;
+  margin-right: auto;
 }
 
 .toolbar-group--center {
-  justify-content: flex-start;
-  margin-left: 0;
+  justify-content: center;
 }
 
 .toolbar-group--right {
@@ -133,38 +141,37 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: var(--toolbar-transition);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 14px;
   font-weight: 500;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   flex-shrink: 0;
   outline: none;
   padding: 0;
   vertical-align: middle;
+  line-height: 1;
 }
 
 .toolbar-btn:hover:not(:disabled) {
   background: var(--surface-2);
   color: var(--text-primary);
-  transform: scale(var(--toolbar-hover-scale));
-  box-shadow: var(--toolbar-hover-shadow);
 }
 
 .toolbar-btn:active:not(:disabled) {
-  transform: scale(var(--toolbar-active-scale));
+  transform: scale(0.95);
 }
 
 .toolbar-btn.active {
   background: var(--accent-primary);
   color: white;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(var(--accent-primary-rgb, 99, 102, 241), 0.3);
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);
 }
 
 .toolbar-btn.active:hover {
   background: var(--accent-hover);
-  transform: scale(var(--toolbar-hover-scale));
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
 }
 
 .toolbar-btn:disabled {
@@ -491,43 +498,57 @@
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 8px);
   left: 0;
   z-index: 1000;
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--toolbar-radius-lg);
-  box-shadow: var(--toolbar-glass-shadow);
-  min-width: 120px;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12),
+              0 2px 8px rgba(0, 0, 0, 0.08);
+  min-width: 160px;
   overflow: hidden;
-  animation: dropdown-slide 0.2s ease-out;
-  backdrop-filter: blur(var(--toolbar-glass-blur));
+  animation: dropdown-slide 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px) saturate(150%);
 }
 
 .dropdown-item {
   display: flex;
   align-items: center;
-  gap: var(--toolbar-gap-medium);
+  gap: 10px;
   width: 100%;
-  padding: var(--toolbar-gap-medium) 12px;
+  padding: 10px 14px;
   background: transparent;
   border: none;
   color: var(--text-primary);
   cursor: pointer;
-  transition: var(--toolbar-transition);
+  transition: all 0.15s ease;
   text-align: left;
   font-size: 14px;
   font-weight: 500;
+  position: relative;
 }
 
 .dropdown-item:hover {
   background: var(--surface-2);
+  color: var(--accent-primary);
 }
 
 .dropdown-item.active {
   background: var(--accent-primary);
   color: white;
   font-weight: 600;
+}
+
+.dropdown-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: white;
+  opacity: 0.8;
 }
 
 /* =============================================================================
