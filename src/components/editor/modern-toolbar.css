@@ -9,9 +9,9 @@
 
 :root {
   /* Spacing */
-  --toolbar-gap-small: 4px;
+  --toolbar-gap-small: 6px;
   --toolbar-gap-medium: 8px;
-  --toolbar-gap-large: 16px;
+  --toolbar-gap-large: 12px;
   
   /* Sizing */
   --toolbar-btn-size: 32px;
@@ -69,12 +69,11 @@
 .toolbar-main {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 0;
   flex-wrap: nowrap;
-  min-height: 48px;
+  min-height: 40px;
   width: 100%;
-  padding: 4px 8px;
 }
 
 /* =============================================================================
@@ -84,24 +83,19 @@
 .toolbar-group {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--toolbar-gap-small);
   position: relative;
   height: var(--toolbar-btn-size);
   min-height: var(--toolbar-btn-size);
-  padding: 0 8px;
-  border-radius: 8px;
-  transition: background 0.2s ease;
 }
-
-/* Hover effect removed for ultra clean design */
 
 .toolbar-group--left {
   justify-content: flex-start;
-  margin-right: auto;
 }
 
 .toolbar-group--center {
-  justify-content: center;
+  justify-content: flex-start;
+  margin-left: 0;
 }
 
 .toolbar-group--right {
@@ -117,7 +111,7 @@
   width: 1px;
   height: var(--toolbar-separator-height);
   background: var(--border-subtle);
-  margin: 0 12px;
+  margin: 0 var(--toolbar-gap-large);
   opacity: var(--toolbar-separator-opacity);
   flex-shrink: 0;
 }
@@ -139,34 +133,38 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--toolbar-transition);
   font-size: 14px;
   font-weight: 500;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   flex-shrink: 0;
   outline: none;
   padding: 0;
   vertical-align: middle;
-  line-height: 1;
 }
 
 .toolbar-btn:hover:not(:disabled) {
+  background: var(--surface-2);
   color: var(--text-primary);
+  transform: scale(var(--toolbar-hover-scale));
+  box-shadow: var(--toolbar-hover-shadow);
 }
 
 .toolbar-btn:active:not(:disabled) {
-  color: var(--text-primary);
+  transform: scale(var(--toolbar-active-scale));
 }
 
 .toolbar-btn.active {
   background: var(--accent-primary);
   color: white;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(var(--accent-primary-rgb, 99, 102, 241), 0.3);
 }
 
 .toolbar-btn.active:hover {
   background: var(--accent-hover);
+  transform: scale(var(--toolbar-hover-scale));
 }
 
 .toolbar-btn:disabled {
@@ -191,13 +189,15 @@
 }
 
 .toolbar-btn--more:hover {
+  background: transparent;
   color: var(--accent-primary);
+  transform: scale(1.05);
 }
 
 .toolbar-btn--more.active {
   background: transparent;
   color: var(--accent-primary);
-  transform: rotate(45deg);
+  transform: rotate(45deg) scale(1.05);
 }
 
 /* Bouton IA - Orange Vibrant */
@@ -208,10 +208,13 @@
 }
 
 .toolbar-btn--ai:hover {
+  background: rgba(255, 107, 53, 0.15);
   color: #ff5722 !important;
+  transform: scale(1.1);
 }
 
 .toolbar-btn--ai:active {
+  transform: scale(0.95);
   color: #ff4500 !important;
 }
 
@@ -253,6 +256,7 @@
 
 .font-selector {
   position: relative;
+  margin: 0 8px;
 }
 
 /* Trigger Button */
@@ -279,7 +283,10 @@
 }
 
 .font-selector__trigger:hover:not(:disabled) {
-  border-color: var(--accent-primary);
+  background: var(--surface-3);
+  border-color: #ff6b35;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
 }
 
 .font-selector__trigger:disabled {
@@ -304,10 +311,12 @@
   z-index: 1000;
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--toolbar-radius-lg);
+  box-shadow: var(--toolbar-glass-shadow);
   min-width: 200px;
   overflow: hidden;
   animation: dropdown-slide 0.2s ease-out;
+  backdrop-filter: blur(var(--toolbar-glass-blur));
 }
 
 @keyframes dropdown-slide {
@@ -374,6 +383,7 @@
 }
 
 .font-selector__scope-btn:hover {
+  background: var(--surface-hover);
   color: var(--text-primary);
 }
 
@@ -423,7 +433,9 @@
   font-size: 14px;
 }
 
-/* Hover removed for minimal design */
+.font-selector__item:hover {
+  background: var(--surface-2);
+}
 
 .font-selector__item.selected {
   background: var(--accent-primary);
@@ -480,53 +492,43 @@
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 4px);
   left: 0;
   z-index: 1000;
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  min-width: 160px;
+  border-radius: var(--toolbar-radius-lg);
+  box-shadow: var(--toolbar-glass-shadow);
+  min-width: 120px;
   overflow: hidden;
-  animation: dropdown-slide 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: dropdown-slide 0.2s ease-out;
+  backdrop-filter: blur(var(--toolbar-glass-blur));
 }
 
 .dropdown-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--toolbar-gap-medium);
   width: 100%;
-  padding: 10px 14px;
+  padding: var(--toolbar-gap-medium) 12px;
   background: transparent;
   border: none;
   color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: var(--toolbar-transition);
   text-align: left;
   font-size: 14px;
   font-weight: 500;
-  position: relative;
 }
 
 .dropdown-item:hover {
-  color: var(--accent-primary);
+  background: var(--surface-2);
 }
 
 .dropdown-item.active {
   background: var(--accent-primary);
   color: white;
   font-weight: 600;
-}
-
-.dropdown-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: white;
-  opacity: 0.8;
 }
 
 /* =============================================================================
@@ -540,9 +542,11 @@
   padding: 12px var(--toolbar-gap-large);
   background: var(--surface-2);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--toolbar-radius-lg);
   margin-top: var(--toolbar-gap-medium);
   animation: slide-down 0.2s ease-out;
+  backdrop-filter: blur(var(--toolbar-glass-blur));
+  box-shadow: var(--toolbar-glass-shadow);
 }
 
 .toolbar-advanced-label {
