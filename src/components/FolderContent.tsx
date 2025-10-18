@@ -93,13 +93,6 @@ const FolderContent: React.FC<FolderContentProps> = ({
   folderPath = [],
   // Search props
   onSearchResult,
-  // 🔧 NOUVEAU: Props pour le ClasseurBandeau intégré
-  classeurs,
-  activeClasseurId,
-  onSelectClasseur,
-  onCreateClasseur,
-  onRenameClasseur,
-  onDeleteClasseur,
 }) => {
   // Robustness: always use arrays to avoid React #310 errors
   const safeFolders = Array.isArray(folders) ? folders : [];

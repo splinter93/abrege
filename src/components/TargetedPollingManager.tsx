@@ -39,21 +39,20 @@ export default function TargetedPollingManager() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // Exposer les fonctions de polling sur window pour les actions UI
-      (window as any).targetedPolling = {
+      window.targetedPolling = {
         pollNotes,
         pollFolders,
         pollClasseurs,
         pollAll,
-        isPolling: () => isPolling
       };
     }
-  }, [pollNotes, pollFolders, pollClasseurs, pollAll, isPolling]);
+  }, [pollNotes, pollFolders, pollClasseurs, pollAll]);
 
   // Cleanup
   useEffect(() => {
     return () => {
       if (typeof window !== 'undefined') {
-        delete (window as any).targetedPolling;
+        delete window.targetedPolling;
       }
     };
   }, []);

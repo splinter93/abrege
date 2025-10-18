@@ -1,154 +1,134 @@
-// Types pour le système de sessions de chat
+/**
+ * Types stricts pour les messages du chat
+ * Remplace les `any` dans ChatMessage.tsx et ChatFullscreenV2.tsx
+ */
 
-export type ToolCall = {
-  id: string;
-  type: 'function';
-  function: {
-    name: string;
-    arguments: string;
-  };
-};
+import type { ToolCall, ToolResult } from '@/hooks/useChatHandlers';
 
-export type ChatMessage = {
-  id: string;
+/**
+ * Message de base du chat
+ */
+export interface BaseMessage {
+  id?: string;
   role: 'user' | 'assistant' | 'system' | 'tool';
-  content: string | null;
-  reasoning?: string | null;
-  timestamp: string;
+  content: string;
+  timestamp?: string | number;
+}
+
+/**
+ * Message utilisateur
+ */
+export interface UserMessage extends BaseMessage {
+  role: 'user';
+  name?: string;
+}
+
+/**
+ * Message assistant avec métadonnées optionnelles
+ */
+export interface AssistantMessage extends BaseMessage {
+  role: 'assistant';
+  name?: 'observation' | string;
+  channel?: 'analysis' | 'default';
+  reasoning?: string;
   tool_calls?: ToolCall[];
-  tool_call_id?: string;
-  name?: string;
-  tool_results?: Array<{
-    tool_call_id: string;
-    name: string;
-    content: string;
-    success?: boolean;
+  tool_results?: ToolResult[];
+}
+
+/**
+ * Message système
+ */
+export interface SystemMessage extends BaseMessage {
+  role: 'system';
+}
+
+/**
+ * Message de résultat d'outil
+ */
+export interface ToolMessage extends BaseMessage {
+  role: 'tool';
+  tool_call_id: string;
+  name: string;
+  success?: boolean;
+}
+
+/**
+ * Union de tous les types de messages
+ */
+export type ChatMessage = UserMessage | AssistantMessage | SystemMessage | ToolMessage;
+
+/**
+ * Type guard pour vérifier si un message est un message d'observation
+ */
+export function isObservationMessage(msg: ChatMessage): msg is AssistantMessage {
+  return msg.role === 'assistant' && (msg as AssistantMessage).name === 'observation';
+}
+
+/**
+ * Type guard pour vérifier si un message a des tool calls
+ */
+export function hasToolCalls(msg: ChatMessage): msg is AssistantMessage & { tool_calls: NonNullable<AssistantMessage['tool_calls']> } {
+  return msg.role === 'assistant' && 
+         'tool_calls' in msg && 
+         Array.isArray((msg as AssistantMessage).tool_calls) &&
+         (msg as AssistantMessage).tool_calls!.length > 0;
+}
+
+/**
+ * Type guard pour vérifier si un message a du reasoning
+ */
+export function hasReasoning(msg: ChatMessage): msg is AssistantMessage & { reasoning: string } {
+  return msg.role === 'assistant' && 
+         'reasoning' in msg && 
+         typeof (msg as AssistantMessage).reasoning === 'string' &&
+         (msg as AssistantMessage).reasoning!.length > 0;
+}
+
+/**
+ * Type guard pour vérifier si c'est un message d'analyse sans contenu
+ */
+export function isEmptyAnalysisMessage(msg: ChatMessage): boolean {
+  return msg.role === 'assistant' && 
+         (msg as AssistantMessage).channel === 'analysis' && 
+         !msg.content;
+}
+
+/**
+ * Interface pour les données de résultat d'outil
+ */
+export interface ToolResultData {
+  success?: boolean;
+  error?: string | null;
+  [key: string]: unknown;
+}
+
+/**
+ * Fonction pour vérifier le succès d'un résultat d'outil
+ */
+export function isToolResultSuccess(data: unknown): boolean {
+  if (!data || typeof data !== 'object') return false;
+  const result = data as ToolResultData;
+  
+  if ('success' in result) {
+    return Boolean(result.success);
+  }
+  if ('error' in result && result.error) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Métadonnées de debug pour les messages
+ */
+export interface MessageDebugInfo {
+  total: number;
+  filtered: number;
+  hasToolCalls: boolean;
+  hasReasoning: boolean;
+  channels: Array<{
+    role: string;
+    channel?: string;
+    hasContent: boolean;
   }>;
-  isStreaming?: boolean;
-};
-
-export interface ChatSession {
-  id: string;
-  user_id: string;
-  name: string;
-  thread: ChatMessage[];
-  created_at: string;
-  updated_at: string;
-  is_active: boolean;
-  history_limit: number;
-  metadata?: Record<string, any>;
 }
-
-export interface CreateChatSessionData {
-  name?: string;
-  initial_message?: string;
-  history_limit?: number;
-  metadata?: Record<string, any>;
-}
-
-export interface UpdateChatSessionData {
-  name?: string;
-  thread?: ChatMessage[];
-  is_active?: boolean;
-  history_limit?: number;
-  metadata?: Record<string, any>;
-}
-
-export interface ChatSessionResponse {
-  success: boolean;
-  data?: ChatSession;
-  error?: string;
-}
-
-export interface ChatSessionsListResponse {
-  success: boolean;
-  data?: ChatSession[];
-  error?: string;
-}
-
-export interface AddMessageData {
-  sessionId: string;
-  message: ChatMessage;
-}
-
-export interface ChatSessionFilters {
-  is_active?: boolean;
-  limit?: number;
-  offset?: number;
-  search?: string;
-}
-
-// Types pour la gestion de l'historique
-export interface HistoryConfig {
-  maxMessages: number;
-  includeSystemMessages?: boolean;
-  truncateStrategy?: 'keep_latest' | 'keep_oldest' | 'keep_middle';
-}
-
-export interface ProcessedHistory {
-  messages: ChatMessage[];
-  totalMessages: number;
-  truncatedMessages: number;
-  historyLimit: number;
-}
-
-// Types pour l'API Synesia
-export interface SynesiaPayload {
-  callable_id: string;
-  args: string;
-  settings: {
-    history_messages: Array<{
-      role: 'user' | 'assistant';
-      content: string;
-    }>;
-    history_limit?: number;
-  };
-}
-
-export interface Agent {
-  // Identification
-  id: string;
-  user_id?: string;
-  name: string;
-  slug?: string;
-  display_name?: string;
-  
-  // Configuration LLM
-  provider: string;
-  model: string;
-  temperature: number;
-  top_p: number;
-  max_tokens: number;
-  
-  // Instructions et comportement
-  system_instructions?: string;
-  personality?: string;
-  expertise?: string[];
-  context_template?: string;
-  
-  // Type et état
-  is_active: boolean;
-  is_chat_agent?: boolean;
-  is_endpoint_agent?: boolean;
-  priority: number;
-  
-  // Schémas
-  input_schema?: Record<string, any>;
-  output_schema?: Record<string, any>;
-  
-  // Capacités
-  capabilities: string[];
-  api_v2_capabilities?: string[];
-  
-  // Apparence
-  profile_picture?: string;
-  description?: string;
-  
-  // Métadonnées
-  version: string;
-  is_default: boolean;
-  api_config: Record<string, any>;
-  metadata?: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-} 

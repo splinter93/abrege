@@ -262,34 +262,37 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   const handleEditorUpdate = React.useCallback(({ editor }: { editor: TiptapEditor }) => {
     if (!editor || editorState.internal.isUpdatingFromStore) return;
     
+    // 🔧 PROTECTION : Ne sauvegarder QUE si l'utilisateur a le focus (tape réellement)
+    if (!editor.isFocused) {
+      console.log('⏳ Éditeur sans focus, skip update (évite boucle au chargement)');
+      return;
+    }
+    
     try {
       const nextMarkdown = getEditorMarkdown(editor);
-      // ✅ FIX : Permettre la sauvegarde de contenu vide (quand l'utilisateur efface tout)
-      if (nextMarkdown !== content) {
-        // 🔧 CORRECTION : Nettoyer le Markdown échappé avant sauvegarde
-        let cleanMarkdown = cleanEscapedMarkdown(nextMarkdown);
-        
-        // 🛡️ SÉCURITÉ : Vérifier si du HTML brut est présent (ne devrait jamais arriver)
-        // Si oui, logger une erreur car c'est anormal
-        if (/<[a-z][\s\S]*>/i.test(cleanMarkdown)) {
-          logger.warn(LogCategory.EDITOR, '⚠️ HTML brut détecté dans le markdown ! Ceci ne devrait pas arriver.');
-          logger.debug(LogCategory.EDITOR, 'Contenu suspect:', cleanMarkdown.substring(0, 200));
-        }
-        
-        updateNote(noteId, { markdown_content: cleanMarkdown });
+      
+      // 🔧 FIX CURSEUR: Comparer avec rawContent (non prétraité)
+      if (nextMarkdown !== rawContent) {
+        console.log('📝 Sauvegarde (utilisateur a tapé)');
+        updateNote(noteId, { markdown_content: nextMarkdown });
       }
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', error);
     }
-  }, [content, noteId, updateNote, editorState.internal.isUpdatingFromStore]);
+  }, [rawContent, noteId, updateNote, editorState.internal.isUpdatingFromStore]);
 
   const editor = useEditor({
     editable: !isReadonly,
     immediatelyRender: false, // Éviter les erreurs de SSR/hydration et d'accès au DOM avant montage
-    extensions: createEditorExtensions(PRODUCTION_EXTENSIONS_CONFIG, lowlight), // Configuration stable mais fonctionnelle
-    content: content || '', // Laisser Tiptap gérer le contenu tel quel
+    // ✅ PRODUCTION : Configuration stable testée et validée
+    extensions: createEditorExtensions(PRODUCTION_EXTENSIONS_CONFIG, lowlight),
+    // 🔧 FIX CURSEUR: Utiliser rawContent (non prétraité) pour l'initialisation
+    // Si on utilise content (prétraité avec ≈), Tiptap va éditer des ≈ au lieu des ~ originaux
+    // Ce qui cause des différences lors de la comparaison avec le store
+    content: rawContent || '',
     onUpdate: handleEditorUpdate,
   });
+
 
   // 🔄 Synchronisation gérée par EditorSyncManager (composant séparé)
 
@@ -315,53 +318,38 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   
   // Synchronisation gérée par EditorSyncManager (composant séparé)
 
-  // Open slash menu on '/'
+  // ✅ Slash menu - VERSION ULTRA-LÉGÈRE (sans opérations lourdes)
   React.useEffect(() => {
     if (!editor || isReadonly) return;
     const el = editor.view.dom as HTMLElement;
-      const onKeyDown = (e: KeyboardEvent) => {
-      // If user types a space right after '/', close menu but do not delete any text
-      if (e.key === ' ' && editor) {
-        try {
-          const { state } = editor.view;
-          const { selection } = state;
-          
-          // CRITICAL: Si c'est une NodeSelection, on skip toute la logique
-          // Laisser juste l'espace passer normalement
-          if (selection.constructor.name === 'NodeSelection' || selection.constructor.name === 'NodeRangeSelection') {
-            logger.debug(LogCategory.EDITOR, 'NodeSelection détectée, skip logique slash menu');
-            // Ne rien faire, laisser Tiptap gérer l'espace normalement
-            return;
-          }
-          
-          const pos = selection.from;
-          const $pos = state.doc.resolve(pos);
-          const textBefore = $pos.parent.textBetween(0, $pos.parentOffset, undefined, '\uFFFC');
-          if (/^\/$/.test(textBefore)) {
-            // User typed "/ ": close menu and keep the slash in content
-            slashMenuRef.current?.closeMenu?.();
-            return; // do not open
-          }
-        } catch (err) {
-          logger.error(LogCategory.EDITOR, 'Erreur dans onKeyDown:', err);
-          // En cas d'erreur, laisser passer l'événement normalement
-        }
-      }
-      if (e.key === '/') {
-        // Ne pas preventDefault - laisser le slash être tapé
-        // Le menu s'ouvrira après que le slash soit dans le texte
-        setTimeout(() => {
-          const coords = editor.view.coordsAtPos(editor.state.selection.from);
-          logger.debug(LogCategory.EDITOR, 'Slash menu ouvert', { coords });
-          slashMenuRef.current?.openMenu({ left: coords.left, top: coords.top });
-        }, 10);
-      } else if (e.key === ' ') {
-        // Fermer le menu slash si ouvert et laisser l'espace être tapé
+    
+    const onKeyDown = (e: KeyboardEvent) => {
+      // ✅ SAFE : Seulement des opérations UI légères, AUCUNE manipulation du document
+      
+      if (e.key === ' ') {
+        // Fermer le menu slash si ouvert (opération légère)
         if (slashMenuRef.current) {
           slashMenuRef.current.closeMenu();
         }
+        // Laisser l'espace passer normalement
+        return;
+      }
+      
+      if (e.key === '/') {
+        // Ouvrir le menu slash
+        setTimeout(() => {
+          if (!editor) return;
+          try {
+            const coords = editor.view.coordsAtPos(editor.state.selection.from);
+            slashMenuRef.current?.openMenu({ left: coords.left, top: coords.top });
+          } catch (err) {
+            // En cas d'erreur, ne rien faire
+            console.error('Erreur ouverture slash menu:', err);
+          }
+        }, 10);
       }
     };
+    
     el.addEventListener('keydown', onKeyDown);
     return () => el.removeEventListener('keydown', onKeyDown);
   }, [editor, isReadonly]);
@@ -982,10 +970,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         }}
       />
       
-      {/* Gestionnaire de synchronisation store ↔ éditeur */}
+      {/* ✅ EditorSyncManager SIMPLIFIÉ - Charge le contenu UNE FOIS seulement */}
       <EditorSyncManager
         editor={editor}
-        storeContent={content}
+        storeContent={rawContent}
         editorState={editorState}
       />
       

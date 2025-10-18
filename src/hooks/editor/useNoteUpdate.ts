@@ -10,6 +10,25 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { logger, LogCategory } from '@/utils/logger';
 
 /**
+ * Type strict pour les mises à jour de notes
+ * Définit tous les champs modifiables d'une note
+ */
+export type NoteUpdatePayload = Partial<{
+  font_family: string;
+  a4_mode: boolean;
+  wide_mode: boolean;
+  slash_lang: 'fr' | 'en';
+  header_image: string | null;
+  header_image_offset: number;
+  header_image_blur: number;
+  header_image_overlay: number;
+  header_title_in_image: boolean;
+  markdown_content: string;
+  source_title: string;
+  description: string;
+}>;
+
+/**
  * Options pour le hook useNoteUpdate
  */
 export interface UseNoteUpdateOptions<T> {
@@ -79,20 +98,19 @@ export function useNoteUpdate<T>({
       const oldValue = currentValue;
       
       try {
+        // Créer le payload typé strictement
+        const payload: NoteUpdatePayload = { [field]: newValue };
+        
         // 1. Mise à jour optimiste du store si demandé
         if (updateStore) {
-          updateNote(noteId, { [field]: newValue } as any);
+          updateNote(noteId, payload);
         }
         
         // 2. Callback de succès (ex: changer la police en CSS)
         onSuccess?.(newValue);
         
         // 3. Appeler l'API
-        await v2UnifiedApi.updateNote(
-          noteId,
-          { [field]: newValue } as any,
-          userId
-        );
+        await v2UnifiedApi.updateNote(noteId, payload, userId);
         
         if (process.env.NODE_ENV === 'development') {
           logger.debug(
@@ -111,7 +129,8 @@ export function useNoteUpdate<T>({
         
         // Restaurer l'ancienne valeur dans le store
         if (updateStore) {
-          updateNote(noteId, { [field]: oldValue } as any);
+          const rollbackPayload: NoteUpdatePayload = { [field]: oldValue };
+          updateNote(noteId, rollbackPayload);
         }
         
         // Callback d'erreur (ex: restaurer la police CSS)
@@ -155,15 +174,14 @@ export function useHeaderImageUpdate({
       const oldValue = currentValue;
       
       try {
+        // Créer le payload typé strictement
+        const payload: NoteUpdatePayload = { [field]: newValue };
+        
         // 1. Appeler l'API en premier pour valider
-        await v2UnifiedApi.updateNote(
-          noteId,
-          { [field]: newValue } as any,
-          userId
-        );
+        await v2UnifiedApi.updateNote(noteId, payload, userId);
         
         // 2. Si succès, mettre à jour l'état local
-        updateNote(noteId, { [field]: newValue } as any);
+        updateNote(noteId, payload);
         onSuccess?.(newValue);
       } catch (error) {
         // 3. En cas d'échec, restaurer l'ancienne valeur

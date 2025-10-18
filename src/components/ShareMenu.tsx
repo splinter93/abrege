@@ -1,13 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import { FiShare2, FiCopy, FiLink, FiLock, FiGlobe, FiX, FiCheck } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
 import './ShareMenu.css';
 
 interface ShareMenuProps {
   noteId: string;
-  currentSettings: any;
+  currentSettings: ShareSettings;
   publicUrl?: string;
-  onSettingsChange: (settings: any) => Promise<void>;
+  onSettingsChange: (settings: ShareSettingsUpdate) => Promise<void>;
   isOpen: boolean;
   onClose: () => void;
 }

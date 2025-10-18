@@ -17,6 +17,19 @@ import { useFolderKeyboard } from '../hooks/useFolderKeyboard';
 import { classeurTabVariants, classeurTabTransition } from './FolderAnimation';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 
+/**
+ * Type pour les résultats de recherche
+ * Unifie les différents types de ressources recherchables
+ */
+export interface SearchResult {
+  type: 'note' | 'folder' | 'classeur';
+  id: string;
+  slug: string;
+  title: string;
+  path?: string;
+  classeur_id?: string;
+  folder_id?: string;
+}
 
 interface FolderManagerProps {
   classeurId: string;
@@ -36,7 +49,7 @@ interface FolderManagerProps {
   onCreateFile?: () => void;
   onToggleView?: (mode: 'list' | 'grid') => void;
   viewMode?: 'list' | 'grid';
-  onSearchResult?: (result: any) => void; // 🔧 NOUVEAU: Prop pour la recherche
+  onSearchResult?: (result: SearchResult) => void; // ✅ Type strict
 
 }
 
@@ -158,9 +171,11 @@ const FolderManager: React.FC<FolderManagerProps> = ({
 
   // Debug: Log des dossiers filtrés pour diagnostiquer les problèmes
   if (process.env.NODE_ENV === 'development') {
-    console.log(`[FolderManager] 📁 Dossiers filtrés pour classeur ${classeurId}, parent ${parentFolderId}:`, 
-      filteredFolders.map(f => ({ id: f.id, name: f.name, parent_id: f.parent_id, classeur_id: f.classeur_id }))
-    );
+    logger.dev('[FolderManager] 📁 Dossiers filtrés', {
+      classeurId,
+      parentFolderId,
+      folders: filteredFolders.map(f => ({ id: f.id, name: f.name, parent_id: f.parent_id, classeur_id: f.classeur_id }))
+    });
   }
   
   // Pas de loading si données préchargées

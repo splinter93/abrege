@@ -8,20 +8,43 @@ import { useChatStore } from '@/store/useChatStore';
 import { useAuthGuard } from './useAuthGuard';
 import { simpleLogger as logger } from '@/utils/logger';
 
+/**
+ * Représente un appel de fonction/outil par le LLM
+ */
+export interface ToolCall {
+  id: string;
+  type?: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+/**
+ * Représente le résultat de l'exécution d'un outil
+ */
+export interface ToolResult {
+  tool_call_id: string;
+  name: string;
+  content: string;
+  success: boolean;
+  error?: string;
+}
+
 interface ChatHandlersOptions {
-  onComplete?: (fullContent: string, fullReasoning: string, toolCalls?: any[], toolResults?: any[]) => void;
+  onComplete?: (fullContent: string, fullReasoning: string, toolCalls?: ToolCall[], toolResults?: ToolResult[]) => void;
   onError?: (errorMessage: string) => void;
-  onToolCalls?: (toolCalls: any[], toolName: string) => void;
-  onToolResult?: (toolName: string, result: any, success: boolean, toolCallId?: string) => void;
-  onToolExecutionComplete?: (toolResults: any[]) => void;
+  onToolCalls?: (toolCalls: ToolCall[], toolName: string) => void;
+  onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
+  onToolExecutionComplete?: (toolResults: ToolResult[]) => void;
 }
 
 interface ChatHandlersReturn {
-  handleComplete: (fullContent: string, fullReasoning: string, toolCalls?: any[], toolResults?: any[]) => Promise<void>;
+  handleComplete: (fullContent: string, fullReasoning: string, toolCalls?: ToolCall[], toolResults?: ToolResult[]) => Promise<void>;
   handleError: (errorMessage: string) => void;
-  handleToolCalls: (toolCalls: any[], toolName: string) => Promise<void>;
-  handleToolResult: (toolName: string, result: any, success: boolean, toolCallId?: string) => Promise<void>;
-  handleToolExecutionComplete: (toolResults: any[]) => Promise<void>;
+  handleToolCalls: (toolCalls: ToolCall[], toolName: string) => Promise<void>;
+  handleToolResult: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => Promise<void>;
+  handleToolExecutionComplete: (toolResults: ToolResult[]) => Promise<void>;
 }
 
 /**
@@ -34,8 +57,8 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
   const handleComplete = useCallback(async (
     fullContent: string, 
     fullReasoning: string, 
-    toolCalls?: any[], 
-    toolResults?: any[]
+    toolCalls?: ToolCall[], 
+    toolResults?: ToolResult[]
   ) => {
     if (!requireAuth()) return;
 
@@ -77,7 +100,7 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
     options.onError?.(errorMessage);
   }, [requireAuth, addMessage, options.onError]);
 
-  const handleToolCalls = useCallback(async (toolCalls: any[], toolName: string) => {
+  const handleToolCalls = useCallback(async (toolCalls: ToolCall[], toolName: string) => {
     if (!requireAuth()) {
       await addMessage({
         role: 'assistant',
@@ -104,7 +127,7 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
 
   const handleToolResult = useCallback(async (
     toolName: string, 
-    result: any, 
+    result: unknown, 
     success: boolean, 
     toolCallId?: string
   ) => {
@@ -157,7 +180,7 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
     options.onToolResult?.(toolName, result, success, toolCallId);
   }, [requireAuth, addMessage, options.onToolResult]);
 
-  const handleToolExecutionComplete = useCallback(async (toolResults: any[]) => {
+  const handleToolExecutionComplete = useCallback(async (toolResults: ToolResult[]) => {
     logger.dev('[useChatHandlers] ✅ Exécution des tools terminée');
     
     if (toolResults && toolResults.length > 0) {

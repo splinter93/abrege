@@ -1,0 +1,88 @@
+/**
+ * Extrait un titre et un corps de texte à partir d'une source markdown variée (string, objet, JSON).
+ * Ce script est conçu pour être fiable en production : il ne modifie pas le contenu markdown,
+ * il se contente de le lire et de le séparer.
+ *
+ * @param {string|object} input - La source de données. Peut être une string markdown,
+ * un objet contenant une clé comme { content, markdown, etc. }, ou une string JSON.
+ * @returns {Promise<{ title: string, body: string }>} - Un objet contenant le titre extrait
+ * et le corps du texte restant.
+ */
+export default async (input) => {
+  // 1️⃣ Normalisation de l'input pour obtenir une string markdown propre.
+  // Cette partie est robuste et gère tous les cas de figure.
+  let markdownSource = '';
+  if (typeof input === 'string') {
+    const s = input.trim();
+    if (s.startsWith('{') && s.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(s);
+        markdownSource = parsed.content ?? parsed.markdown ?? parsed.body ?? parsed.text ?? '';
+      } catch (err) {
+        // Si ce n'est pas un JSON valide, on considère la string comme du markdown brut.
+        markdownSource = input;
+      }
+    } else {
+      markdownSource = input;
+    }
+  } else if (typeof input === 'object' && input !== null) {
+    markdownSource = input.content ?? input.markdown ?? input.body ?? input.text ?? '';
+  }
+
+  // 2️⃣ Extraction non-destructive du titre et du corps.
+  const lines = markdownSource.trim().split('\n');
+  let title = '';
+  let bodyLines = [];
+
+  // Recherche intelligente du titre : H1/H2, citation, ou premier H2
+  let titleIndex = -1;
+  let titleLine = '';
+
+  // 1. Chercher un titre H1 ou H2 au début
+  titleIndex = lines.findIndex(line => line.match(/^#{1,2}\s+.*/));
+  
+  if (titleIndex !== -1) {
+    titleLine = lines[titleIndex];
+    title = titleLine.replace(/^#{1,2}\s+/, '').trim();
+  } else {
+    // 2. Si pas de titre H1/H2, chercher une citation au début comme titre
+    const quoteIndex = lines.findIndex(line => line.match(/^>\s+.*/));
+    if (quoteIndex !== -1 && quoteIndex < 5) { // Citation dans les 5 premières lignes
+      titleLine = lines[quoteIndex];
+      title = titleLine.replace(/^>\s+/, '').trim();
+      titleIndex = quoteIndex;
+    } else {
+      // 3. En dernier recours, utiliser le premier H2 comme titre
+      const h2Index = lines.findIndex(line => line.match(/^##\s+.*/));
+      if (h2Index !== -1) {
+        titleLine = lines[h2Index];
+        title = titleLine.replace(/^##\s+/, '').trim();
+        titleIndex = h2Index;
+      }
+    }
+  }
+
+  if (titleIndex !== -1) {
+    // Le corps est constitué de TOUTES les autres lignes.
+    // C'est non-destructif, on ne modifie pas le tableau original.
+    bodyLines = lines.filter((_, index) => index !== titleIndex);
+    
+    // Nettoyage supplémentaire : supprimer les lignes vides au début du corps
+    while (bodyLines.length > 0 && bodyLines[0].trim() === '') {
+      bodyLines.shift();
+    }
+  } else {
+    // Pas de titre trouvé.
+    // Le titre reste vide et le corps est l'intégralité du texte.
+    title = '';
+    bodyLines = lines;
+  }
+
+  const body = bodyLines.join('\n');
+
+  // 3️⃣ Retourne un objet JavaScript simple et propre.
+  // La sérialisation en JSON (échappement des \n, ", etc.)
+  // sera gérée automatiquement par l'environnement qui fait l'appel (ex: fetch).
+  // C'est la méthode standard et la plus sûre.
+  return { title, body };
+}

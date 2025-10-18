@@ -103,8 +103,8 @@ export const useFolderDragAndDrop = ({
           // No-op here
         }
       }
-    } catch {
-      // ignore
+    } catch (error) {
+      logger.warn('[DnD] Invalid drag data format', error);
     }
   }, [moveItem, parentFolderId]);
 

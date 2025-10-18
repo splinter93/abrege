@@ -4,6 +4,54 @@
  */
 
 export namespace OpenAPITypes {
+  /**
+   * Type strict pour les schémas JSON Schema utilisés dans OpenAPI
+   */
+  export interface JSONSchema {
+    type?: 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'object' | 'null';
+    format?: string;
+    description?: string;
+    enum?: unknown[];
+    default?: unknown;
+    
+    // Pour les objets
+    properties?: Record<string, JSONSchema>;
+    required?: string[];
+    additionalProperties?: boolean | JSONSchema;
+    
+    // Pour les tableaux
+    items?: JSONSchema;
+    minItems?: number;
+    maxItems?: number;
+    
+    // Pour les nombres
+    minimum?: number;
+    maximum?: number;
+    multipleOf?: number;
+    
+    // Pour les chaînes
+    minLength?: number;
+    maxLength?: number;
+    pattern?: string;
+    
+    // Composition de schémas
+    allOf?: JSONSchema[];
+    oneOf?: JSONSchema[];
+    anyOf?: JSONSchema[];
+    not?: JSONSchema;
+    
+    // Métadonnées
+    title?: string;
+    example?: unknown;
+    deprecated?: boolean;
+    readOnly?: boolean;
+    writeOnly?: boolean;
+    
+    // OpenAPI extensions
+    'x-nullable'?: boolean;
+    [key: string]: unknown; // Permet les extensions personnalisées
+  }
+
   // Types de base OpenAPI
   export interface OpenAPISchema {
     openapi?: string;
@@ -15,10 +63,10 @@ export namespace OpenAPITypes {
     };
     paths: Record<string, PathItem>;
     components?: {
-      schemas?: Record<string, any>;
-      parameters?: Record<string, any>;
-      responses?: Record<string, any>;
-      requestBodies?: Record<string, any>;
+      schemas?: Record<string, JSONSchema>;
+      parameters?: Record<string, Parameter>;
+      responses?: Record<string, Response>;
+      requestBodies?: Record<string, RequestBody>;
     };
   }
 
@@ -41,7 +89,7 @@ export namespace OpenAPITypes {
     in: 'query' | 'header' | 'path' | 'cookie';
     description?: string;
     required?: boolean;
-    schema?: any;
+    schema?: JSONSchema;
   }
 
   export interface RequestBody {
@@ -51,8 +99,8 @@ export namespace OpenAPITypes {
   }
 
   export interface MediaType {
-    schema?: any;
-    example?: any;
+    schema?: JSONSchema;
+    example?: unknown;
   }
 
   export interface Response {

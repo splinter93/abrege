@@ -5,14 +5,11 @@ import {
   FiAlignLeft, FiAlignCenter, FiAlignRight, FiAlignJustify,
   FiList as FiOrderedList, FiQuote, FiTable, FiPalette
 } from 'react-icons/fi';
+import type { Editor as TiptapEditor } from '@tiptap/react';
 import Tooltip from '@/components/Tooltip';
 
 interface EditorToolbarProps {
-  editor: {
-    view: { dom: HTMLElement };
-    chain: () => any;
-    isActive: (type: string, attrs?: { level?: number }) => boolean;
-  } | null;
+  editor: TiptapEditor | null;
   setImageMenuOpen: (open: boolean) => void;
 }
 

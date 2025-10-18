@@ -15,8 +15,17 @@ export type EditorWithMarkdown = TiptapEditor & {
 // Garde de type pour vérifier si l'éditeur a le storage markdown
 export function hasMarkdownStorage(editor: TiptapEditor | null): editor is EditorWithMarkdown {
   if (!editor) return false;
-  const storage = editor.storage as any;
-  return storage?.markdown && typeof storage.markdown.getMarkdown === 'function';
+  
+  // Typage strict sans `as any`
+  const storage = editor.storage as Record<string, unknown>;
+  const markdown = storage?.markdown;
+  
+  // Vérifier que markdown existe et est un objet
+  if (!markdown || typeof markdown !== 'object') return false;
+  
+  // Vérifier que getMarkdown est une fonction
+  return 'getMarkdown' in markdown && 
+         typeof (markdown as { getMarkdown?: unknown }).getMarkdown === 'function';
 }
 
 // Export de FullEditorInstance pour compatibilité (deprecated)

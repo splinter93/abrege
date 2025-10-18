@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { createMarkdownIt } from '@/utils/markdownItConfig';
 import { simpleLogger as logger } from '@/utils/logger';
+import type MarkdownIt from 'markdown-it';
 
 export interface UseMarkdownRenderProps {
   content: string;
@@ -9,7 +10,7 @@ export interface UseMarkdownRenderProps {
 export interface UseMarkdownRenderReturn {
   html: string;
   isRendering: boolean;
-  md: any;
+  md: MarkdownIt | null;
 }
 
 /**

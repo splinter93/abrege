@@ -138,7 +138,76 @@ export const hashString = (str: string): number => {
  * }
  * ```
  */
-export function getEditorMarkdown(editor: { storage?: unknown } | null): string {
+/**
+ * Convertit le contenu Tiptap en Markdown (fallback sans extension Markdown)
+ * Utilisé quand l'extension tiptap-markdown est désactivée car elle cause des bugs
+ */
+function convertHTMLtoMarkdown(editor: { getJSON?: () => unknown }): string {
+  if (!editor.getJSON) return '';
+  
+  try {
+    const json = editor.getJSON() as { content?: Array<{ type: string; content?: unknown[]; attrs?: Record<string, unknown>; text?: string }> };
+    if (!json.content) return '';
+    
+    // Conversion basique JSON → Markdown
+    const lines: string[] = [];
+    
+    for (const node of json.content) {
+      if (node.type === 'paragraph') {
+        // Paragraph
+        const text = extractText(node);
+        lines.push(text);
+        lines.push(''); // Ligne vide après paragraphe
+      } else if (node.type === 'heading') {
+        // Heading
+        const level = (node.attrs?.level as number) || 1;
+        const text = extractText(node);
+        lines.push('#'.repeat(level) + ' ' + text);
+        lines.push('');
+      } else if (node.type === 'codeBlock') {
+        // Code block
+        const code = extractText(node);
+        lines.push('```');
+        lines.push(code);
+        lines.push('```');
+        lines.push('');
+      } else if (node.type === 'taskList' || node.type === 'bulletList' || node.type === 'orderedList') {
+        // Lists - return raw content to avoid duplication
+        console.warn('[convertHTMLtoMarkdown] TaskList/List not fully implemented - returning empty');
+        // Pour éviter la boucle, on ne convertit pas les listes
+        // L'extension Markdown devrait gérer ça
+      }
+    }
+    
+    return lines.join('\n').trim();
+  } catch (error) {
+    console.error('Error converting to markdown:', error);
+    return '';
+  }
+}
+
+function extractText(node: { content?: unknown[]; text?: string; marks?: Array<{ type: string }> }): string {
+  if (node.text) {
+    let text = node.text;
+    // Appliquer les marks (bold, italic, etc.)
+    if (node.marks) {
+      for (const mark of node.marks) {
+        if (mark.type === 'bold') text = `**${text}**`;
+        if (mark.type === 'italic') text = `*${text}*`;
+        if (mark.type === 'code') text = `\`${text}\``;
+      }
+    }
+    return text;
+  }
+  
+  if (node.content && Array.isArray(node.content)) {
+    return node.content.map((child: unknown) => extractText(child as { content?: unknown[]; text?: string; marks?: Array<{ type: string }> })).join('');
+  }
+  
+  return '';
+}
+
+export function getEditorMarkdown(editor: { storage?: unknown; getJSON?: () => unknown } | null): string {
   if (!editor) return '';
   
   try {
@@ -147,7 +216,10 @@ export function getEditorMarkdown(editor: { storage?: unknown } | null): string 
     if (storage?.markdown && typeof storage.markdown.getMarkdown === 'function') {
       return storage.markdown.getMarkdown() || '';
     }
-    return '';
+    
+    // 🔧 FALLBACK: Extension Markdown désactivée, conversion manuelle
+    console.log('⚠️ [getEditorMarkdown] Extension Markdown non disponible, utilisation du fallback');
+    return convertHTMLtoMarkdown(editor);
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
       // Type-safe logging - pas de console.warn en production

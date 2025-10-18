@@ -70,13 +70,122 @@ export function createEditorExtensions(
 ): AnyExtension[] {
   const extensions: AnyExtension[] = [];
 
+  // 🔧 DEBUG: Si aucune config n'est activée, retourner config minimale mais fonctionnelle
+  if (!config.core && !config.advanced && !config.experimental) {
+    console.log('🔧 [DEBUG] Mode PROGRESSIF - Réactivation extensions essentielles');
+    extensions.push(
+      // StarterKit avec configuration optimale
+      StarterKit.configure({
+        // ✅ Essentiel
+        document: true,
+        paragraph: true,
+        text: true,
+        history: true,
+        
+        // ✅ Formats de base
+        bold: true,
+        italic: true,
+        strike: true,
+        code: true,
+        
+        // ✅ Structure
+        heading: true,
+        blockquote: true,
+        bulletList: true,
+        orderedList: true,
+        listItem: true,
+        horizontalRule: true,
+        codeBlock: true,
+        
+        // ❌ Désactivé (peut causer problèmes)
+        hardBreak: false,
+        dropcursor: true,
+        gapcursor: true,
+      }),
+      
+      // ✅ Extensions essentielles réactivées
+      Placeholder.configure({
+        placeholder: 'Écrivez quelque chose d\'incroyable...',
+        showOnlyWhenEditable: true,
+      }),
+      Underline,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+      
+      // ✅ Tables réactivées
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      
+      // ✅ Images
+      CustomImage.configure({ inline: false }),
+      
+      // ✅ Links SANS autolink (safe)
+      LinkExtension.configure({ 
+        openOnClick: false, 
+        autolink: false,      // ❌ Désactivé définitivement - Cause des updates inattendus
+        linkOnPaste: false,   // ❌ Désactivé définitivement - Cause des updates inattendus
+        HTMLAttributes: {
+          class: 'link',
+        },
+      }),
+      
+      // ✅ Code blocks avec syntax highlighting
+      UnifiedCodeBlockExtension.configure({ 
+        lowlight: lowlightInstance,
+      }),
+      
+      // ✅ Extensions custom safe
+      NoAutoListConversion,
+      TextStyle,
+      Color.configure({ types: [TextStyle.name] }),
+      Highlight.configure({ multicolor: true }),
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention',
+        },
+      }),
+      
+      // ✅ Markdown RÉACTIVÉE en mode SAFE
+      // CRITIQUE : transformPastedText et transformCopiedText DOIVENT rester false
+      Markdown.configure({ 
+        html: false,
+        transformPastedText: false,   // ✅ SAFE - Ne transforme PAS automatiquement
+        transformCopiedText: false,   // ✅ SAFE - Ne transforme PAS automatiquement
+      }),
+      
+      // ✅ Extensions avancées réactivées
+      ContextMenuExtension,
+      CalloutExtension,
+      
+      // ✅ Floating Menu pour la sélection
+      FloatingMenu.configure({
+        element: typeof window !== 'undefined' ? document.createElement('div') : null,
+        tippyOptions: {
+          duration: 100,
+        },
+      }),
+      
+      // ✅ Drag Handles Notion-style
+      NotionDragHandleExtension.configure({
+        handleClass: 'notion-drag-handle',
+      })
+    );
+    console.log('🔧 [DEBUG] Extensions actives:', extensions.length);
+    return extensions;
+  }
+
   // Extensions de base (toujours activées)
   if (config.core) {
     extensions.push(
       StarterKit.configure({ 
         // Configuration minimale pour éviter les conflits
         codeBlock: false, // Désactiver - on utilise UnifiedCodeBlockExtension
-        hardBreak: false, // Désactiver les sauts de ligne forcés
+        hardBreak: false, // ✅ SAFE - Désactivé définitivement
         blockquote: false, // Désactiver - on utilise Blockquote standalone
         bulletList: false, // Désactiver - on utilise BulletList standalone
         orderedList: false, // Désactiver - on utilise OrderedList standalone  
@@ -89,28 +198,31 @@ export function createEditorExtensions(
       OrderedList,
       ListItem,
       TaskList,
-      TaskItem,
+      TaskItem.configure({
+        nested: true,
+      }),
       Table.configure({ resizable: true }),
       TableRow,
       TableHeader,
       TableCell,
-      // TableWithTildeFix, // ❌ DÉSACTIVÉ - Cause une erreur
       UnifiedCodeBlockExtension.configure({ 
         lowlight: lowlightInstance,
       }),
       LinkExtension.configure({ 
         openOnClick: false, 
-        autolink: true, 
-        linkOnPaste: true,
+        // ✅ SAFE - Désactivé définitivement (causait des updates inattendus)
+        autolink: false,
+        linkOnPaste: false,
         HTMLAttributes: {
           class: 'link',
         },
       }),
       CustomImage.configure({ inline: false }),
       Markdown.configure({ 
-        html: false, // Désactive la génération de HTML
-        transformPastedText: true,
-        transformCopiedText: true,
+        html: false,
+        // ✅ SAFE - Désactivé définitivement (causait espace → retour ligne)
+        transformPastedText: false,
+        transformCopiedText: false,
       }),
       Placeholder.configure({
         placeholder: 'Écrivez quelque chose d\'incroyable...',
@@ -124,24 +236,13 @@ export function createEditorExtensions(
         HTMLAttributes: {
           class: 'mention',
         },
+      }),
+      FloatingMenu.configure({
+        element: typeof window !== 'undefined' ? document.createElement('div') : null,
+        tippyOptions: {
+          duration: 100,
+        },
       })
-      // LinkExtension SUPPRIMÉ ICI - déjà configuré ligne 99 !
-      // Emoji temporairement désactivé - problème d'affichage avec les crochets
-      // Emoji.configure({
-      //   enableEmoticons: true,
-      //   enableShortcuts: true,
-      //   HTMLAttributes: {
-      //     class: 'emoji',
-      //   },
-      // }),
-      // FloatingMenu désactivé - on utilise notre composant personnalisé
-      // FloatingMenu.configure({
-      //   element: typeof window !== 'undefined' ? document.createElement('div') : null,
-      //   tippyOptions: {
-      //     duration: 100,
-      //   },
-      // }),
-      // SlashMenuExtension // Temporairement désactivé
     );
   }
 
@@ -161,7 +262,7 @@ export function createEditorExtensions(
     // Les extensions problématiques ont été retirées
   }
 
-  // ⚠️ DRAG HANDLES - NE PAS MODIFIER SANS AUDIT COMPLET
+  // ⚠️ DRAG HANDLES - RÉACTIVÉ (testé et validé après fix curseur)
   // Voir docs/DRAG-HANDLES-AUDIT.md pour détails complets
   // Extension active: NotionDragHandleExtension (version finale)
   // Extensions backup: SimpleDragHandleExtension, DragHandleExtension (conservées)
@@ -188,6 +289,16 @@ export function createEditorExtensions(
 
   return extensions;
 }
+
+/**
+ * Configuration MINIMALE pour debug curseur
+ */
+export const MINIMAL_EXTENSIONS_CONFIG: EditorExtensionsConfig = {
+  core: false,      // ❌ Désactivé
+  advanced: false,  // ❌ Désactivé
+  experimental: false,
+  performance: false,
+};
 
 /**
  * Configuration optimisée pour la production

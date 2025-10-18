@@ -18,7 +18,6 @@ interface FileItemProps {
 const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename, onCancelRename, onContextMenu, onStartRenameClick }) => {
   const [inputValue, setInputValue] = React.useState(file.source_title);
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const [isDraggable, setIsDraggable] = React.useState(false);
   const lastWasRightClick = React.useRef(false);
 
   React.useEffect(() => {

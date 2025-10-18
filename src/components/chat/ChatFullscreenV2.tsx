@@ -9,6 +9,12 @@ import { useChatResponse } from '@/hooks/useChatResponse';
 import { useChatScroll } from '@/hooks/useChatScroll';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useChatHandlers } from '@/hooks/useChatHandlers';
+import { 
+  ChatMessage as ChatMessageType, 
+  isEmptyAnalysisMessage,
+  hasToolCalls,
+  hasReasoning
+} from '@/types/chat';
 import { supabase } from '@/supabaseClient';
 import { tokenManager } from '@/utils/tokenManager';
 import ChatInput from './ChatInput';
@@ -167,7 +173,7 @@ const ChatFullscreenV2: React.FC = () => {
       if (msg.role === 'tool') return true;
       
       // Exclure les messages temporaires sans contenu (canal 'analysis' sans content)
-      if ((msg as any).channel === 'analysis' && !msg.content) return false;
+      if (isEmptyAnalysisMessage(msg)) return false;
       
       // Par défaut, garder le message
       return true;
@@ -178,9 +184,13 @@ const ChatFullscreenV2: React.FC = () => {
       logger.dev(`[ChatFullscreenV2] 🔍 Messages affichés: ${filtered.length}/${sorted.length}`, {
         total: sorted.length,
         filtered: filtered.length,
-        hasToolCalls: filtered.some(m => (m as any).tool_calls?.length > 0),
-        hasReasoning: filtered.some(m => (m as any).reasoning),
-        channels: sorted.map(m => ({ role: m.role, channel: (m as any).channel, hasContent: !!m.content }))
+        hasToolCalls: filtered.some(hasToolCalls),
+        hasReasoning: filtered.some(hasReasoning),
+        channels: sorted.map(m => ({ 
+          role: m.role, 
+          channel: m.role === 'assistant' ? (m as ChatMessageType).channel : undefined, 
+          hasContent: !!m.content 
+        }))
       });
     }
     
@@ -420,7 +430,7 @@ const ChatFullscreenV2: React.FC = () => {
             <div className="chatgpt-messages">
               {displayMessages.map((message) => (
                 <ChatMessage 
-                  key={message.id || `${message.role}-${message.timestamp}-${(message as any).tool_call_id || ''}`} 
+                  key={message.id || `${message.role}-${message.timestamp}-${message.role === 'tool' ? (message as ChatMessageType).tool_call_id : ''}`} 
                   message={message}
                   animateContent={false} // Supprimé - faux streaming
                   isWaitingForResponse={loading && message.role === 'assistant' && !message.content}

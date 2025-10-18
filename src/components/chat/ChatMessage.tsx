@@ -1,7 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChatMessage as ChatMessageType } from '@/types/chat';
+import { 
+  ChatMessage as ChatMessageType, 
+  isObservationMessage,
+  isToolResultSuccess 
+} from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ToolCallMessage from './ToolCallMessage';
 import BubbleButtons from './BubbleButtons';
@@ -36,7 +40,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const { role, content, reasoning } = message;
 
   // Masquer les observations internes et messages tool
-  if (role === 'assistant' && (message as any).name === 'observation') return null;
+  if (isObservationMessage(message)) return null;
   if (role === 'tool') return null;
 
   useEffect(() => {
@@ -47,18 +51,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     if (!raw) return undefined;
     try {
       const data = JSON.parse(raw);
-      if (data && typeof data === 'object') {
-        if ('success' in data) {
-          return Boolean((data as any).success);
-        }
-        if ('error' in data && (data as any).error) {
-          return false;
-        }
-      }
+      return isToolResultSuccess(data);
     } catch {
       // ignore non-JSON content
+      return undefined;
     }
-    return undefined;
   };
 
   const getToolResultsForAssistant = () => {

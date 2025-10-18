@@ -94,7 +94,7 @@ const ModernToolbar: React.FC<ModernToolbarProps> = ({
           <Tooltip text="Dictaphone IA">
             <AudioRecorder 
               onTranscriptionComplete={onTranscriptionComplete || (() => {})}
-              onError={(error) => console.error('Audio error:', error)}
+              onError={(error) => logger.error('[Audio] Transcription error', error)}
               disabled={isReadonly}
               variant="toolbar"
             />

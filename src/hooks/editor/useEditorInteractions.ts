@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import type { Editor } from '@tiptap/react';
+import type { Editor, EditorState } from '@tiptap/react';
 import { logger, LogCategory } from '@/utils/logger';
 
 /**
@@ -7,8 +7,12 @@ import { logger, LogCategory } from '@/utils/logger';
  * Centralise la logique de communication et évite les re-renders excessifs
  */
 export function useEditorInteractions(editor: Editor | null) {
-  const interactionRef = useRef({
-    lastSelection: null as any,
+  const interactionRef = useRef<{
+    lastSelection: EditorState['selection'] | null;
+    lastContent: string;
+    updateCount: number;
+  }>({
+    lastSelection: null,
     lastContent: '',
     updateCount: 0
   });

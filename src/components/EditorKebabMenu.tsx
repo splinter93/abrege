@@ -206,7 +206,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
             aria-label={opt.label}
             style={{ cursor: 'pointer' }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: (opt as any).color }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               {opt.icon}
               {opt.label}
             </span>

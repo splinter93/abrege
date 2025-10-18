@@ -33,8 +33,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     // En production, envoyer l'erreur à un service de monitoring
     if (process.env.NODE_ENV === 'production') {
       // Envoyer vers un service de monitoring (Sentry, LogRocket, etc.)
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'exception', {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'exception', {
           description: error.message,
           fatal: false
         });
