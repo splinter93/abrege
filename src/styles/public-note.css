@@ -108,6 +108,11 @@
 .public-note-container .public-header-image img {
   background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
   background-color: var(--color-bg-header) !important;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 /* Le bouton d'édition utilise maintenant les variables glassmorphism */
@@ -248,6 +253,7 @@
   width: 100vw;
   min-height: 100vh;
   padding-bottom: 64px;
+  overflow-x: hidden; /* Évite le scroll horizontal */
 }
 
 /* Forcer le thème sombre sur html et body de la page publique */
@@ -431,18 +437,26 @@ body.public-note-page {
   .editor-container-width {
     padding-left: 16px !important;
     padding-right: 16px !important;
-    max-width: calc(100vw - 32px) !important;
+    max-width: 100vw !important;
     width: 100% !important;
   }
 
-  /* Image d'en-tête - hauteur réduite + pleine largeur */
+  /* Image d'en-tête - hauteur réduite, pleine largeur */
   .public-header-image {
     height: var(--editor-header-image-height-mobile) ; /* 200px - cohérent avec l'éditeur */
-    margin-bottom: 16px; /* IDENTIQUE À L'ÉDITEUR - 16px sur mobile */
-    margin-left: -16px;
-    margin-right: -16px;
-    width: calc(100% + 32px);
-    border-radius: 0;
+    margin-bottom: 16px;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  /* Images dans le contenu - pleine largeur */
+  .public-note-container .markdown-body img {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
 
   /* Titre dans l'image - ajustements */
@@ -522,18 +536,24 @@ body.public-note-page {
   .editor-container-width {
     padding-left: 12px !important;
     padding-right: 12px !important;
-    max-width: calc(100vw - 24px) !important;
+    max-width: 100vw !important;
     width: 100% !important;
   }
 
-  /* Image d'en-tête - encore plus petite + pleine largeur */
+  /* Image d'en-tête - encore plus petite, pleine largeur */
   .public-header-image {
     height: 150px ;
-    margin-bottom: 12px; /* IDENTIQUE À L'ÉDITEUR - 12px sur petit mobile */
-    margin-left: -12px;
-    margin-right: -12px;
-    width: calc(100% + 24px);
-    border-radius: 0;
+    margin-bottom: 12px;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  /* Images dans le contenu */
+  .public-note-container .markdown-body img {
+    width: 100%;
+    max-width: 100%;
   }
 
   /* Titre dans l'image - très compact */
