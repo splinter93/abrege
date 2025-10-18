@@ -27,6 +27,7 @@
    ========================================================================== */
 .ProseMirror .u-block,
 .markdown-body .u-block,
+.public-note-container .markdown-body .u-block,
 .chat-markdown-content .u-block,
 .code-block-wrapper { /* Added code-block-wrapper for chat */
   background: var(--blk-bg) ;
@@ -42,21 +43,23 @@
 /* Toolbar */
 .ProseMirror .u-block__toolbar,
 .markdown-body .u-block__toolbar,
+.public-note-container .markdown-body .u-block__toolbar,
 .chat-markdown-content .u-block__toolbar,
 .unified-block-toolbar { /* Added for chat CodeBlock */
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: var(--blk-toolbar-h);
-  padding: 0 8px 0 var(--blk-pad-x);
-  background: transparent;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  user-select: none;
-  flex-shrink: 0;
+  display: flex !important; /* Force avec !important pour page publique */
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: var(--blk-toolbar-h) !important;
+  padding: 0 8px 0 var(--blk-pad-x) !important;
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  user-select: none !important;
+  flex-shrink: 0 !important;
 }
 
 .ProseMirror .u-block__toolbar .toolbar-left,
 .markdown-body .u-block__toolbar .toolbar-left,
+.public-note-container .markdown-body .u-block__toolbar .toolbar-left,
 .chat-markdown-content .u-block__toolbar .toolbar-left,
 .unified-block-toolbar .toolbar-left { /* Added for chat CodeBlock */
   display: flex;
@@ -68,6 +71,7 @@
 
 .ProseMirror .u-block__toolbar .toolbar-right,
 .markdown-body .u-block__toolbar .toolbar-right,
+.public-note-container .markdown-body .u-block__toolbar .toolbar-right,
 .chat-markdown-content .u-block__toolbar .toolbar-right,
 .unified-block-toolbar .toolbar-right { /* Added for chat CodeBlock */
   display: flex;
@@ -330,20 +334,93 @@
 }
 
 /* ==========================================================================
+   BLOCKQUOTES - Utilise les styles existants de l'éditeur
+   ========================================================================== */
+
+/* ==========================================================================
+   TABLES - Utilise les styles existants de l'éditeur
+   ========================================================================== */
+
+/* ==========================================================================
    MERMAID VARIANT
    ========================================================================== */
+
+/* Container Mermaid - Style identique aux code blocks */
+.ProseMirror .u-block--mermaid,
+.markdown-body .u-block--mermaid,
+.public-note-container .markdown-body .u-block--mermaid,
+.chat-markdown-content .u-block--mermaid {
+  background: var(--blk-bg);
+  color: var(--blk-fg);
+  border: none;
+  border-radius: var(--blk-radius);
+  margin: 1.75rem 0;
+  box-shadow: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Toolbar Mermaid - COPIE EXACTE des styles code blocks */
+.ProseMirror .u-block--mermaid .u-block__toolbar,
+.markdown-body .u-block--mermaid .u-block__toolbar,
+.public-note-container .markdown-body .u-block--mermaid .u-block__toolbar,
+.chat-markdown-content .u-block--mermaid .u-block__toolbar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: var(--blk-toolbar-h) !important;
+  padding: 0 8px 0 var(--blk-pad-x) !important;
+  background: var(--blk-bg) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  user-select: none !important;
+  flex-shrink: 0 !important;
+  border-radius: var(--blk-radius) var(--blk-radius) 0 0 !important;
+}
+
+.ProseMirror .u-block--mermaid .u-block__toolbar .toolbar-left,
+.markdown-body .u-block--mermaid .u-block__toolbar .toolbar-left,
+.public-note-container .markdown-body .u-block--mermaid .u-block__toolbar .toolbar-left,
+.chat-markdown-content .u-block--mermaid .u-block__toolbar .toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ProseMirror .u-block--mermaid .u-block__toolbar .toolbar-right,
+.markdown-body .u-block--mermaid .u-block__toolbar .toolbar-right,
+.public-note-container .markdown-body .u-block--mermaid .u-block__toolbar .toolbar-right,
+.chat-markdown-content .u-block--mermaid .u-block__toolbar .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ProseMirror .u-block--mermaid .u-block__toolbar .toolbar-label,
+.markdown-body .u-block--mermaid .u-block__toolbar .toolbar-label,
+.public-note-container .markdown-body .u-block--mermaid .u-block__toolbar .toolbar-label,
+.chat-markdown-content .u-block--mermaid .u-block__toolbar .toolbar-label {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--blk-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 .ProseMirror .u-block--mermaid .u-block__body,
 .markdown-body .u-block--mermaid .u-block__body,
+.public-note-container .markdown-body .u-block--mermaid .u-block__body,
 .chat-markdown-content .u-block--mermaid .u-block__body {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 150px;
-  padding: var(--blk-pad-y);
+  min-height: 100px; /* Réduit de 150px pour être plus compact */
+  padding: 16px 20px; /* Même padding que les code blocks */
 }
 
 .ProseMirror .u-block--mermaid .mermaid-svg-container,
 .markdown-body .u-block--mermaid .mermaid-svg-container,
+.public-note-container .markdown-body .u-block--mermaid .mermaid-svg-container,
 .chat-markdown-content .u-block--mermaid .mermaid-svg-container {
   display: flex;
   justify-content: center;
@@ -353,6 +430,7 @@
 
 .ProseMirror .u-block--mermaid svg,
 .markdown-body .u-block--mermaid svg,
+.public-note-container .markdown-body .u-block--mermaid svg,
 .chat-markdown-content .u-block--mermaid svg {
   display: block;
   margin: 0 auto;

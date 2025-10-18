@@ -370,7 +370,7 @@ a {
     border-left: none;
     border-radius: var(--radius-md);
     position: relative;
-    box-shadow: var(--glass-shadow-soft);
+    box-shadow: none;
     font-family: var(--editor-font-family-body); /* Inter pour le texte */
     font-size: var(--editor-body-size); /* 1.125rem (18px) */
     font-weight: var(--editor-blockquote-weight); /* 600 - COHÉRENT AVEC L'ÉDITEUR */
@@ -431,7 +431,7 @@ a {
   table-layout: fixed;
   margin: 0;
   background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
-  border-radius: 0 0 8px 8px;
+  border-radius: var(--radius-md); /* Même radius que le wrapper */
 }
 
 .markdown-body th,
@@ -481,8 +481,8 @@ a {
   top: 0;
   z-index: 10;
   padding: 8px 20px;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
 }
 
 /* Force le gras sur tous les éléments dans les en-têtes */
@@ -493,6 +493,19 @@ a {
 .markdown-body th strong,
 .markdown-body th b {
   font-weight: var(--editor-table-header-weight) !important; /* Force le gras sur tous les éléments */
+}
+
+/* Coins inférieurs du tableau */
+.markdown-body tbody tr:last-child td:first-child,
+.public-note-container .markdown-body tbody tr:last-child td:first-child,
+.public-note-content-wrapper .markdown-body tbody tr:last-child td:first-child {
+  border-bottom-left-radius: var(--radius-md);
+}
+
+.markdown-body tbody tr:last-child td:last-child,
+.public-note-container .markdown-body tbody tr:last-child td:last-child,
+.public-note-content-wrapper .markdown-body tbody tr:last-child td:last-child {
+  border-bottom-right-radius: var(--radius-md);
 }
 
   .markdown-body tr:last-child td,

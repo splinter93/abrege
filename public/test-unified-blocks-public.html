@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Unified Blocks - Public</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #d0d0d0;
+            padding: 40px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Copie des variables */
+        :root {
+            --blk-bg: #2a2a2a;
+            --blk-fg: #a0a0a0;
+            --blk-muted: #8a8a8a;
+            --blk-radius: 8px;
+            --blk-pad-x: 16px;
+            --blk-toolbar-h: 40px;
+        }
+
+        /* Test 1: Sans public-note-container */
+        .test-1 .u-block {
+            background: var(--blk-bg);
+            border-radius: var(--blk-radius);
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .test-1 .u-block__toolbar {
+            display: flex;
+            justify-content: space-between;
+            height: var(--blk-toolbar-h);
+            padding: 0 8px 0 var(--blk-pad-x);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: red; /* DEBUG */
+        }
+
+        /* Test 2: Avec public-note-container */
+        .test-2 .public-note-container .markdown-body .u-block {
+            background: var(--blk-bg);
+            border-radius: var(--blk-radius);
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .test-2 .public-note-container .markdown-body .u-block__toolbar {
+            display: flex;
+            justify-content: space-between;
+            height: var(--blk-toolbar-h);
+            padding: 0 8px 0 var(--blk-pad-x);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: green; /* DEBUG */
+        }
+
+        .toolbar-label {
+            color: white;
+            font-size: 13px;
+        }
+
+        .toolbar-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Unified Blocks</h1>
+
+    <div class="test-1">
+        <h2>Test 1: Sans public-note-container (toolbar rouge)</h2>
+        <div class="u-block u-block--code">
+            <div class="u-block__toolbar">
+                <div class="toolbar-left">
+                    <span class="toolbar-label">JAVASCRIPT</span>
+                </div>
+                <div class="toolbar-right">
+                    <button class="toolbar-btn">Copier</button>
+                    <button class="toolbar-btn">Agrandir</button>
+                </div>
+            </div>
+            <div class="u-block__body">
+                <pre><code>console.log('test');</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-2">
+        <h2>Test 2: Avec public-note-container (toolbar verte)</h2>
+        <div class="public-note-container">
+            <div class="markdown-body">
+                <div class="u-block u-block--code">
+                    <div class="u-block__toolbar">
+                        <div class="toolbar-left">
+                            <span class="toolbar-label">PYTHON</span>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="toolbar-btn">Copier</button>
+                            <button class="toolbar-btn">Agrandir</button>
+                        </div>
+                    </div>
+                    <div class="u-block__body">
+                        <pre><code>print('test')</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('=== VÉRIFICATION STYLES ===');
+            
+            const toolbar1 = document.querySelector('.test-1 .u-block__toolbar');
+            const toolbar2 = document.querySelector('.test-2 .u-block__toolbar');
+            
+            if (toolbar1) {
+                const styles = window.getComputedStyle(toolbar1);
+                console.log('Toolbar 1 (sans container):');
+                console.log('  display:', styles.display);
+                console.log('  background:', styles.background);
+                console.log('  height:', styles.height);
+            }
+            
+            if (toolbar2) {
+                const styles = window.getComputedStyle(toolbar2);
+                console.log('Toolbar 2 (avec container):');
+                console.log('  display:', styles.display);
+                console.log('  background:', styles.background);
+                console.log('  height:', styles.height);
+            }
+        });
+    </script>
+</body>
+</html>
+

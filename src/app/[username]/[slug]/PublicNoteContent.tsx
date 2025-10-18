@@ -17,6 +17,8 @@ import '@/styles/unified-blocks.css'; // Système unifié pour tous les blocs - 
 import '@/styles/mermaid.css'; // Styles Mermaid centralisés
 import '@/styles/syntax-highlighting.css'; // Coloration syntaxique
 import '@/components/mermaid/MermaidModal.css'; // Styles de la modale Mermaid
+import '@/styles/checkbox-simple-approach.css'; // Styles des checkboxes
+import '@/styles/public-note-unified-styles.css'; // ✨ Scope spécifique pour page publique - DOIT ÊTRE EN DERNIER
 
 interface PublicNoteProps {
   note: {

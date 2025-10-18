@@ -179,7 +179,7 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
     openMermaidModal(content);
   }, [content]);
 
-  const diagramType = getMermaidDiagramType(content);
+  const diagramType = getMermaidDiagramType(content).toUpperCase(); // MAJUSCULE
 
   return (
     <div className={`u-block u-block--mermaid ${className}`}>
@@ -223,7 +223,7 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
             )}
             {showExpand && isRendered && (
                <button 
-                 className="toolbar-btn" 
+                 className="toolbar-btn expand-btn" 
                  title="Agrandir le diagramme"
                  onClick={handleExpand}
                >

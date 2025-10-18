@@ -7,7 +7,8 @@
 
 /* Le UL parent - RÉDUIT pour aligner à gauche */
 ul[data-type="taskList"],
-.ProseMirror ul[data-type="taskList"] {
+.ProseMirror ul[data-type="taskList"],
+.public-note-container ul[data-type="taskList"] {
   margin: var(--editor-list-margin-vertical, 1.25rem) 0 !important;
   padding-left: 0 !important; /* ← SUPPRIMÉ pour aligner à gauche */
   line-height: var(--editor-line-height-base, 1.75) !important;
@@ -17,7 +18,8 @@ ul[data-type="taskList"],
 ul[data-type="taskList"] li,
 .ProseMirror li[data-type="taskItem"],
 .ProseMirror .task-list-item,
-.markdown-body li:has(> input[type="checkbox"]) {
+.markdown-body li:has(> input[type="checkbox"]),
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) {
   /* Annuler le flexbox */
   display: block !important;
   
@@ -36,7 +38,8 @@ ul[data-type="taskList"] li,
 ul[data-type="taskList"] li input[type="checkbox"],
 .ProseMirror li[data-type="taskItem"] input[type="checkbox"],
 .ProseMirror .task-list-item input[type="checkbox"],
-.markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"] {
+.markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"],
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"] {
   /* Checkbox inline avec le texte */
   display: inline-block !important;
   vertical-align: -0.23em !important; /* Descend la checkbox davantage */
@@ -61,7 +64,8 @@ ul[data-type="taskList"] li input[type="checkbox"],
 ul[data-type="taskList"] li input[type="checkbox"]:checked,
 .ProseMirror li[data-type="taskItem"] input[type="checkbox"]:checked,
 .ProseMirror .task-list-item input[type="checkbox"]:checked,
-.markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"]:checked {
+.markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"]:checked,
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"]:checked {
   border-color: #ff6b35 !important;
   background: #ff6b35 !important;
 }
@@ -70,7 +74,8 @@ ul[data-type="taskList"] li input[type="checkbox"]:checked,
 ul[data-type="taskList"] li input[type="checkbox"]:checked::after,
 .ProseMirror li[data-type="taskItem"] input[type="checkbox"]:checked::after,
 .ProseMirror .task-list-item input[type="checkbox"]:checked::after,
-.markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"]:checked::after {
+.markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"]:checked::after,
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"]:checked::after {
   content: '✓' !important;
   position: absolute !important;
   top: 50% !important;
@@ -89,7 +94,8 @@ ul[data-type="taskList"] li input[type="checkbox"]:checked::after,
 ul[data-type="taskList"] li > *:not(input[type="checkbox"]),
 .ProseMirror li[data-type="taskItem"] > *:not(input[type="checkbox"]),
 .ProseMirror .task-list-item > *:not(input[type="checkbox"]),
-.markdown-body li:has(> input[type="checkbox"]) > *:not(input[type="checkbox"]) {
+.markdown-body li:has(> input[type="checkbox"]) > *:not(input[type="checkbox"]),
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) > *:not(input[type="checkbox"]) {
   display: inline !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -99,7 +105,8 @@ ul[data-type="taskList"] li > *:not(input[type="checkbox"]),
 ul[data-type="taskList"] li p,
 .ProseMirror li[data-type="taskItem"] p,
 .ProseMirror .task-list-item p,
-.markdown-body li:has(> input[type="checkbox"]) p {
+.markdown-body li:has(> input[type="checkbox"]) p,
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) p {
   display: inline !important;
   margin: 0 !important;
 }
@@ -110,7 +117,9 @@ ul[data-type="taskList"] li span,
 .ProseMirror li[data-type="taskItem"] div,
 .ProseMirror li[data-type="taskItem"] span,
 .ProseMirror .task-list-item div,
-.ProseMirror .task-list-item span {
+.ProseMirror .task-list-item span,
+.public-note-container .markdown-body li div,
+.public-note-container .markdown-body li span {
   display: inline !important;
   margin: 0 !important;
 }
@@ -118,7 +127,8 @@ ul[data-type="taskList"] li span,
 /* Label transparent (si présent) */
 ul[data-type="taskList"] li > label,
 .ProseMirror li[data-type="taskItem"] > label,
-.ProseMirror .task-list-item > label {
+.ProseMirror .task-list-item > label,
+.public-note-container .markdown-body li > label {
   display: inline !important;
   margin: 0 !important;
   padding: 0 !important;

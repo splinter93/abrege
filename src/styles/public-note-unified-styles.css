@@ -1,0 +1,139 @@
+/**
+ * STYLES UNIFIÉS POUR LA PAGE PUBLIQUE
+ * 
+ * Ce fichier garantit que TOUS les styles de l'éditeur s'appliquent
+ * correctement sur la page publique (.public-note-container .markdown-body).
+ * 
+ * Il cible tous les éléments qui nécessitent un scope spécifique.
+ */
+
+/* ==========================================================================
+   UNIFIED BLOCKS - Scope pour page publique
+   ========================================================================== */
+
+/* Container principal des blocs */
+/* Blocs unifiés - Utilise les styles de unified-blocks.css */
+
+/* Toolbar - Utilise les styles de unified-blocks.css */
+
+/* Content/Body area */
+.public-note-container .markdown-body .u-block__content,
+.public-note-container .markdown-body .u-block__body {
+  padding: 16px 20px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Code blocks */
+.public-note-container .markdown-body .u-block__content pre,
+.public-note-container .markdown-body .u-block__body pre {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.public-note-container .markdown-body .u-block__content code,
+.public-note-container .markdown-body .u-block__body code {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  border: none;
+  border-radius: 0;
+  color: inherit;
+}
+
+/* Line numbers */
+.public-note-container .markdown-body .u-block__content .hljs-ln,
+.public-note-container .markdown-body .u-block__body .hljs-ln {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.public-note-container .markdown-body .u-block__content .hljs-ln-numbers,
+.public-note-container .markdown-body .u-block__body .hljs-ln-numbers {
+  user-select: none;
+  text-align: right;
+  color: var(--blk-muted);
+  padding-right: 16px;
+  vertical-align: top;
+  width: 40px;
+}
+
+.public-note-container .markdown-body .u-block__content .hljs-ln-code,
+.public-note-container .markdown-body .u-block__body .hljs-ln-code {
+  padding-left: 8px;
+  vertical-align: top;
+}
+
+/* ==========================================================================
+   MERMAID BLOCKS - Scope pour page publique
+   ========================================================================== */
+
+/* Mermaid - Utilise les styles de unified-blocks.css */
+
+/* Toolbar Mermaid - Utilise les styles unifiés .u-block__toolbar */
+
+/* ==========================================================================
+   SYNTAX HIGHLIGHTING - Scope pour page publique
+   ========================================================================== */
+
+/* Tous les tokens de syntax highlighting */
+.public-note-container .markdown-body .hljs-keyword,
+.public-note-container .markdown-body .hljs-selector-tag,
+.public-note-container .markdown-body .hljs-literal,
+.public-note-container .markdown-body .hljs-section,
+.public-note-container .markdown-body .hljs-link {
+  font-weight: 600;
+}
+
+.public-note-container .markdown-body .hljs-string,
+.public-note-container .markdown-body .hljs-attr,
+.public-note-container .markdown-body .hljs-name,
+.public-note-container .markdown-body .hljs-number,
+.public-note-container .markdown-body .hljs-built_in,
+.public-note-container .markdown-body .hljs-builtin-name,
+.public-note-container .markdown-body .hljs-bullet,
+.public-note-container .markdown-body .hljs-code,
+.public-note-container .markdown-body .hljs-addition {
+  /* Hérité de syntax-highlighting.css */
+}
+
+/* ==========================================================================
+   TABLES - Utilise les styles de l'éditeur depuis markdown.css
+   ========================================================================== */
+
+/* ==========================================================================
+   BLOCKQUOTES - Scope pour page publique
+   ========================================================================== */
+
+/* Blockquotes - Utilise les styles de l'éditeur depuis markdown.css */
+
+/* ==========================================================================
+   IMAGES - Scope pour page publique
+   ========================================================================== */
+
+.public-note-container .markdown-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+}
+
+.public-note-container .markdown-body .editor-image-wrapper {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+

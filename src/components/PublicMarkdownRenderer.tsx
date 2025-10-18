@@ -5,6 +5,7 @@ import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
 import { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from '@/components/chat/mermaidService';
 import MermaidRenderer from '@/components/mermaid/MermaidRenderer';
 import { formatPathsInElement } from '@/utils/formatPaths';
+import MarkdownBlockRenderer from '@/components/MarkdownBlockRenderer';
 
 interface PublicMarkdownRendererProps {
   content: string;
@@ -28,17 +29,58 @@ const PublicMarkdownRenderer: React.FC<PublicMarkdownRendererProps> = ({ content
 
   // Post-traiter le HTML pour transformer les blocs de code en structure identique à l'éditeur
   useEffect(() => {
-    if (!containerRef.current) return;
+    console.log('[PublicMarkdownRenderer] useEffect déclenché');
+    
+    if (!containerRef.current) {
+      console.warn('[PublicMarkdownRenderer] containerRef.current est null');
+      return;
+    }
+
+    console.log('[PublicMarkdownRenderer] containerRef OK, recherche des blocs...');
 
     // Transformer tous les blocs de code <pre><code> en structure avec toolbar unifiée
     const codeBlocks = containerRef.current.querySelectorAll('pre code');
-    codeBlocks.forEach((codeElement) => {
+    
+    console.log(`[PublicMarkdownRenderer] ✅ Trouvé ${codeBlocks.length} bloc(s) de code à transformer`);
+    
+    if (codeBlocks.length === 0) {
+      console.warn('[PublicMarkdownRenderer] Aucun bloc de code trouvé - le HTML est peut-être déjà transformé ou vide');
+      console.log('[PublicMarkdownRenderer] HTML du container:', containerRef.current.innerHTML.substring(0, 500));
+    }
+    
+    codeBlocks.forEach((codeElement, index) => {
       const preElement = codeElement.parentElement;
-      if (!preElement || preElement.classList.contains('u-block')) return;
+      if (!preElement) return;
+      
+      // ⚠️ GUARDS MULTIPLES - Éviter la double transformation
+      // 1. Vérifier si déjà wrappé (le pre OU son parent est un u-block)
+      if (preElement.classList.contains('u-block')) {
+        console.log(`[PublicMarkdownRenderer] Bloc ${index} déjà wrappé (classList)`);
+        return;
+      }
+      if (preElement.parentElement?.classList.contains('u-block')) {
+        console.log(`[PublicMarkdownRenderer] Bloc ${index} déjà wrappé (parent)`);
+        return;
+      }
+      if (preElement.closest('.u-block')) {
+        console.log(`[PublicMarkdownRenderer] Bloc ${index} déjà wrappé (closest)`);
+        return;
+      }
+      
+      // 2. Vérifier si déjà transformé (attribut data-processed)
+      if (preElement.hasAttribute('data-processed')) {
+        console.log(`[PublicMarkdownRenderer] Bloc ${index} déjà transformé (data-processed)`);
+        return;
+      }
+      
+      // 3. Marquer comme transformé IMMÉDIATEMENT
+      preElement.setAttribute('data-processed', 'true');
+      console.log(`[PublicMarkdownRenderer] Transformation du bloc ${index}...`);
 
       // Créer la structure unifiée (identique à l'éditeur)
       const container = document.createElement('div');
       container.className = 'u-block u-block--code';
+      container.setAttribute('data-processed', 'true'); // Marquer le container aussi
       
       // Créer la toolbar unifiée
       const toolbar = document.createElement('div');
@@ -53,7 +95,7 @@ const PublicMarkdownRenderer: React.FC<PublicMarkdownRendererProps> = ({ content
       
       // Détecter le langage
       const language = codeElement.className.match(/language-(\w+)/)?.[1] || '';
-      const languageDisplay = language || 'Code';
+      const languageDisplay = (language || 'Code').toUpperCase(); // Majuscule
       
       // Créer le label de langue
       const languageLabel = document.createElement('span');
@@ -212,14 +254,14 @@ const PublicMarkdownRenderer: React.FC<PublicMarkdownRendererProps> = ({ content
             />
           );
         } else {
-          // Bloc de texte normal - utiliser le rendu markdown pour ce bloc
+          // Bloc de texte normal - utiliser le composant MarkdownBlockRenderer
+          // qui va transformer les blocs de code avec toolbar
           const { html: blockHtml } = useMarkdownRender({ content: block.content });
           return (
-            <div 
+            <MarkdownBlockRenderer
               key={`text-${index}`}
-              ref={index === 0 ? containerRef : undefined}
+              html={blockHtml}
               className="markdown-body"
-              dangerouslySetInnerHTML={{ __html: blockHtml }}
             />
           );
         }

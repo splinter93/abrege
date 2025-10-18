@@ -1,5 +1,6 @@
 import MarkdownIt from 'markdown-it';
 import markdownItGithubTables from './markdownItGithubTables';
+import markdownItTaskLists from 'markdown-it-task-lists';
 import anchor from 'markdown-it-anchor';
 import { slugify } from './markdownTOC';
 
@@ -34,6 +35,7 @@ export function createMarkdownIt() {
   });
   
   md.use(markdownItGithubTables);
+  md.use(markdownItTaskLists);
   md.use(anchor, {
     slugify,
     level: [1,2,3,4,5,6],
