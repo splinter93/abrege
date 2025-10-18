@@ -1404,14 +1404,14 @@ Modèle utilisé : ${model}`;
       api_v2_capabilities: agent.api_v2_capabilities || ['get_note', 'update_note', 'search_notes', 'list_notes', 'create_note', 'delete_note']
     };
 
-    const orchestratorResult = await agenticOrchestrator.processMessage(
+    const orchestratorResult = await simpleOrchestrator.processMessage(
       userMessage,
-      [],
       {
         userToken,
         sessionId: sessionId || `specialized-${agent.id || agent.slug || 'unknown'}-${Date.now()}`,
         agentConfig: agentConfigWithTools
-      }
+      },
+      [] // history vide
     );
     
     // ✅ CORRECTION : Validation de la réponse de l'orchestrateur

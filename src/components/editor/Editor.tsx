@@ -876,10 +876,65 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             {!isReadonly && (
               <FloatingMenuNotion 
                 editor={editor} 
-                onAskAI={(selectedText) => {
-                  // TODO: Implémenter l'action Ask AI
-                  logger.debug(LogCategory.EDITOR, 'Ask AI avec texte sélectionné', { selectedText });
-                  toast.success(`Ask AI: "${selectedText}"`);
+                onAskAI={async (promptWithText: string) => {
+                  try {
+                    // Extract prompt and text from the combined string
+                    const parts = promptWithText.split(': ');
+                    const prompt = parts[0];
+                    const selectedText = parts.slice(1).join(': ');
+                    
+                    logger.debug(LogCategory.EDITOR, 'Ask AI request', { prompt, selectedText });
+                    toast.loading('Scribe réfléchit...');
+                    
+                    // Get JWT token
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) {
+                      throw new Error('No session found');
+                    }
+                    
+                    // Call Scribe agent
+                    const response = await fetch('/api/v2/agents/execute', {
+                      method: 'POST',
+                      headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                      },
+                      body: JSON.stringify({
+                        ref: 'scribe',
+                        input: `${prompt}:\n\n"${selectedText}"\n\nRéponds UNIQUEMENT avec le texte transformé, sans explication ni formatage markdown.`
+                      })
+                    });
+                    
+                    if (!response.ok) throw new Error('Agent request failed');
+                    
+                    const data = await response.json();
+                    logger.debug(LogCategory.EDITOR, 'Ask AI raw response', { data });
+                    
+                    // Extract response from multiple possible fields
+                    const aiResponse = data.data?.response || data.data?.content || data.data?.result || 
+                                      data.response || data.content || data.result || '';
+                    
+                    if (!aiResponse) {
+                      toast.error('Pas de réponse de Scribe');
+                      logger.error(LogCategory.EDITOR, 'No AI response found', { data });
+                      return;
+                    }
+                    
+                    // Replace selected text with AI response
+                    editor?.chain()
+                      .focus()
+                      .deleteSelection()
+                      .insertContent(aiResponse)
+                      .run();
+                    
+                    toast.dismiss();
+                    toast.success('Texte transformé !');
+                    logger.debug(LogCategory.EDITOR, 'Ask AI success', { aiResponse });
+                  } catch (error) {
+                    toast.dismiss();
+                    toast.error('Erreur lors de l\'appel à Scribe');
+                    logger.error(LogCategory.EDITOR, 'Ask AI error', { error });
+                  }
                 }}
               />
             )}

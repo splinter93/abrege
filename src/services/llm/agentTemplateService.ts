@@ -287,6 +287,22 @@ export class AgentTemplateService {
   }
 
   /**
+   * Retourne une configuration d'agent par défaut
+   */
+  getDefaultAgent(): AgentTemplateConfig {
+    return {
+      id: 'default',
+      name: 'Agent par défaut',
+      system_instructions: 'Tu es un assistant IA intelligent et utile.',
+      model_variant: 'llama-4-maverick-17b-128e-instruct',
+      temperature: 0.7,
+      max_completion_tokens: 4000,
+      capabilities: ['text', 'function_calling'],
+      api_v2_capabilities: []
+    };
+  }
+
+  /**
    * Résumé des templates utilisés (pour logs)
    */
   generateTemplateSummary(agentConfig: AgentTemplateConfig): string {
