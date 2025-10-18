@@ -427,10 +427,22 @@ body.public-note-page {
     padding-bottom: 32px;
   }
 
-  /* Image d'en-tête - hauteur réduite - ESPACEMENT IDENTIQUE À L'ÉDITEUR */
+  /* Largeur adaptative du contenu */
+  .editor-container-width {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    max-width: calc(100vw - 32px) !important;
+    width: 100% !important;
+  }
+
+  /* Image d'en-tête - hauteur réduite + pleine largeur */
   .public-header-image {
     height: var(--editor-header-image-height-mobile) ; /* 200px - cohérent avec l'éditeur */
     margin-bottom: 16px; /* IDENTIQUE À L'ÉDITEUR - 16px sur mobile */
+    margin-left: -16px;
+    margin-right: -16px;
+    width: calc(100% + 32px);
+    border-radius: 0;
   }
 
   /* Titre dans l'image - ajustements */
@@ -506,10 +518,22 @@ body.public-note-page {
     padding-bottom: 24px;
   }
 
-  /* Image d'en-tête - encore plus petite - ESPACEMENT IDENTIQUE À L'ÉDITEUR */
+  /* Largeur adaptative du contenu - encore plus réduit */
+  .editor-container-width {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    max-width: calc(100vw - 24px) !important;
+    width: 100% !important;
+  }
+
+  /* Image d'en-tête - encore plus petite + pleine largeur */
   .public-header-image {
     height: 150px ;
     margin-bottom: 12px; /* IDENTIQUE À L'ÉDITEUR - 12px sur petit mobile */
+    margin-left: -12px;
+    margin-right: -12px;
+    width: calc(100% + 24px);
+    border-radius: 0;
   }
 
   /* Titre dans l'image - très compact */
@@ -628,6 +652,75 @@ body.public-note-page {
 
   /* Headings - DÉLÉGUÉ À TYPOGRAPHY.CSS */
   /* Les styles responsive sont maintenant gérés par typography.css */
+}
+
+/* ==========================================================================
+   RESPONSIVE - TABLEAUX ET BLOCS DE CODE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* Tableaux responsive */
+  .public-note-container .markdown-body .tableWrapper,
+  .public-note-container .markdown-body table {
+    font-size: 0.8125rem !important; /* 13px */
+  }
+  
+  .public-note-container .markdown-body table th,
+  .public-note-container .markdown-body table td {
+    padding: 8px 10px !important;
+    font-size: 0.8125rem !important;
+  }
+  
+  .public-note-container .markdown-body table th {
+    font-size: 0.6875rem !important; /* 11px - headers plus petits */
+    letter-spacing: 0.06em;
+  }
+  
+  /* Blocs de code responsive */
+  .public-note-container .u-block pre code {
+    font-size: 0.75rem !important; /* 12px */
+    line-height: 1.4;
+  }
+  
+  .public-note-container .u-block__toolbar {
+    padding: 6px 10px !important;
+    font-size: 0.7rem !important;
+  }
+  
+  .public-note-container .toolbar-btn,
+  .public-note-container .copy-btn,
+  .public-note-container .expand-btn {
+    padding: 4px 8px !important;
+    font-size: 0.7rem !important;
+  }
+  
+  /* TOC - caché sur tablette/mobile */
+  .public-toc-container {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Tableaux encore plus compacts */
+  .public-note-container .markdown-body table th,
+  .public-note-container .markdown-body table td {
+    padding: 6px 8px !important;
+    font-size: 0.75rem !important; /* 12px */
+  }
+  
+  .public-note-container .markdown-body table th {
+    font-size: 0.625rem !important; /* 10px */
+  }
+  
+  /* Blocs de code encore plus compacts */
+  .public-note-container .u-block pre code {
+    font-size: 0.6875rem !important; /* 11px */
+  }
+  
+  .public-note-container .u-block__toolbar {
+    padding: 4px 8px !important;
+    font-size: 0.65rem !important;
+  }
 }
 
 /* ==========================================================================
