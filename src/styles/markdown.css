@@ -407,20 +407,20 @@ a {
   }
 
 /* ==========================================================================
-     TABLEAUX - DESIGN ALIGNÉ SUR LES BLOCS DE CODE
+     TABLEAUX - DESIGN MODERNE ET ÉLÉGANT
    ========================================================================== */
 
 .markdown-body .tableWrapper,
 .public-note-container .markdown-body .tableWrapper,
 .public-note-content-wrapper .markdown-body .tableWrapper {
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  overflow: auto; /* permet sticky sur th */
+  overflow: auto;
   margin: 1.75em 0;
-  box-shadow: var(--glass-shadow-soft);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
   -webkit-overflow-scrolling: touch;
   max-width: 100%;
-  background-color: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
+  background-color: var(--color-bg-content);
 }
 
 .markdown-body table,
@@ -430,8 +430,8 @@ a {
   border-collapse: collapse;
   table-layout: fixed;
   margin: 0;
-  background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
-  border-radius: var(--radius-md); /* Même radius que le wrapper */
+  background: var(--color-bg-content);
+  border-radius: var(--radius-md);
 }
 
 .markdown-body th,
@@ -442,14 +442,25 @@ a {
 .public-note-content-wrapper .markdown-body td {
   border: none;
   border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
   text-align: left;
   vertical-align: top;
-  padding: 8px 20px;
-  font-size: var(--editor-table-font-size) !important; /* Taille réduite pour les tableaux */
-  color: var(--color-text-primary);
+  padding: 12px 16px;
+  font-size: var(--editor-table-font-size) !important;
+  color: var(--color-text-secondary);
   word-break: break-word;
   white-space: normal;
   box-sizing: border-box;
+}
+
+/* Dernière colonne sans bordure droite */
+.markdown-body th:last-child,
+.markdown-body td:last-child,
+.public-note-container .markdown-body th:last-child,
+.public-note-container .markdown-body td:last-child,
+.public-note-content-wrapper .markdown-body th:last-child,
+.public-note-content-wrapper .markdown-body td:last-child {
+  border-right: none;
 }
 
 /* Règle ultra-spécifique pour forcer la font-size des tableaux */
@@ -471,18 +482,17 @@ a {
 .markdown-body th,
 .public-note-container .markdown-body th,
 .public-note-content-wrapper .markdown-body th {
-  background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
+  background: var(--surface-secondary);
   color: var(--color-text-primary);
-  /* font-weight géré par typography.css */
-  font-size: var(--editor-table-font-size) !important; /* Taille réduite pour les tableaux */
-  letter-spacing: 0.02em;
-  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.75rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  border-bottom: 2px solid var(--border-default);
   position: sticky;
   top: 0;
   z-index: 10;
-  padding: 8px 20px;
-  border-top-left-radius: var(--radius-md);
-  border-top-right-radius: var(--radius-md);
+  padding: 12px 16px;
 }
 
 /* Force le gras sur tous les éléments dans les en-têtes */
@@ -492,20 +502,42 @@ a {
 .markdown-body th span,
 .markdown-body th strong,
 .markdown-body th b {
-  font-weight: var(--editor-table-header-weight) !important; /* Force le gras sur tous les éléments */
+  font-weight: 700 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase;
 }
 
-/* Coins inférieurs du tableau */
+/* Première colonne avec style accentué (comme un label) */
+.markdown-body tbody td:first-child,
+.public-note-container .markdown-body tbody td:first-child,
+.public-note-content-wrapper .markdown-body tbody td:first-child {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Coins du tableau */
+.markdown-body thead tr:first-child th:first-child,
+.public-note-container .markdown-body thead tr:first-child th:first-child,
+.public-note-content-wrapper .markdown-body thead tr:first-child th:first-child {
+  border-top-left-radius: calc(var(--radius-md) - 1px);
+}
+
+.markdown-body thead tr:first-child th:last-child,
+.public-note-container .markdown-body thead tr:first-child th:last-child,
+.public-note-content-wrapper .markdown-body thead tr:first-child th:last-child {
+  border-top-right-radius: calc(var(--radius-md) - 1px);
+}
+
 .markdown-body tbody tr:last-child td:first-child,
 .public-note-container .markdown-body tbody tr:last-child td:first-child,
 .public-note-content-wrapper .markdown-body tbody tr:last-child td:first-child {
-  border-bottom-left-radius: var(--radius-md);
+  border-bottom-left-radius: calc(var(--radius-md) - 1px);
 }
 
 .markdown-body tbody tr:last-child td:last-child,
 .public-note-container .markdown-body tbody tr:last-child td:last-child,
 .public-note-content-wrapper .markdown-body tbody tr:last-child td:last-child {
-  border-bottom-right-radius: var(--radius-md);
+  border-bottom-right-radius: calc(var(--radius-md) - 1px);
 }
 
   .markdown-body tr:last-child td,
@@ -514,22 +546,26 @@ a {
     border-bottom: none;
   }
 
+  /* Zebra striping subtil */
   .markdown-body tbody tr:nth-child(odd) td,
   .public-note-container .markdown-body tbody tr:nth-child(odd) td,
   .public-note-content-wrapper .markdown-body tbody tr:nth-child(odd) td {
-    background-color: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
+    background-color: var(--color-bg-content);
   }
 
   .markdown-body tbody tr:nth-child(even) td,
   .public-note-container .markdown-body tbody tr:nth-child(even) td,
   .public-note-content-wrapper .markdown-body tbody tr:nth-child(even) td {
-    background-color: var(--color-bg-table-alternate); /* Variable unifiée pour l'alternance des tableaux */
+    background-color: var(--surface-tertiary);
   }
+  
+  /* Hover effect élégant et visible */
   .markdown-body tbody tr:hover td,
   .public-note-container .markdown-body tbody tr:hover td,
   .public-note-content-wrapper .markdown-body tbody tr:hover td {
-    background-color: var(--surface-hover);
-    transition: background-color 0.2s ease;
+    background-color: var(--surface-hover) !important;
+    transition: background-color 0.15s ease;
+    cursor: pointer;
   }
 
   .markdown-body table p,
