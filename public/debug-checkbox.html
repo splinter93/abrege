@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Checkboxes</title>
+    <style>
+        body {
+            padding: 40px;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            border: 2px solid #333;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        h2 {
+            color: #ff6b35;
+            margin-bottom: 20px;
+        }
+        
+        /* Copie des styles markdown.css */
+        .markdown-body li:has(> input[type="checkbox"]) {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.4em;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            width: 100%;
+            padding-left: 0;
+            margin-left: 0;
+            list-style: none;
+            border: 1px solid yellow; /* DEBUG */
+            background: rgba(255, 255, 0, 0.1); /* DEBUG */
+        }
+        
+        .markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
+            flex: 1;
+            margin: 0;
+            padding: 0;
+            min-width: 0;
+            border: 1px solid cyan; /* DEBUG */
+            background: rgba(0, 255, 255, 0.1); /* DEBUG */
+        }
+        
+        .markdown-body input[type='checkbox'] {
+            appearance: none;
+            width: 1.2em;
+            height: 1.2em;
+            border: 2px solid #666;
+            border-radius: 6px;
+            background: #2a2a2a;
+            display: inline-block;
+            vertical-align: top;
+            position: relative;
+            cursor: pointer;
+            margin: 0;
+            flex-shrink: 0;
+            border: 2px solid red; /* DEBUG */
+        }
+        
+        /* Tiptap styles */
+        .ProseMirror li[data-type="taskItem"] {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.4em;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            width: 100%;
+            padding-left: 0;
+            margin-left: 0;
+            list-style: none;
+            border: 1px solid yellow; /* DEBUG */
+            background: rgba(255, 255, 0, 0.1); /* DEBUG */
+        }
+        
+        .ProseMirror li[data-type="taskItem"] > *:not(input) {
+            flex: 1;
+            margin: 0;
+            padding: 0;
+            min-width: 0;
+            border: 1px solid cyan; /* DEBUG */
+            background: rgba(0, 255, 255, 0.1); /* DEBUG */
+        }
+        
+        .ProseMirror li[data-type="taskItem"] > label {
+            display: contents;
+        }
+        
+        .ProseMirror li[data-type="taskItem"] > div {
+            flex: 1;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .ProseMirror li[data-type="taskItem"] p {
+            margin: 0;
+            display: inline;
+        }
+        
+        .ProseMirror li[data-type="taskItem"] input[type="checkbox"] {
+            margin: 0;
+            flex-shrink: 0;
+            flex-grow: 0;
+            order: -1;
+        }
+        
+        .debug-info {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnostic Checkboxes</h1>
+    
+    <div class="test-section">
+        <h2>Test 1 : Structure Simple (markdown-body)</h2>
+        <ul class="markdown-body">
+            <li>
+                <input type="checkbox">
+                <span>Texte à côté de la checkbox</span>
+            </li>
+        </ul>
+        <div class="debug-info">
+            Structure : li > input + span<br>
+            Flexbox : display: flex, gap: 0.4em
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2 : Structure avec DIV wrapper</h2>
+        <ul class="markdown-body">
+            <li>
+                <input type="checkbox">
+                <div>Texte dans un div wrapper</div>
+            </li>
+        </ul>
+        <div class="debug-info">
+            Structure : li > input + div<br>
+            div devrait avoir flex: 1
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3 : Structure Tiptap (taskItem)</h2>
+        <ul class="ProseMirror">
+            <li data-type="taskItem">
+                <label>
+                    <input type="checkbox">
+                    <span>Texte dans un label</span>
+                </label>
+            </li>
+        </ul>
+        <div class="debug-info">
+            Structure : li > label > input + span<br>
+            label a display: contents
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 4 : Structure Tiptap avec DIV</h2>
+        <ul class="ProseMirror">
+            <li data-type="taskItem">
+                <input type="checkbox">
+                <div>
+                    <p>Texte dans un div > p</p>
+                </div>
+            </li>
+        </ul>
+        <div class="debug-info">
+            Structure : li > input + div > p<br>
+            p devrait avoir display: inline
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 5 : Structure problématique (block dans flex)</h2>
+        <ul class="markdown-body">
+            <li>
+                <input type="checkbox">
+                <p style="display: block;">Texte en block (devrait casser)</p>
+            </li>
+        </ul>
+        <div class="debug-info">
+            Structure : li > input + p[display: block]<br>
+            ⚠️ display: block casse le flexbox horizontal
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 6 : Le vrai problème ?</h2>
+        <ul class="ProseMirror">
+            <li data-type="taskItem">
+                <input type="checkbox">
+                <div style="display: block;">
+                    <p>Si le div est en block, ça casse tout</p>
+                </div>
+            </li>
+        </ul>
+        <div class="debug-info">
+            Structure : li > input + div[display: block]<br>
+            ⚠️ C'est probablement ça le problème !
+        </div>
+    </div>
+    
+    <script>
+        // Inspection live
+        document.addEventListener('DOMContentLoaded', () => {
+            const lis = document.querySelectorAll('li');
+            lis.forEach((li, index) => {
+                console.log(`\n=== LI ${index + 1} ===`);
+                console.log('Display:', window.getComputedStyle(li).display);
+                console.log('Flex-direction:', window.getComputedStyle(li).flexDirection);
+                console.log('Gap:', window.getComputedStyle(li).gap);
+                console.log('HTML:', li.innerHTML);
+                
+                li.childNodes.forEach((child, i) => {
+                    if (child.nodeType === 1) { // Element
+                        console.log(`  Child ${i}:`, child.tagName, 'display:', window.getComputedStyle(child).display);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+

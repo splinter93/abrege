@@ -134,27 +134,25 @@ html {
 
 /* Aligner correctement le texte avec les checkboxes */
 .markdown-body li:has(> input[type="checkbox"]) {
-  display: flex ;
-  align-items: flex-start ;
-  gap: 0.3em ;
-  flex-direction: row ;
-  flex-wrap: nowrap ;
-  width: 100% ;
-  padding-left: 0 ;
-  margin-left: 0 ;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.4em !important;
+  flex-direction: row !important;
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
 }
 
-.markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
-  flex: 1 ;
-  margin: 0 ;
-  padding: 0 ;
-  min-width: 0 ;
-  display: inline ;
+.markdown-body li:has(> input[type="checkbox"]) > input[type="checkbox"] {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
 }
 
-/* Règle de fallback pour les navigateurs qui ne supportent pas :has() */
-.markdown-body li input[type="checkbox"] {
-  margin-left: -1.5em; /* Décaler vers la gauche pour compenser le padding de la liste */
+.markdown-body li:has(> input[type="checkbox"]) > *:not(input[type="checkbox"]) {
+  flex: 1 1 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
 }
 
 /* Supprimer les bullets de tous les éléments avec checkbox (méthode alternative) */
@@ -163,20 +161,37 @@ html {
   list-style: none ;
 }
 
-/* STYLES SPÉCIFIQUES POUR TIPTAP TASK ITEMS */
-/* Cibler les éléments TaskItem de Tiptap */
+/* ==========================================================================
+   TIPTAP TASK ITEMS - STRUCTURE CUSTOM CONTROLÉE
+   ========================================================================== 
+   
+   Structure HTML générée par CustomTaskItem :
+   <li data-type="taskItem">
+     <label>                          ← display: contents (transparent)
+       <input type="checkbox">        ← flex: 0 0 auto (ne bouge pas)
+       <span class="task-item-content"> ← flex: 1 (prend l'espace)
+         <p>Texte ici</p>
+       </span>
+     </label>
+   </li>
+*/
+
+/* Le li est le container flexbox horizontal */
 .ProseMirror li[data-type="taskItem"],
 .ProseMirror .task-list-item {
-  list-style: none ;
-  list-style-type: none ;
-  padding-left: 0 ;
-  margin-left: 0 ;
-  display: flex ;
-  align-items: flex-start ;
-  gap: 0.3em ;
-  flex-direction: row ;
-  flex-wrap: nowrap ;
-  width: 100% ;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 0.4em !important;
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Le label est transparent pour le layout (display: contents) */
+.ProseMirror li[data-type="taskItem"] > label,
+.ProseMirror .task-list-item > label {
+  display: contents !important;
 }
 
 /* Supprimer les pseudo-éléments des TaskItem */
@@ -184,76 +199,43 @@ html {
 .ProseMirror li[data-type="taskItem"]::after,
 .ProseMirror .task-list-item::before,
 .ProseMirror .task-list-item::after {
-  content: none ;
-  display: none ;
+  content: none !important;
+  display: none !important;
 }
 
-/* Aligner le contenu des TaskItem */
-.ProseMirror li[data-type="taskItem"] > *:not(input),
-.ProseMirror .task-list-item > *:not(input) {
-  flex: 1 ;
-  margin: 0 ;
-  padding: 0 ;
-  min-width: 0 ;
-  display: inline ;
-}
-
-/* Styles spécifiques pour les checkboxes dans les TaskItem */
+/* La checkbox ne doit JAMAIS rétrécir ou grandir */
 .ProseMirror li[data-type="taskItem"] input[type="checkbox"],
 .ProseMirror .task-list-item input[type="checkbox"] {
-  margin: 0 ;
-  margin-top: 0.1em ;
-  flex-shrink: 0 ;
-  flex-grow: 0 ;
-  order: -1 ;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  align-self: flex-start !important;
 }
 
-/* RÈGLES ULTRA-AGRESSIVES pour forcer l'alignement horizontal */
-.markdown-body li:has(> input[type="checkbox"]),
-.ProseMirror li[data-type="taskItem"],
-.ProseMirror .task-list-item {
-  white-space: nowrap ;
-  overflow: visible ;
+/* Le span de contenu prend tout l'espace restant */
+.ProseMirror li[data-type="taskItem"] .task-item-content,
+.ProseMirror .task-list-item .task-item-content {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* Forcer la checkbox à rester sur la même ligne */
-.markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"],
-.ProseMirror li[data-type="taskItem"] input[type="checkbox"],
-.ProseMirror .task-list-item input[type="checkbox"] {
-  order: -1 ;
-  flex-shrink: 0 ;
-  flex-grow: 0 ;
+/* Les paragraphes dans le contenu n'ont pas de marge */
+.ProseMirror li[data-type="taskItem"] .task-item-content p,
+.ProseMirror .task-list-item .task-item-content p {
+  margin: 0 !important;
+  display: inline !important;
 }
 
-/* Forcer le contenu à rester sur la même ligne */
-.markdown-body li:has(> input[type="checkbox"]) > *:not(input),
-.ProseMirror li[data-type="taskItem"] > *:not(input),
-.ProseMirror .task-list-item > *:not(input) {
-  order: 1 ;
-  flex-shrink: 1 ;
-  white-space: normal ;
-}
+/* ===== RÈGLES ULTRA-AGRESSIVES SUPPRIMÉES =====
+   Ces règles avec white-space: nowrap cassaient le layout.
+   Le flexbox naturel suffit amplement.
+   ============================================== */
 
-/* APPROCHE ALTERNATIVE : Styles universels pour TOUS les inputs checkbox */
-.markdown-body input[type="checkbox"],
-.ProseMirror input[type="checkbox"] {
-  float: left ;
-  margin: 0.1em 0.6em 0 0 ;
-  clear: both ;
-}
-
-/* Positionner la checkbox en absolu si le flexbox ne marche pas */
-.markdown-body li:has(input[type="checkbox"]) {
-  padding-left: 1.75em ;
-  position: relative ;
-  margin-left: 0 ;
-}
-
-.markdown-body li:has(input[type="checkbox"]) input[type="checkbox"] {
-  position: absolute ;
-  left: 0.2em ;
-  top: 0.1em ;
-}
+/* ===== APPROCHES FLOAT ET ABSOLUTE SUPPRIMÉES =====
+   Ces styles causaient des conflits avec l'approche flexbox.
+   Seule l'approche flexbox moderne est conservée ci-dessous.
+   ================================================== */
 
 /* RESTAURER les bullets normales pour les listes SANS checkboxes */
 .markdown-body ul li:not(:has(input[type="checkbox"])) {
@@ -597,8 +579,7 @@ a {
   position: relative;
   transition: border-color 0.18s, background 0.18s;
   cursor: pointer;
-  margin-right: 0.4em;
-  margin-top: 0.1em; /* Légèrement décalé vers le bas pour l'alignement */
+  margin: 0; /* Pas de marge - l'espacement est géré par gap dans flexbox */
   flex-shrink: 0; /* Empêcher la réduction de taille */
 }
 

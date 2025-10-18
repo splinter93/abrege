@@ -1021,6 +1021,14 @@ p {
   -moz-osx-font-smoothing: grayscale;     /* Lissage sur macOS */
 }
 
+/* EXCEPTION: Paragraphes dans les task items - pas de marge ! */
+.ProseMirror li[data-type="taskItem"] p,
+.ProseMirror .task-list-item p,
+.markdown-body li:has(> input[type="checkbox"]) p {
+  margin: 0 !important;
+  display: inline !important; /* Force inline pour rester sur la même ligne */
+}
+
 .markdown-body p:last-child,
 .ProseMirror p:last-child,
 .editor-content p:last-child,

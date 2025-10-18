@@ -24,6 +24,12 @@
 /* Import des utilitaires chat */
 @import '../styles/toolbar-consolidated.css';
 
+/* ☢️ FIX NUCLÉAIRE CHECKBOXES - DOIT ÊTRE EN DERNIER ! */
+/* @import '../styles/checkbox-fix-nuclear.css'; */ /* DÉSACTIVÉ - Trop compliqué */
+
+/* ✨ APPROCHE SIMPLE - COPIER LES LISTES NORMALES */
+@import '../styles/checkbox-simple-approach.css';
+
 :root {
   /* FALLBACKS - Éviter le flash blanc */
   --background: var(--color-bg-primary, #121212);

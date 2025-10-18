@@ -461,6 +461,25 @@
    CHECKBOXES - STYLE CHATGPT
    ======================================== */
 
+/* Listes avec checkboxes - Approche flexbox */
+.chat-markdown li:has(> input[type='checkbox']),
+.chat-markdown .task-list-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.5rem !important; /* Espacement ChatGPT-style */
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+.chat-markdown li:has(> input[type='checkbox']) > *:not(input),
+.chat-markdown .task-list-item > *:not(input) {
+  flex: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+}
+
 .chat-markdown input[type='checkbox'] {
   appearance: none !important;
   width: 1.25rem !important;
@@ -473,8 +492,7 @@
   position: relative !important;
   transition: all 0.2s ease !important;
   cursor: pointer !important;
-  margin-right: 0.5rem !important;
-  margin-top: 0.125rem !important;
+  margin: 0 !important; /* Pas de marge - géré par gap */
   flex-shrink: 0 !important;
 }
 

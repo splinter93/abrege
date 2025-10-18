@@ -303,8 +303,7 @@ body.public-note-page {
   position: relative ;
   transition: border-color 0.18s, background 0.18s ;
   cursor: pointer ;
-  margin-right: 0.8em ;
-  margin-top: 0 ;
+  margin: 0 ; /* Pas de marge - géré par gap dans flexbox */
   flex-shrink: 0 ;
 }
 
@@ -334,21 +333,22 @@ body.public-note-page {
   outline-offset: 2px ;
 }
 
-/* Correction des listes avec checkboxes */
+/* Correction des listes avec checkboxes - APPROCHE FLEXBOX PURE */
 .public-note-container .markdown-body li:has(> input[type="checkbox"]) {
   display: flex ;
-  align-items: center ;
-  gap: 0.3em ;
+  align-items: flex-start ;
+  gap: 0.4em ; /* Espacement entre checkbox et texte */
   list-style: none ;
-  padding-left: 1.3em;
+  padding-left: 0 ;
   margin-left: 0 ;
-  position: relative ;
 }
 
 /* Contenu des éléments avec checkbox */
 .public-note-container .markdown-body li:has(> input[type="checkbox"]) > *:not(input) {
-  display: inline ;
+  flex: 1 ;
   margin: 0 ;
+  padding: 0 ;
+  min-width: 0 ;
 }
 
 /* Paragraphes dans les éléments avec checkbox */
@@ -357,14 +357,10 @@ body.public-note-page {
   margin: 0 ;
 }
 
-/* Alignement vertical des checkboxes */
-.public-note-container .markdown-body input[type='checkbox'] {
-  position: absolute ;
-  left: 0.2em ;
-  top: 0.1em ;
-  vertical-align: middle ;
-  margin-top: 0 ;
-  margin-bottom: 0 ;
+/* Checkboxes dans les notes publiques - pas de positionnement absolu */
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) input[type='checkbox'] {
+  margin: 0 ;
+  flex-shrink: 0 ;
 }
 
 /* ==========================================================================

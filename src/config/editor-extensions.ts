@@ -113,6 +113,9 @@ export function createEditorExtensions(
       TaskList,
       TaskItem.configure({
         nested: true,
+        HTMLAttributes: {
+          class: 'task-item-wrapper',
+        },
       }),
       
       // ✅ Tables réactivées
@@ -200,6 +203,9 @@ export function createEditorExtensions(
       TaskList,
       TaskItem.configure({
         nested: true,
+        HTMLAttributes: {
+          class: 'task-item-wrapper',
+        },
       }),
       Table.configure({ resizable: true }),
       TableRow,

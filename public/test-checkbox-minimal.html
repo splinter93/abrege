@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Checkbox Minimal</title>
+    <style>
+        body {
+            padding: 40px;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Reset de base */
+        * {
+            box-sizing: border-box;
+        }
+
+        .test {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+
+        h2 {
+            color: #ff6b35;
+            margin-bottom: 15px;
+        }
+
+        /* Style checkbox de base */
+        input[type="checkbox"] {
+            appearance: none;
+            width: 1.2em;
+            height: 1.2em;
+            border: 2px solid #666;
+            border-radius: 6px;
+            background: #2a2a2a;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"]:checked {
+            background: #ff6b35;
+            border-color: #ff6b35;
+        }
+
+        /* TEST 1: Structure simple avec flexbox */
+        .test-1 li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5em;
+            list-style: none;
+            padding: 5px 0;
+            border: 1px solid lime;
+        }
+
+        .test-1 input[type="checkbox"] {
+            flex: 0 0 auto;
+            margin: 0;
+            border: 2px solid red;
+        }
+
+        .test-1 span {
+            flex: 1;
+            border: 1px solid cyan;
+        }
+
+        /* TEST 2: Avec label et display: contents */
+        .test-2 li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5em;
+            list-style: none;
+            padding: 5px 0;
+            border: 1px solid lime;
+        }
+
+        .test-2 label {
+            display: contents;
+        }
+
+        .test-2 input[type="checkbox"] {
+            flex: 0 0 auto;
+            margin: 0;
+            border: 2px solid red;
+        }
+
+        .test-2 span {
+            flex: 1;
+            border: 1px solid cyan;
+        }
+
+        /* TEST 3: Avec label et display: flex */
+        .test-3 li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5em;
+            list-style: none;
+            padding: 5px 0;
+            border: 1px solid lime;
+        }
+
+        .test-3 label {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5em;
+            flex: 1;
+            border: 1px solid yellow;
+        }
+
+        .test-3 input[type="checkbox"] {
+            flex: 0 0 auto;
+            margin: 0;
+            border: 2px solid red;
+        }
+
+        .test-3 span {
+            flex: 1;
+            border: 1px solid cyan;
+        }
+
+        /* TEST 4: Avec paragraphe (le vrai problème ?) */
+        .test-4 li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5em;
+            list-style: none;
+            padding: 5px 0;
+            border: 1px solid lime;
+        }
+
+        .test-4 label {
+            display: contents;
+        }
+
+        .test-4 input[type="checkbox"] {
+            flex: 0 0 auto;
+            margin: 0;
+            border: 2px solid red;
+        }
+
+        .test-4 span {
+            flex: 1;
+            border: 1px solid cyan;
+        }
+
+        .test-4 p {
+            margin: 0;
+            display: inline;
+            border: 1px solid magenta;
+        }
+
+        /* TEST 5: Sans label du tout */
+        .test-5 li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5em;
+            list-style: none;
+            padding: 5px 0;
+            border: 1px solid lime;
+        }
+
+        .test-5 input[type="checkbox"] {
+            flex: 0 0 auto;
+            margin: 0;
+            border: 2px solid red;
+        }
+
+        .test-5 div {
+            flex: 1;
+            border: 1px solid cyan;
+        }
+
+        .test-5 p {
+            margin: 0;
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔬 Tests Checkbox - Trouver le problème</h1>
+
+    <div class="test test-1">
+        <h2>Test 1 : Structure simple (li > input + span)</h2>
+        <ul>
+            <li>
+                <input type="checkbox">
+                <span>Texte à côté ✅</span>
+            </li>
+        </ul>
+        <code>li { display: flex }</code>
+    </div>
+
+    <div class="test test-2">
+        <h2>Test 2 : Avec label (display: contents)</h2>
+        <ul>
+            <li>
+                <label>
+                    <input type="checkbox">
+                    <span>Texte à côté ✅</span>
+                </label>
+            </li>
+        </ul>
+        <code>label { display: contents }</code>
+    </div>
+
+    <div class="test test-3">
+        <h2>Test 3 : Label avec display: flex</h2>
+        <ul>
+            <li>
+                <label>
+                    <input type="checkbox">
+                    <span>Texte à côté ✅</span>
+                </label>
+            </li>
+        </ul>
+        <code>label { display: flex }</code>
+    </div>
+
+    <div class="test test-4">
+        <h2>Test 4 : Avec paragraphe dans span</h2>
+        <ul>
+            <li>
+                <label>
+                    <input type="checkbox">
+                    <span>
+                        <p>Texte dans un paragraphe</p>
+                    </span>
+                </label>
+            </li>
+        </ul>
+        <code>p { margin: 0; display: inline }</code>
+    </div>
+
+    <div class="test test-5">
+        <h2>Test 5 : Sans label (li > input + div)</h2>
+        <ul>
+            <li>
+                <input type="checkbox">
+                <div>
+                    <p>Texte dans div > p</p>
+                </div>
+            </li>
+        </ul>
+        <code>Sans label</code>
+    </div>
+
+    <script>
+        // Log des computed styles au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('=== STYLES COMPUTED ===');
+            document.querySelectorAll('.test li').forEach((li, i) => {
+                console.log(`\nTest ${i + 1}:`);
+                console.log('  LI display:', window.getComputedStyle(li).display);
+                console.log('  LI flex-direction:', window.getComputedStyle(li).flexDirection);
+                
+                const children = Array.from(li.children);
+                children.forEach((child, j) => {
+                    const styles = window.getComputedStyle(child);
+                    console.log(`  Child ${j} (${child.tagName}):`, {
+                        display: styles.display,
+                        flex: styles.flex,
+                        position: styles.position,
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
