@@ -7,7 +7,7 @@
    VARIABLES
    ================================================================= */
 :root {
-  --notion-handle-size: 32px; /* Même taille que le bouton + */
+  --notion-handle-size: 44px; /* Taille augmentée pour meilleure visibilité */
   --notion-handle-gap: 8px;
   --notion-handle-bg: rgba(255, 255, 255, 0.95);
   --notion-handle-bg-hover: rgba(255, 255, 255, 1);
@@ -53,8 +53,8 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 32px !important; /* Même taille que le bouton + */
-  height: 32px !important;
+  width: var(--notion-handle-size) !important;
+  height: var(--notion-handle-size) !important;
   padding: 0 !important;
   margin: 0 !important;
   background: transparent !important;
@@ -66,13 +66,13 @@
 }
 
 .notion-drag-handle-btn:hover {
-  background: rgba(255, 255, 255, 0.05) !important; /* Hover léger comme le bouton + */
-  transform: none !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: none !important; /* Pas de scale pour rester cohérent avec le bouton + */
 }
 
 @media (prefers-color-scheme: dark) {
   .notion-drag-handle-btn:hover {
-    background: rgba(255, 255, 255, 0.05) !important; /* Cohérent avec le bouton + */
+    background: rgba(255, 255, 255, 0.1) !important;
   }
 }
 
@@ -85,8 +85,8 @@
    ICÔNE
    ================================================================= */
 .notion-drag-handle-btn svg {
-  width: 16px !important; /* Réduit pour être cohérent avec le bouton + */
-  height: 16px !important;
+  width: 20px !important;
+  height: 34px !important; /* Encore plus allongé verticalement */
   color: var(--notion-handle-icon) !important;
   transition: color 150ms ease !important;
 }
@@ -100,12 +100,12 @@
    ================================================================= */
 @media (max-width: 768px) {
   :root {
-    --notion-handle-size: 32px; /* Même taille que desktop */
+    --notion-handle-size: 40px; /* Encore plus gros sur mobile */
   }
   
   .notion-drag-handle-btn svg {
-    width: 16px !important;
-    height: 16px !important;
+    width: 24px !important;
+    height: 24px !important;
   }
 }
 

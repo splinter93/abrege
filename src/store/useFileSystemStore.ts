@@ -130,31 +130,12 @@ export const useFileSystemStore = create<FileSystemState>()((set) => ({
     return { notes: n }; 
   }),
   
-  updateNote: (id: string, patch: Partial<Note>) => {
-    console.log('📦 [STORE] updateNote appelé', {
-      noteId: id,
-      patch: Object.keys(patch),
-      hasMarkdownContent: !!patch.markdown_content,
-      markdownLength: patch.markdown_content?.length,
-      markdownPreview: patch.markdown_content?.substring(0, 100)
-    });
-    
-    return set(state => {
-      const updated = { 
-        notes: { 
-          ...state.notes, 
-          [id]: { ...state.notes[id], ...patch } 
-        } 
-      };
-      
-      console.log('📦 [STORE] updateNote terminé', {
-        noteId: id,
-        updatedMarkdownLength: updated.notes[id]?.markdown_content?.length
-      });
-      
-      return updated;
-    });
-  },
+  updateNote: (id: string, patch: Partial<Note>) => set(state => ({ 
+    notes: { 
+      ...state.notes, 
+      [id]: { ...state.notes[id], ...patch } 
+    } 
+  })),
   
   renameNote: (id: string, title: string) => set(state => ({ 
     notes: { 
