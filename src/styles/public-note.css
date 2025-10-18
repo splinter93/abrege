@@ -256,6 +256,14 @@
   overflow-x: hidden; /* Évite le scroll horizontal */
 }
 
+/* Contenu TOUJOURS CENTRÉ - règle de base */
+.public-note-container .editor-container-width {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  /* Largeur définie par typography.css (800px ou 1000px) */
+  /* Le centrage automatique s'occupe du positionnement */
+}
+
 /* Forcer le thème sombre sur html et body de la page publique */
 html.public-note-page,
 body.public-note-page {
@@ -433,30 +441,27 @@ body.public-note-page {
     padding-bottom: 32px;
   }
 
-  /* Largeur adaptative du contenu */
+  /* Contenu TOUJOURS CENTRÉ avec padding de sécurité */
   .editor-container-width {
+    margin-left: auto !important;
+    margin-right: auto !important;
     padding-left: 16px !important;
     padding-right: 16px !important;
-    max-width: 100vw !important;
-    width: 100% !important;
+    /* Largeur reste fixe, le centrage s'adapte */
   }
 
-  /* Image d'en-tête - hauteur réduite, pleine largeur */
+  /* Image d'en-tête - hauteur réduite */
   .public-header-image {
     height: var(--editor-header-image-height-mobile) ; /* 200px - cohérent avec l'éditeur */
     margin-bottom: 16px;
-    margin-left: 0;
-    margin-right: 0;
-    width: 100%;
-    max-width: 100%;
   }
   
-  /* Images dans le contenu - pleine largeur */
+  /* Images dans le contenu - TOUJOURS LISIBLES */
   .public-note-container .markdown-body img {
-    width: 100%;
     max-width: 100%;
-    margin-left: 0;
-    margin-right: 0;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   /* Titre dans l'image - ajustements */
@@ -532,28 +537,25 @@ body.public-note-page {
     padding-bottom: 24px;
   }
 
-  /* Largeur adaptative du contenu - encore plus réduit */
+  /* Contenu TOUJOURS CENTRÉ - padding de sécurité réduit */
   .editor-container-width {
+    margin-left: auto !important;
+    margin-right: auto !important;
     padding-left: 12px !important;
     padding-right: 12px !important;
-    max-width: 100vw !important;
-    width: 100% !important;
+    /* Largeur reste fixe, le centrage s'adapte */
   }
 
-  /* Image d'en-tête - encore plus petite, pleine largeur */
+  /* Image d'en-tête - encore plus petite */
   .public-header-image {
     height: 150px ;
     margin-bottom: 12px;
-    margin-left: 0;
-    margin-right: 0;
-    width: 100%;
-    max-width: 100%;
   }
   
-  /* Images dans le contenu */
+  /* Images dans le contenu - TOUJOURS LISIBLES */
   .public-note-container .markdown-body img {
-    width: 100%;
     max-width: 100%;
+    height: auto;
   }
 
   /* Titre dans l'image - très compact */
