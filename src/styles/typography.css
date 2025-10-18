@@ -1097,7 +1097,8 @@ p:last-child {
   margin: var(--editor-block-spacing) 0; /* 2em */
   max-width: 100%;
   height: auto;
-  /* Aucun encadré - design épuré */
+  border: none; /* Aucun encadré - design épuré */
+  box-shadow: none;
 }
 
 /* ==========================================================================

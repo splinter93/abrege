@@ -156,14 +156,14 @@
 }
 
 .toolbar-btn.active {
-  background: var(--accent-primary);
-  color: white;
+  background: #e55a2c !important;
+  color: white !important;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(var(--accent-primary-rgb, 99, 102, 241), 0.3);
+  box-shadow: 0 2px 8px rgba(229, 90, 44, 0.3) !important;
 }
 
 .toolbar-btn.active:hover {
-  background: var(--accent-hover);
+  background: #d04a1c !important;
   transform: scale(var(--toolbar-hover-scale));
 }
 
@@ -229,8 +229,8 @@
 
 /* États pour AudioRecorder */
 .toolbar-btn.processing {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: rgba(229, 90, 44, 0.1);
+  color: #e55a2c;
   animation: pulse-blue 1.5s ease-in-out infinite;
 }
 

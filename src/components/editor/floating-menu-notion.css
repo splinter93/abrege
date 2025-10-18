@@ -21,9 +21,9 @@
   --fm-text-secondary: rgba(255, 255, 255, 0.5);
   --fm-text-tertiary: #9b9b9b;
   
-  --fm-accent: #3b82f6; /* Blue accent */
-  --fm-accent-hover: #1a73d1;
-  --fm-accent-bg: rgba(59, 130, 246, 0.2);
+  --fm-accent: #e55a2c; /* Orange accent - cohérent avec le design system */
+  --fm-accent-hover: #d04a1c;
+  --fm-accent-bg: rgba(229, 90, 44, 0.2);
   
   --fm-button-bg: transparent;
   --fm-button-bg-hover: rgba(255, 255, 255, 0.08);
@@ -283,6 +283,6 @@
     --fm-text-tertiary: #808080;
     
     --fm-button-bg-hover: rgba(255, 255, 255, 0.08);
-    --fm-button-bg-active: rgba(35, 131, 226, 0.2);
+    --fm-button-bg-active: rgba(229, 90, 44, 0.2); /* Orange - cohérent */
   }
 }

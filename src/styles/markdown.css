@@ -600,8 +600,9 @@ a {
   height: auto;
   margin: 1.75rem 0;
   display: block;
-  border-radius: 8px;
-  /* Aucun encadré - design épuré */
+  border: none; /* Aucun encadré - design épuré */
+  box-shadow: none;
+  /* Pas de border-radius pour un look plus épuré */
 }
 
 .markdown-body img:hover,
@@ -985,7 +986,8 @@ a {
   max-width: 100%;
   margin: 1.5rem 0;
   display: block;
-  /* Aucun encadré - design épuré */
+  border: none; /* Aucun encadré - design épuré */
+  box-shadow: none;
 }
 
 .ProseMirror img:hover {
