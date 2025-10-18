@@ -122,18 +122,21 @@
 /* Blockquotes - Utilise les styles de l'éditeur depuis markdown.css */
 
 /* ==========================================================================
-   IMAGES - Scope pour page publique
+   IMAGES - Scope pour page publique (Largeur complète)
    ========================================================================== */
 
 .public-note-container .markdown-body img {
+  width: 100%;
   max-width: 100%;
   height: auto;
   border-radius: 8px;
   margin: 1.5rem 0;
+  display: block;
 }
 
 .public-note-container .markdown-body .editor-image-wrapper {
   margin: 1.5rem 0;
-  text-align: center;
+  width: 100%;
+  display: block;
 }
 

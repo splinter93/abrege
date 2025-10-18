@@ -595,9 +595,12 @@ a {
 .markdown-body img,
 .public-note-container .markdown-body img,
 .public-note-content-wrapper .markdown-body img {
+  width: 100%;
   max-width: 100%;
+  height: auto;
   margin: 1.75rem 0;
   display: block;
+  border-radius: 8px;
   /* Aucun encadré - design épuré */
 }
 
