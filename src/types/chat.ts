@@ -6,6 +6,32 @@
 import type { ToolCall, ToolResult } from '@/hooks/useChatHandlers';
 
 /**
+ * Configuration d'un agent de chat
+ */
+export interface Agent {
+  id: string;
+  name: string;
+  slug: string;
+  display_name?: string;
+  description?: string;
+  model: string;
+  provider?: string;
+  system_instructions?: string;
+  instructions?: string;
+  personality?: string;
+  expertise?: string[];
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+  is_active?: boolean;
+  capabilities?: string[];
+  api_v2_capabilities?: string[];
+  profile_picture?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
  * Message de base du chat
  */
 export interface BaseMessage {

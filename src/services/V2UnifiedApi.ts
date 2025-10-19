@@ -1,6 +1,6 @@
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 
-import { simpleLogger as logger } from '@/utils/logger';
+import { simpleLogger as logger, LogCategory } from '@/utils/logger';
 
 
 // Types pour les données d'API (compatibles avec V1)
@@ -211,7 +211,7 @@ export class V2UnifiedApi {
       return fallbackHeaders;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        logger.error('API', `[V2UnifiedApi] Erreur récupération headers`, {
+        logger.error(LogCategory.API, `[V2UnifiedApi] Erreur récupération headers`, {
           error: error instanceof Error ? error.message : 'Erreur inconnue',
           stack: error instanceof Error ? error.stack : 'Pas de stack trace'
         });
@@ -548,7 +548,7 @@ export class V2UnifiedApi {
 
     } catch (error) {
       const duration = Date.now() - startTime;
-      logger.error('[V2UnifiedApi] ❌ Erreur création dossier', { folderData, duration }, error instanceof Error ? error : new Error(String(error)));
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur création dossier', { folderData, duration, error: error instanceof Error ? error.message : String(error) });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -627,7 +627,7 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur mise à jour dossier', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur mise à jour dossier', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -703,7 +703,7 @@ export class V2UnifiedApi {
       
       return { success: true };
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur suppression dossier', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur suppression dossier', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -796,7 +796,7 @@ export class V2UnifiedApi {
 
       return result;
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur déplacement note', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur déplacement note', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -882,7 +882,7 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur déplacement dossier', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur déplacement dossier', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1016,7 +1016,7 @@ export class V2UnifiedApi {
         duration
       };
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur mise à jour classeur', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur mise à jour classeur', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1094,7 +1094,7 @@ export class V2UnifiedApi {
       
       return { success: true };
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur suppression classeur', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur suppression classeur', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1140,7 +1140,7 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur ajout contenu note', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur ajout contenu note', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1172,7 +1172,7 @@ export class V2UnifiedApi {
       const result = await response.json();
       return result;
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur récupération contenu note', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur récupération contenu note', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1224,7 +1224,7 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur récupération arbre classeur', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur récupération arbre classeur', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1253,7 +1253,7 @@ export class V2UnifiedApi {
       const result = await response.json();
       return result;
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur récupération classeurs', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur récupération classeurs', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1297,7 +1297,7 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur réorganisation classeurs', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur réorganisation classeurs', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -1378,7 +1378,7 @@ export class V2UnifiedApi {
       
       return { success: true, classeurs: classeursResult.classeurs };
     } catch (error) {
-      logger.error('API', '[V2UnifiedApi] ❌ Erreur chargement classeurs avec contenu', undefined, error instanceof Error ? error : undefined);
+      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur chargement classeurs avec contenu', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
       throw error;
     }
   }
