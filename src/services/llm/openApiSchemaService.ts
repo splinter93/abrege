@@ -51,19 +51,66 @@ export class OpenAPISchemaService {
   }
 
   /**
-   * Récupère les tools depuis un schéma OpenAPI
+   * ✅ NOUVEAU : Récupère les tools depuis un schéma par ID
    */
-  async getToolsFromSchema(schemaName: string = 'scrivia-api-v2'): Promise<Tool[]> {
+  async getToolsFromSchemaById(schemaId: string): Promise<Tool[]> {
     try {
-      // ✅ TEMPORAIRE : Forcer le rechargement pour voir les changements
-      // TODO: Retirer après debug
-      this.invalidateCache();
+      const cacheKey = `id:${schemaId}`;
       
       // Vérifier le cache
       const now = Date.now();
-      if (this.schemasCache.has(schemaName) && now - this.cacheTimestamp < this.CACHE_TTL) {
+      if (this.schemasCache.has(cacheKey) && now - this.cacheTimestamp < this.CACHE_TTL) {
+        logger.dev(`[OpenAPISchemaService] ✅ Cache hit pour schema ID ${schemaId}`);
+        return this.schemasCache.get(cacheKey)!;
+      }
+
+      logger.dev(`[OpenAPISchemaService] 📥 Chargement du schéma ${schemaId} depuis BDD...`);
+
+      // Récupérer depuis la BDD
+      const supabase = getSupabaseClient();
+      const { data: schema, error } = await supabase
+        .from('openapi_schemas')
+        .select('*')
+        .eq('id', schemaId)
+        .eq('status', 'active')
+        .single();
+
+      if (error || !schema) {
+        logger.error(`[OpenAPISchemaService] ❌ Schéma ID ${schemaId} non trouvé:`, error);
+        return [];
+      }
+
+      logger.dev(`[OpenAPISchemaService] ✅ Schéma chargé: ${schema.name} v${schema.version}`);
+
+      // Convertir en tools
+      const tools = this.convertOpenAPIToTools(schema.content);
+
+      // Mettre en cache
+      this.schemasCache.set(cacheKey, tools);
+      this.cacheTimestamp = now;
+
+      logger.dev(`[OpenAPISchemaService] ✅ ${tools.length} tools générés depuis le schéma`);
+
+      return tools;
+
+    } catch (error) {
+      logger.error('[OpenAPISchemaService] ❌ Erreur lors du chargement par ID:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Récupère les tools depuis un schéma OpenAPI par nom
+   */
+  async getToolsFromSchema(schemaName: string = 'scrivia-api-v2'): Promise<Tool[]> {
+    try {
+      const cacheKey = `name:${schemaName}`;
+      
+      // Vérifier le cache
+      const now = Date.now();
+      if (this.schemasCache.has(cacheKey) && now - this.cacheTimestamp < this.CACHE_TTL) {
         logger.dev(`[OpenAPISchemaService] ✅ Cache hit pour ${schemaName}`);
-        return this.schemasCache.get(schemaName)!;
+        return this.schemasCache.get(cacheKey)!;
       }
 
       logger.dev(`[OpenAPISchemaService] 📥 Chargement du schéma ${schemaName} depuis BDD...`);
@@ -88,7 +135,7 @@ export class OpenAPISchemaService {
       const tools = this.convertOpenAPIToTools(schema.content);
 
       // Mettre en cache
-      this.schemasCache.set(schemaName, tools);
+      this.schemasCache.set(cacheKey, tools);
       this.cacheTimestamp = now;
 
       logger.dev(`[OpenAPISchemaService] ✅ ${tools.length} tools générés depuis le schéma`);
