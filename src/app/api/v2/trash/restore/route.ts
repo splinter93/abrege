@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
+import { createClient } from '@supabase/supabase-js';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -139,11 +140,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  * Fonction utilitaire pour restaurer un élément de la corbeille
  */
 async function restoreFromTrash(
-  supabase: any,
+  supabase: ReturnType<typeof createClient>,
   tableName: string,
   resourceId: string,
   userId: string,
-  context: any
+  context: Record<string, unknown>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Vérifier que l'élément existe et est en corbeille
@@ -186,10 +187,10 @@ async function restoreFromTrash(
  * Fonction pour restaurer un fichier de la corbeille
  */
 async function restoreFileFromTrash(
-  supabase: any,
+  supabase: ReturnType<typeof createClient>,
   fileId: string,
   userId: string,
-  context: any
+  context: Record<string, unknown>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Vérifier que le fichier existe et est en corbeille

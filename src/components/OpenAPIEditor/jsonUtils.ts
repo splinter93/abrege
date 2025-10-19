@@ -6,7 +6,7 @@ import * as yaml from 'js-yaml';
 
 export interface ParseResult {
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
   position?: number;
   context?: string;
@@ -28,7 +28,7 @@ export function cleanAndValidateSchema(text: string): ParseResult {
   const isYAML = !cleanedText.startsWith('{') && !cleanedText.startsWith('[');
   
   try {
-    let data: any;
+    let data: unknown;
     
     if (isYAML) {
       // Parser YAML
@@ -94,7 +94,7 @@ export function cleanAndValidateJSON(text: string): ParseResult {
 /**
  * Valide qu'un objet est un schéma OpenAPI valide
  */
-export function validateOpenAPISchema(data: any): { valid: boolean; error?: string } {
+export function validateOpenAPISchema(data: unknown): { valid: boolean; error?: string } {
   if (!data || typeof data !== 'object') {
     return { valid: false, error: 'Le schéma doit être un objet' };
   }

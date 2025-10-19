@@ -177,8 +177,9 @@ export async function POST(request: NextRequest) {
           logger.warn(`[LLM Route] ⚠️ Erreur récupération agent par ID: ${agentByIdError.message}`);
         } else if (agentById) {
           agentConfig = agentById;
-          const hasInstructions = !!(agentById.system_instructions || (agentById as any).instructions);
-          logger.dev(`[LLM Route] ✅ Agent récupéré par ID: ${agentById.name} (ID: ${agentById.id})`);
+          const agentWithInstructions = agentById as { system_instructions?: string; instructions?: string; name: string; id: string };
+          const hasInstructions = !!(agentWithInstructions.system_instructions || agentWithInstructions.instructions);
+          logger.dev(`[LLM Route] ✅ Agent récupéré par ID: ${agentWithInstructions.name} (ID: ${agentWithInstructions.id})`);
           logger.dev(`[LLM Route] 🎯 Configuration agent (ID):`, {
             model: agentById.model,
             temperature: agentById.temperature,
@@ -208,8 +209,9 @@ export async function POST(request: NextRequest) {
           logger.warn(`[LLM Route] ⚠️ Erreur récupération agent ${provider}: ${agentError.message}`);
         } else if (agent) {
           agentConfig = agent;
-          const hasInstructions = !!(agent.system_instructions || (agent as any).instructions);
-          logger.dev(`[LLM Route] ✅ Agent récupéré: ${agent.name} (ID: ${agent.id})`);
+          const agentWithInstructions = agent as { system_instructions?: string; instructions?: string; name: string; id: string };
+          const hasInstructions = !!(agentWithInstructions.system_instructions || agentWithInstructions.instructions);
+          logger.dev(`[LLM Route] ✅ Agent récupéré: ${agentWithInstructions.name} (ID: ${agentWithInstructions.id})`);
           logger.dev(`[LLM Route] 🎯 Configuration agent (provider):`, {
             model: agent.model,
             temperature: agent.temperature,
@@ -240,8 +242,9 @@ export async function POST(request: NextRequest) {
           logger.warn(`[LLM Route] ⚠️ Erreur récupération agent par défaut: ${defaultAgentError.message}`);
         } else if (defaultAgent) {
           agentConfig = defaultAgent;
-          const hasInstructions = !!(defaultAgent.system_instructions || (defaultAgent as any).instructions);
-          logger.dev(`[LLM Route] ✅ Agent par défaut récupéré: ${defaultAgent.name} (ID: ${defaultAgent.id})`);
+          const agentWithInstructions = defaultAgent as { system_instructions?: string; instructions?: string; name: string; id: string };
+          const hasInstructions = !!(agentWithInstructions.system_instructions || agentWithInstructions.instructions);
+          logger.dev(`[LLM Route] ✅ Agent par défaut récupéré: ${agentWithInstructions.name} (ID: ${agentWithInstructions.id})`);
           logger.dev(`[LLM Route] 🎯 Configuration agent par défaut:`, {
             model: defaultAgent.model,
             temperature: defaultAgent.temperature,

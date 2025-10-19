@@ -146,11 +146,35 @@ export async function GET(
   }
 }
 
+// Types pour l'arborescence
+interface FolderData {
+  id: string;
+  name: string;
+  parent_id?: string | null;
+  position: number;
+  slug: string;
+  [key: string]: unknown;
+}
+
+interface NoteData {
+  id: string;
+  source_title: string;
+  folder_id?: string | null;
+  position: number;
+  slug: string;
+  [key: string]: unknown;
+}
+
+interface TreeFolder extends FolderData {
+  children: TreeFolder[];
+  notes: NoteData[];
+}
+
 // Fonction utilitaire pour construire l'arborescence
-function buildTree(folders: any[], notes: any[]) {
-  const folderMap = new Map();
-  const rootFolders: any[] = [];
-  const rootNotes: any[] = [];
+function buildTree(folders: FolderData[], notes: NoteData[]) {
+  const folderMap = new Map<string, TreeFolder>();
+  const rootFolders: TreeFolder[] = [];
+  const rootNotes: NoteData[] = [];
 
   // Créer un map des dossiers
   folders.forEach(folder => {

@@ -48,14 +48,14 @@ const addMessageSchema = z.object({
     success: z.boolean().optional(),
     // Champs alternatifs pour la structure actuelle
     tool_name: z.string().optional(),
-    details: z.any().optional(),
-    tool_args: z.any().optional(),
+    details: z.unknown().optional(),
+    tool_args: z.unknown().optional(),
     timestamp: z.string().optional()
   })).optional()
 });
 
 // 🔧 VALIDATION RENFORCÉE: Vérifier que les messages tool ont les champs requis
-function validateToolMessage(message: any): boolean {
+function validateToolMessage(message: Record<string, unknown>): boolean {
   if (message.role === 'tool') {
     if (!message.tool_call_id) {
       logger.warn('[Chat Messages API] ⚠️ Message tool sans tool_call_id:', message);

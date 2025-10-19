@@ -11,8 +11,18 @@ interface UseOptimizedNoteLoaderProps {
   preloadContent?: boolean;
 }
 
+interface NoteData {
+  id: string;
+  source_title: string;
+  markdown_content?: string;
+  html_content?: string;
+  header_image?: string;
+  slug: string;
+  [key: string]: unknown;
+}
+
 interface UseOptimizedNoteLoaderReturn {
-  note: any; // TODO: Remplacer par le type Note approprié
+  note: NoteData | null;
   loading: boolean;
   error: string | null;
   loadNote: () => Promise<void>;
@@ -98,7 +108,7 @@ export const useOptimizedNoteLoader = ({
       if (existingNote) {
         updateNote(noteRef, noteData);
       } else {
-        addNote(noteData as any);
+        addNote(noteData as NoteData);
       }
 
       // Phase 2 : Charger le contenu si demandé avec gestion de concurrence
@@ -143,7 +153,7 @@ export const useOptimizedNoteLoader = ({
             updateNote(noteRef, updatedNoteData);
           } else {
             console.log('[useOptimizedNoteLoader] ➕ Ajout nouvelle note dans le store');
-            addNote(updatedNoteData as any);
+            addNote(updatedNoteData as NoteData);
           }
           
           // 🔍 Vérifier que la note est bien dans le store après mise à jour
@@ -203,7 +213,7 @@ export const useOptimizedNoteLoader = ({
                 store.updateNote(noteRef, updatedNoteData);
                 console.log('[useOptimizedNoteLoader] ✅ Store mis à jour asynchronement');
               } else {
-                store.addNote(updatedNoteData as any);
+                store.addNote(updatedNoteData as NoteData);
                 console.log('[useOptimizedNoteLoader] ✅ Note ajoutée asynchronement au store');
               }
             })
