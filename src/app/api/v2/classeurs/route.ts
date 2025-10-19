@@ -121,7 +121,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .trim();
 
     // Préparer les données du classeur
-    const classeurData: any = {
+    const classeurData: Record<string, unknown> = {
       name,
       slug,
       user_id: userId,

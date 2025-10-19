@@ -66,7 +66,7 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
       return ERROR_MESSAGES.FILE_TOO_LARGE(FILE_SIZE_LIMITS.MAX_IMAGE_SIZE);
     }
     
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type as any)) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type as (typeof ALLOWED_IMAGE_TYPES)[number])) {
       return ERROR_MESSAGES.INVALID_TYPE(file.type, ALLOWED_IMAGE_TYPES);
     }
     

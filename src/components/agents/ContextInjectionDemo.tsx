@@ -54,7 +54,7 @@ export default function ContextInjectionDemo() {
     }
   };
 
-  const handleConfigChange = (field: keyof AgentTemplateConfig, value: any) => {
+  const handleConfigChange = (field: keyof AgentTemplateConfig, value: unknown) => {
     const newConfig = { ...agentConfig, [field]: value };
     setAgentConfig(newConfig);
     if (uiContext) {

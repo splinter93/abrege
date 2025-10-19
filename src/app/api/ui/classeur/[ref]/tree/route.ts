@@ -114,7 +114,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ ref:
     const etagBase = JSON.stringify({
       classeurId,
       depth,
-      f: sortedFolders.map(f => `${f.id}:${(f as any).updated_at || ''}`).join(','),
+      f: sortedFolders.map(f => {
+        const folder = f as { id: string; updated_at?: string };
+        return `${folder.id}:${folder.updated_at || ''}`;
+      }).join(','),
       n: sortedNotes.map(n => `${n.id}:${n.updated_at || ''}`).join(',')
     });
     const etag = `W/"${Buffer.from(etagBase).toString('base64').slice(0, 16)}"`;

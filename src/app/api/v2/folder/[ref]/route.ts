@@ -133,7 +133,7 @@ export async function PUT(
     const folderId = resolveResult.id;
 
     // Préparer les données de mise à jour
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString()
     };
 

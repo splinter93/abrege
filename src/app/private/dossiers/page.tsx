@@ -607,7 +607,7 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
                   updated_at: new Date().toISOString(),
                   user_id: user.id
                 }))}
-                preloadedFolders={useFileSystemStore.getState().folders as any}
+                preloadedFolders={useFileSystemStore.getState().folders as Record<string, unknown>}
                 preloadedNotes={useFileSystemStore.getState().notes as unknown as { [key: string]: FileArticle }}
                 skipApiCalls={true}
                 viewMode={viewMode}

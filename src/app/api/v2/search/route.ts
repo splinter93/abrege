@@ -62,7 +62,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const userToken = extractTokenFromRequest(request);
     const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
     
-    const results: any[] = [];
+    const results: unknown[] = [];
     let totalCount = 0;
 
     // Recherche dans les notes

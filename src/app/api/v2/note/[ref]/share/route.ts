@@ -210,7 +210,7 @@ export async function PATCH(
     }
 
     // Préparer les données de mise à jour
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       share_settings: updatedShareSettings,
       updated_at: new Date().toISOString()
     };

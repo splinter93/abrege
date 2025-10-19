@@ -106,7 +106,7 @@ async function createChatGPTOAuthCode(userId: string, params: OAuthParams): Prom
     throw new Error(`create-code failed: ${response.status} ${text}`);
   }
 
-  const json = await response.json().catch(() => ({} as any));
+  const json = await response.json().catch(() => ({} as Record<string, unknown>));
   const code = json?.code as string | undefined;
   if (!code) throw new Error('No code returned by /api/auth/create-code');
   return code;

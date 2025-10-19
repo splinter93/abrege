@@ -51,7 +51,7 @@ const NotePreloader: React.FC<NotePreloaderProps> = ({
         Promise.allSettled(preloadPromises).then(results => {
           const successfulNotes = results
             .filter(result => result.status === 'fulfilled')
-            .map(result => (result as PromiseFulfilledResult<any>).value);
+            .map(result => (result as PromiseFulfilledResult<unknown>).value);
 
           // Mettre à jour le store avec les notes préchargées
           if (successfulNotes.length > 0) {

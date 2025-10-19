@@ -87,7 +87,7 @@ export async function PUT(
     }
 
     // Préparer les données de mise à jour
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
     if (emoji !== undefined) updateData.emoji = emoji;
     if (description !== undefined) updateData.description = description;

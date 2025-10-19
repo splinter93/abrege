@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     
     // TODO: Réactiver quand le service sera créé
     // Générer les tools depuis le schéma OpenAPI V2
-    const tools: any[] = []; // getOpenAPIV2Tools();
+    const tools: unknown[] = []; // getOpenAPIV2Tools();
     
     console.log(`[OpenAPI Tools API] ✅ ${tools.length} tools générés`);
     

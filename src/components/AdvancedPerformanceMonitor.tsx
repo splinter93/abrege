@@ -7,7 +7,7 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 interface HealthStatus {
   healthy: boolean;
-  details: any;
+  details: Record<string, unknown>;
 }
 
 interface CacheStats {

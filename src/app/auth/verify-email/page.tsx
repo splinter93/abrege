@@ -30,7 +30,8 @@ export default function VerifyEmailPage() {
       } else {
         setMessage('Email de vérification envoyé ! Vérifiez votre boîte de réception.');
       }
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as { message?: string };
       setError('Erreur lors de l\'envoi de l\'email');
     } finally {
       setLoading(false);

@@ -66,7 +66,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       key,
       headers: { 'Content-Type': file_type },
     }, { status: 200 });
-  } catch (error: any) {
+  } catch (error) {
+    const err = error as { message?: string };
     logger.error(LogCategory.API, `❌ Erreur presign: ${error?.message || error}`, { ...context, error });
     return NextResponse.json({ error: 'Erreur presign' }, { status: 500 });
   }

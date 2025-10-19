@@ -117,7 +117,7 @@ export async function PUT(
     }
 
     // Construire dynamiquement les champs à mettre à jour
-    const updatePayload: Record<string, any> = { updated_at: new Date().toISOString() };
+    const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (typeof validatedData.name === 'string' && validatedData.name.trim().length > 0) {
       updatePayload.name = validatedData.name.trim();
     }

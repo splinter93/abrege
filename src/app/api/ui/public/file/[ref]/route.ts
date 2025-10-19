@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   // Resolve file by id or slug
-  let file: any = null;
+  let file: { id: string; url?: string; filename: string } | null = null;
   if (isUUID(ref)) {
     const { data } = await supabase.from('files').select('*').eq('id', ref).maybeSingle();
     file = data;

@@ -10,7 +10,7 @@ import { simpleLogger as logger } from '@/utils/logger';
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  const diagnostics: Record<string, any> = {
+  const diagnostics: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     platform: process.env.VERCEL ? 'Vercel' : 'Local',

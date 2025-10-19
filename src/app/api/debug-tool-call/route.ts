@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     log(`🔍 [DEBUG] Env check: ${JSON.stringify(envCheck)}`);
 
     // 3. Body
-    let body: any = {};
+    let body: Record<string, unknown> = {};
     try {
       body = await request.json();
       log(`🔍 [DEBUG] Body reçu: ${JSON.stringify(Object.keys(body))}`);

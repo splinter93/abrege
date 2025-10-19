@@ -15,7 +15,7 @@ async function getAuthenticatedClient(req: NextRequest) {
   const serviceRoleHeader = req.headers.get('x-service-role');
   
   let userId: string;
-  let supabase: any;
+  let supabase: ReturnType<typeof createClient>;
 
   // ✅ GESTION IMPERSONATION : Vérifier si c'est un appel avec Service Role
   if (serviceRoleHeader === 'true' && userIdHeader) {

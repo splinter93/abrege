@@ -210,7 +210,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     // Tri optimisé
     if (sortOptions.field !== 'created_at' || sortOptions.order !== 'desc') {
       files.sort((a, b) => {
-        let aValue: any, bValue: any;
+        let aValue: unknown, bValue: unknown;
         
         switch (sortOptions.field) {
           case 'filename':

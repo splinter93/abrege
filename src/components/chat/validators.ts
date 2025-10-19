@@ -75,7 +75,7 @@ export const ChatInputPropsSchema = z.object({
   onSend: z.function().args(z.string()).returns(z.void()),
   loading: z.boolean(),
   textareaRef: z.object({
-    current: z.any().nullable()
+    current: z.unknown().nullable()
   })
 });
 

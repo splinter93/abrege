@@ -39,8 +39,8 @@ describe('Sanitization côté serveur', () => {
 
     it('devrait gérer les chaînes vides', () => {
       expect(sanitizeMarkdownContent('')).toBe('');
-      expect(sanitizeMarkdownContent(null as any)).toBe(null);
-      expect(sanitizeMarkdownContent(undefined as any)).toBe(undefined);
+      expect(sanitizeMarkdownContent(null as unknown as string)).toBe(null);
+      expect(sanitizeMarkdownContent(undefined as unknown as string)).toBe(undefined);
     });
   });
 
@@ -96,8 +96,8 @@ describe('Sanitization côté client', () => {
 
     it('devrait gérer les chaînes vides', () => {
       expect(unescapeHtmlEntities('')).toBe('');
-      expect(unescapeHtmlEntities(null as any)).toBe(null);
-      expect(unescapeHtmlEntities(undefined as any)).toBe(undefined);
+      expect(unescapeHtmlEntities(null as unknown as string)).toBe(null);
+      expect(unescapeHtmlEntities(undefined as unknown as string)).toBe(undefined);
     });
   });
 
