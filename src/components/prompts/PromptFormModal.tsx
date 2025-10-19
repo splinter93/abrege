@@ -30,7 +30,9 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
     icon: 'FiZap',
     agent_id: undefined,
     description: '',
-    category: ''
+    category: '',
+    insertion_mode: 'replace',
+    use_structured_output: false
   });
 
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
@@ -45,7 +47,9 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
         icon: prompt.icon,
         agent_id: prompt.agent_id || undefined,
         description: prompt.description || '',
-        category: prompt.category || ''
+        category: prompt.category || '',
+        insertion_mode: prompt.insertion_mode || 'replace',
+        use_structured_output: prompt.use_structured_output || false
       });
     }
   }, [prompt]);
@@ -237,6 +241,62 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               <option value="analysis">Analysis</option>
               <option value="custom">Custom</option>
             </select>
+          </div>
+
+          {/* Mode d'insertion */}
+          <div className="prompt-form-group">
+            <label className="prompt-form-label" htmlFor="insertion_mode">
+              Mode d'insertion
+            </label>
+            <select
+              id="insertion_mode"
+              className="prompt-form-select"
+              value={formData.insertion_mode}
+              onChange={(e) => handleChange('insertion_mode', e.target.value)}
+            >
+              <option value="replace">Remplacer la sélection</option>
+              <option value="append">Ajouter après la sélection</option>
+              <option value="prepend">Ajouter avant la sélection</option>
+            </select>
+            <small className="prompt-form-hint">
+              <strong>Replace:</strong> pour corriger, reformuler, simplifier<br />
+              <strong>Append:</strong> pour expliquer, développer, continuer<br />
+              <strong>Prepend:</strong> pour ajouter une intro
+            </small>
+          </div>
+
+          {/* Structured Output */}
+          <div className="prompt-form-group">
+            <label className="prompt-form-checkbox-wrapper">
+              <input
+                type="checkbox"
+                checked={formData.use_structured_output}
+                onChange={(e) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    use_structured_output: e.target.checked,
+                    // Générer automatiquement le schéma quand activé
+                    output_schema: e.target.checked ? {
+                      type: 'object',
+                      properties: {
+                        content: {
+                          type: 'string',
+                          description: 'Le contenu demandé, sans introduction ni explication'
+                        }
+                      },
+                      required: ['content']
+                    } : undefined
+                  }));
+                }}
+              />
+              <span className="prompt-form-checkbox-label">
+                Format strict (structured output)
+              </span>
+            </label>
+            <small className="prompt-form-hint">
+              Active le mode JSON pour éliminer les phrases parasites du LLM<br />
+              (ex: "Voici la correction:", "J'ai reformulé...")
+            </small>
           </div>
 
           <div className="prompt-modal-footer">

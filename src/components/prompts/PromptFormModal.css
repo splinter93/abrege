@@ -1,5 +1,6 @@
 /**
  * Styles pour PromptFormModal
+ * Includes: modal overlay, form elements, checkbox styles for new features
  */
 
 .prompt-modal-overlay {
@@ -222,6 +223,37 @@
 
 .prompt-btn-primary:hover {
   background: #f7931e;
+}
+
+/* Checkbox pour structured output */
+.prompt-form-checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.prompt-form-checkbox-wrapper:hover {
+  background: var(--surface-2);
+}
+
+.prompt-form-checkbox-wrapper input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: #ff6b35;
+  flex-shrink: 0;
+}
+
+.prompt-form-checkbox-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  user-select: none;
 }
 
 /* Responsive */
