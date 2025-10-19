@@ -5,8 +5,8 @@ interface UseChatResponseOptions {
   onComplete?: (
     fullContent: string, 
     fullReasoning: string, 
-    toolCalls?: any[], 
-    toolResults?: any[]
+    toolCalls?: unknown[], 
+    toolResults?: unknown[]
   ) => void;
   onError?: (error: string) => void;
   onToolCalls?: (toolCalls: Array<{ id: string; name: string; arguments: Record<string, unknown> }>, toolName: string) => void;

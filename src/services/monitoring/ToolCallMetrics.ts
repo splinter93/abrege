@@ -406,7 +406,12 @@ export class ToolCallMetrics {
    */
   exportMetrics(timeWindow: number = 24 * 60 * 60 * 1000): {
     timestamp: number;
-    globalStats: any;
+    globalStats: {
+      totalCalls: number;
+      successRate: number;
+      avgExecutionTime: number;
+      errorRate: number;
+    };
     toolStats: Record<string, ToolCallStats>;
     alerts: PerformanceAlert[];
   } {

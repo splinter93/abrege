@@ -210,8 +210,8 @@ export function usePerformanceMonitor() {
       
       // Mesurer l'utilisation mémoire si disponible
       if ('memory' in performance) {
-        const memory = (performance as any).memory;
-        metricsRef.current.memoryUsage = memory.usedJSHeapSize;
+        const memory = (performance as { memory?: { usedJSHeapSize: number } }).memory;
+        metricsRef.current.memoryUsage = memory?.usedJSHeapSize || 0;
       }
     };
   }, []);

@@ -32,7 +32,7 @@ export function getSupabaseClient(): SupabaseClient {
  * Cache simple pour les requêtes fréquentes
  * Ne pas utiliser pour des données critiques ou multi-user
  */
-const queryCache = new Map<string, { data: any; timestamp: number }>();
+const queryCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export function getCachedQuery<T>(key: string, queryFn: () => Promise<T>): Promise<T> {

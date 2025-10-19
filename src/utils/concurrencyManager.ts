@@ -4,7 +4,7 @@
  */
 
 export interface LoadingPromise {
-  promise: Promise<any>;
+  promise: Promise<unknown>;
   timestamp: number;
   aborted: boolean;
 }

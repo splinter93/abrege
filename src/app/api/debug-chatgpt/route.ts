@@ -52,7 +52,7 @@ async function debugRequest(request: NextRequest, method: string) {
   }
   
   // 🚨 ANALYSE DU BODY
-  let bodyData: any = null;
+  let bodyData: unknown = null;
   let bodyText = '';
   
   if (method !== 'GET' && method !== 'HEAD') {
@@ -121,7 +121,7 @@ async function debugRequest(request: NextRequest, method: string) {
  */
 function detectChatGPTRequest(
   headers: Record<string, string>, 
-  bodyData: any, 
+  bodyData: unknown, 
   queryParams: Record<string, string>
 ): boolean {
   // Vérifier les headers spécifiques à ChatGPT

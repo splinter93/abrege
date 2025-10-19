@@ -8,7 +8,7 @@ import { formatPathsInElement } from '@/utils/formatPaths';
  */
 export function usePathFormatting(
   elementRef: React.RefObject<HTMLElement>,
-  dependencies: any[] = []
+  dependencies: unknown[] = []
 ) {
   useEffect(() => {
     if (!elementRef.current) return;

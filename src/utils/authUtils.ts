@@ -294,7 +294,7 @@ export async function checkUserPermission(
   requiredRole: PermissionRole,
   userId: string,
   context: { operation: string; component: string },
-  authenticatedSupabaseClient?: any
+  authenticatedSupabaseClient?: ReturnType<typeof createClient>
 ): Promise<PermissionResult> {
   try {
     // Validation des paramètres d'entrée

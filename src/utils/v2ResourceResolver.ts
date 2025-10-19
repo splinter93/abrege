@@ -154,7 +154,7 @@ export class V2ResourceResolver {
     type: ResourceType,
     userId: string,
     context: { operation: string; component: string }
-  ): Promise<{ success: true; data: any } | { success: false; error: string; status: number }> {
+  ): Promise<{ success: true; data: unknown } | { success: false; error: string; status: number }> {
     
     try {
       // ✅ 1. Nettoyer l'ID (remplacer les tirets longs par des tirets courts)

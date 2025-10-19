@@ -559,8 +559,8 @@ export class OptimizedClasseurService {
   /**
    * 🔧 OPTIMISATION: Vérifier la santé du service
    */
-  async healthCheck(): Promise<{ healthy: boolean; details: any }> {
-    try {
+  async healthCheck(): Promise<{ healthy: boolean; details: Record<string, unknown> }> {
+    try{
       const stats = this.getCacheStats();
       const hasErrors = stats.errorEntries > 0;
       const isOverloaded = stats.totalCacheSize > this.MAX_CACHE_SIZE * 0.8;

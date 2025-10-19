@@ -173,7 +173,7 @@ export class MultimodalHandler {
         const imageUrl = input.imageUrl || input.image_url || input.image || '';
         
         // ✅ CORRECTION : Gérer le format de l'endpoint execute { input: text, image: imageUrl }
-        const inputObj = input as any;
+        const inputObj = input as { input?: string; image?: string };
         const finalText = text || inputObj.input || '';
         const finalImageUrl = imageUrl || inputObj.image || '';
         

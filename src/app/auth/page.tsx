@@ -16,7 +16,7 @@ function AuthPageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [sessionStatus, setSessionStatus] = useState<string>('Vérification...');
-  const [currentSession, setCurrentSession] = useState<any>(null);
+  const [currentSession, setCurrentSession] = useState<{ access_token?: string; user?: { email?: string } } | null>(null);
 
   const { t } = useLanguageContext();
   const router = useRouter();
@@ -112,8 +112,9 @@ function AuthPageContent() {
         // ❌ SUPPRIMÉ : Redirection automatique après connexion
         // router.push('/');
       }
-    } catch (err: any) {
-      setError(err?.message || 'Erreur de connexion');
+    } catch (err) {
+      const error = err as { message?: string };
+      setError(error?.message || 'Erreur de connexion');
     } finally {
       setLoading(false);
     }

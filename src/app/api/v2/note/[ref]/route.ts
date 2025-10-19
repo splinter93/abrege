@@ -56,7 +56,7 @@ export async function GET(
 
     // Construire la requête selon le paramètre fields
     let selectFields: string;
-    let responseNote: any;
+    let responseNote: unknown;
 
     switch (fields) {
       case 'content':
@@ -94,7 +94,7 @@ export async function GET(
     }
 
     // Formater la réponse selon le mode
-    const noteData = note as any; // Type assertion pour éviter les erreurs TypeScript
+    const noteData = note as Record<string, unknown>;
     
     // Champs socle toujours présents
     const baseFields = {

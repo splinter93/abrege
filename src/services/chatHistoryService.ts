@@ -26,7 +26,10 @@ export class ChatHistoryService {
 
     // Exclure certains canaux (par défaut, on exclut 'analysis')
     if (excludeChannels && excludeChannels.length > 0) {
-      processedMessages = processedMessages.filter(msg => !excludeChannels.includes((msg as any).channel));
+      processedMessages = processedMessages.filter(msg => {
+        const extMsg = msg as { channel?: 'analysis' | 'commentary' | 'final' };
+        return !extMsg.channel || !excludeChannels.includes(extMsg.channel);
+      });
     }
 
     // Filtrer les messages système si nécessaire

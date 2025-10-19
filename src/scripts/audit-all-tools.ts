@@ -18,7 +18,7 @@ async function auditAllTools() {
       throw new Error('Erreur lors de la récupération des tools');
     }
     
-    const llmTools = toolsData.tools.map((tool: any) => tool.function.name).sort();
+    const llmTools = toolsData.tools.map((tool: { function: { name: string } }) => tool.function.name).sort();
     console.log(`✅ ${llmTools.length} tools LLM trouvés`);
     
     // 2. Récupérer les endpoints API V2
@@ -83,7 +83,7 @@ async function auditAllTools() {
     for (const tool of llmTools) {
       console.log(`\n🔧 Tool: ${tool}`);
       
-      const toolData = toolsData.tools.find((t: any) => t.function.name === tool);
+      const toolData = toolsData.tools.find((t: { function: { name: string } }) => t.function.name === tool);
       if (!toolData) {
         console.log('   ❌ Données du tool non trouvées');
         continue;

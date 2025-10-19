@@ -15,7 +15,7 @@ interface RealtimeEditorManagerProps {
   debug?: boolean;
   autoReconnect?: boolean;
   onStateChange?: (state: RealtimeEditorState) => void;
-  onEvent?: (event: any) => void;
+  onEvent?: (event: { type: string; payload: unknown; timestamp: number }) => void;
   children?: React.ReactNode;
 }
 

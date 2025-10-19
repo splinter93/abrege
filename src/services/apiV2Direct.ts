@@ -96,7 +96,8 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
     setTimeout(() => reject(new Error('Timeout création note')), 10000);
   });
 
-  const { data: note, error: createError } = await Promise.race([createPromise, timeoutPromise]) as any;
+  const result = await Promise.race([createPromise, timeoutPromise]) as { data: unknown; error: unknown };
+  const { data: note, error: createError } = result;
 
   if (createError) {
     const duration = Date.now() - startTime;

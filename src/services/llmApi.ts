@@ -693,7 +693,7 @@ export class LLMApi {
     
     try {
       const headers = await this.getAuthHeaders();
-      const payload: any = { target_folder_id: targetParentRef };
+      const payload: { target_folder_id: string; target_classeur_id?: string } = { target_folder_id: targetParentRef };
       if (targetClasseurId) {
         payload.target_classeur_id = targetClasseurId;
       }

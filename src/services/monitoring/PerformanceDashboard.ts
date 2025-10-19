@@ -148,7 +148,7 @@ export class PerformanceDashboard {
   /**
    * Calculer les métriques de performance
    */
-  private calculatePerformanceMetrics(globalStats: any): {
+  private calculatePerformanceMetrics(globalStats: { totalCalls: number; successRate: number; avgExecutionTime: number; errorRate: number }): {
     slowestTools: Array<{ name: string; avgTime: number }>;
     errorProneTools: Array<{ name: string; errorRate: number }>;
     topUsedTools: Array<{ name: string; calls: number }>;

@@ -177,7 +177,7 @@ export type User = {
   bio: string | null;
   timezone: string;
   language: string;
-  settings: Record<string, any> | null;
+  settings: Record<string, unknown> | null;
 };
 
 export type UserSettings = {

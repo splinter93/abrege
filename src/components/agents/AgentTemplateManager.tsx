@@ -11,7 +11,7 @@ import { agentTemplateService, AgentTemplateConfig, RenderedTemplate } from '@/s
 interface AgentTemplateManagerProps {
   agentConfig: AgentTemplateConfig;
   onConfigChange: (config: AgentTemplateConfig) => void;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   className?: string;
 }
 
@@ -40,7 +40,7 @@ export default function AgentTemplateManager({
     return () => clearTimeout(timeoutId);
   }, [localConfig, onConfigChange]);
 
-  const handleConfigChange = (field: keyof AgentTemplateConfig, value: any) => {
+  const handleConfigChange = (field: keyof AgentTemplateConfig, value: unknown) => {
     setLocalConfig(prev => ({
       ...prev,
       [field]: value

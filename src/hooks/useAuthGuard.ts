@@ -11,7 +11,7 @@ interface AuthGuardReturn {
   /** Vérifie si l'utilisateur est authentifié */
   requireAuth: () => boolean;
   /** Utilisateur actuel */
-  user: any;
+  user: { id: string; email?: string } | null;
   /** État de chargement */
   loading: boolean;
   /** Booléen indiquant si l'utilisateur est authentifié */

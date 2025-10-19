@@ -249,7 +249,7 @@ export class SpecializedAgentManagerV2 {
   /**
    * Valide et convertit un agent de la DB
    */
-  private validateAndConvertAgent(agent: any): SpecializedAgentConfig {
+  private validateAndConvertAgent(agent: Record<string, unknown>): SpecializedAgentConfig {
     const validation = this.validator.validateAgentConfig(agent);
     if (!validation.valid) {
       logger.warn(`[SpecializedAgentManagerV2] ⚠️ Agent invalide, utilisation des valeurs par défaut:`, {

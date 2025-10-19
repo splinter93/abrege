@@ -48,8 +48,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
       const body = await request.json();
       requestData = getUrlSchema.parse(body);
-    } catch (error: any) {
-      logApi.info(`❌ Validation des données échouée: ${error.message}`);
+    } catch (error) {
+      const err = error as { message?: string };
+      logApi.info(`❌ Validation des données échouée: ${err.message}`);
       return NextResponse.json(
         { error: `Données invalides: ${error.message}` }, 
         { status: 400 }
@@ -141,8 +142,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     });
 
-  } catch (error: any) {
+  } catch (error) {
     // ========================================
+    const err = error as { message?: string };
     // 6. GESTION D'ERREURS GLOBALES
     // ========================================
     

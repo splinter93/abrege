@@ -7,7 +7,7 @@ export interface User {
   id: string;
   email?: string;
   username?: string;
-  user_metadata?: { [key: string]: any };
+  user_metadata?: { [key: string]: unknown };
 }
 
 export interface AuthState {
