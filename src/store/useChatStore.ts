@@ -121,7 +121,8 @@ export const useChatStore = create<ChatStore>()(
           if (options?.updateExisting) {
             // ✅ Remplacer le dernier message temporaire (canal 'analysis') par le message final
             const lastMessage = currentSession.thread[currentSession.thread.length - 1];
-            if (lastMessage && (lastMessage as any).channel === 'analysis') {
+            const extLastMsg = lastMessage as ChatMessage & { channel?: string };
+            if (lastMessage && extLastMsg.channel === 'analysis') {
               // Remplacer le message temporaire
               const messageWithId: ChatMessage = {
                 ...message,
@@ -130,13 +131,17 @@ export const useChatStore = create<ChatStore>()(
               updatedThread = [...currentSession.thread.slice(0, -1), messageWithId];
               
               if (process.env.NODE_ENV === 'development') {
+                const extMsg = messageWithId as ChatMessage & { 
+                  tool_calls?: unknown[]; 
+                  reasoning?: string; 
+                };
                 logger.dev('[ChatStore] Message temporaire remplacé par le message final:', {
                   messageId: messageWithId.id,
                   role: messageWithId.role,
                   content: messageWithId.content?.substring(0, 50) + '...',
                   channel: messageWithId.channel,
-                  hasToolCalls: !!(messageWithId as any).tool_calls?.length,
-                  hasReasoning: !!(messageWithId as any).reasoning
+                  hasToolCalls: !!extMsg.tool_calls?.length,
+                  hasReasoning: !!extMsg.reasoning
                 });
               }
             } else {
@@ -157,13 +162,17 @@ export const useChatStore = create<ChatStore>()(
             
             // Log optimisé pour le debugging
             if (process.env.NODE_ENV === 'development') {
+              const extMsg = messageWithId as ChatMessage & { 
+                tool_calls?: unknown[]; 
+                reasoning?: string; 
+              };
               logger.dev('[ChatStore] Nouveau message ajouté:', {
                 messageId: messageWithId.id,
                 role: messageWithId.role,
                 content: messageWithId.content?.substring(0, 50) + '...',
                 channel: messageWithId.channel,
-                hasToolCalls: !!(messageWithId as any).tool_calls?.length,
-                hasReasoning: !!(messageWithId as any).reasoning,
+                hasToolCalls: !!extMsg.tool_calls?.length,
+                hasReasoning: !!extMsg.reasoning,
                 threadLength: updatedThread.length
               });
             }

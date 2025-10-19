@@ -730,7 +730,9 @@ export class V2UnifiedApi {
       }
       
       const headers = await this.getAuthHeaders();
-      const payload: any = { target_folder_id: targetFolderId };
+      const payload: { target_folder_id: string | null; target_notebook_id?: string } = { 
+        target_folder_id: targetFolderId 
+      };
       if (targetClasseurId) {
         payload.target_notebook_id = targetClasseurId;
       }
@@ -814,7 +816,9 @@ export class V2UnifiedApi {
       
       // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-      const payload: any = { target_folder_id: targetParentId };
+      const payload: { target_folder_id: string | null; target_classeur_id?: string } = { 
+        target_folder_id: targetParentId 
+      };
       if (targetClasseurId) {
         payload.target_classeur_id = targetClasseurId;
       }
@@ -1327,8 +1331,8 @@ export class V2UnifiedApi {
       }
       
       // 🚀 Accumuler tous les dossiers et notes de tous les classeurs
-      const allDossiers: any[] = [];
-      const allNotes: any[] = [];
+      const allDossiers: unknown[] = [];
+      const allNotes: unknown[] = [];
       
       // 🚀 Pour chaque classeur, récupérer l'arbre complet
       for (const classeur of classeursResult.classeurs) {

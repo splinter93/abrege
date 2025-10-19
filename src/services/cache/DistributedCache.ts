@@ -6,18 +6,32 @@
 import { simpleLogger as logger } from '@/utils/logger';
 import { getCacheConfig, logCacheConfig } from './CacheConfig';
 
+// Types Redis (import conditionnel)
+type RedisClientType = {
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  isReady: boolean;
+  get: (key: string) => Promise<string | null>;
+  set: (key: string, value: string, options?: { EX: number }) => Promise<void>;
+  del: (key: string) => Promise<number>;
+  keys: (pattern: string) => Promise<string[]>;
+} | null;
+
+type CreateClientFn = ((options: {
+  socket: { host: string; port: number };
+  password?: string;
+  database?: number;
+}) => RedisClientType) | null;
+
 // Import conditionnel de Redis
-let createClient: any;
-let RedisClientType: any;
+let createClient: CreateClientFn;
 
 try {
   const redis = require('redis');
   createClient = redis.createClient;
-  RedisClientType = redis.RedisClientType;
 } catch (error) {
   logger.warn('[DistributedCache] Redis non disponible, utilisation du cache mémoire uniquement');
   createClient = null;
-  RedisClientType = null;
 }
 
 export interface CacheConfig {
@@ -41,7 +55,7 @@ export interface CacheConfig {
   };
 }
 
-export interface CacheEntry<T = any> {
+export interface CacheEntry<T = unknown> {
   data: T;
   timestamp: number;
   ttl: number;
@@ -144,7 +158,7 @@ export class DistributedCache {
   /**
    * Obtenir une valeur du cache
    */
-  async get<T = any>(key: string): Promise<T | null> {
+  async get<T = unknown>(key: string): Promise<T | null> {
     try {
       // 1. Essayer Redis d'abord
       if (this.isConnected && this.redis) {
@@ -184,7 +198,7 @@ export class DistributedCache {
   /**
    * Stocker une valeur dans le cache
    */
-  async set<T = any>(key: string, data: T, ttl?: number): Promise<boolean> {
+  async set<T = unknown>(key: string, data: T, ttl?: number): Promise<boolean> {
     try {
       const entry: CacheEntry<T> = {
         data,

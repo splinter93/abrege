@@ -368,9 +368,9 @@ export const treeResponseV2Schema = z.object({
   tree: z.object({
     id: z.string().uuid(),
     name: z.string(),
-    children: z.array(z.any()).optional(),
-    folders: z.array(z.any()).optional(),
-    notes: z.array(z.any()).optional(),
+    children: z.array(z.unknown()).optional(),
+    folders: z.array(z.unknown()).optional(),
+    notes: z.array(z.unknown()).optional(),
   }),
 });
 
@@ -382,7 +382,7 @@ export const treeResponseV2Schema = z.object({
 /**
  * Valide un payload avec un schéma Zod et retourne une réponse d'erreur si invalide
  */
-export function validatePayload<T>(schema: z.ZodSchema<T>, payload: any): { success: true; data: T } | { success: false; error: string; details: string[] } {
+export function validatePayload<T>(schema: z.ZodSchema<T>, payload: unknown): { success: true; data: T } | { success: false; error: string; details: string[] } {
   const parseResult = schema.safeParse(payload);
   
   if (!parseResult.success) {

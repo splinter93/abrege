@@ -1,5 +1,5 @@
 type Opts = { etag?: string; bearer?: string; timeoutMs?: number };
-const memCache = new Map<string, any>();
+const memCache = new Map<string, unknown>();
 
 export async function fetchJsonV1<T>(url: string, opts: Opts = {}): Promise<{ data: T; etag?: string; fromCache?: boolean }> {
   const { etag, bearer, timeoutMs = 5000 } = opts;
@@ -7,7 +7,7 @@ export async function fetchJsonV1<T>(url: string, opts: Opts = {}): Promise<{ da
   if (bearer) headers.authorization = `Bearer ${bearer}`;
   if (etag) headers['if-none-match'] = etag;
 
-  const attempt = async () => {
+  const attempt = async (): Promise<{ data: T; etag?: string; fromCache?: boolean }> => {
     const ac = new AbortController();
     const t = setTimeout(() => ac.abort(), timeoutMs);
     try {
@@ -16,7 +16,7 @@ export async function fetchJsonV1<T>(url: string, opts: Opts = {}): Promise<{ da
 
       if (res.status === 304 && etag && memCache.has(etag)) {
         clearTimeout(t);
-        return { data: memCache.get(etag), etag, fromCache: true } as any;
+        return { data: memCache.get(etag) as T, etag, fromCache: true };
       }
 
       if (!res.ok) {
@@ -27,8 +27,8 @@ export async function fetchJsonV1<T>(url: string, opts: Opts = {}): Promise<{ da
       const json = await res.json();
       if (newEtag) memCache.set(newEtag, json);
       clearTimeout(t);
-      return { data: json, etag: newEtag, fromCache: false } as any;
-    } catch (e: any) {
+      return { data: json as T, etag: newEtag, fromCache: false };
+    } catch (e) {
       clearTimeout(t);
       throw e;
     }
@@ -36,8 +36,9 @@ export async function fetchJsonV1<T>(url: string, opts: Opts = {}): Promise<{ da
 
   try {
     return await attempt();
-  } catch (e: any) {
-    if (e.status && e.status >= 400 && e.status < 500) throw e; // no retry on 4xx
+  } catch (e) {
+    const error = e as { status?: number };
+    if (error.status && error.status >= 400 && error.status < 500) throw e; // no retry on 4xx
     // one retry (réseau/5xx)
     return await attempt();
   }
