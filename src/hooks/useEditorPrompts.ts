@@ -130,6 +130,10 @@ export function useEditorPrompts(userId: string | undefined): UseEditorPromptsRe
   ): Promise<EditorPrompt | null> => {
     try {
       logger.info('[useEditorPrompts] 🔄 Mise à jour prompt:', id);
+      logger.dev('[useEditorPrompts] 📋 Données envoyées:', {
+        ...data,
+        output_schema: data.output_schema ? 'Configuré' : 'Non configuré'
+      });
 
       const response = await fetch(`/api/editor-prompts/${id}`, {
         method: 'PATCH',

@@ -32,7 +32,11 @@ const updatePromptSchema = z.object({
   description: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   position: z.number().int().min(0).optional(),
-  is_active: z.boolean().optional()
+  is_active: z.boolean().optional(),
+  // Nouveaux champs pour insertion flexible et structured outputs
+  insertion_mode: z.enum(['replace', 'append', 'prepend']).optional(),
+  use_structured_output: z.boolean().optional(),
+  output_schema: z.any().nullable().optional() // JSONB, pas de validation stricte côté Zod
 });
 
 /**

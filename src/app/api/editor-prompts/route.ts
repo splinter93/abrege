@@ -32,7 +32,11 @@ const createPromptSchema = z.object({
   description: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   position: z.number().int().min(0).optional(),
-  user_id: z.string().uuid('User ID invalide')
+  user_id: z.string().uuid('User ID invalide'),
+  // Nouveaux champs pour insertion flexible et structured outputs
+  insertion_mode: z.enum(['replace', 'append', 'prepend']).optional(),
+  use_structured_output: z.boolean().optional(),
+  output_schema: z.any().nullable().optional() // JSONB, pas de validation stricte côté Zod
 });
 
 /**
@@ -148,7 +152,11 @@ export async function POST(request: NextRequest) {
         position,
         is_active: true,
         is_default: false,
-        category: data.category ?? null
+        category: data.category ?? null,
+        // Nouveaux champs
+        insertion_mode: data.insertion_mode ?? 'replace',
+        use_structured_output: data.use_structured_output ?? false,
+        output_schema: data.output_schema ?? null
       })
       .select()
       .single();
