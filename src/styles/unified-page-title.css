@@ -401,3 +401,30 @@
     font-size: 0.75rem;
   }
 }
+
+/* ========================================
+   ACTION À DROITE (BOUTON, ETC.)
+   ======================================== */
+
+.unified-page-title-action {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .unified-page-title-content {
+    flex-wrap: wrap;
+  }
+  
+  .unified-page-title-action {
+    margin-left: 0;
+    width: 100%;
+    margin-top: 1rem;
+  }
+  
+  .unified-page-title-action > * {
+    width: 100%;
+  }
+}

@@ -14,6 +14,7 @@ interface UnifiedPageTitleProps {
   title: string;
   subtitle?: string;
   stats?: StatItem[];
+  action?: React.ReactNode; // Action button ou autre élément à droite
   className?: string;
   initialAnimation?: boolean;
 }
@@ -27,6 +28,7 @@ const UnifiedPageTitle: React.FC<UnifiedPageTitleProps> = ({
   title,
   subtitle,
   stats = [],
+  action,
   className = '',
   initialAnimation = true
 }) => {
@@ -54,6 +56,13 @@ const UnifiedPageTitle: React.FC<UnifiedPageTitleProps> = ({
               <span className="unified-page-title-stat-label">{stat.label}</span>
             </div>
           ))}
+        </div>
+      )}
+      
+      {/* Action button ou autre à droite */}
+      {action && (
+        <div className="unified-page-title-action">
+          {action}
         </div>
       )}
     </div>
