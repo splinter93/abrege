@@ -1,6 +1,15 @@
 import { simpleLogger as logger } from '@/utils/logger';
 import { ChatMessage } from '@/types/chat';
 
+// Helper type pour les messages avec propriétés étendues
+interface ExtendedChatMessage extends ChatMessage {
+  channel?: 'analysis' | 'commentary' | 'final';
+  tool_calls?: Array<{ id: string; type: string; function: { name: string; arguments: string } }>;
+  tool_call_id?: string;
+  name?: string;
+  tool_name?: string;
+}
+
 export interface CleanHistoryOptions {
   maxMessages?: number;
   removeInvalidToolMessages?: boolean;
@@ -40,15 +49,19 @@ export class ChatHistoryCleaner {
 
     // 🔧 Exclure certains canaux (par défaut, on exclut 'analysis')
     if (excludeChannels && excludeChannels.length > 0) {
-      cleanedMessages = cleanedMessages.filter(msg => !excludeChannels.includes((msg as any).channel));
+      cleanedMessages = cleanedMessages.filter(msg => {
+        const extMsg = msg as ExtendedChatMessage;
+        return !extMsg.channel || !excludeChannels.includes(extMsg.channel);
+      });
     }
 
     // 🔧 Supprimer les messages tool invalides
     if (removeInvalidToolMessages) {
       cleanedMessages = cleanedMessages.filter(msg => {
         if (msg.role === 'tool') {
-          const hasToolCallId = !!(msg as any).tool_call_id;
-          const hasName = !!(msg as any).name || !!(msg as any).tool_name;
+          const extMsg = msg as ExtendedChatMessage;
+          const hasToolCallId = !!extMsg.tool_call_id;
+          const hasName = !!extMsg.name || !!extMsg.tool_name;
           const hasContent = !!msg.content;
           
           if (!hasToolCallId || !hasName || !hasContent) {
@@ -68,7 +81,8 @@ export class ChatHistoryCleaner {
     // 🔧 Supprimer les messages vides
     if (removeEmptyMessages) {
       cleanedMessages = cleanedMessages.filter(msg => {
-        if (msg.role === 'assistant' && msg.content === null && !(msg as any).tool_calls) {
+        const extMsg = msg as ExtendedChatMessage;
+        if (msg.role === 'assistant' && msg.content === null && !extMsg.tool_calls) {
           logger.warn(`[HistoryCleaner] 🧹 Message assistant vide supprimé:`, msg);
           return false;
         }
@@ -136,10 +150,11 @@ export class ChatHistoryCleaner {
    * 🔧 Créer une clé unique pour un message
    */
   private createMessageKey(msg: ChatMessage): string {
+    const extMsg = msg as ExtendedChatMessage;
     const content = msg.content || '';
-    const toolCalls = (msg as any).tool_calls ? JSON.stringify((msg as any).tool_calls) : '';
-    const toolCallId = (msg as any).tool_call_id || '';
-    const name = (msg as any).name || '';
+    const toolCalls = extMsg.tool_calls ? JSON.stringify(extMsg.tool_calls) : '';
+    const toolCallId = extMsg.tool_call_id || '';
+    const name = extMsg.name || '';
     
     return `${msg.role}-${content.substring(0, 100)}-${toolCalls}-${toolCallId}-${name}`;
   }
@@ -157,14 +172,16 @@ export class ChatHistoryCleaner {
 
     // Collecter tous les tool call IDs et résultats
     for (const msg of messages) {
-      if (msg.role === 'assistant' && (msg as any).tool_calls) {
-        for (const toolCall of (msg as any).tool_calls) {
+      const extMsg = msg as ExtendedChatMessage;
+      
+      if (msg.role === 'assistant' && extMsg.tool_calls) {
+        for (const toolCall of extMsg.tool_calls) {
           toolCallIds.add(toolCall.id);
         }
       }
       
-      if (msg.role === 'tool' && (msg as any).tool_call_id) {
-        toolResults.set((msg as any).tool_call_id, msg);
+      if (msg.role === 'tool' && extMsg.tool_call_id) {
+        toolResults.set(extMsg.tool_call_id, msg);
       }
     }
 
@@ -181,7 +198,8 @@ export class ChatHistoryCleaner {
         issues.push(`Résultat tool ${toolCallId} n'a pas de tool call correspondant`);
       }
       
-      if (!(toolMsg as any).name) {
+      const extToolMsg = toolMsg as ExtendedChatMessage;
+      if (!extToolMsg.name) {
         issues.push(`Message tool ${toolCallId} n'a pas de nom`);
       }
     }
@@ -210,8 +228,9 @@ export class ChatHistoryCleaner {
     for (const msg of messages) {
       byRole[msg.role] = (byRole[msg.role] || 0) + 1;
       
-      if (msg.role === 'assistant' && (msg as any).tool_calls) {
-        toolCalls += (msg as any).tool_calls.length;
+      const extMsg = msg as ExtendedChatMessage;
+      if (msg.role === 'assistant' && extMsg.tool_calls) {
+        toolCalls += extMsg.tool_calls.length;
       }
       
       if (msg.role === 'tool') {

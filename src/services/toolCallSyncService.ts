@@ -1,7 +1,28 @@
 import { simpleLogger as logger } from '@/utils/logger';
 import { chatSessionService } from './chatSessionService';
 
-/** Aligné avec l’orchestrateur */
+// Helper types pour les messages de la DB
+interface DBMessage {
+  id?: string;
+  role: string;
+  content: string | null;
+  tool_calls?: Array<{
+    id?: string;
+    function?: {
+      name?: string;
+      arguments?: string;
+    };
+  }>;
+  tool_call_id?: string;
+  name?: string;
+  timestamp?: string;
+  created_at?: string;
+  success?: boolean;
+  code?: string;
+  message?: string;
+}
+
+/** Aligné avec l'orchestrateur */
 type ToolCall = {
   id?: string;                 // id du tool_call généré par le LLM (si présent)
   type?: 'function';
@@ -120,7 +141,7 @@ export class ToolCallSyncService {
       const response = await chatSessionService.getMessages(sessionId);
       if (!response?.success || !response?.data) throw new Error(response?.error || 'Erreur récupération messages');
 
-      const messages: any[] = response.data.messages || [];
+      const messages: DBMessage[] = response.data.messages || [];
       let newCalls: ToolCall[] = [];
       let newResults: NormalizedToolResult[] = [];
 
@@ -147,11 +168,11 @@ export class ToolCallSyncService {
           const result: NormalizedToolResult = {
             tool_call_id: String(message?.tool_call_id || parsed?.tool_call_id || 'unknown'),
             name: String(message?.name || parsed?.name || 'unknown'),
-            success: (message as any)?.success !== false, // par défaut true si absent
+            success: message.success !== false, // par défaut true si absent
             result: this.truncateResult(parsed ?? message?.content),
             timestamp: message?.timestamp || message?.created_at || new Date().toISOString(),
-            code: (message as any)?.code,
-            message: (message as any)?.message
+            code: message.code,
+            message: message.message
           };
           const key = this.keyForToolResult(result, message);
           if (!state.seen.has(key)) {
@@ -174,9 +195,10 @@ export class ToolCallSyncService {
         toolResults: newResults,
         stats: { scannedMessages: messages.length, newCalls: newCalls.length, newResults: newResults.length }
       };
-    } catch (error: any) {
-      logger.error('[ToolCallSync] ❌ Erreur synchronisation', { sessionId, error: error?.message || error });
-      return { success: false, error: error?.message || 'Erreur inconnue' };
+    } catch (error) {
+      const errorObj = error as { message?: string } | undefined;
+      logger.error('[ToolCallSync] ❌ Erreur synchronisation', { sessionId, error: errorObj?.message || error });
+      return { success: false, error: errorObj?.message || 'Erreur inconnue' };
     } finally {
       state.isSyncing = false;
     }
@@ -281,7 +303,7 @@ export class ToolCallSyncService {
 
   /* ---------------------- Helpers ---------------------- */
 
-  private keyForToolCall(call: ToolCall, msg: any): string {
+  private keyForToolCall(call: ToolCall, msg: DBMessage): string {
     const id = call.id ?? '';
     const name = call.function?.name ?? '';
     // arguments potentiellement volumineux → hash cheap
@@ -290,7 +312,7 @@ export class ToolCallSyncService {
     return `CALL:${id}:${name}:${args}:${mid}`;
   }
 
-  private keyForToolResult(res: NormalizedToolResult, msg: any): string {
+  private keyForToolResult(res: NormalizedToolResult, msg: DBMessage): string {
     const mid = msg?.id || msg?.created_at || msg?.timestamp || '';
     return `RESULT:${res.tool_call_id}:${res.name}:${mid}`;
   }
@@ -305,7 +327,7 @@ export class ToolCallSyncService {
     return Math.abs(h).toString(36);
   }
 
-  private safeParseContent(content: unknown): any {
+  private safeParseContent(content: unknown): unknown {
     if (typeof content !== 'string') return content;
     try {
       return JSON.parse(content);
@@ -314,8 +336,8 @@ export class ToolCallSyncService {
     }
   }
 
-  /** Tronque le résultat (UTF-8 safe non garantie ici, suffisant pour l’UI) */
-  private truncateResult(result: any, byteLimit = 16 * 1024): any {
+  /** Tronque le résultat (UTF-8 safe non garantie ici, suffisant pour l'UI) */
+  private truncateResult(result: unknown, byteLimit = 16 * 1024): unknown {
     try {
       const str = typeof result === 'string' ? result : JSON.stringify(result);
       const enc = new TextEncoder().encode(str);

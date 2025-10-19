@@ -63,6 +63,78 @@ export interface NoteSummary {
   content_size: number;
 }
 
+export interface NoteDetailed extends NoteSummary {
+  markdown_content?: string;
+  html_content?: string;
+  visibility?: string;
+  public_url?: string;
+  position?: number;
+  etag?: string;
+  classeurs?: { id: string; name: string; slug: string } | null;
+  folders?: { id: string; name: string; slug: string } | null;
+}
+
+export interface ClasseurSummary {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  emoji?: string;
+  position?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FolderSummary {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  classeur_id: string;
+  parent_folder_id?: string;
+  position?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Types pour les données brutes de la base de données
+interface RawClasseurData {
+  id: string;
+  name: string;
+  description?: string;
+  emoji?: string;
+  position: number;
+  slug: string;
+  created_at: string;
+  updated_at: string;
+  folders?: RawFolderData[];
+  articles?: RawNoteData[];
+}
+
+interface RawFolderData {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  position: number;
+  parent_folder_id?: string;
+  classeur_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface RawNoteData {
+  id: string;
+  source_title: string;
+  slug: string;
+  header_image?: string;
+  created_at: string;
+  updated_at: string;
+  folder_id?: string;
+  classeur_id: string;
+  markdown_content?: string;
+}
+
 export class OptimizedDatabaseService {
   private static instance: OptimizedDatabaseService;
   private supabase: SupabaseClient;
@@ -215,7 +287,7 @@ export class OptimizedDatabaseService {
     noteId: string, 
     userId: string, 
     options: OptimizedQueryOptions = {}
-  ): Promise<any | null> {
+  ): Promise<NoteDetailed | null> {
     const { useCache = true, cacheTtl } = options;
     const cacheKey = `note:${noteId}:${userId}`;
 
@@ -272,8 +344,8 @@ export class OptimizedDatabaseService {
     } = {}
   ): Promise<{
     notes: NoteSummary[];
-    classeurs: any[];
-    folders: any[];
+    classeurs: ClasseurSummary[];
+    folders: FolderSummary[];
     total: number;
   }> {
     const { useCache = true, cacheTtl, type = 'all', classeurId, limit = 20 } = options;
@@ -291,8 +363,8 @@ export class OptimizedDatabaseService {
 
       const results = {
         notes: [] as NoteSummary[],
-        classeurs: [] as any[],
-        folders: [] as any[],
+        classeurs: [] as ClasseurSummary[],
+        folders: [] as FolderSummary[],
         total: 0,
       };
 
@@ -375,15 +447,15 @@ export class OptimizedDatabaseService {
   /**
    * Construire la structure optimisée d'un classeur
    */
-  private buildClasseurStructure(classeur: any): ClasseurWithContent {
+  private buildClasseurStructure(classeur: RawClasseurData): ClasseurWithContent {
     const folders = classeur.folders || [];
     const notes = classeur.articles || [];
 
     // Organiser les dossiers en arbre
-    const folderMap = new Map();
+    const folderMap = new Map<string, FolderWithContent>();
     const rootFolders: FolderWithContent[] = [];
 
-    folders.forEach((folder: any) => {
+    folders.forEach((folder: RawFolderData) => {
       const folderWithContent: FolderWithContent = {
         ...folder,
         notes: [],
@@ -397,27 +469,33 @@ export class OptimizedDatabaseService {
     });
 
     // Construire l'arbre des dossiers
-    folders.forEach((folder: any) => {
+    folders.forEach((folder: RawFolderData) => {
       const folderWithContent = folderMap.get(folder.id);
-      if (folder.parent_folder_id && folderMap.has(folder.parent_folder_id)) {
-        folderMap.get(folder.parent_folder_id).subfolders.push(folderWithContent);
-        folderMap.get(folder.parent_folder_id).statistics.total_subfolders++;
-      } else {
+      if (folderWithContent && folder.parent_folder_id && folderMap.has(folder.parent_folder_id)) {
+        const parentFolder = folderMap.get(folder.parent_folder_id);
+        if (parentFolder) {
+          parentFolder.subfolders.push(folderWithContent);
+          parentFolder.statistics.total_subfolders++;
+        }
+      } else if (folderWithContent) {
         rootFolders.push(folderWithContent);
       }
     });
 
     // Organiser les notes
     const rootNotes: NoteSummary[] = [];
-    notes.forEach((note: any) => {
+    notes.forEach((note: RawNoteData) => {
       const noteSummary: NoteSummary = {
         ...note,
         content_size: note.markdown_content?.length || 0,
       };
 
       if (note.folder_id && folderMap.has(note.folder_id)) {
-        folderMap.get(note.folder_id).notes.push(noteSummary);
-        folderMap.get(note.folder_id).statistics.total_notes++;
+        const folder = folderMap.get(note.folder_id);
+        if (folder) {
+          folder.notes.push(noteSummary);
+          folder.statistics.total_notes++;
+        }
       } else {
         rootNotes.push(noteSummary);
       }
@@ -426,7 +504,7 @@ export class OptimizedDatabaseService {
     // Calculer les statistiques du classeur
     const totalFolders = folders.length;
     const totalNotes = notes.length;
-    const totalSize = notes.reduce((sum: number, note: any) => sum + (note.markdown_content?.length || 0), 0);
+    const totalSize = notes.reduce((sum: number, note: RawNoteData) => sum + (note.markdown_content?.length || 0), 0);
 
     return {
       id: classeur.id,
