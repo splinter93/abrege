@@ -369,8 +369,8 @@ export class SpecializedAgentManager {
         traceId, 
         resultType: typeof result,
         resultKeys: result && typeof result === 'object' ? Object.keys(result) : 'N/A',
-        resultContent: result && typeof result === 'object' ? (result as any).content : 'N/A',
-        resultSuccess: result && typeof result === 'object' ? (result as any).success : 'N/A'
+        resultContent: result && typeof result === 'object' ? (result as Record<string, unknown>).content : 'N/A',
+        resultSuccess: result && typeof result === 'object' ? (result as Record<string, unknown>).success : 'N/A'
       });
       
       const formattedResult = this.formatSpecializedOutput(result, agent.output_schema);
@@ -860,12 +860,13 @@ Modèle utilisé : ${model}`;
       const resultObj = result as Record<string, unknown>;
       
       // Essayer d'extraire la réponse de différentes propriétés possibles
+      const nestedResult = resultObj?.result as Record<string, unknown> | undefined;
       const extractedResponse = resultObj?.content || 
                                resultObj?.response || 
                                resultObj?.message || 
                                resultObj?.text || 
-                               (resultObj?.result as any)?.response ||
-                               (resultObj?.result as any)?.content ||
+                               nestedResult?.response ||
+                               nestedResult?.content ||
                                result;
       
       // Normaliser les caractères Unicode pour éviter les erreurs d'encodage

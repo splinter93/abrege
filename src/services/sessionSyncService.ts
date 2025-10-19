@@ -12,7 +12,7 @@ import { batchMessageService } from './batchMessageService';
 export class SessionSyncService {
   private static instance: SessionSyncService;
   private chatSessionService: ChatSessionService;
-  private sessionQueues: Map<string, Promise<any>>;
+  private sessionQueues: Map<string, Promise<unknown>>;
 
   constructor() {
     this.chatSessionService = ChatSessionService.getInstance();
@@ -135,16 +135,20 @@ export class SessionSyncService {
     try {
       return await this.runExclusive(sessionId, async () => {
         // Ajouter timestamp si manquant pour garantir l'ordre
+        const extMessage = message as Omit<ChatMessage, 'id'> & { 
+          timestamp?: string; 
+          tool_call_id?: string; 
+        };
         const messageWithTimestamp = {
           ...message,
-          timestamp: (message as any).timestamp || new Date().toISOString()
+          timestamp: extMessage.timestamp || new Date().toISOString()
         } as Omit<ChatMessage, 'id'>;
 
         // 🔧 NOUVEAU : Ne plus persister les messages tool individuellement
         // Ils sont maintenant inclus dans les tool_results du message assistant
-        if (messageWithTimestamp.role === 'tool' && (messageWithTimestamp as any).tool_call_id) {
+        if (messageWithTimestamp.role === 'tool' && extMessage.tool_call_id) {
           logger.debug('EDITOR', '[SessionSync] ⏭️ Message tool ignoré (inclus dans tool_results)', {
-            tool_call_id: (messageWithTimestamp as any).tool_call_id
+            tool_call_id: extMessage.tool_call_id
           });
           return { success: true }; // Ne rien faire, déjà géré via tool_results
         }

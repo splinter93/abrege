@@ -6,6 +6,23 @@ import { useAgents } from '@/hooks/useAgents';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+// Types pour les sessions et agents
+interface ChatSession {
+  id: string;
+  name: string;
+  thread: unknown[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Agent {
+  id: string;
+  display_name: string;
+  slug: string;
+  description?: string;
+  is_active: boolean;
+}
+
 interface SidebarUltraCleanProps {
   isOpen: boolean;
   isDesktop: boolean;
@@ -31,14 +48,14 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
     }
   };
 
-  const handleSelectSession = (session: any) => {
+  const handleSelectSession = (session: ChatSession) => {
     setCurrentSession(session);
     if (!isDesktop) {
       onClose();
     }
   };
 
-  const handleSelectAgent = (agent: any) => {
+  const handleSelectAgent = (agent: Agent) => {
     setSelectedAgent(agent);
     if (!isDesktop) {
       onClose();
@@ -46,7 +63,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   };
 
   // Filtrage des sessions
-  const filteredSessions = sessions.filter((session: any) =>
+  const filteredSessions = sessions.filter((session: ChatSession) =>
     session.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -101,7 +118,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
               <span>Chargement...</span>
             </div>
           ) : (
-            agents.map((agent: any) => (
+            agents.map((agent: Agent) => (
               <div key={agent.id} className="sidebar-agent-row">
                 <button
                   onClick={() => handleSelectAgent(agent)}
@@ -131,7 +148,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
         {/* Sessions de chat */}
         <div className="sidebar-section-clean">
           <div className="sidebar-section-title-clean">Conversations</div>
-          {filteredSessions.map((session: any) => (
+          {filteredSessions.map((session: ChatSession) => (
             <button
               key={session.id}
               onClick={() => handleSelectSession(session)}

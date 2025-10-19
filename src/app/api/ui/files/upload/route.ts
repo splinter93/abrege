@@ -59,9 +59,20 @@ interface UploadRequest {
   notebookId?: string;
 }
 
+interface FileRecord {
+  id: string;
+  filename: string;
+  mime_type: string;
+  size: number;
+  url?: string;
+  folder_id?: string;
+  classeur_id?: string;
+  created_at: string;
+}
+
 interface UploadResponse {
   success: boolean;
-  file: any;
+  file: FileRecord;
   uploadUrl?: string; // Seulement pour les fichiers locaux
   expiresAt?: Date;   // Seulement pour les fichiers locaux
   requestId: string;
@@ -104,7 +115,7 @@ async function logFileEvent(params: {
   requestId: string;
   ipAddress?: string;
   userAgent?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }): Promise<void> {
   try {
     await supabase.from('file_events').insert({
@@ -200,8 +211,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 4. TRAITEMENT SELON LE TYPE
     // ========================================
     
-    let fileRecord: any;
-    let s3Result: any = null;
+    let fileRecord: FileRecord;
+    let s3Result: { url: string; key: string } | null = null;
 
     if (isFileUpload) {
       // ========================================
@@ -468,10 +479,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     });
 
-  } catch (error: any) {
+  } catch (error) {
     // ========================================
     // 8. GESTION D'ERREURS GLOBALES
     // ========================================
+    const err = error as { message?: string; code?: string };
     
     const apiTime = Date.now() - startTime;
     const errorMessage = error.message || 'Erreur inconnue';

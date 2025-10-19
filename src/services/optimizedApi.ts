@@ -156,7 +156,7 @@ export class OptimizedApi {
     try { return Buffer.from(value).toString('base64').slice(0, 8); } catch { return 'hash'; }
   }
 
-  private async shadowRead<T>(label: string, legacyFn: () => Promise<T>, v1Fn: () => Promise<T>, normalizer: (d: unknown) => any): Promise<T> {
+  private async shadowRead<T>(label: string, legacyFn: () => Promise<T>, v1Fn: () => Promise<T>, normalizer: (d: unknown) => T): Promise<T> {
     if (!this.shadowEnabled && !this.useV1Only) {
       return legacyFn();
     }
@@ -201,7 +201,7 @@ export class OptimizedApi {
   }
 
   // v1 clients
-  private async getClasseursV1(): Promise<any[]> {
+  private async getClasseursV1(): Promise<unknown[]> {
     const headers = await this.getAuthHeaders();
     const { ok, data } = await this.fetchWithEtag('/api/ui/classeurs', headers);
     if (!ok) throw new Error('Classeurs v1 error');
@@ -535,7 +535,9 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Appel API V2 (déplacement dans le même classeur et cross-classeur)
-      const payload: any = { target_folder_id: targetFolderId };
+      const payload: { target_folder_id: string | null; target_notebook_id?: string } = { 
+        target_folder_id: targetFolderId 
+      };
       if (targetClasseurId) {
         payload.target_notebook_id = targetClasseurId;
       }
@@ -588,7 +590,9 @@ export class OptimizedApi {
       const headers = await this.getAuthHeaders();
       
       // Préparer le payload pour l'API V2
-      const payload: any = { target_folder_id: targetParentId };
+      const payload: { target_folder_id: string | null; target_classeur_id?: string } = { 
+        target_folder_id: targetParentId 
+      };
       if (targetClasseurId) {
         payload.target_classeur_id = targetClasseurId;
       }

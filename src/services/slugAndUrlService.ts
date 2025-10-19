@@ -25,7 +25,7 @@ export class SlugAndUrlService {
     title: string,
     userId: string,
     noteId?: string,
-    clientOverride?: any
+    clientOverride?: ReturnType<typeof createClient>
   ): Promise<{ slug: string; publicUrl: string | null }> {
     try {
       const supabase = clientOverride || this.supabase;
@@ -87,7 +87,7 @@ export class SlugAndUrlService {
     noteId: string,
     newTitle: string,
     userId: string,
-    clientOverride?: any,
+    clientOverride?: ReturnType<typeof createClient>,
     currentNote?: { id: string; source_title: string; slug: string; visibility?: string; public_url?: string | null }
   ): Promise<{ slug: string; publicUrl: string }> {
     try {
@@ -160,7 +160,7 @@ export class SlugAndUrlService {
    * @param clientOverride - Client Supabase personnalisé (optionnel)
    * @returns L'URL publique
    */
-  static async buildPublicUrl(userId: string, slug: string, clientOverride?: any): Promise<string> {
+  static async buildPublicUrl(userId: string, slug: string, clientOverride?: ReturnType<typeof createClient>): Promise<string> {
     const supabase = clientOverride || this.supabase;
     
     const { data: user, error: userError } = await supabase
@@ -284,7 +284,8 @@ export class SlugAndUrlService {
       report.totalNotes = notes.length;
 
       for (const note of notes) {
-        const username = (note as any).users?.username;
+        const noteWithUser = note as { users?: { username?: string } };
+        const username = noteWithUser.users?.username;
         
         // Vérifier le slug
         if (!note.slug) {
