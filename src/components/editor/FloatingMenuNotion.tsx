@@ -400,8 +400,11 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
                 logger.info('[FloatingMenuNotion] 📊 Résultat:', result);
 
                 if (result.success && result.response) {
-                  // Remplacer la sélection par la réponse
+                  // 📝 DESIGN INTENTIONNEL : Insertion dans l'éditeur local (pas de save auto)
+                  // L'utilisateur décide : CMD+S pour sauvegarder, CMD+Z pour annuler
+                  // Permet aussi le streaming en temps réel à l'avenir
                   editor.chain().focus().deleteSelection().insertContent(result.response).run();
+                  
                   logger.info('[FloatingMenuNotion] ✅ Prompt exécuté et texte remplacé');
                 } else {
                   logger.error('[FloatingMenuNotion] ❌ Erreur exécution:', result.error || 'Erreur inconnue');
