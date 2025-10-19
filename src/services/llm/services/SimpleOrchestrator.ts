@@ -17,6 +17,7 @@ import { ChatMessage } from '@/types/chat';
 import { agentTemplateService, AgentTemplateConfig } from '../agentTemplateService';
 import { UIContext } from '../ContextCollector';
 import { mcpConfigService } from '../mcpConfigService';
+import { openApiSchemaService } from '../openApiSchemaService';
 import { groqCircuitBreaker } from '@/services/circuitBreaker';
 import { addToolCallInstructions } from '../toolCallInstructions';
 import type { Tool, GroqMessage, McpCall } from '../types/strictTypes';
@@ -114,19 +115,31 @@ export class SimpleOrchestrator {
       
       // ✅ NOUVEAU : Sélectionner le bon provider selon l'agent
       this.llmProvider = this.selectProvider(agentConfig);
+      const selectedProvider = agentConfig?.provider || 'groq';
       
       const systemMessage = this.buildSystemMessage(agentConfig, context.uiContext);
       let messages = this.historyBuilder.buildInitialHistory(systemMessage, message, history);
 
-      // Get MCP tools
-      const tools = await mcpConfigService.buildHybridTools(
-        agentConfig?.id || 'default',
-        context.userToken,
-        [] // No OpenAPI tools, MCP only
-      ) as Tool[];
-
-      const mcpCount = tools.filter((t) => isMcpTool(t)).length;
-      logger.dev(`[SimpleOrchestrator] Tools available: ${tools.length} total (${mcpCount} serveurs MCP)`);
+      // ✅ NOUVEAU : Sélectionner les tools selon le provider
+      let tools: Tool[] = [];
+      
+      if (selectedProvider.toLowerCase() === 'xai') {
+        // ✅ xAI : Utiliser les tools OpenAPI depuis la BDD
+        logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools OpenAPI pour xAI...`);
+        tools = await openApiSchemaService.getToolsFromSchema('scrivia-api-v2');
+        logger.dev(`[SimpleOrchestrator] ✅ Tools OpenAPI disponibles: ${tools.length} tools`);
+      } else {
+        // ✅ Groq : Utiliser les MCP tools (comme avant)
+        logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools MCP pour Groq...`);
+        tools = await mcpConfigService.buildHybridTools(
+          agentConfig?.id || 'default',
+          context.userToken,
+          [] // No OpenAPI tools, MCP only
+        ) as Tool[];
+        
+        const mcpCount = tools.filter((t) => isMcpTool(t)).length;
+        logger.dev(`[SimpleOrchestrator] ✅ Tools available: ${tools.length} total (${mcpCount} serveurs MCP)`);
+      }
 
       let iteration = 0;
       let totalToolCalls = 0;
