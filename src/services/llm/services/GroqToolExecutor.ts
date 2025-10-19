@@ -194,8 +194,9 @@ export class GroqToolExecutor {
         .filter(r => !r.success)
         .slice(0, 3)
         .map(r => {
-          const err = (r as any)?.result?.error || 'Erreur inconnue';
-          const code = (r as any)?.result?.code || 'UNKNOWN_ERROR';
+          const resultObj = r.result as { error?: unknown; code?: string } | undefined;
+          const err = resultObj?.error || 'Erreur inconnue';
+          const code = resultObj?.code || 'UNKNOWN_ERROR';
           return `• ${r.name} (${code}): ${String(err).slice(0, 140)}`;
         });
       topErrors.forEach(e => logger.warn(e));

@@ -6,6 +6,7 @@ import {
   ToolArguments,
   ToolResult 
 } from '../schemas';
+import type { Tool } from '../types/strictTypes';
 
 // 🎯 Interface standardisée pour tous les providers
 export interface ProviderResponse {
@@ -33,10 +34,19 @@ export interface ProviderConfig {
   enableLogging: boolean;
 }
 
+// 🎯 Message pour l'API
+interface ApiMessage {
+  role: 'user' | 'assistant' | 'system' | 'tool' | 'developer';
+  content: string | null;
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
+  name?: string;
+}
+
 // 🎯 Options d'appel au modèle
 export interface ModelCallOptions {
-  messages: any[];
-  tools?: any[];
+  messages: ApiMessage[];
+  tools?: Tool[];
   tool_choice?: 'auto' | 'none';
   maxTokens?: number;
   temperature?: number;
@@ -191,8 +201,8 @@ export abstract class OpenAiLikeAdapter {
   /**
    * 🔧 Préparation du payload pour le provider
    */
-  private preparePayload(options: ModelCallOptions): any {
-    const payload: any = {
+  private preparePayload(options: ModelCallOptions): Record<string, unknown> {
+    const payload: Record<string, unknown> = {
       model: this.config.model,
       messages: options.messages,
       max_tokens: options.maxTokens || this.config.maxTokens,
@@ -213,7 +223,7 @@ export abstract class OpenAiLikeAdapter {
   /**
    * 📊 Logging du payload (avec sanitisation PII)
    */
-  private logPayload(payload: any, direction: 'IN' | 'OUT'): void {
+  private logPayload(payload: Record<string, unknown>, direction: 'IN' | 'OUT'): void {
     try {
       const sanitizedPayload = this.sanitizePayload(payload);
       logger.dev(`[${this.config.name}] 📤 PAYLOAD ${direction}:`, JSON.stringify(sanitizedPayload, null, 2));
@@ -225,7 +235,7 @@ export abstract class OpenAiLikeAdapter {
   /**
    * 📊 Logging de la réponse
    */
-  private logResponse(response: any, direction: 'IN' | 'OUT'): void {
+  private logResponse(response: ProviderResponse, direction: 'IN' | 'OUT'): void {
     try {
       const sanitizedResponse = this.sanitizeResponse(response);
       logger.dev(`[${this.config.name}] 📥 RÉPONSE ${direction}:`, JSON.stringify(sanitizedResponse, null, 2));
@@ -237,7 +247,7 @@ export abstract class OpenAiLikeAdapter {
   /**
    * 🧹 Sanitisation du payload (suppression des données sensibles)
    */
-  private sanitizePayload(payload: any): any {
+  private sanitizePayload(payload: Record<string, unknown>): Record<string, unknown> {
     const sanitized = { ...payload };
     
     // Supprimer les clés API sensibles
@@ -245,11 +255,20 @@ export abstract class OpenAiLikeAdapter {
     if (sanitized.authorization) delete sanitized.authorization;
     
     // Limiter la taille des messages pour le logging
-    if (sanitized.messages) {
-      sanitized.messages = sanitized.messages.map((msg: any) => ({
-        ...msg,
-        content: msg.content ? `${msg.content.substring(0, 200)}${msg.content.length > 200 ? '...' : ''}` : msg.content
-      }));
+    if (Array.isArray(sanitized.messages)) {
+      sanitized.messages = sanitized.messages.map((msg: unknown) => {
+        if (typeof msg === 'object' && msg !== null) {
+          const message = msg as Record<string, unknown>;
+          const content = message.content;
+          return {
+            ...message,
+            content: typeof content === 'string' 
+              ? `${content.substring(0, 200)}${content.length > 200 ? '...' : ''}` 
+              : content
+          };
+        }
+        return msg;
+      });
     }
     
     return sanitized;
@@ -258,17 +277,17 @@ export abstract class OpenAiLikeAdapter {
   /**
    * 🧹 Sanitisation de la réponse
    */
-  private sanitizeResponse(response: any): any {
+  private sanitizeResponse(response: ProviderResponse): ProviderResponse {
     const sanitized = { ...response };
     
     // Limiter la taille du contenu pour le logging
-    if (sanitized.content) {
+    if (typeof sanitized.content === 'string') {
       sanitized.content = `${sanitized.content.substring(0, 200)}${sanitized.content.length > 200 ? '...' : ''}`;
     }
     
     // Limiter la taille des tool calls
-    if (sanitized.tool_calls) {
-      sanitized.tool_calls = sanitized.tool_calls.map((tc: any) => ({
+    if (Array.isArray(sanitized.tool_calls)) {
+      sanitized.tool_calls = sanitized.tool_calls.map((tc) => ({
         ...tc,
         function: {
           ...tc.function,
@@ -285,32 +304,36 @@ export abstract class OpenAiLikeAdapter {
   /**
    * ✅ Normalisation de la réponse du provider
    */
-  private normalizeResponse(response: any): ProviderResponse {
+  private normalizeResponse(response: Record<string, unknown>): ProviderResponse {
     const normalized: ProviderResponse = {};
 
     // 🎯 Contenu principal
-    if (response.choices && response.choices[0]?.message) {
-      const message = response.choices[0].message;
-      
-      normalized.content = message.content;
-      
-      // 🎯 Tool calls
-      if (message.tool_calls && Array.isArray(message.tool_calls)) {
-        normalized.tool_calls = message.tool_calls.map((tc: any) => this.normalizeToolCall(tc));
-      }
-      
-      // 🎯 Reasoning (si supporté)
-      if (message.reasoning) {
-        normalized.reasoning = message.reasoning;
+    if (typeof response.choices === 'object' && Array.isArray(response.choices)) {
+      const firstChoice = response.choices[0] as Record<string, unknown> | undefined;
+      if (firstChoice && typeof firstChoice.message === 'object') {
+        const message = firstChoice.message as Record<string, unknown>;
+        
+        normalized.content = message.content as string | null || null;
+        
+        // 🎯 Tool calls
+        if (Array.isArray(message.tool_calls)) {
+          normalized.tool_calls = message.tool_calls.map((tc: unknown) => this.normalizeToolCall(tc as Record<string, unknown>));
+        }
+        
+        // 🎯 Reasoning (si supporté)
+        if (typeof message.reasoning === 'string') {
+          normalized.reasoning = message.reasoning;
+        }
       }
     }
 
     // 🎯 Usage (si disponible)
-    if (response.usage) {
+    if (typeof response.usage === 'object' && response.usage !== null) {
+      const usage = response.usage as Record<string, unknown>;
       normalized.usage = {
-        prompt_tokens: response.usage.prompt_tokens || 0,
-        completion_tokens: response.usage.completion_tokens || 0,
-        total_tokens: response.usage.total_tokens || 0
+        prompt_tokens: (typeof usage.prompt_tokens === 'number' ? usage.prompt_tokens : 0),
+        completion_tokens: (typeof usage.completion_tokens === 'number' ? usage.completion_tokens : 0),
+        total_tokens: (typeof usage.total_tokens === 'number' ? usage.total_tokens : 0)
       };
     }
 
@@ -320,23 +343,24 @@ export abstract class OpenAiLikeAdapter {
   /**
    * 🔧 Normalisation d'un tool call
    */
-  private normalizeToolCall(toolCall: any): ToolCall {
+  private normalizeToolCall(toolCall: Record<string, unknown>): ToolCall {
     // 🔍 Validation des arguments JSON
-    if (toolCall.function?.arguments) {
-      const validation = validateToolArguments(toolCall.function.arguments);
+    const funcObj = toolCall.function as Record<string, unknown> | undefined;
+    if (funcObj && typeof funcObj.arguments === 'string') {
+      const validation = validateToolArguments(funcObj.arguments);
       if (!validation.isValid) {
-        logger.warn(`[${this.config.name}] ⚠️ Arguments JSON invalides pour le tool ${toolCall.function?.name}:`, validation.error);
+        logger.warn(`[${this.config.name}] ⚠️ Arguments JSON invalides pour le tool ${funcObj.name}:`, validation.error);
         // Corriger en créant des arguments vides
-        toolCall.function.arguments = '{}';
+        funcObj.arguments = '{}';
       }
     }
 
     return {
-      id: toolCall.id || `call_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-      type: toolCall.type || 'function',
+      id: (typeof toolCall.id === 'string' ? toolCall.id : `call_${Date.now()}_${Math.random().toString(36).slice(2)}`),
+      type: 'function',
       function: {
-        name: toolCall.function?.name || 'unknown',
-        arguments: toolCall.function?.arguments || '{}'
+        name: (funcObj && typeof funcObj.name === 'string' ? funcObj.name : 'unknown'),
+        arguments: (funcObj && typeof funcObj.arguments === 'string' ? funcObj.arguments : '{}')
       }
     };
   }
@@ -351,12 +375,12 @@ export abstract class OpenAiLikeAdapter {
   /**
    * 🚀 Méthode abstraite à implémenter par chaque provider
    */
-  protected abstract executeCall(payload: any, timeout: number): Promise<any>;
+  protected abstract executeCall(payload: Record<string, unknown>, timeout: number): Promise<Record<string, unknown>>;
 
   /**
    * 🔧 Validation des résultats de tool
    */
-  validateToolExecutionResult(result: any): { isValid: boolean; normalized: ToolResult; errors: string[] } {
+  validateToolExecutionResult(result: unknown): { isValid: boolean; normalized: ToolResult; errors: string[] } {
     return validateToolResult(result);
   }
 
@@ -400,7 +424,7 @@ export class ProviderAdapterFactory {
  * 🔧 Adaptateur pour Groq
  */
 class GroqAdapter extends OpenAiLikeAdapter {
-  protected async executeCall(payload: any, timeout: number): Promise<any> {
+  protected async executeCall(payload: Record<string, unknown>, timeout: number): Promise<Record<string, unknown>> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -421,7 +445,7 @@ class GroqAdapter extends OpenAiLikeAdapter {
         throw new Error(`Groq API error: ${response.status} - ${response.statusText}`);
       }
 
-      return await response.json();
+      return await response.json() as Record<string, unknown>;
     } catch (error) {
       clearTimeout(timeoutId);
       throw error;
@@ -433,7 +457,7 @@ class GroqAdapter extends OpenAiLikeAdapter {
  * 🔧 Adaptateur pour OpenAI
  */
 class OpenAiAdapter extends OpenAiLikeAdapter {
-  protected async executeCall(payload: any, timeout: number): Promise<any> {
+  protected async executeCall(payload: Record<string, unknown>, timeout: number): Promise<Record<string, unknown>> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -454,7 +478,7 @@ class OpenAiAdapter extends OpenAiLikeAdapter {
         throw new Error(`OpenAI API error: ${response.status} - ${response.statusText}`);
       }
 
-      return await response.json();
+      return await response.json() as Record<string, unknown>;
     } catch (error) {
       clearTimeout(timeoutId);
       throw error;
@@ -466,7 +490,7 @@ class OpenAiAdapter extends OpenAiLikeAdapter {
  * 🔧 Adaptateur pour Anthropic (Claude)
  */
 class AnthropicAdapter extends OpenAiLikeAdapter {
-  protected async executeCall(payload: any, timeout: number): Promise<any> {
+  protected async executeCall(payload: Record<string, unknown>, timeout: number): Promise<Record<string, unknown>> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -491,7 +515,7 @@ class AnthropicAdapter extends OpenAiLikeAdapter {
         throw new Error(`Anthropic API error: ${response.status} - ${response.statusText}`);
       }
 
-      const anthropicResponse = await response.json();
+      const anthropicResponse = await response.json() as Record<string, unknown>;
       return this.convertFromAnthropicFormat(anthropicResponse);
     } catch (error) {
       clearTimeout(timeoutId);
@@ -502,7 +526,7 @@ class AnthropicAdapter extends OpenAiLikeAdapter {
   /**
    * 🔄 Conversion du format OpenAI vers Anthropic
    */
-  private convertToAnthropicFormat(openAiPayload: any): any {
+  private convertToAnthropicFormat(openAiPayload: Record<string, unknown>): Record<string, unknown> {
     // TODO: Implémenter la conversion complète
     return {
       model: openAiPayload.model,
@@ -514,12 +538,17 @@ class AnthropicAdapter extends OpenAiLikeAdapter {
   /**
    * 🔄 Conversion du format Anthropic vers OpenAI
    */
-  private convertFromAnthropicFormat(anthropicResponse: any): any {
+  private convertFromAnthropicFormat(anthropicResponse: Record<string, unknown>): Record<string, unknown> {
     // TODO: Implémenter la conversion complète
+    const content = anthropicResponse.content;
+    const firstContentText = Array.isArray(content) && content[0] 
+      ? (content[0] as Record<string, unknown>).text 
+      : null;
+      
     return {
       choices: [{
         message: {
-          content: anthropicResponse.content?.[0]?.text,
+          content: firstContentText,
           role: 'assistant'
         }
       }],

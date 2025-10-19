@@ -1,4 +1,5 @@
 import { simpleLogger as logger } from '@/utils/logger';
+import type { ChatMessage } from './types/strictTypes';
 
 /**
  * Service de reconstruction des threads depuis la base de données
@@ -21,7 +22,7 @@ export class ThreadBuilder {
    * @param sessionId ID de la session
    * @returns Thread reconstruit avec tous les messages
    */
-  async rebuildFromDB(sessionId: string): Promise<any[]> {
+  async rebuildFromDB(sessionId: string): Promise<ChatMessage[]> {
     try {
       logger.info(`[ThreadBuilder] 🔄 Reconstruction du thread pour la session ${sessionId}`);
       
@@ -41,10 +42,9 @@ export class ThreadBuilder {
 
       // 🔒 ISOLATION : Valider que le thread appartient bien à la session
       const validatedThread = this.validateAndNormalizeThread(thread);
-      const isolatedThread = this.ensureSessionIsolation(validatedThread, sessionId);
       
-      logger.info(`[ThreadBuilder] 🔒 Thread isolé pour la session ${sessionId}: ${isolatedThread.length} messages`);
-      return isolatedThread;
+      logger.info(`[ThreadBuilder] 🔒 Thread validé pour la session ${sessionId}: ${validatedThread.length} messages`);
+      return validatedThread;
     } catch (error) {
       logger.error(`[ThreadBuilder] ❌ Erreur reconstruction thread:`, error);
       throw error;
@@ -56,7 +56,7 @@ export class ThreadBuilder {
    * @param thread Thread brut depuis la DB
    * @returns Thread validé et normalisé
    */
-  private validateAndNormalizeThread(thread: any[]): any[] {
+  private validateAndNormalizeThread(thread: unknown[]): ChatMessage[] {
     if (!Array.isArray(thread)) {
       logger.warn(`[ThreadBuilder] ⚠️ Thread invalide, retour thread vide`);
       return [];
@@ -82,35 +82,37 @@ export class ThreadBuilder {
    * @param message Message à valider
    * @returns true si le message est valide
    */
-  private isValidMessage(message: any): boolean {
+  private isValidMessage(message: unknown): message is ChatMessage {
     if (!message || typeof message !== 'object') {
       return false;
     }
 
+    const msg = message as Record<string, unknown>;
+
     // Vérifier les propriétés obligatoires selon le rôle
-    if (message.role === 'user') {
-      return !!message.content && typeof message.content === 'string';
+    if (msg.role === 'user') {
+      return !!msg.content && typeof msg.content === 'string';
     }
 
-    if (message.role === 'assistant') {
+    if (msg.role === 'assistant') {
       return true; // Assistant peut avoir content vide si tool_calls
     }
 
-    if (message.role === 'tool') {
-      return !!message.tool_call_id && 
-             !!message.name && 
-             !!message.content &&
-             typeof message.tool_call_id === 'string' &&
-             typeof message.name === 'string' &&
-             typeof message.content === 'string';
+    if (msg.role === 'tool') {
+      return !!msg.tool_call_id && 
+             !!msg.name && 
+             !!msg.content &&
+             typeof msg.tool_call_id === 'string' &&
+             typeof msg.name === 'string' &&
+             typeof msg.content === 'string';
     }
 
-    if (message.role === 'system') {
-      return !!message.content && typeof message.content === 'string';
+    if (msg.role === 'system') {
+      return !!msg.content && typeof msg.content === 'string';
     }
 
     // Par défaut, un message doit avoir un rôle et un timestamp
-    return !!message.role && !!message.timestamp;
+    return !!msg.role && !!msg.timestamp;
   }
 
   /**
@@ -118,8 +120,9 @@ export class ThreadBuilder {
    * @param message Message à normaliser
    * @returns Message normalisé
    */
-  private normalizeMessage(message: any): any {
-    const normalized: ChatMessage = { ...message };
+  private normalizeMessage(message: unknown): ChatMessage {
+    const msg = message as Record<string, unknown>;
+    const normalized: ChatMessage = { ...(msg as ChatMessage) };
 
     // S'assurer que le contenu est une string
     if (normalized.content && typeof normalized.content !== 'string') {
@@ -133,14 +136,19 @@ export class ThreadBuilder {
 
     // Normaliser les tool_calls si présents
     if (normalized.tool_calls && Array.isArray(normalized.tool_calls)) {
-      normalized.tool_calls = normalized.tool_calls.map(toolCall => ({
-        id: toolCall.id || `tool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        type: 'function',
-        function: {
-          name: toolCall.function?.name || 'unknown',
-          arguments: toolCall.function?.arguments || '{}'
-        }
-      }));
+      normalized.tool_calls = normalized.tool_calls.map((toolCall: unknown) => {
+        const tc = toolCall as Record<string, unknown>;
+        const func = tc.function as Record<string, unknown> | undefined;
+        
+        return {
+          id: (tc.id as string) || `tool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          type: 'function' as const,
+          function: {
+            name: (func?.name as string) || 'unknown',
+            arguments: (func?.arguments as string) || '{}'
+          }
+        };
+      });
     }
 
     // Ajouter un timestamp si manquant
@@ -162,7 +170,7 @@ export class ThreadBuilder {
    * @param untilMessageId ID du message jusqu'auquel reconstruire
    * @returns Thread reconstruit jusqu'au message spécifié
    */
-  async rebuildFromDBUntil(sessionId: string, untilMessageId: string): Promise<any[]> {
+  async rebuildFromDBUntil(sessionId: string, untilMessageId: string): Promise<ChatMessage[]> {
     try {
       const fullThread = await this.rebuildFromDB(sessionId);
       
@@ -189,7 +197,7 @@ export class ThreadBuilder {
    * @param thread Thread à vérifier
    * @returns Résultat de la vérification
    */
-  validateThreadCoherence(thread: any[]): { isValid: boolean; errors: string[] } {
+  validateThreadCoherence(thread: ChatMessage[]): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     if (!Array.isArray(thread)) {

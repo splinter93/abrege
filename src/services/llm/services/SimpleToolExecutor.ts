@@ -5,6 +5,12 @@
 
 import { ApiV2ToolExecutor } from '../executors/ApiV2ToolExecutor';
 import { simpleLogger as logger } from '@/utils/logger';
+import type { LLMResponse } from '../types/strictTypes';
+
+/**
+ * Type pour le callback LLM
+ */
+export type LLMCallback = (message: string, history: unknown[], tools: ToolCall[], results: ToolResult[]) => Promise<LLMResponse>;
 
 export interface ToolCall {
   id: string;
@@ -60,7 +66,7 @@ export class SimpleToolExecutor {
   async executeWithRetry(
     toolCalls: ToolCall[],
     context: ExecutionContext,
-    llmCallback: (message: string, history: any[], tools: ToolCall[], results: ToolResult[]) => Promise<any>
+    llmCallback: LLMCallback
   ): Promise<ExecutionResult> {
     const { userToken, sessionId } = context;
     const maxRetries = context.maxRetries || this.maxRetries;
@@ -220,7 +226,7 @@ export class SimpleToolExecutor {
   /**
    * Construire un message d'erreur
    */
-  private buildErrorMessage(error: any): string {
+  private buildErrorMessage(error: unknown): string {
     const errorMsg = error instanceof Error ? error.message : String(error);
     return `Une erreur s'est produite lors de l'exécution des outils : ${errorMsg}. 
     Peux-tu proposer une solution alternative ?`;
@@ -229,17 +235,17 @@ export class SimpleToolExecutor {
   /**
    * Extraire les tool calls d'une réponse LLM
    */
-  private extractToolCalls(llmResponse: any): ToolCall[] {
+  private extractToolCalls(llmResponse: LLMResponse): ToolCall[] {
     if (!llmResponse || typeof llmResponse !== 'object') return [];
     
-    const toolCalls = llmResponse.tool_calls || llmResponse.toolCalls || [];
+    const toolCalls = llmResponse.tool_calls || [];
     
     if (!Array.isArray(toolCalls)) return [];
     
-    return toolCalls.filter((tc: any) => 
-      tc && 
+    return toolCalls.filter((tc): tc is ToolCall => 
+      !!tc && 
       typeof tc.id === 'string' && 
-      tc.function && 
+      !!tc.function && 
       typeof tc.function.name === 'string'
     );
   }
@@ -250,7 +256,7 @@ export class SimpleToolExecutor {
   private async generateFinalResponse(
     toolCalls: ToolCall[], 
     results: ToolResult[], 
-    llmCallback: Function
+    llmCallback: LLMCallback
   ): Promise<string> {
     const successfulResults = results.filter(r => r.success);
     const failedResults = results.filter(r => !r.success);
@@ -283,6 +289,13 @@ export class SimpleToolExecutor {
    * Exécution simple sans relance (pour compatibilité)
    */
   async executeSimple(toolCalls: ToolCall[], userToken: string): Promise<ToolResult[]> {
+    return this.executeTools(toolCalls, userToken);
+  }
+
+  /**
+   * Alias pour executeSimple (utilisé par SimpleOrchestrator)
+   */
+  async executeToolCalls(toolCalls: ToolCall[], userToken: string): Promise<ToolResult[]> {
     return this.executeTools(toolCalls, userToken);
   }
 }

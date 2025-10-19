@@ -7,6 +7,12 @@ import { ToolCall, ToolResult } from '../types/apiV2Types';
 import { ApiV2HttpClient } from '../clients/ApiV2HttpClient';
 import { simpleLogger as logger } from '@/utils/logger';
 import { validateToolArgs } from '../validation/toolSchemas';
+import type { ToolHandlerMap } from '../types/strictTypes';
+
+/**
+ * Type pour les handlers de tools
+ */
+type ToolHandler = (args: Record<string, unknown>, token: string) => Promise<unknown>;
 
 /**
  * Exécuteur de tools simplifié
@@ -14,7 +20,7 @@ import { validateToolArgs } from '../validation/toolSchemas';
  */
 export class ApiV2ToolExecutor {
   private readonly httpClient: ApiV2HttpClient;
-  private readonly toolHandlers: Map<string, Function>;
+  private readonly toolHandlers: Map<string, ToolHandler>;
 
   constructor(httpClient?: ApiV2HttpClient) {
     this.httpClient = httpClient || new ApiV2HttpClient();
@@ -66,77 +72,70 @@ export class ApiV2ToolExecutor {
   /**
    * Initialiser les handlers de tools de manière générique
    */
-  private initializeToolHandlers(): Map<string, Function> {
-    const handlers = new Map<string, Function>();
+  private initializeToolHandlers(): Map<string, ToolHandler> {
+    const handlers = new Map<string, ToolHandler>();
 
     // Notes
-    handlers.set('createNote', (args: any, token: string) => this.httpClient.createNote(args, token));
-    handlers.set('getNote', (args: any, token: string) => this.httpClient.getNote(args, token));
-    handlers.set('updateNote', (args: any, token: string) => this.httpClient.updateNote(args.ref, args, token));
-    handlers.set('moveNote', (args: any, token: string) => this.httpClient.moveNote(args.ref, args, token));
-    handlers.set('insertNoteContent', (args: any, token: string) => this.httpClient.insertNoteContent(args.ref, args, token));
-    handlers.set('applyContentOperations', (args: any, token: string) => this.httpClient.applyContentOperations(args.ref, args, token));
-    handlers.set('getNoteTOC', (args: any, token: string) => this.httpClient.getNoteTOC(args.ref, token));
-    handlers.set('getNoteShareSettings', (args: any, token: string) => this.httpClient.getNoteShareSettings(args.ref, token));
-    handlers.set('updateNoteShareSettings', (args: any, token: string) => this.httpClient.updateNoteShareSettings(args.ref, args, token));
-    handlers.set('getRecentNotes', (args: any, token: string) => this.httpClient.getRecentNotes(args, token));
+    handlers.set('createNote', (args: Record<string, unknown>, token: string) => this.httpClient.createNote(args, token));
+    handlers.set('getNote', (args: Record<string, unknown>, token: string) => this.httpClient.getNote(args, token));
+    handlers.set('updateNote', (args: Record<string, unknown>, token: string) => this.httpClient.updateNote(args.ref as string, args, token));
+    handlers.set('moveNote', (args: Record<string, unknown>, token: string) => this.httpClient.moveNote(args.ref as string, args, token));
+    handlers.set('insertNoteContent', (args: Record<string, unknown>, token: string) => this.httpClient.insertNoteContent(args.ref as string, args, token));
+    handlers.set('applyContentOperations', (args: Record<string, unknown>, token: string) => this.httpClient.applyContentOperations(args.ref as string, args, token));
+    handlers.set('getNoteTOC', (args: Record<string, unknown>, token: string) => this.httpClient.getNoteTOC(args.ref as string, token));
+    handlers.set('getNoteShareSettings', (args: Record<string, unknown>, token: string) => this.httpClient.getNoteShareSettings(args.ref as string, token));
+    handlers.set('updateNoteShareSettings', (args: Record<string, unknown>, token: string) => this.httpClient.updateNoteShareSettings(args.ref as string, args, token));
+    handlers.set('getRecentNotes', (args: Record<string, unknown>, token: string) => this.httpClient.getRecentNotes(args, token));
 
     // Classeurs
-    handlers.set('createClasseur', (args: any, token: string) => this.httpClient.createClasseur(args, token));
-    handlers.set('getClasseur', (args: any, token: string) => this.httpClient.getClasseur(args, token));
-    handlers.set('updateClasseur', (args: any, token: string) => this.httpClient.updateClasseur(args.ref, args, token));
-    handlers.set('getClasseurTree', (args: any, token: string) => this.httpClient.getClasseurTree(args.ref, token));
-    handlers.set('getClasseursWithContent', (args: any, token: string) => this.httpClient.getClasseursWithContent(token));
-    handlers.set('listClasseurs', (args: any, token: string) => this.httpClient.listClasseurs(token));
+    handlers.set('createClasseur', (args: Record<string, unknown>, token: string) => this.httpClient.createClasseur(args, token));
+    handlers.set('getClasseur', (args: Record<string, unknown>, token: string) => this.httpClient.getClasseur(args, token));
+    handlers.set('updateClasseur', (args: Record<string, unknown>, token: string) => this.httpClient.updateClasseur(args.ref as string, args, token));
+    handlers.set('getClasseurTree', (args: Record<string, unknown>, token: string) => this.httpClient.getClasseurTree(args.ref as string, token));
+    handlers.set('getClasseursWithContent', (args: Record<string, unknown>, token: string) => this.httpClient.getClasseursWithContent(token));
+    handlers.set('listClasseurs', (args: Record<string, unknown>, token: string) => this.httpClient.listClasseurs(token));
 
     // Dossiers
-    handlers.set('createFolder', (args: any, token: string) => this.httpClient.createFolder(args, token));
-    handlers.set('getFolder', (args: any, token: string) => this.httpClient.getFolder(args, token));
-    handlers.set('updateFolder', (args: any, token: string) => this.httpClient.updateFolder(args.ref, args, token));
-    handlers.set('moveFolder', (args: any, token: string) => this.httpClient.moveFolder(args.ref, args, token));
-    handlers.set('getFolderTree', (args: any, token: string) => this.httpClient.getFolderTree(args.ref, token));
+    handlers.set('createFolder', (args: Record<string, unknown>, token: string) => this.httpClient.createFolder(args, token));
+    handlers.set('getFolder', (args: Record<string, unknown>, token: string) => this.httpClient.getFolder(args, token));
+    handlers.set('updateFolder', (args: Record<string, unknown>, token: string) => this.httpClient.updateFolder(args.ref as string, args, token));
+    handlers.set('moveFolder', (args: Record<string, unknown>, token: string) => this.httpClient.moveFolder(args.ref as string, args, token));
+    handlers.set('getFolderTree', (args: Record<string, unknown>, token: string) => this.httpClient.getFolderTree(args.ref as string, token));
 
     // Recherche
-    handlers.set('searchContent', (args: any, token: string) => this.httpClient.searchContent(args, token));
-    handlers.set('searchFiles', (args: any, token: string) => this.httpClient.searchFiles(args, token));
+    handlers.set('searchContent', (args: Record<string, unknown>, token: string) => this.httpClient.searchContent(args, token));
+    handlers.set('searchFiles', (args: Record<string, unknown>, token: string) => this.httpClient.searchFiles(args, token));
 
     // Autres
-    handlers.set('getStats', (args: any, token: string) => this.httpClient.getStats(token));
-    handlers.set('getUserProfile', (args: any, token: string) => this.httpClient.getUserProfile(token));
-    handlers.set('getTrash', (args: any, token: string) => this.httpClient.getTrash(token));
-    handlers.set('restoreFromTrash', (args: any, token: string) => this.httpClient.restoreFromTrash(args, token));
-    handlers.set('purgeTrash', (args: any, token: string) => this.httpClient.purgeTrash(token));
-    handlers.set('deleteResource', (args: any, token: string) => this.httpClient.deleteResource(args.resource, args.ref, token));
+    handlers.set('getStats', (args: Record<string, unknown>, token: string) => this.httpClient.getStats(token));
+    handlers.set('getUserProfile', (args: Record<string, unknown>, token: string) => this.httpClient.getUserProfile(token));
+    handlers.set('getTrash', (args: Record<string, unknown>, token: string) => this.httpClient.getTrash(token));
+    handlers.set('restoreFromTrash', (args: Record<string, unknown>, token: string) => this.httpClient.restoreFromTrash(args, token));
+    handlers.set('purgeTrash', (args: Record<string, unknown>, token: string) => this.httpClient.purgeTrash(token));
+    handlers.set('deleteResource', (args: Record<string, unknown>, token: string) => this.httpClient.deleteResource(args.resource as string, args.ref as string, token));
 
     // Agents
-    handlers.set('listAgents', (args: any, token: string) => this.httpClient.listAgents(token));
-    handlers.set('createAgent', (args: any, token: string) => this.httpClient.createAgent(args, token));
-    handlers.set('getAgent', (args: any, token: string) => this.httpClient.getAgent(args.agentId, token));
-    handlers.set('executeAgent', (args: any, token: string) => {
+    handlers.set('listAgents', (args: Record<string, unknown>, token: string) => this.httpClient.listAgents(token));
+    handlers.set('createAgent', (args: Record<string, unknown>, token: string) => this.httpClient.createAgent(args, token));
+    handlers.set('getAgent', (args: Record<string, unknown>, token: string) => this.httpClient.getAgent(args.agentId as string, token));
+    handlers.set('executeAgent', (args: Record<string, unknown>, token: string) => {
       // Mapper les paramètres pour l'API V2
       const mappedArgs = {
-        ref: args.ref || args.agentId || args.agent_slug,
-        input: args.input || args.message
+        ref: (args.ref || args.agentId || args.agent_slug) as string,
+        input: (args.input || args.message) as string
       };
       return this.httpClient.executeAgent(mappedArgs, token);
     });
-    handlers.set('updateAgent', (args: any, token: string) => this.httpClient.updateAgent(args.agentId, args, token));
-    handlers.set('patchAgent', (args: any, token: string) => this.httpClient.patchAgent(args.agentId, args, token));
-    handlers.set('deleteAgent', (args: any, token: string) => this.httpClient.deleteAgent(args.agentId, token));
-
-    // Notes - Opérations avancées
-    handlers.set('applyContentOperations', (args: any, token: string) => this.httpClient.applyContentOperations(args.ref, args, token));
-    handlers.set('insertNoteContent', (args: any, token: string) => this.httpClient.insertNoteContent(args.ref, args, token));
-    handlers.set('getNoteTOC', (args: any, token: string) => this.httpClient.getNoteTOC(args.ref, token));
-    handlers.set('getNoteShareSettings', (args: any, token: string) => this.httpClient.getNoteShareSettings(args.ref, token));
-    handlers.set('updateNoteShareSettings', (args: any, token: string) => this.httpClient.updateNoteShareSettings(args.ref, args, token));
+    handlers.set('updateAgent', (args: Record<string, unknown>, token: string) => this.httpClient.updateAgent(args.agentId as string, args, token));
+    handlers.set('patchAgent', (args: Record<string, unknown>, token: string) => this.httpClient.patchAgent(args.agentId as string, args, token));
+    handlers.set('deleteAgent', (args: Record<string, unknown>, token: string) => this.httpClient.deleteAgent(args.agentId as string, token));
 
     // Classeurs - Opérations avancées
-    handlers.set('reorderClasseurs', (args: any, token: string) => this.httpClient.reorderClasseurs(args, token));
+    handlers.set('reorderClasseurs', (args: Record<string, unknown>, token: string) => this.httpClient.reorderClasseurs(args, token));
 
     // Debug
-    handlers.set('listTools', (args: any, token: string) => this.httpClient.listTools(token));
-    handlers.set('debugInfo', (args: any, token: string) => this.httpClient.debugInfo(token));
+    handlers.set('listTools', (args: Record<string, unknown>, token: string) => this.httpClient.listTools(token));
+    handlers.set('debugInfo', (args: Record<string, unknown>, token: string) => this.httpClient.debugInfo(token));
 
     return handlers;
   }
@@ -207,14 +206,14 @@ export class ApiV2ToolExecutor {
    * Nettoie les paramètres null des arguments de tool call
    * L'API Groq ne supporte pas les valeurs null pour les paramètres de type string
    */
-  private cleanNullParameters(args: any): any {
-    if (!args || typeof args !== 'object') {
-      return args;
+  private cleanNullParameters(args: unknown): Record<string, unknown> {
+    if (!args || typeof args !== 'object' || Array.isArray(args)) {
+      return {};
     }
 
-    const cleaned: any = {};
+    const cleaned: Record<string, unknown> = {};
     
-    for (const [key, value] of Object.entries(args)) {
+    for (const [key, value] of Object.entries(args as Record<string, unknown>)) {
       // Si la valeur est null, undefined, ou une chaîne vide, on l'omet complètement
       if (value === null || value === undefined || value === '') {
         logger.dev(`[ApiV2ToolExecutor] 🧹 Suppression du paramètre invalide: ${key} = ${value}`);
@@ -222,7 +221,7 @@ export class ApiV2ToolExecutor {
       }
       
       // Si c'est un objet, nettoyer récursivement
-      if (value && typeof value === 'object') {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
         cleaned[key] = this.cleanNullParameters(value);
       } else {
         cleaned[key] = value;

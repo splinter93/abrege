@@ -140,7 +140,7 @@ export class LLMConfigManager {
     }
     
     if (process.env.GROQ_SERVICE_TIER) {
-      config.providers.groq.serviceTier = process.env.GROQ_SERVICE_TIER as any;
+      config.providers.groq.serviceTier = process.env.GROQ_SERVICE_TIER as 'auto' | 'on_demand' | 'flex' | 'performance';
     }
 
     if (process.env.SYNESIA_API_KEY) {
@@ -195,7 +195,7 @@ export class LLMConfigManager {
     }
     
     if (process.env.LLM_LOG_LEVEL) {
-      config.monitoring.logLevel = process.env.LLM_LOG_LEVEL as any;
+      config.monitoring.logLevel = process.env.LLM_LOG_LEVEL as 'debug' | 'info' | 'warn' | 'error';
     }
 
     return config;

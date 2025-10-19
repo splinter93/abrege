@@ -368,24 +368,26 @@ export class SimpleChatOrchestrator {
   /**
    * Convertit les tool_calls du LLM en format ToolCall[]
    */
-  private convertToolCalls(rawToolCalls: any[]): ToolCall[] {
+  private convertToolCalls(rawToolCalls: unknown[]): ToolCall[] {
     if (!Array.isArray(rawToolCalls) || rawToolCalls.length === 0) return [];
 
     return rawToolCalls
-      .map((tc: any, idx: number) => {
-        if (!tc.function?.name) {
+      .map((tc: unknown, idx: number) => {
+        const toolCallObj = tc as { id?: string; function?: { name?: string; arguments?: string | Record<string, unknown> } };
+        
+        if (!toolCallObj.function?.name) {
           logger.warn(`[Orchestrator] ⚠️ Tool call ${idx} ignoré: name manquant`);
           return null;
         }
 
         const toolCall: ToolCall = {
-          id: tc.id ?? `call-${Date.now()}-${idx}`,
+          id: toolCallObj.id ?? `call-${Date.now()}-${idx}`,
           type: 'function' as const,
           function: {
-            name: tc.function.name,
-            arguments: typeof tc.function.arguments === 'string' 
-              ? tc.function.arguments 
-              : JSON.stringify(tc.function.arguments ?? {})
+            name: toolCallObj.function.name,
+            arguments: typeof toolCallObj.function.arguments === 'string' 
+              ? toolCallObj.function.arguments 
+              : JSON.stringify(toolCallObj.function.arguments ?? {})
           }
         };
 

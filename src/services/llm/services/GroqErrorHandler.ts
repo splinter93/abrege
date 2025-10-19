@@ -1,5 +1,6 @@
 import type { ToolExecutionResult, ErrorAnalysisResult } from '../types/groqTypes';
 import { simpleLogger as logger } from '@/utils/logger';
+import type { ToolCall } from '../types/strictTypes';
 
 /**
  * Service responsable de la gestion et analyse des erreurs pour Groq
@@ -134,7 +135,7 @@ export class GroqErrorHandler {
   /**
    * Détermine si on doit continuer après des erreurs
    */
-  shouldContinueAfterErrors(analysis: ErrorAnalysisResult, newToolCalls: any[]): boolean {
+  shouldContinueAfterErrors(analysis: ErrorAnalysisResult, newToolCalls: ToolCall[]): boolean {
     // Si des erreurs d'auth, ne pas continuer
     if (analysis.hasAuthErrors) {
       return false;

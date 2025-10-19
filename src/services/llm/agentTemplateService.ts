@@ -189,7 +189,7 @@ export class AgentTemplateService {
    */
   renderAgentTemplate(
     agentConfig: AgentTemplateConfig,
-    context: Record<string, any> = {},
+    context: Record<string, unknown> = {},
     fallbackTemplate: string = 'Tu es un assistant IA utile et bienveillant.'
   ): RenderedTemplate {
     let content = '';
@@ -271,12 +271,16 @@ export class AgentTemplateService {
   /**
    * Rendu du template contextuel avec remplacement de variables
    */
-  private renderContextTemplate(template: string, context: Record<string, any>): string {
+  private renderContextTemplate(template: string, context: Record<string, unknown>): string {
+    const getString = (value: unknown, defaultValue: string): string => {
+      return typeof value === 'string' ? value : defaultValue;
+    };
+    
     return template
-      .replace(/\{\{type\}\}/g, context.type || 'chat_session')
-      .replace(/\{\{name\}\}/g, context.name || 'Session de chat')
-      .replace(/\{\{id\}\}/g, context.id || 'current')
-      .replace(/\{\{content\}\}/g, context.content || 'Assistant de chat pour la gestion de notes et dossiers');
+      .replace(/\{\{type\}\}/g, getString(context.type, 'chat_session'))
+      .replace(/\{\{name\}\}/g, getString(context.name, 'Session de chat'))
+      .replace(/\{\{id\}\}/g, getString(context.id, 'current'))
+      .replace(/\{\{content\}\}/g, getString(context.content, 'Assistant de chat pour la gestion de notes et dossiers'));
   }
 
   /**

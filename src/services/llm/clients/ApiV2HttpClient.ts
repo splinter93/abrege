@@ -227,169 +227,169 @@ export class ApiV2HttpClient {
   // ============================================================================
 
   // Notes
-  async createNote(params: any, userToken: string) {
+  async createNote(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest('/note/create', 'POST', params, userToken);
   }
 
-  async getNote(params: any, userToken: string) {
+  async getNote(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     const { ref, fields = 'all' } = params;
     return this.makeRequest(`/note/${ref}`, 'GET', { fields }, userToken);
   }
 
-  async updateNote(ref: string, params: any, userToken: string) {
+  async updateNote(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest(`/note/${ref}/update`, 'PUT', params, userToken);
   }
 
-  async moveNote(ref: string, params: any, userToken: string) {
+  async moveNote(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest(`/note/${ref}/move`, 'POST', params, userToken);
   }
 
-  async insertNoteContent(ref: string, params: any, userToken: string) {
+  async insertNoteContent(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest(`/note/${ref}/insert-content`, 'POST', params, userToken);
   }
 
-  async applyContentOperations(ref: string, params: any, userToken: string) {
+  async applyContentOperations(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest(`/note/${ref}/content:apply`, 'POST', params, userToken);
   }
 
-  async getNoteTOC(ref: string, userToken: string) {
+  async getNoteTOC(ref: string, userToken: string): Promise<unknown> {
     return this.makeRequest(`/note/${ref}/table-of-contents`, 'GET', null, userToken);
   }
 
-  async getNoteShareSettings(ref: string, userToken: string) {
+  async getNoteShareSettings(ref: string, userToken: string): Promise<unknown> {
     return this.makeRequest(`/note/${ref}/share`, 'GET', null, userToken);
   }
 
-  async updateNoteShareSettings(ref: string, params: any, userToken: string) {
+  async updateNoteShareSettings(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest(`/note/${ref}/share`, 'PUT', params, userToken);
   }
 
-  async getRecentNotes(params: any, userToken: string) {
+  async getRecentNotes(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest('/note/recent', 'GET', params, userToken);
   }
 
   // Classeurs
-  async createClasseur(params: any, userToken: string) {
+  async createClasseur(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest('/classeur/create', 'POST', params, userToken);
   }
 
-  async getClasseur(params: any, userToken: string) {
+  async getClasseur(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     const { ref } = params;
     return this.makeRequest(`/classeur/${ref}`, 'GET', null, userToken);
   }
 
-  async updateClasseur(ref: string, params: any, userToken: string) {
+  async updateClasseur(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest(`/classeur/${ref}/update`, 'PUT', params, userToken);
   }
 
-  async getClasseurTree(ref: string, userToken: string) {
+  async getClasseurTree(ref: string, userToken: string): Promise<unknown> {
     return this.makeRequest(`/classeur/${ref}/tree`, 'GET', null, userToken);
   }
 
-  async getClasseursWithContent(userToken: string) {
+  async getClasseursWithContent(userToken: string): Promise<unknown> {
     return this.makeRequest('/classeurs/with-content', 'GET', null, userToken);
   }
 
-  async listClasseurs(userToken: string) {
+  async listClasseurs(userToken: string): Promise<unknown> {
     return this.makeRequest('/classeurs', 'GET', null, userToken);
   }
 
   // Dossiers
-  async createFolder(params: any, userToken: string) {
+  async createFolder(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest('/folder/create', 'POST', params, userToken);
   }
 
-  async getFolder(params: any, userToken: string) {
+  async getFolder(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     const { ref } = params;
     return this.makeRequest(`/folder/${ref}`, 'GET', null, userToken);
   }
 
-  async updateFolder(ref: string, params: any, userToken: string) {
+  async updateFolder(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest(`/folder/${ref}/update`, 'PUT', params, userToken);
   }
 
-  async moveFolder(ref: string, params: any, userToken: string) {
+  async moveFolder(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest(`/folder/${ref}/move`, 'POST', params, userToken);
   }
 
-  async getFolderTree(ref: string, userToken: string) {
+  async getFolderTree(ref: string, userToken: string): Promise<unknown> {
     return this.makeRequest(`/folder/${ref}/tree`, 'GET', null, userToken);
   }
 
   // Recherche
-  async searchContent(params: any, userToken: string) {
+  async searchContent(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest('/search', 'GET', params, userToken);
   }
 
-  async searchFiles(params: any, userToken: string) {
+  async searchFiles(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest('/files/search', 'GET', params, userToken);
   }
 
   // Autres
-  async getStats(userToken: string) {
+  async getStats(userToken: string): Promise<unknown> {
     return this.makeRequest('/stats', 'GET', null, userToken);
   }
 
-  async getUserProfile(userToken: string) {
+  async getUserProfile(userToken: string): Promise<unknown> {
     return this.makeRequest('/me', 'GET', null, userToken);
   }
 
-  async getTrash(userToken: string) {
+  async getTrash(userToken: string): Promise<unknown> {
     return this.makeRequest('/trash', 'GET', null, userToken);
   }
 
-  async restoreFromTrash(params: any, userToken: string) {
+  async restoreFromTrash(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest('/trash/restore', 'POST', params, userToken);
   }
 
-  async purgeTrash(userToken: string) {
+  async purgeTrash(userToken: string): Promise<unknown> {
     return this.makeRequest('/trash/purge', 'POST', null, userToken);
   }
 
-  async deleteResource(resource: string, ref: string, userToken: string) {
+  async deleteResource(resource: string, ref: string, userToken: string): Promise<unknown> {
     return this.makeRequest(`/delete/${resource}/${ref}`, 'DELETE', null, userToken);
   }
 
   // Agents
-  async listAgents(userToken: string) {
+  async listAgents(userToken: string): Promise<unknown> {
     return this.makeRequest('/agents', 'GET', null, userToken);
   }
 
-  async createAgent(params: any, userToken: string) {
+  async createAgent(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest('/agents', 'POST', params, userToken);
   }
 
-  async getAgent(agentId: string, userToken: string) {
+  async getAgent(agentId: string, userToken: string): Promise<unknown> {
     return this.makeRequest(`/agents/${agentId}`, 'GET', null, userToken);
   }
 
-  async executeAgent(params: any, userToken: string) {
+  async executeAgent(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest('/agents/execute', 'POST', params, userToken);
   }
 
-  async updateAgent(agentId: string, params: any, userToken: string) {
+  async updateAgent(agentId: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest(`/agents/${agentId}`, 'PUT', params, userToken);
   }
 
-  async patchAgent(agentId: string, params: any, userToken: string) {
+  async patchAgent(agentId: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest(`/agents/${agentId}`, 'PATCH', params, userToken);
   }
 
-  async deleteAgent(agentId: string, userToken: string) {
+  async deleteAgent(agentId: string, userToken: string): Promise<unknown> {
     return this.makeRequest(`/agents/${agentId}`, 'DELETE', null, userToken);
   }
 
   // Classeurs - Opérations avancées
-  async reorderClasseurs(params: any, userToken: string) {
+  async reorderClasseurs(params: Record<string, unknown>, userToken: string): Promise<unknown> {
     return this.makeRequest('/classeurs/reorder', 'POST', params, userToken);
   }
 
   // Debug
-  async listTools(userToken: string) {
+  async listTools(userToken: string): Promise<unknown> {
     return this.makeRequest('/tools', 'GET', null, userToken);
   }
 
-  async debugInfo(userToken: string) {
+  async debugInfo(userToken: string): Promise<unknown> {
     return this.makeRequest('/debug', 'GET', null, userToken);
   }
 }

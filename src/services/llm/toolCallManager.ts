@@ -3,11 +3,12 @@ import { OpenApiToolExecutor } from './openApiToolExecutor';
 import { ApiV2ToolExecutor } from './executors/ApiV2ToolExecutor';
 import { ChatMessage } from '@/types/chat';
 import { createHash } from 'crypto';
+import type { ToolCall } from './types/strictTypes';
 
 export interface ToolCallResult {
   tool_call_id: string;
   name: string;
-  result: any;
+  result: unknown;
   success: boolean;
   timestamp: string;
 }
@@ -39,7 +40,7 @@ export class ToolCallManager {
    * 🔒 Calculer un hash unique basé sur le contenu de la fonction (nom + arguments)
    * Permet de détecter les doublons même si les IDs sont différents
    */
-  private getFunctionHash(toolCall: any): string {
+  private getFunctionHash(toolCall: ToolCall): string {
     try {
       const { name, arguments: args } = toolCall.function;
       // Parser et normaliser les arguments pour éviter les différences de formatting
@@ -58,7 +59,7 @@ export class ToolCallManager {
    * Protection par ID ET par contenu (hash) + locks atomiques
    */
   async executeToolCall(
-    toolCall: any,
+    toolCall: ToolCall,
     userToken: string,
     maxRetries: number = 3,
     options?: { batchId?: string }
@@ -136,7 +137,7 @@ export class ToolCallManager {
    * 🔧 Exécution interne du tool call (appelée avec lock)
    */
   private async _executeToolCallInternal(
-    toolCall: any,
+    toolCall: ToolCall,
     userToken: string,
     maxRetries: number = 3,
     options?: { batchId?: string },
@@ -219,7 +220,7 @@ export class ToolCallManager {
     }
   }
 
-  private parseArguments(argumentsStr: string): any {
+  private parseArguments(argumentsStr: string): Record<string, unknown> {
     try { 
       const parsed = typeof argumentsStr === 'string' ? JSON.parse(argumentsStr || '{}') : (argumentsStr || {});
       
@@ -234,14 +235,14 @@ export class ToolCallManager {
    * Nettoie les paramètres null des arguments de tool call
    * L'API Groq ne supporte pas les valeurs null pour les paramètres de type string
    */
-  private cleanNullParameters(args: any): any {
-    if (!args || typeof args !== 'object') {
-      return args;
+  private cleanNullParameters(args: unknown): Record<string, unknown> {
+    if (!args || typeof args !== 'object' || Array.isArray(args)) {
+      return {};
     }
 
-    const cleaned: any = {};
+    const cleaned: Record<string, unknown> = {};
     
-    for (const [key, value] of Object.entries(args)) {
+    for (const [key, value] of Object.entries(args as Record<string, unknown>)) {
       // Si la valeur est null, undefined, ou une chaîne vide, on l'omet complètement
       if (value === null || value === undefined || value === '') {
         logger.dev(`[ToolCallManager] 🧹 Suppression du paramètre invalide: ${key} = ${value}`);
@@ -249,7 +250,7 @@ export class ToolCallManager {
       }
       
       // Si c'est un objet, nettoyer récursivement
-      if (value && typeof value === 'object') {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
         cleaned[key] = this.cleanNullParameters(value);
       } else {
         cleaned[key] = value;
@@ -260,13 +261,16 @@ export class ToolCallManager {
     return cleaned;
   }
 
-  private normalizeResult(rawResult: any, toolName: string, args: any): any {
-    if (rawResult && typeof rawResult === 'object' && 'success' in rawResult) return rawResult;
+  private normalizeResult(rawResult: unknown, toolName: string, args: Record<string, unknown>): Record<string, unknown> {
+    if (rawResult && typeof rawResult === 'object' && 'success' in rawResult) {
+      return rawResult as Record<string, unknown>;
+    }
     return { success: true, data: rawResult, tool: toolName, args };
   }
 
-  private detectErrorCode(error: any): string {
-    const t = String(error?.message || error || '').toLowerCase();
+  private detectErrorCode(error: unknown): string {
+    const errorObj = error as { message?: string } | undefined;
+    const t = String(errorObj?.message || error || '').toLowerCase();
     if (t.includes('timeout')) return 'TIMEOUT';
     if (t.includes('forbidden') || t.includes('permission')) return 'FORBIDDEN';
     if (t.includes('rls')) return 'RLS_DENIED';

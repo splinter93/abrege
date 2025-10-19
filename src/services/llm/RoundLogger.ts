@@ -139,7 +139,7 @@ export class RoundLogger {
     eventType: RoundEventType,
     level: RoundLogLevel,
     message: string,
-    data?: any
+    data?: Record<string, unknown>
   ): void {
     if (!this.config.enableLogging) return;
 
@@ -179,7 +179,7 @@ export class RoundLogger {
     startTime: number,
     endTime: number,
     success: boolean,
-    result?: any,
+    result?: unknown,
     error?: string
   ): void {
     const duration = endTime - startTime;
@@ -241,8 +241,8 @@ export class RoundLogger {
     startTime: number,
     endTime: number,
     success: boolean,
-    payload?: any,
-    response?: any,
+    payload?: unknown,
+    response?: unknown,
     error?: string
   ): void {
     const duration = endTime - startTime;
@@ -404,16 +404,16 @@ export class RoundLogger {
    */
   private initializeSanitizationRules(): void {
     // Règles pour les messages utilisateur
-    this.sanitizationRules.set('userMessage', (value: string) => {
-      if (!value) return value;
+    this.sanitizationRules.set('userMessage', (value: unknown) => {
+      if (typeof value !== 'string') return value;
       return value.length > 100 ? `${value.substring(0, 100)}...` : value;
     });
 
     // Règles pour les payloads API
-    this.sanitizationRules.set('payload', (value: any) => {
-      if (!value || typeof value !== 'object') return value;
+    this.sanitizationRules.set('payload', (value: unknown) => {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
       
-      const sanitized = { ...value };
+      const sanitized = { ...(value as Record<string, unknown>) };
       
       // Supprimer les clés sensibles
       ['api_key', 'authorization', 'token', 'password'].forEach(key => {
@@ -422,37 +422,50 @@ export class RoundLogger {
       
       // Limiter la taille des messages
       if (sanitized.messages && Array.isArray(sanitized.messages)) {
-        sanitized.messages = sanitized.messages.map((msg: any) => ({
-          ...msg,
-          content: msg.content ? `${msg.content.substring(0, 200)}${msg.content.length > 200 ? '...' : ''}` : msg.content
-        }));
+        sanitized.messages = sanitized.messages.map((msg: unknown) => {
+          if (typeof msg !== 'object' || !msg) return msg;
+          const message = msg as Record<string, unknown>;
+          const content = message.content;
+          return {
+            ...message,
+            content: typeof content === 'string'
+              ? `${content.substring(0, 200)}${content.length > 200 ? '...' : ''}` 
+              : content
+          };
+        });
       }
       
       return sanitized;
     });
 
     // Règles pour les réponses API
-    this.sanitizationRules.set('response', (value: any) => {
-      if (!value || typeof value !== 'object') return value;
+    this.sanitizationRules.set('response', (value: unknown) => {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
       
-      const sanitized = { ...value };
+      const sanitized = { ...(value as Record<string, unknown>) };
       
       // Limiter la taille du contenu
-      if (sanitized.content) {
+      if (typeof sanitized.content === 'string') {
         sanitized.content = `${sanitized.content.substring(0, 200)}${sanitized.content.length > 200 ? '...' : ''}`;
       }
       
       // Limiter la taille des tool calls
       if (sanitized.tool_calls && Array.isArray(sanitized.tool_calls)) {
-        sanitized.tool_calls = sanitized.tool_calls.map((tc: any) => ({
-          ...tc,
-          function: {
-            ...tc.function,
-            arguments: tc.function?.arguments ? 
-              `${tc.function.arguments.substring(0, 100)}${tc.function.arguments.length > 100 ? '...' : ''}` : 
-              tc.function?.arguments
-          }
-        }));
+        sanitized.tool_calls = sanitized.tool_calls.map((tc: unknown) => {
+          if (typeof tc !== 'object' || !tc) return tc;
+          const toolCall = tc as Record<string, unknown>;
+          const funcObj = toolCall.function as Record<string, unknown> | undefined;
+          
+          return {
+            ...toolCall,
+            function: funcObj ? {
+              ...funcObj,
+              arguments: typeof funcObj.arguments === 'string'
+                ? `${funcObj.arguments.substring(0, 100)}${funcObj.arguments.length > 100 ? '...' : ''}` 
+                : funcObj.arguments
+            } : funcObj
+          };
+        });
       }
       
       return sanitized;
@@ -462,7 +475,7 @@ export class RoundLogger {
   /**
    * 🧹 Sanitiser les données selon les règles
    */
-  private sanitizeData(data: any): any {
+  private sanitizeData(data: unknown): unknown {
     if (!this.config.enableSanitization || !data) return data;
 
     try {
@@ -471,9 +484,9 @@ export class RoundLogger {
         return data.length > 500 ? `${data.substring(0, 500)}...` : data;
       }
       
-      if (typeof data === 'object') {
+      if (typeof data === 'object' && !Array.isArray(data)) {
         const sanitized: Record<string, unknown> = {};
-        for (const [key, value] of Object.entries(data)) {
+        for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
           sanitized[key] = this.sanitizeData(value);
         }
         return sanitized;
@@ -490,7 +503,8 @@ export class RoundLogger {
    */
   private sanitizeMessage(message?: string): string | undefined {
     if (!message) return message;
-    return this.sanitizationRules.get('userMessage')?.(message) || message;
+    const sanitized = this.sanitizationRules.get('userMessage')?.(message);
+    return typeof sanitized === 'string' ? sanitized : message;
   }
 
   /**
@@ -512,11 +526,13 @@ export class RoundLogger {
   /**
    * 🧹 Sanitiser un résultat de tool
    */
-  private sanitizeToolResult(result?: Record<string, unknown>): Record<string, unknown> | string | undefined {
+  private sanitizeToolResult(result?: unknown): unknown {
     if (!result) return result;
     
     try {
-      const sanitized = { ...result };
+      if (typeof result !== 'object' || Array.isArray(result)) return result;
+      
+      const sanitized = { ...(result as Record<string, unknown>) };
       
       // Supprimer les données sensibles
       ['token', 'api_key', 'password', 'secret'].forEach(key => {

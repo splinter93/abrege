@@ -1,4 +1,30 @@
 import { simpleLogger as logger } from '@/utils/logger';
+import type { ToolCall, ToolResult } from '../types/agentTypes';
+
+/**
+ * Message assistant avec tool calls
+ */
+interface AssistantMessage {
+  content?: string | null;
+  tool_calls?: ToolCall[];
+  timestamp?: string;
+}
+
+/**
+ * Message à persister (assistant ou tool)
+ */
+interface MessageToPersist {
+  role: 'assistant' | 'tool';
+  content?: string | null;
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
+  name?: string;
+  timestamp: string;
+  relance_index: number;
+  success?: boolean;
+  error?: unknown;
+  duration_ms?: number;
+}
 
 /**
  * Service de persistance atomique des messages tool via l'API batch
@@ -29,12 +55,12 @@ export class BatchMessageService {
    */
   async persistToolMessages(
     sessionId: string,
-    toolCalls: any[],
-    toolResults: any[],
+    toolCalls: ToolCall[],
+    toolResults: ToolResult[],
     operationId: string,
     relanceIndex: number,
     includeAssistantMessage: boolean = false,
-    assistantMessage?: any
+    assistantMessage?: AssistantMessage
   ): Promise<BatchPersistResult> {
     try {
       logger.info(`[BatchMessageService] 💾 Persistance batch (op: ${operationId}, relance: ${relanceIndex})`);
@@ -83,7 +109,7 @@ export class BatchMessageService {
   /**
    * Valide strictement les messages tool
    */
-  private validateToolMessages(toolCalls: any[], toolResults: any[]): ToolValidationResult {
+  private validateToolMessages(toolCalls: ToolCall[], toolResults: ToolResult[]): ToolValidationResult {
     const errors: string[] = [];
 
     // Vérifier la correspondance 1:1
@@ -137,17 +163,17 @@ export class BatchMessageService {
    * Construit les messages à persister
    */
   private buildMessagesToPersist(
-    toolCalls: any[],
-    toolResults: any[],
+    toolCalls: ToolCall[],
+    toolResults: ToolResult[],
     relanceIndex: number,
     includeAssistantMessage: boolean,
-    assistantMessage?: any
-  ): any[] {
-    const messages: any[] = [];
+    assistantMessage?: AssistantMessage
+  ): MessageToPersist[] {
+    const messages: MessageToPersist[] = [];
 
     // 1. Message assistant avec tool_calls (si demandé et pas encore en DB)
     if (includeAssistantMessage && assistantMessage) {
-      const assistantMsg = {
+      const assistantMsg: MessageToPersist = {
         role: 'assistant' as const,
         content: assistantMessage.content || null,
         tool_calls: toolCalls,
@@ -158,7 +184,7 @@ export class BatchMessageService {
     }
 
     // 2. Messages tool dans l'ordre EXACT des tool_calls
-    const toolMessages = toolCalls.map((toolCall, index) => {
+    const toolMessages: MessageToPersist[] = toolCalls.map((toolCall, index) => {
       const toolResult = toolResults[index];
       if (!toolResult) {
         throw new Error(`Tool result manquant pour tool call ${index}`);
@@ -172,18 +198,20 @@ export class BatchMessageService {
         timestamp: new Date().toISOString(),
         relance_index: relanceIndex,
         success: toolResult.success,
-        error: toolResult.result?.error || null,
+        error: (toolResult.result && typeof toolResult.result === 'object' && 'error' in toolResult.result) 
+          ? (toolResult.result as { error: unknown }).error 
+          : null,
         duration_ms: toolResult.duration_ms
       };
     });
 
     messages.push(...toolMessages);
 
-          logger.dev(`[BatchMessageService] 🔧 Messages construits:`, {
-        assistantMessage: includeAssistantMessage,
-        toolMessages: toolMessages.length,
-        total: messages.length
-      });
+    logger.dev(`[BatchMessageService] 🔧 Messages construits:`, {
+      assistantMessage: includeAssistantMessage,
+      toolMessages: toolMessages.length,
+      total: messages.length
+    });
 
     return messages;
   }
@@ -191,7 +219,7 @@ export class BatchMessageService {
   /**
    * Normalise le contenu des messages tool (toujours string JSON)
    */
-  private normalizeToolContent(result: any): string {
+  private normalizeToolContent(result: unknown): string {
     try {
       if (typeof result === 'string') {
         // Vérifier si c'est déjà du JSON valide
@@ -212,7 +240,7 @@ export class BatchMessageService {
    */
   private async callBatchAPI(
     sessionId: string,
-    messages: any[],
+    messages: MessageToPersist[],
     operationId: string,
     relanceIndex: number
   ): Promise<BatchAPIResponse> {

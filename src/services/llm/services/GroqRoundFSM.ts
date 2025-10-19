@@ -3,8 +3,10 @@ import type {
   RoundContext, 
   FSMConfig, 
   RoundData,
-  RoundMetrics 
+  RoundMetrics,
+  GroqRoundResult
 } from '../types/groqTypes';
+import type { LLMResponse, ToolResult } from '../types/strictTypes';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
@@ -52,7 +54,10 @@ export class GroqRoundFSM {
       toolCalls: [],
       toolResults: [],
       secondResponse: null,
-      finalResult: null as any
+      finalResult: {
+        success: false,
+        sessionId: '',
+      } as GroqRoundResult
     };
   }
 
@@ -362,7 +367,7 @@ export class GroqRoundFSM {
   /**
    * Injecte une réponse du premier appel
    */
-  injectFirstResponse(response: any): void {
+  injectFirstResponse(response: LLMResponse): void {
     this.data.firstResponse = response;
     this.data.toolCalls = response.tool_calls || [];
   }
@@ -370,21 +375,21 @@ export class GroqRoundFSM {
   /**
    * Injecte les résultats des tools
    */
-  injectToolResults(results: any[]): void {
+  injectToolResults(results: ToolResult[]): void {
     this.data.toolResults = results;
   }
 
   /**
    * Injecte la réponse du second appel
    */
-  injectSecondResponse(response: any): void {
+  injectSecondResponse(response: LLMResponse): void {
     this.data.secondResponse = response;
   }
 
   /**
    * Injecte le résultat final
    */
-  injectFinalResult(result: any): void {
+  injectFinalResult(result: GroqRoundResult): void {
     this.data.finalResult = result;
   }
 } 

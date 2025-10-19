@@ -4,17 +4,20 @@ import type { ChatMessage } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSystemMessage } from '../../templates';
 import { systemMessageBuilder } from '../../SystemMessageBuilder';
-
-/**
- * Interface étendue pour le provider Groq qui retourne la structure attendue par l'orchestrateur
- */
-export interface LLMResponse {
-  content: string;
-  tool_calls?: any[];
-  model?: string;
-  usage?: any;
-  reasoning?: string;
-}
+import type {
+  LLMResponse,
+  ToolCall,
+  Tool,
+  FunctionTool,
+  McpTool,
+  GroqMessage,
+  GroqChatCompletionResponse,
+  GroqResponsesApiResponse,
+  GroqResponsesApiOutput,
+  McpCall,
+  Usage,
+  isMcpTool
+} from '../../types/strictTypes';
 
 /**
  * Configuration spécifique à Groq
@@ -154,7 +157,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue un appel à l'API Groq avec support des function calls
    */
-  async call(message: string, context: AppContext, history: ChatMessage[]): Promise<any> {
+  async call(message: string, context: AppContext, history: ChatMessage[]): Promise<LLMResponse> {
     if (!this.isAvailable()) {
       throw new Error('Groq provider non configuré');
     }
@@ -171,7 +174,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const messages = this.prepareMessages(message, context, history);
       
       // Préparer le payload (sans streaming)
-      const payload = await this.preparePayload(messages);
+      const payload = await this.preparePayload(messages, []);
       payload.stream = false; // Forcer le mode non-streaming
       
       // Effectuer l'appel API
@@ -215,17 +218,17 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    * ✅ OPTIMISATION: Les messages sont déjà formatés par GroqHistoryBuilder
    * ✅ MIGRATION MCP: Utilise l'API Responses pour les tools MCP
    */
-  async callWithMessages(messages: ChatMessage[], tools: any[]): Promise<LLMResponse> {
+  async callWithMessages(messages: ChatMessage[], tools: Tool[]): Promise<LLMResponse> {
     if (!this.isAvailable()) {
       throw new Error('Groq provider non configuré');
     }
 
     try {
       // ✅ DÉTECTION MCP: Router vers l'API appropriée
-      const hasMcpTools = tools && tools.some((t: any) => t.type === 'mcp');
+      const hasMcpTools = tools && tools.some((t) => isMcpTool(t));
       
       if (hasMcpTools) {
-        logger.dev(`[GroqProvider] 🔀 Détection de ${tools.filter((t: any) => t.type === 'mcp').length} tools MCP → API Responses`);
+        logger.dev(`[GroqProvider] 🔀 Détection de ${tools.filter((t) => isMcpTool(t)).length} tools MCP → API Responses`);
         return await this.callWithResponsesApi(messages, tools);
       }
       
@@ -260,16 +263,16 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * ✅ NOUVELLE MÉTHODE: Convertit les ChatMessage vers le format API Groq
    */
-  private convertChatMessagesToApiFormat(messages: ChatMessage[]): any[] {
+  private convertChatMessagesToApiFormat(messages: ChatMessage[]): GroqMessage[] {
     return messages.map(msg => {
-      const messageObj: any = {
+      const messageObj: GroqMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool' | 'developer',
         content: msg.content
       };
 
       // Gérer les tool calls pour les messages assistant
       if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
-        messageObj.tool_calls = msg.tool_calls;
+        messageObj.tool_calls = msg.tool_calls as ToolCall[];
       }
 
       // Gérer les tool results pour les messages tool
@@ -292,7 +295,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    * 
    * Voir: https://console.groq.com/docs/mcp
    */
-  private async callWithResponsesApi(messages: ChatMessage[], tools: any[]): Promise<LLMResponse> {
+  private async callWithResponsesApi(messages: ChatMessage[], tools: Tool[]): Promise<LLMResponse> {
     try {
       logger.dev(`[GroqProvider] 🔄 Appel Responses API avec ${messages.length} messages et ${tools.length} tools`);
       
@@ -312,9 +315,9 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       logger.dev('[GroqProvider] 📤 Payload Responses API:', {
         model: payload.model,
         inputType: typeof input,
-        inputLength: typeof input === 'string' ? input.length : input.length,
+        inputLength: typeof input === 'string' ? input.length : Array.isArray(input) ? input.length : 0,
         toolsCount: tools.length,
-        mcpServers: tools.filter((t: any) => t.type === 'mcp').map((t: any) => t.server_label)
+        mcpServers: tools.filter((t) => isMcpTool(t)).map((t) => (t as McpTool).server_label)
       });
       
       // ✅ DEBUG: Logger le payload complet pour identifier le problème
@@ -335,7 +338,15 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         const errorText = await response.text();
         
         // ✅ Parser l'erreur pour extraire les détails
-        let errorDetails: any = {};
+        interface ErrorDetails {
+          error?: {
+            message?: string;
+            code?: string;
+            failed_generation?: unknown;
+          };
+        }
+        
+        let errorDetails: ErrorDetails = {};
         try {
           errorDetails = JSON.parse(errorText);
         } catch {
@@ -369,14 +380,14 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
               failed_generation: failedGeneration,
               recoverable: true
             }
-          } as any;
+          };
         }
         
         // Pour les autres erreurs, throw normalement
         throw new Error(`Groq Responses API error: ${response.status} - ${errorText}`);
       }
 
-      const responseData = await response.json();
+      const responseData = await response.json() as GroqResponsesApiResponse;
       logger.dev('[GroqProvider] 📥 Réponse Responses API:', {
         id: responseData.id,
         status: responseData.status,
@@ -412,7 +423,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    * ⚠️ IMPORTANT: Responses API ne supporte QUE les roles: user, assistant, system, developer
    * Les messages 'tool' doivent être filtrés ou convertis
    */
-  private convertMessagesToInput(messages: ChatMessage[]): string | any[] {
+  private convertMessagesToInput(messages: ChatMessage[]): string | GroqMessage[] {
     // Si on a juste un message user, on peut simplifier
     if (messages.length === 1 && messages[0].role === 'user') {
       return messages[0].content || '';
@@ -426,8 +437,8 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     // - Supprimer les tool_calls (le LLM ne doit pas apprendre des anciens patterns)
     // - Supprimer les tool_call_id
     // - Nettoyer les suffixes legacy <|channel|>xxx dans le contenu
-    const cleanedMessages = filteredMessages.map(msg => {
-      const cleanMsg: any = {
+    const cleanedMessages: GroqMessage[] = filteredMessages.map(msg => {
+      const cleanMsg: GroqMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'developer',
         content: msg.content
       };
@@ -453,13 +464,13 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    * - mcp_call: Exécution d'un tool MCP
    * - message: Réponse finale
    */
-  private parseResponsesOutput(responseData: any): LLMResponse {
+  private parseResponsesOutput(responseData: GroqResponsesApiResponse): LLMResponse {
     const output = responseData.output || [];
     
     let finalContent = '';
     let reasoning = '';
-    const tool_calls: any[] = [];
-    const mcpCalls: any[] = [];
+    const tool_calls: ToolCall[] = [];
+    const mcpCalls: McpCall[] = [];
     
     // ✅ Parser chaque élément de l'output
     for (const item of output) {
@@ -473,8 +484,8 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
           // Raisonnement du modèle
           if (item.content && Array.isArray(item.content)) {
             const reasoningTexts = item.content
-              .filter((c: any) => c.type === 'reasoning_text')
-              .map((c: any) => c.text);
+              .filter((c) => c.type === 'reasoning_text')
+              .map((c) => c.text);
             reasoning = reasoningTexts.join('\n');
             logger.dev(`[GroqProvider] 🧠 Reasoning: ${reasoning.substring(0, 200)}...`);
             
@@ -482,6 +493,10 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
             // Pour afficher le raisonnement entre les tool calls
             if (!mcpCalls.find(c => c.type === 'commentary')) {
               mcpCalls.push({
+                server_label: '',
+                name: '',
+                arguments: {},
+                output: undefined,
                 type: 'commentary',
                 content: reasoning,
                 timestamp: new Date().toISOString()
@@ -493,15 +508,15 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         case 'mcp_call':
           // Exécution d'un tool MCP
           // ✅ WORKAROUND HARMONY: Nettoyer les suffixes <|channel|>xxx si présents
-          const cleanedName = item.name.replace(/<\|channel\|>\w+$/i, '');
+          const cleanedName = (item.name || '').replace(/<\|channel\|>\w+$/i, '');
           
           logger.dev(`[GroqProvider] 🔧 MCP call: ${cleanedName} sur ${item.server_label}` + 
             (cleanedName !== item.name ? ` (nettoyé de "${item.name}")` : ''));
           
           mcpCalls.push({
-            server_label: item.server_label,
+            server_label: item.server_label || '',
             name: cleanedName,
-            arguments: item.arguments,
+            arguments: (item.arguments as Record<string, unknown>) || {},
             output: item.output
           });
           
@@ -511,7 +526,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
             type: 'function' as const,
             function: {
               name: `${item.server_label}_${cleanedName}`,
-              arguments: item.arguments || '{}'
+              arguments: JSON.stringify(item.arguments || {})
             }
           });
           break;
@@ -521,8 +536,8 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
           if (item.role === 'assistant' && item.content) {
             if (Array.isArray(item.content)) {
               const outputTexts = item.content
-                .filter((c: any) => c.type === 'output_text' || c.type === 'text')
-                .map((c: any) => c.text);
+                .filter((c) => c.type === 'output_text' || c.type === 'text')
+                .map((c) => c.text);
               finalContent = outputTexts.join('\n');
             } else if (typeof item.content === 'string') {
               finalContent = item.content;
@@ -547,14 +562,14 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         ...responseData.x_groq,
         mcp_calls: mcpCalls
       }
-    } as any;
+    };
   }
 
   /**
    * Prépare les messages pour l'API (méthode legacy - à supprimer progressivement)
    */
-  private prepareMessages(message: string, context: AppContext, history: ChatMessage[]) {
-    const messages: Array<any> = [];
+  private prepareMessages(message: string, context: AppContext, history: ChatMessage[]): GroqMessage[] {
+    const messages: GroqMessage[] = [];
 
     // Message système avec contexte
     const systemContent = this.formatSystemMessage(context);
@@ -565,14 +580,14 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
 
     // Historique des messages
     for (const msg of history) {
-      const messageObj: any = {
+      const messageObj: GroqMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool' | 'developer',
         content: msg.content
       };
 
       // ✅ Gérer les tool calls pour les messages assistant
       if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
-        messageObj.tool_calls = msg.tool_calls;
+        messageObj.tool_calls = msg.tool_calls as ToolCall[];
       }
 
       // ✅ Gérer les tool results pour les messages tool
@@ -587,7 +602,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
 
       // ✅ Transformer `tool_results` (si présents sur un message assistant) en messages `tool` séparés
       if (msg.role === 'assistant' && msg.tool_results && msg.tool_results.length > 0) {
-        for (const result of (msg.tool_results as any[])) {
+        for (const result of msg.tool_results) {
           messages.push({
             role: 'tool',
             tool_call_id: result.tool_call_id,
@@ -610,7 +625,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Prépare le payload pour l'API Groq avec support des tools
    */
-  private async preparePayload(messages: any[], tools: any[]) {
+  private async preparePayload(messages: GroqMessage[], tools: Tool[]): Promise<Record<string, unknown>> {
     // Nettoyer les messages pour Groq (supprimer id et timestamp)
     const cleanedMessages = messages.map(msg => ({
       role: msg.role,
@@ -619,7 +634,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       ...(msg.tool_call_id && { tool_call_id: msg.tool_call_id })
     }));
 
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       model: this.config.model,
       messages: cleanedMessages,
       temperature: this.config.temperature,
@@ -640,7 +655,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Extrait les outils du message developer
    */
-  private extractToolsFromDeveloperMessage(content: string): any[] {
+  private extractToolsFromDeveloperMessage(content: string): FunctionTool[] {
     try {
       logger.dev(`[GroqProvider] 🔍 Extraction outils depuis message developer (${content.length} chars)`);
       
@@ -654,7 +669,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const toolCodeContent = toolCodeMatch[1].trim();
       logger.dev(`[GroqProvider] 🔍 Contenu tool_code extrait (${toolCodeContent.length} chars):`, toolCodeContent.substring(0, 200) + '...');
       
-      const tools: any[] = [];
+      const tools: FunctionTool[] = [];
 
       // Parser chaque outil (séparés par des lignes vides)
       const toolSections = toolCodeContent.split(/\n\s*\n/);
@@ -681,7 +696,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
           if (paramsStartIndex >= 0 && paramsStartIndex + 1 < lines.length) {
             const paramsJson = lines.slice(paramsStartIndex + 1).join('\n').trim();
             try {
-              const parameters = JSON.parse(paramsJson);
+              const parameters = JSON.parse(paramsJson) as Record<string, unknown>;
               
               // ✅ Validation des champs requis
               if (!name || !description || !parameters) {
@@ -690,7 +705,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
                   hasDescription: !!description,
                   hasParameters: !!parameters
                 });
-                return;
+                continue;
               }
 
               tools.push({
@@ -698,7 +713,16 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
                 function: {
                   name,
                   description,
-                  parameters
+                  parameters: {
+                    type: 'object',
+                    properties: (parameters.properties as Record<string, {
+                      type: string;
+                      description?: string;
+                      enum?: string[];
+                      [key: string]: unknown;
+                    }>) || {},
+                    required: (parameters.required as string[]) || []
+                  }
                 }
               });
               
@@ -728,7 +752,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue l'appel API à Groq
    */
-  private async makeApiCall(payload: any) {
+  private async makeApiCall(payload: Record<string, unknown>): Promise<GroqChatCompletionResponse> {
     const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -751,7 +775,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       throw new Error('Streaming non supporté dans le provider Groq - utilisez la route API directement');
     }
 
-    const responseData = await response.json();
+    const responseData = await response.json() as GroqChatCompletionResponse;
     logger.dev('[GroqProvider] 🔍 Réponse brute de l\'API Groq:', {
       responseData: responseData,
       responseType: typeof responseData,
@@ -767,13 +791,13 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Extrait la réponse de l'API Groq avec support des tool calls
    */
-  private extractResponse(response: any): any {
+  private extractResponse(response: GroqChatCompletionResponse): LLMResponse {
     if (!response.choices || response.choices.length === 0) {
       throw new Error('Réponse invalide de Groq API');
     }
 
     const choice = response.choices[0];
-    const result: any = {
+    const result: LLMResponse = {
       content: choice?.message?.content ?? '',
       model: response.model,
       usage: response.usage
@@ -784,7 +808,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       result.tool_calls = choice.message.tool_calls;
       logger.dev(`[GroqProvider] 🔧 ${result.tool_calls.length} tool calls détectés`);
       
-      result.tool_calls.forEach((toolCall: any, index: number) => {
+      result.tool_calls.forEach((toolCall, index) => {
         logger.dev(`[GroqProvider] Tool call ${index + 1}: ${toolCall.function.name}`);
       });
     }
@@ -828,7 +852,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Retourne les tools disponibles pour les function calls
    */
-  getFunctionCallTools(): any[] {
+  getFunctionCallTools(): Tool[] {
     try {
       // TODO: Réactiver quand le service sera créé
       // Importer dynamiquement les tools OpenAPI V2
@@ -865,11 +889,18 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         throw new Error(`Erreur ${response.status}: ${response.statusText}`);
       }
 
-      const models = await response.json();
+      interface ModelsResponse {
+        data: Array<{
+          id: string;
+          [key: string]: unknown;
+        }>;
+      }
+
+      const models = await response.json() as ModelsResponse;
       logger.dev(`[GroqProvider] ✅ Connexion réussie - ${models.data.length} modèles disponibles`);
       
       // Vérifier si GPT OSS est disponible
-      const gptOssModels = models.data.filter((model: any) => 
+      const gptOssModels = models.data.filter((model) => 
         model.id.includes('gpt-oss')
       );
       
@@ -885,11 +916,11 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
   /**
    * Test d'appel avec function calls
    */
-  async testFunctionCalls(tools: any[]): Promise<boolean> {
+  async testFunctionCalls(tools: Tool[]): Promise<boolean> {
     try {
       logger.dev('[GroqProvider] 🧪 Test d\'appel avec function calls...');
       
-      const messages = [
+      const messages: GroqMessage[] = [
         {
           role: 'system',
           content: getSystemMessage('assistant-tools')
@@ -942,7 +973,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       timestampGranularities?: ('word' | 'segment')[];
       temperature?: number;
     } = {}
-  ): Promise<any> {
+  ): Promise<unknown> {
     if (!this.isAvailable()) {
       throw new Error('Groq provider non configuré');
     }
@@ -1018,7 +1049,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       timestampGranularities?: ('word' | 'segment')[];
       temperature?: number;
     } = {}
-  ): Promise<any> {
+  ): Promise<unknown> {
     if (!this.isAvailable()) {
       throw new Error('Groq provider non configuré');
     }
@@ -1091,7 +1122,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       timestampGranularities?: ('word' | 'segment')[];
       temperature?: number;
     } = {}
-  ): Promise<any> {
+  ): Promise<unknown> {
     if (!this.isAvailable()) {
       throw new Error('Groq provider non configuré');
     }
@@ -1100,7 +1131,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       logger.dev(`[GroqProvider] 🎤 Transcription audio depuis URL avec ${this.config.audioModel}`);
 
       // Préparer le payload
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         model: this.config.audioModel || 'whisper-large-v3-turbo',
         url: url,
         temperature: options.temperature || 0,

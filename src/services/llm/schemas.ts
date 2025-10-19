@@ -75,7 +75,7 @@ export const ChatMessageSchema = z.union([
 export const ThreadSchema = z.array(ChatMessageSchema);
 
 // 🎯 Schéma pour la validation des arguments de tool
-export const ToolArgumentsSchema = z.record(z.any()).refine(
+export const ToolArgumentsSchema = z.record(z.unknown()).refine(
   (args) => {
     // Vérifier que les arguments sont sérialisables en JSON
     try {
@@ -91,18 +91,18 @@ export const ToolArgumentsSchema = z.record(z.any()).refine(
 // 🎯 Schéma pour la validation des résultats de tool
 export const ToolResultSchema = z.object({
   success: z.boolean(),
-  data: z.any().optional(),
+  data: z.unknown().optional(),
   error: z.object({
     code: z.string(),
     message: z.string(),
-    details: z.any().optional()
+    details: z.unknown().optional()
   }).optional(),
   duration_ms: z.number().positive().optional(),
   timestamp: z.string().datetime().optional()
 });
 
 // 🎯 Guards TypeScript pour la validation runtime
-export const isAssistantWithToolCalls = (message: any): message is z.infer<typeof AssistantWithToolCallsSchema> => {
+export const isAssistantWithToolCalls = (message: unknown): message is z.infer<typeof AssistantWithToolCallsSchema> => {
   try {
     AssistantWithToolCallsSchema.parse(message);
     return true;
@@ -111,7 +111,7 @@ export const isAssistantWithToolCalls = (message: any): message is z.infer<typeo
   }
 };
 
-export const isToolMessage = (message: any): message is z.infer<typeof ToolMessageSchema> => {
+export const isToolMessage = (message: unknown): message is z.infer<typeof ToolMessageSchema> => {
   try {
     ToolMessageSchema.parse(message);
     return true;
@@ -120,7 +120,7 @@ export const isToolMessage = (message: any): message is z.infer<typeof ToolMessa
   }
 };
 
-export const isUserMessage = (message: any): message is z.infer<typeof UserMessageSchema> => {
+export const isUserMessage = (message: unknown): message is z.infer<typeof UserMessageSchema> => {
   try {
     UserMessageSchema.parse(message);
     return true;
@@ -129,7 +129,7 @@ export const isUserMessage = (message: any): message is z.infer<typeof UserMessa
   }
 };
 
-export const isSystemMessage = (message: any): message is z.infer<typeof SystemMessageSchema> => {
+export const isSystemMessage = (message: unknown): message is z.infer<typeof SystemMessageSchema> => {
   try {
     SystemMessageSchema.parse(message);
     return true;
@@ -139,7 +139,7 @@ export const isSystemMessage = (message: any): message is z.infer<typeof SystemM
 };
 
 // 🎯 Validation complète d'un message
-export const validateMessage = (message: any): { isValid: boolean; errors: string[] } => {
+export const validateMessage = (message: unknown): { isValid: boolean; errors: string[] } => {
   try {
     ChatMessageSchema.parse(message);
     return { isValid: true, errors: [] };
@@ -155,9 +155,9 @@ export const validateMessage = (message: any): { isValid: boolean; errors: strin
 };
 
 // 🎯 Validation d'un thread complet
-export const validateThread = (thread: any[]): { isValid: boolean; errors: string[]; validMessages: any[] } => {
+export const validateThread = (thread: unknown[]): { isValid: boolean; errors: string[]; validMessages: unknown[] } => {
   const errors: string[] = [];
-  const validMessages: any[] = [];
+  const validMessages: unknown[] = [];
 
   for (let i = 0; i < thread.length; i++) {
     const message = thread[i];
@@ -178,7 +178,7 @@ export const validateThread = (thread: any[]): { isValid: boolean; errors: strin
 };
 
 // 🎯 Validation spécifique des tool calls
-export const validateToolCalls = (toolCalls: any[]): { isValid: boolean; errors: string[] } => {
+export const validateToolCalls = (toolCalls: unknown[]): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
   for (let i = 0; i < toolCalls.length; i++) {
@@ -200,7 +200,7 @@ export const validateToolCalls = (toolCalls: any[]): { isValid: boolean; errors:
 };
 
 // 🎯 Validation des arguments JSON
-export const validateToolArguments = (argumentsStr: string): { isValid: boolean; parsed: any; error?: string } => {
+export const validateToolArguments = (argumentsStr: string): { isValid: boolean; parsed: unknown; error?: string } => {
   try {
     const parsed = JSON.parse(argumentsStr);
     return { isValid: true, parsed };
@@ -214,7 +214,7 @@ export const validateToolArguments = (argumentsStr: string): { isValid: boolean;
 };
 
 // 🎯 Validation des résultats de tool
-export const validateToolResult = (result: any): { isValid: boolean; normalized: any; errors: string[] } => {
+export const validateToolResult = (result: unknown): { isValid: boolean; normalized: unknown; errors: string[] } => {
   try {
     const normalized = ToolResultSchema.parse(result);
     return { isValid: true, normalized, errors: [] };

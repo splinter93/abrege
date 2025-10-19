@@ -205,7 +205,7 @@ export class SystemMessageTemplateManager {
   /**
    * Rend un template avec des variables
    */
-  renderTemplate(templateId: string, variables: Record<string, any>): string {
+  renderTemplate(templateId: string, variables: Record<string, unknown>): string {
     const template = this.getTemplate(templateId);
     if (!template) {
       throw new Error(`Template '${templateId}' non trouvé`);
@@ -272,7 +272,7 @@ export class SystemMessageTemplateManager {
 /**
  * Fonctions utilitaires pour la compatibilité
  */
-export const getSystemMessage = (templateId: string, variables?: Record<string, any>): string => {
+export const getSystemMessage = (templateId: string, variables?: Record<string, unknown>): string => {
   const manager = SystemMessageTemplateManager.getInstance();
   try {
     return manager.renderTemplate(templateId, variables || {});
@@ -282,7 +282,7 @@ export const getSystemMessage = (templateId: string, variables?: Record<string, 
   }
 };
 
-export const getDefaultSystemMessage = (variables?: Record<string, any>): string => {
+export const getDefaultSystemMessage = (variables?: Record<string, unknown>): string => {
   const manager = SystemMessageTemplateManager.getInstance();
   return manager.renderTemplate(manager.getDefaultTemplate().id, variables || {});
 };
@@ -291,6 +291,6 @@ export const buildOneShotSystemInstruction = (): string => {
   return getSystemMessage('assistant-error-handler');
 };
 
-export const buildContextualSystemMessage = (context: any): string => {
+export const buildContextualSystemMessage = (context: unknown): string => {
   return getSystemMessage('assistant-contextual', { context });
 }; 

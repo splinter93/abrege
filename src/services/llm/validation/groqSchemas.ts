@@ -95,7 +95,7 @@ export const RoundParamsSchema = z.object({
     content: z.string()
   }),
   sessionHistory: z.array(ChatMessageSchema),
-  agentConfig: z.any().optional(),
+  agentConfig: z.unknown().optional(),
   userToken: z.string().min(1, 'Token utilisateur requis'),
   sessionId: z.string().min(1, 'ID de session requis')
 });
@@ -106,7 +106,7 @@ export const RoundResultSchema = z.object({
   content: z.string().optional(),
   reasoning: z.string().optional(),
   tool_calls: z.array(ToolCallSchema).optional(),
-  tool_results: z.array(z.any()).optional(),
+  tool_results: z.array(z.unknown()).optional(),
   sessionId: z.string(),
   is_relance: z.boolean().optional(),
   has_new_tool_calls: z.boolean().optional(),
@@ -150,7 +150,7 @@ export const TestSchemas = {
 /**
  * Valide un tool call et retourne les erreurs
  */
-export function validateToolCall(toolCall: any): { isValid: boolean; errors: string[] } {
+export function validateToolCall(toolCall: unknown): { isValid: boolean; errors: string[] } {
   try {
     ToolCallSchema.parse(toolCall);
     return { isValid: true, errors: [] };
@@ -168,7 +168,7 @@ export function validateToolCall(toolCall: any): { isValid: boolean; errors: str
 /**
  * Valide un message tool et retourne les erreurs
  */
-export function validateToolMessage(toolMessage: any): { isValid: boolean; errors: string[] } {
+export function validateToolMessage(toolMessage: unknown): { isValid: boolean; errors: string[] } {
   try {
     ToolMessageSchema.parse(toolMessage);
     return { isValid: true, errors: [] };
@@ -186,7 +186,7 @@ export function validateToolMessage(toolMessage: any): { isValid: boolean; error
 /**
  * Valide un payload d'API batch et retourne les erreurs
  */
-export function validateBatchPayload(payload: any): { isValid: boolean; errors: string[] } {
+export function validateBatchPayload(payload: unknown): { isValid: boolean; errors: string[] } {
   try {
     BatchApiPayloadSchema.parse(payload);
     return { isValid: true, errors: [] };
@@ -204,14 +204,15 @@ export function validateBatchPayload(payload: any): { isValid: boolean; errors: 
 /**
  * Valide que les arguments d'un tool call sont du JSON valide
  */
-export function validateToolCallArguments(toolCall: any): { isValid: boolean; errors: string[] } {
+export function validateToolCallArguments(toolCall: unknown): { isValid: boolean; errors: string[] } {
   const validation = validateToolCall(toolCall);
   if (!validation.isValid) {
     return validation;
   }
 
   try {
-    JSON.parse(toolCall.function.arguments);
+    const tc = toolCall as { function: { arguments: string } };
+    JSON.parse(tc.function.arguments);
     return { isValid: true, errors: [] };
   } catch (error) {
     return {
@@ -224,14 +225,15 @@ export function validateToolCallArguments(toolCall: any): { isValid: boolean; er
 /**
  * Valide que le contenu d'un message tool est du JSON stringifié
  */
-export function validateToolMessageContent(toolMessage: any): { isValid: boolean; errors: string[] } {
+export function validateToolMessageContent(toolMessage: unknown): { isValid: boolean; errors: string[] } {
   const validation = validateToolMessage(toolMessage);
   if (!validation.isValid) {
     return validation;
   }
 
   try {
-    JSON.parse(toolMessage.content);
+    const tm = toolMessage as { content: string };
+    JSON.parse(tm.content);
     return { isValid: true, errors: [] };
   } catch (error) {
     return {
@@ -245,30 +247,34 @@ export function validateToolMessageContent(toolMessage: any): { isValid: boolean
  * Valide l'appariement tool_call_id entre tool calls et tool results
  */
 export function validateToolCallIdMapping(
-  toolCalls: any[], 
-  toolResults: any[]
+  toolCalls: unknown[], 
+  toolResults: unknown[]
 ): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
   
   // Vérifier que tous les tool calls ont un tool result correspondant
   for (const toolCall of toolCalls) {
-    const hasMatchingResult = toolResults.some(result => 
-      result.tool_call_id === toolCall.id
-    );
+    const tc = toolCall as { id: string };
+    const hasMatchingResult = toolResults.some(result => {
+      const tr = result as { tool_call_id: string };
+      return tr.tool_call_id === tc.id;
+    });
     
     if (!hasMatchingResult) {
-      errors.push(`Tool call ${toolCall.id} n'a pas de résultat correspondant`);
+      errors.push(`Tool call ${tc.id} n'a pas de résultat correspondant`);
     }
   }
 
   // Vérifier que tous les tool results ont un tool call correspondant
   for (const toolResult of toolResults) {
-    const hasMatchingCall = toolCalls.some(call => 
-      call.id === toolResult.tool_call_id
-    );
+    const tr = toolResult as { tool_call_id: string };
+    const hasMatchingCall = toolCalls.some(call => {
+      const tc = call as { id: string };
+      return tc.id === tr.tool_call_id;
+    });
     
     if (!hasMatchingCall) {
-      errors.push(`Tool result ${toolResult.tool_call_id} n'a pas d'appel correspondant`);
+      errors.push(`Tool result ${tr.tool_call_id} n'a pas d'appel correspondant`);
     }
   }
 
@@ -281,7 +287,7 @@ export function validateToolCallIdMapping(
 /**
  * Valide l'ordre des messages dans un batch
  */
-export function validateBatchMessageOrder(messages: any[]): { isValid: boolean; errors: string[] } {
+export function validateBatchMessageOrder(messages: unknown[]): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
   
   if (messages.length < 2) {
@@ -290,14 +296,14 @@ export function validateBatchMessageOrder(messages: any[]): { isValid: boolean; 
   }
 
   // Le premier message doit être un assistant avec tool calls
-  const firstMessage = messages[0];
+  const firstMessage = messages[0] as { role: string; tool_calls?: unknown[] };
   if (firstMessage.role !== 'assistant' || !firstMessage.tool_calls) {
     errors.push('Le premier message doit être un assistant avec tool calls');
   }
 
   // Les messages suivants doivent être des tools
   for (let i = 1; i < messages.length; i++) {
-    const message = messages[i];
+    const message = messages[i] as { role: string };
     if (message.role !== 'tool') {
       errors.push(`Le message ${i + 1} doit être un message tool, reçu: ${message.role}`);
     }

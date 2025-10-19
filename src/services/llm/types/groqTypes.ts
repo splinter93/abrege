@@ -1,6 +1,7 @@
 import type { ChatMessage } from '@/types/chat';
 import type { AppContext } from '../types';
 import type { AgentConfig, LLMResponse, ToolCall, ToolResult, SessionIdentity } from './agentTypes';
+import type { ToolCall as StrictToolCall } from './strictTypes';
 
 // 🎯 Types pour l'orchestration des rounds
 export interface GroqRoundParams {
@@ -115,9 +116,9 @@ export interface RelanceContext {
   roundId: string;
   operationId: string;
   relanceIndex: number;
-  toolCalls: any[];
-  toolResults: any[];
-  thread: any[];
+  toolCalls: ToolCall[];
+  toolResults: ToolResult[];
+  thread: ChatMessage[];
 }
 
 // 🎯 États de la FSM
@@ -146,10 +147,10 @@ export interface RoundContext {
 export interface RoundData {
   userMessage: string;
   systemContent: string;
-  firstResponse: any;
-  toolCalls: any[];
+  firstResponse: LLMResponse | null;
+  toolCalls: ToolCall[];
   toolResults: ToolExecutionResult[];
-  secondResponse: any;
+  secondResponse: LLMResponse | null;
   finalResult: GroqRoundResult;
 }
 
@@ -165,8 +166,8 @@ export interface BatchApiConfig {
 export interface BatchApiPayload {
   messages: Array<{
     role: 'assistant' | 'tool';
-    content?: string;
-    tool_calls?: any[];
+    content?: string | null;
+    tool_calls?: ToolCall[];
     tool_call_id?: string;
     name?: string;
   }>;
@@ -187,9 +188,9 @@ export interface BatchApiResponse {
 
 // 🎯 Schémas de validation Zod
 export interface ValidationSchemas {
-  assistantWithToolCalls: any;
-  toolMessage: any;
-  batchPayload: any;
+  assistantWithToolCalls: unknown;
+  toolMessage: unknown;
+  batchPayload: unknown;
 }
 
 // 🎯 Métriques du round

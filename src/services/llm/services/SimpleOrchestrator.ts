@@ -18,6 +18,7 @@ import { UIContext } from '../ContextCollector';
 import { mcpConfigService } from '../mcpConfigService';
 import { groqCircuitBreaker } from '@/services/circuitBreaker';
 import { addToolCallInstructions } from '../toolCallInstructions';
+import type { Tool, GroqMessage, isMcpTool, McpCall } from '../types/strictTypes';
 
 /**
  * Contexte d'exécution
@@ -89,9 +90,9 @@ export class SimpleOrchestrator {
         agentConfig?.id || 'default',
         context.userToken,
         [] // No OpenAPI tools, MCP only
-      );
+      ) as Tool[];
 
-      const mcpCount = tools.filter((t: any) => t.type === 'mcp').length;
+      const mcpCount = tools.filter((t) => isMcpTool(t)).length;
       logger.dev(`[SimpleOrchestrator] Tools available: ${tools.length} total (${mcpCount} serveurs MCP)`);
 
       let iteration = 0;
@@ -113,8 +114,8 @@ export class SimpleOrchestrator {
         const response = await this.callLLM(messages, tools);
         
         // ✅ NOUVEAU: Gérer les erreurs de validation de tool calls
-        if ((response as any).validation_error) {
-          const validationError = (response as any).validation_error;
+        if (response.validation_error) {
+          const validationError = response.validation_error;
           logger.warn(`[SimpleOrchestrator] ⚠️ Erreur de validation tool call (retry ${iteration}):`, validationError.message);
           
           // Ajouter un message système avec l'erreur pour que le LLM corrige
@@ -148,22 +149,22 @@ export class SimpleOrchestrator {
 
         // ✅ NOUVEAU: Détecter si on a utilisé l'API Responses (MCP)
         // Dans ce cas, les tool calls ont DÉJÀ été exécutés par Groq
-        const hasMcpTools = tools.some((t: any) => t.type === 'mcp');
+        const hasMcpTools = tools.some((t) => isMcpTool(t));
         
         if (hasMcpTools) {
           // ✅ Les MCP calls ont déjà été exécutés par Groq dans l'API Responses
           // On a juste besoin d'enregistrer les résultats
           logger.dev(`[SimpleOrchestrator] ✅ MCP calls déjà exécutés par Groq (Responses API)`);
           
-          const toolCalls = response.tool_calls;
+          const toolCalls = response.tool_calls || [];
           allToolCalls.push(...toolCalls);
           
           // Les résultats sont dans response.x_groq.mcp_calls
           if (response.x_groq?.mcp_calls) {
-            const mcpResults = response.x_groq.mcp_calls.map((call: any, idx: number) => ({
+            const mcpResults: ToolResult[] = response.x_groq.mcp_calls.map((call: McpCall, idx: number) => ({
               tool_call_id: toolCalls[idx]?.id || `mcp_${Date.now()}_${idx}`,
               name: call.name,
-              content: call.output,
+              content: typeof call.output === 'string' ? call.output : JSON.stringify(call.output),
               success: true
             }));
             allToolResults.push(...mcpResults);
@@ -267,7 +268,7 @@ export class SimpleOrchestrator {
   /**
    * Call LLM with circuit breaker
    */
-  private async callLLM(messages: any[], tools: any[]): Promise<LLMResponse> {
+  private async callLLM(messages: ChatMessage[], tools: Tool[]): Promise<LLMResponse> {
     return groqCircuitBreaker.execute(async () => {
       return this.llmProvider.callWithMessages(messages, tools);
     });

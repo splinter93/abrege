@@ -1,9 +1,10 @@
 import { simpleLogger as logger } from '@/utils/logger';
+import type { ToolCall } from './types/strictTypes';
 
 export interface OpenApiToolResult {
   tool_call_id: string;
   name: string;
-  result: any;
+  result: unknown;
   success: boolean;
   timestamp: string;
 }
@@ -34,7 +35,7 @@ export class OpenApiToolExecutor {
    * Exécuter un tool call OpenAPI V2
    */
   async executeToolCall(
-    toolCall: any,
+    toolCall: ToolCall,
     userToken: string,
     maxRetries: number = 3,
     options?: { batchId?: string }
@@ -107,7 +108,7 @@ export class OpenApiToolExecutor {
   /**
    * Exécuter un tool OpenAPI V2 spécifique
    */
-  private async executeOpenApiTool(toolName: string, args: any, userToken: string): Promise<any> {
+  private async executeOpenApiTool(toolName: string, args: Record<string, unknown>, userToken: string): Promise<unknown> {
     // 🔧 CORRECTION: Mapper les noms OpenAPI (camelCase) vers les endpoints API v2
     const endpointMapping: Record<string, { method: string; path: string }> = {
       // Notes
@@ -213,20 +214,23 @@ export class OpenApiToolExecutor {
     return result;
   }
 
-  private parseArguments(argumentsStr: string): any {
+  private parseArguments(argumentsStr: string): Record<string, unknown> {
     try {
-      return JSON.parse(argumentsStr);
+      const parsed = JSON.parse(argumentsStr);
+      return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) 
+        ? parsed 
+        : {};
     } catch (error) {
       logger.error(`[OpenApiToolExecutor] ❌ Erreur parsing arguments:`, error);
       return {};
     }
   }
 
-  private normalizeResult(rawResult: any, toolName: string, args: any): any {
+  private normalizeResult(rawResult: unknown, toolName: string, args: Record<string, unknown>): Record<string, unknown> {
     // Normaliser le résultat selon le format attendu
-    if (rawResult && typeof rawResult === 'object') {
+    if (rawResult && typeof rawResult === 'object' && !Array.isArray(rawResult)) {
       return {
-        ...rawResult,
+        ...(rawResult as Record<string, unknown>),
         tool_name: toolName,
         executed_at: new Date().toISOString()
       };

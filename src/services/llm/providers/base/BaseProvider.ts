@@ -75,7 +75,7 @@ export interface IBaseProvider {
   
   // Méthodes optionnelles
   supportsFunctionCalls(): boolean;
-  getFunctionCallTools(): any[];
+  getFunctionCallTools(): unknown[];
   
   // Méthodes utilitaires
   getSupportedModels(): string[];
@@ -115,7 +115,7 @@ export abstract class BaseProvider implements IBaseProvider {
   /**
    * Retourne les tools disponibles pour les function calls
    */
-  getFunctionCallTools(): any[] {
+  getFunctionCallTools(): unknown[] {
     return [];
   }
 

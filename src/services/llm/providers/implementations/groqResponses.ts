@@ -3,6 +3,14 @@ import type { LLMProvider, AppContext } from '../../types';
 import type { ChatMessage } from '@/types/chat';
 import { logger } from '@/utils/logger';
 import { getSystemMessage } from '../../templates';
+import type {
+  GroqMessage,
+  GroqResponsesApiResponse,
+  Tool,
+  FunctionTool,
+  ToolCall,
+  isMcpTool
+} from '../../types/strictTypes';
 
 /**
  * Configuration spécifique à Groq Responses API
@@ -143,7 +151,7 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue un appel à l'API Groq Responses
    */
-  async call(message: string, context: AppContext, history: any[]): Promise<string> {
+  async call(message: string, context: AppContext, history: ChatMessage[]): Promise<string> {
     if (!this.validateConfig()) {
       throw new Error('Configuration Groq Responses invalide');
     }
@@ -177,8 +185,8 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
    * 
    * L'API Responses utilise un champ 'input' au lieu de 'messages'
    */
-  private prepareMessages(message: string, context: AppContext, history: ChatMessage[]): any[] {
-    const messages: any[] = [];
+  private prepareMessages(message: string, context: AppContext, history: ChatMessage[]): GroqMessage[] {
+    const messages: GroqMessage[] = [];
 
     // Message système
     const systemContent = this.formatSystemMessage(context);
@@ -189,14 +197,14 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
 
     // Historique des messages
     for (const msg of history) {
-      const messageObj: any = {
+      const messageObj: GroqMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
         content: msg.content
       };
 
       // Gérer les tool calls pour les messages assistant
       if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
-        messageObj.tool_calls = msg.tool_calls;
+        messageObj.tool_calls = msg.tool_calls as ToolCall[];
       }
 
       // Gérer les tool results pour les messages tool
@@ -205,11 +213,6 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
         if (msg.name) {
           messageObj.name = msg.name;
         }
-      }
-
-      // Gérer les tool results si présents
-      if (msg.tool_results && msg.tool_results.length > 0) {
-        messageObj.tool_results = msg.tool_results;
       }
 
       messages.push(messageObj);
@@ -229,21 +232,17 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
    * 
    * Conversion de 'messages' vers 'input' + support des nouvelles fonctionnalités
    */
-  private prepareResponsesPayload(messages: any[]): any {
+  private prepareResponsesPayload(messages: GroqMessage[]): Record<string, unknown> {
     // 🎯 CONVERSION PRINCIPALE : messages → input
     const input = this.convertMessagesToInput(messages);
     
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       model: this.config.model,
       input, // ✅ Nouveau format pour Responses API
       temperature: this.config.temperature,
       top_p: this.config.topP
       // ✅ Suppression de max_tokens - l'API Responses gère automatiquement
     };
-
-
-
-
     
     // Ajouter les built-in tools si activés
     const builtInTools = this.getBuiltInTools();
@@ -271,14 +270,14 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
    * 
    * L'API Responses attend un string simple au lieu d'un array de messages
    */
-  private convertMessagesToInput(messages: any[]): string {
+  private convertMessagesToInput(messages: GroqMessage[]): string {
     // Pour l'instant, on prend le dernier message utilisateur
     // TODO: Améliorer pour gérer l'historique complet
     const lastUserMessage = messages
       .filter(msg => msg.role === 'user')
       .pop();
     
-    if (lastUserMessage) {
+    if (lastUserMessage && lastUserMessage.content) {
       return lastUserMessage.content;
     }
     
@@ -289,8 +288,8 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
   /**
    * Valide les tools pour l'API Responses
    */
-  private validateTools(tools: any[]): any[] {
-    return tools.filter((tool: any) => {
+  private validateTools(tools: Tool[]): Tool[] {
+    return tools.filter((tool) => {
       if (!tool || typeof tool !== 'object') {
         logger.warn(`[GroqResponsesProvider] ⚠️ Tool invalide ignoré:`, tool);
         return false;
@@ -298,19 +297,20 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
       
       // ✅ L'API Responses utilise une structure différente pour les tools
       if (tool.type === 'function') {
-        if (!tool.function || typeof tool.function !== 'object') {
+        const funcTool = tool as FunctionTool;
+        if (!funcTool.function || typeof funcTool.function !== 'object') {
           logger.warn(`[GroqResponsesProvider] ⚠️ Tool sans fonction ignoré:`, tool);
           return false;
         }
         
-        if (!tool.function.name || typeof tool.function.name !== 'string') {
+        if (!funcTool.function.name || typeof funcTool.function.name !== 'string') {
           logger.warn(`[GroqResponsesProvider] ⚠️ Tool sans nom de fonction ignoré:`, tool);
           return false;
         }
         
-        const params = tool.function.parameters;
+        const params = funcTool.function.parameters;
         if (!params || params.type !== 'object' || typeof params.properties !== 'object' || !Array.isArray(params.required)) {
-          logger.warn(`[GroqResponsesProvider] ⚠️ Tool avec paramètres invalides ignoré: ${tool.function.name}`, params);
+          logger.warn(`[GroqResponsesProvider] ⚠️ Tool avec paramètres invalides ignoré: ${funcTool.function.name}`, params);
           return false;
         }
       }
@@ -322,8 +322,8 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
   /**
    * Retourne les built-in tools disponibles pour l'API Responses
    */
-  private getBuiltInTools(): any[] {
-    const builtInTools: any[] = [];
+  private getBuiltInTools(): Array<Record<string, unknown>> {
+    const builtInTools: Array<Record<string, unknown>> = [];
 
     // Browser Search
     if (this.config.enableBrowserSearch && this.supportsBrowserSearch()) {
@@ -364,7 +364,7 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue l'appel API à Groq Responses
    */
-  private async makeResponsesApiCall(payload: any) {
+  private async makeResponsesApiCall(payload: Record<string, unknown>): Promise<GroqResponsesApiResponse> {
     // ✅ Optimiser le payload pour éviter les timeouts
     const optimizedPayload = this.optimizeRequest(payload);
     
@@ -383,32 +383,37 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
       throw new Error(`Groq Responses API error: ${response.status} - ${errorText}`);
     }
 
-    return await response.json();
+    return await response.json() as GroqResponsesApiResponse;
   }
 
   /**
    * Optimise la requête pour éviter les timeouts
    */
-  private optimizeRequest(payload: any): any {
+  private optimizeRequest(payload: Record<string, unknown>): Record<string, unknown> {
+    const optimized = { ...payload };
+    
     // ✅ Réduire la taille de l'input si trop long
-    if (payload.input && payload.input.length > 1000) {
-      payload.input = payload.input.substring(0, 1000) + '...';
+    if (typeof optimized.input === 'string' && optimized.input.length > 1000) {
+      optimized.input = optimized.input.substring(0, 1000) + '...';
       logger.debug(`[GroqResponsesProvider] ⚠️ Input tronqué à 1000 caractères`);
     }
     
     // ✅ DÉSACTIVER Browser Search par défaut (trop cher)
-    if (payload.tools) {
-      payload.tools = payload.tools.filter((tool: any) => tool.type !== 'browser_search');
+    if (Array.isArray(optimized.tools)) {
+      optimized.tools = optimized.tools.filter((tool: unknown) => {
+        return typeof tool === 'object' && tool !== null && 
+               (tool as Record<string, unknown>).type !== 'browser_search';
+      });
       logger.debug(`[GroqResponsesProvider] ⚠️ Browser Search désactivé (coût élevé)`);
     }
     
     // ✅ Limiter les tools pour réduire la complexité
-    if (payload.tools && payload.tools.length > 1) {
-      payload.tools = payload.tools.slice(0, 1);
+    if (Array.isArray(optimized.tools) && optimized.tools.length > 1) {
+      optimized.tools = optimized.tools.slice(0, 1);
       logger.debug(`[GroqResponsesProvider] ⚠️ Tools limités à 1`);
     }
     
-    return payload;
+    return optimized;
   }
 
   /**
@@ -416,40 +421,35 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
    * 
    * Conversion de output_text vers content pour compatibilité
    */
-  private extractResponsesResponse(response: any): any {
+  private extractResponsesResponse(response: GroqResponsesApiResponse): string {
     // ✅ Debug: Log de la réponse brute
-    console.log('[GroqResponsesProvider] 🔍 Réponse brute de l\'API:', JSON.stringify(response, null, 2));
+    logger.debug('[GroqResponsesProvider] 🔍 Réponse brute de l\'API:', JSON.stringify(response, null, 2));
     
     // ✅ Extraction correcte pour l'API Responses
     let content = '';
     if (response.output && Array.isArray(response.output)) {
       // Chercher le message de type "message" avec le contenu
-      const messageOutput = response.output.find((item: any) => item.type === 'message');
+      const messageOutput = response.output.find((item) => item.type === 'message');
       if (messageOutput && messageOutput.content && Array.isArray(messageOutput.content)) {
-        const textContent = messageOutput.content.find((item: any) => item.type === 'output_text');
+        const textContent = messageOutput.content.find((item) => item.type === 'output_text');
         if (textContent && textContent.text) {
           content = textContent.text;
         }
       }
     }
     
-    const result: any = {
-      content: content,
-      model: response.model,
-      usage: response.usage
-    };
-
-    // Gérer les tool calls si présents
-    if (response.tool_calls && response.tool_calls.length > 0) {
-      result.tool_calls = response.tool_calls;
-      logger.debug(`[GroqResponsesProvider] 🔧 ${result.tool_calls.length} tool calls détectés`);
-      
-      result.tool_calls.forEach((toolCall: any, index: number) => {
-        logger.debug(`[GroqResponsesProvider] Tool call ${index + 1}: ${toolCall.function.name}`);
-      });
+    // Gérer les tool calls si présents dans la réponse
+    if (response.output) {
+      const mcpCalls = response.output.filter(item => item.type === 'mcp_call');
+      if (mcpCalls.length > 0) {
+        logger.debug(`[GroqResponsesProvider] 🔧 ${mcpCalls.length} MCP calls détectés`);
+        mcpCalls.forEach((call, index) => {
+          logger.debug(`[GroqResponsesProvider] MCP call ${index + 1}: ${call.name} sur ${call.server_label}`);
+        });
+      }
     }
 
-    return result;
+    return content;
   }
 
   /**
@@ -466,7 +466,7 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
   /**
    * Retourne les tools disponibles pour les function calls
    */
-  getFunctionCallTools(): any[] {
+  getFunctionCallTools(): Tool[] {
     return [];
   }
 
@@ -489,11 +489,18 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const models = await response.json();
+      interface ModelsResponse {
+        data: Array<{
+          id: string;
+          [key: string]: unknown;
+        }>;
+      }
+
+      const models = await response.json() as ModelsResponse;
       logger.debug(`[GroqResponsesProvider] ✅ Connexion réussie - ${models.data.length} modèles disponibles`);
 
       // Vérifier les modèles supportés
-      const supportedModels = models.data.filter((model: any) => 
+      const supportedModels = models.data.filter((model) => 
         this.info.supportedModels.includes(model.id)
       );
       logger.debug(`[GroqResponsesProvider] 🎯 ${supportedModels.length} modèles supportés disponibles`);

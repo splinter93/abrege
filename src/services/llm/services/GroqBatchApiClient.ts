@@ -7,6 +7,15 @@ import type {
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
+ * État de session refetché
+ */
+interface SessionState {
+  sequence: number;
+  updated_at: string;
+  messages?: Array<{ id: string; [key: string]: unknown }>;
+}
+
+/**
  * Client pour l'API batch atomique
  * Gère la persistance des messages tool et la récupération des conflits
  */
@@ -164,7 +173,7 @@ export class GroqBatchApiClient {
   /**
    * Refetch la session depuis l'API
    */
-  private async refetchSession(sessionId: string): Promise<any> {
+  private async refetchSession(sessionId: string): Promise<SessionState> {
     try {
       const { token } = await this.getSessionAuth(sessionId);
       
@@ -176,7 +185,7 @@ export class GroqBatchApiClient {
         throw new Error(`Impossible de refetch la session: ${response.status}`);
       }
 
-      return await response.json();
+      return await response.json() as SessionState;
     } catch (error) {
       throw new Error(`Erreur lors du refetch de la session: ${error}`);
     }
@@ -212,9 +221,9 @@ export class GroqBatchApiClient {
   /**
    * Construit le payload de replay en tenant compte de l'état actuel
    */
-  private buildReplayPayload(originalPayload: BatchApiPayload, sessionState: any): BatchApiPayload {
+  private buildReplayPayload(originalPayload: BatchApiPayload, sessionState: SessionState): BatchApiPayload {
     // Filtrer les messages qui n'existent pas déjà
-    const existingMessageIds = new Set(sessionState.messages?.map((m: any) => m.id) || []);
+    const existingMessageIds = new Set(sessionState.messages?.map((m) => m.id) || []);
     
     const filteredMessages = originalPayload.messages.filter(msg => {
       // Pour les messages tool, vérifier s'ils existent déjà

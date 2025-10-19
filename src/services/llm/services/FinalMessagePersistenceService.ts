@@ -1,5 +1,6 @@
 import { simpleLogger as logger } from '@/utils/logger';
 import type { ChatMessage } from '@/types/chat';
+import type { ToolCall, ToolResult } from '../types/agentTypes';
 
 /**
  * Service pour persister les messages finaux (utilisateur et assistant) à la fin d'un round.
@@ -22,8 +23,8 @@ export class FinalMessagePersistenceService {
     assistantResponse: {
       content: string;
       reasoning?: string;
-      tool_calls?: any[];
-      tool_results?: any[];
+      tool_calls?: ToolCall[];
+      tool_results?: ToolResult[];
     }
   ): Promise<void> {
     logger.dev('[FinalMessagePersistence] 🚀 Persistance des messages finaux...');

@@ -135,9 +135,9 @@ export class McpConfigService {
   async buildHybridTools(
     agentId: string,
     userToken: string,
-    openApiTools: Array<{ type: 'function'; function: { name: string; description: string; parameters: any } }>
+    openApiTools: Array<{ type: 'function'; function: { name: string; description: string; parameters: Record<string, unknown> } }>
   ): Promise<Array<
-    | { type: 'function'; function: { name: string; description: string; parameters: any } }
+    | { type: 'function'; function: { name: string; description: string; parameters: Record<string, unknown> } }
     | McpServerConfig
   >> {
     const mcpConfig = await this.getAgentMcpConfig(agentId);

@@ -242,7 +242,7 @@ export const applyContentOperationsSchema = z.object({
 
 // ==================== MAP DE TOUS LES SCHÉMAS ====================
 
-export const TOOL_SCHEMAS: Record<string, z.ZodType<any>> = {
+export const TOOL_SCHEMAS: Record<string, z.ZodType<unknown>> = {
   // Notes
   createNote: createNoteSchema,
   getNote: getNoteSchema,
