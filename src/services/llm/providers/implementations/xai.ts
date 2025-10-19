@@ -389,6 +389,12 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
    * Effectue l'appel API à xAI
    */
   private async makeApiCall(payload: Record<string, unknown>): Promise<XAIChatCompletionResponse> {
+    // ✅ DEBUG TEMPORAIRE : Logger le payload complet
+    if (payload.tools && Array.isArray(payload.tools)) {
+      logger.dev(`[XAIProvider] 🔍 PAYLOAD DEBUG - ${payload.tools.length} tools à envoyer`);
+      logger.dev(`[XAIProvider] 📋 Payload tools (sample 2):`, JSON.stringify(payload.tools.slice(0, 2), null, 2));
+    }
+
     const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
