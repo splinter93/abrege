@@ -30,6 +30,12 @@ export interface LLMConfig {
       baseUrl: string;
       defaultModel: string;
     };
+    xai: {
+      apiKey: string;
+      baseUrl: string;
+      defaultModel: string;
+      reasoningMode: 'fast' | 'reasoning';
+    };
   };
   
   // Configuration des outils
@@ -73,6 +79,12 @@ const DEFAULT_CONFIG: LLMConfig = {
       apiKey: process.env.SYNESIA_API_KEY || '',
       baseUrl: process.env.SYNESIA_BASE_URL || 'https://api.synesia.com',
       defaultModel: 'gpt-4'
+    },
+    xai: {
+      apiKey: process.env.XAI_API_KEY || '',
+      baseUrl: 'https://api.x.ai/v1',
+      defaultModel: 'grok-4-fast',
+      reasoningMode: 'fast'
     }
   },
   
@@ -153,6 +165,22 @@ export class LLMConfigManager {
     
     if (process.env.SYNESIA_MODEL) {
       config.providers.synesia.defaultModel = process.env.SYNESIA_MODEL;
+    }
+
+    if (process.env.XAI_API_KEY) {
+      config.providers.xai.apiKey = process.env.XAI_API_KEY;
+    }
+    
+    if (process.env.XAI_BASE_URL) {
+      config.providers.xai.baseUrl = process.env.XAI_BASE_URL;
+    }
+    
+    if (process.env.XAI_MODEL) {
+      config.providers.xai.defaultModel = process.env.XAI_MODEL;
+    }
+    
+    if (process.env.XAI_REASONING_MODE) {
+      config.providers.xai.reasoningMode = process.env.XAI_REASONING_MODE as 'fast' | 'reasoning';
     }
 
     // Configuration générale
