@@ -100,14 +100,15 @@ export default function FolderDeepLinkPage() {
 
   const filesAtRoot = useMemo(() => {
     return Array.isArray(payload?.notes_at_root) ? payload.notes_at_root.map((n: unknown) => {
-      const note = n as { id: string; source_title?: string; header_image?: string; created_at?: string };
+      const note = n as { id: string; source_title?: string; header_image?: string; created_at?: string; title?: string };
       return {
-      id: note.id,
-      source_title: n.title,
-      folder_id: null,
-      classeur_id: payload?.classeur?.id,
-      updated_at: undefined,
-    })) : [];
+        id: note.id,
+        source_title: note.title || note.source_title || '',
+        folder_id: null,
+        classeur_id: payload?.classeur?.id,
+        updated_at: undefined,
+      };
+    }) : [];
   }, [payload]);
 
   const shownFolders = useMemo(() => foldersFlat.filter(f => (currentFolderId ? f.parent_id === currentFolderId : f.parent_id == null)), [foldersFlat, currentFolderId]);

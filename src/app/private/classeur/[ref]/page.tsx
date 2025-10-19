@@ -66,17 +66,26 @@ function ClasseurDeepLinkPageContent() {
 
   const filesAtRoot = useMemo(() => {
     return Array.isArray(payload?.notes_at_root) ? payload.notes_at_root.map((n: unknown) => {
-      const note = n as { id: string; source_title?: string; header_image?: string };
+      const note = n as { 
+        id: string; 
+        source_title?: string; 
+        title?: string;
+        header_image?: string;
+        created_at?: string;
+        updated_at?: string;
+        position?: number;
+      };
       return {
-      id: note.id,
-      source_title: n.title,
-      folder_id: null,
-      classeur_id: payload?.classeur?.id || '',
-      user_id: payload?.classeur?.user_id || '',
-      created_at: n.created_at || new Date().toISOString(),
-      updated_at: n.updated_at || new Date().toISOString(),
-      position: n.position || 0
-    })) : [];
+        id: note.id,
+        source_title: note.title || note.source_title || '',
+        folder_id: null,
+        classeur_id: payload?.classeur?.id || '',
+        user_id: payload?.classeur?.user_id || '',
+        created_at: note.created_at || new Date().toISOString(),
+        updated_at: note.updated_at || new Date().toISOString(),
+        position: note.position || 0
+      };
+    }) : [];
   }, [payload]);
 
   const shownFolders = useMemo(() => foldersFlat.filter(f => (currentFolderId ? f.parent_id === currentFolderId : f.parent_id == null)), [foldersFlat, currentFolderId]);
