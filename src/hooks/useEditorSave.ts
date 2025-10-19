@@ -42,8 +42,26 @@ export default function useEditorSave({ onSave, editor }: UseEditorSaveOptions):
       setIsSaving(true);
       const html_content = editor.getHTML();
       let markdown_content = getEditorMarkdown(editor);
+      
+      // 🔧 FIX: Supprimer l'échappement des titres (ex: \# → #)
       markdown_content = markdown_content.replace(/\\(#+ )/g, '$1');
-      markdown_content = markdown_content.replace(/(\!\[.*?\]\(.*?\))\s*(#+ )/g, '$1\n\n$2');
+      
+      // 🔧 FIX COMPLET: Ajouter des sauts de ligne entre images et éléments markdown de bloc
+      // Gère: titres (#), blockquotes (>), listes (-, *, 1.), code blocks (```), lignes horizontales (---)
+      // Utilise un lookahead pour détecter les éléments de bloc sans les capturer
+      markdown_content = markdown_content.replace(
+        /(\!\[.*?\]\(.*?\))(\s*)(?=[#>*\-`]|\d+\.)/gm,
+        (_match, image, whitespace) => {
+          // Compter les sauts de ligne existants
+          const lineBreaks = (whitespace.match(/\n/g) || []).length;
+          // S'assurer qu'il y a au moins 2 sauts de ligne (ligne vide) entre l'image et l'élément suivant
+          if (lineBreaks < 2) {
+            return `${image}\n\n`;
+          }
+          return image + whitespace;
+        }
+      );
+      
       if (process.env.NODE_ENV === 'development') {
         // Log autosave déclenchée
          
