@@ -3,7 +3,7 @@
 interface IntentMatch {
   action: string;
   confidence: number;
-  extractedData: Record<string, any>;
+  extractedData: Record<string, unknown>;
   originalMessage: string;
 }
 
@@ -12,7 +12,7 @@ interface ApiV2Action {
   operation: string;
   endpoint: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  dataExtractor: (message: string) => Record<string, any>;
+  dataExtractor: (message: string) => Record<string, unknown>;
 }
 
 export class AgentIntentParser {
@@ -238,7 +238,7 @@ export class AgentIntentParser {
   /**
    * Extrait les données à partir d'une capacité et d'un message
    */
-  private extractData(capability: string, message: string): Record<string, any> {
+  private extractData(capability: string, message: string): Record<string, unknown> {
     const action = this.apiV2Actions.get(capability);
     if (!action) return {};
 
@@ -251,7 +251,7 @@ export class AgentIntentParser {
   buildApiV2Request(intentMatch: IntentMatch): {
     endpoint: string;
     method: string;
-    data: Record<string, any>;
+    data: Record<string, unknown>;
   } | null {
     const action = this.apiV2Actions.get(intentMatch.action);
     if (!action) return null;

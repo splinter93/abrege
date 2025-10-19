@@ -28,10 +28,10 @@ export function markOperationComplete(type: string, id: string): void {
 /**
  * handleRealtimeEvent - Route les événements WebSocket vers le store Zustand
  *
- * @param event { type: string, payload: any, timestamp: number }
+ * @param event { type: string, payload: unknown, timestamp: number }
  * @param debug (optionnel) : loggue chaque event dispatché si true
  */
-export function handleRealtimeEvent(event: { type: string, payload: any, timestamp: number }, debug = false) {
+export function handleRealtimeEvent(event: { type: string, payload: unknown, timestamp: number }, debug = false) {
   const store = useFileSystemStore.getState();
   if (debug) logEventToConsole(event);
   
@@ -137,13 +137,13 @@ export function handleRealtimeEvent(event: { type: string, payload: any, timesta
 /**
  * logEventToConsole - Affiche l'event WebSocket dans la console (debug)
  */
-export function logEventToConsole(event: { type: string, payload: any, timestamp: number }) {
+export function logEventToConsole(event: { type: string, payload: unknown, timestamp: number }) {
   // Fonction de debug - logs supprimés pour la production
 }
 
 /**
  * handleEditorEvent - Gère les événements spécifiques à l'éditeur
  */
-export function handleEditorEvent(event: { type: string, payload: any, timestamp: number }) {
+export function handleEditorEvent(event: { type: string, payload: unknown, timestamp: number }) {
   // TODO: Implémenter la logique spécifique à l'éditeur selon les besoins
 } 

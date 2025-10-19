@@ -13,10 +13,10 @@ export interface OpenAPISchema {
     description: string;
     version: string;
   };
-  paths: Record<string, any>;
+  paths: Record<string, unknown>;
   components: {
-    schemas: Record<string, any>;
-    securitySchemes: Record<string, any>;
+    schemas: Record<string, unknown>;
+    securitySchemes: Record<string, unknown>;
   };
   tags: Array<{
     name: string;
@@ -107,7 +107,7 @@ export class OpenAPISchemaService {
   /**
    * Obtenir les schémas de composants
    */
-  public getSchemas(): Record<string, any> {
+  public getSchemas(): Record<string, unknown> {
     const schema = this.getSchema();
     return schema.components.schemas;
   }

@@ -26,7 +26,7 @@ export class AutoSlugUpdateService {
         newName: string,
         userId: string,
         supabase: SupabaseClient,
-        _context?: any
+        _context?: Record<string, unknown>
       ): Promise<SlugUpdateResult> {
     try {
               logApi.info(`🔄 Vérification mise à jour slug pour ${resourceType} ${resourceId}`, _context);
@@ -221,7 +221,7 @@ export class AutoSlugUpdateService {
     newTitle: string,
     userId: string,
     supabase: SupabaseClient,
-    context?: any
+    context?: Record<string, unknown>
   ): Promise<SlugUpdateResult> {
     try {
       // Utiliser SlugAndUrlService pour les notes (plus complet avec URLs publiques)
@@ -258,7 +258,7 @@ export class AutoSlugUpdateService {
     newName: string,
     userId: string,
     supabase: SupabaseClient,
-    context?: any
+    context?: Record<string, unknown>
   ): Promise<SlugUpdateResult> {
     return this.updateSlugIfNameChanged('folder', folderId, newName, userId, supabase, context);
   }
@@ -271,7 +271,7 @@ export class AutoSlugUpdateService {
     newName: string,
     userId: string,
     supabase: SupabaseClient,
-    context?: any
+    context?: Record<string, unknown>
   ): Promise<SlugUpdateResult> {
     return this.updateSlugIfNameChanged('classeur', classeurId, newName, userId, supabase, context);
   }
