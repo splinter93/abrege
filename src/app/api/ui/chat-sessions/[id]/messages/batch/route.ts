@@ -3,6 +3,25 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { simpleLogger as logger } from '@/utils/logger';
 
+// Interface pour les messages du thread
+interface ThreadMessage {
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content: string | null;
+  timestamp?: string;
+  operation_id?: string;
+  relance_index?: number;
+  tool_call_id?: string;
+  name?: string;
+  tool_calls?: Array<{
+    id: string;
+    type?: 'function';
+    function: {
+      name: string;
+      arguments?: string;
+    };
+  }>;
+}
+
 // Configuration Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -44,7 +63,7 @@ const batchMessageSchema = z.object({
 });
 
 // Validation renforcée des messages tool
-function validateToolMessages(messages: any[]): { isValid: boolean; errors: string[] } {
+function validateToolMessages(messages: ThreadMessage[]): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
   
   for (let i = 0; i < messages.length; i++) {
@@ -53,7 +72,7 @@ function validateToolMessages(messages: any[]): { isValid: boolean; errors: stri
       if (!msg.tool_call_id) {
         errors.push(`Message ${i}: tool_call_id manquant pour les messages tool`);
       }
-      if (!msg.name && !msg.tool_name) {
+      if (!msg.name) {
         errors.push(`Message ${i}: name manquant pour les messages tool`);
       }
       if (!msg.content) {
@@ -255,8 +274,9 @@ export async function POST(
     if (idempotencyKey && operationId) {
       // Vérifier si l'opération existe déjà dans la session
       if (currentSession.thread && Array.isArray(currentSession.thread)) {
-        const existingOperation = currentSession.thread.find(msg => 
-          (msg as any).operation_id === operationId && (msg as any).relance_index === relance_index
+        const thread = currentSession.thread as ThreadMessage[];
+        const existingOperation = thread.find(msg => 
+          msg.operation_id === operationId && msg.relance_index === relance_index
         );
         
         if (existingOperation) {
@@ -279,9 +299,10 @@ export async function POST(
     // 🔧 DÉDUPLICATION: Vérifier les tool_call_id existants
     const existingToolCallIds = new Set<string>();
     if (currentSession.thread && Array.isArray(currentSession.thread)) {
-      for (const msg of currentSession.thread) {
-        if (msg.role === 'tool' && (msg as any).tool_call_id) {
-          existingToolCallIds.add((msg as any).tool_call_id);
+      const thread = currentSession.thread as ThreadMessage[];
+      for (const msg of thread) {
+        if (msg.role === 'tool' && msg.tool_call_id) {
+          existingToolCallIds.add(msg.tool_call_id);
         }
       }
     }
@@ -302,10 +323,10 @@ export async function POST(
     // ✅ Déduplication supplémentaire: assistant avec exactement le même set de tool_calls que déjà présent
     const assistantToolCallSignatures = new Set<string>();
     if (currentSession.thread && Array.isArray(currentSession.thread)) {
-      for (const msg of currentSession.thread) {
-        if (msg.role === 'assistant' && Array.isArray((msg as any).tool_calls) && (msg as any).tool_calls.length > 0) {
-          const calls = (msg as any).tool_calls as Array<{ id: string; function: { name: string } }>;
-          const sig = calls
+      const thread = currentSession.thread as ThreadMessage[];
+      for (const msg of thread) {
+        if (msg.role === 'assistant' && Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0) {
+          const sig = msg.tool_calls
             .map(c => `${c.id}:${c.function?.name || 'unknown'}`)
             .sort()
             .join('|');
@@ -315,9 +336,8 @@ export async function POST(
     }
 
     const fullyDedupedMessages = deduplicatedMessages.filter(msg => {
-      if (msg.role === 'assistant' && Array.isArray((msg as any).tool_calls) && (msg as any).tool_calls.length > 0) {
-        const calls = (msg as any).tool_calls as Array<{ id: string; function: { name: string } }>;
-        const sig = calls
+      if (msg.role === 'assistant' && Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0) {
+        const sig = msg.tool_calls
           .map(c => `${c.id}:${c.function?.name || 'unknown'}`)
           .sort()
           .join('|');
