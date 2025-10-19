@@ -85,6 +85,12 @@ const AgentsIcon = () => (
   </svg>
 );
 
+const PromptsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </svg>
+);
+
 
 interface UnifiedSidebarProps {
   isOpen?: boolean;
@@ -162,7 +168,8 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
     { href: '/private/dossiers', label: 'Mes Classeurs', icon: FolderIcon, key: 'dossiers' },
     { href: '/private/files', label: 'Mes Fichiers', icon: FileIcon, key: 'files' },
     { href: '/private/shared', label: 'Notes Partagées', icon: ShareIcon, key: 'shared' },
-    { href: '/ai', label: 'AI', icon: AgentsIcon, key: 'ai' },
+    { href: '/private/agents', label: 'Agents IA', icon: AgentsIcon, key: 'agents' },
+    { href: '/private/prompts', label: 'Prompts', icon: PromptsIcon, key: 'prompts' },
     { href: '/private/documentation', label: 'Documentation', icon: DocumentationIcon, key: 'documentation' },
     { href: '/private/settings', label: 'Paramètres', icon: SettingsIcon, key: 'settings' },
     { href: '/private/trash', label: 'Corbeille', icon: TrashIcon, key: 'trash' },
