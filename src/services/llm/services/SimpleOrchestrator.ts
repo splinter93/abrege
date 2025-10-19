@@ -8,6 +8,7 @@
  */
 
 import { GroqProvider, LLMResponse } from '../providers/implementations/groq';
+import { XAIProvider } from '../providers/implementations/xai';
 import { SimpleToolExecutor, ToolCall, ToolResult } from './SimpleToolExecutor';
 import { GroqHistoryBuilder } from './GroqHistoryBuilder';
 import { DEFAULT_GROQ_LIMITS } from '../types/groqTypes';
@@ -56,14 +57,41 @@ const DEFAULT_CONFIG = {
  * Orchestrateur simple pour gérer les conversations avec tool calls MCP
  */
 export class SimpleOrchestrator {
-  private llmProvider: GroqProvider;
+  private llmProvider: GroqProvider | XAIProvider;
   private toolExecutor: SimpleToolExecutor;
   private historyBuilder: GroqHistoryBuilder;
 
   constructor() {
-    this.llmProvider = new GroqProvider();
+    this.llmProvider = new GroqProvider(); // Default provider
     this.toolExecutor = new SimpleToolExecutor();
     this.historyBuilder = new GroqHistoryBuilder(DEFAULT_GROQ_LIMITS);
+  }
+
+  /**
+   * ✅ NOUVELLE MÉTHODE : Sélectionner le provider en fonction de l'agent config
+   */
+  private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider {
+    const provider = agentConfig?.provider || 'groq';
+    const model = agentConfig?.model;
+
+    logger.dev(`[SimpleOrchestrator] Sélection du provider: ${provider} (model: ${model})`);
+
+    switch (provider.toLowerCase()) {
+      case 'xai':
+        return new XAIProvider({
+          model: model || 'grok-4-fast',
+          temperature: typeof agentConfig?.temperature === 'number' ? agentConfig.temperature : 0.7,
+          maxTokens: agentConfig?.max_tokens || 8000
+        });
+      
+      case 'groq':
+      default:
+        return new GroqProvider({
+          model: model || 'openai/gpt-oss-20b',
+          temperature: typeof agentConfig?.temperature === 'number' ? agentConfig.temperature : 0.7,
+          maxTokens: agentConfig?.max_tokens || 8000
+        });
+    }
   }
 
   /**
@@ -83,6 +111,10 @@ export class SimpleOrchestrator {
     try {
       // Build initial messages
       const agentConfig = context.agentConfig || agentTemplateService.getDefaultAgent();
+      
+      // ✅ NOUVEAU : Sélectionner le bon provider selon l'agent
+      this.llmProvider = this.selectProvider(agentConfig);
+      
       const systemMessage = this.buildSystemMessage(agentConfig, context.uiContext);
       let messages = this.historyBuilder.buildInitialHistory(systemMessage, message, history);
 
