@@ -95,10 +95,6 @@ const PromptCard: React.FC<PromptCardProps> = ({
           <p className="prompt-card-description">{prompt.description}</p>
         )}
 
-        <div className="prompt-card-template">
-          <code>{prompt.prompt_template}</code>
-        </div>
-
         {prompt.category && (
           <div className="prompt-card-category">
             <span className="prompt-card-category-badge">{prompt.category}</span>
