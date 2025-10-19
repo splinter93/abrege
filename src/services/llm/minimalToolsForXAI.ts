@@ -1,15 +1,15 @@
 /**
  * Tools minimaux pour xAI Grok
  * 
- * Version simplifiée avec seulement les 5 tools essentiels
- * Garantit 100% de compatibilité xAI
+ * Version étendue avec 15 tools essentiels
+ * Format ultra-simple, testé et validé pour xAI
  */
 
 import type { Tool } from './types/strictTypes';
 
 /**
- * 5 tools essentiels pour Donna/xAI
- * Format ultra-simple, testé et validé
+ * 15 tools essentiels pour Donna/xAI
+ * Format ultra-simple, garanti compatible
  */
 export const MINIMAL_XAI_TOOLS: Tool[] = [
   // 1. Créer une note
@@ -128,6 +128,222 @@ export const MINIMAL_XAI_TOOLS: Tool[] = [
           markdown_content: {
             type: 'string',
             description: 'Nouveau contenu markdown (optionnel)'
+          }
+        },
+        required: ['ref']
+      }
+    }
+  },
+
+  // 6. Créer un dossier
+  {
+    type: 'function',
+    function: {
+      name: 'createFolder',
+      description: 'Créer un nouveau dossier dans un classeur',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Nom du dossier'
+          },
+          classeur_id: {
+            type: 'string',
+            description: 'ID ou slug du classeur parent'
+          },
+          parent_folder_id: {
+            type: 'string',
+            description: 'ID du dossier parent (optionnel, pour sous-dossier)'
+          }
+        },
+        required: ['name', 'classeur_id']
+      }
+    }
+  },
+
+  // 7. Récupérer un dossier
+  {
+    type: 'function',
+    function: {
+      name: 'getFolder',
+      description: 'Récupérer les détails d\'un dossier',
+      parameters: {
+        type: 'object',
+        properties: {
+          ref: {
+            type: 'string',
+            description: 'ID ou slug du dossier'
+          }
+        },
+        required: ['ref']
+      }
+    }
+  },
+
+  // 8. Créer un classeur
+  {
+    type: 'function',
+    function: {
+      name: 'createClasseur',
+      description: 'Créer un nouveau classeur',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Nom du classeur'
+          },
+          description: {
+            type: 'string',
+            description: 'Description du classeur (optionnel)'
+          },
+          color: {
+            type: 'string',
+            description: 'Couleur du classeur en hex (ex: #FF5733)'
+          }
+        },
+        required: ['name']
+      }
+    }
+  },
+
+  // 9. Récupérer un classeur
+  {
+    type: 'function',
+    function: {
+      name: 'getClasseur',
+      description: 'Récupérer les détails d\'un classeur',
+      parameters: {
+        type: 'object',
+        properties: {
+          ref: {
+            type: 'string',
+            description: 'ID ou slug du classeur'
+          }
+        },
+        required: ['ref']
+      }
+    }
+  },
+
+  // 10. Supprimer une ressource
+  {
+    type: 'function',
+    function: {
+      name: 'deleteResource',
+      description: 'Supprimer une ressource (note, dossier, classeur ou fichier)',
+      parameters: {
+        type: 'object',
+        properties: {
+          resource: {
+            type: 'string',
+            description: 'Type de ressource à supprimer',
+            enum: ['note', 'folder', 'classeur', 'file']
+          },
+          ref: {
+            type: 'string',
+            description: 'ID ou slug de la ressource'
+          }
+        },
+        required: ['resource', 'ref']
+      }
+    }
+  },
+
+  // 11. Déplacer une note
+  {
+    type: 'function',
+    function: {
+      name: 'moveNote',
+      description: 'Déplacer une note vers un autre classeur ou dossier',
+      parameters: {
+        type: 'object',
+        properties: {
+          ref: {
+            type: 'string',
+            description: 'ID ou slug de la note'
+          },
+          classeur_id: {
+            type: 'string',
+            description: 'ID du classeur de destination'
+          },
+          folder_id: {
+            type: 'string',
+            description: 'ID du dossier de destination (optionnel)'
+          }
+        },
+        required: ['ref', 'classeur_id']
+      }
+    }
+  },
+
+  // 12. Rechercher dans les fichiers
+  {
+    type: 'function',
+    function: {
+      name: 'searchFiles',
+      description: 'Rechercher spécifiquement dans les fichiers uploadés',
+      parameters: {
+        type: 'object',
+        properties: {
+          q: {
+            type: 'string',
+            description: 'Terme de recherche'
+          },
+          file_type: {
+            type: 'string',
+            description: 'Type de fichier à rechercher',
+            enum: ['all', 'image', 'document', 'pdf', 'text']
+          },
+          limit: {
+            type: 'number',
+            description: 'Nombre maximum de résultats'
+          }
+        },
+        required: ['q']
+      }
+    }
+  },
+
+  // 13. Récupérer le profil utilisateur
+  {
+    type: 'function',
+    function: {
+      name: 'getUserProfile',
+      description: 'Récupérer les informations du profil utilisateur',
+      parameters: {
+        type: 'object',
+        properties: {}
+      }
+    }
+  },
+
+  // 14. Lister les agents disponibles
+  {
+    type: 'function',
+    function: {
+      name: 'listAgents',
+      description: 'Récupérer la liste des agents spécialisés disponibles',
+      parameters: {
+        type: 'object',
+        properties: {}
+      }
+    }
+  },
+
+  // 15. Récupérer la table des matières d'une note
+  {
+    type: 'function',
+    function: {
+      name: 'getNoteTOC',
+      description: 'Récupérer la table des matières structurée d\'une note',
+      parameters: {
+        type: 'object',
+        properties: {
+          ref: {
+            type: 'string',
+            description: 'ID ou slug de la note'
           }
         },
         required: ['ref']
