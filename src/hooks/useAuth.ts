@@ -23,13 +23,12 @@ export function useAuth() {
 
   // Fonction de déconnexion automatique en cas de problème d'authentification
   const forceSignOut = useCallback(async () => {
-    console.log('🔧 Auth: Déconnexion forcée suite à un problème d\'authentification');
     try {
       await supabase.auth.signOut();
       setUser(null);
       setError('Session expirée. Veuillez vous reconnecter.');
     } catch (error) {
-      console.log('🔧 Auth: Erreur lors de la déconnexion forcée', error);
+      // Erreur silencieuse
     }
   }, []);
 
@@ -38,35 +37,24 @@ export function useAuth() {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
       
-      if (error) {
-        console.log('🔧 Auth: Erreur lors de la vérification de session', { error: error.message });
-        return false;
-      }
-      
-      if (!session?.access_token) {
-        console.log('🔧 Auth: Aucune session active');
+      if (error || !session?.access_token) {
         return false;
       }
 
       // Vérifier si le token est expiré
       const tokenExpiry = session.expires_at;
       if (tokenExpiry && new Date(tokenExpiry * 1000) < new Date()) {
-        console.log('🔧 Auth: Token expiré, tentative de rafraîchissement');
-        
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
         if (refreshError || !refreshData.session?.access_token) {
-          console.log('🔧 Auth: Échec du rafraîchissement', { error: refreshError?.message });
           return false;
         }
         
-        console.log('🔧 Auth: Token rafraîchi avec succès');
         setUser(refreshData.session.user);
         return true;
       }
       
       return true;
     } catch (error) {
-      console.log('🔧 Auth: Erreur lors de la vérification d\'authentification', error);
       return false;
     }
   }, []);
@@ -77,28 +65,22 @@ export function useAuth() {
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error || !session?.access_token) {
-        console.log('🔧 Auth: Impossible de récupérer le token', { error: error?.message });
         return null;
       }
 
       // Vérifier si le token est expiré
       const tokenExpiry = session.expires_at;
       if (tokenExpiry && new Date(tokenExpiry * 1000) < new Date()) {
-        console.log('🔧 Auth: Token expiré, tentative de rafraîchissement');
-        
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
         if (refreshError || !refreshData.session?.access_token) {
-          console.log('🔧 Auth: Échec du rafraîchissement du token', { error: refreshError?.message });
           return null;
         }
         
-        console.log('🔧 Auth: Token rafraîchi avec succès');
         return refreshData.session.access_token;
       }
       
       return session.access_token;
     } catch (error) {
-      console.log('🔧 Auth: Erreur lors de la récupération du token', error);
       return null;
     }
   }, []);
@@ -109,20 +91,14 @@ export function useAuth() {
     const initializeAuth = async () => {
       try {
         setLoading(true);
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (error) {
-          console.log('🔧 Auth: Erreur récupération session', { error: error.message });
-          setUser(null);
-        } else if (session?.user) {
-          console.log('🔧 Auth: Session utilisateur trouvée');
+        if (session?.user) {
           setUser(session.user);
         } else {
-          console.log('🔧 Auth: Aucune session utilisateur');
           setUser(null);
         }
       } catch (error) {
-        console.log('🔧 Auth: Erreur inattendue lors de l\'initialisation de l\'authentification', error);
         setUser(null);
       } finally {
         setLoading(false);
@@ -138,13 +114,9 @@ export function useAuth() {
         // Éviter les déclenchements pendant l'initialisation
         if (!isInitialized) return;
         
-        console.log(`🔧 Auth: Changement d'état d'authentification: ${event}`);
-        
         if (event === 'SIGNED_IN' && session?.user) {
-          console.log('🔧 Auth: Session utilisateur trouvée');
           setUser(session.user);
         } else if (event === 'SIGNED_OUT') {
-          console.log('🔧 Auth: Aucune session utilisateur');
           setUser(null);
         }
       }
@@ -166,15 +138,12 @@ export function useAuth() {
       });
 
       if (error) {
-        console.log('🔧 Auth: Erreur connexion', { error: error.message });
         setError(error.message);
         return { error: error.message };
       }
 
-      console.log('🔧 Auth: Connexion réussie', { userId: data.user?.id });
       return { user: data.user };
     } catch (error) {
-      console.log('🔧 Auth: Erreur inattendue lors de la connexion', { error });
       setError('Erreur inattendue');
       return { error: 'Erreur inattendue' };
     } finally {
@@ -198,15 +167,12 @@ export function useAuth() {
       });
 
       if (error) {
-        console.log('🔧 Auth: Erreur inscription', { error: error.message });
         setError(error.message);
         return { error: error.message };
       }
 
-      console.log('🔧 Auth: Inscription réussie', { userId: data.user?.id });
       return { user: data.user };
     } catch (error) {
-      console.log('🔧 Auth: Erreur inattendue lors de l\'inscription', { error });
       setError('Erreur inattendue');
       return { error: 'Erreur inattendue' };
     } finally {
@@ -222,14 +188,11 @@ export function useAuth() {
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.log('🔧 Auth: Erreur lors de la déconnexion', { error: error.message });
         setError('Erreur lors de la déconnexion');
       } else {
-        console.log('🔧 Auth: Déconnexion réussie');
         setUser(null);
       }
     } catch (error) {
-      console.log('🔧 Auth: Erreur inattendue lors de la déconnexion', error);
       setError('Erreur inattendue lors de la déconnexion');
     } finally {
       setLoading(false);

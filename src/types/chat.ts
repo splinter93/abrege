@@ -18,13 +18,14 @@ export interface Agent {
   provider?: string;
   system_instructions?: string;
   instructions?: string;
+  context_template?: string;
   personality?: string;
   expertise?: string[];
   temperature?: number;
   max_tokens?: number;
   top_p?: number;
   is_active?: boolean;
-  capabilities?: string[];
+  capabilities?: string[] | Record<string, unknown>; // JSONB dans la base
   api_v2_capabilities?: string[];
   profile_picture?: string;
   created_at?: string;

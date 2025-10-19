@@ -19,13 +19,16 @@ import {
   FiChevronDown,
   FiType
 } from 'react-icons/fi';
+import { useAuth } from '@/hooks/useAuth';
+import { EditorPromptExecutor } from '@/services/editorPromptExecutor';
+import type { EditorPrompt } from '@/types/editorPrompts';
+import { simpleLogger as logger } from '@/utils/logger';
 import './floating-menu-notion.css';
 import TransformMenu from './TransformMenu';
 import AskAIMenu from './AskAIMenu';
 
 interface FloatingMenuNotionProps {
   editor: Editor | null;
-  onAskAI?: (selectedText: string) => void;
 }
 
 interface MenuPosition {
@@ -35,9 +38,9 @@ interface MenuPosition {
 }
 
 const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({ 
-  editor, 
-  onAskAI 
+  editor
 }) => {
+  const { user, getAccessToken } = useAuth();
   const [position, setPosition] = useState<MenuPosition>({
     top: 0,
     left: 0,
@@ -49,6 +52,7 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isTransformMenuOpen, setTransformMenuOpen] = useState(false);
   const [isAskAIMenuOpen, setAskAIMenuOpen] = useState(false);
+  const [isExecuting, setIsExecuting] = useState(false);
   const isDraggingRef = useRef(false);
 
   // Mise à jour de la position du menu avec délai
@@ -64,8 +68,9 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
     const { selection } = state;
     
     // 🔧 FIX : Ne PAS afficher le menu pour les NodeSelection (drag handles, images, etc.)
+    // ✅ MAIS autoriser AllSelection (CMD+A)
     const selectionType = selection.constructor.name;
-    if (selectionType === 'NodeSelection' || selectionType === 'AllSelection') {
+    if (selectionType === 'NodeSelection') {
       timeoutRef.current = setTimeout(() => {
         setPosition(prev => ({ ...prev, visible: false }));
       }, 100);
@@ -300,7 +305,7 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
       },
       isActive: () => editor?.isActive('link') || false
     }
-  ], [editor, onAskAI, selectedText]);
+  ], [editor]);
 
   if (!editor || !position.visible) {
     return null;
@@ -375,7 +380,38 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
             editor={editor} 
             selectedText={selectedText}
             onClose={() => setAskAIMenuOpen(false)}
-            onAskAI={(prompt, text) => onAskAI?.(`${prompt}: ${text}`)}
+            onExecutePrompt={async (prompt: EditorPrompt, text: string) => {
+              // ✅ FIX: Utiliser user.id directement au lieu du JWT
+              if (!user?.id) {
+                logger.error('[FloatingMenuNotion] ❌ Utilisateur non connecté');
+                return;
+              }
+
+              setIsExecuting(true);
+              logger.info('[FloatingMenuNotion] 🚀 Exécution prompt:', prompt.name);
+
+              try {
+                const result = await EditorPromptExecutor.executePrompt(
+                  prompt,
+                  text,
+                  user.id
+                );
+
+                logger.info('[FloatingMenuNotion] 📊 Résultat:', result);
+
+                if (result.success && result.response) {
+                  // Remplacer la sélection par la réponse
+                  editor.chain().focus().deleteSelection().insertContent(result.response).run();
+                  logger.info('[FloatingMenuNotion] ✅ Prompt exécuté et texte remplacé');
+                } else {
+                  logger.error('[FloatingMenuNotion] ❌ Erreur exécution:', result.error || 'Erreur inconnue');
+                }
+              } catch (error) {
+                logger.error('[FloatingMenuNotion] ❌ Erreur:', error);
+              } finally {
+                setIsExecuting(false);
+              }
+            }}
           />
         </div>
       )}

@@ -18,7 +18,8 @@ import { UIContext } from '../ContextCollector';
 import { mcpConfigService } from '../mcpConfigService';
 import { groqCircuitBreaker } from '@/services/circuitBreaker';
 import { addToolCallInstructions } from '../toolCallInstructions';
-import type { Tool, GroqMessage, isMcpTool, McpCall } from '../types/strictTypes';
+import type { Tool, GroqMessage, McpCall } from '../types/strictTypes';
+import { isMcpTool } from '../types/strictTypes';
 
 /**
  * Contexte d'exécution

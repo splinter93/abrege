@@ -1,5 +1,5 @@
 /**
- * ASK AI MENU - Menu déroulant pour actions IA
+ * ASK AI MENU - Menu déroulant pour actions IA (version dynamique avec prompts DB)
  */
 
 .ask-ai-menu {
@@ -56,20 +56,112 @@
   transition: all 0.15s ease;
   text-align: left;
   font-size: 14px;
+  position: relative;
 }
 
-.ask-ai-item:hover {
+.ask-ai-item:hover:not(.disabled) {
   background: var(--surface-2);
+}
+
+/* État désactivé (agent non disponible) */
+.ask-ai-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: var(--text-muted);
+}
+
+.ask-ai-item.disabled .ask-ai-item-icon {
+  color: var(--text-muted);
+}
+
+/* Badge système pour prompts par défaut */
+.ask-ai-item.system::after {
+  content: 'Système';
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.ask-ai-item.system:hover::after {
+  opacity: 0.6;
 }
 
 .ask-ai-item-icon {
   flex-shrink: 0;
   color: #ff6b35;
+  transition: color 0.15s ease;
 }
 
 .ask-ai-item-label {
   flex: 1;
   font-weight: 500;
+}
+
+.ask-ai-item-warning {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+/* Bouton Show More */
+.ask-ai-show-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ask-ai-show-more:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+/* États de chargement et vide */
+.ask-ai-loading,
+.ask-ai-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.ask-ai-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ask-ai-loading::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border-subtle);
+  border-top-color: #ff6b35;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Scrollbar */

@@ -1,92 +1,112 @@
 /**
- * Menu Ask AI - Actions IA sur le texte sélectionné
+ * Menu Ask AI - Actions IA sur le texte sélectionné (version dynamique avec prompts DB)
  * @module components/editor/AskAIMenu
  */
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Editor } from '@tiptap/react';
-import {
-  FiEdit3,
-  FiMessageSquare,
-  FiCheckCircle,
-  FiCode,
-  FiGlobe,
-  FiTrendingUp,
-  FiAlertCircle,
-  FiList
-} from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { useEditorPrompts } from '@/hooks/useEditorPrompts';
+import { useAuth } from '@/hooks/useAuth';
+import { useAgents } from '@/hooks/useAgents';
+import { getIconComponent } from '@/utils/iconMapper';
+import type { EditorPrompt, PromptStatus } from '@/types/editorPrompts';
+import type { Agent } from '@/types/chat';
 import './ask-ai-menu.css';
 
 interface AskAIMenuProps {
   editor: Editor;
   selectedText: string;
   onClose: () => void;
-  onAskAI?: (prompt: string, selectedText: string) => void;
+  onExecutePrompt?: (prompt: EditorPrompt, selectedText: string) => void;
 }
 
 const AskAIMenu: React.FC<AskAIMenuProps> = ({ 
   editor, 
   selectedText,
   onClose, 
-  onAskAI 
+  onExecutePrompt 
 }) => {
-  const handleAction = (prompt: string) => {
-    if (onAskAI) {
-      onAskAI(prompt, selectedText);
+  const { user } = useAuth();
+  const { prompts, loading } = useEditorPrompts(user?.id);
+  const { agents } = useAgents();
+  const [showAll, setShowAll] = useState(false);
+
+  /**
+   * Détermine le statut d'un prompt par rapport à son agent
+   */
+  const getPromptStatus = (prompt: EditorPrompt): PromptStatus => {
+    if (!prompt.agent_id) return 'no-agent';
+    
+    const agent = agents.find((a: Agent) => a.id === prompt.agent_id);
+    if (!agent) return 'agent-deleted';
+    if (!agent.is_active) return 'agent-inactive';
+    
+    return 'ok';
+  };
+
+  /**
+   * Récupère le nom de l'agent pour un prompt
+   */
+  const getAgentName = (prompt: EditorPrompt): string => {
+    if (!prompt.agent_id) return 'Aucun agent';
+    const agent = agents.find((a: Agent) => a.id === prompt.agent_id);
+    return agent?.name || 'Agent inconnu';
+  };
+
+  /**
+   * Gère l'exécution d'un prompt
+   */
+  const handleExecutePrompt = (prompt: EditorPrompt) => {
+    const status = getPromptStatus(prompt);
+    
+    if (status !== 'ok') {
+      // Ne rien faire si l'agent n'est pas disponible
+      return;
     }
+
+    if (onExecutePrompt) {
+      onExecutePrompt(prompt, selectedText);
+    }
+    
     onClose();
   };
 
-  const aiActions = [
-    {
-      id: 'improve',
-      icon: FiTrendingUp,
-      label: 'Améliorer l\'écriture',
-      prompt: 'Améliore ce texte en le rendant plus clair et professionnel'
-    },
-    {
-      id: 'fix',
-      icon: FiCheckCircle,
-      label: 'Corriger orthographe',
-      prompt: 'Corrige l\'orthographe et la grammaire de ce texte'
-    },
-    {
-      id: 'simplify',
-      icon: FiEdit3,
-      label: 'Simplifier',
-      prompt: 'Simplifie ce texte pour le rendre plus accessible'
-    },
-    {
-      id: 'expand',
-      icon: FiMessageSquare,
-      label: 'Développer',
-      prompt: 'Développe et enrichis ce texte avec plus de détails'
-    },
-    {
-      id: 'summarize',
-      icon: FiList,
-      label: 'Résumer',
-      prompt: 'Résume ce texte de manière concise'
-    },
-    {
-      id: 'translate',
-      icon: FiGlobe,
-      label: 'Traduire',
-      prompt: 'Traduis ce texte en anglais'
-    },
-    {
-      id: 'explain',
-      icon: FiAlertCircle,
-      label: 'Expliquer',
-      prompt: 'Explique ce concept de manière simple et claire'
-    },
-    {
-      id: 'code',
-      icon: FiCode,
-      label: 'Générer du code',
-      prompt: 'Génère du code basé sur cette description'
-    }
-  ];
+  /**
+   * Affiche les 8 premiers prompts ou tous selon l'état showAll
+   */
+  const displayedPrompts = useMemo(() => {
+    const activePrompts = prompts.filter(p => p.is_active);
+    return showAll ? activePrompts : activePrompts.slice(0, 8);
+  }, [prompts, showAll]);
+
+  const hasMore = prompts.filter(p => p.is_active).length > 8;
+
+  if (loading) {
+    return (
+      <div className="ask-ai-menu">
+        <div className="ask-ai-header">
+          <span>Actions IA</span>
+        </div>
+        <div className="ask-ai-loading">
+          <span>Chargement...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (prompts.length === 0) {
+    return (
+      <div className="ask-ai-menu">
+        <div className="ask-ai-header">
+          <span>Actions IA</span>
+        </div>
+        <div className="ask-ai-empty">
+          <span>Aucun prompt disponible</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="ask-ai-menu">
@@ -94,20 +114,53 @@ const AskAIMenu: React.FC<AskAIMenuProps> = ({
         <span>Actions IA</span>
       </div>
       <div className="ask-ai-items">
-        {aiActions.map((action) => {
-          const Icon = action.icon;
+        {displayedPrompts.map((prompt) => {
+          const Icon = getIconComponent(prompt.icon);
+          const status = getPromptStatus(prompt);
+          const isDisabled = status !== 'ok';
+          
+          // Messages d'erreur selon le statut
+          const tooltipMessage = {
+            'no-agent': 'Aucun agent assigné',
+            'agent-deleted': 'Agent supprimé - Réassignez un agent',
+            'agent-inactive': 'Agent inactif'
+          }[status] || '';
+
           return (
             <button
-              key={action.id}
-              className="ask-ai-item"
-              onClick={() => handleAction(action.prompt)}
+              key={prompt.id}
+              className={`ask-ai-item ${isDisabled ? 'disabled' : ''} ${prompt.is_default ? 'system' : ''}`}
+              onClick={() => handleExecutePrompt(prompt)}
+              disabled={isDisabled}
+              title={isDisabled ? tooltipMessage : prompt.description || prompt.name}
             >
               <Icon size={16} className="ask-ai-item-icon" />
-              <span className="ask-ai-item-label">{action.label}</span>
+              <span className="ask-ai-item-label">{prompt.name}</span>
+              {isDisabled && (
+                <span className="ask-ai-item-warning">⚠️</span>
+              )}
             </button>
           );
         })}
       </div>
+      {hasMore && (
+        <button
+          className="ask-ai-show-more"
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll ? (
+            <>
+              <FiChevronUp size={14} />
+              <span>Afficher moins</span>
+            </>
+          ) : (
+            <>
+              <FiChevronDown size={14} />
+              <span>Afficher plus</span>
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 };

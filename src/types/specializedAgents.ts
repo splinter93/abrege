@@ -11,13 +11,13 @@ import { Agent } from './chat';
  */
 export interface SpecializedAgentConfig extends Agent {
   // Nouvelles propriétés pour agents spécialisés
-  slug?: string;
-  display_name?: string;
-  description?: string;
+  // slug, display_name, description sont déjà dans Agent
   is_chat_agent?: boolean;
   is_endpoint_agent?: boolean;
   input_schema?: OpenAPISchema;
   output_schema?: OpenAPISchema;
+  priority?: number;
+  version?: string;
 }
 
 /**

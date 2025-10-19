@@ -15,9 +15,9 @@ import type {
   GroqResponsesApiResponse,
   GroqResponsesApiOutput,
   McpCall,
-  Usage,
-  isMcpTool
+  Usage
 } from '../../types/strictTypes';
+import { isMcpTool } from '../../types/strictTypes';
 
 /**
  * Configuration spécifique à Groq

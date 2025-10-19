@@ -162,7 +162,7 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
     { href: '/private/dossiers', label: 'Mes Classeurs', icon: FolderIcon, key: 'dossiers' },
     { href: '/private/files', label: 'Mes Fichiers', icon: FileIcon, key: 'files' },
     { href: '/private/shared', label: 'Notes Partagées', icon: ShareIcon, key: 'shared' },
-    { href: '/private/agents', label: 'Agents', icon: AgentsIcon, key: 'agents' },
+    { href: '/ai', label: 'AI', icon: AgentsIcon, key: 'ai' },
     { href: '/private/documentation', label: 'Documentation', icon: DocumentationIcon, key: 'documentation' },
     { href: '/private/settings', label: 'Paramètres', icon: SettingsIcon, key: 'settings' },
     { href: '/private/trash', label: 'Corbeille', icon: TrashIcon, key: 'trash' },

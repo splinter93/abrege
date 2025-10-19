@@ -64,40 +64,24 @@ export const useAgents = () => {
    */
   const updateAgent = async (id: string, updates: Partial<Agent>) => {
     try {
-      console.log('🔍 updateAgent - Début de la fonction');
-      console.log('🔍 ID:', id);
-      console.log('🔍 Updates:', updates);
-      
       const { data: updatedAgent, error } = await supabase
         .from('agents')
         .update(updates)
         .eq('id', id)
         .select()
         .single();
-      
-      console.log('🔍 Réponse Supabase:', { data: updatedAgent, error });
         
-      if (error) {
-        console.error('❌ Erreur Supabase:', error);
-        throw error;
-      }
+      if (error) throw error;
       
       if (updatedAgent) {
-        console.log('✅ Agent mis à jour avec succès:', updatedAgent);
         setAgents(prev => prev.map(agent => 
           agent.id === id ? updatedAgent : agent
         ));
         return updatedAgent;
       }
       
-      console.log('⚠️ Aucun agent retourné après mise à jour');
       return null;
     } catch (err) {
-      console.error('💥 Erreur dans updateAgent:', err);
-      console.error('💥 Type d\'erreur:', typeof err);
-      console.error('💥 Message d\'erreur:', err instanceof Error ? err.message : 'Pas de message');
-      console.error('💥 Stack trace:', err instanceof Error ? err.stack : 'Pas de stack trace');
-      
       setError('Erreur lors de la mise à jour de l\'agent');
       logger.error('Erreur useAgents.updateAgent:', err);
       return null;

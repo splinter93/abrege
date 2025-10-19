@@ -8,9 +8,9 @@ import type {
   GroqResponsesApiResponse,
   Tool,
   FunctionTool,
-  ToolCall,
-  isMcpTool
+  ToolCall
 } from '../../types/strictTypes';
+import { isMcpTool } from '../../types/strictTypes';
 
 /**
  * Configuration spécifique à Groq Responses API
