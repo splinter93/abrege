@@ -55,6 +55,10 @@ export class OpenAPISchemaService {
    */
   async getToolsFromSchema(schemaName: string = 'scrivia-api-v2'): Promise<Tool[]> {
     try {
+      // ✅ TEMPORAIRE : Forcer le rechargement pour voir les changements
+      // TODO: Retirer après debug
+      this.invalidateCache();
+      
       // Vérifier le cache
       const now = Date.now();
       if (this.schemasCache.has(schemaName) && now - this.cacheTimestamp < this.CACHE_TTL) {
@@ -136,6 +140,16 @@ export class OpenAPISchemaService {
 
           // Construire les paramètres du tool
           const parameters = this.buildToolParameters(op, pathName);
+
+          // ✅ WORKAROUND : Exclure les tools trop complexes pour xAI
+          const excludedTools = [
+            'applyContentOperations', // Trop complexe (nested objects profonds)
+          ];
+
+          if (excludedTools.includes(operationId)) {
+            logger.dev(`[OpenAPISchemaService] ⚠️ Tool exclu (trop complexe): ${operationId}`);
+            continue;
+          }
 
           // Créer le tool
           const tool: Tool = {
@@ -250,26 +264,33 @@ export class OpenAPISchemaService {
    * Supprime: format, maxLength, minLength, minimum, maximum, default, pattern, etc.
    */
   private cleanSchemaForXAI(schema: Record<string, unknown>): Record<string, unknown> {
+    if (!schema || typeof schema !== 'object') {
+      return schema;
+    }
+
     const cleaned: Record<string, unknown> = {};
 
-    // ✅ Champs autorisés par xAI
+    // ✅ Champs autorisés par xAI (whitelist stricte)
     const allowedFields = ['type', 'description', 'enum', 'items', 'properties', 'required'];
 
-    for (const field of allowedFields) {
-      if (field in schema) {
-        if (field === 'items' && typeof schema.items === 'object' && schema.items !== null) {
-          // Nettoyer récursivement les items (pour les arrays)
-          cleaned.items = this.cleanSchemaForXAI(schema.items as Record<string, unknown>);
-        } else if (field === 'properties' && typeof schema.properties === 'object' && schema.properties !== null) {
-          // Nettoyer récursivement les properties (pour les objects)
-          const props = schema.properties as Record<string, unknown>;
-          cleaned.properties = {};
-          for (const [key, value] of Object.entries(props)) {
-            (cleaned.properties as Record<string, unknown>)[key] = this.cleanSchemaForXAI(value as Record<string, unknown>);
-          }
-        } else {
-          cleaned[field] = schema[field];
+    for (const [key, value] of Object.entries(schema)) {
+      // ✅ Filtrer uniquement les champs autorisés
+      if (!allowedFields.includes(key)) {
+        continue; // Skip les champs non autorisés
+      }
+
+      if (key === 'items' && typeof value === 'object' && value !== null) {
+        // Nettoyer récursivement les items (pour les arrays)
+        cleaned.items = this.cleanSchemaForXAI(value as Record<string, unknown>);
+      } else if (key === 'properties' && typeof value === 'object' && value !== null) {
+        // Nettoyer récursivement les properties (pour les objects)
+        const props = value as Record<string, unknown>;
+        cleaned.properties = {};
+        for (const [propKey, propValue] of Object.entries(props)) {
+          (cleaned.properties as Record<string, unknown>)[propKey] = this.cleanSchemaForXAI(propValue as Record<string, unknown>);
         }
+      } else {
+        cleaned[key] = value;
       }
     }
 

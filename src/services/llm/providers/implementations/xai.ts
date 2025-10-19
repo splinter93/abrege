@@ -371,6 +371,10 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
     if (tools && tools.length > 0) {
       payload.tools = tools;
       payload.tool_choice = 'auto';
+      
+      // ✅ DEBUG: Logger les tools pour identifier le problème
+      logger.dev(`[XAIProvider] 🔧 Envoi de ${tools.length} tools à xAI`);
+      logger.dev(`[XAIProvider] 📋 Premier tool:`, JSON.stringify(tools[0], null, 2));
     }
 
     // Ajouter parallel_tool_calls si configuré
