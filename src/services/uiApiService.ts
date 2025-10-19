@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Types pour l'API UI
-export interface UIApiResponse<T = any> {
+export interface UIApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -56,7 +56,7 @@ export interface SearchResult {
  */
 export class UIApiService {
   private baseUrl: string;
-  private supabase: any;
+  private supabase: ReturnType<typeof createClient>;
   private authToken: string | null = null;
 
   constructor() {

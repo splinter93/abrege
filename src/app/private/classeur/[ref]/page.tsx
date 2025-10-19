@@ -31,7 +31,7 @@ function ClasseurDeepLinkPageContent() {
   const fetcher = async ([url]: readonly string[]) => {
     const { data: { session } } = await supabase.auth.getSession();
     const bearer = session?.access_token;
-    const res = await fetchJsonV1<any>(url, { bearer, etag: etagRef.current });
+    const res = await fetchJsonV1<{ dossiers?: unknown[]; notes_at_root?: unknown[] }>(url, { bearer, etag: etagRef.current });
     etagRef.current = res.etag;
     return res.data;
   };
@@ -45,7 +45,7 @@ function ClasseurDeepLinkPageContent() {
 
   const foldersFlat = useMemo<Folder[]>(() => {
     const result: Folder[] = [];
-    function walk(nodes: any[]) {
+    function walk(nodes: unknown[]) {
       for (const n of nodes) {
         result.push({ 
           id: n.id, 
@@ -65,8 +65,10 @@ function ClasseurDeepLinkPageContent() {
   }, [payload]);
 
   const filesAtRoot = useMemo(() => {
-    return Array.isArray(payload?.notes_at_root) ? payload.notes_at_root.map((n: any) => ({
-      id: n.id,
+    return Array.isArray(payload?.notes_at_root) ? payload.notes_at_root.map((n: unknown) => {
+      const note = n as { id: string; source_title?: string; header_image?: string };
+      return {
+      id: note.id,
       source_title: n.title,
       folder_id: null,
       classeur_id: payload?.classeur?.id || '',

@@ -3,12 +3,12 @@
  * Version optimisée et fonctionnelle
  */
 
-export default function markdownItGithubTables(md: any) {
+export default function markdownItGithubTables(md: { block: { ruler: { before: (name: string, ruleName: string, fn: unknown) => void } } }) {
   // Regex pour détecter les tables GitHub
   // const tableRegex = /^(\|[^\n]+\|\r?\n)((?:\|[\s\-\:]+\|\r?\n)+)((?:\|[^\n]+\|\r?\n?)*)$/;
 
   // Fonction de parsing des tables
-  function parseTable(state: any, startLine: number, endLine: number, silent: boolean): boolean {
+  function parseTable(state: { bMarks: number[]; tShift: number[]; eMarks: number[]; src: string; [key: string]: unknown }, startLine: number, endLine: number, silent: boolean): boolean {
     const start = state.bMarks[startLine] + state.tShift[startLine];
     const end = state.eMarks[startLine];
     const lineText = state.src.slice(start, end);

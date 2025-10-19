@@ -246,7 +246,7 @@ export class ChatSessionService {
       }
 
       // Essayer de lire le corps JSON s'il existe
-      let data: any = null;
+      let data: unknown = null;
       try {
         data = await response.json();
         logger.debug('[ChatSessionService] 📋 Données réponse:', { data });
@@ -388,7 +388,7 @@ export class ChatSessionService {
    * - Ajoute un timestamp si manquant
    */
   private sanitizeMessageForPersistence(message: Omit<ChatMessage, 'id'>): Omit<ChatMessage, 'id'> {
-    const sanitized: any = { ...(message as any) };
+    const sanitized: Omit<ChatMessage, 'id'> & { [key: string]: unknown } = { ...message };
 
     // Horodatage garanti
     sanitized.timestamp = sanitized.timestamp || new Date().toISOString();

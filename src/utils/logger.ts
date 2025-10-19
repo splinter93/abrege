@@ -101,7 +101,8 @@ class Logger {
         } catch (error) {
           // Fallback pour les objets avec structures circulaires complexes
           if (error instanceof Error && error.message.includes('circular')) {
-            return `[Object with circular structure: ${(obj as any)?.constructor?.name || 'Unknown'}]`;
+            const objWithConstructor = obj as { constructor?: { name?: string } };
+            return `[Object with circular structure: ${objWithConstructor?.constructor?.name || 'Unknown'}]`;
           }
           return String(obj);
         }
@@ -257,7 +258,8 @@ export const simpleLogger = {
       } catch (circularError) {
         // Fallback pour les objets avec structures circulaires
         if (circularError instanceof Error && circularError.message.includes('circular')) {
-          serializedData = `[Object with circular structure: ${(error as any)?.constructor?.name || 'Unknown'}]`;
+          const errorWithConstructor = error as { constructor?: { name?: string } };
+          serializedData = `[Object with circular structure: ${errorWithConstructor?.constructor?.name || 'Unknown'}]`;
         } else {
           serializedData = String(error);
         }

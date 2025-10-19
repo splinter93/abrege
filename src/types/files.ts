@@ -74,7 +74,7 @@ export interface FileEvent {
   request_id?: string;
   ip_address?: string;
   user_agent?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -185,7 +185,7 @@ export interface FileValidationOptions {
 // TYPES POUR LES API RESPONSES
 // ========================================
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

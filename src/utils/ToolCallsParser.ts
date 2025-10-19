@@ -217,7 +217,7 @@ export class ToolCallsParser {
    * @param chunk Le chunk de réponse de l'API.
    */
   feed(chunk: unknown): void {
-    const chunkObj = chunk as { choices?: Array<{ delta?: any }> };
+    const chunkObj = chunk as { choices?: Array<{ delta?: { tool_calls?: unknown[]; [key: string]: unknown } }> };
     const delta = chunkObj?.choices?.[0]?.delta;
     if (!delta) return;
 
@@ -235,8 +235,9 @@ export class ToolCallsParser {
 
     // 3. Traiter les tool_calls
     if (Array.isArray(delta.tool_calls)) {
-      delta.tool_calls.forEach((toolCallChunk: any) => {
-        const index = toolCallChunk.index;
+      delta.tool_calls.forEach((toolCallChunk: unknown) => {
+        const tc = toolCallChunk as { index?: number; id?: string; type?: string; function?: { name?: string; arguments?: string } };
+        const index = tc.index;
         if (typeof index !== 'number') return;
 
         let call = this.toolCallMap.get(index);

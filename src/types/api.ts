@@ -10,7 +10,7 @@ export interface ApiContext {
 }
 
 // Types pour les réponses d'API
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   details?: string[];
@@ -85,8 +85,10 @@ export interface ApiError extends Error {
 }
 
 // Types pour l'authentification
+import { SupabaseClient } from '@supabase/supabase-js';
+
 export interface AuthenticatedClient {
-  supabase: any; // TODO: Typer avec SupabaseClient
+  supabase: SupabaseClient;
   userId: string;
 }
 

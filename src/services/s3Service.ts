@@ -158,8 +158,9 @@ export class S3Service {
       });
       await this.client.send(command);
       return true;
-    } catch (error: any) {
-      if (error.name === 'NotFound') {
+    } catch (error) {
+      const err = error as { name?: string; message?: string };
+      if (err.name === 'NotFound') {
         return false;
       }
       throw this.handleS3Error(error, 'fileExists');
@@ -200,8 +201,9 @@ export class S3Service {
   /**
    * Gestion centralisée des erreurs S3
    */
-  private handleS3Error(error: any, operation: string): S3Error {
-    const s3Error: S3Error = new Error(`Erreur S3 lors de ${operation}: ${error.message}`);
+  private handleS3Error(error: unknown, operation: string): S3Error {
+    const err = error as { message?: string; code?: string; name?: string };
+    const s3Error: S3Error = new Error(`Erreur S3 lors de ${operation}: ${err.message || 'Erreur inconnue'}`);
     s3Error.code = error.code;
     s3Error.statusCode = error.statusCode;
     s3Error.requestId = error.requestId;
