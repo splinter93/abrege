@@ -18,8 +18,16 @@ interface ExternalUrlPayload {
   fileSize: number;
 }
 
+interface FileData {
+  id: string;
+  filename: string;
+  url?: string;
+  mime_type: string;
+  size: number;
+}
+
 interface UploadResponse {
-  file: any;
+  file: FileData;
   uploadUrl?: string;
   expiresAt?: Date;
 }
@@ -27,7 +35,7 @@ interface UploadResponse {
 interface GetUrlResponse {
   success: boolean;
   url: string;
-  file: any;
+  file: FileData;
 }
 
 // ========================================
@@ -119,7 +127,7 @@ async function getFinalUrl(fileId: string, authHeader: Record<string, string>): 
 export async function uploadImageForNote(
   file: File | string, 
   noteRef: string
-): Promise<{ publicUrl: string; saved: any }> {
+): Promise<{ publicUrl: string; saved: FileData }> {
   // Authentification
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;

@@ -41,14 +41,17 @@ export interface NoteRenamedEvent extends BaseEvent {
 export type RealtimeEvent = NoteCreatedEvent | NoteDeletedEvent | NoteRenamedEvent;
 
 // Type guard functions
-export function isNoteCreatedEvent(event: any): event is NoteCreatedEvent {
-  return event.type === 'note.created' && event.payload?.id;
+export function isNoteCreatedEvent(event: unknown): event is NoteCreatedEvent {
+  const e = event as { type?: string; payload?: { id?: string } };
+  return e.type === 'note.created' && !!e.payload?.id;
 }
 
-export function isNoteDeletedEvent(event: any): event is NoteDeletedEvent {
-  return event.type === 'note.deleted' && event.payload?.id;
+export function isNoteDeletedEvent(event: unknown): event is NoteDeletedEvent {
+  const e = event as { type?: string; payload?: { id?: string } };
+  return e.type === 'note.deleted' && !!e.payload?.id;
 }
 
-export function isNoteRenamedEvent(event: any): event is NoteRenamedEvent {
-  return event.type === 'note.renamed' && event.payload?.id;
+export function isNoteRenamedEvent(event: unknown): event is NoteRenamedEvent {
+  const e = event as { type?: string; payload?: { id?: string } };
+  return e.type === 'note.renamed' && !!e.payload?.id;
 } 

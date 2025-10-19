@@ -30,7 +30,7 @@ export class ErrorHandler {
   /**
    * Gérer les erreurs API de manière centralisée
    */
-  static handleApiError(error: any, context: ErrorContext): void {
+  static handleApiError(error: unknown, context: ErrorContext): void {
     const errorHandler = ErrorHandler.getInstance();
     errorHandler.logError(error, context);
     errorHandler.showUserNotification(error, context);
@@ -39,7 +39,7 @@ export class ErrorHandler {
   /**
    * Logger les erreurs de manière structurée
    */
-  private logError(error: any, context: ErrorContext): void {
+  private logError(error: unknown, context: ErrorContext): void {
     const errorInfo = {
       timestamp: new Date().toISOString(),
       error: {
@@ -65,7 +65,7 @@ export class ErrorHandler {
   /**
    * Afficher une notification utilisateur appropriée
    */
-  private showUserNotification(error: any, context: ErrorContext): void {
+  private showUserNotification(error: unknown, context: ErrorContext): void {
     let message = 'Une erreur est survenue';
 
     // Messages personnalisés selon le type d'opération

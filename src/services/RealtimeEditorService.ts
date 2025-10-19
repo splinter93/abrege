@@ -14,7 +14,7 @@ import { handleRealtimeEvent } from '@/realtime/dispatcher';
 /**
  * Utilitaire pour sérialiser des objets en évitant les références circulaires
  */
-function safeStringify(obj: any, maxDepth: number = 10): string {
+function safeStringify(obj: unknown, maxDepth: number = 10): string {
   const seen = new WeakSet();
   
   return JSON.stringify(obj, (key, value) => {
@@ -56,7 +56,7 @@ export interface RealtimeEditorState {
 
 export interface RealtimeEditorEvent {
   type: string;
-  payload: any;
+  payload: unknown;
   timestamp: number;
   source: 'llm' | 'user' | 'system';
 }
@@ -544,7 +544,7 @@ export class RealtimeEditorService {
   /**
    * Envoie un événement de broadcast
    */
-  public async broadcast(event: string, payload: any): Promise<void> {
+  public async broadcast(event: string, payload: unknown): Promise<void> {
     if (!this.channel || !this.state.isConnected) {
       logger.warn(LogCategory.EDITOR, '[RealtimeEditor] Impossible d\'envoyer - non connecté');
       return;

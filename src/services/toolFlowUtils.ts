@@ -3,13 +3,14 @@ import crypto from 'crypto';
 export function canonicalJsonString(input: unknown): string {
   try {
     const obj = typeof input === 'string' ? JSON.parse(input) : input;
-    const sorter = (x: any): any => {
+    const sorter = (x: unknown): unknown => {
       if (Array.isArray(x)) return x.map(sorter);
       if (x && typeof x === 'object') {
-        return Object.keys(x)
+        const xObj = x as Record<string, unknown>;
+        return Object.keys(xObj)
           .sort()
-          .reduce((acc: Record<string, any>, key) => {
-            acc[key] = sorter((x as any)[key]);
+          .reduce((acc: Record<string, unknown>, key) => {
+            acc[key] = sorter(xObj[key]);
             return acc;
           }, {});
       }
