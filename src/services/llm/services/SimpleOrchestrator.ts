@@ -124,10 +124,12 @@ export class SimpleOrchestrator {
       let tools: Tool[] = [];
       
       if (selectedProvider.toLowerCase() === 'xai') {
-        // ✅ xAI : Utiliser les tools OpenAPI depuis la BDD
-        logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools OpenAPI pour xAI...`);
-        tools = await openApiSchemaService.getToolsFromSchema('scrivia-api-v2');
-        logger.dev(`[SimpleOrchestrator] ✅ Tools OpenAPI disponibles: ${tools.length} tools`);
+        // ✅ xAI : Utiliser les tools minimaux (5 tools testés)
+        // TODO: Passer aux 38 tools complets quand xAI sera stable
+        logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools minimaux pour xAI...`);
+        const { getMinimalXAITools } = await import('../minimalToolsForXAI');
+        tools = getMinimalXAITools();
+        logger.dev(`[SimpleOrchestrator] ✅ Tools minimaux disponibles: ${tools.length} tools`);
       } else {
         // ✅ Groq : Utiliser les MCP tools (comme avant)
         logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools MCP pour Groq...`);
