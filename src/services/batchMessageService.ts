@@ -12,13 +12,13 @@ export interface BatchMessageRequest {
 export interface BatchMessageResponse {
   success: boolean;
   data?: {
-    session: any;
+    session: unknown;
     messages: ChatMessage[];
     duplicatesFiltered: number;
     batchId: string;
   };
   error?: string;
-  details?: any[];
+  details?: string[];
 }
 
 /**
@@ -199,7 +199,7 @@ export class BatchMessageService {
       });
 
       if (!response.ok) {
-        let errorData: Record<string, any> = {};
+        let errorData: Record<string, unknown> = {};
         let errorText = '';
         
         try {
@@ -371,14 +371,15 @@ export class BatchMessageService {
   /**
    * 🔧 Valider un message tool avant ajout
    */
-  validateToolMessage(message: any): { isValid: boolean; errors: string[] } {
+  validateToolMessage(message: Omit<ChatMessage, 'id'>): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
     
     if (message.role === 'tool') {
-      if (!message.tool_call_id) {
+      const toolMsg = message as Omit<ChatMessage, 'id'> & { tool_call_id?: string; name?: string; tool_name?: string };
+      if (!toolMsg.tool_call_id) {
         errors.push('tool_call_id manquant pour les messages tool');
       }
-      if (!message.name && !message.tool_name) {
+      if (!toolMsg.name && !toolMsg.tool_name) {
         errors.push('name manquant pour les messages tool');
       }
       if (!message.content) {
@@ -433,11 +434,19 @@ export class BatchMessageService {
    * - Ajoute un timestamp si manquant
    */
   private sanitizeMessageForPersistence(message: Omit<ChatMessage, 'id'>): Omit<ChatMessage, 'id'> {
-    const { reasoning: _removedReasoning, ...rest } = message as any;
-    const sanitized: any = { ...rest };
-
-    // Horodatage garanti
-    sanitized.timestamp = sanitized.timestamp || new Date().toISOString();
+    const msgWithReasoning = message as Omit<ChatMessage, 'id'> & { 
+      reasoning?: string; 
+      channel?: 'analysis' | 'commentary' | 'final';
+    };
+    const { reasoning: _removedReasoning, ...rest } = msgWithReasoning;
+    const sanitized: Omit<ChatMessage, 'id'> & { 
+      channel?: 'analysis' | 'commentary' | 'final';
+      timestamp: string;
+      [key: string]: unknown;
+    } = { 
+      ...rest,
+      timestamp: rest.timestamp || new Date().toISOString()
+    };
 
     // Ne jamais persister de messages en canal 'analysis' pour user/assistant
     if (sanitized.role === 'assistant' || sanitized.role === 'user') {
@@ -453,7 +462,7 @@ export class BatchMessageService {
       if (sanitized[key] === undefined) delete sanitized[key];
     });
 
-    return sanitized;
+    return sanitized as Omit<ChatMessage, 'id'>;
   }
 }
 

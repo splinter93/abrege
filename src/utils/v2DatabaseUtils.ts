@@ -1,9 +1,37 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logApi as originalLogApi } from './logger';
 import { V2ResourceResolver } from './v2ResourceResolver';
 import { SlugGenerator } from './slugGenerator';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
 import { sanitizeMarkdownContent } from './markdownSanitizer.server';
+
+// Types pour les opérations de contenu et les agents
+export interface ContentOperation {
+  id: string;
+  action: 'insert' | 'replace' | 'delete' | 'upsert_section';
+  target: unknown;
+  where: string;
+  content?: string;
+  options?: Record<string, unknown>;
+}
+
+export interface ShareSettings {
+  visibility?: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
+  allow_edit?: boolean;
+  allow_comments?: boolean;
+  invited_users?: string[];
+  link_expires?: string;
+}
+
+export interface AgentData {
+  display_name?: string;
+  slug?: string;
+  description?: string;
+  model?: string;
+  system_instructions?: string;
+  api_v2_capabilities?: string[];
+  [key: string]: unknown;
+}
 
 // Wrapper pour logApi pour accepter les paramètres ApiContext
 const logApi = {
@@ -515,7 +543,7 @@ export class V2DatabaseUtils {
   /**
    * Créer un dossier
    */
-  static async createFolder(data: CreateFolderData, userId: string, context: ApiContext, supabaseClient?: any) {
+  static async createFolder(data: CreateFolderData, userId: string, context: ApiContext, supabaseClient?: SupabaseClient) {
     logApi.info(`🚀 Création dossier optimisée`, context);
     
     try {
@@ -719,7 +747,7 @@ export class V2DatabaseUtils {
       }
 
       // Mettre à jour le parent du dossier
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         parent_id: targetParentId
       };
       
@@ -1702,7 +1730,7 @@ export class V2DatabaseUtils {
   /**
    * Générer un slug
    */
-  static async generateSlug(text: string, type: 'note' | 'classeur' | 'folder', userId: string, context: ApiContext, supabaseClient?: any) {
+  static async generateSlug(text: string, type: 'note' | 'classeur' | 'folder', userId: string, context: ApiContext, supabaseClient?: SupabaseClient) {
     logApi.info(`🚀 Génération slug pour ${type}`, context);
     
     try {
@@ -1920,7 +1948,7 @@ export class V2DatabaseUtils {
   /**
    * Appliquer des opérations de contenu à une note
    */
-  static async applyContentOperations(ref: string, operations: any[], userId: string, context: ApiContext) {
+  static async applyContentOperations(ref: string, operations: ContentOperation[], userId: string, context: ApiContext) {
     logApi.info(`🚀 Application opérations contenu ${ref}`, context);
     
     try {
@@ -1975,7 +2003,7 @@ export class V2DatabaseUtils {
   /**
    * Mettre à jour les paramètres de partage d'une note
    */
-  static async updateNoteShareSettings(ref: string, settings: any, userId: string, context: ApiContext) {
+  static async updateNoteShareSettings(ref: string, settings: ShareSettings, userId: string, context: ApiContext) {
     logApi.info(`🚀 Mise à jour paramètres partage ${ref}`, context);
     
     try {
@@ -2214,7 +2242,7 @@ export class V2DatabaseUtils {
   /**
    * Créer un agent
    */
-  static async createAgent(data: any, userId: string, context: ApiContext) {
+  static async createAgent(data: AgentData, userId: string, context: ApiContext) {
     logApi.info(`🚀 Création agent`, context);
     return { success: true, data: { id: 'placeholder' } };
   }
@@ -2230,7 +2258,7 @@ export class V2DatabaseUtils {
   /**
    * Exécuter un agent
    */
-  static async executeAgent(data: any, userId: string, context: ApiContext) {
+  static async executeAgent(data: Record<string, unknown>, userId: string, context: ApiContext) {
     logApi.info(`🚀 Exécution agent`, context);
     return { success: true, data: { response: 'placeholder' } };
   }
@@ -2238,7 +2266,7 @@ export class V2DatabaseUtils {
   /**
    * Mettre à jour un agent
    */
-  static async updateAgent(agentId: string, data: any, userId: string, context: ApiContext) {
+  static async updateAgent(agentId: string, data: AgentData, userId: string, context: ApiContext) {
     logApi.info(`🚀 Mise à jour agent ${agentId}`, context);
     return { success: true, data: { id: agentId } };
   }
@@ -2246,7 +2274,7 @@ export class V2DatabaseUtils {
   /**
    * Patcher un agent
    */
-  static async patchAgent(agentId: string, data: any, userId: string, context: ApiContext) {
+  static async patchAgent(agentId: string, data: Partial<AgentData>, userId: string, context: ApiContext) {
     logApi.info(`🚀 Patch agent ${agentId}`, context);
     return { success: true, data: { id: agentId } };
   }

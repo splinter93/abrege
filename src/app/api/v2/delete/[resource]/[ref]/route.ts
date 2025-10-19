@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
-import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
+import { V2DatabaseUtils, ApiContext } from '@/utils/v2DatabaseUtils';
 import { logApi } from '@/utils/logger';
 import { canPerformAction } from '@/utils/scopeValidation';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -235,11 +236,11 @@ export async function HEAD(
  * Fonction utilitaire pour mettre un élément en corbeille
  */
 async function moveToTrash(
-  supabase: any,
+  supabase: SupabaseClient,
   tableName: string,
   resourceId: string,
   userId: string,
-  context: any
+  context: ApiContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const now = new Date().toISOString();
@@ -286,10 +287,10 @@ async function moveToTrash(
  * Fonction pour mettre un classeur en corbeille avec tous ses enfants
  */
 async function moveClasseurToTrash(
-  supabase: any,
+  supabase: SupabaseClient,
   classeurId: string,
   userId: string,
-  context: any
+  context: ApiContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const now = new Date().toISOString();
@@ -350,10 +351,10 @@ async function moveClasseurToTrash(
  * Fonction pour mettre un dossier en corbeille avec tous ses enfants (OPTIMISÉE)
  */
 async function moveFolderToTrash(
-  supabase: any,
+  supabase: SupabaseClient,
   folderId: string,
   userId: string,
-  context: any
+  context: ApiContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const now = new Date().toISOString();

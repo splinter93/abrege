@@ -4,28 +4,22 @@
  */
 
 import { Extension } from '@tiptap/core';
-import Suggestion from '@tiptap/suggestion';
+import Suggestion, { SuggestionOptions, SuggestionProps } from '@tiptap/suggestion';
 import { ReactRenderer } from '@tiptap/react';
-import tippy from 'tippy.js';
+import tippy, { Instance as TippyInstance } from 'tippy.js';
 import SlashMenu from '@/components/SlashMenu';
 import { slashCommands, type SlashCommand } from '@/types/slashCommands';
+import { Editor } from '@tiptap/core';
+
+// Types pour les props de suggestion
+interface CommandProps {
+  editor: Editor;
+  range: { from: number; to: number };
+  props: SlashCommand;
+}
 
 export interface SlashMenuOptions {
-  suggestion: {
-    char: string;
-    command: (props: {
-      editor: any;
-      range: any;
-      props: any;
-    }) => void;
-    items: (query: string) => SlashCommand[];
-    render: () => {
-      onStart: (props: any) => void;
-      onUpdate: (props: any) => void;
-      onKeyDown: (props: any) => boolean;
-      onExit: () => void;
-    };
-  };
+  suggestion: Omit<SuggestionOptions, 'editor'>;
 }
 
 const SlashMenuExtension = Extension.create({
@@ -55,10 +49,10 @@ const SlashMenuExtension = Extension.create({
         },
         render: () => {
           let component: ReactRenderer;
-          let popup: any;
+          let popup: TippyInstance[] | undefined;
 
           return {
-            onStart: (props) => {
+            onStart: (props: SuggestionProps) => {
               component = new ReactRenderer(SlashMenu, {
                 props: {
                   ...props,
@@ -87,7 +81,7 @@ const SlashMenuExtension = Extension.create({
               });
             },
 
-            onUpdate(props) {
+            onUpdate(props: SuggestionProps) {
               component.updateProps({
                 ...props,
                 onSelect: (item: SlashCommand) => {
@@ -99,14 +93,14 @@ const SlashMenuExtension = Extension.create({
                 return;
               }
 
-              popup[0].setProps({
+              popup?.[0]?.setProps({
                 getReferenceClientRect: props.clientRect,
               });
             },
 
-            onKeyDown(props) {
+            onKeyDown(props: { event: KeyboardEvent }) {
               if (props.event.key === 'Escape') {
-                popup[0].hide();
+                popup?.[0]?.hide();
                 return true;
               }
 
@@ -114,7 +108,7 @@ const SlashMenuExtension = Extension.create({
             },
 
             onExit() {
-              popup[0].destroy();
+              popup?.[0]?.destroy();
               component.destroy();
             },
           };
