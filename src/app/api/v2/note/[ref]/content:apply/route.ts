@@ -194,7 +194,7 @@ export async function POST(
     logApi.info(`✅ Contenu appliqué avec succès en ${apiTime}ms`, context);
 
     // 📤 Construire la réponse
-    const response: any = {
+    const response: { data: { content?: string; diff?: string; operations_applied: number; dry_run: boolean } } = {
       data: {
         note_id: noteId,
         ops_results: result.results,
@@ -281,7 +281,7 @@ export async function POST(
  * Valide l'ETag ou la version de la note
  */
 async function validateETag(
-  supabase: any,
+  supabase: ReturnType<typeof createClient>,
   noteId: string,
   ifMatch?: string | null,
   xNoteVersion?: string | null

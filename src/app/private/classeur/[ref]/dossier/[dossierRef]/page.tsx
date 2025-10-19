@@ -6,7 +6,7 @@ import { supabase } from '@/supabaseClient';
 import FolderManager from '@/components/FolderManager';
 import type { Folder } from '@/components/types';
 
-const etagCache = new Map<string, { etag: string; data: any }>();
+const etagCache = new Map<string, { etag: string; data: unknown }>();
 async function fetchTree(ref: string) {
   const { data: { session } } = await supabase.auth.getSession();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -31,7 +31,7 @@ export default function FolderDeepLinkPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [payload, setPayload] = useState<any | null>(null);
+  const [payload, setPayload] = useState<{ tree?: unknown[]; notes_at_root?: unknown[]; classeur?: { id: string; name: string; emoji?: string } } | null>(null);
   const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -57,8 +57,9 @@ export default function FolderDeepLinkPage() {
     if (!payload) return;
     let targetId: string | undefined = undefined;
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dossierRef);
-    function walk(nodes: any[]) {
+    function walk(nodes: unknown[]): string | undefined {
       for (const n of nodes) {
+        const node = n as { id: string; slug?: string; children?: unknown[] };
         if ((isUUID && n.id === dossierRef) || (!isUUID && n.slug === dossierRef) || n.id === dossierRef) {
           targetId = n.id; return;
         }
@@ -75,8 +76,9 @@ export default function FolderDeepLinkPage() {
 
   const foldersFlat = useMemo<Folder[]>(() => {
     const result: Folder[] = [];
-    function walk(nodes: any[]) {
+    function walk(nodes: unknown[]) {
       for (const n of nodes) {
+        const node = n as { id: string; name: string; parent_id?: string; children?: unknown[] };
         result.push({ 
           id: n.id, 
           name: n.name, 
@@ -97,8 +99,10 @@ export default function FolderDeepLinkPage() {
   }, [payload]);
 
   const filesAtRoot = useMemo(() => {
-    return Array.isArray(payload?.notes_at_root) ? payload.notes_at_root.map((n: any) => ({
-      id: n.id,
+    return Array.isArray(payload?.notes_at_root) ? payload.notes_at_root.map((n: unknown) => {
+      const note = n as { id: string; source_title?: string; header_image?: string; created_at?: string };
+      return {
+      id: note.id,
       source_title: n.title,
       folder_id: null,
       classeur_id: payload?.classeur?.id,

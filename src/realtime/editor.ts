@@ -3,14 +3,15 @@ import { useFileSystemStore, EditorPatch } from '@/store/useFileSystemStore';
 /**
  * handleEditorEvent - Gère les événements editor.* (insert, delete, update, image) pour l'éditeur Markdown
  *
- * @param event { type: string, payload: any, timestamp: number }
+ * @param event { type: string, payload: unknown, timestamp: number }
  *
  * Utilisation :
  *   if (type.startsWith('editor.')) handleEditorEvent(event)
  */
-export function handleEditorEvent(event: { type: string, payload: any, timestamp: number }) {
+export function handleEditorEvent(event: { type: string, payload: unknown, timestamp: number }) {
   const { type, payload } = event;
-  const { noteId, selector, content, position } = payload || {};
+  const payloadObj = payload as { noteId?: string; selector?: string; content?: string; position?: number } | undefined;
+  const { noteId, selector, content, position } = payloadObj || {};
   if (!noteId || !selector || typeof content !== 'string') return;
   const patch: EditorPatch = {
     selector,
