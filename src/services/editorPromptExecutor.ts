@@ -101,26 +101,48 @@ export class EditorPromptExecutor {
       // 3. Générer un sessionId temporaire pour cette exécution
       const tempSessionId = `prompt_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-      // 4. Appeler l'API LLM avec l'agent spécifique
+      // 4. Préparer le payload de la requête
+      const requestPayload: any = {
+        message: finalPrompt,
+        context: {
+          type: 'editor_prompt',
+          sessionId: tempSessionId, // ✅ FIX: Ajouter le sessionId requis
+          agentId: prompt.agent_id,
+          promptId: prompt.id,
+          promptName: prompt.name,
+          selectedText: selectedText.substring(0, 200) // Aperçu du texte sélectionné
+        },
+        history: [],
+        provider: 'groq'
+      };
+
+      // 🔧 NOUVEAU: Ajouter structured outputs si configuré
+      if (prompt.use_structured_output && prompt.output_schema) {
+        requestPayload.response_format = {
+          type: 'json_schema',
+          json_schema: {
+            name: 'editor_prompt_response',
+            strict: true,
+            schema: prompt.output_schema
+          }
+        };
+        
+        // Ajouter instruction explicite dans le prompt
+        requestPayload.message += '\n\nIMPORTANT: Return ONLY the requested content in the "content" field of the JSON response. NO introduction, NO explanation, NO extra phrases.';
+        
+        logger.dev('[EditorPromptExecutor] 📋 Structured output activé:', {
+          schema: prompt.output_schema
+        });
+      }
+
+      // 5. Appeler l'API LLM avec l'agent spécifique
       const response = await fetch('/api/chat/llm', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${userIdOrToken}`
         },
-        body: JSON.stringify({
-          message: finalPrompt,
-          context: {
-            type: 'editor_prompt',
-            sessionId: tempSessionId, // ✅ FIX: Ajouter le sessionId requis
-            agentId: prompt.agent_id,
-            promptId: prompt.id,
-            promptName: prompt.name,
-            selectedText: selectedText.substring(0, 200) // Aperçu du texte sélectionné
-          },
-          history: [],
-          provider: 'groq'
-        })
+        body: JSON.stringify(requestPayload)
       });
 
       if (!response.ok) {
@@ -146,7 +168,25 @@ export class EditorPromptExecutor {
         dataKeys: Object.keys(data)
       });
 
-      const responseText = data.response || data.message || data.content || '';
+      let responseText = data.response || data.message || data.content || '';
+      
+      // 🔧 NOUVEAU: Parser la réponse structurée si nécessaire
+      if (prompt.use_structured_output && responseText) {
+        try {
+          // Essayer de parser la réponse JSON
+          const parsed = JSON.parse(responseText);
+          
+          if (parsed && typeof parsed.content === 'string') {
+            responseText = parsed.content;
+            logger.info('[EditorPromptExecutor] 📋 Structured output parsé avec succès');
+          } else {
+            logger.warn('[EditorPromptExecutor] ⚠️ Structured output invalide, utilisation du texte brut');
+          }
+        } catch (parseError) {
+          // Si le parsing échoue, utiliser le texte brut
+          logger.warn('[EditorPromptExecutor] ⚠️ Échec parsing JSON, utilisation du texte brut:', parseError);
+        }
+      }
       
       if (!responseText) {
         logger.warn('[EditorPromptExecutor] ⚠️ Aucun texte dans la réponse:', data);

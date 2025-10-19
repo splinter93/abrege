@@ -403,9 +403,41 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
                   // 📝 DESIGN INTENTIONNEL : Insertion dans l'éditeur local (pas de save auto)
                   // L'utilisateur décide : CMD+S pour sauvegarder, CMD+Z pour annuler
                   // Permet aussi le streaming en temps réel à l'avenir
-                  editor.chain().focus().deleteSelection().insertContent(result.response).run();
                   
-                  logger.info('[FloatingMenuNotion] ✅ Prompt exécuté et texte remplacé');
+                  // 🔧 NOUVEAU: Gestion des modes d'insertion (replace, append, prepend)
+                  const insertionMode = prompt.insertion_mode || 'replace';
+                  const { from, to } = editor.state.selection;
+                  
+                  switch (insertionMode) {
+                    case 'replace':
+                      // Comportement par défaut : remplacer la sélection
+                      editor.chain().focus().deleteSelection().insertContent(result.response).run();
+                      logger.info('[FloatingMenuNotion] ✅ Prompt exécuté - Sélection remplacée');
+                      break;
+                      
+                    case 'append':
+                      // Ajouter après la sélection (sans la supprimer)
+                      editor.chain()
+                        .focus(to) // Position après la sélection
+                        .insertContent('\n\n' + result.response) // Avec saut de ligne
+                        .run();
+                      logger.info('[FloatingMenuNotion] ✅ Prompt exécuté - Contenu ajouté après');
+                      break;
+                      
+                    case 'prepend':
+                      // Ajouter avant la sélection (sans la supprimer)
+                      editor.chain()
+                        .focus(from) // Position avant la sélection
+                        .insertContent(result.response + '\n\n') // Avec saut de ligne
+                        .run();
+                      logger.info('[FloatingMenuNotion] ✅ Prompt exécuté - Contenu ajouté avant');
+                      break;
+                      
+                    default:
+                      // Fallback sur replace
+                      editor.chain().focus().deleteSelection().insertContent(result.response).run();
+                      logger.warn('[FloatingMenuNotion] ⚠️ Mode d\'insertion inconnu, fallback sur replace');
+                  }
                 } else {
                   logger.error('[FloatingMenuNotion] ❌ Erreur exécution:', result.error || 'Erreur inconnue');
                 }
