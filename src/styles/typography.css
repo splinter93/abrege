@@ -25,6 +25,8 @@
 /* POLICES PRINCIPALES - Noto Sans + Inter + Monospace */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* POLICES ÉDITEUR - Options utilisateur uniquement */
@@ -38,19 +40,32 @@
   --editor-text-muted: var(--color-text-secondary); /* Délégation vers variables-unified.css */
 
   /* ==========================================================================
-     FONTS HIÉRARCHISÉES - NOTO SANS + INTER + OPTIONS ÉDITEUR
+     ARCHITECTURE TYPOGRAPHIE - HIÉRARCHIE CLAIRE
      ========================================================================== */
-  /* Police de base - Noto Sans partout */
-  --font-base: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  
+  /* === POLICE UI GLOBALE (Sidebar, Menus, Boutons) === */
+  --font-ui: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-base: var(--font-ui); /* Alias pour compatibilité */
 
-  /* Polices éditeur - Noto Sans pour titres, Inter pour texte */
-  --editor-font-family: var(--font-base);
-  --editor-font-family-headings: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --editor-font-family-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  /* === POLICES ÉDITEUR === */
+  --font-editor-headings: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-editor-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --editor-font-family: var(--font-ui); /* Alias */
+  --editor-font-family-headings: var(--font-editor-headings); /* Alias */
+  --editor-font-family-body: var(--font-editor-body); /* Alias */
 
-  /* Polices chat - Noto Sans pour titres, Inter pour texte */
-  --chat-font-family: var(--font-base);
-  --chat-font-family-headings: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  /* === POLICES CHAT === */
+  --font-chat-headings: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-chat-body: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  
+  /* Alias pour compatibilité avec l'ancien système */
+  --chat-font-family: var(--font-ui);
+  --chat-font-family-headings: var(--font-chat-headings);
+  --chat-font-family-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --chat-font-family-figtree: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --chat-font-family-manrope: var(--font-chat-headings);
+  --chat-font-family-geist: var(--font-chat-body);
+  --chat-font-family-base: var(--font-chat-body);
 
   /* Police monospace optimisée */
   --font-monospace: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', monospace;

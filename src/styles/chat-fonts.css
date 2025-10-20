@@ -44,7 +44,7 @@
 
 /* Police pour le contenu principal du chat */
 .chat-content-font {
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--font-chat-body);
 }
 
 /* Police pour le code dans le chat */
