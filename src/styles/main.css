@@ -27,9 +27,9 @@
 @import './pages-files-dossiers.css';
 
 /* ==========================================================================
-   STYLES CHAT (TEMPORAIRE - À SÉPARER)
+   STYLES CHAT - ARCHITECTURE PROPRE ET OPTIMISÉE
    ========================================================================== */
-@import './chat-consolidated.css';
+@import './chat-clean.css';
 
 /* ==========================================================================
    STYLES SPÉCIFIQUES PAR PAGE - GLASSMORPHISM UNIFIÉ
