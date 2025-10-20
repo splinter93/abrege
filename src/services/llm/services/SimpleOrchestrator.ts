@@ -425,12 +425,16 @@ export class SimpleOrchestrator {
         
         if (selectedProvider.toLowerCase() === 'xai') {
           // ✅ xAI : Utiliser uniquement les tools OpenAPI avec limite
-          const XAI_MAX_TOOLS = 20; // Limite stricte de xAI
+          // Note: xAI semble avoir une limite sur les tools, mais pas documentée officiellement
+          // Tests empiriques: 8 tools OK, 34+ tools KO
+          // Limite conservative: 15 tools max
+          const XAI_MAX_TOOLS = 15;
           
           if (openApiTools.length > XAI_MAX_TOOLS) {
             logger.warn(`[SimpleOrchestrator] ⚠️ Trop de tools pour xAI (${openApiTools.length}/${XAI_MAX_TOOLS}). Limitation appliquée.`);
+            logger.warn(`[SimpleOrchestrator] 💡 Conseil: Assignez moins de schémas OpenAPI ou utilisez Groq/OpenAI pour plus de tools`);
             tools = openApiTools.slice(0, XAI_MAX_TOOLS);
-            logger.warn(`[SimpleOrchestrator] 📋 Tools conservés: ${tools.map(t => t.function.name).join(', ')}`);
+            logger.warn(`[SimpleOrchestrator] 📋 ${tools.length} tools conservés (premiers du schéma)`);
           } else {
             tools = openApiTools;
           }
