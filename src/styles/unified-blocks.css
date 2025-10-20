@@ -349,7 +349,8 @@
 .ProseMirror .u-block--mermaid,
 .markdown-body .u-block--mermaid,
 .public-note-container .markdown-body .u-block--mermaid,
-.chat-markdown-content .u-block--mermaid {
+.chat-markdown-content .u-block--mermaid,
+.chat-markdown .u-block--mermaid {
   background: var(--blk-bg);
   color: var(--blk-fg);
   border: none;
@@ -365,7 +366,8 @@
 .ProseMirror .u-block--mermaid .u-block__toolbar,
 .markdown-body .u-block--mermaid .u-block__toolbar,
 .public-note-container .markdown-body .u-block--mermaid .u-block__toolbar,
-.chat-markdown-content .u-block--mermaid .u-block__toolbar {
+.chat-markdown-content .u-block--mermaid .u-block__toolbar,
+.chat-markdown .u-block--mermaid .u-block__toolbar {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -381,7 +383,8 @@
 .ProseMirror .u-block--mermaid .u-block__toolbar .toolbar-left,
 .markdown-body .u-block--mermaid .u-block__toolbar .toolbar-left,
 .public-note-container .markdown-body .u-block--mermaid .u-block__toolbar .toolbar-left,
-.chat-markdown-content .u-block--mermaid .u-block__toolbar .toolbar-left {
+.chat-markdown-content .u-block--mermaid .u-block__toolbar .toolbar-left,
+.chat-markdown .u-block--mermaid .u-block__toolbar .toolbar-left {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -390,7 +393,8 @@
 .ProseMirror .u-block--mermaid .u-block__toolbar .toolbar-right,
 .markdown-body .u-block--mermaid .u-block__toolbar .toolbar-right,
 .public-note-container .markdown-body .u-block--mermaid .u-block__toolbar .toolbar-right,
-.chat-markdown-content .u-block--mermaid .u-block__toolbar .toolbar-right {
+.chat-markdown-content .u-block--mermaid .u-block__toolbar .toolbar-right,
+.chat-markdown .u-block--mermaid .u-block__toolbar .toolbar-right {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -399,7 +403,8 @@
 .ProseMirror .u-block--mermaid .u-block__toolbar .toolbar-label,
 .markdown-body .u-block--mermaid .u-block__toolbar .toolbar-label,
 .public-note-container .markdown-body .u-block--mermaid .u-block__toolbar .toolbar-label,
-.chat-markdown-content .u-block--mermaid .u-block__toolbar .toolbar-label {
+.chat-markdown-content .u-block--mermaid .u-block__toolbar .toolbar-label,
+.chat-markdown .u-block--mermaid .u-block__toolbar .toolbar-label {
   font-family: var(--sans);
   font-size: 13px;
   font-weight: 500;
@@ -410,7 +415,8 @@
 .ProseMirror .u-block--mermaid .u-block__body,
 .markdown-body .u-block--mermaid .u-block__body,
 .public-note-container .markdown-body .u-block--mermaid .u-block__body,
-.chat-markdown-content .u-block--mermaid .u-block__body {
+.chat-markdown-content .u-block--mermaid .u-block__body,
+.chat-markdown .u-block--mermaid .u-block__body {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -421,7 +427,8 @@
 .ProseMirror .u-block--mermaid .mermaid-svg-container,
 .markdown-body .u-block--mermaid .mermaid-svg-container,
 .public-note-container .markdown-body .u-block--mermaid .mermaid-svg-container,
-.chat-markdown-content .u-block--mermaid .mermaid-svg-container {
+.chat-markdown-content .u-block--mermaid .mermaid-svg-container,
+.chat-markdown .u-block--mermaid .mermaid-svg-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -431,7 +438,8 @@
 .ProseMirror .u-block--mermaid svg,
 .markdown-body .u-block--mermaid svg,
 .public-note-container .markdown-body .u-block--mermaid svg,
-.chat-markdown-content .u-block--mermaid svg {
+.chat-markdown-content .u-block--mermaid svg,
+.chat-markdown .u-block--mermaid svg {
   display: block;
   margin: 0 auto;
   max-width: 100%;
@@ -442,9 +450,11 @@
 .ProseMirror .u-block__body .mermaid-loading-content,
 .markdown-body .u-block__body .mermaid-loading-content,
 .chat-markdown-content .u-block__body .mermaid-loading-content,
+.chat-markdown .u-block__body .mermaid-loading-content,
 .ProseMirror .u-block__body .mermaid-error-content,
 .markdown-body .u-block__body .mermaid-error-content,
-.chat-markdown-content .u-block__body .mermaid-error-content {
+.chat-markdown-content .u-block__body .mermaid-error-content,
+.chat-markdown .u-block__body .mermaid-error-content {
   color: var(--blk-muted);
 }
 
@@ -540,8 +550,10 @@
 }
 
 /* Mermaid blocks integration */
+/* ✅ DÉSACTIVÉ - Le chat utilise maintenant les mêmes styles unifiés que l'éditeur (lignes 349-439) */
+/*
 .chat-markdown .u-block--mermaid {
-  background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
+  background: var(--color-bg-content);
   color: #a0a0a0 ;
   border: 1px solid rgba(255, 255, 255, 0.1) ;
   border-radius: 0.5rem ;
@@ -559,6 +571,7 @@
   overflow: auto ;
   background: transparent ;
 }
+*/
 
 /* Toolbar integration for chat */
 .chat-markdown .u-block__toolbar {
