@@ -1409,6 +1409,20 @@
 }
 
 /* ========================================
+   SIDEBAR HOVER ZONE
+   ======================================== */
+
+.sidebar-hover-zone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100vh;
+  z-index: var(--chat-z-sidebar);
+  pointer-events: auto;
+}
+
+/* ========================================
    SIDEBAR ULTRA CLEAN - STYLES SPÉCIFIQUES
    ======================================== */
 
@@ -1483,7 +1497,7 @@
 .sidebar-search-input-clean {
   width: 100%;
   padding: 12px 16px 12px 44px;
-  background: #2d2d2d;
+  background: #1f1f1f;
   border: none;
   border-radius: 12px;
   color: #ffffff;
@@ -1494,7 +1508,7 @@
 }
 
 .sidebar-search-input-clean:focus {
-  background: #3c3c3c;
+  background: #252525;
 }
 
 .sidebar-search-input-clean::placeholder {
@@ -1550,11 +1564,11 @@
 }
 
 .sidebar-item-clean:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .sidebar-item-clean.active {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .sidebar-item-icon-clean {
@@ -1583,7 +1597,7 @@
 }
 
 .sidebar-user-item-clean:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .sidebar-user-avatar-clean {

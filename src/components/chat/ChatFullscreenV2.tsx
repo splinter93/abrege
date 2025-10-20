@@ -32,6 +32,7 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 Hooks optimisés
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
   const [wideMode, setWideMode] = useState(false);
   
   // 🎯 Auth centralisée
@@ -370,6 +371,18 @@ const ChatFullscreenV2: React.FC = () => {
     });
   }, [requireAuth]);
 
+  const handleSidebarMouseEnter = useCallback(() => {
+    if (isDesktop) {
+      setSidebarHovered(true);
+    }
+  }, [isDesktop]);
+
+  const handleSidebarMouseLeave = useCallback(() => {
+    if (isDesktop) {
+      setSidebarHovered(false);
+    }
+  }, [isDesktop]);
+
   const handleWideModeToggle = useCallback(() => {
     if (!requireAuth()) return;
     setWideMode(prev => !prev);
@@ -434,18 +447,31 @@ const ChatFullscreenV2: React.FC = () => {
         </div>
       </div>
 
+      {/* Zone de hover invisible pour la sidebar */}
+      {isDesktop && (
+        <div 
+          className="sidebar-hover-zone"
+          onMouseEnter={handleSidebarMouseEnter}
+        />
+      )}
+
       {/* Contenu principal avec nouveau design ChatGPT */}
       <div className="chatgpt-content">
         {/* Sidebar moderne */}
-        <SidebarUltraClean
-          isOpen={sidebarOpen}
-          isDesktop={isDesktop}
-          onClose={() => {
-            if (user && !authLoading) {
-              setSidebarOpen(false);
-            }
-          }}
-        />
+        <div 
+          onMouseEnter={handleSidebarMouseEnter}
+          onMouseLeave={handleSidebarMouseLeave}
+        >
+          <SidebarUltraClean
+            isOpen={isDesktop ? (sidebarOpen || sidebarHovered) : sidebarOpen}
+            isDesktop={isDesktop}
+            onClose={() => {
+              if (user && !authLoading) {
+                setSidebarOpen(false);
+              }
+            }}
+          />
+        </div>
 
         {/* Overlay mobile/tablette */}
         {!isDesktop && sidebarOpen && (
