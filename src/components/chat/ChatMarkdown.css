@@ -10,8 +10,8 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   font-size: 16px;
   line-height: 1.75; /* ✅ ChatGPT utilise 1.75-1.8 pour meilleure lisibilité */
-  color: #ffffff;
-  font-weight: 400;
+  color: #e5e5e5;
+  font-weight: 430;
   letter-spacing: 0; /* ✅ Letter spacing normal pour le corps du texte */
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -27,59 +27,59 @@
 .chat-markdown h1 {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   font-size: 2rem !important;
-  font-weight: 700 !important;
+  font-weight: 725 !important;
   margin: 2rem 0 1.25rem 0 !important; /* ✅ Marge inférieure plus généreuse */
   line-height: 1.3 !important; /* ✅ Line height légèrement plus aéré */
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   letter-spacing: -0.02em !important; /* ✅ Letter spacing plus subtil */
 }
 
 .chat-markdown h2 {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   font-size: 1.5rem !important;
-  font-weight: 600 !important;
+  font-weight: 625 !important;
   margin: 1.75rem 0 1rem 0 !important; /* ✅ Marge inférieure plus généreuse */
   line-height: 1.4 !important; /* ✅ Line height légèrement plus aéré */
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   letter-spacing: -0.015em !important; /* ✅ Letter spacing plus subtil */
 }
 
 .chat-markdown h3 {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   font-size: 1.25rem !important;
-  font-weight: 600 !important;
+  font-weight: 625 !important;
   margin: 1.5rem 0 0.75rem 0 !important; /* ✅ Marge inférieure plus généreuse */
   line-height: 1.5 !important; /* ✅ Line height légèrement plus aéré */
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   letter-spacing: -0.01em !important; /* ✅ Letter spacing plus subtil */
 }
 
 .chat-markdown h4 {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   font-size: 1.125rem !important;
-  font-weight: 600 !important;
+  font-weight: 625 !important;
   margin: 1.25rem 0 0.5rem 0 !important;
   line-height: 1.4 !important;
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
 }
 
 .chat-markdown h5 {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   font-size: 1rem !important;
-  font-weight: 600 !important;
+  font-weight: 625 !important;
   margin: 1rem 0 0.5rem 0 !important;
   line-height: 1.4 !important;
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   opacity: 0.9 !important;
 }
 
 .chat-markdown h6 {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   font-size: 0.875rem !important;
-  font-weight: 600 !important;
+  font-weight: 625 !important;
   margin: 1rem 0 0.5rem 0 !important;
   line-height: 1.4 !important;
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   opacity: 0.8 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
@@ -93,9 +93,9 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   margin: 0 0 1.25rem 0 !important; /* ✅ Espacement plus généreux entre paragraphes (1.25rem au lieu de 1rem) */
   line-height: 1.75 !important; /* ✅ Line height ChatGPT pour confort de lecture */
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   font-size: 16px !important;
-  font-weight: 400 !important;
+  font-weight: 430 !important;
   letter-spacing: 0 !important; /* ✅ Pas de letter-spacing pour le corps du texte */
 }
 
@@ -106,14 +106,14 @@
 .chat-markdown strong {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   font-weight: 600 !important;
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   letter-spacing: 0 !important; /* ✅ Pas de letter-spacing pour le gras */
 }
 
 .chat-markdown em {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   font-style: italic !important;
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   opacity: 0.95 !important; /* ✅ Légèrement moins transparent */
   letter-spacing: 0 !important; /* ✅ Pas de letter-spacing pour l'italique */
 }
@@ -129,7 +129,7 @@
   border-radius: 0.25rem;
   font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   font-size: 0.875em;
-  color: #ffffff;
+  color: #e5e5e5;
   font-weight: 500;
   letter-spacing: 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -197,7 +197,7 @@
   padding-left: 1.5em !important;
   line-height: 1.75 !important;
   font-size: 16px !important;
-  font-weight: 400 !important;
+  font-weight: 430 !important;
   letter-spacing: 0 !important;
   list-style-position: outside !important;
 }
@@ -208,7 +208,7 @@
   line-height: 1.75 !important;
   color: inherit !important;
   font-size: 16px !important;
-  font-weight: 400 !important;
+  font-weight: 430 !important;
   letter-spacing: 0 !important;
   padding-left: 0.25em !important;
 }
@@ -232,13 +232,13 @@
 }
 
 .chat-markdown ol li::marker {
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   font-weight: 500 !important;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
 }
 
 .chat-markdown ul li::marker {
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   font-size: 0.875em !important;
 }
 
@@ -266,7 +266,7 @@
   color: #d1d5db !important;
   position: relative !important;
   font-size: 16px !important;
-  font-weight: 400 !important;
+  font-weight: 430 !important;
   letter-spacing: 0 !important; /* ✅ Pas de letter-spacing */
 }
 
@@ -275,7 +275,7 @@
   margin: 0 !important;
   font-size: 1rem !important;
   line-height: 1.75 !important; /* ✅ Line height ChatGPT */
-  font-weight: 400 !important;
+  font-weight: 430 !important;
   letter-spacing: 0 !important; /* ✅ Pas de letter-spacing */
 }
 
@@ -295,7 +295,7 @@
   text-decoration-thickness: 1px !important;
   transition: color 0.2s ease, text-underline-offset 0.2s ease !important;
   font-size: 16px !important;
-  font-weight: 400 !important;
+  font-weight: 430 !important;
 }
 
 .chat-markdown a:hover {
@@ -345,7 +345,7 @@
   padding: 0.75rem 1rem !important;
   text-align: left !important;
   font-weight: 600 !important;
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   font-size: 0.8rem !important;
   letter-spacing: 0.025em !important;
@@ -357,10 +357,10 @@
   padding: 0.75rem 1rem !important;
   text-align: left !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   vertical-align: top !important;
   font-size: 0.875rem !important;
-  font-weight: 400 !important;
+  font-weight: 430 !important;
 }
 
 .chat-markdown tr:last-child td {
@@ -397,7 +397,7 @@
 .chat-markdown mark {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   background: rgba(16, 163, 127, 0.2) !important;
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   padding: 0.125rem 0.25rem !important;
   border-radius: 0.25rem !important;
   font-weight: 500 !important;
@@ -407,10 +407,10 @@
 .chat-markdown del {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
   text-decoration: line-through !important;
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
   opacity: 0.6 !important;
   font-size: 16px !important;
-  font-weight: 400 !important;
+  font-weight: 430 !important;
 }
 
 .chat-markdown kbd {
@@ -421,7 +421,7 @@
   border-bottom-width: 2px !important;
   border-radius: 0.25rem !important;
   background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
+  color: #e5e5e5 !important;
 }
 
 .chat-markdown sup,

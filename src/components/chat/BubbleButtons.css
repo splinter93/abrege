@@ -12,20 +12,23 @@
   transition: opacity var(--chat-transition-normal);
 }
 
+.chatgpt-message-user .bubble-buttons,
 .chat-message-user .bubble-buttons,
 .bubble-buttons-user {
   justify-content: flex-end;
+  margin-top: 6px;
 }
 
 /* ========================================
    AFFICHAGE AU HOVER
    ======================================== */
 
-.chat-message-container:hover .bubble-buttons,
+.chatgpt-message:hover .bubble-buttons,
 .chat-message:hover .bubble-buttons {
   opacity: 1;
 }
 
+.chatgpt-message-assistant .bubble-buttons,
 .chat-message-assistant .bubble-buttons {
   justify-content: flex-start;
   width: auto;
@@ -33,7 +36,7 @@
 
 .bubble-buttons-container {
   display: flex;
-  gap: 3px;
+  gap: 8px;
   align-items: center;
 }
 

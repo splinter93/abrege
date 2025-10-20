@@ -21,13 +21,13 @@
      COULEURS CHAT - THÈME SOMBRE
      ======================================== */
   
-  --chat-bg-primary: #0f0f0f;
-  --chat-bg-secondary: #1a1a1a;
-  --chat-bg-tertiary: #2a2a2a;
-  --chat-bg-elevated: #222222;
+  --chat-bg-primary: #1c1c1c;
+  --chat-bg-secondary: #272727;
+  --chat-bg-tertiary: #373737;
+  --chat-bg-elevated: #2f2f2f;
   --chat-bg-hover: rgba(255, 255, 255, 0.05);
   
-  --chat-text-primary: #ffffff;
+  --chat-text-primary: #e5e5e5;
   --chat-text-secondary: #d1d5db;
   --chat-text-muted: #9ca3af;
   
@@ -579,7 +579,7 @@
   box-shadow: none;
   border-bottom-right-radius: var(--chat-radius-sm);
   margin-left: auto;
-  max-width: 60%;
+  max-width: 70%;
   padding: var(--chat-space-md) var(--chat-space-lg);
   text-align: left;
   line-height: var(--chat-line-height-relaxed);
