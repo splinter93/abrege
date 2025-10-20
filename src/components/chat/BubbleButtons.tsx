@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import './BubbleButtons.css';
-import { FiCopy, FiCheck, FiEdit3 } from 'react-icons/fi';
+import { FiCopy, FiCheck, FiVolume2, FiEdit2 } from 'react-icons/fi';
 
 interface BubbleButtonsProps {
   content: string;
   messageId?: string;
   onCopy?: () => void;
+  onVoice?: () => void;
   onEdit?: () => void;
+  showVoiceButton?: boolean;
   showEditButton?: boolean;
   className?: string;
 }
@@ -16,8 +18,10 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
   content,
   messageId,
   onCopy,
+  onVoice,
   onEdit,
-  showEditButton = true,
+  showVoiceButton = false,
+  showEditButton = false,
   className = ''
 }) => {
   const [copied, setCopied] = React.useState(false);
@@ -33,6 +37,10 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
     } catch (err) {
       logger.error('Failed to copy text: ', err);
     }
+  };
+
+  const handleVoice = () => {
+    onVoice?.();
   };
 
   const handleEdit = () => {
@@ -52,6 +60,17 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
             {copied ? <FiCheck size={16} /> : <FiCopy size={16} />}
           </button>
 
+          {showVoiceButton && (
+            <button
+              className="bubble-button voice-button"
+              onClick={handleVoice}
+              title="Lire à haute voix"
+              aria-label="Lire le message à haute voix"
+            >
+              <FiVolume2 size={16} />
+            </button>
+          )}
+
           {showEditButton && (
             <button
               className="bubble-button edit-button"
@@ -59,7 +78,7 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
               title="Éditer le message"
               aria-label="Éditer le message"
             >
-              <FiEdit3 size={16} />
+              <FiEdit2 size={16} />
             </button>
           )}
 

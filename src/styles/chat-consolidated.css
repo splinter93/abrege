@@ -395,7 +395,7 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--chat-space-xl) var(--chat-space-xl); /* ✅ Paddings horizontaux identiques à l'input */
-  padding-bottom: calc(var(--chat-space-xl) + 120px); /* Espace pour l'input fixe en bas */
+  padding-bottom: calc(var(--chat-space-xl) + 160px); /* Espace pour l'input fixe en bas */
   display: flex;
   flex-direction: column;
   gap: var(--chat-space-xs);
@@ -465,7 +465,7 @@
   .chatgpt-messages-container,
   .chat-messages-container {
     padding: var(--chat-space-xl) var(--chat-space-xl); /* Paddings horizontaux identiques à l'input */
-    padding-bottom: calc(var(--chat-space-xl) + 120px);
+    padding-bottom: calc(var(--chat-space-xl) + 160px);
   }
 }
 
@@ -480,7 +480,7 @@
   .chatgpt-messages-container,
   .chat-messages-container {
     padding: var(--chat-space-lg) var(--chat-space-lg); /* Paddings horizontaux identiques à l'input tablette */
-    padding-bottom: calc(var(--chat-space-lg) + 120px);
+    padding-bottom: calc(var(--chat-space-lg) + 160px);
   }
 }
 
@@ -495,7 +495,7 @@
   .chatgpt-messages-container,
   .chat-messages-container {
     padding: var(--chat-space-lg) var(--chat-space-lg); /* Paddings horizontaux identiques à l'input mobile */
-    padding-bottom: calc(var(--chat-space-lg) + 120px);
+    padding-bottom: calc(var(--chat-space-lg) + 160px);
   }
 }
 
@@ -510,7 +510,7 @@
   .chatgpt-messages-container,
   .chat-messages-container {
     padding: var(--chat-space-md) var(--chat-space-md); /* Paddings horizontaux identiques à l'input mobile petit */
-    padding-bottom: calc(var(--chat-space-md) + 120px);
+    padding-bottom: calc(var(--chat-space-md) + 160px);
   }
 }
 

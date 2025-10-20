@@ -132,7 +132,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 logger.error('Failed to copy text: ', err);
               }
             }}
+            onVoice={() => logger.debug('Lecture vocale du message')}
             onEdit={() => logger.debug('Édition du message')}
+            showVoiceButton={role === 'assistant'}
+            showEditButton={role === 'user'}
             className={role === 'user' ? 'bubble-buttons-user' : ''}
           />
         </div>

@@ -48,19 +48,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 28px;
+  height: 28px;
   background: transparent;
   color: var(--chat-text-secondary);
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: color var(--chat-transition-normal), transform var(--chat-transition-fast);
+  transition: all var(--chat-transition-normal);
   padding: 0;
 }
 
 .bubble-button:hover {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
   color: var(--chat-text-primary);
   transform: none;
 }
@@ -80,6 +80,18 @@
 .copy-button.copied:hover {
   background: var(--chat-bg-success);
   color: var(--chat-text-success);
+}
+
+/* ========================================
+   BOUTON VOICE - LECTURE VOCALE
+   ======================================== */
+
+.voice-button {
+  /* Styles par défaut déjà définis dans .bubble-button */
+}
+
+.voice-button:hover {
+  color: var(--chat-accent-primary);
 }
 
 
