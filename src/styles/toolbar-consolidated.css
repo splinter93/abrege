@@ -12,7 +12,8 @@
    BOUTONS TOOLBAR UNIFIÉS
    ======================================== */
 
-.toolbar-btn {
+/* ⚠️ EXCLUSION: Ne pas appliquer aux u-blocks qui ont leurs propres styles dans unified-blocks.css */
+.toolbar-btn:not(.u-block .toolbar-btn):not(.u-block--code .toolbar-btn):not(.u-block--mermaid .toolbar-btn) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -34,7 +35,7 @@
   min-width: 36px;
 }
 
-.toolbar-btn:hover {
+.toolbar-btn:not(.u-block .toolbar-btn):not(.u-block--code .toolbar-btn):not(.u-block--mermaid .toolbar-btn):hover {
   background: var(--glass-soft, rgba(255, 255, 255, 0.06));
   border-color: var(--border-medium, rgba(255, 255, 255, 0.2));
   color: var(--text-primary, #ffffff);
@@ -42,18 +43,18 @@
   box-shadow: var(--shadow-soft, 0 4px 12px rgba(0, 0, 0, 0.4));
 }
 
-.toolbar-btn:active {
+.toolbar-btn:not(.u-block .toolbar-btn):not(.u-block--code .toolbar-btn):not(.u-block--mermaid .toolbar-btn):active {
   transform: translateY(0);
   background: var(--glass-medium, rgba(255, 255, 255, 0.09));
 }
 
-.toolbar-btn:focus {
+.toolbar-btn:not(.u-block .toolbar-btn):not(.u-block--code .toolbar-btn):not(.u-block--mermaid .toolbar-btn):focus {
   outline: none;
   border-color: var(--accent-primary, #e55a2b);
   box-shadow: 0 0 0 3px rgba(229, 90, 43, 0.1);
 }
 
-.toolbar-btn:disabled {
+.toolbar-btn:not(.u-block .toolbar-btn):not(.u-block--code .toolbar-btn):not(.u-block--mermaid .toolbar-btn):disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
@@ -99,7 +100,7 @@
    ICÔNES ET CONTENU
    ======================================== */
 
-.toolbar-btn svg {
+.toolbar-btn:not(.u-block .toolbar-btn):not(.u-block--code .toolbar-btn):not(.u-block--mermaid .toolbar-btn) svg {
   width: 14px;
   height: 14px;
   flex-shrink: 0;

@@ -104,9 +104,35 @@ const CodeBlockReplacer: React.FC<{ containerRef: React.RefObject<HTMLDivElement
         const root = createSafeRoot(wrapper as HTMLElement);
         
         if (root) {
-          // Rendre un code block avec les styles unified-blocks
+          // Rendre un code block avec toolbar (comme dans l'éditeur)
           renderSafeRoot(root, 
             <div className="u-block u-block--code">
+              <div className="u-block__toolbar">
+                <div className="toolbar-left">
+                  <span className="toolbar-label">{language.toUpperCase() || 'CODE'}</span>
+                </div>
+                <div className="toolbar-right">
+                  <button 
+                    className="toolbar-btn copy-btn" 
+                    title="Copier le code"
+                    onClick={async (e) => {
+                      try {
+                        await navigator.clipboard.writeText(content);
+                        const btn = e.currentTarget;
+                        btn.classList.add('copied');
+                        setTimeout(() => btn.classList.remove('copied'), 2000);
+                      } catch (err) {
+                        logger.error('Erreur copie code:', err);
+                      }
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
               <div className="u-block__body">
                 <pre>
                   <code className={`language-${language}`}>
@@ -301,18 +327,20 @@ const EnhancedMarkdownMessage: React.FC<EnhancedMarkdownMessageProps> = ({ conte
           const cleanContent = cleanMermaidContent(block.content);
           
           return (
-            <MermaidRenderer
-              key={`mermaid-${index}`}
-              content={cleanContent}
-              variant="chat"
-              showToolbar={true}
-              showCopy={true}
-              showExpand={true}
-              showEdit={false}
-              renderOptions={{
-                timeout: 10000
-              }}
-            />
+            <div key={`mermaid-wrapper-${index}`} className="chat-markdown">
+              <MermaidRenderer
+                key={`mermaid-${index}`}
+                content={cleanContent}
+                variant="chat"
+                showToolbar={true}
+                showCopy={true}
+                showExpand={true}
+                showEdit={false}
+                renderOptions={{
+                  timeout: 10000
+                }}
+              />
+            </div>
           );
         } else {
           // Bloc de texte normal
