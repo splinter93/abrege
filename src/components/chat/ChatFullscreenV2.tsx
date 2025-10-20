@@ -3,8 +3,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { debounce } from 'lodash';
 import { useChatStore } from '@/store/useChatStore';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { useAppContext } from '@/hooks/useAppContext';
-import { useUIContext } from '@/hooks/useUIContext';
+import { useLLMContext, useLLMContextFormatted } from '@/hooks/useLLMContext';
 import { useChatResponse } from '@/hooks/useChatResponse';
 import { useChatScroll } from '@/hooks/useChatScroll';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
@@ -38,14 +37,11 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 Auth centralisée
   const { requireAuth, user, loading: authLoading, isAuthenticated } = useAuthGuard();
   
-  // 🎯 Contexte et store
-  const appContext = useAppContext();
-  
-  // 🎯 Contexte UI pour l'injection
-  const uiContext = useUIContext({
-    activeNote: appContext?.activeNote,
-    activeClasseur: appContext?.activeClasseur,
-    activeFolder: appContext?.activeFolder
+  // 🎯 Contexte LLM unifié
+  const llmContext = useLLMContext({
+    includeRecent: false,  // Pas d'historique pour l'instant
+    includeDevice: true,
+    compactFormat: true
   });
   const {
     sessions,
@@ -381,14 +377,14 @@ const ChatFullscreenV2: React.FC = () => {
         throw new Error(tokenResult.error || 'Token invalide');
       }
       
-      const contextWithSessionId = {
-        ...appContext,
+      // ✅ NOUVEAU : Contexte LLM unifié avec sessionId
+      const contextForLLM = {
+        ...llmContext,
         sessionId: currentSession.id,
         agentId: selectedAgent?.id,
-        uiContext
       };
 
-      await sendMessage(message, currentSession.id, contextWithSessionId, limitedHistoryForLLM, tokenResult.token);
+      await sendMessage(message, currentSession.id, contextForLLM, limitedHistoryForLLM, tokenResult.token);
 
     } catch (error) {
       logger.error('Erreur lors de l\'appel LLM:', error);
@@ -400,7 +396,7 @@ const ChatFullscreenV2: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [loading, currentSession, createSession, addMessage, selectedAgent, appContext, sendMessage, setLoading, requireAuth]);
+  }, [loading, currentSession, createSession, addMessage, selectedAgent, llmContext, sendMessage, setLoading, requireAuth]);
 
   const handleHistoryLimitChange = useCallback(async (newLimit: number) => {
     if (!requireAuth() || !currentSession) return;

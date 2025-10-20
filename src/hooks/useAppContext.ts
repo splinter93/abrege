@@ -2,6 +2,10 @@ import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
 import type { AppContext } from '@/services/llm/types';
 
+/**
+ * @deprecated Utiliser useLLMContext() à la place
+ * Ce hook est conservé pour compatibilité avec les anciens composants
+ */
 export const useAppContext = (): AppContext | null => {
   const pathname = usePathname();
 

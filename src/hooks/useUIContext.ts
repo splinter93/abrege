@@ -1,4 +1,7 @@
 /**
+ * @deprecated Utiliser useLLMContext() à la place
+ * Ce hook est conservé pour compatibilité avec les anciens composants
+ * 
  * Hook pour collecter le contexte de l'interface utilisateur
  * Utilisé pour l'injection de contexte dans les agents
  */
