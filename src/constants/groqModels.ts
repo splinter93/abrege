@@ -6,7 +6,8 @@
 export interface GroqModelInfo {
   id: string;
   name: string;
-  category: 'gpt-oss' | 'llama' | 'qwen' | 'whisper' | 'tts' | 'other';
+  category: 'gpt-oss' | 'llama' | 'qwen' | 'xai' | 'whisper' | 'tts' | 'other';
+  provider?: 'groq' | 'xai'; // Provider du modèle
   capabilities: string[];
   contextWindow: number;
   maxOutput: number;
@@ -96,6 +97,58 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     pricing: { input: '$1.00', output: '$3.00' },
     description: 'Contexte ultra-long (256k), structured outputs, prompt caching'
   },
+  
+  // xAI Grok Models
+  {
+    id: 'grok-4-fast',
+    name: 'Grok 4 Fast 128k',
+    category: 'xai',
+    provider: 'xai',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
+    contextWindow: 131072,
+    maxOutput: 8000,
+    speed: 800,
+    pricing: { input: '$0.20', output: '$0.50' },
+    description: 'Ultra-rapide et économique, parfait pour la production',
+    recommended: true
+  },
+  {
+    id: 'grok-4-fast-reasoning',
+    name: 'Grok 4 Fast Reasoning 128k',
+    category: 'xai',
+    provider: 'xai',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning', 'images'],
+    contextWindow: 131072,
+    maxOutput: 8000,
+    speed: 700,
+    pricing: { input: '$0.20', output: '$0.50' },
+    description: 'Avec raisonnement avancé et support des images',
+    recommended: true
+  },
+  {
+    id: 'grok-beta',
+    name: 'Grok Beta 128k',
+    category: 'xai',
+    provider: 'xai',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
+    contextWindow: 131072,
+    maxOutput: 8000,
+    speed: 750,
+    pricing: { input: '$0.20', output: '$0.50' },
+    description: 'Version beta avec les dernières fonctionnalités'
+  },
+  {
+    id: 'grok-vision-beta',
+    name: 'Grok Vision Beta 128k',
+    category: 'xai',
+    provider: 'xai',
+    capabilities: ['text', 'images', 'function_calling', 'streaming', 'structured_output'],
+    contextWindow: 131072,
+    maxOutput: 8000,
+    speed: 650,
+    pricing: { input: '$0.20', output: '$0.50' },
+    description: 'Multimodal avec analyse avancée d\'images (beta)'
+  },
 ];
 
 /**
@@ -107,7 +160,8 @@ export const LLM_MODELS = GROQ_MODELS;
  * Grouper les modèles par catégorie pour le menu déroulant
  */
 export const GROQ_MODELS_BY_CATEGORY = {
-  'GPT-OSS (Recommandé)': GROQ_MODELS.filter(m => m.category === 'gpt-oss'),
+  'xAI Grok (Recommandé)': GROQ_MODELS.filter(m => m.category === 'xai'),
+  'GPT-OSS': GROQ_MODELS.filter(m => m.category === 'gpt-oss'),
   'Llama 4 (Multimodal)': GROQ_MODELS.filter(m => m.category === 'llama'),
   'Qwen3': GROQ_MODELS.filter(m => m.category === 'qwen'),
   'Kimi K2': GROQ_MODELS.filter(m => m.category === 'other'),

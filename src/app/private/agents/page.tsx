@@ -10,7 +10,7 @@ import { useSpecializedAgents } from "@/hooks/useSpecializedAgents";
 import { useMcpServers } from "@/hooks/useMcpServers";
 import { SpecializedAgentConfig } from "@/types/specializedAgents";
 import { GROQ_MODELS_BY_CATEGORY, getModelInfo } from "@/constants/groqModels";
-import { Bot, Trash2, Save, X, ExternalLink, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Bot, Trash2, Save, X, ExternalLink, Plus, ChevronDown, ChevronUp, FileText, CheckCircle } from "lucide-react";
 import "@/styles/main.css";
 import "./agents.css";
 
@@ -60,6 +60,8 @@ function AgentsPageContent() {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [showMcpDropdown, setShowMcpDropdown] = useState(false);
   const [showParameters, setShowParameters] = useState(false);
+  const [openApiSchemas, setOpenApiSchemas] = useState<any[]>([]);
+  const [loadingSchemas, setLoadingSchemas] = useState(false);
   
   // Ref pour suivre si la sélection initiale a été faite
   const initialSelectionDone = useRef(false);
@@ -82,6 +84,31 @@ function AgentsPageContent() {
       handleSelectAgent(agents[0]);
     }
   }, [loading, agents.length, selectedAgent]);
+
+  /**
+   * Charge les schémas OpenAPI disponibles
+   */
+  const loadOpenApiSchemas = async () => {
+    setLoadingSchemas(true);
+    try {
+      const response = await fetch('/api/ui/openapi-schemas');
+      const data = await response.json();
+      if (data.success) {
+        setOpenApiSchemas(data.schemas || []);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des schémas OpenAPI:', error);
+    } finally {
+      setLoadingSchemas(false);
+    }
+  };
+
+  /**
+   * Charge les schémas au montage du composant
+   */
+  useEffect(() => {
+    loadOpenApiSchemas();
+  }, []);
 
   /**
    * Sélectionne un agent et charge ses détails complets
@@ -156,6 +183,27 @@ function AgentsPageContent() {
   ) => {
     setEditedAgent(prev => prev ? { ...prev, [field]: value } : null);
     setHasChanges(true);
+  };
+
+  /**
+   * Met à jour le schéma OpenAPI de l'agent
+   */
+  const updateOpenApiSchema = async (schemaId: string | null) => {
+    if (!selectedAgent) return;
+    
+    try {
+      const agentId = selectedAgent.slug || selectedAgent.id;
+      const updated = await patchAgent(agentId, { openapi_schema_id: schemaId });
+      
+      if (updated) {
+        // Le hook patchAgent met déjà à jour selectedAgent et la liste
+        // On met juste à jour editedAgent pour refléter les changements
+        setEditedAgent(prev => prev ? { ...prev, openapi_schema_id: schemaId } : null);
+        setHasChanges(false);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du schéma OpenAPI:', error);
+    }
   };
 
   if (loading && agents.length === 0) {
@@ -498,7 +546,23 @@ function AgentsPageContent() {
 
                     <div className="field-group">
                       <label className="field-label">Provider</label>
-                      <p className="field-value field-readonly">{selectedAgent.provider}</p>
+                      <select
+                        className="field-select"
+                        value={editedAgent?.provider || 'groq'}
+                        onChange={(e) => updateField('provider', e.target.value)}
+                      >
+                        <option value="groq">Groq (MCP Tools)</option>
+                        <option value="xai">xAI (OpenAPI Tools)</option>
+                      </select>
+                      <p style={{ 
+                        fontSize: '0.85rem', 
+                        color: 'rgba(255, 255, 255, 0.6)', 
+                        marginTop: '0.25rem' 
+                      }}>
+                        {editedAgent?.provider === 'xai' 
+                          ? '→ Utilisera les OpenAPI Tools (assignez un schéma ci-dessous)' 
+                          : '→ Utilisera les MCP Tools (configurez ci-dessous)'}
+                      </p>
                     </div>
                   </div>
 
@@ -555,6 +619,118 @@ function AgentsPageContent() {
                             max="100000"
                           />
                         </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* OpenAPI Tools */}
+                  <div className="detail-section">
+                    <h3 className="section-title">
+                      OpenAPI Tools
+                      <a 
+                        href="/docs/guides/OPENAPI-SCHEMAS-REUSABLES.md" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="section-doc-link"
+                        title="Guide des schémas OpenAPI"
+                      >
+                        <ExternalLink size={14} />
+                      </a>
+                    </h3>
+
+                    {loadingSchemas ? (
+                      <div style={{ padding: '1rem', textAlign: 'center' }}>
+                        <div className="loading-spinner" style={{ width: '24px', height: '24px', margin: '0 auto' }} />
+                        <p style={{ marginTop: '0.5rem', color: 'rgba(255, 255, 255, 0.7)' }}>Chargement des schémas...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="field-group">
+                          <label className="field-label">Schéma OpenAPI assigné</label>
+                          <select
+                            className="field-select"
+                            value={editedAgent?.openapi_schema_id || ''}
+                            onChange={(e) => {
+                              const schemaId = e.target.value || null;
+                              updateField('openapi_schema_id', schemaId);
+                              // Ne pas appeler updateOpenApiSchema ici pour éviter les appels multiples
+                              // L'utilisateur devra cliquer sur "Sauvegarder" pour persister
+                            }}
+                          >
+                            <option value="">Aucun schéma (15 tools minimaux par défaut)</option>
+                            {openApiSchemas.map(schema => (
+                              <option key={schema.id} value={schema.id}>
+                                {schema.name} (v{schema.version}) - {schema.description}
+                              </option>
+                            ))}
+                          </select>
+                          
+                          {editedAgent?.openapi_schema_id && (
+                            <div className="schema-info" style={{ 
+                              marginTop: '0.5rem', 
+                              padding: '0.75rem', 
+                              background: 'rgba(0, 150, 255, 0.1)', 
+                              borderRadius: '6px',
+                              border: '1px solid rgba(0, 150, 255, 0.2)'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <CheckCircle size={16} style={{ color: '#00ff88' }} />
+                                <span style={{ fontWeight: '500' }}>Schéma assigné</span>
+                              </div>
+                              <p style={{ 
+                                margin: '0.25rem 0 0 0', 
+                                fontSize: '0.85rem', 
+                                color: 'rgba(255, 255, 255, 0.8)' 
+                              }}>
+                                Cet agent utilisera les tools générés depuis ce schéma OpenAPI.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {openApiSchemas.length > 0 && (
+                          <div className="field-group">
+                            <label className="field-label">Schémas disponibles ({openApiSchemas.length})</label>
+                            <div className="schemas-list">
+                              {openApiSchemas.map(schema => (
+                                <div 
+                                  key={schema.id} 
+                                  className={`schema-item ${editedAgent?.openapi_schema_id === schema.id ? 'selected' : ''}`}
+                                  onClick={() => {
+                                    updateField('openapi_schema_id', schema.id);
+                                    updateOpenApiSchema(schema.id);
+                                  }}
+                                >
+                                  <div className="schema-header">
+                                    <FileText size={16} />
+                                    <span className="schema-name">{schema.name}</span>
+                                    <span className="schema-version">v{schema.version}</span>
+                                  </div>
+                                  <p className="schema-description">{schema.description}</p>
+                                  {schema.tags && schema.tags.length > 0 && (
+                                    <div className="schema-tags">
+                                      {schema.tags.map((tag: string, index: number) => (
+                                        <span key={index} className="schema-tag">{tag}</span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {openApiSchemas.length === 0 && (
+                          <div className="empty-state" style={{ padding: '1rem', textAlign: 'center' }}>
+                            <FileText size={32} style={{ color: 'rgba(255, 255, 255, 0.3)', marginBottom: '0.5rem' }} />
+                            <p style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                              Aucun schéma OpenAPI configuré
+                            </p>
+                            <p style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '0.25rem' }}>
+                              Utilisez le script de seed pour ajouter des schémas
+                            </p>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>

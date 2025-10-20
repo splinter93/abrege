@@ -10,6 +10,7 @@
 import { GroqProvider, LLMResponse } from '../providers/implementations/groq';
 import { XAIProvider } from '../providers/implementations/xai';
 import { SimpleToolExecutor, ToolCall, ToolResult } from './SimpleToolExecutor';
+import { OpenApiToolExecutor } from '../executors/OpenApiToolExecutor';
 import { GroqHistoryBuilder } from './GroqHistoryBuilder';
 import { DEFAULT_GROQ_LIMITS } from '../types/groqTypes';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -18,6 +19,7 @@ import { agentTemplateService, AgentTemplateConfig } from '../agentTemplateServi
 import { UIContext } from '../ContextCollector';
 import { mcpConfigService } from '../mcpConfigService';
 import { openApiSchemaService } from '../openApiSchemaService';
+import { createClient } from '@supabase/supabase-js';
 import { groqCircuitBreaker } from '@/services/circuitBreaker';
 import { addToolCallInstructions } from '../toolCallInstructions';
 import type { Tool, GroqMessage, McpCall } from '../types/strictTypes';
@@ -60,12 +62,180 @@ const DEFAULT_CONFIG = {
 export class SimpleOrchestrator {
   private llmProvider: GroqProvider | XAIProvider;
   private toolExecutor: SimpleToolExecutor;
+  private openApiToolExecutor: OpenApiToolExecutor;
   private historyBuilder: GroqHistoryBuilder;
 
   constructor() {
     this.llmProvider = new GroqProvider(); // Default provider
     this.toolExecutor = new SimpleToolExecutor();
+    this.openApiToolExecutor = new OpenApiToolExecutor();
     this.historyBuilder = new GroqHistoryBuilder(DEFAULT_GROQ_LIMITS);
+  }
+
+  /**
+   * Détecter si les tools sont des tools OpenAPI
+   * Vérifie si au moins un tool call existe dans les endpoints OpenAPI configurés
+   */
+  private isOpenApiTools(toolCalls: ToolCall[]): boolean {
+    // Si l'exécuteur OpenAPI n'a pas d'endpoints configurés, ce ne sont pas des tools OpenAPI
+    if (!this.openApiToolExecutor || !this.openApiToolExecutor.endpoints || this.openApiToolExecutor.endpoints.size === 0) {
+      return false;
+    }
+
+    // Vérifier si au moins un tool call existe dans les endpoints OpenAPI
+    return toolCalls.some(toolCall => {
+      const exists = this.openApiToolExecutor.endpoints.has(toolCall.function.name);
+      if (exists) {
+        logger.dev(`[SimpleOrchestrator] ✅ Tool OpenAPI détecté: ${toolCall.function.name}`);
+      }
+      return exists;
+    });
+  }
+
+  /**
+   * Configurer l'exécuteur OpenAPI avec l'URL de base appropriée
+   */
+  private async configureOpenApiExecutor(schemaId?: string): Promise<void> {
+    if (!schemaId) return;
+
+    try {
+      // Récupérer le schéma pour obtenir l'URL de base et les endpoints
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      
+      const { data: schema, error } = await supabase
+        .from('openapi_schemas')
+        .select('content, api_key, header')
+        .eq('id', schemaId)
+        .eq('status', 'active')
+        .single();
+
+      if (error || !schema) {
+        logger.warn(`[SimpleOrchestrator] ⚠️ Schéma OpenAPI non trouvé: ${schemaId}`);
+        return;
+      }
+
+      // Validation du contenu du schéma
+      const content = schema.content as Record<string, unknown>;
+      if (!content || typeof content !== 'object') {
+        logger.error(`[SimpleOrchestrator] ❌ Contenu du schéma invalide`);
+        return;
+      }
+
+      // Extraire l'URL de base du schéma avec validation
+      const servers = content.servers as Array<{ url: string }> | undefined;
+      const baseUrl = servers?.[0]?.url || '';
+
+      if (!baseUrl) {
+        logger.error(`[SimpleOrchestrator] ❌ URL de base manquante dans le schéma`);
+        return;
+      }
+
+      // Validation de l'URL de base
+      try {
+        new URL(baseUrl);
+      } catch (error) {
+        logger.error(`[SimpleOrchestrator] ❌ URL de base invalide: ${baseUrl}`);
+        return;
+      }
+
+      // Extraire la clé API et le header depuis la base de données (priorité) ou depuis l'URL
+      const apiKey = schema.api_key || undefined;
+      const headerName = schema.header || this.detectHeaderNameFromUrl(baseUrl);
+      
+      // Extraire les endpoints du schéma
+      const endpoints = this.extractEndpointsFromSchema(content, apiKey, headerName);
+
+      if (endpoints.size === 0) {
+        logger.warn(`[SimpleOrchestrator] ⚠️ Aucun endpoint extrait du schéma`);
+      }
+
+      // Créer un nouvel exécuteur avec l'URL de base et les endpoints
+      this.openApiToolExecutor = new OpenApiToolExecutor(baseUrl, endpoints);
+      logger.dev(`[SimpleOrchestrator] ✅ Exécuteur OpenAPI configuré avec URL: ${baseUrl}`);
+      logger.dev(`[SimpleOrchestrator] ✅ ${endpoints.size} endpoints extraits du schéma`);
+      logger.dev(`[SimpleOrchestrator] ✅ Header: ${headerName}, API Key: ${apiKey ? '✅ Configurée' : '❌ Manquante'}`);
+    } catch (error) {
+      logger.error(`[SimpleOrchestrator] ❌ Erreur configuration exécuteur OpenAPI:`, error);
+    }
+  }
+
+  /**
+   * Extraire les endpoints du schéma OpenAPI
+   */
+  private extractEndpointsFromSchema(
+    content: Record<string, unknown>, 
+    apiKey?: string, 
+    headerName?: string
+  ): Map<string, { method: string; path: string; apiKey?: string; headerName?: string }> {
+    const endpoints = new Map<string, { method: string; path: string; apiKey?: string; headerName?: string }>();
+    
+    try {
+      const paths = content.paths as Record<string, Record<string, unknown>> | undefined;
+
+      if (!paths || typeof paths !== 'object') {
+        logger.warn(`[SimpleOrchestrator] ⚠️ Aucun path trouvé dans le schéma OpenAPI`);
+        return endpoints;
+      }
+
+      // Parser chaque path et méthode
+      for (const [pathName, pathItem] of Object.entries(paths)) {
+        // Validation du pathItem
+        if (!pathItem || typeof pathItem !== 'object') {
+          logger.warn(`[SimpleOrchestrator] ⚠️ PathItem invalide pour ${pathName}`);
+          continue;
+        }
+
+        const pathMethods = pathItem as Record<string, unknown>;
+
+        for (const [method, operation] of Object.entries(pathMethods)) {
+          // Ignorer les clés spéciales
+          if (['parameters', 'servers', '$ref'].includes(method)) {
+            continue;
+          }
+
+          // Validation de l'opération
+          if (!operation || typeof operation !== 'object') {
+            continue;
+          }
+
+          const op = operation as Record<string, unknown>;
+          const operationId = op.operationId as string | undefined;
+
+          if (operationId && typeof operationId === 'string') {
+            endpoints.set(operationId, {
+              method: method.toUpperCase(),
+              path: pathName,
+              apiKey,
+              headerName
+            });
+            logger.dev(`[SimpleOrchestrator] 🔧 Endpoint extrait: ${operationId} => ${method.toUpperCase()} ${pathName}`);
+          } else {
+            logger.warn(`[SimpleOrchestrator] ⚠️ OperationId manquant pour ${method.toUpperCase()} ${pathName}`);
+          }
+        }
+      }
+    } catch (error) {
+      logger.error(`[SimpleOrchestrator] ❌ Erreur lors de l'extraction des endpoints:`, error);
+    }
+
+    return endpoints;
+  }
+
+  /**
+   * Détecter le nom du header selon l'URL de base
+   */
+  private detectHeaderNameFromUrl(baseUrl: string): string {
+    if (baseUrl.includes('pexels.com')) {
+      return 'Authorization';
+    }
+    if (baseUrl.includes('exa.ai')) {
+      return 'x-api-key';
+    }
+    // Par défaut, utiliser Authorization
+    return 'Authorization';
   }
 
   /**
@@ -123,30 +293,54 @@ export class SimpleOrchestrator {
       // ✅ NOUVEAU : Sélectionner les tools selon le provider
       let tools: Tool[] = [];
       
-      if (selectedProvider.toLowerCase() === 'xai') {
-        // ✅ xAI : Charger les tools depuis le schéma OpenAPI assigné (si configuré)
-        if (agentConfig?.openapi_schema_id) {
-          logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools depuis schéma OpenAPI: ${agentConfig.openapi_schema_id}`);
-          tools = await openApiSchemaService.getToolsFromSchemaById(agentConfig.openapi_schema_id);
-          logger.dev(`[SimpleOrchestrator] ✅ Tools OpenAPI chargés: ${tools.length} tools`);
+      // ✅ CORRECTION : Charger les tools OpenAPI pour tous les providers si configuré
+      if (agentConfig?.openapi_schema_id) {
+        logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools depuis schéma OpenAPI: ${agentConfig.openapi_schema_id}`);
+        const openApiTools = await openApiSchemaService.getToolsFromSchemaById(agentConfig.openapi_schema_id);
+        logger.dev(`[SimpleOrchestrator] ✅ Tools OpenAPI chargés: ${openApiTools.length} tools`);
+        
+        if (selectedProvider.toLowerCase() === 'xai') {
+          // ✅ xAI : Utiliser uniquement les tools OpenAPI
+          tools = openApiTools;
+          // Configurer l'URL de base pour l'exécuteur OpenAPI
+          await this.configureOpenApiExecutor(agentConfig?.openapi_schema_id);
         } else {
-          // Fallback vers les tools minimaux
+          // ✅ Groq/OpenAI : Combiner les tools OpenAPI avec les MCP tools
+          logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools MCP pour ${selectedProvider}...`);
+          const mcpTools = await mcpConfigService.buildHybridTools(
+            agentConfig?.id || 'default',
+            context.userToken,
+            openApiTools // Inclure les tools OpenAPI
+          ) as Tool[];
+          tools = mcpTools;
+          
+          const mcpCount = tools.filter((t) => isMcpTool(t)).length;
+          const openApiCount = tools.filter((t) => !isMcpTool(t)).length;
+          logger.dev(`[SimpleOrchestrator] ✅ Tools hybrides disponibles: ${tools.length} total (${mcpCount} MCP + ${openApiCount} OpenAPI)`);
+          
+          // Configurer l'URL de base pour l'exécuteur OpenAPI
+          await this.configureOpenApiExecutor(agentConfig?.openapi_schema_id);
+        }
+      } else {
+        // ✅ Fallback : Aucun schéma OpenAPI assigné
+        if (selectedProvider.toLowerCase() === 'xai') {
+          // xAI : Tools minimaux
           logger.dev(`[SimpleOrchestrator] 🔧 Aucun schéma assigné, chargement des tools minimaux...`);
           const { getMinimalXAITools } = await import('../minimalToolsForXAI');
           tools = getMinimalXAITools();
           logger.dev(`[SimpleOrchestrator] ✅ Tools minimaux disponibles: ${tools.length} tools`);
+        } else {
+          // Groq/OpenAI : MCP tools uniquement
+          logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools MCP pour ${selectedProvider}...`);
+          tools = await mcpConfigService.buildHybridTools(
+            agentConfig?.id || 'default',
+            context.userToken,
+            [] // Pas de tools OpenAPI
+          ) as Tool[];
+          
+          const mcpCount = tools.filter((t) => isMcpTool(t)).length;
+          logger.dev(`[SimpleOrchestrator] ✅ Tools MCP disponibles: ${tools.length} total (${mcpCount} serveurs MCP)`);
         }
-      } else {
-        // ✅ Groq : Utiliser les MCP tools (comme avant)
-        logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools MCP pour Groq...`);
-        tools = await mcpConfigService.buildHybridTools(
-          agentConfig?.id || 'default',
-          context.userToken,
-          [] // No OpenAPI tools, MCP only
-        ) as Tool[];
-        
-        const mcpCount = tools.filter((t) => isMcpTool(t)).length;
-        logger.dev(`[SimpleOrchestrator] ✅ Tools available: ${tools.length} total (${mcpCount} serveurs MCP)`);
       }
 
       let iteration = 0;
@@ -244,7 +438,12 @@ export class SimpleOrchestrator {
         }
 
         logger.dev(`[SimpleOrchestrator] Executing ${toolCalls.length} tool calls (Chat Completions)`);
-        const toolResults = await this.toolExecutor.executeToolCalls(toolCalls, context.userToken);
+        
+        // Détecter le type de tools et utiliser l'exécuteur approprié
+        const isOpenApiTools = this.isOpenApiTools(toolCalls);
+        const toolResults = isOpenApiTools 
+          ? await this.openApiToolExecutor.executeToolCalls(toolCalls, context.userToken)
+          : await this.toolExecutor.executeToolCalls(toolCalls, context.userToken);
 
         allToolCalls.push(...toolCalls);
         allToolResults.push(...toolResults);

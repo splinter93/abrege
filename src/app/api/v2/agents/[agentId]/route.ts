@@ -296,6 +296,7 @@ export async function GET(
       is_default: agent.is_default,
       context_template: agent.context_template,
       api_config: agent.api_config,
+      openapi_schema_id: agent.openapi_schema_id,
       created_at: agent.created_at,
       updated_at: agent.updated_at,
       metadata: {
