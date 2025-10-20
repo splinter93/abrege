@@ -12,49 +12,178 @@
    ======================================== */
 
 /* ========================================
-   VARIABLES CSS
+   DESIGN TOKENS - SYSTÈME DE THÈMES
+   ========================================
+   Architecture modulaire pour supporter :
+   - Mode sombre (défaut)
+   - Mode clair
+   - Mode glass/glassmorphism
+   - Thèmes personnalisés
+   
+   Usage : Modifier uniquement les variables de :root
+   pour changer l'apparence complète du chat
    ======================================== */
 
 :root {
-  /* Couleurs */
-  --chat-bg-primary: #121212;
-  --chat-bg-secondary: #161616;
-  --chat-bg-tertiary: #181818;
-  --chat-text-primary: #e5e5e5;
-  --chat-text-secondary: #d1d5db;
-  --chat-text-muted: #9ca3af;
-  --chat-accent-primary: #e55a2b;
-  --chat-accent-hover: #f5652c;
+  /* ========================================
+     BACKGROUNDS - Surfaces principales
+     ======================================== */
+  --chat-bg-primary: #121212;           /* Container, header, messages */
+  --chat-bg-secondary: #161616;         /* Réservé pour surfaces alternatives */
+  --chat-bg-tertiary: #181818;          /* Sidebar, chat input area */
+  --chat-bg-input: #1f1f1f;             /* Input search, formulaires */
+  --chat-bg-input-focus: #252525;       /* Input au focus */
+  --chat-bg-user-message: #1e1e1e;      /* Bulle message user */
+  --chat-bg-user-message-hover: #202020; /* Bulle user au hover */
+  
+  /* ========================================
+     OVERLAYS - Effets de surface
+     ======================================== */
+  --chat-overlay-subtle: rgba(255, 255, 255, 0.02);   /* Hover très léger */
+  --chat-overlay-soft: rgba(255, 255, 255, 0.03);     /* Backgrounds doux */
+  --chat-overlay-active: rgba(255, 255, 255, 0.04);   /* État actif */
+  --chat-overlay-input: rgba(255, 255, 255, 0.05);    /* Input backgrounds */
+  --chat-overlay-input-focus: rgba(255, 255, 255, 0.08); /* Input focus */
+  --chat-overlay-hover: rgba(255, 255, 255, 0.1);     /* Hover buttons */
+  --chat-overlay-dark: rgba(0, 0, 0, 0.5);            /* Mobile overlay */
+  
+  /* ========================================
+     TEXTE - Hiérarchie typographique
+     ======================================== */
+  --chat-text-primary: #e5e5e5;         /* Texte principal */
+  --chat-text-secondary: #d1d5db;       /* Texte secondaire */
+  --chat-text-muted: #9ca3af;           /* Texte discret, labels */
+  --chat-text-success: #22c55e;         /* Texte succès */
+  --chat-text-error: #ef4444;           /* Texte erreur */
+  --chat-text-error-hover: #dc2626;     /* Texte erreur hover */
+  
+  /* ========================================
+     ACCENTS - Couleurs d'action
+     ======================================== */
+  --chat-accent-primary: #e55a2b;       /* Bouton envoi, liens */
+  --chat-accent-hover: #f5652c;         /* Hover accent */
+  
+  /* ========================================
+     BORDURES - Séparateurs visuels
+     ======================================== */
   --chat-border-subtle: rgba(255, 255, 255, 0.1);
   --chat-border-soft: rgba(255, 255, 255, 0.08);
   
-  /* Typographie */
+  /* ========================================
+     STATES - États spéciaux
+     ======================================== */
+  --chat-bg-success: rgba(34, 197, 94, 0.1);      /* Background succès */
+  --chat-bg-error: rgba(239, 68, 68, 0.1);        /* Background erreur */
+  --chat-bg-error-hover: rgba(239, 68, 68, 0.2);  /* Background erreur hover */
+  --chat-border-error: rgba(239, 68, 68, 0.3);    /* Bordure erreur */
+  
+  /* ========================================
+     TYPOGRAPHIE
+     ======================================== */
   --font-chat-text: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-chat-headings: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --chat-font-size-base: 16px;
   --chat-line-height-normal: 1.5;
   --chat-line-height-relaxed: 1.75;
   
-  /* Espacements */
+  /* ========================================
+     ESPACEMENTS
+     ======================================== */
   --chat-space-sm: 8px;
   --chat-space-md: 12px;
   --chat-space-lg: 16px;
   --chat-space-xl: 24px;
   --chat-space-2xl: 32px;
   
-  /* Bordures */
+  /* ========================================
+     BORDURES
+     ======================================== */
   --chat-radius-md: 8px;
   --chat-radius-lg: 12px;
   --chat-radius-xl: 16px;
   --chat-radius-2xl: 20px;
   
-  /* Transitions */
+  /* ========================================
+     TRANSITIONS
+     ======================================== */
   --chat-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --chat-transition-normal: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   
-  /* Z-index */
+  /* ========================================
+     Z-INDEX
+     ======================================== */
   --chat-z-sidebar: 1000;
   --chat-z-overlay: 999;
+}
+
+/* ========================================
+   THÈME CLAIR (LIGHT MODE)
+   ========================================
+   Usage : Ajouter .chat-theme-light sur body
+   ======================================== */
+.chat-theme-light {
+  /* Backgrounds */
+  --chat-bg-primary: #ffffff;
+  --chat-bg-secondary: #f9fafb;
+  --chat-bg-tertiary: #f3f4f6;
+  --chat-bg-input: #e5e7eb;
+  --chat-bg-input-focus: #d1d5db;
+  --chat-bg-user-message: #e0f2fe;
+  --chat-bg-user-message-hover: #bae6fd;
+  
+  /* Overlays */
+  --chat-overlay-subtle: rgba(0, 0, 0, 0.02);
+  --chat-overlay-soft: rgba(0, 0, 0, 0.03);
+  --chat-overlay-active: rgba(0, 0, 0, 0.05);
+  --chat-overlay-input: rgba(0, 0, 0, 0.05);
+  --chat-overlay-input-focus: rgba(0, 0, 0, 0.08);
+  --chat-overlay-hover: rgba(0, 0, 0, 0.1);
+  --chat-overlay-dark: rgba(0, 0, 0, 0.3);
+  
+  /* Texte */
+  --chat-text-primary: #111827;
+  --chat-text-secondary: #4b5563;
+  --chat-text-muted: #6b7280;
+  
+  /* Bordures */
+  --chat-border-subtle: rgba(0, 0, 0, 0.1);
+  --chat-border-soft: rgba(0, 0, 0, 0.08);
+}
+
+/* ========================================
+   THÈME GLASS (GLASSMORPHISM)
+   ========================================
+   Usage : Ajouter .chat-theme-glass sur body
+   ======================================== */
+.chat-theme-glass {
+  /* Backgrounds avec blur */
+  --chat-bg-primary: rgba(18, 18, 18, 0.7);
+  --chat-bg-secondary: rgba(22, 22, 22, 0.7);
+  --chat-bg-tertiary: rgba(24, 24, 24, 0.8);
+  --chat-bg-input: rgba(31, 31, 31, 0.8);
+  --chat-bg-input-focus: rgba(37, 37, 37, 0.9);
+  --chat-bg-user-message: rgba(30, 30, 30, 0.8);
+  --chat-bg-user-message-hover: rgba(32, 32, 32, 0.9);
+  
+  /* Overlays plus prononcés */
+  --chat-overlay-subtle: rgba(255, 255, 255, 0.03);
+  --chat-overlay-soft: rgba(255, 255, 255, 0.05);
+  --chat-overlay-active: rgba(255, 255, 255, 0.08);
+  --chat-overlay-input: rgba(255, 255, 255, 0.08);
+  --chat-overlay-input-focus: rgba(255, 255, 255, 0.12);
+  --chat-overlay-hover: rgba(255, 255, 255, 0.15);
+  
+  /* Bordures plus visibles */
+  --chat-border-subtle: rgba(255, 255, 255, 0.15);
+  --chat-border-soft: rgba(255, 255, 255, 0.12);
+}
+
+/* Effet backdrop-filter pour glass mode */
+.chat-theme-glass .chatgpt-container,
+.chat-theme-glass .sidebar-ultra-clean,
+.chat-theme-glass .chatgpt-input-area {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* ========================================
@@ -118,7 +247,7 @@
 }
 
 .chatgpt-sidebar-toggle-btn-header:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--chat-overlay-hover);
   color: var(--chat-text-primary);
 }
 
@@ -184,7 +313,7 @@
 .sidebar-search-input-clean {
   width: 100%;
   padding: 10px 12px 10px 40px;
-  background: #1f1f1f;
+  background: var(--chat-bg-input);
   border: none;
   border-radius: var(--chat-radius-md);
   color: var(--chat-text-primary);
@@ -194,7 +323,7 @@
 }
 
 .sidebar-search-input-clean:focus {
-  background: #252525;
+  background: var(--chat-bg-input-focus);
 }
 
 .sidebar-content-clean {
@@ -232,12 +361,12 @@
 }
 
 .sidebar-item-clean:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--chat-overlay-subtle);
   color: var(--chat-text-primary);
 }
 
 .sidebar-item-clean.active {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--chat-overlay-active);
   color: var(--chat-text-primary);
 }
 
@@ -291,7 +420,7 @@
 }
 
 .sidebar-user-item-clean:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--chat-overlay-subtle);
 }
 
 .sidebar-user-avatar-clean {
@@ -341,9 +470,9 @@
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--chat-bg-error);
   border: none;
-  color: #ef4444;
+  color: var(--chat-text-error);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -357,13 +486,13 @@
 }
 
 .sidebar-delete-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #dc2626;
+  background: var(--chat-bg-error-hover);
+  color: var(--chat-text-error-hover);
 }
 
 .sidebar-rename-input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--chat-overlay-input);
   border: none;
   color: var(--chat-text-primary);
   font-size: 13px;
@@ -375,7 +504,7 @@
 }
 
 .sidebar-rename-input:focus {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--chat-overlay-input-focus);
 }
 
 /* ========================================
@@ -454,13 +583,13 @@
 }
 
 .chatgpt-message-bubble-user {
-  background: #1e1e1e;
+  background: var(--chat-bg-user-message);
   color: var(--chat-text-primary);
   max-width: 70%;
 }
 
 .chatgpt-message-bubble-user:hover {
-  background: #202020;
+  background: var(--chat-bg-user-message-hover);
 }
 
 .chatgpt-message-content {
@@ -486,7 +615,7 @@
 .chatgpt-message-reasoning {
   margin-bottom: var(--chat-space-md);
   padding: var(--chat-space-md);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--chat-overlay-soft);
   border-radius: var(--chat-radius-md);
   border-left: 3px solid var(--chat-accent-primary);
 }
@@ -526,10 +655,10 @@
 
 .chatgpt-message-error {
   padding: var(--chat-space-md);
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--chat-bg-error);
+  border: 1px solid var(--chat-border-error);
   border-radius: var(--chat-radius-md);
-  color: #ef4444;
+  color: var(--chat-text-error);
 }
 
 /* ========================================
@@ -618,7 +747,7 @@
 
 .chatgpt-input-speaker:hover,
 .chatgpt-input-mic:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--chat-overlay-hover);
   color: var(--chat-text-primary);
 }
 
@@ -719,7 +848,7 @@
 }
 
 .bubble-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--chat-overlay-hover);
   color: var(--chat-text-primary);
 }
 
@@ -728,7 +857,7 @@
 }
 
 .copy-button.copied {
-  color: #22c55e;
+  color: var(--chat-text-success);
 }
 
 .voice-button:hover {
@@ -829,7 +958,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--chat-overlay-dark);
     z-index: calc(var(--chat-z-sidebar) - 1);
   }
 }
