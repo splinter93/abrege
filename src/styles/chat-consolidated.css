@@ -638,8 +638,8 @@
   max-width: 1055px; /* ✅ CORRECTION: 1005px contenu + 48px padding + 2px border pour aligner avec messages */
   min-width: 0;
   margin: 0 auto; /* ✅ Centrage horizontal */
-  background: var(--chat-bg-secondary);
-  border: 1px solid var(--chat-border-subtle);
+  background: #262626;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--chat-radius-2xl);
   padding: var(--chat-space-lg) var(--chat-space-xl);
   pointer-events: auto;
@@ -803,8 +803,8 @@
 
 .chatgpt-input-mic,
 .chat-input-mic {
-  background: var(--chat-bg-secondary);
-  border: 1px solid var(--chat-border-color);
+  background: transparent;
+  border: none;
   color: var(--chat-text-secondary);
   cursor: pointer;
   padding: 8px;
@@ -821,7 +821,7 @@
 
 .chatgpt-input-speaker:hover,
 .chat-input-speaker:hover {
-  background: var(--chat-bg-hover);
+  background: rgba(255, 255, 255, 0.1);
   box-shadow: none;
   color: var(--chat-text-primary);
   transform: none;
@@ -829,8 +829,8 @@
 
 .chatgpt-input-mic:hover,
 .chat-input-mic:hover {
-  background: var(--chat-bg-tertiary);
-  border-color: var(--chat-text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
   color: var(--chat-text-primary);
   transform: none;
 }
@@ -838,13 +838,13 @@
 .chatgpt-input-speaker:active,
 .chat-input-speaker:active {
   transform: none;
-  background: var(--chat-bg-hover);
+  background: transparent;
 }
 
 .chatgpt-input-mic:active,
 .chat-input-mic:active {
   transform: none;
-  background: var(--chat-bg-tertiary);
+  background: transparent;
 }
 
 .chatgpt-input-speaker:disabled,
@@ -983,6 +983,44 @@
   transform: none;
   opacity: 0.5;
   color: white;
+}
+
+/* ========================================
+   ANIMATION DE CHARGEMENT DU BOUTON ENVOI
+   ======================================== */
+
+.chat-input-typing-dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-input-typing-dot {
+  width: 5px;
+  height: 5px;
+  background: white;
+  border-radius: 50%;
+  animation: typingDot 1.4s infinite ease-in-out;
+}
+
+.chat-input-typing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.chat-input-typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typingDot {
+  0%, 80%, 100% {
+    transform: scale(0.3);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* ========================================
