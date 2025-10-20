@@ -88,19 +88,6 @@
   color: var(--color-text-primary);
   
   margin: var(--chat-space-3xl) 0 var(--chat-space-xl) 0;
-  position: relative;
-}
-
-.chat-markdown h1::after {
-  content: '';
-  position: absolute;
-  bottom: -var(--chat-space-sm);
-  left: 0;
-  width: var(--chat-space-2xl);
-  height: 3px;
-  background: var(--color-accent-primary);
-  border-radius: 2px;
-  opacity: 0.8;
 }
 
 /* H2 - Sous-titre principal */
@@ -113,19 +100,6 @@
   color: var(--color-text-primary);
   
   margin: var(--chat-space-2xl) 0 var(--chat-space-lg) 0;
-  position: relative;
-}
-
-.chat-markdown h2::after {
-  content: '';
-  position: absolute;
-  bottom: -var(--chat-space-xs);
-  left: 0;
-  width: var(--chat-space-xl);
-  height: 2px;
-  background: var(--color-accent);
-  border-radius: 1px;
-  opacity: 0.6;
 }
 
 /* H3 - Titre de section */
