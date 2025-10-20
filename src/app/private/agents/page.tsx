@@ -8,6 +8,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import { useSpecializedAgents } from "@/hooks/useSpecializedAgents";
 import { useMcpServers } from "@/hooks/useMcpServers";
+import { useOpenApiSchemas } from "@/hooks/useOpenApiSchemas";
 import { SpecializedAgentConfig } from "@/types/specializedAgents";
 import { GROQ_MODELS_BY_CATEGORY, getModelInfo } from "@/constants/groqModels";
 import { Bot, Trash2, Save, X, ExternalLink, Plus, ChevronDown, ChevronUp, FileText, CheckCircle } from "lucide-react";
@@ -54,6 +55,16 @@ function AgentsPageContent() {
     loadAgentServers: reloadAgentMcpServers,
   } = useMcpServers(selectedAgent?.id);
 
+  const {
+    allSchemas: openApiSchemas,
+    agentSchemas: agentOpenApiSchemas,
+    loading: openApiLoading,
+    linkSchema,
+    unlinkSchema,
+    isSchemaLinked,
+    loadAgentSchemas: reloadAgentSchemas,
+  } = useOpenApiSchemas(selectedAgent?.id);
+
   const [editedAgent, setEditedAgent] = useState<Partial<SpecializedAgentConfig> | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -61,9 +72,6 @@ function AgentsPageContent() {
   const [showMcpDropdown, setShowMcpDropdown] = useState(false);
   const [showOpenApiDropdown, setShowOpenApiDropdown] = useState(false);
   const [showParameters, setShowParameters] = useState(false);
-  const [openApiSchemas, setOpenApiSchemas] = useState<any[]>([]);
-  const [loadingSchemas, setLoadingSchemas] = useState(false);
-  const [linkedSchemas, setLinkedSchemas] = useState<any[]>([]);
   
   // Ref pour suivre si la sélection initiale a été faite
   const initialSelectionDone = useRef(false);
@@ -74,20 +82,8 @@ function AgentsPageContent() {
   useEffect(() => {
     if (selectedAgent && !hasChanges) {
       setEditedAgent({ ...selectedAgent });
-      
-      // Synchroniser linkedSchemas avec le schéma assigné
-      if (selectedAgent.openapi_schema_id) {
-        const linkedSchema = openApiSchemas.find(s => s.id === selectedAgent.openapi_schema_id);
-        if (linkedSchema) {
-          setLinkedSchemas([linkedSchema]);
-        } else {
-          setLinkedSchemas([]);
-        }
-      } else {
-        setLinkedSchemas([]);
-      }
     }
-  }, [selectedAgent, hasChanges, openApiSchemas]);
+  }, [selectedAgent, hasChanges]);
 
   /**
    * Sélectionne automatiquement le premier agent au chargement (une seule fois)
@@ -99,30 +95,6 @@ function AgentsPageContent() {
     }
   }, [loading, agents.length, selectedAgent]);
 
-  /**
-   * Charge les schémas OpenAPI disponibles
-   */
-  const loadOpenApiSchemas = async () => {
-    setLoadingSchemas(true);
-    try {
-      const response = await fetch('/api/ui/openapi-schemas');
-      const data = await response.json();
-      if (data.success) {
-        setOpenApiSchemas(data.schemas || []);
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des schémas OpenAPI:', error);
-    } finally {
-      setLoadingSchemas(false);
-    }
-  };
-
-  /**
-   * Charge les schémas au montage du composant
-   */
-  useEffect(() => {
-    loadOpenApiSchemas();
-  }, []);
 
   /**
    * Sélectionne un agent et charge ses détails complets
@@ -199,26 +171,6 @@ function AgentsPageContent() {
     setHasChanges(true);
   };
 
-  /**
-   * Met à jour le schéma OpenAPI de l'agent
-   */
-  const updateOpenApiSchema = async (schemaId: string | null) => {
-    if (!selectedAgent) return;
-    
-    try {
-      const agentId = selectedAgent.slug || selectedAgent.id;
-      const updated = await patchAgent(agentId, { openapi_schema_id: schemaId });
-      
-      if (updated) {
-        // Le hook patchAgent met déjà à jour selectedAgent et la liste
-        // On met juste à jour editedAgent pour refléter les changements
-        setEditedAgent(prev => prev ? { ...prev, openapi_schema_id: schemaId } : null);
-        setHasChanges(false);
-      }
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du schéma OpenAPI:', error);
-    }
-  };
 
   if (loading && agents.length === 0) {
     return (
@@ -652,7 +604,7 @@ function AgentsPageContent() {
                       </a>
                     </h3>
 
-                    {loadingSchemas ? (
+                    {openApiLoading ? (
                       <div style={{ padding: '1rem', textAlign: 'center' }}>
                         <div className="loading-spinner" style={{ width: '24px', height: '24px', margin: '0 auto' }} />
                       </div>
@@ -673,16 +625,14 @@ function AgentsPageContent() {
                           {showOpenApiDropdown && openApiSchemas.length > 0 && (
                             <div className="mcp-dropdown">
                               {openApiSchemas
-                                .filter(schema => !linkedSchemas.some(s => s.id === schema.id))
+                                .filter(schema => !isSchemaLinked(schema.id))
                                 .map(schema => (
                                   <div
                                     key={schema.id}
                                     className="mcp-dropdown-item"
                                     onClick={() => {
                                       if (selectedAgent) {
-                                        setLinkedSchemas([...linkedSchemas, schema]);
-                                        updateField('openapi_schema_id', schema.id);
-                                        updateOpenApiSchema(schema.id);
+                                        linkSchema(selectedAgent.id, schema.id);
                                         setShowOpenApiDropdown(false);
                                       }
                                     }}
@@ -703,27 +653,25 @@ function AgentsPageContent() {
                           )}
                         </div>
 
-                        {linkedSchemas.length > 0 && (
+                        {agentOpenApiSchemas.length > 0 && (
                           <div className="field-group">
                             <label className="field-label">
-                              Schémas actifs ({linkedSchemas.length})
+                              Schémas actifs ({agentOpenApiSchemas.length})
                             </label>
                             <div className="mcp-linked-servers">
-                              {linkedSchemas.map(schema => (
-                                <div key={schema.id} className="mcp-linked-item">
+                              {agentOpenApiSchemas.map(link => (
+                                <div key={link.id} className="mcp-linked-item">
                                   <div className="mcp-linked-info">
-                                    <div className="mcp-linked-name">{schema.name}</div>
-                                    {schema.description && (
-                                      <div className="mcp-linked-desc">{schema.description}</div>
+                                    <div className="mcp-linked-name">{link.openapi_schema.name}</div>
+                                    {link.openapi_schema.description && (
+                                      <div className="mcp-linked-desc">{link.openapi_schema.description}</div>
                                     )}
                                   </div>
                                   <button
                                     className="btn-mcp-remove"
                                     onClick={() => {
                                       if (selectedAgent) {
-                                        setLinkedSchemas(linkedSchemas.filter(s => s.id !== schema.id));
-                                        updateField('openapi_schema_id', null);
-                                        updateOpenApiSchema(null);
+                                        unlinkSchema(selectedAgent.id, link.openapi_schema_id);
                                       }
                                     }}
                                     title="Retirer ce schéma"

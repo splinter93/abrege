@@ -14,6 +14,7 @@ interface OpenApiEndpoint {
   path: string;
   apiKey?: string;
   headerName?: string;
+  baseUrl?: string;
 }
 
 /**
@@ -188,12 +189,14 @@ export class OpenApiToolExecutor {
   /**
    * Construire l'URL de l'endpoint
    */
-  private buildEndpointUrl(endpoint: { method: string; path: string }, args: Record<string, unknown>): string {
-    let url = this.baseUrl + endpoint.path;
+  private buildEndpointUrl(endpoint: OpenApiEndpoint, args: Record<string, unknown>): string {
+    // Utiliser baseUrl de l'endpoint si disponible, sinon baseUrl de la classe
+    const baseUrl = endpoint.baseUrl || this.baseUrl;
+    let url = baseUrl + endpoint.path;
     
     // Debug: Afficher l'URL construite
     logger.dev(`[OpenApiToolExecutor] 🔧 URL construite: ${url}`);
-    logger.dev(`[OpenApiToolExecutor] 🔧 Base URL: ${this.baseUrl}`);
+    logger.dev(`[OpenApiToolExecutor] 🔧 Base URL: ${baseUrl}`);
     logger.dev(`[OpenApiToolExecutor] 🔧 Endpoint path: ${endpoint.path}`);
 
     if (endpoint.method === 'GET') {
