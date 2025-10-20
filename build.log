@@ -1,0 +1,423 @@
+
+> abrege@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.3
+   - Environments: .env.production, .env
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 6.6s
+
+./src/utils/iconMapper.ts
+Attempted import error: 'FiStop' is not exported from '__barrel_optimize__?names=FiActivity,FiAlertCircle,FiAnchor,FiAperture,FiArchive,FiArrowDown,FiArrowLeft,FiArrowRight,FiArrowUp,FiAtSign,FiAward,FiBarChart,FiBattery,FiBatteryCharging,FiBell,FiBellOff,FiBluetooth,FiBookmark,FiBox,FiCalendar,FiCamera,FiCameraOff,FiCast,FiCheckCircle,FiCheckSquare,FiChevronDown,FiChevronLeft,FiChevronRight,FiChevronUp,FiChevronsDown,FiChevronsLeft,FiChevronsRight,FiChevronsUp,FiCircle,FiClipboard,FiClock,FiCloud,FiCloudDrizzle,FiCloudLightning,FiCloudOff,FiCloudRain,FiCloudSnow,FiCode,FiCodesandbox,FiColumns,FiCommand,FiCompass,FiCopy,FiCornerDownLeft,FiCornerDownRight,FiCornerUpLeft,FiCornerUpRight,FiCpu,FiCreditCard,FiCrosshair,FiDatabase,FiDelete,FiDisc,FiDollar,FiDollarSign,FiDownload,FiDroplet,FiEdit3,FiExternalLink,FiEye,FiEyeOff,FiFeather,FiFile,FiFileMinus,FiFilePlus,FiFileText,FiFilter,FiFlag,FiFolder,FiFolderMinus,FiFolderPlus,FiGift,FiGitBranch,FiGitCommit,FiGitMerge,FiGitPullRequest,FiGithub,FiGitlab,FiGlobe,FiGrid,FiHardDrive,FiHash,FiHeadphones,FiHeart,FiImage,FiInbox,FiLayers,FiLink,FiLink2,FiList,FiLock,FiMail,FiMap,FiMapPin,FiMaximize,FiMaximize2,FiMenu,FiMessageSquare,FiMic,FiMicOff,FiMinimize,FiMinimize2,FiMinusCircle,FiMonitor,FiMoon,FiMoreHorizontal,FiMoreVertical,FiMove,FiMusic,FiNavigation,FiNavigation2,FiPackage,FiPaperclip,FiPause,FiPercent,FiPhone,FiPieChart,FiPlay,FiPlusCircle,FiPrinter,FiRadio,FiRefreshCw,FiRepeat,FiRotateCcw,FiRotateCw,FiSave,FiSearch,FiSend,FiServer,FiSettings,FiShare,FiShare2,FiShoppingBag,FiShoppingCart,FiShuffle,FiSidebar,FiSkipBack,FiSkipForward,FiSliders,FiSmartphone,FiSquare,FiStar,FiStop,FiSun,FiSunrise,FiSunset,FiTablet,FiTag,FiTarget,FiTerminal,FiThermometer,FiThumbsDown,FiThumbsUp,FiToggleLeft,FiToggleRight,FiTool,FiTrash,FiTrendingDown,FiTrendingUp,FiUnlock,FiUpload,FiUser,FiUsers,FiVideo,FiVolume,FiVolume1,FiVolume2,FiVolumeX,FiWatch,FiWifi,FiWifiOff,FiWind,FiXCircle,FiZap,FiZapOff,FiZoomIn,FiZoomOut!=!react-icons/fi' (imported as 'FiStop').
+
+Import trace for requested module:
+./src/utils/iconMapper.ts
+./src/components/prompts/PromptCard.tsx
+./src/app/private/prompts/page.tsx
+
+./src/utils/iconMapper.ts
+Attempted import error: 'FiDollar' is not exported from '__barrel_optimize__?names=FiActivity,FiAlertCircle,FiAnchor,FiAperture,FiArchive,FiArrowDown,FiArrowLeft,FiArrowRight,FiArrowUp,FiAtSign,FiAward,FiBarChart,FiBattery,FiBatteryCharging,FiBell,FiBellOff,FiBluetooth,FiBookmark,FiBox,FiCalendar,FiCamera,FiCameraOff,FiCast,FiCheckCircle,FiCheckSquare,FiChevronDown,FiChevronLeft,FiChevronRight,FiChevronUp,FiChevronsDown,FiChevronsLeft,FiChevronsRight,FiChevronsUp,FiCircle,FiClipboard,FiClock,FiCloud,FiCloudDrizzle,FiCloudLightning,FiCloudOff,FiCloudRain,FiCloudSnow,FiCode,FiCodesandbox,FiColumns,FiCommand,FiCompass,FiCopy,FiCornerDownLeft,FiCornerDownRight,FiCornerUpLeft,FiCornerUpRight,FiCpu,FiCreditCard,FiCrosshair,FiDatabase,FiDelete,FiDisc,FiDollar,FiDollarSign,FiDownload,FiDroplet,FiEdit3,FiExternalLink,FiEye,FiEyeOff,FiFeather,FiFile,FiFileMinus,FiFilePlus,FiFileText,FiFilter,FiFlag,FiFolder,FiFolderMinus,FiFolderPlus,FiGift,FiGitBranch,FiGitCommit,FiGitMerge,FiGitPullRequest,FiGithub,FiGitlab,FiGlobe,FiGrid,FiHardDrive,FiHash,FiHeadphones,FiHeart,FiImage,FiInbox,FiLayers,FiLink,FiLink2,FiList,FiLock,FiMail,FiMap,FiMapPin,FiMaximize,FiMaximize2,FiMenu,FiMessageSquare,FiMic,FiMicOff,FiMinimize,FiMinimize2,FiMinusCircle,FiMonitor,FiMoon,FiMoreHorizontal,FiMoreVertical,FiMove,FiMusic,FiNavigation,FiNavigation2,FiPackage,FiPaperclip,FiPause,FiPercent,FiPhone,FiPieChart,FiPlay,FiPlusCircle,FiPrinter,FiRadio,FiRefreshCw,FiRepeat,FiRotateCcw,FiRotateCw,FiSave,FiSearch,FiSend,FiServer,FiSettings,FiShare,FiShare2,FiShoppingBag,FiShoppingCart,FiShuffle,FiSidebar,FiSkipBack,FiSkipForward,FiSliders,FiSmartphone,FiSquare,FiStar,FiStop,FiSun,FiSunrise,FiSunset,FiTablet,FiTag,FiTarget,FiTerminal,FiThermometer,FiThumbsDown,FiThumbsUp,FiToggleLeft,FiToggleRight,FiTool,FiTrash,FiTrendingDown,FiTrendingUp,FiUnlock,FiUpload,FiUser,FiUsers,FiVideo,FiVolume,FiVolume1,FiVolume2,FiVolumeX,FiWatch,FiWifi,FiWifiOff,FiWind,FiXCircle,FiZap,FiZapOff,FiZoomIn,FiZoomOut!=!react-icons/fi' (imported as 'FiDollar').
+
+Import trace for requested module:
+./src/utils/iconMapper.ts
+./src/components/prompts/PromptCard.tsx
+./src/app/private/prompts/page.tsx
+
+./src/utils/iconMapper.ts
+Attempted import error: 'FiStop' is not exported from '__barrel_optimize__?names=FiActivity,FiAlertCircle,FiAnchor,FiAperture,FiArchive,FiArrowDown,FiArrowLeft,FiArrowRight,FiArrowUp,FiAtSign,FiAward,FiBarChart,FiBattery,FiBatteryCharging,FiBell,FiBellOff,FiBluetooth,FiBookmark,FiBox,FiCalendar,FiCamera,FiCameraOff,FiCast,FiCheckCircle,FiCheckSquare,FiChevronDown,FiChevronLeft,FiChevronRight,FiChevronUp,FiChevronsDown,FiChevronsLeft,FiChevronsRight,FiChevronsUp,FiCircle,FiClipboard,FiClock,FiCloud,FiCloudDrizzle,FiCloudLightning,FiCloudOff,FiCloudRain,FiCloudSnow,FiCode,FiCodesandbox,FiColumns,FiCommand,FiCompass,FiCopy,FiCornerDownLeft,FiCornerDownRight,FiCornerUpLeft,FiCornerUpRight,FiCpu,FiCreditCard,FiCrosshair,FiDatabase,FiDelete,FiDisc,FiDollar,FiDollarSign,FiDownload,FiDroplet,FiEdit3,FiExternalLink,FiEye,FiEyeOff,FiFeather,FiFile,FiFileMinus,FiFilePlus,FiFileText,FiFilter,FiFlag,FiFolder,FiFolderMinus,FiFolderPlus,FiGift,FiGitBranch,FiGitCommit,FiGitMerge,FiGitPullRequest,FiGithub,FiGitlab,FiGlobe,FiGrid,FiHardDrive,FiHash,FiHeadphones,FiHeart,FiImage,FiInbox,FiLayers,FiLink,FiLink2,FiList,FiLock,FiMail,FiMap,FiMapPin,FiMaximize,FiMaximize2,FiMenu,FiMessageSquare,FiMic,FiMicOff,FiMinimize,FiMinimize2,FiMinusCircle,FiMonitor,FiMoon,FiMoreHorizontal,FiMoreVertical,FiMove,FiMusic,FiNavigation,FiNavigation2,FiPackage,FiPaperclip,FiPause,FiPercent,FiPhone,FiPieChart,FiPlay,FiPlusCircle,FiPrinter,FiRadio,FiRefreshCw,FiRepeat,FiRotateCcw,FiRotateCw,FiSave,FiSearch,FiSend,FiServer,FiSettings,FiShare,FiShare2,FiShoppingBag,FiShoppingCart,FiShuffle,FiSidebar,FiSkipBack,FiSkipForward,FiSliders,FiSmartphone,FiSquare,FiStar,FiStop,FiSun,FiSunrise,FiSunset,FiTablet,FiTag,FiTarget,FiTerminal,FiThermometer,FiThumbsDown,FiThumbsUp,FiToggleLeft,FiToggleRight,FiTool,FiTrash,FiTrendingDown,FiTrendingUp,FiUnlock,FiUpload,FiUser,FiUsers,FiVideo,FiVolume,FiVolume1,FiVolume2,FiVolumeX,FiWatch,FiWifi,FiWifiOff,FiWind,FiXCircle,FiZap,FiZapOff,FiZoomIn,FiZoomOut!=!react-icons/fi' (imported as 'FiStop').
+
+Import trace for requested module:
+./src/utils/iconMapper.ts
+./src/components/prompts/PromptCard.tsx
+./src/app/private/prompts/page.tsx
+
+./src/utils/iconMapper.ts
+Attempted import error: 'FiDollar' is not exported from '__barrel_optimize__?names=FiActivity,FiAlertCircle,FiAnchor,FiAperture,FiArchive,FiArrowDown,FiArrowLeft,FiArrowRight,FiArrowUp,FiAtSign,FiAward,FiBarChart,FiBattery,FiBatteryCharging,FiBell,FiBellOff,FiBluetooth,FiBookmark,FiBox,FiCalendar,FiCamera,FiCameraOff,FiCast,FiCheckCircle,FiCheckSquare,FiChevronDown,FiChevronLeft,FiChevronRight,FiChevronUp,FiChevronsDown,FiChevronsLeft,FiChevronsRight,FiChevronsUp,FiCircle,FiClipboard,FiClock,FiCloud,FiCloudDrizzle,FiCloudLightning,FiCloudOff,FiCloudRain,FiCloudSnow,FiCode,FiCodesandbox,FiColumns,FiCommand,FiCompass,FiCopy,FiCornerDownLeft,FiCornerDownRight,FiCornerUpLeft,FiCornerUpRight,FiCpu,FiCreditCard,FiCrosshair,FiDatabase,FiDelete,FiDisc,FiDollar,FiDollarSign,FiDownload,FiDroplet,FiEdit3,FiExternalLink,FiEye,FiEyeOff,FiFeather,FiFile,FiFileMinus,FiFilePlus,FiFileText,FiFilter,FiFlag,FiFolder,FiFolderMinus,FiFolderPlus,FiGift,FiGitBranch,FiGitCommit,FiGitMerge,FiGitPullRequest,FiGithub,FiGitlab,FiGlobe,FiGrid,FiHardDrive,FiHash,FiHeadphones,FiHeart,FiImage,FiInbox,FiLayers,FiLink,FiLink2,FiList,FiLock,FiMail,FiMap,FiMapPin,FiMaximize,FiMaximize2,FiMenu,FiMessageSquare,FiMic,FiMicOff,FiMinimize,FiMinimize2,FiMinusCircle,FiMonitor,FiMoon,FiMoreHorizontal,FiMoreVertical,FiMove,FiMusic,FiNavigation,FiNavigation2,FiPackage,FiPaperclip,FiPause,FiPercent,FiPhone,FiPieChart,FiPlay,FiPlusCircle,FiPrinter,FiRadio,FiRefreshCw,FiRepeat,FiRotateCcw,FiRotateCw,FiSave,FiSearch,FiSend,FiServer,FiSettings,FiShare,FiShare2,FiShoppingBag,FiShoppingCart,FiShuffle,FiSidebar,FiSkipBack,FiSkipForward,FiSliders,FiSmartphone,FiSquare,FiStar,FiStop,FiSun,FiSunrise,FiSunset,FiTablet,FiTag,FiTarget,FiTerminal,FiThermometer,FiThumbsDown,FiThumbsUp,FiToggleLeft,FiToggleRight,FiTool,FiTrash,FiTrendingDown,FiTrendingUp,FiUnlock,FiUpload,FiUser,FiUsers,FiVideo,FiVolume,FiVolume1,FiVolume2,FiVolumeX,FiWatch,FiWifi,FiWifiOff,FiWind,FiXCircle,FiZap,FiZapOff,FiZoomIn,FiZoomOut!=!react-icons/fi' (imported as 'FiDollar').
+
+Import trace for requested module:
+./src/utils/iconMapper.ts
+./src/components/prompts/PromptCard.tsx
+./src/app/private/prompts/page.tsx
+
+./src/utils/iconMapper.ts
+Attempted import error: 'FiStop' is not exported from '__barrel_optimize__?names=FiActivity,FiAlertCircle,FiAnchor,FiAperture,FiArchive,FiArrowDown,FiArrowLeft,FiArrowRight,FiArrowUp,FiAtSign,FiAward,FiBarChart,FiBattery,FiBatteryCharging,FiBell,FiBellOff,FiBluetooth,FiBookmark,FiBox,FiCalendar,FiCamera,FiCameraOff,FiCast,FiCheckCircle,FiCheckSquare,FiChevronDown,FiChevronLeft,FiChevronRight,FiChevronUp,FiChevronsDown,FiChevronsLeft,FiChevronsRight,FiChevronsUp,FiCircle,FiClipboard,FiClock,FiCloud,FiCloudDrizzle,FiCloudLightning,FiCloudOff,FiCloudRain,FiCloudSnow,FiCode,FiCodesandbox,FiColumns,FiCommand,FiCompass,FiCopy,FiCornerDownLeft,FiCornerDownRight,FiCornerUpLeft,FiCornerUpRight,FiCpu,FiCreditCard,FiCrosshair,FiDatabase,FiDelete,FiDisc,FiDollar,FiDollarSign,FiDownload,FiDroplet,FiEdit3,FiExternalLink,FiEye,FiEyeOff,FiFeather,FiFile,FiFileMinus,FiFilePlus,FiFileText,FiFilter,FiFlag,FiFolder,FiFolderMinus,FiFolderPlus,FiGift,FiGitBranch,FiGitCommit,FiGitMerge,FiGitPullRequest,FiGithub,FiGitlab,FiGlobe,FiGrid,FiHardDrive,FiHash,FiHeadphones,FiHeart,FiImage,FiInbox,FiLayers,FiLink,FiLink2,FiList,FiLock,FiMail,FiMap,FiMapPin,FiMaximize,FiMaximize2,FiMenu,FiMessageSquare,FiMic,FiMicOff,FiMinimize,FiMinimize2,FiMinusCircle,FiMonitor,FiMoon,FiMoreHorizontal,FiMoreVertical,FiMove,FiMusic,FiNavigation,FiNavigation2,FiPackage,FiPaperclip,FiPause,FiPercent,FiPhone,FiPieChart,FiPlay,FiPlusCircle,FiPrinter,FiRadio,FiRefreshCw,FiRepeat,FiRotateCcw,FiRotateCw,FiSave,FiSearch,FiSend,FiServer,FiSettings,FiShare,FiShare2,FiShoppingBag,FiShoppingCart,FiShuffle,FiSidebar,FiSkipBack,FiSkipForward,FiSliders,FiSmartphone,FiSquare,FiStar,FiStop,FiSun,FiSunrise,FiSunset,FiTablet,FiTag,FiTarget,FiTerminal,FiThermometer,FiThumbsDown,FiThumbsUp,FiToggleLeft,FiToggleRight,FiTool,FiTrash,FiTrendingDown,FiTrendingUp,FiUnlock,FiUpload,FiUser,FiUsers,FiVideo,FiVolume,FiVolume1,FiVolume2,FiVolumeX,FiWatch,FiWifi,FiWifiOff,FiWind,FiXCircle,FiZap,FiZapOff,FiZoomIn,FiZoomOut!=!react-icons/fi' (imported as 'FiStop').
+
+Import trace for requested module:
+./src/utils/iconMapper.ts
+./src/app/api/editor-prompts/route.ts
+
+./src/utils/iconMapper.ts
+Attempted import error: 'FiDollar' is not exported from '__barrel_optimize__?names=FiActivity,FiAlertCircle,FiAnchor,FiAperture,FiArchive,FiArrowDown,FiArrowLeft,FiArrowRight,FiArrowUp,FiAtSign,FiAward,FiBarChart,FiBattery,FiBatteryCharging,FiBell,FiBellOff,FiBluetooth,FiBookmark,FiBox,FiCalendar,FiCamera,FiCameraOff,FiCast,FiCheckCircle,FiCheckSquare,FiChevronDown,FiChevronLeft,FiChevronRight,FiChevronUp,FiChevronsDown,FiChevronsLeft,FiChevronsRight,FiChevronsUp,FiCircle,FiClipboard,FiClock,FiCloud,FiCloudDrizzle,FiCloudLightning,FiCloudOff,FiCloudRain,FiCloudSnow,FiCode,FiCodesandbox,FiColumns,FiCommand,FiCompass,FiCopy,FiCornerDownLeft,FiCornerDownRight,FiCornerUpLeft,FiCornerUpRight,FiCpu,FiCreditCard,FiCrosshair,FiDatabase,FiDelete,FiDisc,FiDollar,FiDollarSign,FiDownload,FiDroplet,FiEdit3,FiExternalLink,FiEye,FiEyeOff,FiFeather,FiFile,FiFileMinus,FiFilePlus,FiFileText,FiFilter,FiFlag,FiFolder,FiFolderMinus,FiFolderPlus,FiGift,FiGitBranch,FiGitCommit,FiGitMerge,FiGitPullRequest,FiGithub,FiGitlab,FiGlobe,FiGrid,FiHardDrive,FiHash,FiHeadphones,FiHeart,FiImage,FiInbox,FiLayers,FiLink,FiLink2,FiList,FiLock,FiMail,FiMap,FiMapPin,FiMaximize,FiMaximize2,FiMenu,FiMessageSquare,FiMic,FiMicOff,FiMinimize,FiMinimize2,FiMinusCircle,FiMonitor,FiMoon,FiMoreHorizontal,FiMoreVertical,FiMove,FiMusic,FiNavigation,FiNavigation2,FiPackage,FiPaperclip,FiPause,FiPercent,FiPhone,FiPieChart,FiPlay,FiPlusCircle,FiPrinter,FiRadio,FiRefreshCw,FiRepeat,FiRotateCcw,FiRotateCw,FiSave,FiSearch,FiSend,FiServer,FiSettings,FiShare,FiShare2,FiShoppingBag,FiShoppingCart,FiShuffle,FiSidebar,FiSkipBack,FiSkipForward,FiSliders,FiSmartphone,FiSquare,FiStar,FiStop,FiSun,FiSunrise,FiSunset,FiTablet,FiTag,FiTarget,FiTerminal,FiThermometer,FiThumbsDown,FiThumbsUp,FiToggleLeft,FiToggleRight,FiTool,FiTrash,FiTrendingDown,FiTrendingUp,FiUnlock,FiUpload,FiUser,FiUsers,FiVideo,FiVolume,FiVolume1,FiVolume2,FiVolumeX,FiWatch,FiWifi,FiWifiOff,FiWind,FiXCircle,FiZap,FiZapOff,FiZoomIn,FiZoomOut!=!react-icons/fi' (imported as 'FiDollar').
+
+Import trace for requested module:
+./src/utils/iconMapper.ts
+./src/app/api/editor-prompts/route.ts
+
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+[2025-10-20T10:32:04.083Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour groq []
+[2025-10-20T10:32:04.084Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour supabase []
+[2025-10-20T10:32:04.084Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour mcp []
+[2025-10-20T10:32:04.084Z] [INFO] [EDITOR] [CircuitBreaker] Services de circuit breaker initialisés []
+[2025-10-20T10:32:04.084Z] [INFO] [EDITOR] [RateLimiter] Services de rate limiting initialisés []
+[2025-10-20T10:32:04.127Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.130Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.135Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.135Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.136Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.136Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.164Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour groq []
+[2025-10-20T10:32:04.164Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour supabase []
+[2025-10-20T10:32:04.164Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour mcp []
+[2025-10-20T10:32:04.165Z] [INFO] [EDITOR] [CircuitBreaker] Services de circuit breaker initialisés []
+[2025-10-20T10:32:04.165Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.165Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.165Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans URL de base []
+[2025-10-20T10:32:04.165Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans endpoints configurés []
+[2025-10-20T10:32:04.166Z] [INFO] [EDITOR] [RateLimiter] Services de rate limiting initialisés []
+[2025-10-20T10:32:04.182Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.182Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.206Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.210Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.228Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.229Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.229Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.229Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.231Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour groq []
+[2025-10-20T10:32:04.231Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour supabase []
+[2025-10-20T10:32:04.231Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour mcp []
+[2025-10-20T10:32:04.231Z] [INFO] [EDITOR] [CircuitBreaker] Services de circuit breaker initialisés []
+[2025-10-20T10:32:04.231Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.231Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.231Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans URL de base []
+[2025-10-20T10:32:04.231Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans endpoints configurés []
+[2025-10-20T10:32:04.243Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.243Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.241Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.249Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.253Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.256Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.257Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.257Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.257Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.257Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.257Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour groq []
+[2025-10-20T10:32:04.257Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour supabase []
+[2025-10-20T10:32:04.257Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour mcp []
+[2025-10-20T10:32:04.258Z] [INFO] [EDITOR] [CircuitBreaker] Services de circuit breaker initialisés []
+[2025-10-20T10:32:04.258Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.258Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.258Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans URL de base []
+[2025-10-20T10:32:04.258Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans endpoints configurés []
+[2025-10-20T10:32:04.259Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.259Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.259Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.259Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.260Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour groq []
+[2025-10-20T10:32:04.260Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour supabase []
+[2025-10-20T10:32:04.260Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour mcp []
+[2025-10-20T10:32:04.260Z] [INFO] [EDITOR] [CircuitBreaker] Services de circuit breaker initialisés []
+[2025-10-20T10:32:04.260Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:04.260Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:04.260Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans URL de base []
+[2025-10-20T10:32:04.260Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans endpoints configurés []
+   Generating static pages (0/52) ...
+[2025-10-20T10:32:07.515Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:07.517Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:07.522Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:07.522Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:07.538Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:07.538Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:07.539Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour groq []
+[2025-10-20T10:32:07.539Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour supabase []
+[2025-10-20T10:32:07.539Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour mcp []
+[2025-10-20T10:32:07.539Z] [INFO] [EDITOR] [CircuitBreaker] Services de circuit breaker initialisés []
+[2025-10-20T10:32:07.539Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:07.539Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:07.539Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans URL de base []
+[2025-10-20T10:32:07.539Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans endpoints configurés []
+   Generating static pages (13/52) 
+   Generating static pages (26/52) 
+[2025-10-20T10:32:07.650Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:07.652Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:07.654Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:07.654Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:07.654Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:07.654Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:07.654Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour groq []
+[2025-10-20T10:32:07.654Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour supabase []
+[2025-10-20T10:32:07.654Z] [INFO] [EDITOR] [CircuitBreakerManager] ✨ Circuit breaker créé pour mcp []
+[2025-10-20T10:32:07.655Z] [INFO] [EDITOR] [CircuitBreaker] Services de circuit breaker initialisés []
+[2025-10-20T10:32:07.655Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔍 Env vars: [
+  {
+    "NEXT_PUBLIC_API_BASE_URL": "https://www.scrivia.app",
+    "NEXT_PUBLIC_SITE_URL": "https://www.scrivia.app"
+  }
+]
+[2025-10-20T10:32:07.655Z] [INFO] [EDITOR] [ApiV2HttpClient] 🔧 Fallback URL: https://www.scrivia.app []
+[2025-10-20T10:32:07.655Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans URL de base []
+[2025-10-20T10:32:07.655Z] [WARN] [EDITOR] [OpenApiToolExecutor] ⚠️ Exécuteur créé sans endpoints configurés []
+   Generating static pages (39/52) 
+ ✓ Generating static pages (52/52)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                     Size  First Load JS
+┌ ○ /                                                        13.9 kB         213 kB
+├ ○ /_not-found                                                 1 kB         105 kB
+├ ƒ /[username]/[slug]                                         15 kB         219 kB
+├ ƒ /[username]/id/[noteId]                                    451 B         107 kB
+├ ○ /ai                                                      2.75 kB         106 kB
+├ ○ /ai/agents                                                 654 B         104 kB
+├ ○ /ai/agents/demo                                          7.49 kB         111 kB
+├ ○ /ai/prompts                                                654 B         104 kB
+├ ƒ /api/auth/authorize                                        335 B         104 kB
+├ ƒ /api/auth/chatgpt-oauth                                    335 B         104 kB
+├ ƒ /api/auth/create-code                                      335 B         104 kB
+├ ƒ /api/auth/token                                            335 B         104 kB
+├ ƒ /api/chat                                                  335 B         104 kB
+├ ƒ /api/chat/llm                                              335 B         104 kB
+├ ƒ /api/chat/metrics                                          335 B         104 kB
+├ ƒ /api/debug-chatgpt                                         335 B         104 kB
+├ ƒ /api/debug-tool-call                                       335 B         104 kB
+├ ƒ /api/debug/auth                                            335 B         104 kB
+├ ƒ /api/debug/env                                             335 B         104 kB
+├ ƒ /api/debug/token                                           335 B         104 kB
+├ ƒ /api/debug/tool-stats                                      335 B         104 kB
+├ ƒ /api/editor-prompts                                        335 B         104 kB
+├ ƒ /api/editor-prompts/[id]                                   335 B         104 kB
+├ ƒ /api/force-log                                             335 B         104 kB
+├ ƒ /api/test-prod                                             335 B         104 kB
+├ ƒ /api/ui                                                    335 B         104 kB
+├ ƒ /api/ui/agents                                             335 B         104 kB
+├ ƒ /api/ui/agents/specialized                                 335 B         104 kB
+├ ƒ /api/ui/api-keys                                           335 B         104 kB
+├ ƒ /api/ui/chat-sessions                                      335 B         104 kB
+├ ƒ /api/ui/chat-sessions/[id]                                 335 B         104 kB
+├ ƒ /api/ui/chat-sessions/[id]/messages                        335 B         104 kB
+├ ƒ /api/ui/chat-sessions/[id]/messages/batch                  335 B         104 kB
+├ ƒ /api/ui/classeur/[ref]                                     335 B         104 kB
+├ ƒ /api/ui/classeur/[ref]/dossiers                            335 B         104 kB
+├ ƒ /api/ui/classeur/[ref]/full-tree                           335 B         104 kB
+├ ƒ /api/ui/classeur/[ref]/meta                                335 B         104 kB
+├ ƒ /api/ui/classeur/[ref]/tree                                335 B         104 kB
+├ ƒ /api/ui/classeur/create                                    335 B         104 kB
+├ ƒ /api/ui/classeur/reorder                                   335 B         104 kB
+├ ƒ /api/ui/files/finalize                                     335 B         104 kB
+├ ƒ /api/ui/files/get-url                                      335 B         104 kB
+├ ƒ /api/ui/files/presign-upload                               335 B         104 kB
+├ ƒ /api/ui/files/status-update                                335 B         104 kB
+├ ƒ /api/ui/files/upload                                       335 B         104 kB
+├ ƒ /api/ui/openapi-schemas                                    335 B         104 kB
+├ ƒ /api/ui/public/file/[ref]                                  335 B         104 kB
+├ ƒ /api/ui/public/note/[username]/[slug]                      335 B         104 kB
+├ ƒ /api/ui/public/note/[username]/[slug]/table-of-contents    335 B         104 kB
+├ ƒ /api/ui/whisper/transcribe                                 335 B         104 kB
+├ ƒ /api/ui/whisper/translate                                  335 B         104 kB
+├ ƒ /api/v2/agents                                             335 B         104 kB
+├ ƒ /api/v2/agents/[agentId]                                   335 B         104 kB
+├ ƒ /api/v2/agents/execute                                     335 B         104 kB
+├ ƒ /api/v2/classeur/[ref]                                     335 B         104 kB
+├ ƒ /api/v2/classeur/[ref]/tree                                335 B         104 kB
+├ ƒ /api/v2/classeur/[ref]/update                              335 B         104 kB
+├ ƒ /api/v2/classeur/create                                    335 B         104 kB
+├ ƒ /api/v2/classeur/reorder                                   335 B         104 kB
+├ ƒ /api/v2/classeurs                                          335 B         104 kB
+├ ƒ /api/v2/classeurs/reorder                                  335 B         104 kB
+├ ƒ /api/v2/classeurs/with-content                             335 B         104 kB
+├ ƒ /api/v2/debug                                              335 B         104 kB
+├ ƒ /api/v2/delete/[resource]/[ref]                            335 B         104 kB
+├ ƒ /api/v2/files/search                                       335 B         104 kB
+├ ƒ /api/v2/folder                                             335 B         104 kB
+├ ƒ /api/v2/folder/[ref]                                       335 B         104 kB
+├ ƒ /api/v2/folder/[ref]/move                                  335 B         104 kB
+├ ƒ /api/v2/folder/[ref]/tree                                  335 B         104 kB
+├ ƒ /api/v2/folder/[ref]/update                                335 B         104 kB
+├ ƒ /api/v2/folder/create                                      335 B         104 kB
+├ ƒ /api/v2/me                                                 335 B         104 kB
+├ ƒ /api/v2/note/[ref]                                         335 B         104 kB
+├ ƒ /api/v2/note/[ref]/apply                                   335 B         104 kB
+├ ƒ /api/v2/note/[ref]/content:apply                           335 B         104 kB
+├ ƒ /api/v2/note/[ref]/insert                                  335 B         104 kB
+├ ƒ /api/v2/note/[ref]/insert-content                          335 B         104 kB
+├ ƒ /api/v2/note/[ref]/move                                    335 B         104 kB
+├ ƒ /api/v2/note/[ref]/share                                   335 B         104 kB
+├ ƒ /api/v2/note/[ref]/table-of-contents                       335 B         104 kB
+├ ƒ /api/v2/note/[ref]/toc                                     335 B         104 kB
+├ ƒ /api/v2/note/[ref]/update                                  335 B         104 kB
+├ ƒ /api/v2/note/create                                        335 B         104 kB
+├ ƒ /api/v2/note/recent                                        335 B         104 kB
+├ ƒ /api/v2/openapi-schema                                     335 B         104 kB
+├ ƒ /api/v2/resource/[ref]                                     335 B         104 kB
+├ ƒ /api/v2/search                                             335 B         104 kB
+├ ƒ /api/v2/search/files                                       335 B         104 kB
+├ ƒ /api/v2/stats                                              335 B         104 kB
+├ ƒ /api/v2/tools                                              335 B         104 kB
+├ ƒ /api/v2/trash                                              335 B         104 kB
+├ ƒ /api/v2/trash/purge                                        335 B         104 kB
+├ ƒ /api/v2/trash/restore                                      335 B         104 kB
+├ ○ /auth                                                     5.1 kB         151 kB
+├ ○ /auth/callback                                           3.13 kB         149 kB
+├ ○ /auth/verify-email                                       1.92 kB         148 kB
+├ ○ /chat                                                      287 B         288 kB
+├ ○ /login                                                     502 B         104 kB
+├ ○ /openapi-editor                                          19.8 kB         123 kB
+├ ○ /private/account                                          4.1 kB         198 kB
+├ ○ /private/agents                                          11.2 kB         205 kB
+├ ○ /private/chat                                              334 B         288 kB
+├ ƒ /private/classeur/[ref]                                  8.02 kB         207 kB
+├ ƒ /private/classeur/[ref]/dossier/[dossierRef]              2.5 kB         202 kB
+├ ○ /private/documentation                                   9.95 kB         204 kB
+├ ○ /private/dossiers                                        35.4 kB         243 kB
+├ ○ /private/favorites                                       1.53 kB         195 kB
+├ ○ /private/files                                           18.9 kB         213 kB
+├ ƒ /private/note/[id]                                        275 kB         494 kB
+├ ○ /private/prompts                                         8.22 kB         211 kB
+├ ○ /private/settings                                        6.31 kB         205 kB
+├ ○ /private/shared                                          2.57 kB         196 kB
+└ ○ /private/trash                                           6.41 kB         205 kB
++ First Load JS shared by all                                 103 kB
+  ├ chunks/1255-5e80850ee659f6b0.js                          45.5 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js                      54.2 kB
+  └ other shared chunks (total)                              3.74 kB
+
+Route (pages)                                                   Size  First Load JS
+┌ ƒ /api/v1/dossiers                                             0 B        98.7 kB
+└ ƒ /api/v1/notes                                                0 B        98.7 kB
++ First Load JS shared by all                                98.7 kB
+  ├ chunks/framework-ea02fc2152e9ed59.js                     57.7 kB
+  ├ chunks/main-a1fee3e0105bf8a6.js                          37.3 kB
+  └ other shared chunks (total)                               3.7 kB
+
+ƒ Middleware                                                 34.2 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

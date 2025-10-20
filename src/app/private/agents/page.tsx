@@ -59,9 +59,11 @@ function AgentsPageContent() {
   const [hasChanges, setHasChanges] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [showMcpDropdown, setShowMcpDropdown] = useState(false);
+  const [showOpenApiDropdown, setShowOpenApiDropdown] = useState(false);
   const [showParameters, setShowParameters] = useState(false);
   const [openApiSchemas, setOpenApiSchemas] = useState<any[]>([]);
   const [loadingSchemas, setLoadingSchemas] = useState(false);
+  const [linkedSchemas, setLinkedSchemas] = useState<any[]>([]);
   
   // Ref pour suivre si la sélection initiale a été faite
   const initialSelectionDone = useRef(false);
@@ -72,8 +74,20 @@ function AgentsPageContent() {
   useEffect(() => {
     if (selectedAgent && !hasChanges) {
       setEditedAgent({ ...selectedAgent });
+      
+      // Synchroniser linkedSchemas avec le schéma assigné
+      if (selectedAgent.openapi_schema_id) {
+        const linkedSchema = openApiSchemas.find(s => s.id === selectedAgent.openapi_schema_id);
+        if (linkedSchema) {
+          setLinkedSchemas([linkedSchema]);
+        } else {
+          setLinkedSchemas([]);
+        }
+      } else {
+        setLinkedSchemas([]);
+      }
     }
-  }, [selectedAgent, hasChanges]);
+  }, [selectedAgent, hasChanges, openApiSchemas]);
 
   /**
    * Sélectionne automatiquement le premier agent au chargement (une seule fois)
@@ -628,11 +642,11 @@ function AgentsPageContent() {
                     <h3 className="section-title">
                       OpenAPI Tools
                       <a 
-                        href="/docs/guides/OPENAPI-SCHEMAS-REUSABLES.md" 
+                        href="/docs/OPENAPI-TOOLS-IMPLEMENTATION.md" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="section-doc-link"
-                        title="Guide des schémas OpenAPI"
+                        title="Documentation OpenAPI Tools"
                       >
                         <ExternalLink size={14} />
                       </a>
@@ -641,94 +655,84 @@ function AgentsPageContent() {
                     {loadingSchemas ? (
                       <div style={{ padding: '1rem', textAlign: 'center' }}>
                         <div className="loading-spinner" style={{ width: '24px', height: '24px', margin: '0 auto' }} />
-                        <p style={{ marginTop: '0.5rem', color: 'rgba(255, 255, 255, 0.7)' }}>Chargement des schémas...</p>
                       </div>
                     ) : (
                       <>
                         <div className="field-group">
-                          <label className="field-label">Schéma OpenAPI assigné</label>
-                          <select
-                            className="field-select"
-                            value={editedAgent?.openapi_schema_id || ''}
-                            onChange={(e) => {
-                              const schemaId = e.target.value || null;
-                              updateField('openapi_schema_id', schemaId);
-                              // Ne pas appeler updateOpenApiSchema ici pour éviter les appels multiples
-                              // L'utilisateur devra cliquer sur "Sauvegarder" pour persister
-                            }}
-                          >
-                            <option value="">Aucun schéma (15 tools minimaux par défaut)</option>
-                            {openApiSchemas.map(schema => (
-                              <option key={schema.id} value={schema.id}>
-                                {schema.name} (v{schema.version}) - {schema.description}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="mcp-add-header">
+                            <label className="field-label">Ajouter un schéma</label>
+                            <button
+                              className="btn-mcp-add"
+                              onClick={() => setShowOpenApiDropdown(!showOpenApiDropdown)}
+                              title="Ajouter un schéma OpenAPI"
+                            >
+                              <Plus size={16} />
+                            </button>
+                          </div>
                           
-                          {editedAgent?.openapi_schema_id && (
-                            <div className="schema-info" style={{ 
-                              marginTop: '0.5rem', 
-                              padding: '0.75rem', 
-                              background: 'rgba(0, 150, 255, 0.1)', 
-                              borderRadius: '6px',
-                              border: '1px solid rgba(0, 150, 255, 0.2)'
-                            }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <CheckCircle size={16} style={{ color: '#00ff88' }} />
-                                <span style={{ fontWeight: '500' }}>Schéma assigné</span>
-                              </div>
-                              <p style={{ 
-                                margin: '0.25rem 0 0 0', 
-                                fontSize: '0.85rem', 
-                                color: 'rgba(255, 255, 255, 0.8)' 
-                              }}>
-                                Cet agent utilisera les tools générés depuis ce schéma OpenAPI.
-                              </p>
+                          {showOpenApiDropdown && openApiSchemas.length > 0 && (
+                            <div className="mcp-dropdown">
+                              {openApiSchemas
+                                .filter(schema => !linkedSchemas.some(s => s.id === schema.id))
+                                .map(schema => (
+                                  <div
+                                    key={schema.id}
+                                    className="mcp-dropdown-item"
+                                    onClick={() => {
+                                      if (selectedAgent) {
+                                        setLinkedSchemas([...linkedSchemas, schema]);
+                                        updateField('openapi_schema_id', schema.id);
+                                        updateOpenApiSchema(schema.id);
+                                        setShowOpenApiDropdown(false);
+                                      }
+                                    }}
+                                  >
+                                    <div className="mcp-dropdown-name">{schema.name}</div>
+                                    {schema.description && (
+                                      <div className="mcp-dropdown-desc">{schema.description}</div>
+                                    )}
+                                  </div>
+                                ))}
                             </div>
+                          )}
+
+                          {openApiSchemas.length === 0 && (
+                            <p className="empty-text" style={{ marginTop: '0.5rem' }}>
+                              Aucun schéma OpenAPI configuré dans la base de données.
+                            </p>
                           )}
                         </div>
 
-                        {openApiSchemas.length > 0 && (
+                        {linkedSchemas.length > 0 && (
                           <div className="field-group">
-                            <label className="field-label">Schémas disponibles ({openApiSchemas.length})</label>
-                            <div className="schemas-list">
-                              {openApiSchemas.map(schema => (
-                                <div 
-                                  key={schema.id} 
-                                  className={`schema-item ${editedAgent?.openapi_schema_id === schema.id ? 'selected' : ''}`}
-                                  onClick={() => {
-                                    updateField('openapi_schema_id', schema.id);
-                                    updateOpenApiSchema(schema.id);
-                                  }}
-                                >
-                                  <div className="schema-header">
-                                    <FileText size={16} />
-                                    <span className="schema-name">{schema.name}</span>
-                                    <span className="schema-version">v{schema.version}</span>
+                            <label className="field-label">
+                              Schémas actifs ({linkedSchemas.length})
+                            </label>
+                            <div className="mcp-linked-servers">
+                              {linkedSchemas.map(schema => (
+                                <div key={schema.id} className="mcp-linked-item">
+                                  <div className="mcp-linked-info">
+                                    <div className="mcp-linked-name">{schema.name}</div>
+                                    {schema.description && (
+                                      <div className="mcp-linked-desc">{schema.description}</div>
+                                    )}
                                   </div>
-                                  <p className="schema-description">{schema.description}</p>
-                                  {schema.tags && schema.tags.length > 0 && (
-                                    <div className="schema-tags">
-                                      {schema.tags.map((tag: string, index: number) => (
-                                        <span key={index} className="schema-tag">{tag}</span>
-                                      ))}
-                                    </div>
-                                  )}
+                                  <button
+                                    className="btn-mcp-remove"
+                                    onClick={() => {
+                                      if (selectedAgent) {
+                                        setLinkedSchemas(linkedSchemas.filter(s => s.id !== schema.id));
+                                        updateField('openapi_schema_id', null);
+                                        updateOpenApiSchema(null);
+                                      }
+                                    }}
+                                    title="Retirer ce schéma"
+                                  >
+                                    <X size={14} />
+                                  </button>
                                 </div>
                               ))}
                             </div>
-                          </div>
-                        )}
-
-                        {openApiSchemas.length === 0 && (
-                          <div className="empty-state" style={{ padding: '1rem', textAlign: 'center' }}>
-                            <FileText size={32} style={{ color: 'rgba(255, 255, 255, 0.3)', marginBottom: '0.5rem' }} />
-                            <p style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                              Aucun schéma OpenAPI configuré
-                            </p>
-                            <p style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: '0.25rem' }}>
-                              Utilisez le script de seed pour ajouter des schémas
-                            </p>
                           </div>
                         )}
                       </>
