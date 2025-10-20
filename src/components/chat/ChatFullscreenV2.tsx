@@ -295,7 +295,25 @@ const ChatFullscreenV2: React.FC = () => {
       }
 
       const historyBeforeNewMessage = currentSession.thread || [];
-      const limitedHistoryForLLM = historyBeforeNewMessage.slice(-(currentSession.history_limit || 30));
+      
+      // ✅ AMÉLIORATION: Filtrage intelligent pour garder le contexte récent
+      // Stratégie : Garder tous les user/assistant + derniers tool calls
+      const historyLimit = currentSession.history_limit || 40; // ✅ 40 messages pour conversation fluide
+      const userAssistantMessages = historyBeforeNewMessage.filter(m => 
+        m.role === 'user' || m.role === 'assistant'
+      );
+      const toolMessages = historyBeforeNewMessage.filter(m => 
+        m.role === 'tool'
+      );
+      
+      // Garder jusqu'à 30 messages user/assistant récents, puis compléter avec tool messages
+      const recentUserAssistant = userAssistantMessages.slice(-Math.min(historyLimit, 30));
+      const remainingSlots = historyLimit - recentUserAssistant.length;
+      const recentTools = remainingSlots > 0 ? toolMessages.slice(-remainingSlots) : [];
+      
+      // Recombiner et trier par timestamp pour garder l'ordre chronologique
+      const limitedHistoryForLLM = [...recentUserAssistant, ...recentTools]
+        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
       
       const userMessage = {
         role: 'user' as const,
