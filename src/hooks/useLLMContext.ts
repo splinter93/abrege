@@ -55,7 +55,7 @@ export function useLLMContext(options: LLMContextOptions = {}): LLMContext {
         timestamp: now.toISOString()
       },
       user: {
-        name: user?.name || user?.username || 'Utilisateur',
+        name: (user as any)?.name || (user as any)?.username || user?.email?.split('@')[0] || 'Utilisateur',
         locale: lang,
         email: user?.email
       },

@@ -377,11 +377,18 @@ const ChatFullscreenV2: React.FC = () => {
         throw new Error(tokenResult.error || 'Token invalide');
       }
       
-      // ✅ NOUVEAU : Contexte LLM unifié avec sessionId
+      // ✅ NOUVEAU : Contexte LLM unifié
+      // Le nouveau LLMContext est passé dans uiContext pour compatibilité avec l'orchestrateur
       const contextForLLM = {
-        ...llmContext,
+        type: 'chat_session' as const,
+        id: currentSession.id,
+        name: 'Chat Scrivia',
         sessionId: currentSession.id,
         agentId: selectedAgent?.id,
+        uiContext: {
+          ...llmContext,
+          sessionId: currentSession.id
+        }
       };
 
       await sendMessage(message, currentSession.id, contextForLLM, limitedHistoryForLLM, tokenResult.token);
