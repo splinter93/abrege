@@ -385,11 +385,45 @@ const ChatFullscreenV2: React.FC = () => {
       {/* Header optimisé avec nouveau design ChatGPT */}
       <div className="chatgpt-header">
         <div className="chatgpt-header-left">
-          <div className="chatgpt-logo">
-            <Link href="/" className="chatgpt-logo-link" aria-label="Aller à l'accueil">
-              <img src="/logo-scrivia-white.png" alt="Scrivia" className="chatgpt-logo-img" />
-            </Link>
-          </div>
+          {/* Bouton retour dashboard */}
+          <Link href="/dashboard" className="chatgpt-sidebar-toggle-btn-header" aria-label="Retour au dashboard" title="Retour au dashboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+          </Link>
+          
+          {/* Bouton toggle sidebar dans le header */}
+          <button
+            onClick={handleSidebarToggle}
+            className="chatgpt-sidebar-toggle-btn-header"
+            aria-label={sidebarOpen ? "Fermer les conversations" : "Ouvrir les conversations"}
+            title={sidebarOpen ? "Fermer les conversations" : "Ouvrir les conversations"}
+            disabled={!user || authLoading}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+          </button>
+          
+          {/* Bouton nouvelle conversation */}
+          <button
+            onClick={() => {
+              if (user && !authLoading) {
+                createSession();
+              }
+            }}
+            className="chatgpt-sidebar-toggle-btn-header"
+            aria-label="Nouvelle conversation"
+            title="Nouvelle conversation"
+            disabled={!user || authLoading}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+          </button>
         </div>
         <div className="chatgpt-header-right">
           <ChatKebabMenu
@@ -427,22 +461,6 @@ const ChatFullscreenV2: React.FC = () => {
 
         {/* Zone principale des messages */}
         <div className="chatgpt-main">
-          {/* Bouton toggle sidebar - affiché seulement quand sidebar est fermée */}
-          {!sidebarOpen && (
-            <button
-              onClick={handleSidebarToggle}
-              className="chatgpt-sidebar-toggle-btn"
-              aria-label="Ouvrir les conversations"
-              title="Ouvrir les conversations"
-              disabled={!user || authLoading}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="9" y1="3" x2="9" y2="21"></line>
-              </svg>
-            </button>
-          )}
-          
           {/* Messages optimisés */}
           <div className="chatgpt-messages-container">
             <div className="chatgpt-messages">

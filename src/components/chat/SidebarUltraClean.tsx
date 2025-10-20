@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Plus, X, User, Settings, LogOut } from 'lucide-react';
+import { Search, X, User, Settings } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
@@ -72,26 +72,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   return (
     <div className={`sidebar-ultra-clean ${isDesktop ? 'desktop' : 'mobile'} ${isOpen ? 'visible' : ''}`}>
 
-      {/* Boutons d'action en haut */}
-      <div className="sidebar-actions-clean">
-        <button 
-          onClick={handleCreateNewSession}
-          className="sidebar-action-btn-clean" 
-          title="Créer une nouvelle conversation"
-        >
-          <Plus size={18} />
-        </button>
-        <button 
-          onClick={onClose} 
-          className="sidebar-action-btn-clean" 
-          title="Rétracter la sidebar"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="9" y1="3" x2="9" y2="21"></line>
-          </svg>
-        </button>
-      </div>
 
       {/* Barre de recherche */}
       <div className="sidebar-search-clean">
@@ -175,21 +155,9 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
             <div className="sidebar-user-name-clean">
               {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur'}
             </div>
-            <div className="sidebar-user-email-clean">
-              {user?.email || 'Non connecté'}
-            </div>
           </div>
         </div>
         
-        {/* Bouton de déconnexion */}
-        <button 
-          onClick={signOut}
-          className="sidebar-logout-btn-clean"
-          title="Déconnexion"
-        >
-          <LogOut size={16} />
-          <span>Déconnexion</span>
-        </button>
       </div>
 
     </div>
