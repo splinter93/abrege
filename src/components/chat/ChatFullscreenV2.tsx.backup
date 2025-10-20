@@ -25,7 +25,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 import Link from 'next/link';
 
 import './ToolCallMessage.css';
-import '@/styles/chat-clean.css';
+import '@/styles/chat-consolidated.css';
 import '@/styles/sidebar-collapsible.css';
 
 const ChatFullscreenV2: React.FC = () => {
@@ -509,7 +509,7 @@ const ChatFullscreenV2: React.FC = () => {
       )}
 
       {/* Contenu principal avec nouveau design ChatGPT */}
-      <div className={`chatgpt-content ${(sidebarOpen || (isDesktop && sidebarHovered)) ? 'sidebar-open' : ''}`}>
+      <div className="chatgpt-content">
         {/* Sidebar moderne */}
         <div 
           onMouseEnter={handleSidebarMouseEnter}

@@ -39,6 +39,8 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const { agents, loading: agentsLoading } = useAgents();
   const [searchQuery, setSearchQuery] = useState('');
   const [agentsOpen, setAgentsOpen] = useState(true);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   // Fonctions de gestion
   const handleCreateNewSession = async () => {
@@ -55,6 +57,32 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
     }
   };
 
+  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('Supprimer cette conversation ?')) {
+      await deleteSession(sessionId);
+    }
+  };
+
+  const handleStartRename = (session: ChatSession, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingSessionId(session.id);
+    setEditingName(session.name);
+  };
+
+  const handleRenameSubmit = async (sessionId: string) => {
+    if (editingName.trim() && editingName !== sessions.find(s => s.id === sessionId)?.name) {
+      await updateSession(sessionId, { name: editingName.trim() });
+    }
+    setEditingSessionId(null);
+    setEditingName('');
+  };
+
+  const handleRenameCancel = () => {
+    setEditingSessionId(null);
+    setEditingName('');
+  };
+
   const handleSelectAgent = (agent: Agent) => {
     setSelectedAgent(agent);
     if (!isDesktop) {
@@ -66,8 +94,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const filteredSessions = sessions.filter((session: ChatSession) =>
     session.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  if (!isOpen) return null;
 
   return (
     <div className={`sidebar-ultra-clean ${isDesktop ? 'desktop' : 'mobile'} ${isOpen ? 'visible' : ''}`}>
@@ -129,18 +155,51 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
         <div className="sidebar-section-clean">
           <div className="sidebar-section-title-clean">Conversations</div>
           {filteredSessions.map((session: ChatSession) => (
-            <button
-              key={session.id}
-              onClick={() => handleSelectSession(session)}
-              className={`sidebar-item-clean ${currentSession?.id === session.id ? 'active' : ''}`}
-            >
-              <div style={{ flex: 1, textAlign: 'left' }}>
-                <div style={{ fontSize: '13px', fontWeight: 500 }}>{session.name}</div>
-                <div style={{ fontSize: '11px', color: '#d0d0d0', marginTop: '2px' }}>
-                  {formatDistanceToNow(new Date(session.updated_at), { addSuffix: true, locale: fr })}
+            <div key={session.id} className={`sidebar-conversation-item ${editingSessionId === session.id ? 'renaming' : ''}`}>
+              <button
+                onClick={() => handleSelectSession(session)}
+                onDoubleClick={(e) => handleStartRename(session, e)}
+                className={`sidebar-item-clean ${currentSession?.id === session.id ? 'active' : ''}`}
+              >
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  {editingSessionId === session.id ? (
+                    <input
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onBlur={() => handleRenameSubmit(session.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleRenameSubmit(session.id);
+                        } else if (e.key === 'Escape') {
+                          handleRenameCancel();
+                        }
+                      }}
+                      autoFocus
+                      className="sidebar-rename-input"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <>
+                      <div style={{ fontSize: '13px', fontWeight: 500 }}>{session.name}</div>
+                      <div style={{ fontSize: '11px', color: '#d0d0d0', marginTop: '2px' }}>
+                        {formatDistanceToNow(new Date(session.updated_at), { addSuffix: true, locale: fr })}
+                      </div>
+                    </>
+                  )}
                 </div>
-              </div>
-            </button>
+              </button>
+              <button
+                onClick={(e) => handleDeleteSession(session.id, e)}
+                className="sidebar-delete-btn"
+                title="Supprimer la conversation"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="3,6 5,6 21,6"></polyline>
+                  <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                </svg>
+              </button>
+            </div>
           ))}
         </div>
       </div>

@@ -1,74 +1,9 @@
 /* ========================================
-   BUBBLE BUTTONS - BOUTONS D'ACTION SOUS LES BULLES
+   BUBBLE BUTTONS - STYLES SPÉCIFIQUES
    ======================================== */
 
-.bubble-buttons {
-  display: flex;
-  justify-content: flex-start;
-  margin-top: 0; /* ✅ RÉDUCTION: Suppression de la marge pour compacité */
-  margin-bottom: 0;
-  width: auto; /* ✅ RÉDUCTION: Largeur automatique au lieu de 60% */
-  opacity: 0;
-  transition: opacity var(--chat-transition-normal);
-}
-
-.chatgpt-message-user .bubble-buttons,
-.chat-message-user .bubble-buttons,
-.bubble-buttons-user {
-  justify-content: flex-end;
-  margin-top: 6px;
-}
-
-/* ========================================
-   AFFICHAGE AU HOVER
-   ======================================== */
-
-.chatgpt-message:hover .bubble-buttons,
-.chat-message:hover .bubble-buttons {
-  opacity: 1;
-}
-
-.chatgpt-message-assistant .bubble-buttons,
-.chat-message-assistant .bubble-buttons {
-  justify-content: flex-start;
-  width: auto;
-  margin-top: -8px;
-}
-
-.bubble-buttons-container {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-/* ========================================
-   BOUTONS INDIVIDUELS
-   ======================================== */
-
-.bubble-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  color: var(--chat-text-secondary);
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all var(--chat-transition-normal);
-  padding: 0;
-}
-
-.bubble-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--chat-text-primary);
-  transform: none;
-}
-
-.bubble-button:active {
-  transform: scale(0.92);
-}
+/* Note: Les styles de base (.bubble-buttons, .bubble-button, etc.) 
+   sont définis dans chat-clean.css pour éviter les doublons */
 
 /* ========================================
    BOUTON COPIER - ÉTATS SPÉCIAUX
@@ -87,15 +22,9 @@
    BOUTON VOICE - LECTURE VOCALE
    ======================================== */
 
-.voice-button {
-  /* Styles par défaut déjà définis dans .bubble-button */
-}
-
 .voice-button:hover {
   color: var(--chat-accent-primary);
 }
-
-
 
 /* ========================================
    MENU KEBBAB DROPDOWN
@@ -345,76 +274,10 @@
 }
 
 /* ========================================
-   ICÔNES
-   ======================================== */
-
-.bubble-button svg {
-  flex-shrink: 0;
-  transition: transform var(--chat-transition-normal);
-}
-
-/* ========================================
-   RESPONSIVE DESIGN
-   ======================================== */
-
-@media (max-width: 768px) {
-  .bubble-buttons {
-    margin-top: 2px;
-  }
-  
-  .bubble-buttons-container {
-    gap: 4px;
-  }
-  
-  .bubble-button {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .bubble-buttons {
-    margin-top: 1px;
-  }
-  
-  .bubble-buttons-container {
-    gap: 4px;
-  }
-  
-  .bubble-button {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-/* ========================================
-   ANIMATIONS D'ENTRÉE
-   ======================================== */
-
-.bubble-buttons {
-  /* Animation supprimée car les boutons sont cachés par défaut */
-}
-
-/* ========================================
-   ACCESSIBILITÉ
-   ======================================== */
-
-.bubble-button:focus {
-  outline: none;
-  box-shadow: none;
-}
-
-.bubble-button:focus-visible {
-  outline: none;
-  box-shadow: none;
-}
-
-/* ========================================
-   THÈME SOMBRE/CLAIR (VARIABLES CSS)
+   VARIABLES CSS - COULEURS SPÉCIFIQUES
    ======================================== */
 
 :root {
   --chat-text-success: #22c55e;
   --chat-bg-success: rgba(34, 197, 94, 0.1);
-  --chat-accent-primary: #3b82f6;
-} 
+}
