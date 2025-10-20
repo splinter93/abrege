@@ -573,7 +573,8 @@
 }
 */
 
-/* Toolbar integration for chat */
+/* ✅ Toolbar integration for chat - DÉSACTIVÉ, on utilise les styles unifiés */
+/*
 .chat-markdown .u-block__toolbar {
   background: rgba(255, 255, 255, 0.05) ;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) ;
@@ -615,6 +616,7 @@
   color: #ffffff ;
   border-color: #10a37f ;
 }
+*/
 
 /* ==========================================================================
    RESPONSIVE & ANIMATIONS
