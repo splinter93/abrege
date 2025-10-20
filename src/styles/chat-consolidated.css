@@ -21,10 +21,10 @@
      COULEURS CHAT - THÈME SOMBRE
      ======================================== */
   
-  --chat-bg-primary: #1c1c1c;
-  --chat-bg-secondary: #272727;
-  --chat-bg-tertiary: #373737;
-  --chat-bg-elevated: #2f2f2f;
+  --chat-bg-primary: #191919;
+  --chat-bg-secondary: #242424;
+  --chat-bg-tertiary: #343434;
+  --chat-bg-elevated: #2c2c2c;
   --chat-bg-hover: rgba(255, 255, 255, 0.05);
   
   --chat-text-primary: #e5e5e5;
@@ -573,7 +573,7 @@
 
 .chatgpt-message-bubble-user,
 .chat-message-bubble-user {
-  background: #3a3a3a;
+  background: #323636;
   color: white;
   border: none;
   box-shadow: none;
@@ -587,7 +587,7 @@
 
 .chatgpt-message-bubble-user:hover,
 .chat-message-bubble-user:hover {
-  background: #4a4a4a;
+  background: #424646;
   box-shadow: none;
   transform: none;
 }
@@ -731,7 +731,7 @@
   font-size: var(--chat-font-size-base);
   line-height: var(--chat-line-height-normal);
   color: var(--chat-text-primary);
-  padding: 0;
+  padding: 4px 0 0 0;
   margin: 0;
   overflow-y: auto;
   scrollbar-width: thin;
