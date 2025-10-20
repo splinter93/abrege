@@ -424,8 +424,17 @@ export class SimpleOrchestrator {
         logger.dev(`[SimpleOrchestrator] ✅ Tools OpenAPI chargés: ${openApiTools.length} tools depuis ${agentSchemas.length} schémas`);
         
         if (selectedProvider.toLowerCase() === 'xai') {
-          // ✅ xAI : Utiliser uniquement les tools OpenAPI
-          tools = openApiTools;
+          // ✅ xAI : Utiliser uniquement les tools OpenAPI avec limite
+          const XAI_MAX_TOOLS = 20; // Limite stricte de xAI
+          
+          if (openApiTools.length > XAI_MAX_TOOLS) {
+            logger.warn(`[SimpleOrchestrator] ⚠️ Trop de tools pour xAI (${openApiTools.length}/${XAI_MAX_TOOLS}). Limitation appliquée.`);
+            tools = openApiTools.slice(0, XAI_MAX_TOOLS);
+            logger.warn(`[SimpleOrchestrator] 📋 Tools conservés: ${tools.map(t => t.function.name).join(', ')}`);
+          } else {
+            tools = openApiTools;
+          }
+          
           // Configurer l'exécuteur OpenAPI pour tous les schémas
           await this.configureOpenApiExecutorForMultipleSchemas(agentSchemas);
         } else {
