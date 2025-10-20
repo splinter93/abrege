@@ -12,6 +12,20 @@ export interface AppContext {
   content?: string;
   metadata?: Record<string, unknown>;
   uiContext?: unknown; // ✅ Support pour le contexte UI (UIContext from ContextCollector)
+  // Propriétés pour le contexte UI
+  activeNote?: {
+    id: string;
+    slug: string;
+    name: string;
+  };
+  activeClasseur?: {
+    id: string;
+    name: string;
+  };
+  activeFolder?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface ChatMessage {

@@ -90,11 +90,56 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 Hook de chat
   const { isProcessing, sendMessage } = useChatResponse({
-    onComplete: handleComplete,
+    onComplete: (fullContent: string, fullReasoning: string, toolCalls?: unknown[], toolResults?: unknown[]) => {
+      // Convertir les types pour les handlers
+      const convertedToolCalls = toolCalls?.map(tc => {
+        const t = tc as any;
+        return {
+          id: t.id || '',
+          type: 'function' as const,
+          function: {
+            name: t.name || t.function?.name || '',
+            arguments: typeof t.arguments === 'string' ? t.arguments : JSON.stringify(t.arguments || t.function?.arguments || {})
+          }
+        };
+      }) || [];
+      
+      const convertedToolResults = toolResults?.map(tr => {
+        const t = tr as any;
+        return {
+          tool_call_id: t.tool_call_id || '',
+          name: t.name || '',
+          content: typeof t.result === 'string' ? t.result : JSON.stringify(t.result || ''),
+          success: t.success || false
+        };
+      }) || [];
+      
+      handleComplete(fullContent, fullReasoning, convertedToolCalls, convertedToolResults);
+    },
     onError: handleError,
-    onToolCalls: handleToolCalls,
-    onToolResult: handleToolResult,
-    onToolExecutionComplete: handleToolExecutionComplete
+    onToolCalls: (toolCalls: Array<{ id: string; name: string; arguments: Record<string, unknown> }>, toolName: string) => {
+      const convertedToolCalls = toolCalls.map(tc => ({
+        id: tc.id,
+        type: 'function' as const,
+        function: {
+          name: tc.name,
+          arguments: JSON.stringify(tc.arguments)
+        }
+      }));
+      handleToolCalls(convertedToolCalls, toolName);
+    },
+    onToolResult: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => {
+      handleToolResult(toolName, result, success, toolCallId);
+    },
+    onToolExecutionComplete: (toolResults: Array<{ name: string; result: unknown; success: boolean; tool_call_id: string }>) => {
+      const convertedToolResults = toolResults.map(tr => ({
+        tool_call_id: tr.tool_call_id,
+        name: tr.name,
+        content: typeof tr.result === 'string' ? tr.result : JSON.stringify(tr.result),
+        success: tr.success
+      }));
+      handleToolExecutionComplete(convertedToolResults);
+    }
   });
 
   // 🎯 Sidebar fermée par défaut
@@ -159,7 +204,11 @@ const ChatFullscreenV2: React.FC = () => {
     if (!currentSession?.thread) return [];
     
     const sorted = [...currentSession.thread].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      (a, b) => {
+        const timestampA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const timestampB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return timestampA - timestampB;
+      }
     );
 
     // ✅ Filtrage intelligent : garder tous les messages importants
@@ -189,7 +238,7 @@ const ChatFullscreenV2: React.FC = () => {
         hasReasoning: filtered.some(hasReasoning),
         channels: sorted.map(m => ({ 
           role: m.role, 
-          channel: m.role === 'assistant' ? (m as ChatMessageType).channel : undefined, 
+          channel: m.role === 'assistant' ? 'assistant' : undefined, 
           hasContent: !!m.content 
         }))
       });
@@ -314,7 +363,11 @@ const ChatFullscreenV2: React.FC = () => {
       
       // Recombiner et trier par timestamp pour garder l'ordre chronologique
       const limitedHistoryForLLM = [...recentUserAssistant, ...recentTools]
-        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        .sort((a, b) => {
+          const timestampA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+          const timestampB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+          return timestampA - timestampB;
+        });
       
       const userMessage = {
         role: 'user' as const,
@@ -492,7 +545,7 @@ const ChatFullscreenV2: React.FC = () => {
             <div className="chatgpt-messages">
               {displayMessages.map((message) => (
                 <ChatMessage 
-                  key={message.id || `${message.role}-${message.timestamp}-${message.role === 'tool' ? (message as ChatMessageType).tool_call_id : ''}`} 
+                  key={message.id || `${message.role}-${message.timestamp}-${message.role === 'tool' ? (message as any).tool_call_id || 'unknown' : ''}`} 
                   message={message}
                   animateContent={false} // Supprimé - faux streaming
                   isWaitingForResponse={loading && message.role === 'assistant' && !message.content}
