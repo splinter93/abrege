@@ -16,6 +16,7 @@ interface UseChatResponseOptions {
   onStreamChunk?: (content: string) => void;
   onStreamStart?: () => void;
   onStreamEnd?: () => void;
+  onToolExecution?: (toolCount: number) => void; // ✅ Quand les tools commencent à s'exécuter
   useStreaming?: boolean; // Activer/désactiver le streaming
 }
 
@@ -38,6 +39,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
     onStreamChunk,
     onStreamStart,
     onStreamEnd,
+    onToolExecution,
     useStreaming = false // ✅ Désactivé par défaut pour compatibilité
   } = options;
 
@@ -175,6 +177,9 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                   // Marquer comme notifiés
                   toolCallsToNotify.forEach(tc => allNotifiedToolCallIds.add(tc.id));
                 }
+                
+                // ✅ Notifier début d'exécution (UI peut clear le message temporaire)
+                onToolExecution?.(chunk.toolCount || 0);
                 
                 // ✅ IMPORTANT : Réinitialiser le content pour le prochain round
                 currentRoundContent = '';
@@ -421,7 +426,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
     } finally {
       setIsProcessing(false);
     }
-  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamEnd, useStreaming]);
+  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamEnd, onToolExecution, useStreaming]);
 
   const reset = useCallback(() => {
     setIsProcessing(false);
