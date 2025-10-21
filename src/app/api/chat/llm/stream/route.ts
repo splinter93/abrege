@@ -151,8 +151,9 @@ export async function POST(request: NextRequest) {
       }
     ];
 
-    // ✅ Charger les tools (OpenAPI + MCP) comme dans la route classique
+    // ✅ Charger les tools (OpenAPI + MCP) ET les endpoints
     let tools: Tool[] = [];
+    let openApiEndpoints = new Map<string, any>();
     
     if (context.agentId) {
       try {
@@ -166,7 +167,10 @@ export async function POST(request: NextRequest) {
           const { openApiSchemaService } = await import('@/services/llm/openApiSchemaService');
           
           const schemaIds = agentSchemas.map(s => s.openapi_schema_id);
-          const { tools: openApiTools } = await openApiSchemaService.getToolsAndEndpointsFromSchemas(schemaIds);
+          const { tools: openApiTools, endpoints } = await openApiSchemaService.getToolsAndEndpointsFromSchemas(schemaIds);
+          
+          // ✅ Garder les endpoints pour OpenApiToolExecutor
+          openApiEndpoints = endpoints;
           
           // 2. Charger les tools MCP de l'agent
           const { mcpConfigService } = await import('@/services/llm/mcpConfigService');
@@ -182,7 +186,7 @@ export async function POST(request: NextRequest) {
           const mcpCount = tools.filter(t => (t as any).server_label).length;
           const openApiCount = tools.length - mcpCount;
           
-          logger.dev(`[Stream Route] ✅ ${tools.length} tools chargés (${mcpCount} MCP + ${openApiCount} OpenAPI)`);
+          logger.dev(`[Stream Route] ✅ ${tools.length} tools chargés (${mcpCount} MCP + ${openApiCount} OpenAPI), ${openApiEndpoints.size} endpoints`);
         }
       } catch (toolsError) {
         logger.warn('[Stream Route] ⚠️ Erreur chargement tools:', toolsError);
@@ -297,16 +301,24 @@ export async function POST(request: NextRequest) {
               timestamp: new Date().toISOString()
             });
 
-            // ✅ Exécuter les tool calls avec ApiV2ToolExecutor
+            // ✅ Exécuter les tool calls avec les bons executors
             const { ApiV2ToolExecutor } = await import('@/services/llm/executors/ApiV2ToolExecutor');
-            const toolExecutor = new ApiV2ToolExecutor();
+            const { OpenApiToolExecutor } = await import('@/services/llm/executors/OpenApiToolExecutor');
+            
+            const mcpExecutor = new ApiV2ToolExecutor();
+            const openApiExecutor = new OpenApiToolExecutor('', openApiEndpoints);
             
             for (const toolCall of accumulatedToolCalls) {
               try {
                 logger.dev(`[Stream Route] 🔧 Exécution tool: ${toolCall.function.name}`);
                 
-                // ✅ Exécuter le tool avec ApiV2ToolExecutor
-                const result = await toolExecutor.executeToolCall(toolCall, userToken);
+                // ✅ Détecter le type de tool (MCP ou OpenAPI)
+                const isMcpTool = (toolCall as any).server_label !== undefined;
+                
+                // ✅ Utiliser le bon executor
+                const result = isMcpTool 
+                  ? await mcpExecutor.executeToolCall(toolCall, userToken)
+                  : await openApiExecutor.executeToolCall(toolCall, userToken);
 
                 // Ajouter le résultat aux messages
                 currentMessages.push({
