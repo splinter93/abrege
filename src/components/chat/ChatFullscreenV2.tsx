@@ -120,17 +120,18 @@ const ChatFullscreenV2: React.FC = () => {
     onStreamChunk: (chunk: string) => {
       logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20));
       
-      // ✅ Transition vers état "responding" dès le premier chunk de texte
-      setStreamingState('responding');
-      
       // ✅ Ajouter au content du round actuel
       setStreamingContent(prev => {
-        const newContent = prev + chunk;
+        // ✅ Si on était en état "executing", c'est un nouveau round → REMPLACER
+        const newContent = streamingState === 'executing' ? chunk : prev + chunk;
+        
+        // ✅ Transition vers état "responding"
+        setStreamingState('responding');
         
         // ✅ Mettre à jour le message temporaire avec le nouveau content
         setStreamingMessageTemp({
           role: 'assistant',
-          content: newContent, // ✅ Utiliser newContent au lieu de prevMsg + chunk
+          content: newContent,
           timestamp: new Date().toISOString()
         });
         
