@@ -146,28 +146,38 @@ export async function POST(request: NextRequest) {
       }
     ];
 
-    // Charger les tools si l'agent en a
+    // ✅ Charger les tools (OpenAPI + MCP) comme dans la route classique
     let tools: Tool[] = [];
     
     if (context.agentId) {
       try {
-        // Charger les schémas OpenAPI de l'agent
+        // 1. Charger les schémas OpenAPI de l'agent
         const { data: agentSchemas } = await supabase
           .from('agent_openapi_schemas')
           .select('openapi_schema_id')
           .eq('agent_id', context.agentId);
 
         if (agentSchemas && agentSchemas.length > 0) {
-          // Importer le service OpenAPI
           const { openApiSchemaService } = await import('@/services/llm/openApiSchemaService');
           
           const schemaIds = agentSchemas.map(s => s.openapi_schema_id);
           const { tools: openApiTools } = await openApiSchemaService.getToolsAndEndpointsFromSchemas(schemaIds);
           
-          // Limiter à 15 tools pour xAI
-          tools = openApiTools.slice(0, 15);
+          // 2. Charger les tools MCP de l'agent
+          const { mcpConfigService } = await import('@/services/llm/mcpConfigService');
+          const hybridTools = await mcpConfigService.buildHybridTools(
+            context.agentId,
+            userToken,
+            openApiTools
+          ) as Tool[];
           
-          logger.dev(`[Stream Route] ✅ ${tools.length} tools chargés pour l'agent`);
+          // Limiter à 15 tools pour xAI
+          tools = hybridTools.slice(0, 15);
+          
+          const mcpCount = tools.filter(t => (t as any).server_label).length;
+          const openApiCount = tools.length - mcpCount;
+          
+          logger.dev(`[Stream Route] ✅ ${tools.length} tools chargés (${mcpCount} MCP + ${openApiCount} OpenAPI)`);
         }
       } catch (toolsError) {
         logger.warn('[Stream Route] ⚠️ Erreur chargement tools:', toolsError);
