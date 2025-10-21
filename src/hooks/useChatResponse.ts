@@ -129,12 +129,6 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
               }
 
               if (chunk.type === 'delta') {
-                // ✅ Si c'est un nouveau round (premier chunk après tool_execution), réinitialiser
-                if (chunk.content && currentRoundContent === '' && currentRoundToolCalls.size === 0) {
-                  logger.dev('[useChatResponse] 🔄 Nouveau round détecté, réinitialisation content');
-                  // Content est déjà vide, pas besoin de réinitialiser
-                }
-                
                 // Content progressif du round actuel
                 if (chunk.content) {
                   currentRoundContent += chunk.content;
@@ -169,7 +163,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                 }
               }
               
-              // ✅ Gérer tool_execution : notifier SANS réinitialiser le content immédiatement
+              // ✅ Gérer tool_execution : notifier et réinitialiser pour le prochain round
               if (chunk.type === 'tool_execution') {
                 logger.dev(`[useChatResponse] 🔧 Exécution de ${chunk.toolCount || 0} tools...`);
                 
@@ -187,9 +181,12 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                 // ✅ Notifier début d'exécution (UI affiche "Executing...")
                 onToolExecution?.(chunk.toolCount || 0);
                 
-                // ✅ NE PAS réinitialiser currentRoundContent ici !
-                // Le texte "Je vais chercher..." doit rester visible
-                // On réinitialisera au prochain chunk delta (début du round suivant)
+                // ✅ Réinitialiser pour le prochain round MAIS après un délai pour garder visible
+                setTimeout(() => {
+                  currentRoundContent = '';
+                  currentRoundReasoning = '';
+                }, 100); // 100ms pour que l'UI ait le temps d'afficher
+                
                 currentRoundToolCalls.clear();
               }
               
