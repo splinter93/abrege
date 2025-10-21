@@ -98,6 +98,7 @@ function AgentsPageContent() {
 
   /**
    * Sélectionne un agent et charge ses détails complets
+   * ✅ Avec gestion d'erreur et fallback
    */
   const handleSelectAgent = async (agent: SpecializedAgentConfig) => {
     setHasChanges(false);
@@ -108,13 +109,19 @@ function AgentsPageContent() {
       const agentId = agent.slug || agent.id;
       const fullAgent = await getAgent(agentId);
       
-      if (fullAgent) {
-        selectAgent(fullAgent); // Mettre à jour avec les détails complets
-        setEditedAgent({ ...fullAgent });
-      } else {
-        selectAgent(agent);
-        setEditedAgent({ ...agent });
+      if (!fullAgent) {
+        throw new Error('Agent non trouvé');
       }
+      
+      selectAgent(fullAgent); // Mettre à jour avec les détails complets
+      setEditedAgent({ ...fullAgent });
+    } catch (error) {
+      logger.error('[AgentsPage] ❌ Erreur chargement agent:', error);
+      // ✅ Fallback : utiliser l'agent partiel pour éviter de bloquer l'UI
+      selectAgent(agent);
+      setEditedAgent({ ...agent });
+      // Optionnel : afficher un toast (nécessite import de toast)
+      // toast.error('Impossible de charger tous les détails de l\'agent');
     } finally {
       setLoadingDetails(false);
     }
