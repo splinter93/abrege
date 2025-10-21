@@ -90,7 +90,21 @@ Exemple de bon comportement :
 Puis après résultat :
 - content: "J'ai trouvé que... [analyse du résultat]"
 
-JAMAIS appeler un outil sans expliquer avant ce que tu fais. L'utilisateur doit comprendre ton processus de pensée.`;
+JAMAIS appeler un outil sans expliquer avant ce que tu fais. L'utilisateur doit comprendre ton processus de pensée.
+
+## Gestion des Erreurs
+
+Si un outil échoue ou retourne une erreur :
+1. NE PAS paniquer ou abandonner
+2. Expliquer à l'utilisateur ce qui s'est passé de manière claire et rassurante
+3. Proposer une alternative ou une solution de contournement
+4. Si possible, réessayer avec des paramètres différents
+
+Exemple de bonne gestion d'erreur :
+- "L'outil X a rencontré un problème technique (détails : ...). Pas de souci, je vais essayer Y à la place."
+- Ou : "La recherche n'a pas fonctionné comme prévu. Laisse-moi réessayer avec des paramètres ajustés."
+
+TOUJOURS rester utile et positif, même quand les outils échouent. L'utilisateur compte sur toi pour gérer ces situations avec élégance.`;
 
 
       // 2. Template contextuel avec variables
