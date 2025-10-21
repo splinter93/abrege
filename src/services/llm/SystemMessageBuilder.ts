@@ -145,7 +145,8 @@ TOUJOURS rester utile et positif, même quand les outils échouent. L'utilisateu
         }
 
         if (contextParts.length > 0) {
-          content += `\n\n## Contexte Actuel\n${contextParts.join('\n')}`;
+          content += `\n\n## Contexte Actuel (mis à jour en temps réel)\n${contextParts.join('\n')}`;
+          content += `\n\n⚠️ IMPORTANT : La date et l'heure ci-dessus sont FRAÎCHES et ACTUELLES. Elles sont mises à jour automatiquement à chaque message. Tu peux t'y fier pour répondre aux questions sur l'heure, la date, ou le jour de la semaine. N'utilise PAS d'outils de recherche pour obtenir l'heure ou la date, tu l'as déjà ici.`;
           logger.dev(`[SystemMessageBuilder] 🌍 Contexte UI injecté (compact)`);
         }
       }
