@@ -99,8 +99,8 @@ const ChatFullscreenV2: React.FC = () => {
   const [currentToolName, setCurrentToolName] = useState<string>('');
   const [currentRound, setCurrentRound] = useState(0);
   
-  // 🎯 Ref pour tracker si on doit remplacer le content (nouveau round)
-  const shouldReplaceContentRef = useRef(false);
+  // 🎯 État pour reset content entre rounds (au lieu de ref pour éviter closure)
+  const [shouldResetNextChunk, setShouldResetNextChunk] = useState(false);
 
   // 🎯 Hook de chat avec streaming
   const { isProcessing, sendMessage } = useChatResponse({
@@ -123,29 +123,23 @@ const ChatFullscreenV2: React.FC = () => {
     },
     
     onStreamChunk: (chunk: string) => {
-      logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20), 'shouldReplace:', shouldReplaceContentRef.current);
+      logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20), 'shouldReset:', shouldResetNextChunk);
       
-      // ✅ Ajouter ou remplacer selon le flag
-      setStreamingContent(prev => {
-        let newContent: string;
-        
-        if (shouldReplaceContentRef.current) {
-          logger.dev('[ChatFullscreen] 🔄 REMPLACEMENT du texte (nouveau round)');
-          newContent = chunk; // REMPLACER
-          shouldReplaceContentRef.current = false; // Reset flag
-        } else {
-          newContent = prev + chunk; // ACCUMULER (round en cours)
-        }
-        
-        // ✅ Mettre à jour le message temporaire
-        setStreamingMessageTemp({
-          role: 'assistant',
-          content: newContent,
-          timestamp: new Date().toISOString()
-        });
-        
-        return newContent;
-      });
+      // ✅ Logique de remplacement ou accumulation
+      if (shouldResetNextChunk) {
+        logger.dev('[ChatFullscreen] 🔄 RESET content (nouveau round)');
+        setStreamingContent(chunk); // REMPLACER
+        setShouldResetNextChunk(false); // Reset flag
+      } else {
+        setStreamingContent(prev => prev + chunk); // ACCUMULER
+      }
+      
+      // ✅ Mettre à jour le message temporaire (synchronisé avec streamingContent)
+      setStreamingMessageTemp(prev => ({
+        role: 'assistant',
+        content: shouldResetNextChunk ? chunk : (prev?.content || '') + chunk,
+        timestamp: new Date().toISOString()
+      }));
       
       // ✅ Transition vers état "responding"
       setStreamingState('responding');
@@ -157,29 +151,30 @@ const ChatFullscreenV2: React.FC = () => {
     },
     
     onToolExecution: (toolCount: number) => {
-      logger.dev(`[ChatFullscreen] 🔧 Exécution de ${toolCount} tools, GARDE le message visible`);
+      logger.dev(`[ChatFullscreen] 🔧 Exécution de ${toolCount} tools, activation reset pour prochain chunk`);
       
       // ✅ État : Exécution des tools
       setStreamingState('executing');
       setExecutingToolCount(toolCount);
       setCurrentRound(prev => prev + 1);
       
-      // ✅ Activer le flag de remplacement pour le prochain chunk
-      shouldReplaceContentRef.current = true;
+      // ✅ Activer le flag pour REMPLACER au prochain chunk
+      setShouldResetNextChunk(true);
       
       // Le texte "Je vais chercher..." reste visible pendant l'exécution
-      // Le prochain chunk remplacera le content
+      // Le prochain chunk REMPLACERA (pas accumulera)
     },
     
     onStreamEnd: () => {
       logger.dev('[ChatFullscreen] ✅ Stream terminé, contenu:', streamingContent.substring(0, 50));
       setIsStreaming(false);
-      setStreamingState('idle'); // ✅ Retour à idle
-      setStreamingMessageTemp(null); // Supprimer le temporaire, onComplete va persister
+      setStreamingState('idle');
+      setStreamingMessageTemp(null);
       setStreamingContent('');
       setExecutingToolCount(0);
       setCurrentToolName('');
       setCurrentRound(0);
+      setShouldResetNextChunk(false); // ✅ Reset flag
     },
     
     onComplete: (fullContent: string, fullReasoning: string, toolCalls?: unknown[], toolResults?: unknown[]) => {
