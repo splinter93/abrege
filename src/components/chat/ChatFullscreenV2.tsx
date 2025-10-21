@@ -112,14 +112,18 @@ const ChatFullscreenV2: React.FC = () => {
       logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20));
       
       // ✅ Ajouter au content du round actuel
-      setStreamingContent(prev => prev + chunk);
-      
-      // ✅ Mettre à jour le message temporaire pour l'affichage
-      setStreamingMessageTemp(prevMsg => ({
-        role: 'assistant',
-        content: (prevMsg?.content || '') + chunk,
-        timestamp: new Date().toISOString()
-      }));
+      setStreamingContent(prev => {
+        const newContent = prev + chunk;
+        
+        // ✅ Mettre à jour le message temporaire avec le nouveau content
+        setStreamingMessageTemp({
+          role: 'assistant',
+          content: newContent, // ✅ Utiliser newContent au lieu de prevMsg + chunk
+          timestamp: new Date().toISOString()
+        });
+        
+        return newContent;
+      });
       
       // ✅ Scroll auto en temps réel pendant le streaming
       requestAnimationFrame(() => {
