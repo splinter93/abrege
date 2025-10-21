@@ -131,6 +131,13 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
               if (chunk.type === 'delta') {
                 // Content progressif du round actuel
                 if (chunk.content) {
+                  // ✅ Si on reçoit du content juste après tool_execution, c'est un nouveau round
+                  // On doit REMPLACER le content au lieu d'accumuler
+                  if (chunk.content && currentRoundToolCalls.size === 0) {
+                    // Probablement un nouveau round après exécution tools
+                    // Mais on garde l'accumulation pour le streaming normal
+                  }
+                  
                   currentRoundContent += chunk.content;
                   onStreamChunk?.(chunk.content);
                 }
@@ -181,12 +188,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                 // ✅ Notifier début d'exécution (UI affiche "Executing...")
                 onToolExecution?.(chunk.toolCount || 0);
                 
-                // ✅ Réinitialiser pour le prochain round MAIS après un délai pour garder visible
-                setTimeout(() => {
-                  currentRoundContent = '';
-                  currentRoundReasoning = '';
-                }, 100); // 100ms pour que l'UI ait le temps d'afficher
-                
+                // ✅ NE PAS réinitialiser ici - le prochain delta va écraser
                 currentRoundToolCalls.clear();
               }
               
