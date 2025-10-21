@@ -38,6 +38,9 @@
     "node_modules",
     "backup/**/*",
     "supabase/functions/**/*",
-    ".next/**/*"
+    ".next/**/*",
+    "examples/**/*",
+    "scripts/test-*.ts",
+    "scripts/validate-*.ts"
   ]
 }

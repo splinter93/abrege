@@ -30,7 +30,12 @@ async function exemple1_BasicUsage() {
   // Appel simple
   const response = await xai.call(
     'Explique-moi ce qu\'est un LLM en 2 phrases.',
-    { content: 'Tu es un assistant IA concis.' },
+    { 
+      type: 'chat_session',
+      id: 'example-1',
+      name: 'Example Session',
+      content: 'Tu es un assistant IA concis.' 
+    },
     []
   );
 
@@ -222,7 +227,7 @@ async function exemple5_ProviderManager() {
     // Essaie xAI, fallback automatique si erreur
     const response = await manager.callWithFallback(
       'Quelle est la capitale de la France ?',
-      { content: 'Tu es un assistant géographique.' },
+      { type: 'chat_session', id: 'example', name: 'Example', content: 'Tu es un assistant géographique.' },
       []
     );
     
@@ -394,7 +399,7 @@ async function exemple10_MonitoringMetrics() {
     try {
       await manager.call(
         `Test ${i + 1}: Dis bonjour`,
-        { content: 'Tu es un assistant.' },
+        { type: 'chat_session', id: 'example', name: 'Example', content: 'Tu es un assistant.' },
         []
       );
     } catch (error) {
