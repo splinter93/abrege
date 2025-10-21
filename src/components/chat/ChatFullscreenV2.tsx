@@ -201,8 +201,11 @@ const ChatFullscreenV2: React.FC = () => {
     },
     
     onComplete: (fullContent: string, fullReasoning: string, toolCalls?: unknown[], toolResults?: unknown[]) => {
+      // ✅ En streaming, utiliser currentToolCalls si toolCalls est vide
+      const toolCallsToUse = (toolCalls && toolCalls.length > 0) ? toolCalls : currentToolCalls;
+      
       // Convertir les types pour les handlers
-      const convertedToolCalls = toolCalls?.map(tc => {
+      const convertedToolCalls = toolCallsToUse?.map(tc => {
         const t = tc as any;
         return {
           id: t.id || '',
@@ -223,6 +226,8 @@ const ChatFullscreenV2: React.FC = () => {
           success: t.success || false
         };
       }) || [];
+      
+      logger.dev('[ChatFullscreen] 📝 onComplete avec tool_calls:', convertedToolCalls.length);
       
       handleComplete(fullContent, fullReasoning, convertedToolCalls, convertedToolResults);
     },
