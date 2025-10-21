@@ -12,6 +12,11 @@ interface UseChatResponseOptions {
   onToolCalls?: (toolCalls: Array<{ id: string; name: string; arguments: Record<string, unknown> }>, toolName: string) => void;
   onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
   onToolExecutionComplete?: (toolResults: Array<{ name: string; result: unknown; success: boolean; tool_call_id: string }>) => void;
+  // ✅ NOUVEAU : Callbacks pour streaming
+  onStreamChunk?: (content: string) => void;
+  onStreamStart?: () => void;
+  onStreamEnd?: () => void;
+  useStreaming?: boolean; // Activer/désactiver le streaming
 }
 
 interface UseChatResponseReturn {
@@ -24,7 +29,17 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingToolCalls, setPendingToolCalls] = useState<Set<string>>(new Set());
 
-  const { onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete } = options;
+  const { 
+    onComplete, 
+    onError, 
+    onToolCalls, 
+    onToolResult, 
+    onToolExecutionComplete,
+    onStreamChunk,
+    onStreamStart,
+    onStreamEnd,
+    useStreaming = false // ✅ Désactivé par défaut pour compatibilité
+  } = options;
 
   const sendMessage = useCallback(async (message: string, sessionId: string, context?: Record<string, unknown>, history?: unknown[], token?: string) => {
     try {
@@ -33,7 +48,8 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         sessionId,
         hasContext: !!context,
         historyLength: history?.length || 0,
-        hasToken: !!token
+        hasToken: !!token,
+        useStreaming
       });
 
       setIsProcessing(true);
@@ -45,14 +61,111 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      logger.dev('[useChatResponse] 🚀 Envoi de la requête à l\'API LLM:', {
-        message: message.substring(0, 50) + '...',
-        sessionId,
-        hasContext: !!context,
-        historyLength: history?.length || 0
-      });
+      // ✅ NOUVEAU : Router vers l'endpoint streaming si activé
+      if (useStreaming) {
+        logger.dev('[useChatResponse] 🌊 Mode streaming activé');
+        onStreamStart?.();
+        
+        const response = await fetch('/api/chat/llm/stream', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            message,
+            context: context || { sessionId }, 
+            history: history || [],
+            sessionId
+          })
+        });
 
-      logger.dev('[useChatResponse] 🔄 Appel fetch en cours...');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        if (!response.body) {
+          throw new Error('Response body is null');
+        }
+
+        // Consommer le stream SSE
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullContent = '';
+        let fullReasoning = '';
+        const accumulatedToolCalls: unknown[] = [];
+
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            logger.dev('[useChatResponse] ✅ Stream terminé');
+            break;
+          }
+
+          // Décoder le chunk
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            
+            if (!trimmed || !trimmed.startsWith('data: ')) {
+              continue;
+            }
+
+            const data = trimmed.slice(6);
+            
+            try {
+              const chunk = JSON.parse(data);
+              
+              // Gérer les différents types de chunks
+              if (chunk.type === 'start') {
+                logger.dev('[useChatResponse] 🚀 Stream démarré');
+                continue;
+              }
+
+              if (chunk.type === 'delta') {
+                // Content progressif
+                if (chunk.content) {
+                  fullContent += chunk.content;
+                  onStreamChunk?.(chunk.content);
+                }
+
+                // Reasoning
+                if (chunk.reasoning) {
+                  fullReasoning += chunk.reasoning;
+                }
+
+                // Tool calls
+                if (chunk.tool_calls) {
+                  accumulatedToolCalls.push(...chunk.tool_calls);
+                  onToolCalls?.(chunk.tool_calls, 'stream');
+                }
+              }
+
+              if (chunk.type === 'done') {
+                logger.dev('[useChatResponse] 🏁 Stream [DONE]');
+                onStreamEnd?.();
+                onComplete?.(fullContent, fullReasoning, accumulatedToolCalls, []);
+              }
+
+              if (chunk.type === 'error') {
+                throw new Error(chunk.error || 'Erreur stream');
+              }
+
+            } catch (parseError) {
+              logger.warn('[useChatResponse] ⚠️ Erreur parsing chunk:', parseError);
+              continue;
+            }
+          }
+        }
+
+        return;
+      }
+      
+      // ✅ MODE CLASSIQUE (sans streaming)
+      logger.dev('[useChatResponse] 🚀 Envoi de la requête à l\'API LLM (mode classique)');
       
       const response = await fetch('/api/chat/llm', {
         method: 'POST',
@@ -264,7 +377,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
     } finally {
       setIsProcessing(false);
     }
-  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete]);
+  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamEnd, useStreaming]);
 
   const reset = useCallback(() => {
     setIsProcessing(false);

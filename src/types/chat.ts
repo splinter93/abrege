@@ -60,6 +60,7 @@ export interface AssistantMessage extends BaseMessage {
   reasoning?: string;
   tool_calls?: ToolCall[];
   tool_results?: ToolResult[];
+  isStreaming?: boolean; // ✅ NOUVEAU : Indique si le message est en cours de streaming
 }
 
 /**

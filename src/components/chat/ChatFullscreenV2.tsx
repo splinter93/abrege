@@ -84,8 +84,67 @@ const ChatFullscreenV2: React.FC = () => {
     handleToolExecutionComplete
   } = useChatHandlers();
 
-  // 🎯 Hook de chat
+  // 🎯 États pour streaming
+  const [streamingContent, setStreamingContent] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  // 🎯 Hook de chat avec streaming
   const { isProcessing, sendMessage } = useChatResponse({
+    useStreaming: true, // ✅ ACTIVER LE STREAMING
+    
+    onStreamStart: () => {
+      logger.dev('[ChatFullscreen] 🌊 Stream démarré');
+      setIsStreaming(true);
+      setStreamingContent('');
+      
+      // Créer un message temporaire pour afficher le streaming
+      addMessage({
+        role: 'assistant',
+        content: '',
+        timestamp: new Date().toISOString(),
+        isStreaming: true
+      });
+    },
+    
+    onStreamChunk: (chunk: string) => {
+      logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20));
+      
+      setStreamingContent(prev => {
+        const newContent = prev + chunk;
+        
+        // Mettre à jour le dernier message en temps réel
+        updateSession(currentSession?.id || '', {
+          thread: currentSession?.thread?.map((msg, idx) => {
+            if (idx === currentSession.thread!.length - 1 && msg.role === 'assistant' && msg.isStreaming) {
+              return {
+                ...msg,
+                content: newContent
+              };
+            }
+            return msg;
+          })
+        });
+        
+        return newContent;
+      });
+    },
+    
+    onStreamEnd: () => {
+      logger.dev('[ChatFullscreen] ✅ Stream terminé');
+      setIsStreaming(false);
+      
+      // Marquer le message comme terminé
+      updateSession(currentSession?.id || '', {
+        thread: currentSession?.thread?.map((msg) => {
+          if (msg.role === 'assistant' && msg.isStreaming) {
+            const { isStreaming, ...rest } = msg;
+            return rest;
+          }
+          return msg;
+        })
+      });
+    },
+    
     onComplete: (fullContent: string, fullReasoning: string, toolCalls?: unknown[], toolResults?: unknown[]) => {
       // Convertir les types pour les handlers
       const convertedToolCalls = toolCalls?.map(tc => {
