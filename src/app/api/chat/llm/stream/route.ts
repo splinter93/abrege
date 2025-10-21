@@ -105,9 +105,32 @@ export async function POST(request: NextRequest) {
       maxTokens: finalAgentConfig?.max_tokens || 8000
     });
 
-    // Préparer les messages
-    const systemMessage = finalAgentConfig?.system_instructions || 
-      'Tu es un assistant intelligent. Tu peux utiliser des outils pour répondre aux questions.';
+    // ✅ Construire le contexte UI (comme dans la route classique)
+    const uiContext = context.uiContext || {};
+    
+    logger.dev('[Stream Route] 🕵️‍♂️ Contexte UI reçu:', {
+      hasUIContext: !!context.uiContext,
+      uiContextKeys: context.uiContext ? Object.keys(context.uiContext) : [],
+      contextType: context.type,
+      contextId: context.id
+    });
+
+    // ✅ Construire le system message avec contexte (comme la route classique)
+    const { SystemMessageBuilder } = await import('@/services/llm/SystemMessageBuilder');
+    const systemMessageBuilder = new SystemMessageBuilder();
+    
+    const systemMessage = finalAgentConfig?.system_instructions 
+      ? systemMessageBuilder.buildWithCustomInstructions(
+          finalAgentConfig.system_instructions,
+          uiContext
+        )
+      : systemMessageBuilder.buildDefault(uiContext);
+    
+    logger.dev('[Stream Route] 📝 System message construit:', {
+      length: systemMessage.length,
+      hasContext: systemMessage.includes('Contexte actuel'),
+      agentName: finalAgentConfig?.name || 'default'
+    });
     
     const messages: ChatMessage[] = [
       {
