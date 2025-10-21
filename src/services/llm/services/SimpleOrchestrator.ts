@@ -196,6 +196,10 @@ export class SimpleOrchestrator {
         
         // Configurer l'exécuteur avec les endpoints pré-parsés
         if (endpoints.size > 0) {
+          // ✅ Cleanup de l'ancien exécuteur pour éviter memory leak
+          if (this.openApiToolExecutor) {
+            this.openApiToolExecutor.cleanup();
+          }
           this.openApiToolExecutor = new OpenApiToolExecutor('', endpoints);
         }
         

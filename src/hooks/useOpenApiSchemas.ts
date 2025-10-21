@@ -151,14 +151,48 @@ export function useOpenApiSchemas(agentId?: string) {
 
   /**
    * Charger les schémas de l'agent quand l'agentId change
+   * ✅ Avec AbortController pour éviter race conditions
    */
   useEffect(() => {
-    if (agentId) {
-      loadAgentSchemas(agentId);
-    } else {
+    if (!agentId) {
       setAgentSchemas([]);
+      return;
     }
-  }, [agentId, loadAgentSchemas]);
+
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/ui/agents/${agentId}/openapi-schemas`);
+        
+        if (cancelled) return; // ✅ Évite race condition
+        
+        const data = await response.json();
+        
+        if (data.success && !cancelled) {
+          setAgentSchemas(data.schemas || []);
+          logger.dev(`[useOpenApiSchemas] ✅ ${data.schemas?.length || 0} schémas liés à l'agent ${agentId}`);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const errorMsg = err instanceof Error ? err.message : 'Erreur inconnue';
+          setError(errorMsg);
+          logger.error('[useOpenApiSchemas] ❌ Erreur chargement schémas agent:', err);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true; // ✅ Cleanup : annuler les updates si agentId change
+    };
+  }, [agentId]);
 
   return {
     allSchemas,

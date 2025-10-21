@@ -39,6 +39,14 @@ export class OpenApiToolExecutor {
   }
 
   /**
+   * ✅ NOUVEAU : Cleanup pour éviter les memory leaks
+   */
+  cleanup(): void {
+    this.endpoints.clear();
+    logger.dev(`[OpenApiToolExecutor] 🧹 Cleanup effectué`);
+  }
+
+  /**
    * Exécuter un tool call OpenAPI
    */
   async executeToolCall(toolCall: ToolCall, userToken: string): Promise<ToolResult> {

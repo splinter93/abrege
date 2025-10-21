@@ -178,12 +178,49 @@ export function useMcpServers(agentId?: string): UseMcpServersReturn {
 
   /**
    * Charge les serveurs de l'agent quand agentId change
+   * ✅ Avec cancellation pour éviter race conditions
    */
   useEffect(() => {
-    if (agentId) {
-      loadAgentServers(agentId);
+    if (!agentId) {
+      return;
     }
-  }, [agentId, loadAgentServers]);
+
+    let cancelled = false;
+
+    const load = async () => {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      try {
+        const servers = await mcpService.getAgentMcpServers(agentId);
+        
+        if (!cancelled) {
+          setState(prev => ({
+            ...prev,
+            agentServers: servers,
+            loading: false,
+          }));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'Erreur lors du chargement des serveurs MCP de l\'agent';
+          logger.error('useMcpServers.loadAgentServers:', error);
+          setState(prev => ({
+            ...prev,
+            loading: false,
+            error: errorMessage,
+          }));
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true; // ✅ Cleanup : annuler les updates si agentId change
+    };
+  }, [agentId]);
 
   return {
     ...state,
