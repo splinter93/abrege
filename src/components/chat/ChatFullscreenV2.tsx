@@ -77,7 +77,7 @@ const ChatFullscreenV2: React.FC = () => {
     messages: currentSession?.thread || []
   });
 
-  // 🎯 Handlers centralisés avec skip persistence en streaming
+  // 🎯 Handlers centralisés avec skip (on gère les tool calls différemment en streaming)
   const {
     handleComplete,
     handleError,
@@ -85,8 +85,11 @@ const ChatFullscreenV2: React.FC = () => {
     handleToolResult,
     handleToolExecutionComplete
   } = useChatHandlers({
-    skipToolCallPersistence: true // ✅ En streaming, ne pas persister "🔧 Exécution..."
+    skipToolCallPersistence: true // ✅ On va les afficher autrement (dans le message temporaire)
   });
+  
+  // 🎯 État pour tracker les tool calls du round actuel
+  const [currentToolCalls, setCurrentToolCalls] = useState<any[]>([]);
 
   // 🎯 États pour streaming (affichage progressif)
   const [streamingContent, setStreamingContent] = useState('');
@@ -133,20 +136,23 @@ const ChatFullscreenV2: React.FC = () => {
         setStreamingContent(chunk); // REMPLACER
         setStreamingMessageTemp({
           role: 'assistant',
-          content: chunk, // Nouveau content
+          content: chunk, // Nouveau content (Round 2)
           timestamp: new Date().toISOString()
+          // Pas de tool_calls au Round 2
         });
+        setCurrentToolCalls([]); // ✅ Clear tool calls du round précédent
         setShouldResetNextChunk(false); // Reset flag
       } else {
         // ACCUMULER
         setStreamingContent(prev => {
           const newContent = prev + chunk;
           
-          setStreamingMessageTemp({
+          setStreamingMessageTemp(prevMsg => ({
             role: 'assistant',
             content: newContent,
-            timestamp: new Date().toISOString()
-          });
+            timestamp: new Date().toISOString(),
+            tool_calls: prevMsg?.tool_calls // ✅ Garder les tool_calls si présents
+          }));
           
           return newContent;
         });
@@ -172,8 +178,14 @@ const ChatFullscreenV2: React.FC = () => {
       // ✅ Activer le flag pour REMPLACER au prochain chunk
       setShouldResetNextChunk(true);
       
-      // Le texte "Je vais chercher..." reste visible pendant l'exécution
-      // Le prochain chunk REMPLACERA (pas accumulera)
+      // ✅ Ajouter les tool calls au message temporaire pour qu'ils s'affichent
+      setStreamingMessageTemp(prev => prev ? {
+        ...prev,
+        tool_calls: currentToolCalls
+      } : null);
+      
+      // Le texte "Je vais chercher..." + tool calls restent visibles pendant l'exécution
+      // Le prochain chunk remplacera le content (mais pas les tool_calls qu'on va clear)
     },
     
     onStreamEnd: () => {
@@ -230,6 +242,12 @@ const ChatFullscreenV2: React.FC = () => {
           }
         };
       });
+      
+      // ✅ En streaming : stocker les tool calls pour les afficher dans le message temporaire
+      setCurrentToolCalls(convertedToolCalls);
+      logger.dev('[ChatFullscreen] 🔧 Tool calls stockés pour affichage:', convertedToolCalls.length);
+      
+      // Appeler le handler quand même (mais skip persistence)
       handleToolCalls(convertedToolCalls, toolName);
     },
     onToolResult: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => {
