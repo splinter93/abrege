@@ -297,21 +297,16 @@ export async function POST(request: NextRequest) {
               timestamp: new Date().toISOString()
             });
 
-            // Exécuter chaque tool call
-            const { SimpleToolExecutor } = await import('@/services/llm/services/SimpleToolExecutor');
-            const { OpenApiToolExecutor } = await import('@/services/llm/executors/OpenApiToolExecutor');
-            
-            const toolExecutor = new SimpleToolExecutor();
-            const openApiExecutor = new OpenApiToolExecutor('', new Map()); // TODO: endpoints
+            // ✅ Exécuter les tool calls avec ApiV2ToolExecutor
+            const { ApiV2ToolExecutor } = await import('@/services/llm/executors/ApiV2ToolExecutor');
+            const toolExecutor = new ApiV2ToolExecutor();
             
             for (const toolCall of accumulatedToolCalls) {
               try {
-                // Exécuter le tool
-                const result = await toolExecutor.executeToolCall(
-                  toolCall,
-                  userToken,
-                  context
-                );
+                logger.dev(`[Stream Route] 🔧 Exécution tool: ${toolCall.function.name}`);
+                
+                // ✅ Exécuter le tool avec ApiV2ToolExecutor
+                const result = await toolExecutor.executeToolCall(toolCall, userToken);
 
                 // Ajouter le résultat aux messages
                 currentMessages.push({
@@ -328,19 +323,34 @@ export async function POST(request: NextRequest) {
                   toolCallId: toolCall.id,
                   toolName: toolCall.function.name,
                   success: result.success,
+                  result: result.content,
                   timestamp: Date.now()
                 });
+
+                logger.dev(`[Stream Route] ✅ Tool ${toolCall.function.name} exécuté (success: ${result.success})`);
 
               } catch (toolError) {
                 logger.error(`[Stream Route] ❌ Erreur tool ${toolCall.function.name}:`, toolError);
                 
                 // Ajouter un résultat d'erreur
+                const errorContent = `Erreur: ${toolError instanceof Error ? toolError.message : String(toolError)}`;
+                
                 currentMessages.push({
                   role: 'tool',
                   tool_call_id: toolCall.id,
                   name: toolCall.function.name,
-                  content: `Erreur: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
+                  content: errorContent,
                   timestamp: new Date().toISOString()
+                });
+                
+                // Envoyer l'erreur au client
+                sendSSE({
+                  type: 'tool_result',
+                  toolCallId: toolCall.id,
+                  toolName: toolCall.function.name,
+                  success: false,
+                  result: errorContent,
+                  timestamp: Date.now()
                 });
               }
             }

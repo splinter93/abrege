@@ -164,15 +164,21 @@ const ChatFullscreenV2: React.FC = () => {
       handleComplete(fullContent, fullReasoning, convertedToolCalls, convertedToolResults);
     },
     onError: handleError,
-    onToolCalls: (toolCalls: Array<{ id: string; name: string; arguments: Record<string, unknown> }>, toolName: string) => {
-      const convertedToolCalls = toolCalls.map(tc => ({
-        id: tc.id,
-        type: 'function' as const,
-        function: {
-          name: tc.name,
-          arguments: JSON.stringify(tc.arguments)
-        }
-      }));
+    onToolCalls: (toolCalls: Array<{ id: string; name?: string; arguments?: Record<string, unknown>; type?: string; function?: { name?: string; arguments?: string } }>, toolName: string) => {
+      const convertedToolCalls = toolCalls.map(tc => {
+        // ✅ Support des 2 structures : {name, arguments} OU {function: {name, arguments}}
+        const name = tc.name || tc.function?.name || '';
+        const args = tc.arguments || tc.function?.arguments || '';
+        
+        return {
+          id: tc.id,
+          type: 'function' as const,
+          function: {
+            name: name,
+            arguments: typeof args === 'string' ? args : JSON.stringify(args)
+          }
+        };
+      });
       handleToolCalls(convertedToolCalls, toolName);
     },
     onToolResult: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => {
