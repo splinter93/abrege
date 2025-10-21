@@ -109,7 +109,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
         ` }} />
       </head>
-      <body className={`${notoSans.className} ${geistSans.variable} ${geistMono.variable} app-container`}>
+      <body className={`${geistSans.className} ${geistSans.variable} ${geistMono.variable} ${notoSans.variable} app-container`}>
         <LanguageProvider>
           <Toaster position="top-right" />
           {children}
