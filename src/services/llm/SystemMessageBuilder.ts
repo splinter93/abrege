@@ -109,6 +109,47 @@ Exemple de bonne gestion d'erreur :
 TOUJOURS rester utile et positif, même quand les outils échouent. L'utilisateur compte sur toi pour gérer ces situations avec élégance.`;
 
 
+      // ✅ NOUVEAU : Injection contexte UI compact (date, device, page)
+      if (context && typeof context === 'object') {
+        const ctx = context as any; // Cast pour accéder aux props optionnelles
+        const contextParts: string[] = [];
+        
+        // Format ultra-compact avec emojis (comme AgentOrchestrator)
+        if (ctx.time && ctx.device && ctx.user) {
+          const deviceEmoji = ctx.device.type === 'mobile' ? '📱' : ctx.device.type === 'tablet' ? '📲' : '💻';
+          const localeFlag = ctx.user.locale === 'fr' ? '🇫🇷' : '🇬🇧';
+          contextParts.push(`📅 ${ctx.time.local} (${ctx.timezone || ctx.time.timezone}) | ${deviceEmoji} ${ctx.device.type} | ${localeFlag} ${ctx.user.locale.toUpperCase()}`);
+          
+          // Page actuelle
+          if (ctx.page) {
+            const pageEmoji = {
+              chat: '💬',
+              editor: '✍️',
+              folder: '📁',
+              classeur: '📚',
+              home: '🏠'
+            }[ctx.page.type] || '❓';
+            contextParts.push(`${pageEmoji} ${ctx.page.type}${ctx.page.action ? ` (${ctx.page.action})` : ''}`);
+          }
+          
+          // Contexte actif
+          if (ctx.active?.note) {
+            contextParts.push(`📝 Note: ${ctx.active.note.title}`);
+          }
+          if (ctx.active?.folder) {
+            contextParts.push(`📁 Dossier: ${ctx.active.folder.name}`);
+          }
+          if (ctx.active?.classeur) {
+            contextParts.push(`📚 Classeur: ${ctx.active.classeur.name}`);
+          }
+        }
+
+        if (contextParts.length > 0) {
+          content += `\n\n## Contexte Actuel\n${contextParts.join('\n')}`;
+          logger.dev(`[SystemMessageBuilder] 🌍 Contexte UI injecté (compact)`);
+        }
+      }
+
       // 2. Template contextuel avec variables
       if (agentConfig.context_template) {
         try {
