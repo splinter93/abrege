@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     // ✅ Récupérer l'agent comme la route classique (table 'agents')
     const agentId = context.agentId;
-    const provider = context.provider || 'xai';
+    const providerName = context.provider || 'xai';
     let finalAgentConfig = agentConfig;
     
     try {
@@ -102,12 +102,12 @@ export async function POST(request: NextRequest) {
       }
 
       // 2) Sinon fallback par provider
-      if (!finalAgentConfig && provider) {
-        logger.dev(`[Stream Route] 🔍 Récupération de l'agent pour le provider: ${provider}`);
+      if (!finalAgentConfig && providerName) {
+        logger.dev(`[Stream Route] 🔍 Récupération de l'agent pour le provider: ${providerName}`);
         const { data: agent, error } = await supabase
           .from('agents')
           .select('*')
-          .eq('provider', provider)
+          .eq('provider', providerName)
           .eq('is_active', true)
           .order('priority', { ascending: false })
           .limit(1)
