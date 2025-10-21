@@ -120,15 +120,19 @@ const ChatFullscreenV2: React.FC = () => {
     },
     
     onStreamChunk: (chunk: string) => {
-      logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20));
+      logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20), 'état actuel:', streamingState);
       
       // ✅ Ajouter au content du round actuel
       setStreamingContent(prev => {
         // ✅ Si on était en état "executing", c'est un nouveau round → REMPLACER
-        const newContent = streamingState === 'executing' ? chunk : prev + chunk;
+        let newContent: string;
         
-        // ✅ Transition vers état "responding"
-        setStreamingState('responding');
+        if (streamingState === 'executing') {
+          logger.dev('[ChatFullscreen] 🔄 Nouveau round détecté, REMPLACEMENT du texte');
+          newContent = chunk; // REMPLACER
+        } else {
+          newContent = prev + chunk; // ACCUMULER (round en cours)
+        }
         
         // ✅ Mettre à jour le message temporaire avec le nouveau content
         setStreamingMessageTemp({
@@ -139,6 +143,9 @@ const ChatFullscreenV2: React.FC = () => {
         
         return newContent;
       });
+      
+      // ✅ Transition vers état "responding" APRÈS avoir géré le content
+      setStreamingState('responding');
       
       // ✅ Scroll auto en temps réel pendant le streaming
       requestAnimationFrame(() => {
