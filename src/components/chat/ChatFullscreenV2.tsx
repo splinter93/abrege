@@ -125,21 +125,32 @@ const ChatFullscreenV2: React.FC = () => {
     onStreamChunk: (chunk: string) => {
       logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20), 'shouldReset:', shouldResetNextChunk);
       
-      // ✅ Logique de remplacement ou accumulation
-      if (shouldResetNextChunk) {
+      // ✅ Décider si on remplace ou accumule
+      const isNewRound = shouldResetNextChunk;
+      
+      if (isNewRound) {
         logger.dev('[ChatFullscreen] 🔄 RESET content (nouveau round)');
         setStreamingContent(chunk); // REMPLACER
+        setStreamingMessageTemp({
+          role: 'assistant',
+          content: chunk, // Nouveau content
+          timestamp: new Date().toISOString()
+        });
         setShouldResetNextChunk(false); // Reset flag
       } else {
-        setStreamingContent(prev => prev + chunk); // ACCUMULER
+        // ACCUMULER
+        setStreamingContent(prev => {
+          const newContent = prev + chunk;
+          
+          setStreamingMessageTemp({
+            role: 'assistant',
+            content: newContent,
+            timestamp: new Date().toISOString()
+          });
+          
+          return newContent;
+        });
       }
-      
-      // ✅ Mettre à jour le message temporaire (synchronisé avec streamingContent)
-      setStreamingMessageTemp(prev => ({
-        role: 'assistant',
-        content: shouldResetNextChunk ? chunk : (prev?.content || '') + chunk,
-        timestamp: new Date().toISOString()
-      }));
       
       // ✅ Transition vers état "responding"
       setStreamingState('responding');
