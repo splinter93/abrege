@@ -344,6 +344,26 @@
   letter-spacing: 0.05em;
 }
 
+/* Bouton "Voir plus" agents */
+.sidebar-show-more-btn {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 4px;
+  background: transparent;
+  border: none;
+  color: var(--chat-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--chat-transition-fast);
+  text-decoration: none;
+}
+
+.sidebar-show-more-btn:hover {
+  text-decoration: underline;
+}
+
 .sidebar-item-clean {
   display: flex;
   align-items: center;

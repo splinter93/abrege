@@ -37,6 +37,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const { agents, loading: agentsLoading } = useAgents();
   const [searchQuery, setSearchQuery] = useState('');
   const [agentsOpen, setAgentsOpen] = useState(true);
+  const [showAllAgents, setShowAllAgents] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
 
@@ -122,30 +123,40 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
               <span>Chargement...</span>
             </div>
           ) : (
-            agents.map((agent: Agent) => (
-              <div key={agent.id} className="sidebar-agent-row">
+            <>
+              {(showAllAgents ? agents : agents.slice(0, 5)).map((agent: Agent) => (
+                <div key={agent.id} className="sidebar-agent-row">
+                  <button
+                    onClick={() => handleSelectAgent(agent)}
+                    className={`sidebar-item-clean ${!currentSession && selectedAgent?.id === agent.id ? 'active' : ''}`}
+                  >
+                    <div className="sidebar-item-icon-clean">
+                      {agent.profile_picture ? (
+                        <img 
+                          src={agent.profile_picture} 
+                          alt={agent.name}
+                          className="agent-avatar"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        "🤖"
+                      )}
+                    </div>
+                    <span>{agent.name}</span>
+                  </button>
+                </div>
+              ))}
+              {agents.length > 5 && (
                 <button
-                  onClick={() => handleSelectAgent(agent)}
-                  className={`sidebar-item-clean ${selectedAgent?.id === agent.id ? 'active' : ''}`}
+                  onClick={() => setShowAllAgents(!showAllAgents)}
+                  className="sidebar-show-more-btn"
                 >
-                  <div className="sidebar-item-icon-clean">
-                    {agent.profile_picture ? (
-                      <img 
-                        src={agent.profile_picture} 
-                        alt={agent.name}
-                        className="agent-avatar"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      "🤖"
-                    )}
-                  </div>
-                  <span>{agent.name}</span>
+                  {showAllAgents ? 'Voir moins' : `Voir ${agents.length - 5} de plus`}
                 </button>
-              </div>
-            ))
+              )}
+            </>
           )}
         </div>
 
