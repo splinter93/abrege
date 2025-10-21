@@ -90,8 +90,8 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
-        let fullContent = '';
-        let fullReasoning = '';
+        let currentRoundContent = ''; // ✅ Content du round actuel seulement
+        let currentRoundReasoning = ''; // ✅ Reasoning du round actuel
         let currentRoundToolCalls = new Map<string, any>(); // ✅ Map pour le round actuel
         const allNotifiedToolCallIds = new Set<string>(); // ✅ Track pour éviter re-notifications
 
@@ -127,15 +127,15 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
               }
 
               if (chunk.type === 'delta') {
-                // Content progressif
+                // Content progressif du round actuel
                 if (chunk.content) {
-                  fullContent += chunk.content;
+                  currentRoundContent += chunk.content;
                   onStreamChunk?.(chunk.content);
                 }
 
-                // Reasoning
+                // Reasoning du round actuel
                 if (chunk.reasoning) {
-                  fullReasoning += chunk.reasoning;
+                  currentRoundReasoning += chunk.reasoning;
                 }
 
                 // ✅ Tool calls avec déduplication par ID
@@ -161,7 +161,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                 }
               }
               
-              // ✅ Gérer tool_execution : notifier et réinitialiser la map du round
+              // ✅ Gérer tool_execution : notifier et réinitialiser pour le prochain round
               if (chunk.type === 'tool_execution') {
                 logger.dev(`[useChatResponse] 🔧 Exécution de ${chunk.toolCount || 0} tools...`);
                 
@@ -176,7 +176,9 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                   toolCallsToNotify.forEach(tc => allNotifiedToolCallIds.add(tc.id));
                 }
                 
-                // ✅ Réinitialiser pour le prochain round
+                // ✅ IMPORTANT : Réinitialiser le content pour le prochain round
+                currentRoundContent = '';
+                currentRoundReasoning = '';
                 currentRoundToolCalls.clear();
               }
               
@@ -188,8 +190,8 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
               if (chunk.type === 'done') {
                 logger.dev('[useChatResponse] 🏁 Stream [DONE]');
                 onStreamEnd?.();
-                // ✅ Passer une liste vide de tool calls (déjà notifiés individuellement)
-                onComplete?.(fullContent, fullReasoning, [], []);
+                // ✅ Passer le content du dernier round (réponse finale)
+                onComplete?.(currentRoundContent, currentRoundReasoning, [], []);
               }
 
               if (chunk.type === 'error') {
