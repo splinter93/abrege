@@ -680,7 +680,7 @@ const ChatFullscreenV2: React.FC = () => {
               ))}
               
               {/* ✅ Message temporaire pour streaming progressif (UI only) */}
-              {isStreaming && streamingMessageTemp && streamingMessageTemp.content && streamingState === 'responding' && (
+              {isStreaming && streamingMessageTemp && streamingMessageTemp.content && (
                 <ChatMessage 
                   key="streaming-temp"
                   message={streamingMessageTemp}
@@ -689,8 +689,8 @@ const ChatFullscreenV2: React.FC = () => {
                 />
               )}
               
-              {/* ✅ Indicateur d'état streaming - seulement thinking ou executing */}
-              {isStreaming && (streamingState === 'thinking' || streamingState === 'executing') && (
+              {/* ✅ Indicateur d'état streaming - APRÈS le message */}
+              {isStreaming && streamingState === 'executing' && (
                 <div>
                   <StreamingIndicator 
                     state={streamingState}
