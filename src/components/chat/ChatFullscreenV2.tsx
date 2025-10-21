@@ -90,7 +90,7 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 Hook de chat avec streaming
   const { isProcessing, sendMessage } = useChatResponse({
-    useStreaming: true, // ✅ ACTIVER LE STREAMING
+    useStreaming: false, // ✅ DÉSACTIVÉ temporairement pour stabilité (réactiver après tests)
     
     onStreamStart: () => {
       logger.dev('[ChatFullscreen] 🌊 Stream démarré');
@@ -98,12 +98,20 @@ const ChatFullscreenV2: React.FC = () => {
       setStreamingContent('');
       
       // Créer un message temporaire pour afficher le streaming
-      addMessage({
+      const tempMessage: AssistantMessage = {
         role: 'assistant',
         content: '',
-        timestamp: new Date().toISOString(),
-        isStreaming: true
-      });
+        timestamp: new Date().toISOString()
+      };
+      
+      // ✅ Utiliser state local pour le streaming (évite problèmes de sync)
+      if (currentSession) {
+        const updatedThread = [...currentSession.thread, tempMessage];
+        setCurrentSession({
+          ...currentSession,
+          thread: updatedThread
+        });
+      }
     },
     
     onStreamChunk: (chunk: string) => {
@@ -112,18 +120,23 @@ const ChatFullscreenV2: React.FC = () => {
       setStreamingContent(prev => {
         const newContent = prev + chunk;
         
-        // Mettre à jour le dernier message en temps réel
-        updateSession(currentSession?.id || '', {
-          thread: currentSession?.thread?.map((msg, idx) => {
-            if (idx === currentSession.thread!.length - 1 && msg.role === 'assistant' && msg.isStreaming) {
+        // ✅ Mettre à jour le dernier message localement
+        if (currentSession) {
+          const updatedThread = currentSession.thread.map((msg, idx) => {
+            if (idx === currentSession.thread.length - 1 && msg.role === 'assistant') {
               return {
                 ...msg,
                 content: newContent
               };
             }
             return msg;
-          })
-        });
+          });
+          
+          setCurrentSession({
+            ...currentSession,
+            thread: updatedThread
+          });
+        }
         
         return newContent;
       });
@@ -132,17 +145,7 @@ const ChatFullscreenV2: React.FC = () => {
     onStreamEnd: () => {
       logger.dev('[ChatFullscreen] ✅ Stream terminé');
       setIsStreaming(false);
-      
-      // Marquer le message comme terminé
-      updateSession(currentSession?.id || '', {
-        thread: currentSession?.thread?.map((msg) => {
-          if (msg.role === 'assistant' && msg.isStreaming) {
-            const { isStreaming, ...rest } = msg;
-            return rest;
-          }
-          return msg;
-        })
-      });
+      setStreamingContent('');
     },
     
     onComplete: (fullContent: string, fullReasoning: string, toolCalls?: unknown[], toolResults?: unknown[]) => {
