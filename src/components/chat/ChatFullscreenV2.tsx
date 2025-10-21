@@ -21,6 +21,7 @@ import ChatInput from './ChatInput';
 import ChatMessage from './ChatMessage';
 import ChatKebabMenu from './ChatKebabMenu';
 import SidebarUltraClean from './SidebarUltraClean';
+import { StreamingIndicator, type StreamingState } from './StreamingIndicator';
 import { simpleLogger as logger } from '@/utils/logger';
 import Link from 'next/link';
 
@@ -89,6 +90,12 @@ const ChatFullscreenV2: React.FC = () => {
   const [streamingContent, setStreamingContent] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessageTemp, setStreamingMessageTemp] = useState<ChatMessageType | null>(null);
+  
+  // 🎯 États pour UI Think-Aloud
+  const [streamingState, setStreamingState] = useState<StreamingState>('idle');
+  const [executingToolCount, setExecutingToolCount] = useState(0);
+  const [currentToolName, setCurrentToolName] = useState<string>('');
+  const [currentRound, setCurrentRound] = useState(0);
 
   // 🎯 Hook de chat avec streaming
   const { isProcessing, sendMessage } = useChatResponse({
@@ -98,6 +105,8 @@ const ChatFullscreenV2: React.FC = () => {
       logger.dev('[ChatFullscreen] 🌊 Stream démarré');
       setIsStreaming(true);
       setStreamingContent('');
+      setStreamingState('thinking'); // ✅ État : Réflexion
+      setCurrentRound(1);
       
       // ✅ Créer un message temporaire pour l'affichage (UI only, pas dans le store)
       const tempMessage: ChatMessageType = {
@@ -110,6 +119,9 @@ const ChatFullscreenV2: React.FC = () => {
     
     onStreamChunk: (chunk: string) => {
       logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20));
+      
+      // ✅ Transition vers état "responding" dès le premier chunk de texte
+      setStreamingState('responding');
       
       // ✅ Ajouter au content du round actuel
       setStreamingContent(prev => {
@@ -133,6 +145,12 @@ const ChatFullscreenV2: React.FC = () => {
     
     onToolExecution: (toolCount: number) => {
       logger.dev(`[ChatFullscreen] 🔧 Exécution de ${toolCount} tools, réinitialisation message temporaire`);
+      
+      // ✅ État : Exécution des tools
+      setStreamingState('executing');
+      setExecutingToolCount(toolCount);
+      setCurrentRound(prev => prev + 1);
+      
       // ✅ Réinitialiser le message temporaire entre les rounds
       setStreamingMessageTemp({
         role: 'assistant',
@@ -145,8 +163,12 @@ const ChatFullscreenV2: React.FC = () => {
     onStreamEnd: () => {
       logger.dev('[ChatFullscreen] ✅ Stream terminé, contenu:', streamingContent.substring(0, 50));
       setIsStreaming(false);
+      setStreamingState('idle'); // ✅ Retour à idle
       setStreamingMessageTemp(null); // Supprimer le temporaire, onComplete va persister
       setStreamingContent('');
+      setExecutingToolCount(0);
+      setCurrentToolName('');
+      setCurrentRound(0);
     },
     
     onComplete: (fullContent: string, fullReasoning: string, toolCalls?: unknown[], toolResults?: unknown[]) => {
@@ -645,8 +667,18 @@ const ChatFullscreenV2: React.FC = () => {
                 />
               ))}
               
+              {/* ✅ Indicateur d'état streaming (Think-Aloud) */}
+              {isStreaming && streamingState !== 'idle' && (
+                <StreamingIndicator 
+                  state={streamingState}
+                  toolCount={executingToolCount}
+                  currentTool={currentToolName}
+                  roundNumber={currentRound}
+                />
+              )}
+              
               {/* ✅ Message temporaire pour streaming progressif (UI only) */}
-              {isStreaming && streamingMessageTemp && (
+              {isStreaming && streamingMessageTemp && streamingMessageTemp.content && (
                 <ChatMessage 
                   key="streaming-temp"
                   message={streamingMessageTemp}

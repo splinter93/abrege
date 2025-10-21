@@ -1,0 +1,158 @@
+/**
+ * StreamingIndicator - Styles pour les états du streaming
+ * Design moderne avec animations fluides
+ */
+
+.streaming-indicator-container {
+  padding: 12px 0;
+  margin: 8px 0;
+}
+
+.streaming-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-secondary, #f7f7f8);
+  border-radius: 12px;
+  border: 1px solid var(--border-light, #e5e5e7);
+  max-width: fit-content;
+  transition: all 0.3s ease;
+}
+
+.streaming-indicator.thinking {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #bae6fd;
+}
+
+.streaming-indicator.executing {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #fcd34d;
+}
+
+.streaming-indicator.responding {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #86efac;
+}
+
+.indicator-icon {
+  font-size: 18px;
+  line-height: 1;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.indicator-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.indicator-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary, #1a1a1a);
+}
+
+.indicator-dots {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.indicator-dots .dot {
+  opacity: 0;
+  animation: blink 1.4s infinite;
+}
+
+.indicator-dots .dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.indicator-dots .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.indicator-dots .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.round-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  color: var(--text-secondary, #666);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes blink {
+  0%, 20% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  60%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .streaming-indicator {
+    background: var(--bg-secondary-dark, #2a2a2a);
+    border-color: var(--border-dark, #404040);
+  }
+
+  .streaming-indicator.thinking {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    border-color: #3b82f6;
+  }
+
+  .streaming-indicator.executing {
+    background: linear-gradient(135deg, #78350f 0%, #f59e0b 100%);
+    border-color: #fbbf24;
+  }
+
+  .streaming-indicator.responding {
+    background: linear-gradient(135deg, #14532d 0%, #22c55e 100%);
+    border-color: #4ade80;
+  }
+
+  .indicator-label {
+    color: var(--text-primary-dark, #e5e5e7);
+  }
+
+  .round-badge {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-secondary-dark, #a0a0a0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .streaming-indicator {
+    padding: 10px 14px;
+  }
+
+  .indicator-icon {
+    font-size: 16px;
+  }
+
+  .indicator-label {
+    font-size: 12px;
+  }
+}
+
