@@ -147,12 +147,19 @@ const ChatFullscreenV2: React.FC = () => {
         setStreamingContent(prev => {
           const newContent = prev + chunk;
           
-          setStreamingMessageTemp(prevMsg => ({
-            role: 'assistant',
-            content: newContent,
-            timestamp: new Date().toISOString(),
-            tool_calls: prevMsg?.tool_calls // ✅ Garder les tool_calls si présents
-          }));
+          setStreamingMessageTemp(prevMsg => {
+            // ✅ Type guard pour accéder à tool_calls de manière sûre
+            const existingToolCalls = (prevMsg && prevMsg.role === 'assistant' && 'tool_calls' in prevMsg) 
+              ? prevMsg.tool_calls 
+              : undefined;
+            
+            return {
+              role: 'assistant',
+              content: newContent,
+              timestamp: new Date().toISOString(),
+              tool_calls: existingToolCalls // ✅ Garder les tool_calls si présents
+            };
+          });
           
           return newContent;
         });
@@ -197,7 +204,8 @@ const ChatFullscreenV2: React.FC = () => {
       setExecutingToolCount(0);
       setCurrentToolName('');
       setCurrentRound(0);
-      setShouldResetNextChunk(false); // ✅ Reset flag
+      setCurrentToolCalls([]); // ✅ Clear tool calls
+      setShouldResetNextChunk(false);
     },
     
     onComplete: (fullContent: string, fullReasoning: string, toolCalls?: unknown[], toolResults?: unknown[]) => {
@@ -230,6 +238,9 @@ const ChatFullscreenV2: React.FC = () => {
       logger.dev('[ChatFullscreen] 📝 onComplete avec tool_calls:', convertedToolCalls.length);
       
       handleComplete(fullContent, fullReasoning, convertedToolCalls, convertedToolResults);
+      
+      // ✅ IMPORTANT : Clear currentToolCalls après utilisation
+      setCurrentToolCalls([]);
     },
     onError: handleError,
     onToolCalls: (toolCalls: Array<{ id: string; name?: string; arguments?: Record<string, unknown>; type?: string; function?: { name?: string; arguments?: string } }>, toolName: string) => {
@@ -613,7 +624,7 @@ const ChatFullscreenV2: React.FC = () => {
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
               <polyline points="9 22 9 12 15 12 15 22"></polyline>
             </svg>
-          </Link>
+            </Link>
           
           {/* Bouton toggle sidebar dans le header */}
           <button
@@ -671,15 +682,15 @@ const ChatFullscreenV2: React.FC = () => {
           onMouseEnter={handleSidebarMouseEnter}
           onMouseLeave={handleSidebarMouseLeave}
         >
-          <SidebarUltraClean
+        <SidebarUltraClean
             isOpen={isDesktop ? (sidebarOpen || sidebarHovered) : sidebarOpen}
-            isDesktop={isDesktop}
-            onClose={() => {
-              if (user && !authLoading) {
-                setSidebarOpen(false);
-              }
-            }}
-          />
+          isDesktop={isDesktop}
+          onClose={() => {
+            if (user && !authLoading) {
+              setSidebarOpen(false);
+            }
+          }}
+        />
         </div>
 
         {/* Overlay mobile/tablette */}
