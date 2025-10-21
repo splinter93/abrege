@@ -10,6 +10,7 @@ import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { 
   ChatMessage as ChatMessageType, 
+  AssistantMessage,
   isEmptyAnalysisMessage,
   hasToolCalls,
   hasReasoning
