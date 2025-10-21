@@ -657,8 +657,7 @@ const ChatFullscreenV2: React.FC = () => {
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
             </svg>
           </button>
-        </div>
-        <div className="chatgpt-header-right">
+          
           {/* Agent actif */}
           {selectedAgent && (
             <div className="chat-active-agent">
@@ -666,7 +665,8 @@ const ChatFullscreenV2: React.FC = () => {
               <span className="agent-name">{selectedAgent.name}</span>
             </div>
           )}
-          
+        </div>
+        <div className="chatgpt-header-right">
           <ChatKebabMenu
             historyLimit={currentSession?.history_limit || 30}
             onHistoryLimitChange={handleHistoryLimitChange}
