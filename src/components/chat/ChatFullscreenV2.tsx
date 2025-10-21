@@ -568,7 +568,7 @@ const ChatFullscreenV2: React.FC = () => {
               loading={loading}
               textareaRef={textareaRef}
               disabled={false}
-              placeholder="Tapez votre message..."
+              placeholder="Commencez à discuter..."
             />
           </div>
         </div>

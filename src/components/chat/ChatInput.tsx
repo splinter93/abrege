@@ -13,7 +13,7 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, disabled = false, placeholder = "Envoyer un message..." }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, disabled = false, placeholder = "Commencez à discuter..." }) => {
   const [message, setMessage] = React.useState('');
   const [audioError, setAudioError] = useState<string | null>(null);
 
