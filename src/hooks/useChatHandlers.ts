@@ -112,6 +112,14 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
 
     logger.tool('[useChatHandlers] 🔧 Tool calls détectés:', { toolCalls, toolName });
     
+    // ✅ En mode streaming, ne pas persister le message tool calls
+    // Le message "Je vais chercher..." du LLM est déjà dans le stream
+    if (options.skipToolCallPersistence) {
+      logger.dev('[useChatHandlers] 🌊 Mode streaming : skip persistance message tool calls');
+      options.onToolCalls?.(toolCalls, toolName);
+      return;
+    }
+    
     const toolCallMessage = {
       role: 'assistant' as const,
       content: '🔧 Exécution des outils en cours...',
@@ -123,7 +131,7 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
     await addMessage(toolCallMessage, { persist: true });
     
     options.onToolCalls?.(toolCalls, toolName);
-  }, [requireAuth, addMessage, options.onToolCalls]);
+  }, [requireAuth, addMessage, options.onToolCalls, options.skipToolCallPersistence]);
 
   const handleToolResult = useCallback(async (
     toolName: string, 

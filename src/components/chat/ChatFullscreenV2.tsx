@@ -77,14 +77,16 @@ const ChatFullscreenV2: React.FC = () => {
     messages: currentSession?.thread || []
   });
 
-  // 🎯 Handlers centralisés
+  // 🎯 Handlers centralisés avec skip persistence en streaming
   const {
     handleComplete,
     handleError,
     handleToolCalls,
     handleToolResult,
     handleToolExecutionComplete
-  } = useChatHandlers();
+  } = useChatHandlers({
+    skipToolCallPersistence: true // ✅ En streaming, ne pas persister "🔧 Exécution..."
+  });
 
   // 🎯 États pour streaming (affichage progressif)
   const [streamingContent, setStreamingContent] = useState('');
