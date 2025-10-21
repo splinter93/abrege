@@ -230,6 +230,36 @@
   gap: var(--chat-space-md);
 }
 
+/* Agent actif dans le header */
+.chat-active-agent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--chat-overlay-soft);
+  border-radius: var(--chat-radius-md);
+  transition: all var(--chat-transition-fast);
+}
+
+.chat-active-agent:hover {
+  background: var(--chat-overlay-active);
+}
+
+.agent-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.agent-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--chat-text-primary);
+  white-space: nowrap;
+}
+
 .chatgpt-sidebar-toggle-btn-header {
   display: flex;
   align-items: center;

@@ -659,6 +659,16 @@ const ChatFullscreenV2: React.FC = () => {
           </button>
         </div>
         <div className="chatgpt-header-right">
+          {/* Agent actif */}
+          {selectedAgent && (
+            <div className="chat-active-agent">
+              {selectedAgent.icon && (
+                <span className="agent-icon">{selectedAgent.icon}</span>
+              )}
+              <span className="agent-name">{selectedAgent.name}</span>
+            </div>
+          )}
+          
           <ChatKebabMenu
             historyLimit={currentSession?.history_limit || 30}
             onHistoryLimitChange={handleHistoryLimitChange}
