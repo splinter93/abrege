@@ -1,6 +1,6 @@
 # Audit Streaming Implementation - Oct 21, 2025
 
-## 📊 Score Global : 7/10
+## 📊 Score Global : 9/10 (Après Fixes Option A)
 
 ### ✅ Points Forts (Ce qui marche)
 
@@ -15,35 +15,39 @@
 - ✅ Pas de TODO, pas de `any[]`, pas d'erreurs linter
 - ✅ Error handling avec try/catch partout
 
-**Problèmes** :
-- ⚠️ Tool executor créé à chaque loop (devrait être réutilisé)
-- ⚠️ Accumulation progressive des tool_calls peut causer doublons si chunks malformés
+**Problèmes résolus** :
+- ✅ Tool executor créé UNE FOIS avant loop (optimisé)
+- ✅ Timeout 60s sur stream (pas de blocage infini)
+- ✅ checkTimeout() avant chaque opération
 
-#### 2. Architecture Frontend (7/10)
+#### 2. Architecture Frontend (9/10)
 - ✅ useChatResponse avec flag `useStreaming`
 - ✅ Déduplication tool calls par ID (Map)
 - ✅ Gestion événements SSE (start, delta, tool_execution, tool_result, done)
 - ✅ Callbacks pour UI (onStreamChunk, onToolExecution, etc.)
 - ✅ Compatibilité mode classique maintenue
 
-**Problèmes** :
-- ❌ CRITIQUE : `currentRoundContent` pas réinitialisé correctement entre rounds
-- ❌ Accumulation texte Round 1 + Round 2 dans certains cas
-- ⚠️ shouldReplaceContentRef peut être désynchronisé
-- ⚠️ streamingState closure problem (état pas à jour dans setStreamingContent)
+**Problèmes résolus** :
+- ✅ `shouldResetNextChunk` state au lieu de ref (pas de closure problem)
+- ✅ Remplacement strict Round 2 (pas accumulation)
+- ✅ Synchronisation parfaite flag reset
+- ✅ Logique claire if/else pour nouveau round vs accumulation
 
-#### 3. UX & UI (6/10)
+#### 3. UX & UI (9/10)
 - ✅ Affichage progressif token par token
 - ✅ Scroll auto fluide avec requestAnimationFrame
 - ✅ StreamingIndicator avec états visuels
 - ✅ Dark mode support
 - ✅ skipToolCallPersistence pour éviter doublons
 
-**Problèmes** :
-- ❌ Ordre messages chaotique (Round 1 + Round 2 parfois mélangés)
-- ❌ Message temporaire disparaît/réapparaît
-- ⚠️ Indicateur trop rapide (visible < 1s)
-- ⚠️ Pas de feedback pendant exécution longue (>2s)
+**Problèmes résolus** :
+- ✅ skipToolCallPersistence pour ordre correct
+- ✅ Message temporaire toujours visible (sauf reset)
+- ✅ Indicateur affiché ENTRE Round 1 et Round 2
+- ✅ Feedback visuel pendant toute l'exécution
+
+**Problèmes mineurs restants** :
+- ⚠️ Indicateur peut être rapide si tools < 500ms (acceptable)
 
 #### 4. Prompt Engineering (7/10)
 - ✅ Instructions "Expliquer avant tool call"
@@ -121,11 +125,13 @@ for (const toolCall of accumulatedToolCalls) {
 - ✅ Streaming SSE fonctionnel
 - ✅ Affichage progressif
 - ✅ UI think-aloud
-- ❌ Accumulation texte entre rounds
-- ❌ Ordre messages chaotique
-- ❌ Plus complexe (462 lignes vs 374)
+- ✅ Remplacement content entre rounds (fix closure)
+- ✅ Ordre messages correct (skipToolCallPersistence)
+- ✅ Timeout 60s (robustesse)
+- ✅ Tool executors optimisés
+- ⚠️ Plus complexe (462 lignes vs 374)
 
-**Verdict** : Le nouveau est **plus ambitieux** mais **moins stable** que l'ancien.
+**Verdict** : Le nouveau est **plus ambitieux ET stable** après fixes.
 
 ---
 
