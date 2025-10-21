@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ✅ Créer le ReadableStream pour SSE
+    // ✅ Créer le ReadableStream pour SSE avec gestion tool calls
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
@@ -211,14 +211,115 @@ export async function POST(request: NextRequest) {
             timestamp: Date.now()
           });
 
-          // ✅ Stream depuis xAI
-          for await (const chunk of provider.callWithMessagesStream(messages, tools)) {
-            sendSSE(chunk);
+          // ✅ Boucle agentic en streaming (max 5 tours)
+          let currentMessages = [...messages];
+          let roundCount = 0;
+          const maxRounds = 5;
+
+          while (roundCount < maxRounds) {
+            roundCount++;
+            logger.dev(`[Stream Route] 🔄 Round ${roundCount}/${maxRounds}`);
+
+            // Accumuler tool calls et content du stream
+            let accumulatedContent = '';
+            let accumulatedToolCalls: any[] = [];
+            let hasToolCalls = false;
+
+            // ✅ Stream depuis xAI
+            for await (const chunk of provider.callWithMessagesStream(currentMessages, tools)) {
+              // Envoyer le chunk au client
+              sendSSE(chunk);
+
+              // Accumuler pour détecter tool calls
+              if (chunk.content) {
+                accumulatedContent += chunk.content;
+              }
+              if (chunk.tool_calls && chunk.tool_calls.length > 0) {
+                accumulatedToolCalls.push(...chunk.tool_calls);
+                hasToolCalls = true;
+              }
+            }
+
+            // Si pas de tool calls, terminer
+            if (!hasToolCalls || accumulatedToolCalls.length === 0) {
+              logger.dev('[Stream Route] ✅ Pas de tool calls, fin du stream');
+              break;
+            }
+
+            // ✅ Exécuter les tool calls
+            logger.dev(`[Stream Route] 🔧 Exécution de ${accumulatedToolCalls.length} tool calls`);
+            
+            // Envoyer un événement d'exécution de tools
+            sendSSE({
+              type: 'tool_execution',
+              toolCount: accumulatedToolCalls.length,
+              timestamp: Date.now()
+            });
+
+            // Ajouter le message assistant avec tool calls
+            currentMessages.push({
+              role: 'assistant',
+              content: accumulatedContent || null,
+              tool_calls: accumulatedToolCalls,
+              timestamp: new Date().toISOString()
+            });
+
+            // Exécuter chaque tool call
+            const { SimpleToolExecutor } = await import('@/services/llm/services/SimpleToolExecutor');
+            const { OpenApiToolExecutor } = await import('@/services/llm/executors/OpenApiToolExecutor');
+            
+            const toolExecutor = new SimpleToolExecutor();
+            const openApiExecutor = new OpenApiToolExecutor('', new Map()); // TODO: endpoints
+            
+            for (const toolCall of accumulatedToolCalls) {
+              try {
+                // Exécuter le tool
+                const result = await toolExecutor.executeToolCall(
+                  toolCall,
+                  userToken,
+                  context
+                );
+
+                // Ajouter le résultat aux messages
+                currentMessages.push({
+                  role: 'tool',
+                  tool_call_id: toolCall.id,
+                  name: toolCall.function.name,
+                  content: typeof result.content === 'string' ? result.content : JSON.stringify(result.content),
+                  timestamp: new Date().toISOString()
+                });
+
+                // Envoyer le résultat au client
+                sendSSE({
+                  type: 'tool_result',
+                  toolCallId: toolCall.id,
+                  toolName: toolCall.function.name,
+                  success: result.success,
+                  timestamp: Date.now()
+                });
+
+              } catch (toolError) {
+                logger.error(`[Stream Route] ❌ Erreur tool ${toolCall.function.name}:`, toolError);
+                
+                // Ajouter un résultat d'erreur
+                currentMessages.push({
+                  role: 'tool',
+                  tool_call_id: toolCall.id,
+                  name: toolCall.function.name,
+                  content: `Erreur: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
+                  timestamp: new Date().toISOString()
+                });
+              }
+            }
+
+            // Continuer la boucle pour relancer le LLM avec les résultats
+            logger.dev(`[Stream Route] 🔄 Relance du LLM avec ${currentMessages.length} messages`);
           }
 
           // Envoyer un chunk de fin
           sendSSE({
             type: 'done',
+            rounds: roundCount,
             timestamp: Date.now()
           });
 

@@ -92,7 +92,7 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 Hook de chat avec streaming
   const { isProcessing, sendMessage } = useChatResponse({
-    useStreaming: false, // ❌ DÉSACTIVÉ : streaming ne peut pas exécuter les tools
+    useStreaming: true, // ✅ ACTIVÉ : streaming avec tool calls fonctionnel
     
     onStreamStart: () => {
       logger.dev('[ChatFullscreen] 🌊 Stream démarré');
