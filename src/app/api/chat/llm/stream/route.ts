@@ -79,23 +79,64 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Récupérer l'agent config si fourni
+    // ✅ Récupérer l'agent comme la route classique (table 'agents')
+    const agentId = context.agentId;
+    const provider = context.provider || 'xai';
     let finalAgentConfig = agentConfig;
     
-    if (context.agentId) {
-      const { data: agent, error } = await supabase
-        .from('specialized_agents')
-        .select('*')
-        .eq('id', context.agentId)
-        .single();
+    try {
+      // 1) Priorité à l'agent explicitement sélectionné
+      if (agentId) {
+        logger.dev(`[Stream Route] 🔍 Récupération de l'agent par ID: ${agentId}`);
+        const { data: agentById, error: agentByIdError } = await supabase
+          .from('agents')
+          .select('*')
+          .eq('id', agentId)
+          .eq('is_active', true)
+          .single();
 
-      if (agent && !error) {
-        finalAgentConfig = {
-          ...agent,
-          provider: agent.provider || 'xai',
-          model: agent.model || 'grok-4-fast'
-        };
+        if (!agentByIdError && agentById) {
+          finalAgentConfig = agentById;
+          logger.dev(`[Stream Route] ✅ Agent trouvé: ${agentById.name}`);
+        }
       }
+
+      // 2) Sinon fallback par provider
+      if (!finalAgentConfig && provider) {
+        logger.dev(`[Stream Route] 🔍 Récupération de l'agent pour le provider: ${provider}`);
+        const { data: agent, error } = await supabase
+          .from('agents')
+          .select('*')
+          .eq('provider', provider)
+          .eq('is_active', true)
+          .order('priority', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (!error && agent) {
+          finalAgentConfig = agent;
+          logger.dev(`[Stream Route] ✅ Agent trouvé par provider: ${agent.name}`);
+        }
+      }
+
+      // 3) Fallback final : premier agent actif
+      if (!finalAgentConfig) {
+        logger.dev(`[Stream Route] 🔍 Récupération du premier agent actif`);
+        const { data: defaultAgent, error } = await supabase
+          .from('agents')
+          .select('*')
+          .eq('is_active', true)
+          .order('priority', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (!error && defaultAgent) {
+          finalAgentConfig = defaultAgent;
+          logger.dev(`[Stream Route] ✅ Agent par défaut: ${defaultAgent.name}`);
+        }
+      }
+    } catch (error) {
+      logger.error(`[Stream Route] ❌ Erreur récupération agent:`, error);
     }
 
     // Créer le provider xAI
