@@ -622,7 +622,15 @@ const ChatFullscreenV2: React.FC = () => {
                 />
               ))}
               
-              {/* ✅ SUPPRIMÉ: Message assistant en streaming (faux streaming) */}
+              {/* ✅ Message temporaire pour streaming progressif (UI only) */}
+              {isStreaming && streamingMessageTemp && (
+                <ChatMessage 
+                  key="streaming-temp"
+                  message={streamingMessageTemp}
+                  animateContent={false}
+                  isWaitingForResponse={false}
+                />
+              )}
             </div>
             <div ref={messagesEndRef} />
           </div>
