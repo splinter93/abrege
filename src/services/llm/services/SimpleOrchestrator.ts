@@ -121,236 +121,13 @@ export class SimpleOrchestrator {
     }
   }
 
-  /**
-   * Configurer l'exécuteur OpenAPI pour plusieurs schémas
-   */
-  private async configureOpenApiExecutorForMultipleSchemas(
-    agentSchemas: Array<{ openapi_schema_id: string }>
-  ): Promise<void> {
-    if (agentSchemas.length === 0) return;
+  // ✅ SUPPRIMÉ : configureOpenApiExecutorForMultipleSchemas()
+  // Logique déplacée dans OpenApiSchemaService.getToolsAndEndpointsFromSchemas()
+  // L'exécuteur est maintenant configuré directement dans processMessage()
 
-    try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-
-      // Récupérer tous les schémas
-      const schemaIds = agentSchemas.map(s => s.openapi_schema_id);
-      const { data: schemas, error } = await supabase
-        .from('openapi_schemas')
-        .select('id, content, api_key, header')
-        .in('id', schemaIds)
-        .eq('status', 'active');
-
-      if (error || !schemas || schemas.length === 0) {
-        logger.warn(`[SimpleOrchestrator] ⚠️ Aucun schéma OpenAPI actif trouvé`);
-        return;
-      }
-
-      // Combiner tous les endpoints de tous les schémas
-      const allEndpoints = new Map<string, { method: string; path: string; apiKey?: string; headerName?: string; baseUrl: string }>();
-
-      for (const schema of schemas) {
-        // Validation du contenu
-        const content = schema.content as Record<string, unknown>;
-        if (!content || typeof content !== 'object') {
-          logger.warn(`[SimpleOrchestrator] ⚠️ Contenu invalide pour schéma ${schema.id}`);
-          continue;
-        }
-
-        // Extraire l'URL de base
-        const servers = content.servers as Array<{ url: string }> | undefined;
-        const baseUrl = servers?.[0]?.url || '';
-
-        if (!baseUrl) {
-          logger.warn(`[SimpleOrchestrator] ⚠️ URL de base manquante pour schéma ${schema.id}`);
-          continue;
-        }
-
-        // Validation de l'URL
-        try {
-          new URL(baseUrl);
-        } catch (error) {
-          logger.warn(`[SimpleOrchestrator] ⚠️ URL invalide pour schéma ${schema.id}: ${baseUrl}`);
-          continue;
-        }
-
-        // Extraire la clé API et le header
-        const apiKey = schema.api_key || undefined;
-        const headerName = schema.header || this.detectHeaderNameFromUrl(baseUrl);
-
-        // Extraire les endpoints de ce schéma
-        const schemaEndpoints = this.extractEndpointsFromSchema(content, apiKey, headerName);
-
-        // Ajouter l'URL de base à chaque endpoint et les combiner
-        for (const [operationId, endpoint] of schemaEndpoints.entries()) {
-          allEndpoints.set(operationId, {
-            ...endpoint,
-            baseUrl
-          });
-        }
-      }
-
-      if (allEndpoints.size === 0) {
-        logger.warn(`[SimpleOrchestrator] ⚠️ Aucun endpoint extrait des schémas`);
-        return;
-      }
-
-      // Créer l'exécuteur OpenAPI avec tous les endpoints combinés
-      this.openApiToolExecutor = new OpenApiToolExecutor('', allEndpoints);
-      logger.dev(`[SimpleOrchestrator] ✅ Exécuteur OpenAPI configuré avec ${allEndpoints.size} endpoints depuis ${schemas.length} schémas`);
-
-    } catch (error) {
-      logger.error(`[SimpleOrchestrator] ❌ Erreur configuration multi-schémas:`, error);
-    }
-  }
-
-  /**
-   * Configurer l'exécuteur OpenAPI avec l'URL de base appropriée (version legacy single schema)
-   */
-  private async configureOpenApiExecutor(schemaId?: string): Promise<void> {
-    if (!schemaId) return;
-
-    try {
-      // Récupérer le schéma pour obtenir l'URL de base et les endpoints
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-      
-      const { data: schema, error } = await supabase
-        .from('openapi_schemas')
-        .select('content, api_key, header')
-        .eq('id', schemaId)
-        .eq('status', 'active')
-        .single();
-
-      if (error || !schema) {
-        logger.warn(`[SimpleOrchestrator] ⚠️ Schéma OpenAPI non trouvé: ${schemaId}`);
-        return;
-      }
-
-      // Validation du contenu du schéma
-      const content = schema.content as Record<string, unknown>;
-      if (!content || typeof content !== 'object') {
-        logger.error(`[SimpleOrchestrator] ❌ Contenu du schéma invalide`);
-        return;
-      }
-
-      // Extraire l'URL de base du schéma avec validation
-      const servers = content.servers as Array<{ url: string }> | undefined;
-      const baseUrl = servers?.[0]?.url || '';
-
-      if (!baseUrl) {
-        logger.error(`[SimpleOrchestrator] ❌ URL de base manquante dans le schéma`);
-        return;
-      }
-
-      // Validation de l'URL de base
-      try {
-        new URL(baseUrl);
-      } catch (error) {
-        logger.error(`[SimpleOrchestrator] ❌ URL de base invalide: ${baseUrl}`);
-        return;
-      }
-
-      // Extraire la clé API et le header depuis la base de données (priorité) ou depuis l'URL
-      const apiKey = schema.api_key || undefined;
-      const headerName = schema.header || this.detectHeaderNameFromUrl(baseUrl);
-      
-      // Extraire les endpoints du schéma
-      const endpoints = this.extractEndpointsFromSchema(content, apiKey, headerName);
-
-      if (endpoints.size === 0) {
-        logger.warn(`[SimpleOrchestrator] ⚠️ Aucun endpoint extrait du schéma`);
-      }
-
-      // Créer un nouvel exécuteur avec l'URL de base et les endpoints
-      this.openApiToolExecutor = new OpenApiToolExecutor(baseUrl, endpoints);
-      logger.dev(`[SimpleOrchestrator] ✅ Exécuteur OpenAPI configuré avec URL: ${baseUrl}`);
-      logger.dev(`[SimpleOrchestrator] ✅ ${endpoints.size} endpoints extraits du schéma`);
-      logger.dev(`[SimpleOrchestrator] ✅ Header: ${headerName}, API Key: ${apiKey ? '✅ Configurée' : '❌ Manquante'}`);
-    } catch (error) {
-      logger.error(`[SimpleOrchestrator] ❌ Erreur configuration exécuteur OpenAPI:`, error);
-    }
-  }
-
-  /**
-   * Extraire les endpoints du schéma OpenAPI
-   */
-  private extractEndpointsFromSchema(
-    content: Record<string, unknown>, 
-    apiKey?: string, 
-    headerName?: string
-  ): Map<string, { method: string; path: string; apiKey?: string; headerName?: string }> {
-    const endpoints = new Map<string, { method: string; path: string; apiKey?: string; headerName?: string }>();
-    
-    try {
-      const paths = content.paths as Record<string, Record<string, unknown>> | undefined;
-
-      if (!paths || typeof paths !== 'object') {
-        logger.warn(`[SimpleOrchestrator] ⚠️ Aucun path trouvé dans le schéma OpenAPI`);
-        return endpoints;
-      }
-
-      // Parser chaque path et méthode
-      for (const [pathName, pathItem] of Object.entries(paths)) {
-        // Validation du pathItem
-        if (!pathItem || typeof pathItem !== 'object') {
-          logger.warn(`[SimpleOrchestrator] ⚠️ PathItem invalide pour ${pathName}`);
-          continue;
-        }
-
-        const pathMethods = pathItem as Record<string, unknown>;
-
-        for (const [method, operation] of Object.entries(pathMethods)) {
-          // Ignorer les clés spéciales
-          if (['parameters', 'servers', '$ref'].includes(method)) {
-            continue;
-          }
-
-          // Validation de l'opération
-          if (!operation || typeof operation !== 'object') {
-            continue;
-          }
-
-          const op = operation as Record<string, unknown>;
-          const operationId = op.operationId as string | undefined;
-
-          if (operationId && typeof operationId === 'string') {
-            endpoints.set(operationId, {
-              method: method.toUpperCase(),
-              path: pathName,
-              apiKey,
-              headerName
-            });
-            logger.dev(`[SimpleOrchestrator] 🔧 Endpoint extrait: ${operationId} => ${method.toUpperCase()} ${pathName}`);
-          } else {
-            logger.warn(`[SimpleOrchestrator] ⚠️ OperationId manquant pour ${method.toUpperCase()} ${pathName}`);
-          }
-        }
-      }
-    } catch (error) {
-      logger.error(`[SimpleOrchestrator] ❌ Erreur lors de l'extraction des endpoints:`, error);
-    }
-
-    return endpoints;
-  }
-
-  /**
-   * Détecter le nom du header selon l'URL de base
-   */
-  private detectHeaderNameFromUrl(baseUrl: string): string {
-    if (baseUrl.includes('pexels.com')) {
-      return 'Authorization';
-    }
-    if (baseUrl.includes('exa.ai')) {
-      return 'x-api-key';
-    }
-    // Par défaut, utiliser Authorization
-    return 'Authorization';
-  }
+  // ✅ SUPPRIMÉ : configureOpenApiExecutor(), extractEndpointsFromSchema(), detectHeaderNameFromUrl()
+  // Toute la logique de parsing OpenAPI est maintenant centralisée dans OpenApiSchemaService
+  // Cela évite la duplication et permet le cache partagé
 
   /**
    * ✅ NOUVELLE MÉTHODE : Sélectionner le provider en fonction de l'agent config
@@ -407,40 +184,33 @@ export class SimpleOrchestrator {
       // ✅ NOUVEAU : Sélectionner les tools selon le provider
       let tools: Tool[] = [];
       
-      // ✅ CORRECTION : Charger les tools OpenAPI pour tous les providers si configuré
+      // ✅ OPTIMISÉ : Charger tools ET endpoints depuis OpenApiSchemaService (parsing 1x)
       const agentSchemas = await this.loadAgentOpenApiSchemas(agentConfig?.id);
       
       if (agentSchemas.length > 0) {
-        logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools depuis ${agentSchemas.length} schémas OpenAPI`);
+        logger.dev(`[SimpleOrchestrator] 🔧 Chargement depuis ${agentSchemas.length} schémas OpenAPI...`);
         
-        // Charger les tools de tous les schémas et les combiner
-        const allOpenApiTools: Tool[] = [];
-        for (const schema of agentSchemas) {
-          const schemaTools = await openApiSchemaService.getToolsFromSchemaById(schema.openapi_schema_id);
-          allOpenApiTools.push(...schemaTools);
+        // ✅ NOUVEAU : Récupérer tools + endpoints en 1 seul parsing (centralisé)
+        const schemaIds = agentSchemas.map(s => s.openapi_schema_id);
+        const { tools: openApiTools, endpoints } = await openApiSchemaService.getToolsAndEndpointsFromSchemas(schemaIds);
+        
+        // Configurer l'exécuteur avec les endpoints pré-parsés
+        if (endpoints.size > 0) {
+          this.openApiToolExecutor = new OpenApiToolExecutor('', endpoints);
         }
         
-        const openApiTools = allOpenApiTools;
-        logger.dev(`[SimpleOrchestrator] ✅ Tools OpenAPI chargés: ${openApiTools.length} tools depuis ${agentSchemas.length} schémas`);
+        logger.dev(`[SimpleOrchestrator] ✅ ${openApiTools.length} tools et ${endpoints.size} endpoints chargés`);
         
         if (selectedProvider.toLowerCase() === 'xai') {
           // ✅ xAI : Utiliser uniquement les tools OpenAPI avec limite
-          // Note: xAI semble avoir une limite sur les tools, mais pas documentée officiellement
-          // Tests empiriques: 8 tools OK, 34+ tools KO
-          // Limite conservative: 15 tools max
           const XAI_MAX_TOOLS = 15;
           
           if (openApiTools.length > XAI_MAX_TOOLS) {
             logger.warn(`[SimpleOrchestrator] ⚠️ Trop de tools pour xAI (${openApiTools.length}/${XAI_MAX_TOOLS}). Limitation appliquée.`);
-            logger.warn(`[SimpleOrchestrator] 💡 Conseil: Assignez moins de schémas OpenAPI ou utilisez Groq/OpenAI pour plus de tools`);
             tools = openApiTools.slice(0, XAI_MAX_TOOLS);
-            logger.warn(`[SimpleOrchestrator] 📋 ${tools.length} tools conservés (premiers du schéma)`);
           } else {
             tools = openApiTools;
           }
-          
-          // Configurer l'exécuteur OpenAPI pour tous les schémas
-          await this.configureOpenApiExecutorForMultipleSchemas(agentSchemas);
         } else {
           // ✅ Groq/OpenAI : Combiner les tools OpenAPI avec les MCP tools
           logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools MCP pour ${selectedProvider}...`);
@@ -454,9 +224,6 @@ export class SimpleOrchestrator {
           const mcpCount = tools.filter((t) => isMcpTool(t)).length;
           const openApiCount = tools.filter((t) => !isMcpTool(t)).length;
           logger.dev(`[SimpleOrchestrator] ✅ Tools hybrides disponibles: ${tools.length} total (${mcpCount} MCP + ${openApiCount} OpenAPI)`);
-          
-          // Configurer l'exécuteur OpenAPI pour tous les schémas
-          await this.configureOpenApiExecutorForMultipleSchemas(agentSchemas);
         }
       } else {
         // ✅ Fallback : Aucun schéma OpenAPI assigné
