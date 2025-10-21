@@ -92,6 +92,8 @@ Puis après résultat :
 
 JAMAIS appeler un outil sans expliquer avant ce que tu fais. L'utilisateur doit comprendre ton processus de pensée.
 
+IMPORTANT : N'écris JAMAIS de balises XML comme <function_call> ou <tool>. Les outils sont appelés automatiquement via l'API quand tu utilises le format JSON standard (tool_calls). Si tu écris du XML, l'outil ne sera PAS exécuté.
+
 ## Gestion des Erreurs
 
 Si un outil échoue ou retourne une erreur :
