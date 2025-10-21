@@ -174,9 +174,6 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                 logger.dev(`[useChatResponse] ✅ Tool result: ${chunk.toolName}`);
                 onToolResult?.(chunk.toolName || '', chunk, chunk.success || false, chunk.toolCallId);
               }
-              
-              if (chunk.type === 'delta') {
-              }
 
               if (chunk.type === 'done') {
                 logger.dev('[useChatResponse] 🏁 Stream [DONE]');
