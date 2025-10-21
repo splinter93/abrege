@@ -85,9 +85,10 @@ const ChatFullscreenV2: React.FC = () => {
     handleToolExecutionComplete
   } = useChatHandlers();
 
-  // 🎯 États pour streaming
+  // 🎯 États pour streaming (affichage progressif)
   const [streamingContent, setStreamingContent] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingMessageTemp, setStreamingMessageTemp] = useState<ChatMessageType | null>(null);
 
   // 🎯 Hook de chat avec streaming
   const { isProcessing, sendMessage } = useChatResponse({
@@ -98,23 +99,37 @@ const ChatFullscreenV2: React.FC = () => {
       setIsStreaming(true);
       setStreamingContent('');
       
-      // ✅ NE PAS créer de message temporaire ici
-      // Le message sera créé dans onComplete avec le contenu final
+      // ✅ Créer un message temporaire pour l'affichage (UI only, pas dans le store)
+      const tempMessage: ChatMessageType = {
+        role: 'assistant',
+        content: '',
+        timestamp: new Date().toISOString()
+      };
+      setStreamingMessageTemp(tempMessage);
     },
     
     onStreamChunk: (chunk: string) => {
       logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20));
       
-      setStreamingContent(prev => prev + chunk);
-      
-      // ✅ Afficher le contenu progressif sans toucher au store
-      // (on pourrait créer un state React temporaire si besoin d'affichage)
+      setStreamingContent(prev => {
+        const newContent = prev + chunk;
+        
+        // ✅ Mettre à jour le message temporaire pour l'affichage
+        setStreamingMessageTemp({
+          role: 'assistant',
+          content: newContent,
+          timestamp: new Date().toISOString()
+        });
+        
+        return newContent;
+      });
     },
     
     onStreamEnd: () => {
       logger.dev('[ChatFullscreen] ✅ Stream terminé, contenu:', streamingContent.substring(0, 50));
       setIsStreaming(false);
-      // Le contenu sera persisté dans onComplete
+      setStreamingMessageTemp(null); // Supprimer le temporaire, onComplete va persister
+      setStreamingContent('');
     },
     
     onComplete: (fullContent: string, fullReasoning: string, toolCalls?: unknown[], toolResults?: unknown[]) => {
