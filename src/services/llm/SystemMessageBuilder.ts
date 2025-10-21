@@ -75,6 +75,24 @@ export class SystemMessageBuilder {
         logger.dev(`[SystemMessageBuilder] ⚙️ Template par défaut utilisé`);
       }
 
+      // ✅ NOUVEAU : Instructions pour tool calls avec explication
+      content += `\n\n## Utilisation des Outils
+
+RÈGLE IMPORTANTE : Avant d'appeler un outil, tu DOIS TOUJOURS :
+1. Expliquer brièvement ce que tu vas faire et pourquoi dans le champ "content"
+2. Puis appeler l'outil dans le même message (content + tool_calls simultanés)
+3. Après avoir reçu le résultat, commenter ce que tu as obtenu
+
+Exemple de bon comportement :
+- content: "Je vais chercher des informations sur X en utilisant l'outil Y..."
+- tool_calls: [{ name: "Y", arguments: {...} }]
+
+Puis après résultat :
+- content: "J'ai trouvé que... [analyse du résultat]"
+
+JAMAIS appeler un outil sans expliquer avant ce que tu fais. L'utilisateur doit comprendre ton processus de pensée.`;
+
+
       // 2. Template contextuel avec variables
       if (agentConfig.context_template) {
         try {
