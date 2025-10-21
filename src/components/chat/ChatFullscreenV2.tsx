@@ -227,6 +227,7 @@ const ChatFullscreenV2: React.FC = () => {
       handleToolCalls(convertedToolCalls, toolName);
     },
     onToolResult: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => {
+      logger.dev(`[ChatFullscreen] ✅ Tool result reçu: ${toolName}, success: ${success}`);
       handleToolResult(toolName, result, success, toolCallId);
     },
     onToolExecutionComplete: (toolResults: Array<{ name: string; result: unknown; success: boolean; tool_call_id: string }>) => {
@@ -678,24 +679,26 @@ const ChatFullscreenV2: React.FC = () => {
                 />
               ))}
               
-              {/* ✅ Indicateur d'état streaming (Think-Aloud) */}
-              {isStreaming && streamingState !== 'idle' && (
-                <StreamingIndicator 
-                  state={streamingState}
-                  toolCount={executingToolCount}
-                  currentTool={currentToolName}
-                  roundNumber={currentRound}
-                />
-              )}
-              
               {/* ✅ Message temporaire pour streaming progressif (UI only) */}
-              {isStreaming && streamingMessageTemp && streamingMessageTemp.content && (
+              {isStreaming && streamingMessageTemp && streamingMessageTemp.content && streamingState === 'responding' && (
                 <ChatMessage 
                   key="streaming-temp"
                   message={streamingMessageTemp}
                   animateContent={false}
                   isWaitingForResponse={false}
                 />
+              )}
+              
+              {/* ✅ Indicateur d'état streaming - seulement thinking ou executing */}
+              {isStreaming && (streamingState === 'thinking' || streamingState === 'executing') && (
+                <div>
+                  <StreamingIndicator 
+                    state={streamingState}
+                    toolCount={executingToolCount}
+                    currentTool={currentToolName}
+                    roundNumber={currentRound}
+                  />
+                </div>
               )}
             </div>
             <div ref={messagesEndRef} />
