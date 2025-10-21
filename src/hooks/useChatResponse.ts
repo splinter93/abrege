@@ -92,7 +92,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         let buffer = '';
         let fullContent = '';
         let fullReasoning = '';
-        const accumulatedToolCalls: unknown[] = [];
+        const toolCallsMap = new Map<string, any>(); // ✅ Déduplication par ID
 
         while (true) {
           const { done, value } = await reader.read();
@@ -137,17 +137,37 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                   fullReasoning += chunk.reasoning;
                 }
 
-                // Tool calls
-                if (chunk.tool_calls) {
-                  accumulatedToolCalls.push(...chunk.tool_calls);
-                  onToolCalls?.(chunk.tool_calls, 'stream');
+                // ✅ Tool calls avec déduplication par ID
+                if (chunk.tool_calls && Array.isArray(chunk.tool_calls)) {
+                  for (const tc of chunk.tool_calls) {
+                    if (!toolCallsMap.has(tc.id)) {
+                      // Nouveau tool call
+                      toolCallsMap.set(tc.id, {
+                        id: tc.id,
+                        type: tc.type || 'function',
+                        function: {
+                          name: tc.function?.name || '',
+                          arguments: tc.function?.arguments || ''
+                        }
+                      });
+                      
+                      // Notifier seulement pour les nouveaux tool calls
+                      onToolCalls?.([toolCallsMap.get(tc.id)], 'stream');
+                    } else {
+                      // Accumuler arguments progressifs (streaming)
+                      const existing = toolCallsMap.get(tc.id);
+                      if (tc.function?.name) existing.function.name = tc.function.name;
+                      if (tc.function?.arguments) existing.function.arguments += tc.function.arguments;
+                    }
+                  }
                 }
               }
 
               if (chunk.type === 'done') {
                 logger.dev('[useChatResponse] 🏁 Stream [DONE]');
+                const finalToolCalls = Array.from(toolCallsMap.values());
                 onStreamEnd?.();
-                onComplete?.(fullContent, fullReasoning, accumulatedToolCalls, []);
+                onComplete?.(fullContent, fullReasoning, finalToolCalls, []);
               }
 
               if (chunk.type === 'error') {
