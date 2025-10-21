@@ -20,6 +20,47 @@ interface XAIConfig extends ProviderConfig {
 }
 
 /**
+ * ✅ Types pour streaming SSE
+ */
+export interface StreamChunk {
+  type: 'delta' | 'done' | 'error';
+  content?: string;
+  tool_calls?: ToolCall[];
+  reasoning?: string;
+  usage?: Usage;
+  error?: string;
+}
+
+/**
+ * Chunk SSE reçu de l'API xAI (format OpenAI)
+ */
+interface XAIStreamChunk {
+  id: string;
+  object: 'chat.completion.chunk';
+  created: number;
+  model: string;
+  choices: Array<{
+    index: number;
+    delta: {
+      role?: 'assistant';
+      content?: string;
+      tool_calls?: Array<{
+        index?: number;
+        id?: string;
+        type?: 'function';
+        function?: {
+          name?: string;
+          arguments?: string;
+        };
+      }>;
+      reasoning?: string;
+    };
+    finish_reason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
+  }>;
+  usage?: Usage;
+}
+
+/**
  * Informations sur xAI
  */
 const XAI_INFO: ProviderInfo = {
@@ -257,6 +298,137 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('[XAIProvider] ❌ Erreur lors de l\'appel:', { message: errorMessage });
+      throw error;
+    }
+  }
+
+  /**
+   * ✅ NOUVEAU : Streaming avec Server-Sent Events (SSE)
+   * Compatible avec xAI API (format OpenAI)
+   */
+  async *callWithMessagesStream(
+    messages: ChatMessage[], 
+    tools: Tool[]
+  ): AsyncGenerator<StreamChunk, void, unknown> {
+    if (!this.isAvailable()) {
+      throw new Error('xAI provider non configuré');
+    }
+
+    try {
+      logger.dev(`[XAIProvider] 🌊 Streaming Chat Completions avec ${messages.length} messages`);
+      
+      // Conversion des ChatMessage vers le format API
+      const apiMessages = this.convertChatMessagesToApiFormat(messages);
+      const payload = await this.preparePayload(apiMessages, tools);
+      payload.stream = true; // ✅ Activer streaming
+      
+      // Appel API avec streaming
+      const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.config.apiKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`xAI API Error: ${response.status} - ${errorText}`);
+      }
+
+      if (!response.body) {
+        throw new Error('Response body is null');
+      }
+
+      // Lire le stream SSE
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+          logger.dev('[XAIProvider] ✅ Stream terminé');
+          break;
+        }
+
+        // Décoder le chunk
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // Garder la dernière ligne incomplète
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          
+          // Ignorer les lignes vides et les commentaires
+          if (!trimmed || trimmed.startsWith(':')) {
+            continue;
+          }
+
+          // Parser les lignes SSE (format "data: {...}")
+          if (trimmed.startsWith('data: ')) {
+            const data = trimmed.slice(6); // Enlever "data: "
+            
+            // Fin du stream
+            if (data === '[DONE]') {
+              logger.dev('[XAIProvider] 🏁 Stream [DONE] reçu');
+              break;
+            }
+
+            try {
+              const parsed = JSON.parse(data) as XAIStreamChunk;
+              
+              // Extraire les informations du chunk
+              const choice = parsed.choices?.[0];
+              if (!choice) continue;
+
+              const delta = choice.delta;
+              const chunk: StreamChunk = {
+                type: 'delta'
+              };
+
+              // Content
+              if (delta.content) {
+                chunk.content = delta.content;
+              }
+
+              // Tool calls
+              if (delta.tool_calls && delta.tool_calls.length > 0) {
+                chunk.tool_calls = delta.tool_calls.map(tc => ({
+                  id: tc.id || '',
+                  type: 'function' as const,
+                  function: {
+                    name: tc.function?.name || '',
+                    arguments: tc.function?.arguments || ''
+                  }
+                }));
+              }
+
+              // Reasoning (si supporté)
+              if (delta.reasoning) {
+                chunk.reasoning = delta.reasoning;
+              }
+
+              // Usage (dans le dernier chunk)
+              if (parsed.usage) {
+                chunk.usage = parsed.usage;
+              }
+
+              yield chunk;
+
+            } catch (parseError) {
+              logger.warn('[XAIProvider] ⚠️ Erreur parsing chunk SSE:', parseError);
+              continue;
+            }
+          }
+        }
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('[XAIProvider] ❌ Erreur streaming:', { message: errorMessage });
       throw error;
     }
   }
