@@ -121,6 +121,11 @@ const ChatFullscreenV2: React.FC = () => {
           timestamp: new Date().toISOString()
         });
         
+        // ✅ Scroll auto en temps réel pendant le streaming
+        requestAnimationFrame(() => {
+          scrollToBottom();
+        });
+        
         return newContent;
       });
     },
