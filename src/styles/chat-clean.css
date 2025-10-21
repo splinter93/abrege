@@ -469,9 +469,9 @@
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  background: var(--chat-bg-error);
+  background: transparent;
   border: none;
-  color: var(--chat-text-error);
+  color: var(--chat-text-secondary);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -485,8 +485,8 @@
 }
 
 .sidebar-delete-btn:hover {
-  background: var(--chat-bg-error-hover);
-  color: var(--chat-text-error-hover);
+  background: var(--chat-overlay-hover);
+  color: var(--chat-text-primary);
 }
 
 .sidebar-rename-input {
@@ -729,7 +729,8 @@
 }
 
 .chatgpt-input-speaker,
-.chatgpt-input-mic {
+.chatgpt-input-mic,
+.chatgpt-input-web-search {
   background: transparent;
   border: none;
   color: var(--chat-text-secondary);
@@ -745,9 +746,34 @@
 }
 
 .chatgpt-input-speaker:hover,
-.chatgpt-input-mic:hover {
+.chatgpt-input-mic:hover,
+.chatgpt-input-web-search:hover {
   background: var(--chat-overlay-hover);
   color: var(--chat-text-primary);
+  border-radius: 50%;
+}
+
+/* État enregistrement du micro */
+.chatgpt-input-mic-recording {
+  background: transparent !important;
+  border: 2px solid #ef4444 !important;
+  border-radius: 50% !important;
+  color: #ef4444 !important;
+  animation: pulse-mic-recording 2s infinite;
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+@keyframes pulse-mic-recording {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
 }
 
 .chatgpt-input-send {

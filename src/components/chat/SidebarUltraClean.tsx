@@ -3,8 +3,6 @@ import { Search, X, User, Settings } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
 // Types pour les sessions et agents
 interface ChatSession {
@@ -180,12 +178,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                       onClick={(e) => e.stopPropagation()}
                     />
                   ) : (
-                    <>
-                      <div style={{ fontSize: '13px', fontWeight: 500 }}>{session.name}</div>
-                      <div style={{ fontSize: '11px', color: '#d0d0d0', marginTop: '2px' }}>
-                        {formatDistanceToNow(new Date(session.updated_at), { addSuffix: true, locale: fr })}
-                      </div>
-                    </>
+                    <div style={{ fontSize: '13px', fontWeight: 500 }}>{session.name}</div>
                   )}
                 </div>
               </button>

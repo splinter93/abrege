@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Send, Plus, Zap, Globe, Search, ArrowUp } from 'react-feather';
+import { Send, Globe, Search, ArrowUp } from 'react-feather';
+import { Lightbulb, Plus } from 'lucide-react';
 import { logger, LogCategory } from '@/utils/logger';
 import AudioRecorder from './AudioRecorder';
 
@@ -121,8 +122,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         <button className="chatgpt-input-speaker" aria-label="Ajouter">
           <Plus size={18} />
         </button>
+        <button className="chatgpt-input-web-search" aria-label="Recherche web">
+          <Globe size={18} />
+        </button>
         <button className="chatgpt-input-mic" aria-label="Reasoning">
-          <Zap size={18} />
+          <Lightbulb size={18} />
         </button>
         
         <div style={{ flex: 1 }}></div>

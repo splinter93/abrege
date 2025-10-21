@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Mic, Square, Loader } from 'react-feather';
+import { Square, Loader } from 'react-feather';
+import { Mic } from 'lucide-react';
 import { logger } from '@/utils/logger';
 
 interface AudioRecorderProps {
@@ -215,7 +216,7 @@ export default function AudioRecorder({
     }
     
     return {
-      icon: <Mic size={18} />,
+      icon: <Mic size={20} />,
       className: baseClass,
       title: 'Cliquer pour enregistrer'
     };

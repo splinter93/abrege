@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import './BubbleButtons.css';
-import { FiCopy, FiCheck, FiVolume2, FiEdit2 } from 'react-icons/fi';
+import { FiCopy, FiCheck, FiEdit2 } from 'react-icons/fi';
+import { Volume2 } from 'lucide-react';
 
 interface BubbleButtonsProps {
   content: string;
@@ -67,7 +68,7 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
               title="Lire à haute voix"
               aria-label="Lire le message à haute voix"
             >
-              <FiVolume2 size={16} />
+              <Volume2 size={16} />
             </button>
           )}
 
