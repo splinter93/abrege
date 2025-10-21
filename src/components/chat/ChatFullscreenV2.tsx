@@ -98,6 +98,9 @@ const ChatFullscreenV2: React.FC = () => {
   const [executingToolCount, setExecutingToolCount] = useState(0);
   const [currentToolName, setCurrentToolName] = useState<string>('');
   const [currentRound, setCurrentRound] = useState(0);
+  
+  // 🎯 Ref pour tracker si on doit remplacer le content (nouveau round)
+  const shouldReplaceContentRef = useRef(false);
 
   // 🎯 Hook de chat avec streaming
   const { isProcessing, sendMessage } = useChatResponse({
@@ -120,21 +123,21 @@ const ChatFullscreenV2: React.FC = () => {
     },
     
     onStreamChunk: (chunk: string) => {
-      logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20), 'état actuel:', streamingState);
+      logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20), 'shouldReplace:', shouldReplaceContentRef.current);
       
-      // ✅ Ajouter au content du round actuel
+      // ✅ Ajouter ou remplacer selon le flag
       setStreamingContent(prev => {
-        // ✅ Si on était en état "executing", c'est un nouveau round → REMPLACER
         let newContent: string;
         
-        if (streamingState === 'executing') {
-          logger.dev('[ChatFullscreen] 🔄 Nouveau round détecté, REMPLACEMENT du texte');
+        if (shouldReplaceContentRef.current) {
+          logger.dev('[ChatFullscreen] 🔄 REMPLACEMENT du texte (nouveau round)');
           newContent = chunk; // REMPLACER
+          shouldReplaceContentRef.current = false; // Reset flag
         } else {
           newContent = prev + chunk; // ACCUMULER (round en cours)
         }
         
-        // ✅ Mettre à jour le message temporaire avec le nouveau content
+        // ✅ Mettre à jour le message temporaire
         setStreamingMessageTemp({
           role: 'assistant',
           content: newContent,
@@ -144,10 +147,10 @@ const ChatFullscreenV2: React.FC = () => {
         return newContent;
       });
       
-      // ✅ Transition vers état "responding" APRÈS avoir géré le content
+      // ✅ Transition vers état "responding"
       setStreamingState('responding');
       
-      // ✅ Scroll auto en temps réel pendant le streaming
+      // ✅ Scroll auto
       requestAnimationFrame(() => {
         scrollToBottom();
       });
@@ -161,9 +164,11 @@ const ChatFullscreenV2: React.FC = () => {
       setExecutingToolCount(toolCount);
       setCurrentRound(prev => prev + 1);
       
-      // ✅ NE PAS réinitialiser le message temporaire ici !
-      // Le texte "Je vais chercher..." doit rester visible pendant l'exécution
-      // On réinitialisera après les résultats, au début du prochain round de streaming
+      // ✅ Activer le flag de remplacement pour le prochain chunk
+      shouldReplaceContentRef.current = true;
+      
+      // Le texte "Je vais chercher..." reste visible pendant l'exécution
+      // Le prochain chunk remplacera le content
     },
     
     onStreamEnd: () => {
