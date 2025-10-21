@@ -137,7 +137,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                   fullReasoning += chunk.reasoning;
                 }
 
-                // ✅ Tool calls avec déduplication par ID
+                // ✅ Tool calls avec déduplication par ID (ne notifie PAS pendant streaming)
                 if (chunk.tool_calls && Array.isArray(chunk.tool_calls)) {
                   for (const tc of chunk.tool_calls) {
                     if (!toolCallsMap.has(tc.id)) {
@@ -150,9 +150,6 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                           arguments: tc.function?.arguments || ''
                         }
                       });
-                      
-                      // Notifier seulement pour les nouveaux tool calls
-                      onToolCalls?.([toolCallsMap.get(tc.id)], 'stream');
                     } else {
                       // Accumuler arguments progressifs (streaming)
                       const existing = toolCallsMap.get(tc.id);
@@ -161,6 +158,24 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                     }
                   }
                 }
+              }
+              
+              // ✅ Gérer tool_execution et tool_result du backend
+              if (chunk.type === 'tool_execution') {
+                logger.dev(`[useChatResponse] 🔧 Exécution de ${chunk.toolCount || 0} tools...`);
+                // Notifier onToolCalls UNE FOIS avec tous les tool calls finaux
+                const finalToolCalls = Array.from(toolCallsMap.values());
+                if (finalToolCalls.length > 0) {
+                  onToolCalls?.(finalToolCalls, 'stream');
+                }
+              }
+              
+              if (chunk.type === 'tool_result') {
+                logger.dev(`[useChatResponse] ✅ Tool result: ${chunk.toolName}`);
+                onToolResult?.(chunk.toolName || '', chunk, chunk.success || false, chunk.toolCallId);
+              }
+              
+              if (chunk.type === 'delta') {
               }
 
               if (chunk.type === 'done') {
