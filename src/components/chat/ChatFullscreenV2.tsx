@@ -662,9 +662,7 @@ const ChatFullscreenV2: React.FC = () => {
           {/* Agent actif */}
           {selectedAgent && (
             <div className="chat-active-agent">
-              {selectedAgent.icon && (
-                <span className="agent-icon">{selectedAgent.icon}</span>
-              )}
+              <span className="agent-icon">{selectedAgent.icon || '🤖'}</span>
               <span className="agent-name">{selectedAgent.name}</span>
             </div>
           )}
