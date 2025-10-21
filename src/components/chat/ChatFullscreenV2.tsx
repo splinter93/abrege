@@ -342,9 +342,9 @@ const ChatFullscreenV2: React.FC = () => {
 
       const historyBeforeNewMessage = currentSession.thread || [];
       
-      // ✅ AMÉLIORATION: Filtrage intelligent pour garder le contexte récent
-      // Stratégie : Garder tous les user/assistant + derniers tool calls
-      const historyLimit = currentSession.history_limit || 40; // ✅ 40 messages pour conversation fluide
+      // ✅ FILTRAGE INTELLIGENT: Garder le contexte conversationnel + tools liés uniquement
+      // Évite les tool messages orphelins (sans leur assistant parent)
+      const historyLimit = currentSession.history_limit || 40;
       const userAssistantMessages = historyBeforeNewMessage.filter(m => 
         m.role === 'user' || m.role === 'assistant'
       );
@@ -352,13 +352,34 @@ const ChatFullscreenV2: React.FC = () => {
         m.role === 'tool'
       );
       
-      // Garder jusqu'à 30 messages user/assistant récents, puis compléter avec tool messages
-      const recentUserAssistant = userAssistantMessages.slice(-Math.min(historyLimit, 30));
-      const remainingSlots = historyLimit - recentUserAssistant.length;
-      const recentTools = remainingSlots > 0 ? toolMessages.slice(-remainingSlots) : [];
+      // 1. Garder les 30 messages user/assistant les plus récents
+      const recentConversation = userAssistantMessages.slice(-Math.min(historyLimit, 30));
       
-      // Recombiner et trier par timestamp pour garder l'ordre chronologique
-      const limitedHistoryForLLM = [...recentUserAssistant, ...recentTools]
+      // 2. Extraire tous les tool_call_id des messages assistant gardés
+      const keptToolCallIds = new Set<string>();
+      recentConversation.forEach(msg => {
+        if (msg.role === 'assistant' && msg.tool_calls && Array.isArray(msg.tool_calls)) {
+          msg.tool_calls.forEach(tc => {
+            if (tc.id) keptToolCallIds.add(tc.id);
+          });
+        }
+      });
+      
+      // 3. Garder SEULEMENT les tool messages qui correspondent à ces tool_call_id
+      const relevantTools = toolMessages.filter(tm => 
+        tm.tool_call_id && keptToolCallIds.has(tm.tool_call_id)
+      );
+      
+      logger.dev('[ChatFullscreenV2] 📊 Filtrage historique:', {
+        total: historyBeforeNewMessage.length,
+        userAssistant: recentConversation.length,
+        toolsRelevant: relevantTools.length,
+        toolsTotal: toolMessages.length,
+        toolCallIds: keptToolCallIds.size
+      });
+      
+      // 4. Recombiner et trier par timestamp pour ordre chronologique
+      const limitedHistoryForLLM = [...recentConversation, ...relevantTools]
         .sort((a, b) => {
           const timestampA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
           const timestampB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
