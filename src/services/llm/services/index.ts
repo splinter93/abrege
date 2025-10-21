@@ -1,5 +1,6 @@
 // 🎯 Services pour l'orchestration Groq
-// GroqOrchestrator supprimé - remplacé par SimpleChatOrchestrator
+// ✅ AgentOrchestrator : pour agents spécialisés avec tools complexes
+export { AgentOrchestrator, agentOrchestrator } from './AgentOrchestrator';
 export { GroqHistoryBuilder } from './GroqHistoryBuilder';
 export { GroqToolExecutor } from './GroqToolExecutor';
 export { GroqErrorHandler } from './GroqErrorHandler';

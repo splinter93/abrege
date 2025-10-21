@@ -715,7 +715,7 @@
   max-height: 80px;
   background: transparent;
   border: none;
-  font-family: var(--font-chat-body);
+  font-family: var(--font-chat-body) !important;
   outline: none;
   resize: none;
   font-size: var(--chat-font-size-base);

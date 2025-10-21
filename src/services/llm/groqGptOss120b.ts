@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { GroqRoundParams, GroqRoundResult } from './types/groqTypes';
 import { DEFAULT_GROQ_LIMITS } from './types/groqTypes';
-import { simpleOrchestrator } from './services/SimpleOrchestrator';
+import { agentOrchestrator } from './services/AgentOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
@@ -45,10 +45,10 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
     } : undefined;
 
     // Utiliser l'orchestrateur simple
-    logger.info(`[Groq API] 🎯 Lancement SimpleOrchestrator pour session ${sessionId}`);
+    logger.info(`[Groq API] 🎯 Lancement AgentOrchestrator pour session ${sessionId}`);
     const orchestratorStart = Date.now();
     
-    const chatResult = await simpleOrchestrator.processMessage(
+    const chatResult = await agentOrchestrator.processMessage(
       params.message,
       {
         userToken: params.userToken,

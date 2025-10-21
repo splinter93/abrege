@@ -4,7 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { simpleOrchestrator } from '@/services/llm/services/SimpleOrchestrator';
+import { simpleOrchestrator } from '@/services/llm/services/AgentOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 import { SchemaValidator } from './schemaValidator';
 import { MultimodalHandler } from './multimodalHandler';

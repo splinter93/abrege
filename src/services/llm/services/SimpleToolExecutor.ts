@@ -293,7 +293,7 @@ export class SimpleToolExecutor {
   }
 
   /**
-   * Alias pour executeSimple (utilisé par SimpleOrchestrator)
+   * Alias pour executeSimple (utilisé par AgentOrchestrator)
    */
   async executeToolCalls(toolCalls: ToolCall[], userToken: string): Promise<ToolResult[]> {
     return this.executeTools(toolCalls, userToken);

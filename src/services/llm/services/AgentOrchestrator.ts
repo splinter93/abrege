@@ -1,5 +1,5 @@
 /**
- * SimpleOrchestrator - Orchestrateur minimaliste pour tool calls MCP
+ * AgentOrchestrator - Orchestrateur minimaliste pour tool calls MCP
  * 
  * Fait juste ce qui est nécessaire :
  * - Appelle le LLM avec les tools MCP
@@ -59,7 +59,7 @@ const DEFAULT_CONFIG = {
 /**
  * Orchestrateur simple pour gérer les conversations avec tool calls MCP
  */
-export class SimpleOrchestrator {
+export class AgentOrchestrator {
   private llmProvider: GroqProvider | XAIProvider;
   private toolExecutor: SimpleToolExecutor;
   private openApiToolExecutor: OpenApiToolExecutor;
@@ -86,7 +86,7 @@ export class SimpleOrchestrator {
     return toolCalls.some(toolCall => {
       const exists = this.openApiToolExecutor.endpoints.has(toolCall.function.name);
       if (exists) {
-        logger.dev(`[SimpleOrchestrator] ✅ Tool OpenAPI détecté: ${toolCall.function.name}`);
+        logger.dev(`[AgentOrchestrator] ✅ Tool OpenAPI détecté: ${toolCall.function.name}`);
       }
       return exists;
     });
@@ -110,13 +110,13 @@ export class SimpleOrchestrator {
         .eq('agent_id', agentId);
 
       if (error) {
-        logger.error(`[SimpleOrchestrator] ❌ Erreur chargement schémas agent:`, error);
+        logger.error(`[AgentOrchestrator] ❌ Erreur chargement schémas agent:`, error);
         return [];
       }
 
       return links || [];
     } catch (error) {
-      logger.error(`[SimpleOrchestrator] ❌ Erreur:`, error);
+      logger.error(`[AgentOrchestrator] ❌ Erreur:`, error);
       return [];
     }
   }
@@ -136,7 +136,7 @@ export class SimpleOrchestrator {
     const provider = agentConfig?.provider || 'groq';
     const model = agentConfig?.model;
 
-    logger.dev(`[SimpleOrchestrator] Sélection du provider: ${provider} (model: ${model})`);
+    logger.dev(`[AgentOrchestrator] Sélection du provider: ${provider} (model: ${model})`);
 
     switch (provider.toLowerCase()) {
       case 'xai':
@@ -168,7 +168,7 @@ export class SimpleOrchestrator {
     const startTime = Date.now();
     const maxToolCalls = context.maxToolCalls || DEFAULT_CONFIG.maxToolCalls;
     
-    logger.info(`[SimpleOrchestrator] Start processing: ${message.substring(0, 100)}...`);
+    logger.info(`[AgentOrchestrator] Start processing: ${message.substring(0, 100)}...`);
 
     try {
       // Build initial messages
@@ -188,7 +188,7 @@ export class SimpleOrchestrator {
       const agentSchemas = await this.loadAgentOpenApiSchemas(agentConfig?.id);
       
       if (agentSchemas.length > 0) {
-        logger.dev(`[SimpleOrchestrator] 🔧 Chargement depuis ${agentSchemas.length} schémas OpenAPI...`);
+        logger.dev(`[AgentOrchestrator] 🔧 Chargement depuis ${agentSchemas.length} schémas OpenAPI...`);
         
         // ✅ NOUVEAU : Récupérer tools + endpoints en 1 seul parsing (centralisé)
         const schemaIds = agentSchemas.map(s => s.openapi_schema_id);
@@ -203,21 +203,21 @@ export class SimpleOrchestrator {
           this.openApiToolExecutor = new OpenApiToolExecutor('', endpoints);
         }
         
-        logger.dev(`[SimpleOrchestrator] ✅ ${openApiTools.length} tools et ${endpoints.size} endpoints chargés`);
+        logger.dev(`[AgentOrchestrator] ✅ ${openApiTools.length} tools et ${endpoints.size} endpoints chargés`);
         
         if (selectedProvider.toLowerCase() === 'xai') {
           // ✅ xAI : Utiliser uniquement les tools OpenAPI avec limite
           const XAI_MAX_TOOLS = 15;
           
           if (openApiTools.length > XAI_MAX_TOOLS) {
-            logger.warn(`[SimpleOrchestrator] ⚠️ Trop de tools pour xAI (${openApiTools.length}/${XAI_MAX_TOOLS}). Limitation appliquée.`);
+            logger.warn(`[AgentOrchestrator] ⚠️ Trop de tools pour xAI (${openApiTools.length}/${XAI_MAX_TOOLS}). Limitation appliquée.`);
             tools = openApiTools.slice(0, XAI_MAX_TOOLS);
           } else {
             tools = openApiTools;
           }
         } else {
           // ✅ Groq/OpenAI : Combiner les tools OpenAPI avec les MCP tools
-          logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools MCP pour ${selectedProvider}...`);
+          logger.dev(`[AgentOrchestrator] 🔧 Chargement des tools MCP pour ${selectedProvider}...`);
           const mcpTools = await mcpConfigService.buildHybridTools(
             agentConfig?.id || 'default',
             context.userToken,
@@ -227,19 +227,19 @@ export class SimpleOrchestrator {
           
           const mcpCount = tools.filter((t) => isMcpTool(t)).length;
           const openApiCount = tools.filter((t) => !isMcpTool(t)).length;
-          logger.dev(`[SimpleOrchestrator] ✅ Tools hybrides disponibles: ${tools.length} total (${mcpCount} MCP + ${openApiCount} OpenAPI)`);
+          logger.dev(`[AgentOrchestrator] ✅ Tools hybrides disponibles: ${tools.length} total (${mcpCount} MCP + ${openApiCount} OpenAPI)`);
         }
       } else {
         // ✅ Fallback : Aucun schéma OpenAPI assigné
         if (selectedProvider.toLowerCase() === 'xai') {
           // xAI : Tools minimaux
-          logger.dev(`[SimpleOrchestrator] 🔧 Aucun schéma assigné, chargement des tools minimaux...`);
+          logger.dev(`[AgentOrchestrator] 🔧 Aucun schéma assigné, chargement des tools minimaux...`);
           const { getMinimalXAITools } = await import('../minimalToolsForXAI');
           tools = getMinimalXAITools();
-          logger.dev(`[SimpleOrchestrator] ✅ Tools minimaux disponibles: ${tools.length} tools`);
+          logger.dev(`[AgentOrchestrator] ✅ Tools minimaux disponibles: ${tools.length} tools`);
         } else {
           // Groq/OpenAI : MCP tools uniquement
-          logger.dev(`[SimpleOrchestrator] 🔧 Chargement des tools MCP pour ${selectedProvider}...`);
+          logger.dev(`[AgentOrchestrator] 🔧 Chargement des tools MCP pour ${selectedProvider}...`);
           tools = await mcpConfigService.buildHybridTools(
             agentConfig?.id || 'default',
             context.userToken,
@@ -247,7 +247,7 @@ export class SimpleOrchestrator {
           ) as Tool[];
           
           const mcpCount = tools.filter((t) => isMcpTool(t)).length;
-          logger.dev(`[SimpleOrchestrator] ✅ Tools MCP disponibles: ${tools.length} total (${mcpCount} serveurs MCP)`);
+          logger.dev(`[AgentOrchestrator] ✅ Tools MCP disponibles: ${tools.length} total (${mcpCount} serveurs MCP)`);
         }
       }
 
@@ -262,7 +262,7 @@ export class SimpleOrchestrator {
         iteration++;
         
         if (Date.now() - startTime > DEFAULT_CONFIG.timeout) {
-          logger.error('[SimpleOrchestrator] Timeout reached');
+          logger.error('[AgentOrchestrator] Timeout reached');
           break;
         }
 
@@ -272,7 +272,7 @@ export class SimpleOrchestrator {
         // ✅ NOUVEAU: Gérer les erreurs de validation de tool calls
         if (response.validation_error) {
           const validationError = response.validation_error;
-          logger.warn(`[SimpleOrchestrator] ⚠️ Erreur de validation tool call (retry ${iteration}):`, validationError.message);
+          logger.warn(`[AgentOrchestrator] ⚠️ Erreur de validation tool call (retry ${iteration}):`, validationError.message);
           
           // Ajouter un message système avec l'erreur pour que le LLM corrige
           messages.push({
@@ -293,7 +293,7 @@ export class SimpleOrchestrator {
 
         // Check if we're done
         if (!response.tool_calls || response.tool_calls.length === 0) {
-          logger.info(`[SimpleOrchestrator] Done after ${iteration} iterations`);
+          logger.info(`[AgentOrchestrator] Done after ${iteration} iterations`);
           return {
             content: finalContent,
             toolCalls: allToolCalls,
@@ -310,7 +310,7 @@ export class SimpleOrchestrator {
         if (hasMcpTools) {
           // ✅ Les MCP calls ont déjà été exécutés par Groq dans l'API Responses
           // On a juste besoin d'enregistrer les résultats
-          logger.dev(`[SimpleOrchestrator] ✅ MCP calls déjà exécutés par Groq (Responses API)`);
+          logger.dev(`[AgentOrchestrator] ✅ MCP calls déjà exécutés par Groq (Responses API)`);
           
           const toolCalls = response.tool_calls || [];
           allToolCalls.push(...toolCalls);
@@ -327,7 +327,7 @@ export class SimpleOrchestrator {
           }
           
           // ✅ On est déjà à la fin avec l'API Responses (tout est fait en un appel)
-          logger.info(`[SimpleOrchestrator] Done with MCP (Responses API) - ${allToolCalls.length} calls executed`);
+          logger.info(`[AgentOrchestrator] Done with MCP (Responses API) - ${allToolCalls.length} calls executed`);
           return {
             content: finalContent,
             toolCalls: allToolCalls,
@@ -341,11 +341,11 @@ export class SimpleOrchestrator {
         totalToolCalls += toolCalls.length;
 
         if (totalToolCalls > maxToolCalls) {
-          logger.error(`[SimpleOrchestrator] Max tool calls reached: ${totalToolCalls}`);
+          logger.error(`[AgentOrchestrator] Max tool calls reached: ${totalToolCalls}`);
           break;
         }
 
-        logger.dev(`[SimpleOrchestrator] Executing ${toolCalls.length} tool calls (Chat Completions)`);
+        logger.dev(`[AgentOrchestrator] Executing ${toolCalls.length} tool calls (Chat Completions)`);
         
         // Détecter le type de tools et utiliser l'exécuteur approprié
         const isOpenApiTools = this.isOpenApiTools(toolCalls);
@@ -382,7 +382,7 @@ export class SimpleOrchestrator {
         }
       }
 
-      logger.info(`[SimpleOrchestrator] Completed: ${totalToolCalls} tool calls, ${iteration} iterations`);
+      logger.info(`[AgentOrchestrator] Completed: ${totalToolCalls} tool calls, ${iteration} iterations`);
 
       return {
         content: finalContent,
@@ -392,7 +392,7 @@ export class SimpleOrchestrator {
       };
 
     } catch (error) {
-      logger.error('[SimpleOrchestrator] Error:', error);
+      logger.error('[AgentOrchestrator] Error:', error);
       throw error;
     }
   }
@@ -472,5 +472,5 @@ export class SimpleOrchestrator {
 /**
  * Instance singleton
  */
-export const simpleOrchestrator = new SimpleOrchestrator();
+export const agentOrchestrator = new AgentOrchestrator();
 
