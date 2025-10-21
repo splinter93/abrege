@@ -92,7 +92,8 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         let buffer = '';
         let fullContent = '';
         let fullReasoning = '';
-        const toolCallsMap = new Map<string, any>(); // ✅ Déduplication par ID
+        let currentRoundToolCalls = new Map<string, any>(); // ✅ Map pour le round actuel
+        const allNotifiedToolCallIds = new Set<string>(); // ✅ Track pour éviter re-notifications
 
         while (true) {
           const { done, value } = await reader.read();
@@ -137,12 +138,12 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                   fullReasoning += chunk.reasoning;
                 }
 
-                // ✅ Tool calls avec déduplication par ID (ne notifie PAS pendant streaming)
+                // ✅ Tool calls avec déduplication par ID
                 if (chunk.tool_calls && Array.isArray(chunk.tool_calls)) {
                   for (const tc of chunk.tool_calls) {
-                    if (!toolCallsMap.has(tc.id)) {
+                    if (!currentRoundToolCalls.has(tc.id)) {
                       // Nouveau tool call
-                      toolCallsMap.set(tc.id, {
+                      currentRoundToolCalls.set(tc.id, {
                         id: tc.id,
                         type: tc.type || 'function',
                         function: {
@@ -152,7 +153,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                       });
                     } else {
                       // Accumuler arguments progressifs (streaming)
-                      const existing = toolCallsMap.get(tc.id);
+                      const existing = currentRoundToolCalls.get(tc.id);
                       if (tc.function?.name) existing.function.name = tc.function.name;
                       if (tc.function?.arguments) existing.function.arguments += tc.function.arguments;
                     }
@@ -160,14 +161,23 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                 }
               }
               
-              // ✅ Gérer tool_execution et tool_result du backend
+              // ✅ Gérer tool_execution : notifier et réinitialiser la map du round
               if (chunk.type === 'tool_execution') {
                 logger.dev(`[useChatResponse] 🔧 Exécution de ${chunk.toolCount || 0} tools...`);
-                // Notifier onToolCalls UNE FOIS avec tous les tool calls finaux
-                const finalToolCalls = Array.from(toolCallsMap.values());
-                if (finalToolCalls.length > 0) {
-                  onToolCalls?.(finalToolCalls, 'stream');
+                
+                // Notifier seulement les tool calls NON déjà notifiés
+                const toolCallsToNotify = Array.from(currentRoundToolCalls.values()).filter(
+                  tc => !allNotifiedToolCallIds.has(tc.id)
+                );
+                
+                if (toolCallsToNotify.length > 0) {
+                  onToolCalls?.(toolCallsToNotify, 'stream');
+                  // Marquer comme notifiés
+                  toolCallsToNotify.forEach(tc => allNotifiedToolCallIds.add(tc.id));
                 }
+                
+                // ✅ Réinitialiser pour le prochain round
+                currentRoundToolCalls.clear();
               }
               
               if (chunk.type === 'tool_result') {
@@ -177,9 +187,9 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
 
               if (chunk.type === 'done') {
                 logger.dev('[useChatResponse] 🏁 Stream [DONE]');
-                const finalToolCalls = Array.from(toolCallsMap.values());
                 onStreamEnd?.();
-                onComplete?.(fullContent, fullReasoning, finalToolCalls, []);
+                // ✅ Passer une liste vide de tool calls (déjà notifiés individuellement)
+                onComplete?.(fullContent, fullReasoning, [], []);
               }
 
               if (chunk.type === 'error') {
