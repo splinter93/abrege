@@ -144,20 +144,16 @@ const ChatFullscreenV2: React.FC = () => {
     },
     
     onToolExecution: (toolCount: number) => {
-      logger.dev(`[ChatFullscreen] 🔧 Exécution de ${toolCount} tools, réinitialisation message temporaire`);
+      logger.dev(`[ChatFullscreen] 🔧 Exécution de ${toolCount} tools, GARDE le message visible`);
       
       // ✅ État : Exécution des tools
       setStreamingState('executing');
       setExecutingToolCount(toolCount);
       setCurrentRound(prev => prev + 1);
       
-      // ✅ Réinitialiser le message temporaire entre les rounds
-      setStreamingMessageTemp({
-        role: 'assistant',
-        content: '', // Vide pour le prochain round
-        timestamp: new Date().toISOString()
-      });
-      setStreamingContent('');
+      // ✅ NE PAS réinitialiser le message temporaire ici !
+      // Le texte "Je vais chercher..." doit rester visible pendant l'exécution
+      // On réinitialisera après les résultats, au début du prochain round de streaming
     },
     
     onStreamEnd: () => {

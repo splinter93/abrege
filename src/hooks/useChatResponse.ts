@@ -129,6 +129,12 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
               }
 
               if (chunk.type === 'delta') {
+                // ✅ Si c'est un nouveau round (premier chunk après tool_execution), réinitialiser
+                if (chunk.content && currentRoundContent === '' && currentRoundToolCalls.size === 0) {
+                  logger.dev('[useChatResponse] 🔄 Nouveau round détecté, réinitialisation content');
+                  // Content est déjà vide, pas besoin de réinitialiser
+                }
+                
                 // Content progressif du round actuel
                 if (chunk.content) {
                   currentRoundContent += chunk.content;
@@ -163,7 +169,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                 }
               }
               
-              // ✅ Gérer tool_execution : notifier et réinitialiser pour le prochain round
+              // ✅ Gérer tool_execution : notifier SANS réinitialiser le content immédiatement
               if (chunk.type === 'tool_execution') {
                 logger.dev(`[useChatResponse] 🔧 Exécution de ${chunk.toolCount || 0} tools...`);
                 
@@ -178,12 +184,12 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                   toolCallsToNotify.forEach(tc => allNotifiedToolCallIds.add(tc.id));
                 }
                 
-                // ✅ Notifier début d'exécution (UI peut clear le message temporaire)
+                // ✅ Notifier début d'exécution (UI affiche "Executing...")
                 onToolExecution?.(chunk.toolCount || 0);
                 
-                // ✅ IMPORTANT : Réinitialiser le content pour le prochain round
-                currentRoundContent = '';
-                currentRoundReasoning = '';
+                // ✅ NE PAS réinitialiser currentRoundContent ici !
+                // Le texte "Je vais chercher..." doit rester visible
+                // On réinitialisera au prochain chunk delta (début du round suivant)
                 currentRoundToolCalls.clear();
               }
               
