@@ -98,55 +98,23 @@ const ChatFullscreenV2: React.FC = () => {
       setIsStreaming(true);
       setStreamingContent('');
       
-      // Créer un message temporaire pour afficher le streaming
-      const tempMessage: AssistantMessage = {
-        role: 'assistant',
-        content: '',
-        timestamp: new Date().toISOString()
-      };
-      
-      // ✅ Utiliser state local pour le streaming (évite problèmes de sync)
-      if (currentSession) {
-        const updatedThread = [...currentSession.thread, tempMessage];
-        setCurrentSession({
-          ...currentSession,
-          thread: updatedThread
-        });
-      }
+      // ✅ NE PAS créer de message temporaire ici
+      // Le message sera créé dans onComplete avec le contenu final
     },
     
     onStreamChunk: (chunk: string) => {
       logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20));
       
-      setStreamingContent(prev => {
-        const newContent = prev + chunk;
-        
-        // ✅ Mettre à jour le dernier message localement
-        if (currentSession) {
-          const updatedThread = currentSession.thread.map((msg, idx) => {
-            if (idx === currentSession.thread.length - 1 && msg.role === 'assistant') {
-              return {
-                ...msg,
-                content: newContent
-              };
-            }
-            return msg;
-          });
-          
-          setCurrentSession({
-            ...currentSession,
-            thread: updatedThread
-          });
-        }
-        
-        return newContent;
-      });
+      setStreamingContent(prev => prev + chunk);
+      
+      // ✅ Afficher le contenu progressif sans toucher au store
+      // (on pourrait créer un state React temporaire si besoin d'affichage)
     },
     
     onStreamEnd: () => {
-      logger.dev('[ChatFullscreen] ✅ Stream terminé');
+      logger.dev('[ChatFullscreen] ✅ Stream terminé, contenu:', streamingContent.substring(0, 50));
       setIsStreaming(false);
-      setStreamingContent('');
+      // Le contenu sera persisté dans onComplete
     },
     
     onComplete: (fullContent: string, fullReasoning: string, toolCalls?: unknown[], toolResults?: unknown[]) => {
