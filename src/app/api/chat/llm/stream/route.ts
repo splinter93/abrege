@@ -239,12 +239,22 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
+        const startTime = Date.now();
+        const TIMEOUT_MS = 60000; // 60s timeout
+        
+        // ✅ Vérifier timeout
+        const checkTimeout = () => {
+          if (Date.now() - startTime > TIMEOUT_MS) {
+            throw new Error('Stream timeout (60s)');
+          }
+        };
         
         try {
           logger.dev('[Stream Route] 📡 Démarrage du stream SSE');
           
           // Helper pour envoyer un chunk SSE
           const sendSSE = (data: unknown) => {
+            checkTimeout(); // Vérifier avant chaque envoi
             const chunk = `data: ${JSON.stringify(data)}\n\n`;
             controller.enqueue(encoder.encode(chunk));
           };
@@ -342,14 +352,16 @@ export async function POST(request: NextRequest) {
               timestamp: new Date().toISOString()
             });
 
-            // ✅ Exécuter les tool calls avec les bons executors
+            // ✅ Créer les executors UNE FOIS (en dehors de la boucle)
             const { ApiV2ToolExecutor } = await import('@/services/llm/executors/ApiV2ToolExecutor');
             const { OpenApiToolExecutor } = await import('@/services/llm/executors/OpenApiToolExecutor');
             
             const mcpExecutor = new ApiV2ToolExecutor();
             const openApiExecutor = new OpenApiToolExecutor('', openApiEndpoints);
             
+            // ✅ Exécuter chaque tool call
             for (const toolCall of accumulatedToolCalls) {
+              checkTimeout(); // Vérifier timeout avant chaque tool
               try {
                 logger.dev(`[Stream Route] 🔧 Exécution tool: ${toolCall.function.name}`);
                 
