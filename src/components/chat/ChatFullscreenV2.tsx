@@ -91,7 +91,7 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 Hook de chat avec streaming
   const { isProcessing, sendMessage } = useChatResponse({
-    useStreaming: false, // ✅ DÉSACTIVÉ temporairement pour stabilité (réactiver après tests)
+    useStreaming: true, // ✅ ACTIVÉ pour tests xAI Grok streaming
     
     onStreamStart: () => {
       logger.dev('[ChatFullscreen] 🌊 Stream démarré');

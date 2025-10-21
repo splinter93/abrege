@@ -105,11 +105,14 @@ export async function POST(request: NextRequest) {
       maxTokens: finalAgentConfig?.max_tokens || 8000
     });
 
-    // Préparer les messages et tools (simplifié pour l'instant)
+    // Préparer les messages
+    const systemMessage = finalAgentConfig?.system_instructions || 
+      'Tu es un assistant intelligent. Tu peux utiliser des outils pour répondre aux questions.';
+    
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: finalAgentConfig?.system_instructions || 'Tu es un assistant intelligent.',
+        content: systemMessage,
         timestamp: new Date().toISOString()
       },
       ...history,
@@ -120,7 +123,34 @@ export async function POST(request: NextRequest) {
       }
     ];
 
-    const tools: Tool[] = []; // TODO: Charger les tools depuis OpenAPI/MCP
+    // Charger les tools si l'agent en a
+    let tools: Tool[] = [];
+    
+    if (context.agentId) {
+      try {
+        // Charger les schémas OpenAPI de l'agent
+        const { data: agentSchemas } = await supabase
+          .from('agent_openapi_schemas')
+          .select('openapi_schema_id')
+          .eq('agent_id', context.agentId);
+
+        if (agentSchemas && agentSchemas.length > 0) {
+          // Importer le service OpenAPI
+          const { openApiSchemaService } = await import('@/services/llm/openApiSchemaService');
+          
+          const schemaIds = agentSchemas.map(s => s.openapi_schema_id);
+          const { tools: openApiTools } = await openApiSchemaService.getToolsAndEndpointsFromSchemas(schemaIds);
+          
+          // Limiter à 15 tools pour xAI
+          tools = openApiTools.slice(0, 15);
+          
+          logger.dev(`[Stream Route] ✅ ${tools.length} tools chargés pour l'agent`);
+        }
+      } catch (toolsError) {
+        logger.warn('[Stream Route] ⚠️ Erreur chargement tools:', toolsError);
+        // Continue sans tools
+      }
+    }
 
     // ✅ Créer le ReadableStream pour SSE
     const stream = new ReadableStream({
