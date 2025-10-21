@@ -117,14 +117,19 @@ export async function POST(request: NextRequest) {
 
     // ✅ Construire le system message avec contexte (comme la route classique)
     const { SystemMessageBuilder } = await import('@/services/llm/SystemMessageBuilder');
-    const systemMessageBuilder = new SystemMessageBuilder();
+    const systemMessageBuilder = SystemMessageBuilder.getInstance();
     
-    const systemMessage = finalAgentConfig?.system_instructions 
-      ? systemMessageBuilder.buildWithCustomInstructions(
-          finalAgentConfig.system_instructions,
-          uiContext
-        )
-      : systemMessageBuilder.buildDefault(uiContext);
+    const systemMessageResult = systemMessageBuilder.buildSystemMessage(
+      finalAgentConfig || {},
+      {
+        type: context.type || 'chat_session',
+        name: context.name || 'Chat',
+        id: context.id || sessionId,
+        ...uiContext
+      }
+    );
+    
+    const systemMessage = systemMessageResult.content;
     
     logger.dev('[Stream Route] 📝 System message construit:', {
       length: systemMessage.length,
