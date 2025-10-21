@@ -222,29 +222,62 @@ export async function POST(request: NextRequest) {
 
             // Accumuler tool calls et content du stream
             let accumulatedContent = '';
-            let accumulatedToolCalls: any[] = [];
-            let hasToolCalls = false;
+            const toolCallsMap = new Map<string, any>(); // Accumuler par ID pour gérer les chunks
+            let finishReason: string | null = null;
 
             // ✅ Stream depuis xAI
             for await (const chunk of provider.callWithMessagesStream(currentMessages, tools)) {
               // Envoyer le chunk au client
               sendSSE(chunk);
 
-              // Accumuler pour détecter tool calls
+              // Accumuler content
               if (chunk.content) {
                 accumulatedContent += chunk.content;
               }
+              
+              // ✅ Accumuler tool calls (peuvent venir en plusieurs chunks)
               if (chunk.tool_calls && chunk.tool_calls.length > 0) {
-                accumulatedToolCalls.push(...chunk.tool_calls);
-                hasToolCalls = true;
+                for (const tc of chunk.tool_calls) {
+                  if (!toolCallsMap.has(tc.id)) {
+                    toolCallsMap.set(tc.id, {
+                      id: tc.id,
+                      type: tc.type,
+                      function: {
+                        name: tc.function.name || '',
+                        arguments: tc.function.arguments || ''
+                      }
+                    });
+                  } else {
+                    // Accumuler les arguments progressifs
+                    const existing = toolCallsMap.get(tc.id);
+                    if (tc.function.name) existing.function.name = tc.function.name;
+                    if (tc.function.arguments) existing.function.arguments += tc.function.arguments;
+                  }
+                }
+              }
+
+              // ✅ Capturer finish_reason
+              if (chunk.finishReason) {
+                finishReason = chunk.finishReason;
+                logger.dev(`[Stream Route] 🏁 Finish reason détecté: ${finishReason}`);
               }
             }
 
-            // Si pas de tool calls, terminer
-            if (!hasToolCalls || accumulatedToolCalls.length === 0) {
+            // ✅ Décision basée sur finish_reason
+            if (finishReason === 'tool_calls' && toolCallsMap.size > 0) {
+              logger.dev(`[Stream Route] 🔧 Tool calls détectés (${toolCallsMap.size}), exécution...`);
+            } else if (finishReason === 'stop') {
+              logger.dev('[Stream Route] ✅ Réponse finale (stop), fin du stream');
+              break;
+            } else if (finishReason === 'length') {
+              logger.warn('[Stream Route] ⚠️ Token limit atteint');
+              break;
+            } else {
               logger.dev('[Stream Route] ✅ Pas de tool calls, fin du stream');
               break;
             }
+
+            const accumulatedToolCalls = Array.from(toolCallsMap.values());
 
             // ✅ Exécuter les tool calls
             logger.dev(`[Stream Route] 🔧 Exécution de ${accumulatedToolCalls.length} tool calls`);

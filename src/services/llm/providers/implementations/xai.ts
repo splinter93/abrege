@@ -29,6 +29,7 @@ export interface StreamChunk {
   reasoning?: string;
   usage?: Usage;
   error?: string;
+  finishReason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null; // ✅ IMPORTANT pour détecter fin
 }
 
 /**
@@ -385,6 +386,8 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
               if (!choice) continue;
 
               const delta = choice.delta;
+              const finishReason = choice.finish_reason;
+              
               const chunk: StreamChunk = {
                 type: 'delta'
               };
@@ -394,7 +397,7 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
                 chunk.content = delta.content;
               }
 
-              // Tool calls
+              // Tool calls (peuvent venir en plusieurs chunks)
               if (delta.tool_calls && delta.tool_calls.length > 0) {
                 chunk.tool_calls = delta.tool_calls.map(tc => ({
                   id: tc.id || '',
@@ -414,6 +417,14 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
               // Usage (dans le dernier chunk)
               if (parsed.usage) {
                 chunk.usage = parsed.usage;
+              }
+
+              // ✅ IMPORTANT : finish_reason indique la fin du stream
+              // 'tool_calls' = Le LLM veut appeler des tools
+              // 'stop' = Réponse complète normale
+              if (finishReason) {
+                chunk.finishReason = finishReason;
+                logger.dev(`[XAIProvider] 🏁 Finish reason: ${finishReason}`);
               }
 
               yield chunk;
