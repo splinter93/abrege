@@ -51,7 +51,24 @@ const addMessageSchema = z.object({
     details: z.unknown().optional(),
     tool_args: z.unknown().optional(),
     timestamp: z.string().optional()
-  })).optional()
+  })).optional(),
+  // ✅ NOUVEAU : Support pour streamTimeline (schéma flexible)
+  streamTimeline: z.object({
+    items: z.array(z.object({
+      type: z.enum(['text', 'tool_execution', 'tool_result']),
+      content: z.string().optional(), // Optionnel pour tool_execution
+      timestamp: z.number(),
+      roundNumber: z.number().optional(),
+      toolCallId: z.string().optional(),
+      toolName: z.string().optional(),
+      toolCalls: z.array(z.any()).optional(), // Pour tool_execution
+      toolCount: z.number().optional(), // Pour tool_execution
+      result: z.string().optional(), // Pour tool_result
+      success: z.boolean().optional() // Pour tool_result
+    })),
+    startTime: z.number().optional(),
+    endTime: z.number().optional()
+  }).optional()
 });
 
 // 🔧 VALIDATION RENFORCÉE: Vérifier que les messages tool ont les champs requis

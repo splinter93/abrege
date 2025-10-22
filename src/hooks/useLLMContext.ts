@@ -34,6 +34,7 @@ export function useLLMContext(options: LLMContextOptions = {}): LLMContext {
     const dayName = daysOfWeek[now.getDay()];
     const day = now.getDate();
     const month = now.toLocaleDateString('fr-FR', { month: 'short' });
+    const year = now.getFullYear();
     const hours = now.getHours().toString().padStart(2, '0');
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -50,7 +51,7 @@ export function useLLMContext(options: LLMContextOptions = {}): LLMContext {
     const context: LLMContext = {
       sessionId: 'current', // Sera remplacé par la vraie sessionId
       time: {
-        local: `${dayName} ${day} ${month}, ${hours}h${minutes}`,
+        local: `${dayName} ${day} ${month} ${year}, ${hours}h${minutes}`,
         timezone: cityName,
         timestamp: now.toISOString()
       },

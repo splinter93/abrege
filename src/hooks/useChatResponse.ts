@@ -1,12 +1,15 @@
 import { useState, useCallback } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
+import { StreamTimeline, StreamTimelineItem } from '@/types/streamTimeline';
+import type { ToolCall } from '@/hooks/useChatHandlers';
 
 interface UseChatResponseOptions {
   onComplete?: (
     fullContent: string, 
     fullReasoning: string, 
     toolCalls?: unknown[], 
-    toolResults?: unknown[]
+    toolResults?: unknown[],
+    streamTimeline?: StreamTimeline // ✅ NOUVEAU: Timeline capturée du stream
   ) => void;
   onError?: (error: string) => void;
   onToolCalls?: (toolCalls: Array<{ id: string; name: string; arguments: Record<string, unknown> }>, toolName: string) => void;
@@ -18,6 +21,7 @@ interface UseChatResponseOptions {
   onStreamEnd?: () => void;
   onToolExecution?: (toolCount: number) => void; // ✅ Quand les tools commencent à s'exécuter
   useStreaming?: boolean; // Activer/désactiver le streaming
+  onAssistantRoundComplete?: (content: string, toolCalls: ToolCall[]) => void; // ✅ NOUVEAU
 }
 
 interface UseChatResponseReturn {
@@ -40,7 +44,8 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
     onStreamStart,
     onStreamEnd,
     onToolExecution,
-    useStreaming = false // ✅ Désactivé par défaut pour compatibilité
+    useStreaming = false, // ✅ Désactivé par défaut pour compatibilité
+    onAssistantRoundComplete, // ✅ NOUVEAU: Pour persister chaque round
   } = options;
 
   const sendMessage = useCallback(async (message: string, sessionId: string, context?: Record<string, unknown>, history?: unknown[], token?: string) => {
@@ -94,8 +99,28 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         let buffer = '';
         let currentRoundContent = ''; // ✅ Content du round actuel seulement
         let currentRoundReasoning = ''; // ✅ Reasoning du round actuel
-        let currentRoundToolCalls = new Map<string, any>(); // ✅ Map pour le round actuel
+        let currentRoundToolCalls = new Map<string, ToolCall>(); // ✅ Map pour le round actuel
         const allNotifiedToolCallIds = new Set<string>(); // ✅ Track pour éviter re-notifications
+        
+        // ✅ NOUVEAU: Collections globales pour tous les tool calls/results du cycle complet
+        const allToolCalls = new Map<string, ToolCall>(); // Tous les tool calls de tous les rounds
+        const allToolResults: Array<{
+          tool_call_id: string;
+          name: string;
+          content: string;
+          success: boolean;
+        }> = []; // Tous les tool results
+        
+        // ✅ NOUVEAU : Accumulateur global pour TOUT le contenu
+        let allContent = '';
+        
+        // ✅ CORRECTION : Pour éviter les hallucinations, on va réinitialiser allContent
+        // après chaque tool execution pour ne garder QUE le contenu post-tool
+        
+        // ✅ NOUVEAU: Timeline pour capturer l'ordre exact des événements
+        const streamTimeline: StreamTimelineItem[] = [];
+        const streamStartTime = Date.now();
+        let currentRoundNumber = 0;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -129,17 +154,35 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
               }
 
               if (chunk.type === 'delta') {
-                // Content progressif du round actuel
-                if (chunk.content) {
-                  // ✅ Si on reçoit du content juste après tool_execution, c'est un nouveau round
-                  // On doit REMPLACER le content au lieu d'accumuler
-                  if (chunk.content && currentRoundToolCalls.size === 0) {
-                    // Probablement un nouveau round après exécution tools
-                    // Mais on garde l'accumulation pour le streaming normal
-                  }
-                  
-                  currentRoundContent += chunk.content;
+                  // Content progressif du round actuel
+                  if (chunk.content) {
+                    // ✅ Si on reçoit du content juste après tool_execution, c'est un nouveau round
+                    // On doit REMPLACER le content au lieu d'accumuler
+                    if (chunk.content && currentRoundToolCalls.size === 0) {
+                      // Probablement un nouveau round après exécution tools
+                      // Mais on garde l'accumulation pour le streaming normal
+                    }
+                    
+                    currentRoundContent += chunk.content;
+                    // ✅ NOUVEAU : Accumuler TOUT le contenu globalement
+                    allContent += chunk.content;
                   onStreamChunk?.(chunk.content);
+                  
+                  // ✅ NOUVEAU: Ajouter/mettre à jour l'événement text dans la timeline
+                  // On fusionne les chunks delta en un seul événement text par round
+                  const lastEvent = streamTimeline[streamTimeline.length - 1];
+                  if (lastEvent && lastEvent.type === 'text' && lastEvent.roundNumber === currentRoundNumber) {
+                    // Fusionner avec l'événement text existant du même round
+                    lastEvent.content += chunk.content;
+                  } else {
+                    // Créer un nouvel événement text
+                    streamTimeline.push({
+                      type: 'text',
+                      content: chunk.content,
+                      timestamp: Date.now() - streamStartTime,
+                      roundNumber: currentRoundNumber
+                    });
+                  }
                 }
 
                 // Reasoning du round actuel
@@ -152,19 +195,28 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                   for (const tc of chunk.tool_calls) {
                     if (!currentRoundToolCalls.has(tc.id)) {
                       // Nouveau tool call
-                      currentRoundToolCalls.set(tc.id, {
+                      const toolCall = {
                         id: tc.id,
                         type: tc.type || 'function',
                         function: {
                           name: tc.function?.name || '',
                           arguments: tc.function?.arguments || ''
                         }
-                      });
+                      };
+                      currentRoundToolCalls.set(tc.id, toolCall);
+                      allToolCalls.set(tc.id, toolCall); // ✅ NOUVEAU: Ajouter au Map global
                     } else {
                       // Accumuler arguments progressifs (streaming)
                       const existing = currentRoundToolCalls.get(tc.id);
                       if (tc.function?.name) existing.function.name = tc.function.name;
                       if (tc.function?.arguments) existing.function.arguments += tc.function.arguments;
+                      
+                      // ✅ NOUVEAU: Mettre à jour aussi dans le Map global
+                      const globalExisting = allToolCalls.get(tc.id);
+                      if (globalExisting) {
+                        if (tc.function?.name) globalExisting.function.name = tc.function.name;
+                        if (tc.function?.arguments) globalExisting.function.arguments += tc.function.arguments;
+                      }
                     }
                   }
                 }
@@ -174,8 +226,9 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
               if (chunk.type === 'tool_execution') {
                 logger.dev(`[useChatResponse] 🔧 Exécution de ${chunk.toolCount || 0} tools...`);
                 
-                // Notifier seulement les tool calls NON déjà notifiés
-                const toolCallsToNotify = Array.from(currentRoundToolCalls.values()).filter(
+                // ✅ CORRIGÉ: Utiliser allToolCalls au lieu de currentRoundToolCalls
+                // car les tool_calls arrivent peut-être dans des chunks après tool_execution
+                const toolCallsToNotify = Array.from(allToolCalls.values()).filter(
                   tc => !allNotifiedToolCallIds.has(tc.id)
                 );
                 
@@ -188,20 +241,96 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                 // ✅ Notifier début d'exécution (UI affiche "Executing...")
                 onToolExecution?.(chunk.toolCount || 0);
                 
+                // ✅ NOUVEAU: Ajouter l'événement tool_execution à la timeline
+                // CORRIGÉ: Utiliser allToolCalls (qui contient TOUS les tool calls reçus jusqu'ici)
+                const toolCallsSnapshot = Array.from(allToolCalls.values()).map(tc => ({
+                  id: tc.id,
+                  type: tc.type,
+                  function: {
+                    name: tc.function.name,
+                    arguments: tc.function.arguments
+                  }
+                }));
+                
+                logger.dev(`[useChatResponse] 📋 Tool execution capturé pour timeline:`, {
+                  toolCount: toolCallsSnapshot.length,
+                  toolNames: toolCallsSnapshot.map(tc => tc.function.name),
+                  allToolCallsSize: allToolCalls.size,
+                  currentRoundToolCallsSize: currentRoundToolCalls.size
+                });
+                
+                streamTimeline.push({
+                  type: 'tool_execution',
+                  toolCalls: toolCallsSnapshot,
+                  toolCount: chunk.toolCount || toolCallsSnapshot.length,
+                  timestamp: Date.now() - streamStartTime,
+                  roundNumber: currentRoundNumber
+                });
+                
+                // Passer au prochain round
+                currentRoundNumber++;
+                
                 // ✅ NE PAS réinitialiser ici - le prochain delta va écraser
                 currentRoundToolCalls.clear();
               }
               
               if (chunk.type === 'tool_result') {
                 logger.dev(`[useChatResponse] ✅ Tool result: ${chunk.toolName}`);
+                
+                // ✅ NOUVEAU: Collecter le tool result
+                const toolResult = {
+                  tool_call_id: chunk.toolCallId || `call_${Date.now()}`,
+                  name: chunk.toolName || 'unknown_tool',
+                  content: typeof chunk.result === 'string' ? chunk.result : JSON.stringify(chunk.result || {}),
+                  success: chunk.success || false
+                };
+                allToolResults.push(toolResult);
+                
+                // ✅ NOUVEAU: Ajouter l'événement tool_result à la timeline
+                streamTimeline.push({
+                  type: 'tool_result',
+                  toolCallId: chunk.toolCallId || `call_${Date.now()}`,
+                  toolName: chunk.toolName || 'unknown_tool',
+                  result: chunk.result,
+                  success: chunk.success || false,
+                  timestamp: Date.now() - streamStartTime
+                });
+                
                 onToolResult?.(chunk.toolName || '', chunk, chunk.success || false, chunk.toolCallId);
               }
 
+              // ✅ NOUVEAU: Gérer la fin d'un round assistant
+              if (chunk.type === 'assistant_round_complete') {
+                logger.dev(`[useChatResponse] 🔵 Round terminé: ${chunk.finishReason}`);
+                if (onAssistantRoundComplete && (chunk.content || (chunk.tool_calls && chunk.tool_calls.length > 0))) {
+                  onAssistantRoundComplete(chunk.content || '', chunk.tool_calls || []);
+                }
+                // Réinitialiser le contenu pour le prochain round potentiel
+                currentRoundContent = '';
+                currentRoundToolCalls.clear();
+              }
+
               if (chunk.type === 'done') {
-                logger.dev('[useChatResponse] 🏁 Stream [DONE]');
+                logger.dev('[useChatResponse] 🏁 Stream [DONE]', {
+                  contentLength: currentRoundContent.length,
+                  toolCallsCount: allToolCalls.size,
+                  toolResultsCount: allToolResults.length,
+                  timelineEvents: streamTimeline.length
+                });
                 onStreamEnd?.();
-                // ✅ Passer le content du dernier round (réponse finale)
-                onComplete?.(currentRoundContent, currentRoundReasoning, [], []);
+                // ✅ CORRIGÉ: Passer TOUS les tool calls, results ET la timeline
+                const finalTimeline: StreamTimeline = {
+                  items: streamTimeline,
+                  startTime: streamStartTime,
+                  endTime: Date.now()
+                };
+                onComplete?.(
+                  allContent, // ✅ CORRIGÉ: Utiliser TOUT le contenu au lieu du round actuel
+                  currentRoundReasoning, 
+                  Array.from(allToolCalls.values()), // Tous les tool calls du cycle
+                  allToolResults, // Tous les résultats collectés
+                  finalTimeline // ✅ NOUVEAU: Timeline complète
+                );
               }
 
               if (chunk.type === 'error') {
@@ -431,7 +560,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
     } finally {
       setIsProcessing(false);
     }
-  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamEnd, onToolExecution, useStreaming]);
+  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamEnd, onToolExecution, useStreaming, onAssistantRoundComplete]);
 
   const reset = useCallback(() => {
     setIsProcessing(false);

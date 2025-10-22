@@ -4,6 +4,7 @@
  */
 
 import type { ToolCall, ToolResult } from '@/hooks/useChatHandlers';
+import type { StreamTimeline } from './streamTimeline';
 
 /**
  * Configuration d'un agent de chat
@@ -40,6 +41,7 @@ export interface BaseMessage {
   role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   timestamp?: string | number;
+  streamTimeline?: StreamTimeline; // ✅ Timeline capturée du streaming
 }
 
 /**

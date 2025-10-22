@@ -7,6 +7,7 @@ import { useCallback } from 'react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuthGuard } from './useAuthGuard';
 import { simpleLogger as logger } from '@/utils/logger';
+import type { StreamTimeline } from '@/types/streamTimeline';
 
 /**
  * Représente un appel de fonction/outil par le LLM
@@ -32,7 +33,7 @@ export interface ToolResult {
 }
 
 interface ChatHandlersOptions {
-  onComplete?: (fullContent: string, fullReasoning: string, toolCalls?: ToolCall[], toolResults?: ToolResult[]) => void;
+  onComplete?: (fullContent: string, fullReasoning: string, toolCalls?: ToolCall[], toolResults?: ToolResult[], streamTimeline?: StreamTimeline) => void;
   onError?: (errorMessage: string) => void;
   onToolCalls?: (toolCalls: ToolCall[], toolName: string) => void;
   onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
@@ -40,9 +41,9 @@ interface ChatHandlersOptions {
 }
 
 interface ChatHandlersReturn {
-  handleComplete: (fullContent: string, fullReasoning: string, toolCalls?: ToolCall[], toolResults?: ToolResult[]) => Promise<void>;
+  handleComplete: (fullContent: string, fullReasoning: string, toolCalls?: ToolCall[], toolResults?: ToolResult[], streamTimeline?: StreamTimeline) => Promise<void>;
   handleError: (errorMessage: string) => void;
-  handleToolCalls: (toolCalls: ToolCall[], toolName: string) => Promise<void>;
+  handleToolCalls: (toolCalls: ToolCall[], toolName: string, roundContent?: string) => Promise<void>;
   handleToolResult: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => Promise<void>;
   handleToolExecutionComplete: (toolResults: ToolResult[]) => Promise<void>;
 }
@@ -58,35 +59,79 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
     fullContent: string, 
     fullReasoning: string, 
     toolCalls?: ToolCall[], 
-    toolResults?: ToolResult[]
+    toolResults?: ToolResult[],
+    streamTimeline?: StreamTimeline
   ) => {
     if (!requireAuth()) return;
 
-    const safeContent = fullContent?.trim();
+    // ✅ DEBUG : Logger l'état de la timeline
+    logger.dev('[useChatHandlers] 📥 handleComplete appelé:', {
+      contentLength: fullContent?.length || 0,
+      hasTimeline: !!streamTimeline,
+      timelineItemsCount: streamTimeline?.items?.length || 0,
+      toolCallsCount: toolCalls?.length || 0,
+      toolResultsCount: toolResults?.length || 0
+    });
+
+    // ✅ NOUVEAU : Reconstituer le contenu complet depuis la timeline
+    let finalContent = fullContent?.trim();
     
-    if (!safeContent) {
+    if (streamTimeline && streamTimeline.items.length > 0) {
+      // ✅ CORRECTION : Ne prendre QUE le dernier event "text" (après tous les tools)
+      // pour éviter les hallucinations du LLM avant l'exécution des tools
+      const textEvents = streamTimeline.items.filter(item => item.type === 'text');
+      
+      if (textEvents.length > 0) {
+        // ✅ STRATÉGIE : Si plusieurs events text, prendre SEULEMENT le dernier
+        // (celui qui suit les tool_results et qui utilise les vrais résultats)
+        const hasToolExecution = streamTimeline.items.some(item => item.type === 'tool_execution');
+        
+        if (hasToolExecution && textEvents.length > 1) {
+          // Il y a des tools ET plusieurs rounds de texte
+          // → Prendre UNIQUEMENT le dernier round (après tools)
+          finalContent = textEvents[textEvents.length - 1].content;
+          logger.info('[useChatHandlers] 🎯 Contenu du DERNIER round utilisé (évite hallucinations):', {
+            totalRounds: textEvents.length,
+            lastRoundLength: finalContent.length
+          });
+        } else {
+          // Pas de tools ou un seul round → utiliser tout
+          finalContent = textEvents.map(event => event.content).join('');
+          logger.dev('[useChatHandlers] 🔄 Contenu complet reconstitué:', {
+            textEventsCount: textEvents.length,
+            reconstructedLength: finalContent.length
+          });
+        }
+      }
+    }
+    
+    if (!finalContent) {
       logger.warn('[useChatHandlers] ⚠️ Contenu vide, pas de message à ajouter');
       return;
     }
       
     const messageToAdd = {
       role: 'assistant' as const,
-      content: safeContent,
+      content: finalContent,
       reasoning: fullReasoning,
       tool_calls: toolCalls || [],
       tool_results: toolResults || [],
+      streamTimeline: streamTimeline, // ✅ NOUVEAU: Persister la timeline
       timestamp: new Date().toISOString()
     };
 
-    logger.dev('[useChatHandlers] 📝 Ajout du message final complet');
+    logger.dev('[useChatHandlers] 📝 Ajout du message final complet avec timeline:', {
+      hasTimeline: !!streamTimeline,
+      timelineEvents: streamTimeline?.items.length || 0
+    });
     
     await addMessage(messageToAdd, { 
       persist: true, 
       updateExisting: true
     });
     
-    options.onComplete?.(fullContent, fullReasoning, toolCalls, toolResults);
-  }, [requireAuth, addMessage, options.onComplete]);
+    options.onComplete?.(fullContent, fullReasoning, toolCalls, toolResults, streamTimeline);
+  }, [requireAuth, addMessage, options]);
 
   const handleError = useCallback((errorMessage: string) => {
     if (!requireAuth()) return;
@@ -100,7 +145,7 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
     options.onError?.(errorMessage);
   }, [requireAuth, addMessage, options.onError]);
 
-  const handleToolCalls = useCallback(async (toolCalls: ToolCall[], toolName: string) => {
+  const handleToolCalls = useCallback(async (toolCalls: ToolCall[], toolName: string, roundContent?: string) => {
     if (!requireAuth()) {
       await addMessage({
         role: 'assistant',
@@ -110,28 +155,19 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
       return;
     }
 
-    logger.tool('[useChatHandlers] 🔧 Tool calls détectés:', { toolCalls, toolName });
-    
-    // ✅ En mode streaming, ne pas persister le message tool calls
-    // Le message "Je vais chercher..." du LLM est déjà dans le stream
-    if (options.skipToolCallPersistence) {
-      logger.dev('[useChatHandlers] 🌊 Mode streaming : skip persistance message tool calls');
-      options.onToolCalls?.(toolCalls, toolName);
-      return;
-    }
+    logger.tool('[useChatHandlers] 🔧 Tool calls persistés pour le round:', { toolCalls, toolName, roundContent });
     
     const toolCallMessage = {
       role: 'assistant' as const,
-      content: '🔧 Exécution des outils en cours...',
+      content: roundContent || 'Exécution des outils...', // Utilise le contenu du round s'il existe
       tool_calls: toolCalls,
       timestamp: new Date().toISOString(),
-      channel: 'analysis' as const
     };
       
     await addMessage(toolCallMessage, { persist: true });
     
     options.onToolCalls?.(toolCalls, toolName);
-  }, [requireAuth, addMessage, options.onToolCalls, options.skipToolCallPersistence]);
+  }, [requireAuth, addMessage, options.onToolCalls]);
 
   const handleToolResult = useCallback(async (
     toolName: string, 

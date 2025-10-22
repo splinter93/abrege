@@ -266,3 +266,5 @@ interface LLMContext {
 
 L'architecture est saine. Le plan est réaliste et progressif. Pas de risque majeur identifié.
 
+
+

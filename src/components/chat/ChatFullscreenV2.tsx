@@ -22,6 +22,7 @@ import ChatMessage from './ChatMessage';
 import ChatKebabMenu from './ChatKebabMenu';
 import SidebarUltraClean from './SidebarUltraClean';
 import { StreamingIndicator, type StreamingState } from './StreamingIndicator';
+import StreamTimelineRenderer from './StreamTimelineRenderer';
 import { simpleLogger as logger } from '@/utils/logger';
 import Link from 'next/link';
 
@@ -84,12 +85,16 @@ const ChatFullscreenV2: React.FC = () => {
     handleToolCalls,
     handleToolResult,
     handleToolExecutionComplete
-  } = useChatHandlers({
-    skipToolCallPersistence: true // ✅ On va les afficher autrement (dans le message temporaire)
-  });
+  } = useChatHandlers();
   
-  // 🎯 État pour tracker les tool calls du round actuel
-  const [currentToolCalls, setCurrentToolCalls] = useState<any[]>([]);
+  // 🎯 État pour tracker les tool calls du round actuel avec leurs statuts
+  const [currentToolCalls, setCurrentToolCalls] = useState<Array<{
+    id: string;
+    name: string;
+    arguments: string;
+    success?: boolean;
+    result?: string;
+  }>>([]);
 
   // 🎯 États pour streaming (affichage progressif)
   const [streamingContent, setStreamingContent] = useState('');
@@ -102,183 +107,144 @@ const ChatFullscreenV2: React.FC = () => {
   const [currentToolName, setCurrentToolName] = useState<string>('');
   const [currentRound, setCurrentRound] = useState(0);
   
-  // 🎯 État pour reset content entre rounds (au lieu de ref pour éviter closure)
-  const [shouldResetNextChunk, setShouldResetNextChunk] = useState(false);
-
+  // ✅ NOUVEAU : Timeline progressive pour affichage pendant le streaming
+  const [streamingTimeline, setStreamingTimeline] = useState<Array<{
+    type: 'text' | 'tool_execution' | 'tool_result';
+    content?: string;
+    toolCalls?: Array<{
+      id: string;
+      name: string;
+      arguments: string;
+      success?: boolean;
+      result?: string;
+    }>;
+    toolCount?: number;
+    roundNumber?: number;
+    timestamp: number;
+  }>>([]);
+  const [streamStartTime, setStreamStartTime] = useState<number>(0);
+  
   // 🎯 Hook de chat avec streaming
   const { isProcessing, sendMessage } = useChatResponse({
-    useStreaming: true, // ✅ ACTIVÉ : streaming avec tool calls fonctionnel
-    
-    onStreamStart: () => {
-      logger.dev('[ChatFullscreen] 🌊 Stream démarré');
-      setIsStreaming(true);
-      setStreamingContent('');
-      setStreamingState('thinking'); // ✅ État : Réflexion
-      setCurrentRound(1);
+    useStreaming: true, // ✅ Activer le streaming
+    onStreamChunk: (chunk) => {
+      // ✅ Accumuler le contenu pour l'affichage progressif
+      setStreamingContent(prev => prev + chunk);
       
-      // ✅ Créer un message temporaire pour l'affichage (UI only, pas dans le store)
-      const tempMessage: ChatMessageType = {
-        role: 'assistant',
-        content: '',
-        timestamp: new Date().toISOString()
-      };
-      setStreamingMessageTemp(tempMessage);
-    },
-    
-    onStreamChunk: (chunk: string) => {
-      logger.dev('[ChatFullscreen] 📝 Chunk reçu:', chunk.substring(0, 20), 'shouldReset:', shouldResetNextChunk);
-      
-      // ✅ Décider si on remplace ou accumule
-      const isNewRound = shouldResetNextChunk;
-      
-      if (isNewRound) {
-        logger.dev('[ChatFullscreen] 🔄 RESET content (nouveau round)');
-        setStreamingContent(chunk); // REMPLACER
-        setStreamingMessageTemp({
-          role: 'assistant',
-          content: chunk, // Nouveau content (Round 2)
-          timestamp: new Date().toISOString()
-          // Pas de tool_calls au Round 2
-        });
-        setCurrentToolCalls([]); // ✅ Clear tool calls du round précédent
-        setShouldResetNextChunk(false); // Reset flag
-      } else {
-        // ACCUMULER
-        setStreamingContent(prev => {
-          const newContent = prev + chunk;
-          
-          setStreamingMessageTemp(prevMsg => {
-            // ✅ Type guard pour accéder à tool_calls de manière sûre
-            const existingToolCalls = (prevMsg && prevMsg.role === 'assistant' && 'tool_calls' in prevMsg) 
-              ? prevMsg.tool_calls 
-              : undefined;
-            
-            return {
-              role: 'assistant',
-              content: newContent,
-              timestamp: new Date().toISOString(),
-              tool_calls: existingToolCalls // ✅ Garder les tool_calls si présents
-            };
-          });
-          
-          return newContent;
-        });
-      }
-      
-      // ✅ Transition vers état "responding"
-      setStreamingState('responding');
-      
-      // ✅ Scroll auto
-      requestAnimationFrame(() => {
-        scrollToBottom();
+      // ✅ NOUVEAU : Alimenter la timeline progressive
+      setStreamingTimeline(prev => {
+        const lastItem = prev[prev.length - 1];
+        
+        // Si le dernier élément est un texte du même round, fusionner
+        if (lastItem && lastItem.type === 'text' && lastItem.roundNumber === currentRound) {
+          return [
+            ...prev.slice(0, -1),
+            {
+              ...lastItem,
+              content: (lastItem.content || '') + chunk
+            }
+          ];
+        } else {
+          // Nouveau bloc de texte
+          return [
+            ...prev,
+            {
+              type: 'text' as const,
+              content: chunk,
+              roundNumber: currentRound,
+              timestamp: Date.now() - streamStartTime
+            }
+          ];
+        }
       });
     },
-    
-    onToolExecution: (toolCount: number) => {
-      logger.dev(`[ChatFullscreen] 🔧 Exécution de ${toolCount} tools, activation reset pour prochain chunk`);
-      
-      // ✅ État : Exécution des tools
+    onStreamStart: () => {
+      setIsStreaming(true);
+      setStreamingContent(''); // Reset pour le nouveau message
+      setCurrentRound(0); // ✅ Commencer au round 0
+      setStreamingState('thinking');
+      // ✅ NOUVEAU : Initialiser la timeline progressive
+      setStreamingTimeline([]);
+      setStreamStartTime(Date.now());
+    },
+    onStreamEnd: () => {
+      setIsStreaming(false);
+      setStreamingContent('');
+      setStreamingState('idle');
+      setCurrentToolCalls([]); // Reset après le stream
+      setCurrentRound(0);
+      // ✅ NOUVEAU : Clear timeline (sera reconstruite depuis le message persisté)
+      setStreamingTimeline([]);
+    },
+    onToolCalls: (toolCalls) => {
+      // ✅ Stocker les tool calls pour affichage pendant l'exécution
+      setCurrentToolCalls(toolCalls.map(tc => ({
+        id: tc.id,
+        name: tc.name || 'unknown',
+        arguments: typeof tc.arguments === 'string' ? tc.arguments : JSON.stringify(tc.arguments || {}),
+        success: undefined // En attente
+      })));
+    },
+    onToolExecution: (toolCount) => {
       setStreamingState('executing');
       setExecutingToolCount(toolCount);
       setCurrentRound(prev => prev + 1);
       
-      // ✅ Activer le flag pour REMPLACER au prochain chunk
-      setShouldResetNextChunk(true);
-      
-      // ✅ Ajouter les tool calls au message temporaire pour qu'ils s'affichent
-      setStreamingMessageTemp(prev => prev ? {
+      // ✅ NOUVEAU : Ajouter événement tool_execution à la timeline
+      setStreamingTimeline(prev => [
         ...prev,
-        tool_calls: currentToolCalls
-      } : null);
-      
-      // Le texte "Je vais chercher..." + tool calls restent visibles pendant l'exécution
-      // Le prochain chunk remplacera le content (mais pas les tool_calls qu'on va clear)
+        {
+          type: 'tool_execution' as const,
+          toolCalls: currentToolCalls.map(tc => ({
+            id: tc.id,
+            name: tc.name,
+            arguments: tc.arguments,
+            success: tc.success,
+            result: tc.result
+          })),
+          toolCount,
+          roundNumber: currentRound,
+          timestamp: Date.now() - streamStartTime
+        }
+      ]);
     },
-    
-    onStreamEnd: () => {
-      logger.dev('[ChatFullscreen] ✅ Stream terminé, contenu:', streamingContent.substring(0, 50));
-      setIsStreaming(false);
-      setStreamingState('idle');
-      setStreamingMessageTemp(null);
-      setStreamingContent('');
-      setExecutingToolCount(0);
-      setCurrentToolName('');
-      setCurrentRound(0);
-      setCurrentToolCalls([]); // ✅ Clear tool calls
-      setShouldResetNextChunk(false);
-    },
-    
-    onComplete: (fullContent: string, fullReasoning: string, toolCalls?: unknown[], toolResults?: unknown[]) => {
-      // ✅ En streaming, utiliser currentToolCalls si toolCalls est vide
-      const toolCallsToUse = (toolCalls && toolCalls.length > 0) ? toolCalls : currentToolCalls;
+    onToolResult: (toolName, result, success, toolCallId) => {
+      // ✅ Mettre à jour le statut du tool en temps réel
+      setCurrentToolCalls(prev => prev.map(tc => 
+        tc.id === toolCallId 
+          ? { ...tc, success, result: typeof result === 'string' ? result : JSON.stringify(result) }
+          : tc
+      ));
       
-      // Convertir les types pour les handlers
-      const convertedToolCalls = toolCallsToUse?.map(tc => {
-        const t = tc as any;
-        return {
-          id: t.id || '',
-          type: 'function' as const,
-          function: {
-            name: t.name || t.function?.name || '',
-            arguments: typeof t.arguments === 'string' ? t.arguments : JSON.stringify(t.arguments || t.function?.arguments || {})
-          }
-        };
-      }) || [];
+      // ✅ NOUVEAU : Mettre à jour les tool calls dans la timeline
+      setStreamingTimeline(prev => prev.map(item => {
+        if (item.type === 'tool_execution' && item.toolCalls) {
+          return {
+            ...item,
+            toolCalls: item.toolCalls.map(tc => 
+              tc.id === toolCallId
+                ? { ...tc, success, result: typeof result === 'string' ? result : JSON.stringify(result) }
+                : tc
+            )
+          };
+        }
+        return item;
+      }));
       
-      const convertedToolResults = toolResults?.map(tr => {
-        const t = tr as any;
-        return {
-          tool_call_id: t.tool_call_id || '',
-          name: t.name || '',
-          content: typeof t.result === 'string' ? t.result : JSON.stringify(t.result || ''),
-          success: t.success || false
-        };
-      }) || [];
-      
-      logger.dev('[ChatFullscreen] 📝 onComplete avec tool_calls:', convertedToolCalls.length);
-      
-      handleComplete(fullContent, fullReasoning, convertedToolCalls, convertedToolResults);
-      
-      // ✅ IMPORTANT : Clear currentToolCalls après utilisation
-      setCurrentToolCalls([]);
-    },
-    onError: handleError,
-    onToolCalls: (toolCalls: Array<{ id: string; name?: string; arguments?: Record<string, unknown>; type?: string; function?: { name?: string; arguments?: string } }>, toolName: string) => {
-      const convertedToolCalls = toolCalls.map(tc => {
-        // ✅ Support des 2 structures : {name, arguments} OU {function: {name, arguments}}
-        const name = tc.name || tc.function?.name || '';
-        const args = tc.arguments || tc.function?.arguments || '';
-        
-        return {
-          id: tc.id,
-          type: 'function' as const,
-          function: {
-            name: name,
-            arguments: typeof args === 'string' ? args : JSON.stringify(args)
-          }
-        };
-      });
-      
-      // ✅ En streaming : stocker les tool calls pour les afficher dans le message temporaire
-      setCurrentToolCalls(convertedToolCalls);
-      logger.dev('[ChatFullscreen] 🔧 Tool calls stockés pour affichage:', convertedToolCalls.length);
-      
-      // Appeler le handler quand même (mais skip persistence)
-      handleToolCalls(convertedToolCalls, toolName);
-    },
-    onToolResult: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => {
-      logger.dev(`[ChatFullscreen] ✅ Tool result reçu: ${toolName}, success: ${success}`);
       handleToolResult(toolName, result, success, toolCallId);
     },
-    onToolExecutionComplete: (toolResults: Array<{ name: string; result: unknown; success: boolean; tool_call_id: string }>) => {
-      const convertedToolResults = toolResults.map(tr => ({
+    onToolExecutionComplete: async (toolResults) => {
+      // Convertir le format pour handleToolExecutionComplete
+      const converted = toolResults.map(tr => ({
         tool_call_id: tr.tool_call_id,
         name: tr.name,
         content: typeof tr.result === 'string' ? tr.result : JSON.stringify(tr.result),
         success: tr.success
       }));
-      handleToolExecutionComplete(convertedToolResults);
-    }
+      await handleToolExecutionComplete(converted);
+    },
+    onComplete: handleComplete, // ✅ Reçoit maintenant la streamTimeline
+    onError: handleError
   });
 
   // 🎯 Sidebar fermée par défaut
@@ -476,6 +442,9 @@ const ChatFullscreenV2: React.FC = () => {
     
     setLoading(true);
     
+    // ✅ Clear completed tool executions pour le nouveau message
+    // setCompletedToolExecutions([]); // This line is removed
+    
     try {
       if (!currentSession) {
         await createSession();
@@ -661,7 +630,7 @@ const ChatFullscreenV2: React.FC = () => {
           {/* Agent actif */}
           {selectedAgent && (
             <div className="chat-active-agent">
-              <span className="agent-icon">{selectedAgent.icon || '🤖'}</span>
+              <span className="agent-icon">🤖</span>
               <span className="agent-name">{selectedAgent.name}</span>
             </div>
           )}
@@ -713,8 +682,8 @@ const ChatFullscreenV2: React.FC = () => {
           />
         )}
 
-        {/* Zone principale des messages */}
-        <div className="chatgpt-main">
+          {/* Zone principale des messages */}
+          <div className="chatgpt-main">
           {/* Messages optimisés */}
           <div className="chatgpt-messages-container">
             <div className="chatgpt-messages">
@@ -722,30 +691,49 @@ const ChatFullscreenV2: React.FC = () => {
                 <ChatMessage 
                   key={message.id || `${message.role}-${message.timestamp}-${message.role === 'tool' ? (message as any).tool_call_id || 'unknown' : ''}`} 
                   message={message}
-                  animateContent={false} // Supprimé - faux streaming
+                  animateContent={false}
                   isWaitingForResponse={loading && message.role === 'assistant' && !message.content}
+                  isStreaming={false} // ✅ Pas de streaming pour les messages persistés
                 />
               ))}
               
-              {/* ✅ Message temporaire pour streaming progressif (UI only) */}
-              {isStreaming && streamingMessageTemp && streamingMessageTemp.content && (
-                <ChatMessage 
-                  key="streaming-temp"
-                  message={streamingMessageTemp}
-                  animateContent={false}
-                  isWaitingForResponse={false}
-                />
-              )}
-              
-              {/* ✅ Indicateur d'état streaming - APRÈS le message */}
-              {isStreaming && streamingState === 'executing' && (
-                <div>
-                  <StreamingIndicator 
-                    state={streamingState}
-                    toolCount={executingToolCount}
-                    currentTool={currentToolName}
-                    roundNumber={currentRound}
-                  />
+              {/* ✅ PENDANT LE STREAMING : Utiliser StreamTimelineRenderer pour affichage chronologique */}
+              {isStreaming && streamingTimeline.length > 0 && (
+                <div className="chatgpt-message chatgpt-message-assistant">
+                  <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant">
+                    <StreamTimelineRenderer 
+                      timeline={{
+                        items: streamingTimeline.map(item => {
+                          if (item.type === 'text') {
+                            return {
+                              type: 'text' as const,
+                              content: item.content || '',
+                              timestamp: item.timestamp,
+                              roundNumber: item.roundNumber
+                            };
+                          } else if (item.type === 'tool_execution') {
+                            return {
+                              type: 'tool_execution' as const,
+                              toolCalls: (item.toolCalls || []).map(tc => ({
+                                id: tc.id,
+                                type: 'function' as const,
+                                function: {
+                                  name: tc.name,
+                                  arguments: tc.arguments
+                                }
+                              })),
+                              toolCount: item.toolCount || 0,
+                              timestamp: item.timestamp,
+                              roundNumber: item.roundNumber || 0
+                            };
+                          }
+                          return item as any;
+                        }),
+                        startTime: streamStartTime,
+                        endTime: Date.now()
+                      }}
+                    />
+                  </div>
                 </div>
               )}
             </div>

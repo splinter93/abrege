@@ -945,6 +945,16 @@
 }
 
 /* ========================================
+   EXECUTION BLOCKS - TOOL CALLS
+   ======================================== */
+
+.chatgpt-execution-block {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+/* ========================================
    ANIMATIONS
    ======================================== */
 

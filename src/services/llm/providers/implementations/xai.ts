@@ -103,7 +103,7 @@ const DEFAULT_XAI_CONFIG: XAIConfig = {
   model: 'grok-4-fast', // Modèle par défaut: ultra-rapide
   temperature: 0.7,
   maxTokens: 8000,
-  topP: 0.9,
+  topP: 0.85, // ✅ Réduit légèrement pour éviter hallucinations sporadiques
   
   // Features
   supportsFunctionCalls: true,
@@ -318,10 +318,42 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
     try {
       logger.dev(`[XAIProvider] 🌊 Streaming Chat Completions avec ${messages.length} messages`);
       
+      // ✅ AUDIT DÉTAILLÉ : Logger les messages d'entrée
+      logger.dev(`[XAIProvider] 📋 MESSAGES D'ENTRÉE:`, {
+        count: messages.length,
+        roles: messages.map(m => m.role),
+        hasToolCalls: messages.some(m => m.tool_calls && m.tool_calls.length > 0),
+        hasToolResults: messages.some(m => m.tool_results && m.tool_results.length > 0)
+      });
+      
       // Conversion des ChatMessage vers le format API
       const apiMessages = this.convertChatMessagesToApiFormat(messages);
       const payload = await this.preparePayload(apiMessages, tools);
       payload.stream = true; // ✅ Activer streaming
+      
+      // ✅ AUDIT DÉTAILLÉ : Logger le payload complet envoyé à Grok
+      logger.info(`[XAIProvider] 🚀 PAYLOAD → GROK: ${payload.model} | ${payload.messages?.length} messages | ${payload.tools?.length || 0} tools`);
+      
+      // ✅ AUDIT DÉTAILLÉ : Logger les messages du payload
+      if (payload.messages && Array.isArray(payload.messages)) {
+        payload.messages.forEach((msg, index) => {
+          logger.dev(`[XAIProvider] 📝 Message ${index + 1}:`, {
+            role: msg.role,
+            contentLength: typeof msg.content === 'string' ? msg.content.length : 'multi-part',
+            hasToolCalls: !!msg.tool_calls,
+            toolCallsCount: msg.tool_calls?.length || 0,
+            hasToolCallId: !!msg.tool_call_id
+          });
+        });
+      }
+      
+      // ✅ AUDIT DÉTAILLÉ : Logger les tools
+      if (payload.tools && Array.isArray(payload.tools)) {
+        logger.dev(`[XAIProvider] 🔧 TOOLS ENVOYÉS:`, {
+          count: payload.tools.length,
+          names: payload.tools.map(t => t.function?.name || 'unknown')
+        });
+      }
       
       // Appel API avec streaming
       const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
@@ -342,16 +374,24 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
         throw new Error('Response body is null');
       }
 
+      // ✅ AUDIT DÉTAILLÉ : Logger la réponse HTTP
+      logger.dev(`[XAIProvider] 📡 RÉPONSE HTTP REÇUE:`, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
       // Lire le stream SSE
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
+      let chunkCount = 0;
 
       while (true) {
         const { done, value } = await reader.read();
         
         if (done) {
-          logger.dev('[XAIProvider] ✅ Stream terminé');
+          logger.dev(`[XAIProvider] ✅ Stream terminé après ${chunkCount} chunks`);
           break;
         }
 
@@ -380,6 +420,16 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
 
             try {
               const parsed = JSON.parse(data) as XAIStreamChunk;
+              chunkCount++;
+              
+              // ✅ AUDIT DÉTAILLÉ : Logger chaque chunk reçu de Grok
+              logger.dev(`[XAIProvider] 📦 CHUNK ${chunkCount} REÇU DE GROK:`, {
+                id: parsed.id,
+                model: parsed.model,
+                hasChoices: !!parsed.choices,
+                choicesCount: parsed.choices?.length || 0,
+                hasUsage: !!parsed.usage
+              });
               
               // Extraire les informations du chunk
               const choice = parsed.choices?.[0];
@@ -387,6 +437,29 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
 
               const delta = choice.delta;
               const finishReason = choice.finish_reason;
+              
+              // ✅ AUDIT DÉTAILLÉ : Logger le contenu du chunk
+              logger.dev(`[XAIProvider] 📝 CHUNK CONTENU:`, {
+                hasContent: !!delta.content,
+                contentLength: delta.content?.length || 0,
+                hasToolCalls: !!delta.tool_calls,
+                toolCallsCount: delta.tool_calls?.length || 0,
+                hasReasoning: !!delta.reasoning,
+                reasoningLength: delta.reasoning?.length || 0,
+                finishReason: finishReason
+              });
+              
+              // ✅ AUDIT DÉTAILLÉ : Logger les tool calls si présents
+              if (delta.tool_calls && delta.tool_calls.length > 0) {
+                delta.tool_calls.forEach((tc, index) => {
+                  logger.dev(`[XAIProvider] 🔧 TOOL CALL ${index + 1} DANS CHUNK:`, {
+                    id: tc.id,
+                    type: tc.type,
+                    functionName: tc.function?.name,
+                    argumentsLength: tc.function?.arguments?.length || 0
+                  });
+                });
+              }
               
               const chunk: StreamChunk = {
                 type: 'delta'
@@ -424,7 +497,7 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
               // 'stop' = Réponse complète normale
               if (finishReason) {
                 chunk.finishReason = finishReason;
-                logger.dev(`[XAIProvider] 🏁 Finish reason: ${finishReason}`);
+                logger.dev(`[XAIProvider] 🏁 FINISH REASON: ${finishReason}`);
               }
 
               yield chunk;

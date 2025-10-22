@@ -35,6 +35,88 @@
   border-color: #86efac;
 }
 
+.streaming-indicator.completed {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #fcd34d;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: all 0.3s ease;
+}
+
+.streaming-indicator.completed:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
+}
+
+.expand-arrow {
+  margin-left: 8px;
+  font-size: 12px;
+  transition: transform 0.2s ease;
+}
+
+.tool-details {
+  width: 100%;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tool-detail-item {
+  background: rgba(255, 255, 255, 0.6);
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.tool-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tool-detail-icon {
+  font-size: 14px;
+}
+
+.tool-detail-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a1a);
+}
+
+.tool-detail-args,
+.tool-detail-result {
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.tool-detail-args strong,
+.tool-detail-result strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-secondary, #666);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tool-detail-args pre,
+.tool-detail-result pre {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'Monaco', 'Menlo', monospace;
+  color: var(--text-primary, #1a1a1a);
+}
+
 .indicator-icon {
   font-size: 18px;
   line-height: 1;
@@ -131,6 +213,30 @@
     border-color: #4ade80;
   }
 
+  .streaming-indicator.completed {
+    background: linear-gradient(135deg, #78350f 0%, #f59e0b 100%);
+    border-color: #fbbf24;
+  }
+
+  .streaming-indicator.completed:hover {
+    border-color: #fb923c;
+  }
+
+  .tool-detail-item {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .tool-detail-name {
+    color: var(--text-primary-dark, #e5e5e7);
+  }
+
+  .tool-detail-args pre,
+  .tool-detail-result pre {
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text-primary-dark, #e5e5e7);
+  }
+
   .indicator-label {
     color: var(--text-primary-dark, #e5e5e7);
   }
@@ -142,6 +248,57 @@
 }
 
 /* Responsive */
+/* ✅ NOUVEAU: Liste des tools en live pendant l'exécution */
+.tool-details-live {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+  font-size: 13px;
+  width: 100%;
+}
+
+.tool-detail-item-live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.tool-status-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.tool-name {
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
+  flex: 1;
+}
+
+.tool-status-text {
+  font-size: 12px;
+  color: var(--text-secondary, #6b7280);
+  font-style: italic;
+}
+
+/* Dark mode pour tool details live */
+@media (prefers-color-scheme: dark) {
+  .tool-details-live {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .tool-name {
+    color: var(--text-primary-dark, #e5e7eb);
+  }
+
+  .tool-status-text {
+    color: var(--text-secondary-dark, #9ca3af);
+  }
+}
+
 @media (max-width: 768px) {
   .streaming-indicator {
     padding: 10px 14px;

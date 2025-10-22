@@ -10,6 +10,7 @@ import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ToolCallMessage from './ToolCallMessage';
 import BubbleButtons from './BubbleButtons';
 import ReasoningDropdown from './ReasoningDropdown';
+import StreamTimelineRenderer from './StreamTimelineRenderer';
 import { useChatStore } from '@/store/useChatStore';
 import { useStreamingPreferences } from '@/hooks/useStreamingPreferences';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -79,17 +80,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
 
+  // ✅ NOUVEAU: Si une streamTimeline existe, l'utiliser pour le rendu
+  const hasStreamTimeline = role === 'assistant' && message.streamTimeline && message.streamTimeline.items.length > 0;
+
   return (
     <div className={`chatgpt-message chatgpt-message-${role} ${className || ''}`}>
       <div className={`chatgpt-message-bubble chatgpt-message-bubble-${role}`}>
-        {/* Tool calls - only for assistant messages to avoid duplicates */}
-        {role === 'assistant' && message.tool_calls && message.tool_calls.length > 0 && (
-          <ToolCallMessage
-            toolCalls={message.tool_calls}
-            toolResults={getToolResultsForAssistant() || []}
-          />
-        )}
-
         {/* Reasoning dropdown - affiché AVANT le contenu */}
         {reasoning && (
           <ReasoningDropdown 
@@ -98,11 +94,27 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           />
         )}
 
-        {/* Contenu markdown */}
-        {content && (
-          <div className="chatgpt-message-content">
-            <EnhancedMarkdownMessage content={content} />
-          </div>
+        {/* ✅ PRIORITÉ 1: Utiliser la timeline si disponible (capture l'ordre exact du stream) */}
+        {hasStreamTimeline ? (
+          <StreamTimelineRenderer timeline={message.streamTimeline!} />
+        ) : (
+          <>
+            {/* FALLBACK: Rendu classique si pas de timeline */}
+            {/* Contenu markdown */}
+            {content && (
+              <div className="chatgpt-message-content">
+                <EnhancedMarkdownMessage content={content} />
+              </div>
+            )}
+
+            {/* Tool calls - APRÈS le contenu pour respecter la chronologie */}
+            {role === 'assistant' && message.tool_calls && message.tool_calls.length > 0 && (
+              <ToolCallMessage
+                toolCalls={message.tool_calls}
+                toolResults={getToolResultsForAssistant() || []}
+              />
+            )}
+          </>
         )}
         
         {/* Indicateur de chargement */}

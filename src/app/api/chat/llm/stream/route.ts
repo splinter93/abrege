@@ -5,6 +5,15 @@ import { XAIProvider } from '@/services/llm/providers/implementations/xai';
 import type { ChatMessage } from '@/types/chat';
 import type { Tool } from '@/services/llm/types/strictTypes';
 
+// ✅ Type guard pour différencier MCP vs OpenAPI tools
+interface McpTool extends Tool {
+  server_label: string;
+}
+
+function isMcpTool(tool: Tool): tool is McpTool {
+  return 'server_label' in tool && typeof (tool as McpTool).server_label === 'string';
+}
+
 // Force Node.js runtime for streaming
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -142,7 +151,8 @@ export async function POST(request: NextRequest) {
     // Créer le provider xAI
     const provider = new XAIProvider({
       model: finalAgentConfig?.model || 'grok-4-fast',
-      temperature: finalAgentConfig?.temperature || 0.7,
+      // ✅ Température optimisée pour chat + tools (évite hallucinations sporadiques)
+      temperature: finalAgentConfig?.temperature || 0.55,
       maxTokens: finalAgentConfig?.max_tokens || 8000
     });
 
@@ -194,7 +204,7 @@ export async function POST(request: NextRequest) {
 
     // ✅ Charger les tools (OpenAPI + MCP) ET les endpoints
     let tools: Tool[] = [];
-    let openApiEndpoints = new Map<string, any>();
+    let openApiEndpoints = new Map<string, { url: string; method: string; headers?: Record<string, string> }>();
     
     if (context.agentId) {
       try {
@@ -224,7 +234,7 @@ export async function POST(request: NextRequest) {
           // Limiter à 15 tools pour xAI
           tools = hybridTools.slice(0, 15);
           
-          const mcpCount = tools.filter(t => (t as any).server_label).length;
+          const mcpCount = tools.filter(isMcpTool).length;
           const openApiCount = tools.length - mcpCount;
           
           logger.dev(`[Stream Route] ✅ ${tools.length} tools chargés (${mcpCount} MCP + ${openApiCount} OpenAPI), ${openApiEndpoints.size} endpoints`);
@@ -270,14 +280,36 @@ export async function POST(request: NextRequest) {
           let currentMessages = [...messages];
           let roundCount = 0;
           const maxRounds = 5;
+          
+          // ✅ AUDIT : Tracker les tool calls déjà exécutés pour détecter les doublons
+          const executedToolCallsSignatures = new Set<string>();
 
           while (roundCount < maxRounds) {
             roundCount++;
             logger.dev(`[Stream Route] 🔄 Round ${roundCount}/${maxRounds}`);
 
+            // ✅ AUDIT DÉTAILLÉ : Logger les messages envoyés à Grok pour ce round
+            logger.dev(`[Stream Route] 📋 MESSAGES ENVOYÉS À GROK ROUND ${roundCount}:`, {
+              messageCount: currentMessages.length,
+              roles: currentMessages.map(m => m.role),
+              hasToolCalls: currentMessages.some(m => m.tool_calls && m.tool_calls.length > 0),
+              hasToolResults: currentMessages.some(m => m.tool_results && m.tool_results.length > 0),
+              lastMessageContent: currentMessages[currentMessages.length - 1]?.content?.substring(0, 100) + '...'
+            });
+            
+            // ✅ AUDIT DÉTAILLÉ : Logger les 5 derniers messages pour voir l'ordre
+            if (roundCount > 1) {
+              const last5 = currentMessages.slice(-5);
+              logger.info(`[Stream Route] 🔍 DERNIERS 5 MESSAGES (Round ${roundCount}):`);
+              last5.forEach((m, i) => {
+                const toolCallId = m.role === 'tool' ? (m as { tool_call_id?: string }).tool_call_id : undefined;
+                logger.info(`  ${i+1}. ${m.role} - toolCalls:${m.tool_calls?.length||0} - toolCallId:${toolCallId||'none'}`);
+              });
+            }
+
             // Accumuler tool calls et content du stream
             let accumulatedContent = '';
-            const toolCallsMap = new Map<string, any>(); // Accumuler par ID pour gérer les chunks
+            const toolCallsMap = new Map<string, { id: string; type: string; function: { name: string; arguments: string } }>(); // Accumuler par ID pour gérer les chunks
             let finishReason: string | null = null;
 
             // ✅ Stream depuis xAI
@@ -318,6 +350,14 @@ export async function POST(request: NextRequest) {
               }
             }
 
+            // ✅ AUDIT DÉTAILLÉ : Logger la décision de fin de round
+            logger.dev(`[Stream Route] 🎯 DÉCISION ROUND ${roundCount}:`, {
+              finishReason,
+              toolCallsCount: toolCallsMap.size,
+              accumulatedContentLength: accumulatedContent.length,
+              willContinue: finishReason === 'tool_calls' && toolCallsMap.size > 0
+            });
+
             // ✅ Décision basée sur finish_reason
             if (finishReason === 'tool_calls' && toolCallsMap.size > 0) {
               logger.dev(`[Stream Route] 🔧 Tool calls détectés (${toolCallsMap.size}), exécution...`);
@@ -334,8 +374,41 @@ export async function POST(request: NextRequest) {
 
             const accumulatedToolCalls = Array.from(toolCallsMap.values());
 
+            // ✅ NOUVEAU : Persister le message de ce round
+            if (accumulatedContent || accumulatedToolCalls.length > 0) {
+              sendSSE({
+                type: 'assistant_round_complete',
+                content: accumulatedContent,
+                tool_calls: accumulatedToolCalls,
+                finishReason: finishReason,
+                timestamp: Date.now()
+              });
+            }
+
             // ✅ Exécuter les tool calls
             logger.dev(`[Stream Route] 🔧 Exécution de ${accumulatedToolCalls.length} tool calls`);
+            
+            // ✅ AUDIT DÉTAILLÉ : Logger les tool calls à exécuter ET détecter les doublons
+            logger.info(`[Stream Route] 🔧 Exécution de ${accumulatedToolCalls.length} tool calls au Round ${roundCount}`);
+            
+            accumulatedToolCalls.forEach((tc, index) => {
+              const signature = `${tc.function.name}:${tc.function.arguments}`;
+              const isDoublon = executedToolCallsSignatures.has(signature);
+              
+              logger.info(`[Stream Route] 🔧 TOOL CALL ${index + 1}:`, {
+                id: tc.id,
+                functionName: tc.function.name,
+                args: tc.function.arguments.substring(0, 100),
+                isDuplicate: isDoublon
+              });
+              
+              if (isDoublon) {
+                logger.warn(`[Stream Route] ⚠️⚠️⚠️ DOUBLON DÉTECTÉ ! ${tc.function.name}`);
+              }
+              
+              // Ajouter la signature pour tracking
+              executedToolCallsSignatures.add(signature);
+            });
             
             // Envoyer un événement d'exécution de tools
             sendSSE({
@@ -366,12 +439,28 @@ export async function POST(request: NextRequest) {
                 logger.dev(`[Stream Route] 🔧 Exécution tool: ${toolCall.function.name}`);
                 
                 // ✅ Détecter le type de tool (MCP ou OpenAPI)
-                const isMcpTool = (toolCall as any).server_label !== undefined;
+                const isToolFromMcp = 'server_label' in toolCall && typeof (toolCall as { server_label?: string }).server_label === 'string';
+                
+                // ✅ AUDIT DÉTAILLÉ : Logger avant exécution
+                logger.dev(`[Stream Route] 🚀 AVANT EXÉCUTION TOOL:`, {
+                  toolName: toolCall.function.name,
+                  toolId: toolCall.id,
+                  isMcpTool: isToolFromMcp,
+                  arguments: toolCall.function.arguments.substring(0, 100) + '...'
+                });
                 
                 // ✅ Utiliser le bon executor
-                const result = isMcpTool 
+                const result = isToolFromMcp 
                   ? await mcpExecutor.executeToolCall(toolCall, userToken)
                   : await openApiExecutor.executeToolCall(toolCall, userToken);
+
+                // ✅ AUDIT DÉTAILLÉ : Logger après exécution
+                logger.dev(`[Stream Route] ✅ APRÈS EXÉCUTION TOOL:`, {
+                  toolName: toolCall.function.name,
+                  success: result.success,
+                  resultLength: typeof result.content === 'string' ? result.content.length : 'object',
+                  resultPreview: typeof result.content === 'string' ? result.content.substring(0, 100) + '...' : 'object'
+                });
 
                 // Ajouter le résultat aux messages
                 currentMessages.push({
