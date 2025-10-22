@@ -90,8 +90,11 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 État pour tracker les tool calls du round actuel avec leurs statuts
   const [currentToolCalls, setCurrentToolCalls] = useState<Array<{
     id: string;
-    name: string;
-    arguments: string;
+    type: 'function';
+    function: {
+      name: string;
+      arguments: string;
+    };
     success?: boolean;
     result?: string;
   }>>([]);
@@ -113,8 +116,11 @@ const ChatFullscreenV2: React.FC = () => {
     content?: string;
     toolCalls?: Array<{
       id: string;
-      name: string;
-      arguments: string;
+      type: 'function';
+      function: {
+        name: string;
+        arguments: string;
+      };
       success?: boolean;
       result?: string;
     }>;
@@ -180,27 +186,29 @@ const ChatFullscreenV2: React.FC = () => {
       // ✅ Stocker les tool calls pour affichage pendant l'exécution
       setCurrentToolCalls(toolCalls.map(tc => ({
         id: tc.id,
-        name: tc.name || 'unknown',
-        arguments: typeof tc.arguments === 'string' ? tc.arguments : JSON.stringify(tc.arguments || {}),
+        type: 'function' as const,
+        function: {
+          name: tc.name || 'unknown',
+          arguments: typeof tc.arguments === 'string' ? tc.arguments : JSON.stringify(tc.arguments || {})
+        },
         success: undefined // En attente
       })));
     },
-    onToolExecution: (toolCount) => {
+    onToolExecution: (toolCount, toolCalls) => {
       setStreamingState('executing');
       setExecutingToolCount(toolCount);
       setCurrentRound(prev => prev + 1);
       
-      // ✅ NOUVEAU : Ajouter événement tool_execution à la timeline
+      // ✅ Utiliser directement les tool calls passés en paramètre (pas le state)
       setStreamingTimeline(prev => [
         ...prev,
         {
           type: 'tool_execution' as const,
-          toolCalls: currentToolCalls.map(tc => ({
-            id: tc.id,
-            name: tc.name,
-            arguments: tc.arguments,
-            success: tc.success,
-            result: tc.result
+          toolCalls: toolCalls.map(tc => ({
+            ...tc,
+            type: 'function' as const, // ✅ Cast explicite
+            success: undefined,
+            result: undefined
           })),
           toolCount,
           roundNumber: currentRound,
@@ -221,11 +229,16 @@ const ChatFullscreenV2: React.FC = () => {
         if (item.type === 'tool_execution' && item.toolCalls) {
           return {
             ...item,
-            toolCalls: item.toolCalls.map(tc => 
-              tc.id === toolCallId
-                ? { ...tc, success, result: typeof result === 'string' ? result : JSON.stringify(result) }
-                : tc
-            )
+            toolCalls: item.toolCalls.map(tc => {
+              if (tc.id === toolCallId) {
+                return { 
+                  ...tc, 
+                  success, 
+                  result: typeof result === 'string' ? result : JSON.stringify(result)
+                };
+              }
+              return tc;
+            })
           };
         }
         return item;
@@ -714,14 +727,7 @@ const ChatFullscreenV2: React.FC = () => {
                           } else if (item.type === 'tool_execution') {
                             return {
                               type: 'tool_execution' as const,
-                              toolCalls: (item.toolCalls || []).map(tc => ({
-                                id: tc.id,
-                                type: 'function' as const,
-                                function: {
-                                  name: tc.name,
-                                  arguments: tc.arguments
-                                }
-                              })),
+                              toolCalls: item.toolCalls || [],
                               toolCount: item.toolCount || 0,
                               timestamp: item.timestamp,
                               roundNumber: item.roundNumber || 0
@@ -732,6 +738,7 @@ const ChatFullscreenV2: React.FC = () => {
                         startTime: streamStartTime,
                         endTime: Date.now()
                       }}
+                      isActiveStreaming={isStreaming}
                     />
                   </div>
                 </div>
@@ -748,7 +755,7 @@ const ChatFullscreenV2: React.FC = () => {
               loading={loading}
               textareaRef={textareaRef}
               disabled={false}
-              placeholder="Commencez à discuter..."
+              placeholder={selectedAgent ? `Discuter avec ${selectedAgent.name}` : "Commencez à discuter..."}
             />
           </div>
         </div>

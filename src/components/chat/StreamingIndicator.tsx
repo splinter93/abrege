@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { Check, X, Loader2 } from 'lucide-react';
 import './StreamingIndicator.css';
 
 export type StreamingState = 'thinking' | 'executing' | 'responding' | 'completed' | 'idle';
@@ -57,37 +58,41 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
         );
 
       case 'executing':
+        console.log('[StreamingIndicator] Executing state:', { toolCallsLength: toolCalls.length, toolCalls });
         return (
           <div className="streaming-indicator executing">
-            <div className="indicator-icon">⚙️</div>
-            <div className="indicator-text">
-              <span className="indicator-label">
-                Exécution de {toolCount} outil{toolCount > 1 ? 's' : ''}
-              </span>
-              <span className="indicator-dots">
-                <span className="dot">.</span>
-                <span className="dot">.</span>
-                <span className="dot">.</span>
-              </span>
-            </div>
-            {roundNumber && roundNumber > 1 && (
-              <span className="round-badge">Round {roundNumber}</span>
-            )}
-            
-            {/* ✅ NOUVEAU : Liste des tools en cours d'exécution */}
-            {toolCalls.length > 0 && (
-              <div className="tool-details-live" style={{ marginTop: '8px' }}>
+            {toolCalls.length > 0 ? (
+              <div className="tool-list-compact">
                 {toolCalls.map((tool, index) => (
-                  <div key={tool.id || index} className="tool-detail-item-live">
-                    <span className="tool-status-icon">
-                      {tool.success === true ? '✅' : tool.success === false ? '❌' : '⏳'}
+                  <div 
+                    key={tool.id || index} 
+                    className="tool-item-compact"
+                    onClick={onToggle}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <span className="tool-item-name">
+                      {tool.name}
                     </span>
-                    <span className="tool-name">{tool.name}</span>
-                    {tool.success === undefined && (
-                      <span className="tool-status-text">en cours...</span>
-                    )}
+                    <span className="tool-item-status">
+                      {tool.success === true ? (
+                        <Check className="status-icon success" size={16} strokeWidth={2.5} />
+                      ) : tool.success === false ? (
+                        <X className="status-icon error" size={16} strokeWidth={2.5} />
+                      ) : (
+                        <Loader2 className="status-icon pending spinner" size={14} strokeWidth={2.5} />
+                      )}
+                    </span>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="tool-item-compact">
+                <span className="tool-item-name">
+                  Exécution en cours...
+                </span>
+                <span className="tool-item-status">
+                  <Loader2 className="status-icon pending spinner" size={14} strokeWidth={2.5} />
+                </span>
               </div>
             )}
           </div>
@@ -109,42 +114,47 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
         );
 
       case 'completed':
-        // ✅ Afficher le nom des tools directement
-        const toolNames = toolCalls.map(tc => tc.name).join(', ');
-        const label = toolCalls.length === 1 
-          ? toolNames 
-          : `${toolCalls.length} outils : ${toolNames}`;
-        
         return (
-          <div className="streaming-indicator completed" onClick={onToggle} style={{ cursor: 'pointer' }}>
-            <div className="indicator-icon">✅</div>
-            <div className="indicator-text">
-              <span className="indicator-label">{label}</span>
-              <span className="expand-arrow">{isExpanded ? '▲' : '▼'}</span>
+          <div className="streaming-indicator completed">
+            <div className="tool-list-compact">
+              {toolCalls.map((tool, index) => (
+                <div 
+                  key={tool.id || index} 
+                  className="tool-item-compact"
+                  onClick={onToggle}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <span className="tool-item-name">
+                    {tool.name}
+                  </span>
+                  <span className="tool-item-status">
+                    {tool.success ? (
+                      <Check className="status-icon success" size={16} strokeWidth={2.5} />
+                    ) : (
+                      <X className="status-icon error" size={16} strokeWidth={2.5} />
+                    )}
+                  </span>
+                </div>
+              ))}
             </div>
-            {roundNumber && roundNumber > 1 && (
-              <span className="round-badge">Round {roundNumber}</span>
-            )}
             
-            {/* ✅ NOUVEAU : Détails déroulants */}
+            {/* Détails déroulants */}
             {isExpanded && toolCalls.length > 0 && (
-              <div className="tool-details" onClick={(e) => e.stopPropagation()}>
+              <div className="tool-details-expanded" onClick={(e) => e.stopPropagation()}>
                 {toolCalls.map((tool, index) => (
-                  <div key={tool.id || index} className="tool-detail-item">
-                    <div className="tool-detail-header">
-                      <span className="tool-detail-icon">{tool.success ? '✅' : '❌'}</span>
-                      <span className="tool-detail-name">{tool.name}</span>
-                    </div>
+                  <div key={tool.id || index} className="tool-detail-expanded">
                     {tool.arguments && (
-                      <div className="tool-detail-args">
-                        <strong>Arguments:</strong>
-                        <pre>{tool.arguments}</pre>
+                      <div className="tool-detail-section">
+                        <div className="tool-detail-label">Arguments</div>
+                        <pre className="tool-detail-content">{tool.arguments}</pre>
                       </div>
                     )}
                     {tool.result && (
-                      <div className="tool-detail-result">
-                        <strong>Résultat:</strong>
-                        <pre>{tool.result.substring(0, 200)}{tool.result.length > 200 ? '...' : ''}</pre>
+                      <div className="tool-detail-section">
+                        <div className="tool-detail-label">Résultat</div>
+                        <pre className="tool-detail-content">
+                          {tool.result.substring(0, 300)}{tool.result.length > 300 ? '...' : ''}
+                        </pre>
                       </div>
                     )}
                   </div>

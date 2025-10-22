@@ -7,13 +7,14 @@ import { StreamingIndicator } from './StreamingIndicator';
 interface StreamTimelineRendererProps {
   timeline: StreamTimeline;
   className?: string;
+  isActiveStreaming?: boolean; // ✅ NOUVEAU: Indique si le streaming est actif
 }
 
 /**
  * Composant qui rend la timeline chronologique exacte du streaming
  * Affiche les blocs de texte et les tool executions dans le bon ordre
  */
-const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = ({ timeline, className = '' }) => {
+const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = ({ timeline, className = '', isActiveStreaming = false }) => {
   // État pour gérer l'expansion des blocs d'exécution
   const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set());
 
@@ -47,10 +48,22 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = ({ timelin
                 ti.type === 'tool_result'
             );
             
+            // ✅ Vérifier si TOUS les tools de ce bloc ont un résultat
+            const allToolsHaveResults = item.toolCalls.every(tc => 
+              toolResults.some(tr => tr.toolCallId === tc.id)
+            );
+            
+            // ✅ Un bloc est "en cours d'exécution" si on stream OU s'il n'a pas encore tous ses résultats
+            const isExecuting = isActiveStreaming || !allToolsHaveResults;
+            
             console.log('[StreamTimelineRenderer] Tool execution:', {
               toolCount: item.toolCount,
               toolCalls: item.toolCalls,
-              toolCallsLength: item.toolCalls?.length
+              toolCallsLength: item.toolCalls?.length,
+              isExecuting,
+              allToolsHaveResults,
+              isActiveStreaming,
+              toolResultsCount: toolResults.length
             });
             
             return (
@@ -60,7 +73,7 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = ({ timelin
                 style={{ marginTop: '12px', marginBottom: '12px' }}
               >
                 <StreamingIndicator
-                  state="completed"
+                  state={isExecuting ? "executing" : "completed"}
                   toolCount={item.toolCount}
                   roundNumber={item.roundNumber}
                   toolCalls={item.toolCalls.map(tc => {

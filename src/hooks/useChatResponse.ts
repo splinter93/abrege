@@ -19,7 +19,7 @@ interface UseChatResponseOptions {
   onStreamChunk?: (content: string) => void;
   onStreamStart?: () => void;
   onStreamEnd?: () => void;
-  onToolExecution?: (toolCount: number) => void; // ✅ Quand les tools commencent à s'exécuter
+  onToolExecution?: (toolCount: number, toolCalls: Array<{ id: string; type: string; function: { name: string; arguments: string } }>) => void; // ✅ Quand les tools commencent à s'exécuter
   useStreaming?: boolean; // Activer/désactiver le streaming
   onAssistantRoundComplete?: (content: string, toolCalls: ToolCall[]) => void; // ✅ NOUVEAU
 }
@@ -101,6 +101,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         let currentRoundReasoning = ''; // ✅ Reasoning du round actuel
         let currentRoundToolCalls = new Map<string, ToolCall>(); // ✅ Map pour le round actuel
         const allNotifiedToolCallIds = new Set<string>(); // ✅ Track pour éviter re-notifications
+        const executionNotifiedToolCallIds = new Set<string>(); // ✅ Track des tool calls déjà notifiés pour exécution
         
         // ✅ NOUVEAU: Collections globales pour tous les tool calls/results du cycle complet
         const allToolCalls = new Map<string, ToolCall>(); // Tous les tool calls de tous les rounds
@@ -238,12 +239,12 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                   toolCallsToNotify.forEach(tc => allNotifiedToolCallIds.add(tc.id));
                 }
                 
-                // ✅ Notifier début d'exécution (UI affiche "Executing...")
-                onToolExecution?.(chunk.toolCount || 0);
+                // ✅ CORRIGÉ : Prendre les nouveaux tool calls depuis allToolCalls
+                // On filtre ceux qui n'ont pas encore été notifiés pour exécution
+                const newToolCallsForExecution = Array.from(allToolCalls.values())
+                  .filter(tc => !executionNotifiedToolCallIds.has(tc.id));
                 
-                // ✅ NOUVEAU: Ajouter l'événement tool_execution à la timeline
-                // CORRIGÉ: Utiliser allToolCalls (qui contient TOUS les tool calls reçus jusqu'ici)
-                const toolCallsSnapshot = Array.from(allToolCalls.values()).map(tc => ({
+                const toolCallsSnapshot = newToolCallsForExecution.map(tc => ({
                   id: tc.id,
                   type: tc.type,
                   function: {
@@ -252,11 +253,18 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                   }
                 }));
                 
+                // ✅ Marquer ces tool calls comme notifiés pour exécution
+                newToolCallsForExecution.forEach(tc => executionNotifiedToolCallIds.add(tc.id));
+                
+                // ✅ Notifier début d'exécution avec les tool calls
+                onToolExecution?.(chunk.toolCount || 0, toolCallsSnapshot);
+                
                 logger.dev(`[useChatResponse] 📋 Tool execution capturé pour timeline:`, {
                   toolCount: toolCallsSnapshot.length,
                   toolNames: toolCallsSnapshot.map(tc => tc.function.name),
                   allToolCallsSize: allToolCalls.size,
-                  currentRoundToolCallsSize: currentRoundToolCalls.size
+                  newToolCallsCount: newToolCallsForExecution.length,
+                  executionNotifiedCount: executionNotifiedToolCallIds.size
                 });
                 
                 streamTimeline.push({

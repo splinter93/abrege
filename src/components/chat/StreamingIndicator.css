@@ -14,38 +14,182 @@
   gap: 12px;
   padding: 12px 16px;
   background: var(--bg-secondary, #f7f7f8);
-  border-radius: 12px;
-  border: 1px solid var(--border-light, #e5e5e7);
+  border-radius: 16px;
+  border: none;
   max-width: fit-content;
   transition: all 0.3s ease;
 }
 
 .streaming-indicator.thinking {
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border-color: #bae6fd;
 }
 
 .streaming-indicator.executing {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-color: #fcd34d;
+  background: linear-gradient(135deg, #27272a 0%, #3f3f46 100%);
+  padding: 0;
+  border-radius: 16px;
+}
+
+/* Tool list compact - Design minimaliste */
+.tool-list-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+.tool-item-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: background 0.2s ease;
+}
+
+.tool-item-compact:first-child {
+  border-radius: 16px 16px 0 0;
+}
+
+.tool-item-compact:last-child {
+  border-bottom: none;
+  border-radius: 0 0 16px 16px;
+}
+
+.tool-item-compact:only-child {
+  border-radius: 16px;
+}
+
+.tool-item-compact:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tool-item-name {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #d4d4d8;
+  flex: 1;
+  font-family: var(--font-chat-text);
+}
+
+.tool-item-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 12px;
+}
+
+/* Status icons */
+.status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  padding: 3px;
+}
+
+.status-icon.success {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.status-icon.error {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.status-icon.pending {
+  color: #71717a;
+}
+
+/* Spinner animation pour Lucide React */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Détails déroulants */
+.tool-details-expanded {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.tool-detail-expanded {
+  margin-bottom: 8px;
+}
+
+.tool-detail-expanded:last-child {
+  margin-bottom: 0;
+}
+
+.tool-detail-section {
+  margin-bottom: 6px;
+}
+
+.tool-detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.tool-detail-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #d4d4d8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  font-family: var(--font-chat-text);
+}
+
+.tool-detail-content {
+  font-size: 12px;
+  font-family: var(--font-monospace, 'JetBrains Mono', monospace);
+  color: #a1a1aa;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 6px;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
 }
 
 .streaming-indicator.responding {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  border-color: #86efac;
 }
 
 .streaming-indicator.completed {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-color: #fcd34d;
+  background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
+  padding: 0;
   flex-direction: column;
   align-items: flex-start;
   transition: all 0.3s ease;
+  border-radius: 16px;
 }
 
 .streaming-indicator.completed:hover {
-  border-color: #fbbf24;
-  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2);
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+}
+
+.streaming-indicator.completed .tool-item-name {
+  color: #e4e4e7;
+  font-family: var(--font-chat-text);
+}
+
+.streaming-indicator.completed .tool-detail-label {
+  color: #e4e4e7;
+  font-family: var(--font-chat-text);
+}
+
+.streaming-indicator.completed .tool-detail-content {
+  color: #d4d4d8;
+  font-family: var(--font-monospace, 'JetBrains Mono', monospace);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .expand-arrow {
@@ -191,50 +335,63 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .streaming-indicator {
-    background: var(--bg-secondary-dark, #2a2a2a);
-    border-color: var(--border-dark, #404040);
-  }
-
-  .streaming-indicator.thinking {
-    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
-    border-color: #3b82f6;
-  }
-
+/* Light mode support */
+@media (prefers-color-scheme: light) {
   .streaming-indicator.executing {
-    background: linear-gradient(135deg, #78350f 0%, #f59e0b 100%);
-    border-color: #fbbf24;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
   }
-
-  .streaming-indicator.responding {
-    background: linear-gradient(135deg, #14532d 0%, #22c55e 100%);
-    border-color: #4ade80;
+  
+  .streaming-indicator.executing .tool-item-name {
+    color: #71717a;
   }
-
+  
+  .streaming-indicator.executing .tool-item-compact:hover {
+    background: rgba(0, 0, 0, 0.03);
+  }
+  
   .streaming-indicator.completed {
-    background: linear-gradient(135deg, #78350f 0%, #f59e0b 100%);
-    border-color: #fbbf24;
+    background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
   }
-
+  
   .streaming-indicator.completed:hover {
-    border-color: #fb923c;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
-
+  
+  .streaming-indicator.completed .tool-item-name {
+    color: #71717a;
+  }
+  
+  .streaming-indicator.completed .tool-item-compact:hover {
+    background: rgba(0, 0, 0, 0.03);
+  }
+  
+  .tool-details-expanded {
+    background: rgba(0, 0, 0, 0.02);
+    border-top-color: rgba(0, 0, 0, 0.08);
+  }
+  
+  .tool-detail-label {
+    color: #52525b;
+  }
+  
+  .tool-detail-content {
+    color: #71717a;
+    background: rgba(0, 0, 0, 0.03);
+  }
+  
   .tool-detail-item {
-    background: rgba(0, 0, 0, 0.2);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08);
   }
 
   .tool-detail-name {
-    color: var(--text-primary-dark, #e5e5e7);
+    color: #3f3f46;
   }
 
   .tool-detail-args pre,
   .tool-detail-result pre {
-    background: rgba(0, 0, 0, 0.3);
-    color: var(--text-primary-dark, #e5e5e7);
+    background: rgba(0, 0, 0, 0.03);
+    color: #52525b;
   }
 
   .indicator-label {
