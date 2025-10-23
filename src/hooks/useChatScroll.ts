@@ -1,24 +1,25 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 
 interface UseChatScrollOptions {
-  scrollThreshold?: number;
-  scrollDelay?: number;
   autoScroll?: boolean;
   messages?: unknown[];
+  offsetTop?: number;            // espace sous le header quand on centre un message
+  refreshOffset?: number;        // offset normal au refresh/chargement
 }
 
 interface UseChatScrollReturn {
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   scrollToBottom: (force?: boolean) => void;
+  scrollToLastUserMessage: () => void;
   isNearBottom: boolean;
 }
 
 export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScrollReturn {
-  const { 
-    scrollThreshold = 300, 
-    scrollDelay = 100,
+  const {
     autoScroll = true,
-    messages = []
+    messages = [],
+    offsetTop = 840,
+    refreshOffset = 50,
   } = options;
   
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -28,7 +29,11 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
 
   // Trouver le container scrollable
   const getScrollContainer = useCallback(() => {
-    return messagesEndRef.current?.closest('.chatgpt-messages-container, .messages-container') as HTMLElement;
+    return (
+      messagesEndRef.current?.closest(
+        '.chatgpt-messages-container, .messages-container, .chat-scroll-container'
+      ) as HTMLElement
+    ) || (messagesEndRef.current?.parentElement as HTMLElement);
   }, []);
 
   // Vérifier si l'utilisateur est près du bas
@@ -38,12 +43,34 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
 
     const { scrollTop, scrollHeight, clientHeight } = container;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-    const near = distanceFromBottom <= scrollThreshold;
+    const near = distanceFromBottom <= 300;
     
     setIsNearBottom(near);
-  }, [getScrollContainer, scrollThreshold]);
+  }, [getScrollContainer]);
 
-  // Scroll intelligent vers le bas - VERSION OPTIMISÉE
+  // 🎯 Scroll pour message USER (offset fort = 840)
+  const scrollToLastUserMessage = useCallback(() => {
+    const container = getScrollContainer();
+    if (!container) return;
+
+    // 🎯 AJOUTER l'espace vide FORT sous les messages (pour positionner sous header)
+    const messagesContainer = container.querySelector('.chatgpt-messages') as HTMLElement;
+    if (messagesContainer) {
+      messagesContainer.style.paddingBottom = `${offsetTop}px`;
+    }
+
+    // Scroll au MAXIMUM (comme avant)
+    const maxScroll = container.scrollHeight - container.clientHeight;
+    
+    container.scrollTo({
+      top: maxScroll,
+      behavior: 'smooth'
+    });
+
+    lastScrollTimeRef.current = Date.now();
+  }, [getScrollContainer, offsetTop]);
+
+  // 🎯 Scroll pour refresh/chargement (offset normal = 50)
   const scrollToBottom = useCallback((force = false) => {
     const container = getScrollContainer();
     if (!container) return;
@@ -51,6 +78,12 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     // Clear le timeout précédent
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
+    }
+
+    // 🎯 AJOUTER l'espace vide NORMAL sous les messages (pour voir tout le chat)
+    const messagesContainer = container.querySelector('.chatgpt-messages') as HTMLElement;
+    if (messagesContainer) {
+      messagesContainer.style.paddingBottom = `${refreshOffset}px`;
     }
 
     // Scroll optimisé sans manipulation du DOM
@@ -61,13 +94,13 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
         
         container.scrollTo({
           top: Math.max(0, maxScrollTop),
-          behavior: 'smooth' // Toujours smooth pour éviter la saccade
+          behavior: 'smooth'
         });
         
         lastScrollTimeRef.current = Date.now();
       });
-    }, force ? 0 : 50); // Délai réduit pour plus de réactivité
-  }, [getScrollContainer]);
+    }, force ? 0 : 50);
+  }, [getScrollContainer, refreshOffset]);
 
   // Écouter le scroll pour détecter la position
   useEffect(() => {
@@ -88,30 +121,34 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     };
   }, [getScrollContainer, checkScrollPosition]);
 
-  // 🎯 Autoscroll optimisé - un seul effet pour éviter les conflits
+  // 🎯 Autoscroll CONDITIONNEL - Seulement pour messages user
   const prevMessagesRef = useRef(messages);
   const scrollThrottleRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
     if (!autoScroll || messages.length === 0) return;
-    
+
     const prevMessages = prevMessagesRef.current;
-    const hasChanged = messages.length !== prevMessages.length || 
-      JSON.stringify(messages) !== JSON.stringify(prevMessages);
-    
-    if (hasChanged) {
-      prevMessagesRef.current = messages;
-      
-      // Throttle le scroll pour éviter les appels multiples
-      if (scrollThrottleRef.current) {
-        clearTimeout(scrollThrottleRef.current);
-      }
-      
+    const prevLast = prevMessages[prevMessages.length - 1];
+    const currLast = messages[messages.length - 1];
+    const hasChanged = messages.length !== prevMessages.length || prevLast !== currLast;
+
+    if (!hasChanged) return;
+
+    prevMessagesRef.current = messages;
+
+    // Détermine le rôle du dernier message si possible
+    const lastMessage: any = currLast as any;
+    const isLastMessageUser = lastMessage && typeof lastMessage === 'object' && 'role' in lastMessage && lastMessage.role === 'user';
+
+    if (isLastMessageUser) {
+      // Petit centrage du message user sous le header
+      if (scrollThrottleRef.current) clearTimeout(scrollThrottleRef.current);
       scrollThrottleRef.current = setTimeout(() => {
-        scrollToBottom(false); // Utiliser smooth scroll
-      }, 100);
+        scrollToLastUserMessage();
+      }, 150);
     }
-  }, [messages, autoScroll, scrollToBottom]);
+  }, [messages, autoScroll, scrollToLastUserMessage]);
 
   // Cleanup des timeouts
   useEffect(() => {
@@ -128,6 +165,7 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
   return {
     messagesEndRef,
     scrollToBottom,
+    scrollToLastUserMessage,
     isNearBottom
   };
-} 
+}
