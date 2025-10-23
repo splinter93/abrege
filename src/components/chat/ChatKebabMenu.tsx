@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { useChatStore } from '@/store/useChatStore';
+import { useTheme, CHAT_THEMES, type ChatTheme } from '@/hooks/useTheme';
 import './ChatKebabMenu.css';
 
 interface ChatKebabMenuProps {
@@ -19,6 +20,9 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   
   // LLM Provider state
   const { selectedAgent } = useChatStore();
+  
+  // Theme state
+  const { theme, setTheme, availableThemes, mounted } = useTheme();
   
   // ✅ SUPPRIMÉ: Hook pour les préférences de streaming (faux streaming)
 
@@ -40,7 +44,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
 
   const handleFullscreenToggle = () => {
     if (disabled) return;
-    onToggleFullscreen();
+    // TODO: Implémenter toggle fullscreen
     setIsOpen(false);
   };
 
@@ -51,6 +55,11 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
     if (!isNaN(newLimit) && newLimit > 0 && newLimit <= 100) {
       onHistoryLimitChange(newLimit);
     }
+  };
+
+  const handleThemeChange = (newTheme: ChatTheme) => {
+    if (disabled) return;
+    setTheme(newTheme);
   };
 
   return (
@@ -98,6 +107,28 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
               placeholder="10"
               disabled={disabled}
             />
+          </div>
+
+          {/* Sélecteur de thème */}
+          <div className="kebab-section">
+            <label className="kebab-section-label">Thème d'affichage</label>
+            <div className="kebab-theme-options">
+              {mounted && availableThemes.map((themeOption) => (
+                <button
+                  key={themeOption.value}
+                  onClick={() => handleThemeChange(themeOption.value)}
+                  className={`kebab-theme-option ${theme === themeOption.value ? 'active' : ''}`}
+                  disabled={disabled}
+                  aria-label={themeOption.label}
+                >
+                  <span className="kebab-theme-icon">{themeOption.icon}</span>
+                  <span className="kebab-theme-label">{themeOption.label}</span>
+                  {theme === themeOption.value && (
+                    <span className="kebab-theme-check">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Modèle */}

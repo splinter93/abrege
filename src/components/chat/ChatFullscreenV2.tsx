@@ -449,8 +449,13 @@ const ChatFullscreenV2: React.FC = () => {
   }, [isProcessing, isNearBottom, scrollToBottom, user, authLoading]);
 
   // 🎯 Handlers optimisés
-  const handleSendMessage = useCallback(async (message: string) => {
-    if (!message.trim() || loading) return;
+  const handleSendMessage = useCallback(async (message: string | import('@/types/image').MessageContent, images?: import('@/types/image').ImageAttachment[]) => {
+    // Vérifier si le message a du contenu (texte ou images)
+    const hasTextContent = typeof message === 'string' ? message.trim() : true;
+    const hasImages = images && images.length > 0;
+    
+    if (!hasTextContent && !hasImages) return;
+    if (loading) return;
     if (!requireAuth()) return;
     
     setLoading(true);
@@ -500,7 +505,9 @@ const ChatFullscreenV2: React.FC = () => {
         userAssistant: recentConversation.length,
         toolsRelevant: relevantTools.length,
         toolsTotal: toolMessages.length,
-        toolCallIds: keptToolCallIds.size
+        toolCallIds: keptToolCallIds.size,
+        hasImages: hasImages,
+        imageCount: images?.length || 0
       });
       
       // 4. Recombiner et trier par timestamp pour ordre chronologique
@@ -511,10 +518,22 @@ const ChatFullscreenV2: React.FC = () => {
           return timestampA - timestampB;
         });
       
+      // Extraire le texte pour la sauvegarde du message
+      const messageText = typeof message === 'string' 
+        ? message 
+        : (message.find((part): part is import('@/types/image').MessageContentPart & { type: 'text' } => part.type === 'text')?.text || '');
+      
+      // Extraire les images si présentes
+      const attachedImages = images?.map(img => ({
+        url: img.base64,
+        fileName: img.fileName
+      }));
+      
       const userMessage = {
         role: 'user' as const,
-        content: message,
-        timestamp: new Date().toISOString()
+        content: messageText,
+        timestamp: new Date().toISOString(),
+        ...(attachedImages && attachedImages.length > 0 && { attachedImages })
       };
       await addMessage(userMessage);
 
@@ -537,6 +556,8 @@ const ChatFullscreenV2: React.FC = () => {
         }
       };
 
+      // ✅ Support multi-modal : Passer le contenu complet (texte ou texte+images)
+      // sendMessage acceptera MessageContent pour gérer les images
       await sendMessage(message, currentSession.id, contextForLLM, limitedHistoryForLLM, tokenResult.token);
 
     } catch (error) {

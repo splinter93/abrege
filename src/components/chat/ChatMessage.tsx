@@ -83,9 +83,28 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   // ✅ NOUVEAU: Si une streamTimeline existe, l'utiliser pour le rendu
   const hasStreamTimeline = role === 'assistant' && message.streamTimeline && message.streamTimeline.items.length > 0;
 
+  // Cast pour accéder aux propriétés spécifiques du UserMessage
+  const userMessage = role === 'user' ? message as import('@/types/chat').UserMessage : null;
+  const hasAttachedImages = userMessage?.attachedImages && userMessage.attachedImages.length > 0;
+
   return (
     <div className={`chatgpt-message chatgpt-message-${role} ${className || ''}`}>
       <div className={`chatgpt-message-bubble chatgpt-message-bubble-${role}`}>
+        {/* Images attachées (messages user uniquement) */}
+        {hasAttachedImages && (
+          <div className="chatgpt-message-images">
+            {userMessage.attachedImages!.map((img, index) => (
+              <img
+                key={index}
+                src={img.url}
+                alt={img.fileName || `Image ${index + 1}`}
+                className="chatgpt-message-image"
+                loading="lazy"
+              />
+            ))}
+          </div>
+        )}
+
         {/* Reasoning dropdown - affiché AVANT le contenu */}
         {reasoning && (
           <ReasoningDropdown 

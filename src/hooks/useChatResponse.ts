@@ -26,7 +26,7 @@ interface UseChatResponseOptions {
 
 interface UseChatResponseReturn {
   isProcessing: boolean;
-  sendMessage: (message: string, sessionId: string, context?: Record<string, unknown>, history?: unknown[], token?: string) => Promise<void>;
+  sendMessage: (message: string | import('@/types/image').MessageContent, sessionId: string, context?: Record<string, unknown>, history?: unknown[], token?: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -48,10 +48,16 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
     onAssistantRoundComplete, // ✅ NOUVEAU: Pour persister chaque round
   } = options;
 
-  const sendMessage = useCallback(async (message: string, sessionId: string, context?: Record<string, unknown>, history?: unknown[], token?: string) => {
+  const sendMessage = useCallback(async (message: string | import('@/types/image').MessageContent, sessionId: string, context?: Record<string, unknown>, history?: unknown[], token?: string) => {
     try {
+      // Extraire un aperçu du message pour le logging
+      const messagePreview = typeof message === 'string' 
+        ? message.substring(0, 50) + '...'
+        : `[Multi-modal: ${message.length} parts]`;
+      
       logger.dev('[useChatResponse] 🎯 sendMessage appelé:', {
-        message: message.substring(0, 50) + '...',
+        message: messagePreview,
+        isMultiModal: typeof message !== 'string',
         sessionId,
         hasContext: !!context,
         historyLength: history?.length || 0,

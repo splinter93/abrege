@@ -284,17 +284,32 @@ export async function POST(request: NextRequest) {
           // ✅ AUDIT : Tracker les tool calls déjà exécutés pour détecter les doublons
           const executedToolCallsSignatures = new Set<string>();
 
+          // ✅ Helper: Extraire le texte d'un MessageContent (string ou array multi-modal)
+          const extractTextFromContent = (content: string | null | Array<{ type: string; text?: string }>): string => {
+            if (!content) return '';
+            if (typeof content === 'string') return content;
+            // Si array, trouver la partie texte
+            const textPart = content.find((part): part is { type: 'text'; text: string } => 
+              typeof part === 'object' && part.type === 'text'
+            );
+            return textPart?.text || '[Multi-modal content]';
+          };
+
           while (roundCount < maxRounds) {
             roundCount++;
             logger.dev(`[Stream Route] 🔄 Round ${roundCount}/${maxRounds}`);
 
             // ✅ AUDIT DÉTAILLÉ : Logger les messages envoyés à Grok pour ce round
+            const lastMessage = currentMessages[currentMessages.length - 1];
+            const lastContent = lastMessage?.content ? extractTextFromContent(lastMessage.content) : '';
+            
             logger.dev(`[Stream Route] 📋 MESSAGES ENVOYÉS À GROK ROUND ${roundCount}:`, {
               messageCount: currentMessages.length,
               roles: currentMessages.map(m => m.role),
               hasToolCalls: currentMessages.some(m => m.tool_calls && m.tool_calls.length > 0),
               hasToolResults: currentMessages.some(m => m.tool_results && m.tool_results.length > 0),
-              lastMessageContent: currentMessages[currentMessages.length - 1]?.content?.substring(0, 100) + '...'
+              lastMessageContent: lastContent.substring(0, 100) + (lastContent.length > 100 ? '...' : ''),
+              isMultiModal: Array.isArray(lastMessage?.content)
             });
             
             // ✅ AUDIT DÉTAILLÉ : Logger les 5 derniers messages pour voir l'ordre

@@ -50,6 +50,10 @@ export interface BaseMessage {
 export interface UserMessage extends BaseMessage {
   role: 'user';
   name?: string;
+  attachedImages?: Array<{
+    url: string; // Base64 data URI
+    fileName?: string;
+  }>;
 }
 
 /**
