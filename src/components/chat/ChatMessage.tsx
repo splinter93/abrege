@@ -119,10 +119,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         ) : (
           <>
             {/* FALLBACK: Rendu classique si pas de timeline */}
-            {/* Contenu markdown */}
+            {/* Contenu - texte brut pour user, markdown pour assistant */}
             {content && (
               <div className="chatgpt-message-content">
-                <EnhancedMarkdownMessage content={content} />
+                {role === 'user' ? (
+                  <div className="chatgpt-message-text-plain">{content}</div>
+                ) : (
+                  <EnhancedMarkdownMessage content={content} />
+                )}
               </div>
             )}
 

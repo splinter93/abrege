@@ -18,8 +18,8 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
   const {
     autoScroll = true,
     messages = [],
-    offsetTop = 840,
-    refreshOffset = 50,
+    offsetTop = 810,
+    refreshOffset = 40,
   } = options;
   
   const messagesEndRef = useRef<HTMLDivElement | null>(null);

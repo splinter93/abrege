@@ -128,7 +128,7 @@
 .markdown-body .toolbar-btn:hover,
 .chat-markdown-content .toolbar-btn:hover,
 .chat-markdown .toolbar-btn:hover,
-.unified-block-toolbar .toolbar-btn:hover { /* Added for chat CodeBlock */
+.unified-block-toolbar .toolbar-btn:hover {
   background: rgba(255,255,255,0.08);
   color: var(--blk-fg);
 }
