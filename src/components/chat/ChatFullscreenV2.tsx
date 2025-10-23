@@ -71,7 +71,7 @@ const ChatFullscreenV2: React.FC = () => {
   const previousSessionIdRef = useRef<string | null>(null);
 
   // 🎯 Hook de scroll optimisé
-  const { messagesEndRef, scrollToBottom, isNearBottom } = useChatScroll({
+  const { messagesEndRef, scrollToBottom, scrollToLastUserMessage, isNearBottom } = useChatScroll({
     scrollThreshold: 300,
     scrollDelay: 100,
     autoScroll: true,
@@ -402,28 +402,22 @@ const ChatFullscreenV2: React.FC = () => {
     restoreSelectedAgent();
   }, [selectedAgentId, selectedAgent, setSelectedAgent, setSelectedAgentId, user, authLoading]);
 
-  // ✅ MÉMOIRE: Scroll optimisé avec debounce et cleanup
-  const debouncedScrollToBottom = useCallback(
-    debounce(() => scrollToBottom(false), 150),
-    [scrollToBottom]
-  );
-
-  // ✅ MÉMOIRE: Cleanup du debounce au démontage
-  useEffect(() => {
-    return () => {
-      debouncedScrollToBottom.cancel();
-    };
-  }, [debouncedScrollToBottom]);
-
-  // ✅ MÉMOIRE: Scroll initial avec cleanup garanti
+  // ✅ Scroll initial seulement au chargement de la page/session
   useEffect(() => {
     if (user && !authLoading && sessions.length > 0 && currentSession?.thread && currentSession.thread.length > 0) {
-      const timer = setTimeout(() => scrollToBottom(false), 300);
-      return () => {
-        clearTimeout(timer);
-      };
+      // Scroll initial uniquement si on change de session
+      if (currentSession.id !== previousSessionIdRef.current) {
+        previousSessionIdRef.current = currentSession.id;
+        const timer = setTimeout(() => {
+          // ✅ Scroll jusqu'en bas au chargement initial (pour voir les derniers messages)
+          scrollToBottom(false);
+        }, 300);
+        return () => {
+          clearTimeout(timer);
+        };
+      }
     }
-  }, [sessions.length, currentSession?.thread, scrollToBottom, user, authLoading]);
+  }, [currentSession?.id, scrollToBottom, user, authLoading, sessions.length]);
 
   // S'assurer qu'une session est sélectionnée SEULEMENT s'il n'y en a aucune
   useEffect(() => {
@@ -434,19 +428,11 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [sessions.length, currentSession, setCurrentSession, user, authLoading]);
 
-  // Scroll automatique pour nouveaux messages (optimisé)
-  useEffect(() => {
-    if (user && !authLoading && currentSession?.thread && currentSession.thread.length > 0) {
-      debouncedScrollToBottom();
-    }
-  }, [currentSession?.thread?.length, debouncedScrollToBottom, user, authLoading]);
-
-  // Scroll intelligent pendant le traitement
-  useEffect(() => {
-    if (user && !authLoading && isProcessing && isNearBottom) {
-      scrollToBottom();
-    }
-  }, [isProcessing, isNearBottom, scrollToBottom, user, authLoading]);
+  // ❌ DÉSACTIVÉ : Pas d'autoscroll automatique pour nouveaux messages
+  // Le scroll est géré manuellement uniquement après l'ajout d'un message user
+  
+  // ❌ DÉSACTIVÉ : Pas d'autoscroll pendant le streaming
+  // On laisse le message assistant s'afficher dans l'espace disponible (padding-bottom: 300px)
 
   // 🎯 Handlers optimisés
   const handleSendMessage = useCallback(async (message: string | import('@/types/image').MessageContent, images?: import('@/types/image').ImageAttachment[]) => {
@@ -536,6 +522,8 @@ const ChatFullscreenV2: React.FC = () => {
         ...(attachedImages && attachedImages.length > 0 && { attachedImages })
       };
       await addMessage(userMessage);
+      
+      // 🎯 Le scroll est géré automatiquement par useChatScroll (détecte message user)
 
       const tokenResult = await tokenManager.getValidToken();
       if (!tokenResult.isValid || !tokenResult.token) {

@@ -590,7 +590,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--chat-bg-primary);
-  padding-bottom: 160px;
+  padding-bottom: 100px; /* 🎯 Espace minimal pour streaming */
 }
 
 .chatgpt-messages {
@@ -1072,7 +1072,7 @@
   }
   
   .chatgpt-messages-container {
-    padding-bottom: 140px;
+    padding-bottom: 80px; /* 🎯 Mobile : espace minimal */
   }
   
   .chatgpt-message-bubble-assistant {
