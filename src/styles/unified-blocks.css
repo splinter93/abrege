@@ -10,10 +10,10 @@
    DESIGN TOKENS
    ========================================================================== */
 :root {
-  --blk-bg: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
-  --blk-fg: #a0a0a0;
-  --blk-muted: #8a8a8a;
-  --blk-radius: 8px;
+  --blk-bg: linear-gradient(135deg, #1c1c1f 0%, #212124 50%, #1c1c1f 100%); /* Dégradé gris froid subtil 3 étapes */
+  --blk-fg: #7a8088; /* Texte code blocks - plus sombre */
+  --blk-muted: #9ca3af; /* Texte secondaire/labels */
+  --blk-radius: 14px;
   --blk-pad-y: 12px;
   --blk-pad-x: 16px;
   --blk-toolbar-h: 40px;
@@ -54,7 +54,7 @@
   height: var(--blk-toolbar-h) !important;
   padding: 0 8px 0 var(--blk-pad-x) !important;
   background: transparent !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-bottom: none !important;
   user-select: none !important;
   flex-shrink: 0 !important;
 }
@@ -90,11 +90,11 @@
 .chat-markdown-content .u-block__toolbar .toolbar-label,
 .chat-markdown .u-block__toolbar .toolbar-label,
 .unified-block-toolbar .toolbar-label { /* Added for chat CodeBlock */
-  font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 500;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
   color: var(--blk-muted);
-  text-transform: capitalize;
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -178,6 +178,7 @@
   font-family: var(--mono);
   font-size: 14px;
   line-height: 1.8;
+  color: #7a8088 !important; /* Couleur spéciale code blocks (plus sombre) */
 }
 
 /* ==========================================================================
@@ -307,17 +308,17 @@
 .ProseMirror .u-block--code .hljs *,
 .markdown-body .u-block--code .hljs *,
 .chat-markdown-content .u-block--code .hljs * {
-  color: var(--blk-fg) ; /* Forcer la couleur grise par défaut */
-  background-color: transparent ;
-  text-decoration: none ;
-  font-style: normal ;
-  font-weight: normal ;
-  border-bottom: none ;
-  text-underline-offset: unset ;
-  text-decoration-thickness: unset ;
-  box-shadow: none ;
-  outline: none ;
-  background-image: none ;
+  color: #7a8088 !important; /* Couleur spéciale code blocks - plus sombre */
+  background-color: transparent !important;
+  text-decoration: none !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+  border-bottom: none !important;
+  text-underline-offset: unset !important;
+  text-decoration-thickness: unset !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-image: none !important;
 }
 
 /* La balise <code> doit aussi être transparente */
@@ -385,7 +386,7 @@
   height: var(--blk-toolbar-h) !important;
   padding: 0 8px 0 var(--blk-pad-x) !important;
   background: var(--blk-bg) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-bottom: none !important;
   user-select: none !important;
   flex-shrink: 0 !important;
   border-radius: var(--blk-radius) var(--blk-radius) 0 0 !important;
@@ -419,9 +420,9 @@
 .public-note-container .markdown-body .u-block--mermaid .u-block__toolbar .toolbar-label,
 .chat-markdown-content .u-block--mermaid .u-block__toolbar .toolbar-label,
 .chat-markdown .u-block--mermaid .u-block__toolbar .toolbar-label {
-  font-family: var(--sans);
-  font-size: 13px;
-  font-weight: 500;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
   color: var(--blk-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -457,7 +458,8 @@
 .u-block--mermaid svg {
   display: block !important;
   margin: 0 auto !important;
-  max-width: 100% !important;
+  max-width: 600px !important; /* Limite la taille pour le chat */
+  max-height: 400px !important; /* Limite la hauteur */
   width: auto !important; /* Force auto pour surcharger width="100%" inline */
   height: auto !important;
 }
@@ -593,7 +595,7 @@
 /*
 .chat-markdown .u-block__toolbar {
   background: rgba(255, 255, 255, 0.05) ;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) ;
+  border-bottom: none ;
   padding: 0.5rem 1rem ;
   display: flex ;
   align-items: center ;

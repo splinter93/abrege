@@ -28,13 +28,13 @@
   /* ========================================
      BACKGROUNDS - Surfaces principales
      ======================================== */
-  --chat-bg-primary: #121212;           /* Container, header, messages */
-  --chat-bg-secondary: #161616;         /* Réservé pour surfaces alternatives */
-  --chat-bg-tertiary: #181818;          /* Sidebar, chat input area */
-  --chat-bg-input: #1f1f1f;             /* Input search, formulaires */
-  --chat-bg-input-focus: #252525;       /* Input au focus */
-  --chat-bg-user-message: #1e1e1e;      /* Bulle message user */
-  --chat-bg-user-message-hover: #202020; /* Bulle user au hover */
+  --chat-bg-primary: #131313;           /* Container, header, messages (assombri -1%) */
+  --chat-bg-secondary: #171717;         /* Réservé pour surfaces alternatives (-1%) */
+  --chat-bg-tertiary: #191919;          /* Sidebar, chat input area (-1%) */
+  --chat-bg-input: #242424;             /* Input search, formulaires (+2%) */
+  --chat-bg-input-focus: #2a2a2a;       /* Input au focus (+2%) */
+  --chat-bg-user-message: #232323;      /* Bulle message user (+2%) */
+  --chat-bg-user-message-hover: #252525; /* Bulle user au hover (+2%) */
   
   /* ========================================
      OVERLAYS - Effets de surface
@@ -50,9 +50,9 @@
   /* ========================================
      TEXTE - Hiérarchie typographique
      ======================================== */
-  --chat-text-primary: #e5e5e5;         /* Texte principal */
-  --chat-text-secondary: #d1d5db;       /* Texte secondaire */
-  --chat-text-muted: #9ca3af;           /* Texte discret, labels */
+  --chat-text-primary: #b5bcc4;         /* Texte principal (+6% luminosité) */
+  --chat-text-secondary: #a3a9b2;       /* Texte secondaire */
+  --chat-text-muted: #7a8088;           /* Texte discret, labels */
   --chat-text-success: #22c55e;         /* Texte succès */
   --chat-text-error: #ef4444;           /* Texte erreur */
   --chat-text-error-hover: #dc2626;     /* Texte erreur hover */
@@ -81,7 +81,7 @@
      TYPOGRAPHIE
      ======================================== */
   /* Les variables sont héritées de typography.css */
-  --chat-font-size-base: 16px;
+  --chat-font-size-base: 15px;
   --chat-line-height-normal: 1.5;
   --chat-line-height-relaxed: 1.75;
   
@@ -294,7 +294,7 @@
   left: 0;
   height: calc(100vh - 56px - 24px);
   width: 280px;
-  background: linear-gradient(135deg, #151518 0%, #1e1e22 100%);
+  background: linear-gradient(135deg, #1c1c1f 0%, #232327 50%, #1c1c1f 100%);
   transform: translateX(-280px);
   transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
               opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -603,8 +603,8 @@
 .chatgpt-message {
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--chat-space-xl);
-  animation: fadeIn 0.2s ease-out;
+  margin-bottom: var(--chat-space-lg);
+  /* animation: fadeIn 0.2s ease-out; */ /* ✅ DÉSACTIVÉ: Cause clignotement à la fin du stream */
 }
 
 /* Texte brut pour messages user */
@@ -770,7 +770,7 @@
 .chatgpt-input-area {
   width: 100%;
   max-width: 1015px;
-  background: linear-gradient(135deg, #18181b 0%, #222226 100%);
+  background: linear-gradient(135deg, #1c1c1f 0%, #212124 50%, #1c1c1f 100%);
   border-radius: var(--chat-radius-xl);
   padding: var(--chat-space-md);
   display: flex;
@@ -798,7 +798,7 @@
 }
 
 .chatgpt-input-textarea::placeholder {
-  color: #6b7280;
+  color: #7a8088;
 }
 
 .chatgpt-input-textarea:focus::placeholder {
@@ -972,12 +972,12 @@
 
 .chatgpt-message-user .bubble-buttons {
   justify-content: flex-end;
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 .chatgpt-message-assistant .bubble-buttons {
   justify-content: flex-start;
-  margin-top: -8px;
+  margin-top: -12px;
 }
 
 .bubble-buttons-container {

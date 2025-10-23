@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import './BubbleButtons.css';
-import { FiCopy, FiCheck, FiEdit2 } from 'react-icons/fi';
+import { FiCopy, FiCheck } from 'react-icons/fi';
 import { Volume2 } from 'lucide-react';
 
 interface BubbleButtonsProps {
@@ -58,7 +58,7 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
             title={copied ? 'Copié !' : 'Copier le message'}
             aria-label={copied ? 'Message copié' : 'Copier le message'}
           >
-            {copied ? <FiCheck size={16} /> : <FiCopy size={16} />}
+            {copied ? <FiCheck size={14} /> : <FiCopy size={14} />}
           </button>
 
           {showVoiceButton && (
@@ -68,7 +68,7 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
               title="Lire à haute voix"
               aria-label="Lire le message à haute voix"
             >
-              <Volume2 size={16} />
+              <Volume2 size={14} />
             </button>
           )}
 
@@ -79,7 +79,10 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
               title="Éditer le message"
               aria-label="Éditer le message"
             >
-              <FiEdit2 size={16} />
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
             </button>
           )}
 

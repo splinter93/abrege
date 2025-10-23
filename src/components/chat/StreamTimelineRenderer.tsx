@@ -13,8 +13,9 @@ interface StreamTimelineRendererProps {
 /**
  * Composant qui rend la timeline chronologique exacte du streaming
  * Affiche les blocs de texte et les tool executions dans le bon ordre
+ * ✅ MEMO: Évite le re-render et le clignotement à la fin du stream
  */
-const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = ({ timeline, className = '', isActiveStreaming = false }) => {
+const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo(({ timeline, className = '', isActiveStreaming = false }) => {
   // État pour gérer l'expansion des blocs d'exécution
   const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set());
 
@@ -104,7 +105,10 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = ({ timelin
       })}
     </div>
   );
-};
+});
+
+// ✅ Nom d'affichage pour le debugging
+StreamTimelineRenderer.displayName = 'StreamTimelineRenderer';
 
 export default StreamTimelineRenderer;
 

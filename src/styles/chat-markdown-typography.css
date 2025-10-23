@@ -12,14 +12,14 @@
   /* Tailles de police - Hiérarchie claire */
   --chat-text-xs: 0.75rem;      /* 12px */
   --chat-text-sm: 0.875rem;     /* 14px */
-  --chat-text-base: 1rem;       /* 16px */
-  --chat-text-lg: 1.125rem;     /* 18px */
-  --chat-text-xl: 1.25rem;      /* 20px */
-  --chat-text-2xl: 1.5rem;      /* 24px */
-  --chat-text-3xl: 1.875rem;    /* 30px */
-  --chat-text-4xl: 2.25rem;     /* 36px */
-  --chat-text-5xl: 3rem;        /* 48px */
-  --chat-text-6xl: 3.75rem;     /* 60px */
+  --chat-text-base: 0.9375rem;  /* 15px - Ajusté pour meilleur viewport */
+  --chat-text-lg: 1.0625rem;    /* 17px */
+  --chat-text-xl: 1.1875rem;    /* 19px */
+  --chat-text-2xl: 1.4375rem;   /* 23px */
+  --chat-text-3xl: 1.8125rem;   /* 29px */
+  --chat-text-4xl: 2.1875rem;   /* 35px */
+  --chat-text-5xl: 2.8125rem;   /* 45px */
+  --chat-text-6xl: 3.5625rem;   /* 57px */
   
   /* Line heights - Optimisés pour la lisibilité */
   --chat-leading-tight: 1.25;
