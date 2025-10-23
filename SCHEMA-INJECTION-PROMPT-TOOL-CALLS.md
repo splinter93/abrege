@@ -376,3 +376,5 @@ content += `AUTO-CHECK : Avant afficher URL → Vient d'un tool ? OUI=OK, NON=ST
 
 **Ton point d'entrée principal : `SystemMessageBuilder.ts` lignes 79-132** ⭐
 
+
+

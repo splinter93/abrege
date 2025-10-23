@@ -426,3 +426,5 @@ src/hooks/useChatHandlers.ts
 
 **Commence par modifier le prompt (SystemMessageBuilder.ts lignes 79-132), c'est le plus efficace !**
 
+
+

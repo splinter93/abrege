@@ -83,8 +83,8 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = ({ timelin
                       id: tc.id,
                       name: tc.function.name,
                       arguments: tc.function.arguments,
-                      result: result ? (typeof result.result === 'string' ? result.result : JSON.stringify(result.result)) : undefined,
-                      success: result?.success
+                      result: tc.result || (result ? (typeof result.result === 'string' ? result.result : JSON.stringify(result.result)) : undefined),
+                      success: tc.success !== undefined ? tc.success : result?.success
                     };
                   })}
                   isExpanded={expandedBlocks.has(index)}

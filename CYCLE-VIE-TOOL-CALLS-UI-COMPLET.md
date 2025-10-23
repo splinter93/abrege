@@ -559,3 +559,5 @@ T12: Message final → "Voici le contenu..." + [Tool Calls] + [Results] ✅
 **Voilà, tout est à plat et clair !** 🎯
 
 
+
+
