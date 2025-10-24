@@ -59,41 +59,59 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
 
     // ✅ PRIORITÉ 1: ESSAYER LES COOKIES DE SESSION SUPABASE (UI normale)
     try {
-      const cookieStore = await cookies();
-      const supabaseServer = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          cookies: {
-            getAll() {
-              return cookieStore.getAll();
+      // Lire les cookies depuis la requête (pas via cookies() qui est pour Server Components)
+      const cookieHeader = request.headers.get('cookie');
+      
+      if (cookieHeader) {
+        logApi.debug(`[AuthUtils] 🍪 Cookies détectés dans la requête`);
+        
+        // Créer un client Supabase qui lit les cookies depuis la requête
+        const supabaseServer = createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          {
+            cookies: {
+              getAll() {
+                // Parser les cookies depuis le header
+                return cookieHeader.split(';').map(cookie => {
+                  const [name, ...valueParts] = cookie.trim().split('=');
+                  return {
+                    name: name.trim(),
+                    value: valueParts.join('=').trim()
+                  };
+                });
+              },
+              setAll() {
+                // Pas de set dans les Route Handlers
+              },
             },
-            setAll() {
-              // Pas de set dans les Route Handlers
-            },
-          },
+          }
+        );
+
+        const { data: { user }, error } = await supabaseServer.auth.getUser();
+
+        if (!error && user) {
+          logApi.info(`[AuthUtils] ✅ Auth via cookies Supabase: ${user.id}`);
+          return {
+            success: true,
+            userId: user.id,
+            scopes: [
+              'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
+              'classeurs:read', 'classeurs:write', 'classeurs:create', 'classeurs:update', 'classeurs:delete',
+              'dossiers:read', 'dossiers:write', 'dossiers:create', 'dossiers:update', 'dossiers:delete',
+              'files:read', 'files:write', 'files:upload', 'files:delete',
+              'profile:read'
+            ],
+            authType: 'jwt'
+          };
+        } else {
+          logApi.warn(`[AuthUtils] ⚠️ Cookies présents mais getUser échoué:`, error?.message);
         }
-      );
-
-      const { data: { user }, error } = await supabaseServer.auth.getUser();
-
-      if (!error && user) {
-        logApi.info(`[AuthUtils] ✅ Auth via cookies Supabase: ${user.id}`);
-        return {
-          success: true,
-          userId: user.id,
-          scopes: [
-            'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
-            'classeurs:read', 'classeurs:write', 'classeurs:create', 'classeurs:update', 'classeurs:delete',
-            'dossiers:read', 'dossiers:write', 'dossiers:create', 'dossiers:update', 'dossiers:delete',
-            'files:read', 'files:write', 'files:upload', 'files:delete',
-            'profile:read'
-          ],
-          authType: 'jwt'
-        };
+      } else {
+        logApi.debug(`[AuthUtils] ⚠️ Pas de cookies dans la requête`);
       }
     } catch (cookieError) {
-      logApi.debug(`[AuthUtils] ⚠️ Pas de session via cookies, essai autres méthodes...`);
+      logApi.debug(`[AuthUtils] ⚠️ Erreur lecture cookies:`, cookieError);
     }
 
     // ✅ PRIORITÉ 2: ESSAYER L'IMPERSONATION D'AGENT
