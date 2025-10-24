@@ -30,6 +30,13 @@
   flex-shrink: 0;
 }
 
+/* Icône agent par défaut - même taille que avatar */
+.sidebar-agent-row .sidebar-item-icon-clean {
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+}
+
 /* ========================================
    CONTENEUR PRINCIPAL
    ======================================== */
