@@ -10,6 +10,15 @@ import { buildMessageContent, revokeImageAttachments, convertFileToBase64 } from
 import { chatImageUploadService } from '@/services/chatImageUploadService';
 import '@/styles/ImageSourceModal.css';
 
+// Type pour les notes sélectionnées
+interface SelectedNote {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  word_count?: number;
+}
+
 interface ChatInputProps {
   onSend: (message: string | MessageContent, images?: ImageAttachment[]) => void;
   loading: boolean;
@@ -40,6 +49,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   const [showImageSourceModal, setShowImageSourceModal] = useState(false);
   const [showWebSearchMenu, setShowWebSearchMenu] = useState(false);
   const [showReasoningMenu, setShowReasoningMenu] = useState(false);
+  const [showNoteSelector, setShowNoteSelector] = useState(false);
+  const [selectedNotes, setSelectedNotes] = useState<SelectedNote[]>([]);
+  const [noteSearchQuery, setNoteSearchQuery] = useState('');
+  const [recentNotes, setRecentNotes] = useState<SelectedNote[]>([]);
   const [reasoningOverride, setReasoningOverride] = useState<'advanced' | 'general' | 'fast' | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -238,6 +251,23 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     setShowReasoningMenu(prev => !prev);
   }, []);
 
+  const toggleNoteSelector = useCallback(() => {
+    setShowNoteSelector(prev => !prev);
+    if (!showNoteSelector) {
+      // TODO: Charger les notes récentes
+      setRecentNotes([
+        // Mock data pour le moment
+        { id: '1', slug: 'architecture-systeme', title: 'Architecture système', word_count: 1234 },
+        { id: '2', slug: 'guide-api-v2', title: 'Guide API v2', word_count: 890 },
+        { id: '3', slug: 'roadmap-q4', title: 'Roadmap Q4 2025', word_count: 567 },
+        { id: '4', slug: 'notes-reunion-octobre', title: 'Notes de réunion Octobre', word_count: 2156 },
+        { id: '5', slug: 'specs-technique-chat', title: 'Spécifications techniques Chat', word_count: 3421 },
+        { id: '6', slug: 'analyse-performance', title: 'Analyse de performance', word_count: 1789 },
+        { id: '7', slug: 'migration-typescript', title: 'Migration TypeScript', word_count: 987 },
+      ]);
+    }
+  }, [showNoteSelector]);
+
   const handleLoadImageClick = useCallback(() => {
     setShowFileMenu(false);
     setShowImageSourceModal(true);
@@ -361,6 +391,20 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     setShowReasoningMenu(false);
   }, [defaultReasoningLevel]);
 
+  // Handlers Notes
+  const handleSelectNote = useCallback((note: SelectedNote) => {
+    // Éviter les doublons
+    if (!selectedNotes.find(n => n.id === note.id)) {
+      setSelectedNotes(prev => [...prev, note]);
+    }
+    setShowNoteSelector(false);
+    setNoteSearchQuery('');
+  }, [selectedNotes]);
+
+  const handleRemoveNote = useCallback((noteId: string) => {
+    setSelectedNotes(prev => prev.filter(n => n.id !== noteId));
+  }, []);
+
   // Fermer le menu fichier quand on clique ailleurs
   useEffect(() => {
     if (!showFileMenu) return;
@@ -405,6 +449,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showReasoningMenu]);
+
+  // Fermer le note selector quand on clique ailleurs
+  useEffect(() => {
+    if (!showNoteSelector) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.chat-note-selector') && !target.closest('.chatgpt-input-mention')) {
+        setShowNoteSelector(false);
+        setNoteSearchQuery('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showNoteSelector]);
 
   // Cleanup des images au démontage
   useEffect(() => {
@@ -462,6 +522,25 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         </div>
       )}
 
+      {/* Notes sélectionnées (pills AU-DESSUS du textarea) */}
+      {selectedNotes.length > 0 && (
+        <div className="chat-selected-notes">
+          {selectedNotes.map((note) => (
+            <div key={note.id} className="chat-note-pill">
+              <FileText size={14} />
+              <span className="chat-note-pill-title">{note.title}</span>
+              <button
+                className="chat-note-pill-remove"
+                onClick={() => handleRemoveNote(note.id)}
+                aria-label="Retirer la note"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Affichage des images attachées */}
       {images.length > 0 && (
         <div className="chat-images-preview-container">
@@ -499,13 +578,64 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         rows={1}
         disabled={false}
       />
-      
+
       {/* Actions de l'input */}
       <div className="chatgpt-input-actions">
-        {/* Bouton @ (Mention/Context) */}
-        <button className="chatgpt-input-mention" aria-label="Mention">
-          <AtSign size={18} />
-        </button>
+        {/* Bouton @ (Mention/Context) avec menu Note Selector */}
+        <div style={{ position: 'relative' }}>
+          <button 
+            className={`chatgpt-input-mention ${showNoteSelector ? 'active' : ''} ${selectedNotes.length > 0 ? 'has-notes' : ''}`}
+            aria-label="Mentionner une note"
+            onClick={toggleNoteSelector}
+            disabled={disabled || loading}
+          >
+            <AtSign size={18} />
+            {selectedNotes.length > 0 && (
+              <span className="chatgpt-input-mention-badge">{selectedNotes.length}</span>
+            )}
+          </button>
+
+          {/* Note Selector Menu */}
+          {showNoteSelector && (
+            <div className="chat-note-selector">
+              <div className="chat-note-search-container">
+                <Search size={16} className="chat-note-search-icon" />
+                <input
+                  type="text"
+                  className="chat-note-search-input"
+                  placeholder="Rechercher une note..."
+                  value={noteSearchQuery}
+                  onChange={(e) => setNoteSearchQuery(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div className="chat-note-list-header">Récentes</div>
+              <div className="chat-note-list">
+                {recentNotes
+                  .filter(note => 
+                    !noteSearchQuery || 
+                    note.title.toLowerCase().includes(noteSearchQuery.toLowerCase())
+                  )
+                  .map((note) => (
+                    <button
+                      key={note.id}
+                      className={`chat-note-item ${selectedNotes.find(n => n.id === note.id) ? 'selected' : ''}`}
+                      onClick={() => handleSelectNote(note)}
+                    >
+                      <FileText size={16} />
+                      <div className="chat-note-item-content">
+                        <div className="chat-note-item-title">{note.title}</div>
+                      </div>
+                      {selectedNotes.find(n => n.id === note.id) && (
+                        <span className="checkmark">✓</span>
+                      )}
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Bouton Fichier avec menu contextuel */}
         <div style={{ position: 'relative' }}>
