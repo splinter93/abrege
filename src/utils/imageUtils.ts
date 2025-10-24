@@ -347,10 +347,18 @@ export function buildMessageContent(
 
   // Ajouter chaque image
   for (const image of images) {
+    // ✅ CRITIQUE: Détecter si c'est une URL S3 ou un base64
+    // Après upload S3, image.base64 contient l'URL S3 (pas le base64 !)
+    const imageUrl = image.base64; // URL S3 OU base64
+    
+    // Log pour debug
+    const isS3Url = imageUrl.startsWith('http');
+    logger.debug(LogCategory.EDITOR, `📎 Image ${image.fileName}: ${isS3Url ? 'URL S3' : 'base64'} (${imageUrl.substring(0, 50)}...)`);
+    
     content.push({
       type: 'image_url',
       image_url: {
-        url: image.base64,
+        url: imageUrl, // URL S3 ou base64
         detail: image.detail || 'auto',
       },
     });
