@@ -337,13 +337,28 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
       // ✅ AUDIT DÉTAILLÉ : Logger les messages du payload
       if (payload.messages && Array.isArray(payload.messages)) {
         payload.messages.forEach((msg, index) => {
+          const contentType = typeof msg.content;
+          const isArray = Array.isArray(msg.content);
+          const contentPreview = contentType === 'string' 
+            ? (msg.content as string).substring(0, 100)
+            : isArray
+              ? `[${(msg.content as unknown[]).length} parts]`
+              : `OBJECT: ${JSON.stringify(msg.content).substring(0, 100)}`;
+          
           logger.dev(`[XAIProvider] 📝 Message ${index + 1}:`, {
             role: msg.role,
-            contentLength: typeof msg.content === 'string' ? msg.content.length : 'multi-part',
+            contentType: contentType,
+            isArray: isArray,
+            contentPreview: contentPreview,
             hasToolCalls: !!msg.tool_calls,
             toolCallsCount: msg.tool_calls?.length || 0,
             hasToolCallId: !!msg.tool_call_id
           });
+          
+          // ⚠️ ALERTE si le content est un objet (bug !)
+          if (contentType === 'object' && !isArray) {
+            logger.error(`[XAIProvider] ⚠️⚠️⚠️ MESSAGE ${index + 1} A UN CONTENT OBJET (PAS ARRAY) ! xAI va rejeter ça !`, msg.content);
+          }
         });
       }
       
