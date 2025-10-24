@@ -978,6 +978,7 @@
 
 .chatgpt-input-textarea::placeholder {
   color: var(--chat-text-placeholder);
+  font-size: calc(var(--chat-font-size-base) * 1.02); /* +2% à peine */
 }
 
 .chatgpt-input-textarea:focus::placeholder {
@@ -1516,6 +1517,21 @@
 /* Legacy styles supprimés - Fusionnés dans .chat-file-menu */
 
 /* ========================================
+   Animations globales pour tous les menus
+   ======================================== */
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========================================
    File Menu (fusionné depuis Image Menu)
    ======================================== */
 
@@ -1534,7 +1550,7 @@
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  animation: menuFadeIn 0.15s ease-out;
+  animation: menuFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .chat-file-menu-item {
@@ -1582,7 +1598,7 @@
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  animation: menuFadeIn 0.15s ease-out;
+  animation: menuFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .chat-menu-header {
@@ -1642,7 +1658,7 @@
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  animation: menuFadeIn 0.15s ease-out;
+  animation: menuFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .chat-reasoning-menu-item {
@@ -1714,7 +1730,7 @@
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  animation: menuFadeIn 0.15s ease-out;
+  animation: menuFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1727,14 +1743,14 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: var(--sidebar-search-overlay); /* Comme sidebar */
+  background: rgba(255, 255, 255, 0.02); /* Ultra subtil */
   border-radius: var(--chat-radius-md);
   border: none;
   transition: background var(--chat-transition-fast);
 }
 
 .chat-note-search-container:focus-within {
-  background: var(--sidebar-search-overlay-focus); /* Comme sidebar */
+  background: rgba(255, 255, 255, 0.03); /* Focus très léger */
 }
 
 .chat-note-search-icon {
