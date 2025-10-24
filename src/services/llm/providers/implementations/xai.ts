@@ -518,55 +518,73 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
   }
 
   /**
+   * ✅ HELPER INTERNE : Convertit le content (potentiellement multi-modal) au format xAI
+   * 
+   * Gère 3 formats:
+   * 1. string (message simple)
+   * 2. MessageContent { text, images } (format frontend)
+   * 3. XAIMessageContent[] (déjà formaté pour API)
+   */
+  private normalizeMessageContent(content: unknown): string | null | XAIMessageContent[] {
+    // Déjà un string ou null/undefined
+    if (typeof content === 'string' || content === null || content === undefined) {
+      return content || null;
+    }
+    
+    // Déjà un array XAIMessageContent[] (pré-formaté)
+    if (Array.isArray(content)) {
+      return content as XAIMessageContent[];
+    }
+    
+    // Format MessageContent (objet avec text et/ou images)
+    if (typeof content === 'object') {
+      const messageContent = content as { text?: string; images?: Array<{ url: string; detail?: 'auto' | 'low' | 'high' }> };
+      
+      // Si on a des images, construire le format multi-part
+      if (messageContent.images && messageContent.images.length > 0) {
+        const contentParts: XAIMessageContent[] = [];
+        
+        // Ajouter le texte (si présent)
+        if (messageContent.text) {
+          contentParts.push({
+            type: 'text',
+            text: messageContent.text
+          });
+        }
+        
+        // Ajouter les images
+        for (const image of messageContent.images) {
+          contentParts.push({
+            type: 'image_url',
+            image_url: {
+              url: image.url,
+              detail: image.detail || 'auto'
+            }
+          });
+        }
+        
+        logger.dev(`[XAIProvider] 🖼️ Message multi-modal: "${messageContent.text?.substring(0, 50)}..." + ${messageContent.images.length} image(s)`);
+        return contentParts;
+      }
+      
+      // Juste du texte, pas d'images
+      if (messageContent.text) {
+        return messageContent.text;
+      }
+    }
+    
+    // Fallback: convertir en string
+    return String(content);
+  }
+
+  /**
    * Convertit les ChatMessage vers le format API xAI
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): XAIMessage[] {
     return messages.map(msg => {
-      // ✅ CRITIQUE : Détecter le contenu multi-modal (images + texte)
-      // Le content peut être:
-      // - string (message simple)
-      // - MessageContent avec { text, images } (multi-modal depuis frontend)
-      // - XAIMessageContent[] (déjà formaté pour l'API)
-      let content: string | null | XAIMessageContent[] = msg.content;
-      
-      // Si le content est un objet MessageContent (format frontend)
-      if (msg.content && typeof msg.content === 'object' && !Array.isArray(msg.content)) {
-        const messageContent = msg.content as { text?: string; images?: Array<{ url: string; detail?: 'auto' | 'low' | 'high' }> };
-        
-        if (messageContent.images && messageContent.images.length > 0) {
-          // Construire le format multi-part pour xAI
-          const contentParts: XAIMessageContent[] = [];
-          
-          // Ajouter le texte
-          if (messageContent.text) {
-            contentParts.push({
-              type: 'text',
-              text: messageContent.text
-            });
-          }
-          
-          // Ajouter les images
-          for (const image of messageContent.images) {
-            contentParts.push({
-              type: 'image_url',
-              image_url: {
-                url: image.url,
-                detail: image.detail || 'auto'
-              }
-            });
-          }
-          
-          content = contentParts;
-          logger.dev(`[XAIProvider] 🖼️ Message multi-modal détecté: ${messageContent.text?.substring(0, 50)}... + ${messageContent.images.length} image(s)`);
-        } else if (messageContent.text) {
-          // Juste du texte, pas d'images
-          content = messageContent.text;
-        }
-      }
-      
       const messageObj: XAIMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
-        content: content
+        content: this.normalizeMessageContent(msg.content)
       };
 
       // Gérer les tool calls pour les messages assistant
@@ -603,7 +621,7 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
     for (const msg of history) {
       const messageObj: XAIMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
-        content: msg.content
+        content: this.normalizeMessageContent(msg.content) // ✅ Utilise la normalisation
       };
 
       // Gérer les tool calls pour les messages assistant
@@ -958,7 +976,7 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
       for (const msg of history) {
         messages.push({
           role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
-          content: msg.content
+          content: this.normalizeMessageContent(msg.content) // ✅ Utilise la normalisation
         });
       }
 
