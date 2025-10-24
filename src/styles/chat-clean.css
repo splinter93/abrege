@@ -273,12 +273,14 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* Input container avec fade-out pour masquer le texte */
+/* Input container avec fade-out pour masquer le texte qui scroll */
 .chat-theme-glass .chatgpt-input-container {
   background: linear-gradient(to top, 
-    var(--chat-bg-primary) 0%, 
-    var(--chat-bg-primary) 40%, 
-    transparent 100%);
+    #1a1625 0%,              /* Opaque en bas (couleur du background) */
+    #1a1625 50%,             /* Opaque jusqu'à mi-hauteur */
+    rgba(26, 22, 37, 0.8) 70%,  /* Semi-transparent */
+    rgba(26, 22, 37, 0) 100%);  /* Transparent en haut */
+  z-index: 100;  /* Au-dessus des messages */
 }
 
 /* ========================================
