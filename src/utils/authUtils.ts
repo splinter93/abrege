@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { logApi } from './logger';
 import { oauthService } from '@/services/oauthService'; // ✅ Import statique corrigé
@@ -55,7 +57,46 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
       'X-API-Key': request.headers.get('X-API-Key') ? '***' : 'ABSENT'
     });
 
-    // ✅ ESSAYER D'ABORD L'IMPERSONATION D'AGENT
+    // ✅ PRIORITÉ 1: ESSAYER LES COOKIES DE SESSION SUPABASE (UI normale)
+    try {
+      const cookieStore = await cookies();
+      const supabaseServer = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return cookieStore.getAll();
+            },
+            setAll() {
+              // Pas de set dans les Route Handlers
+            },
+          },
+        }
+      );
+
+      const { data: { user }, error } = await supabaseServer.auth.getUser();
+
+      if (!error && user) {
+        logApi.info(`[AuthUtils] ✅ Auth via cookies Supabase: ${user.id}`);
+        return {
+          success: true,
+          userId: user.id,
+          scopes: [
+            'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
+            'classeurs:read', 'classeurs:write', 'classeurs:create', 'classeurs:update', 'classeurs:delete',
+            'dossiers:read', 'dossiers:write', 'dossiers:create', 'dossiers:update', 'dossiers:delete',
+            'files:read', 'files:write', 'files:upload', 'files:delete',
+            'profile:read'
+          ],
+          authType: 'jwt'
+        };
+      }
+    } catch (cookieError) {
+      logApi.debug(`[AuthUtils] ⚠️ Pas de session via cookies, essai autres méthodes...`);
+    }
+
+    // ✅ PRIORITÉ 2: ESSAYER L'IMPERSONATION D'AGENT
     const userId = request.headers.get('X-User-Id');
     const isServiceRole = request.headers.get('X-Service-Role') === 'true';
     
