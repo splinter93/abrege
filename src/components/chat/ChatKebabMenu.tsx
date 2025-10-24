@@ -152,7 +152,7 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
         // ✅ Calculer et appliquer les couleurs dérivées au chargement
         const mutedColor = palette.colors['--chat-text-muted'];
         if (mutedColor) {
-          const placeholderColor = darkenColor(mutedColor, 5);
+          const placeholderColor = darkenColor(mutedColor, 1); // ✅ 1% plus sombre
           document.documentElement.style.setProperty('--chat-text-placeholder', placeholderColor);
           
           const codeColor = darkenColor(mutedColor, -5);
@@ -205,8 +205,8 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
       // ✅ Calculer et appliquer les couleurs dérivées
       const mutedColor = palette.colors['--chat-text-muted'];
       if (mutedColor) {
-        // Placeholder: muted assombri de 5%
-        const placeholderColor = darkenColor(mutedColor, 5);
+        // Placeholder: muted assombri de 1%
+        const placeholderColor = darkenColor(mutedColor, 1); // ✅ 1% plus sombre
         document.documentElement.style.setProperty('--chat-text-placeholder', placeholderColor);
         
         // Code: muted éclairci de 5%

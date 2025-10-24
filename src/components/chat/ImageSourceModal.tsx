@@ -16,6 +16,20 @@ const ImageSourceModal: React.FC<ImageSourceModalProps> = ({
   onSelectComputer,
   onSelectFiles
 }) => {
+  // Fermer avec Echap
+  React.useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -29,13 +43,6 @@ const ImageSourceModal: React.FC<ImageSourceModalProps> = ({
       <div className="image-source-modal">
         <div className="image-source-modal-header">
           <h3>Charger une image</h3>
-          <button 
-            className="image-source-modal-close"
-            onClick={onClose}
-            aria-label="Fermer"
-          >
-            ×
-          </button>
         </div>
 
         <div className="image-source-modal-content">

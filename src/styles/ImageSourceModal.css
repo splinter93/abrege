@@ -26,10 +26,11 @@
 
 /* Modale */
 .image-source-modal {
+  position: relative; /* Pour le positionnement absolu du bouton fermer */
   background: linear-gradient(135deg, 
-    #1d1f27 0%, 
-    #24262f 50%, 
-    #1d1f27 100%);
+    #1b1d25 0%, 
+    #252833 50%, 
+    #1b1d25 100%);
   border: none;
   border-radius: 16px;
   width: 90%;
@@ -53,8 +54,8 @@
 .image-source-modal-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 24px;
+  justify-content: center; /* Titre centré */
+  padding: 24px 24px 0 24px; /* Padding réduit en bas */
 }
 
 .image-source-modal-header h3 {
@@ -66,6 +67,9 @@
 }
 
 .image-source-modal-close {
+  position: absolute; /* Position absolue par rapport à .image-source-modal */
+  right: 16px; /* Coin droit */
+  top: 16px; /* Coin haut */
   background: transparent;
   border: none;
   color: var(--chat-text-secondary);
@@ -80,6 +84,7 @@
   justify-content: center;
   border-radius: 6px;
   transition: all 0.15s ease;
+  z-index: 1; /* Au-dessus du contenu */
 }
 
 .image-source-modal-close:hover {

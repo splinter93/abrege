@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Globe, ArrowUp, Folder, Image as ImageIcon } from 'react-feather';
+import { Globe, CornerUpRight, Folder, Image as ImageIcon } from 'react-feather';
 import { Lightbulb } from 'lucide-react';
 import { logger, LogCategory } from '@/utils/logger';
 import AudioRecorder from './AudioRecorder';
@@ -347,7 +347,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
               <div className="chat-input-typing-dot"></div>
             </div>
           ) : (
-            <ArrowUp size={18} />
+            <CornerUpRight size={20} />
           )}
         </button>
       </div>

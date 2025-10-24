@@ -60,7 +60,7 @@
   --chat-text-secondary: #a3a9b2;       /* Texte secondaire */
   --chat-text-muted: #7a8088;           /* Texte discret, labels */
   --chat-text-code: #838b93;            /* Texte code blocks (muted éclairci ~5%) */
-  --chat-text-placeholder: #6d747c;     /* Placeholder input (muted assombri ~5%) */
+  --chat-text-placeholder: #7c8189;     /* Placeholder input (muted assombri ~1%) */
   --chat-text-success: #22c55e;         /* Texte succès */
   --chat-text-error: #ef4444;           /* Texte erreur */
   --chat-text-error-hover: #dc2626;     /* Texte erreur hover */
@@ -165,7 +165,7 @@
   --chat-text-secondary: #5a5d60;      /* Gris moyen (éclairci) */
   --chat-text-muted: #8a8d90;          /* Gris clair (éclairci) */
   --chat-text-code: #939699;           /* Texte code blocks (muted éclairci ~5%) */
-  --chat-text-placeholder: #7d8084;    /* Placeholder input (muted assombri ~5%) */
+  --chat-text-placeholder: #8b8f93;    /* Placeholder input (muted assombri ~1%) */
   
   /* Sidebar - Overlays inversés pour mode clair */
   --sidebar-search-overlay: rgba(0, 0, 0, 0.02);     /* Overlay recherche (plus transparent) */
@@ -253,7 +253,7 @@
   --chat-text-secondary: #c5bfd9;      /* Gris violet clair */
   --chat-text-muted: #9a92b3;          /* Gris violet */
   --chat-text-code: #a49cbf;           /* Texte code blocks (muted éclairci ~5%) */
-  --chat-text-placeholder: #8d85a5;    /* Placeholder input (muted assombri ~5%) */
+  --chat-text-placeholder: #9c95b0;    /* Placeholder input (muted assombri ~1%) */
   
   /* Sidebar - Overlays violet pour mode glass */
   --sidebar-search-overlay: rgba(147, 112, 219, 0.05);     /* Overlay recherche (plus transparent) */
@@ -957,7 +957,7 @@
   font-size: var(--chat-font-size-base);
   line-height: var(--chat-line-height-normal);
   color: var(--chat-text-primary);
-  padding: 5px 0 0 8px;
+  padding: 8px 0 0 8px; /* Padding top augmenté de 5px à 8px */
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--chat-text-muted) transparent;
@@ -1065,9 +1065,12 @@
 }
 
 .chatgpt-input-send {
-  background: var(--chat-accent-primary);
-  border: 1px solid var(--chat-accent-primary);
-  color: white;
+  background: linear-gradient(135deg, 
+    #e8e8ea 0%, 
+    #ffffff 50%, 
+    #e8e8ea 100%);
+  border: none;
+  color: var(--chat-bg-primary); /* Icône en couleur du background pour contraste */
   cursor: pointer;
   padding: var(--chat-space-sm);
   border-radius: 50%;
@@ -1081,20 +1084,23 @@
 }
 
 .chatgpt-input-send:hover {
-  background: var(--chat-accent-hover);
+  background: linear-gradient(135deg, 
+    #ffffff 0%, 
+    #f5f5f7 50%, 
+    #ffffff 100%);
   transform: scale(1.05);
 }
 
 .chatgpt-input-send:disabled {
-  background: #3f3f46;
+  background: var(--chat-text-placeholder); /* Bouton en couleur placeholder (muted -1%) */
   border: none;
-  color: #a1a1aa;
+  color: var(--chat-bg-secondary); /* Flèche un poil plus sombre */
   cursor: not-allowed;
   opacity: 1;
 }
 
 .chatgpt-input-send:disabled:hover {
-  background: #3f3f46;
+  background: var(--chat-text-placeholder);
   transform: none;
 }
 
