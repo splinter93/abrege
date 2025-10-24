@@ -8,6 +8,7 @@ import type {
 } from '@/types/chat';
 import { supabase } from '@/supabaseClient';
 import { logger } from '@/utils/logger';
+import { chatImageUploadService, type ChatImageToUpload, type UploadedChatImage } from './chatImageUploadService';
 
 /**
  * Service pour gérer les sessions de chat
@@ -289,7 +290,8 @@ export class ChatSessionService {
       }
 
       // Assainir le message avant persistance (pas de CoT, pas de canal analysis)
-      const sanitized = this.sanitizeMessageForPersistence(message);
+      // ⚠️ ASYNC car upload les images vers Supabase Storage
+      const sanitized = await this.sanitizeMessageForPersistence(message, sessionId);
       const operationId = `op-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // Utiliser une URL relative côté client pour éviter les problèmes de CORS
@@ -340,7 +342,8 @@ export class ChatSessionService {
 
       // 🔧 NOUVEAU: Log détaillé pour debug
       logger.debug('[ChatSessionService] 📋 Message à sauvegarder (avant assainissement):', { message: JSON.stringify(message, null, 2), url });
-      const sanitized = this.sanitizeMessageForPersistence(message);
+      // ⚠️ ASYNC car upload les images vers Supabase Storage
+      const sanitized = await this.sanitizeMessageForPersistence(message, sessionId);
       const operationId = `op-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       const response = await fetch(url, {
@@ -386,23 +389,87 @@ export class ChatSessionService {
    * - Retire le chain-of-thought (reasoning)
    * - Convertit le canal 'analysis' en 'final' (non persisté tel quel)
    * - Ajoute un timestamp si manquant
-   * - ✅ Convertit le content multi-modal en string JSON pour la DB
+   * - ✅ Upload les images vers Supabase et remplace par des URLs
+   * 
+   * ⚠️ Cette fonction est ASYNC car elle upload les images !
    */
-  private sanitizeMessageForPersistence(message: Omit<ChatMessage, 'id'>): Omit<ChatMessage, 'id'> {
+  private async sanitizeMessageForPersistence(
+    message: Omit<ChatMessage, 'id'>,
+    sessionId: string
+  ): Promise<Omit<ChatMessage, 'id'>> {
     const sanitized: Omit<ChatMessage, 'id'> & { [key: string]: unknown } = { ...message };
 
     // Horodatage garanti
     sanitized.timestamp = sanitized.timestamp || new Date().toISOString();
 
-    // ✅ CRITIQUE: Gérer le content multi-modal (objet avec text + images)
-    // La DB attend un string, pas un objet complexe
+    // ✅ CRITIQUE: Gérer le content multi-modal (objet avec text + images base64)
+    // Upload les images vers Supabase et remplacer par des URLs
     if (sanitized.content && typeof sanitized.content === 'object' && !Array.isArray(sanitized.content)) {
-      const multiModalContent = sanitized.content as { text?: string; images?: unknown[] };
+      const multiModalContent = sanitized.content as { 
+        text?: string; 
+        images?: Array<{ base64?: string; url?: string; fileName?: string; mimeType?: string; size?: number }> 
+      };
       
-      // Si c'est un objet { text, images }, sérialiser en JSON
-      if ('text' in multiModalContent || 'images' in multiModalContent) {
-        sanitized.content = JSON.stringify(multiModalContent);
-        logger.debug('[ChatSessionService] 🖼️ Content multi-modal sérialisé en JSON pour DB');
+      // Si c'est un objet { text, images }
+      if ('images' in multiModalContent && multiModalContent.images && multiModalContent.images.length > 0) {
+        logger.debug('[ChatSessionService] 🖼️ Upload de ${multiModalContent.images.length} image(s) vers Supabase...');
+        
+        // Séparer les images base64 (à uploader) des URLs (déjà uploadées)
+        const imagesToUpload: ChatImageToUpload[] = [];
+        const existingUrls: UploadedChatImage[] = [];
+        
+        for (const img of multiModalContent.images) {
+          if (img.base64 && !img.url) {
+            // Image base64 à uploader
+            imagesToUpload.push({
+              base64: img.base64,
+              fileName: img.fileName || 'image.jpg',
+              mimeType: img.mimeType || 'image/jpeg',
+              size: img.size || 0
+            });
+          } else if (img.url) {
+            // URL déjà uploadée
+            existingUrls.push({
+              url: img.url,
+              fileName: img.fileName || 'image.jpg',
+              mimeType: img.mimeType || 'image/jpeg',
+              size: img.size || 0,
+              uploadedAt: Date.now()
+            });
+          }
+        }
+        
+        // Upload les images base64
+        let uploadedImages: UploadedChatImage[] = [];
+        if (imagesToUpload.length > 0) {
+          const uploadResult = await chatImageUploadService.uploadImages(imagesToUpload, sessionId);
+          
+          if (uploadResult.success && uploadResult.images) {
+            uploadedImages = uploadResult.images;
+            logger.debug('[ChatSessionService] ✅ ${uploadedImages.length} image(s) uploadée(s)');
+          } else {
+            logger.error('[ChatSessionService] ❌ Erreur upload images:', uploadResult.error);
+          }
+        }
+        
+        // Combiner URLs existantes + nouvelles
+        const allImages = [...existingUrls, ...uploadedImages];
+        
+        // Sauvegarder en JSON avec URLs seulement
+        sanitized.content = JSON.stringify({
+          text: multiModalContent.text || 'Regarde cette image',
+          images: allImages.map(img => ({
+            url: img.url,
+            fileName: img.fileName,
+            mimeType: img.mimeType,
+            size: img.size
+          }))
+        });
+        
+        logger.debug('[ChatSessionService] 💾 Content sauvegardé: texte + ${allImages.length} URL(s)');
+      } else if ('text' in multiModalContent) {
+        // Juste du texte, pas d'images
+        sanitized.content = multiModalContent.text || '';
       }
     }
 
