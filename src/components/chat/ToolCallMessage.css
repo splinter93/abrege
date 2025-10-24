@@ -22,10 +22,8 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  background: var(--glass-bg-subtle);
-  backdrop-filter: var(--glass-blur-strong);
-  -webkit-backdrop-filter: var(--glass-blur-strong);
-  border: 1px solid var(--glass-border-soft);
+  background: var(--chat-gradient-input);
+  border: 1px solid var(--chat-border-subtle);
   padding: 8px 12px;
   border-radius: 12px;
   cursor: pointer;
@@ -49,10 +47,9 @@
 }
 
 .tool-call-header:hover {
-  background: var(--glass-bg-soft);
-  border-color: var(--glass-border-medium);
+  background: var(--chat-gradient-user-hover);
+  border-color: var(--chat-border-subtle);
   transform: translateY(-1px);
-  box-shadow: var(--glass-shadow-medium);
 }
 
 .tool-call-header:hover::before {
@@ -202,12 +199,10 @@
 
 .tool-call-content {
   padding: 4px 12px 8px;
-  border: 1px solid var(--glass-border-subtle);
+  border: 1px solid var(--chat-border-subtle);
   border-top: 0;
   border-radius: 0 0 12px 12px;
-  background: var(--glass-bg-base);
-  backdrop-filter: var(--glass-blur-strong);
-  -webkit-backdrop-filter: var(--glass-blur-strong);
+  background: var(--chat-gradient-input);
   margin-top: -1px;
 }
 

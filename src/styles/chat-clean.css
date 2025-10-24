@@ -115,13 +115,13 @@
   --chat-z-overlay: 999;
   
   /* ========================================
-     DÉGRADÉS - Mode Dark par défaut
+     DÉGRADÉS - Mode Dark par défaut (éclaircis)
      ======================================== */
-  --chat-gradient-input: linear-gradient(135deg, #1c1c1f 0%, #212124 50%, #1c1c1f 100%);
-  --chat-gradient-sidebar: linear-gradient(135deg, #1c1c1f 0%, #232327 50%, #1c1c1f 100%);
-  --chat-gradient-user: linear-gradient(135deg, #1c1c1f 0%, #212124 50%, #1c1c1f 100%);
-  --chat-gradient-user-hover: linear-gradient(135deg, #1e1e21 0%, #232326 50%, #1e1e21 100%);
-  --chat-gradient-kebab: linear-gradient(135deg, #1c1c1f 0%, #212124 50%, #1c1c1f 100%);
+  --chat-gradient-input: linear-gradient(135deg, #20202a 0%, #25252f 50%, #20202a 100%);
+  --chat-gradient-sidebar: linear-gradient(135deg, #1e1e28 0%, #2a2a35 50%, #1e1e28 100%);
+  --chat-gradient-user: linear-gradient(135deg, #20202a 0%, #25252f 50%, #20202a 100%);
+  --chat-gradient-user-hover: linear-gradient(135deg, #24242e 0%, #292934 50%, #24242e 100%);
+  --chat-gradient-kebab: linear-gradient(135deg, #20202a 0%, #25252f 50%, #20202a 100%);
 }
 
 /* ========================================
@@ -268,9 +268,9 @@
 /* Chat input OPAQUE pour écrire sans voir le texte derrière */
 .chat-theme-glass .chatgpt-input-area {
   background: linear-gradient(135deg, 
-    rgba(40, 60, 100, 1) 0%,    /* Opaque bleu foncé */
-    rgba(50, 80, 130, 1) 50%,   /* Opaque bleu moyen */
-    rgba(40, 60, 100, 1) 100%); /* Opaque bleu foncé */
+    rgba(25, 40, 70, 1) 0%,     /* Bleu foncé assombri */
+    rgba(35, 55, 90, 1) 50%,    /* Bleu moyen assombri */
+    rgba(25, 40, 70, 1) 100%);  /* Bleu foncé assombri */
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
