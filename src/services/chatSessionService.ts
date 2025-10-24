@@ -386,12 +386,25 @@ export class ChatSessionService {
    * - Retire le chain-of-thought (reasoning)
    * - Convertit le canal 'analysis' en 'final' (non persisté tel quel)
    * - Ajoute un timestamp si manquant
+   * - ✅ Convertit le content multi-modal en string JSON pour la DB
    */
   private sanitizeMessageForPersistence(message: Omit<ChatMessage, 'id'>): Omit<ChatMessage, 'id'> {
     const sanitized: Omit<ChatMessage, 'id'> & { [key: string]: unknown } = { ...message };
 
     // Horodatage garanti
     sanitized.timestamp = sanitized.timestamp || new Date().toISOString();
+
+    // ✅ CRITIQUE: Gérer le content multi-modal (objet avec text + images)
+    // La DB attend un string, pas un objet complexe
+    if (sanitized.content && typeof sanitized.content === 'object' && !Array.isArray(sanitized.content)) {
+      const multiModalContent = sanitized.content as { text?: string; images?: unknown[] };
+      
+      // Si c'est un objet { text, images }, sérialiser en JSON
+      if ('text' in multiModalContent || 'images' in multiModalContent) {
+        sanitized.content = JSON.stringify(multiModalContent);
+        logger.debug('[ChatSessionService] 🖼️ Content multi-modal sérialisé en JSON pour DB');
+      }
+    }
 
     // Ne jamais persister de messages en canal 'analysis'
     if (sanitized.role === 'assistant' || sanitized.role === 'user') {

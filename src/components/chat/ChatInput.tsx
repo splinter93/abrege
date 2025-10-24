@@ -90,7 +90,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         setUploadError(`Erreur avec ${file.name}`);
       }
     }
-  }, []);
+    
+    // ✅ Focus sur la barre de saisie après le drop
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 100);
+  }, [textareaRef]);
 
   const handleSend = () => {
     const hasContent = message.trim() || images.length > 0;
@@ -107,7 +114,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
       logger.debug(LogCategory.API, '✅ Envoi du message avec images');
       
       // Construire le contenu multi-modal si images présentes
-      const content = buildMessageContent(message.trim() || 'Que vois-tu sur cette image ?', images);
+      const content = buildMessageContent(message.trim() || 'Regarde cette image', images);
       
       // Envoyer le message
       onSend(content, images);

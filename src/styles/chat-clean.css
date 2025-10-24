@@ -947,17 +947,15 @@
 
 /* État drag & drop */
 .chatgpt-input-area.dragging {
-  background: var(--chat-overlay-hover); /* Hover plus clair */
-  transform: scale(1.01);
-  transition: all 0.2s ease;
+  filter: brightness(1.05); /* Éclaircir légèrement */
+  transition: filter 0.2s ease;
 }
 
 /* Bouton image actif pendant le drag */
 .chatgpt-input-area.dragging .chatgpt-input-image {
-  background: var(--chat-accent-primary) !important;
-  color: white !important;
-  transform: scale(1.1);
-  box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.2);
+  background: rgba(255, 107, 0, 0.15) !important; /* Orange transparent */
+  color: var(--chat-accent-primary) !important;
+  border-radius: 50%;
 }
 
 .chatgpt-input-textarea {
