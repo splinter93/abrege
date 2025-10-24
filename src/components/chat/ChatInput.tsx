@@ -74,9 +74,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
       try {
         const base64 = await convertFileToBase64(file);
         const newImage: ImageAttachment = {
-          url: base64,
+          id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          file: file,
+          previewUrl: base64, // Utiliser base64 comme preview (sera révoqué plus tard)
+          base64: base64,
+          detail: 'auto',
           fileName: file.name,
-          mimeType: file.type,
+          mimeType: file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+          size: file.size,
+          addedAt: Date.now()
         };
         setImages(prev => [...prev, newImage]);
       } catch (error) {
@@ -192,10 +198,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
           fileArray.map(async (file) => {
             const base64 = await convertFileToBase64(file);
             return {
-              url: base64,
+              id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              file: file,
+              previewUrl: base64,
+              base64: base64,
+              detail: 'auto' as const,
               fileName: file.name,
-              mimeType: file.type,
-              size: file.size
+              mimeType: file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+              size: file.size,
+              addedAt: Date.now()
             };
           })
         );
@@ -299,7 +310,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         <div className="chat-images-preview-container">
           {images.map((img, idx) => (
             <div key={idx} className="chat-image-preview">
-              <img src={img.url} alt={img.fileName || `Image ${idx + 1}`} />
+              <img src={img.previewUrl} alt={img.fileName || `Image ${idx + 1}`} />
               <button
                 className="chat-image-preview-remove"
                 onClick={() => {
