@@ -4,9 +4,8 @@ import { Globe, ArrowUp, Folder, Image as ImageIcon } from 'react-feather';
 import { Lightbulb } from 'lucide-react';
 import { logger, LogCategory } from '@/utils/logger';
 import AudioRecorder from './AudioRecorder';
-import ImageUploadZone from './ImageUploadZone';
 import type { ImageAttachment, MessageContent, ImageUploadStats } from '@/types/image';
-import { buildMessageContent, revokeImageAttachments } from '@/utils/imageUtils';
+import { buildMessageContent, revokeImageAttachments, convertFileToBase64 } from '@/utils/imageUtils';
 
 interface ChatInputProps {
   onSend: (message: string | MessageContent, images?: ImageAttachment[]) => void;
@@ -20,7 +19,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   const [message, setMessage] = React.useState('');
   const [audioError, setAudioError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageAttachment[]>([]);
-  const [showImageZone, setShowImageZone] = useState(false);
   const [showImageMenu, setShowImageMenu] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -120,17 +118,43 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     }
   }, []);
 
-  const toggleImageZone = useCallback(() => {
-    setShowImageZone(prev => !prev);
-  }, []);
-
   const toggleImageMenu = useCallback(() => {
     setShowImageMenu(prev => !prev);
   }, []);
 
-  const handleLoadImage = useCallback(() => {
+  const handleBrowseComputer = useCallback(() => {
     setShowImageMenu(false);
-    setShowImageZone(true);
+    // Ouvrir le sélecteur de fichiers
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = async (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (files && files.length > 0) {
+        const fileArray = Array.from(files);
+        // Convertir en ImageAttachment
+        const newImages = await Promise.all(
+          fileArray.map(async (file) => {
+            const base64 = await convertFileToBase64(file);
+            return {
+              url: base64,
+              fileName: file.name,
+              mimeType: file.type,
+              size: file.size
+            };
+          })
+        );
+        handleImagesAdd(newImages);
+      }
+    };
+    input.click();
+  }, [handleImagesAdd]);
+
+  const handleBrowseFiles = useCallback(() => {
+    setShowImageMenu(false);
+    // TODO: Ouvrir modal pour chercher dans Files
+    console.log('Browse Files');
   }, []);
 
   const handleLoadFile = useCallback(() => {
@@ -210,16 +234,22 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         </div>
       )}
 
-      {/* Zone d'upload d'images (si activée) */}
-      {showImageZone && (
-        <ImageUploadZone
-          images={images}
-          onImagesAdd={handleImagesAdd}
-          onImageRemove={handleImageRemove}
-          onError={handleImageUploadError}
-          disabled={disabled || loading}
-          maxImages={10}
-        />
+      {/* Affichage des images attachées */}
+      {images.length > 0 && (
+        <div className="chat-images-preview-container">
+          {images.map((img, idx) => (
+            <div key={idx} className="chat-image-preview">
+              <img src={img.url} alt={img.fileName || `Image ${idx + 1}`} />
+              <button
+                className="chat-image-preview-remove"
+                onClick={() => handleImageRemove(idx)}
+                aria-label="Supprimer l'image"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Zone de texte principale */}
@@ -252,10 +282,30 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
           {/* Menu contextuel pour les images */}
           {showImageMenu && (
             <div className="chat-image-menu">
-              <button className="chat-image-menu-item" onClick={handleLoadImage}>
+              <div className="chat-image-menu-item has-submenu">
                 <ImageIcon size={16} />
                 <span>Charger une image</span>
-              </button>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto' }}>
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+                
+                {/* Sous-menu */}
+                <div className="chat-image-submenu">
+                  <button className="chat-image-menu-item" onClick={handleBrowseComputer}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    <span>Depuis mon ordinateur</span>
+                  </button>
+                  <button className="chat-image-menu-item" onClick={handleBrowseFiles}>
+                    <Folder size={16} />
+                    <span>Depuis mes Files</span>
+                  </button>
+                </div>
+              </div>
+
               <button className="chat-image-menu-item" onClick={handleLoadFile}>
                 <Folder size={16} />
                 <span>Charger un fichier</span>

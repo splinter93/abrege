@@ -1492,6 +1492,46 @@
   color: var(--chat-text-secondary);
 }
 
+/* Item avec sous-menu */
+.chat-image-menu-item.has-submenu {
+  position: relative;
+  cursor: default;
+}
+
+/* Sous-menu */
+.chat-image-submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 8px;
+  background: var(--chat-gradient-input);
+  border: 1px solid var(--chat-border-subtle);
+  border-radius: var(--chat-radius-md);
+  padding: 4px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+}
+
+.chat-image-menu-item.has-submenu:hover .chat-image-submenu {
+  display: flex;
+  animation: menuFadeIn 0.15s ease-out;
+}
+
+/* Container pour les images preview */
+.chat-images-preview-container {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  flex-wrap: wrap;
+  background: var(--chat-bg-secondary);
+  border-radius: var(--chat-radius-md);
+  margin-bottom: 8px;
+}
+
 /* Zone de drop */
 .chat-image-drop-zone {
   width: 100%;
