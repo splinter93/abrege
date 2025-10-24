@@ -130,39 +130,43 @@
    Usage : Ajouter .chat-theme-light sur body
    ======================================== */
 .chat-theme-light {
-  /* Backgrounds - Gris bleuté moderne (style Linear/Vercel) */
-  --chat-bg-primary: #fafbfc;          /* Gris très clair avec nuance bleue */
-  --chat-bg-secondary: #f6f8fa;        /* Gris bleuté léger */
-  --chat-bg-tertiary: #f1f3f5;         /* Gris bleuté moyen */
-  --chat-bg-input: #e9ecef;            /* Input backgrounds */
-  --chat-bg-input-focus: #dee2e6;      /* Input focus */
-  --chat-bg-user-message: #e7f0fa;     /* Bubble user - bleu très pâle */
-  --chat-bg-user-message-hover: #d3e5f5; /* Bubble user hover */
+  /* Backgrounds - Gris doux moderne */
+  --chat-bg-primary: #f0f1f3;          /* Gris clair neutre */
+  --chat-bg-secondary: #e8eaed;        /* Gris moyen */
+  --chat-bg-tertiary: #e0e2e5;         /* Gris plus foncé */
+  --chat-bg-input: #dde0e4;            /* Input backgrounds */
+  --chat-bg-input-focus: #d4d7db;      /* Input focus */
+  --chat-bg-user-message: #fff4e6;     /* Bubble user - orange très pâle */
+  --chat-bg-user-message-hover: #ffe8cc; /* Bubble user hover - orange pâle */
   
-  /* Overlays - Teinte bleue subtile */
-  --chat-overlay-subtle: rgba(100, 130, 160, 0.02);
-  --chat-overlay-soft: rgba(100, 130, 160, 0.04);
-  --chat-overlay-active: rgba(100, 130, 160, 0.06);
-  --chat-overlay-input: rgba(100, 130, 160, 0.05);
-  --chat-overlay-input-focus: rgba(100, 130, 160, 0.08);
-  --chat-overlay-hover: rgba(100, 130, 160, 0.08);
+  /* Overlays */
+  --chat-overlay-subtle: rgba(0, 0, 0, 0.03);
+  --chat-overlay-soft: rgba(0, 0, 0, 0.05);
+  --chat-overlay-active: rgba(0, 0, 0, 0.08);
+  --chat-overlay-input: rgba(0, 0, 0, 0.06);
+  --chat-overlay-input-focus: rgba(0, 0, 0, 0.1);
+  --chat-overlay-hover: rgba(0, 0, 0, 0.08);
   --chat-overlay-dark: rgba(0, 0, 0, 0.3);
   
-  /* Texte - Gris bleuté foncé */
-  --chat-text-primary: #1c2025;        /* Gris très foncé bleuté */
-  --chat-text-secondary: #505864;      /* Gris moyen bleuté */
-  --chat-text-muted: #868e96;          /* Gris clair bleuté */
+  /* Texte - Gris foncé avec bonne lisibilité */
+  --chat-text-primary: #1a1c1e;        /* Gris très foncé */
+  --chat-text-secondary: #4a4d50;      /* Gris moyen */
+  --chat-text-muted: #7a7d80;          /* Gris clair */
   
-  /* Bordures - Teinte bleue subtile */
-  --chat-border-subtle: rgba(100, 130, 160, 0.15);
-  --chat-border-soft: rgba(100, 130, 160, 0.12);
+  /* Bordures */
+  --chat-border-subtle: rgba(0, 0, 0, 0.15);
+  --chat-border-soft: rgba(0, 0, 0, 0.1);
   
-  /* Dégradés mode clair - Gris bleuté élégant */
-  --chat-gradient-input: linear-gradient(135deg, #f0f2f5 0%, #e6e9ed 50%, #f0f2f5 100%);
-  --chat-gradient-sidebar: linear-gradient(135deg, #eff1f3 0%, #e4e7eb 50%, #eff1f3 100%);
-  --chat-gradient-user: linear-gradient(135deg, #eef4fa 0%, #dae7f3 50%, #eef4fa 100%);
-  --chat-gradient-user-hover: linear-gradient(135deg, #dae7f3 0%, #c5dcf0 50%, #dae7f3 100%);
-  --chat-gradient-kebab: linear-gradient(135deg, #f0f2f5 0%, #e6e9ed 50%, #f0f2f5 100%);
+  /* Accents - Orange moderne */
+  --chat-accent-primary: #f97316;      /* Orange vif */
+  --chat-accent-hover: #ea580c;        /* Orange foncé */
+  
+  /* Dégradés mode clair - Contraste marqué pour visibilité */
+  --chat-gradient-input: linear-gradient(135deg, #e8eaed 0%, #d8dce0 50%, #e8eaed 100%);      /* Gris avec contraste */
+  --chat-gradient-sidebar: linear-gradient(135deg, #e4e6ea 0%, #d4d8dc 50%, #e4e6ea 100%);    /* Gris un peu plus foncé */
+  --chat-gradient-user: linear-gradient(135deg, #fff4e6 0%, #ffe0b3 50%, #fff4e6 100%);       /* Orange pâle visible */
+  --chat-gradient-user-hover: linear-gradient(135deg, #ffe8cc 0%, #ffd699 50%, #ffe8cc 100%); /* Orange plus prononcé */
+  --chat-gradient-kebab: linear-gradient(135deg, #e8eaed 0%, #d8dce0 50%, #e8eaed 100%);      /* Gris avec contraste */
 }
 
 /* ========================================
