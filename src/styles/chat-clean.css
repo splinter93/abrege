@@ -260,10 +260,19 @@
 
 /* Effet backdrop-filter pour glass mode */
 .chat-theme-glass .chatgpt-container,
-.chat-theme-glass .sidebar-ultra-clean,
-.chat-theme-glass .chatgpt-input-area {
+.chat-theme-glass .sidebar-ultra-clean {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+}
+
+/* Chat input OPAQUE pour écrire sans voir le texte derrière */
+.chat-theme-glass .chatgpt-input-area {
+  background: linear-gradient(135deg, 
+    rgba(40, 60, 100, 1) 0%,    /* Opaque bleu foncé */
+    rgba(50, 80, 130, 1) 50%,   /* Opaque bleu moyen */
+    rgba(40, 60, 100, 1) 100%); /* Opaque bleu foncé */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* Header transparent en mode Glass pour laisser passer l'aurore */
