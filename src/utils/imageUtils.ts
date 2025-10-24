@@ -77,11 +77,99 @@ export function validateImageFile(file: File): ImageValidationResult {
 }
 
 /**
+ * Charge une image File dans un HTMLImageElement
+ * @param file - Fichier image à charger
+ * @returns Promise avec l'image chargée
+ */
+async function loadImageFromFile(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Impossible de charger l\'image'));
+    };
+    
+    img.src = url;
+  });
+}
+
+/**
+ * Compresse une image si elle dépasse la taille maximale
+ * @param file - Fichier image à compresser
+ * @param maxBytes - Taille maximale en bytes (défaut: 25 Mo pour Grok)
+ * @returns Promise avec le base64 compressé
+ */
+async function compressImageIfNeeded(file: File, maxBytes: number = 26214400): Promise<string> {
+  // Charger l'image
+  const img = await loadImageFromFile(file);
+  
+  // Créer un canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Impossible de créer le contexte Canvas');
+  }
+  
+  // Dessiner l'image
+  ctx.drawImage(img, 0, 0);
+  
+  // Compresser progressivement jusqu'à atteindre la taille cible
+  let quality = 0.95;
+  let base64 = '';
+  let attempts = 0;
+  const maxAttempts = 10;
+  
+  while (quality > 0.1 && attempts < maxAttempts) {
+    base64 = canvas.toDataURL('image/jpeg', quality);
+    
+    // Estimer la taille (base64 fait ~1.37× la taille binaire)
+    const estimatedSize = (base64.length * 0.75); // Conversion base64 → bytes
+    
+    logger.debug(LogCategory.API, `[Compression] Tentative ${attempts + 1}: quality=${quality.toFixed(2)}, size=${(estimatedSize / 1024 / 1024).toFixed(2)} Mo`);
+    
+    if (estimatedSize < maxBytes) {
+      logger.debug(LogCategory.API, `✅ Image compressée: ${(estimatedSize / 1024 / 1024).toFixed(2)} Mo (quality: ${quality.toFixed(2)})`);
+      break;
+    }
+    
+    quality -= 0.1;
+    attempts++;
+  }
+  
+  if (quality <= 0.1) {
+    throw new Error('Impossible de compresser l\'image suffisamment (même à quality 0.1)');
+  }
+  
+  return base64;
+}
+
+/**
  * Convertit un fichier en chaîne base64 avec data URI
+ * Compresse automatiquement si > 25 Mo
  * @param file - Le fichier à convertir
  * @returns Promise qui résout avec la chaîne base64
  */
 export async function convertFileToBase64(file: File): Promise<string> {
+  // Limite xAI/Grok: 25 Mo
+  const MAX_SIZE_BYTES = 26214400;
+  
+  // Si l'image est trop grosse, la compresser
+  if (file.size > MAX_SIZE_BYTES) {
+    logger.debug(LogCategory.API, `🗜️ Image trop grosse (${(file.size / 1024 / 1024).toFixed(2)} Mo), compression...`);
+    return compressImageIfNeeded(file, MAX_SIZE_BYTES);
+  }
+  
+  // Sinon, conversion classique
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
