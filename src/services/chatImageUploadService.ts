@@ -1,22 +1,22 @@
-import { supabase } from '@/supabaseClient';
 import { logger, LogCategory } from '@/utils/logger';
 
 /**
- * Structure d'une image uploadée vers Supabase Storage
+ * Structure d'une image uploadée vers S3
  */
 export interface UploadedChatImage {
-  url: string;          // URL publique Supabase
-  fileName: string;     // Nom du fichier
+  url: string;          // URL publique S3
+  fileName: string;     // Nom du fichier original
   mimeType: string;     // Type MIME
   size: number;         // Taille en bytes
   uploadedAt: number;   // Timestamp
+  key?: string;         // Clé S3 (optionnel)
 }
 
 /**
  * Image à uploader (depuis le frontend)
  */
 export interface ChatImageToUpload {
-  base64: string;       // Data URI base64
+  file: File;           // Fichier original
   fileName: string;
   mimeType: string;
   size: number;
@@ -32,15 +32,19 @@ export interface UploadResult {
 }
 
 /**
- * Service d'upload des images de chat vers Supabase Storage
+ * Service d'upload des images de chat vers S3
  * 
- * Organisation:
- * - Bucket: 'chat-images' (séparé de 'files')
- * - Path: {sessionId}/{timestamp}-{random}.{ext}
+ * Flow:
+ * 1. Appel /api/ui/chat-images → Presigned URL S3
+ * 2. Upload direct vers S3 (contourne limite Vercel)
+ * 3. Retourne URL publique S3
+ * 
+ * Organisation S3:
+ * - Path: chat-images/{userId}/{sessionId}/{timestamp}-{random}.{ext}
  */
 export class ChatImageUploadService {
   private static instance: ChatImageUploadService;
-  private readonly bucketName = 'chat-images';
+  private readonly apiEndpoint = '/api/ui/chat-images';
 
   private constructor() {}
 
@@ -52,11 +56,11 @@ export class ChatImageUploadService {
   }
 
   /**
-   * Upload une liste d'images vers Supabase Storage
+   * Upload une liste d'images vers S3 via l'API backend
    * 
-   * @param images - Images à uploader (base64)
+   * @param images - Images à uploader (File objects)
    * @param sessionId - ID de la session chat
-   * @returns URLs publiques des images uploadées
+   * @returns URLs publiques S3 des images uploadées
    */
   async uploadImages(
     images: ChatImageToUpload[],
@@ -102,124 +106,59 @@ export class ChatImageUploadService {
   }
 
   /**
-   * Upload une seule image vers Supabase Storage
+   * Upload une seule image vers S3 via l'API backend
    */
   private async uploadSingleImage(
     image: ChatImageToUpload,
     sessionId: string
   ): Promise<UploadedChatImage> {
-    // Convertir base64 en Blob
-    const blob = this.base64ToBlob(image.base64, image.mimeType);
+    const startTime = Date.now();
 
-    // Générer un nom de fichier unique
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 9);
-    const extension = this.getExtensionFromMimeType(image.mimeType);
-    const fileName = `${timestamp}-${random}.${extension}`;
-    const filePath = `${sessionId}/${fileName}`;
+    // 1. Demander une presigned URL à l'API
+    logger.debug(LogCategory.API, `[ChatImageUpload] 🔑 Demande presigned URL pour ${image.fileName}...`);
+    
+    const presignResponse = await fetch(this.apiEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        file_name: image.fileName,
+        file_type: image.mimeType,
+        file_size: image.size,
+        session_id: sessionId,
+      }),
+    });
 
-    // Upload vers Supabase Storage
-    const { data, error } = await supabase.storage
-      .from(this.bucketName)
-      .upload(filePath, blob, {
-        contentType: image.mimeType,
-        cacheControl: '3600',
-        upsert: false
-      });
-
-    if (error) {
-      throw new Error(`Supabase upload error: ${error.message}`);
+    if (!presignResponse.ok) {
+      const error = await presignResponse.json();
+      throw new Error(error.error || `Erreur API: ${presignResponse.status}`);
     }
 
-    if (!data) {
-      throw new Error('Upload réussi mais pas de data retournée');
+    const { upload_url, key, public_url } = await presignResponse.json();
+
+    // 2. Upload direct vers S3 (contourne limite Vercel 4.5 Mo)
+    logger.debug(LogCategory.API, `[ChatImageUpload] 📤 Upload vers S3: ${key}...`);
+    
+    const uploadResponse = await fetch(upload_url, {
+      method: 'PUT',
+      headers: { 'Content-Type': image.mimeType },
+      body: image.file,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error(`Erreur upload S3: ${uploadResponse.status} ${uploadResponse.statusText}`);
     }
 
-    // Obtenir l'URL publique
-    const { data: { publicUrl } } = supabase.storage
-      .from(this.bucketName)
-      .getPublicUrl(filePath);
+    const uploadTime = Date.now() - startTime;
+    logger.debug(LogCategory.API, `[ChatImageUpload] ✅ Upload réussi en ${uploadTime}ms: ${public_url}`);
 
     return {
-      url: publicUrl,
+      url: public_url,
       fileName: image.fileName,
       mimeType: image.mimeType,
       size: image.size,
-      uploadedAt: timestamp
+      uploadedAt: Date.now(),
+      key: key,
     };
-  }
-
-  /**
-   * Convertit un data URI base64 en Blob
-   */
-  private base64ToBlob(base64: string, mimeType: string): Blob {
-    // Extraire le base64 pur (sans le préfixe data:image/...)
-    const base64Data = base64.includes(',') 
-      ? base64.split(',')[1] 
-      : base64;
-
-    // Décoder le base64
-    const byteString = atob(base64Data);
-    const arrayBuffer = new ArrayBuffer(byteString.length);
-    const uint8Array = new Uint8Array(arrayBuffer);
-
-    for (let i = 0; i < byteString.length; i++) {
-      uint8Array[i] = byteString.charCodeAt(i);
-    }
-
-    return new Blob([arrayBuffer], { type: mimeType });
-  }
-
-  /**
-   * Obtient l'extension de fichier depuis le MIME type
-   */
-  private getExtensionFromMimeType(mimeType: string): string {
-    const mimeToExt: Record<string, string> = {
-      'image/jpeg': 'jpg',
-      'image/png': 'png',
-      'image/gif': 'gif',
-      'image/webp': 'webp',
-      'image/svg+xml': 'svg'
-    };
-
-    return mimeToExt[mimeType] || 'jpg';
-  }
-
-  /**
-   * Vérifie si le bucket existe, sinon le crée
-   * À appeler une fois au démarrage de l'app
-   */
-  async ensureBucketExists(): Promise<void> {
-    try {
-      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-
-      if (listError) {
-        logger.error(LogCategory.API, '[ChatImageUpload] ❌ Erreur liste buckets:', listError);
-        return;
-      }
-
-      const bucketExists = buckets?.some(b => b.name === this.bucketName);
-
-      if (!bucketExists) {
-        logger.info(LogCategory.API, `[ChatImageUpload] 📦 Création du bucket '${this.bucketName}'...`);
-        
-        const { error: createError } = await supabase.storage.createBucket(this.bucketName, {
-          public: true,
-          fileSizeLimit: 10485760, // 10 Mo max
-          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-        });
-
-        if (createError) {
-          logger.error(LogCategory.API, '[ChatImageUpload] ❌ Erreur création bucket:', createError);
-        } else {
-          logger.info(LogCategory.API, `[ChatImageUpload] ✅ Bucket '${this.bucketName}' créé`);
-        }
-      } else {
-        logger.debug(LogCategory.API, `[ChatImageUpload] ✅ Bucket '${this.bucketName}' existe déjà`);
-      }
-    } catch (error) {
-      logger.error(LogCategory.API, '[ChatImageUpload] ❌ Erreur ensureBucketExists:', error);
-    }
   }
 }
 

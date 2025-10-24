@@ -792,6 +792,7 @@ const ChatFullscreenV2: React.FC = () => {
               textareaRef={textareaRef}
               disabled={false}
               placeholder={selectedAgent ? `Discuter avec ${selectedAgent.name}` : "Commencez à discuter..."}
+              sessionId={currentSession?.id || 'temp'}
             />
           </div>
         </div>

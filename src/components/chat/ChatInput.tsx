@@ -7,6 +7,7 @@ import AudioRecorder from './AudioRecorder';
 import ImageSourceModal from './ImageSourceModal';
 import type { ImageAttachment, MessageContent, ImageUploadStats } from '@/types/image';
 import { buildMessageContent, revokeImageAttachments, convertFileToBase64 } from '@/utils/imageUtils';
+import { chatImageUploadService } from '@/services/chatImageUploadService';
 import '@/styles/ImageSourceModal.css';
 
 interface ChatInputProps {
@@ -15,9 +16,10 @@ interface ChatInputProps {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
   placeholder?: string;
+  sessionId: string; // ✅ Requis pour upload S3
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, disabled = false, placeholder = "Commencez à discuter..." }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, disabled = false, placeholder = "Commencez à discuter...", sessionId }) => {
   const [message, setMessage] = React.useState('');
   const [audioError, setAudioError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageAttachment[]>([]);
@@ -69,24 +71,55 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
       return;
     }
 
-    // Convertir et ajouter les images
+    // ✅ NOUVEAU FLOW : Upload vers S3 immédiatement (avant envoi au LLM)
     for (const file of imageFiles) {
       try {
+        // 1. Générer preview base64 local (affichage instantané)
         const base64 = await convertFileToBase64(file);
-        const newImage: ImageAttachment = {
-          id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        
+        // 2. Créer image temporaire avec base64 (pour preview)
+        const tempId = `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const tempImage: ImageAttachment = {
+          id: tempId,
           file: file,
-          previewUrl: base64, // Utiliser base64 comme preview (sera révoqué plus tard)
-          base64: base64,
+          previewUrl: base64,
+          base64: base64, // Temporaire, sera remplacé par URL S3
           detail: 'auto',
           fileName: file.name,
           mimeType: file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
           size: file.size,
           addedAt: Date.now()
         };
-        setImages(prev => [...prev, newImage]);
+        
+        // 3. Afficher immédiatement dans l'UI
+        setImages(prev => [...prev, tempImage]);
+        
+        // 4. Upload vers S3 en arrière-plan
+        logger.debug(LogCategory.API, `📤 Upload image vers S3: ${file.name}...`);
+        
+        const uploadResult = await chatImageUploadService.uploadImages(
+          [{ file, fileName: file.name, mimeType: file.type, size: file.size }],
+          sessionId
+        );
+        
+        if (uploadResult.success && uploadResult.images && uploadResult.images[0]) {
+          const s3Image = uploadResult.images[0];
+          
+          // 5. Remplacer le base64 par l'URL S3
+          setImages(prev => prev.map(img => 
+            img.id === tempId 
+              ? { ...img, base64: s3Image.url, previewUrl: s3Image.url } // URL S3 au lieu de base64
+              : img
+          ));
+          
+          logger.debug(LogCategory.API, `✅ Image uploadée: ${s3Image.url}`);
+        } else {
+          logger.error(LogCategory.API, 'Erreur upload S3:', uploadResult.error);
+          setUploadError(`Erreur upload: ${file.name}`);
+        }
+        
       } catch (error) {
-        logger.error(LogCategory.API, 'Erreur conversion image:', error);
+        logger.error(LogCategory.API, 'Erreur traitement image:', error);
         setUploadError(`Erreur avec ${file.name}`);
       }
     }
@@ -97,7 +130,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         textareaRef.current.focus();
       }
     }, 100);
-  }, [textareaRef]);
+  }, [textareaRef, sessionId]);
 
   const handleSend = () => {
     const hasContent = message.trim() || images.length > 0;
@@ -200,12 +233,17 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
       const files = (e.target as HTMLInputElement).files;
       if (files && files.length > 0) {
         const fileArray = Array.from(files);
-        // Convertir en ImageAttachment
-        const newImages = await Promise.all(
-          fileArray.map(async (file) => {
+        
+        // ✅ NOUVEAU FLOW : Upload vers S3 immédiatement
+        for (const file of fileArray) {
+          try {
+            // 1. Preview base64 local
             const base64 = await convertFileToBase64(file);
-            return {
-              id: `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            
+            // 2. Image temporaire
+            const tempId = `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const tempImage: ImageAttachment = {
+              id: tempId,
               file: file,
               previewUrl: base64,
               base64: base64,
@@ -215,13 +253,39 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
               size: file.size,
               addedAt: Date.now()
             };
-          })
-        );
-        handleImagesAdd(newImages);
+            
+            // 3. Afficher immédiatement
+            setImages(prev => [...prev, tempImage]);
+            
+            // 4. Upload S3 en arrière-plan
+            const uploadResult = await chatImageUploadService.uploadImages(
+              [{ file, fileName: file.name, mimeType: file.type, size: file.size }],
+              sessionId
+            );
+            
+            if (uploadResult.success && uploadResult.images && uploadResult.images[0]) {
+              const s3Image = uploadResult.images[0];
+              
+              // 5. Remplacer par URL S3
+              setImages(prev => prev.map(img => 
+                img.id === tempId 
+                  ? { ...img, base64: s3Image.url, previewUrl: s3Image.url }
+                  : img
+              ));
+              
+              logger.debug(LogCategory.API, `✅ Image uploadée: ${s3Image.url}`);
+            } else {
+              setUploadError(`Erreur upload: ${file.name}`);
+            }
+          } catch (error) {
+            logger.error(LogCategory.API, 'Erreur:', error);
+            setUploadError(`Erreur: ${file.name}`);
+          }
+        }
       }
     };
     input.click();
-  }, [handleImagesAdd]);
+  }, [sessionId]);
 
   const handleBrowseFiles = useCallback(() => {
     setShowImageSourceModal(false);

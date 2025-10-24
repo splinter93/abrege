@@ -389,9 +389,10 @@ export class ChatSessionService {
    * - Retire le chain-of-thought (reasoning)
    * - Convertit le canal 'analysis' en 'final' (non persisté tel quel)
    * - Ajoute un timestamp si manquant
-   * - ✅ Upload les images vers Supabase et remplace par des URLs
+   * - ✅ Sérialise le content multi-modal (images = URLs S3 déjà uploadées)
    * 
-   * ⚠️ Cette fonction est ASYNC car elle upload les images !
+   * ⚠️ Les images sont uploadées dans ChatInput AVANT l'envoi,
+   * donc ici on reçoit déjà des URLs S3 (pas de base64)
    */
   private async sanitizeMessageForPersistence(
     message: Omit<ChatMessage, 'id'>,
@@ -402,74 +403,20 @@ export class ChatSessionService {
     // Horodatage garanti
     sanitized.timestamp = sanitized.timestamp || new Date().toISOString();
 
-    // ✅ CRITIQUE: Gérer le content multi-modal (objet avec text + images base64)
-    // Upload les images vers Supabase et remplacer par des URLs
+    // ✅ Gérer le content multi-modal (objet avec text + images)
+    // Les images contiennent déjà des URLs S3 (uploadées dans ChatInput)
     if (sanitized.content && typeof sanitized.content === 'object' && !Array.isArray(sanitized.content)) {
       const multiModalContent = sanitized.content as { 
         text?: string; 
-        images?: Array<{ base64?: string; url?: string; fileName?: string; mimeType?: string; size?: number }> 
+        images?: Array<{ url?: string; fileName?: string; mimeType?: string; size?: number }> 
       };
       
-      // Si c'est un objet { text, images }
-      if ('images' in multiModalContent && multiModalContent.images && multiModalContent.images.length > 0) {
-        logger.debug('[ChatSessionService] 🖼️ Upload de ${multiModalContent.images.length} image(s) vers Supabase...');
+      // Sérialiser en JSON pour la DB
+      if ('text' in multiModalContent || 'images' in multiModalContent) {
+        sanitized.content = JSON.stringify(multiModalContent);
         
-        // Séparer les images base64 (à uploader) des URLs (déjà uploadées)
-        const imagesToUpload: ChatImageToUpload[] = [];
-        const existingUrls: UploadedChatImage[] = [];
-        
-        for (const img of multiModalContent.images) {
-          if (img.base64 && !img.url) {
-            // Image base64 à uploader
-            imagesToUpload.push({
-              base64: img.base64,
-              fileName: img.fileName || 'image.jpg',
-              mimeType: img.mimeType || 'image/jpeg',
-              size: img.size || 0
-            });
-          } else if (img.url) {
-            // URL déjà uploadée
-            existingUrls.push({
-              url: img.url,
-              fileName: img.fileName || 'image.jpg',
-              mimeType: img.mimeType || 'image/jpeg',
-              size: img.size || 0,
-              uploadedAt: Date.now()
-            });
-          }
-        }
-        
-        // Upload les images base64
-        let uploadedImages: UploadedChatImage[] = [];
-        if (imagesToUpload.length > 0) {
-          const uploadResult = await chatImageUploadService.uploadImages(imagesToUpload, sessionId);
-          
-          if (uploadResult.success && uploadResult.images) {
-            uploadedImages = uploadResult.images;
-            logger.debug('[ChatSessionService] ✅ ${uploadedImages.length} image(s) uploadée(s)');
-          } else {
-            logger.error('[ChatSessionService] ❌ Erreur upload images:', uploadResult.error);
-          }
-        }
-        
-        // Combiner URLs existantes + nouvelles
-        const allImages = [...existingUrls, ...uploadedImages];
-        
-        // Sauvegarder en JSON avec URLs seulement
-        sanitized.content = JSON.stringify({
-          text: multiModalContent.text || 'Regarde cette image',
-          images: allImages.map(img => ({
-            url: img.url,
-            fileName: img.fileName,
-            mimeType: img.mimeType,
-            size: img.size
-          }))
-        });
-        
-        logger.debug('[ChatSessionService] 💾 Content sauvegardé: texte + ${allImages.length} URL(s)');
-      } else if ('text' in multiModalContent) {
-        // Juste du texte, pas d'images
-        sanitized.content = multiModalContent.text || '';
+        const imageCount = multiModalContent.images?.length || 0;
+        logger.debug('[ChatSessionService] 💾 Content multi-modal sérialisé: texte + ${imageCount} URL(s) S3');
       }
     }
 
