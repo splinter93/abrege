@@ -266,6 +266,18 @@
   -webkit-backdrop-filter: blur(20px);
 }
 
+/* Header transparent en mode Glass pour laisser passer l'aurore */
+.chat-theme-glass .chatgpt-header {
+  background: transparent;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Input area transparente pour l'effet aurore */
+.chat-theme-glass .chatgpt-input-container {
+  background: transparent;
+}
+
 /* ========================================
    CONTAINER PRINCIPAL
    ======================================== */
