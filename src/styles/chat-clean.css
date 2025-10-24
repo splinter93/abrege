@@ -1437,6 +1437,61 @@
   letter-spacing: 0.5px;
 }
 
+/* Menu contextuel image */
+.chat-image-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  background: var(--chat-gradient-input);
+  border: 1px solid var(--chat-border-subtle);
+  border-radius: var(--chat-radius-md);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: menuFadeIn 0.15s ease-out;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-image-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--chat-text-primary);
+  font-size: 14px;
+  font-family: var(--font-chat-ui);
+  cursor: pointer;
+  transition: all var(--chat-transition-fast);
+  text-align: left;
+  width: 100%;
+}
+
+.chat-image-menu-item:hover {
+  background: var(--sidebar-item-hover);
+}
+
+.chat-image-menu-item svg {
+  flex-shrink: 0;
+  color: var(--chat-text-secondary);
+}
+
 /* Zone de drop */
 .chat-image-drop-zone {
   width: 100%;

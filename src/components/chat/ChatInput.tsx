@@ -21,6 +21,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   const [audioError, setAudioError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [showImageZone, setShowImageZone] = useState(false);
+  const [showImageMenu, setShowImageMenu] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -123,6 +124,42 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     setShowImageZone(prev => !prev);
   }, []);
 
+  const toggleImageMenu = useCallback(() => {
+    setShowImageMenu(prev => !prev);
+  }, []);
+
+  const handleLoadImage = useCallback(() => {
+    setShowImageMenu(false);
+    setShowImageZone(true);
+  }, []);
+
+  const handleLoadFile = useCallback(() => {
+    setShowImageMenu(false);
+    // TODO: Implémenter le chargement de fichier
+    console.log('Load file');
+  }, []);
+
+  const handleTakePhoto = useCallback(() => {
+    setShowImageMenu(false);
+    // TODO: Implémenter la capture photo
+    console.log('Take photo');
+  }, []);
+
+  // Fermer le menu image quand on clique ailleurs
+  useEffect(() => {
+    if (!showImageMenu) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.chat-image-menu') && !target.closest('.chatgpt-input-image')) {
+        setShowImageMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showImageMenu]);
+
   // Cleanup des images au démontage
   useEffect(() => {
     return () => {
@@ -199,17 +236,40 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
       
       {/* Actions de l'input */}
       <div className="chatgpt-input-actions">
-        <button 
-          className={`chatgpt-input-image ${showImageZone ? 'active' : ''} ${images.length > 0 ? 'has-images' : ''}`}
-          aria-label="Ajouter des images"
-          onClick={toggleImageZone}
-          disabled={disabled || loading}
-        >
-          <ImageIcon size={18} />
-          {images.length > 0 && (
-            <span className="chatgpt-input-image-badge">{images.length}</span>
+        <div style={{ position: 'relative' }}>
+          <button 
+            className={`chatgpt-input-image ${showImageMenu ? 'active' : ''} ${images.length > 0 ? 'has-images' : ''}`}
+            aria-label="Ajouter des images"
+            onClick={toggleImageMenu}
+            disabled={disabled || loading}
+          >
+            <ImageIcon size={18} />
+            {images.length > 0 && (
+              <span className="chatgpt-input-image-badge">{images.length}</span>
+            )}
+          </button>
+
+          {/* Menu contextuel pour les images */}
+          {showImageMenu && (
+            <div className="chat-image-menu">
+              <button className="chat-image-menu-item" onClick={handleLoadImage}>
+                <ImageIcon size={16} />
+                <span>Charger une image</span>
+              </button>
+              <button className="chat-image-menu-item" onClick={handleLoadFile}>
+                <Folder size={16} />
+                <span>Charger un fichier</span>
+              </button>
+              <button className="chat-image-menu-item" onClick={handleTakePhoto}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                <span>Prendre une photo</span>
+              </button>
+            </div>
           )}
-        </button>
+        </div>
         <button className="chatgpt-input-speaker" aria-label="Ajouter">
           <Folder size={18} />
         </button>
