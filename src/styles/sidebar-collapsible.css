@@ -21,6 +21,16 @@
   min-width: 0;
 }
 
+/* Avatar des agents - rond */
+.agent-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
 /* ========================================
    CONTENEUR PRINCIPAL
    ======================================== */
