@@ -947,7 +947,17 @@
 
 /* État drag & drop */
 .chatgpt-input-area.dragging {
-  opacity: 0.8; /* Subtle hover effect */
+  background: var(--chat-overlay-hover); /* Hover plus clair */
+  transform: scale(1.01);
+  transition: all 0.2s ease;
+}
+
+/* Bouton image actif pendant le drag */
+.chatgpt-input-area.dragging .chatgpt-input-image {
+  background: var(--chat-accent-primary) !important;
+  color: white !important;
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.2);
 }
 
 .chatgpt-input-textarea {
