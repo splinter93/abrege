@@ -64,7 +64,7 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: linear-gradient(135deg, #1c1c1f 0%, #212124 50%, #1c1c1f 100%);
+  background: var(--chat-gradient-kebab);
   border: none;
   border-radius: 14px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
