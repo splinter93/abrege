@@ -1005,6 +1005,7 @@
 .chatgpt-input-mic,
 .chatgpt-input-web-search,
 .chatgpt-input-websearch,
+.chatgpt-input-reasoning,
 .chatgpt-input-image {
   background: transparent;
   border: none;
@@ -1025,6 +1026,7 @@
 .chatgpt-input-mic:hover,
 .chatgpt-input-web-search:hover,
 .chatgpt-input-websearch:hover,
+.chatgpt-input-reasoning:hover,
 .chatgpt-input-image:hover {
   background: var(--chat-overlay-hover);
   color: var(--chat-text-primary);
@@ -1041,6 +1043,23 @@
 .chatgpt-input-websearch.active {
   background: var(--chat-overlay-active);
   color: var(--chat-accent-primary);
+}
+
+/* Bouton reasoning actif (menu ouvert) */
+.chatgpt-input-reasoning.active {
+  background: var(--chat-overlay-hover);
+  color: var(--chat-text-primary);
+}
+
+/* ⚠️ Bouton reasoning avec override (icône orange + fond neutre léger persistant) */
+.chatgpt-input-reasoning.override-active {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--chat-accent-primary) !important;
+}
+
+.chatgpt-input-reasoning.override-active:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--chat-accent-primary) !important;
 }
 
 /* Badge compteur d'images */
@@ -1622,6 +1641,67 @@
 .chat-websearch-menu-item svg {
   flex-shrink: 0;
   color: var(--chat-text-secondary);
+}
+
+/* ========================================
+   Reasoning Menu (identique à WebSearch Menu)
+   ======================================== */
+
+.chat-reasoning-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  background: var(--chat-gradient-input);
+  border: none;
+  border-radius: var(--chat-radius-md);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 200px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: menuFadeIn 0.15s ease-out;
+}
+
+.chat-reasoning-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--chat-text-primary);
+  font-size: 14px;
+  font-family: var(--font-chat-ui);
+  cursor: pointer;
+  transition: all var(--chat-transition-fast);
+  text-align: left;
+  width: 100%;
+}
+
+.chat-reasoning-menu-item:hover {
+  background: var(--sidebar-item-hover);
+}
+
+.chat-reasoning-menu-item svg {
+  flex-shrink: 0;
+  color: var(--chat-text-secondary);
+}
+
+/* Item sélectionné (garde le hover visible) */
+.chat-reasoning-menu-item.selected {
+  background: var(--sidebar-item-hover);
+}
+
+/* Checkmark */
+.chat-reasoning-menu-item .checkmark {
+  margin-left: auto;
+  color: var(--chat-accent-primary);
+  font-weight: bold;
+  font-size: 16px;
 }
 
 /* Container pour les images preview */

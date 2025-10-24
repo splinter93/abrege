@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Globe, CornerUpRight, Folder, Image as ImageIcon, Search, FileText, Settings } from 'react-feather';
+import { Globe, CornerUpRight, Folder, Image as ImageIcon, Search, FileText, Settings, Zap, Target, Cpu } from 'react-feather';
 import { Lightbulb } from 'lucide-react';
 import { logger, LogCategory } from '@/utils/logger';
 import AudioRecorder from './AudioRecorder';
@@ -17,15 +17,30 @@ interface ChatInputProps {
   disabled?: boolean;
   placeholder?: string;
   sessionId: string; // ✅ Requis pour upload S3
+  currentAgentModel?: string; // Modèle actuel de l'agent (ex: "grok-4-fast-reasoning")
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, disabled = false, placeholder = "Commencez à discuter...", sessionId }) => {
+// Helper: mapper modèle → niveau reasoning
+const getReasoningLevelFromModel = (model?: string): 'advanced' | 'general' | 'fast' | null => {
+  if (!model) return null;
+  if (model.includes('grok-4-0709')) return 'advanced';
+  if (model.includes('grok-4-fast-reasoning')) return 'general';
+  if (model.includes('grok-4-fast-non-reasoning')) return 'fast';
+  return null;
+};
+
+const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, disabled = false, placeholder = "Commencez à discuter...", sessionId, currentAgentModel }) => {
   const [message, setMessage] = React.useState('');
   const [audioError, setAudioError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageAttachment[]>([]);
+  
+  // Déterminer le niveau par défaut basé sur le modèle de l'agent
+  const defaultReasoningLevel = getReasoningLevelFromModel(currentAgentModel);
   const [showImageMenu, setShowImageMenu] = useState(false);
   const [showImageSourceModal, setShowImageSourceModal] = useState(false);
   const [showWebSearchMenu, setShowWebSearchMenu] = useState(false);
+  const [showReasoningMenu, setShowReasoningMenu] = useState(false);
+  const [reasoningOverride, setReasoningOverride] = useState<'advanced' | 'general' | 'fast' | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -219,6 +234,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     setShowWebSearchMenu(prev => !prev);
   }, []);
 
+  const toggleReasoningMenu = useCallback(() => {
+    setShowReasoningMenu(prev => !prev);
+  }, []);
+
   const handleLoadImageClick = useCallback(() => {
     setShowImageMenu(false);
     setShowImageSourceModal(true);
@@ -325,6 +344,23 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     console.log('Advanced search');
   }, []);
 
+  // Handlers Reasoning
+  const handleFastReasoning = useCallback(() => {
+    // Si c'est le modèle par défaut, ne rien faire (pas d'override)
+    setReasoningOverride(prev => (prev === 'fast' || defaultReasoningLevel === 'fast') ? null : 'fast');
+    setShowReasoningMenu(false);
+  }, [defaultReasoningLevel]);
+
+  const handleGeneralReasoning = useCallback(() => {
+    setReasoningOverride(prev => (prev === 'general' || defaultReasoningLevel === 'general') ? null : 'general');
+    setShowReasoningMenu(false);
+  }, [defaultReasoningLevel]);
+
+  const handleAdvancedReasoning = useCallback(() => {
+    setReasoningOverride(prev => (prev === 'advanced' || defaultReasoningLevel === 'advanced') ? null : 'advanced');
+    setShowReasoningMenu(false);
+  }, [defaultReasoningLevel]);
+
   // Fermer le menu image quand on clique ailleurs
   useEffect(() => {
     if (!showImageMenu) return;
@@ -354,6 +390,21 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showWebSearchMenu]);
+
+  // Fermer le menu reasoning quand on clique ailleurs
+  useEffect(() => {
+    if (!showReasoningMenu) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.chat-reasoning-menu') && !target.closest('.chatgpt-input-reasoning')) {
+        setShowReasoningMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showReasoningMenu]);
 
   // Cleanup des images au démontage
   useEffect(() => {
@@ -528,9 +579,52 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
           )}
         </div>
 
-        <button className="chatgpt-input-mic" aria-label="Reasoning">
-          <Lightbulb size={18} />
-        </button>
+        {/* Reasoning avec menu contextuel */}
+        <div style={{ position: 'relative' }}>
+          <button 
+            className={`chatgpt-input-reasoning ${showReasoningMenu ? 'active' : ''} ${reasoningOverride ? 'override-active' : ''}`}
+            aria-label="Reasoning"
+            onClick={toggleReasoningMenu}
+            disabled={disabled || loading}
+            title={reasoningOverride ? `Override actif: ${reasoningOverride}` : 'Reasoning mode'}
+          >
+            <Lightbulb size={18} />
+          </button>
+
+          {/* Menu contextuel Reasoning */}
+          {showReasoningMenu && (
+            <div className="chat-reasoning-menu">
+              <div className="chat-menu-header">Reasoning</div>
+              <button 
+                className={`chat-reasoning-menu-item ${(reasoningOverride === 'advanced' || (!reasoningOverride && defaultReasoningLevel === 'advanced')) ? 'selected' : ''}`}
+                onClick={handleAdvancedReasoning}
+                title="grok-4-0709 (Puissant, coûteux)"
+              >
+                <Cpu size={16} />
+                <span>Advanced {defaultReasoningLevel === 'advanced' && '(Default)'}</span>
+                {(reasoningOverride === 'advanced' || (!reasoningOverride && defaultReasoningLevel === 'advanced')) && <span className="checkmark">✓</span>}
+              </button>
+              <button 
+                className={`chat-reasoning-menu-item ${(reasoningOverride === 'general' || (!reasoningOverride && defaultReasoningLevel === 'general')) ? 'selected' : ''}`}
+                onClick={handleGeneralReasoning}
+                title="grok-4-fast-reasoning (Équilibré)"
+              >
+                <Target size={16} />
+                <span>General {defaultReasoningLevel === 'general' && '(Default)'}</span>
+                {(reasoningOverride === 'general' || (!reasoningOverride && defaultReasoningLevel === 'general')) && <span className="checkmark">✓</span>}
+              </button>
+              <button 
+                className={`chat-reasoning-menu-item ${(reasoningOverride === 'fast' || (!reasoningOverride && defaultReasoningLevel === 'fast')) ? 'selected' : ''}`}
+                onClick={handleFastReasoning}
+                title="grok-4-fast-non-reasoning (Rapide)"
+              >
+                <Zap size={16} />
+                <span>Fast {defaultReasoningLevel === 'fast' && '(Default)'}</span>
+                {(reasoningOverride === 'fast' || (!reasoningOverride && defaultReasoningLevel === 'fast')) && <span className="checkmark">✓</span>}
+              </button>
+            </div>
+          )}
+        </div>
         
         <div style={{ flex: 1 }}></div>
         
