@@ -63,52 +63,67 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
       const cookieHeader = request.headers.get('cookie');
       
       if (cookieHeader) {
-        logApi.debug(`[AuthUtils] 🍪 Cookies détectés dans la requête`);
+        // Parser les cookies (simple split sur ';' puis '=')
+        const parsedCookies: Array<{ name: string; value: string }> = [];
         
-        // Créer un client Supabase qui lit les cookies depuis la requête
-        const supabaseServer = createServerClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          {
-            cookies: {
-              getAll() {
-                // Parser les cookies depuis le header
-                return cookieHeader.split(';').map(cookie => {
-                  const [name, ...valueParts] = cookie.trim().split('=');
-                  return {
-                    name: name.trim(),
-                    value: valueParts.join('=').trim()
-                  };
-                });
-              },
-              setAll() {
-                // Pas de set dans les Route Handlers
-              },
-            },
+        for (const cookie of cookieHeader.split(';')) {
+          const trimmed = cookie.trim();
+          const firstEquals = trimmed.indexOf('=');
+          if (firstEquals > 0) {
+            parsedCookies.push({
+              name: trimmed.substring(0, firstEquals),
+              value: trimmed.substring(firstEquals + 1)
+            });
           }
-        );
-
-        const { data: { user }, error } = await supabaseServer.auth.getUser();
-
-        if (!error && user) {
-          logApi.info(`[AuthUtils] ✅ Auth via cookies Supabase: ${user.id}`);
-          return {
-            success: true,
-            userId: user.id,
-            scopes: [
-              'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
-              'classeurs:read', 'classeurs:write', 'classeurs:create', 'classeurs:update', 'classeurs:delete',
-              'dossiers:read', 'dossiers:write', 'dossiers:create', 'dossiers:update', 'dossiers:delete',
-              'files:read', 'files:write', 'files:upload', 'files:delete',
-              'profile:read'
-            ],
-            authType: 'jwt'
-          };
-        } else {
-          logApi.warn(`[AuthUtils] ⚠️ Cookies présents mais getUser échoué:`, error?.message);
         }
-      } else {
-        logApi.debug(`[AuthUtils] ⚠️ Pas de cookies dans la requête`);
+        
+        // Chercher cookies Supabase auth-token (chunkés: .0, .1, etc.)
+        const authTokenCookies = parsedCookies
+          .filter(c => c.name.match(/^sb-.*-auth-token(\.\d+)?$/))
+          .sort((a, b) => {
+            const aNum = a.name.match(/\.(\d+)$/)?.[1];
+            const bNum = b.name.match(/\.(\d+)$/)?.[1];
+            return (aNum ? parseInt(aNum) : 0) - (bNum ? parseInt(bNum) : 0);
+          });
+        
+        if (authTokenCookies.length > 0) {
+          const encodedToken = authTokenCookies.map(c => c.value).join('');
+          const token = decodeURIComponent(encodedToken);
+          
+          // Extraire access_token si JSON
+          let accessToken = token;
+          if (token.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(token);
+              accessToken = parsed.access_token || token;
+            } catch {
+              // Ignore, pas du JSON valide
+            }
+          }
+          
+          // Valider avec Supabase
+          const supabaseAuth = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          );
+          
+          const { data: { user }, error } = await supabaseAuth.auth.getUser(accessToken);
+
+          if (!error && user) {
+            return {
+              success: true,
+              userId: user.id,
+              scopes: [
+                'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
+                'classeurs:read', 'classeurs:write', 'classeurs:create', 'classeurs:update', 'classeurs:delete',
+                'dossiers:read', 'dossiers:write', 'dossiers:create', 'dossiers:update', 'dossiers:delete',
+                'files:read', 'files:write', 'files:upload', 'files:delete',
+                'profile:read'
+              ],
+              authType: 'jwt'
+            };
+          }
+        }
       }
     } catch (cookieError) {
       logApi.debug(`[AuthUtils] ⚠️ Erreur lecture cookies:`, cookieError);

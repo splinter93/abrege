@@ -95,8 +95,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         setImages(prev => [...prev, tempImage]);
         
         // 4. Upload vers S3 en arrière-plan
-        logger.debug(LogCategory.API, `📤 Upload image vers S3: ${file.name}...`);
-        
         const uploadResult = await chatImageUploadService.uploadImages(
           [{ file, fileName: file.name, mimeType: file.type, size: file.size }],
           sessionId
@@ -112,7 +110,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
               : img
           ));
           
-          logger.debug(LogCategory.API, `✅ Image uploadée: ${s3Image.url}`);
         } else {
           logger.error(LogCategory.API, 'Erreur upload S3:', uploadResult.error);
           setUploadError(`Erreur upload: ${file.name}`);
@@ -273,7 +270,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
                   : img
               ));
               
-              logger.debug(LogCategory.API, `✅ Image uploadée: ${s3Image.url}`);
             } else {
               setUploadError(`Erreur upload: ${file.name}`);
             }

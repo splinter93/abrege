@@ -71,8 +71,6 @@ export class ChatImageUploadService {
         return { success: true, images: [] };
       }
 
-      logger.debug(LogCategory.API, `[ChatImageUpload] 📤 Upload de ${images.length} image(s) pour session ${sessionId}`);
-
       const uploadedImages: UploadedChatImage[] = [];
 
       for (const image of images) {
@@ -88,8 +86,6 @@ export class ChatImageUploadService {
       if (uploadedImages.length === 0) {
         throw new Error('Aucune image n\'a pu être uploadée');
       }
-
-      logger.debug(LogCategory.API, `[ChatImageUpload] ✅ ${uploadedImages.length}/${images.length} image(s) uploadée(s)`);
 
       return {
         success: true,
@@ -114,19 +110,24 @@ export class ChatImageUploadService {
   ): Promise<UploadedChatImage> {
     const startTime = Date.now();
 
-    // 1. Récupérer le token d'authentification
-    // L'API utilise getAuthenticatedUser qui lit le cookie de session
-    // Pas besoin de passer explicitement le token en header côté client
+    // 1. Récupérer le token d'authentification depuis le client Supabase
+    const { supabase } = await import('@/supabaseClient');
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
-    // 2. Demander une presigned URL à l'API
-    logger.debug(LogCategory.API, `[ChatImageUpload] 🔑 Demande presigned URL pour ${image.fileName}...`);
+    if (sessionError || !session?.access_token) {
+      throw new Error('Session Supabase non disponible');
+    }
+    
+    const token = session.access_token;
+    
+    // 2. Demander une presigned URL à l'API avec le token en header
     
     const presignResponse = await fetch(this.apiEndpoint, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`, // ✅ Token en header (contourne pb cookies)
       },
-      credentials: 'include', // ✅ Inclure les cookies de session
       body: JSON.stringify({
         file_name: image.fileName,
         file_type: image.mimeType,
@@ -143,8 +144,6 @@ export class ChatImageUploadService {
     const { upload_url, key, public_url } = await presignResponse.json();
 
     // 2. Upload direct vers S3 (contourne limite Vercel 4.5 Mo)
-    logger.debug(LogCategory.API, `[ChatImageUpload] 📤 Upload vers S3: ${key}...`);
-    
     const uploadResponse = await fetch(upload_url, {
       method: 'PUT',
       headers: { 'Content-Type': image.mimeType },
@@ -154,9 +153,6 @@ export class ChatImageUploadService {
     if (!uploadResponse.ok) {
       throw new Error(`Erreur upload S3: ${uploadResponse.status} ${uploadResponse.statusText}`);
     }
-
-    const uploadTime = Date.now() - startTime;
-    logger.debug(LogCategory.API, `[ChatImageUpload] ✅ Upload réussi en ${uploadTime}ms: ${public_url}`);
 
     return {
       url: public_url,

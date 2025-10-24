@@ -400,7 +400,14 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
 
     if (!uploadResponse.ok) {
       const errorData = await uploadResponse.json();
-      throw new Error(errorData.error || 'Erreur lors de l\'initiation de l\'upload');
+      const errorMessage = errorData.error || 'Erreur lors de l\'initiation de l\'upload';
+      
+      // ✅ Détecter l'erreur de fichier dupliqué
+      if (errorMessage.includes('duplicate key') || errorMessage.includes('already exists')) {
+        throw new Error(`Le fichier "${file.name}" existe déjà. Veuillez le renommer ou supprimer l'ancien.`);
+      }
+      
+      throw new Error(errorMessage);
     }
 
     const uploadData = await uploadResponse.json();
@@ -462,7 +469,16 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
           throw new Error(`Fichier "${file.name}" trop volumineux (max: ${Math.round(STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE / (1024 * 1024))} MB)`);
         }
         
-        if (!STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES.includes(file.type)) {
+        // ✅ Vérifier le MIME type avec support des wildcards (image/*, text/*)
+        const isAllowed = STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES.some(allowed => {
+          if (allowed.endsWith('/*')) {
+            const prefix = allowed.slice(0, -2); // 'image/*' → 'image'
+            return file.type.startsWith(prefix + '/');
+          }
+          return file.type === allowed;
+        });
+        
+        if (!isAllowed) {
           throw new Error(`Type de fichier "${file.type}" non autorisé`);
         }
       }

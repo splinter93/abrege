@@ -86,7 +86,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     // ✅ Générer l'URL publique (pour affichage après upload)
-    const publicUrl = s3Service.getPublicUrl(key);
+    const publicUrl = s3Service.getObjectUrl(key);
 
     logger.info(LogCategory.API, '✅ Presigned URL générée', { key, publicUrl });
 
