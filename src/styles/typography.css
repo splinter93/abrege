@@ -55,9 +55,12 @@
   --editor-font-family-body: var(--font-editor-body); /* Alias */
 
   /* === POLICES CHAT === */
-  --font-chat-headings: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --font-chat-body: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --font-chat-text: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  /* 🎯 Architecture: 2 variables séparées mais fusionnées par défaut pour cohérence */
+  --font-chat-headings: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; /* Titres H1-H6 */
+  --font-chat-base: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; /* Font principale */
+  --font-chat-ui: var(--font-chat-base); /* UI: header, sidebar, menus (fusionné par défaut) */
+  --font-chat-text: var(--font-chat-base); /* Messages: input, bubbles (fusionné par défaut) */
+  --font-chat-body: var(--font-chat-text); /* Alias compatibilité */
   
   /* Alias pour compatibilité avec l'ancien système */
   --chat-font-family: var(--font-ui);

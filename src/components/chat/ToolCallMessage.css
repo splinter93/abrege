@@ -10,7 +10,7 @@
   min-width: 250px;
   text-align: left;
   filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.06));
-  font-family: var(--chat-font-family-inter);
+  font-family: var(--font-chat-text);
 }
 
 /* ========================================

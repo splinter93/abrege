@@ -216,6 +216,7 @@
   flex-shrink: 0;
   height: 56px;
   z-index: 1001;
+  font-family: var(--font-chat-ui);
 }
 
 .chatgpt-header-left {
@@ -309,6 +310,7 @@
   will-change: transform;
   pointer-events: auto;
   opacity: 1;
+  font-family: var(--font-chat-ui);
 }
 
 .sidebar-ultra-clean.visible {
@@ -628,6 +630,7 @@
   border-radius: var(--chat-radius-xl);
   font-size: var(--chat-font-size-base);
   line-height: var(--chat-line-height-relaxed);
+  font-family: var(--font-chat-text);
 }
 
 .chatgpt-message-bubble-assistant {
@@ -639,14 +642,14 @@
 }
 
 .chatgpt-message-bubble-user {
-  background: linear-gradient(135deg, #18181b 0%, #222226 100%);
+  background: linear-gradient(135deg, #1c1c1f 0%, #212124 50%, #1c1c1f 100%);
   color: var(--chat-text-primary);
   max-width: 70%;
   border: none;
 }
 
 .chatgpt-message-bubble-user:hover {
-  background: linear-gradient(135deg, #1b1b1e 0%, #252529 100%);
+  background: linear-gradient(135deg, #1e1e21 0%, #232326 50%, #1e1e21 100%);
 }
 
 /* Images attachées dans les messages user */
@@ -785,7 +788,7 @@
   max-height: 80px;
   background: transparent;
   border: none;
-  font-family: var(--font-chat-body) !important;
+  font-family: var(--font-chat-text) !important;
   outline: none;
   resize: none;
   font-size: var(--chat-font-size-base);

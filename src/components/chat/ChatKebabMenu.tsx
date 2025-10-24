@@ -62,6 +62,122 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
     setTheme(newTheme);
   };
 
+  // Font state
+  const [selectedFont, setSelectedFont] = useState<string>('figtree');
+  const [selectedColorPalette, setSelectedColorPalette] = useState<string>('soft-dark');
+
+  // 🎨 PALETTES DE COULEURS PRÉDÉFINIES
+  const availableColorPalettes = [
+    { 
+      value: 'soft-dark', 
+      label: 'Sombre Doux', 
+      preview: '🌙',
+      colors: {
+        '--chat-text-primary': '#b5bcc4',
+        '--chat-text-secondary': '#a3a9b2', 
+        '--chat-text-muted': '#7a8088'
+      }
+    },
+    { 
+      value: 'warm-dark', 
+      label: 'Sombre Chaud', 
+      preview: '🔥',
+      colors: {
+        '--chat-text-primary': '#d4c5a9',
+        '--chat-text-secondary': '#c4b599',
+        '--chat-text-muted': '#9a8b6f'
+      }
+    },
+    { 
+      value: 'cool-dark', 
+      label: 'Sombre Froid', 
+      preview: '❄️',
+      colors: {
+        '--chat-text-primary': '#a8b8d8',
+        '--chat-text-secondary': '#9aa8c8',
+        '--chat-text-muted': '#6b7a9a'
+      }
+    },
+    { 
+      value: 'high-contrast', 
+      label: 'Contraste Élevé', 
+      preview: '⚡',
+      colors: {
+        '--chat-text-primary': '#ffffff',
+        '--chat-text-secondary': '#e5e5e5',
+        '--chat-text-muted': '#a0a0a0'
+      }
+    }
+  ];
+
+  useEffect(() => {
+    // Charger la font sauvegardée et l'appliquer
+    const savedFont = localStorage.getItem('chat-font-preference');
+    if (savedFont) {
+      setSelectedFont(savedFont);
+      // Appliquer immédiatement
+      const fontMap: Record<string, string> = {
+        'figtree': "'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        'geist': "'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        'inter': "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        'noto-sans': "'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        'manrope': "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      };
+      document.documentElement.style.setProperty('--font-chat-base', fontMap[savedFont]);
+    }
+
+    // Charger la palette de couleurs sauvegardée et l'appliquer
+    const savedColors = localStorage.getItem('chat-color-preference');
+    if (savedColors) {
+      setSelectedColorPalette(savedColors);
+      // Appliquer la palette par défaut (soft-dark) si pas trouvée
+      const palette = availableColorPalettes.find(p => p.value === savedColors) || availableColorPalettes[0];
+      if (palette) {
+        Object.entries(palette.colors).forEach(([property, value]) => {
+          document.documentElement.style.setProperty(property, value);
+        });
+      }
+    }
+  }, []);
+
+  const availableFonts = [
+    { value: 'figtree', label: 'Figtree', preview: 'Figtree' },
+    { value: 'geist', label: 'Geist', preview: 'Geist' },
+    { value: 'inter', label: 'Inter', preview: 'Inter' },
+    { value: 'noto-sans', label: 'Noto Sans', preview: 'Noto Sans' },
+    { value: 'manrope', label: 'Manrope', preview: 'Manrope' },
+  ];
+
+  const handleFontChange = (fontValue: string) => {
+    if (disabled) return;
+    setSelectedFont(fontValue);
+    localStorage.setItem('chat-font-preference', fontValue);
+    
+    // Appliquer la font via CSS variable
+    const fontMap: Record<string, string> = {
+      'figtree': "'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      'geist': "'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      'inter': "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      'noto-sans': "'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      'manrope': "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    };
+    
+    document.documentElement.style.setProperty('--font-chat-base', fontMap[fontValue]);
+  };
+
+  const handleColorPaletteChange = (paletteValue: string) => {
+    if (disabled) return;
+    setSelectedColorPalette(paletteValue);
+    localStorage.setItem('chat-color-preference', paletteValue);
+    
+    const palette = availableColorPalettes.find(p => p.value === paletteValue);
+    if (palette) {
+      Object.entries(palette.colors).forEach(([property, value]) => {
+        document.documentElement.style.setProperty(property, value);
+      });
+    }
+  };
+
   return (
     <div className="chat-kebab-menu" ref={menuRef}>
       <button
@@ -112,23 +228,62 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
           {/* Sélecteur de thème */}
           <div className="kebab-section">
             <label className="kebab-section-label">Thème d'affichage</label>
-            <div className="kebab-theme-options">
-              {mounted && availableThemes.map((themeOption) => (
-                <button
-                  key={themeOption.value}
-                  onClick={() => handleThemeChange(themeOption.value)}
-                  className={`kebab-theme-option ${theme === themeOption.value ? 'active' : ''}`}
-                  disabled={disabled}
-                  aria-label={themeOption.label}
+            <select
+              value={theme}
+              onChange={(e) => handleThemeChange(e.target.value as ChatTheme)}
+              className="kebab-font-select"
+              disabled={disabled || !mounted}
+            >
+              {availableThemes.map((themeOption) => (
+                <option 
+                  key={themeOption.value} 
+                  value={themeOption.value}
                 >
-                  <span className="kebab-theme-icon">{themeOption.icon}</span>
-                  <span className="kebab-theme-label">{themeOption.label}</span>
-                  {theme === themeOption.value && (
-                    <span className="kebab-theme-check">✓</span>
-                  )}
-                </button>
+                  {themeOption.icon} {themeOption.label}
+                </option>
               ))}
-            </div>
+            </select>
+          </div>
+
+          {/* Sélecteur de police */}
+          <div className="kebab-section">
+            <label className="kebab-section-label">Police de caractères</label>
+            <select
+              value={selectedFont}
+              onChange={(e) => handleFontChange(e.target.value)}
+              className="kebab-font-select"
+              disabled={disabled}
+            >
+              {availableFonts.map((font) => (
+                <option 
+                  key={font.value} 
+                  value={font.value}
+                  style={{ fontFamily: font.preview }}
+                >
+                  {font.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Sélecteur de palette de couleurs */}
+          <div className="kebab-section">
+            <label className="kebab-section-label">Palette de couleurs</label>
+            <select
+              value={selectedColorPalette}
+              onChange={(e) => handleColorPaletteChange(e.target.value)}
+              className="kebab-font-select"
+              disabled={disabled}
+            >
+              {availableColorPalettes.map((palette) => (
+                <option 
+                  key={palette.value} 
+                  value={palette.value}
+                >
+                  {palette.preview} {palette.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Modèle */}
