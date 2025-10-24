@@ -114,12 +114,19 @@ export class ChatImageUploadService {
   ): Promise<UploadedChatImage> {
     const startTime = Date.now();
 
-    // 1. Demander une presigned URL à l'API
+    // 1. Récupérer le token d'authentification
+    // L'API utilise getAuthenticatedUser qui lit le cookie de session
+    // Pas besoin de passer explicitement le token en header côté client
+    
+    // 2. Demander une presigned URL à l'API
     logger.debug(LogCategory.API, `[ChatImageUpload] 🔑 Demande presigned URL pour ${image.fileName}...`);
     
     const presignResponse = await fetch(this.apiEndpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // ✅ Inclure les cookies de session
       body: JSON.stringify({
         file_name: image.fileName,
         file_type: image.mimeType,
