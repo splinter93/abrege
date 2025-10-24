@@ -1,11 +1,12 @@
 "use client";
-import React, { useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useMemo, useEffect, useRef, useCallback, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { useMarkdownRender } from '../../hooks/editor/useMarkdownRender';
 import { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from './mermaidService';
 import MermaidRenderer from '@/components/mermaid/MermaidRenderer';
 import { createRoot, Root } from 'react-dom/client';
 import { simpleLogger as logger } from '@/utils/logger';
+import { openImageModal } from './ImageModal';
 import '@/styles/mermaid.css';
 import '@/styles/unified-blocks.css';
 
@@ -276,6 +277,40 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
     ADD_TAGS: ['div'],
     ADD_ATTR: ['class']
   });
+
+  // 🖼️ Intercepter les double-clics sur les images du markdown
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleImageDoubleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'IMG') {
+        const imgSrc = target.getAttribute('src');
+        const imgAlt = target.getAttribute('alt');
+        if (imgSrc) {
+          openImageModal({
+            src: imgSrc,
+            alt: imgAlt || undefined
+          });
+        }
+      }
+    };
+
+    // Ajouter le listener sur le container
+    container.addEventListener('dblclick', handleImageDoubleClick);
+
+    // Ajouter un style cursor pointer aux images
+    const images = container.querySelectorAll('img');
+    images.forEach(img => {
+      (img as HTMLElement).style.cursor = 'pointer';
+      (img as HTMLElement).title = 'Double-cliquer pour agrandir';
+    });
+
+    return () => {
+      container.removeEventListener('dblclick', handleImageDoubleClick);
+    };
+  }, [sanitizedHtml]);
   
   return (
     <>

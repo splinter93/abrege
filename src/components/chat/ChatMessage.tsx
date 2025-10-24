@@ -8,6 +8,7 @@ import {
 } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import ToolCallMessage from './ToolCallMessage';
+import { openImageModal } from './ImageModal';
 import BubbleButtons from './BubbleButtons';
 import ReasoningDropdown from './ReasoningDropdown';
 import StreamTimelineRenderer from './StreamTimelineRenderer';
@@ -87,6 +88,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const userMessage = role === 'user' ? message as import('@/types/chat').UserMessage : null;
   const hasAttachedImages = userMessage?.attachedImages && userMessage.attachedImages.length > 0;
 
+  // Handler pour ouvrir la modal au double-clic
+  const handleImageDoubleClick = (imageSrc: string, fileName?: string) => {
+    openImageModal({
+      src: imageSrc,
+      fileName: fileName
+    });
+  };
+
   return (
     <div className={`chatgpt-message chatgpt-message-${role} ${className || ''}`}>
       <div className={`chatgpt-message-bubble chatgpt-message-bubble-${role}`}>
@@ -100,10 +109,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 alt={img.fileName || `Image ${index + 1}`}
                 className="chatgpt-message-image"
                 loading="lazy"
+                onDoubleClick={() => handleImageDoubleClick(img.url, img.fileName)}
+                style={{ cursor: 'pointer' }}
+                title="Double-cliquer pour agrandir"
               />
             ))}
           </div>
         )}
+
 
         {/* Reasoning dropdown - affiché AVANT le contenu */}
         {reasoning && (

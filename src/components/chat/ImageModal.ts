@@ -1,41 +1,53 @@
 /**
- * Modal Mermaid pour agrandir les diagrammes
- * Utilise la configuration centralisée avec zoom et pan, sans container
+ * Modal Image avec Zoom & Pan
+ * Double-clic sur une image pour l'agrandir
+ * Inspiré de MermaidModal pour cohérence et performances
  */
 
-import { initializeMermaid } from '@/services/mermaid/mermaidConfig';
-import { normalizeMermaidContent } from '@/components/chat/mermaidService';
-import { simpleLogger as logger } from '@/utils/logger';
-import './MermaidModal.css';
+import './ImageModal.css';
+
+interface ImageModalOptions {
+  src: string;
+  alt?: string;
+  fileName?: string;
+}
 
 // ✅ SINGLETON : Empêcher multiples modals simultanées
 let currentModal: HTMLElement | null = null;
 
 /**
- * Fonction pour détecter le type de diagramme Mermaid
+ * Fonction pour extraire le nom du fichier depuis l'URL ou l'alt
+ * Priorité : fileName fourni > alt (nom descriptif) > nom du fichier URL
  */
-function detectDiagramType(mermaidContent: string): string {
-  const firstLine = mermaidContent.trim().split('\n')[0].toLowerCase();
+function extractFileName(src: string, alt?: string): string {
+  // Si on a un alt descriptif (pas juste "Image" ou vide), l'utiliser en priorité
+  if (alt && alt.trim() && !alt.match(/^image$/i)) {
+    return alt.trim();
+  }
   
-  if (firstLine.includes('graph') || firstLine.includes('flowchart')) return 'FLOWCHART';
-  if (firstLine.includes('sequence')) return 'SEQUENCE';
-  if (firstLine.includes('class')) return 'CLASS';
-  if (firstLine.includes('state')) return 'STATE';
-  if (firstLine.includes('er')) return 'ER';
-  if (firstLine.includes('journey')) return 'JOURNEY';
-  if (firstLine.includes('gantt')) return 'GANTT';
-  if (firstLine.includes('pie')) return 'PIE';
-  if (firstLine.includes('gitgraph')) return 'GITGRAPH';
-  if (firstLine.includes('c4')) return 'C4';
-  if (firstLine.includes('mindmap')) return 'MINDMAP';
+  // Sinon extraire le nom du fichier depuis l'URL
+  try {
+    const url = new URL(src);
+    const pathname = url.pathname;
+    const filename = pathname.substring(pathname.lastIndexOf('/') + 1);
+    const decoded = decodeURIComponent(filename);
+    
+    // Si le filename est valide, l'utiliser
+    if (decoded && decoded.length > 0) {
+      return decoded;
+    }
+  } catch {
+    // Si erreur de parsing URL, continuer
+  }
   
-  return 'DIAGRAM';
+  // Fallback final
+  return alt || 'image';
 }
 
 /**
- * Fonction pour ouvrir le modal Mermaid agrandi
+ * Fonction pour ouvrir la modal Image agrandie
  */
-export function openMermaidModal(mermaidContent: string) {
+export function openImageModal(options: ImageModalOptions) {
   // ✅ SINGLETON : Fermer la modal existante si une est déjà ouverte
   if (currentModal && document.body.contains(currentModal)) {
     document.body.removeChild(currentModal);
@@ -43,30 +55,34 @@ export function openMermaidModal(mermaidContent: string) {
     currentModal = null;
   }
 
-  // Créer le modal sans container
+  const { src, alt, fileName: providedFileName } = options;
+  // Priorité : fileName fourni > alt descriptif > nom fichier URL
+  const fileName = providedFileName || extractFileName(src, alt);
+
+  // Créer le modal
   const modal = document.createElement('div');
-  modal.className = 'mermaid-modal';
+  modal.className = 'image-modal';
   
   // ✅ Enregistrer comme modal courante
   currentModal = modal;
   
-  // Toolbar transparente avec type de diagramme et boutons
+  // Toolbar transparente avec nom du fichier et boutons
   const toolbar = document.createElement('div');
-  toolbar.className = 'mermaid-modal-toolbar';
+  toolbar.className = 'image-modal-toolbar';
   
-  // Type de diagramme (détecté depuis le contenu)
-  const diagramType = detectDiagramType(mermaidContent);
-  const typeLabel = document.createElement('div');
-  typeLabel.className = 'mermaid-modal-type';
-  typeLabel.textContent = diagramType;
+  // Nom du fichier à gauche
+  const fileNameLabel = document.createElement('div');
+  fileNameLabel.className = 'image-modal-filename-label';
+  fileNameLabel.textContent = fileName;
+  fileNameLabel.title = fileName;
   
-  // Boutons de zoom à gauche du bouton copier
+  // Boutons de zoom au centre
   const zoomControls = document.createElement('div');
-  zoomControls.className = 'mermaid-modal-zoom-controls';
+  zoomControls.className = 'image-modal-zoom-controls';
   
   // Bouton Zoom -
   const zoomOutButton = document.createElement('button');
-  zoomOutButton.className = 'mermaid-modal-zoom-btn';
+  zoomOutButton.className = 'image-modal-zoom-btn';
   zoomOutButton.title = 'Zoom arrière';
   zoomOutButton.innerHTML = `
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -78,7 +94,7 @@ export function openMermaidModal(mermaidContent: string) {
   
   // Bouton Zoom +
   const zoomInButton = document.createElement('button');
-  zoomInButton.className = 'mermaid-modal-zoom-btn';
+  zoomInButton.className = 'image-modal-zoom-btn';
   zoomInButton.title = 'Zoom avant';
   zoomInButton.innerHTML = `
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -91,7 +107,7 @@ export function openMermaidModal(mermaidContent: string) {
   
   // Bouton Reset
   const resetButton = document.createElement('button');
-  resetButton.className = 'mermaid-modal-zoom-btn';
+  resetButton.className = 'image-modal-zoom-btn';
   resetButton.title = 'Reset zoom';
   resetButton.innerHTML = `
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -104,8 +120,8 @@ export function openMermaidModal(mermaidContent: string) {
   
   // Bouton copier - juste l'icône
   const copyButton = document.createElement('button');
-  copyButton.className = 'mermaid-modal-copy';
-  copyButton.title = 'Copier le code (Ctrl+C)';
+  copyButton.className = 'image-modal-copy';
+  copyButton.title = "Copier l'URL (Ctrl+C)";
   copyButton.innerHTML = `
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="9" y="9" width="13" height="13"></rect>
@@ -116,7 +132,7 @@ export function openMermaidModal(mermaidContent: string) {
   // Gestion du copier
   copyButton.addEventListener('click', async () => {
     try {
-      await navigator.clipboard.writeText(mermaidContent);
+      await navigator.clipboard.writeText(src);
       copyButton.innerHTML = `
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="20,6 9,17 4,12"></polyline>
@@ -138,16 +154,169 @@ export function openMermaidModal(mermaidContent: string) {
     }
   });
   
+  // Bouton télécharger - juste l'icône
+  const downloadButton = document.createElement('button');
+  downloadButton.className = 'image-modal-download';
+  downloadButton.title = 'Télécharger';
+  downloadButton.innerHTML = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="7 10 12 15 17 10"></polyline>
+      <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+  `;
+  
+  // Gestion du téléchargement avec fallback CORS
+  downloadButton.addEventListener('click', async () => {
+    try {
+      // Tenter le download via fetch (fonctionne si même origine ou CORS activé)
+      try {
+        const response = await fetch(src);
+        
+        // Vérifier si la réponse est OK
+        if (!response.ok) {
+          throw new Error('Fetch failed');
+        }
+        
+        const blob = await response.blob();
+        
+        // Créer un lien temporaire pour télécharger
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } catch (fetchError) {
+        // ✅ FALLBACK CORS : Ouvrir dans nouvel onglet si fetch échoue
+        console.warn('Fetch failed (CORS?), fallback to window.open:', fetchError);
+        const a = document.createElement('a');
+        a.href = src;
+        a.download = fileName;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+      
+      // Feedback visuel
+      downloadButton.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20,6 9,17 4,12"></polyline>
+        </svg>
+      `;
+      downloadButton.classList.add('downloaded');
+      
+      setTimeout(() => {
+        downloadButton.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        `;
+        downloadButton.classList.remove('downloaded');
+      }, 2000);
+    } catch (error) {
+      console.error('Erreur critique lors du téléchargement:', error);
+    }
+  });
+  
   // Bouton fermer intégré dans la toolbar
   const closeButton = document.createElement('button');
-  closeButton.className = 'mermaid-modal-close';
+  closeButton.className = 'image-modal-close';
   closeButton.title = 'Fermer (Échap)';
   closeButton.innerHTML = `
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <line x1="18" y1="6" x2="6" y2="18"></line>
       <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>
   `;
+  
+  // Assembler la toolbar
+  toolbar.appendChild(fileNameLabel);
+  toolbar.appendChild(zoomControls);
+  toolbar.appendChild(copyButton);
+  toolbar.appendChild(downloadButton);
+  toolbar.appendChild(closeButton);
+  
+  // Assembler les contrôles de zoom
+  zoomControls.appendChild(zoomOutButton);
+  zoomControls.appendChild(zoomInButton);
+  zoomControls.appendChild(resetButton);
+  
+  // Conteneur pour l'image avec zoom et pan
+  const imageWrapper = document.createElement('div');
+  imageWrapper.className = 'image-modal-wrapper';
+  imageWrapper.style.cssText = `
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    cursor: default;
+    user-select: none;
+    transition: transform 0.2s ease-out;
+  `;
+  
+  // Image
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = alt || 'Image agrandie';
+  img.className = 'image-modal-img';
+  img.style.cssText = `
+    max-width: 90%;
+    max-height: 90%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  `;
+  
+  imageWrapper.appendChild(img);
+  
+  // État du zoom et pan
+  let currentScale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let isDragging = false;
+  let lastX = 0;
+  let lastY = 0;
+  let dragStartTime = 0;
+  let hasMoved = false;
+  
+  // Fonction pour appliquer la transformation complète
+  const applyTransform = () => {
+    imageWrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+  };
+  
+  // Fonction pour appliquer le zoom
+  const applyZoom = (newScale: number) => {
+    // Interdire le dezoom en dessous de 100%
+    currentScale = Math.max(1, Math.min(3, newScale));
+    
+    // Si on dezoom vers 100%, recentrer automatiquement
+    if (currentScale === 1) {
+      translateX = 0;
+      translateY = 0;
+    }
+    
+    applyTransform();
+    imageWrapper.style.cursor = currentScale > 1 ? 'grab' : 'default';
+  };
+  
+  // Fonction pour reset le zoom et la position
+  const resetZoom = () => {
+    currentScale = 1;
+    translateX = 0;
+    translateY = 0;
+    applyTransform();
+    imageWrapper.style.cursor = 'default';
+  };
   
   // Event listeners pour les boutons de zoom
   zoomOutButton.addEventListener('click', () => {
@@ -163,71 +332,6 @@ export function openMermaidModal(mermaidContent: string) {
   resetButton.addEventListener('click', () => {
     resetZoom();
   });
-  
-  // Assembler la toolbar
-  toolbar.appendChild(typeLabel);
-  toolbar.appendChild(zoomControls);
-  toolbar.appendChild(copyButton);
-  toolbar.appendChild(closeButton);
-  
-  // Assembler les contrôles de zoom
-  zoomControls.appendChild(zoomOutButton);
-  zoomControls.appendChild(zoomInButton);
-  zoomControls.appendChild(resetButton);
-  
-  // Conteneur pour le SVG avec zoom et pan
-  const svgWrapper = document.createElement('div');
-  svgWrapper.className = 'mermaid-modal-svg-wrapper';
-  svgWrapper.style.cssText = `
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding: 40px;
-    cursor: default;
-    user-select: none;
-    transition: transform 0.2s ease-out;
-  `;
-  
-  // État du zoom et pan
-  let currentScale = 1;
-  let translateX = 0;
-  let translateY = 0;
-  let isDragging = false;
-  let lastX = 0;
-  let lastY = 0;
-  let dragStartTime = 0;
-  let hasMoved = false;
-  
-  // Fonction pour appliquer la transformation complète
-  const applyTransform = () => {
-    svgWrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
-  };
-  
-  // Fonction pour appliquer le zoom
-  const applyZoom = (newScale: number) => {
-    // Interdire le dezoom en dessous de 100%
-    currentScale = Math.max(1, Math.min(3, newScale));
-    
-    // Si on dezoom vers 100%, recentrer automatiquement
-    if (currentScale === 1) {
-      translateX = 0;
-      translateY = 0;
-    }
-    
-    applyTransform();
-    svgWrapper.style.cursor = currentScale > 1 ? 'grab' : 'default';
-  };
-  
-  // Fonction pour reset le zoom et la position
-  const resetZoom = () => {
-    currentScale = 1;
-    translateX = 0;
-    translateY = 0;
-    applyTransform();
-    svgWrapper.style.cursor = 'default';
-  };
   
   // Gestion du zoom à la molette
   const handleWheel = (e: WheelEvent) => {
@@ -246,7 +350,7 @@ export function openMermaidModal(mermaidContent: string) {
       dragStartTime = Date.now();
       lastX = e.clientX;
       lastY = e.clientY;
-      svgWrapper.style.cursor = 'grabbing';
+      imageWrapper.style.cursor = 'grabbing';
       e.preventDefault();
     }
   };
@@ -274,7 +378,7 @@ export function openMermaidModal(mermaidContent: string) {
   const handleMouseUp = () => {
     if (isDragging) {
       isDragging = false;
-      svgWrapper.style.cursor = currentScale > 1 ? 'grab' : 'default';
+      imageWrapper.style.cursor = currentScale > 1 ? 'grab' : 'default';
       
       // Réinitialiser le flag de mouvement après un délai
       setTimeout(() => {
@@ -288,12 +392,9 @@ export function openMermaidModal(mermaidContent: string) {
     resetZoom();
   };
   
-  // Ajouter les éléments directement au modal
+  // Ajouter les éléments au modal
   modal.appendChild(toolbar);
-  modal.appendChild(svgWrapper);
-  
-  // Rendre le diagramme dans le modal
-  renderMermaidDiagram(svgWrapper, mermaidContent);
+  modal.appendChild(imageWrapper);
   
   // Ajouter au DOM
   document.body.appendChild(modal);
@@ -302,11 +403,11 @@ export function openMermaidModal(mermaidContent: string) {
   document.body.style.overflow = 'hidden';
   
   // Event listeners pour le zoom et pan
-  svgWrapper.addEventListener('wheel', handleWheel, { passive: false });
-  svgWrapper.addEventListener('mousedown', handleMouseDown);
+  imageWrapper.addEventListener('wheel', handleWheel, { passive: false });
+  imageWrapper.addEventListener('mousedown', handleMouseDown);
   document.addEventListener('mousemove', handleMouseMove);
   document.addEventListener('mouseup', handleMouseUp);
-  svgWrapper.addEventListener('dblclick', handleDoubleClick);
+  imageWrapper.addEventListener('dblclick', handleDoubleClick);
   
   // Fermer avec Escape
   const handleEscape = (e: KeyboardEvent) => {
@@ -315,9 +416,12 @@ export function openMermaidModal(mermaidContent: string) {
     }
   };
   
-  // Fermer en cliquant sur l'overlay
+  // Fermer en cliquant sur l'overlay (hors de l'image)
   const handleOverlayClick = (e: MouseEvent) => {
-    if (e.target === modal) {
+    const target = e.target as HTMLElement;
+    
+    // Fermer si on clique sur le modal lui-même ou sur le wrapper (pas sur l'image ou toolbar)
+    if (target === modal || target === imageWrapper) {
       // Ne pas fermer si on vient de faire du drag
       const timeSinceDrag = Date.now() - dragStartTime;
       if (isDragging || hasMoved || timeSinceDrag < 100) {
@@ -348,11 +452,11 @@ export function openMermaidModal(mermaidContent: string) {
     document.removeEventListener('keydown', handleEscape);
     modal.removeEventListener('click', handleOverlayClick);
     closeButton.removeEventListener('click', handleCloseClick);
-    svgWrapper.removeEventListener('wheel', handleWheel);
-    svgWrapper.removeEventListener('mousedown', handleMouseDown);
+    imageWrapper.removeEventListener('wheel', handleWheel);
+    imageWrapper.removeEventListener('mousedown', handleMouseDown);
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
-    svgWrapper.removeEventListener('dblclick', handleDoubleClick);
+    imageWrapper.removeEventListener('dblclick', handleDoubleClick);
   }
 
   // Ajouter les event listeners
@@ -361,83 +465,3 @@ export function openMermaidModal(mermaidContent: string) {
   closeButton.addEventListener('click', handleCloseClick);
 }
 
-/**
- * Fonction pour rendre le diagramme Mermaid dans la modal
- */
-async function renderMermaidDiagram(container: HTMLElement, mermaidContent: string) {
-  try {
-    // Initialiser Mermaid avec la configuration centralisée
-    await initializeMermaid();
-
-    // Importer Mermaid dynamiquement
-    const mermaid = await import('mermaid');
-
-    // Normaliser le contenu Mermaid
-    const normalizedContent = normalizeMermaidContent(mermaidContent);
-    
-    // Générer un ID unique
-    const id = `mermaid-modal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Rendre le diagramme
-    const result = await mermaid.default.render(id, normalizedContent);
-    
-    if (result && result.svg) {
-      // Créer le conteneur SVG pour le diagramme agrandi
-      const svgContainer = document.createElement('div');
-      svgContainer.style.cssText = `
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100%;
-      `;
-      svgContainer.innerHTML = result.svg;
-      
-      // Ajouter le conteneur SVG
-      container.appendChild(svgContainer);
-    } else {
-      throw new Error('Format de réponse Mermaid invalide');
-    }
-    
-  } catch (error) {
-    logger.error('Erreur lors du rendu Mermaid dans la modal:', error);
-    
-    // Afficher l'erreur
-    const errorContainer = document.createElement('div');
-    errorContainer.style.cssText = `
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-      padding: 20px;
-    `;
-    errorContainer.innerHTML = `
-      <div class="mermaid-error">
-        <div class="mermaid-error-content">
-          <div class="mermaid-error-header">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="15" y1="9" x2="9" y2="15" />
-              <line x1="9" y1="9" x2="15" y2="15" />
-            </svg>
-            <span>Erreur de rendu du diagramme</span>
-          </div>
-          <div class="mermaid-error-body">
-            <div class="mermaid-error-message">
-              <strong>Erreur :</strong>
-              <pre>${error instanceof Error ? error.message : 'Erreur inconnue'}</pre>
-            </div>
-            <details class="mermaid-error-details">
-              <summary>Code source</summary>
-              <pre class="mermaid-source">${mermaidContent}</pre>
-            </details>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    // Ajouter le conteneur d'erreur
-    container.appendChild(errorContainer);
-  }
-}

@@ -289,7 +289,7 @@
 
 .chat-markdown a {
   font-family: var(--font-chat-text) !important;
-  color: #10a37f !important;
+  color: #c2410c !important; /* Orange foncé */
   text-decoration: underline !important;
   text-underline-offset: 2px !important;
   text-decoration-thickness: 1px !important;
@@ -299,7 +299,7 @@
 }
 
 .chat-markdown a:hover {
-  color: #1a7f64 !important;
+  color: #f97316 !important; /* Orange vif au hover */
   text-underline-offset: 3px !important;
 }
 
