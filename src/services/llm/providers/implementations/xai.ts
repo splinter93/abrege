@@ -359,6 +359,11 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
           if (contentType === 'object' && !isArray) {
             logger.error(`[XAIProvider] ⚠️⚠️⚠️ MESSAGE ${index + 1} A UN CONTENT OBJET (PAS ARRAY) ! xAI va rejeter ça !`, msg.content);
           }
+          
+          // 🔍 DEBUG: Log le contenu exact pour les messages multi-part
+          if (isArray && Array.isArray(msg.content)) {
+            logger.dev(`[XAIProvider] 🔍 MESSAGE ${index + 1} CONTENT EXACT:`, JSON.stringify(msg.content, null, 2));
+          }
         });
       }
       
