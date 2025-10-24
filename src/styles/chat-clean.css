@@ -199,33 +199,57 @@
    Usage : Ajouter .chat-theme-glass sur body
    ======================================== */
 .chat-theme-glass {
-  /* Backgrounds avec blur */
-  --chat-bg-primary: rgba(18, 18, 18, 0.7);
-  --chat-bg-secondary: rgba(22, 22, 22, 0.7);
-  --chat-bg-tertiary: rgba(24, 24, 24, 0.8);
-  --chat-bg-input: rgba(31, 31, 31, 0.8);
-  --chat-bg-input-focus: rgba(37, 37, 37, 0.9);
-  --chat-bg-user-message: rgba(30, 30, 30, 0.8);
-  --chat-bg-user-message-hover: rgba(32, 32, 32, 0.9);
+  /* Backgrounds - Aurora Glass bleu-violet */
+  --chat-bg-primary: #1a1625;          /* Violet très foncé */
+  --chat-bg-secondary: #1e1a2e;        /* Violet foncé */
+  --chat-bg-tertiary: #221f33;         /* Violet moyen foncé */
+  --chat-bg-input: rgba(40, 35, 60, 0.8);     /* Violet avec transparence */
+  --chat-bg-input-focus: rgba(50, 42, 75, 0.9);
+  --chat-bg-user-message: rgba(45, 38, 70, 0.8);
+  --chat-bg-user-message-hover: rgba(55, 45, 85, 0.9);
   
-  /* Overlays plus prononcés */
-  --chat-overlay-subtle: rgba(255, 255, 255, 0.03);
-  --chat-overlay-soft: rgba(255, 255, 255, 0.05);
-  --chat-overlay-active: rgba(255, 255, 255, 0.08);
-  --chat-overlay-input: rgba(255, 255, 255, 0.08);
-  --chat-overlay-input-focus: rgba(255, 255, 255, 0.12);
-  --chat-overlay-hover: rgba(255, 255, 255, 0.15);
+  /* Overlays - Reflets bleu-violet */
+  --chat-overlay-subtle: rgba(147, 112, 219, 0.05);   /* Violet clair */
+  --chat-overlay-soft: rgba(147, 112, 219, 0.08);
+  --chat-overlay-active: rgba(147, 112, 219, 0.12);
+  --chat-overlay-input: rgba(147, 112, 219, 0.1);
+  --chat-overlay-input-focus: rgba(147, 112, 219, 0.15);
+  --chat-overlay-hover: rgba(147, 112, 219, 0.15);
   
-  /* Bordures plus visibles */
-  --chat-border-subtle: rgba(255, 255, 255, 0.15);
-  --chat-border-soft: rgba(255, 255, 255, 0.12);
+  /* Texte - Nuances bleu-violet */
+  --chat-text-primary: #e8e4f3;        /* Blanc violet très léger */
+  --chat-text-secondary: #c5bfd9;      /* Gris violet clair */
+  --chat-text-muted: #9a92b3;          /* Gris violet */
   
-  /* Dégradés transparents avec blur */
-  --chat-gradient-input: linear-gradient(135deg, rgba(28, 28, 31, 0.7) 0%, rgba(33, 33, 36, 0.7) 50%, rgba(28, 28, 31, 0.7) 100%);
-  --chat-gradient-sidebar: linear-gradient(135deg, rgba(28, 28, 31, 0.7) 0%, rgba(35, 35, 39, 0.7) 50%, rgba(28, 28, 31, 0.7) 100%);
-  --chat-gradient-user: linear-gradient(135deg, rgba(30, 30, 30, 0.8) 0%, rgba(33, 33, 36, 0.8) 50%, rgba(30, 30, 30, 0.8) 100%);
-  --chat-gradient-user-hover: linear-gradient(135deg, rgba(32, 32, 32, 0.9) 0%, rgba(35, 35, 38, 0.9) 50%, rgba(32, 32, 32, 0.9) 100%);
-  --chat-gradient-kebab: linear-gradient(135deg, rgba(28, 28, 31, 0.8) 0%, rgba(33, 33, 36, 0.8) 50%, rgba(28, 28, 31, 0.8) 100%);
+  /* Bordures - Lueur violette */
+  --chat-border-subtle: rgba(147, 112, 219, 0.2);
+  --chat-border-soft: rgba(147, 112, 219, 0.15);
+  
+  /* Dégradés Aurora Glass - Bleu-Violet avec transparence */
+  --chat-gradient-input: linear-gradient(135deg, 
+    rgba(70, 50, 120, 0.6) 0%, 
+    rgba(100, 70, 160, 0.4) 50%, 
+    rgba(70, 50, 120, 0.6) 100%);
+  
+  --chat-gradient-sidebar: linear-gradient(135deg, 
+    rgba(60, 45, 110, 0.7) 0%, 
+    rgba(90, 65, 150, 0.5) 50%, 
+    rgba(60, 45, 110, 0.7) 100%);
+  
+  --chat-gradient-user: linear-gradient(135deg, 
+    rgba(80, 60, 140, 0.6) 0%, 
+    rgba(110, 85, 180, 0.4) 50%, 
+    rgba(80, 60, 140, 0.6) 100%);
+  
+  --chat-gradient-user-hover: linear-gradient(135deg, 
+    rgba(100, 75, 160, 0.7) 0%, 
+    rgba(130, 100, 200, 0.5) 50%, 
+    rgba(100, 75, 160, 0.7) 100%);
+  
+  --chat-gradient-kebab: linear-gradient(135deg, 
+    rgba(70, 50, 120, 0.7) 0%, 
+    rgba(100, 70, 160, 0.5) 50%, 
+    rgba(70, 50, 120, 0.7) 100%);
 }
 
 /* Effet backdrop-filter pour glass mode */
