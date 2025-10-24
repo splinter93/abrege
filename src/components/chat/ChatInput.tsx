@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Globe, CornerUpRight, Folder, Image as ImageIcon, Search, FileText, Settings, Zap, Target, Cpu } from 'react-feather';
+import { Globe, CornerUpRight, Folder, Image as ImageIcon, Search, FileText, Settings, Zap, Target, Cpu, AtSign } from 'react-feather';
 import { Lightbulb } from 'lucide-react';
 import { logger, LogCategory } from '@/utils/logger';
 import AudioRecorder from './AudioRecorder';
@@ -36,7 +36,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   
   // Déterminer le niveau par défaut basé sur le modèle de l'agent
   const defaultReasoningLevel = getReasoningLevelFromModel(currentAgentModel);
-  const [showImageMenu, setShowImageMenu] = useState(false);
+  const [showFileMenu, setShowFileMenu] = useState(false);
   const [showImageSourceModal, setShowImageSourceModal] = useState(false);
   const [showWebSearchMenu, setShowWebSearchMenu] = useState(false);
   const [showReasoningMenu, setShowReasoningMenu] = useState(false);
@@ -226,8 +226,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     }
   }, []);
 
-  const toggleImageMenu = useCallback(() => {
-    setShowImageMenu(prev => !prev);
+  const toggleFileMenu = useCallback(() => {
+    setShowFileMenu(prev => !prev);
   }, []);
 
   const toggleWebSearchMenu = useCallback(() => {
@@ -239,7 +239,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   }, []);
 
   const handleLoadImageClick = useCallback(() => {
-    setShowImageMenu(false);
+    setShowFileMenu(false);
     setShowImageSourceModal(true);
   }, []);
 
@@ -314,13 +314,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   }, []);
 
   const handleLoadFile = useCallback(() => {
-    setShowImageMenu(false);
+    setShowFileMenu(false);
     // TODO: Implémenter le chargement de fichier
     console.log('Load file');
   }, []);
 
   const handleTakePhoto = useCallback(() => {
-    setShowImageMenu(false);
+    setShowFileMenu(false);
     // TODO: Implémenter la capture photo
     console.log('Take photo');
   }, []);
@@ -361,20 +361,20 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     setShowReasoningMenu(false);
   }, [defaultReasoningLevel]);
 
-  // Fermer le menu image quand on clique ailleurs
+  // Fermer le menu fichier quand on clique ailleurs
   useEffect(() => {
-    if (!showImageMenu) return;
+    if (!showFileMenu) return;
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest('.chat-image-menu') && !target.closest('.chatgpt-input-image')) {
-        setShowImageMenu(false);
+      if (!target.closest('.chat-file-menu') && !target.closest('.chatgpt-input-file')) {
+        setShowFileMenu(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showImageMenu]);
+  }, [showFileMenu]);
 
   // Fermer le menu websearch quand on clique ailleurs
   useEffect(() => {
@@ -502,31 +502,37 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
       
       {/* Actions de l'input */}
       <div className="chatgpt-input-actions">
+        {/* Bouton @ (Mention/Context) */}
+        <button className="chatgpt-input-mention" aria-label="Mention">
+          <AtSign size={18} />
+        </button>
+
+        {/* Bouton Fichier avec menu contextuel */}
         <div style={{ position: 'relative' }}>
           <button 
-            className={`chatgpt-input-image ${showImageMenu ? 'active' : ''} ${images.length > 0 ? 'has-images' : ''}`}
-            aria-label="Ajouter des images"
-            onClick={toggleImageMenu}
+            className={`chatgpt-input-file ${showFileMenu ? 'active' : ''} ${images.length > 0 ? 'has-files' : ''}`}
+            aria-label="Ajouter des fichiers"
+            onClick={toggleFileMenu}
             disabled={disabled || loading}
           >
-            <ImageIcon size={18} />
+            <Folder size={18} />
             {images.length > 0 && (
-              <span className="chatgpt-input-image-badge">{images.length}</span>
+              <span className="chatgpt-input-file-badge">{images.length}</span>
             )}
           </button>
 
-          {/* Menu contextuel */}
-          {showImageMenu && (
-            <div className="chat-image-menu">
-              <button className="chat-image-menu-item" onClick={handleLoadImageClick}>
+          {/* Menu contextuel Fichier */}
+          {showFileMenu && (
+            <div className="chat-file-menu">
+              <button className="chat-file-menu-item" onClick={handleLoadImageClick}>
                 <ImageIcon size={16} />
                 <span>Charger une image</span>
               </button>
-              <button className="chat-image-menu-item" onClick={handleLoadFile}>
+              <button className="chat-file-menu-item" onClick={handleLoadFile}>
                 <Folder size={16} />
                 <span>Charger un fichier</span>
               </button>
-              <button className="chat-image-menu-item" onClick={handleTakePhoto}>
+              <button className="chat-file-menu-item" onClick={handleTakePhoto}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                   <circle cx="12" cy="13" r="4"></circle>
@@ -544,9 +550,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
             onSelectFiles={handleBrowseFiles}
           />
         </div>
-        <button className="chatgpt-input-speaker" aria-label="Ajouter">
-          <Folder size={18} />
-        </button>
 
         {/* WebSearch avec menu contextuel */}
         <div style={{ position: 'relative' }}>

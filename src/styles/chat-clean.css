@@ -951,8 +951,8 @@
   transition: filter 0.2s ease;
 }
 
-/* Bouton image actif pendant le drag */
-.chatgpt-input-area.dragging .chatgpt-input-image {
+/* Bouton fichier actif pendant le drag */
+.chatgpt-input-area.dragging .chatgpt-input-file {
   background: rgba(255, 107, 0, 0.15) !important; /* Orange transparent */
   color: var(--chat-accent-primary) !important;
   border-radius: 50%;
@@ -1001,12 +1001,13 @@
   padding-top: 0;
 }
 
+.chatgpt-input-mention,
+.chatgpt-input-file,
 .chatgpt-input-speaker,
 .chatgpt-input-mic,
 .chatgpt-input-web-search,
 .chatgpt-input-websearch,
-.chatgpt-input-reasoning,
-.chatgpt-input-image {
+.chatgpt-input-reasoning {
   background: transparent;
   border: none;
   color: var(--chat-text-secondary);
@@ -1022,22 +1023,24 @@
   position: relative;
 }
 
+.chatgpt-input-mention:hover,
+.chatgpt-input-file:hover,
 .chatgpt-input-speaker:hover,
 .chatgpt-input-mic:hover,
 .chatgpt-input-web-search:hover,
 .chatgpt-input-websearch:hover,
-.chatgpt-input-reasoning:hover,
-.chatgpt-input-image:hover {
+.chatgpt-input-reasoning:hover {
   background: var(--chat-overlay-hover);
   color: var(--chat-text-primary);
   border-radius: var(--chat-radius-md);
 }
 
-/* Bouton image actif */
-.chatgpt-input-image.active {
+/* Bouton fichier actif */
+.chatgpt-input-file.active {
   background: var(--chat-overlay-active);
   color: var(--chat-accent-primary);
 }
+
 
 /* Bouton websearch actif */
 .chatgpt-input-websearch.active {
@@ -1062,8 +1065,8 @@
   color: var(--chat-accent-primary) !important;
 }
 
-/* Badge compteur d'images */
-.chatgpt-input-image-badge {
+/* Badge compteur de fichiers */
+.chatgpt-input-file-badge {
   position: absolute;
   top: 2px;
   right: 2px;
@@ -1485,36 +1488,31 @@
 }
 
 /* Menu contextuel image */
-.chat-image-menu {
+/* Legacy styles supprimés - Fusionnés dans .chat-file-menu */
+
+/* ========================================
+   File Menu (fusionné depuis Image Menu)
+   ======================================== */
+
+.chat-file-menu {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
   background: var(--chat-gradient-input);
-  border: none; /* Pas de bordure */
+  border: none;
   border-radius: var(--chat-radius-md);
   padding: 4px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 200px;
-  backdrop-filter: blur(8px); /* Léger blur subtil */
+  backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   animation: menuFadeIn 0.15s ease-out;
 }
 
-@keyframes menuFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.chat-image-menu-item {
+.chat-file-menu-item {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1531,55 +1529,12 @@
   width: 100%;
 }
 
-.chat-image-menu-item:hover {
+.chat-file-menu-item:hover {
   background: var(--sidebar-item-hover);
 }
 
-.chat-image-menu-item svg {
+.chat-file-menu-item svg {
   flex-shrink: 0;
-  color: var(--chat-text-secondary);
-}
-
-/* Item avec sous-menu */
-.chat-image-menu-item.has-submenu {
-  position: relative;
-  cursor: default;
-}
-
-/* Sous-menu inline (apparaît en dessous) */
-.chat-image-submenu-inline {
-  display: none;
-  flex-direction: column;
-  gap: 2px;
-  padding-left: 8px;
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: all 0.2s ease-out;
-}
-
-.chat-image-menu-item.has-submenu:hover + .chat-image-submenu-inline {
-  display: flex;
-  max-height: 200px;
-  opacity: 1;
-  animation: submenuSlideDown 0.2s ease-out;
-}
-
-@keyframes submenuSlideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Items du sous-menu (légèrement indentés) */
-.chat-image-menu-item.submenu-item {
-  padding-left: 32px;
-  font-size: 13px;
   color: var(--chat-text-secondary);
 }
 
@@ -1703,6 +1658,17 @@
   font-weight: bold;
   font-size: 16px;
 }
+
+/* Tooltips rapides pour les items de menu */
+.chat-reasoning-menu-item[title],
+.chat-websearch-menu-item[title],
+.chat-file-menu-item[title] {
+  position: relative;
+}
+
+/* Note: Les tooltips natifs (title) ne peuvent pas être stylés en CSS pur.
+   Pour un délai instantané, il faudrait un composant tooltip custom.
+   Mais le hover sur les items rend le tooltip moins crucial. */
 
 /* Container pour les images preview */
 .chat-images-preview-container {
