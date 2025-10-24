@@ -1,0 +1,970 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Factoria PDF Parse API",
+    "version": "1.0.0",
+    "description": "API complète pour l'extraction et l'analyse de contenu PDF. Powered by pdf-parse.",
+    "contact": {
+      "name": "Factoria Support",
+      "email": "support@factoria.app"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://factoria-nine.vercel.app",
+      "description": "Production Server (Vercel)"
+    }
+  ],
+  "security": [],
+  "paths": {
+    "/api/pdf-parse/parse": {
+      "post": {
+        "operationId": "parsePDF",
+        "summary": "Parser un PDF complet",
+        "description": "Extrait tout le contenu textuel et les métadonnées d'un document PDF",
+        "tags": ["PDF Parsing"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Le fichier PDF à parser"
+                  },
+                  "options": {
+                    "type": "string",
+                    "description": "Options de parsing (JSON stringifié)",
+                    "example": "{\"max\":0,\"verbose\":false}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Parsing réussi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "description": "Contenu textuel complet du PDF",
+                          "example": "This is the full text content of the PDF document..."
+                        },
+                        "pageCount": {
+                          "type": "number",
+                          "description": "Nombre total de pages",
+                          "example": 15
+                        },
+                        "pagesProcessed": {
+                          "type": "number",
+                          "description": "Nombre de pages traitées",
+                          "example": 15
+                        },
+                        "version": {
+                          "type": "string",
+                          "description": "Version du PDF",
+                          "example": "1.7"
+                        },
+                        "info": {
+                          "$ref": "#/components/schemas/PDFInfo"
+                        },
+                        "metadata": {
+                          "$ref": "#/components/schemas/PDFMetadata"
+                        },
+                        "stats": {
+                          "$ref": "#/components/schemas/PDFTextStats"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/pdf-parse/extract-text": {
+      "post": {
+        "operationId": "extractTextFromPDF",
+        "summary": "Extraire le texte d'un PDF",
+        "description": "Extrait uniquement le contenu textuel d'un document PDF",
+        "tags": ["PDF Text Extraction"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Le fichier PDF"
+                  },
+                  "options": {
+                    "type": "string",
+                    "description": "Options d'extraction (JSON stringifié)",
+                    "example": "{\"includePageNumbers\":true,\"preserveLineBreaks\":true}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Texte extrait avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "description": "Texte extrait",
+                          "example": "Chapter 1\nIntroduction\n\nThis document..."
+                        },
+                        "pageCount": {
+                          "type": "number",
+                          "description": "Nombre de pages",
+                          "example": 10
+                        },
+                        "metadata": {
+                          "$ref": "#/components/schemas/PDFMetadata"
+                        },
+                        "stats": {
+                          "$ref": "#/components/schemas/PDFTextStats"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/pdf-parse/metadata": {
+      "post": {
+        "operationId": "extractPDFMetadata",
+        "summary": "Extraire les métadonnées d'un PDF",
+        "description": "Extrait uniquement les métadonnées d'un document PDF (auteur, titre, dates, etc.)",
+        "tags": ["PDF Metadata"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Le fichier PDF"
+                  },
+                  "options": {
+                    "type": "string",
+                    "description": "Options d'extraction (JSON stringifié)",
+                    "example": "{\"includeAll\":true}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Métadonnées extraites avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "info": {
+                          "$ref": "#/components/schemas/PDFInfo"
+                        },
+                        "metadata": {
+                          "$ref": "#/components/schemas/PDFMetadata"
+                        },
+                        "version": {
+                          "type": "string",
+                          "description": "Version du PDF",
+                          "example": "1.7"
+                        },
+                        "pageCount": {
+                          "type": "number",
+                          "description": "Nombre de pages",
+                          "example": 25
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/pdf-parse/analyze": {
+      "post": {
+        "operationId": "analyzePDF",
+        "summary": "Analyser la structure d'un PDF",
+        "description": "Analyse en profondeur la structure d'un document PDF (pages, fonts, layout, etc.)",
+        "tags": ["PDF Analysis"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Le fichier PDF à analyser"
+                  },
+                  "options": {
+                    "type": "string",
+                    "description": "Options d'analyse (JSON stringifié)",
+                    "example": "{\"analyzeText\":true,\"analyzeLayout\":true,\"includeFonts\":true}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Analyse réussie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "pageCount": {
+                          "type": "number",
+                          "example": 20
+                        },
+                        "version": {
+                          "type": "string",
+                          "example": "1.7"
+                        },
+                        "fileSize": {
+                          "type": "number",
+                          "description": "Taille du fichier en bytes",
+                          "example": 2456789
+                        },
+                        "textAnalysis": {
+                          "type": "object",
+                          "properties": {
+                            "totalCharacters": {
+                              "type": "number",
+                              "example": 45678
+                            },
+                            "totalWords": {
+                              "type": "number",
+                              "example": 8234
+                            },
+                            "totalLines": {
+                              "type": "number",
+                              "example": 1256
+                            },
+                            "averageWordsPerPage": {
+                              "type": "number",
+                              "example": 411.7
+                            }
+                          }
+                        },
+                        "metadata": {
+                          "$ref": "#/components/schemas/PDFMetadata"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/pdf-parse/search": {
+      "post": {
+        "operationId": "searchPDF",
+        "summary": "Rechercher dans un PDF",
+        "description": "Recherche du texte spécifique dans un document PDF et retourne les occurrences avec leur contexte",
+        "tags": ["PDF Search"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "query"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Le fichier PDF"
+                  },
+                  "query": {
+                    "type": "string",
+                    "description": "Terme de recherche",
+                    "example": "invoice"
+                  },
+                  "options": {
+                    "type": "string",
+                    "description": "Options de recherche (JSON stringifié)",
+                    "example": "{\"caseSensitive\":false,\"wholeWord\":false}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recherche effectuée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "query": {
+                          "type": "string",
+                          "example": "invoice"
+                        },
+                        "totalMatches": {
+                          "type": "number",
+                          "description": "Nombre total de correspondances",
+                          "example": 15
+                        },
+                        "matches": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "page": {
+                                "type": "number",
+                                "description": "Numéro de page (1-indexed)",
+                                "example": 3
+                              },
+                              "position": {
+                                "type": "number",
+                                "description": "Position dans le texte",
+                                "example": 1234
+                              },
+                              "context": {
+                                "type": "string",
+                                "description": "Contexte autour du match",
+                                "example": "...please find the invoice number #12345 attached..."
+                              },
+                              "line": {
+                                "type": "number",
+                                "description": "Numéro de ligne",
+                                "example": 45
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/pdf-parse/batch": {
+      "post": {
+        "operationId": "batchProcessPDFs",
+        "summary": "Traiter plusieurs PDFs en batch",
+        "description": "Traite plusieurs documents PDF en une seule requête et retourne les résultats consolidés",
+        "tags": ["PDF Batch Processing"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["files"],
+                "properties": {
+                  "files": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Fichiers PDF à traiter",
+                    "minItems": 1,
+                    "maxItems": 10
+                  },
+                  "options": {
+                    "type": "string",
+                    "description": "Options de traitement (JSON stringifié)",
+                    "example": "{\"max\":0,\"extractMetadata\":true}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch processing réussi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalFiles": {
+                          "type": "number",
+                          "example": 5
+                        },
+                        "successfulFiles": {
+                          "type": "number",
+                          "example": 4
+                        },
+                        "failedFiles": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "results": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "filename": {
+                                "type": "string",
+                                "example": "document1.pdf"
+                              },
+                              "success": {
+                                "type": "boolean",
+                                "example": true
+                              },
+                              "text": {
+                                "type": "string",
+                                "example": "Text content..."
+                              },
+                              "pageCount": {
+                                "type": "number",
+                                "example": 10
+                              },
+                              "metadata": {
+                                "$ref": "#/components/schemas/PDFMetadata"
+                              },
+                              "error": {
+                                "type": "string",
+                                "example": "Failed to parse PDF"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/pdf-parse/stats": {
+      "get": {
+        "operationId": "getPDFParseStats",
+        "summary": "Statistiques du service PDF-Parse",
+        "description": "Retourne les statistiques d'utilisation du service PDF-Parse",
+        "tags": ["Monitoring"],
+        "responses": {
+          "200": {
+            "description": "Statistiques récupérées avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PDFParseServiceStats"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdf-parse/test": {
+      "post": {
+        "operationId": "testPDFParseService",
+        "summary": "Tester le service PDF-Parse",
+        "description": "Endpoint de test pour vérifier que le service PDF-Parse fonctionne correctement",
+        "tags": ["Monitoring"],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+              },
+              "example": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Service opérationnel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "PDF-parse service is operational"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "1.1.1"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PDFParseOptions": {
+        "type": "object",
+        "description": "Options pour parser un PDF",
+        "properties": {
+          "max": {
+            "type": "number",
+            "description": "Nombre maximum de pages à parser (0 = toutes)",
+            "default": 0,
+            "example": 10
+          },
+          "page": {
+            "type": "string",
+            "description": "Plage de pages à parser (ex: '1-5')",
+            "example": "1-10"
+          },
+          "password": {
+            "type": "string",
+            "description": "Mot de passe pour les PDFs chiffrés",
+            "example": "secret123"
+          },
+          "verbose": {
+            "type": "boolean",
+            "description": "Mode verbeux",
+            "default": false
+          }
+        }
+      },
+      "PDFTextExtractionOptions": {
+        "type": "object",
+        "description": "Options pour l'extraction de texte",
+        "properties": {
+          "includePageNumbers": {
+            "type": "boolean",
+            "description": "Inclure les numéros de pages",
+            "default": false
+          },
+          "preserveLineBreaks": {
+            "type": "boolean",
+            "description": "Conserver les sauts de ligne",
+            "default": true
+          },
+          "encoding": {
+            "type": "string",
+            "description": "Encodage du texte",
+            "default": "utf-8",
+            "example": "utf-8"
+          }
+        }
+      },
+      "PDFSearchOptions": {
+        "type": "object",
+        "description": "Options de recherche",
+        "properties": {
+          "caseSensitive": {
+            "type": "boolean",
+            "description": "Recherche sensible à la casse",
+            "default": false
+          },
+          "wholeWord": {
+            "type": "boolean",
+            "description": "Rechercher mot entier uniquement",
+            "default": false
+          },
+          "regex": {
+            "type": "boolean",
+            "description": "Utiliser regex",
+            "default": false
+          }
+        }
+      },
+      "PDFInfo": {
+        "type": "object",
+        "description": "Informations brutes du PDF",
+        "properties": {
+          "Title": {
+            "type": "string",
+            "example": "My Document"
+          },
+          "Author": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "Subject": {
+            "type": "string",
+            "example": "Annual Report"
+          },
+          "Keywords": {
+            "type": "string",
+            "example": "finance, 2025, report"
+          },
+          "Creator": {
+            "type": "string",
+            "example": "Microsoft Word"
+          },
+          "Producer": {
+            "type": "string",
+            "example": "Adobe PDF Library"
+          },
+          "CreationDate": {
+            "type": "string",
+            "example": "D:20250115103000Z"
+          },
+          "ModDate": {
+            "type": "string",
+            "example": "D:20250115110000Z"
+          },
+          "Trapped": {
+            "type": "string",
+            "example": "False"
+          }
+        }
+      },
+      "PDFMetadata": {
+        "type": "object",
+        "description": "Métadonnées structurées du PDF",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "My Document"
+          },
+          "author": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "subject": {
+            "type": "string",
+            "example": "Annual Report"
+          },
+          "keywords": {
+            "type": "string",
+            "example": "finance, 2025, report"
+          },
+          "creator": {
+            "type": "string",
+            "example": "Microsoft Word"
+          },
+          "producer": {
+            "type": "string",
+            "example": "Adobe PDF Library"
+          },
+          "creationDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "modificationDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-15T11:00:00Z"
+          },
+          "trapped": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "PDFTextStats": {
+        "type": "object",
+        "description": "Statistiques sur le contenu textuel",
+        "properties": {
+          "textLength": {
+            "type": "number",
+            "description": "Longueur totale du texte",
+            "example": 45678
+          },
+          "wordCount": {
+            "type": "number",
+            "description": "Nombre de mots",
+            "example": 8234
+          },
+          "lineCount": {
+            "type": "number",
+            "description": "Nombre de lignes",
+            "example": 1256
+          },
+          "averageWordsPerPage": {
+            "type": "number",
+            "description": "Moyenne de mots par page",
+            "example": 411.7
+          }
+        }
+      },
+      "PDFParseServiceStats": {
+        "type": "object",
+        "description": "Statistiques du service PDF-Parse",
+        "properties": {
+          "totalParses": {
+            "type": "number",
+            "description": "Nombre total de parsing",
+            "example": 2345
+          },
+          "successfulParses": {
+            "type": "number",
+            "description": "Parsing réussis",
+            "example": 2289
+          },
+          "failedParses": {
+            "type": "number",
+            "description": "Parsing échoués",
+            "example": 56
+          },
+          "averageParseTime": {
+            "type": "number",
+            "description": "Temps de parsing moyen en ms",
+            "example": 456.7
+          },
+          "totalProcessingTime": {
+            "type": "number",
+            "description": "Temps de traitement total en ms",
+            "example": 1071078
+          },
+          "cacheHitRate": {
+            "type": "number",
+            "description": "Taux de hit du cache (0-1)",
+            "example": 0.73,
+            "minimum": 0,
+            "maximum": 1
+          },
+          "lastReset": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date du dernier reset",
+            "example": "2025-01-15T00:00:00Z"
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Requête invalide",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "error": {
+                  "type": "string",
+                  "example": "PDF file is required"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "description": "Erreur serveur",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Failed to parse PDF"
+                },
+                "details": {
+                  "type": "string",
+                  "example": "PDF may be corrupted or password protected"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "description": "Service non disponible",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "error": {
+                  "type": "string",
+                  "example": "PDF-parse service not available"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "PDF Parsing",
+      "description": "Parser des documents PDF complets"
+    },
+    {
+      "name": "PDF Text Extraction",
+      "description": "Extraire le contenu textuel des PDFs"
+    },
+    {
+      "name": "PDF Metadata",
+      "description": "Extraire les métadonnées des PDFs"
+    },
+    {
+      "name": "PDF Analysis",
+      "description": "Analyser la structure des PDFs"
+    },
+    {
+      "name": "PDF Search",
+      "description": "Rechercher dans les PDFs"
+    },
+    {
+      "name": "PDF Batch Processing",
+      "description": "Traiter plusieurs PDFs simultanément"
+    },
+    {
+      "name": "Monitoring",
+      "description": "Statistiques et tests du service"
+    }
+  ]
+}
+

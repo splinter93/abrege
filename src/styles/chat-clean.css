@@ -1004,6 +1004,7 @@
 .chatgpt-input-speaker,
 .chatgpt-input-mic,
 .chatgpt-input-web-search,
+.chatgpt-input-websearch,
 .chatgpt-input-image {
   background: transparent;
   border: none;
@@ -1023,14 +1024,21 @@
 .chatgpt-input-speaker:hover,
 .chatgpt-input-mic:hover,
 .chatgpt-input-web-search:hover,
+.chatgpt-input-websearch:hover,
 .chatgpt-input-image:hover {
   background: var(--chat-overlay-hover);
   color: var(--chat-text-primary);
-  border-radius: 50%;
+  border-radius: var(--chat-radius-md);
 }
 
 /* Bouton image actif */
 .chatgpt-input-image.active {
+  background: var(--chat-overlay-active);
+  color: var(--chat-accent-primary);
+}
+
+/* Bouton websearch actif */
+.chatgpt-input-websearch.active {
   background: var(--chat-overlay-active);
   color: var(--chat-accent-primary);
 }
@@ -1553,6 +1561,66 @@
 .chat-image-menu-item.submenu-item {
   padding-left: 32px;
   font-size: 13px;
+  color: var(--chat-text-secondary);
+}
+
+/* ========================================
+   WebSearch Menu (identique à Image Menu)
+   ======================================== */
+
+.chat-websearch-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  background: var(--chat-gradient-input);
+  border: none;
+  border-radius: var(--chat-radius-md);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 200px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: menuFadeIn 0.15s ease-out;
+}
+
+.chat-menu-header {
+  padding: 8px 12px 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--chat-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-chat-ui);
+  border-bottom: none;
+  margin-bottom: 4px;
+}
+
+.chat-websearch-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--chat-text-primary);
+  font-size: 14px;
+  font-family: var(--font-chat-ui);
+  cursor: pointer;
+  transition: all var(--chat-transition-fast);
+  text-align: left;
+  width: 100%;
+}
+
+.chat-websearch-menu-item:hover {
+  background: var(--sidebar-item-hover);
+}
+
+.chat-websearch-menu-item svg {
+  flex-shrink: 0;
   color: var(--chat-text-secondary);
 }
 

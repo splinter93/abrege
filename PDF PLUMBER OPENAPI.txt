@@ -1,0 +1,1144 @@
+{
+  "info": {
+    "title": "Factoria PDFPlumber API",
+    "version": "1.0.0",
+    "description": "Service Python d'extraction avancée de PDFs avec support tableaux structurés. Spécialisé dans l'extraction de tableaux complexes avec colonnes multiples."
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "Info"
+        ],
+        "summary": "Informations sur l'API",
+        "security": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RootInfoResponse"
+                }
+              }
+            },
+            "description": "Informations du service"
+          }
+        },
+        "parameters": [],
+        "description": "Retourne les informations de base sur le service PDFPlumber et la liste des endpoints disponibles.",
+        "operationId": "getApiInfo"
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Vérification de l'état du service",
+        "security": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Service opérationnel"
+          }
+        },
+        "parameters": [],
+        "description": "Endpoint de health check pour monitoring. Retourne le statut du service PDFPlumber.",
+        "operationId": "healthCheck"
+      }
+    },
+    "/search": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Recherche dans le PDF",
+        "security": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                },
+                "example": {
+                  "query": "garanties",
+                  "results": [
+                    {
+                      "page": 1,
+                      "match": "garanties détenues",
+                      "context": "...application de la franchise à hauteur des montants de garanties détenues à la concurrence..."
+                    }
+                  ],
+                  "total_matches": 15
+                }
+              }
+            },
+            "description": "Résultats de recherche"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Fichier ou requête invalide"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Erreur lors de la recherche"
+          }
+        },
+        "parameters": [],
+        "description": "Recherche un texte dans le PDF et retourne les correspondances avec contexte et numéro de page.",
+        "operationId": "searchInPdf",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file",
+                  "query"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Fichier PDF"
+                  },
+                  "query": {
+                    "type": "string",
+                    "example": "garanties",
+                    "description": "Texte à rechercher"
+                  },
+                  "case_sensitive": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Recherche sensible à la casse"
+                  }
+                }
+              }
+            }
+          },
+          "required": true,
+          "description": "Fichier PDF et requête de recherche"
+        }
+      }
+    },
+    "/analyze": {
+      "post": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Analyse complète de la structure du PDF",
+        "security": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                },
+                "example": {
+                  "pages": [
+                    {
+                      "width": 595.276,
+                      "height": 841.89,
+                      "word_count": 1124,
+                      "image_count": 0,
+                      "page_number": 1,
+                      "table_count": 2,
+                      "text_length": 7808,
+                      "columns_detected": 2
+                    }
+                  ],
+                  "page_count": 5,
+                  "total_chars": 24580,
+                  "total_images": 3,
+                  "total_tables": 8
+                }
+              }
+            },
+            "description": "Analyse complète du PDF"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Fichier invalide"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Erreur lors de l'analyse"
+          }
+        },
+        "parameters": [],
+        "description": "Analyse détaillée : pages, dimensions, colonnes détectées, tableaux, images, statistiques par page.",
+        "operationId": "analyzePdf",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Fichier PDF à analyser"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/extract-all": {
+      "post": {
+        "tags": [
+          "Extraction"
+        ],
+        "summary": "Extraction complète du PDF",
+        "security": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractAllResponse"
+                },
+                "example": {
+                  "text": "ARTICLE 4 - MONTANTS DES GARANTIES...",
+                  "stats": {
+                    "page_count": 1,
+                    "word_count": 1124,
+                    "table_count": 2,
+                    "text_length": 7808
+                  },
+                  "images": {
+                    "count": 0,
+                    "per_page": []
+                  },
+                  "tables": [
+                    [
+                      [
+                        "Type",
+                        "Min",
+                        "Max"
+                      ],
+                      [
+                        "Capital Décès",
+                        "15 000 €",
+                        "7 500 000 €"
+                      ]
+                    ]
+                  ],
+                  "metadata": {
+                    "creator": "Adobe InDesign",
+                    "producer": "macOS Quartz PDFContext"
+                  }
+                }
+              }
+            },
+            "description": "Extraction complète réussie"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Fichier invalide"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Erreur lors de l'extraction"
+          }
+        },
+        "parameters": [],
+        "description": "Extrait texte, tableaux, métadonnées et info images en une seule opération. Endpoint le plus complet.",
+        "operationId": "extractAll",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Fichier PDF"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/extract-text": {
+      "post": {
+        "tags": [
+          "Extraction"
+        ],
+        "summary": "Extrait le texte du PDF",
+        "security": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TextResponse"
+                },
+                "example": {
+                  "text": "Contenu du PDF...",
+                  "page_count": 5,
+                  "word_count": 1245,
+                  "method_used": "custom",
+                  "text_length": 8542
+                }
+              }
+            },
+            "description": "Texte extrait avec succès"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "detail": "Seuls les fichiers PDF sont acceptés"
+                }
+              }
+            },
+            "description": "Fichier invalide"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Erreur lors de l'extraction"
+          }
+        },
+        "parameters": [],
+        "description": "Extrait le texte avec différentes méthodes (layout, text, custom). Custom utilise détection de colonnes intelligente.",
+        "operationId": "extractText",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Fichier PDF à parser"
+                  },
+                  "method": {
+                    "enum": [
+                      "layout",
+                      "text",
+                      "custom"
+                    ],
+                    "type": "string",
+                    "default": "layout",
+                    "description": "Méthode d'extraction (custom recommandé pour colonnes)"
+                  }
+                }
+              },
+              "examples": {
+                "custom": {
+                  "summary": "Extraction custom (détection colonnes)",
+                  "description": "Recommandé pour PDFs multi-colonnes"
+                },
+                "default": {
+                  "summary": "Extraction standard avec layout"
+                }
+              }
+            }
+          },
+          "required": true,
+          "description": "Fichier PDF et méthode d'extraction"
+        }
+      }
+    },
+    "/extract-images": {
+      "post": {
+        "tags": [
+          "Extraction"
+        ],
+        "summary": "Compte et analyse les images du PDF",
+        "security": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImagesResponse"
+                },
+                "example": {
+                  "page_count": 5,
+                  "image_count": 12,
+                  "images_per_page": [
+                    {
+                      "page": 1,
+                      "count": 3
+                    },
+                    {
+                      "page": 2,
+                      "count": 5
+                    },
+                    {
+                      "page": 3,
+                      "count": 4
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Informations images extraites"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Fichier invalide"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Erreur lors de l'analyse"
+          }
+        },
+        "parameters": [],
+        "description": "Retourne le nombre total d'images et la distribution par page. N'extrait pas les images elles-mêmes.",
+        "operationId": "extractImagesInfo",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Fichier PDF"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/extract-tables": {
+      "post": {
+        "tags": [
+          "Extraction"
+        ],
+        "summary": "Extrait les tableaux du PDF",
+        "security": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TableResponse"
+                },
+                "example": {
+                  "tables": [
+                    [
+                      [
+                        "Type de garanties",
+                        "Montant minimum",
+                        "Montant maximum"
+                      ],
+                      [
+                        "Capital Décès",
+                        "15 000 €",
+                        "7 500 000 €"
+                      ],
+                      [
+                        "Rente Viagère",
+                        "15 000 €",
+                        "7 500 000 €"
+                      ]
+                    ]
+                  ],
+                  "page_count": 5,
+                  "table_count": 1
+                }
+              }
+            },
+            "description": "Tableaux extraits avec succès"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Fichier invalide"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Erreur lors de l'extraction"
+          }
+        },
+        "parameters": [],
+        "description": "Extrait tous les tableaux en structure JSON (array de rows). Supporte stratégies d'extraction personnalisées pour lignes/colonnes.",
+        "operationId": "extractTables",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Fichier PDF contenant des tableaux"
+                  },
+                  "vertical_strategy": {
+                    "enum": [
+                      "lines",
+                      "text",
+                      "explicit"
+                    ],
+                    "type": "string",
+                    "default": "lines",
+                    "description": "Stratégie de détection des lignes verticales"
+                  },
+                  "horizontal_strategy": {
+                    "enum": [
+                      "lines",
+                      "text",
+                      "explicit"
+                    ],
+                    "type": "string",
+                    "default": "lines",
+                    "description": "Stratégie de détection des lignes horizontales"
+                  }
+                }
+              }
+            }
+          },
+          "required": true,
+          "description": "Fichier PDF et stratégies d'extraction"
+        }
+      }
+    },
+    "/extract-metadata": {
+      "post": {
+        "tags": [
+          "Extraction"
+        ],
+        "summary": "Extrait les métadonnées du PDF",
+        "security": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetadataResponse"
+                },
+                "example": {
+                  "metadata": {
+                    "title": "Notice d'Assurance",
+                    "author": "Abeille Assurances",
+                    "creator": "Adobe InDesign 17.2",
+                    "producer": "macOS Quartz PDFContext",
+                    "creation_date": "D:20251017223855Z",
+                    "modification_date": null
+                  },
+                  "page_count": 5
+                }
+              }
+            },
+            "description": "Métadonnées extraites"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Fichier invalide"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Erreur lors de l'extraction"
+          }
+        },
+        "parameters": [],
+        "description": "Extrait titre, auteur, créateur, dates de création/modification et autres métadonnées du PDF.",
+        "operationId": "extractMetadata",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Fichier PDF"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    }
+  },
+  "openapi": "3.1.0",
+  "servers": [
+    {
+      "url": "https://factoria-pdf.up.railway.app",
+      "description": "Production PDFPlumber Service (Railway)"
+    }
+  ],
+  "security": [],
+  "components": {
+    "schemas": {
+      "TextResponse": {
+        "type": "object",
+        "required": [
+          "text",
+          "page_count",
+          "text_length",
+          "word_count",
+          "method_used"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Texte extrait du PDF"
+          },
+          "page_count": {
+            "type": "integer",
+            "example": 5,
+            "description": "Nombre de pages"
+          },
+          "word_count": {
+            "type": "integer",
+            "example": 1245,
+            "description": "Nombre de mots"
+          },
+          "method_used": {
+            "enum": [
+              "layout",
+              "text",
+              "custom"
+            ],
+            "type": "string",
+            "example": "custom",
+            "description": "Méthode d'extraction utilisée"
+          },
+          "text_length": {
+            "type": "integer",
+            "example": 8542,
+            "description": "Longueur du texte en caractères"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "properties": {
+          "detail": {
+            "type": "string",
+            "example": "Seuls les fichiers PDF sont acceptés",
+            "description": "Message d'erreur"
+          }
+        }
+      },
+      "TableResponse": {
+        "type": "object",
+        "required": [
+          "tables",
+          "table_count",
+          "page_count"
+        ],
+        "properties": {
+          "tables": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "description": "Row représenté comme array de cellules"
+              },
+              "description": "Tableau représenté comme array de rows"
+            },
+            "description": "Tableaux extraits (array de rows)"
+          },
+          "page_count": {
+            "type": "integer",
+            "example": 5,
+            "description": "Nombre de pages"
+          },
+          "table_count": {
+            "type": "integer",
+            "example": 3,
+            "description": "Nombre de tableaux extraits"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "service",
+          "version"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "healthy",
+              "unhealthy"
+            ],
+            "type": "string",
+            "example": "healthy"
+          },
+          "service": {
+            "type": "string",
+            "example": "pdfplumber"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0.0"
+          }
+        }
+      },
+      "ImagesResponse": {
+        "type": "object",
+        "required": [
+          "image_count",
+          "page_count",
+          "images_per_page"
+        ],
+        "properties": {
+          "page_count": {
+            "type": "integer",
+            "example": 5
+          },
+          "image_count": {
+            "type": "integer",
+            "example": 12,
+            "description": "Nombre total d'images"
+          },
+          "images_per_page": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "integer"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            },
+            "description": "Nombre d'images par page"
+          }
+        }
+      },
+      "SearchResponse": {
+        "type": "object",
+        "required": [
+          "query",
+          "total_matches",
+          "results"
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "example": "garanties",
+            "description": "Requête de recherche"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "integer",
+                  "description": "Numéro de page"
+                },
+                "match": {
+                  "type": "string",
+                  "description": "Texte correspondant"
+                },
+                "context": {
+                  "type": "string",
+                  "description": "Contexte autour de la correspondance"
+                }
+              }
+            },
+            "description": "Résultats de recherche"
+          },
+          "total_matches": {
+            "type": "integer",
+            "example": 15,
+            "description": "Nombre total de correspondances"
+          }
+        }
+      },
+      "AnalysisResponse": {
+        "type": "object",
+        "required": [
+          "page_count",
+          "pages"
+        ],
+        "properties": {
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                },
+                "word_count": {
+                  "type": "integer"
+                },
+                "image_count": {
+                  "type": "integer"
+                },
+                "page_number": {
+                  "type": "integer"
+                },
+                "table_count": {
+                  "type": "integer"
+                },
+                "text_length": {
+                  "type": "integer"
+                },
+                "columns_detected": {
+                  "type": "integer"
+                }
+              }
+            },
+            "description": "Analyse détaillée par page"
+          },
+          "page_count": {
+            "type": "integer",
+            "example": 5
+          },
+          "total_chars": {
+            "type": "integer",
+            "example": 24580
+          },
+          "total_images": {
+            "type": "integer",
+            "example": 3
+          },
+          "total_tables": {
+            "type": "integer",
+            "example": 8
+          }
+        }
+      },
+      "MetadataResponse": {
+        "type": "object",
+        "required": [
+          "metadata",
+          "page_count"
+        ],
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "nullable": true
+              },
+              "author": {
+                "type": "string",
+                "nullable": true
+              },
+              "creator": {
+                "type": "string",
+                "nullable": true
+              },
+              "subject": {
+                "type": "string",
+                "nullable": true
+              },
+              "keywords": {
+                "type": "string",
+                "nullable": true
+              },
+              "producer": {
+                "type": "string",
+                "nullable": true
+              },
+              "creation_date": {
+                "type": "string",
+                "nullable": true
+              },
+              "modification_date": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          },
+          "page_count": {
+            "type": "integer",
+            "example": 5
+          }
+        }
+      },
+      "RootInfoResponse": {
+        "type": "object",
+        "required": [
+          "service",
+          "version",
+          "endpoints"
+        ],
+        "properties": {
+          "service": {
+            "type": "string",
+            "example": "PDFPlumber API",
+            "description": "Nom du service"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.0.0",
+            "description": "Version du service"
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "/extract-text",
+              "/extract-tables",
+              "/extract-metadata",
+              "/extract-images",
+              "/extract-all",
+              "/search",
+              "/analyze"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "example": "API d'extraction avancée de PDFs avec support tableaux structurés"
+          }
+        }
+      },
+      "ExtractAllResponse": {
+        "type": "object",
+        "required": [
+          "text",
+          "tables",
+          "metadata",
+          "images",
+          "stats"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Texte complet extrait"
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "page_count": {
+                "type": "integer"
+              },
+              "word_count": {
+                "type": "integer"
+              },
+              "table_count": {
+                "type": "integer"
+              },
+              "text_length": {
+                "type": "integer"
+              }
+            }
+          },
+          "images": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer"
+              },
+              "per_page": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "page": {
+                      "type": "integer"
+                    },
+                    "count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tables": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "nullable": true
+                }
+              }
+            },
+            "description": "Tous les tableaux extraits"
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "nullable": true
+              },
+              "author": {
+                "type": "string",
+                "nullable": true
+              },
+              "creator": {
+                "type": "string",
+                "nullable": true
+              },
+              "producer": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {}
+  },
+  "x-factoria": {
+    "notes": "Service Python FastAPI standalone. Doit être démarré séparément sur port 8000. Spécialisé dans extraction de tableaux complexes.",
+    "use_cases": [
+      "Extraction tableaux de notices d'assurance",
+      "Parsing documents contractuels avec tableaux",
+      "Analyse structure de PDFs complexes",
+      "Recherche full-text dans PDFs"
+    ],
+    "deployment": {
+      "port": 8000,
+      "local": "cd services/pdfplumber && python3 main.py",
+      "docker": "docker-compose up pdfplumber"
+    },
+    "limitations": {
+      "recommendation": "Utiliser Hybrid Parser pour combiner avec pdf-parse",
+      "text_extraction": "Problèmes avec texte multi-colonnes (colonnes mélangées)"
+    },
+    "performance": {
+      "average_time": "< 2 secondes par page",
+      "max_file_size": "100 MB",
+      "table_accuracy": "Excellente (95%+) pour tableaux structurés"
+    }
+  }
+}

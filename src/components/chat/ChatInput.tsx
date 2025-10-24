@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Globe, CornerUpRight, Folder, Image as ImageIcon } from 'react-feather';
+import { Globe, CornerUpRight, Folder, Image as ImageIcon, Search, FileText, Settings } from 'react-feather';
 import { Lightbulb } from 'lucide-react';
 import { logger, LogCategory } from '@/utils/logger';
 import AudioRecorder from './AudioRecorder';
@@ -25,6 +25,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [showImageMenu, setShowImageMenu] = useState(false);
   const [showImageSourceModal, setShowImageSourceModal] = useState(false);
+  const [showWebSearchMenu, setShowWebSearchMenu] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -214,6 +215,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     setShowImageMenu(prev => !prev);
   }, []);
 
+  const toggleWebSearchMenu = useCallback(() => {
+    setShowWebSearchMenu(prev => !prev);
+  }, []);
+
   const handleLoadImageClick = useCallback(() => {
     setShowImageMenu(false);
     setShowImageSourceModal(true);
@@ -301,6 +306,25 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     console.log('Take photo');
   }, []);
 
+  // Handlers WebSearch
+  const handleNewsSearch = useCallback(() => {
+    setShowWebSearchMenu(false);
+    // TODO: Implémenter la recherche News
+    console.log('News search');
+  }, []);
+
+  const handleBasicSearch = useCallback(() => {
+    setShowWebSearchMenu(false);
+    // TODO: Implémenter Basic Search
+    console.log('Basic search');
+  }, []);
+
+  const handleAdvancedSearch = useCallback(() => {
+    setShowWebSearchMenu(false);
+    // TODO: Implémenter Advanced Search
+    console.log('Advanced search');
+  }, []);
+
   // Fermer le menu image quand on clique ailleurs
   useEffect(() => {
     if (!showImageMenu) return;
@@ -315,6 +339,21 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showImageMenu]);
+
+  // Fermer le menu websearch quand on clique ailleurs
+  useEffect(() => {
+    if (!showWebSearchMenu) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.chat-websearch-menu') && !target.closest('.chatgpt-input-websearch')) {
+        setShowWebSearchMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showWebSearchMenu]);
 
   // Cleanup des images au démontage
   useEffect(() => {
@@ -457,9 +496,38 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
         <button className="chatgpt-input-speaker" aria-label="Ajouter">
           <Folder size={18} />
         </button>
-        <button className="chatgpt-input-web-search" aria-label="Recherche web">
-          <Globe size={18} />
-        </button>
+
+        {/* WebSearch avec menu contextuel */}
+        <div style={{ position: 'relative' }}>
+          <button 
+            className={`chatgpt-input-websearch ${showWebSearchMenu ? 'active' : ''}`}
+            aria-label="Recherche web"
+            onClick={toggleWebSearchMenu}
+            disabled={disabled || loading}
+          >
+            <Globe size={18} />
+          </button>
+
+          {/* Menu contextuel WebSearch */}
+          {showWebSearchMenu && (
+            <div className="chat-websearch-menu">
+              <div className="chat-menu-header">Search</div>
+              <button className="chat-websearch-menu-item" onClick={handleNewsSearch}>
+                <FileText size={16} />
+                <span>News</span>
+              </button>
+              <button className="chat-websearch-menu-item" onClick={handleBasicSearch}>
+                <Globe size={16} />
+                <span>Websearch</span>
+              </button>
+              <button className="chat-websearch-menu-item" onClick={handleAdvancedSearch}>
+                <Search size={16} />
+                <span>Deep Search</span>
+              </button>
+            </div>
+          )}
+        </div>
+
         <button className="chatgpt-input-mic" aria-label="Reasoning">
           <Lightbulb size={18} />
         </button>
