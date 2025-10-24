@@ -574,6 +574,12 @@
   justify-content: center;
 }
 
+/* Conteneur avatar - doit être carré pour images rondes */
+.sidebar-item-icon-clean:has(.agent-avatar) {
+  width: 32px;
+  height: 32px;
+}
+
 .sidebar-agent-row {
   display: flex;
   align-items: center;
