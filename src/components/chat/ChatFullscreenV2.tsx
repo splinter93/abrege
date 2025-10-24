@@ -72,8 +72,6 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 Hook de scroll optimisé
   const { messagesEndRef, scrollToBottom, scrollToLastUserMessage, isNearBottom } = useChatScroll({
-    scrollThreshold: 300,
-    scrollDelay: 100,
     autoScroll: true,
     messages: currentSession?.thread || []
   });
@@ -717,15 +715,24 @@ const ChatFullscreenV2: React.FC = () => {
           {/* Messages optimisés */}
           <div className="chatgpt-messages-container">
             <div className="chatgpt-messages">
-              {displayMessages.map((message) => (
-                <ChatMessage 
-                  key={message.id || `${message.role}-${message.timestamp}-${message.role === 'tool' ? (message as any).tool_call_id || 'unknown' : ''}`} 
-                  message={message}
-                  animateContent={false}
-                  isWaitingForResponse={loading && message.role === 'assistant' && !message.content}
-                  isStreaming={false} // ✅ Pas de streaming pour les messages persistés
-                />
-              ))}
+              {displayMessages.map((message) => {
+                // ✅ TypeScript strict : Générer une clé unique sans 'as any'
+                const keyParts = [message.role, message.timestamp];
+                if (message.role === 'tool' && 'tool_call_id' in message) {
+                  keyParts.push(message.tool_call_id || 'unknown');
+                }
+                const fallbackKey = keyParts.join('-');
+                
+                return (
+                  <ChatMessage 
+                    key={message.id || fallbackKey} 
+                    message={message}
+                    animateContent={false}
+                    isWaitingForResponse={loading && message.role === 'assistant' && !message.content}
+                    isStreaming={false} // ✅ Pas de streaming pour les messages persistés
+                  />
+                );
+              })}
               
               {/* ✅ PENDANT LE STREAMING : Utiliser StreamTimelineRenderer pour affichage chronologique */}
               {isStreaming && streamingTimeline.length > 0 && (
@@ -749,8 +756,20 @@ const ChatFullscreenV2: React.FC = () => {
                               timestamp: item.timestamp,
                               roundNumber: item.roundNumber || 0
                             };
+                          } else if (item.type === 'tool_result') {
+                            // ✅ Gérer tool_result proprement avec les champs requis
+                            return {
+                              type: 'tool_result' as const,
+                              toolCallId: (item as { toolCallId?: string }).toolCallId || 'unknown',
+                              toolName: (item as { toolName?: string }).toolName || 'unknown',
+                              result: item.content || '',
+                              success: (item as { success?: boolean }).success ?? true,
+                              timestamp: item.timestamp
+                            };
                           }
-                          return item as any;
+                          // ✅ Exhaustive check : ne devrait jamais arriver
+                          const _exhaustive: never = item.type;
+                          throw new Error(`Type non géré: ${_exhaustive}`);
                         }),
                         startTime: streamStartTime,
                         endTime: Date.now()
