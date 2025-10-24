@@ -131,7 +131,7 @@
    ======================================== */
 .chat-theme-light {
   /* Backgrounds - Gris moyen moderne (style ChatGPT) */
-  --chat-bg-primary: #ececec;          /* Gris moyen élégant */
+  --chat-bg-primary: #d4d4d4;          /* Gris moyen assombri */
   --chat-bg-secondary: #e8eaed;        /* Gris moyen */
   --chat-bg-tertiary: #e0e2e5;         /* Gris plus foncé */
   --chat-bg-input: #dde0e4;            /* Input backgrounds */
@@ -161,12 +161,12 @@
   --chat-accent-primary: #f97316;      /* Orange vif */
   --chat-accent-hover: #ea580c;        /* Orange foncé */
   
-  /* Dégradés mode clair - Gris plus foncé pour meilleur contraste */
-  --chat-gradient-input: linear-gradient(135deg, #dcdfe3 0%, #c8ccd1 50%, #dcdfe3 100%);      /* Gris moyen */
-  --chat-gradient-sidebar: linear-gradient(135deg, #d8dce0 0%, #c4c8cd 50%, #d8dce0 100%);    /* Gris moyen foncé */
-  --chat-gradient-user: linear-gradient(135deg, #d6d9dd 0%, #c2c6cb 50%, #d6d9dd 100%);       /* Gris qui ressort bien */
-  --chat-gradient-user-hover: linear-gradient(135deg, #cdd1d5 0%, #b9bdc2 50%, #cdd1d5 100%); /* Gris plus foncé */
-  --chat-gradient-kebab: linear-gradient(135deg, #dcdfe3 0%, #c8ccd1 50%, #dcdfe3 100%);      /* Gris moyen */
+  /* Dégradés mode clair - Gris assombri pour contraste sur fond #d4d4d4 */
+  --chat-gradient-input: linear-gradient(135deg, #c8ccd1 0%, #b4b9be 50%, #c8ccd1 100%);      /* Gris foncé */
+  --chat-gradient-sidebar: linear-gradient(135deg, #c4c8cd 0%, #b0b5ba 50%, #c4c8cd 100%);    /* Gris foncé */
+  --chat-gradient-user: linear-gradient(135deg, #c2c6cb 0%, #aeb3b8 50%, #c2c6cb 100%);       /* Gris foncé qui ressort */
+  --chat-gradient-user-hover: linear-gradient(135deg, #b9bdc2 0%, #a5aaaf 50%, #b9bdc2 100%); /* Gris très foncé */
+  --chat-gradient-kebab: linear-gradient(135deg, #c8ccd1 0%, #b4b9be 50%, #c8ccd1 100%);      /* Gris foncé */
 }
 
 /* ========================================
