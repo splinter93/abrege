@@ -652,7 +652,15 @@ const ChatFullscreenV2: React.FC = () => {
           {/* Agent actif */}
           {selectedAgent && (
             <div className="chat-active-agent">
-              <span className="agent-icon">🤖</span>
+              {selectedAgent.profile_picture ? (
+                <img 
+                  src={selectedAgent.profile_picture} 
+                  alt={selectedAgent.name}
+                  className="agent-icon agent-avatar-header"
+                />
+              ) : (
+                <span className="agent-icon">🤖</span>
+              )}
               <span className="agent-name">{selectedAgent.name}</span>
             </div>
           )}
