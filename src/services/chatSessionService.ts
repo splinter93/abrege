@@ -425,6 +425,29 @@ export class ChatSessionService {
   }
 
   /**
+   * Désérialise le content d'un message après lecture depuis la DB
+   * Si le content est un string JSON avec { text, images }, le parse en objet
+   */
+  private deserializeMessageContent(message: ChatMessage): ChatMessage {
+    // Si le content est un string qui ressemble à du JSON
+    if (typeof message.content === 'string' && message.content.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(message.content);
+        // Si c'est un objet { text, images }, l'utiliser
+        if (parsed && typeof parsed === 'object' && ('text' in parsed || 'images' in parsed)) {
+          return {
+            ...message,
+            content: parsed
+          };
+        }
+      } catch {
+        // Pas du JSON valide, garder le string tel quel
+      }
+    }
+    return message;
+  }
+
+  /**
    * Récupérer les messages d'une session
    */
   async getMessages(sessionId: string): Promise<{
@@ -451,6 +474,19 @@ export class ChatSessionService {
 
       if (!response.ok) {
         throw new Error(data.error || 'Erreur lors de la récupération des messages');
+      }
+
+      // ✅ Désérialiser le content multi-modal pour chaque message
+      if (data.success && data.data?.messages) {
+        data.data.messages = data.data.messages.map((msg: ChatMessage) => 
+          this.deserializeMessageContent(msg)
+        );
+        logger.debug('[ChatSessionService] 📥 Messages désérialisés:', {
+          count: data.data.messages.length,
+          hasMultiModal: data.data.messages.some((m: ChatMessage) => 
+            typeof m.content === 'object' && !Array.isArray(m.content)
+          )
+        });
       }
 
       return data;
