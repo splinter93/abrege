@@ -67,7 +67,7 @@
   background: var(--chat-gradient-kebab);
   border: none;
   border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: none;
   min-width: 240px;
   max-width: 280px;
   z-index: var(--chat-z-dropdown, 1000);
