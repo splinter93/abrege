@@ -945,6 +945,11 @@
   box-sizing: border-box;
 }
 
+/* État drag & drop */
+.chatgpt-input-area.dragging {
+  opacity: 0.8; /* Subtle hover effect */
+}
+
 .chatgpt-input-textarea {
   width: 100%;
   min-height: 18px;
@@ -1335,11 +1340,11 @@
 /* Preview individuelle */
 .chat-image-preview {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   border-radius: var(--chat-radius-md);
   overflow: hidden;
-  border: 1px solid var(--chat-border-subtle);
+  border: none;
   transition: all var(--chat-transition-fast);
   cursor: pointer;
 }
@@ -1355,10 +1360,11 @@
 }
 
 /* Image dans le preview */
+.chat-image-preview img,
 .chat-image-preview-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* Crop to fill */
   display: block;
 }
 
@@ -1546,11 +1552,10 @@
 .chat-images-preview-container {
   display: flex;
   gap: 8px;
-  padding: 12px;
+  padding: 0 0 4px 8px; /* Aligné avec textarea */
   flex-wrap: wrap;
-  background: var(--chat-bg-secondary);
-  border-radius: var(--chat-radius-md);
-  margin-bottom: 8px;
+  background: transparent;
+  margin-bottom: 0;
 }
 
 /* Zone de drop */

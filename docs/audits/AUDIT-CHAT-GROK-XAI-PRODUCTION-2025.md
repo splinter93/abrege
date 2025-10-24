@@ -662,3 +662,4 @@ Le code est **prêt pour la production** après le nettoyage des logs de debug. 
 **Prochain audit recommandé** : Dans 3 mois (janvier 2026)
 
 
+

@@ -24,10 +24,67 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   const [showImageMenu, setShowImageMenu] = useState(false);
   const [showImageSourceModal, setShowImageSourceModal] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
   };
+
+  // Handlers drag & drop
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Vérifier si on quitte réellement le container
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    if (x <= rect.left || x >= rect.right || y <= rect.top || y >= rect.bottom) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) {
+      setUploadError('Seules les images sont acceptées');
+      setTimeout(() => setUploadError(null), 3000);
+      return;
+    }
+
+    // Convertir et ajouter les images
+    for (const file of imageFiles) {
+      try {
+        const base64 = await convertFileToBase64(file);
+        const newImage: ImageAttachment = {
+          url: base64,
+          fileName: file.name,
+          mimeType: file.type,
+        };
+        setImages(prev => [...prev, newImage]);
+      } catch (error) {
+        logger.error(LogCategory.API, 'Erreur conversion image:', error);
+        setUploadError(`Erreur avec ${file.name}`);
+      }
+    }
+  }, []);
 
   const handleSend = () => {
     const hasContent = message.trim() || images.length > 0;
@@ -56,7 +113,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
       if (images.length > 0) {
         revokeImageAttachments(images);
         setImages([]);
-        setShowImageZone(false);
       }
     } else {
       logger.debug(LogCategory.API, '❌ Envoi bloqué:', { 
@@ -99,16 +155,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   const handleImagesAdd = useCallback((newImages: ImageAttachment[]) => {
     setImages(prev => [...prev, ...newImages]);
     setUploadError(null);
-  }, []);
-
-  const handleImageRemove = useCallback((id: string) => {
-    setImages(prev => {
-      const imageToRemove = prev.find(img => img.id === id);
-      if (imageToRemove) {
-        revokeImageAttachments([imageToRemove]);
-      }
-      return prev.filter(img => img.id !== id);
-    });
   }, []);
 
   const handleImageUploadError = useCallback((stats: ImageUploadStats) => {
@@ -219,7 +265,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   }, [message, textareaRef]);
 
   return (
-    <div className="chatgpt-input-area">
+    <div 
+      className={`chatgpt-input-area ${isDragging ? 'dragging' : ''}`}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       {/* Affichage des erreurs */}
       {(audioError || uploadError) && (
         <div className="chatgpt-message-error">
@@ -250,7 +302,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
               <img src={img.url} alt={img.fileName || `Image ${idx + 1}`} />
               <button
                 className="chat-image-preview-remove"
-                onClick={() => handleImageRemove(idx)}
+                onClick={() => {
+                  setImages(prev => {
+                    const imageToRemove = prev[idx];
+                    if (imageToRemove) {
+                      revokeImageAttachments([imageToRemove]);
+                    }
+                    return prev.filter((_, i) => i !== idx);
+                  });
+                }}
                 aria-label="Supprimer l'image"
               >
                 ×
