@@ -161,11 +161,11 @@
   --chat-accent-primary: #f97316;      /* Orange vif */
   --chat-accent-hover: #ea580c;        /* Orange foncé */
   
-  /* Dégradés mode clair - Contraste marqué pour visibilité */
+  /* Dégradés mode clair - Gris clair qui ressortent bien */
   --chat-gradient-input: linear-gradient(135deg, #e8eaed 0%, #d8dce0 50%, #e8eaed 100%);      /* Gris avec contraste */
   --chat-gradient-sidebar: linear-gradient(135deg, #e4e6ea 0%, #d4d8dc 50%, #e4e6ea 100%);    /* Gris un peu plus foncé */
-  --chat-gradient-user: linear-gradient(135deg, #fff4e6 0%, #ffe0b3 50%, #fff4e6 100%);       /* Orange pâle visible */
-  --chat-gradient-user-hover: linear-gradient(135deg, #ffe8cc 0%, #ffd699 50%, #ffe8cc 100%); /* Orange plus prononcé */
+  --chat-gradient-user: linear-gradient(135deg, #e6e8eb 0%, #d6d9dd 50%, #e6e8eb 100%);       /* Gris clair qui ressort */
+  --chat-gradient-user-hover: linear-gradient(135deg, #dde0e4 0%, #cdd1d5 50%, #dde0e4 100%); /* Gris un peu plus foncé */
   --chat-gradient-kebab: linear-gradient(135deg, #e8eaed 0%, #d8dce0 50%, #e8eaed 100%);      /* Gris avec contraste */
 }
 
