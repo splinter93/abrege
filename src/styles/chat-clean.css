@@ -1443,14 +1443,15 @@
   bottom: calc(100% + 8px);
   left: 0;
   background: var(--chat-gradient-input);
-  border: 1px solid var(--chat-border-subtle);
+  border: none; /* Pas de bordure */
   border-radius: var(--chat-radius-md);
   padding: 4px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 200px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px); /* Léger blur subtil */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   animation: menuFadeIn 0.15s ease-out;
 }
@@ -1498,27 +1499,41 @@
   cursor: default;
 }
 
-/* Sous-menu */
-.chat-image-submenu {
-  position: absolute;
-  left: 100%;
-  top: 0;
-  margin-left: 8px;
-  background: var(--chat-gradient-input);
-  border: 1px solid var(--chat-border-subtle);
-  border-radius: var(--chat-radius-md);
-  padding: 4px;
+/* Sous-menu inline (apparaît en dessous) */
+.chat-image-submenu-inline {
   display: none;
   flex-direction: column;
   gap: 2px;
-  min-width: 220px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1001;
+  padding-left: 8px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.2s ease-out;
 }
 
-.chat-image-menu-item.has-submenu:hover .chat-image-submenu {
+.chat-image-menu-item.has-submenu:hover + .chat-image-submenu-inline {
   display: flex;
-  animation: menuFadeIn 0.15s ease-out;
+  max-height: 200px;
+  opacity: 1;
+  animation: submenuSlideDown 0.2s ease-out;
+}
+
+@keyframes submenuSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Items du sous-menu (légèrement indentés) */
+.chat-image-menu-item.submenu-item {
+  padding-left: 32px;
+  font-size: 13px;
+  color: var(--chat-text-secondary);
 }
 
 /* Container pour les images preview */

@@ -4,8 +4,10 @@ import { Globe, ArrowUp, Folder, Image as ImageIcon } from 'react-feather';
 import { Lightbulb } from 'lucide-react';
 import { logger, LogCategory } from '@/utils/logger';
 import AudioRecorder from './AudioRecorder';
+import ImageSourceModal from './ImageSourceModal';
 import type { ImageAttachment, MessageContent, ImageUploadStats } from '@/types/image';
 import { buildMessageContent, revokeImageAttachments, convertFileToBase64 } from '@/utils/imageUtils';
+import '@/styles/ImageSourceModal.css';
 
 interface ChatInputProps {
   onSend: (message: string | MessageContent, images?: ImageAttachment[]) => void;
@@ -20,6 +22,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   const [audioError, setAudioError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [showImageMenu, setShowImageMenu] = useState(false);
+  const [showImageSourceModal, setShowImageSourceModal] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -122,8 +125,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     setShowImageMenu(prev => !prev);
   }, []);
 
-  const handleBrowseComputer = useCallback(() => {
+  const handleLoadImageClick = useCallback(() => {
     setShowImageMenu(false);
+    setShowImageSourceModal(true);
+  }, []);
+
+  const handleBrowseComputer = useCallback(() => {
+    setShowImageSourceModal(false);
     // Ouvrir le sélecteur de fichiers
     const input = document.createElement('input');
     input.type = 'file';
@@ -152,7 +160,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   }, [handleImagesAdd]);
 
   const handleBrowseFiles = useCallback(() => {
-    setShowImageMenu(false);
+    setShowImageSourceModal(false);
     // TODO: Ouvrir modal pour chercher dans Files
     console.log('Browse Files');
   }, []);
@@ -279,33 +287,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
             )}
           </button>
 
-          {/* Menu contextuel pour les images */}
+          {/* Menu contextuel */}
           {showImageMenu && (
             <div className="chat-image-menu">
-              <div className="chat-image-menu-item has-submenu">
+              <button className="chat-image-menu-item" onClick={handleLoadImageClick}>
                 <ImageIcon size={16} />
                 <span>Charger une image</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto' }}>
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-                
-                {/* Sous-menu */}
-                <div className="chat-image-submenu">
-                  <button className="chat-image-menu-item" onClick={handleBrowseComputer}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                      <line x1="8" y1="21" x2="16" y2="21"></line>
-                      <line x1="12" y1="17" x2="12" y2="21"></line>
-                    </svg>
-                    <span>Depuis mon ordinateur</span>
-                  </button>
-                  <button className="chat-image-menu-item" onClick={handleBrowseFiles}>
-                    <Folder size={16} />
-                    <span>Depuis mes Files</span>
-                  </button>
-                </div>
-              </div>
-
+              </button>
               <button className="chat-image-menu-item" onClick={handleLoadFile}>
                 <Folder size={16} />
                 <span>Charger un fichier</span>
@@ -319,6 +307,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
               </button>
             </div>
           )}
+
+          {/* Modale de sélection source image */}
+          <ImageSourceModal
+            isOpen={showImageSourceModal}
+            onClose={() => setShowImageSourceModal(false)}
+            onSelectComputer={handleBrowseComputer}
+            onSelectFiles={handleBrowseFiles}
+          />
         </div>
         <button className="chatgpt-input-speaker" aria-label="Ajouter">
           <Folder size={18} />
