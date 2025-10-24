@@ -584,8 +584,8 @@
 
 /* Conteneur avatar - doit être carré pour images rondes */
 .sidebar-item-icon-clean:has(.agent-avatar) {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
 }
 
 .sidebar-agent-row {

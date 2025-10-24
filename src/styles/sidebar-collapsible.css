@@ -23,8 +23,8 @@
 
 /* Avatar des agents - rond */
 .agent-avatar {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
@@ -32,9 +32,9 @@
 
 /* Icône agent par défaut - même taille que avatar */
 .sidebar-agent-row .sidebar-item-icon-clean {
-  width: 32px;
-  height: 32px;
-  font-size: 20px;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
 }
 
 /* ========================================
