@@ -522,9 +522,51 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): XAIMessage[] {
     return messages.map(msg => {
+      // ✅ CRITIQUE : Détecter le contenu multi-modal (images + texte)
+      // Le content peut être:
+      // - string (message simple)
+      // - MessageContent avec { text, images } (multi-modal depuis frontend)
+      // - XAIMessageContent[] (déjà formaté pour l'API)
+      let content: string | null | XAIMessageContent[] = msg.content;
+      
+      // Si le content est un objet MessageContent (format frontend)
+      if (msg.content && typeof msg.content === 'object' && !Array.isArray(msg.content)) {
+        const messageContent = msg.content as { text?: string; images?: Array<{ url: string; detail?: 'auto' | 'low' | 'high' }> };
+        
+        if (messageContent.images && messageContent.images.length > 0) {
+          // Construire le format multi-part pour xAI
+          const contentParts: XAIMessageContent[] = [];
+          
+          // Ajouter le texte
+          if (messageContent.text) {
+            contentParts.push({
+              type: 'text',
+              text: messageContent.text
+            });
+          }
+          
+          // Ajouter les images
+          for (const image of messageContent.images) {
+            contentParts.push({
+              type: 'image_url',
+              image_url: {
+                url: image.url,
+                detail: image.detail || 'auto'
+              }
+            });
+          }
+          
+          content = contentParts;
+          logger.dev(`[XAIProvider] 🖼️ Message multi-modal détecté: ${messageContent.text?.substring(0, 50)}... + ${messageContent.images.length} image(s)`);
+        } else if (messageContent.text) {
+          // Juste du texte, pas d'images
+          content = messageContent.text;
+        }
+      }
+      
       const messageObj: XAIMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
-        content: msg.content
+        content: content
       };
 
       // Gérer les tool calls pour les messages assistant
