@@ -149,21 +149,23 @@
   color: var(--text-primary, #ffffff);
 }
 
-/* Chat Markdown */
-.chat-markdown-content .toolbar-btn {
+/* Chat Markdown - Sans bordure, couleur comme le titre */
+.chat-markdown-content .toolbar-btn,
+.chat-markdown .toolbar-btn {
   background: transparent;
-  color: #a0a0a0;
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  color: var(--blk-muted); /* Même couleur que le titre */
+  border: none;
 }
 
-.chat-markdown-content .toolbar-btn:hover {
+.chat-markdown-content .toolbar-btn:hover,
+.chat-markdown .toolbar-btn:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  color: var(--blk-muted);
 }
 
-.chat-markdown-content .toolbar-btn.copied {
-  background: #10a37f;
-  color: #ffffff;
+.chat-markdown-content .toolbar-btn.copied,
+.chat-markdown .toolbar-btn.copied {
+  color: rgba(34, 197, 94, 0.9); /* Vert sans background */
 }
 
 /* Unified Block Toolbar */

@@ -235,7 +235,16 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
           </div>
         </div>
       )}
-      <div className="u-block__body">
+      <div 
+        className="u-block__body"
+        onDoubleClick={() => {
+          if (isRendered && !error) {
+            openMermaidModal(content);
+          }
+        }}
+        style={{ cursor: isRendered && !error ? 'pointer' : 'default' }}
+        title={isRendered && !error ? 'Double-cliquer pour agrandir' : ''}
+      >
         {isLoading && (
           <div className="mermaid-loading-content">
             <div className="mermaid-spinner"></div>

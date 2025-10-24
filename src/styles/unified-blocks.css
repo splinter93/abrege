@@ -10,8 +10,8 @@
    DESIGN TOKENS
    ========================================================================== */
 :root {
-  --blk-bg: linear-gradient(135deg, #1c1c1f 0%, #212124 50%, #1c1c1f 100%); /* Dégradé gris froid subtil 3 étapes */
-  --blk-fg: #7a8088; /* Texte code blocks - plus sombre */
+  --blk-bg: var(--chat-gradient-block, linear-gradient(135deg, #20202a 0%, #25252f 50%, #20202a 100%)); /* Suit le thème du chat */
+  --blk-fg: var(--chat-text-code, #7a8088); /* Texte code blocks - suit le thème */
   --blk-muted: #9ca3af; /* Texte secondaire/labels */
   --blk-radius: 14px;
   --blk-pad-y: 12px;
@@ -90,7 +90,7 @@
 .chat-markdown-content .u-block__toolbar .toolbar-label,
 .chat-markdown .u-block__toolbar .toolbar-label,
 .unified-block-toolbar .toolbar-label { /* Added for chat CodeBlock */
-  font-family: var(--mono);
+  font-family: var(--font-chat-ui, var(--mono));
   font-size: 14px;
   font-weight: 700;
   color: var(--blk-muted);
@@ -178,7 +178,7 @@
   font-family: var(--mono);
   font-size: 14px;
   line-height: 1.8;
-  color: #7a8088 !important; /* Couleur spéciale code blocks (plus sombre) */
+  color: var(--blk-fg) !important; /* Couleur code blocks - suit le thème */
 }
 
 /* ==========================================================================
@@ -308,7 +308,7 @@
 .ProseMirror .u-block--code .hljs *,
 .markdown-body .u-block--code .hljs *,
 .chat-markdown-content .u-block--code .hljs * {
-  color: #7a8088 !important; /* Couleur spéciale code blocks - plus sombre */
+  color: var(--blk-fg) !important; /* Couleur code blocks - suit le thème */
   background-color: transparent !important;
   text-decoration: none !important;
   font-style: normal !important;
@@ -374,7 +374,7 @@
   flex-direction: column;
 }
 
-/* Toolbar Mermaid - COPIE EXACTE des styles code blocks */
+/* Toolbar Mermaid - Transparente pour background uni */
 .ProseMirror .u-block--mermaid .u-block__toolbar,
 .markdown-body .u-block--mermaid .u-block__toolbar,
 .public-note-container .markdown-body .u-block--mermaid .u-block__toolbar,
@@ -385,7 +385,7 @@
   justify-content: space-between !important;
   height: var(--blk-toolbar-h) !important;
   padding: 0 8px 0 var(--blk-pad-x) !important;
-  background: var(--blk-bg) !important;
+  background: transparent !important; /* Transparente pour background uni */
   border-bottom: none !important;
   user-select: none !important;
   flex-shrink: 0 !important;
@@ -420,7 +420,7 @@
 .public-note-container .markdown-body .u-block--mermaid .u-block__toolbar .toolbar-label,
 .chat-markdown-content .u-block--mermaid .u-block__toolbar .toolbar-label,
 .chat-markdown .u-block--mermaid .u-block__toolbar .toolbar-label {
-  font-family: var(--mono);
+  font-family: var(--font-chat-ui, var(--mono));
   font-size: 14px;
   font-weight: 700;
   color: var(--blk-muted);
@@ -572,14 +572,7 @@
 /*
 .chat-markdown .u-block--mermaid {
   background: var(--color-bg-content);
-  color: #a0a0a0 ;
-  border: 1px solid rgba(255, 255, 255, 0.1) ;
-  border-radius: 0.5rem ;
-  margin: 1.5rem 0 ;
-  display: flex ;
-  flex-direction: column ;
-  overflow: hidden ;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) ;
+  ...
 }
 
 .chat-markdown .u-block--mermaid .u-block__body {
@@ -604,15 +597,8 @@
   min-height: 2.5rem ;
 }
 
-.chat-markdown .u-block__toolbar .toolbar-label {
-  font-family: var(--editor-font-family-body);
-  font-size: 0.8rem ;
-  font-weight: 500 ;
-  color: #a0a0a0 ;
-  text-transform: uppercase ;
-  letter-spacing: 0.025em ;
-}
-
+/* Removed - Now uses global rule with var(--font-chat-ui) */
+/*
 .chat-markdown .u-block__toolbar .toolbar-btn {
   background: transparent ;
   color: #a0a0a0 ;

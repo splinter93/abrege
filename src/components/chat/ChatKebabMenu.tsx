@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useChatStore } from '@/store/useChatStore';
 import { useTheme, CHAT_THEMES, type ChatTheme } from '@/hooks/useTheme';
 import './ChatKebabMenu.css';
@@ -65,6 +65,17 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
   // Font state
   const [selectedFont, setSelectedFont] = useState<string>('figtree');
   const [selectedColorPalette, setSelectedColorPalette] = useState<string>('soft-dark');
+
+  /**
+   * Assombrit ou éclaircit une couleur hex de X%
+   */
+  const darkenColor = useCallback((hex: string, percent: number): string => {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.max(0, Math.min(255, Math.floor((num >> 16) * (1 - percent / 100))));
+    const g = Math.max(0, Math.min(255, Math.floor(((num >> 8) & 0x00FF) * (1 - percent / 100))));
+    const b = Math.max(0, Math.min(255, Math.floor((num & 0x0000FF) * (1 - percent / 100))));
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  }, []);
 
   // 🎨 PALETTES DE COULEURS PRÉDÉFINIES
   const availableColorPalettes = [
@@ -133,12 +144,26 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
       // Appliquer la palette par défaut (soft-dark) si pas trouvée
       const palette = availableColorPalettes.find(p => p.value === savedColors) || availableColorPalettes[0];
       if (palette) {
+        // Appliquer les couleurs de base
         Object.entries(palette.colors).forEach(([property, value]) => {
           document.documentElement.style.setProperty(property, value);
         });
+        
+        // ✅ Calculer et appliquer les couleurs dérivées au chargement
+        const mutedColor = palette.colors['--chat-text-muted'];
+        if (mutedColor) {
+          const placeholderColor = darkenColor(mutedColor, 5);
+          document.documentElement.style.setProperty('--chat-text-placeholder', placeholderColor);
+          
+          const codeColor = darkenColor(mutedColor, -5);
+          document.documentElement.style.setProperty('--chat-text-code', codeColor);
+          
+          // ✅ Blk-muted (titres blocks): utiliser muted directement
+          document.documentElement.style.setProperty('--blk-muted', mutedColor);
+        }
       }
     }
-  }, []);
+  }, [darkenColor]);
 
   const availableFonts = [
     { value: 'figtree', label: 'Figtree', preview: 'Figtree' },
@@ -172,9 +197,25 @@ const ChatKebabMenu: React.FC<ChatKebabMenuProps> = ({
     
     const palette = availableColorPalettes.find(p => p.value === paletteValue);
     if (palette) {
+      // Appliquer les couleurs de base
       Object.entries(palette.colors).forEach(([property, value]) => {
         document.documentElement.style.setProperty(property, value);
       });
+      
+      // ✅ Calculer et appliquer les couleurs dérivées
+      const mutedColor = palette.colors['--chat-text-muted'];
+      if (mutedColor) {
+        // Placeholder: muted assombri de 5%
+        const placeholderColor = darkenColor(mutedColor, 5);
+        document.documentElement.style.setProperty('--chat-text-placeholder', placeholderColor);
+        
+        // Code: muted éclairci de 5%
+        const codeColor = darkenColor(mutedColor, -5);
+        document.documentElement.style.setProperty('--chat-text-code', codeColor);
+        
+        // ✅ Blk-muted (titres blocks): utiliser muted directement
+        document.documentElement.style.setProperty('--blk-muted', mutedColor);
+      }
     }
   };
 
