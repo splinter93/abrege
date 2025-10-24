@@ -130,39 +130,39 @@
    Usage : Ajouter .chat-theme-light sur body
    ======================================== */
 .chat-theme-light {
-  /* Backgrounds */
-  --chat-bg-primary: #ffffff;
-  --chat-bg-secondary: #f9fafb;
-  --chat-bg-tertiary: #f3f4f6;
-  --chat-bg-input: #e5e7eb;
-  --chat-bg-input-focus: #d1d5db;
-  --chat-bg-user-message: #e0f2fe;
-  --chat-bg-user-message-hover: #bae6fd;
+  /* Backgrounds - Blanc cassé chaleureux avec teinte orange */
+  --chat-bg-primary: #faf8f5;          /* Blanc cassé très doux (beige très clair) */
+  --chat-bg-secondary: #f5f2ed;        /* Légèrement plus foncé */
+  --chat-bg-tertiary: #f0ebe3;         /* Encore plus foncé pour contraste */
+  --chat-bg-input: #ebe6dd;            /* Input backgrounds */
+  --chat-bg-input-focus: #e6e0d5;      /* Input focus */
+  --chat-bg-user-message: #fff4e6;     /* Bubble user - orange très pâle */
+  --chat-bg-user-message-hover: #ffe8cc; /* Bubble user hover - orange pâle */
   
   /* Overlays */
-  --chat-overlay-subtle: rgba(0, 0, 0, 0.02);
-  --chat-overlay-soft: rgba(0, 0, 0, 0.03);
-  --chat-overlay-active: rgba(0, 0, 0, 0.05);
-  --chat-overlay-input: rgba(0, 0, 0, 0.05);
-  --chat-overlay-input-focus: rgba(0, 0, 0, 0.08);
-  --chat-overlay-hover: rgba(0, 0, 0, 0.1);
-  --chat-overlay-dark: rgba(0, 0, 0, 0.3);
+  --chat-overlay-subtle: rgba(120, 80, 40, 0.02);   /* Overlay chaud */
+  --chat-overlay-soft: rgba(120, 80, 40, 0.04);     /* Overlay chaud */
+  --chat-overlay-active: rgba(120, 80, 40, 0.06);   /* Active chaud */
+  --chat-overlay-input: rgba(120, 80, 40, 0.05);    /* Input overlay */
+  --chat-overlay-input-focus: rgba(120, 80, 40, 0.08); /* Input focus overlay */
+  --chat-overlay-hover: rgba(120, 80, 40, 0.08);    /* Hover chaud */
+  --chat-overlay-dark: rgba(0, 0, 0, 0.3);          /* Mobile overlay */
   
-  /* Texte */
-  --chat-text-primary: #111827;
-  --chat-text-secondary: #4b5563;
-  --chat-text-muted: #6b7280;
+  /* Texte - Tons chauds */
+  --chat-text-primary: #2d2416;        /* Brun très foncé (presque noir) */
+  --chat-text-secondary: #5a4a3a;      /* Brun moyen */
+  --chat-text-muted: #8a7a6a;          /* Brun clair */
   
-  /* Bordures */
-  --chat-border-subtle: rgba(0, 0, 0, 0.1);
-  --chat-border-soft: rgba(0, 0, 0, 0.08);
+  /* Bordures - Teinte chaude */
+  --chat-border-subtle: rgba(120, 80, 40, 0.15);
+  --chat-border-soft: rgba(120, 80, 40, 0.12);
   
-  /* Dégradés mode clair */
-  --chat-gradient-input: linear-gradient(135deg, #f5f5f5 0%, #ececec 50%, #f5f5f5 100%);
-  --chat-gradient-sidebar: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 50%, #f0f0f0 100%);
-  --chat-gradient-user: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #e0f2fe 100%);
-  --chat-gradient-user-hover: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 50%, #bae6fd 100%);
-  --chat-gradient-kebab: linear-gradient(135deg, #f5f5f5 0%, #ececec 50%, #f5f5f5 100%);
+  /* Dégradés mode clair - Tons chauds avec contraste doux */
+  --chat-gradient-input: linear-gradient(135deg, #f5f0e8 0%, #ebe3d8 50%, #f5f0e8 100%);       /* Beige doux */
+  --chat-gradient-sidebar: linear-gradient(135deg, #f0ebe3 0%, #e6dfd5 50%, #f0ebe3 100%);     /* Beige plus foncé */
+  --chat-gradient-user: linear-gradient(135deg, #fff8ed 0%, #ffedd5 50%, #fff8ed 100%);        /* Orange très pâle */
+  --chat-gradient-user-hover: linear-gradient(135deg, #ffedd5 0%, #fed7aa 50%, #ffedd5 100%);  /* Orange pâle */
+  --chat-gradient-kebab: linear-gradient(135deg, #f5f0e8 0%, #ebe3d8 50%, #f5f0e8 100%);       /* Beige doux */
 }
 
 /* ========================================
