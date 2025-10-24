@@ -231,31 +231,31 @@
   --chat-border-subtle: rgba(147, 112, 219, 0.2);
   --chat-border-soft: rgba(147, 112, 219, 0.15);
   
-  /* Dégradés Aurora Glass - Bleu-Violet avec transparence */
+  /* Dégradés Aurora Glass - Bleu dominant avec transparence */
   --chat-gradient-input: linear-gradient(135deg, 
-    rgba(70, 50, 120, 0.6) 0%, 
-    rgba(100, 70, 160, 0.4) 50%, 
-    rgba(70, 50, 120, 0.6) 100%);
+    rgba(40, 60, 100, 0.6) 0%, 
+    rgba(50, 80, 130, 0.4) 50%, 
+    rgba(40, 60, 100, 0.6) 100%);
   
   --chat-gradient-sidebar: linear-gradient(135deg, 
-    rgba(60, 45, 110, 0.7) 0%, 
-    rgba(90, 65, 150, 0.5) 50%, 
-    rgba(60, 45, 110, 0.7) 100%);
+    rgba(35, 55, 90, 0.7) 0%, 
+    rgba(45, 70, 120, 0.5) 50%, 
+    rgba(35, 55, 90, 0.7) 100%);
   
   --chat-gradient-user: linear-gradient(135deg, 
-    rgba(80, 60, 140, 0.6) 0%, 
-    rgba(110, 85, 180, 0.4) 50%, 
-    rgba(80, 60, 140, 0.6) 100%);
+    rgba(45, 65, 105, 0.6) 0%, 
+    rgba(55, 85, 135, 0.4) 50%, 
+    rgba(45, 65, 105, 0.6) 100%);
   
   --chat-gradient-user-hover: linear-gradient(135deg, 
-    rgba(100, 75, 160, 0.7) 0%, 
-    rgba(130, 100, 200, 0.5) 50%, 
-    rgba(100, 75, 160, 0.7) 100%);
+    rgba(55, 75, 115, 0.7) 0%, 
+    rgba(65, 95, 145, 0.5) 50%, 
+    rgba(55, 75, 115, 0.7) 100%);
   
   --chat-gradient-kebab: linear-gradient(135deg, 
-    rgba(70, 50, 120, 0.7) 0%, 
-    rgba(100, 70, 160, 0.5) 50%, 
-    rgba(70, 50, 120, 0.7) 100%);
+    rgba(40, 60, 100, 0.7) 0%, 
+    rgba(50, 80, 130, 0.5) 50%, 
+    rgba(40, 60, 100, 0.7) 100%);
 }
 
 /* Effet backdrop-filter pour glass mode */
@@ -273,13 +273,13 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* Input container avec fade-out pour masquer le texte qui scroll */
+/* Input container avec fade-out court pour masquer le texte qui scroll */
 .chat-theme-glass .chatgpt-input-container {
   background: linear-gradient(to top, 
-    #1a1625 0%,              /* Opaque en bas (couleur du background) */
-    #1a1625 50%,             /* Opaque jusqu'à mi-hauteur */
-    rgba(26, 22, 37, 0.8) 70%,  /* Semi-transparent */
-    rgba(26, 22, 37, 0) 100%);  /* Transparent en haut */
+    #1a1625 0%,              /* Opaque en bas */
+    #1a1625 20%,             /* Opaque jusqu'à 20% */
+    rgba(26, 22, 37, 0.5) 40%,  /* Semi-transparent */
+    rgba(26, 22, 37, 0) 70%);   /* Transparent à 70% */
   z-index: 100;  /* Au-dessus des messages */
 }
 
