@@ -273,9 +273,12 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* Input area transparente pour l'effet aurore */
+/* Input container avec fade-out pour masquer le texte */
 .chat-theme-glass .chatgpt-input-container {
-  background: transparent;
+  background: linear-gradient(to top, 
+    var(--chat-bg-primary) 0%, 
+    var(--chat-bg-primary) 40%, 
+    transparent 100%);
 }
 
 /* ========================================
