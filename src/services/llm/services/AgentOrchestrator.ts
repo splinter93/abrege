@@ -210,15 +210,15 @@ export class AgentOrchestrator {
         }
         
         if (selectedProvider.toLowerCase() === 'xai') {
-          // xAI : Utiliser uniquement les tools OpenAPI avec limite
-          const XAI_MAX_TOOLS = 15;
+          // xAI : Utiliser uniquement les tools OpenAPI (pas de limite artificielle)
+          tools = openApiTools;
           
-          if (openApiTools.length > XAI_MAX_TOOLS) {
-            logger.warn(`[AgentOrchestrator] ⚠️ Trop de tools pour xAI (${openApiTools.length}/${XAI_MAX_TOOLS}). Limitation appliquée.`);
-            tools = openApiTools.slice(0, XAI_MAX_TOOLS);
-          } else {
-            tools = openApiTools;
-          }
+          // 🎯 LOG FOCUS TOOLS : xAI
+          logger.info(`[TOOLS] Agent: ${agentConfig?.name || 'default'} (xAI)`, {
+            provider: 'xai',
+            total: tools.length,
+            tools: tools.map(t => `API:${(t as any).function?.name}`).slice(0, 20)
+          });
         } else {
           // Groq/OpenAI : Combiner les tools OpenAPI avec les MCP tools
           const mcpTools = await mcpConfigService.buildHybridTools(
