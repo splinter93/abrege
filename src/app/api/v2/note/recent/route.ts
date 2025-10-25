@@ -37,25 +37,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const limit = searchParams.get('limit') || '50';
     const limitNum = parseInt(limit, 10);
 
-    // ✅ Récupération sécurisée des notes de l'utilisateur uniquement
+    // ✅ OPTIMISATION : Select uniquement les colonnes nécessaires (pas de markdown_content !)
     const { data: notes, error } = await supabase
       .from('articles')
-      .select(`
-        id,
-        source_title,
-        slug,
-        public_url,
-        header_image,
-        created_at,
-        updated_at,
-        share_settings,
-        user_id,
-        classeur_id,
-        folder_id,
-        markdown_content
-      `)
+      .select('id, source_title, slug, updated_at, created_at, classeur_id')
       .eq('user_id', userId)
-      .is('trashed_at', null) // 🔧 CORRECTION: Exclure les notes supprimées
+      .is('trashed_at', null) // ✅ Exclure les notes supprimées
       .order('updated_at', { ascending: false })
       .limit(limitNum);
 
@@ -67,20 +54,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // ✅ Format compatible avec Zustand
+    // ✅ Format optimisé (seulement les données nécessaires)
     const formattedNotes = notes?.map(note => ({
       id: note.id,
       source_title: note.source_title || 'Sans titre',
       slug: note.slug,
-      public_url: note.public_url,
-      header_image: note.header_image,
-      created_at: note.created_at,
       updated_at: note.updated_at,
-      share_settings: note.share_settings || { visibility: 'private' },
-      user_id: note.user_id,
-      classeur_id: note.classeur_id,
-      folder_id: note.folder_id,
-      markdown_content: note.markdown_content
+      created_at: note.created_at,
+      classeur_id: note.classeur_id
     })) || [];
 
     const apiTime = Date.now() - startTime;

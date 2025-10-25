@@ -715,6 +715,24 @@ const ChatFullscreenV2: React.FC = () => {
           {/* Messages optimisés */}
           <div className="chatgpt-messages-container">
             <div className="chatgpt-messages">
+              {/* Écran d'accueil quand chat vide */}
+              {displayMessages.length === 0 && selectedAgent && (
+                <div className="chat-empty-state">
+                  <div className="chat-empty-agent-avatar">
+                    {selectedAgent.profile_picture ? (
+                      <img src={selectedAgent.profile_picture} alt={selectedAgent.name} />
+                    ) : (
+                      <div className="chat-empty-agent-placeholder">🤖</div>
+                    )}
+                  </div>
+                  <h2 className="chat-empty-agent-name">{selectedAgent.name}</h2>
+                  <p className="chat-empty-agent-description">{selectedAgent.description || 'Prêt à vous assister'}</p>
+                  {selectedAgent.model && (
+                    <div className="chat-empty-agent-model">{selectedAgent.model}</div>
+                  )}
+                </div>
+              )}
+
               {displayMessages.map((message) => {
                 // ✅ TypeScript strict : Générer une clé unique sans 'as any'
                 const keyParts = [message.role, message.timestamp];

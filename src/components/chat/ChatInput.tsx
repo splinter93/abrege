@@ -8,6 +8,7 @@ import ImageSourceModal from './ImageSourceModal';
 import type { ImageAttachment, MessageContent, ImageUploadStats } from '@/types/image';
 import { buildMessageContent, revokeImageAttachments, convertFileToBase64 } from '@/utils/imageUtils';
 import { chatImageUploadService } from '@/services/chatImageUploadService';
+import { useAuth } from '@/hooks/useAuth';
 import '@/styles/ImageSourceModal.css';
 
 // Type pour les notes sélectionnées
@@ -39,6 +40,7 @@ const getReasoningLevelFromModel = (model?: string): 'advanced' | 'general' | 'f
 };
 
 const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, disabled = false, placeholder = "Commencez à discuter...", sessionId, currentAgentModel }) => {
+  const { getAccessToken } = useAuth();
   const [message, setMessage] = React.useState('');
   const [audioError, setAudioError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageAttachment[]>([]);
@@ -53,6 +55,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   const [selectedNotes, setSelectedNotes] = useState<SelectedNote[]>([]);
   const [noteSearchQuery, setNoteSearchQuery] = useState('');
   const [recentNotes, setRecentNotes] = useState<SelectedNote[]>([]);
+  const [searchedNotes, setSearchedNotes] = useState<SelectedNote[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [reasoningOverride, setReasoningOverride] = useState<'advanced' | 'general' | 'fast' | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -251,22 +255,44 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     setShowReasoningMenu(prev => !prev);
   }, []);
 
+  // Fonction pour charger les notes récentes
+  const loadRecentNotes = useCallback(async () => {
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        logger.error(LogCategory.API, 'Token non disponible pour charger notes récentes');
+        return;
+      }
+
+      const response = await fetch('/api/v2/note/recent?limit=10', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur API: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.notes) {
+        const formattedNotes: SelectedNote[] = data.notes.map((note: any) => ({
+          id: note.id,
+          slug: note.slug,
+          title: note.source_title || 'Sans titre',
+          description: note.markdown_content ? note.markdown_content.substring(0, 200) : undefined,
+        }));
+        setRecentNotes(formattedNotes);
+      }
+    } catch (error) {
+      logger.error(LogCategory.API, 'Erreur chargement notes récentes:', error);
+    }
+  }, [getAccessToken]);
+
   const toggleNoteSelector = useCallback(() => {
     setShowNoteSelector(prev => !prev);
-    if (!showNoteSelector) {
-      // TODO: Charger les notes récentes
-      setRecentNotes([
-        // Mock data pour le moment
-        { id: '1', slug: 'architecture-systeme', title: 'Architecture système', word_count: 1234 },
-        { id: '2', slug: 'guide-api-v2', title: 'Guide API v2', word_count: 890 },
-        { id: '3', slug: 'roadmap-q4', title: 'Roadmap Q4 2025', word_count: 567 },
-        { id: '4', slug: 'notes-reunion-octobre', title: 'Notes de réunion Octobre', word_count: 2156 },
-        { id: '5', slug: 'specs-technique-chat', title: 'Spécifications techniques Chat', word_count: 3421 },
-        { id: '6', slug: 'analyse-performance', title: 'Analyse de performance', word_count: 1789 },
-        { id: '7', slug: 'migration-typescript', title: 'Migration TypeScript', word_count: 987 },
-      ]);
-    }
-  }, [showNoteSelector]);
+  }, []);
 
   const handleLoadImageClick = useCallback(() => {
     setShowFileMenu(false);
@@ -393,17 +419,76 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
 
   // Handlers Notes
   const handleSelectNote = useCallback((note: SelectedNote) => {
-    // Éviter les doublons
-    if (!selectedNotes.find(n => n.id === note.id)) {
+    // Toggle : si déjà sélectionnée, on la retire, sinon on l'ajoute
+    const isAlreadySelected = selectedNotes.find(n => n.id === note.id);
+    if (isAlreadySelected) {
+      setSelectedNotes(prev => prev.filter(n => n.id !== note.id));
+    } else {
       setSelectedNotes(prev => [...prev, note]);
     }
-    setShowNoteSelector(false);
+    // Ne pas fermer le menu pour permettre la sélection multiple
+    // setShowNoteSelector(false);
     setNoteSearchQuery('');
   }, [selectedNotes]);
 
   const handleRemoveNote = useCallback((noteId: string) => {
     setSelectedNotes(prev => prev.filter(n => n.id !== noteId));
   }, []);
+
+  // Charger les notes récentes au montage du composant
+  useEffect(() => {
+    loadRecentNotes();
+  }, [loadRecentNotes]);
+
+  // Recherche de notes avec debounce
+  useEffect(() => {
+    if (!noteSearchQuery || noteSearchQuery.length < 2) {
+      setSearchedNotes([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const timeoutId = setTimeout(async () => {
+      try {
+        const token = await getAccessToken();
+        if (!token) {
+          setIsSearching(false);
+          return;
+        }
+
+        const response = await fetch(`/api/v2/search?q=${encodeURIComponent(noteSearchQuery)}&type=notes&limit=10`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erreur API: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.success && data.results) {
+          const formattedNotes: SelectedNote[] = data.results
+            .filter((r: any) => r.type === 'note')
+            .map((note: any) => ({
+              id: note.id,
+              slug: note.slug,
+              title: note.title || 'Sans titre',
+              description: note.excerpt,
+            }));
+          setSearchedNotes(formattedNotes);
+        }
+      } catch (error) {
+        logger.error(LogCategory.API, 'Erreur recherche notes:', error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300); // Debounce 300ms
+
+    return () => clearTimeout(timeoutId);
+  }, [noteSearchQuery, getAccessToken]);
 
   // Fermer le menu fichier quand on clique ailleurs
   useEffect(() => {
@@ -610,28 +695,38 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
                 />
               </div>
 
-              <div className="chat-note-list-header">Récentes</div>
+              <div className="chat-note-list-header">
+                {isSearching ? 'Recherche...' : (noteSearchQuery ? 'Résultats' : 'Récentes')}
+              </div>
               <div className="chat-note-list">
-                {recentNotes
-                  .filter(note => 
-                    !noteSearchQuery || 
-                    note.title.toLowerCase().includes(noteSearchQuery.toLowerCase())
-                  )
-                  .map((note) => (
-                    <button
-                      key={note.id}
-                      className={`chat-note-item ${selectedNotes.find(n => n.id === note.id) ? 'selected' : ''}`}
-                      onClick={() => handleSelectNote(note)}
-                    >
-                      <FileText size={16} />
-                      <div className="chat-note-item-content">
-                        <div className="chat-note-item-title">{note.title}</div>
-                      </div>
-                      {selectedNotes.find(n => n.id === note.id) && (
-                        <span className="checkmark">✓</span>
-                      )}
-                    </button>
-                  ))}
+                {isSearching ? (
+                  // Afficher un placeholder pendant la recherche pour garder la hauteur
+                  <div className="chat-note-list-loading">
+                    <div className="chat-note-loading-spinner"></div>
+                    <div className="chat-note-loading-text">Recherche en cours...</div>
+                  </div>
+                ) : (
+                  <>
+                    {(noteSearchQuery && noteSearchQuery.length >= 2 ? searchedNotes : recentNotes).map((note) => (
+                      <button
+                        key={note.id}
+                        className={`chat-note-item ${selectedNotes.find(n => n.id === note.id) ? 'selected' : ''}`}
+                        onClick={() => handleSelectNote(note)}
+                      >
+                        <FileText size={16} />
+                        <div className="chat-note-item-content">
+                          <div className="chat-note-item-title">{note.title}</div>
+                        </div>
+                        {selectedNotes.find(n => n.id === note.id) && (
+                          <span className="checkmark">✓</span>
+                        )}
+                      </button>
+                    ))}
+                    {noteSearchQuery && noteSearchQuery.length >= 2 && searchedNotes.length === 0 && (
+                      <div className="chat-note-list-empty">Aucune note trouvée</div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           )}

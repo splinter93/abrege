@@ -532,12 +532,14 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
                     </div>
 
                     {/* Badge de visibilité */}
-                    <div 
-                      className="visibility-badge"
-                      style={{ color: getVisibilityColor(note.share_settings.visibility) }}
-                    >
-                      {getVisibilityIcon(note.share_settings.visibility)}
-                    </div>
+                    {note.share_settings && (
+                      <div 
+                        className="visibility-badge"
+                        style={{ color: getVisibilityColor(note.share_settings.visibility) }}
+                      >
+                        {getVisibilityIcon(note.share_settings.visibility)}
+                      </div>
+                    )}
                   </div>
 
                   {/* Contenu de la note */}

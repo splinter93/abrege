@@ -69,12 +69,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     if (type === 'notes' || type === 'all') {
       let notesQuery = supabase
         .from('articles')
-        .select('id, source_title, slug, classeur_id, markdown_content')
-        .eq('user_id', userId);
+        .select('id, source_title, slug, classeur_id, created_at, updated_at')
+        .eq('user_id', userId)
+        .is('trashed_at', null); // ✅ Exclure notes supprimées
 
-      // ✅ CORRECTION : Appliquer le filtre de recherche seulement si searchQuery existe
+      // ✅ OPTIMISATION : Ne chercher que si query fournie
       if (searchQuery) {
         notesQuery = notesQuery.or(`source_title.ilike.%${searchQuery}%,markdown_content.ilike.%${searchQuery}%`);
+      } else {
+        // Si pas de query, trier par date de mise à jour
+        notesQuery = notesQuery.order('updated_at', { ascending: false });
       }
 
       if (classeurId) {
@@ -85,20 +89,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
       if (!notesError && notes) {
         notes.forEach(note => {
-          // Créer un extrait du contenu
-          const content = note.markdown_content || '';
-          const excerpt = content.length > 200 
-            ? content.substring(0, 200) + '...' 
-            : content;
-
           results.push({
             type: 'note',
             id: note.id,
-            title: note.source_title,
+            title: note.source_title || 'Sans titre',
             slug: note.slug,
             classeur_id: note.classeur_id,
-            score: searchQuery ? calculateScore(searchQuery, note.source_title, content) : 1.0,
-            excerpt: excerpt.replace(/[#*`]/g, '') // Nettoyer le markdown
+            // ✅ Score basé sur titre uniquement (pas de fetch markdown_content)
+            score: searchQuery ? calculateScoreFromTitle(searchQuery, note.source_title || '') : 1.0,
+            excerpt: '', // Pas d'excerpt pour économiser de la bande passante
+            updated_at: note.updated_at
           });
         });
         totalCount += notes.length;
@@ -109,12 +109,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     if (type === 'folders' || type === 'all') {
       let foldersQuery = supabase
         .from('folders')
-        .select('id, name, slug, classeur_id')
-        .eq('user_id', userId);
+        .select('id, name, slug, classeur_id, created_at, updated_at')
+        .eq('user_id', userId)
+        .is('trashed_at', null); // ✅ Exclure dossiers supprimés
 
-      // ✅ CORRECTION : Appliquer le filtre de recherche seulement si searchQuery existe
+      // ✅ OPTIMISATION : Ne chercher que si query fournie
       if (searchQuery) {
         foldersQuery = foldersQuery.ilike('name', `%${searchQuery}%`);
+      } else {
+        // Si pas de query, trier par date de mise à jour
+        foldersQuery = foldersQuery.order('updated_at', { ascending: false });
       }
 
       if (classeurId) {
@@ -128,19 +132,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           results.push({
             type: 'folder',
             id: folder.id,
-            title: folder.name,
+            title: folder.name || 'Sans nom',
             slug: folder.slug,
             classeur_id: folder.classeur_id,
-            score: searchQuery ? calculateScore(searchQuery, folder.name, '') : 1.0,
-            excerpt: `Dossier: ${folder.name}`
+            score: searchQuery ? calculateScoreFromTitle(searchQuery, folder.name || '') : 1.0,
+            excerpt: '', // Pas d'excerpt pour dossiers
+            updated_at: folder.updated_at
           });
         });
         totalCount += folders.length;
       }
     }
 
-    // Trier par score de pertinence
-    results.sort((a, b) => b.score - a.score);
+    // ✅ OPTIMISATION : Trier seulement si recherche active
+    if (searchQuery) {
+      results.sort((a: any, b: any) => b.score - a.score);
+    }
 
     // Limiter le nombre de résultats
     const limitedResults = results.slice(0, limit);
@@ -165,33 +172,35 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-// Fonction de calcul du score de pertinence
-function calculateScore(query: string, title: string, content: string): number {
+/**
+ * Calcul optimisé du score de pertinence (titre uniquement)
+ * Évite le fetch du markdown_content pour la performance
+ */
+function calculateScoreFromTitle(query: string, title: string): number {
   const queryLower = query.toLowerCase();
   const titleLower = title.toLowerCase();
-  const contentLower = content.toLowerCase();
   
   let score = 0;
   
-  // Score pour le titre (plus important)
-  if (titleLower.includes(queryLower)) {
+  // Match exact (insensible à la casse)
+  if (titleLower === queryLower) {
+    return 200;
+  }
+  
+  // Match au début du titre (très pertinent)
+  if (titleLower.startsWith(queryLower)) {
+    score += 150;
+  } else if (titleLower.includes(queryLower)) {
+    // Match quelque part dans le titre
     score += 100;
-    // Bonus si c'est au début du titre
-    if (titleLower.startsWith(queryLower)) {
-      score += 50;
-    }
   }
   
-  // Score pour le contenu
-  if (contentLower.includes(queryLower)) {
-    score += 10;
-    // Compter les occurrences
-    const occurrences = (contentLower.match(new RegExp(queryLower, 'g')) || []).length;
-    score += Math.min(occurrences * 5, 50);
-  }
-  
-  // Bonus pour la longueur du titre (titre plus court = plus pertinent)
+  // Bonus pour titre court (plus précis)
   score += Math.max(0, 50 - title.length);
   
-  return score;
+  // Pénalité si beaucoup de mots (titre trop long = moins pertinent)
+  const wordCount = title.split(/\s+/).length;
+  score -= Math.min(wordCount * 2, 30);
+  
+  return Math.max(score, 1);
 }
