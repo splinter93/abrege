@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { simpleLogger as logger } from '@/utils/logger';
+import { SlugGenerator } from '@/utils/slugGenerator';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -98,10 +99,10 @@ export async function PUT(
 
     const { supabase, userId } = await getAuthenticatedClient(request);
 
-    // Vérifier que le classeur appartient à l'utilisateur
+    // Vérifier que le classeur appartient à l'utilisateur et récupérer son nom actuel
     const { data: existingClasseur, error: fetchError } = await supabase
       .from('classeurs')
-      .select('id')
+      .select('id, name')
       .eq('id', classeurId)
       .eq('user_id', userId)
       .single();
@@ -119,6 +120,13 @@ export async function PUT(
     if (emoji) updateData.emoji = emoji;
     if (color) updateData.color = color;
     if (position !== undefined) updateData.position = position;
+
+    // ✅ FIX SLUG : Regénérer le slug si le nom change
+    if (name && name !== existingClasseur.name) {
+      const newSlug = await SlugGenerator.generateSlug(name, 'classeur', userId, classeurId, supabase);
+      updateData.slug = newSlug;
+      logger.dev(`[API] 🔄 Slug classeur mis à jour: "${existingClasseur.name}" → "${name}" → "${newSlug}"`);
+    }
 
     // Mettre à jour le classeur
     const { data: classeur, error } = await supabase

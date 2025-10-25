@@ -102,8 +102,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const { name, emoji, description } = validationResult.data;
 
-    // ✅ CORRECTION : Générer un slug simple pour l'agent
-    const slug = `classeur-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now()}`;
+    // ✅ FIX SLUG : Utiliser SlugGenerator pour garantir l'unicité du slug
+    const slug = await SlugGenerator.generateSlug(name, 'classeur', userId, undefined, supabase);
 
     // Créer le classeur
     const { data: classeur, error: createError } = await supabase

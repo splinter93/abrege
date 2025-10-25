@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { logApi } from '@/utils/logger';
-import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
+import { getAuthenticatedUser, extractTokenFromRequest } from '@/utils/authUtils';
 import { updateClasseurV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
+import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 
-// 🔧 CORRECTIONS APPLIQUÉES:
-// - Authentification simplifiée via getAuthenticatedUser uniquement
-// - Suppression de la double vérification d'authentification
-// - Client Supabase standard sans token manuel
-// - Plus de 401 causés par des conflits d'authentification
+// 🔧 FIX SLUG: Utilisation de V2DatabaseUtils.updateClasseur pour garantir la mise à jour automatique du slug
+// lors du renommage d'un classeur. Cette correction assure la cohérence avec les endpoints note et folder.
 
 export async function PUT(
   request: NextRequest,
@@ -43,10 +40,7 @@ export async function PUT(
   }
 
   const userId = authResult.userId!;
-  
-  // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
   const userToken = extractTokenFromRequest(request);
-  const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
   try {
     const body = await request.json();
@@ -57,57 +51,14 @@ export async function PUT(
       return createValidationErrorResponse(validationResult);
     }
 
-    const { name, emoji, description } = validationResult.data;
-
-    // Résoudre la référence (UUID ou slug)
-    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context);
-    if (!resolveResult.success) {
-      return NextResponse.json(
-        { error: resolveResult.error },
-        { status: resolveResult.status, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    const classeurId = resolveResult.id;
-
-    // Vérifier que l'utilisateur est propriétaire du classeur
-    const { data: existingClasseur, error: checkError } = await supabase
-      .from('classeurs')
-      .select('id, name')
-      .eq('id', classeurId)
-      .eq('user_id', userId)
-      .single();
-
-    if (checkError || !existingClasseur) {
-      logApi.info(`❌ Classeur non trouvé ou accès refusé: ${classeurId}`, context);
-      return NextResponse.json(
-        { error: 'Classeur non trouvé ou accès refusé' },
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Préparer les données de mise à jour
-    const updateData: Record<string, unknown> = {};
-    if (name !== undefined) updateData.name = name;
-    if (emoji !== undefined) updateData.emoji = emoji;
-    if (description !== undefined) updateData.description = description;
-
-    // Mettre à jour le classeur
-    const { data: updatedClasseur, error: updateError } = await supabase
-      .from('classeurs')
-      .update(updateData)
-      .eq('id', classeurId)
-      .eq('user_id', userId)
-      .select()
-      .single();
-
-    if (updateError) {
-      logApi.error(`❌ Erreur mise à jour classeur: ${updateError.message}`, context);
-      return NextResponse.json(
-        { error: 'Erreur lors de la mise à jour du classeur' },
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    // ✅ FIX SLUG: Utiliser V2DatabaseUtils.updateClasseur qui inclut la logique de mise à jour du slug
+    const result = await V2DatabaseUtils.updateClasseur(
+      ref, 
+      validationResult.data, 
+      userId, 
+      context,
+      userToken || undefined
+    );
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Classeur mis à jour en ${apiTime}ms`, context);
@@ -116,7 +67,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      classeur: updatedClasseur
+      classeur: result.data
     }, { headers: { "Content-Type": "application/json" } });
 
   } catch (error) {
