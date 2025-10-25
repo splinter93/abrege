@@ -1203,6 +1203,57 @@ Modèle utilisé : ${model}`;
   }
 
   /**
+   * Génère un slug pour un agent avec vérification d'unicité globale
+   */
+  private async generateAgentSlug(displayName: string, excludeId?: string): Promise<string> {
+    const baseSlug = this.slugify(displayName);
+    let candidateSlug = baseSlug;
+    let counter = 1;
+    
+    while (!(await this.checkSlugUniqueness(candidateSlug, excludeId))) {
+      counter++;
+      candidateSlug = `${baseSlug}-${counter}`;
+    }
+    
+    return candidateSlug;
+  }
+
+  /**
+   * Vérifie l'unicité d'un slug d'agent (globale, pas par utilisateur)
+   */
+  private async checkSlugUniqueness(slug: string, excludeId?: string): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('agents')
+      .select('id')
+      .eq('slug', slug);
+
+    if (error || !data) return false;
+    
+    if (excludeId) {
+      // Exclure l'ID de l'agent actuel de la vérification d'unicité
+      return !data.some(agent => agent.id !== excludeId);
+    }
+    
+    return data.length === 0;
+  }
+
+  /**
+   * Convertit un texte en slug (format agents)
+   */
+  private slugify(text: string): string {
+    if (!text || typeof text !== 'string') {
+      return 'untitled';
+    }
+    return text
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .slice(0, 50); // Plus court pour les agents
+  }
+
+  /**
    * Mettre à jour complètement un agent spécialisé
    */
   async updateAgent(
@@ -1227,6 +1278,20 @@ Modèle utilisé : ${model}`;
         return null;
       }
 
+      // ✅ FIX SLUG : Détecter changement de display_name ou name et régénérer le slug
+      const nameChanged = (
+        (updateData.display_name && updateData.display_name !== existingAgent.display_name) ||
+        (updateData.name && updateData.name !== existingAgent.name)
+      );
+
+      if (nameChanged) {
+        const newName = (updateData.display_name || updateData.name) as string;
+        const newSlug = await this.generateAgentSlug(newName, existingAgent.id);
+        updateData.slug = newSlug;
+        
+        logger.info(`[SpecializedAgentManager] 🔄 Slug agent mis à jour: "${existingAgent.slug}" → "${newSlug}"`);
+      }
+
       // Préparer les données de mise à jour
       const updatePayload = {
         ...updateData,
@@ -1248,6 +1313,10 @@ Modèle utilisé : ${model}`;
 
       // Invalider le cache
       this.invalidateAgentCache(agentId);
+      if (nameChanged && updateData.slug) {
+        // Invalider aussi l'ancien slug
+        this.invalidateAgentCache(existingAgent.slug);
+      }
 
       logger.dev(`[SpecializedAgentManager] ✅ Agent ${agentId} mis à jour`, { 
         traceId,
@@ -1305,6 +1374,20 @@ Modèle utilisé : ${model}`;
         throw new Error(`Validation échouée: ${validation.errors.join(', ')}`);
       }
 
+      // ✅ FIX SLUG : Détecter changement de display_name ou name et régénérer le slug
+      const nameChanged = (
+        (patchData.display_name && patchData.display_name !== existingAgent.display_name) ||
+        (patchData.name && patchData.name !== existingAgent.name)
+      );
+
+      if (nameChanged) {
+        const newName = (patchData.display_name || patchData.name) as string;
+        const newSlug = await this.generateAgentSlug(newName, existingAgent.id);
+        patchData.slug = newSlug;
+        
+        logger.info(`[SpecializedAgentManager] 🔄 Slug agent mis à jour: "${existingAgent.slug}" → "${newSlug}"`);
+      }
+
       // Fusionner les données existantes avec les nouvelles
       const mergedData = {
         ...existingAgent,
@@ -1327,6 +1410,10 @@ Modèle utilisé : ${model}`;
 
       // Invalider le cache
       this.invalidateAgentCache(agentId);
+      if (nameChanged && patchData.slug) {
+        // Invalider aussi l'ancien slug
+        this.invalidateAgentCache(existingAgent.slug);
+      }
 
       logger.dev(`[SpecializedAgentManager] ✅ Agent ${agentId} patché`, { 
         traceId,
