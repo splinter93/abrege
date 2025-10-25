@@ -33,13 +33,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { message, context, history, provider } = body;
 
-    // 🕵️‍♂️ DEBUG: Log du body reçu par l'API
-    logger.dev('🕵️‍♂️ [API Route] Body Reçu:', {
-      hasMessage: !!message,
-      hasContext: !!context,
-      contextContent: JSON.stringify(context)
-    });
-
     // Validation des paramètres requis
     if (!message || !context || !history) {
       return NextResponse.json(
@@ -50,11 +43,6 @@ export async function POST(request: NextRequest) {
 
     // Extraire le token d'authentification depuis le header Authorization
     const authHeader = request.headers.get('authorization');
-    
-    logger.info(`[LLM Route] 🔍 DEBUG AUTH - Header reçu:`, {
-      hasAuthHeader: !!authHeader,
-      authHeaderStart: authHeader ? authHeader.substring(0, 20) + '...' : 'N/A'
-    });
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       logger.error(`[LLM Route] ❌ Token manquant ou invalide:`, {
@@ -69,13 +57,7 @@ export async function POST(request: NextRequest) {
     
     userToken = authHeader.replace('Bearer ', '');
     
-    logger.info(`[LLM Route] 🔍 DEBUG TOKEN - Extrait:`, {
-      tokenLength: userToken.length,
-      tokenStart: userToken.substring(0, 20) + '...',
-      tokenEnd: '...' + userToken.substring(userToken.length - 20)
-    });
-    
-    // ✅ FIX PROD : Valider le JWT et EXTRAIRE le userId pour éviter l'expiration
+    // Valider le JWT et EXTRAIRE le userId pour éviter l'expiration
     let userId: string;
     
     try {
@@ -84,7 +66,6 @@ export async function POST(request: NextRequest) {
       
       if (isUserId) {
         // UUID direct : impersonation d'agent (backend uniquement)
-        logger.dev(`[LLM Route] 🔑 Impersonation d'agent détectée: userId: ${userToken.substring(0, 8)}...`);
         userId = userToken;
       } else {
         // JWT : valider et EXTRAIRE le userId
@@ -98,16 +79,8 @@ export async function POST(request: NextRequest) {
           );
         }
         
-        // ✅ FIX CRITIQUE: Extraire le userId du JWT
-        // Le userId ne peut pas expirer (contrairement au JWT)
+        // Extraire le userId du JWT
         userId = user.id;
-        
-        logger.info(`[LLM Route] ✅ JWT validé, userId extrait: ${userId}`);
-        logger.info(`[LLM Route] 🔍 DEBUG TOKEN - userId pour tool calls:`, {
-          userId: userId,
-          email: user.email,
-          note: 'Le userId est utilisé pour les tool calls au lieu du JWT'
-        });
       }
     } catch (validationError) {
       logger.error(`[LLM Route] ❌ Erreur validation token:`, validationError);
@@ -144,8 +117,6 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    logger.dev(`[LLM Route] ✅ Rate limit OK: ${chatLimit.remaining}/${chatLimit.limit} restants`);
-    
     // Extraire les valeurs nécessaires depuis le contexte
     const { sessionId: extractedSessionId, agentId, uiContext } = context;
     sessionId = extractedSessionId;
@@ -165,7 +136,6 @@ export async function POST(request: NextRequest) {
     try {
       // 1) Priorité à l'agent explicitement sélectionné
       if (agentId) {
-        logger.dev(`[LLM Route] 🔍 Récupération de l'agent par ID: ${agentId}`);
         const { data: agentById, error: agentByIdError } = await supabase
           .from('agents')
           .select('*')
@@ -177,26 +147,11 @@ export async function POST(request: NextRequest) {
           logger.warn(`[LLM Route] ⚠️ Erreur récupération agent par ID: ${agentByIdError.message}`);
         } else if (agentById) {
           agentConfig = agentById;
-          const agentWithInstructions = agentById as { system_instructions?: string; instructions?: string; name: string; id: string };
-          const hasInstructions = !!(agentWithInstructions.system_instructions || agentWithInstructions.instructions);
-          logger.dev(`[LLM Route] ✅ Agent récupéré par ID: ${agentWithInstructions.name} (ID: ${agentWithInstructions.id})`);
-          logger.dev(`[LLM Route] 🎯 Configuration agent (ID):`, {
-            model: agentById.model,
-            temperature: agentById.temperature,
-            top_p: agentById.top_p,
-            max_tokens: agentById.max_tokens,
-            instructions: hasInstructions ? '✅ Présentes' : '❌ Manquantes',
-            context_template: agentById.context_template ? '✅ Présent' : '❌ Manquant',
-            api_config: agentById.api_config ? '✅ Présent' : '❌ Manquant',
-            capabilities: agentById.capabilities?.length || 0,
-            api_v2_capabilities: agentById.api_v2_capabilities?.length || 0
-          });
         }
       }
 
       // 2) Sinon fallback par provider
       if (!agentConfig && provider) {
-        logger.dev(`[LLM Route] 🔍 Récupération de l'agent pour le provider: ${provider}`);
         const { data: agent, error: agentError } = await supabase
           .from('agents')
           .select('*')
@@ -210,20 +165,6 @@ export async function POST(request: NextRequest) {
           logger.warn(`[LLM Route] ⚠️ Erreur récupération agent ${provider}: ${agentError.message}`);
         } else if (agent) {
           agentConfig = agent;
-          const agentWithInstructions = agent as { system_instructions?: string; instructions?: string; name: string; id: string };
-          const hasInstructions = !!(agentWithInstructions.system_instructions || agentWithInstructions.instructions);
-          logger.dev(`[LLM Route] ✅ Agent récupéré: ${agentWithInstructions.name} (ID: ${agentWithInstructions.id})`);
-          logger.dev(`[LLM Route] 🎯 Configuration agent (provider):`, {
-            model: agent.model,
-            temperature: agent.temperature,
-            top_p: agent.top_p,
-            max_tokens: agent.max_tokens,
-            instructions: hasInstructions ? '✅ Présentes' : '❌ Manquantes',
-            context_template: agent.context_template ? '✅ Présent' : '❌ Manquant',
-            api_config: agent.api_config ? '✅ Présent' : '❌ Manquant',
-            capabilities: agent.capabilities?.length || 0,
-            api_v2_capabilities: agent.api_v2_capabilities?.length || 0
-          });
         } else {
           logger.warn(`[LLM Route] ⚠️ Aucun agent trouvé pour le provider: ${provider}`);
         }
@@ -231,8 +172,7 @@ export async function POST(request: NextRequest) {
 
       // 3) Fallback final : premier agent actif disponible
       if (!agentConfig) {
-        logger.dev(`[LLM Route] 🔍 Récupération du premier agent actif disponible`);
-        const { data: defaultAgent, error: defaultAgentError } = await supabase
+        const { data: defaultAgent, error: defaultAgentError} = await supabase
           .from('agents')
           .select('*')
           .eq('is_active', true)
@@ -244,20 +184,6 @@ export async function POST(request: NextRequest) {
           logger.warn(`[LLM Route] ⚠️ Erreur récupération agent par défaut: ${defaultAgentError.message}`);
         } else if (defaultAgent) {
           agentConfig = defaultAgent;
-          const agentWithInstructions = defaultAgent as { system_instructions?: string; instructions?: string; name: string; id: string };
-          const hasInstructions = !!(agentWithInstructions.system_instructions || agentWithInstructions.instructions);
-          logger.dev(`[LLM Route] ✅ Agent par défaut récupéré: ${agentWithInstructions.name} (ID: ${agentWithInstructions.id})`);
-          logger.dev(`[LLM Route] 🎯 Configuration agent par défaut:`, {
-            model: defaultAgent.model,
-            temperature: defaultAgent.temperature,
-            top_p: defaultAgent.top_p,
-            max_tokens: defaultAgent.max_tokens,
-            instructions: hasInstructions ? '✅ Présentes' : '❌ Manquantes',
-            context_template: defaultAgent.context_template ? '✅ Présent' : '❌ Manquant',
-            api_config: defaultAgent.api_config ? '✅ Présent' : '❌ Manquant',
-            capabilities: defaultAgent.capabilities?.length || 0,
-            api_v2_capabilities: defaultAgent.api_v2_capabilities?.length || 0
-          });
         } else {
           logger.warn(`[LLM Route] ⚠️ Aucun agent actif trouvé dans la base de données`);
         }
@@ -282,12 +208,9 @@ export async function POST(request: NextRequest) {
           if (updateError) {
             logger.error(`[LLM Route] ❌ Erreur mise à jour scopes agent: ${updateError.message}`);
           } else {
-            logger.info(`[LLM Route] ✅ Scopes par défaut ajoutés à l'agent ${agentConfig.name}`);
             // Mettre à jour la config locale
             agentConfig.api_v2_capabilities = DEFAULT_AGENT_SCOPES;
           }
-        } else {
-          logger.info(`[LLM Route] ✅ Agent ${agentConfig.name} a déjà des scopes configurés: ${agentConfig.api_v2_capabilities?.length || 0}`);
         }
       }
 
@@ -306,15 +229,6 @@ export async function POST(request: NextRequest) {
       system_instructions: 'Tu es un assistant IA utile et compétent.',
       api_v2_capabilities: DEFAULT_AGENT_SCOPES
     };
-
-    // Appel à la logique Groq OSS 120B avec l'agentConfig récupéré
-    logger.info(`[LLM Route] 🚀 Appel handleGroqGptOss120b avec userId:`, {
-      userId: userId,
-      sessionId,
-      agentName: finalAgentConfig.name,
-      agentModel: finalAgentConfig.model,
-      hasJWT: !!userToken
-    });
     
     const result = await handleGroqGptOss120b({
       message,
@@ -323,14 +237,11 @@ export async function POST(request: NextRequest) {
         uiContext // ✅ Inclure le contexte UI
       },
       sessionHistory: history,
-      agentConfig: finalAgentConfig, // ✅ Récupéré depuis la base, par ID si fourni
-      userToken: userToken!, // ✅ FIX MCP: Passer le JWT original pour l'authentification MCP (pas le userId)
+      agentConfig: finalAgentConfig,
+      userToken: userToken!,
       sessionId
     });
     
-    logger.info(`[LLM Route] ✅ handleGroqGptOss120b terminé avec succès`);
-
-    logger.info(`[LLM Route] ✅ Session ${sessionId} terminée avec succès`);
     return result;
 
   } catch (error) {
