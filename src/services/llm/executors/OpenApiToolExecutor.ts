@@ -196,22 +196,39 @@ export class OpenApiToolExecutor {
 
   /**
    * Construire l'URL de l'endpoint
+   * ✅ FIXED: Remplace les path parameters {param} avant d'ajouter les query params
    */
   private buildEndpointUrl(endpoint: OpenApiEndpoint, args: Record<string, unknown>): string {
     // Utiliser baseUrl de l'endpoint si disponible, sinon baseUrl de la classe
     const baseUrl = endpoint.baseUrl || this.baseUrl;
-    let url = baseUrl + endpoint.path;
+    let path = endpoint.path;
     
-    // Debug: Afficher l'URL construite
-    logger.dev(`[OpenApiToolExecutor] 🔧 URL construite: ${url}`);
+    // Debug: Afficher l'URL avant substitution
+    logger.dev(`[OpenApiToolExecutor] 🔧 Path original: ${path}`);
     logger.dev(`[OpenApiToolExecutor] 🔧 Base URL: ${baseUrl}`);
-    logger.dev(`[OpenApiToolExecutor] 🔧 Endpoint path: ${endpoint.path}`);
+    logger.dev(`[OpenApiToolExecutor] 🔧 Arguments:`, args);
 
+    // ✅ CRITICAL FIX: Remplacer les path parameters {param} avec les vraies valeurs
+    const usedParams = new Set<string>();
+    
+    for (const [key, value] of Object.entries(args)) {
+      const placeholder = `{${key}}`;
+      if (path.includes(placeholder)) {
+        path = path.replace(placeholder, String(value));
+        usedParams.add(key);
+        logger.dev(`[OpenApiToolExecutor] 🔧 Remplacé ${placeholder} par ${value}`);
+      }
+    }
+
+    let url = baseUrl + path;
+    logger.dev(`[OpenApiToolExecutor] 🔧 URL après substitution: ${url}`);
+
+    // ✅ Pour les GET: ajouter les params restants en query string (ceux qui ne sont pas des path params)
     if (endpoint.method === 'GET') {
-      // Ajouter les paramètres de requête
       const params = new URLSearchParams();
       for (const [key, value] of Object.entries(args)) {
-        if (value !== undefined && value !== null) {
+        // Ne pas ajouter les params déjà utilisés dans le path
+        if (!usedParams.has(key) && value !== undefined && value !== null) {
           params.append(key, String(value));
         }
       }

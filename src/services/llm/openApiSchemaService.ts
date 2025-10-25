@@ -227,6 +227,7 @@ export class OpenAPISchemaService {
   /**
    * Construit les paramètres d'un tool depuis une opération OpenAPI
    * ✅ CLEAN : Supprime les champs non-standard pour xAI
+   * ✅ FIXED : Déduplique les paramètres required pour éviter ["ref", "ref"]
    */
   private buildToolParameters(
     operation: Record<string, unknown>,
@@ -249,20 +250,29 @@ export class OpenAPISchemaService {
       required.push(param);
     }
 
-    // 2. Paramètres d'URL (query params)
+    // 2. Paramètres d'URL (query params et path params depuis OpenAPI spec)
     const parameters = operation.parameters as Array<Record<string, unknown>> | undefined;
     if (parameters) {
       for (const param of parameters) {
         const name = param.name as string;
+        const paramIn = param.in as string | undefined;
         const paramSchema = param.schema as Record<string, unknown> | undefined;
         const isRequired = param.required as boolean | undefined;
 
         if (name && paramSchema) {
-          // ✅ Nettoyer le schéma pour xAI
-          properties[name] = this.cleanSchemaForXAI({
-            ...paramSchema,
-            description: param.description as string | undefined
-          });
+          // ✅ Enrichir la description des path params (déjà ajoutés à l'étape 1)
+          if (paramIn === 'path' && properties[name]) {
+            properties[name] = this.cleanSchemaForXAI({
+              ...paramSchema,
+              description: param.description as string | undefined || `Paramètre de path: ${name}`
+            });
+          } else {
+            // Query params ou autres
+            properties[name] = this.cleanSchemaForXAI({
+              ...paramSchema,
+              description: param.description as string | undefined
+            });
+          }
 
           if (isRequired) {
             required.push(name);
@@ -295,10 +305,16 @@ export class OpenAPISchemaService {
       }
     }
 
+    // ✅ CRITICAL FIX : Dédupliquer le array required
+    // Les path parameters peuvent être ajoutés deux fois :
+    // - Une fois depuis extractPathParameters()
+    // - Une fois depuis operation.parameters
+    const uniqueRequired = [...new Set(required)];
+
     return {
       type: 'object',
       properties,
-      ...(required.length > 0 && { required })
+      ...(uniqueRequired.length > 0 && { required: uniqueRequired })
     };
   }
 
