@@ -130,28 +130,49 @@ export class AgentOrchestrator {
   // Cela évite la duplication et permet le cache partagé
 
   /**
-   * ✅ NOUVELLE MÉTHODE : Sélectionner le provider en fonction de l'agent config
+   * ✅ Sélectionner le provider en fonction de l'agent config
+   * ✅ PRODUCTION READY : Validation stricte des paramètres LLM
    */
   private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider {
     const provider = agentConfig?.provider || 'groq';
     const model = agentConfig?.model;
 
-    logger.dev(`[AgentOrchestrator] Sélection du provider: ${provider} (model: ${model})`);
+    // ✅ Validation et normalisation des paramètres LLM
+    const temperature = typeof agentConfig?.temperature === 'number'
+      ? Math.max(0, Math.min(2, agentConfig.temperature))
+      : 0.7;
+    
+    const topP = typeof agentConfig?.top_p === 'number'
+      ? Math.max(0, Math.min(1, agentConfig.top_p))
+      : 0.9;
+    
+    const maxTokens = typeof agentConfig?.max_tokens === 'number'
+      ? Math.max(1, Math.min(100000, agentConfig.max_tokens))
+      : 8000;
+
+    logger.dev(`[AgentOrchestrator] Sélection du provider: ${provider}`, {
+      model,
+      temperature,
+      topP,
+      maxTokens
+    });
 
     switch (provider.toLowerCase()) {
       case 'xai':
         return new XAIProvider({
           model: model || 'grok-4-fast',
-          temperature: typeof agentConfig?.temperature === 'number' ? agentConfig.temperature : 0.7,
-          maxTokens: agentConfig?.max_tokens || 8000
+          temperature,
+          topP,
+          maxTokens
         });
       
       case 'groq':
       default:
         return new GroqProvider({
           model: model || 'openai/gpt-oss-20b',
-          temperature: typeof agentConfig?.temperature === 'number' ? agentConfig.temperature : 0.7,
-          maxTokens: agentConfig?.max_tokens || 8000
+          temperature,
+          topP,
+          maxTokens
         });
     }
   }

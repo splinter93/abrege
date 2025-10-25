@@ -183,6 +183,7 @@ export async function POST(request: NextRequest) {
           logger.dev(`[LLM Route] 🎯 Configuration agent (ID):`, {
             model: agentById.model,
             temperature: agentById.temperature,
+            top_p: agentById.top_p,
             max_tokens: agentById.max_tokens,
             instructions: hasInstructions ? '✅ Présentes' : '❌ Manquantes',
             context_template: agentById.context_template ? '✅ Présent' : '❌ Manquant',
@@ -215,6 +216,7 @@ export async function POST(request: NextRequest) {
           logger.dev(`[LLM Route] 🎯 Configuration agent (provider):`, {
             model: agent.model,
             temperature: agent.temperature,
+            top_p: agent.top_p,
             max_tokens: agent.max_tokens,
             instructions: hasInstructions ? '✅ Présentes' : '❌ Manquantes',
             context_template: agent.context_template ? '✅ Présent' : '❌ Manquant',
@@ -248,6 +250,7 @@ export async function POST(request: NextRequest) {
           logger.dev(`[LLM Route] 🎯 Configuration agent par défaut:`, {
             model: defaultAgent.model,
             temperature: defaultAgent.temperature,
+            top_p: defaultAgent.top_p,
             max_tokens: defaultAgent.max_tokens,
             instructions: hasInstructions ? '✅ Présentes' : '❌ Manquantes',
             context_template: defaultAgent.context_template ? '✅ Présent' : '❌ Manquant',
