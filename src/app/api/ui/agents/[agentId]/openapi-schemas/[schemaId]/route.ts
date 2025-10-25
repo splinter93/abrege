@@ -15,10 +15,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { agentId: string; schemaId: string } }
+  { params }: { params: Promise<{ agentId: string; schemaId: string }> }
 ) {
   try {
-    const { agentId, schemaId } = params;
+    const { agentId, schemaId } = await params;
 
     if (!agentId || !schemaId) {
       return NextResponse.json(
