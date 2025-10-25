@@ -8,13 +8,24 @@ import { simpleLogger as logger } from '@/utils/logger';
 
 /**
  * Type pour les endpoints OpenAPI
+ * ✅ STRICT: Types précis pour éviter les erreurs
  */
 interface OpenApiEndpoint {
-  method: string;
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   path: string;
   apiKey?: string;
   headerName?: string;
   baseUrl?: string;
+}
+
+/**
+ * Type pour les résultats d'exécution
+ */
+interface ExecutionResult {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+  statusCode?: number;
 }
 
 /**
@@ -127,6 +138,7 @@ export class OpenApiToolExecutor {
 
   /**
    * Exécuter une fonction OpenAPI spécifique
+   * ✅ STRICT: Types précis et validation renforcée
    */
   private async executeOpenApiFunction(functionName: string, args: Record<string, unknown>, userToken: string): Promise<unknown> {
     // Récupérer l'endpoint depuis la Map
@@ -148,11 +160,12 @@ export class OpenApiToolExecutor {
 
     logger.dev(`[OpenApiToolExecutor] 🔧 Headers:`, headers);
 
-    // Validation de l'URL
+    // ✅ STRICT: Validation de l'URL avec types
     try {
-      new URL(url);
+      const urlObj = new URL(url);
+      logger.dev(`[OpenApiToolExecutor] 🔧 URL validée: ${urlObj.origin}${urlObj.pathname}`);
     } catch (error) {
-      throw new Error(`URL invalide: ${url}`);
+      throw new Error(`URL invalide: ${url} - ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
 
     // Faire l'appel HTTP avec timeout
@@ -160,12 +173,13 @@ export class OpenApiToolExecutor {
     const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
     try {
+      // ✅ FIXED: Construire le body correctement (exclure les path params)
+      const body = this.buildRequestBody(endpoint, args);
+      
       const response = await fetch(url, {
         method: endpoint.method,
         headers,
-        body: endpoint.method === 'POST' || endpoint.method === 'PUT' || endpoint.method === 'PATCH' 
-          ? JSON.stringify(args) 
-          : undefined,
+        body,
         signal: controller.signal
       });
 
@@ -177,13 +191,20 @@ export class OpenApiToolExecutor {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      // Vérifier que la réponse est bien du JSON
+      // ✅ STRICT: Vérifier le content-type et gérer les erreurs de parsing
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         logger.warn(`[OpenApiToolExecutor] ⚠️ Réponse non-JSON: ${contentType}`);
       }
 
-      return await response.json();
+      try {
+        const jsonData = await response.json();
+        logger.dev(`[OpenApiToolExecutor] ✅ Réponse JSON parsée (${Object.keys(jsonData).length} clés)`);
+        return jsonData;
+      } catch (parseError) {
+        logger.error(`[OpenApiToolExecutor] ❌ Erreur parsing JSON:`, parseError);
+        throw new Error(`Réponse non-JSON valide: ${parseError instanceof Error ? parseError.message : 'Erreur inconnue'}`);
+      }
     } catch (error) {
       clearTimeout(timeout);
       if (error instanceof Error && error.name === 'AbortError') {
@@ -197,6 +218,7 @@ export class OpenApiToolExecutor {
   /**
    * Construire l'URL de l'endpoint
    * ✅ FIXED: Remplace les path parameters {param} avant d'ajouter les query params
+   * ✅ FIXED: Validation des path params manquants
    */
   private buildEndpointUrl(endpoint: OpenApiEndpoint, args: Record<string, unknown>): string {
     // Utiliser baseUrl de l'endpoint si disponible, sinon baseUrl de la classe
@@ -210,14 +232,33 @@ export class OpenApiToolExecutor {
 
     // ✅ CRITICAL FIX: Remplacer les path parameters {param} avec les vraies valeurs
     const usedParams = new Set<string>();
+    const missingParams: string[] = [];
     
-    for (const [key, value] of Object.entries(args)) {
-      const placeholder = `{${key}}`;
-      if (path.includes(placeholder)) {
-        path = path.replace(placeholder, String(value));
-        usedParams.add(key);
-        logger.dev(`[OpenApiToolExecutor] 🔧 Remplacé ${placeholder} par ${value}`);
+    // Extraire tous les placeholders du path
+    const pathParamMatches = path.match(/\{([^}]+)\}/g) || [];
+    const requiredParams = pathParamMatches.map(match => match.slice(1, -1)); // Enlever {}
+    
+    for (const paramName of requiredParams) {
+      const value = args[paramName];
+      if (value === undefined || value === null) {
+        missingParams.push(paramName);
+        continue;
       }
+      
+      const placeholder = `{${paramName}}`;
+      path = path.replace(placeholder, String(value));
+      usedParams.add(paramName);
+      logger.dev(`[OpenApiToolExecutor] 🔧 Remplacé ${placeholder} par ${value}`);
+    }
+    
+    // ✅ CRITICAL FIX: Valider qu'il ne reste plus de placeholders
+    if (path.includes('{')) {
+      const remainingPlaceholders = path.match(/\{[^}]+\}/g) || [];
+      throw new Error(`Path parameters manquants: ${remainingPlaceholders.join(', ')}`);
+    }
+    
+    if (missingParams.length > 0) {
+      throw new Error(`Path parameters requis manquants: ${missingParams.join(', ')}`);
     }
 
     let url = baseUrl + path;
@@ -229,7 +270,14 @@ export class OpenApiToolExecutor {
       for (const [key, value] of Object.entries(args)) {
         // Ne pas ajouter les params déjà utilisés dans le path
         if (!usedParams.has(key) && value !== undefined && value !== null) {
-          params.append(key, String(value));
+          // ✅ FIXED: Gestion des arrays dans query params
+          if (Array.isArray(value)) {
+            for (const item of value) {
+              params.append(`${key}[]`, String(item));
+            }
+          } else {
+            params.append(key, String(value));
+          }
         }
       }
       if (params.toString()) {
@@ -242,8 +290,39 @@ export class OpenApiToolExecutor {
   }
 
   /**
+   * ✅ NOUVEAU: Construire le body pour POST/PUT/PATCH
+   * Exclut les path parameters du body
+   */
+  private buildRequestBody(endpoint: OpenApiEndpoint, args: Record<string, unknown>): string | undefined {
+    // Seulement pour les méthodes qui envoient un body
+    if (!['POST', 'PUT', 'PATCH'].includes(endpoint.method)) {
+      return undefined;
+    }
+
+    // Extraire les path parameters du path
+    const pathParamMatches = endpoint.path.match(/\{([^}]+)\}/g) || [];
+    const pathParams = pathParamMatches.map(match => match.slice(1, -1)); // Enlever {}
+    
+    // Filtrer les args pour exclure les path parameters
+    const bodyArgs: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(args)) {
+      if (!pathParams.includes(key)) {
+        bodyArgs[key] = value;
+      }
+    }
+
+    // Si pas de body args, ne pas envoyer de body
+    if (Object.keys(bodyArgs).length === 0) {
+      return undefined;
+    }
+
+    logger.dev(`[OpenApiToolExecutor] 🔧 Body args (${Object.keys(bodyArgs).length}):`, Object.keys(bodyArgs));
+    return JSON.stringify(bodyArgs);
+  }
+
+  /**
    * Construire les headers pour l'appel HTTP
-   * Combine le nom du header et la clé API
+   * ✅ FIXED: Utilise le userToken pour l'auth utilisateur
    */
   private buildHeaders(endpoint: OpenApiEndpoint, userToken: string): Record<string, string> {
     const headers: Record<string, string> = {
@@ -251,14 +330,20 @@ export class OpenApiToolExecutor {
       'User-Agent': 'Scrivia-OpenAPI-Executor/1.0'
     };
 
+    // ✅ CRITICAL FIX: Utiliser le userToken pour l'auth utilisateur
+    if (userToken) {
+      headers['Authorization'] = `Bearer ${userToken}`;
+      logger.dev(`[OpenApiToolExecutor] 🔑 Token utilisateur ajouté`);
+    }
+
     // Combiner header name + api key (comme dans MCP servers)
     if (endpoint.apiKey && endpoint.headerName) {
       headers[endpoint.headerName] = endpoint.apiKey;
       logger.dev(`[OpenApiToolExecutor] 🔑 Clé API ajoutée au header "${endpoint.headerName}"`);
     } else if (endpoint.apiKey) {
-      // Fallback sur Authorization si pas de header name spécifié
-      headers['Authorization'] = endpoint.apiKey;
-      logger.dev(`[OpenApiToolExecutor] 🔑 Clé API ajoutée au header "Authorization" (fallback)`);
+      // Fallback sur X-API-Key si pas de header name spécifié
+      headers['X-API-Key'] = endpoint.apiKey;
+      logger.dev(`[OpenApiToolExecutor] 🔑 Clé API ajoutée au header "X-API-Key" (fallback)`);
     }
 
     return headers;

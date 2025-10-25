@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { simpleLogger as logger } from '@/utils/logger';
+import { openApiSchemaService } from '@/services/llm/openApiSchemaService';
 
 // Force Node.js runtime
 export const runtime = 'nodejs';
@@ -159,6 +160,10 @@ export async function POST(
     }
 
     logger.info(`[AgentOpenApiSchemas] ✅ Schéma ${schema.name} lié à l'agent ${agentId}`);
+
+    // ✅ CRITICAL FIX : Invalider le cache pour que le chat voit immédiatement les nouveaux tools
+    openApiSchemaService.invalidateCache();
+    logger.dev(`[AgentOpenApiSchemas] 🔄 Cache invalidé après liaison du schéma`);
 
     return NextResponse.json({
       success: true,
