@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 /**
  * Composant client qui met à jour la meta tag theme-color
  * en fonction du thème actif en lisant la variable CSS --color-bg-primary
+ * Contrôle total indépendamment du mode système Android/iOS
  */
 export default function ThemeColor() {
   useEffect(() => {
@@ -14,27 +15,47 @@ export default function ThemeColor() {
         .getPropertyValue('--color-bg-primary')
         .trim();
       
-      // Update la meta tag avec la vraie couleur du thème
-      let metaThemeColor = document.querySelector('meta[name="theme-color"]');
-      if (metaThemeColor && bgColor) {
-        metaThemeColor.setAttribute('content', bgColor);
+      if (!bgColor) return;
+      
+      // Update toutes les meta tags theme-color (au cas où il y en aurait plusieurs)
+      const metaTags = document.querySelectorAll('meta[name="theme-color"]');
+      metaTags.forEach(tag => {
+        tag.setAttribute('content', bgColor);
+      });
+      
+      // Forcer aussi dans le manifest si disponible
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'THEME_COLOR',
+          color: bgColor
+        });
       }
     };
     
-    // Update initial après un court délai pour s'assurer que les CSS sont chargés
+    // Update initial après délai
     setTimeout(updateThemeColor, 100);
     
-    // Observer les changements de classe sur <html> (changement de thème)
+    // Update périodique pour forcer la couleur (Android peut reset)
+    const interval = setInterval(updateThemeColor, 2000);
+    
+    // Observer les changements de classe sur <html>
     const observer = new MutationObserver(() => {
       setTimeout(updateThemeColor, 50);
     });
     
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class'],
+      attributeFilter: ['class', 'style'],
     });
     
-    return () => observer.disconnect();
+    // Update au focus de la fenêtre
+    window.addEventListener('focus', updateThemeColor);
+    
+    return () => {
+      observer.disconnect();
+      clearInterval(interval);
+      window.removeEventListener('focus', updateThemeColor);
+    };
   }, []);
   
   return null;

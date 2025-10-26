@@ -63,14 +63,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/feather.svg" type="image/svg+xml" />
         <link rel="manifest" href="/manifest.json" />
         
-        {/* PWA Status Bar - Couleur de l'app jusqu'en haut */}
+        {/* PWA Status Bar - Contrôlée dynamiquement par ThemeColor.tsx */}
         <meta name="theme-color" content="#121212" />
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
-        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="color-scheme" content="dark light" />
         
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
