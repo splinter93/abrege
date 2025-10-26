@@ -285,6 +285,14 @@ export async function POST(request: NextRequest) {
             checkTimeout(); // Vérifier avant chaque envoi
             const chunk = `data: ${JSON.stringify(data)}\n\n`;
             controller.enqueue(encoder.encode(chunk));
+            
+            // ✅ Log chaque envoi SSE pour debug
+            if ((data as { content?: string }).content) {
+              logger.dev(`[Stream Route] 📡 SSE ENVOYÉ →`, {
+                type: (data as { type?: string }).type || 'content',
+                contentPreview: (data as { content: string }).content.substring(0, 20)
+              });
+            }
           };
 
           // Envoyer un chunk de début
