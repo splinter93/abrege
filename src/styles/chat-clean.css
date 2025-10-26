@@ -892,6 +892,24 @@
   line-height: 1.5;
 }
 
+/* Liens dans messages user - cohérent avec markdown */
+.user-message-link {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-decoration-skip-ink: auto;
+  transition: color 0.2s ease, text-underline-offset 0.2s ease, text-decoration-thickness 0.2s ease;
+  word-break: break-all;
+  cursor: pointer;
+}
+
+.user-message-link:hover {
+  color: var(--color-accent-hover);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 2px;
+}
+
 .chatgpt-message-assistant {
   align-items: flex-start;
 }

@@ -124,15 +124,16 @@
 
 .chat-markdown code:not(pre code),
 .chatgpt-message-content code:not(pre code) {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.125rem 0.375rem;
+  background: var(--chat-gradient-block); /* ✅ Dégradé cohérent */
+  padding: 0.2rem 0.375rem; /* ✅ Padding vertical augmenté */
   border-radius: 0.25rem;
   font-family: var(--font-monospace);
   font-size: 0.875em;
-  color: #d4d4d8;
+  color: var(--blk-fg) !important; /* ✅ Même variable que unified-blocks.css */
+  filter: brightness(1.12); /* ✅ Éclairci subtilement */
   font-weight: 400;
   letter-spacing: 0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: none; /* ✅ Pas de bordure */
 }
 
 /* ========================================
@@ -252,22 +253,34 @@
 }
 
 /* ========================================
-   CITATIONS - DESIGN CHATGPT
+   CITATIONS - DESIGN ÉPURÉ
    ======================================== */
 
 .chat-markdown blockquote {
   font-family: var(--font-chat-text) !important;
   margin: 1.5rem 0 !important;
-  padding: 1rem 1.5rem !important;
-  border-left: 4px solid #6b7280 !important;
-  background: rgba(107, 114, 128, 0.1) !important;
-  border-radius: 0 0.5rem 0.5rem 0 !important;
+  padding: 1rem 0 1rem 1.5rem !important;
+  border-left: none !important;
+  background: transparent !important; /* ✅ Pas de fond */
+  border-radius: 0 !important;
   font-style: normal !important;
   color: var(--chat-text-primary) !important;
   position: relative !important;
   font-size: 16px !important;
   font-weight: 500 !important;
-  letter-spacing: 0 !important; /* ✅ Pas de letter-spacing */
+  letter-spacing: 0 !important;
+}
+
+.chat-markdown blockquote::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 4px !important;
+  background: var(--chat-gradient-block) !important; /* ✅ Gradient gris cohérent */
+  border-radius: 2px !important; /* ✅ Arrondi haut et bas */
+  filter: brightness(1.1) !important; /* ✅ +10% luminosité */
 }
 
 .chat-markdown blockquote p {
@@ -289,17 +302,25 @@
 
 .chat-markdown a {
   font-family: var(--font-chat-text) !important;
-  color: #c2410c !important; /* Orange foncé */
+  background: linear-gradient(135deg, #9a3412, #c2410c) !important; /* ✅ Dégradé orange plus sombre */
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
   text-decoration: underline !important;
+  text-decoration-color: #9a3412 !important; /* ✅ Soulignement orange très foncé */
   text-underline-offset: 2px !important;
   text-decoration-thickness: 1px !important;
-  transition: color 0.2s ease, text-underline-offset 0.2s ease !important;
+  transition: all 0.2s ease !important;
   font-size: 16px !important;
   font-weight: 500 !important;
 }
 
 .chat-markdown a:hover {
-  color: #f97316 !important; /* Orange vif au hover */
+  background: linear-gradient(135deg, #c2410c, #ea580c) !important; /* ✅ Dégradé orange au hover */
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  text-decoration-color: #c2410c !important;
   text-underline-offset: 3px !important;
 }
 
@@ -330,14 +351,15 @@
   margin: 1.5rem 0 !important;
   font-size: 0.875rem !important;
   line-height: 1.5 !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-radius: 0.5rem !important;
+  background: var(--chat-gradient-block) !important; /* ✅ Gradient gris cohérent */
+  border-radius: 12px !important; /* ✅ Même radius que blocs de code */
   overflow: hidden !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: none !important; /* ✅ Pas de bordure */
 }
 
 .chat-markdown thead {
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: transparent !important; /* ✅ Laisse le gradient du table visible */
+  filter: brightness(1.05) !important; /* ✅ Légèrement plus clair pour le header */
 }
 
 .chat-markdown th {
@@ -346,7 +368,7 @@
   text-align: left !important;
   font-weight: 600 !important;
   color: var(--chat-text-primary) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: none !important; /* ✅ Pas de bordure */
   font-size: 0.8rem !important;
   letter-spacing: 0.025em !important;
   text-transform: uppercase !important;
@@ -356,24 +378,28 @@
   font-family: var(--font-chat-text) !important;
   padding: 0.75rem 1rem !important;
   text-align: left !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border: none !important; /* ✅ Pas de bordure */
   color: var(--chat-text-primary) !important;
   vertical-align: top !important;
   font-size: 0.875rem !important;
   font-weight: 500 !important;
 }
 
-.chat-markdown tr:last-child td {
-  border-bottom: none;
+.chat-markdown thead {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* ✅ Bordure subtile sous l'en-tête */
 }
 
-.chat-markdown tbody tr:nth-child(even) td {
-  background: rgba(255, 255, 255, 0.02);
+.chat-markdown tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* ✅ Lignes subtiles entre les rangées */
+}
+
+.chat-markdown tbody tr:last-child {
+  border-bottom: none; /* ✅ Pas de bordure sur la dernière ligne */
 }
 
 .chat-markdown tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.05);
-  transition: background-color 0.2s ease;
+  filter: brightness(1.08);
+  transition: filter 0.2s ease;
 }
 
 /* ========================================
@@ -556,8 +582,8 @@
   
   .chat-markdown blockquote {
     margin: 1.25rem 0;
-    padding: 0.875rem 1.25rem;
-    font-size: 0.9375rem; /* ✅ Légèrement plus grand */
+    padding: 0.875rem 0 0.875rem 1.25rem;
+    font-size: 0.9375rem;
     line-height: 1.7;
   }
   
@@ -624,7 +650,7 @@
   
   .chat-markdown blockquote {
     margin: 1rem 0;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 0 0.75rem 1rem;
     font-size: 0.875rem;
     line-height: 1.65;
   }
@@ -668,8 +694,11 @@
   /* Code styles gérés par les styles principaux */
   
   .chat-markdown blockquote {
-    background: #f9f9f9;
-    border-left-color: #10a37f;
+    background: transparent;
+  }
+  
+  .chat-markdown blockquote::before {
+    background: #e55a2b;
   }
   
   .chat-markdown table {

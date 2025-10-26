@@ -362,13 +362,13 @@ a {
   .markdown-body blockquote,
   .public-note-container .markdown-body blockquote,
   .public-note-content-wrapper .markdown-body blockquote {
-    background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */ /* Fond plus sombre */
+    background: transparent; /* ✅ Pas de fond */
     color: var(--text-2);
     text-align: left;
     padding: 1.25rem 1.75rem;
     margin: var(--editor-block-spacing) 0; /* 1.75rem - COHÉRENT AVEC L'ÉDITEUR */
     border-left: none;
-    border-radius: var(--radius-md);
+    border-radius: 0;
     position: relative;
     box-shadow: none;
     font-family: var(--editor-font-family-body); /* Inter pour le texte */
@@ -387,7 +387,7 @@ a {
     bottom: 0;
     width: 4px;
     background: #e55a2b; /* Orange adouci */
-    border-radius: 2px 0 0 2px;
+    border-radius: 2px; /* ✅ Arrondi des deux côtés (haut et bas) */
   }
 
   .markdown-body blockquote p,
@@ -1084,7 +1084,7 @@ a {
     .markdown-body pre, .markdown-body blockquote, .markdown-body table { page-break-inside: avoid; }
     .markdown-body img { max-width: 100% ; page-break-inside: avoid; }
     /* Styles de code gérés par unified-blocks.css */
-    .markdown-body blockquote { background: #f0f0f0; border-color: #e55a2b; box-shadow: none; }
+    .markdown-body blockquote { background: transparent; border-color: #e55a2b; box-shadow: none; }
          .markdown-body hr {
        background: #00000022;
        height: 1px;

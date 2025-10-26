@@ -318,6 +318,46 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
       container.removeEventListener('dblclick', handleImageDoubleClick);
     };
   }, [sanitizedHtml]);
+
+  // 🔗 Intercepter les clics sur les liens vers images
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleLinkClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // 🎯 Remonter l'arbre DOM pour trouver le lien <a> parent
+      const linkElement = target.closest('a');
+      
+      if (linkElement) {
+        const href = linkElement.getAttribute('href');
+        if (href) {
+          // 🎯 Détecter si le lien pointe vers une image
+          const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'];
+          const isImageLink = imageExtensions.some(ext => 
+            href.toLowerCase().endsWith(ext) || href.toLowerCase().includes(ext + '?')
+          );
+
+          if (isImageLink) {
+            e.preventDefault(); // Empêcher la navigation
+            e.stopPropagation(); // Empêcher la propagation
+            openImageModal({
+              src: href,
+              alt: linkElement.textContent || undefined
+            });
+          }
+        }
+      }
+    };
+
+    // Ajouter le listener sur le container
+    container.addEventListener('click', handleLinkClick);
+
+    return () => {
+      container.removeEventListener('click', handleLinkClick);
+    };
+  }, [sanitizedHtml]);
   
   return (
     <>

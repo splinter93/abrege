@@ -267,15 +267,7 @@ export function openImageModal(options: ImageModalOptions) {
   img.src = src;
   img.alt = alt || 'Image agrandie';
   img.className = 'image-modal-img';
-  img.style.cssText = `
-    max-width: 90%;
-    max-height: 90%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  `;
+  // ✅ Pas de styles inline, on utilise uniquement le CSS
   
   imageWrapper.appendChild(img);
   

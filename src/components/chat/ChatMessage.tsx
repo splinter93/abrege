@@ -7,6 +7,7 @@ import {
   isToolResultSuccess 
 } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
+import UserMessageText from './UserMessageText';
 import ToolCallMessage from './ToolCallMessage';
 import { openImageModal } from './ImageModal';
 import BubbleButtons from './BubbleButtons';
@@ -132,11 +133,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         ) : (
           <>
             {/* FALLBACK: Rendu classique si pas de timeline */}
-            {/* Contenu - texte brut pour user, markdown pour assistant */}
+            {/* Contenu - texte avec liens pour user, markdown pour assistant */}
             {content && (
               <div className="chatgpt-message-content">
                 {role === 'user' ? (
-                  <div className="chatgpt-message-text-plain">{content}</div>
+                  <UserMessageText content={content} />
                 ) : (
                   <EnhancedMarkdownMessage content={content} />
                 )}

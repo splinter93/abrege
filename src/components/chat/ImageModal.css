@@ -258,8 +258,7 @@
   width: auto;
   height: auto;
   object-fit: contain;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border-radius: var(--chat-radius-md); /* 8px - cohérent avec images du chat */
   display: block;
   user-select: none;
   -webkit-user-drag: none;
