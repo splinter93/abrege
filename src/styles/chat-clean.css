@@ -384,6 +384,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-left: -12px; /* ✅ Décalé à gauche en desktop (pas de bouton sidebar) */
 }
 
 .chatgpt-header-right {
@@ -405,26 +406,50 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 22px; /* ✅ Ajusté */
   line-height: 1;
 }
 
 /* Avatar agent dans header - rond */
 .agent-avatar-header {
-  width: 24px;
-  height: 24px;
+  width: 30px; /* ✅ 30px */
+  height: 30px; /* ✅ 30px */
   border-radius: 50%;
   object-fit: cover;
 }
 
 .agent-name {
-  font-size: 14px;
+  font-size: 15px; /* ✅ 15px */
   font-weight: 500;
   color: var(--chat-text-primary);
   white-space: nowrap;
 }
 
 .chatgpt-sidebar-toggle-btn-header {
+  display: none; /* ✅ Caché en desktop par défaut */
+  align-items: center;
+  justify-content: center;
+  padding: 0; /* ✅ Pas de padding pour centrage parfait */
+  background: transparent;
+  border: none;
+  color: var(--chat-text-secondary);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all var(--chat-transition-fast);
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0; /* ✅ Ne pas rétrécir */
+}
+
+/* ✅ Pas de hover, style simple */
+.chatgpt-sidebar-toggle-btn-header:focus,
+.chatgpt-sidebar-toggle-btn-header:focus-visible,
+.chatgpt-sidebar-toggle-btn-header:active {
+  outline: none;
+}
+
+/* Bouton réduire - toujours visible */
+.chatgpt-reduce-btn-header {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -439,10 +464,14 @@
   height: 36px;
 }
 
-/* ✅ Pas de hover, style simple */
-.chatgpt-sidebar-toggle-btn-header:focus,
-.chatgpt-sidebar-toggle-btn-header:focus-visible,
-.chatgpt-sidebar-toggle-btn-header:active {
+.chatgpt-reduce-btn-header:hover {
+  background: var(--chat-overlay-hover);
+  color: var(--chat-text-primary);
+}
+
+.chatgpt-reduce-btn-header:focus,
+.chatgpt-reduce-btn-header:focus-visible,
+.chatgpt-reduce-btn-header:active {
   outline: none;
 }
 
@@ -491,6 +520,29 @@
 .sidebar-search-clean {
   padding: 16px;
   border-bottom: none;
+  display: flex; /* ✅ Flexbox pour aligner recherche + bouton */
+  gap: 8px; /* ✅ Espace entre recherche et bouton */
+  align-items: center;
+}
+
+.sidebar-new-note-btn-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0; /* ✅ Ne pas réduire */
+  background: var(--sidebar-search-overlay); /* ✅ Même background que recherche */
+  border: none;
+  border-radius: var(--chat-radius-md);
+  color: var(--chat-text-secondary);
+  cursor: pointer;
+  transition: all var(--chat-transition-fast);
+}
+
+.sidebar-new-note-btn-top:hover {
+  background: var(--sidebar-search-overlay-focus);
+  color: var(--chat-text-primary);
 }
 
 .sidebar-search-clean > div {
@@ -516,6 +568,10 @@
   font-size: 14px;
   outline: none;
   transition: all var(--chat-transition-fast);
+}
+
+.sidebar-search-input-clean::placeholder {
+  color: var(--chat-text-muted); /* ✅ Même couleur que l'icône loupe */
 }
 
 .sidebar-search-input-clean:focus {
@@ -1111,7 +1167,8 @@
 }
 
 .chatgpt-input-textarea::placeholder {
-  color: var(--chat-text-placeholder);
+  color: var(--chat-text-code-bright); /* ✅ Même couleur que code inline */
+  filter: var(--code-brightness-filter); /* ✅ Même filtre que code inline */
   font-size: calc(var(--chat-font-size-base) * 1.02); /* +2% à peine */
 }
 
@@ -1464,6 +1521,16 @@
   
   *::-webkit-scrollbar {
     display: none; /* Chrome/Safari/Android */
+  }
+  
+  /* ✅ Afficher le bouton sidebar en mobile */
+  .chatgpt-sidebar-toggle-btn-header {
+    display: flex !important;
+  }
+  
+  /* ✅ Ajuster le margin en mobile pour coller le bouton à 5px du bord */
+  .chatgpt-header-left {
+    margin-left: -7px; /* ✅ Bouton à 5px du bord (12px padding - 7px = 5px) */
   }
   
   .chatgpt-header {
@@ -1880,7 +1947,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 12px; /* ✅ Plus de respiration */
   padding: 60px 40px;
   text-align: center;
   animation: fadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
@@ -1902,8 +1969,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  margin-bottom: 6px;
+  margin-bottom: 4px; /* ✅ Séparation sous l'avatar */
 }
 
 .chat-empty-agent-avatar img {
@@ -1927,7 +1993,7 @@
 }
 
 .chat-empty-agent-description {
-  font-size: 15px;
+  font-size: 16px; /* ✅ Légèrement plus grande */
   color: var(--chat-text-muted);
   margin: 0;
   line-height: 1.6;
@@ -1940,14 +2006,15 @@
   display: inline-flex;
   align-items: center;
   padding: 6px 16px;
-  background: var(--chat-bg-secondary);
+  background: var(--chat-gradient-block); /* ✅ Dégradé cohérent */
+  opacity: 0.6; /* ✅ Plus transparent */
   border-radius: 20px;
-  font-size: 13px;
-  color: var(--chat-text-muted);
+  font-size: 12px; /* ✅ Réduit de 13px à 12px */
+  color: var(--chat-text-primary); /* ✅ Couleur plus claire */
   font-family: var(--font-chat-ui);
   font-weight: 500;
   letter-spacing: 0.02em;
-  margin-top: 4px;
+  margin-top: 8px; /* ✅ Espacement harmonieux */
 }
 
 /* ========================================
