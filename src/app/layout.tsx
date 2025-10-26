@@ -88,13 +88,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" />
         <style dangerouslySetInnerHTML={{ __html: `
           /* CRITICAL CSS - Éviter le flash de couleur */
-          html, body { 
+          html { 
+            background: var(--color-bg-primary, #121212) !important; 
+            height: 100%;
+          }
+          body { 
             background: var(--color-bg-primary, #121212) !important; 
             color: var(--color-text-primary, #d0d0d0) !important; 
             font-family: 'Noto Sans', sans-serif !important;
             margin: 0;
             padding: 0;
             /* PWA Fullscreen - Remplit haut et bas */
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
           }
