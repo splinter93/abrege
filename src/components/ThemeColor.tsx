@@ -4,39 +4,29 @@ import { useEffect } from 'react';
 
 /**
  * Composant client qui met à jour la meta tag theme-color
- * en fonction du thème actif (dark/light/glass)
+ * en fonction du thème actif en lisant la variable CSS --color-bg-primary
  */
 export default function ThemeColor() {
   useEffect(() => {
     const updateThemeColor = () => {
-      const htmlElement = document.documentElement;
-      const isDark = htmlElement.classList.contains('dark') || 
-                     htmlElement.classList.contains('theme-dark');
-      const isLight = htmlElement.classList.contains('light') || 
-                      htmlElement.classList.contains('theme-light');
+      // Lire la variable CSS --color-bg-primary du document
+      const bgColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--color-bg-primary')
+        .trim();
       
-      // Couleurs selon le thème
-      let themeColor = '#121212'; // Dark par défaut
-      
-      if (isLight) {
-        themeColor = '#ffffff'; // Light mode
-      } else if (isDark) {
-        themeColor = '#121212'; // Dark mode
-      }
-      
-      // Update la meta tag
+      // Update la meta tag avec la vraie couleur du thème
       let metaThemeColor = document.querySelector('meta[name="theme-color"]');
-      if (metaThemeColor) {
-        metaThemeColor.setAttribute('content', themeColor);
+      if (metaThemeColor && bgColor) {
+        metaThemeColor.setAttribute('content', bgColor);
       }
     };
     
-    // Update initial
-    updateThemeColor();
+    // Update initial après un court délai pour s'assurer que les CSS sont chargés
+    setTimeout(updateThemeColor, 100);
     
-    // Observer les changements de classe sur <html>
+    // Observer les changements de classe sur <html> (changement de thème)
     const observer = new MutationObserver(() => {
-      updateThemeColor();
+      setTimeout(updateThemeColor, 50);
     });
     
     observer.observe(document.documentElement, {
