@@ -26,6 +26,8 @@ export interface Agent {
   max_tokens?: number;
   top_p?: number;
   is_active?: boolean;
+  is_chat_agent?: boolean;
+  is_endpoint_agent?: boolean;
   capabilities?: string[] | Record<string, unknown>; // JSONB dans la base
   api_v2_capabilities?: string[];
   profile_picture?: string;

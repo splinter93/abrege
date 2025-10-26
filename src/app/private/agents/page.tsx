@@ -510,47 +510,6 @@ function AgentsPageContent() {
                         </div>
                       )}
                     </div>
-
-                    {/* Provider déduit automatiquement du modèle (read-only) */}
-                    <div className="field-group">
-                      <label className="field-label">Provider (auto-détecté)</label>
-                      <div style={{
-                        padding: '0.75rem 1rem',
-                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        fontSize: '0.95rem',
-                        color: 'rgba(255, 255, 255, 0.9)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}>
-                        <span style={{ fontSize: '1.2rem' }}>
-                          {(() => {
-                            const model = editedAgent?.model || '';
-                            if (model.includes('grok')) return '🤖 xAI';
-                            if (model.includes('openai/') || model.includes('llama') || model.includes('deepseek')) return '⚡ Groq';
-                            return '⚡ Groq';
-                          })()}
-                        </span>
-                        <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                          (déduit depuis le modèle)
-                        </span>
-                      </div>
-                      <p style={{ 
-                        fontSize: '0.85rem', 
-                        color: 'rgba(255, 255, 255, 0.6)', 
-                        marginTop: '0.5rem' 
-                      }}>
-                        {(() => {
-                          const model = editedAgent?.model || '';
-                          if (model.includes('grok')) {
-                            return '→ Utilisera les OpenAPI Tools (assignez un schéma ci-dessous)';
-                          }
-                          return '→ Utilisera les MCP Tools (configurez ci-dessous)';
-                        })()}
-                      </p>
-                    </div>
                   </div>
 
                   {/* Paramètres LLM */}
@@ -823,9 +782,31 @@ function AgentsPageContent() {
 
                     <div className="field-group">
                       <label className="field-label">Type d'agent</label>
-                      <p className="field-value">
-                        {selectedAgent.is_chat_agent ? '💬 Chat' : '🔌 Endpoint'}
-                      </p>
+                      <select
+                        className="field-select"
+                        value={(() => {
+                          if (editedAgent?.is_chat_agent && editedAgent?.is_endpoint_agent) return 'both';
+                          if (editedAgent?.is_chat_agent) return 'chat';
+                          return 'endpoint';
+                        })()}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === 'chat') {
+                            updateField('is_chat_agent', true);
+                            updateField('is_endpoint_agent', false);
+                          } else if (value === 'endpoint') {
+                            updateField('is_chat_agent', false);
+                            updateField('is_endpoint_agent', true);
+                          } else if (value === 'both') {
+                            updateField('is_chat_agent', true);
+                            updateField('is_endpoint_agent', true);
+                          }
+                        }}
+                      >
+                        <option value="chat">💬 Agent Chat</option>
+                        <option value="endpoint">🔌 Agent Endpoint</option>
+                        <option value="both">🔄 Les deux (Chat + Endpoint)</option>
+                      </select>
                     </div>
 
                     <div className="field-group">

@@ -13,7 +13,8 @@ export const useAgents = () => {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Charge tous les agents actifs
+   * Charge tous les agents actifs de type chat uniquement
+   * (pour la sidebar du chat)
    */
   const loadAgents = async () => {
     try {
@@ -23,6 +24,7 @@ export const useAgents = () => {
         .from('agents')
         .select('*')
         .eq('is_active', true)
+        .eq('is_chat_agent', true)
         .order('priority', { ascending: false });
         
       if (error) throw error;
@@ -109,7 +111,7 @@ export const useAgents = () => {
   };
 
   /**
-   * Récupère un agent par son provider
+   * Récupère un agent de type chat par son provider
    */
   const getAgentByProvider = async (provider: string) => {
     try {
@@ -118,6 +120,7 @@ export const useAgents = () => {
         .select('*')
         .eq('provider', provider)
         .eq('is_active', true)
+        .eq('is_chat_agent', true)
         .single();
         
       if (error) throw error;
