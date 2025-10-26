@@ -366,6 +366,11 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
 
             // Ne yield que si le chunk a du contenu
             if (streamChunk.content || streamChunk.tool_calls || streamChunk.finish_reason) {
+              logger.dev(`[GroqProvider] 📤 YIELD →`, {
+                content: streamChunk.content?.substring(0, 20) || '[none]',
+                toolCalls: streamChunk.tool_calls?.length || 0,
+                finishReason: streamChunk.finish_reason || '[none]'
+              });
               yield streamChunk;
             }
             
