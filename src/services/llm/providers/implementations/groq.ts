@@ -341,6 +341,14 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
             const delta = chunk.choices?.[0]?.delta;
             if (!delta) continue;
 
+            // ✅ Log le contenu du chunk pour debug
+            logger.dev(`[GroqProvider] 📦 CHUNK:`, {
+              hasContent: !!delta.content,
+              contentLength: delta.content?.length || 0,
+              hasToolCalls: !!delta.tool_calls,
+              finishReason: chunk.choices?.[0]?.finish_reason
+            });
+
             // Yield le chunk formaté
             const streamChunk: StreamChunk = {};
             
@@ -356,7 +364,10 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
               streamChunk.finish_reason = chunk.choices[0].finish_reason;
             }
 
-            yield streamChunk;
+            // Ne yield que si le chunk a du contenu
+            if (streamChunk.content || streamChunk.tool_calls || streamChunk.finish_reason) {
+              yield streamChunk;
+            }
             
           } catch (parseError) {
             logger.error('[GroqProvider] ❌ Erreur parsing chunk SSE:', parseError);
