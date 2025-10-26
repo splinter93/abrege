@@ -4,57 +4,66 @@ import { useEffect } from 'react';
 
 /**
  * Composant client qui met à jour la meta tag theme-color
- * en fonction du thème actif en lisant la variable CSS --color-bg-primary
- * Contrôle total indépendamment du mode système Android/iOS
+ * Détecte le thème actif et applique la bonne couleur
  */
 export default function ThemeColor() {
   useEffect(() => {
     const updateThemeColor = () => {
-      // Lire la variable CSS --color-bg-primary du document
-      const bgColor = getComputedStyle(document.documentElement)
-        .getPropertyValue('--color-bg-primary')
-        .trim();
+      const html = document.documentElement;
+      let color = '#121212'; // Dark par défaut
       
-      if (!bgColor) return;
+      // Détecter le thème actif
+      if (html.classList.contains('theme-glass') || 
+          html.classList.contains('chat-theme-glass')) {
+        color = '#1a1625'; // Glass theme
+      } else if (html.classList.contains('theme-light') || 
+                 html.classList.contains('light')) {
+        color = '#ffffff'; // Light theme
+      } else {
+        color = '#121212'; // Dark theme
+      }
       
-      // Update toutes les meta tags theme-color (au cas où il y en aurait plusieurs)
-      const metaTags = document.querySelectorAll('meta[name="theme-color"]');
-      metaTags.forEach(tag => {
-        tag.setAttribute('content', bgColor);
-      });
+      console.log('[ThemeColor] Update:', color, 'Classes:', html.className);
       
-      // Forcer aussi dans le manifest si disponible
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'THEME_COLOR',
-          color: bgColor
-        });
+      // Update la meta tag
+      const metaTag = document.querySelector('meta[name="theme-color"]');
+      if (metaTag) {
+        metaTag.setAttribute('content', color);
       }
     };
     
-    // Update initial après délai
+    // Update initial immédiat
+    updateThemeColor();
+    
+    // Re-update après 100ms pour s'assurer que les CSS sont chargés
     setTimeout(updateThemeColor, 100);
+    setTimeout(updateThemeColor, 500);
     
-    // Update périodique pour forcer la couleur (Android peut reset)
-    const interval = setInterval(updateThemeColor, 2000);
+    // Update périodique agressif (Android peut reset)
+    const interval = setInterval(updateThemeColor, 1000);
     
-    // Observer les changements de classe sur <html>
-    const observer = new MutationObserver(() => {
-      setTimeout(updateThemeColor, 50);
-    });
-    
+    // Observer les changements de classe
+    const observer = new MutationObserver(updateThemeColor);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class', 'style'],
+      attributeFilter: ['class'],
     });
     
-    // Update au focus de la fenêtre
+    // Update au focus/visibilité
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        updateThemeColor();
+      }
+    };
+    
     window.addEventListener('focus', updateThemeColor);
+    document.addEventListener('visibilitychange', handleVisibility);
     
     return () => {
       observer.disconnect();
       clearInterval(interval);
       window.removeEventListener('focus', updateThemeColor);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
   
