@@ -294,6 +294,21 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       
       logger.info(`[GroqProvider] 🚀 PAYLOAD → GROQ: ${payload.model} | ${payload.messages?.length} messages | ${payload.tools?.length || 0} tools`);
       
+      // ✅ DEBUG: Logger les messages tool pour diagnostiquer
+      const toolMessages = (payload.messages as GroqMessage[])?.filter(m => m.role === 'tool') || [];
+      if (toolMessages.length > 0) {
+        logger.warn(`[GroqProvider] 🔍 ${toolMessages.length} messages TOOL dans le payload:`, 
+          toolMessages.map((m, i) => ({
+            index: i,
+            hasToolCallId: !!m.tool_call_id,
+            hasName: !!m.name,
+            name: m.name || '❌ MISSING',
+            tool_call_id: m.tool_call_id || '❌ MISSING',
+            contentPreview: typeof m.content === 'string' ? m.content.substring(0, 50) : typeof m.content
+          }))
+        );
+      }
+      
       // Appel API avec streaming
       const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
         method: 'POST',
@@ -387,7 +402,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    * ✅ NOUVELLE MÉTHODE: Convertit les ChatMessage vers le format API Groq
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): GroqMessage[] {
-    return messages.map(msg => {
+    return messages.map((msg, index) => {
       const messageObj: GroqMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool' | 'developer',
         content: msg.content
@@ -399,15 +414,45 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       }
 
       // Gérer les tool results pour les messages tool
-      if (msg.role === 'tool' && msg.tool_call_id) {
-        messageObj.tool_call_id = msg.tool_call_id;
-        if (msg.name) {
-          messageObj.name = msg.name;
+      if (msg.role === 'tool') {
+        let toolCallId = msg.tool_call_id;
+        let toolName = msg.name;
+        
+        // ✅ Si name manquant, essayer de l'extraire du content (anciens messages DB)
+        if (!toolName && typeof msg.content === 'string') {
+          try {
+            const parsed = JSON.parse(msg.content);
+            toolName = parsed.toolName || parsed.name;
+            if (!toolCallId && parsed.toolCallId) {
+              toolCallId = parsed.toolCallId;
+            }
+          } catch {
+            // Content n'est pas du JSON, on garde undefined
+          }
+        }
+        
+        // ✅ Fallback final si toujours manquant
+        if (!toolCallId || !toolName) {
+          logger.warn(`[GroqProvider] ⚠️ Message tool ${index} incomplet, SKIP:`, {
+            hasToolCallId: !!toolCallId,
+            hasName: !!toolName,
+            contentPreview: typeof msg.content === 'string' ? msg.content.substring(0, 100) : typeof msg.content
+          });
+          // ⚠️ FILTRER ce message au lieu de l'envoyer avec des valeurs bidon
+          return null;
+        }
+        
+        messageObj.tool_call_id = toolCallId;
+        messageObj.name = toolName;
+        
+        // ✅ Convertir content en string si c'est un objet
+        if (typeof msg.content === 'object' && msg.content !== null) {
+          messageObj.content = JSON.stringify(msg.content);
         }
       }
 
       return messageObj;
-    });
+    }).filter((msg): msg is GroqMessage => msg !== null);  // ✅ Filtrer les nulls
   }
 
   /**
