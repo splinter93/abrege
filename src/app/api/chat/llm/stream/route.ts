@@ -314,12 +314,23 @@ export async function POST(request: NextRequest) {
           // Car le toolCall retourné par le LLM n'a PAS de server_label !
           const toolNameToType = new Map<string, 'mcp' | 'openapi'>();
           for (const tool of tools) {
+            // ✅ Vérifier que le tool a la structure attendue
+            if (!tool.function || !tool.function.name) {
+              logger.warn(`[Stream Route] ⚠️ Tool sans function.name ignoré:`, {
+                type: tool.type,
+                hasFunction: !!tool.function,
+                tool: JSON.stringify(tool, null, 2)
+              });
+              continue;
+            }
+            
             const isMcp = isMcpTool(tool);
             toolNameToType.set(tool.function.name, isMcp ? 'mcp' : 'openapi');
           }
           
           logger.dev(`[Stream Route] 🗺️ Tool routing map créée:`, {
             totalTools: tools.length,
+            mappedTools: toolNameToType.size,
             mcpTools: Array.from(toolNameToType.entries()).filter(([_, type]) => type === 'mcp').map(([name]) => name),
             openApiTools: Array.from(toolNameToType.entries()).filter(([_, type]) => type === 'openapi').map(([name]) => name)
           });
