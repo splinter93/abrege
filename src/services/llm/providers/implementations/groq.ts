@@ -20,6 +20,15 @@ import type {
 import { isMcpTool } from '../../types/strictTypes';
 
 /**
+ * ✅ Type pour les chunks de streaming SSE
+ */
+interface StreamChunk {
+  content?: string;
+  tool_calls?: ToolCall[];
+  finish_reason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
+}
+
+/**
  * Configuration spécifique à Groq
  */
 interface GroqConfig extends ProviderConfig {
@@ -256,6 +265,107 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('[GroqProvider] ❌ Erreur lors de l\'appel:', { message: errorMessage });
+      throw error;
+    }
+  }
+
+  /**
+   * ✅ NOUVEAU : Streaming avec Server-Sent Events (SSE)
+   * Compatible avec Groq API (format OpenAI identique à xAI)
+   */
+  async *callWithMessagesStream(
+    messages: ChatMessage[], 
+    tools: Tool[]
+  ): AsyncGenerator<StreamChunk, void, unknown> {
+    if (!this.isAvailable()) {
+      throw new Error('Groq provider non configuré');
+    }
+
+    try {
+      logger.dev(`[GroqProvider] 🌊 Streaming Chat Completions avec ${messages.length} messages`);
+      
+      // Conversion des ChatMessage vers le format API
+      const apiMessages = this.convertChatMessagesToApiFormat(messages);
+      const payload = await this.preparePayload(apiMessages, tools);
+      payload.stream = true; // ✅ Activer streaming
+      
+      logger.info(`[GroqProvider] 🚀 PAYLOAD → GROQ: ${payload.model} | ${payload.messages?.length} messages | ${payload.tools?.length || 0} tools`);
+      
+      // Appel API avec streaming
+      const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.config.apiKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Groq API Error: ${response.status} - ${errorText}`);
+      }
+
+      if (!response.body) {
+        throw new Error('Response body is null');
+      }
+
+      // Lire le stream SSE
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+          logger.dev(`[GroqProvider] ✅ Stream terminé`);
+          break;
+        }
+
+        // Décoder le chunk
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          
+          if (!trimmed || trimmed === 'data: [DONE]') continue;
+          if (!trimmed.startsWith('data: ')) continue;
+
+          try {
+            const jsonStr = trimmed.substring(6);
+            const chunk = JSON.parse(jsonStr);
+            
+            const delta = chunk.choices?.[0]?.delta;
+            if (!delta) continue;
+
+            // Yield le chunk formaté
+            const streamChunk: StreamChunk = {};
+            
+            if (delta.content) {
+              streamChunk.content = delta.content;
+            }
+            
+            if (delta.tool_calls) {
+              streamChunk.tool_calls = delta.tool_calls;
+            }
+            
+            if (chunk.choices?.[0]?.finish_reason) {
+              streamChunk.finish_reason = chunk.choices[0].finish_reason;
+            }
+
+            yield streamChunk;
+            
+          } catch (parseError) {
+            logger.error('[GroqProvider] ❌ Erreur parsing chunk SSE:', parseError);
+          }
+        }
+      }
+
+    } catch (error) {
+      logger.error('[GroqProvider] ❌ Erreur streaming:', error);
       throw error;
     }
   }
