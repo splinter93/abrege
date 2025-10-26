@@ -302,29 +302,19 @@ export async function POST(request: NextRequest) {
           // ✅ AUDIT : Tracker les tool calls déjà exécutés pour détecter les doublons
           const executedToolCallsSignatures = new Set<string>();
           
-          // ✅ NOUVEAU : Créer une Map des tool names → type (MCP/OpenAPI)
-          // Car le toolCall retourné par le LLM n'a PAS de server_label !
-          const toolNameToType = new Map<string, 'mcp' | 'openapi'>();
-          for (const tool of tools) {
-            // ✅ Vérifier que le tool a la structure attendue
-            if (!tool.function || !tool.function.name) {
-              logger.warn(`[Stream Route] ⚠️ Tool sans function.name ignoré:`, {
-                type: tool.type,
-                hasFunction: !!tool.function,
-                tool: JSON.stringify(tool, null, 2)
-              });
-              continue;
-            }
-            
-            const isMcp = isMcpTool(tool);
-            toolNameToType.set(tool.function.name, isMcp ? 'mcp' : 'openapi');
-          }
+          // ✅ Séparer les tools MCP (exécutés par Groq nativement) des OpenAPI (exécutés par nous)
+          const mcpTools = tools.filter(isMcpTool);
+          const openApiTools = tools.filter(t => !isMcpTool(t));
           
-          logger.dev(`[Stream Route] 🗺️ Tool routing map créée:`, {
+          // ✅ Créer une Map des tool names OpenAPI → pour routing d'exécution
+          const openApiToolNames = new Set(openApiTools.map(t => t.function.name));
+          
+          logger.dev(`[Stream Route] 🗺️ Tools séparés:`, {
             totalTools: tools.length,
-            mappedTools: toolNameToType.size,
-            mcpTools: Array.from(toolNameToType.entries()).filter(([_, type]) => type === 'mcp').map(([name]) => name),
-            openApiTools: Array.from(toolNameToType.entries()).filter(([_, type]) => type === 'openapi').map(([name]) => name)
+            mcpCount: mcpTools.length,
+            openApiCount: openApiTools.length,
+            mcpServers: mcpTools.map(t => (t as McpTool).server_label),
+            openApiNames: Array.from(openApiToolNames)
           });
 
           // ✅ Helper: Extraire le texte d'un MessageContent (string ou array multi-modal)
@@ -482,11 +472,8 @@ export async function POST(request: NextRequest) {
               timestamp: new Date().toISOString()
             });
 
-            // ✅ Créer les executors UNE FOIS (en dehors de la boucle)
-            const { ApiV2ToolExecutor } = await import('@/services/llm/executors/ApiV2ToolExecutor');
+            // ✅ Créer l'executor OpenAPI (les tools MCP sont gérés nativement par Groq)
             const { OpenApiToolExecutor } = await import('@/services/llm/executors/OpenApiToolExecutor');
-            
-            const mcpExecutor = new ApiV2ToolExecutor();
             const openApiExecutor = new OpenApiToolExecutor('', openApiEndpoints);
             
             // ✅ Exécuter chaque tool call
@@ -495,23 +482,25 @@ export async function POST(request: NextRequest) {
               try {
                 logger.dev(`[Stream Route] 🔧 Exécution tool: ${toolCall.function.name}`);
                 
-                // ✅ Détecter le type de tool via la Map (car le toolCall n'a pas server_label)
-                const toolType = toolNameToType.get(toolCall.function.name);
-                const isToolFromMcp = toolType === 'mcp';
+                // ✅ Vérifier si c'est un tool OpenAPI (exécuté par nous)
+                // Les tools MCP sont exécutés nativement par Groq, on ne les touche pas
+                const isOpenApiTool = openApiToolNames.has(toolCall.function.name);
                 
-                // ✅ AUDIT DÉTAILLÉ : Logger avant exécution
-                logger.dev(`[Stream Route] 🚀 AVANT EXÉCUTION TOOL:`, {
+                if (!isOpenApiTool) {
+                  // Tool MCP : déjà exécuté par Groq, on skip
+                  logger.dev(`[Stream Route] ⏭️ Tool MCP skip (géré par Groq): ${toolCall.function.name}`);
+                  continue;
+                }
+                
+                // ✅ AUDIT DÉTAILLÉ : Logger avant exécution OpenAPI
+                logger.dev(`[Stream Route] 🚀 AVANT EXÉCUTION OPENAPI:`, {
                   toolName: toolCall.function.name,
                   toolId: toolCall.id,
-                  toolType: toolType || 'UNKNOWN',
-                  isMcpTool: isToolFromMcp,
                   arguments: toolCall.function.arguments.substring(0, 100) + '...'
                 });
                 
-                // ✅ Utiliser le bon executor
-                const result = isToolFromMcp 
-                  ? await mcpExecutor.executeToolCall(toolCall, userToken)
-                  : await openApiExecutor.executeToolCall(toolCall, userToken);
+                // ✅ Exécuter le tool OpenAPI
+                const result = await openApiExecutor.executeToolCall(toolCall, userToken);
 
                 // ✅ AUDIT DÉTAILLÉ : Logger après exécution
                 logger.dev(`[Stream Route] ✅ APRÈS EXÉCUTION TOOL:`, {
