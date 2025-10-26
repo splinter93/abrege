@@ -100,6 +100,12 @@
   --chat-space-md: 12px;
   --chat-space-lg: 16px;
   --chat-space-xl: 24px;
+  
+  /* ========================================
+     PADDINGS RESPONSIVE - SYSTÈME UNIFIÉ
+     Appliqués simultanément au container messages et input
+     ======================================== */
+  --chat-padding-horizontal: 24px;  /* Desktop par défaut */
   --chat-space-2xl: 32px;
   
   /* ========================================
@@ -427,9 +433,11 @@
   height: 36px;
 }
 
-.chatgpt-sidebar-toggle-btn-header:hover {
-  background: var(--chat-overlay-hover);
-  color: var(--chat-text-primary);
+/* ✅ Pas de hover, style simple */
+.chatgpt-sidebar-toggle-btn-header:focus,
+.chatgpt-sidebar-toggle-btn-header:focus-visible,
+.chatgpt-sidebar-toggle-btn-header:active {
+  outline: none;
 }
 
 /* ========================================
@@ -738,6 +746,32 @@
   margin-left: 280px;
 }
 
+/* En mode responsive, garder la largeur fixe et laisser déborder */
+@media (max-width: 1023px) {
+  /* ✅ Forcer la largeur fixe sur TOUS les containers (sidebar ouverte OU fermée) */
+  .chatgpt-messages {
+    max-width: none;
+    width: 100vw;
+    min-width: 100vw;
+  }
+  
+  .chatgpt-input-container {
+    width: 100vw;
+    max-width: none;
+    left: 0;
+    right: auto;
+  }
+  
+  .chatgpt-input-area {
+    max-width: 1015px;
+  }
+  
+  /* ✅ Décalage uniquement quand sidebar ouverte (pas de resize) */
+  .chatgpt-content.sidebar-open {
+    margin-left: 280px;
+  }
+}
+
 .chatgpt-sidebar-overlay {
   display: none;
 }
@@ -762,10 +796,11 @@
 .chatgpt-messages {
   max-width: 1000px;
   margin: 0 auto;
-  padding: var(--chat-space-xl) 0;
+  padding: var(--chat-space-xl) var(--chat-padding-horizontal);
   position: relative; /* Pour le centrage absolu de l'empty state */
   min-height: 100%; /* S'assure que le conteneur prend toute la hauteur */
   width: 100%;
+  box-sizing: border-box;
 }
 
 .chatgpt-message {
@@ -843,7 +878,7 @@
 }
 
 /* Responsive mobile - images plus petites */
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .chatgpt-message-image {
     max-width: 200px;
     max-height: 200px;
@@ -871,11 +906,9 @@
 }
 
 .chatgpt-message-reasoning {
-  margin-bottom: var(--chat-space-md);
-  padding: var(--chat-space-md);
-  background: var(--chat-overlay-soft);
-  border-radius: var(--chat-radius-md);
-  border-left: 3px solid var(--chat-accent-primary);
+  margin-bottom: 4px;
+  padding: 0;
+  position: relative;
 }
 
 .chatgpt-message-loading {
@@ -928,7 +961,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0 var(--chat-space-xl) 24px;
+  padding: 0 var(--chat-padding-horizontal) 24px;
   background: var(--chat-bg-primary);
   display: flex;
   justify-content: center;
@@ -1313,14 +1346,20 @@
    RESPONSIVE - MOBILE
    ======================================== */
 
-@media (max-width: 768px) {
+/* ========================================
+   RESPONSIVE - SYSTÈME DE BREAKPOINTS UNIFIÉ
+   Les paddings changent simultanément pour messages et input
+   ======================================== */
+
+/* Mobile et tablette (< 1024px) - Correspond au breakpoint React */
+@media (max-width: 1023px) {
+  :root {
+    --chat-padding-horizontal: 12px;  /* ✅ Appliqué simultanément */
+  }
+  
   .chatgpt-header {
     padding: var(--chat-space-md);
     height: 56px;
-  }
-  
-  .chatgpt-messages {
-    padding: var(--chat-space-lg) 0;
   }
   
   .chatgpt-messages-container {
@@ -1336,11 +1375,7 @@
     max-width: 85%;
   }
   
-  .chatgpt-input-container {
-    padding: 12px;
-  }
-  
-  .chatgpt-input-area {
+  .chatgpt-content:not(.sidebar-open) .chatgpt-input-area {
     padding: 12px;
   }
   
@@ -1348,26 +1383,23 @@
     font-size: 16px !important; /* Évite le zoom sur iOS */
   }
   
+  /* Garde le même style qu'en desktop : 280px avec border-radius */
   .sidebar-ultra-clean {
-    width: 100%;
-    border-radius: 0;
-    margin-bottom: 0;
-    height: 100%;
+    /* Hérite des styles desktop (280px, border-radius, etc.) */
+    transform: translateX(-280px) !important;  /* ✅ Cachée par défaut */
+  }
+  
+  .sidebar-ultra-clean.visible {
+    transform: translateX(0) !important;  /* ✅ Visible avec son style */
   }
   
   .sidebar-hover-zone {
-    display: none;
+    display: none !important;  /* ✅ Force le masquage */
   }
   
+  /* ✅ Plus d'overlay en mobile : la sidebar garde son style et repousse le contenu */
   .chatgpt-sidebar-overlay.visible {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--chat-overlay-dark);
-    z-index: calc(var(--chat-z-sidebar) - 1);
+    display: none;
   }
 }
 
@@ -2168,7 +2200,7 @@
 }
 
 /* Responsive mobile */
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .chat-image-preview {
     width: 64px;
     height: 64px;

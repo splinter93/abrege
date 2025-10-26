@@ -263,6 +263,14 @@ const ChatFullscreenV2: React.FC = () => {
     setSidebarOpen(false);
   }, []);
 
+  // 🎯 Fermer sidebar et désactiver hover quand on passe en mode mobile
+  useEffect(() => {
+    if (!isDesktop) {
+      setSidebarOpen(false);
+      setSidebarHovered(false);
+    }
+  }, [isDesktop]);
+
   // 🎯 Fermer sidebar sur mobile après changement de session
   useEffect(() => {
     if (!isDesktop && sidebarOpen && currentSession) {
@@ -618,15 +626,13 @@ const ChatFullscreenV2: React.FC = () => {
   }, [requireAuth]);
 
   const handleSidebarMouseEnter = useCallback(() => {
-    if (isDesktop) {
-      setSidebarHovered(true);
-    }
+    if (!isDesktop) return;  // ✅ Guard clause strict
+    setSidebarHovered(true);
   }, [isDesktop]);
 
   const handleSidebarMouseLeave = useCallback(() => {
-    if (isDesktop) {
-      setSidebarHovered(false);
-    }
+    if (!isDesktop) return;  // ✅ Guard clause strict
+    setSidebarHovered(false);
   }, [isDesktop]);
 
   const handleWideModeToggle = useCallback(() => {
@@ -721,8 +727,10 @@ const ChatFullscreenV2: React.FC = () => {
       <div className={`chatgpt-content ${(sidebarOpen || (isDesktop && sidebarHovered)) ? 'sidebar-open' : ''}`}>
         {/* Sidebar moderne */}
         <div 
-          onMouseEnter={handleSidebarMouseEnter}
-          onMouseLeave={handleSidebarMouseLeave}
+          {...(isDesktop ? {
+            onMouseEnter: handleSidebarMouseEnter,
+            onMouseLeave: handleSidebarMouseLeave
+          } : {})}
         >
         <SidebarUltraClean
             isOpen={isDesktop ? (sidebarOpen || sidebarHovered) : sidebarOpen}

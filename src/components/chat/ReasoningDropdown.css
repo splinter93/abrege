@@ -3,25 +3,28 @@
    ======================================== */
 
 .reasoning-dropdown {
-  margin-bottom: 2px;
-  width: auto; /* ✅ Largeur adaptée au contenu */
-  display: inline-block; /* ✅ Prend seulement l'espace nécessaire */
+  position: relative;
+  margin-bottom: 0;
+  width: 100%;
 }
 
 .reasoning-dropdown-trigger {
-  width: auto; /* ✅ Largeur adaptée au contenu */
+  position: absolute;
+  left: -40px;
+  top: 6px;
   background: none;
   border: none;
   border-radius: 0;
   padding: 0;
   cursor: pointer;
   transition: all 0.2s ease;
-  position: relative;
-  overflow: visible; /* ✅ Permet au contenu d'être visible */
+  overflow: visible;
+  z-index: 10;
 }
 
 .reasoning-dropdown-trigger:hover .reasoning-dropdown-header {
-  background: rgba(255, 255, 255, 0.08); /* ✅ Hover plus visible */
+  filter: brightness(1.1);
+  transform: scale(1.05);
 }
 
 .reasoning-dropdown-trigger:active {
@@ -29,63 +32,50 @@
 }
 
 .reasoning-dropdown-header {
-  display: inline-flex; /* ✅ Inline-flex pour largeur adaptative */
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px; /* ✅ Padding équilibré pour le background */
-  color: #9ca3af;
-  font-size: 12px;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.05); /* ✅ Background gris subtle */
-  border-radius: 12px; /* ✅ Plus arrondi */
-  transition: background 0.2s ease;
-  width: auto; /* ✅ Largeur adaptée au texte */
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--chat-text-primary);
+  transition: all 0.2s ease;
+  filter: brightness(0.8);
+  border-radius: 50%;
+  background: var(--chat-gradient-input);
 }
 
 
 .reasoning-dropdown-icon {
-  color: #9ca3af;
-  margin-right: 2px;
   flex-shrink: 0;
-}
-
-.reasoning-dropdown-title {
-  flex: 1;
-  text-align: left;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  text-transform: none;
-  font-style: normal;
-  font-size: 11px;
 }
 
 
 .reasoning-dropdown-content {
+  position: relative;
+  left: 0;
   overflow: hidden;
   background: none;
   border-top: none;
 }
 
 .reasoning-dropdown-body {
-  padding: 6px 12px 12px 0;
+  padding: 0;
+  margin-top: 6px;
+  margin-bottom: 10px;
 }
 
 .reasoning-dropdown-text {
   margin: 0;
-  padding: 0;
+  padding: 12px 16px;
   font-family: var(--font-chat-text);
-  font-size: 12px;
-  line-height: 1.4;
-  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--chat-text-primary);
+  filter: brightness(0.8);
   white-space: pre-wrap;
   word-wrap: break-word;
-  overflow-wrap: break-word;
-  background: none;
-  border: none;
-  outline: none;
-  resize: none;
-  width: 100%;
-  box-sizing: border-box;
+  background: var(--chat-gradient-input);
+  border-radius: 12px;
 }
 
 /* ========================================
@@ -111,33 +101,61 @@
    RESPONSIVE DESIGN
    ======================================== */
 
-@media (max-width: 768px) {
-  .reasoning-dropdown-header {
-    padding: 6px 10px 6px 0;
-    font-size: 11px;
+@media (max-width: 1023px) {
+  /* Remettre l'ampoule au-dessus de la bulle sur mobile/tablette */
+  .reasoning-dropdown-trigger {
+    position: relative;
+    left: 0;
+    top: 0;
+    display: inline-block;
+    margin-bottom: 4px;
   }
   
-  .reasoning-dropdown-title {
-    font-size: 10px;
+  .reasoning-dropdown-header {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .reasoning-dropdown-icon {
+    width: 12px;
+    height: 12px;
   }
   
   .reasoning-dropdown-body {
-    padding: 4px 10px 10px 0;
+    margin-top: 4px;
   }
   
   .reasoning-dropdown-text {
     font-size: 11px;
+    padding: 10px 12px;
   }
 }
 
 @media (max-width: 480px) {
+  .reasoning-dropdown-trigger {
+    position: relative;
+    left: 0;
+    top: 0;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+  
   .reasoning-dropdown-header {
-    padding: 6px 8px 6px 0;
-    gap: 4px;
+    width: 24px;
+    height: 24px;
+  }
+  
+  .reasoning-dropdown-icon {
+    width: 11px;
+    height: 11px;
   }
   
   .reasoning-dropdown-body {
-    padding: 8px 8px 8px 0;
+    margin-top: 4px;
+  }
+  
+  .reasoning-dropdown-text {
+    padding: 8px 10px;
   }
 }
 
@@ -159,25 +177,11 @@
    ======================================== */
 
 @media (prefers-color-scheme: dark) {
-  .reasoning-dropdown-trigger {
-    background: none;
-    border: none;
-  }
-  
-  .reasoning-dropdown-trigger:hover {
-    background: none;
-  }
-  
   .reasoning-dropdown-header {
-    color: #9ca3af;
-  }
-  
-  .reasoning-dropdown-content {
-    background: none;
-    border-top: none;
+    color: var(--chat-text-primary);
   }
   
   .reasoning-dropdown-text {
-    color: #9ca3af;
+    color: var(--chat-text-primary);
   }
 }

@@ -27,8 +27,7 @@ const ReasoningDropdown: React.FC<ReasoningDropdownProps> = ({
         aria-label="Toggle reasoning details"
       >
         <div className="reasoning-dropdown-header">
-          <Lightbulb className="reasoning-dropdown-icon" size={12} />
-          <span className="reasoning-dropdown-title">Reasoning</span>
+          <Lightbulb className="reasoning-dropdown-icon" size={14} />
         </div>
       </button>
 
