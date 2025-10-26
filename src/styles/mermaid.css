@@ -20,8 +20,8 @@
   --mermaid-theme-tertiary-border-color: #374151;
   --mermaid-theme-tertiary-text-color: #d1d5db;
   --mermaid-theme-line-color: #4b5563; /* Couleur des flèches et lignes */
-  --mermaid-theme-font-family: var(--editor-font-family-headings);
-  --mermaid-theme-font-size: 14px;
+  --mermaid-theme-font-family: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* ✅ Cohérent avec chat */
+  --mermaid-theme-font-size: 18px; /* ✅ Augmenté pour lisibilité */
 }
 
 /* Application du thème via le renderer Mermaid */
@@ -40,12 +40,55 @@
   border-radius: 12px;
 }
 
-/* Texte dans les noeuds */
-.mermaid-svg-container .nodeLabel {
-  color: var(--mermaid-theme-primary-text-color) ;
+/* ✅ Centrage global du texte SVG + taille cohérente */
+.mermaid-svg-container svg text {
+  text-anchor: middle !important;
+  dominant-baseline: central !important;
+  font-family: var(--font-chat-text) !important; /* ✅ Cohérent avec chat */
+  font-size: 18px !important; /* ✅ Taille augmentée pour lisibilité */
 }
+
+/* ✅ Font-size spécifique pour le texte dans les nodes */
+.mermaid-svg-container .nodeLabel,
+.mermaid-svg-container .node text tspan {
+  font-size: 18px !important;
+}
+
+/* Texte dans les noeuds - centrage */
+.mermaid-svg-container .nodeLabel {
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
 .mermaid-svg-container .node text {
-  fill: var(--mermaid-theme-primary-text-color) ;
+  fill: #ffffff !important;
+  text-anchor: middle !important; /* ✅ Centrage horizontal */
+  dominant-baseline: central !important; /* ✅ Centrage vertical */
+}
+
+/* Labels dans foreignObject */
+.mermaid-svg-container foreignObject {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important; /* ✅ Augmenté pour lisibilité */
+}
+
+.mermaid-svg-container foreignObject > div,
+.mermaid-svg-container foreignObject > span,
+.mermaid-svg-container foreignObject p {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  font-family: var(--font-chat-text) !important; /* ✅ Cohérent avec chat */
+  font-size: 18px !important; /* ✅ Augmenté pour lisibilité */
+  line-height: 1.4 !important;
 }
 
 /* Style des liens/flèches */
@@ -73,39 +116,62 @@
 
 /* Flowchart */
 .mermaid-svg-container .flowchart-label {
-  color: var(--mermaid-theme-primary-text-color) ;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
 }
 .mermaid-svg-container .flowchart-link {
   stroke: var(--mermaid-theme-line-color) ;
 }
-.mermaid-svg-container .flowchart-node-rect {
-  fill: var(--mermaid-theme-primary-color) ;
-  stroke: var(--mermaid-theme-primary-border-color) ;
-  rx: 10px;
-  ry: 10px;
+
+/* Labels containers flowchart */
+.mermaid-svg-container .label-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mermaid-svg-container .label {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
 }
 
 /* Rayons de bordure pour tous les rectangles de nœuds */
 .mermaid-svg-container rect[id*="node"] {
-  rx: 10px;
-  ry: 10px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
 }
 
 /* Rayons de bordure pour les rectangles génériques dans les diagrammes */
 .mermaid-svg-container rect {
-  rx: 8px;
-  ry: 8px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
 }
 
 /* Sequence Diagram */
 .mermaid-svg-container .actor {
   stroke: var(--mermaid-theme-secondary-border-color) ;
-  fill: var(--mermaid-theme-secondary-color) ;
-  rx: 8px;
-  ry: 8px;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
 }
+.mermaid-svg-container .actor-label,
 .mermaid-svg-container .messageText {
   fill: var(--mermaid-theme-text-color) ;
+  text-anchor: middle !important;
+  dominant-baseline: central !important;
 }
 .mermaid-svg-container .sequence-number {
   fill: var(--mermaid-theme-text-color) ;
@@ -113,39 +179,54 @@
 
 /* Gantt Chart */
 .mermaid-svg-container .section {
-  fill: var(--mermaid-theme-secondary-color) ;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
   stroke: var(--mermaid-theme-secondary-border-color) ;
-  rx: 6px;
-  ry: 6px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
 }
 .mermaid-svg-container .task {
-  fill: var(--mermaid-theme-primary-color) ;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
   stroke: var(--mermaid-theme-primary-border-color) ;
-  rx: 6px;
-  ry: 6px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
 }
 .mermaid-svg-container .taskText {
   fill: var(--mermaid-theme-primary-text-color) ;
+  text-anchor: middle !important;
+  dominant-baseline: central !important;
 }
 
 /* Rayons de bordure pour les éléments de classe et d'état */
 .mermaid-svg-container .classBox,
 .mermaid-svg-container .stateBox,
 .mermaid-svg-container .noteBox {
-  rx: 8px;
-  ry: 8px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
 }
 
 /* Rayons de bordure pour les éléments de diagramme d'état */
 .mermaid-svg-container .state-node {
-  rx: 10px;
-  ry: 10px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
 }
 
 /* Rayons de bordure pour les éléments de diagramme de classe */
 .mermaid-svg-container .class-node {
-  rx: 8px;
-  ry: 8px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
 }
 
 /* Cacher le texte d'erreur généré par Mermaid à l'intérieur du SVG */
@@ -157,33 +238,119 @@
    STYLES POUR LA MODALE MERMAID
    ========================================================================== */
 
+/* ✅ Font globale pour la modale */
+.mermaid-modal svg {
+  font-family: var(--font-chat-text) !important; /* ✅ Cohérent avec chat */
+  font-size: 18px !important; /* ✅ Augmenté pour lisibilité */
+}
+
+/* ✅ Centrage global du texte SVG + taille cohérente dans la modale */
+.mermaid-modal svg text {
+  text-anchor: middle !important;
+  dominant-baseline: central !important;
+  font-family: var(--font-chat-text) !important; /* ✅ Cohérent avec chat */
+  font-size: 18px !important; /* ✅ Augmenté pour lisibilité */
+  fill: #ffffff !important;
+}
+
+/* ✅ Labels dans foreignObject - modale */
+.mermaid-modal foreignObject {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important; /* ✅ Augmenté pour lisibilité */
+}
+
+.mermaid-modal foreignObject > div,
+.mermaid-modal foreignObject > span,
+.mermaid-modal foreignObject p {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  font-family: var(--font-chat-text) !important; /* ✅ Cohérent avec chat */
+  font-size: 18px !important; /* ✅ Augmenté pour lisibilité */
+  line-height: 1.4 !important;
+}
+
 /* Rayons de bordure pour tous les rectangles dans la modale Mermaid */
 .mermaid-modal svg rect {
-  rx: 6px;
-  ry: 6px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
 }
 
 /* Rayons de bordure pour les rectangles de nœuds dans la modale */
 .mermaid-modal svg rect[id*="node"] {
-  rx: 8px;
-  ry: 8px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
 }
 
 /* Rayons de bordure pour les éléments spécifiques dans la modale */
 .mermaid-modal svg .actor {
-  rx: 6px;
-  ry: 6px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
 }
 
 .mermaid-modal svg .section,
 .mermaid-modal svg .task {
-  rx: 4px;
-  ry: 4px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
 }
 
 .mermaid-modal svg .classBox,
 .mermaid-modal svg .stateBox,
 .mermaid-modal svg .noteBox {
-  rx: 6px;
-  ry: 6px;
+  rx: 12px; /* ✅ Cohérent avec code blocks */
+  ry: 12px;
+  fill: rgba(255, 255, 255, 0.03) !important; /* ✅ Background glass subtil */
+  backdrop-filter: blur(10px) !important; /* ✅ Effet blur */
+  -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
+}
+
+/* ✅ Styles de texte spécifiques pour la modale */
+.mermaid-modal .nodeLabel,
+.mermaid-modal .flowchart-label,
+.mermaid-modal .label {
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.mermaid-modal .label-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mermaid-modal .node text {
+  fill: #ffffff !important;
+}
+
+.mermaid-modal .actor-label,
+.mermaid-modal .messageText {
+  fill: var(--mermaid-theme-text-color) ;
+  text-anchor: middle !important;
+  dominant-baseline: central !important;
+}
+
+.mermaid-modal .taskText {
+  fill: var(--mermaid-theme-primary-text-color) ;
+  text-anchor: middle !important;
+  dominant-baseline: central !important;
 }

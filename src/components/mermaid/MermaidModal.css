@@ -7,9 +7,9 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--chat-bg-primary); /* ✅ Background opaque du chat */
+  backdrop-filter: none; /* ✅ Pas de blur */
+  -webkit-backdrop-filter: none;
   z-index: 999999;
   display: flex;
   flex-direction: column;
@@ -22,13 +22,9 @@
 @keyframes modalFadeIn {
   from {
     opacity: 0;
-    backdrop-filter: blur(0px);
-    -webkit-backdrop-filter: blur(0px);
   }
   to {
     opacity: 1;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
   }
 }
 
@@ -82,12 +78,13 @@
   color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   transition: all 0.2s ease;
-  border-radius: 4px;
+  border-radius: 8px; /* ✅ Cohérent avec boutons header chat */
 }
 
 .mermaid-modal-zoom-btn:hover {
   color: rgba(255, 255, 255, 1);
   transform: scale(1.1);
+  background: transparent !important; /* ✅ Pas de background arrondi */
 }
 
 .mermaid-modal-zoom-btn:active {
@@ -120,11 +117,13 @@
   cursor: pointer;
   transition: all 0.2s ease;
   margin: 0 16px;
+  border-radius: 8px; /* ✅ Cohérent avec boutons header chat */
 }
 
 .mermaid-modal-copy:hover {
   color: rgba(255, 255, 255, 1);
   transform: scale(1.1);
+  background: transparent !important; /* ✅ Pas de background arrondi */
 }
 
 .mermaid-modal-copy:active {
@@ -161,11 +160,13 @@
   justify-content: center;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  border-radius: 8px; /* ✅ Cohérent avec boutons header chat */
 }
 
 .mermaid-modal-close:hover {
   color: rgba(255, 255, 255, 1);
   transform: scale(1.1);
+  background: transparent !important; /* ✅ Pas de background arrondi */
 }
 
 .mermaid-modal-close:active {

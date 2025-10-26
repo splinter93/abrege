@@ -113,7 +113,7 @@
   height: 28px;
   width: 28px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 8px; /* ✅ Cohérent avec boutons header chat */
   background: transparent;
   color: var(--blk-muted);
   cursor: pointer;

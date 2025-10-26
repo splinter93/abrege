@@ -393,6 +393,23 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
       `;
       svgContainer.innerHTML = result.svg;
       
+      // ✅ Forcer la font sur le SVG après injection
+      const svg = svgContainer.querySelector('svg');
+      if (svg) {
+        // Lire la variable CSS --font-chat-text
+        const computedStyle = getComputedStyle(document.documentElement);
+        const chatFont = computedStyle.getPropertyValue('--font-chat-text').trim() || 'Figtree, Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        
+        svg.setAttribute('style', `font-family: ${chatFont}; font-size: 18px;`);
+        
+        // Forcer sur tous les éléments text aussi
+        const textElements = svg.querySelectorAll('text');
+        textElements.forEach((text) => {
+          (text as SVGTextElement).style.fontFamily = chatFont;
+          (text as SVGTextElement).style.fontSize = '18px';
+        });
+      }
+      
       // Ajouter le conteneur SVG
       container.appendChild(svgContainer);
     } else {

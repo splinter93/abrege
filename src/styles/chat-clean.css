@@ -1336,6 +1336,7 @@
 
 .bubble-buttons {
   display: flex;
+  width: 100%; /* ✅ Prend toute la largeur du container */
   justify-content: flex-start;
   opacity: 0;
   transition: opacity var(--chat-transition-normal);
@@ -1346,13 +1347,13 @@
 }
 
 .chatgpt-message-user .bubble-buttons {
-  justify-content: flex-end;
-  margin-top: 2px;
+  justify-content: flex-end; /* ✅ Aligné à droite du container */
+  margin-top: -4px; /* ✅ Remonté plus près de la bubble */
 }
 
 .chatgpt-message-assistant .bubble-buttons {
-  justify-content: flex-start;
-  margin-top: -12px;
+  justify-content: flex-start; /* ✅ Aligné à gauche du container */
+  margin-top: -4px; /* ✅ Remonté plus près de la bubble */
 }
 
 .bubble-buttons-container {

@@ -245,34 +245,34 @@ export const defaultMermaidConfig: MermaidConfig = {
     arrowheadColor: '#f97316',
     
     // Fonds principaux
-    mainBkg: '#1f2020',
-    secondBkg: '#2d2d2d',
-    background1: '#1a1a1a',
-    background2: '#2d2d2d',
-    background3: '#404040',
+    mainBkg: 'transparent', /* ✅ Background transparent */
+    secondBkg: 'transparent', /* ✅ Background transparent */
+    background1: 'transparent', /* ✅ Background transparent */
+    background2: 'transparent', /* ✅ Background transparent */
+    background3: 'transparent', /* ✅ Background transparent */
     
     // Flowchart
-    nodeBkg: '#f97316',
+    nodeBkg: 'transparent', /* ✅ Background transparent */
     nodeBorder: '#ea580c',
     nodeTextColor: '#ffffff',
-    clusterBkg: '#2d2d2d',
+    clusterBkg: 'transparent', /* ✅ Background transparent */
     clusterBorder: '#f97316',
     defaultLinkColor: '#f97316',
     edgeLabelBackground: 'transparent',
     
     // Sequence Diagram
-    actorBkg: '#1f2020',
+    actorBkg: 'transparent', /* ✅ Background transparent */
     actorBorder: '#f97316',
     actorTextColor: '#ffffff',
     messageTextColor: '#e5e7eb',
-    noteBkgColor: '#fef3c7',
+    noteBkgColor: 'transparent', /* ✅ Background transparent */
     noteBorderColor: '#f59e0b',
-    noteTextColor: '#92400e',
-    sectionBkgColor: '#2d2d2d',
-    sectionBkgColor2: '#404040',
+    noteTextColor: '#ffffff', /* ✅ Texte blanc pour lisibilité */
+    sectionBkgColor: 'transparent', /* ✅ Background transparent */
+    sectionBkgColor2: 'transparent', /* ✅ Background transparent */
     
     // Class Diagram
-    classBkg: '#1f2020',
+    classBkg: 'transparent', /* ✅ Background transparent */
     classBorder: '#f97316',
     classTitleColor: '#f97316',
     classLabelColor: '#e5e7eb',
@@ -280,7 +280,7 @@ export const defaultMermaidConfig: MermaidConfig = {
     relationshipTextColor: '#ffffff',
     
     // State Diagram
-    stateBkg: '#1f2020',
+    stateBkg: 'transparent', /* ✅ Background transparent */
     stateBorder: '#ea580c',
     stateTextColor: '#ffffff',
     transitionTextColor: '#ffffff',
@@ -288,24 +288,24 @@ export const defaultMermaidConfig: MermaidConfig = {
     edgeLabelColor: '#ffffff',
     
     // Entity Relationship
-    entityBkg: '#1f2020',
+    entityBkg: 'transparent', /* ✅ Background transparent */
     entityBorder: '#f97316',
     entityTextColor: '#ffffff',
     
     // Git Graph
-    commitBkg: '#f97316',
+    commitBkg: 'transparent', /* ✅ Background transparent */
     commitBorder: '#ea580c',
     commitTextColor: '#ffffff',
     branchTextColor: '#e5e7eb',
     
     // Pie Chart
-    pieBkg: '#ffffff',
+    pieBkg: 'transparent', /* ✅ Background transparent */
     pieBorder: '#f97316',
     pieTitleTextColor: '#ffffff',
     sliceTextColor: '#ffffff',
     
     // Journey
-    journeyBkg: '#1f2020',
+    journeyBkg: 'transparent', /* ✅ Background transparent */
     journeyBorder: '#f97316',
     journeyTextColor: '#ffffff',
     
@@ -319,48 +319,48 @@ export const defaultMermaidConfig: MermaidConfig = {
     
     // Couleurs spéciales
     titleColor: '#f97316',
-    labelBackground: '#2d2d2d',
+    labelBackground: 'transparent', /* ✅ Background transparent */
     mainContrastColor: '#ffffff',
     darkTextColor: '#1f2020',
   },
   securityLevel: 'loose',
-  fontFamily: 'Noto Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-  fontSize: 14,
+  fontFamily: 'Figtree, Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', /* ✅ Cohérent avec --font-chat-text */
+  fontSize: 18, /* ✅ Augmenté pour lisibilité */
   
   // Configuration Flowchart
   flowchart: {
     useMaxWidth: true,
     htmlLabels: true,
     curve: 'basis',
-    padding: 20,
-    nodeSpacing: 50,
-    rankSpacing: 50,
-    diagramPadding: 20,
+    padding: 30, /* ✅ Augmenté pour éviter texte coupé */
+    nodeSpacing: 60, /* ✅ Plus d'espace entre nœuds */
+    rankSpacing: 60, /* ✅ Plus d'espace entre rangs */
+    diagramPadding: 30, /* ✅ Plus de padding global */
   },
   
   // Configuration Sequence
   sequence: {
     useMaxWidth: true,
-    diagramMarginX: 50,
-    diagramMarginY: 20,
-    actorMargin: 50,
-    width: 150,
-    height: 65,
-    boxMargin: 15,
-    boxTextMargin: 10,
-    noteMargin: 15,
-    messageMargin: 40,
+    diagramMarginX: 60, /* ✅ Plus de marge */
+    diagramMarginY: 30, /* ✅ Plus de marge */
+    actorMargin: 60, /* ✅ Plus d'espace entre acteurs */
+    width: 170, /* ✅ Boxes plus larges */
+    height: 75, /* ✅ Boxes plus hautes */
+    boxMargin: 20, /* ✅ Plus de marge */
+    boxTextMargin: 15, /* ✅ Plus de padding texte */
+    noteMargin: 20, /* ✅ Plus de marge */
+    messageMargin: 50, /* ✅ Plus d'espace entre messages */
     mirrorActors: true,
     bottomMarginAdj: 1,
     rightAngles: false,
     showSequenceNumbers: false,
-    actorFontSize: 14,
-    noteFontSize: 14,
-    messageFontSize: 14,
+    actorFontSize: 18, /* ✅ Augmenté pour lisibilité */
+    noteFontSize: 18, /* ✅ Augmenté pour lisibilité */
+    messageFontSize: 18, /* ✅ Augmenté pour lisibilité */
     wrap: true,
-    wrapPadding: 15,
-    labelBoxWidth: 60,
-    labelBoxHeight: 25,
+    wrapPadding: 20, /* ✅ Plus de padding wrap */
+    labelBoxWidth: 80, /* ✅ Box labels plus larges */
+    labelBoxHeight: 35, /* ✅ Box labels plus hautes */
   },
   
   // Configuration Gantt
@@ -372,7 +372,7 @@ export const defaultMermaidConfig: MermaidConfig = {
     topPadding: 60,
     leftPadding: 80,
     gridLineStartPadding: 40,
-    fontSize: 14,
+    fontSize: 18, /* ✅ Augmenté pour lisibilité */
     numberSectionStyles: 4,
     axisFormat: '%Y-%m-%d',
     topAxis: false,
@@ -404,21 +404,21 @@ export const defaultMermaidConfig: MermaidConfig = {
   // Configuration ER
   er: {
     useMaxWidth: true,
-    diagramPadding: 25,
-    minEntityWidth: 120,
-    minEntityHeight: 80,
-    entityPadding: 20,
+    diagramPadding: 35, /* ✅ Plus de padding */
+    minEntityWidth: 150, /* ✅ Boxes plus larges */
+    minEntityHeight: 100, /* ✅ Boxes plus hautes */
+    entityPadding: 25, /* ✅ Plus de padding interne */
     stroke: '#f97316',
     fill: '#1f2020',
-    fontSize: 14,
+    fontSize: 18, /* ✅ Augmenté pour lisibilité */
   },
   
   // Configuration Class
   class: {
     useMaxWidth: true,
-    diagramPadding: 15,
-    nodeSpacing: 60,
-    rankSpacing: 60,
+    diagramPadding: 25, /* ✅ Plus de padding */
+    nodeSpacing: 70, /* ✅ Plus d'espace */
+    rankSpacing: 70, /* ✅ Plus d'espace */
   },
 };
 
