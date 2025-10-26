@@ -60,6 +60,7 @@
   --chat-text-secondary: #a3a9b2;       /* Texte secondaire */
   --chat-text-muted: #7a8088;           /* Texte discret, labels */
   --chat-text-code: #838b93;            /* Texte code blocks (muted éclairci ~5%) */
+  --chat-text-code-bright: var(--blk-fg); /* ✅ Couleur code blocks/tableaux (avec filter: brightness(1.12)) */
   --chat-text-placeholder: #7c8189;     /* Placeholder input (muted assombri ~1%) */
   --chat-text-success: #22c55e;         /* Texte succès */
   --chat-text-error: #ef4444;           /* Texte erreur */
@@ -140,6 +141,11 @@
   
   /* ✅ Surcharge directe de --blk-bg pour les code blocks */
   --blk-bg: var(--chat-gradient-block);
+  
+  /* ========================================
+     CODE & TABLES BRIGHTNESS FILTER
+     ======================================== */
+  --code-brightness-filter: brightness(1.18); /* ✅ Filtre réutilisable pour code/tables */
 }
 
 /* ========================================

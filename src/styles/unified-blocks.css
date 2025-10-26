@@ -561,8 +561,8 @@
   border-bottom: none ;
   text-underline-offset: unset ;
   text-decoration-thickness: unset ;
-  color: var(--blk-fg) !important;
-  filter: brightness(1.12); /* ✅ Éclairci subtilement */
+  color: var(--chat-text-code-bright) !important; /* ✅ Variable code couleur */
+  filter: var(--code-brightness-filter); /* ✅ Variable brightness réutilisable */
   font-family: var(--mono) !important;
   font-size: 14px !important;
   line-height: 1.8 !important;

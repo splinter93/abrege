@@ -129,8 +129,8 @@
   border-radius: 0.25rem;
   font-family: var(--font-monospace);
   font-size: 0.875em;
-  color: var(--blk-fg) !important; /* ✅ Même variable que unified-blocks.css */
-  filter: brightness(1.12); /* ✅ Éclairci subtilement */
+  color: var(--chat-text-code-bright) !important; /* ✅ Variable code couleur */
+  filter: var(--code-brightness-filter); /* ✅ Variable brightness réutilisable */
   font-weight: 400;
   letter-spacing: 0;
   border: none; /* ✅ Pas de bordure */
@@ -280,7 +280,7 @@
   width: 4px !important;
   background: var(--chat-gradient-block) !important; /* ✅ Gradient gris cohérent */
   border-radius: 2px !important; /* ✅ Arrondi haut et bas */
-  filter: brightness(1.1) !important; /* ✅ +10% luminosité */
+  opacity: 0.6; /* ✅ Légèrement plus opaque */
 }
 
 .chat-markdown blockquote p {
@@ -335,9 +335,11 @@
 
 .chat-markdown hr {
   border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  margin: 2rem 0;
-  height: 1px;
+  background: var(--chat-gradient-block); /* ✅ Dégradé cohérent */
+  height: 2px;
+  margin: 2.5rem 0;
+  border-radius: 2px; /* ✅ Bouts arrondis */
+  opacity: 0.5; /* ✅ Subtil */
 }
 
 /* ========================================
@@ -367,7 +369,8 @@
   padding: 0.75rem 1rem !important;
   text-align: left !important;
   font-weight: 600 !important;
-  color: var(--chat-text-primary) !important;
+  color: var(--chat-text-code-bright) !important; /* ✅ Variable code couleur */
+  filter: var(--code-brightness-filter); /* ✅ Variable brightness réutilisable */
   border: none !important; /* ✅ Pas de bordure */
   font-size: 0.8rem !important;
   letter-spacing: 0.025em !important;
@@ -379,7 +382,8 @@
   padding: 0.75rem 1rem !important;
   text-align: left !important;
   border: none !important; /* ✅ Pas de bordure */
-  color: var(--chat-text-primary) !important;
+  color: var(--chat-text-code-bright) !important; /* ✅ Variable code couleur */
+  filter: var(--code-brightness-filter); /* ✅ Variable brightness réutilisable */
   vertical-align: top !important;
   font-size: 0.875rem !important;
   font-weight: 500 !important;
