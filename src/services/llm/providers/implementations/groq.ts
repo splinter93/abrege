@@ -379,6 +379,11 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
               }));
             }
             
+            // ✅ Reasoning (si supporté par le modèle)
+            if (delta.reasoning) {
+              streamChunk.reasoning = delta.reasoning;
+            }
+            
             if (chunk.choices?.[0]?.finish_reason) {
               streamChunk.finishReason = chunk.choices[0].finish_reason;
             }

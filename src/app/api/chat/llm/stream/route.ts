@@ -357,6 +357,7 @@ export async function POST(request: NextRequest) {
 
             // Accumuler tool calls et content du stream
             let accumulatedContent = '';
+            let accumulatedReasoning = '';  // ✅ NOUVEAU: Accumuler le reasoning
             const toolCallsMap = new Map<string, { id: string; type: string; function: { name: string; arguments: string } }>(); // Accumuler par ID pour gérer les chunks
             let finishReason: string | null = null;
 
@@ -368,6 +369,11 @@ export async function POST(request: NextRequest) {
               // Accumuler content
               if (chunk.content) {
                 accumulatedContent += chunk.content;
+              }
+              
+              // ✅ NOUVEAU: Accumuler reasoning
+              if (chunk.reasoning) {
+                accumulatedReasoning += chunk.reasoning;
               }
               
               // ✅ Accumuler tool calls (peuvent venir en plusieurs chunks)
