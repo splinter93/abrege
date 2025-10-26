@@ -139,14 +139,29 @@ export class OpenApiToolExecutor {
   /**
    * Exécuter une fonction OpenAPI spécifique
    * ✅ STRICT: Types précis et validation renforcée
+   * ✅ NAMESPACE: Support des noms préfixés (ex: pexels__search)
    */
   private async executeOpenApiFunction(functionName: string, args: Record<string, unknown>, userToken: string): Promise<unknown> {
-    // Récupérer l'endpoint depuis la Map
-    const endpoint = this.endpoints.get(functionName);
+    // ✅ Chercher l'endpoint (peut être préfixé ou non)
+    let endpoint = this.endpoints.get(functionName);
+
+    // Si pas trouvé avec le nom complet, essayer d'enlever le préfixe namespace
+    if (!endpoint && functionName.includes('__')) {
+      const parts = functionName.split('__');
+      if (parts.length >= 2) {
+        // Prendre tout après le premier '__' (au cas où il y a plusieurs __)
+        const originalName = parts.slice(1).join('__');
+        endpoint = this.endpoints.get(originalName);
+        
+        if (endpoint) {
+          logger.dev(`[OpenApiToolExecutor] 🔧 Endpoint trouvé avec nom original: ${originalName} (appelé via ${functionName})`);
+        }
+      }
+    }
 
     if (!endpoint) {
       logger.error(`[OpenApiToolExecutor] ❌ Fonction non trouvée dans endpoints: ${functionName}`);
-      logger.error(`[OpenApiToolExecutor] 📋 Endpoints disponibles:`, Array.from(this.endpoints.keys()));
+      logger.error(`[OpenApiToolExecutor] 📋 Endpoints disponibles:`, Array.from(this.endpoints.keys()).slice(0, 10));
       throw new Error(`Fonction OpenAPI non supportée: ${functionName}`);
     }
 

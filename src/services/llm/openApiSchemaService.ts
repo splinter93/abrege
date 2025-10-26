@@ -33,6 +33,61 @@ interface OpenAPISchema {
 }
 
 /**
+ * Extrait un namespace propre depuis une base URL
+ * Utilisé pour préfixer les tools et créer une isolation par API
+ * 
+ * @param baseUrl - URL de base de l'API (ex: https://api.pexels.com/v1)
+ * @returns Namespace normalisé (ex: "pexels")
+ * 
+ * @example
+ * extractNamespaceFromUrl("https://api.pexels.com/v1") → "pexels"
+ * extractNamespaceFromUrl("https://api.unsplash.com") → "unsplash"
+ * extractNamespaceFromUrl("https://www.scrivia.app/api/v2") → "scrivia"
+ */
+function extractNamespaceFromUrl(baseUrl: string): string {
+  try {
+    const url = new URL(baseUrl);
+    const hostname = url.hostname.toLowerCase();
+    
+    // Extraire le domaine principal (enlever www, api, sous-domaines multiples)
+    const parts = hostname.split('.');
+    
+    // Cas spéciaux pour localhost et IPs
+    if (hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+      return 'local';
+    }
+    
+    // Trouver le domaine principal (avant le TLD)
+    // Ex: api.pexels.com → pexels
+    // Ex: www.scrivia.app → scrivia
+    // Ex: api.exa.ai → exa
+    let domain = parts[parts.length - 2] || parts[0];
+    
+    // Si le domaine commence par 'api' ou 'www', prendre la partie avant
+    if (domain === 'api' || domain === 'www') {
+      domain = parts[parts.length - 3] || parts[parts.length - 2] || parts[0];
+    }
+    
+    // Nettoyer et valider
+    const namespace = domain
+      .replace(/[^a-z0-9]/g, '') // Garder seulement alphanumériques
+      .toLowerCase();
+    
+    // Validation finale
+    if (!namespace || namespace.length === 0) {
+      logger.warn(`[extractNamespaceFromUrl] ⚠️ Namespace vide pour URL: ${baseUrl}`);
+      return 'unknown';
+    }
+    
+    return namespace;
+    
+  } catch (error) {
+    logger.error(`[extractNamespaceFromUrl] ❌ Erreur parsing URL: ${baseUrl}`, error);
+    return 'unknown';
+  }
+}
+
+/**
  * Service pour gérer les schémas OpenAPI
  */
 export class OpenAPISchemaService {
@@ -82,8 +137,13 @@ export class OpenAPISchemaService {
 
       logger.dev(`[OpenAPISchemaService] ✅ Schéma chargé: ${schema.name} v${schema.version}`);
 
-      // Convertir en tools avec nom du schéma pour contexte
-      const tools = this.convertOpenAPIToTools(schema.content, schema.name);
+      // Extraire baseUrl depuis le schéma OpenAPI
+      const content = schema.content as Record<string, unknown>;
+      const servers = content.servers as Array<{ url: string }> | undefined;
+      const baseUrl = servers?.[0]?.url;
+
+      // Convertir en tools avec namespace depuis baseUrl
+      const tools = this.convertOpenAPIToTools(schema.content, schema.name, baseUrl);
 
       // Mettre en cache
       this.schemasCache.set(cacheKey, tools);
@@ -131,8 +191,13 @@ export class OpenAPISchemaService {
 
       logger.dev(`[OpenAPISchemaService] ✅ Schéma chargé: ${schema.name} v${schema.version}`);
 
-      // Convertir en tools avec nom du schéma pour contexte
-      const tools = this.convertOpenAPIToTools(schema.content, schema.name);
+      // Extraire baseUrl depuis le schéma OpenAPI
+      const content = schema.content as Record<string, unknown>;
+      const servers = content.servers as Array<{ url: string }> | undefined;
+      const baseUrl = servers?.[0]?.url;
+
+      // Convertir en tools avec namespace depuis baseUrl
+      const tools = this.convertOpenAPIToTools(schema.content, schema.name, baseUrl);
 
       // Mettre en cache
       this.schemasCache.set(cacheKey, tools);
@@ -150,13 +215,23 @@ export class OpenAPISchemaService {
 
   /**
    * Convertit un schéma OpenAPI en array de tools function
+   * 
    * @param openApiContent - Contenu du schéma OpenAPI
    * @param schemaName - Nom du schéma pour contexte (optionnel, enrichit les descriptions)
+   * @param baseUrl - URL de base de l'API (optionnel, utilisé pour préfixer les noms)
+   * @returns Array de tools triés alphabétiquement par nom
    */
-  private convertOpenAPIToTools(openApiContent: Record<string, unknown>, schemaName?: string): Tool[] {
+  private convertOpenAPIToTools(
+    openApiContent: Record<string, unknown>, 
+    schemaName?: string,
+    baseUrl?: string
+  ): Tool[] {
     const tools: Tool[] = [];
 
     try {
+      // Extraire le namespace depuis le baseUrl pour préfixer les tools
+      const namespace = baseUrl ? extractNamespaceFromUrl(baseUrl) : undefined;
+      
       const paths = openApiContent.paths as Record<string, Record<string, unknown>> | undefined;
 
       if (!paths) {
@@ -200,26 +275,17 @@ export class OpenAPISchemaService {
             continue;
           }
 
-          // ✅ Enrichir la description avec le nom du schéma pour contexte LLM
-          let enrichedDescription = description || summary || `${method.toUpperCase()} ${pathName}`;
+          // ✅ Construire le nom du tool avec préfixe namespace si disponible
+          const toolName = namespace ? `${namespace}__${operationId}` : operationId;
           
-          if (schemaName) {
-            // Normaliser le nom du schéma pour affichage
-            const displayName = schemaName
-              .replace(/-/g, ' ')
-              .replace(/api/gi, '')
-              .replace(/v\d+/gi, '')
-              .trim()
-              .toUpperCase();
-            
-            enrichedDescription = `[${displayName}] ${enrichedDescription}`;
-          }
+          // ✅ Enrichir la description (plus besoin de [TAG] si on a le namespace dans le nom)
+          const enrichedDescription = description || summary || `${method.toUpperCase()} ${pathName}`;
 
           // Créer le tool
           const tool: Tool = {
             type: 'function',
             function: {
-              name: operationId,
+              name: toolName,
               description: enrichedDescription,
               parameters: parameters
             }
@@ -227,11 +293,15 @@ export class OpenAPISchemaService {
 
           tools.push(tool);
 
-          logger.dev(`[OpenAPISchemaService] ✅ Tool créé: ${operationId} (${method.toUpperCase()} ${pathName})`);
+          logger.dev(`[OpenAPISchemaService] ✅ Tool créé: ${toolName} (${method.toUpperCase()} ${pathName})`);
         }
       }
 
-      logger.dev(`[OpenAPISchemaService] ✅ Total: ${tools.length} tools générés`);
+      // ✅ Tri alphabétique des tools (groupement naturel par namespace)
+      // Recommandation ChatGPT : déterministe, évite les biais de position
+      tools.sort((a, b) => a.function.name.localeCompare(b.function.name));
+
+      logger.dev(`[OpenAPISchemaService] ✅ Total: ${tools.length} tools générés${namespace ? ` (namespace: ${namespace})` : ''}`);
 
       return tools;
 
@@ -524,8 +594,8 @@ export class OpenAPISchemaService {
         const apiKey = schema.api_key || undefined;
         const headerName = schema.header || this.detectHeaderNameFromUrl(baseUrl);
 
-        // Convertir en tools avec nom du schéma pour contexte
-        const tools = this.convertOpenAPIToTools(content, schema.name);
+        // Convertir en tools avec namespace depuis baseUrl
+        const tools = this.convertOpenAPIToTools(content, schema.name, baseUrl);
         allTools.push(...tools);
 
         // Extraire endpoints

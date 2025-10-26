@@ -126,6 +126,30 @@ export class AgentOrchestrator {
   // Cela évite la duplication et permet le cache partagé
 
   /**
+   * ✅ NOUVEAU : Construit un index de diagnostic des tools par namespace
+   * Recommandation ChatGPT : aide au debug et monitoring
+   * 
+   * @param tools - Array de tools à analyser
+   * @returns Objet avec le nombre de tools par namespace (ex: {pexels: 3, scrivia: 70})
+   */
+  private buildToolsIndex(tools: Tool[]): Record<string, number> {
+    const index: Record<string, number> = {};
+    
+    for (const tool of tools) {
+      const toolName = (tool as any).function?.name as string;
+      if (!toolName) continue;
+      
+      // Extraire le namespace (partie avant le premier '__')
+      const namespaceMatch = toolName.match(/^([^_]+)__/);
+      const namespace = namespaceMatch ? namespaceMatch[1] : 'other';
+      
+      index[namespace] = (index[namespace] || 0) + 1;
+    }
+    
+    return index;
+  }
+
+  /**
    * ✅ Sélectionner le provider en fonction de l'agent config
    * ✅ PRODUCTION READY : Validation stricte des paramètres LLM
    */
@@ -213,11 +237,15 @@ export class AgentOrchestrator {
           // xAI : Utiliser uniquement les tools OpenAPI (pas de limite artificielle)
           tools = openApiTools;
           
+          // ✅ Générer l'index de diagnostic (recommandation ChatGPT)
+          const toolsIndex = this.buildToolsIndex(tools);
+          
           // 🎯 LOG FOCUS TOOLS : xAI
           logger.info(`[TOOLS] Agent: ${agentConfig?.name || 'default'} (xAI)`, {
             provider: 'xai',
             total: tools.length,
-            tools: tools.map(t => `API:${(t as any).function?.name}`).slice(0, 20)
+            index: toolsIndex,
+            sample: tools.map(t => (t as any).function?.name).slice(0, 10)
           });
         } else {
           // Groq/OpenAI : Combiner les tools OpenAPI avec les MCP tools
@@ -231,13 +259,18 @@ export class AgentOrchestrator {
           const mcpCount = tools.filter((t) => isMcpTool(t)).length;
           const openApiCount = tools.filter((t) => !isMcpTool(t)).length;
           
+          // ✅ Générer l'index de diagnostic pour les tools OpenAPI
+          const openApiTools = tools.filter((t) => !isMcpTool(t));
+          const toolsIndex = this.buildToolsIndex(openApiTools);
+          
           // 🎯 LOG FOCUS TOOLS : Affichage détaillé des tools disponibles
           logger.info(`[TOOLS] Agent: ${agentConfig?.name || 'default'}`, {
             provider: selectedProvider,
             total: tools.length,
             mcp: mcpCount,
             openapi: openApiCount,
-            tools: tools.map(t => isMcpTool(t) ? `MCP:${(t as any).server_label}` : `API:${(t as any).function?.name}`).slice(0, 20)
+            index: toolsIndex,
+            sample: openApiTools.map(t => (t as any).function?.name).slice(0, 10)
           });
         }
       } else {
