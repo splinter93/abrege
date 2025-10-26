@@ -1401,6 +1401,24 @@
   .chatgpt-sidebar-overlay.visible {
     display: none;
   }
+  
+  /* ✅ Menu @ (Note Selector) - Adapté à la largeur mobile */
+  .chat-note-selector {
+    width: calc(100vw - 32px); /* 16px padding de chaque côté */
+    max-width: 380px; /* Max desktop */
+    left: 50%;
+    transform: translateX(-50%); /* Centre le menu */
+  }
+  
+  /* ✅ Masquer la scrollbar sur mobile */
+  .chat-note-list {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  
+  .chat-note-list::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
 }
 
 /* ========================================
