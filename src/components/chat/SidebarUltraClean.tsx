@@ -97,10 +97,9 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   return (
     <div className={`sidebar-ultra-clean ${isDesktop ? 'desktop' : 'mobile'} ${isOpen ? 'visible' : ''}`}>
 
-
-      {/* Barre de recherche */}
+      {/* Barre de recherche avec bouton nouvelle note */}
       <div className="sidebar-search-clean">
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', flex: 1 }}>
           <Search className="sidebar-search-icon-clean" size={16} />
           <input
             type="text"
@@ -110,6 +109,13 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <button
+          onClick={handleCreateNewSession}
+          className="sidebar-new-note-btn-top"
+          title="Nouvelle conversation"
+        >
+          <SquarePen size={16} />
+        </button>
       </div>
 
       {/* Contenu principal */}
@@ -166,13 +172,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
         <div className="sidebar-section-clean">
           <div className="sidebar-section-header-clean">
             <div className="sidebar-section-title-clean">Conversations</div>
-            <button
-              onClick={handleCreateNewSession}
-              className="sidebar-new-conversation-btn"
-              title="Nouvelle conversation"
-            >
-              <SquarePen size={14} />
-            </button>
           </div>
           {filteredSessions.map((session: ChatSession) => (
             <div key={session.id} className={`sidebar-conversation-item ${editingSessionId === session.id ? 'renaming' : ''}`}>

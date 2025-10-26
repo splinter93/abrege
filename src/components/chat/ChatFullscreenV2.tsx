@@ -774,24 +774,6 @@ const ChatFullscreenV2: React.FC = () => {
             </svg>
           </button>
           
-          {/* Bouton nouvelle conversation */}
-          <button
-            onClick={() => {
-              if (user && !authLoading) {
-                createSession();
-              }
-            }}
-            className="chatgpt-sidebar-toggle-btn-header"
-            aria-label="Nouvelle conversation"
-            title="Nouvelle conversation"
-            disabled={!user || authLoading}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
-          </button>
-          
           {/* Agent actif */}
           {selectedAgent && (
             <div className="chat-active-agent">
@@ -818,7 +800,7 @@ const ChatFullscreenV2: React.FC = () => {
           {/* Bouton réduire */}
           <Link 
             href="/" 
-            className="chatgpt-sidebar-toggle-btn-header"
+            className="chatgpt-reduce-btn-header"
             aria-label="Réduire le chat"
             title="Réduire le chat"
           >
