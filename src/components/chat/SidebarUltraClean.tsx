@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, User, Settings } from 'lucide-react';
+import { Search, X, User, Settings, Plus } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
@@ -162,7 +162,16 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
 
         {/* Sessions de chat */}
         <div className="sidebar-section-clean">
-          <div className="sidebar-section-title-clean">Conversations</div>
+          <div className="sidebar-section-header-clean">
+            <div className="sidebar-section-title-clean">Conversations</div>
+            <button
+              onClick={handleCreateNewSession}
+              className="sidebar-new-conversation-btn"
+              title="Nouvelle conversation"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
           {filteredSessions.map((session: ChatSession) => (
             <div key={session.id} className={`sidebar-conversation-item ${editingSessionId === session.id ? 'renaming' : ''}`}>
               <button

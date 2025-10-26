@@ -526,13 +526,38 @@
   margin-bottom: var(--chat-space-xl);
 }
 
+.sidebar-section-header-clean {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--chat-space-md);
+}
+
 .sidebar-section-title-clean {
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  color: var(--chat-text-muted);
-  margin-bottom: var(--chat-space-md);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.5px;
+  color: var(--chat-text-secondary);
+}
+
+.sidebar-new-conversation-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  color: var(--chat-text-secondary);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all var(--chat-transition-fast);
+}
+
+.sidebar-new-conversation-btn:hover {
+  background: var(--sidebar-item-hover);
+  color: var(--chat-text-primary);
 }
 
 /* Bouton "Voir plus" agents */
