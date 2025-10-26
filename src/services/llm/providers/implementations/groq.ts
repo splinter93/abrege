@@ -771,16 +771,8 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     };
 
     if (tools && tools.length > 0) {
-        // ✅ Log détaillé des tools pour debug
-        logger.dev(`[GroqProvider] 🔧 Préparation de ${tools.length} tools pour Groq:`, 
-          tools.map((t, i) => ({
-            index: i,
-            type: t.type,
-            hasFunction: !!t.function,
-            functionName: t.function?.name || '[MISSING NAME]',
-            functionDesc: t.function?.description?.substring(0, 50) || '[NO DESC]'
-          }))
-        );
+        // ✅ Log le PREMIER tool en entier pour diagnostiquer le format
+        logger.dev(`[GroqProvider] 🔬 PREMIER TOOL COMPLET:`, JSON.stringify(tools[0], null, 2));
         
         payload.tools = tools;
         payload.tool_choice = "auto";
