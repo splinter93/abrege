@@ -116,7 +116,9 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
       <div className="sidebar-content-clean">
         {/* Agents */}
         <div className="sidebar-section-clean">
-          <div className="sidebar-section-title-clean">Agents</div>
+          <div className="sidebar-section-header-clean">
+            <div className="sidebar-section-title-clean">Agents</div>
+          </div>
           {agentsLoading ? (
             <div className="sidebar-item-clean">
               <div className="sidebar-item-icon-clean">⏳</div>

@@ -520,6 +520,13 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--chat-space-lg);
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Scrollbar sidebar invisible */
+.sidebar-content-clean::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .sidebar-section-clean {
@@ -539,6 +546,8 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--chat-text-secondary);
+  line-height: 1;
+  margin: 0;
 }
 
 .sidebar-new-conversation-btn {
@@ -584,7 +593,7 @@
   display: flex;
   align-items: center;
   gap: var(--chat-space-md);
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-radius: var(--chat-radius-md);
   cursor: pointer;
   transition: all var(--chat-transition-fast);
@@ -608,17 +617,18 @@
 
 .sidebar-item-icon-clean {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 16px;
 }
 
 /* Conteneur avatar - doit être carré pour images rondes */
 .sidebar-item-icon-clean:has(.agent-avatar) {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
 }
 
 .sidebar-agent-row {
@@ -816,6 +826,29 @@
   background: var(--chat-bg-primary);
   padding-bottom: 100px; /* 🎯 Espace minimal pour streaming */
   position: relative; /* Pour le centrage absolu de l'empty state */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+/* Scrollbar zone messages ultra discrète et raccourcie */
+.chatgpt-messages-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chatgpt-messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chatgpt-messages-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 4px;
+}
+
+.chatgpt-messages-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.12);
+  background-clip: padding-box;
 }
 
 .chatgpt-messages {
