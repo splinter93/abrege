@@ -1404,11 +1404,8 @@
   
   /* ✅ Menu @ (Note Selector) - Adapté à la largeur mobile */
   .chat-note-selector {
-    width: calc(100vw - 64px); /* 32px padding de chaque côté */
-    max-width: 340px; /* Réduit pour mobile */
-    left: 50% !important; /* Override desktop left: 0 */
-    right: auto !important;
-    transform: translateX(-50%) !important; /* Centre le menu */
+    width: 280px; /* Largeur fixe réduite pour mobile */
+    max-width: calc(100vw - 80px); /* Ne déborde jamais de l'écran */
   }
   
   /* ✅ Masquer la scrollbar sur mobile */
