@@ -355,14 +355,8 @@ export async function POST(request: NextRequest) {
 
             // ✅ Stream depuis le provider
             for await (const chunk of provider.callWithMessagesStream(currentMessages, tools)) {
-              // ✅ Ajouter type: 'delta' pour compatibilité avec useChatResponse
-              const clientChunk = {
-                type: 'delta',
-                ...chunk
-              };
-              
-              // Envoyer le chunk au client
-              sendSSE(clientChunk);
+              // ✅ Le chunk contient déjà type: 'delta' (ajouté par le provider)
+              sendSSE(chunk);
 
               // Accumuler content
               if (chunk.content) {

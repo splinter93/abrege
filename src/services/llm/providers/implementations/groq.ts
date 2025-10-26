@@ -23,9 +23,12 @@ import { isMcpTool } from '../../types/strictTypes';
  * ✅ Type pour les chunks de streaming SSE
  */
 interface StreamChunk {
+  type?: 'delta';  // ✅ Ajouté pour compatibilité avec xAI et useChatResponse
   content?: string;
   tool_calls?: ToolCall[];
   finishReason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
+  reasoning?: string;  // ✅ Ajouté pour support futur
+  usage?: unknown;  // ✅ Ajouté pour support futur
 }
 
 /**
@@ -349,30 +352,32 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
               finishReason: chunk.choices?.[0]?.finish_reason
             });
 
-            // Yield le chunk formaté
-            const streamChunk: StreamChunk = {};
+            // ✅ Construire le chunk (format identique à xAI)
+            const streamChunk: StreamChunk = {
+              type: 'delta'  // ✅ Type ajouté dès le début comme xAI
+            };
             
             if (delta.content) {
               streamChunk.content = delta.content;
             }
             
-            if (delta.tool_calls) {
-              streamChunk.tool_calls = delta.tool_calls;
+            if (delta.tool_calls && delta.tool_calls.length > 0) {
+              streamChunk.tool_calls = delta.tool_calls.map(tc => ({
+                id: tc.id || '',
+                type: 'function' as const,
+                function: {
+                  name: tc.function?.name || '',
+                  arguments: tc.function?.arguments || ''
+                }
+              }));
             }
             
             if (chunk.choices?.[0]?.finish_reason) {
               streamChunk.finishReason = chunk.choices[0].finish_reason;
             }
 
-            // Ne yield que si le chunk a du contenu
-            if (streamChunk.content || streamChunk.tool_calls || streamChunk.finishReason) {
-              logger.dev(`[GroqProvider] 📤 YIELD →`, {
-                content: streamChunk.content?.substring(0, 20) || '[none]',
-                toolCalls: streamChunk.tool_calls?.length || 0,
-                finishReason: streamChunk.finishReason || '[none]'
-              });
-              yield streamChunk;
-            }
+            // ✅ Yield tous les chunks (comme xAI) au lieu de filtrer
+            yield streamChunk;
             
           } catch (parseError) {
             logger.error('[GroqProvider] ❌ Erreur parsing chunk SSE:', parseError);
