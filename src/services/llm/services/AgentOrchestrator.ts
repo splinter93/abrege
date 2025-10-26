@@ -167,12 +167,43 @@ export class AgentOrchestrator {
   }
 
   /**
-   * ✅ Sélectionner le provider en fonction de l'agent config
-   * ✅ PRODUCTION READY : Validation stricte des paramètres LLM
+   * ✅ Déduire le provider depuis le modèle (source unique de vérité)
+   * ✅ NOUVEAU DESIGN : Le modèle détermine le provider, pas l'inverse
+   */
+  private getProviderFromModel(model: string): 'groq' | 'xai' {
+    // xAI models
+    if (model.includes('grok')) return 'xai';
+    
+    // Groq models
+    if (model.includes('openai/') || model.includes('llama') || model.includes('deepseek') || model.includes('mixtral')) {
+      return 'groq';
+    }
+    
+    // Default fallback
+    return 'groq';
+  }
+
+  /**
+   * ✅ Sélectionner le provider en fonction du MODÈLE (pas du champ provider)
+   * ✅ PRODUCTION READY : Le modèle est la source de vérité
    */
   private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider {
-    const provider = agentConfig?.provider || 'groq';
-    const model = agentConfig?.model;
+    const configuredModel = agentConfig?.model || 'openai/gpt-oss-20b';
+    const configuredProvider = agentConfig?.provider;
+    
+    // ✅ DÉDUCTION : Provider depuis le modèle (source de vérité)
+    const deducedProvider = this.getProviderFromModel(configuredModel);
+    
+    // ⚠️ VALIDATION : Détecter incohérences
+    if (configuredProvider && configuredProvider !== deducedProvider) {
+      logger.warn(`[AgentOrchestrator] ⚠️ INCOHÉRENCE DÉTECTÉE:`, {
+        agentName: agentConfig?.name,
+        configuredProvider,
+        configuredModel,
+        deducedProvider,
+        action: 'Provider déduit du modèle sera utilisé'
+      });
+    }
 
     // ✅ Validation et normalisation des paramètres LLM
     const temperature = typeof agentConfig?.temperature === 'number'
@@ -187,23 +218,33 @@ export class AgentOrchestrator {
       ? Math.max(1, Math.min(100000, agentConfig.max_tokens))
       : 8000;
 
-    switch (provider.toLowerCase()) {
-      case 'xai':
-        return new XAIProvider({
-          model: model || 'grok-4-fast',
-          temperature,
-          topP,
-          maxTokens
-        });
-      
-      case 'groq':
-      default:
-        return new GroqProvider({
-          model: model || 'openai/gpt-oss-20b',
-          temperature,
-          topP,
-          maxTokens
-        });
+    // 🔍 DEBUG: Log détaillé de la sélection du provider
+    logger.info(`[AgentOrchestrator] 🔄 Sélection du provider:`, {
+      agentName: agentConfig?.name || 'default',
+      model: configuredModel,
+      deducedProvider,
+      temperature,
+      topP,
+      maxTokens
+    });
+
+    // ✅ Créer le provider basé sur le modèle (source de vérité)
+    if (deducedProvider === 'xai') {
+      logger.info(`[AgentOrchestrator] ✅ Provider XAI sélectionné (modèle: ${configuredModel})`);
+      return new XAIProvider({
+        model: configuredModel,
+        temperature,
+        topP,
+        maxTokens
+      });
+    } else {
+      logger.info(`[AgentOrchestrator] ✅ Provider GROQ sélectionné (modèle: ${configuredModel})`);
+      return new GroqProvider({
+        model: configuredModel,
+        temperature,
+        topP,
+        maxTokens
+      });
     }
   }
 
@@ -223,9 +264,22 @@ export class AgentOrchestrator {
       // Build initial messages
       const agentConfig = context.agentConfig || agentTemplateService.getDefaultAgent();
       
+      // 🔍 DEBUG: Log de l'agent config reçu
+      logger.info(`[AgentOrchestrator] 🎯 Agent Config reçu:`, {
+        hasAgentConfig: !!context.agentConfig,
+        agentId: agentConfig?.id,
+        agentName: agentConfig?.name,
+        provider: agentConfig?.provider,
+        model: agentConfig?.model,
+        temperature: agentConfig?.temperature,
+        isDefault: !context.agentConfig
+      });
+      
       // ✅ NOUVEAU : Sélectionner le bon provider selon l'agent
       this.llmProvider = this.selectProvider(agentConfig);
       const selectedProvider = agentConfig?.provider || 'groq';
+      
+      logger.info(`[AgentOrchestrator] 🚀 Provider final sélectionné: ${selectedProvider.toUpperCase()}`);
       
       const systemMessage = this.buildSystemMessage(agentConfig, context.uiContext);
       let messages = this.historyBuilder.buildInitialHistory(systemMessage, message, history);

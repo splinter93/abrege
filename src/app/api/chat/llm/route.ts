@@ -230,6 +230,17 @@ export async function POST(request: NextRequest) {
       api_v2_capabilities: DEFAULT_AGENT_SCOPES
     };
     
+    // 🔍 DEBUG: Log de l'agent config envoyé à l'orchestrateur
+    logger.info(`[LLM Route] 📤 Envoi à l'orchestrateur:`, {
+      agentId: finalAgentConfig.id,
+      agentName: finalAgentConfig.name,
+      provider: finalAgentConfig.provider,
+      model: finalAgentConfig.model,
+      temperature: finalAgentConfig.temperature,
+      max_tokens: finalAgentConfig.max_tokens,
+      isDefault: !agentConfig
+    });
+    
     const result = await handleGroqGptOss120b({
       message,
       appContext: {

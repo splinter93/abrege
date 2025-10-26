@@ -279,7 +279,6 @@ function AgentsPageContent() {
                     </p>
                     <div className="agent-meta">
                       <span className="agent-model">{agent.model}</span>
-                      <span className="agent-slug">{agent.slug}</span>
                     </div>
                   </motion.button>
                 ))
@@ -349,11 +348,6 @@ function AgentsPageContent() {
                         value={editedAgent?.display_name || ''}
                         onChange={(e) => updateField('display_name', e.target.value)}
                       />
-                    </div>
-
-                    <div className="field-group">
-                      <label className="field-label">Slug</label>
-                      <p className="field-value field-readonly">{selectedAgent.slug}</p>
                     </div>
 
                     <div className="field-group">
@@ -517,24 +511,44 @@ function AgentsPageContent() {
                       )}
                     </div>
 
+                    {/* Provider déduit automatiquement du modèle (read-only) */}
                     <div className="field-group">
-                      <label className="field-label">Provider</label>
-                      <select
-                        className="field-select"
-                        value={editedAgent?.provider || 'groq'}
-                        onChange={(e) => updateField('provider', e.target.value)}
-                      >
-                        <option value="groq">Groq (MCP Tools)</option>
-                        <option value="xai">xAI (OpenAPI Tools)</option>
-                      </select>
+                      <label className="field-label">Provider (auto-détecté)</label>
+                      <div style={{
+                        padding: '0.75rem 1rem',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        fontSize: '0.95rem',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}>
+                        <span style={{ fontSize: '1.2rem' }}>
+                          {(() => {
+                            const model = editedAgent?.model || '';
+                            if (model.includes('grok')) return '🤖 xAI';
+                            if (model.includes('openai/') || model.includes('llama') || model.includes('deepseek')) return '⚡ Groq';
+                            return '⚡ Groq';
+                          })()}
+                        </span>
+                        <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.5)' }}>
+                          (déduit depuis le modèle)
+                        </span>
+                      </div>
                       <p style={{ 
                         fontSize: '0.85rem', 
                         color: 'rgba(255, 255, 255, 0.6)', 
-                        marginTop: '0.25rem' 
+                        marginTop: '0.5rem' 
                       }}>
-                        {editedAgent?.provider === 'xai' 
-                          ? '→ Utilisera les OpenAPI Tools (assignez un schéma ci-dessous)' 
-                          : '→ Utilisera les MCP Tools (configurez ci-dessous)'}
+                        {(() => {
+                          const model = editedAgent?.model || '';
+                          if (model.includes('grok')) {
+                            return '→ Utilisera les OpenAPI Tools (assignez un schéma ci-dessous)';
+                          }
+                          return '→ Utilisera les MCP Tools (configurez ci-dessous)';
+                        })()}
                       </p>
                     </div>
                   </div>

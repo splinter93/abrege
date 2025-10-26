@@ -215,11 +215,16 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               <option value="">Sélectionnez un agent</option>
               {agents
                 .filter(a => a.is_active)
-                .map(agent => (
-                  <option key={agent.id} value={agent.id}>
-                    {agent.name} ({agent.provider})
-                  </option>
-                ))}
+                .map(agent => {
+                  // Déduire le provider depuis le modèle
+                  const model = agent.model || '';
+                  const providerIcon = model.includes('grok') ? '🤖' : '⚡';
+                  return (
+                    <option key={agent.id} value={agent.id}>
+                      {providerIcon} {agent.name}
+                    </option>
+                  );
+                })}
             </select>
           </div>
 

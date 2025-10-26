@@ -152,7 +152,19 @@ export async function POST(request: NextRequest) {
 
     // ✅ Sélectionner le provider selon la config agent (Groq ou xAI)
     const providerType = finalAgentConfig?.provider?.toLowerCase() || 'groq';
-    const model = finalAgentConfig?.model || (providerType === 'xai' ? 'grok-4-fast' : 'openai/gpt-oss-20b');
+    let model = finalAgentConfig?.model || (providerType === 'xai' ? 'grok-4-fast' : 'openai/gpt-oss-20b');
+    
+    // 🔍 VALIDATION : Détecter incohérence provider/modèle
+    const isXaiModel = model.includes('grok');
+    const isGroqModel = model.includes('openai/') || model.includes('llama') || model.includes('deepseek');
+    
+    if (providerType === 'xai' && isGroqModel) {
+      logger.warn(`[Stream Route] ⚠️ INCOHÉRENCE: Provider xAI avec modèle Groq (${model}), correction automatique`);
+      model = 'grok-4-fast'; // Fallback vers un modèle xAI
+    } else if (providerType === 'groq' && isXaiModel) {
+      logger.warn(`[Stream Route] ⚠️ INCOHÉRENCE: Provider Groq avec modèle xAI (${model}), correction automatique`);
+      model = 'openai/gpt-oss-20b'; // Fallback vers un modèle Groq
+    }
     
     // Validation et normalisation des paramètres LLM
     const temperature = typeof finalAgentConfig?.temperature === 'number'
@@ -167,12 +179,25 @@ export async function POST(request: NextRequest) {
       ? Math.max(1, Math.min(100000, finalAgentConfig.max_tokens))
       : 8000;
 
+    // 🔍 DEBUG: Log détaillé de la sélection
+    logger.info(`[Stream Route] 🔄 Configuration LLM:`, {
+      agentId: finalAgentConfig?.id,
+      agentName: finalAgentConfig?.name,
+      provider: providerType,
+      model: model,
+      temperature,
+      topP,
+      maxTokens,
+      originalModel: finalAgentConfig?.model,
+      corrected: finalAgentConfig?.model !== model
+    });
+
     // Créer le provider approprié
     const provider = providerType === 'xai'
       ? new XAIProvider({ model, temperature, topP, maxTokens })
       : new GroqProvider({ model, temperature, topP, maxTokens });
     
-    logger.info(`[Stream Route] 🎯 Provider sélectionné: ${providerType} (model: ${model})`);
+    logger.info(`[Stream Route] ✅ Provider ${providerType.toUpperCase()} créé avec modèle: ${model}`);
 
     // ✅ Construire le contexte UI (comme dans la route classique)
     const uiContext = context.uiContext || {};

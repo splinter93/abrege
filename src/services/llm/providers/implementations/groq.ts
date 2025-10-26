@@ -423,6 +423,14 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         let toolCallId = msg.tool_call_id;
         let toolName = msg.name;
         
+        // ✅ FIX: Attacher tool_call_id et name au messageObj
+        if (toolCallId) {
+          messageObj.tool_call_id = toolCallId;
+        }
+        if (toolName) {
+          messageObj.name = toolName;
+        }
+        
         // ✅ Si name manquant, essayer de l'extraire du content (anciens messages DB)
         if (!toolName && typeof msg.content === 'string') {
           try {
@@ -804,7 +812,8 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       role: msg.role,
       content: msg.content,
       ...(msg.tool_calls && { tool_calls: msg.tool_calls }),
-      ...(msg.tool_call_id && { tool_call_id: msg.tool_call_id })
+      ...(msg.tool_call_id && { tool_call_id: msg.tool_call_id }),
+      ...(msg.name && { name: msg.name }) // ✅ FIX: Inclure le champ name pour les messages tool
     }));
 
     const payload: Record<string, unknown> = {

@@ -1388,6 +1388,33 @@ Modèle utilisé : ${model}`;
         logger.info(`[SpecializedAgentManager] 🔄 Slug agent mis à jour: "${existingAgent.slug}" → "${newSlug}"`);
       }
 
+      // ✅ FIX PROVIDER : Auto-corriger le provider si le modèle change
+      const modelChanged = (
+        patchData.model && 
+        typeof patchData.model === 'string' && 
+        patchData.model !== existingAgent.model
+      );
+
+      if (modelChanged) {
+        const newModel = patchData.model as string;
+        
+        // Déduire le provider depuis le modèle
+        let deducedProvider: string;
+        if (newModel.includes('grok')) {
+          deducedProvider = 'xai';
+        } else if (newModel.includes('openai/') || newModel.includes('llama') || newModel.includes('deepseek') || newModel.includes('mixtral')) {
+          deducedProvider = 'groq';
+        } else {
+          deducedProvider = 'groq'; // fallback
+        }
+        
+        // Auto-corriger le provider si nécessaire
+        if (existingAgent.provider !== deducedProvider) {
+          patchData.provider = deducedProvider;
+          logger.info(`[SpecializedAgentManager] 🔄 Provider auto-corrigé: "${existingAgent.provider}" → "${deducedProvider}" (modèle: ${newModel})`);
+        }
+      }
+
       // Fusionner les données existantes avec les nouvelles
       const mergedData = {
         ...existingAgent,
