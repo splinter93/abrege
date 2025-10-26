@@ -44,6 +44,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
   const [message, setMessage] = React.useState('');
   const [audioError, setAudioError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageAttachment[]>([]);
+  const cameraInputRef = useRef<HTMLInputElement>(null); // ✅ Ref pour capture photo
   
   // Déterminer le niveau par défaut basé sur le modèle de l'agent
   const defaultReasoningLevel = getReasoningLevelFromModel(currentAgentModel);
@@ -379,10 +380,68 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     console.log('Load file');
   }, []);
 
+  // ✅ Handler pour capturer une photo
+  const handleCameraCapture = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    
+    try {
+      // 1. Preview base64 local
+      const base64 = await convertFileToBase64(file);
+      
+      // 2. Image temporaire
+      const tempId = `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const tempImage: ImageAttachment = {
+        id: tempId,
+        type: 'url',
+        base64,
+        previewUrl: base64,
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        addedAt: Date.now()
+      };
+      
+      // 3. Afficher immédiatement
+      setImages(prev => [...prev, tempImage]);
+      
+      // 4. Upload S3 en arrière-plan
+      const uploadResult = await chatImageUploadService.uploadImages(
+        [{ file, fileName: file.name, mimeType: file.type, size: file.size }],
+        sessionId
+      );
+      
+      if (uploadResult.success && uploadResult.images && uploadResult.images[0]) {
+        const s3Image = uploadResult.images[0];
+        
+        // 5. Remplacer par URL S3
+        setImages(prev => prev.map(img => 
+          img.id === tempId 
+            ? { ...img, base64: s3Image.url, previewUrl: s3Image.url }
+            : img
+        ));
+        
+        logger.info(LogCategory.API, '✅ Photo uploadée vers S3:', s3Image.url);
+      } else {
+        throw new Error(uploadResult.error || 'Échec upload S3');
+      }
+    } catch (error) {
+      logger.error(LogCategory.API, '❌ Erreur capture photo:', error);
+      setUploadError('Échec de la capture photo');
+    }
+    
+    // Reset input
+    if (e.target) {
+      e.target.value = '';
+    }
+  }, [sessionId]);
+
   const handleTakePhoto = useCallback(() => {
     setShowFileMenu(false);
-    // TODO: Implémenter la capture photo
-    console.log('Take photo');
+    // ✅ Déclencher la capture photo
+    cameraInputRef.current?.click();
   }, []);
 
   // Handlers WebSearch
@@ -589,6 +648,17 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
+      {/* Input caché pour capture photo */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleCameraCapture}
+        style={{ display: 'none' }}
+        aria-hidden="true"
+      />
+      
       {/* Affichage des erreurs */}
       {(audioError || uploadError) && (
         <div className="chatgpt-message-error">
