@@ -1,0 +1,19 @@
+{
+  "name": "Scrivia",
+  "short_name": "Scrivia",
+  "description": "Markdown knowledge base with LLM integration",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#131313",
+  "theme_color": "#131313",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/feather.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
