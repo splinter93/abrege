@@ -1,14 +1,16 @@
 import { useState, useCallback } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import { StreamTimeline, StreamTimelineItem } from '@/types/streamTimeline';
-import type { ToolCall } from '@/hooks/useChatHandlers';
+import type { ToolCall, ToolResult } from '@/hooks/useChatHandlers';
+import type { ChatMessage } from '@/types/chat';
+import type { MessageContent } from '@/types/image';
 
 interface UseChatResponseOptions {
   onComplete?: (
     fullContent: string, 
     fullReasoning: string, 
-    toolCalls?: unknown[], 
-    toolResults?: unknown[],
+    toolCalls?: ToolCall[], 
+    toolResults?: ToolResult[],
     streamTimeline?: StreamTimeline // ✅ NOUVEAU: Timeline capturée du stream
   ) => void;
   onError?: (error: string) => void;
@@ -26,7 +28,7 @@ interface UseChatResponseOptions {
 
 interface UseChatResponseReturn {
   isProcessing: boolean;
-  sendMessage: (message: string | import('@/types/image').MessageContent, sessionId: string, context?: Record<string, unknown>, history?: unknown[], token?: string) => Promise<void>;
+  sendMessage: (message: string | MessageContent, sessionId: string, context?: Record<string, unknown>, history?: ChatMessage[], token?: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -48,7 +50,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
     onAssistantRoundComplete, // ✅ NOUVEAU: Pour persister chaque round
   } = options;
 
-  const sendMessage = useCallback(async (message: string | import('@/types/image').MessageContent, sessionId: string, context?: Record<string, unknown>, history?: unknown[], token?: string) => {
+  const sendMessage = useCallback(async (message: string | MessageContent, sessionId: string, context?: Record<string, unknown>, history?: ChatMessage[], token?: string) => {
     try {
       // Extraire un aperçu du message pour le logging
       const messagePreview = typeof message === 'string' 
@@ -476,7 +478,8 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
             data.content || '', 
             data.reasoning || '', 
             data.tool_calls || [], 
-            data.tool_results || []
+            data.tool_results || [],
+            undefined // Pas de timeline en mode classique (non-streaming)
           );
           return;
         }

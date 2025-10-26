@@ -469,20 +469,42 @@ const ChatFullscreenV2: React.FC = () => {
       // 1. Garder les 30 messages user/assistant les plus récents
       const recentConversation = userAssistantMessages.slice(-Math.min(historyLimit, 30));
       
-      // 2. Extraire tous les tool_call_id des messages assistant gardés
+      // 2. Extraire UNIQUEMENT les tool_call_id du DERNIER message assistant avec tool_calls
+      // ✅ FIX: Ne pas garder les anciens tool results qui polluent l'historique
       const keptToolCallIds = new Set<string>();
-      recentConversation.forEach(msg => {
-        if (msg.role === 'assistant' && msg.tool_calls && Array.isArray(msg.tool_calls)) {
+      
+      // Chercher le dernier assistant avec tool_calls (en partant de la fin)
+      for (let i = recentConversation.length - 1; i >= 0; i--) {
+        const msg = recentConversation[i];
+        if (msg.role === 'assistant' && msg.tool_calls && Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0) {
+          // Trouvé ! Garder seulement ces tool_call_id
           msg.tool_calls.forEach(tc => {
             if (tc.id) keptToolCallIds.add(tc.id);
           });
+          break; // ✅ Stop après le premier trouvé (le plus récent)
         }
-      });
+      }
       
       // 3. Garder SEULEMENT les tool messages qui correspondent à ces tool_call_id
       const relevantTools = toolMessages.filter(tm => 
         tm.tool_call_id && keptToolCallIds.has(tm.tool_call_id)
       );
+      
+      // 🔍 DEBUG: Logger le filtrage des tools
+      if (toolMessages.length > 0) {
+        logger.dev('[ChatFullscreenV2] 🔍 Filtrage tool messages:', {
+          totalToolMessages: toolMessages.length,
+          keptToolCallIds: Array.from(keptToolCallIds),
+          relevantTools: relevantTools.length,
+          filtered: toolMessages.length - relevantTools.length,
+          toolMessagesDetails: toolMessages.map(tm => ({
+            tool_call_id: tm.tool_call_id,
+            name: tm.name,
+            hasName: !!tm.name,
+            isKept: tm.tool_call_id ? keptToolCallIds.has(tm.tool_call_id) : false
+          }))
+        });
+      }
       
       logger.dev('[ChatFullscreenV2] 📊 Filtrage historique:', {
         total: historyBeforeNewMessage.length,
@@ -501,6 +523,21 @@ const ChatFullscreenV2: React.FC = () => {
           const timestampB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
           return timestampA - timestampB;
         });
+      
+      // 🔍 DEBUG: Logger l'historique final envoyé au LLM
+      logger.info('[ChatFullscreenV2] 📤 Historique envoyé au LLM:', {
+        totalMessages: limitedHistoryForLLM.length,
+        roles: limitedHistoryForLLM.map(m => m.role),
+        hasToolMessages: limitedHistoryForLLM.filter(m => m.role === 'tool').length,
+        toolMessagesDetails: limitedHistoryForLLM
+          .filter(m => m.role === 'tool')
+          .map(m => ({
+            tool_call_id: m.tool_call_id,
+            name: m.name,
+            hasName: !!m.name,
+            contentPreview: m.content?.substring(0, 50)
+          }))
+      });
       
       // Extraire le texte pour la sauvegarde du message
       const messageText = typeof message === 'string' 
