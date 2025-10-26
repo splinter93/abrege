@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { simpleLogger as logger } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
 import { XAIProvider } from '@/services/llm/providers/implementations/xai';
+import { GroqProvider } from '@/services/llm/providers/implementations/groq';
 import type { ChatMessage } from '@/types/chat';
 import type { Tool } from '@/services/llm/types/strictTypes';
 
@@ -25,8 +26,9 @@ const supabase = createClient(
 );
 
 /**
- * ✅ Route API Streaming pour xAI Grok
+ * ✅ Route API Streaming pour LLM (Groq ou xAI)
  * Retourne un ReadableStream avec SSE
+ * Provider sélectionné automatiquement selon la config agent
  */
 export async function POST(request: NextRequest) {
   let sessionId: string | undefined;
@@ -148,13 +150,29 @@ export async function POST(request: NextRequest) {
       logger.error(`[Stream Route] ❌ Erreur récupération agent:`, error);
     }
 
-    // Créer le provider xAI
-    const provider = new XAIProvider({
-      model: finalAgentConfig?.model || 'grok-4-fast',
-      // ✅ Température optimisée pour chat + tools (évite hallucinations sporadiques)
-      temperature: finalAgentConfig?.temperature || 0.55,
-      maxTokens: finalAgentConfig?.max_tokens || 8000
-    });
+    // ✅ Sélectionner le provider selon la config agent (Groq ou xAI)
+    const providerType = finalAgentConfig?.provider?.toLowerCase() || 'groq';
+    const model = finalAgentConfig?.model || (providerType === 'xai' ? 'grok-4-fast' : 'openai/gpt-oss-20b');
+    
+    // Validation et normalisation des paramètres LLM
+    const temperature = typeof finalAgentConfig?.temperature === 'number'
+      ? Math.max(0, Math.min(2, finalAgentConfig.temperature))
+      : 0.7;
+    
+    const topP = typeof finalAgentConfig?.top_p === 'number'
+      ? Math.max(0, Math.min(1, finalAgentConfig.top_p))
+      : 0.9;
+    
+    const maxTokens = typeof finalAgentConfig?.max_tokens === 'number'
+      ? Math.max(1, Math.min(100000, finalAgentConfig.max_tokens))
+      : 8000;
+
+    // Créer le provider approprié
+    const provider = providerType === 'xai'
+      ? new XAIProvider({ model, temperature, topP, maxTokens })
+      : new GroqProvider({ model, temperature, topP, maxTokens });
+    
+    logger.info(`[Stream Route] 🎯 Provider sélectionné: ${providerType} (model: ${model})`);
 
     // ✅ Construire le contexte UI (comme dans la route classique)
     const uiContext = context.uiContext || {};
@@ -299,11 +317,11 @@ export async function POST(request: NextRequest) {
             roundCount++;
             logger.dev(`[Stream Route] 🔄 Round ${roundCount}/${maxRounds}`);
 
-            // ✅ AUDIT DÉTAILLÉ : Logger les messages envoyés à Grok pour ce round
+            // ✅ AUDIT DÉTAILLÉ : Logger les messages envoyés au LLM pour ce round
             const lastMessage = currentMessages[currentMessages.length - 1];
             const lastContent = lastMessage?.content ? extractTextFromContent(lastMessage.content) : '';
             
-            logger.dev(`[Stream Route] 📋 MESSAGES ENVOYÉS À GROK ROUND ${roundCount}:`, {
+            logger.dev(`[Stream Route] 📋 MESSAGES ENVOYÉS AU LLM - ROUND ${roundCount}:`, {
               messageCount: currentMessages.length,
               roles: currentMessages.map(m => m.role),
               hasToolCalls: currentMessages.some(m => m.tool_calls && m.tool_calls.length > 0),
