@@ -25,7 +25,7 @@ import { isMcpTool } from '../../types/strictTypes';
 interface StreamChunk {
   content?: string;
   tool_calls?: ToolCall[];
-  finish_reason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
+  finishReason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
 }
 
 /**
@@ -361,15 +361,15 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
             }
             
             if (chunk.choices?.[0]?.finish_reason) {
-              streamChunk.finish_reason = chunk.choices[0].finish_reason;
+              streamChunk.finishReason = chunk.choices[0].finish_reason;
             }
 
             // Ne yield que si le chunk a du contenu
-            if (streamChunk.content || streamChunk.tool_calls || streamChunk.finish_reason) {
+            if (streamChunk.content || streamChunk.tool_calls || streamChunk.finishReason) {
               logger.dev(`[GroqProvider] 📤 YIELD →`, {
                 content: streamChunk.content?.substring(0, 20) || '[none]',
                 toolCalls: streamChunk.tool_calls?.length || 0,
-                finishReason: streamChunk.finish_reason || '[none]'
+                finishReason: streamChunk.finishReason || '[none]'
               });
               yield streamChunk;
             }
