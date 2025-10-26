@@ -184,7 +184,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                           handleRenameCancel();
                         }
                       }}
-                      autoFocus
+                      autoFocus={'ontouchstart' in window || navigator.maxTouchPoints > 0 ? false : true}
                       className="sidebar-rename-input"
                       onClick={(e) => e.stopPropagation()}
                     />

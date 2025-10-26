@@ -695,7 +695,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
                   placeholder="Rechercher une note..."
                   value={noteSearchQuery}
                   onChange={(e) => setNoteSearchQuery(e.target.value)}
-                  autoFocus
+                  autoFocus={'ontouchstart' in window || navigator.maxTouchPoints > 0 ? false : true}
                 />
               </div>
 
