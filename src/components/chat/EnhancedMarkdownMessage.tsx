@@ -120,8 +120,15 @@ const CodeBlockReplacer: React.FC<{ containerRef: React.RefObject<HTMLDivElement
                       try {
                         await navigator.clipboard.writeText(content);
                         const btn = e.currentTarget;
-                        btn.classList.add('copied');
-                        setTimeout(() => btn.classList.remove('copied'), 2000);
+                        // ✅ Vérifier que le bouton existe toujours après le await (streaming rapide)
+                        if (btn && btn.classList) {
+                          btn.classList.add('copied');
+                          setTimeout(() => {
+                            if (btn && btn.classList) {
+                              btn.classList.remove('copied');
+                            }
+                          }, 2000);
+                        }
                       } catch (err) {
                         logger.error('Erreur copie code:', err);
                       }
