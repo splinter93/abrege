@@ -650,14 +650,6 @@ const ChatFullscreenV2: React.FC = () => {
       {/* Header optimisé avec nouveau design ChatGPT */}
       <div className="chatgpt-header">
         <div className="chatgpt-header-left">
-          {/* Bouton retour home */}
-          <Link href="/" className="chatgpt-sidebar-toggle-btn-header" aria-label="Retour à l'accueil" title="Retour à l'accueil">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-              <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-            </Link>
-          
           {/* Bouton toggle sidebar dans le header */}
           <button
             onClick={handleSidebarToggle}
@@ -712,6 +704,21 @@ const ChatFullscreenV2: React.FC = () => {
             onHistoryLimitChange={handleHistoryLimitChange}
             disabled={!user || authLoading}
           />
+          
+          {/* Bouton réduire */}
+          <Link 
+            href="/" 
+            className="chatgpt-sidebar-toggle-btn-header"
+            aria-label="Réduire le chat"
+            title="Réduire le chat"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="4 14 10 14 10 20"></polyline>
+              <polyline points="20 10 14 10 14 4"></polyline>
+              <line x1="14" y1="10" x2="21" y2="3"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </Link>
         </div>
       </div>
 
