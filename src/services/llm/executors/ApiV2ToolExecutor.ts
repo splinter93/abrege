@@ -142,15 +142,33 @@ export class ApiV2ToolExecutor {
 
   /**
    * Exécuter une fonction de tool
+   * ✅ NAMESPACE: Support des noms préfixés (ex: scrivia__createNote)
    */
   private async executeToolFunction(
     functionName: string,
     args: Record<string, unknown>,
     userToken: string
   ): Promise<unknown> {
-    const handler = this.toolHandlers.get(functionName);
+    // ✅ Chercher le handler (peut être préfixé ou non)
+    let handler = this.toolHandlers.get(functionName);
+    
+    // Si pas trouvé avec le nom complet, essayer d'enlever le préfixe namespace
+    if (!handler && functionName.includes('__')) {
+      const parts = functionName.split('__');
+      if (parts.length >= 2) {
+        // Prendre tout après le premier '__' (au cas où il y a plusieurs __)
+        const originalName = parts.slice(1).join('__');
+        handler = this.toolHandlers.get(originalName);
+        
+        if (handler) {
+          logger.dev(`[ApiV2ToolExecutor] 🔧 Handler trouvé avec nom original: ${originalName} (appelé via ${functionName})`);
+        }
+      }
+    }
     
     if (!handler) {
+      logger.error(`[ApiV2ToolExecutor] ❌ Tool non supporté: ${functionName}`);
+      logger.error(`[ApiV2ToolExecutor] 📋 Tools disponibles:`, Array.from(this.toolHandlers.keys()).slice(0, 15));
       throw new Error(`Tool non supporté: ${functionName}`);
     }
 
@@ -159,6 +177,7 @@ export class ApiV2ToolExecutor {
 
   /**
    * Parser et valider les arguments JSON avec Zod
+   * ✅ NAMESPACE: Enlève le préfixe avant validation (ex: scrivia__createNote → createNote)
    */
   private parseArguments(argumentsStr: string, toolName: string): Record<string, unknown> {
     try {
@@ -168,8 +187,18 @@ export class ApiV2ToolExecutor {
       // 2. Nettoyer les paramètres null
       const cleaned = this.cleanNullParameters(parsed);
       
-      // 3. Valider avec Zod
-      const validation = validateToolArgs(toolName, cleaned);
+      // 3. Enlever le préfixe namespace pour la validation Zod
+      let toolNameForValidation = toolName;
+      if (toolName.includes('__')) {
+        const parts = toolName.split('__');
+        if (parts.length >= 2) {
+          toolNameForValidation = parts.slice(1).join('__');
+          logger.dev(`[ApiV2ToolExecutor] 🔧 Validation avec nom original: ${toolNameForValidation} (appelé ${toolName})`);
+        }
+      }
+      
+      // 4. Valider avec Zod
+      const validation = validateToolArgs(toolNameForValidation, cleaned);
       
       if (!validation.success) {
         // Extraire les erreurs de validation de manière lisible
