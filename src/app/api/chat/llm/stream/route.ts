@@ -353,10 +353,16 @@ export async function POST(request: NextRequest) {
             const toolCallsMap = new Map<string, { id: string; type: string; function: { name: string; arguments: string } }>(); // Accumuler par ID pour gérer les chunks
             let finishReason: string | null = null;
 
-            // ✅ Stream depuis xAI
+            // ✅ Stream depuis le provider
             for await (const chunk of provider.callWithMessagesStream(currentMessages, tools)) {
+              // ✅ Ajouter type: 'delta' pour compatibilité avec useChatResponse
+              const clientChunk = {
+                type: 'delta',
+                ...chunk
+              };
+              
               // Envoyer le chunk au client
-              sendSSE(chunk);
+              sendSSE(clientChunk);
 
               // Accumuler content
               if (chunk.content) {
