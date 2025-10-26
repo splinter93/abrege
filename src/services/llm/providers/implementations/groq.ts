@@ -344,14 +344,6 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
             const delta = chunk.choices?.[0]?.delta;
             if (!delta) continue;
 
-            // ✅ Log le contenu du chunk pour debug
-            logger.dev(`[GroqProvider] 📦 CHUNK:`, {
-              hasContent: !!delta.content,
-              contentLength: delta.content?.length || 0,
-              hasToolCalls: !!delta.tool_calls,
-              finishReason: chunk.choices?.[0]?.finish_reason
-            });
-
             // ✅ Construire le chunk (format identique à xAI)
             const streamChunk: StreamChunk = {
               type: 'delta'  // ✅ Type ajouté dès le début comme xAI
@@ -776,20 +768,6 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     };
 
     if (tools && tools.length > 0) {
-        // ✅ Log TOUS les tools pour identifier celui qui n'a pas de name
-        logger.dev(`[GroqProvider] 🔬 TOUS LES TOOLS (${tools.length}):`, 
-          tools.map((t, i) => ({
-            index: i,
-            type: t.type,
-            name: t.function?.name || '❌ MISSING NAME',
-            hasDescription: !!t.function?.description,
-            hasParameters: !!t.function?.parameters,
-            // Champs MCP spécifiques
-            hasServerLabel: 'server_label' in t,
-            serverLabel: (t as { server_label?: string }).server_label || 'none'
-          }))
-        );
-        
         payload.tools = tools;
         payload.tool_choice = "auto";
     }
