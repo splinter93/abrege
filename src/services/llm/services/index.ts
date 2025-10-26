@@ -1,8 +1,8 @@
-// 🎯 Services pour l'orchestration Groq
+// 🎯 Services pour l'orchestration LLM
 // ✅ AgentOrchestrator : pour agents spécialisés avec tools complexes
 export { AgentOrchestrator, agentOrchestrator } from './AgentOrchestrator';
+export { SimpleOrchestrator } from './SimpleOrchestrator';
 export { GroqHistoryBuilder } from './GroqHistoryBuilder';
-export { GroqToolExecutor } from './GroqToolExecutor';
 export { GroqErrorHandler } from './GroqErrorHandler';
 
 // 🎯 Types et interfaces

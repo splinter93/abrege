@@ -274,18 +274,11 @@ export class SimpleOrchestrator {
           });
         }
       } else {
-        // Fallback : Aucun schéma OpenAPI assigné
+        // Aucun schéma OpenAPI assigné
         if (selectedProvider.toLowerCase() === 'xai') {
-          // xAI : Tools minimaux
-          const { getMinimalXAITools } = await import('../minimalToolsForXAI');
-          tools = getMinimalXAITools();
-          
-          // 🎯 LOG FOCUS TOOLS
-          logger.info(`[TOOLS] Agent: ${agentConfig?.name || 'default'} (xAI minimal)`, {
-            provider: 'xai',
-            total: tools.length,
-            tools: tools.map(t => `API:${(t as any).function?.name}`)
-          });
+          // xAI sans schémas = pas de tools (comportement explicite)
+          tools = [];
+          logger.warn(`[SimpleOrchestrator] ⚠️ Agent ${agentConfig?.name} (xAI) sans schémas OpenAPI - Aucun tool disponible`);
         } else {
           // Groq/OpenAI : MCP tools uniquement
           tools = await mcpConfigService.buildHybridTools(
