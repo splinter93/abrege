@@ -309,6 +309,20 @@ export async function POST(request: NextRequest) {
           
           // ✅ AUDIT : Tracker les tool calls déjà exécutés pour détecter les doublons
           const executedToolCallsSignatures = new Set<string>();
+          
+          // ✅ NOUVEAU : Créer une Map des tool names → type (MCP/OpenAPI)
+          // Car le toolCall retourné par le LLM n'a PAS de server_label !
+          const toolNameToType = new Map<string, 'mcp' | 'openapi'>();
+          for (const tool of tools) {
+            const isMcp = isMcpTool(tool);
+            toolNameToType.set(tool.function.name, isMcp ? 'mcp' : 'openapi');
+          }
+          
+          logger.dev(`[Stream Route] 🗺️ Tool routing map créée:`, {
+            totalTools: tools.length,
+            mcpTools: Array.from(toolNameToType.entries()).filter(([_, type]) => type === 'mcp').map(([name]) => name),
+            openApiTools: Array.from(toolNameToType.entries()).filter(([_, type]) => type === 'openapi').map(([name]) => name)
+          });
 
           // ✅ Helper: Extraire le texte d'un MessageContent (string ou array multi-modal)
           const extractTextFromContent = (content: string | null | Array<{ type: string; text?: string }>): string => {
@@ -479,13 +493,15 @@ export async function POST(request: NextRequest) {
               try {
                 logger.dev(`[Stream Route] 🔧 Exécution tool: ${toolCall.function.name}`);
                 
-                // ✅ Détecter le type de tool (MCP ou OpenAPI)
-                const isToolFromMcp = 'server_label' in toolCall && typeof (toolCall as { server_label?: string }).server_label === 'string';
+                // ✅ Détecter le type de tool via la Map (car le toolCall n'a pas server_label)
+                const toolType = toolNameToType.get(toolCall.function.name);
+                const isToolFromMcp = toolType === 'mcp';
                 
                 // ✅ AUDIT DÉTAILLÉ : Logger avant exécution
                 logger.dev(`[Stream Route] 🚀 AVANT EXÉCUTION TOOL:`, {
                   toolName: toolCall.function.name,
                   toolId: toolCall.id,
+                  toolType: toolType || 'UNKNOWN',
                   isMcpTool: isToolFromMcp,
                   arguments: toolCall.function.arguments.substring(0, 100) + '...'
                 });
