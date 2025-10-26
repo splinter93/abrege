@@ -48,6 +48,11 @@ export const metadata: Metadata = {
   title: "Scrivia",
   description:
     "Scrivia is a modern, collaborative, and LLM-friendly markdown knowledge base. Organize, publish, and share your notes with clean URLs and a beautiful UI.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover", // ✅ Remplit haut et bas (barre nav Android)
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -88,6 +93,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             font-family: 'Noto Sans', sans-serif !important;
             margin: 0;
             padding: 0;
+            /* PWA Fullscreen - Remplit haut et bas */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
           }
           * { box-sizing: border-box; }
           
