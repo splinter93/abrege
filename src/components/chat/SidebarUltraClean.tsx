@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, User, Settings, Plus } from 'lucide-react';
+import { Search, X, User, Settings, SquarePen } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
@@ -169,7 +169,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
               className="sidebar-new-conversation-btn"
               title="Nouvelle conversation"
             >
-              <Plus size={14} />
+              <SquarePen size={14} />
             </button>
           </div>
           {filteredSessions.map((session: ChatSession) => (
