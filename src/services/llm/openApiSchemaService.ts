@@ -82,8 +82,8 @@ export class OpenAPISchemaService {
 
       logger.dev(`[OpenAPISchemaService] ✅ Schéma chargé: ${schema.name} v${schema.version}`);
 
-      // Convertir en tools
-      const tools = this.convertOpenAPIToTools(schema.content);
+      // Convertir en tools avec nom du schéma pour contexte
+      const tools = this.convertOpenAPIToTools(schema.content, schema.name);
 
       // Mettre en cache
       this.schemasCache.set(cacheKey, tools);
@@ -131,8 +131,8 @@ export class OpenAPISchemaService {
 
       logger.dev(`[OpenAPISchemaService] ✅ Schéma chargé: ${schema.name} v${schema.version}`);
 
-      // Convertir en tools
-      const tools = this.convertOpenAPIToTools(schema.content);
+      // Convertir en tools avec nom du schéma pour contexte
+      const tools = this.convertOpenAPIToTools(schema.content, schema.name);
 
       // Mettre en cache
       this.schemasCache.set(cacheKey, tools);
@@ -150,8 +150,10 @@ export class OpenAPISchemaService {
 
   /**
    * Convertit un schéma OpenAPI en array de tools function
+   * @param openApiContent - Contenu du schéma OpenAPI
+   * @param schemaName - Nom du schéma pour contexte (optionnel, enrichit les descriptions)
    */
-  private convertOpenAPIToTools(openApiContent: Record<string, unknown>): Tool[] {
+  private convertOpenAPIToTools(openApiContent: Record<string, unknown>, schemaName?: string): Tool[] {
     const tools: Tool[] = [];
 
     try {
@@ -198,12 +200,27 @@ export class OpenAPISchemaService {
             continue;
           }
 
+          // ✅ Enrichir la description avec le nom du schéma pour contexte LLM
+          let enrichedDescription = description || summary || `${method.toUpperCase()} ${pathName}`;
+          
+          if (schemaName) {
+            // Normaliser le nom du schéma pour affichage
+            const displayName = schemaName
+              .replace(/-/g, ' ')
+              .replace(/api/gi, '')
+              .replace(/v\d+/gi, '')
+              .trim()
+              .toUpperCase();
+            
+            enrichedDescription = `[${displayName}] ${enrichedDescription}`;
+          }
+
           // Créer le tool
           const tool: Tool = {
             type: 'function',
             function: {
               name: operationId,
-              description: description || summary || `${method.toUpperCase()} ${pathName}`,
+              description: enrichedDescription,
               parameters: parameters
             }
           };
@@ -507,8 +524,8 @@ export class OpenAPISchemaService {
         const apiKey = schema.api_key || undefined;
         const headerName = schema.header || this.detectHeaderNameFromUrl(baseUrl);
 
-        // Convertir en tools
-        const tools = this.convertOpenAPIToTools(content);
+        // Convertir en tools avec nom du schéma pour contexte
+        const tools = this.convertOpenAPIToTools(content, schema.name);
         allTools.push(...tools);
 
         // Extraire endpoints
