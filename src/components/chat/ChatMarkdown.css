@@ -191,11 +191,11 @@
    LISTES - STYLE CHATGPT PREMIUM
    ======================================== */
 
-.chat-markdown ul,
+.chat-markdown ul:not(.contains-task-list),
 .chat-markdown ol {
   font-family: var(--font-chat-text) !important;
   margin: 1rem 0 !important;
-  padding-left: 1.5em !important;
+  padding-left: 1.5em !important; /* ✅ Retour au padding normal */
   line-height: 1.75 !important;
   font-size: 16px !important;
   font-weight: 500 !important;
@@ -389,17 +389,17 @@
   font-weight: 500 !important;
 }
 
-.chat-markdown thead {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* ✅ Bordure subtile sous l'en-tête */
-}
-
-.chat-markdown tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* ✅ Lignes subtiles entre les rangées */
-}
-
-.chat-markdown tbody tr:last-child {
-  border-bottom: none; /* ✅ Pas de bordure sur la dernière ligne */
-}
+  .chat-markdown thead {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.035); /* ✅ Ultra subtil */
+  }
+  
+  .chat-markdown tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.035); /* ✅ Ultra subtil */
+  }
+  
+  .chat-markdown tbody tr:last-child {
+    border-bottom: none; /* ✅ Pas de bordure sur la dernière ligne */
+  }
 
 .chat-markdown tbody tr:hover td {
   filter: brightness(1.08);
@@ -475,14 +475,26 @@
    ======================================== */
 
 /* Listes avec checkboxes - Approche flexbox */
-.chat-markdown li:has(> input[type='checkbox']),
-.chat-markdown .task-list-item {
-  display: flex !important;
-  align-items: flex-start !important;
-  gap: 0.5rem !important; /* Espacement ChatGPT-style */
-  list-style: none !important;
+.chat-markdown .contains-task-list {
   padding-left: 0 !important;
   margin-left: 0 !important;
+  list-style: none !important;
+}
+
+.chat-markdown ul.contains-task-list {
+  margin: var(--chat-space-lg) 0 !important;
+}
+
+.chat-markdown li:has(> input[type='checkbox']),
+.chat-markdown .task-list-item,
+.chat-markdown li.task-list-item {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important; /* ✅ Gap en pixels explicite */
+  list-style: none !important;
+  padding-left: 3px !important; /* ✅ Petit retrait */
+  margin-left: 0 !important;
+  margin-bottom: 0.5rem !important;
 }
 
 .chat-markdown li:has(> input[type='checkbox']) > *:not(input),
@@ -491,45 +503,69 @@
   margin: 0 !important;
   padding: 0 !important;
   min-width: 0 !important;
+  line-height: 1.6 !important;
 }
 
-.chat-markdown input[type='checkbox'] {
+.chat-markdown input[type='checkbox'],
+.chat-markdown .task-list-item-checkbox {
   appearance: none !important;
-  width: 1.25rem !important;
-  height: 1.25rem !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  border-radius: 0.25rem !important;
-  background: transparent !important;
+  -webkit-appearance: none !important;
+  width: 20px !important; /* ✅ Légèrement plus grand */
+  height: 20px !important; /* ✅ Légèrement plus grand */
+  border: none !important; /* ✅ Pas de bordure */
+  border-radius: 5px !important;
+  background: var(--chat-gradient-block) !important; /* ✅ Dégradé gris */
   display: inline-block !important;
   vertical-align: middle !important;
   position: relative !important;
   transition: all 0.2s ease !important;
-  cursor: pointer !important;
-  margin: 0 !important; /* Pas de marge - géré par gap */
+  cursor: default !important; /* ✅ Pas de cursor pointer */
+  pointer-events: none !important; /* ✅ Non cliquable */
+  margin: 0 !important;
+  margin-top: -3px !important; /* ✅ Remontée de 3px */
+  margin-right: 8px !important; /* ✅ Rapproché encore de 1px */
   flex-shrink: 0 !important;
 }
 
-.chat-markdown input[type='checkbox']:checked {
-  border-color: #10a37f !important;
-  background: #10a37f !important;
+/* ✅ Pas de hover car non cliquable */
+
+.chat-markdown input[type='checkbox']:checked,
+.chat-markdown .task-list-item-checkbox:checked {
+  background: var(--chat-gradient-block) !important; /* ✅ Garde le dégradé gris */
+  opacity: 1 !important; /* ✅ Checkbox toujours visible à 100% */
 }
 
-.chat-markdown input[type='checkbox']:checked::after {
+.chat-markdown input[type='checkbox']:checked::after,
+.chat-markdown .task-list-item-checkbox:checked::after {
   content: '✓' !important;
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
-  color: white !important;
-  font-size: 0.875rem !important;
-  font-weight: 600 !important;
+  color: var(--chat-accent-primary, #ea580c) !important; /* ✅ Check orange */
+  font-size: 14px !important; /* ✅ Légèrement plus grand pour s'adapter */
+  font-weight: 700 !important;
   line-height: 1 !important;
   font-family: var(--font-chat-text) !important;
 }
 
-.chat-markdown input[type='checkbox']:focus {
+.chat-markdown input[type='checkbox']:focus,
+.chat-markdown .task-list-item-checkbox:focus {
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* ✅ Barrer le texte des tâches cochées */
+.chat-markdown .task-list-item:has(input:checked) > *:not(input),
+.chat-markdown li:has(> input[type='checkbox']:checked) > *:not(input) {
+  text-decoration: line-through !important;
+  opacity: 0.75 !important; /* ✅ Moins assombri */
+}
+
+/* ✅ Forcer la checkbox à rester visible */
+.chat-markdown .task-list-item:has(input:checked) > input[type='checkbox'],
+.chat-markdown .task-list-item:has(input:checked) > .task-list-item-checkbox {
+  opacity: 1 !important;
 }
 
 /* ========================================

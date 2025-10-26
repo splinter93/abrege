@@ -19,7 +19,6 @@ import { supabase } from '@/supabaseClient';
 import { tokenManager } from '@/utils/tokenManager';
 import ChatInput from './ChatInput';
 import ChatMessage from './ChatMessage';
-import ChatKebabMenu from './ChatKebabMenu';
 import SidebarUltraClean from './SidebarUltraClean';
 import MessageLoader from './MessageLoader';
 import { StreamingIndicator, type StreamingState } from './StreamingIndicator';
@@ -713,17 +712,6 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [loading, currentSession, createSession, addMessage, selectedAgent, llmContext, sendMessage, setLoading, requireAuth]);
 
-  const handleHistoryLimitChange = useCallback(async (newLimit: number) => {
-    if (!requireAuth() || !currentSession) return;
-    
-    try {
-      await updateSession(currentSession.id, { history_limit: newLimit });
-    } catch (error) {
-      logger.error('[ChatFullscreenV2] ❌ Erreur mise à jour history_limit:', error);
-      setError('Erreur lors de la mise à jour de la limite d\'historique');
-    }
-  }, [currentSession, updateSession, setError, requireAuth]);
-
   const handleSidebarToggle = useCallback(() => {
     if (!requireAuth()) return;
 
@@ -791,12 +779,6 @@ const ChatFullscreenV2: React.FC = () => {
           )}
         </div>
         <div className="chatgpt-header-right">
-          <ChatKebabMenu
-            historyLimit={currentSession?.history_limit || 30}
-            onHistoryLimitChange={handleHistoryLimitChange}
-            disabled={!user || authLoading}
-          />
-          
           {/* Bouton réduire */}
           <Link 
             href="/" 

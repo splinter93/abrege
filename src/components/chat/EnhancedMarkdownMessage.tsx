@@ -179,7 +179,7 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
     }
     
     try {
-      // ✅ SÉCURITÉ: Sanitizer d'abord le contenu avant parsing (avec support des tableaux)
+      // ✅ SÉCURITÉ: Sanitizer d'abord le contenu avant parsing (avec support des tableaux + checkboxes)
       const sanitizedContent = DOMPurify.sanitize(htmlContent, {
         ALLOWED_TAGS: [
           'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
@@ -190,9 +190,10 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
           'a', 'img', 'figure', 'figcaption',
           'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
           'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
-          'hr', 'br'
+          'hr', 'br',
+          'input', 'label' // ✅ Support des checkboxes
         ],
-        ALLOWED_ATTR: ['class', 'id', 'href', 'src', 'alt', 'title', 'style', 'colspan', 'rowspan', 'scope', 'headers'],
+        ALLOWED_ATTR: ['class', 'id', 'href', 'src', 'alt', 'title', 'style', 'colspan', 'rowspan', 'scope', 'headers', 'type', 'checked', 'disabled'],
         ALLOW_DATA_ATTR: false // Désactiver les data-* pour plus de sécurité
       });
       
@@ -239,7 +240,7 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
       return doc.body.innerHTML;
     } catch (error) {
       logger.error('Erreur lors du traitement des code blocks:', error);
-      // ✅ SÉCURITÉ: Fallback sécurisé en cas d'erreur (avec support des tableaux)
+      // ✅ SÉCURITÉ: Fallback sécurisé en cas d'erreur (avec support des tableaux + checkboxes)
       return DOMPurify.sanitize(htmlContent, {
         ALLOWED_TAGS: [
           'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
@@ -250,15 +251,16 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
           'a', 'img', 'figure', 'figcaption',
           'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
           'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
-          'hr', 'br'
+          'hr', 'br',
+          'input', 'label' // ✅ Support des checkboxes
         ],
-        ALLOWED_ATTR: ['class', 'id', 'href', 'src', 'alt', 'title', 'style', 'colspan', 'rowspan', 'scope', 'headers'],
+        ALLOWED_ATTR: ['class', 'id', 'href', 'src', 'alt', 'title', 'style', 'colspan', 'rowspan', 'scope', 'headers', 'type', 'checked', 'disabled'],
         ALLOW_DATA_ATTR: false
       });
     }
   };
   
-  // ✅ SÉCURITÉ: Sanitizer le HTML avant de l'injecter (avec support des tableaux wrappés)
+  // ✅ SÉCURITÉ: Sanitizer le HTML avant de l'injecter (avec support des tableaux wrappés + checkboxes)
   const processedHtml = processCodeBlocks(html);
   const sanitizedHtml = DOMPurify.sanitize(processedHtml, {
     ALLOWED_TAGS: [
@@ -270,13 +272,15 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
       'a', 'img', 'figure', 'figcaption',
       'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
       'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
-      'hr', 'br'
+      'hr', 'br',
+      'input', 'label' // ✅ Support des checkboxes
     ],
     ALLOWED_ATTR: [
       'href', 'src', 'alt', 'title', 'class', 'id', 'style',
       'data-language', 'data-content', 'data-index',
       'colspan', 'rowspan', 'scope', 'headers',
-      'width', 'height', 'align', 'valign'
+      'width', 'height', 'align', 'valign',
+      'type', 'checked', 'disabled' // ✅ Attributs des checkboxes
     ],
     ALLOW_DATA_ATTR: true,
     ALLOW_UNKNOWN_PROTOCOLS: false,

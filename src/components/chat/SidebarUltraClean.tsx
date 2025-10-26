@@ -3,6 +3,7 @@ import { Search, X, User, Settings, SquarePen } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
+import SettingsModal from './SettingsModal';
 
 // Types pour les sessions et agents
 interface ChatSession {
@@ -40,6 +41,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const [showAllAgents, setShowAllAgents] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Fonctions de gestion
   const handleCreateNewSession = async () => {
@@ -220,7 +222,11 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
 
       {/* Profil utilisateur */}
       <div className="sidebar-user-clean">
-        <div className="sidebar-user-item-clean">
+        <button 
+          className="sidebar-user-item-clean"
+          onClick={() => setSettingsOpen(true)}
+          title="Settings"
+        >
           <div className="sidebar-user-avatar-clean">
             {user?.email?.charAt(0).toUpperCase() || 'U'}
           </div>
@@ -229,9 +235,14 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
               {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur'}
             </div>
           </div>
-        </div>
-        
+        </button>
       </div>
+
+      {/* Settings Modal */}
+      <SettingsModal 
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
 
     </div>
   );

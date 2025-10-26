@@ -735,10 +735,20 @@
   border-radius: var(--chat-radius-md);
   cursor: pointer;
   transition: all var(--chat-transition-fast);
+  width: 100%;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
 }
 
 .sidebar-user-item-clean:hover {
   background: var(--chat-overlay-subtle);
+}
+
+.sidebar-user-item-clean:active {
+  transform: scale(0.98);
 }
 
 .sidebar-user-avatar-clean {

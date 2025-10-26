@@ -35,7 +35,10 @@ export function createMarkdownIt() {
   });
   
   md.use(markdownItGithubTables);
-  md.use(markdownItTaskLists);
+  md.use(markdownItTaskLists, {
+    enabled: true, // ✅ Checkboxes interactives
+    label: true,   // ✅ Avec label cliquable
+  });
   md.use(anchor, {
     slugify,
     level: [1,2,3,4,5,6],
