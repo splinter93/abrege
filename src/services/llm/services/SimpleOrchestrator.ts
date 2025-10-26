@@ -75,6 +75,7 @@ export class SimpleOrchestrator {
   /**
    * Détecter si les tools sont des tools OpenAPI
    * Vérifie si au moins un tool call existe dans les endpoints OpenAPI configurés
+   * ✅ NAMESPACE: Support des noms préfixés (ex: pexels__search)
    */
   private isOpenApiTools(toolCalls: ToolCall[]): boolean {
     // Si l'exécuteur OpenAPI n'a pas d'endpoints configurés, ce ne sont pas des tools OpenAPI
@@ -84,7 +85,23 @@ export class SimpleOrchestrator {
 
     // Vérifier si au moins un tool call existe dans les endpoints OpenAPI
     return toolCalls.some(toolCall => {
-      return this.openApiToolExecutor.endpoints.has(toolCall.function.name);
+      const functionName = toolCall.function.name;
+      
+      // Chercher d'abord avec le nom complet
+      if (this.openApiToolExecutor.endpoints.has(functionName)) {
+        return true;
+      }
+      
+      // Si pas trouvé ET contient '__', essayer sans le préfixe namespace
+      if (functionName.includes('__')) {
+        const parts = functionName.split('__');
+        if (parts.length >= 2) {
+          const originalName = parts.slice(1).join('__');
+          return this.openApiToolExecutor.endpoints.has(originalName);
+        }
+      }
+      
+      return false;
     });
   }
 
