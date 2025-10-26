@@ -21,9 +21,11 @@ import ChatInput from './ChatInput';
 import ChatMessage from './ChatMessage';
 import ChatKebabMenu from './ChatKebabMenu';
 import SidebarUltraClean from './SidebarUltraClean';
+import MessageLoader from './MessageLoader';
 import { StreamingIndicator, type StreamingState } from './StreamingIndicator';
 import StreamTimelineRenderer from './StreamTimelineRenderer';
 import { simpleLogger as logger } from '@/utils/logger';
+import { useInfiniteMessages } from '@/hooks/useInfiniteMessages';
 import Link from 'next/link';
 
 import './ToolCallMessage.css';
@@ -69,11 +71,35 @@ const ChatFullscreenV2: React.FC = () => {
   const toolFlowActiveRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previousSessionIdRef = useRef<string | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // 🎯 Lazy loading des messages avec infinite scroll
+  const {
+    messages: infiniteMessages,
+    isLoading: isLoadingMessages,
+    isLoadingMore,
+    hasMore,
+    loadMoreMessages,
+    addMessage: addInfiniteMessage,
+    clearMessages: clearInfiniteMessages
+  } = useInfiniteMessages({
+    sessionId: currentSession?.id || null,
+    initialLimit: 10,  // 🎯 10 messages pour éviter les problèmes avec images/mermaid
+    loadMoreLimit: 20,
+    enabled: !!currentSession?.id
+  });
+
+  // 🎨 État pour animation fade-in des messages
+  const [shouldAnimateMessages, setShouldAnimateMessages] = useState(false);
+  const [messagesVisible, setMessagesVisible] = useState(false);
+  
+  // 🎯 Track session change pour vider immédiatement l'affichage
+  const [displayedSessionId, setDisplayedSessionId] = useState<string | null>(null);
 
   // 🎯 Hook de scroll optimisé
   const { messagesEndRef, scrollToBottom, scrollToLastUserMessage, isNearBottom } = useChatScroll({
     autoScroll: true,
-    messages: currentSession?.thread || []
+    messages: infiniteMessages
   });
 
   // 🎯 Handlers centralisés avec skip (on gère les tool calls différemment en streaming)
@@ -323,11 +349,30 @@ const ChatFullscreenV2: React.FC = () => {
     return null;
   };
 
+  // 🎯 Détecter changement de session et vider immédiatement l'affichage
+  useEffect(() => {
+    if (currentSession?.id && currentSession.id !== previousSessionIdRef.current) {
+      // 🚫 Nouvelle session sélectionnée : vider IMMÉDIATEMENT l'affichage et les messages
+      setDisplayedSessionId(null);
+      setShouldAnimateMessages(false); // Reset animation
+      setMessagesVisible(false); // Masquer les messages
+      clearInfiniteMessages(); // Nettoyer les anciens messages
+      previousSessionIdRef.current = currentSession.id;
+    }
+    
+    // ✅ Une fois les messages chargés (ou conversation vide), activer l'affichage
+    if (!isLoadingMessages && !displayedSessionId && currentSession?.id) {
+      setDisplayedSessionId(currentSession.id);
+    }
+  }, [currentSession?.id, displayedSessionId, isLoadingMessages, infiniteMessages.length, clearInfiniteMessages]);
+
   // 🎯 Messages triés et mémorisés pour l'affichage
   const displayMessages = useMemo(() => {
-    if (!currentSession?.thread) return [];
+    // 🚫 Ne rien afficher si la session affichée ne correspond pas à la session active
+    if (displayedSessionId !== currentSession?.id) return [];
+    if (infiniteMessages.length === 0) return [];
     
-    const sorted = [...currentSession.thread].sort(
+    const sorted = [...infiniteMessages].sort(
       (a, b) => {
         const timestampA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
         const timestampB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
@@ -369,7 +414,7 @@ const ChatFullscreenV2: React.FC = () => {
     }
     
     return filtered;
-  }, [currentSession?.thread]);
+  }, [infiniteMessages, displayedSessionId, currentSession?.id]);
 
   // 🎯 Effets optimisés
   useEffect(() => {
@@ -408,22 +453,87 @@ const ChatFullscreenV2: React.FC = () => {
     restoreSelectedAgent();
   }, [selectedAgentId, selectedAgent, setSelectedAgent, setSelectedAgentId, user, authLoading]);
 
-  // ✅ Scroll initial seulement au chargement de la page/session
+  // ✅ Scroll et animation quand session chargée
   useEffect(() => {
-    if (user && !authLoading && sessions.length > 0 && currentSession?.thread && currentSession.thread.length > 0) {
-      // Scroll initial uniquement si on change de session
-      if (currentSession.id !== previousSessionIdRef.current) {
-        previousSessionIdRef.current = currentSession.id;
-        const timer = setTimeout(() => {
-          // ✅ Scroll jusqu'en bas au chargement initial (pour voir les derniers messages)
-          scrollToBottom(false);
-        }, 300);
-        return () => {
-          clearTimeout(timer);
-        };
+    // 🎯 Déclencher quand displayedSessionId est mis à jour (messages chargés ou conversation vide)
+    if (displayedSessionId === currentSession?.id && !isLoadingMessages && !messagesVisible) {
+      
+      if (infiniteMessages.length > 0) {
+        // 🎯 ÉTAPE 1 : Rendre dans le DOM mais INVISIBLE (opacity: 0)
+        setMessagesVisible(false);
+        
+        // 🎯 ÉTAPE 2 : Attendre que le DOM soit rendu, scroll INSTANTANÉ invisible
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const container = messagesContainerRef.current;
+            if (container) {
+              // 🎯 Forcer un padding fixe en bas (40px)
+              const messagesContainer = container.querySelector('.chatgpt-messages') as HTMLElement;
+              if (messagesContainer) {
+                messagesContainer.style.paddingBottom = '40px';
+              }
+              
+              // Scroll instantané sans animation (invisible)
+              const maxScrollTop = container.scrollHeight - container.clientHeight;
+              container.scrollTop = Math.max(0, maxScrollTop);
+              
+              // 🎯 ÉTAPE 3 : Retry pour les images après 300ms
+              setTimeout(() => {
+                const newMaxScrollTop = container.scrollHeight - container.clientHeight;
+                container.scrollTop = Math.max(0, newMaxScrollTop);
+                
+                // 🎯 ÉTAPE 4 : Fade-in maintenant que tout est en place
+                requestAnimationFrame(() => {
+                  setMessagesVisible(true);
+                  setShouldAnimateMessages(true);
+                  setTimeout(() => setShouldAnimateMessages(false), 400);
+                });
+              }, 300);
+            }
+          });
+        });
+      } else {
+        // 🎯 Conversation vide (nouvelle) : afficher directement l'empty state
+        setMessagesVisible(true);
+        setShouldAnimateMessages(true);
+        setTimeout(() => setShouldAnimateMessages(false), 400);
       }
     }
-  }, [currentSession?.id, scrollToBottom, user, authLoading, sessions.length]);
+  }, [displayedSessionId, currentSession?.id, infiniteMessages.length, messagesVisible, isLoadingMessages, scrollToBottom]);
+
+  // 🎯 Détection du scroll pour infinite loading
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container || !hasMore || isLoadingMore) return;
+
+    const handleScroll = () => {
+      // Détecter si on est proche du haut (50px)
+      if (container.scrollTop < 50) {
+        logger.dev('[ChatFullscreenV2] 📥 Scroll proche du haut, chargement des messages anciens...');
+        loadMoreMessages();
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [hasMore, isLoadingMore, loadMoreMessages]);
+
+  // 🎯 Synchroniser les nouveaux messages streamés vers le hook infinite
+  const lastMessageCountRef = useRef(0);
+  useEffect(() => {
+    if (!currentSession?.thread) return;
+    
+    const threadLength = currentSession.thread.length;
+    
+    // Si le thread a augmenté, ajouter le dernier message au hook infinite
+    if (threadLength > lastMessageCountRef.current && threadLength > 0) {
+      const newMessage = currentSession.thread[threadLength - 1];
+      addInfiniteMessage(newMessage);
+      logger.dev('[ChatFullscreenV2] ➕ Nouveau message ajouté au lazy loading:', newMessage.role);
+    }
+    
+    lastMessageCountRef.current = threadLength;
+  }, [currentSession?.thread, addInfiniteMessage]);
 
   // S'assurer qu'une session est sélectionnée SEULEMENT s'il n'y en a aucune
   useEffect(() => {
@@ -765,10 +875,15 @@ const ChatFullscreenV2: React.FC = () => {
           {/* Zone principale des messages */}
           <div className="chatgpt-main">
           {/* Messages optimisés */}
-          <div className="chatgpt-messages-container">
-            <div className="chatgpt-messages">
-              {/* Écran d'accueil quand chat vide */}
-              {displayMessages.length === 0 && selectedAgent && (
+          <div className="chatgpt-messages-container" ref={messagesContainerRef}>
+            <div 
+              className={`chatgpt-messages ${shouldAnimateMessages ? 'messages-fade-in' : ''}`}
+              style={{
+                opacity: messagesVisible || displayMessages.length === 0 ? undefined : 0
+              }}
+            >
+              {/* Écran d'accueil SEULEMENT pour nouvelle conversation (pas en chargement, pas en transition) */}
+              {!isLoadingMessages && displayMessages.length === 0 && selectedAgent && messagesVisible && displayedSessionId === currentSession?.id && (
                 <div className="chat-empty-state">
                   <div className="chat-empty-agent-avatar">
                     {selectedAgent.profile_picture ? (
@@ -783,6 +898,11 @@ const ChatFullscreenV2: React.FC = () => {
                     <div className="chat-empty-agent-model">{selectedAgent.model}</div>
                   )}
                 </div>
+              )}
+
+              {/* Loader pour infinite scroll (chargement messages anciens) */}
+              {isLoadingMore && hasMore && (
+                <MessageLoader isLoadingMore />
               )}
 
               {displayMessages.map((message) => {

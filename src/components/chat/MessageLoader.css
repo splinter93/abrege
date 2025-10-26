@@ -1,0 +1,75 @@
+/**
+ * 🎨 Styles: MessageLoader
+ * Indicateur de chargement pour lazy loading des messages
+ */
+
+.message-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: var(--chat-text-secondary);
+  font-size: 14px;
+}
+
+.message-loader-compact {
+  padding: 20px 20px;
+}
+
+.message-loader-spinner {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.message-loader-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--chat-text-secondary);
+  opacity: 0.6;
+  animation: message-loader-bounce 1.4s infinite ease-in-out both;
+}
+
+.message-loader-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.message-loader-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes message-loader-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+.message-loader-text {
+  font-family: var(--font-chat-ui);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Mode compact - texte plus petit */
+.message-loader-compact .message-loader-text {
+  font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .message-loader {
+    padding: 30px 16px;
+  }
+  
+  .message-loader-compact {
+    padding: 16px;
+  }
+}
+

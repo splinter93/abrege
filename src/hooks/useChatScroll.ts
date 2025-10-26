@@ -69,7 +69,7 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     
     container.scrollTo({
       top: maxScroll,
-      behavior: 'smooth'
+      behavior: 'auto' // Instantané sans animation
     });
 
     lastScrollTimeRef.current = Date.now();
@@ -91,20 +91,49 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
       messagesContainer.style.paddingBottom = `${refreshOffset}px`;
     }
 
-    // Scroll optimisé sans manipulation du DOM
+    // 🎯 Si force=true, scroll avec animation custom (durée contrôlée)
+    if (force) {
+      const maxScrollTop = container.scrollHeight - container.clientHeight;
+      const targetScroll = Math.max(0, maxScrollTop);
+      const startScroll = container.scrollTop;
+      const distance = targetScroll - startScroll;
+      const duration = 800; // 🎨 Durée en ms (ajustable)
+      const startTime = performance.now();
+
+      const animateScroll = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function (ease-in-out cubic pour fluidité)
+        const easeProgress = progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        
+        container.scrollTop = startScroll + (distance * easeProgress);
+        
+        if (progress < 1) {
+          requestAnimationFrame(animateScroll);
+        }
+      };
+
+      requestAnimationFrame(animateScroll);
+      lastScrollTimeRef.current = Date.now();
+      return;
+    }
+
+    // Scroll optimisé sans manipulation du DOM (pour les autres cas)
     scrollTimeoutRef.current = setTimeout(() => {
-      // Utiliser requestAnimationFrame pour un scroll fluide
       requestAnimationFrame(() => {
         const maxScrollTop = container.scrollHeight - container.clientHeight;
         
         container.scrollTo({
           top: Math.max(0, maxScrollTop),
-          behavior: 'smooth'
+          behavior: 'auto' // Instantané sans animation
         });
         
         lastScrollTimeRef.current = Date.now();
       });
-    }, force ? 0 : 50);
+    }, 50);
   }, [getScrollContainer, refreshOffset]);
 
   // 🎯 Ajuster le padding SANS scroller (pour messages assistant)

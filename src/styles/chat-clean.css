@@ -861,6 +861,22 @@
   box-sizing: border-box;
 }
 
+/* 🎨 Animation fade-in fluide pour chargement conversation */
+.chatgpt-messages.messages-fade-in {
+  animation: messagesFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes messagesFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .chatgpt-message {
   display: flex;
   flex-direction: column;

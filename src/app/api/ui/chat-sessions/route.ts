@@ -213,9 +213,11 @@ export async function GET(request: NextRequest) {
     // Récupérer les sessions de l'utilisateur avec le contexte utilisateur
     logger.dev('[Chat Sessions API] 🔍 Récupération sessions pour utilisateur:', userId);
     
+    // 🎯 Lazy loading: Ne charger QUE les métadonnées des sessions (sans threads)
+    // Les threads seront chargés à la demande via /messages/recent
     const { data: sessions, error } = await userClient
       .from('chat_sessions')
-      .select('*')
+      .select('id, name, history_limit, is_active, created_at, updated_at, metadata')
       .eq('user_id', userId)
       .eq('is_active', true)
       .order('updated_at', { ascending: false });
@@ -228,18 +230,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // ✅ NOUVEAU: Afficher TOUS les messages pour l'utilisateur
-    // La limitation history_limit est uniquement pour l'API LLM, pas pour l'affichage
-    const sessionsWithFullHistory = sessions.map(session => ({
+    // 🎯 Retourner les métadonnées SANS les threads
+    // Les messages seront chargés via le hook useInfiniteMessages
+    const sessionsMetadata = sessions.map(session => ({
       ...session,
-      thread: session.thread || [] // ✅ Thread complet, pas de limitation
+      thread: [] // Thread vide, chargé à la demande
     }));
 
-    logger.dev('[Chat Sessions API] ✅ Sessions récupérées:', sessionsWithFullHistory.length);
+    logger.dev('[Chat Sessions API] ✅ Sessions récupérées (métadonnées only):', sessionsMetadata.length);
 
     return NextResponse.json({
       success: true,
-      data: sessionsWithFullHistory,
+      data: sessionsMetadata,
       message: 'Sessions récupérées avec succès'
     });
 
