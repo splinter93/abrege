@@ -323,44 +323,6 @@
 }
 
 /* ========================================
-   BLOCKQUOTES - DESIGN ÉPURÉ
-   ======================================== */
-
-.chat-markdown blockquote {
-  background: transparent; /* ✅ Pas de fond */
-  color: var(--color-text-primary);
-  text-align: left;
-  padding: var(--chat-space-lg) var(--chat-space-xl);
-  margin: var(--chat-space-xl) 0;
-  border-left: none;
-  border-radius: 0;
-  position: relative;
-  font-family: var(--font-chat-text);
-  font-size: var(--chat-text-base);
-  font-weight: 500;
-  line-height: var(--chat-leading-relaxed);
-}
-
-.chat-markdown blockquote::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--color-accent); /* Orange */
-  border-radius: 2px; /* ✅ Arrondi haut et bas */
-}
-
-.chat-markdown blockquote p {
-  margin-bottom: var(--chat-space-md);
-}
-
-.chat-markdown blockquote p:last-child {
-  margin-bottom: 0;
-}
-
-/* ========================================
    ACCESSIBILITÉ
    ======================================== */
 
