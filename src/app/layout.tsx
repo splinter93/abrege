@@ -101,8 +101,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             /* PWA Fullscreen - Remplit haut et bas */
             min-height: 100vh;
             min-height: -webkit-fill-available;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
           }
           * { box-sizing: border-box; }
           
