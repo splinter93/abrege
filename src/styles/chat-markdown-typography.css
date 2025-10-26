@@ -298,17 +298,18 @@
   }
 }
 
-/* ✅ Mobile très petit - scroll horizontal */
+/* ✅ Mobile très petit - scroll horizontal avec texte fixe */
 @media (max-width: 480px) {
   .chat-markdown table {
     min-width: 500px; /* ✅ Force le scroll horizontal */
+    table-layout: auto; /* ✅ Colonnes à largeur naturelle - plus de resize */
   }
   
   .chat-markdown th,
   .chat-markdown td {
-    white-space: nowrap; /* ✅ Préserve la structure */
-    padding: var(--chat-space-sm);
-    min-width: 60px;
+    white-space: nowrap; /* ✅ Texte sur une ligne - pas de wrap */
+    padding: var(--chat-space-sm) var(--chat-space-md);
+    min-width: 100px; /* ✅ Largeur min confortable */
     max-width: none;
   }
 }

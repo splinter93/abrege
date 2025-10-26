@@ -1354,7 +1354,7 @@
 /* Mobile et tablette (< 1024px) - Correspond au breakpoint React */
 @media (max-width: 1023px) {
   :root {
-    --chat-padding-horizontal: 12px;  /* ✅ Appliqué simultanément */
+    --chat-padding-horizontal: 16px;  /* ✅ Appliqué simultanément messages + input */
   }
   
   .chatgpt-header {

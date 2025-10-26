@@ -212,19 +212,23 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
     setMessage(prev => prev + (prev ? ' ' : '') + text);
     setAudioError(null);
     
-    // Focus sur le textarea pour permettre l'édition avec cleanup
-    const timeoutId = setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        textareaRef.current.setSelectionRange(
-          textareaRef.current.value.length,
-          textareaRef.current.value.length
-        );
-      }
-    }, 100);
+    // ✅ Focus seulement sur desktop (évite le clavier mobile après Whisper)
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     
-    // ✅ MÉMOIRE: Cleanup du timeout si le composant se démonte
-    return () => clearTimeout(timeoutId);
+    if (!isTouchDevice) {
+      const timeoutId = setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(
+            textareaRef.current.value.length,
+            textareaRef.current.value.length
+          );
+        }
+      }, 100);
+      
+      // ✅ MÉMOIRE: Cleanup du timeout si le composant se démonte
+      return () => clearTimeout(timeoutId);
+    }
   }, [textareaRef]);
 
   // Gestion des images
