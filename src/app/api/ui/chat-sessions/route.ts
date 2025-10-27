@@ -84,9 +84,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { name = 'Nouvelle conversation', history_limit = 30 } = body;
+    const { name = 'Nouvelle conversation', history_limit = 30, agent_id = null } = body;
 
-    logger.dev('[Chat Sessions API] 📋 Données reçues:', { name, history_limit });
+    logger.dev('[Chat Sessions API] 📋 Données reçues:', { name, history_limit, agent_id });
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
     const { supabaseUrl } = getSupabaseConfig();
@@ -116,6 +116,7 @@ export async function POST(request: NextRequest) {
         name,
         thread: [],
         history_limit,
+        agent_id,
         is_active: true,
         metadata: { created_via: 'api_endpoint' }
       })

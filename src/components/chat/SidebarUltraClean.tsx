@@ -90,7 +90,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const handleSelectAgent = async (agent: Agent) => {
     await cleanupEmptySession(); // Nettoyer avant de changer d'agent
     // Créer une nouvelle conversation avec l'agent sélectionné
-    await createSession(`Chat avec ${agent.display_name || agent.name}`);
+    await createSession(`Chat avec ${agent.display_name || agent.name}`, agent.id);
     setSelectedAgent(agent);
     if (!isDesktop) {
       onClose();

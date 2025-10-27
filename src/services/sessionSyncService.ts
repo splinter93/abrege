@@ -68,6 +68,7 @@ export class SessionSyncService {
         name: session.name,
         thread: session.thread || [],
         history_limit: session.history_limit || 30,
+        agent_id: session.agent_id || null,
         created_at: session.created_at,
         updated_at: session.updated_at
       }));
@@ -89,13 +90,16 @@ export class SessionSyncService {
   /**
    * ➕ Créer une session en DB puis synchroniser
    */
-  async createSessionAndSync(name: string = 'Nouvelle conversation'): Promise<{
+  async createSessionAndSync(name: string = 'Nouvelle conversation', agentId?: string | null): Promise<{
     success: boolean;
     session?: ChatSession;
     error?: string;
   }> {
     try {
-      const response = await this.chatSessionService.createSession({ name });
+      const response = await this.chatSessionService.createSession({ 
+        name,
+        agent_id: agentId 
+      });
       
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Erreur création session');
@@ -106,6 +110,7 @@ export class SessionSyncService {
         name: response.data.name,
         thread: response.data.thread || [],
         history_limit: response.data.history_limit || 30,
+        agent_id: response.data.agent_id || null,
         created_at: response.data.created_at,
         updated_at: response.data.updated_at
       };

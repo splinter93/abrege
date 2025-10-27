@@ -178,3 +178,63 @@ export interface EditingState {
   originalContent: string;
   messageIndex: number;
 }
+
+/**
+ * Session de chat complète (format DB)
+ */
+export interface ChatSession {
+  id: string;
+  user_id: string;
+  name: string;
+  thread: ChatMessage[];
+  agent_id: string | null;
+  history_limit: number;
+  is_active: boolean;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Données pour créer une nouvelle session
+ */
+export interface CreateChatSessionData {
+  name: string;
+  agent_id?: string | null;
+  history_limit?: number;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Données pour mettre à jour une session
+ */
+export interface UpdateChatSessionData {
+  name?: string;
+  agent_id?: string | null;
+  history_limit?: number;
+  metadata?: Record<string, unknown>;
+  is_active?: boolean;
+}
+
+/**
+ * Réponse API pour une session
+ */
+export interface ChatSessionResponse {
+  success: boolean;
+  data?: ChatSession;
+  error?: string;
+}
+
+/**
+ * Réponse API pour une liste de sessions
+ */
+export interface ChatSessionsListResponse {
+  success: boolean;
+  data?: ChatSession[];
+  error?: string;
+  pagination?: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+}
