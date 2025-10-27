@@ -69,11 +69,11 @@ export async function GET(request: NextRequest) {
 
     logger.info(`[Editor Prompts API] 📥 GET prompts pour user: ${userId}`);
 
-    // Récupérer les prompts
+    // Récupérer les prompts de l'utilisateur ET les prompts par défaut (user_id = null)
     const { data: prompts, error } = await supabase
       .from('editor_prompts')
       .select('*')
-      .eq('user_id', userId)
+      .or(`user_id.eq.${userId},user_id.is.null`)
       .eq('is_active', true)
       .order('position', { ascending: true });
 
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    logger.info(`[Editor Prompts API] ✅ ${prompts?.length || 0} prompts récupérés`);
+    logger.info(`[Editor Prompts API] ✅ ${prompts?.length || 0} prompts récupérés (user + defaults)`);
 
     return NextResponse.json({
       success: true,

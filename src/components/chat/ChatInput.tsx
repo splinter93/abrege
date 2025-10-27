@@ -3,13 +3,16 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, CornerUpRight, Folder, Image as ImageIcon, Search, FileText, Settings, Zap, Target, Cpu, AtSign, Feather } from 'react-feather';
 import { Lightbulb, Pencil, X } from 'lucide-react';
-import { logger, LogCategory } from '@/utils/logger';
+import { simpleLogger as logger } from '@/utils/logger';
 import AudioRecorder from './AudioRecorder';
 import ImageSourceModal from './ImageSourceModal';
 import type { ImageAttachment, MessageContent, ImageUploadStats } from '@/types/image';
 import { buildMessageContent, revokeImageAttachments, convertFileToBase64 } from '@/utils/imageUtils';
 import { chatImageUploadService } from '@/services/chatImageUploadService';
 import { useAuth } from '@/hooks/useAuth';
+import { useEditorPrompts } from '@/hooks/useEditorPrompts';
+import type { EditorPrompt } from '@/types/editorPrompts';
+import { getIconComponent } from '@/utils/iconMapper';
 import '@/styles/ImageSourceModal.css';
 
 // Type pour les notes sélectionnées
@@ -56,7 +59,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   editingContent,
   onCancelEdit
 }) => {
-  const { getAccessToken } = useAuth();
+  const { getAccessToken, user } = useAuth();
+  const { prompts: allPrompts } = useEditorPrompts(user?.id);
   const [message, setMessage] = React.useState('');
   const [audioError, setAudioError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageAttachment[]>([]);
@@ -91,9 +95,39 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [reasoningOverride, setReasoningOverride] = useState<'advanced' | 'general' | 'fast' | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  
+  // 🎯 Slash command pour les prompts chat
+  const [showSlashMenu, setShowSlashMenu] = useState(false);
+  const [slashQuery, setSlashQuery] = useState('');
+  
+  // Filtrer les prompts pour le chat (context = 'chat' ou 'both')
+  const chatPrompts = allPrompts.filter(p => 
+    p.is_active && (p.context === 'chat' || p.context === 'both')
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
+    const value = e.target.value;
+    setMessage(value);
+    
+    // 🎯 Détection slash command au début de la saisie
+    if (value.startsWith('/')) {
+      // Si espace après le slash → fermer le menu
+      if (value.includes(' ')) {
+        setShowSlashMenu(false);
+        setSlashQuery('');
+      } else {
+        // Extraire la query après le slash (peut être vide si juste "/")
+        const query = value.substring(1).toLowerCase();
+        setSlashQuery(query);
+        setShowSlashMenu(true);
+      }
+    } else {
+      // Fermer le menu si on ne commence plus par "/"
+      if (showSlashMenu) {
+        setShowSlashMenu(false);
+        setSlashQuery('');
+      }
+    }
   };
 
   // ✅ Fonction réutilisable : traiter et uploader une image
@@ -450,6 +484,30 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setSelectedNotes(prev => prev.filter(n => n.id !== noteId));
   }, []);
 
+  // 🎯 Handler pour sélectionner un prompt slash
+  const handleSelectPrompt = useCallback((prompt: EditorPrompt) => {
+    // Remplacer le contenu par le template du prompt
+    // Le placeholder {selection} sera vide pour le chat
+    const promptContent = prompt.prompt_template.replace('{selection}', '');
+    setMessage(promptContent);
+    setShowSlashMenu(false);
+    setSlashQuery('');
+    
+    // Focus sur le textarea
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [textareaRef]);
+
+  // Filtrer les prompts chat par query
+  const filteredChatPrompts = slashQuery
+    ? chatPrompts.filter(p => 
+        p.name.toLowerCase().includes(slashQuery) ||
+        p.description?.toLowerCase().includes(slashQuery) ||
+        p.category?.toLowerCase().includes(slashQuery)
+      )
+    : chatPrompts;
+
   // Charger les notes récentes au montage du composant
   useEffect(() => {
     loadRecentNotes();
@@ -565,6 +623,22 @@ const ChatInput: React.FC<ChatInputProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showNoteSelector]);
+
+  // Fermer le slash menu quand on clique ailleurs
+  useEffect(() => {
+    if (!showSlashMenu) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.chat-slash-menu') && !target.closest('.chatgpt-input-textarea')) {
+        setShowSlashMenu(false);
+        setSlashQuery('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSlashMenu]);
 
   // Cleanup des images au démontage
   useEffect(() => {
@@ -702,17 +776,51 @@ const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      {/* Zone de texte principale */}
-      <textarea
-        ref={textareaRef}
-        value={message}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        className="chatgpt-input-textarea"
-        rows={1}
-        disabled={false}
-      />
+      {/* Zone de texte principale avec wrapper pour slash menu */}
+      <div style={{ position: 'relative', flex: 1 }}>
+        <textarea
+          ref={textareaRef}
+          value={message}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className="chatgpt-input-textarea"
+          rows={1}
+          disabled={false}
+        />
+
+        {/* Slash Menu pour les prompts chat */}
+        {showSlashMenu && (
+          <div className="chat-slash-menu">
+            <div className="chat-note-list-header">
+              Prompts disponibles
+            </div>
+            <div className="chat-note-list">
+              {filteredChatPrompts.length > 0 ? (
+                filteredChatPrompts.map((prompt) => {
+                  const PromptIcon = getIconComponent(prompt.icon);
+                  return (
+                    <button
+                      key={prompt.id}
+                      className="chat-note-item"
+                      onClick={() => handleSelectPrompt(prompt)}
+                    >
+                      <PromptIcon size={16} style={{ flexShrink: 0, color: 'var(--chat-text-secondary)' }} />
+                      <div className="chat-note-item-content">
+                        <div className="chat-note-item-title">{prompt.name}</div>
+                      </div>
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="chat-note-list-empty">
+                  Aucun prompt trouvé
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Actions de l'input */}
       <div className="chatgpt-input-actions">
