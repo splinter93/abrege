@@ -1,10 +1,18 @@
 /**
- * Types pour le système de prompts éditeur personnalisables
+ * Types pour le système de prompts personnalisables (éditeur et chat)
  * @module types/editorPrompts
  */
 
 /**
- * Mode d'insertion du contenu généré par un prompt
+ * Contexte d'utilisation du prompt
+ * - editor: Uniquement dans l'éditeur
+ * - chat: Uniquement dans le chat
+ * - both: Dans les deux contextes
+ */
+export type PromptContext = 'editor' | 'chat' | 'both';
+
+/**
+ * Mode d'insertion du contenu généré par un prompt (uniquement pour contexte editor)
  * - replace: Remplace la sélection (défaut)
  * - append: Ajoute après la sélection
  * - prepend: Ajoute avant la sélection
@@ -26,7 +34,7 @@ export interface OutputSchema {
 }
 
 /**
- * Interface représentant un prompt éditeur
+ * Interface représentant un prompt (éditeur ou chat)
  */
 export interface EditorPrompt {
   id: string;
@@ -41,8 +49,11 @@ export interface EditorPrompt {
   is_default: boolean;
   category?: string | null;
   
-  /** Mode d'insertion du contenu généré (replace, append, prepend) */
-  insertion_mode: InsertionMode;
+  /** Contexte d'utilisation (editor, chat, both) */
+  context: PromptContext;
+  
+  /** Mode d'insertion du contenu généré (uniquement pour editor) */
+  insertion_mode?: InsertionMode | null;
   
   /** Utiliser les structured outputs pour éviter les phrases parasites */
   use_structured_output: boolean;
@@ -55,34 +66,36 @@ export interface EditorPrompt {
 }
 
 /**
- * Requête de création d'un prompt éditeur
+ * Requête de création d'un prompt
  */
 export interface EditorPromptCreateRequest {
   name: string;
   prompt_template: string;
   icon: string;
+  context?: PromptContext;
   agent_id?: string | null;
   description?: string | null;
   category?: string | null;
   position?: number;
-  insertion_mode?: InsertionMode;
+  insertion_mode?: InsertionMode | null;
   use_structured_output?: boolean;
   output_schema?: OutputSchema | null;
 }
 
 /**
- * Requête de mise à jour d'un prompt éditeur
+ * Requête de mise à jour d'un prompt
  */
 export interface EditorPromptUpdateRequest {
   name?: string;
   prompt_template?: string;
   icon?: string;
+  context?: PromptContext;
   agent_id?: string | null;
   description?: string | null;
   category?: string | null;
   position?: number;
   is_active?: boolean;
-  insertion_mode?: InsertionMode;
+  insertion_mode?: InsertionMode | null;
   use_structured_output?: boolean;
   output_schema?: OutputSchema | null;
 }
@@ -95,6 +108,6 @@ export type PromptStatus = 'ok' | 'no-agent' | 'agent-deleted' | 'agent-inactive
 /**
  * Catégories de prompts disponibles
  */
-export type PromptCategory = 'writing' | 'code' | 'translate' | 'analysis' | 'custom';
+export type PromptCategory = 'writing' | 'code' | 'translate' | 'analysis' | 'learning' | 'brainstorm' | 'custom';
 
 
