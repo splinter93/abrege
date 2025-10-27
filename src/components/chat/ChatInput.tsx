@@ -100,6 +100,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [showSlashMenu, setShowSlashMenu] = useState(false);
   const [slashQuery, setSlashQuery] = useState('');
   
+  // 🎯 Position du menu @ (calculée dynamiquement)
+  const [atMenuPosition, setAtMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  
   // Filtrer les prompts pour le chat (context = 'chat' ou 'both')
   const chatPrompts = allPrompts.filter(p => 
     p.is_active && (p.context === 'chat' || p.context === 'both')
@@ -107,9 +110,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
+    const cursorPosition = e.target.selectionStart;
     setMessage(value);
     
-    // 🎯 Détection slash command au début de la saisie
+    // 🎯 Détection slash command au DÉBUT de la saisie uniquement
     if (value.startsWith('/')) {
       // Si espace après le slash → fermer le menu
       if (value.includes(' ')) {
@@ -121,11 +125,63 @@ const ChatInput: React.FC<ChatInputProps> = ({
         setSlashQuery(query);
         setShowSlashMenu(true);
       }
-    } else {
-      // Fermer le menu si on ne commence plus par "/"
+      // Fermer le menu @ si ouvert
+      if (showNoteSelector) {
+        setShowNoteSelector(false);
+        setNoteSearchQuery('');
+      }
+    } 
+    else {
+      // Fermer le slash menu si on ne commence plus par "/"
       if (showSlashMenu) {
         setShowSlashMenu(false);
         setSlashQuery('');
+      }
+    }
+    
+    // 🎯 Détection @ PARTOUT dans le texte (comme une mention)
+    // Chercher le dernier @ avant le curseur
+    const textBeforeCursor = value.substring(0, cursorPosition);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtIndex !== -1) {
+      // Il y a un @ avant le curseur
+      const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+      
+      // Si espace après le @, ne pas ouvrir le menu
+      if (textAfterAt.includes(' ') || textAfterAt.includes('\n')) {
+        setShowNoteSelector(false);
+        setNoteSearchQuery('');
+        setAtMenuPosition(null);
+      } else {
+        // Calculer la position approximative du @ dans le textarea
+        if (textareaRef.current) {
+          // Compter les retours à la ligne avant le @
+          const textBeforeAt = value.substring(0, lastAtIndex);
+          const lines = textBeforeAt.split('\n');
+          const currentLine = lines.length - 1;
+          const charInLine = lines[lines.length - 1]?.length || 0;
+          
+          // Position approximative
+          const charWidth = 7.5; // largeur moyenne d'un caractère
+          const left = Math.min(charInLine * charWidth, 100); // Limiter à 100px max pour éviter débordement
+          
+          setAtMenuPosition({ 
+            top: 0, // Non utilisé pour l'instant, menu toujours au-dessus
+            left 
+          });
+        }
+        
+        // Ouvrir le menu avec la query
+        setNoteSearchQuery(textAfterAt.toLowerCase());
+        setShowNoteSelector(true);
+      }
+    } else {
+      // Pas de @ avant le curseur, fermer le menu
+      if (showNoteSelector && !value.includes('@')) {
+        setShowNoteSelector(false);
+        setNoteSearchQuery('');
+        setAtMenuPosition(null);
       }
     }
   };
@@ -234,7 +290,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }, 100);
   }, [textareaRef, processAndUploadImage]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     const hasContent = message.trim() || images.length > 0;
     
     logger.debug(LogCategory.API, '🚀 Tentative d\'envoi:', { 
@@ -242,16 +298,29 @@ const ChatInput: React.FC<ChatInputProps> = ({
       loading, 
       disabled,
       messageLength: message.length,
-      imageCount: images.length
+      imageCount: images.length,
+      selectedNotesCount: selectedNotes.length
     });
     
     if (hasContent && !loading && !disabled) {
-      logger.debug(LogCategory.API, '✅ Envoi du message avec images');
+      logger.debug(LogCategory.API, '✅ Envoi du message avec images et notes');
       
       // Construire le contenu multi-modal si images présentes
       const content = buildMessageContent(message.trim() || 'Regarde cette image', images);
       
-      // Envoyer le message
+      // TODO: Charger le contenu des notes sélectionnées et l'ajouter au contexte
+      // Pour l'instant on envoie juste les IDs/slugs
+      const notesContext = selectedNotes.length > 0 ? {
+        notes: selectedNotes.map(n => ({
+          id: n.id,
+          slug: n.slug,
+          title: n.title
+        }))
+      } : undefined;
+      
+      logger.dev('[ChatInput] 📎 Notes attachées:', notesContext);
+      
+      // Envoyer le message (TODO: passer notesContext)
       onSend(content, images);
       
       // Reset l'état
@@ -474,11 +543,36 @@ const ChatInput: React.FC<ChatInputProps> = ({
       setSelectedNotes(prev => prev.filter(n => n.id !== note.id));
     } else {
       setSelectedNotes(prev => [...prev, note]);
+      
+      // Si le menu a été ouvert via @, effacer le texte "@query"
+      if (textareaRef.current) {
+        const cursorPosition = textareaRef.current.selectionStart;
+        const textBeforeCursor = message.substring(0, cursorPosition);
+        const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+        
+        if (lastAtIndex !== -1) {
+          // Effacer depuis @ jusqu'au curseur
+          const newMessage = message.substring(0, lastAtIndex) + message.substring(cursorPosition);
+          setMessage(newMessage);
+          
+          // Fermer le menu
+          setShowNoteSelector(false);
+          setNoteSearchQuery('');
+          
+          // Replacer le curseur à la bonne position
+          setTimeout(() => {
+            if (textareaRef.current) {
+              textareaRef.current.focus();
+              textareaRef.current.selectionStart = lastAtIndex;
+              textareaRef.current.selectionEnd = lastAtIndex;
+            }
+          }, 0);
+        }
+      }
     }
-    // Ne pas fermer le menu pour permettre la sélection multiple
-    // setShowNoteSelector(false);
+    // Ne pas fermer le menu pour permettre la sélection multiple (si ouvert via bouton)
     setNoteSearchQuery('');
-  }, [selectedNotes]);
+  }, [selectedNotes, message, textareaRef]);
 
   const handleRemoveNote = useCallback((noteId: string) => {
     setSelectedNotes(prev => prev.filter(n => n.id !== noteId));
@@ -840,7 +934,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
           {/* Note Selector Menu */}
           {showNoteSelector && (
-            <div className="chat-note-selector">
+            <div 
+              className="chat-note-selector"
+              style={atMenuPosition ? {
+                left: `${atMenuPosition.left}px`
+              } : undefined}
+            >
               <div className="chat-note-search-container">
                 <Search size={16} className="chat-note-search-icon" />
                 <input
