@@ -28,6 +28,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
     name: '',
     prompt_template: '',
     icon: 'FiZap',
+    context: 'editor',
     agent_id: undefined,
     description: '',
     category: '',
@@ -45,6 +46,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
         name: prompt.name,
         prompt_template: prompt.prompt_template,
         icon: prompt.icon,
+        context: prompt.context || 'editor',
         agent_id: prompt.agent_id || undefined,
         description: prompt.description || '',
         category: prompt.category || '',
@@ -244,11 +246,56 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               <option value="code">Code</option>
               <option value="translate">Translate</option>
               <option value="analysis">Analysis</option>
+              <option value="learning">Learning</option>
+              <option value="brainstorm">Brainstorm</option>
               <option value="custom">Custom</option>
             </select>
           </div>
 
-          {/* Mode d'insertion */}
+          {/* Contexte d'utilisation */}
+          <div className="prompt-form-group">
+            <label className="prompt-form-label">
+              Contexte d'utilisation
+            </label>
+            <div className="prompt-context-options">
+              <label className="prompt-context-option">
+                <input
+                  type="radio"
+                  name="context"
+                  value="editor"
+                  checked={formData.context === 'editor'}
+                  onChange={(e) => handleChange('context', e.target.value)}
+                />
+                <span>📝 Éditeur uniquement</span>
+              </label>
+              <label className="prompt-context-option">
+                <input
+                  type="radio"
+                  name="context"
+                  value="chat"
+                  checked={formData.context === 'chat'}
+                  onChange={(e) => handleChange('context', e.target.value)}
+                />
+                <span>💬 Chat uniquement</span>
+              </label>
+              <label className="prompt-context-option">
+                <input
+                  type="radio"
+                  name="context"
+                  value="both"
+                  checked={formData.context === 'both'}
+                  onChange={(e) => handleChange('context', e.target.value)}
+                />
+                <span>📝💬 Les deux</span>
+              </label>
+            </div>
+            <small className="prompt-form-hint">
+              Choisissez où ce prompt sera disponible en tant que slash command
+            </small>
+          </div>
+
+          {/* Mode d'insertion (uniquement pour editor) */}
+          {(formData.context === 'editor' || formData.context === 'both') && (
           <div className="prompt-form-group">
             <label className="prompt-form-label" htmlFor="insertion_mode">
               Mode d'insertion
@@ -269,6 +316,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               <strong>Prepend:</strong> pour ajouter une intro
             </small>
           </div>
+          )}
 
           {/* Structured Output */}
           <div className="prompt-form-group">

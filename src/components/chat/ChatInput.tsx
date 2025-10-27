@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, CornerUpRight, Folder, Image as ImageIcon, Search, FileText, Settings, Zap, Target, Cpu, AtSign } from 'react-feather';
+import { Globe, CornerUpRight, Folder, Image as ImageIcon, Search, FileText, Settings, Zap, Target, Cpu, AtSign, Feather } from 'react-feather';
 import { Lightbulb, Pencil, X } from 'lucide-react';
 import { logger, LogCategory } from '@/utils/logger';
 import AudioRecorder from './AudioRecorder';
@@ -662,7 +662,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <div className="chat-selected-notes">
           {selectedNotes.map((note) => (
             <div key={note.id} className="chat-note-pill">
-              <FileText size={14} />
+              <Feather size={14} />
               <span className="chat-note-pill-title">{note.title}</span>
               <button
                 className="chat-note-pill-remove"
@@ -763,7 +763,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
                         className={`chat-note-item ${selectedNotes.find(n => n.id === note.id) ? 'selected' : ''}`}
                         onClick={() => handleSelectNote(note)}
                       >
-                        <FileText size={16} />
                         <div className="chat-note-item-content">
                           <div className="chat-note-item-title">{note.title}</div>
                         </div>

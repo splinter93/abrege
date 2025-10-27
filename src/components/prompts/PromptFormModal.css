@@ -257,6 +257,52 @@
 }
 
 /* Responsive */
+/* Styles pour les options de contexte */
+.prompt-context-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.prompt-context-option {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--surface-2);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.prompt-context-option:hover {
+  background: var(--surface-3);
+  border-color: var(--border-subtle);
+}
+
+.prompt-context-option input[type="radio"] {
+  margin-right: 0.75rem;
+  cursor: pointer;
+  accent-color: var(--accent-primary);
+}
+
+.prompt-context-option input[type="radio"]:checked + span {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.prompt-context-option span {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  transition: all 0.15s ease;
+}
+
+.prompt-context-option:has(input:checked) {
+  background: var(--surface-3);
+  border-color: var(--accent-primary);
+}
+
 @media (max-width: 768px) {
   .prompt-modal {
     max-width: none;

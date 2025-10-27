@@ -120,6 +120,21 @@
   color: #ff6b35;
 }
 
+.prompt-card-badge.context-editor {
+  background: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.prompt-card-badge.context-chat {
+  background: rgba(10, 132, 255, 0.15);
+  color: #0a84ff;
+}
+
+.prompt-card-badge.context-both {
+  background: rgba(191, 90, 242, 0.15);
+  color: #bf5af2;
+}
+
 .prompt-card-description {
   font-size: 0.875rem;
   color: var(--text-muted);

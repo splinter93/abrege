@@ -89,6 +89,13 @@ const PromptCard: React.FC<PromptCardProps> = ({
           {prompt.is_default && (
             <span className="prompt-card-badge system">Système</span>
           )}
+          {prompt.context && (
+            <span className={`prompt-card-badge context-${prompt.context}`}>
+              {prompt.context === 'editor' && '📝 Éditeur'}
+              {prompt.context === 'chat' && '💬 Chat'}
+              {prompt.context === 'both' && '📝💬 Les deux'}
+            </span>
+          )}
         </h3>
 
         {prompt.description && (
