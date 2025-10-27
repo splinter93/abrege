@@ -4,22 +4,15 @@ import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
 import SettingsModal from './SettingsModal';
+import type { Agent } from '@/types/chat';
 
-// Types pour les sessions et agents
+// Types pour les sessions
 interface ChatSession {
   id: string;
   name: string;
   thread: unknown[];
   createdAt: string;
   updatedAt: string;
-}
-
-interface Agent {
-  id: string;
-  display_name: string;
-  slug: string;
-  description?: string;
-  is_active: boolean;
 }
 
 interface SidebarUltraCleanProps {
@@ -43,15 +36,25 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const [editingName, setEditingName] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  // 🧹 Nettoyer les sessions vides avant de changer
+  const cleanupEmptySession = async () => {
+    if (currentSession && Array.isArray(currentSession.thread) && currentSession.thread.length === 0) {
+      // Supprimer silencieusement la session vide
+      await deleteSession(currentSession.id);
+    }
+  };
+
   // Fonctions de gestion
   const handleCreateNewSession = async () => {
+    await cleanupEmptySession(); // Nettoyer avant de créer
     await createSession('Nouvelle Conversation');
     if (!isDesktop) {
       onClose();
     }
   };
 
-  const handleSelectSession = (session: ChatSession) => {
+  const handleSelectSession = async (session: ChatSession) => {
+    await cleanupEmptySession(); // Nettoyer avant de changer
     setCurrentSession(session);
     if (!isDesktop) {
       onClose();
@@ -84,7 +87,10 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
     setEditingName('');
   };
 
-  const handleSelectAgent = (agent: Agent) => {
+  const handleSelectAgent = async (agent: Agent) => {
+    await cleanupEmptySession(); // Nettoyer avant de changer d'agent
+    // Créer une nouvelle conversation avec l'agent sélectionné
+    await createSession(`Chat avec ${agent.display_name || agent.name}`);
     setSelectedAgent(agent);
     if (!isDesktop) {
       onClose();
@@ -144,7 +150,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                       {agent.profile_picture ? (
                         <img 
                           src={agent.profile_picture} 
-                          alt={agent.name}
+                          alt={agent.display_name || agent.name}
                           className="agent-avatar"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
@@ -154,7 +160,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                         "🤖"
                       )}
                     </div>
-                    <span>{agent.name}</span>
+                    <span>{agent.display_name || agent.name}</span>
                   </button>
                 </div>
               ))}

@@ -1,0 +1,128 @@
+/* ========================================
+   AGENT INFO DROPDOWN
+   ======================================== */
+
+.agent-dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 998;
+  background: transparent;
+}
+
+.agent-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 8px;
+  width: 260px;
+  background: var(--chat-gradient-block);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  padding: 16px;
+  z-index: 999;
+  animation: slideDown 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header sans avatar */
+.agent-dropdown-header {
+  margin-bottom: 12px;
+}
+
+.agent-dropdown-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--chat-text-primary);
+  margin: 0;
+  font-family: var(--font-chat-ui);
+}
+
+/* Description */
+.agent-dropdown-description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--chat-text-secondary);
+  margin: 0;
+  font-family: var(--font-chat-ui);
+}
+
+/* Modèle */
+.agent-dropdown-model {
+  font-size: 12px;
+  color: var(--chat-text-muted);
+  margin: 0;
+  font-family: var(--font-chat-ui);
+}
+
+/* Sections */
+.agent-dropdown-section {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.agent-dropdown-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--chat-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px 0;
+  font-family: var(--font-chat-ui);
+}
+
+.agent-dropdown-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.agent-dropdown-tool-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--chat-gradient-block);
+  filter: brightness(1.2);
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--chat-text-secondary);
+  font-family: var(--font-chat-ui);
+}
+
+/* Lien configuration */
+.agent-dropdown-config-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--chat-text-primary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-family: var(--font-chat-ui);
+}
+
+.agent-dropdown-config-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.agent-dropdown-config-link svg {
+  color: var(--chat-text-muted);
+}
+

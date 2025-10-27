@@ -22,6 +22,7 @@ import ChatInput from './ChatInput';
 import ChatMessage from './ChatMessage';
 import SidebarUltraClean from './SidebarUltraClean';
 import MessageLoader from './MessageLoader';
+import AgentInfoDropdown from './AgentInfoDropdown';
 import { StreamingIndicator, type StreamingState } from './StreamingIndicator';
 import StreamTimelineRenderer from './StreamTimelineRenderer';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -38,6 +39,7 @@ const ChatFullscreenV2: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [wideMode, setWideMode] = useState(false);
+  const [agentDropdownOpen, setAgentDropdownOpen] = useState(false);
   
   // 🎯 Auth centralisée
   const { requireAuth, user, loading: authLoading, isAuthenticated } = useAuthGuard();
@@ -743,6 +745,8 @@ const ChatFullscreenV2: React.FC = () => {
         timestamp: new Date().toISOString(),
         ...(attachedImages && attachedImages.length > 0 && { attachedImages })
       };
+      
+      // Ajouter le message user au store
       await addMessage(userMessage);
       
       // 🎯 Le scroll est géré automatiquement par useChatScroll (détecte message user)
@@ -772,6 +776,7 @@ const ChatFullscreenV2: React.FC = () => {
 
     } catch (error) {
       logger.error('Erreur lors de l\'appel LLM:', error);
+      
       await addMessage({
         role: 'assistant',
         content: 'Désolé, une erreur est survenue lors du traitement de votre message. Veuillez réessayer.',
@@ -939,17 +944,30 @@ const ChatFullscreenV2: React.FC = () => {
           
           {/* Agent actif */}
           {selectedAgent && (
-            <div className="chat-active-agent">
-              {selectedAgent.profile_picture ? (
-                <img 
-                  src={selectedAgent.profile_picture} 
-                  alt={selectedAgent.name}
-                  className="agent-icon agent-avatar-header"
-                />
-              ) : (
-                <span className="agent-icon">🤖</span>
-              )}
-              <span className="agent-name">{selectedAgent.name}</span>
+            <div className="chat-active-agent-wrapper" style={{ position: 'relative' }}>
+              <button 
+                className="chat-active-agent"
+                onClick={() => setAgentDropdownOpen(!agentDropdownOpen)}
+                aria-label="Informations de l'agent"
+              >
+                {selectedAgent.profile_picture ? (
+                  <img 
+                    src={selectedAgent.profile_picture} 
+                    alt={selectedAgent.name}
+                    className="agent-icon agent-avatar-header"
+                  />
+                ) : (
+                  <span className="agent-icon">🤖</span>
+                )}
+                <span className="agent-name">{selectedAgent.name}</span>
+              </button>
+              
+              {/* Dropdown d'info agent */}
+              <AgentInfoDropdown
+                agent={selectedAgent}
+                isOpen={agentDropdownOpen}
+                onClose={() => setAgentDropdownOpen(false)}
+              />
             </div>
           )}
         </div>
@@ -1044,7 +1062,7 @@ const ChatFullscreenV2: React.FC = () => {
                 <MessageLoader isLoadingMore />
               )}
 
-              <AnimatePresence mode="popLayout">
+              <AnimatePresence mode="sync">
                 {displayMessages.map((message, index) => {
                   // ✅ TypeScript strict : Générer une clé unique sans 'as any'
                   const keyParts = [message.role, message.timestamp];
@@ -1053,11 +1071,17 @@ const ChatFullscreenV2: React.FC = () => {
                   }
                   const fallbackKey = keyParts.join('-');
                   
+                  // ✅ Masquer le dernier message assistant s'il est en cours de streaming
+                  const isLastAssistant = index === displayMessages.length - 1 && message.role === 'assistant';
+                  const isBeingStreamed = isLastAssistant && isStreaming;
+                  
+                  if (isBeingStreamed) return null;
+                  
                   return (
                     <motion.div
                       key={message.id || fallbackKey}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={false}
+                      animate={{ opacity: 1 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ 
                         duration: 0.2,
@@ -1069,13 +1093,27 @@ const ChatFullscreenV2: React.FC = () => {
                         messageIndex={index}
                         onEdit={handleEditMessage}
                         animateContent={false}
-                        isWaitingForResponse={loading && message.role === 'assistant' && !message.content}
                         isStreaming={false} // ✅ Pas de streaming pour les messages persistés
                       />
                     </motion.div>
                   );
                 })}
               </AnimatePresence>
+              
+              {/* ✨ Indicateur de saisie : afficher pendant loading jusqu'à ce que le contenu arrive */}
+              {loading && (!isStreaming || streamingTimeline.length === 0) && displayMessages.length > 0 && (
+                <div className="chatgpt-message chatgpt-message-assistant">
+                  <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant">
+                    <div className="chatgpt-message-content">
+                      <div className="chat-typing-indicator">
+                        <div className="chat-typing-dot"></div>
+                        <div className="chat-typing-dot"></div>
+                        <div className="chat-typing-dot"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* ✅ PENDANT LE STREAMING : Utiliser StreamTimelineRenderer pour affichage chronologique */}
               {isStreaming && streamingTimeline.length > 0 && (

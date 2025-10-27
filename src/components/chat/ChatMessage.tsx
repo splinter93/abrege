@@ -24,7 +24,6 @@ interface ChatMessageProps {
   className?: string;
   isStreaming?: boolean;
   animateContent?: boolean; // Nouveau prop pour contrôler l'animation
-  isWaitingForResponse?: boolean; // ✅ Ajout de la prop manquante
   messageIndex?: number; // Index du message dans le thread
   onEdit?: (messageId: string, content: string, index: number) => void; // Callback d'édition
 }
@@ -137,6 +136,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         ) : (
           <>
             {/* FALLBACK: Rendu classique si pas de timeline */}
+            
             {/* Contenu - texte avec liens pour user, markdown pour assistant */}
             {content && (
               <div className="chatgpt-message-content">

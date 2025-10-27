@@ -394,12 +394,24 @@
 }
 
 /* Agent actif dans le header */
+.chat-active-agent-wrapper {
+  position: relative;
+}
+
 .chat-active-agent {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
   transition: all var(--chat-transition-fast);
+}
+
+.chat-active-agent:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
 }
 
 .agent-icon {
@@ -1395,6 +1407,44 @@
 
 .chat-input-typing-dot:nth-child(2) {
   animation-delay: -0.16s;
+}
+
+/* ========================================
+   TYPING INDICATOR - INDICATEUR DE SAISIE
+   ======================================== */
+
+.chat-typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0 4px 0;
+}
+
+.chat-typing-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--chat-text-muted);
+  animation: typingDot 1.4s ease-in-out infinite;
+}
+
+.chat-typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.chat-typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingDot {
+  0%, 60%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ========================================
