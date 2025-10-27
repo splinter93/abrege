@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Agent, ChatMessage } from '@/types/chat';
+import { Agent, ChatMessage, EditingState } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
 import { sessionSyncService } from '@/services/sessionSyncService';
 
@@ -22,6 +22,7 @@ interface ChatStore {
   isFullscreen: boolean;
   loading: boolean;
   error: string | null;
+  editingMessage: EditingState | null;
   
   // 🔄 Actions de base
   setSessions: (sessions: ChatSession[]) => void;
@@ -33,6 +34,10 @@ interface ChatStore {
   
   // 🎮 Actions UI
   openFullscreen: () => void;
+  
+  // ✏️ Actions d'édition de messages
+  startEditingMessage: (messageId: string, content: string, index: number) => void;
+  cancelEditing: () => void;
   
   // ⚡ Actions avec fonctionnalités essentielles
   syncSessions: () => Promise<void>;
@@ -53,6 +58,7 @@ export const useChatStore = create<ChatStore>()(
       isFullscreen: false,
       loading: false,
       error: null,
+      editingMessage: null,
 
       // 🔄 Actions de base
       setSessions: (sessions: ChatSession[]) => set({ sessions }),
@@ -71,6 +77,23 @@ export const useChatStore = create<ChatStore>()(
         if (typeof window !== 'undefined') {
           window.location.href = '/chat';
         }
+      },
+
+      // ✏️ Actions d'édition de messages
+      startEditingMessage: (messageId: string, content: string, index: number) => {
+        set({ 
+          editingMessage: {
+            messageId,
+            originalContent: content,
+            messageIndex: index
+          }
+        });
+        logger.dev('[ChatStore] ✏️ Mode édition activé:', { messageId, index });
+      },
+
+      cancelEditing: () => {
+        set({ editingMessage: null });
+        logger.dev('[ChatStore] ❌ Mode édition annulé');
       },
 
       // ⚡ Actions avec fonctionnalités essentielles

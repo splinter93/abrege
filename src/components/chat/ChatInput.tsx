@@ -1,7 +1,8 @@
 'use client';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, CornerUpRight, Folder, Image as ImageIcon, Search, FileText, Settings, Zap, Target, Cpu, AtSign } from 'react-feather';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, Pencil, X } from 'lucide-react';
 import { logger, LogCategory } from '@/utils/logger';
 import AudioRecorder from './AudioRecorder';
 import ImageSourceModal from './ImageSourceModal';
@@ -28,6 +29,10 @@ interface ChatInputProps {
   placeholder?: string;
   sessionId: string; // ✅ Requis pour upload S3
   currentAgentModel?: string; // Modèle actuel de l'agent (ex: "grok-4-fast-reasoning")
+  // ✏️ Props pour l'édition de messages
+  editingMessageId?: string | null;
+  editingContent?: string;
+  onCancelEdit?: () => void;
 }
 
 // Helper: mapper modèle → niveau reasoning
@@ -39,11 +44,36 @@ const getReasoningLevelFromModel = (model?: string): 'advanced' | 'general' | 'f
   return null;
 };
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, disabled = false, placeholder = "Commencez à discuter...", sessionId, currentAgentModel }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ 
+  onSend, 
+  loading, 
+  textareaRef, 
+  disabled = false, 
+  placeholder = "Commencez à discuter...", 
+  sessionId, 
+  currentAgentModel,
+  editingMessageId,
+  editingContent,
+  onCancelEdit
+}) => {
   const { getAccessToken } = useAuth();
   const [message, setMessage] = React.useState('');
   const [audioError, setAudioError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageAttachment[]>([]);
+  
+  // ✏️ Synchroniser le contenu quand on entre en mode édition
+  useEffect(() => {
+    if (editingContent) {
+      setMessage(editingContent);
+      // Focus sur le textarea
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        // Placer le curseur à la fin
+        textareaRef.current.selectionStart = editingContent.length;
+        textareaRef.current.selectionEnd = editingContent.length;
+      }
+    }
+  }, [editingContent, textareaRef]);
   const cameraInputRef = useRef<HTMLInputElement>(null); // ✅ Ref pour capture photo
   
   // Déterminer le niveau par défaut basé sur le modèle de l'agent
@@ -602,6 +632,30 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSend, loading, textareaRef, dis
           </div>
         </div>
       )}
+
+      {/* ✏️ Indicateur d'édition */}
+      <AnimatePresence>
+        {editingMessageId && (
+          <motion.div 
+            className="editing-indicator"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Pencil size={14} />
+            <span>Modifier le message</span>
+            <button 
+              type="button"
+              onClick={onCancelEdit}
+              className="editing-cancel-btn"
+              aria-label="Annuler l'édition"
+            >
+              <X size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Notes sélectionnées (pills AU-DESSUS du textarea) */}
       {selectedNotes.length > 0 && (

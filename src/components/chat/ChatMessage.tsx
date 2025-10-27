@@ -25,13 +25,17 @@ interface ChatMessageProps {
   isStreaming?: boolean;
   animateContent?: boolean; // Nouveau prop pour contrôler l'animation
   isWaitingForResponse?: boolean; // ✅ Ajout de la prop manquante
+  messageIndex?: number; // Index du message dans le thread
+  onEdit?: (messageId: string, content: string, index: number) => void; // Callback d'édition
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ 
   message, 
   className, 
   isStreaming = false,
-  animateContent = false 
+  animateContent = false,
+  messageIndex,
+  onEdit
 }) => {
   const [displayedContent, setDisplayedContent] = useState('');
   
@@ -173,6 +177,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           <BubbleButtons
             content={content}
             messageId={message.id}
+            messageIndex={messageIndex}
             onCopy={async () => {
               try {
                 await navigator.clipboard.writeText(content);
@@ -182,7 +187,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               }
             }}
             onVoice={() => logger.debug('Lecture vocale du message')}
-            onEdit={() => logger.debug('Édition du message')}
+            onEdit={onEdit}
             showVoiceButton={role === 'assistant'}
             showEditButton={role === 'user'}
             className={role === 'user' ? 'bubble-buttons-user' : ''}

@@ -1398,6 +1398,54 @@
 }
 
 /* ========================================
+   EDITING INDICATOR - INDICATEUR D'ÉDITION
+   ======================================== */
+
+.editing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--chat-gradient-block);
+  filter: brightness(1.4);
+  border-radius: 8px;
+  margin: 0 0 2px 0;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--chat-text-primary);
+  font-family: var(--font-chat-ui);
+}
+
+.editing-indicator svg {
+  flex-shrink: 0;
+  color: var(--chat-text-muted);
+}
+
+.editing-indicator span {
+  flex: 1;
+  color: var(--chat-text-muted);
+}
+
+.editing-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--chat-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.editing-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--chat-text-primary);
+}
+
+/* ========================================
    BUBBLE BUTTONS - ACTIONS SOUS LES BULLES
    ======================================== */
 
@@ -1958,7 +2006,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px; /* ✅ Plus de respiration */
-  padding: 60px 40px;
+  padding: 60px 45px;
   text-align: center;
   animation: fadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   max-width: 500px;

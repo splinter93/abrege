@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { debounce } from 'lodash';
 import { useChatStore } from '@/store/useChatStore';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -53,6 +54,7 @@ const ChatFullscreenV2: React.FC = () => {
     selectedAgent,
     selectedAgentId,
     loading,
+    editingMessage,
     setCurrentSession,
     setSelectedAgent,
     setSelectedAgentId,
@@ -61,7 +63,8 @@ const ChatFullscreenV2: React.FC = () => {
     syncSessions,
     createSession,
     addMessage,
-    updateSession
+    startEditingMessage,
+    cancelEditing
   } = useChatStore();
 
 
@@ -78,8 +81,10 @@ const ChatFullscreenV2: React.FC = () => {
     isLoading: isLoadingMessages,
     isLoadingMore,
     hasMore,
+    loadInitialMessages,
     loadMoreMessages,
     addMessage: addInfiniteMessage,
+    replaceMessages: replaceInfiniteMessages,
     clearMessages: clearInfiniteMessages
   } = useInfiniteMessages({
     sessionId: currentSession?.id || null,
@@ -132,6 +137,9 @@ const ChatFullscreenV2: React.FC = () => {
   const [executingToolCount, setExecutingToolCount] = useState(0);
   const [currentToolName, setCurrentToolName] = useState<string>('');
   const [currentRound, setCurrentRound] = useState(0);
+  
+  // ✏️ État pour l'édition de messages
+  const [editingContent, setEditingContent] = useState<string>('');
   
   // ✅ NOUVEAU : Timeline progressive pour affichage pendant le streaming
   const [streamingTimeline, setStreamingTimeline] = useState<Array<{
@@ -380,7 +388,7 @@ const ChatFullscreenV2: React.FC = () => {
     );
 
     // ✅ Filtrage intelligent : garder tous les messages importants
-    const filtered = sorted.filter(msg => {
+    let filtered = sorted.filter(msg => {
       // Toujours garder les messages utilisateur
       if (msg.role === 'user') return true;
       
@@ -396,6 +404,20 @@ const ChatFullscreenV2: React.FC = () => {
       // Par défaut, garder le message
       return true;
     });
+    
+    // ✏️ Si on est en mode édition, masquer le message en édition ET tous ceux qui suivent
+    if (editingMessage) {
+      // Trouver l'index du message édité dans le tableau filtré
+      const editedMsgIndexInFiltered = filtered.findIndex(msg => 
+        msg.id === editingMessage.messageId ||
+        (msg.timestamp && editingMessage.messageId.includes(new Date(msg.timestamp).getTime().toString()))
+      );
+      
+      if (editedMsgIndexInFiltered !== -1) {
+        // ✅ Garder seulement les messages AVANT celui en édition (pas le message lui-même)
+        filtered = filtered.slice(0, editedMsgIndexInFiltered);
+      }
+    }
     
     // Log optimisé pour le debugging
     if (process.env.NODE_ENV === 'development') {
@@ -413,7 +435,7 @@ const ChatFullscreenV2: React.FC = () => {
     }
     
     return filtered;
-  }, [infiniteMessages, displayedSessionId, currentSession?.id]);
+  }, [infiniteMessages, displayedSessionId, currentSession?.id, editingMessage]);
 
   // 🎯 Effets optimisés
   useEffect(() => {
@@ -549,8 +571,56 @@ const ChatFullscreenV2: React.FC = () => {
   // ❌ DÉSACTIVÉ : Pas d'autoscroll pendant le streaming
   // On laisse le message assistant s'afficher dans l'espace disponible (padding-bottom: 300px)
 
-  // 🎯 Handlers optimisés
-  const handleSendMessage = useCallback(async (message: string | import('@/types/image').MessageContent, images?: import('@/types/image').ImageAttachment[]) => {
+  // ✏️ Handlers pour l'édition de messages
+  const handleEditMessage = useCallback((messageId: string, content: string, displayIndex: number) => {
+    if (!requireAuth()) return;
+    
+    // ✅ Trouver le vrai index dans infiniteMessages (qui est la source de vérité affichée)
+    const realIndex = infiniteMessages.findIndex(msg => {
+      if (msg.id === messageId) return true;
+      
+      // Fallback: chercher par timestamp
+      if (msg.timestamp && messageId.match(/^msg-(\d+)-/)) {
+        const timestampMatch = messageId.match(/^msg-(\d+)-/);
+        if (timestampMatch) {
+          const targetTimestamp = parseInt(timestampMatch[1]);
+          const msgTimestamp = new Date(msg.timestamp).getTime();
+          return Math.abs(msgTimestamp - targetTimestamp) < 1000 && msg.role === 'user';
+        }
+      }
+      
+      return false;
+    });
+    
+    if (realIndex === -1) {
+      logger.error('[ChatFullscreenV2] ❌ Message non trouvé:', {
+        messageId,
+        displayIndex,
+        infiniteMessagesLength: infiniteMessages.length,
+        sampleIds: infiniteMessages.slice(0, 5).map(m => ({ id: m.id, timestamp: m.timestamp }))
+      });
+      return;
+    }
+    
+    startEditingMessage(messageId, content, realIndex);
+    setEditingContent(content);
+    
+    logger.dev('[ChatFullscreenV2] ✏️ Mode édition activé:', { 
+      messageId, 
+      displayIndex, 
+      realIndex 
+    });
+  }, [startEditingMessage, requireAuth, infiniteMessages]);
+
+  const handleCancelEdit = useCallback(() => {
+    cancelEditing();
+    setEditingContent('');
+    
+    logger.dev('[ChatFullscreenV2] ❌ Édition annulée');
+  }, [cancelEditing]);
+
+  // 🎯 Handlers optimisés  
+  const handleSendMessageInternal = useCallback(async (message: string | import('@/types/image').MessageContent, images?: import('@/types/image').ImageAttachment[]) => {
     // Vérifier si le message a du contenu (texte ou images)
     const hasTextContent = typeof message === 'string' ? message.trim() : true;
     const hasImages = images && images.length > 0;
@@ -712,6 +782,111 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [loading, currentSession, createSession, addMessage, selectedAgent, llmContext, sendMessage, setLoading, requireAuth]);
 
+  // ✏️ Handler pour soumettre un message édité
+  const handleEditSubmit = useCallback(async (newContent: string, images?: import('@/types/image').ImageAttachment[]) => {
+    if (!editingMessage || !currentSession || !requireAuth()) return;
+    
+    setLoading(true);
+    
+    try {
+      // 1. Appel API pour remplacer le message et supprimer les suivants
+      const tokenResult = await tokenManager.getValidToken();
+      if (!tokenResult.isValid || !tokenResult.token) {
+        throw new Error(tokenResult.error || 'Token non disponible');
+      }
+
+      const response = await fetch(
+        `/api/ui/chat-sessions/${currentSession.id}/messages/${editingMessage.messageId}/edit`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${tokenResult.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            content: newContent,
+            attachedImages: images?.map(img => ({
+              url: img.base64 || img.previewUrl,
+              fileName: img.fileName
+            }))
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erreur lors de l\'édition du message');
+      }
+
+      // 2. Recharger la session depuis la DB pour avoir le thread à jour
+      await syncSessions();
+      
+      // 3. Forcer le rechargement des messages depuis l'API (sans clear brutal)
+      await loadInitialMessages();
+      
+      // 4. Récupérer la session fraîchement rechargée
+      const freshSession = useChatStore.getState().currentSession;
+      
+      if (!freshSession) {
+        throw new Error('Session perdue après édition');
+      }
+
+      // 5. Annuler le mode édition
+      cancelEditing();
+      setEditingContent('');
+
+      logger.info('[ChatFullscreenV2] ✅ Message édité avec succès:', {
+        messageId: editingMessage.messageId,
+        messagesDeleted: result.data.messagesDeleted
+      });
+
+      // 6. Préparer l'historique pour le LLM (messages jusqu'au message édité)
+      const historyForLLM = freshSession.thread.filter(m => 
+        m.role === 'user' || m.role === 'assistant' || m.role === 'tool'
+      );
+
+      // 7. Préparer le contexte pour le LLM
+      const contextForLLM = {
+        agent: selectedAgent,
+        uiContext: {
+          ...llmContext,
+          sessionId: freshSession.id
+        }
+      };
+
+      // 8. Relancer la génération avec le nouveau message édité
+      await sendMessage(newContent, freshSession.id, contextForLLM, historyForLLM, tokenResult.token);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'édition';
+      logger.error('[ChatFullscreenV2] ❌ Erreur lors de l\'édition:', errorMessage);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, [editingMessage, cancelEditing, requireAuth, setLoading, setError, syncSessions, loadInitialMessages, selectedAgent, llmContext, sendMessage]);
+
+  // 🎯 Wrapper pour router entre édition et envoi normal
+  const handleSendMessage = useCallback(async (message: string | import('@/types/image').MessageContent, images?: import('@/types/image').ImageAttachment[]) => {
+    // ✏️ Si on est en mode édition, router vers handleEditSubmit
+    if (editingMessage) {
+      let textContent = '';
+      if (typeof message === 'string') {
+        textContent = message;
+      } else if (Array.isArray(message)) {
+        // Extraire le texte du premier élément de type 'text'
+        const textPart = message.find(part => part.type === 'text');
+        textContent = textPart && 'text' in textPart ? textPart.text : '';
+      }
+      await handleEditSubmit(textContent, images);
+      return;
+    }
+    
+    // Mode normal
+    await handleSendMessageInternal(message, images);
+  }, [editingMessage, handleEditSubmit, handleSendMessageInternal]);
+
   const handleSidebarToggle = useCallback(() => {
     if (!requireAuth()) return;
 
@@ -869,24 +1044,38 @@ const ChatFullscreenV2: React.FC = () => {
                 <MessageLoader isLoadingMore />
               )}
 
-              {displayMessages.map((message) => {
-                // ✅ TypeScript strict : Générer une clé unique sans 'as any'
-                const keyParts = [message.role, message.timestamp];
-                if (message.role === 'tool' && 'tool_call_id' in message) {
-                  keyParts.push(message.tool_call_id || 'unknown');
-                }
-                const fallbackKey = keyParts.join('-');
-                
-                return (
-                  <ChatMessage 
-                    key={message.id || fallbackKey} 
-                    message={message}
-                    animateContent={false}
-                    isWaitingForResponse={loading && message.role === 'assistant' && !message.content}
-                    isStreaming={false} // ✅ Pas de streaming pour les messages persistés
-                  />
-                );
-              })}
+              <AnimatePresence mode="popLayout">
+                {displayMessages.map((message, index) => {
+                  // ✅ TypeScript strict : Générer une clé unique sans 'as any'
+                  const keyParts = [message.role, message.timestamp];
+                  if (message.role === 'tool' && 'tool_call_id' in message) {
+                    keyParts.push(message.tool_call_id || 'unknown');
+                  }
+                  const fallbackKey = keyParts.join('-');
+                  
+                  return (
+                    <motion.div
+                      key={message.id || fallbackKey}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ 
+                        duration: 0.2,
+                        ease: [0.22, 1, 0.36, 1]
+                      }}
+                    >
+                      <ChatMessage 
+                        message={message}
+                        messageIndex={index}
+                        onEdit={handleEditMessage}
+                        animateContent={false}
+                        isWaitingForResponse={loading && message.role === 'assistant' && !message.content}
+                        isStreaming={false} // ✅ Pas de streaming pour les messages persistés
+                      />
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
               
               {/* ✅ PENDANT LE STREAMING : Utiliser StreamTimelineRenderer pour affichage chronologique */}
               {isStreaming && streamingTimeline.length > 0 && (
@@ -948,6 +1137,9 @@ const ChatFullscreenV2: React.FC = () => {
               placeholder={selectedAgent ? `Discuter avec ${selectedAgent.name}` : "Commencez à discuter..."}
               sessionId={currentSession?.id || 'temp'}
               currentAgentModel={selectedAgent?.model}
+              editingMessageId={editingMessage?.messageId || null}
+              editingContent={editingContent}
+              onCancelEdit={handleCancelEdit}
             />
           </div>
         </div>

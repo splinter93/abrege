@@ -7,9 +7,10 @@ import { Volume2 } from 'lucide-react';
 interface BubbleButtonsProps {
   content: string;
   messageId?: string;
+  messageIndex?: number;
   onCopy?: () => void;
   onVoice?: () => void;
-  onEdit?: () => void;
+  onEdit?: (messageId: string, content: string, index: number) => void;
   showVoiceButton?: boolean;
   showEditButton?: boolean;
   className?: string;
@@ -18,6 +19,7 @@ interface BubbleButtonsProps {
 const BubbleButtons: React.FC<BubbleButtonsProps> = ({
   content,
   messageId,
+  messageIndex,
   onCopy,
   onVoice,
   onEdit,
@@ -45,7 +47,9 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
   };
 
   const handleEdit = () => {
-    onEdit?.();
+    if (messageId && messageIndex !== undefined && onEdit) {
+      onEdit(messageId, content, messageIndex);
+    }
   };
 
   return (

@@ -168,3 +168,13 @@ export interface MessageDebugInfo {
     hasContent: boolean;
   }>;
 }
+
+/**
+ * État d'édition d'un message
+ * Utilisé pour le flow d'édition ChatGPT-style
+ */
+export interface EditingState {
+  messageId: string;
+  originalContent: string;
+  messageIndex: number;
+}
