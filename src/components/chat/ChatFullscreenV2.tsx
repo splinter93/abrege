@@ -854,14 +854,16 @@ const ChatFullscreenV2: React.FC = () => {
       // 7. Préparer le contexte pour le LLM
       const contextForLLM = {
         agent: selectedAgent,
+        skipAddingUserMessage: true, // ✅ Flag pour éviter de rajouter le message user qui est déjà dans l'historique
         uiContext: {
           ...llmContext,
           sessionId: freshSession.id
         }
       };
 
-      // 8. Relancer la génération avec le nouveau message édité
-      await sendMessage(newContent, freshSession.id, contextForLLM, historyForLLM, tokenResult.token);
+      // 8. Relancer la génération (le message édité est déjà dans historyForLLM)
+      // On passe une string vide car le message n'a pas besoin d'être rajouté
+      await sendMessage('', freshSession.id, contextForLLM, historyForLLM, tokenResult.token);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'édition';

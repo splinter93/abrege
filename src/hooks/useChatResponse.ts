@@ -88,7 +88,9 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
             message,
             context: context || { sessionId }, 
             history: history || [],
-            sessionId
+            sessionId,
+            // ✅ Passer skipAddingUserMessage si présent dans le contexte
+            skipAddingUserMessage: context?.skipAddingUserMessage || false
           })
         });
 

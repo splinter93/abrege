@@ -36,12 +36,20 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { message, context, history, agentConfig } = body;
+    const { message, context, history, agentConfig, skipAddingUserMessage = false } = body;
 
     // Validation des paramètres requis
-    if (!message || !context || !history) {
+    if (!context || !history) {
       return new Response(
-        JSON.stringify({ error: 'Paramètres manquants', required: ['message', 'context', 'history'] }),
+        JSON.stringify({ error: 'Paramètres manquants', required: ['context', 'history'] }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Si skipAddingUserMessage est false, message est requis
+    if (!skipAddingUserMessage && !message) {
+      return new Response(
+        JSON.stringify({ error: 'Paramètre message requis quand skipAddingUserMessage est false' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -231,6 +239,8 @@ export async function POST(request: NextRequest) {
       agentName: finalAgentConfig?.name || 'default'
     });
     
+    // ✅ Construire le tableau de messages
+    // Si skipAddingUserMessage est true (cas édition), ne pas rajouter le message user
     const messages: ChatMessage[] = [
       {
         role: 'system',
@@ -238,11 +248,12 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString()
       },
       ...history,
-      {
-        role: 'user',
+      // N'ajouter le message user que si pas en mode skip
+      ...(skipAddingUserMessage ? [] : [{
+        role: 'user' as const,
         content: message,
         timestamp: new Date().toISOString()
-      }
+      }])
     ];
 
     // ✅ Charger les tools (OpenAPI + MCP) ET les endpoints
