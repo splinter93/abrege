@@ -36,25 +36,15 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const [editingName, setEditingName] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // 🧹 Nettoyer les sessions vides avant de changer
-  const cleanupEmptySession = async () => {
-    if (currentSession && Array.isArray(currentSession.thread) && currentSession.thread.length === 0) {
-      // Supprimer silencieusement la session vide
-      await deleteSession(currentSession.id);
-    }
-  };
-
   // Fonctions de gestion
   const handleCreateNewSession = async () => {
-    await cleanupEmptySession(); // Nettoyer avant de créer
     await createSession('Nouvelle Conversation');
     if (!isDesktop) {
       onClose();
     }
   };
 
-  const handleSelectSession = async (session: ChatSession) => {
-    await cleanupEmptySession(); // Nettoyer avant de changer
+  const handleSelectSession = (session: ChatSession) => {
     setCurrentSession(session);
     if (!isDesktop) {
       onClose();
@@ -88,7 +78,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   };
 
   const handleSelectAgent = async (agent: Agent) => {
-    await cleanupEmptySession(); // Nettoyer avant de changer d'agent
     // Créer une nouvelle conversation avec l'agent sélectionné
     await createSession(`Chat avec ${agent.display_name || agent.name}`, agent.id);
     setSelectedAgent(agent);
