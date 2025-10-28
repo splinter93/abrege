@@ -132,7 +132,7 @@
   /* ========================================
      CODE & TABLES BRIGHTNESS FILTER
      ======================================== */
-  --code-brightness-filter: brightness(1.18); /* ✅ Filtre réutilisable pour code/tables */
+  --code-brightness-filter: none; /* ✅ Pas de filtre par défaut - gradient suffit */
 }
 
 /* ========================================
