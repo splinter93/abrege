@@ -138,12 +138,12 @@
    ======================================== */
 .chat-theme-dark,
 body:not(.chat-theme-light):not(.chat-theme-blue) {
-  /* Dégradés - Mode Dark LISSÉS - TOUS IDENTIQUES */
-  --chat-gradient-block: linear-gradient(135deg, #20202a 0%, #23232d 50%, #20202a 100%); /* Gradient unifié pour TOUT */
+  /* Dégradés - Mode Dark LISSÉS + ACCENTUÉS - TOUS IDENTIQUES */
+  --chat-gradient-block: linear-gradient(135deg, #20202a 0%, #252530 50%, #20202a 100%); /* Gradient unifié pour TOUT */
   --chat-gradient-input: var(--chat-gradient-block);
   --chat-gradient-sidebar: var(--chat-gradient-block); /* ✅ Même gradient que les blocs */
   --chat-gradient-user: var(--chat-gradient-block);
-  --chat-gradient-user-hover: linear-gradient(135deg, #24242e 0%, #272731 50%, #24242e 100%);
+  --chat-gradient-user-hover: linear-gradient(135deg, #24242e 0%, #292934 50%, #24242e 100%);
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
@@ -194,12 +194,12 @@ body.chat-theme-light,
   --chat-accent-primary: #f97316;      /* Orange vif */
   --chat-accent-hover: #ea580c;        /* Orange foncé */
   
-  /* Dégradés mode clair - LISSÉS + UNIFIÉS */
+  /* Dégradés mode clair - LISSÉS + ACCENTUÉS */
   --chat-gradient-block: linear-gradient(135deg, 
     rgba(0, 0, 0, 0.08) 0%, 
-    rgba(0, 0, 0, 0.11) 50%, 
+    rgba(0, 0, 0, 0.12) 50%, 
     rgba(0, 0, 0, 0.08) 100%), 
-    var(--chat-bg-primary); /* Gradient unifié LISSÉ pour TOUS les éléments */
+    var(--chat-bg-primary); /* Gradient unifié LISSÉ + ACCENTUÉ pour TOUS les éléments */
   
   /* ✅ TOUS les éléments (sidebar incluse) utilisent le même gradient */
   --chat-gradient-input: var(--chat-gradient-block);
@@ -208,13 +208,13 @@ body.chat-theme-light,
   
   --chat-gradient-user: linear-gradient(135deg, 
     rgba(0, 0, 0, 0.06) 0%, 
-    rgba(0, 0, 0, 0.09) 50%, 
+    rgba(0, 0, 0, 0.10) 50%, 
     rgba(0, 0, 0, 0.06) 100%), 
     var(--chat-bg-primary);
   
   --chat-gradient-user-hover: linear-gradient(135deg, 
     rgba(0, 0, 0, 0.1) 0%, 
-    rgba(0, 0, 0, 0.13) 50%, 
+    rgba(0, 0, 0, 0.14) 50%, 
     rgba(0, 0, 0, 0.1) 100%), 
     var(--chat-bg-primary);
   
@@ -262,11 +262,11 @@ body.chat-theme-blue,
   --chat-border-subtle: transparent;
   --chat-border-soft: transparent;
   
-  /* Dégradés Blue Mode - UNIFORMISÉS pour cohérence visuelle */
+  /* Dégradés Blue Mode - LISSÉS + ACCENTUÉS */
   --chat-gradient-block: linear-gradient(135deg, 
     #2d3f52 0%, 
-    #31445a 50%, 
-    #2d3f52 100%); /* Gradient unifié LISSÉ pour TOUS les éléments */
+    #344962 50%, 
+    #2d3f52 100%); /* Gradient unifié LISSÉ + ACCENTUÉ pour TOUS les éléments */
   
   /* ✅ TOUS les éléments (sidebar incluse) utilisent le même gradient */
   --chat-gradient-input: var(--chat-gradient-block);
@@ -274,8 +274,8 @@ body.chat-theme-blue,
   --chat-gradient-user: var(--chat-gradient-block);
   --chat-gradient-user-hover: linear-gradient(135deg, 
     #304555 0%, 
-    #344b5e 50%, 
-    #304555 100%); /* Hover légèrement plus clair + gradient lissé */
+    #374f69 50%, 
+    #304555 100%); /* Hover légèrement plus clair + gradient accentué */
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
