@@ -88,10 +88,8 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
 
   const handleOpenSettings = () => {
     setSettingsOpen(true);
-    // Fermer la sidebar sur mobile quand on ouvre les settings
-    if (!isDesktop) {
-      onClose();
-    }
+    // Fermer la sidebar TOUJOURS quand on ouvre les settings (évite qu'elle reste derrière)
+    onClose();
   };
 
   // Filtrage des sessions
