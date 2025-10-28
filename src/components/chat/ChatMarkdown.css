@@ -173,7 +173,7 @@
   margin: 1rem 0 !important;
   padding-left: calc(1.5em - 2px) !important; /* ✅ Décalé 2px vers la gauche */
   line-height: 1.75 !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
   list-style-position: outside !important;
@@ -184,7 +184,7 @@
   margin: 0.5rem 0 !important;
   line-height: 1.75 !important;
   color: inherit !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
   padding-left: 0.25em !important;
@@ -242,7 +242,7 @@
   font-style: normal !important;
   color: var(--chat-text-primary) !important;
   position: relative !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
 }
@@ -287,7 +287,7 @@
   text-underline-offset: 2px !important;
   text-decoration-thickness: 1px !important;
   transition: all 0.2s ease !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 500 !important;
 }
 
@@ -407,7 +407,7 @@
   padding: 0.125rem 0.25rem !important;
   border-radius: 0.25rem !important;
   font-weight: 500 !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 .chat-markdown del {
@@ -415,7 +415,7 @@
   text-decoration: line-through !important;
   color: var(--chat-text-primary) !important;
   opacity: 0.6 !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 500 !important;
 }
 

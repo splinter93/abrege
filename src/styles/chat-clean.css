@@ -678,6 +678,7 @@ body.chat-theme-anthracite .chatgpt-header {
   color: var(--chat-text-secondary);
   line-height: 1;
   margin: 0;
+  padding-left: 12px; /* ✅ Alignement avec les items */
 }
 
 .sidebar-new-conversation-btn {
@@ -792,6 +793,7 @@ body.chat-theme-anthracite .chatgpt-header {
 
 .sidebar-user-clean {
   padding: var(--chat-space-lg);
+  padding-bottom: 24px; /* ✅ Aligné avec le bas du chat input */
   border-top: none;
 }
 
@@ -1193,7 +1195,7 @@ body.chat-theme-anthracite .chatgpt-header {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0 var(--chat-padding-horizontal) 40px;
+  padding: 0 var(--chat-padding-horizontal) 24px;
   background: transparent; /* Transparent - le footer masque le texte */
   display: flex;
   justify-content: center;
@@ -1208,7 +1210,7 @@ body.chat-theme-anthracite .chatgpt-header {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 120px; /* Hauteur réduite pour plus de subtilité */
+  height: 100px; /* Hauteur réduite pour input plus proche du bas */
   background: linear-gradient(to top, 
     var(--chat-bg-primary) 0%, 
     var(--chat-bg-primary) 30%, 
