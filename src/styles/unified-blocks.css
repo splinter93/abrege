@@ -10,10 +10,10 @@
    DESIGN TOKENS
    ========================================================================== */
 :root {
-  /* ✅ UNIFIÉ: --blk-bg utilise toujours var(--chat-gradient-block) qui est défini par le thème */
-  --blk-bg: var(--chat-gradient-block); /* Pas de fallback - défini par le thème (dark/light/blue) */
-  --blk-fg: var(--chat-text-code, #7a8088); /* Texte code blocks - suit le thème */
-  --blk-muted: #9ca3af; /* Texte secondaire/labels */
+  /* ✅ UNIFIÉ: Variables définies par les thèmes (dark/light/blue) dans chat-clean.css */
+  --blk-bg: var(--chat-gradient-block); /* Background défini par le thème */
+  --blk-fg: var(--chat-text-secondary); /* ✅ Texte des blocs = texte secondaire */
+  --blk-muted: var(--chat-text-secondary); /* Labels/secondaire */
   --blk-radius: 14px;
   --blk-pad-y: 12px;
   --blk-pad-x: 16px;
