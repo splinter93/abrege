@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
 import type { FileArticle } from "@/components/types";
 import FolderManager from "@/components/FolderManager";
@@ -189,6 +190,9 @@ function DossiersPageContent() {
 // 🔧 FIX: Composant séparé pour éviter les problèmes d'ordre des hooks
 function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
   // 🔧 FIX: TOUS les hooks doivent être appelés dans le même ordre à chaque render
+  // Router pour la navigation
+  const router = useRouter();
+  
   // État pour le mode de vue
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   
@@ -285,31 +289,51 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
   }, [activeClasseur, user?.id, currentFolderId, handleError]);
 
   /**
-   * Crée une nouvelle note dans le classeur actif
+   * Crée une nouvelle note dans le classeur actif ou Quicknotes par défaut
    * Utilise DossierService avec polling ciblé automatique
+   * 🎯 AMÉLIORATION: Création directe + ouverture automatique, utilise Quicknotes si pas de classeur actif
    */
   const handleCreateNote = useCallback(async () => {
-    if (!activeClasseur || !user?.id) return;
+    if (!user?.id) return;
     
     try {
-      const name = prompt('Nom de la note :');
-      if (name && name.trim()) {
-        const { DossierService } = await import('@/services/dossierService');
-        const dossierService = DossierService.getInstance();
-        await dossierService.createNote({
-          source_title: name.trim(),
-          notebook_id: activeClasseur.id,
-          markdown_content: `# ${name.trim()}\n\nContenu de la note...`,
-          folder_id: currentFolderId || null
-        }, user.id);
-        
-        // 🎯 Le polling ciblé est déjà déclenché par V2UnifiedApi dans DossierService
-        logger.info(LogCategory.API, '[DossiersPage] ✅ Note créée, polling ciblé déclenché automatiquement', { noteName: name.trim() });
+      // 🔍 Si pas de classeur actif, chercher Quicknotes
+      let targetClasseur = activeClasseur;
+      if (!targetClasseur) {
+        const quicknotesClasseur = classeurs.find(c => c.name === 'Quicknotes');
+        if (!quicknotesClasseur) {
+          handleError(new Error('Aucun classeur disponible. Veuillez créer un classeur d\'abord.'), 'création note');
+          return;
+        }
+        targetClasseur = quicknotesClasseur;
+        // Activer le classeur Quicknotes
+        setActiveClasseurId(quicknotesClasseur.id);
+      }
+      
+      // 🚀 Créer la note directement avec un nom par défaut
+      const now = new Date();
+      const defaultName = `Note ${now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} ${now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+      
+      const { DossierService } = await import('@/services/dossierService');
+      const dossierService = DossierService.getInstance();
+      const newNote = await dossierService.createNote({
+        source_title: defaultName,
+        notebook_id: targetClasseur.id,
+        markdown_content: `# ${defaultName}\n\n`,
+        folder_id: currentFolderId || null
+      }, user.id);
+      
+      // 🎯 Le polling ciblé est déjà déclenché par V2UnifiedApi dans DossierService
+      logger.info(LogCategory.API, '[DossiersPage] ✅ Note créée, polling ciblé déclenché automatiquement', { noteName: defaultName });
+      
+      // 🔗 Rediriger vers la note pour l'éditer immédiatement
+      if (newNote?.id) {
+        router.push(`/private/note/${newNote.id}`);
       }
     } catch (e) {
       handleError(e, 'création note');
     }
-  }, [activeClasseur, user?.id, currentFolderId, handleError]);
+  }, [activeClasseur, classeurs, user?.id, currentFolderId, handleError, setActiveClasseurId, router]);
 
   // Handlers pour les classeurs (utilisent maintenant le service optimisé)
   const handleCreateClasseurClick = useCallback(async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, forwardRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
@@ -36,10 +36,10 @@ interface RecentFilesListProps {
  * Liste des fichiers récents avec design moderne
  * Affiche les 4-5 derniers fichiers modifiés
  */
-const RecentFilesList: React.FC<RecentFilesListProps> = ({
+const RecentFilesList = forwardRef<HTMLDivElement, RecentFilesListProps>(({
   limit = 5,
   className = ''
-}) => {
+}, ref) => {
   const { getAccessToken } = useAuth();
   const router = useRouter();
   const [files, setFiles] = useState<RecentFile[]>([]);
@@ -300,6 +300,23 @@ const RecentFilesList: React.FC<RecentFilesListProps> = ({
     closeContextMenu();
   }, [contextMenu.file, closeContextMenu]);
 
+  // Gestion du clic sur une image - DOIT ÊTRE AVANT LES RETURNS
+  const handleImageClick = useCallback((e: React.MouseEvent, file: RecentFile) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (file.type.startsWith('image/') && file.url) {
+      // Import dynamique de la modale d'image
+      import('@/components/chat/ImageModal').then(({ openImageModal }) => {
+        openImageModal({
+          src: file.url!,
+          alt: file.name,
+          fileName: file.name
+        });
+      });
+    }
+  }, []);
+
   // Fermer le menu contextuel avec la touche Escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -421,7 +438,7 @@ const RecentFilesList: React.FC<RecentFilesListProps> = ({
 
   return (
     <>
-      <div className={`recent-files-grid ${className}`}>
+      <div ref={ref} className={`recent-files-grid ${className}`}>
         {files.map((file, index) => (
           <motion.div
             key={file.id}
@@ -434,23 +451,39 @@ const RecentFilesList: React.FC<RecentFilesListProps> = ({
             onContextMenu={(e) => handleContextMenu(e, file)}
           >
             {file.url ? (
-              <Link href={file.url} className="recent-file-link">
-                {file.type.startsWith('image/') ? (
+              file.type.startsWith('image/') ? (
+                // ✅ Pour les images : div cliquable qui ouvre la modale
+                <div 
+                  className="recent-file-link" 
+                  onClick={(e) => handleImageClick(e, file)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <ImagePreview file={file} />
-                ) : (
+                  <div className="recent-file-info">
+                    <div className="recent-file-name" title={file.name}>
+                      {file.name}
+                    </div>
+                    <div className="recent-file-meta">
+                      {formatDate(file.updated_at)}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Pour les autres fichiers : Link normal
+                <Link href={file.url} className="recent-file-link">
                   <div className="recent-file-icon">
                     {getFileIcon(file.type)}
                   </div>
-                )}
-                <div className="recent-file-info">
-                  <div className="recent-file-name" title={file.name}>
-                    {file.name}
+                  <div className="recent-file-info">
+                    <div className="recent-file-name" title={file.name}>
+                      {file.name}
+                    </div>
+                    <div className="recent-file-meta">
+                      {formatDate(file.updated_at)}
+                    </div>
                   </div>
-                  <div className="recent-file-meta">
-                    {formatDate(file.updated_at)}
-                  </div>
-                </div>
-              </Link>
+                </Link>
+              )
             ) : (
               <div className="recent-file-link">
                 {file.type.startsWith('image/') ? (
@@ -489,6 +522,8 @@ const RecentFilesList: React.FC<RecentFilesListProps> = ({
       />
     </>
   );
-};
+});
+
+RecentFilesList.displayName = 'RecentFilesList';
 
 export default RecentFilesList;

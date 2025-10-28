@@ -15,15 +15,8 @@
 .page-wrapper {
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(135deg, 
-    #0f0f0f 0%, 
-    #151515 15%, 
-    #1a1a1a 30%, 
-    #151515 45%, 
-    #121212 60%, 
-    #161616 75%, 
-    #111111 90%, 
-    #0f0f0f 100%);
+  background: var(--chat-bg-primary, #131313); /* ✅ Background du chat */
+  font-family: var(--font-chat-text, 'Figtree', 'Geist', -apple-system, sans-serif); /* ✅ Font du chat */
   position: relative;
   overflow-x: hidden;
 }
@@ -74,7 +67,7 @@
   margin-left: var(--sidebar-width);
   min-height: 100vh;
   padding: var(--spacing-xl) !important; /* Force le padding même en cas de conflit CSS */
-  background: transparent;
+  background: var(--chat-bg-primary, #131313); /* ✅ Background du chat */
   position: relative;
 }
 

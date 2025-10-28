@@ -145,13 +145,14 @@ TOUJOURS rester utile et positif, même quand les outils échouent. L'utilisateu
           
           // Page actuelle
           if (ctx.page) {
-            const pageEmoji = {
+            const pageEmojiMap: Record<string, string> = {
               chat: '💬',
               editor: '✍️',
               folder: '📁',
               classeur: '📚',
               home: '🏠'
-            }[ctx.page.type] || '❓';
+            };
+            const pageEmoji = pageEmojiMap[ctx.page.type as string] || '❓';
             contextParts.push(`${pageEmoji} ${ctx.page.type}${ctx.page.action ? ` (${ctx.page.action})` : ''}`);
           }
           
@@ -171,6 +172,22 @@ TOUJOURS rester utile et positif, même quand les outils échouent. L'utilisateu
           content += `\n\n## Contexte Actuel\n${contextParts.join('\n')}`;
           content += `\n\n⚠️ Date/heure ci-dessus = MAINTENANT (actualisée automatiquement). Ne cherche pas l'heure ailleurs.`;
           logger.dev(`[SystemMessageBuilder] 🌍 Contexte UI injecté (compact)`);
+        }
+        
+        // 📎 Ajouter les notes attachées (style Cursor)
+        if (ctx.attachedNotes && Array.isArray(ctx.attachedNotes) && ctx.attachedNotes.length > 0) {
+          content += `\n\n## 📎 Notes Attachées par l'Utilisateur\n\n`;
+          content += `L'utilisateur a mentionné les notes suivantes avec @ (comme dans Cursor).\n`;
+          content += `Tu DOIS te baser sur leur contenu pour répondre.\n\n`;
+          
+          ctx.attachedNotes.forEach((note: any, index: number) => {
+            content += `### Note ${index + 1}: ${note.title}\n`;
+            content += `**Slug:** ${note.slug}\n\n`;
+            content += `**Contenu:**\n\`\`\`markdown\n${note.markdown_content}\n\`\`\`\n\n`;
+            content += `---\n\n`;
+          });
+          
+          logger.dev(`[SystemMessageBuilder] 📎 ${ctx.attachedNotes.length} notes attachées ajoutées au contexte`);
         }
       }
 

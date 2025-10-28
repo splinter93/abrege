@@ -123,7 +123,11 @@
 }
 
 .dashboard-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 1rem;
+  gap: 1rem;
 }
 
 .dashboard-column-title {
@@ -191,25 +195,14 @@
   flex-shrink: 1; /* Permet au container de rétrécir si nécessaire */
 }
 
-/* Personnalisation de la scrollbar pour webkit */
+/* Scrollbar invisible */
 .recent-files-grid::-webkit-scrollbar {
-  height: 6px;
+  display: none; /* ✅ Masquer la scrollbar sur webkit */
 }
 
-.recent-files-grid::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 10px;
-  margin: 0 1rem;
-}
-
-.recent-files-grid::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  transition: background 0.2s ease;
-}
-
-.recent-files-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+.recent-files-grid {
+  scrollbar-width: none; /* ✅ Masquer la scrollbar sur Firefox */
+  -ms-overflow-style: none; /* ✅ Masquer la scrollbar sur IE/Edge */
 }
 
 .recent-files-list {

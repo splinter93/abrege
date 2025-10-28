@@ -40,7 +40,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // ✅ OPTIMISATION : Select uniquement les colonnes nécessaires (pas de markdown_content !)
     const { data: notes, error } = await supabase
       .from('articles')
-      .select('id, source_title, slug, updated_at, created_at, classeur_id')
+      .select('id, source_title, slug, updated_at, created_at, classeur_id, header_image, share_settings')
       .eq('user_id', userId)
       .is('trashed_at', null) // ✅ Exclure les notes supprimées
       .order('updated_at', { ascending: false })
@@ -61,7 +61,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       slug: note.slug,
       updated_at: note.updated_at,
       created_at: note.created_at,
-      classeur_id: note.classeur_id
+      classeur_id: note.classeur_id,
+      header_image: note.header_image,
+      share_settings: note.share_settings
     })) || [];
 
     const apiTime = Date.now() - startTime;

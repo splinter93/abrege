@@ -43,15 +43,15 @@ Le chat Scrivia utilise un **système de design tokens** professionnel permettan
 - Texte : Dark gray `#111827`
 - Optimisé pour la lecture en plein jour
 
-### 3. **Mode Glass (Glassmorphism)**
+### 3. **Mode Blue (Dégradés bleus modernes)**
 ```html
-<body class="chat-theme-glass">
+<body class="chat-theme-blue">
 ```
 
 **Caractéristiques :**
-- Backgrounds transparents + blur
-- Effet `backdrop-filter: blur(20px)`
-- Design moderne et élégant
+- Dégradés opaques bleu foncé
+- Sans bordures - style minimaliste premium
+- Inspiré du style moderne sans transparence
 
 ---
 
@@ -61,13 +61,13 @@ Le chat Scrivia utilise un **système de design tokens** professionnel permettan
 
 ```typescript
 // Mode sombre (défaut)
-document.body.classList.remove('chat-theme-light', 'chat-theme-glass');
+document.body.classList.remove('chat-theme-light', 'chat-theme-blue');
 
 // Mode clair
 document.body.classList.add('chat-theme-light');
 
-// Mode glass
-document.body.classList.add('chat-theme-glass');
+// Mode blue
+document.body.classList.add('chat-theme-blue');
 ```
 
 ### Exemple : Toggle Light/Dark
@@ -228,19 +228,19 @@ const toggleTheme = () => {
 // ThemeSelector.tsx
 import { useState } from 'react';
 
-const themes = ['default', 'light', 'glass'] as const;
+const themes = ['default', 'light', 'blue'] as const;
 type Theme = typeof themes[number];
 
 export const ThemeSelector = () => {
   const [theme, setTheme] = useState<Theme>('default');
   
   const applyTheme = (newTheme: Theme) => {
-    document.body.classList.remove('chat-theme-light', 'chat-theme-glass');
+    document.body.classList.remove('chat-theme-light', 'chat-theme-blue');
     
     if (newTheme === 'light') {
       document.body.classList.add('chat-theme-light');
-    } else if (newTheme === 'glass') {
-      document.body.classList.add('chat-theme-glass');
+    } else if (newTheme === 'blue') {
+      document.body.classList.add('chat-theme-blue');
     }
     
     setTheme(newTheme);

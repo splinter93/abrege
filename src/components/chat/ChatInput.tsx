@@ -24,8 +24,16 @@ interface SelectedNote {
   word_count?: number;
 }
 
+// Type pour les notes avec contenu complet
+interface NoteWithContent {
+  id: string;
+  slug: string;
+  title: string;
+  markdown_content: string;
+}
+
 interface ChatInputProps {
-  onSend: (message: string | MessageContent, images?: ImageAttachment[]) => void;
+  onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[]) => void;
   loading: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
@@ -196,13 +204,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
       const tempId = `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const tempImage: ImageAttachment = {
         id: tempId,
-        type: 'url',
         file: file,
         previewUrl: base64,
         base64: base64,
         detail: 'auto',
         fileName: file.name,
-        mimeType: file.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+        mimeType: file.type as import('@/types/image').SupportedImageFormat,
         size: file.size,
         addedAt: Date.now()
       };
@@ -226,13 +233,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
             : img
         ));
         
-        logger.info(LogCategory.API, '✅ Image uploadée vers S3:', s3Image.url);
+        logger.dev('✅ Image uploadée vers S3:', s3Image.url);
         return true;
       } else {
         throw new Error(uploadResult.error || 'Échec upload S3');
       }
     } catch (error) {
-      logger.error(LogCategory.API, '❌ Erreur traitement image:', error);
+      logger.error('❌ Erreur traitement image:', error);
       setUploadError(`Erreur avec ${file.name}`);
       return false;
     }
@@ -293,51 +300,119 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const handleSend = async () => {
     const hasContent = message.trim() || images.length > 0;
     
-    logger.debug(LogCategory.API, '🚀 Tentative d\'envoi:', { 
-      message: message.trim(), 
-      loading, 
-      disabled,
-      messageLength: message.length,
-      imageCount: images.length,
-      selectedNotesCount: selectedNotes.length
-    });
+    console.log('═══════════════════════════════════════');
+    console.log('🚀 [handleSend] DÉBUT');
+    console.log('Message:', message.trim().substring(0, 50));
+    console.log('Loading:', loading);
+    console.log('Disabled:', disabled);
+    console.log('Images:', images.length);
+    console.log('Notes sélectionnées:', selectedNotes.length, selectedNotes.map(n => n.title));
+    console.log('═══════════════════════════════════════');
     
     if (hasContent && !loading && !disabled) {
-      logger.debug(LogCategory.API, '✅ Envoi du message avec images et notes');
+      console.log('✅ Conditions OK, on continue...');
       
-      // Construire le contenu multi-modal si images présentes
-      const content = buildMessageContent(message.trim() || 'Regarde cette image', images);
-      
-      // TODO: Charger le contenu des notes sélectionnées et l'ajouter au contexte
-      // Pour l'instant on envoie juste les IDs/slugs
-      const notesContext = selectedNotes.length > 0 ? {
-        notes: selectedNotes.map(n => ({
-          id: n.id,
-          slug: n.slug,
-          title: n.title
-        }))
-      } : undefined;
-      
-      logger.dev('[ChatInput] 📎 Notes attachées:', notesContext);
-      
-      // Envoyer le message (TODO: passer notesContext)
-      onSend(content, images);
-      
-      // Reset l'état
-      setMessage('');
-      
-      // Cleanup et reset des images
-      if (images.length > 0) {
-        revokeImageAttachments(images);
-        setImages([]);
+      try {
+        // 📎 Charger le contenu complet des notes sélectionnées
+        let notesWithContent: NoteWithContent[] | undefined;
+        
+        if (selectedNotes.length > 0) {
+          console.log('📥 Début chargement de', selectedNotes.length, 'notes...');
+          
+          const token = await getAccessToken();
+          if (!token) {
+            console.error('❌ Token non disponible');
+            throw new Error('Token non disponible');
+          }
+          
+          console.log('✅ Token obtenu, longueur:', token.length);
+          
+          const notePromises = selectedNotes.map(async (note, index) => {
+            try {
+              console.log(`📡 [Note ${index + 1}/${selectedNotes.length}] Fetch: ${note.title} (ID: ${note.id})`);
+              
+              // ✅ Appeler l'API locale qui route vers Supabase
+              const response = await fetch(`/api/v2/note/${note.id}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+              });
+              
+              console.log(`📡 [Note ${index + 1}] Réponse HTTP:`, response.status, response.statusText);
+              
+              if (!response.ok) {
+                console.error(`❌ [Note ${index + 1}] Échec HTTP ${response.status}`);
+                return null;
+              }
+              
+              const data = await response.json();
+              console.log(`✅ [Note ${index + 1}] Data reçu, keys:`, Object.keys(data));
+              
+              // ✅ Accéder au contenu dans la structure de réponse correcte
+              const noteData = data.note || data;
+              console.log(`✅ [Note ${index + 1}] NoteData keys:`, Object.keys(noteData));
+              console.log(`✅ [Note ${index + 1}] Markdown length:`, noteData.markdown_content?.length || 0);
+              
+              return {
+                id: note.id,
+                slug: note.slug,
+                title: note.title,
+                markdown_content: noteData.markdown_content || ''
+              };
+            } catch (fetchError) {
+              const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+              console.error(`❌ [Note ${index + 1}] Exception:`, errorMsg);
+              return null;
+            }
+          });
+          
+          console.log('⏳ Attente de toutes les notes...');
+          const loadedNotes = await Promise.all(notePromises);
+          console.log('✅ Notes chargées:', loadedNotes.length, 'sur', selectedNotes.length);
+          
+          notesWithContent = loadedNotes.filter((n): n is NoteWithContent => n !== null);
+          console.log('✅ Notes valides:', notesWithContent.length);
+          console.log('📋 Détails notes:', notesWithContent.map(n => ({ 
+            title: n.title, 
+            contentLength: n.markdown_content.length 
+          })));
+        } else {
+          console.log('ℹ️ Aucune note sélectionnée');
+        }
+        
+        // Construire le contenu multi-modal si images présentes
+        console.log('🔨 Construction du contenu...');
+        const content = buildMessageContent(message.trim() || 'Regarde cette image', images);
+        console.log('✅ Contenu construit:', typeof content, Array.isArray(content) ? content.length : 'string');
+        
+        // Envoyer le message avec les notes complètes
+        console.log('📤 Appel onSend avec notes:', notesWithContent?.length || 0);
+        onSend(content, images, notesWithContent);
+        console.log('✅ onSend appelé');
+        
+        // Reset l'état
+        console.log('🧹 Reset de l\'état...');
+        setMessage('');
+        setSelectedNotes([]); // Reset des notes sélectionnées
+        
+        // Cleanup et reset des images
+        if (images.length > 0) {
+          revokeImageAttachments(images);
+          setImages([]);
+        }
+        
+        console.log('✅ handleSend TERMINÉ');
+        console.log('═══════════════════════════════════════');
+      } catch (error) {
+        console.error('💥 ERREUR GLOBALE dans handleSend:', error);
+        logger.error('[ChatInput] ❌ Erreur lors de l\'envoi:', error);
       }
     } else {
-      logger.debug(LogCategory.API, '❌ Envoi bloqué:', { 
-        hasMessage: !!message.trim(), 
-        hasImages: images.length > 0,
-        loading, 
-        disabled 
-      });
+      console.log('❌ Conditions non remplies pour envoyer');
+      console.log('hasContent:', hasContent);
+      console.log('loading:', loading);
+      console.log('disabled:', disabled);
     }
   };
 
@@ -405,7 +480,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     try {
       const token = await getAccessToken();
       if (!token) {
-        logger.error(LogCategory.API, 'Token non disponible pour charger notes récentes');
+        logger.error('Token non disponible pour charger notes récentes');
         return;
       }
 
@@ -431,7 +506,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         setRecentNotes(formattedNotes);
       }
     } catch (error) {
-      logger.error(LogCategory.API, 'Erreur chargement notes récentes:', error);
+      logger.error('Erreur chargement notes récentes:', error);
     }
   }, [getAccessToken]);
 
@@ -648,7 +723,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           setSearchedNotes(formattedNotes);
         }
       } catch (error) {
-        logger.error(LogCategory.API, 'Erreur recherche notes:', error);
+        logger.error('Erreur recherche notes:', error);
       } finally {
         setIsSearching(false);
       }

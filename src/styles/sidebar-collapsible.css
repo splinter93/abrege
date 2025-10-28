@@ -218,7 +218,7 @@ aside.unified-sidebar {
   border: none !important;
   background: transparent !important;
   width: 100% !important;
-  font-size: 14px !important;
+  font-size: 15px !important; /* ✅ Augmenté de 14px à 15px */
   font-weight: 400 !important;
   cursor: pointer !important;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;

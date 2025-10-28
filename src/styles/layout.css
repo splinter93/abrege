@@ -16,7 +16,8 @@
   display: flex;
   min-height: 100vh;
   width: 100vw;
-  background: var(--surface-background);
+  background: var(--chat-bg-primary, #131313); /* ✅ Background du chat */
+  font-family: var(--font-chat-text, 'Figtree', 'Geist', -apple-system, sans-serif); /* ✅ Font du chat */
   position: relative;
 }
 
@@ -37,7 +38,7 @@
   flex: 1;
   margin-left: var(--sidebar-width);
   min-height: 100vh;
-  background: var(--surface-background);
+  background: var(--chat-bg-primary, #131313); /* ✅ Background du chat */
   display: flex;
   flex-direction: column;
   overflow-x: hidden;

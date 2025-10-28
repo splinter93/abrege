@@ -442,14 +442,14 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
               const parsed = JSON.parse(data) as XAIStreamChunk;
               chunkCount++;
               
-              // ✅ AUDIT DÉTAILLÉ : Logger chaque chunk reçu de Grok
-              logger.dev(`[XAIProvider] 📦 CHUNK ${chunkCount} REÇU DE GROK:`, {
-                id: parsed.id,
-                model: parsed.model,
-                hasChoices: !!parsed.choices,
-                choicesCount: parsed.choices?.length || 0,
-                hasUsage: !!parsed.usage
-              });
+              // ✅ AUDIT DÉTAILLÉ : Logger chaque chunk reçu de Grok (DÉSACTIVÉ pour ne pas polluer)
+              // logger.dev(`[XAIProvider] 📦 CHUNK ${chunkCount} REÇU DE GROK:`, {
+              //   id: parsed.id,
+              //   model: parsed.model,
+              //   hasChoices: !!parsed.choices,
+              //   choicesCount: parsed.choices?.length || 0,
+              //   hasUsage: !!parsed.usage
+              // });
               
               // Extraire les informations du chunk
               const choice = parsed.choices?.[0];
@@ -458,26 +458,26 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
               const delta = choice.delta;
               const finishReason = choice.finish_reason;
               
-              // ✅ AUDIT DÉTAILLÉ : Logger le contenu du chunk
-              logger.dev(`[XAIProvider] 📝 CHUNK CONTENU:`, {
-                hasContent: !!delta.content,
-                contentLength: delta.content?.length || 0,
-                hasToolCalls: !!delta.tool_calls,
-                toolCallsCount: delta.tool_calls?.length || 0,
-                hasReasoning: !!delta.reasoning,
-                reasoningLength: delta.reasoning?.length || 0,
-                finishReason: finishReason
-              });
+              // ✅ AUDIT DÉTAILLÉ : Logger le contenu du chunk (DÉSACTIVÉ)
+              // logger.dev(`[XAIProvider] 📝 CHUNK CONTENU:`, {
+              //   hasContent: !!delta.content,
+              //   contentLength: delta.content?.length || 0,
+              //   hasToolCalls: !!delta.tool_calls,
+              //   toolCallsCount: delta.tool_calls?.length || 0,
+              //   hasReasoning: !!delta.reasoning,
+              //   reasoningLength: delta.reasoning?.length || 0,
+              //   finishReason: finishReason
+              // });
               
-              // ✅ AUDIT DÉTAILLÉ : Logger les tool calls si présents
+              // ✅ AUDIT DÉTAILLÉ : Logger les tool calls si présents (DÉSACTIVÉ)
               if (delta.tool_calls && delta.tool_calls.length > 0) {
                 delta.tool_calls.forEach((tc, index) => {
-                  logger.dev(`[XAIProvider] 🔧 TOOL CALL ${index + 1} DANS CHUNK:`, {
-                    id: tc.id,
-                    type: tc.type,
-                    functionName: tc.function?.name,
-                    argumentsLength: tc.function?.arguments?.length || 0
-                  });
+                  // logger.dev(`[XAIProvider] 🔧 TOOL CALL ${index + 1} DANS CHUNK:`, {
+                  //   id: tc.id,
+                  //   type: tc.type,
+                  //   functionName: tc.function?.name,
+                  //   argumentsLength: tc.function?.arguments?.length || 0
+                  // });
                 });
               }
               

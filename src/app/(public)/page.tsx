@@ -10,7 +10,7 @@ import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
 import { MessageSquare, Plus, Upload, Sparkles, Zap, Eye, Youtube, FileText, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
-import NotesCarouselNotion, { NotesCarouselRef } from '@/components/NotesCarouselNotion';
+import NotesCarouselNotion from '@/components/NotesCarouselNotion';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
 import RecentFilesList from '@/components/RecentFilesList';
@@ -20,120 +20,6 @@ import { motion } from 'framer-motion';
 import './home.css';
 import './dashboard.css';
 import Link from 'next/link';
-
-// Composant modal pour créer une nouvelle note
-const CreateNoteModal = ({ isOpen, onClose, onCreateNote }: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  onCreateNote: (title: string) => void; 
-}) => {
-  const [noteTitle, setNoteTitle] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!noteTitle.trim()) return;
-
-    setIsLoading(true);
-    setError('');
-    
-    try {
-      await onCreateNote(noteTitle.trim());
-      setNoteTitle('');
-      onClose();
-    } catch (error) {
-      logger.error('[HomePage] Erreur création note:', error);
-      setError('Une erreur est survenue lors de la création de la note. Veuillez réessayer.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    setError('');
-    setNoteTitle('');
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <motion.div 
-        className="bg-white rounded-lg w-full max-w-md mx-auto shadow-xl"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-      >
-        {/* Header du modal */}
-        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200">
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Créer une nouvelle note</h3>
-          <button 
-            onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
-            aria-label="Fermer"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        
-        {/* Contenu du modal */}
-        <div className="p-4 sm:p-6">
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          )}
-          
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label htmlFor="note-title" className="block text-sm font-medium text-gray-700 mb-2">
-                Titre de la note
-              </label>
-              <input
-                id="note-title"
-                type="text"
-                value={noteTitle}
-                onChange={(e) => setNoteTitle(e.target.value)}
-                placeholder="Ex: Ma première note..."
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
-                autoFocus
-                disabled={isLoading}
-              />
-            </div>
-            
-            {/* Boutons d'action */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium"
-                disabled={isLoading}
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium flex-1 flex items-center justify-center"
-                disabled={isLoading || !noteTitle.trim()}
-              >
-                {isLoading ? (
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Création...
-                  </span>
-                ) : (
-                  'Créer la note'
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-      </motion.div>
-    </div>
-  );
-};
 
 export default function HomePage() {
   return (
@@ -163,8 +49,8 @@ function HomePageContent() {
 
 function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string; username?: string } }) {
   const router = useRouter();
-  const [isCreateNoteModalOpen, setIsCreateNoteModalOpen] = useState(false);
-  const notesCarouselRef = useRef<NotesCarouselRef>(null);
+  const notesScrollRef = useRef<HTMLDivElement>(null);
+  const filesScrollRef = useRef<HTMLDivElement>(null);
 
   const { stats, loading: statsLoading } = useUserStats();
 
@@ -197,7 +83,46 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
     }
 
     try {
-      router.push('/private/dossiers');
+      // 🚀 Création ultra-rapide : pas de modale, pas de prompt
+      logger.info('[HomePage] 🚀 Création rapide de note');
+      
+      // Import dynamique des services
+      const { V2UnifiedApi } = await import('@/services/V2UnifiedApi');
+      const v2Api = V2UnifiedApi.getInstance();
+      
+      // 1. Récupérer les classeurs avec authentification automatique
+      const classeursResult = await v2Api.getClasseurs();
+      
+      if (!classeursResult.success || !classeursResult.classeurs) {
+        throw new Error('Erreur lors de la récupération des classeurs');
+      }
+
+      const quicknotesClasseur = classeursResult.classeurs.find((c) => c.name === 'Quicknotes');
+
+      if (!quicknotesClasseur) {
+        throw new Error('Classeur Quicknotes non trouvé. Veuillez créer un classeur d\'abord.');
+      }
+
+      // 2. Nom simple et incrémental avec timestamp
+      const noteNumber = Date.now().toString().slice(-4); // 4 derniers chiffres du timestamp
+      const defaultName = `Nouvelle note ${noteNumber}`;
+
+      // 3. Créer la note directement avec V2UnifiedApi
+      const createResult = await v2Api.createNote({
+        source_title: defaultName,
+        notebook_id: quicknotesClasseur.id,
+        markdown_content: '', // Vide pour commencer à écrire immédiatement
+        folder_id: null,
+      });
+
+      if (!createResult.success || !createResult.note) {
+        throw new Error(createResult.error || 'Erreur lors de la création de la note');
+      }
+
+      // 4. Rediriger IMMÉDIATEMENT vers l'éditeur
+      logger.info('[HomePage] ✅ Note créée, redirection vers éditeur');
+      router.push(`/private/note/${createResult.note.id}`);
+
     } catch (error) {
       logger.error('[HomePage] Erreur lors de la création de la note:', error);
       handleError(error, 'création note');
@@ -210,11 +135,27 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
   }, [router]);
 
   const handleNotesPrevious = useCallback(() => {
-    notesCarouselRef.current?.goToPrevious();
+    if (notesScrollRef.current) {
+      notesScrollRef.current.scrollBy({ left: -350, behavior: 'smooth' });
+    }
   }, []);
 
   const handleNotesNext = useCallback(() => {
-    notesCarouselRef.current?.goToNext();
+    if (notesScrollRef.current) {
+      notesScrollRef.current.scrollBy({ left: 350, behavior: 'smooth' });
+    }
+  }, []);
+
+  const handleFilesPrevious = useCallback(() => {
+    if (filesScrollRef.current) {
+      filesScrollRef.current.scrollBy({ left: -350, behavior: 'smooth' });
+    }
+  }, []);
+
+  const handleFilesNext = useCallback(() => {
+    if (filesScrollRef.current) {
+      filesScrollRef.current.scrollBy({ left: 350, behavior: 'smooth' });
+    }
   }, []);
 
 
@@ -265,11 +206,11 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
             <div className="quick-actions">
               <motion.button 
                 className="quick-action create-note"
-                onClick={() => setIsCreateNoteModalOpen(true)}
+                onClick={handleCreateNote}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 300 }}
-                title="Créer une note"
+                title="Créer une note rapide"
               >
                 <Plus size={16} />
               </motion.button>
@@ -324,7 +265,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
                     className="nav-btn prev-btn"
                     onClick={handleNotesPrevious}
                     aria-label="Notes précédentes"
-                    title="Notes précédentes"
+                    title="Faire défiler vers la gauche"
                   >
                     <ChevronLeft size={18} />
                   </button>
@@ -332,19 +273,18 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
                     className="nav-btn next-btn"
                     onClick={handleNotesNext}
                     aria-label="Notes suivantes"
-                    title="Notes suivantes"
+                    title="Faire défiler vers la droite"
                   >
                     <ChevronRight size={18} />
                   </button>
                 </div>
               </div>
-              <div className="section-separator"></div>
             </div>
             <div className="section-content">
               <NotesCarouselNotion 
-                ref={notesCarouselRef}
+                ref={notesScrollRef}
                 limit={10}
-                showNavigation={true}
+                showNavigation={false}
                 autoPlay={false}
                 title=""
                 showViewAll={false}
@@ -377,9 +317,27 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
               <div className="dashboard-column">
                 <div className="dashboard-column-header">
                   <h3 className="dashboard-column-title">Fichiers Récents</h3>
+                  <div className="section-navigation">
+                    <button 
+                      className="nav-btn prev-btn"
+                      onClick={handleFilesPrevious}
+                      aria-label="Fichiers précédents"
+                      title="Faire défiler vers la gauche"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button 
+                      className="nav-btn next-btn"
+                      onClick={handleFilesNext}
+                      aria-label="Fichiers suivants"
+                      title="Faire défiler vers la droite"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
                 </div>
                 <div className="dashboard-column-content">
-                  <RecentFilesList limit={10} />
+                  <RecentFilesList ref={filesScrollRef} limit={10} />
                 </div>
               </div>
             </div>
@@ -401,13 +359,6 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
       
       {/* 🔧 Monitoring des performances en temps réel */}
       <PerformanceMonitor visible={false} />
-
-      {/* Modal de création de note */}
-      <CreateNoteModal
-        isOpen={isCreateNoteModalOpen}
-        onClose={() => setIsCreateNoteModalOpen(false)}
-        onCreateNote={handleCreateNote}
-      />
     </div>
   );
 }

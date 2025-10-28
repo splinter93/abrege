@@ -13,9 +13,9 @@ export default function ThemeColor() {
       let color = '#121212'; // Dark par défaut
       
       // Détecter le thème actif
-      if (html.classList.contains('theme-glass') || 
-          html.classList.contains('chat-theme-glass')) {
-        color = '#1a1625'; // Glass theme
+      if (html.classList.contains('theme-blue') || 
+          html.classList.contains('chat-theme-blue')) {
+        color = '#0f1419'; // Blue theme
       } else if (html.classList.contains('theme-light') || 
                  html.classList.contains('light')) {
         color = '#ffffff'; // Light theme

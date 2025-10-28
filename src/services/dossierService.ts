@@ -179,6 +179,11 @@ export class DossierService {
       // ✅ V2UnifiedApi gère automatiquement l'optimisme et la mise à jour du store
       const result = await v2Api.createNote(data);
       
+      // 🔒 SÉCURITÉ: Vérifier le succès avant d'accéder à result.note
+      if (!result.success || !result.note) {
+        throw new Error(result.error || 'Erreur lors de la création de la note');
+      }
+      
       logger.dev('[DossierService] ✅ Note créée via V2UnifiedApi:', result.note.id);
       return result.note;
     } catch (error) {

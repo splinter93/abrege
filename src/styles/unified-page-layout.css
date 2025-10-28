@@ -15,10 +15,8 @@
 .page-wrapper {
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(135deg, 
-    rgba(15, 15, 18, 0.95) 0%, 
-    rgba(20, 20, 25, 0.98) 50%, 
-    rgba(15, 15, 18, 0.95) 100%);
+  background: var(--chat-bg-primary, #131313); /* ✅ Background du chat */
+  font-family: var(--font-chat-text, 'Figtree', 'Geist', -apple-system, sans-serif); /* ✅ Font du chat */
   position: relative;
 }
 
@@ -64,6 +62,7 @@
   padding: var(--spacing-xl) !important; /* Force le padding même en cas de conflit CSS */
   gap: var(--spacing-lg);
   position: relative;
+  background: var(--chat-bg-primary, #131313); /* ✅ Background du chat */
 }
 
 /* ==========================================================================

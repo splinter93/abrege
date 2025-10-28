@@ -165,7 +165,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const themeIcons: Record<ChatTheme, React.ReactNode> = {
     dark: <Moon size={16} />,
     light: <Sun size={16} />,
-    glass: <Sparkles size={16} />,
+    blue: <Sparkles size={16} />,
   };
 
   if (!isOpen) return null;

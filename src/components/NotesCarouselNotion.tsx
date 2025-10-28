@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ChevronLeft, 
-  ChevronRight, 
   FileText, 
   Calendar, 
   Eye, 
@@ -48,18 +46,12 @@ interface NotesCarouselNotionProps {
   showViewAll?: boolean;
 }
 
-export interface NotesCarouselRef {
-  goToPrevious: () => void;
-  goToNext: () => void;
-  canGoPrevious: boolean;
-  canGoNext: boolean;
-}
-
 /**
  * Carrousel de notes avec design moderne style Notion
  * Cartes élégantes avec animations fluides et interactions tactiles
+ * Utilise maintenant un scroll natif horizontal (comme RecentFilesList)
  */
-const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProps>(({
+const NotesCarouselNotion = forwardRef<HTMLDivElement, NotesCarouselNotionProps>(({
   limit = 8,
   showNavigation = true,
   autoPlay = false,
@@ -73,39 +65,12 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState(0);
-  const [dragOffset, setDragOffset] = useState(0);
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; note: Note | null }>({ 
     visible: false, 
     x: 0, 
     y: 0, 
     note: null 
   });
-
-  // Configuration du carrousel - Responsive
-  const [cardsPerView, setCardsPerView] = useState(3);
-
-  // Détecter la taille d'écran pour ajuster le nombre de cartes
-  useEffect(() => {
-    const updateCardsPerView = () => {
-      if (window.innerWidth >= 1400) {
-        setCardsPerView(4); // Desktop Large
-      } else if (window.innerWidth >= 1024) {
-        setCardsPerView(3); // Desktop Standard
-      } else if (window.innerWidth >= 768) {
-        setCardsPerView(2); // Tablet
-      } else {
-        setCardsPerView(1); // Mobile
-      }
-    };
-
-    updateCardsPerView();
-    window.addEventListener('resize', updateCardsPerView);
-    return () => window.removeEventListener('resize', updateCardsPerView);
-  }, []);
 
   // Charger les notes récentes
   useEffect(() => {
@@ -155,18 +120,6 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
     loadRecentNotes();
   }, [limit, getAccessToken]);
 
-  // Autoplay
-  useEffect(() => {
-    if (!autoPlay || isHovered || notes.length <= cardsPerView || isDragging) return;
-
-    const interval = setInterval(() => {
-      const maxIndex = Math.max(0, notes.length - cardsPerView);
-      setCurrentIndex((prev) => prev >= maxIndex ? 0 : prev + cardsPerView);
-    }, autoPlayInterval);
-
-    return () => clearInterval(interval);
-  }, [autoPlay, autoPlayInterval, isHovered, notes.length, isDragging, cardsPerView]);
-
   // Fermer le menu contextuel avec la touche Escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -178,72 +131,6 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [contextMenu.visible]);
-  
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => Math.max(0, prev - cardsPerView));
-  };
-
-  const goToNext = () => {
-    const maxIndex = Math.max(0, notes.length - cardsPerView);
-    setCurrentIndex((prev) => Math.min(maxIndex, prev + cardsPerView));
-  };
-
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index);
-  };
-
-  // Exposer les fonctions de navigation via la ref
-  useImperativeHandle(ref, () => ({
-    goToPrevious,
-    goToNext,
-    canGoPrevious: currentIndex > 0,
-    canGoNext: currentIndex < Math.max(0, notes.length - cardsPerView)
-  }), [currentIndex, notes.length, cardsPerView]);
-
-  // Gestion du drag
-  const handleDragStart = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragStart(e.clientX);
-    setDragOffset(0);
-  };
-
-  const handleDragMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    const delta = e.clientX - dragStart;
-    setDragOffset(delta);
-  };
-
-  const handleDragEnd = () => {
-    if (!isDragging) return;
-    
-    const threshold = 100;
-    if (Math.abs(dragOffset) > threshold) {
-      if (dragOffset > 0) {
-        goToPrevious();
-      } else {
-        goToNext();
-      }
-    }
-    
-    setIsDragging(false);
-    setDragOffset(0);
-  };
-
-  // Gestion du scroll avec trackpad
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    
-    // Détecter le scroll horizontal (trackpad)
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-      if (e.deltaX > 0) {
-        // Scroll vers la droite = page suivante
-        goToNext();
-      } else {
-        // Scroll vers la gauche = page précédente
-        goToPrevious();
-      }
-    }
-  };
 
   // Gestion du menu contextuel
   const handleContextMenu = (e: React.MouseEvent, note: Note) => {
@@ -457,107 +344,81 @@ const NotesCarouselNotion = forwardRef<NotesCarouselRef, NotesCarouselNotionProp
   }
 
   return (
-    <div 
-      className={`notes-carousel-notion ${className}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-
-      {/* Container du carrousel avec drag */}
-      <div 
-        className="carousel-container"
-        onMouseDown={handleDragStart}
-        onMouseMove={handleDragMove}
-        onMouseUp={handleDragEnd}
-        onMouseLeave={handleDragEnd}
-        onWheel={handleWheel}
-      >
-        <motion.div 
-          className="carousel-track"
-          animate={{ 
-            x: -currentIndex * (100 / cardsPerView) + '%',
-            ...(isDragging && { x: -currentIndex * (100 / cardsPerView) + '%' + dragOffset * 0.1 })
-          }}
-          transition={{ 
-            type: "spring", 
-            stiffness: 300, 
-            damping: 30,
-            ...(isDragging && { duration: 0 })
-          }}
-        >
-          {notes.map((note, index) => (
-            <motion.div
-              key={note.id}
-              className="carousel-slide"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-            >
-              <Link href={`/private/note/${note.id}`} className="note-card-link">
-                <motion.div 
-                  className="note-card"
-                  whileHover={{ 
-                    y: -8,
-                    transition: { duration: 0.2 }
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  onContextMenu={(e) => handleContextMenu(e, note)}
-                >
-                  {/* Image de la note */}
-                  <div className="note-image-container">
-                    {note.header_image ? (
-                      <img 
-                        src={note.header_image} 
-                        alt={note.source_title}
-                        className="note-image"
-                      />
-                    ) : (
-                      <div className="note-image-placeholder">
-                        <FileText size={32} />
-                      </div>
-                    )}
-                    
-                    {/* Overlay avec actions */}
-                    <div className="note-overlay">
-                      <div className="note-actions">
-                        <button className="action-btn" aria-label="Ouvrir la note">
-                          <Eye size={16} />
-                        </button>
-                        {note.is_favorite && (
-                          <button className="action-btn favorite" aria-label="Note favorite">
-                            <Star size={16} />
-                          </button>
-                        )}
-                      </div>
+    <div className={`notes-carousel-notion ${className}`}>
+      {/* Grille horizontale avec scroll natif (comme fichiers récents) */}
+      <div ref={ref} className="notes-horizontal-grid">
+        {notes.map((note, index) => (
+          <motion.div
+            key={note.id}
+            className="carousel-slide"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: index * 0.05 }}
+          >
+            <Link href={`/private/note/${note.id}`} className="note-card-link">
+              <motion.div 
+                className="note-card"
+                whileHover={{ 
+                  y: -8,
+                  transition: { duration: 0.2 }
+                }}
+                whileTap={{ scale: 0.98 }}
+                onContextMenu={(e) => handleContextMenu(e, note)}
+              >
+                {/* Image de la note */}
+                <div className="note-image-container">
+                  {note.header_image ? (
+                    <img 
+                      src={note.header_image} 
+                      alt={note.source_title}
+                      className="note-image"
+                    />
+                  ) : (
+                    <div className="note-image-placeholder">
+                      {/* ✅ Pas d'icône, juste le fond */}
                     </div>
-
-                    {/* Badge de visibilité */}
-                    {note.share_settings && (
-                      <div 
-                        className="visibility-badge"
-                        style={{ color: getVisibilityColor(note.share_settings.visibility) }}
-                      >
-                        {getVisibilityIcon(note.share_settings.visibility)}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Contenu de la note */}
-                  <div className="note-content">
-                    <div className="note-header">
-                      <h3 className="note-title">{note.source_title}</h3>
-                      <button className="more-btn" aria-label="Plus d'options">
-                        <MoreHorizontal size={16} />
+                  )}
+                  
+                  {/* Overlay avec actions */}
+                  <div className="note-overlay">
+                    <div className="note-actions">
+                      <button className="action-btn" aria-label="Ouvrir la note">
+                        <Eye size={16} />
                       </button>
+                      {note.is_favorite && (
+                        <button className="action-btn favorite" aria-label="Note favorite">
+                          <Star size={16} />
+                        </button>
+                      )}
                     </div>
-                    
-                    {/* Description, tags et métadonnées supprimés pour un design plus compact */}
                   </div>
-                </motion.div>
-              </Link>
-            </motion.div>
-          ))}
-        </motion.div>
+
+                  {/* Badge de visibilité */}
+                  {note.share_settings && (
+                    <div 
+                      className="visibility-badge"
+                      style={{ color: getVisibilityColor(note.share_settings.visibility) }}
+                    >
+                      {getVisibilityIcon(note.share_settings.visibility)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Contenu de la note */}
+                <div className="note-content">
+                  <div className="note-header">
+                    <h3 className="note-title">{note.source_title}</h3>
+                    <button className="more-btn" aria-label="Plus d'options">
+                      <MoreHorizontal size={16} />
+                    </button>
+                  </div>
+                  
+                  {/* Description, tags et métadonnées supprimés pour un design plus compact */}
+                </div>
+              </motion.div>
+            </Link>
+          </motion.div>
+        ))}
       </div>
 
       {/* Menu contextuel */}
