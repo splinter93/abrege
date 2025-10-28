@@ -230,7 +230,7 @@ aside.unified-sidebar {
 
 .unified-nav-link:hover {
   background: var(--sidebar-item-hover) !important;
-  color: #ffffff !important;
+  color: var(--chat-text-primary) !important; /* ✅ Variable unifiée */
 }
 
 .unified-nav-link:focus {
@@ -240,7 +240,7 @@ aside.unified-sidebar {
 
 .unified-nav-link.active {
   background: var(--sidebar-item-active) !important;
-  color: #ffffff !important;
+  color: var(--chat-text-primary) !important; /* ✅ Variable unifiée */
   font-weight: 500 !important;
 }
 
@@ -270,12 +270,12 @@ aside.unified-sidebar {
 }
 
 .unified-nav-link:hover svg {
-  color: #ffffff !important;
+  color: var(--chat-text-primary) !important; /* ✅ Variable unifiée */
   transform: scale(1.1) !important;
 }
 
 .unified-nav-link.active svg {
-  color: #ffffff !important;
+  color: var(--chat-text-primary) !important; /* ✅ Variable unifiée */
   transform: scale(1.05) !important;
 }
 

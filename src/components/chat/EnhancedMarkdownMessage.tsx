@@ -194,7 +194,7 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
           'input', 'label' // ✅ Support des checkboxes
         ],
         ALLOWED_ATTR: ['class', 'id', 'href', 'src', 'alt', 'title', 'style', 'colspan', 'rowspan', 'scope', 'headers', 'type', 'checked', 'disabled'],
-        ALLOW_DATA_ATTR: false // Désactiver les data-* pour plus de sécurité
+        ALLOW_DATA_ATTR: true // ✅ CRITIQUE: Autoriser data-* sinon les wrappers perdent leurs attributs !
       });
       
       // Créer un DOM parser temporaire avec contenu sanitizé

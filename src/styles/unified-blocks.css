@@ -235,7 +235,7 @@
 .public-note-content-wrapper .markdown-body pre code,
 .public-note-content-wrapper .markdown-body .hljs {
   background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
-  color: #a0a0a0 ;
+  color: var(--chat-text-secondary); /* ✅ Variable unifiée */
   border: none ;
   border-radius: 8px ;
   padding: 16px 20px ;
@@ -274,7 +274,7 @@
 .public-note-content-wrapper .markdown-body pre *,
 .public-note-content-wrapper .markdown-body pre code *,
 .public-note-content-wrapper .markdown-body .hljs * {
-  color: #a0a0a0 ;
+  color: var(--chat-text-secondary); /* ✅ Variable unifiée */
   background: transparent ;
   text-decoration: none ;
   font-weight: normal ;
