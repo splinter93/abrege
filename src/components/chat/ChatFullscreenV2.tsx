@@ -785,27 +785,126 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [loading, currentSession, createSession, addMessage, selectedAgent, llmContext, sendMessage, setLoading, requireAuth]);
 
-  // ✏️ Handler pour soumettre un message édité
-  // TODO: Réimplémenter l'édition de messages avec HistoryManager
-  // Ancienne route /api/ui/chat-sessions/:id/messages/:messageId/edit supprimée (legacy)
-  // Nouvelle implémentation devra utiliser historyManager.deleteMessagesAfter()
+  /**
+   * ✏️ Handler pour soumettre un message édité
+   * 
+   * Flow atomique:
+   * 1. Trouver sequence_number du message édité
+   * 2. DELETE messages après ce sequence_number (route API)
+   * 3. POST nouveau message édité (addMessage)
+   * 4. Reload messages depuis DB
+   * 5. Relancer génération LLM avec nouveau contexte
+   */
   const handleEditSubmit = useCallback(async (newContent: string, images?: import('@/types/image').ImageAttachment[]) => {
     if (!editingMessage || !currentSession || !requireAuth()) return;
     
     setLoading(true);
     
     try {
+      // 1. Trouver le message édité dans infiniteMessages
+      const editedMessage = infiniteMessages.find(m => m.id === editingMessage.messageId);
+      
+      if (!editedMessage || !editedMessage.sequence_number) {
+        throw new Error('Message édité non trouvé ou sans sequence_number');
+      }
+
+      logger.dev('[ChatFullscreenV2] ✏️ Édition message:', {
+        messageId: editingMessage.messageId,
+        sequenceNumber: editedMessage.sequence_number,
+        newContentPreview: newContent.substring(0, 50)
+      });
+
+      // 2. Récupérer token auth
+      const tokenResult = await tokenManager.getValidToken();
+      if (!tokenResult.isValid || !tokenResult.token) {
+        throw new Error(tokenResult.error || 'Token non disponible');
+      }
+
+      // 3. Supprimer les messages après le message édité
+      const deleteResponse = await fetch(
+        `/api/chat/sessions/${currentSession.id}/messages/delete-after`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${tokenResult.token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            afterSequence: editedMessage.sequence_number
+          })
+        }
+      );
+
+      if (!deleteResponse.ok) {
+        const deleteResult = await deleteResponse.json();
+        throw new Error(deleteResult.error || 'Erreur suppression messages');
+      }
+
+      const deleteResult = await deleteResponse.json();
+      
+      logger.dev('[ChatFullscreenV2] 🗑️ Messages supprimés:', {
+        deletedCount: deleteResult.data?.deletedCount || 0
+      });
+
+      // 4. Ajouter le nouveau message édité
+      const savedMessage = await addMessage({
+        role: 'user',
+        content: newContent,
+        timestamp: new Date().toISOString()
+      });
+
+      if (!savedMessage) {
+        throw new Error('Erreur sauvegarde message édité');
+      }
+
+      // 5. Annuler le mode édition
       cancelEditing();
       setEditingContent('');
-      throw new Error('Édition de messages non implémentée (en cours de migration vers HistoryManager)');
+
+      // 6. Recharger les messages depuis la DB
+      clearInfiniteMessages();
+      await loadInitialMessages();
+
+      logger.dev('[ChatFullscreenV2] ✅ Message édité avec succès, rechargement...');
+
+      // 7. Préparer contexte pour régénération
+      const contextForLLM = {
+        agent: selectedAgent,
+        uiContext: {
+          ...llmContext,
+          sessionId: currentSession.id
+        }
+      };
+
+      // 8. Relancer génération LLM (le nouveau message est déjà dans infiniteMessages)
+      // On passe une string vide car le message user est déjà sauvegardé
+      await sendMessage('', currentSession.id, contextForLLM, infiniteMessages, tokenResult.token);
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'édition';
       logger.error('[ChatFullscreenV2] ❌ Erreur lors de l\'édition:', errorMessage);
       setError(errorMessage);
+      
+      // En cas d'erreur, recharger pour état cohérent
+      await loadInitialMessages();
     } finally {
       setLoading(false);
     }
-  }, [editingMessage, cancelEditing, requireAuth, setLoading, setError]);
+  }, [
+    editingMessage, 
+    currentSession, 
+    requireAuth, 
+    infiniteMessages,
+    cancelEditing, 
+    setLoading, 
+    setError, 
+    addMessage,
+    clearInfiniteMessages,
+    loadInitialMessages,
+    selectedAgent,
+    llmContext,
+    sendMessage
+  ]);
 
   // 🎯 Wrapper pour router entre édition et envoi normal
   const handleSendMessage = useCallback(async (
