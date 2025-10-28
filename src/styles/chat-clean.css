@@ -242,21 +242,21 @@
    ======================================== */
 .chat-theme-blue {
   /* Background principal - Couleur solide sans gradient (plus simple) */
-  --chat-bg-primary: #16202d;          /* Couleur solide éclaircie */
-  --chat-bg-secondary: #1a2534;        /* Bleu foncé solide éclairci */
-  --chat-bg-tertiary: #1f2a3a;         /* Bleu moyen éclairci */
-  --chat-bg-input: #1f2a3a;            /* Opaque éclairci */
-  --chat-bg-input-focus: #243041;      /* Opaque plus clair éclairci */
-  --chat-bg-user-message: #1f2a3a;     /* Opaque éclairci */
-  --chat-bg-user-message-hover: #243041; /* Opaque plus clair éclairci */
+  --chat-bg-primary: #1e2c3d;          /* Couleur solide éclaircie +5% */
+  --chat-bg-secondary: #22313f;        /* Bleu foncé solide éclairci +5% */
+  --chat-bg-tertiary: #273747;         /* Bleu moyen éclairci +5% */
+  --chat-bg-input: #273747;            /* Opaque éclairci +5% */
+  --chat-bg-input-focus: #2c3d4f;      /* Opaque plus clair éclairci +5% */
+  --chat-bg-user-message: #273747;     /* Opaque éclairci +5% */
+  --chat-bg-user-message-hover: #2c3d4f; /* Opaque plus clair éclairci +5% */
   
   /* Overlays - Opaques pour messages/interactions */
-  --chat-overlay-subtle: #1a2534;      /* Bleu foncé opaque éclairci */
-  --chat-overlay-soft: #1f2a3a;        /* Bleu moyen opaque éclairci */
-  --chat-overlay-active: #243041;      /* Bleu clair opaque éclairci */
-  --chat-overlay-input: #1f2a3a;       /* Opaque éclairci */
-  --chat-overlay-input-focus: #243041; /* Opaque éclairci */
-  --chat-overlay-hover: #243041;       /* Opaque éclairci */
+  --chat-overlay-subtle: #22313f;      /* Bleu foncé opaque éclairci +5% */
+  --chat-overlay-soft: #273747;        /* Bleu moyen opaque éclairci +5% */
+  --chat-overlay-active: #2c3d4f;      /* Bleu clair opaque éclairci +5% */
+  --chat-overlay-input: #273747;       /* Opaque éclairci +5% */
+  --chat-overlay-input-focus: #2c3d4f; /* Opaque éclairci +5% */
+  --chat-overlay-hover: #2c3d4f;       /* Opaque éclairci +5% */
   
   /* Texte - Blanc/gris clair sur bleu foncé */
   --chat-text-primary: #e8eaed;        /* Blanc cassé */
@@ -266,30 +266,30 @@
   --chat-text-placeholder: #9aa0a6;    /* Placeholder input */
   
   /* Sidebar - Dégradés opaques */
-  --sidebar-search-overlay: #1a2534;   /* Opaque éclairci */
-  --sidebar-search-overlay-focus: #1f2a3a; /* Opaque éclairci */
-  --sidebar-item-active: #1f2a3a;      /* Opaque éclairci */
-  --sidebar-item-hover: #1a2534;       /* Opaque éclairci */
+  --sidebar-search-overlay: #22313f;   /* Opaque éclairci +5% */
+  --sidebar-search-overlay-focus: #273747; /* Opaque éclairci +5% */
+  --sidebar-item-active: #273747;      /* Opaque éclairci +5% */
+  --sidebar-item-hover: #22313f;       /* Opaque éclairci +5% */
   
   /* Bordures - AUCUNE (style moderne sans bordures) */
   --chat-border-subtle: transparent;
   --chat-border-soft: transparent;
   
-  /* Dégradés Blue Mode - OPAQUES, style moderne très atténué (éclairci) */
+  /* Dégradés Blue Mode - OPAQUES, style moderne très atténué (éclairci +5%) */
   --chat-gradient-input: linear-gradient(135deg, 
-    #1f2a3a 0%, 
-    #202c3c 50%, 
-    #1f2a3a 100%);
+    #273747 0%, 
+    #293949 50%, 
+    #273747 100%);
   
   --chat-gradient-sidebar: linear-gradient(135deg, 
-    #1a2534 0%, 
-    #1c2736 50%, 
-    #1a2534 100%);
+    #22313f 0%, 
+    #243442 50%, 
+    #22313f 100%);
   
   --chat-gradient-user: linear-gradient(135deg, 
-    #1f2a3a 0%, 
-    #212e3e 50%, 
-    #1f2a3a 100%);
+    #273747 0%, 
+    #293b4b 50%, 
+    #273747 100%);
   
   --chat-gradient-user-hover: linear-gradient(135deg, 
     #212e3d 0%, 
@@ -346,12 +346,12 @@ body.chat-theme-blue .unified-sidebar {
 /* Input container avec gradient fade-out pour masquer le texte qui scroll */
 body.chat-theme-blue .chatgpt-input-container {
   background: linear-gradient(to top,
-    #16202d 0%,              /* Opaque en bas (éclairci) */
-    #16202d 15%,             /* Opaque court */
-    rgba(22, 32, 45, 0.9) 30%,  /* Très peu transparent */
-    rgba(22, 32, 45, 0.6) 50%,  /* Semi-transparent */
-    rgba(22, 32, 45, 0.25) 75%, /* Très transparent */
-    rgba(22, 32, 45, 0) 100%);  /* Transparent */
+    #1e2c3d 0%,              /* Opaque en bas (éclairci +5%) */
+    #1e2c3d 15%,             /* Opaque court */
+    rgba(30, 44, 61, 0.9) 30%,  /* Très peu transparent */
+    rgba(30, 44, 61, 0.6) 50%,  /* Semi-transparent */
+    rgba(30, 44, 61, 0.25) 75%, /* Très transparent */
+    rgba(30, 44, 61, 0) 100%);  /* Transparent */
   z-index: 100;
 }
 
