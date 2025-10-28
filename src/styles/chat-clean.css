@@ -231,22 +231,22 @@ body.chat-theme-light,
    ======================================== */
 body.chat-theme-blue,
 .chat-theme-blue {
-  /* Background principal - Couleur solide sans gradient (plus simple) */
-  --chat-bg-primary: #1e2c3d;          /* Couleur solide éclaircie +5% */
-  --chat-bg-secondary: #22313f;        /* Bleu foncé solide éclairci +5% */
-  --chat-bg-tertiary: #273747;         /* Bleu moyen éclairci +5% */
-  --chat-bg-input: #273747;            /* Opaque éclairci +5% */
-  --chat-bg-input-focus: #2c3d4f;      /* Opaque plus clair éclairci +5% */
-  --chat-bg-user-message: #273747;     /* Opaque éclairci +5% */
-  --chat-bg-user-message-hover: #2c3d4f; /* Opaque plus clair éclairci +5% */
+  /* Background principal - Bleu légèrement plus intense */
+  --chat-bg-primary: #1d3045;          /* Bleu plus saturé */
+  --chat-bg-secondary: #213241;        /* Bleu foncé plus saturé */
+  --chat-bg-tertiary: #26384a;         /* Bleu moyen plus saturé */
+  --chat-bg-input: #26384a;            /* Opaque plus saturé */
+  --chat-bg-input-focus: #2b3e52;      /* Opaque plus clair saturé */
+  --chat-bg-user-message: #26384a;     /* Opaque plus saturé */
+  --chat-bg-user-message-hover: #2b3e52; /* Opaque plus clair saturé */
   
-  /* Overlays - Opaques pour messages/interactions */
-  --chat-overlay-subtle: #22313f;      /* Bleu foncé opaque éclairci +5% */
-  --chat-overlay-soft: #273747;        /* Bleu moyen opaque éclairci +5% */
-  --chat-overlay-active: #2c3d4f;      /* Bleu clair opaque éclairci +5% */
-  --chat-overlay-input: #273747;       /* Opaque éclairci +5% */
-  --chat-overlay-input-focus: #2c3d4f; /* Opaque éclairci +5% */
-  --chat-overlay-hover: #2c3d4f;       /* Opaque éclairci +5% */
+  /* Overlays - Opaques plus saturés */
+  --chat-overlay-subtle: #213241;      /* Bleu foncé opaque saturé */
+  --chat-overlay-soft: #26384a;        /* Bleu moyen opaque saturé */
+  --chat-overlay-active: #2b3e52;      /* Bleu clair opaque saturé */
+  --chat-overlay-input: #26384a;       /* Opaque saturé */
+  --chat-overlay-input-focus: #2b3e52; /* Opaque plus clair saturé */
+  --chat-overlay-hover: #2b3e52;       /* Opaque plus clair saturé */
   
   /* Texte - SIMPLIFIÉ À 2 VARIABLES */
   --chat-text-primary: #e8eaed;        /* Texte principal (paragraphes, titres, messages) */

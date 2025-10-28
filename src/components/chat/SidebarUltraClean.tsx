@@ -19,12 +19,14 @@ interface SidebarUltraCleanProps {
   isOpen: boolean;
   isDesktop: boolean;
   onClose: () => void;
+  onForceClose?: () => void; // Fermeture forcée (désactive aussi le hover sur desktop)
 }
 
 const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   isOpen,
   isDesktop,
-  onClose
+  onClose,
+  onForceClose
 }) => {
   const { user, signOut } = useAuth();
   const { sessions, currentSession, selectedAgent, createSession, setCurrentSession, setSelectedAgent, deleteSession, updateSession } = useChatStore();
@@ -88,8 +90,12 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
 
   const handleOpenSettings = () => {
     setSettingsOpen(true);
-    // Fermer la sidebar TOUJOURS quand on ouvre les settings (évite qu'elle reste derrière)
-    onClose();
+    // Fermeture FORCÉE (désactive aussi le hover sur desktop)
+    if (onForceClose) {
+      onForceClose();
+    } else {
+      onClose();
+    }
   };
 
   // Filtrage des sessions

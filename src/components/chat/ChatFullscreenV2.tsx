@@ -1026,6 +1026,13 @@ const ChatFullscreenV2: React.FC = () => {
               setSidebarOpen(false);
             }
           }}
+          onForceClose={() => {
+            // Fermeture FORCÉE : désactive sidebarOpen ET sidebarHovered
+            if (user && !authLoading) {
+              setSidebarOpen(false);
+              setSidebarHovered(false);
+            }
+          }}
         />
         </div>
 
