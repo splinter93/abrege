@@ -2575,10 +2575,8 @@ body.chat-theme-blue .chatgpt-input-container {
     background: linear-gradient(135deg, #f0f0f0 0%, #e3e3e3 100%);
   }
   
-  /* Removed - Now uses variables that adapt automatically */
-  /*
   .sidebar-item-clean.active {
     background: #e8e8e8;
   }
-  */
+} */
 
