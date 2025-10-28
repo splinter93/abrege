@@ -44,7 +44,7 @@ interface ChatStore {
   // ⚡ Actions avec fonctionnalités essentielles
   syncSessions: () => Promise<void>;
   createSession: (name?: string, agentId?: string | null) => Promise<void>;
-  addMessage: (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean; updateExisting?: boolean }) => Promise<void>;
+  addMessage: (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean; updateExisting?: boolean }) => Promise<ChatMessage | null>;
   deleteSession: (sessionId: string) => Promise<void>;
   updateSession: (sessionId: string, data: { name?: string; history_limit?: number }) => Promise<void>;
 }
@@ -134,93 +134,37 @@ export const useChatStore = create<ChatStore>()(
         }
       },
 
-      addMessage: async (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean; updateExisting?: boolean }) => {
+      addMessage: async (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean; updateExisting?: boolean }): Promise<ChatMessage | null> => {
         const currentSession = get().currentSession;
         if (!currentSession) {
           logger.warn('[ChatStore] Aucune session active pour addMessage');
-          return;
+          return null;
         }
 
         try {
-          let updatedThread: ChatMessage[];
+          // ✅ REFACTOR: Sauvegarde directement en DB via HistoryManager
           
-          if (options?.updateExisting) {
-            // ✅ Remplacer le dernier message temporaire (canal 'analysis') par le message final
-            const lastMessage = currentSession.thread[currentSession.thread.length - 1];
-            const extLastMsg = lastMessage as ChatMessage & { channel?: string };
-            if (lastMessage && extLastMsg.channel === 'analysis') {
-              // Remplacer le message temporaire
-              const messageWithId: ChatMessage = {
-                ...message,
-                id: lastMessage.id // Garder le même ID
-              };
-              updatedThread = [...currentSession.thread.slice(0, -1), messageWithId];
-              
-              if (process.env.NODE_ENV === 'development') {
-                const extMsg = messageWithId as ChatMessage & { 
-                  tool_calls?: unknown[]; 
-                  reasoning?: string; 
-                };
-                logger.dev('[ChatStore] Message temporaire remplacé par le message final:', {
-                  messageId: messageWithId.id,
-                  role: messageWithId.role,
-                  content: messageWithId.content?.substring(0, 50) + '...',
-                  channel: messageWithId.channel,
-                  hasToolCalls: !!extMsg.tool_calls?.length,
-                  hasReasoning: !!extMsg.reasoning
-                });
-              }
-            } else {
-              // Pas de message temporaire à remplacer, ajouter normalement
-              const messageWithId: ChatMessage = {
-                ...message,
-                id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-              };
-              updatedThread = [...currentSession.thread, messageWithId];
-            }
-          } else {
-            // Ajouter un nouveau message
-            const messageWithId: ChatMessage = {
-              ...message,
-              id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-            };
-            updatedThread = [...currentSession.thread, messageWithId];
-            
-            // Log optimisé pour le debugging
-            if (process.env.NODE_ENV === 'development') {
-              const extMsg = messageWithId as ChatMessage & { 
-                tool_calls?: unknown[]; 
-                reasoning?: string; 
-              };
-              logger.dev('[ChatStore] Nouveau message ajouté:', {
-                messageId: messageWithId.id,
-                role: messageWithId.role,
-                content: messageWithId.content?.substring(0, 50) + '...',
-                channel: messageWithId.channel,
-                hasToolCalls: !!extMsg.tool_calls?.length,
-                hasReasoning: !!extMsg.reasoning,
-                threadLength: updatedThread.length
-              });
-            }
-          }
-
-          const updatedSession = {
-            ...currentSession,
-            thread: updatedThread,
-            updated_at: new Date().toISOString()
-          };
-
-          // Mettre à jour le store immédiatement
-          get().setCurrentSession(updatedSession);
-
-          // Persister en DB si demandé
+          // Persister en DB
           if (options?.persist !== false) {
-            await sessionSyncService.addMessageAndSync(currentSession.id, message);
+            const result = await sessionSyncService.addMessageAndSync(currentSession.id, message);
+            
+            if (result.success && result.message) {
+              logger.dev('[ChatStore] ✅ Message sauvegardé en DB:', {
+                sessionId: currentSession.id,
+                sequenceNumber: result.message.sequence_number,
+                role: result.message.role,
+                contentPreview: result.message.content?.substring(0, 50)
+              });
+              
+              return result.message;  // ✅ Retourner message complet
+            }
           }
+          
+          return null;
+          
         } catch (error) {
           logger.error('[ChatStore] Erreur addMessage:', error);
-          // Rollback en cas d'erreur
-          get().setCurrentSession(currentSession);
+          throw error;
         }
       },
 

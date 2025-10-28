@@ -43,6 +43,7 @@ export interface BaseMessage {
   role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   timestamp?: string | number;
+  sequence_number?: number;  // ✅ NOUVEAU: Ordre strict (table chat_messages)
   streamTimeline?: StreamTimeline; // ✅ Timeline capturée du streaming
 }
 

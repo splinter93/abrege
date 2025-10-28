@@ -2,7 +2,7 @@ import { ChatSessionService } from './chatSessionService';
 import type { ChatSession } from '@/store/useChatStore';
 import type { ChatMessage } from '@/types/chat';
 import { useChatStore } from '@/store/useChatStore';
-import { logger } from '@/utils/logger';
+import { simpleLogger as logger } from '@/utils/logger';
 import { batchMessageService } from './batchMessageService';
 
 /**
@@ -131,46 +131,81 @@ export class SessionSyncService {
 
   /**
    * 💬 Ajouter un message en DB puis synchroniser
-   * ✅ CONSERVE toutes les données (tool_calls, tool_results, reasoning)
+   * ✅ REFACTOR: Appelle API route /messages/add (sécurisée)
    */
   async addMessageAndSync(sessionId: string, message: Omit<ChatMessage, 'id'>): Promise<{
     success: boolean;
+    message?: ChatMessage;
     error?: string;
   }> {
     try {
+      logger.dev('[SessionSync] 🚀 Début addMessageAndSync:', {
+        sessionId,
+        messageRole: message.role
+      });
+      
       return await this.runExclusive(sessionId, async () => {
-        // Ajouter timestamp si manquant pour garantir l'ordre
-        const extMessage = message as Omit<ChatMessage, 'id'> & { 
-          timestamp?: string; 
-          tool_call_id?: string; 
-        };
-        const messageWithTimestamp = {
-          ...message,
-          timestamp: extMessage.timestamp || new Date().toISOString()
-        } as Omit<ChatMessage, 'id'>;
-
-        // 🔧 NOUVEAU : Ne plus persister les messages tool individuellement
-        // Ils sont maintenant inclus dans les tool_results du message assistant
-        if (messageWithTimestamp.role === 'tool' && extMessage.tool_call_id) {
-          logger.debug('EDITOR', '[SessionSync] ⏭️ Message tool ignoré (inclus dans tool_results)', {
-            tool_call_id: extMessage.tool_call_id
+        logger.dev('[SessionSync] 🔒 Dans runExclusive, appel addMessageToSession...');
+        
+        // ✅ SÉCURITÉ: Appeler via API route (vérifie token)
+        const response = await this.chatSessionService.addMessageToSession(sessionId, message);
+        
+        logger.dev('[SessionSync] 📥 Réponse addMessageToSession:', {
+          success: response.success,
+          hasData: !!response.data,
+          error: response.error
+        });
+        
+        if (!response.success || !response.data) {
+          const errorMsg = response.error || 'Erreur ajout message';
+          logger.error('[SessionSync] ❌ Response pas success:', {
+            success: response.success,
+            hasData: !!response.data,
+            error: errorMsg
           });
-          return { success: true }; // Ne rien faire, déjà géré via tool_results
+          throw new Error(errorMsg);
         }
-
-        // Par défaut, route simple
-        logger.debug('EDITOR', '[SessionSync] 🔧 Persist via route simple');
-        const response = await this.chatSessionService.addMessage(sessionId, messageWithTimestamp);
-        if (!response.success) {
-          throw new Error(response.error || 'Erreur ajout message');
+        
+        const savedMessage = response.data.message;
+        
+        if (!savedMessage) {
+          logger.error('[SessionSync] ❌ Message sauvegardé vide');
+          throw new Error('Message sauvegardé vide');
         }
-        return { success: true };
+        
+        logger.dev('[SessionSync] ✅ Message sauvegardé via API:', {
+          sessionId,
+          role: savedMessage.role,
+          sequenceNumber: savedMessage.sequence_number,
+          contentPreview: savedMessage.content?.substring(0, 50)
+        });
+        
+        return { 
+          success: true,
+          message: savedMessage
+        };
       });
     } catch (error) {
-      logger.error('API', '[SessionSync] ❌ Erreur ajout message:', error);
+      // ✅ Logger l'erreur RAW d'abord
+      console.error('[SessionSync] ❌ RAW ERROR:', error);
+      console.error('[SessionSync] ❌ ERROR TYPE:', typeof error);
+      console.error('[SessionSync] ❌ ERROR CONSTRUCTOR:', error?.constructor?.name);
+      
+      const errorDetails = {
+        errorType: error?.constructor?.name || 'Unknown',
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+        sessionId,
+        messageRole: message.role,
+        messageContent: message.content?.substring(0, 100)
+      };
+      
+      console.error('[SessionSync] ❌ ERROR DETAILS:', errorDetails);
+      logger.error('[SessionSync] ❌ Erreur ajout message:', errorDetails);
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Erreur inconnue'
+        error: error instanceof Error ? error.message : String(error)
       };
     }
   }

@@ -121,6 +121,7 @@ export function useInfiniteMessages(
 
   /**
    * 📥 Charger les messages plus anciens (infinite scroll)
+   * ✅ REFACTOR: Utilise sequence_number au lieu de timestamp
    */
   const loadMoreMessages = useCallback(async () => {
     if (!sessionId || !enabled || loadingRef.current || !hasMore || messages.length === 0) {
@@ -131,17 +132,18 @@ export function useInfiniteMessages(
       setIsLoadingMore(true);
       loadingRef.current = true;
 
-      // Obtenir le timestamp du message le plus ancien
+      // ✅ Utiliser sequence_number du message le plus ancien
       const oldestMessage = messages[0];
-      const beforeTimestamp = oldestMessage.timestamp || oldestMessage.id;
+      const beforeSequence = oldestMessage.sequence_number || 0;
 
       const token = await getAuthToken();
       if (!token) {
         throw new Error('Non authentifié');
       }
 
+      // ✅ Passer sequence_number au lieu de timestamp
       const response = await fetch(
-        `/api/chat/sessions/${sessionId}/messages/before?before=${beforeTimestamp}&limit=${loadMoreLimit}`,
+        `/api/chat/sessions/${sessionId}/messages/before?before=${beforeSequence}&limit=${loadMoreLimit}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -168,7 +170,7 @@ export function useInfiniteMessages(
       logger.dev('[useInfiniteMessages] ✅ Messages anciens chargés:', {
         count: olderMessages.length,
         hasMore: result.data.hasMore,
-        totalBefore: result.data.totalBefore
+        beforeSequence
       });
 
     } catch (err) {

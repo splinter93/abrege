@@ -273,7 +273,82 @@ export class ChatSessionService {
   }
 
   /**
-   * Ajouter un message à une session
+   * ✅ NOUVEAU: Ajouter message via nouvelle route /messages/add (HistoryManager)
+   */
+  async addMessageToSession(sessionId: string, message: Omit<ChatMessage, 'id'>): Promise<{
+    success: boolean;
+    data?: { message: ChatMessage };
+    error?: string;
+  }> {
+    try {
+      // Récupérer le token d'authentification
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        logger.error('ChatSessionService.addMessageToSession: Token manquant');
+        throw new Error('Authentification requise');
+      }
+
+      // ✅ NOUVEAU: Appeler route /messages/add (utilise HistoryManager)
+      const url = `/api/chat/sessions/${sessionId}/messages/add`;
+      
+      logger.debug('[ChatSessionService] 📤 Envoi message vers /add:', {
+        sessionId,
+        role: message.role,
+        url
+      });
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(message),
+      });
+
+      logger.debug('[ChatSessionService] 📥 Réponse reçue:', {
+        status: response.status,
+        ok: response.ok
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error('ChatSessionService.addMessageToSession: Erreur HTTP', {
+          status: response.status,
+          error: data.error,
+          details: data.details
+        });
+        throw new Error(data.error || `Erreur HTTP ${response.status}`);
+      }
+
+      logger.debug('[ChatSessionService] ✅ Message ajouté via /add:', {
+        sequenceNumber: data.data?.message?.sequence_number
+      });
+
+      return data;
+    } catch (error) {
+      logger.error('Erreur ChatSessionService.addMessageToSession:', {
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        } : String(error),
+        sessionId,
+        messageRole: message.role
+      });
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      };
+    }
+  }
+  
+  /**
+   * ⚠️ LEGACY: Ajouter un message à une session (ancien système thread JSONB)
+   * @deprecated Utiliser addMessageToSession() à la place
    */
   async addMessage(sessionId: string, message: Omit<ChatMessage, 'id'>): Promise<{
     success: boolean;

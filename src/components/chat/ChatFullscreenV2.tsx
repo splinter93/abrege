@@ -108,14 +108,20 @@ const ChatFullscreenV2: React.FC = () => {
     messages: infiniteMessages
   });
 
-  // 🎯 Handlers centralisés avec skip (on gère les tool calls différemment en streaming)
+  // 🎯 Handlers centralisés avec reload après réponse assistant
   const {
     handleComplete,
     handleError,
     handleToolCalls,
     handleToolResult,
     handleToolExecutionComplete
-  } = useChatHandlers();
+  } = useChatHandlers({
+    onComplete: async () => {
+      // ✅ CRITIQUE: Recharger messages après réponse assistant
+      logger.dev('[ChatFullscreenV2] 🔄 onComplete → reload messages');
+      await loadInitialMessages();
+    }
+  });
   
   // 🎯 État pour tracker les tool calls du round actuel avec leurs statuts
   const [currentToolCalls, setCurrentToolCalls] = useState<Array<{
@@ -446,35 +452,42 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [syncSessions, user, authLoading]);
 
-  // Restaurer l'agent sélectionné au montage
+  // ✅ NOUVEAU: Mettre à jour l'agent automatiquement selon la session
   useEffect(() => {
-    if (!user || authLoading) return;
+    if (!user || authLoading || !currentSession) return;
     
-    const restoreSelectedAgent = async () => {
-      if (selectedAgentId && !selectedAgent) {
+    const syncAgentWithSession = async () => {
+      const sessionAgentId = currentSession.agent_id;
+      
+      // Si la session a un agent différent de celui sélectionné, le charger
+      if (sessionAgentId && sessionAgentId !== selectedAgentId) {
         try {
-          logger.dev('[ChatFullscreenV2] 🔄 Restauration agent avec ID:', selectedAgentId);
+          logger.dev('[ChatFullscreenV2] 🔄 Changement session → chargement agent:', sessionAgentId);
+          
           const { data: agent, error } = await supabase
             .from('agents')
             .select('*')
-            .eq('id', selectedAgentId)
+            .eq('id', sessionAgentId)
             .single();
             
           if (agent) {
             setSelectedAgent(agent);
-            logger.dev('[ChatFullscreenV2] ✅ Agent restauré:', agent.name);
+            logger.dev('[ChatFullscreenV2] ✅ Agent chargé depuis session:', agent.display_name || agent.name);
           } else {
-            logger.dev('[ChatFullscreenV2] ⚠️ Agent non trouvé, suppression de l\'ID');
-            setSelectedAgentId(null);
+            logger.warn('[ChatFullscreenV2] ⚠️ Agent de la session introuvable:', sessionAgentId);
+            // Garder l'agent actuel si celui de la session n'existe plus
           }
         } catch (err) {
-          logger.error('[ChatFullscreenV2] ❌ Erreur restauration agent:', err);
+          logger.error('[ChatFullscreenV2] ❌ Erreur chargement agent session:', err);
         }
+      } else if (!sessionAgentId && selectedAgent) {
+        // Si la session n'a pas d'agent, ne rien changer (garder l'agent actuel)
+        logger.dev('[ChatFullscreenV2] ℹ️ Session sans agent, conservation agent actuel');
       }
     };
     
-    restoreSelectedAgent();
-  }, [selectedAgentId, selectedAgent, setSelectedAgent, setSelectedAgentId, user, authLoading]);
+    syncAgentWithSession();
+  }, [currentSession?.id, currentSession?.agent_id, user, authLoading, setSelectedAgent, selectedAgentId]);
 
   // ✅ Scroll et animation quand session chargée
   useEffect(() => {
@@ -541,22 +554,10 @@ const ChatFullscreenV2: React.FC = () => {
     return () => container.removeEventListener('scroll', handleScroll);
   }, [hasMore, isLoadingMore, loadMoreMessages]);
 
-  // 🎯 Synchroniser les nouveaux messages streamés vers le hook infinite
-  const lastMessageCountRef = useRef(0);
-  useEffect(() => {
-    if (!currentSession?.thread) return;
-    
-    const threadLength = currentSession.thread.length;
-    
-    // Si le thread a augmenté, ajouter le dernier message au hook infinite
-    if (threadLength > lastMessageCountRef.current && threadLength > 0) {
-      const newMessage = currentSession.thread[threadLength - 1];
-      addInfiniteMessage(newMessage);
-      logger.dev('[ChatFullscreenV2] ➕ Nouveau message ajouté au lazy loading:', newMessage.role);
-    }
-    
-    lastMessageCountRef.current = threadLength;
-  }, [currentSession?.thread, addInfiniteMessage]);
+  // ✅ REFACTOR: Supprimé l'effect qui écoutait currentSession.thread (legacy)
+  // Maintenant, les messages sont ajoutés directement via:
+  // 1. addInfiniteMessage (optimistic UI pour message user)
+  // 2. loadInitialMessages (reload après réponse assistant)
 
   // S'assurer qu'une session est sélectionnée SEULEMENT s'il n'y en a aucune
   useEffect(() => {
@@ -647,89 +648,19 @@ const ChatFullscreenV2: React.FC = () => {
         return;
       }
 
-      const historyBeforeNewMessage = currentSession.thread || [];
+      // ✅ REFACTOR: Charger historique depuis infiniteMessages (déjà en mémoire)
+      // HistoryManager est côté serveur uniquement (SERVICE_ROLE)
+      const historyLimit = currentSession.history_limit || 30;
       
-      // ✅ FILTRAGE INTELLIGENT: Garder le contexte conversationnel + tools liés uniquement
-      // Évite les tool messages orphelins (sans leur assistant parent)
-      const historyLimit = currentSession.history_limit || 40;
-      const userAssistantMessages = historyBeforeNewMessage.filter(m => 
-        m.role === 'user' || m.role === 'assistant'
-      );
-      const toolMessages = historyBeforeNewMessage.filter(m => 
-        m.role === 'tool'
-      );
+      // ✅ Construire historique pour LLM depuis messages chargés
+      const limitedHistoryForLLM = infiniteMessages.slice(-historyLimit);
       
-      // 1. Garder les 30 messages user/assistant les plus récents
-      const recentConversation = userAssistantMessages.slice(-Math.min(historyLimit, 30));
-      
-      // 2. Extraire UNIQUEMENT les tool_call_id du DERNIER message assistant avec tool_calls
-      // ✅ FIX: Ne pas garder les anciens tool results qui polluent l'historique
-      const keptToolCallIds = new Set<string>();
-      
-      // Chercher le dernier assistant avec tool_calls (en partant de la fin)
-      for (let i = recentConversation.length - 1; i >= 0; i--) {
-        const msg = recentConversation[i];
-        if (msg.role === 'assistant' && msg.tool_calls && Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0) {
-          // Trouvé ! Garder seulement ces tool_call_id
-          msg.tool_calls.forEach(tc => {
-            if (tc.id) keptToolCallIds.add(tc.id);
-          });
-          break; // ✅ Stop après le premier trouvé (le plus récent)
-        }
-      }
-      
-      // 3. Garder SEULEMENT les tool messages qui correspondent à ces tool_call_id
-      const relevantTools = toolMessages.filter(tm => 
-        tm.tool_call_id && keptToolCallIds.has(tm.tool_call_id)
-      );
-      
-      // 🔍 DEBUG: Logger le filtrage des tools
-      if (toolMessages.length > 0) {
-        logger.dev('[ChatFullscreenV2] 🔍 Filtrage tool messages:', {
-          totalToolMessages: toolMessages.length,
-          keptToolCallIds: Array.from(keptToolCallIds),
-          relevantTools: relevantTools.length,
-          filtered: toolMessages.length - relevantTools.length,
-          toolMessagesDetails: toolMessages.map(tm => ({
-            tool_call_id: tm.tool_call_id,
-            name: tm.name,
-            hasName: !!tm.name,
-            isKept: tm.tool_call_id ? keptToolCallIds.has(tm.tool_call_id) : false
-          }))
-        });
-      }
-      
-      logger.dev('[ChatFullscreenV2] 📊 Filtrage historique:', {
-        total: historyBeforeNewMessage.length,
-        userAssistant: recentConversation.length,
-        toolsRelevant: relevantTools.length,
-        toolsTotal: toolMessages.length,
-        toolCallIds: keptToolCallIds.size,
-        hasImages: hasImages,
-        imageCount: images?.length || 0
-      });
-      
-      // 4. Recombiner et trier par timestamp pour ordre chronologique
-      const limitedHistoryForLLM = [...recentConversation, ...relevantTools]
-        .sort((a, b) => {
-          const timestampA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-          const timestampB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-          return timestampA - timestampB;
-        });
-      
-      // 🔍 DEBUG: Logger l'historique final envoyé au LLM
-      logger.info('[ChatFullscreenV2] 📤 Historique envoyé au LLM:', {
+      logger.dev('[ChatFullscreenV2] 📤 Historique LLM depuis cache local:', {
         totalMessages: limitedHistoryForLLM.length,
+        maxMessages: historyLimit,
         roles: limitedHistoryForLLM.map(m => m.role),
-        hasToolMessages: limitedHistoryForLLM.filter(m => m.role === 'tool').length,
-        toolMessagesDetails: limitedHistoryForLLM
-          .filter(m => m.role === 'tool')
-          .map(m => ({
-            tool_call_id: m.tool_call_id,
-            name: m.name,
-            hasName: !!m.name,
-            contentPreview: m.content?.substring(0, 50)
-          }))
+        hasImages,
+        imageCount: images?.length || 0
       });
       
       // Extraire le texte pour la sauvegarde du message
@@ -750,8 +681,16 @@ const ChatFullscreenV2: React.FC = () => {
         ...(attachedImages && attachedImages.length > 0 && { attachedImages })
       };
       
-      // Ajouter le message user au store
-      await addMessage(userMessage);
+      // ✅ Ajouter le message user au store ET à l'affichage
+      const savedUserMessage = await addMessage(userMessage);
+      
+      // ✅ NOUVEAU: Ajouter à l'affichage avec le vrai message depuis DB
+      if (savedUserMessage) {
+        addInfiniteMessage(savedUserMessage);
+        logger.dev('[ChatFullscreenV2] ➕ Message user ajouté à l\'affichage:', {
+          sequenceNumber: savedUserMessage.sequence_number
+        });
+      }
       
       // 🎯 Le scroll est géré automatiquement par useChatScroll (détecte message user)
 
