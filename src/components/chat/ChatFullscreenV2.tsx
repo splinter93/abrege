@@ -108,7 +108,7 @@ const ChatFullscreenV2: React.FC = () => {
     messages: infiniteMessages
   });
 
-  // 🎯 Handlers centralisés avec reload après réponse assistant
+  // 🎯 Handlers centralisés SANS reload (optimistic UI smooth)
   const {
     handleComplete,
     handleError,
@@ -116,10 +116,10 @@ const ChatFullscreenV2: React.FC = () => {
     handleToolResult,
     handleToolExecutionComplete
   } = useChatHandlers({
-    onComplete: async () => {
-      // ✅ CRITIQUE: Recharger messages après réponse assistant
-      logger.dev('[ChatFullscreenV2] 🔄 onComplete → reload messages');
-      await loadInitialMessages();
+    onComplete: async (fullContent, fullReasoning, toolCalls, toolResults, streamTimeline) => {
+      // ✅ OPTIMISATION: Le message assistant est déjà affiché pendant streaming
+      // PAS besoin de reload (évite saccade)
+      logger.dev('[ChatFullscreenV2] ✅ onComplete - message déjà affiché via streaming');
     }
   });
   
@@ -681,16 +681,29 @@ const ChatFullscreenV2: React.FC = () => {
         ...(attachedImages && attachedImages.length > 0 && { attachedImages })
       };
       
-      // ✅ Ajouter le message user au store ET à l'affichage
-      const savedUserMessage = await addMessage(userMessage);
+      // ✅ OPTIMISATION: Affichage IMMÉDIAT puis sauvegarde background
+      // Évite attente 230ms (UX plus fluide)
       
-      // ✅ NOUVEAU: Ajouter à l'affichage avec le vrai message depuis DB
-      if (savedUserMessage) {
-        addInfiniteMessage(savedUserMessage);
-        logger.dev('[ChatFullscreenV2] ➕ Message user ajouté à l\'affichage:', {
-          sequenceNumber: savedUserMessage.sequence_number
-        });
-      }
+      // 1. Afficher immédiatement (optimistic UI)
+      const tempUserMessage = {
+        ...userMessage,
+        id: `temp-${Date.now()}`,
+        sequence_number: 999999  // Temporaire
+      } as ChatMessageType;
+      
+      addInfiniteMessage(tempUserMessage);
+      logger.dev('[ChatFullscreenV2] ⚡ Message user affiché (optimistic)');
+      
+      // 2. Sauvegarder en background (non-bloquant pour UX)
+      addMessage(userMessage).then(saved => {
+        if (saved) {
+          logger.dev('[ChatFullscreenV2] ✅ Message user sauvegardé:', {
+            sequenceNumber: saved.sequence_number
+          });
+        }
+      }).catch(err => {
+        logger.error('[ChatFullscreenV2] ❌ Erreur sauvegarde message user:', err);
+      });
       
       // 🎯 Le scroll est géré automatiquement par useChatScroll (détecte message user)
 
