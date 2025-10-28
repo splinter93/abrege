@@ -233,6 +233,10 @@ aside.unified-sidebar {
   color: var(--chat-text-primary) !important; /* ✅ Variable unifiée */
 }
 
+.unified-nav-link:active {
+  transform: scale(0.98) !important;
+}
+
 .unified-nav-link:focus {
   outline: 2px solid rgba(255, 255, 255, 0.3) !important;
   outline-offset: 2px !important;
@@ -322,6 +326,10 @@ aside.unified-sidebar {
 .unified-logout-button:hover {
   background: rgba(239, 68, 68, 0.1) !important;
   color: #ef4444 !important;
+}
+
+.unified-logout-button:active {
+  transform: scale(0.98) !important;
 }
 
 .unified-logout-button:focus {

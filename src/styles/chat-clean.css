@@ -231,10 +231,10 @@ body.chat-theme-light,
    ======================================== */
 body.chat-theme-blue,
 .chat-theme-blue {
-  /* Background principal - Bleu légèrement plus intense */
-  --chat-bg-primary: #1d3045;          /* Bleu plus saturé */
-  --chat-bg-secondary: #213241;        /* Bleu foncé plus saturé */
-  --chat-bg-tertiary: #26384a;         /* Bleu moyen plus saturé */
+  /* Background principal - Bleu saturé et profond */
+  --chat-bg-primary: #192d45;          /* Bleu saturé (B: 67→69, +saturation) */
+  --chat-bg-secondary: #1d3041;        /* Bleu foncé saturé (B: 63→65, +saturation) */
+  --chat-bg-tertiary: #22364a;         /* Bleu moyen saturé (B: 72→74, +saturation) */
   --chat-bg-input: #26384a;            /* Opaque plus saturé */
   --chat-bg-input-focus: #2b3e52;      /* Opaque plus clair saturé */
   --chat-bg-user-message: #26384a;     /* Opaque plus saturé */
@@ -262,20 +262,20 @@ body.chat-theme-blue,
   --chat-border-subtle: transparent;
   --chat-border-soft: transparent;
   
-  /* Dégradés Blue Mode - ULTRA-LISSÉS */
+  /* Dégradés Blue Mode - ULTRA-LISSÉS avec dégradé accentué */
   --chat-gradient-block: linear-gradient(135deg, 
-    #2d3f52 0%, 
-    #31445a 50%, 
-    #2d3f52 100%); /* Gradient unifié ULTRA-LISSÉ pour TOUS les éléments */
+    #2d3f55 0%, 
+    #33475f 50%, 
+    #2d3f55 100%); /* Gradient accentué au milieu (+2/+3/+2) */
   
   /* ✅ TOUS les éléments (sidebar incluse) utilisent le même gradient */
   --chat-gradient-input: var(--chat-gradient-block);
   --chat-gradient-sidebar: var(--chat-gradient-block); /* ✅ Même gradient que les blocs */
   --chat-gradient-user: var(--chat-gradient-block);
   --chat-gradient-user-hover: linear-gradient(135deg, 
-    #304555 0%, 
-    #344b5e 50%, 
-    #304555 100%); /* Hover légèrement plus clair + gradient lissé */
+    #304558 0%, 
+    #364d63 50%, 
+    #304558 100%); /* Hover accentué */
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
@@ -317,58 +317,59 @@ body.chat-theme-blue .unified-sidebar {
 }
 
 /* ========================================
-   THÈME ANTHRACITE MODE - GRIS ÉLÉGANT
+   THÈME ANTHRACITE MODE - GRIS MOYEN ÉLÉGANT
    ========================================
    Usage : Ajouter .chat-theme-anthracite sur body
-   Style : Gris anthracite, minimaliste, élégant et sobre
+   Style : Gris moyen, même structure que Blue Mode
    ======================================== */
 body.chat-theme-anthracite,
 .chat-theme-anthracite {
-  /* Background principal - Quasi noir éclairci */
-  --chat-bg-primary: #121317;          /* Quasi noir éclairci (+3%) */
-  --chat-bg-secondary: #16171a;        /* Quasi noir éclairci + */
-  --chat-bg-tertiary: #1a1b1e;         /* Quasi noir éclairci ++ */
-  --chat-bg-input: #1a1b1e;            /* Opaque */
-  --chat-bg-input-focus: #1e1f22;      /* Opaque plus clair */
-  --chat-bg-user-message: #1a1b1e;     /* Opaque */
-  --chat-bg-user-message-hover: #1e1f22; /* Opaque plus clair */
+  /* Background principal - Gris froid assombri encore */
+  --chat-bg-primary: #22252a;          /* Gris froid assombri -2 hex */
+  --chat-bg-secondary: #26292e;        /* Gris froid foncé assombri -2 hex */
+  --chat-bg-tertiary: #2b2e35;         /* Gris froid moyen-clair assombri -2 hex */
+  --chat-bg-input: #35383f;            /* Opaque gris froid (R:-2, B:+1) */
+  --chat-bg-input-focus: #3a3e45;      /* Opaque plus clair gris froid (R:-2, B:+1) */
+  --chat-bg-user-message: #35383f;     /* Opaque gris froid */
+  --chat-bg-user-message-hover: #3a3e45; /* Opaque plus clair gris froid */
   
-  /* Overlays - Opaques quasi noirs éclaircis */
-  --chat-overlay-subtle: #16171a;      /* Quasi noir éclairci + */
-  --chat-overlay-soft: #1a1b1e;        /* Quasi noir éclairci ++ */
-  --chat-overlay-active: #1e1f22;      /* Quasi noir éclairci +++ */
-  --chat-overlay-input: #1a1b1e;       /* Opaque */
-  --chat-overlay-input-focus: #1e1f22; /* Opaque plus clair */
-  --chat-overlay-hover: #1e1f22;       /* Opaque plus clair */
+  /* Overlays - Opaques gris froid */
+  --chat-overlay-subtle: #2c2f34;      /* Gris froid foncé (R:-2, B:+1) */
+  --chat-overlay-soft: #31343b;        /* Gris froid moyen-clair (R:-2, B:+1) */
+  --chat-overlay-active: #35383f;      /* Gris froid actif (R:-2, B:+1) */
+  --chat-overlay-input: #35383f;       /* Opaque gris froid */
+  --chat-overlay-input-focus: #3a3e45; /* Opaque plus clair gris froid */
+  --chat-overlay-hover: #3a3e45;       /* Opaque plus clair gris froid */
+  --chat-overlay-dark: rgba(0, 0, 0, 0.5); /* Mobile overlay */
   
   /* Texte - SIMPLIFIÉ À 2 VARIABLES */
   --chat-text-primary: #e8eaed;        /* Texte principal */
   --chat-text-secondary: #bfc5cb;      /* Texte secondaire */
   
-  /* Sidebar - Progression naturelle quasi noire éclaircie */
-  --sidebar-search-overlay: #1c1d20;   /* Subtil quasi noir éclairci */
-  --sidebar-search-overlay-focus: #1f2024; /* Focus quasi noir éclairci */
-  --sidebar-item-hover: #222327;       /* Hover quasi noir éclairci */
-  --sidebar-item-active: #26272b;      /* Active quasi noir éclairci */
+  /* Sidebar - Progression naturelle gris froid */
+  --sidebar-search-overlay: #414552;   /* Barre recherche + Bouton gris froid */
+  --sidebar-search-overlay-focus: #454958; /* Focus gris froid */
+  --sidebar-item-hover: #494d5d;       /* Hover gris froid */
+  --sidebar-item-active: #4d5260;      /* Active gris froid */
   
-  /* Bordures - AUCUNE */
+  /* Bordures - AUCUNE (style moderne sans bordures) */
   --chat-border-subtle: transparent;
   --chat-border-soft: transparent;
   
-  /* Dégradés Anthracite - ULTRA CLAIRS pour contraste maximum */
+  /* Dégradés Anthracite Mode - ULTRA-LISSÉS gris froid très atténués */
   --chat-gradient-block: linear-gradient(135deg, 
-    #4a4b52 0%,   /* Start (ULTRA clair +40%) */
-    #55565e 50%,  /* Milieu (+11%) */
-    #4a4b52 100%); /* End - Gradient unifié LISSÉ */
+    #383b42 0%, 
+    #3a3e46 50%, 
+    #383b42 100%); /* Gradient très atténué -2 hex encore */
   
   /* ✅ TOUS les éléments (sidebar incluse) utilisent le même gradient */
   --chat-gradient-input: var(--chat-gradient-block);
   --chat-gradient-sidebar: var(--chat-gradient-block); /* ✅ Même gradient que les blocs */
   --chat-gradient-user: var(--chat-gradient-block);
   --chat-gradient-user-hover: linear-gradient(135deg, 
-    #55565e 0%,   /* Hover start */
-    #60616a 50%,  /* Hover milieu */
-    #55565e 100%); /* Hover end */
+    #3b3f45 0%, 
+    #3d4149 50%, 
+    #3b3f45 100%); /* Hover très atténué -2 hex encore */
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
