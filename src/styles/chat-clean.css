@@ -275,36 +275,24 @@
   --chat-border-subtle: transparent;
   --chat-border-soft: transparent;
   
-  /* Dégradés Blue Mode - OPAQUES, style moderne très atténué (éclairci +5%) */
-  --chat-gradient-input: linear-gradient(135deg, 
+  /* Dégradés Blue Mode - UNIFORMISÉS pour cohérence visuelle */
+  --chat-gradient-block: linear-gradient(135deg, 
     #273747 0%, 
-    #293949 50%, 
-    #273747 100%);
+    #2a3a4b 50%, 
+    #273747 100%); /* Gradient unifié pour TOUS les blocs */
   
+  /* ✅ Tous les éléments utilisent le même gradient de bloc */
+  --chat-gradient-input: var(--chat-gradient-block);
   --chat-gradient-sidebar: linear-gradient(135deg, 
     #22313f 0%, 
-    #243442 50%, 
-    #22313f 100%);
-  
-  --chat-gradient-user: linear-gradient(135deg, 
-    #273747 0%, 
-    #293b4b 50%, 
-    #273747 100%);
-  
+    #253542 50%, 
+    #22313f 100%); /* Sidebar légèrement plus sombre */
+  --chat-gradient-user: var(--chat-gradient-block);
   --chat-gradient-user-hover: linear-gradient(135deg, 
-    #212e3d 0%, 
-    #233141 50%, 
-    #212e3d 100%);
-  
-  --chat-gradient-kebab: linear-gradient(135deg, 
-    #1f2a3a 0%, 
-    #212e3e 50%, 
-    #1f2a3a 100%);
-  
-  --chat-gradient-block: linear-gradient(135deg, 
-    #1f2a3a 0%, 
-    #212e3e 50%, 
-    #1f2a3a 100%); /* Code & Mermaid blocks */
+    #2a3a4b 0%, 
+    #2d3d4f 50%, 
+    #2a3a4b 100%); /* Hover légèrement plus clair */
+  --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg pour les code blocks */
   --blk-bg: var(--chat-gradient-block);
