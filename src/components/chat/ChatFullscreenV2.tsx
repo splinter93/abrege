@@ -117,9 +117,31 @@ const ChatFullscreenV2: React.FC = () => {
     handleToolExecutionComplete
   } = useChatHandlers({
     onComplete: async (fullContent, fullReasoning, toolCalls, toolResults, streamTimeline) => {
-      // ✅ OPTIMISATION: Le message assistant est déjà affiché pendant streaming
-      // PAS besoin de reload (évite saccade)
-      logger.dev('[ChatFullscreenV2] ✅ onComplete - message déjà affiché via streaming');
+      // ✅ Convertir le contenu streamé en message permanent
+      const assistantMessage: ChatMessageType = {
+        id: `msg-${Date.now()}`,
+        role: 'assistant',
+        content: fullContent,
+        reasoning: fullReasoning,
+        tool_calls: toolCalls,
+        tool_results: toolResults,
+        streamTimeline,
+        timestamp: new Date().toISOString(),
+        sequence_number: 999998  // Temporaire, vrai sequence_number en DB
+      };
+      
+      // Ajouter à l'affichage (remplace le streaming)
+      addInfiniteMessage(assistantMessage);
+      
+      // Reset streaming states
+      setStreamingContent('');
+      setIsStreaming(false);
+      setStreamingTimeline([]);
+      
+      logger.dev('[ChatFullscreenV2] ✅ Message assistant ajouté à l\'affichage:', {
+        contentLength: fullContent.length,
+        hasToolCalls: toolCalls && toolCalls.length > 0
+      });
     }
   });
   
