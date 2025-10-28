@@ -1,0 +1,138 @@
+/* ========================================
+   THÈME [NOM] MODE - DÉGRADÉS OPAQUES MODERNES
+   ========================================
+   Usage : Ajouter .chat-theme-[nom] sur body
+   Style : Dégradés opaques, sans bordures, minimaliste premium
+   
+   📝 INSTRUCTIONS:
+   1. Remplacer [NOM] par le nom du thème (ex: PURPLE, GREEN, etc.)
+   2. Remplacer [nom] par le slug (ex: purple, green, etc.)
+   3. Remplir les couleurs selon la palette choisie
+   4. Garder la même structure que Blue Mode
+   5. Respecter les règles: saturation cohérente, gradients lissés, hiérarchie claire
+   ======================================== */
+body.chat-theme-[nom],
+.chat-theme-[nom] {
+  /* Background principal - [COULEUR] saturé */
+  --chat-bg-primary: #______;          /* [COULEUR] foncé - BASE */
+  --chat-bg-secondary: #______;        /* [COULEUR] moyen - +1 ton */
+  --chat-bg-tertiary: #______;         /* [COULEUR] clair - +2 tons */
+  --chat-bg-input: #______;            /* = tertiary */
+  --chat-bg-input-focus: #______;      /* tertiary + 1 ton */
+  --chat-bg-user-message: #______;     /* = tertiary */
+  --chat-bg-user-message-hover: #______; /* tertiary + 1 ton */
+  
+  /* Overlays - Opaques saturés (mêmes valeurs que bg) */
+  --chat-overlay-subtle: #______;      /* = secondary */
+  --chat-overlay-soft: #______;        /* = tertiary */
+  --chat-overlay-active: #______;      /* = tertiary + 1 ton */
+  --chat-overlay-input: #______;       /* = tertiary */
+  --chat-overlay-input-focus: #______; /* = tertiary + 1 ton */
+  --chat-overlay-hover: #______;       /* = tertiary + 1 ton */
+  
+  /* Texte - SIMPLIFIÉ À 2 VARIABLES (garder ces valeurs) */
+  --chat-text-primary: #e8eaed;        /* Texte principal */
+  --chat-text-secondary: #bfc5cb;      /* Texte secondaire */
+  
+  /* Sidebar - Progression naturelle (entre tertiary et tertiary+2) */
+  --sidebar-search-overlay: #______;   /* Barre recherche (tertiary + 0.5) */
+  --sidebar-search-overlay-focus: #______; /* Focus (tertiary + 1) */
+  --sidebar-item-hover: #______;       /* Hover (tertiary + 1.5) */
+  --sidebar-item-active: #______;      /* Active (tertiary + 2) */
+  
+  /* Bordures - AUCUNE (garder transparent) */
+  --chat-border-subtle: transparent;
+  --chat-border-soft: transparent;
+  
+  /* Dégradés [NOM] Mode - ULTRA-LISSÉS */
+  /* 
+     📐 RÈGLE: Écart minimal entre start et milieu (max 8-10% luminosité)
+     Exemple Blue: #2d3f52 → #31445a
+     Calculer: start = tertiary, milieu = tertiary + 5-8%
+  */
+  --chat-gradient-block: linear-gradient(135deg, 
+    #______ 0%,   /* Start = entre secondary et tertiary */
+    #______ 50%,  /* Milieu = start + 5-8% luminosité */
+    #______ 100%); /* End = start */
+  
+  /* ✅ TOUS les éléments (sidebar incluse) utilisent le même gradient */
+  --chat-gradient-input: var(--chat-gradient-block);
+  --chat-gradient-sidebar: var(--chat-gradient-block);
+  --chat-gradient-user: var(--chat-gradient-block);
+  --chat-gradient-user-hover: linear-gradient(135deg, 
+    #______ 0%,   /* Start + 1 ton */
+    #______ 50%,  /* Milieu + 1 ton */
+    #______ 100%); /* End + 1 ton */
+  --chat-gradient-kebab: var(--chat-gradient-block);
+  
+  /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
+  --blk-bg: var(--chat-gradient-block);
+  --blk-fg: var(--chat-text-secondary);
+}
+
+/* Sidebar [nom] - Gradient unifié */
+body.chat-theme-[nom] .sidebar-ultra-clean,
+body.chat-theme-[nom] .unified-sidebar {
+  background: var(--chat-gradient-sidebar);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Container [nom] - Background principal */
+body.chat-theme-[nom] .chatgpt-container {
+  background: var(--chat-bg-primary);
+}
+
+/* Content et main transparents - Laisse passer le background du container */
+body.chat-theme-[nom] .chatgpt-content,
+body.chat-theme-[nom] .chatgpt-main {
+  background: transparent;
+}
+
+/* Header transparent - Laisse passer le background du container */
+body.chat-theme-[nom] .chatgpt-header {
+  background: transparent;
+}
+
+/* ========================================
+   📊 EXEMPLES DE PALETTES PRÊTES À L'EMPLOI
+   ========================================
+   
+   PURPLE:
+   Primary:   #2d1b3d
+   Secondary: #3a2250
+   Tertiary:  #482a61
+   Gradient:  #3d2552 → #482d5f
+   
+   GREEN:
+   Primary:   #1b3d2d
+   Secondary: #225038
+   Tertiary:  #2a6148
+   Gradient:  #2d523f → #34604c
+   
+   ORANGE:
+   Primary:   #3d2b1b
+   Secondary: #503a22
+   Tertiary:  #61492a
+   Gradient:  #523d2d → #5f4834
+   
+   RED:
+   Primary:   #3d1b1b
+   Secondary: #502222
+   Tertiary:  #612a2a
+   Gradient:  #523d2d → #5f4440
+   
+   TEAL:
+   Primary:   #1b3d3d
+   Secondary: #225050
+   Tertiary:  #2a6161
+   Gradient:  #2d5252 → #345f5f
+   
+   PINK:
+   Primary:   #3d1b2d
+   Secondary: #502238
+   Tertiary:  #612a48
+   Gradient:  #523d47 → #5f4854
+   
+   ======================================== */
+

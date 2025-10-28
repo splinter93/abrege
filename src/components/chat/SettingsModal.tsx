@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, User, Bell, Palette, Link2, Calendar, Database, Lock, Users, UserCircle, Moon, Sun, Sparkles, Info, Flame, Snowflake, Zap } from 'lucide-react';
+import { X, User, Bell, Palette, Link2, Calendar, Database, Lock, Users, UserCircle, Moon, Sun, Sparkles, Circle, Info, Flame, Snowflake, Zap } from 'lucide-react';
 import { useTheme, type ChatTheme } from '@/hooks/useTheme';
 import { useChatStore } from '@/store/useChatStore';
 import CustomSelect from './CustomSelect';
@@ -166,6 +166,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     dark: <Moon size={16} />,
     light: <Sun size={16} />,
     blue: <Sparkles size={16} />,
+    anthracite: <Circle size={16} />,
   };
 
   if (!isOpen) return null;

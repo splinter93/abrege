@@ -90,12 +90,8 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
 
   const handleOpenSettings = () => {
     setSettingsOpen(true);
-    // Fermeture FORCÉE (désactive aussi le hover sur desktop)
-    if (onForceClose) {
-      onForceClose();
-    } else {
-      onClose();
-    }
+    // Ne pas fermer la sidebar à l'ouverture
+    // Elle se fermera à la fermeture de la modal
   };
 
   // Filtrage des sessions
@@ -248,7 +244,15 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
       {/* Settings Modal */}
       <SettingsModal 
         isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
+        onClose={() => {
+          setSettingsOpen(false);
+          // Fermeture FORCÉE de la sidebar quand la modal se ferme
+          if (onForceClose) {
+            onForceClose();
+          } else {
+            onClose();
+          }
+        }}
       />
 
     </div>

@@ -28,9 +28,9 @@
   /* ========================================
      BACKGROUNDS - Surfaces principales
      ======================================== */
-  --chat-bg-primary: #131313;           /* Container, header, messages (assombri -1%) */
-  --chat-bg-secondary: #171717;         /* Réservé pour surfaces alternatives (-1%) */
-  --chat-bg-tertiary: #191919;          /* Sidebar, chat input area (-1%) */
+  --chat-bg-primary: #141618;           /* Container, header, messages (teinte slate) */
+  --chat-bg-secondary: #181a1c;         /* Réservé pour surfaces alternatives (teinte slate) */
+  --chat-bg-tertiary: #1a1c1e;          /* Sidebar, chat input area (teinte slate) */
   --chat-bg-input: #242424;             /* Input search, formulaires (+2%) */
   --chat-bg-input-focus: #2a2a2a;       /* Input au focus (+2%) */
   --chat-bg-user-message: #232323;      /* Bulle message user (+2%) */
@@ -137,13 +137,13 @@
    Usage : Ajouter .chat-theme-dark sur body (ou par défaut si pas de classe)
    ======================================== */
 .chat-theme-dark,
-body:not(.chat-theme-light):not(.chat-theme-blue) {
-  /* Dégradés - Mode Dark ULTRA-LISSÉS - TOUS IDENTIQUES */
-  --chat-gradient-block: linear-gradient(135deg, #20202a 0%, #23232e 50%, #20202a 100%); /* Gradient unifié pour TOUT */
+body:not(.chat-theme-light):not(.chat-theme-blue):not(.chat-theme-anthracite) {
+  /* Dégradés - Mode Dark avec teinte slate élégante */
+  --chat-gradient-block: linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%); /* Gris slate moderne */
   --chat-gradient-input: var(--chat-gradient-block);
   --chat-gradient-sidebar: var(--chat-gradient-block); /* ✅ Même gradient que les blocs */
   --chat-gradient-user: var(--chat-gradient-block);
-  --chat-gradient-user-hover: linear-gradient(135deg, #24242e 0%, #272731 50%, #24242e 100%);
+  --chat-gradient-user-hover: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
@@ -290,7 +290,7 @@ body.chat-theme-blue .chatgpt-input-area {
   border: none;
 }
 
-/* Blue Mode - COULEUR SOLIDE (pas de gradient) pour éviter les problèmes de superposition */
+/* Blue Mode - Le ::before du container gère le masque fade */
 
 /* Header transparent - laisse passer le background du container */
 body.chat-theme-blue .chatgpt-header {
@@ -314,6 +314,90 @@ body.chat-theme-blue .unified-sidebar {
   background: var(--chat-gradient-sidebar);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+/* ========================================
+   THÈME ANTHRACITE MODE - GRIS ÉLÉGANT
+   ========================================
+   Usage : Ajouter .chat-theme-anthracite sur body
+   Style : Gris anthracite, minimaliste, élégant et sobre
+   ======================================== */
+body.chat-theme-anthracite,
+.chat-theme-anthracite {
+  /* Background principal - Quasi noir éclairci */
+  --chat-bg-primary: #121317;          /* Quasi noir éclairci (+3%) */
+  --chat-bg-secondary: #16171a;        /* Quasi noir éclairci + */
+  --chat-bg-tertiary: #1a1b1e;         /* Quasi noir éclairci ++ */
+  --chat-bg-input: #1a1b1e;            /* Opaque */
+  --chat-bg-input-focus: #1e1f22;      /* Opaque plus clair */
+  --chat-bg-user-message: #1a1b1e;     /* Opaque */
+  --chat-bg-user-message-hover: #1e1f22; /* Opaque plus clair */
+  
+  /* Overlays - Opaques quasi noirs éclaircis */
+  --chat-overlay-subtle: #16171a;      /* Quasi noir éclairci + */
+  --chat-overlay-soft: #1a1b1e;        /* Quasi noir éclairci ++ */
+  --chat-overlay-active: #1e1f22;      /* Quasi noir éclairci +++ */
+  --chat-overlay-input: #1a1b1e;       /* Opaque */
+  --chat-overlay-input-focus: #1e1f22; /* Opaque plus clair */
+  --chat-overlay-hover: #1e1f22;       /* Opaque plus clair */
+  
+  /* Texte - SIMPLIFIÉ À 2 VARIABLES */
+  --chat-text-primary: #e8eaed;        /* Texte principal */
+  --chat-text-secondary: #bfc5cb;      /* Texte secondaire */
+  
+  /* Sidebar - Progression naturelle quasi noire éclaircie */
+  --sidebar-search-overlay: #1c1d20;   /* Subtil quasi noir éclairci */
+  --sidebar-search-overlay-focus: #1f2024; /* Focus quasi noir éclairci */
+  --sidebar-item-hover: #222327;       /* Hover quasi noir éclairci */
+  --sidebar-item-active: #26272b;      /* Active quasi noir éclairci */
+  
+  /* Bordures - AUCUNE */
+  --chat-border-subtle: transparent;
+  --chat-border-soft: transparent;
+  
+  /* Dégradés Anthracite - ULTRA CLAIRS pour contraste maximum */
+  --chat-gradient-block: linear-gradient(135deg, 
+    #4a4b52 0%,   /* Start (ULTRA clair +40%) */
+    #55565e 50%,  /* Milieu (+11%) */
+    #4a4b52 100%); /* End - Gradient unifié LISSÉ */
+  
+  /* ✅ TOUS les éléments (sidebar incluse) utilisent le même gradient */
+  --chat-gradient-input: var(--chat-gradient-block);
+  --chat-gradient-sidebar: var(--chat-gradient-block); /* ✅ Même gradient que les blocs */
+  --chat-gradient-user: var(--chat-gradient-block);
+  --chat-gradient-user-hover: linear-gradient(135deg, 
+    #55565e 0%,   /* Hover start */
+    #60616a 50%,  /* Hover milieu */
+    #55565e 100%); /* Hover end */
+  --chat-gradient-kebab: var(--chat-gradient-block);
+  
+  /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
+  --blk-bg: var(--chat-gradient-block);
+  --blk-fg: var(--chat-text-secondary); /* ✅ Texte des blocs = secondaire */
+}
+
+/* Sidebar anthracite - Gradient unifié */
+body.chat-theme-anthracite .sidebar-ultra-clean,
+body.chat-theme-anthracite .unified-sidebar {
+  background: var(--chat-gradient-sidebar);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Container anthracite - Background principal */
+body.chat-theme-anthracite .chatgpt-container {
+  background: var(--chat-bg-primary);
+}
+
+/* Content et main transparents - Laisse passer le background du container */
+body.chat-theme-anthracite .chatgpt-content,
+body.chat-theme-anthracite .chatgpt-main {
+  background: transparent;
+}
+
+/* Header transparent - Laisse passer le background du container */
+body.chat-theme-anthracite .chatgpt-header {
+  background: transparent;
 }
 
 /* ========================================
@@ -852,7 +936,7 @@ body.chat-theme-blue .unified-sidebar {
   }
   
   .chatgpt-input-area {
-    max-width: 1015px;
+    max-width: 1000px;
   }
   
   /* ✅ Décalage uniquement quand sidebar ouverte (pas de resize) */
@@ -908,7 +992,7 @@ body.chat-theme-blue .unified-sidebar {
 .chatgpt-messages {
   max-width: 1000px;
   margin: 0 auto;
-  padding: var(--chat-space-xl) var(--chat-padding-horizontal);
+  padding: var(--chat-space-xl) 0; /* Pas de padding horizontal - messages prennent 1000px */
   position: relative; /* Pour le centrage absolu de l'empty state */
   min-height: 100%; /* S'assure que le conteneur prend toute la hauteur */
   width: 100%;
@@ -1108,16 +1192,35 @@ body.chat-theme-blue .unified-sidebar {
   left: 0;
   right: 0;
   padding: 0 var(--chat-padding-horizontal) 24px;
-  background: var(--chat-bg-primary);
+  background: transparent; /* Transparent - le footer masque le texte */
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  padding-top: 0;
+  padding-top: 60px; /* Espace réduit pour fade subtil */
 }
 
+/* Footer masque sous l'input - cache le texte qui défile (subtil) */
+.chatgpt-input-container::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px; /* Hauteur réduite pour plus de subtilité */
+  background: linear-gradient(to top, 
+    var(--chat-bg-primary) 0%, 
+    var(--chat-bg-primary) 30%, 
+    transparent 100%);
+  pointer-events: none; /* Ne bloque pas les interactions */
+  z-index: 0;
+}
+
+/* Input au-dessus du footer */
 .chatgpt-input-area {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 1015px;
+  max-width: 1000px;
   background: var(--chat-gradient-input);
   border-radius: var(--chat-radius-xl);
   padding: var(--chat-space-md);
@@ -1683,7 +1786,7 @@ body.chat-theme-blue .unified-sidebar {
   }
   
   .chatgpt-input-area {
-    max-width: 1015px;
+    max-width: 1000px;
   }
 }
 
@@ -2543,4 +2646,3 @@ body.chat-theme-blue .unified-sidebar {
     background: #e8e8e8;
   }
 } */
-
