@@ -39,6 +39,7 @@
   display: flex ;
   flex-direction: column ;
   overflow: hidden ;
+  filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Brightness unifié */
 }
 
 /* Toolbar */
@@ -372,6 +373,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Brightness comme code blocks */
 }
 
 /* Toolbar Mermaid - Transparente pour background uni */
@@ -491,31 +493,15 @@
    CHAT SPECIFIC OVERRIDES - CHATGPT-LEVEL INTEGRATION
    ========================================================================== */
 
-/* Override chat-specific styles for code blocks - Style simple */
+/* Override chat-specific styles for code blocks - Hérite du style unifié */
 .chat-markdown .code-block-wrapper {
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  margin: 16px 0 !important;
-  display: block !important;
-  overflow: visible !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow: none !important;
+  /* Hérite des styles .u-block génériques avec gradient */
+  margin: 16px 0 !important; /* Juste le margin spécifique au chat */
 }
 
 .chat-markdown .u-block--code {
-  background: var(--blk-bg) !important;
-  color: var(--blk-fg) !important;
-  border: none !important;
-  border-radius: var(--blk-radius) !important;
-  margin: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow: none !important;
+  /* Hérite des styles .u-block génériques avec gradient */
+  margin: 0 !important; /* Pas de margin doublon */
 }
 
 .chat-markdown .code-block-wrapper .u-block__body,

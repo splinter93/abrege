@@ -137,24 +137,11 @@
 }
 
 /* ========================================
-   CODE BLOCKS - STYLE CHATGPT PREMIUM
+   CODE BLOCKS - HÉRITE DU STYLE UNIFIÉ
    ======================================== */
 
-.chat-markdown pre,
-.chatgpt-message-content pre {
-  background: #2d2d2d;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 20px 24px;
-  margin: 20px 0;
-  overflow-x: auto;
-  font-family: var(--font-monospace);
-  font-size: 14px;
-  line-height: 1.6;
-  color: #e5e7eb;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  position: relative;
-}
+/* Les code blocks héritent maintenant de unified-blocks.css
+   avec le gradient unifié var(--chat-gradient-block) */
 
 .chat-markdown pre code,
 .chatgpt-message-content pre code {

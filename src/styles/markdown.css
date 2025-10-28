@@ -522,26 +522,31 @@ a {
 
 .markdown-body .tableWrapper,
 .public-note-container .markdown-body .tableWrapper,
-.public-note-content-wrapper .markdown-body .tableWrapper {
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
+.public-note-content-wrapper .markdown-body .tableWrapper,
+.chat-markdown-content .tableWrapper,
+.chat-markdown .tableWrapper {
+  border: none;
+  border-radius: 14px;
   overflow: auto;
   margin: 1.75em 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
   -webkit-overflow-scrolling: touch;
   max-width: 100%;
-  background-color: var(--color-bg-content);
+  background: var(--chat-gradient-block, linear-gradient(135deg, #20202a 0%, #25252f 50%, #20202a 100%));
+  filter: var(--code-brightness-filter, brightness(1.18));
 }
 
 .markdown-body table,
 .public-note-container .markdown-body table,
-.public-note-content-wrapper .markdown-body table {
+.public-note-content-wrapper .markdown-body table,
+.chat-markdown-content table,
+.chat-markdown table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
   margin: 0;
-  background: var(--color-bg-content);
-  border-radius: var(--radius-md);
+  background: transparent;
+  border-radius: 14px;
 }
 
 .markdown-body th,
