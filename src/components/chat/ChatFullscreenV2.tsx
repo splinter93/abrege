@@ -130,15 +130,19 @@ const ChatFullscreenV2: React.FC = () => {
         sequence_number: 999998  // Temporaire, vrai sequence_number en DB
       };
       
-      // Ajouter à l'affichage (remplace le streaming)
-      addInfiniteMessage(assistantMessage);
+      // ✅ SMOOTH TRANSITION: Fade out streaming d'abord, puis afficher message permanent
       
-      // Reset streaming states
-      setStreamingContent('');
+      // 1. Commencer fade out du streaming
       setIsStreaming(false);
-      setStreamingTimeline([]);
       
-      logger.dev('[ChatFullscreenV2] ✅ Message assistant ajouté à l\'affichage:', {
+      // 2. Attendre fin transition (200ms), puis ajouter message permanent
+      setTimeout(() => {
+        addInfiniteMessage(assistantMessage);
+        setStreamingContent('');
+        setStreamingTimeline([]);
+      }, 200); // Sync avec transition opacity AnimatePresence
+      
+      logger.dev('[ChatFullscreenV2] ✅ Message assistant ajouté (transition smooth):', {
         contentLength: fullContent.length,
         hasToolCalls: toolCalls && toolCalls.length > 0
       });
@@ -472,10 +476,24 @@ const ChatFullscreenV2: React.FC = () => {
 
   // ✅ NOUVEAU: Mettre à jour l'agent automatiquement selon la session
   useEffect(() => {
-    if (!user || authLoading || !currentSession) return;
+    if (!user || authLoading || !currentSession) {
+      logger.dev('[ChatFullscreenV2] ⏭️ Skip sync agent:', { 
+        hasUser: !!user, 
+        authLoading, 
+        hasSession: !!currentSession 
+      });
+      return;
+    }
     
     const syncAgentWithSession = async () => {
       const sessionAgentId = currentSession.agent_id;
+      
+      logger.dev('[ChatFullscreenV2] 🔍 Sync agent check:', {
+        sessionId: currentSession.id,
+        sessionAgentId,
+        selectedAgentId,
+        needsSync: sessionAgentId && sessionAgentId !== selectedAgentId
+      });
       
       // Si la session a un agent différent de celui sélectionné, le charger
       if (sessionAgentId && sessionAgentId !== selectedAgentId) {
@@ -490,17 +508,21 @@ const ChatFullscreenV2: React.FC = () => {
             
           if (agent) {
             setSelectedAgent(agent);
-            logger.dev('[ChatFullscreenV2] ✅ Agent chargé depuis session:', agent.display_name || agent.name);
+            logger.dev('[ChatFullscreenV2] ✅ Agent chargé et appliqué:', {
+              agentId: agent.id,
+              agentName: agent.display_name || agent.name,
+              sessionId: currentSession.id
+            });
           } else {
             logger.warn('[ChatFullscreenV2] ⚠️ Agent de la session introuvable:', sessionAgentId);
-            // Garder l'agent actuel si celui de la session n'existe plus
           }
         } catch (err) {
           logger.error('[ChatFullscreenV2] ❌ Erreur chargement agent session:', err);
         }
-      } else if (!sessionAgentId && selectedAgent) {
-        // Si la session n'a pas d'agent, ne rien changer (garder l'agent actuel)
-        logger.dev('[ChatFullscreenV2] ℹ️ Session sans agent, conservation agent actuel');
+      } else if (!sessionAgentId) {
+        logger.dev('[ChatFullscreenV2] ℹ️ Session sans agent_id:', currentSession.id);
+      } else {
+        logger.dev('[ChatFullscreenV2] ✅ Agent déjà à jour (même ID)');
       }
     };
     
@@ -1104,11 +1126,19 @@ const ChatFullscreenV2: React.FC = () => {
                 </div>
               )}
               
-              {/* ✅ PENDANT LE STREAMING : Utiliser StreamTimelineRenderer pour affichage chronologique */}
-              {isStreaming && streamingTimeline.length > 0 && (
-                <div className="chatgpt-message chatgpt-message-assistant">
-                  <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant">
-                    <StreamTimelineRenderer 
+              {/* ✅ PENDANT LE STREAMING : Utiliser StreamTimelineRenderer avec transition smooth */}
+              <AnimatePresence mode="wait">
+                {isStreaming && streamingTimeline.length > 0 && (
+                  <motion.div
+                    key="streaming-message"
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="chatgpt-message chatgpt-message-assistant"
+                  >
+                    <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant">
+                      <StreamTimelineRenderer 
                       timeline={{
                         items: streamingTimeline.map(item => {
                           if (item.type === 'text') {
@@ -1147,8 +1177,9 @@ const ChatFullscreenV2: React.FC = () => {
                       isActiveStreaming={isStreaming}
                     />
                   </div>
-                </div>
+                </motion.div>
               )}
+            </AnimatePresence>
             </div>
             <div ref={messagesEndRef} />
           </div>
