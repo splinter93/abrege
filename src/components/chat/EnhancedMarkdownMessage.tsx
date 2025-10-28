@@ -89,7 +89,7 @@ const CodeBlockReplacer: React.FC<{ containerRef: React.RefObject<HTMLDivElement
       // Trouver tous les wrappers de code blocks
       const codeBlockWrappers = containerRef.current?.querySelectorAll('.code-block-wrapper');
       
-      if (!codeBlockWrappers) return;
+      if (!codeBlockWrappers || codeBlockWrappers.length === 0) return;
       
       codeBlockWrappers.forEach((wrapper, index) => {
         // Vérifier si ce wrapper a déjà été traité
