@@ -293,8 +293,8 @@ body.chat-theme-blue,
   --chat-gradient-input: var(--chat-gradient-block);
   --chat-gradient-sidebar: linear-gradient(135deg, 
     #22313f 0%, 
-    #253542 50%, 
-    #22313f 100%); /* Sidebar légèrement plus sombre */
+    #2a3e51 50%, 
+    #22313f 100%); /* Sidebar légèrement plus sombre + gradient ACCENTUÉ */
   --chat-gradient-user: var(--chat-gradient-block);
   --chat-gradient-user-hover: linear-gradient(135deg, 
     #2a3a4b 0%, 
