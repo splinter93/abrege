@@ -10,7 +10,8 @@
    DESIGN TOKENS
    ========================================================================== */
 :root {
-  --blk-bg: var(--chat-gradient-block, linear-gradient(135deg, #20202a 0%, #25252f 50%, #20202a 100%)); /* Suit le thème du chat */
+  /* ✅ UNIFIÉ: --blk-bg utilise toujours var(--chat-gradient-block) qui est défini par le thème */
+  --blk-bg: var(--chat-gradient-block); /* Pas de fallback - défini par le thème (dark/light/blue) */
   --blk-fg: var(--chat-text-code, #7a8088); /* Texte code blocks - suit le thème */
   --blk-muted: #9ca3af; /* Texte secondaire/labels */
   --blk-radius: 14px;
