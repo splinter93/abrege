@@ -19,6 +19,11 @@
   animation: fadeIn 0.2s ease-out;
 }
 
+/* Light Mode - Overlay clair */
+body.chat-theme-light .settings-modal-overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -83,6 +88,11 @@
   transform: scale(1.05);
 }
 
+/* Light Mode - Close button hover */
+body.chat-theme-light .settings-modal-close:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
 .settings-modal-close:active {
   transform: scale(0.95);
 }
@@ -110,6 +120,11 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+/* Light Mode - Menu plus clair */
+body.chat-theme-light .settings-menu {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .settings-menu::-webkit-scrollbar {
@@ -155,6 +170,15 @@
 .settings-menu-item.active {
   background: rgba(255, 255, 255, 0.12); /* ✅ Juste plus lumineux */
   color: var(--chat-text-primary);
+}
+
+/* Light Mode - Menu items */
+body.chat-theme-light .settings-menu-item:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+body.chat-theme-light .settings-menu-item.active {
+  background: rgba(0, 0, 0, 0.10);
 }
 
 .settings-menu-icon {
@@ -326,6 +350,22 @@
   box-shadow: none;
 }
 
+/* Light Mode - Inputs/selects */
+body.chat-theme-light .settings-select,
+body.chat-theme-light .settings-input {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+body.chat-theme-light .settings-select:hover,
+body.chat-theme-light .settings-input:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+body.chat-theme-light .settings-select:focus,
+body.chat-theme-light .settings-input:focus {
+  background: rgba(0, 0, 0, 0.08);
+}
+
 .settings-select:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -372,6 +412,22 @@
   background: rgba(255, 255, 255, 0.12); /* ✅ Pas orange, juste plus lumineux */
   border-color: rgba(255, 255, 255, 0.25);
   box-shadow: none;
+}
+
+/* Light Mode - Option cards */
+body.chat-theme-light .settings-option-card {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.chat-theme-light .settings-option-card:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+body.chat-theme-light .settings-option-card.active {
+  background: rgba(0, 0, 0, 0.10);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 .settings-option-icon {

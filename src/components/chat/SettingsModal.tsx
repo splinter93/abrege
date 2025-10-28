@@ -82,6 +82,56 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         '--chat-text-secondary': '#e5e5e5',
         '--chat-text-muted': '#a0a0a0'
       }
+    },
+    { 
+      value: 'light-grey-dark', 
+      label: 'Gris Foncé', 
+      icon: <Circle size={16} />,
+      colors: {
+        '--chat-text-primary': '#2a2d32',
+        '--chat-text-secondary': '#6b6e73',
+        '--chat-text-muted': '#9a9da2'
+      }
+    },
+    { 
+      value: 'light-grey-soft', 
+      label: 'Gris Doux', 
+      icon: <Circle size={16} />,
+      colors: {
+        '--chat-text-primary': '#3a3d42',
+        '--chat-text-secondary': '#6b6e73',
+        '--chat-text-muted': '#9a9da2'
+      }
+    },
+    { 
+      value: 'light-grey-medium', 
+      label: 'Gris Moyen', 
+      icon: <Circle size={16} />,
+      colors: {
+        '--chat-text-primary': '#4a4d52',
+        '--chat-text-secondary': '#7a7d82',
+        '--chat-text-muted': '#aaadb2'
+      }
+    },
+    { 
+      value: 'light-grey-warm', 
+      label: 'Gris Chaud', 
+      icon: <Flame size={16} />,
+      colors: {
+        '--chat-text-primary': '#3d3a36',
+        '--chat-text-secondary': '#6d6a66',
+        '--chat-text-muted': '#9d9a96'
+      }
+    },
+    { 
+      value: 'light-taupe', 
+      label: 'Taupe', 
+      icon: <Palette size={16} />,
+      colors: {
+        '--chat-text-primary': '#4d4a46',
+        '--chat-text-secondary': '#7d7a76',
+        '--chat-text-muted': '#adaaa6'
+      }
     }
   ];
 
@@ -107,12 +157,30 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     if (savedFont) setSelectedFont(savedFont);
     
     const savedColors = localStorage.getItem('chat-color-preference');
-    if (savedColors) setSelectedColorPalette(savedColors);
+    if (savedColors) {
+      setSelectedColorPalette(savedColors);
+      // Appliquer la palette sauvegardée sur body avec !important
+      const palette = availableColorPalettes.find(p => p.value === savedColors);
+      if (palette) {
+        Object.entries(palette.colors).forEach(([property, value]) => {
+          document.body.style.setProperty(property, value, 'important');
+        });
+        
+        const mutedColor = palette.colors['--chat-text-muted'];
+        if (mutedColor) {
+          const placeholderColor = darkenColor(mutedColor, 1);
+          document.body.style.setProperty('--chat-text-placeholder', placeholderColor, 'important');
+          
+          const codeColor = darkenColor(mutedColor, -5);
+          document.body.style.setProperty('--chat-text-code-bright', codeColor, 'important');
+        }
+      }
+    }
     
     if (currentSession?.history_limit) {
       setHistoryLimit(currentSession.history_limit);
     }
-  }, [currentSession]);
+  }, [currentSession, availableColorPalettes, darkenColor]);
 
   const handleFontChange = (fontValue: string) => {
     setSelectedFont(fontValue);
@@ -135,19 +203,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     
     const palette = availableColorPalettes.find(p => p.value === paletteValue);
     if (palette) {
+      // Appliquer sur body au lieu de :root pour override les thèmes
       Object.entries(palette.colors).forEach(([property, value]) => {
-        document.documentElement.style.setProperty(property, value);
+        document.body.style.setProperty(property, value, 'important');
       });
       
       const mutedColor = palette.colors['--chat-text-muted'];
       if (mutedColor) {
         const placeholderColor = darkenColor(mutedColor, 1);
-        document.documentElement.style.setProperty('--chat-text-placeholder', placeholderColor);
+        document.body.style.setProperty('--chat-text-placeholder', placeholderColor, 'important');
         
         const codeColor = darkenColor(mutedColor, -5);
-        document.documentElement.style.setProperty('--chat-text-code', codeColor);
+        document.body.style.setProperty('--chat-text-code-bright', codeColor, 'important');
         
-        document.documentElement.style.setProperty('--blk-muted', mutedColor);
+        document.body.style.setProperty('--blk-muted', mutedColor, 'important');
       }
     }
   };

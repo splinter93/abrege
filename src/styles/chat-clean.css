@@ -130,12 +130,12 @@
      ======================================== */
   --code-brightness-filter: none; /* ✅ Pas de filtre par défaut - gradient suffit */
 }
-
-/* ========================================
+  
+  /* ========================================
    THÈME DARK MODE (PAR DÉFAUT)
    ========================================
    Usage : Ajouter .chat-theme-dark sur body (ou par défaut si pas de classe)
-   ======================================== */
+     ======================================== */
 .chat-theme-dark,
 body:not(.chat-theme-light):not(.chat-theme-blue):not(.chat-theme-anthracite) {
   /* Dégradés - Mode Dark avec teinte slate élégante */
@@ -152,71 +152,72 @@ body:not(.chat-theme-light):not(.chat-theme-blue):not(.chat-theme-anthracite) {
 }
 
 /* ========================================
-   THÈME CLAIR (LIGHT MODE)
+   THÈME CLAIR (LIGHT MODE) - GRIS CLAIR (Anthracite éclairci)
    ========================================
    Usage : Ajouter .chat-theme-light sur body
+   Style : Gris clair, même structure qu'Anthracite mais éclairci uniformément
    ======================================== */
 body.chat-theme-light,
 .chat-theme-light {
-  /* Backgrounds - Gris moyen moderne (style ChatGPT) */
-  --chat-bg-primary: #c8c8c8;          /* Gris moyen foncé */
-  --chat-bg-secondary: #e8eaed;        /* Gris moyen */
-  --chat-bg-tertiary: #e0e2e5;         /* Gris plus foncé */
-  --chat-bg-input: #dde0e4;            /* Input backgrounds */
-  --chat-bg-input-focus: #d4d7db;      /* Input focus */
-  --chat-bg-user-message: #fff4e6;     /* Bubble user - orange très pâle */
-  --chat-bg-user-message-hover: #ffe8cc; /* Bubble user hover - orange pâle */
+  /* Background principal - Gris bleuté doux */
+  --chat-bg-primary: #d4d7dc;          /* Gris bleuté doux (éclairci +30) */
+  --chat-bg-secondary: #d8dbe0;        /* Gris bleuté légèrement plus clair */
+  --chat-bg-tertiary: #dddfe6;         /* Gris bleuté moyen-clair */
+  --chat-bg-input: #d9dce3;            /* Opaque gris clair */
+  --chat-bg-input-focus: #dee1e9;      /* Opaque gris clair plus clair */
+  --chat-bg-user-message: #d9dce3;     /* Opaque gris clair */
+  --chat-bg-user-message-hover: #dee1e9; /* Opaque gris clair plus clair */
   
-  /* Overlays */
-  --chat-overlay-subtle: rgba(0, 0, 0, 0.03);
-  --chat-overlay-soft: rgba(0, 0, 0, 0.05);
-  --chat-overlay-active: rgba(0, 0, 0, 0.08);
-  --chat-overlay-input: rgba(0, 0, 0, 0.06);
-  --chat-overlay-input-focus: rgba(0, 0, 0, 0.1);
-  --chat-overlay-hover: rgba(0, 0, 0, 0.08);
-  --chat-overlay-dark: rgba(0, 0, 0, 0.3);
+  /* Overlays - Gris clair assombri */
+  --chat-overlay-subtle: #d0d3d8;      /* Gris clair léger */
+  --chat-overlay-soft: #d5d8df;        /* Gris clair moyen */
+  --chat-overlay-active: #d9dce3;      /* Gris clair actif */
+  --chat-overlay-input: #d9dce3;       /* Opaque gris clair */
+  --chat-overlay-input-focus: #dee1e9; /* Opaque gris clair plus clair */
+  --chat-overlay-hover: #dee1e9;       /* Opaque gris clair plus clair */
+  --chat-overlay-dark: rgba(0, 0, 0, 0.3); /* Mobile overlay */
   
-  /* Texte - SIMPLIFIÉ À 2 VARIABLES */
-  --chat-text-primary: #2a2c2e;        /* Texte principal (paragraphes, titres, messages) */
-  --chat-text-secondary: #838689;      /* Texte secondaire (placeholders, boutons, blocs code/tableaux) - Éclairci +2 */
+  /* Texte - SIMPLIFIÉ À 2 VARIABLES (inversé pour mode clair) */
+  --chat-text-primary: #2a2d32;        /* Texte principal sombre (option 1) */
+  --chat-text-secondary: #6b6e73;      /* Texte secondaire gris moyen */
   
-  /* Sidebar - Progression naturelle des overlays */
-  --sidebar-search-overlay: rgba(0, 0, 0, 0.03);     /* Barre recherche + Bouton */
-  --sidebar-search-overlay-focus: rgba(0, 0, 0, 0.05); /* Focus (léger) */
-  --sidebar-item-hover: rgba(0, 0, 0, 0.07);     /* Hover (moyen) */
-  --sidebar-item-active: rgba(0, 0, 0, 0.09);   /* Active (fort) */
+  /* Variantes texte pour tests palette - Non utilisées par défaut */
+  --chat-text-variant-1: #3a3d42;      /* Gris foncé doux (moins de contraste) */
+  --chat-text-variant-2: #4a4d52;      /* Gris moyen-foncé (encore plus doux) */
+  --chat-text-variant-3: #3d3a36;      /* Gris chaud foncé (teinte chaude) */
+  --chat-text-variant-4: #4d4a46;      /* Taupe moyen (crème foncé) */
   
-  /* Bordures */
-  --chat-border-subtle: rgba(0, 0, 0, 0.15);
-  --chat-border-soft: rgba(0, 0, 0, 0.1);
+  /* Sidebar - Progression naturelle gris clair assombri */
+  --sidebar-search-overlay: #e5e8ed;   /* Barre recherche + Bouton gris clair assombri */
+  --sidebar-search-overlay-focus: #e9ecef; /* Focus gris clair assombri */
+  --sidebar-item-hover: #edeff1;       /* Hover gris clair assombri */
+  --sidebar-item-active: #f0f2f4;      /* Active gris très clair */
+  
+  /* Bordures - AUCUNE (style moderne sans bordures) */
+  --chat-border-subtle: transparent;
+  --chat-border-soft: transparent;
   
   /* Accents - Orange moderne */
   --chat-accent-primary: #f97316;      /* Orange vif */
   --chat-accent-hover: #ea580c;        /* Orange foncé */
   
-  /* Dégradés mode clair - ULTRA-LISSÉS */
+  /* Dégradés Light Mode - Overlay gris bleuté assombri encore */
   --chat-gradient-block: linear-gradient(135deg, 
-    rgba(0, 0, 0, 0.08) 0%, 
-    rgba(0, 0, 0, 0.11) 50%, 
-    rgba(0, 0, 0, 0.08) 100%), 
-    var(--chat-bg-primary); /* Gradient unifié ULTRA-LISSÉ pour TOUS les éléments */
+    rgba(70, 85, 105, 0.10) 0%, 
+    rgba(70, 85, 105, 0.16) 50%, 
+    rgba(70, 85, 105, 0.10) 100%), 
+    var(--chat-bg-primary); /* Gradient gris bleuté plus sombre et plus visible */
   
   /* ✅ TOUS les éléments (sidebar incluse) utilisent le même gradient */
   --chat-gradient-input: var(--chat-gradient-block);
   --chat-gradient-sidebar: var(--chat-gradient-block); /* ✅ Même gradient que les blocs */
-  --chat-gradient-kebab: var(--chat-gradient-block);
-  
-  --chat-gradient-user: linear-gradient(135deg, 
-    rgba(0, 0, 0, 0.06) 0%, 
-    rgba(0, 0, 0, 0.09) 50%, 
-    rgba(0, 0, 0, 0.06) 100%), 
-    var(--chat-bg-primary);
-  
+  --chat-gradient-user: var(--chat-gradient-block);
   --chat-gradient-user-hover: linear-gradient(135deg, 
-    rgba(0, 0, 0, 0.1) 0%, 
-    rgba(0, 0, 0, 0.13) 50%, 
-    rgba(0, 0, 0, 0.1) 100%), 
-    var(--chat-bg-primary);
+    rgba(70, 85, 105, 0.12) 0%, 
+    rgba(70, 85, 105, 0.18) 50%, 
+    rgba(70, 85, 105, 0.12) 100%), 
+    var(--chat-bg-primary); /* Hover gris bleuté encore plus sombre */
+  --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
   --blk-bg: var(--chat-gradient-block);
