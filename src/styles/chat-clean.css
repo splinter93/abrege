@@ -265,11 +265,11 @@ body.chat-theme-blue,
   --chat-text-primary: #e8eaed;        /* Texte principal (paragraphes, titres, messages) */
   --chat-text-secondary: #a8aeb4;      /* Texte secondaire (placeholders, boutons, blocs code/tableaux) */
   
-  /* Sidebar - Dégradés opaques */
-  --sidebar-search-overlay: #22313f;   /* Opaque éclairci +5% */
-  --sidebar-search-overlay-focus: #273747; /* Opaque éclairci +5% */
-  --sidebar-item-active: #273747;      /* Opaque éclairci +5% */
-  --sidebar-item-hover: #22313f;       /* Opaque éclairci +5% */
+  /* Sidebar - Dégradés opaques ÉCLAIRCIS */
+  --sidebar-search-overlay: #2d3f52;   /* Barre recherche + Bouton nouvelle note (plus clair) */
+  --sidebar-search-overlay-focus: #364a60; /* Focus encore plus clair */
+  --sidebar-item-active: #364a60;      /* Item actif (plus clair) */
+  --sidebar-item-hover: #2d3f52;       /* Hover items (plus clair) */
   
   /* Bordures - AUCUNE (style moderne sans bordures) */
   --chat-border-subtle: transparent;
