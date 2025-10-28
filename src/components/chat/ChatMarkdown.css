@@ -160,19 +160,8 @@
   display: block;
 }
 
-/* Code block avec langage spécifique */
-.chat-markdown pre[class*="language-"],
-.chatgpt-message-content pre[class*="language-"] {
-  background: #2d2d2d;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Amélioration de la lisibilité */
-.chat-markdown pre:hover,
-.chatgpt-message-content pre:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
+/* Code blocks héritent du gradient unifié de unified-blocks.css */
+/* Plus de styles hardcodés ici - tout est géré par var(--chat-gradient-block) */
 
 /* ========================================
    LISTES - STYLE CHATGPT PREMIUM
