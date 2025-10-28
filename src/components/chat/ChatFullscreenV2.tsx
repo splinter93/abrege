@@ -820,7 +820,8 @@ const ChatFullscreenV2: React.FC = () => {
         throw new Error(tokenResult.error || 'Token non disponible');
       }
 
-      // 3. Supprimer les messages après le message édité
+      // 3. Supprimer le message édité ET tous ceux après
+      // afterSequence = sequence - 1 pour inclure le message édité (DELETE > sequence-1 = DELETE >= sequence)
       const deleteResponse = await fetch(
         `/api/chat/sessions/${currentSession.id}/messages/delete-after`,
         {
@@ -830,7 +831,7 @@ const ChatFullscreenV2: React.FC = () => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            afterSequence: editedMessage.sequence_number
+            afterSequence: editedMessage.sequence_number - 1
           })
         }
       );
@@ -846,39 +847,18 @@ const ChatFullscreenV2: React.FC = () => {
         deletedCount: deleteResult.data?.deletedCount || 0
       });
 
-      // 4. Ajouter le nouveau message édité
-      const savedMessage = await addMessage({
-        role: 'user',
-        content: newContent,
-        timestamp: new Date().toISOString()
-      });
-
-      if (!savedMessage) {
-        throw new Error('Erreur sauvegarde message édité');
-      }
-
-      // 5. Annuler le mode édition
+      // 4. Annuler le mode édition AVANT d'envoyer
       cancelEditing();
       setEditingContent('');
 
-      // 6. Recharger les messages depuis la DB
+      // 5. Recharger les messages depuis la DB (pour UI cohérente)
       clearInfiniteMessages();
       await loadInitialMessages();
 
-      logger.dev('[ChatFullscreenV2] ✅ Message édité avec succès, rechargement...');
+      logger.dev('[ChatFullscreenV2] ✅ Messages rechargés, relance génération...');
 
-      // 7. Préparer contexte pour régénération
-      const contextForLLM = {
-        agent: selectedAgent,
-        uiContext: {
-          ...llmContext,
-          sessionId: currentSession.id
-        }
-      };
-
-      // 8. Relancer génération LLM (le nouveau message est déjà dans infiniteMessages)
-      // On passe une string vide car le message user est déjà sauvegardé
-      await sendMessage('', currentSession.id, contextForLLM, infiniteMessages, tokenResult.token);
+      // 6. Renvoyer le message édité (handleSendMessageInternal va faire addMessage + sendMessage)
+      await handleSendMessageInternal(newContent, images);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'édition';
@@ -897,13 +877,10 @@ const ChatFullscreenV2: React.FC = () => {
     infiniteMessages,
     cancelEditing, 
     setLoading, 
-    setError, 
-    addMessage,
+    setError,
     clearInfiniteMessages,
     loadInitialMessages,
-    selectedAgent,
-    llmContext,
-    sendMessage
+    handleSendMessageInternal
   ]);
 
   // 🎯 Wrapper pour router entre édition et envoi normal
