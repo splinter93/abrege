@@ -285,21 +285,21 @@ body.chat-theme-blue,
   
   /* Dégradés Blue Mode - UNIFORMISÉS pour cohérence visuelle */
   --chat-gradient-block: linear-gradient(135deg, 
-    #273747 0%, 
-    #2f4157 50%, 
-    #273747 100%); /* Gradient unifié ACCENTUÉ pour TOUS les blocs */
+    #2d3f52 0%, 
+    #364a60 50%, 
+    #2d3f52 100%); /* Gradient unifié ACCENTUÉ + ÉCLAIRCI pour TOUS les blocs */
   
   /* ✅ Tous les éléments utilisent le même gradient de bloc */
   --chat-gradient-input: var(--chat-gradient-block);
   --chat-gradient-sidebar: linear-gradient(135deg, 
-    #22313f 0%, 
-    #2a3e51 50%, 
-    #22313f 100%); /* Sidebar légèrement plus sombre + gradient ACCENTUÉ */
+    #283848 0%, 
+    #314759 50%, 
+    #283848 100%); /* Sidebar légèrement plus sombre + gradient ACCENTUÉ + ÉCLAIRCI */
   --chat-gradient-user: var(--chat-gradient-block);
   --chat-gradient-user-hover: linear-gradient(135deg, 
-    #2a3a4b 0%, 
-    #33475b 50%, 
-    #2a3a4b 100%); /* Hover légèrement plus clair + gradient accentué */
+    #304555 0%, 
+    #3a5167 50%, 
+    #304555 100%); /* Hover légèrement plus clair + gradient accentué + ÉCLAIRCI */
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg pour les code blocks */
