@@ -86,6 +86,14 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
     }
   };
 
+  const handleOpenSettings = () => {
+    setSettingsOpen(true);
+    // Fermer la sidebar sur mobile quand on ouvre les settings
+    if (!isDesktop) {
+      onClose();
+    }
+  };
+
   // Filtrage des sessions
   const filteredSessions = sessions.filter((session: ChatSession) =>
     session.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -219,7 +227,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
       <div className="sidebar-user-clean">
         <button 
           className="sidebar-user-item-clean"
-          onClick={() => setSettingsOpen(true)}
+          onClick={handleOpenSettings}
           title="Settings"
         >
           <div className="sidebar-user-avatar-clean">
