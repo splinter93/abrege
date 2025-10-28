@@ -60,15 +60,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const timeline = assistantMessage?.streamTimeline || assistantMessage?.stream_timeline;
   const hasStreamTimeline = role === 'assistant' && timeline && timeline.items && timeline.items.length > 0;
   
-  // ✅ DEBUG: Logger la timeline pour comprendre le problème
-  if (role === 'assistant' && timeline) {
-    logger.dev('[ChatMessage] 📊 Timeline détectée:', {
+  // ✅ DEBUG: Logger la timeline ET le content pour comprendre le problème
+  if (role === 'assistant') {
+    logger.dev('[ChatMessage] 📊 Message assistant:', {
       messageId: message.id,
       hasTimeline: !!timeline,
-      hasItems: !!(timeline.items),
-      itemsCount: timeline.items?.length || 0,
-      itemTypes: timeline.items?.map(i => i.type) || [],
-      firstItems: timeline.items?.slice(0, 2) || []
+      timelineItemsCount: timeline?.items?.length || 0,
+      timelineItemTypes: timeline?.items?.map(i => i.type) || [],
+      contentPreview: content?.substring(0, 200) || 'NO CONTENT',
+      contentIncludes_Function: content?.includes('Function:') || false,
+      contentIncludes_tool_result: content?.includes('tool_result') || false
     });
   }
 
