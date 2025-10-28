@@ -3,6 +3,7 @@ import markdownItGithubTables from './markdownItGithubTables';
 import markdownItTaskLists from 'markdown-it-task-lists';
 import anchor from 'markdown-it-anchor';
 import { slugify } from './markdownTOC';
+import { markdownItCallouts } from './markdownItCallouts';
 
 // Configuration markdown-it avec support GFM (tables) via plugin local
 export function createMarkdownIt() {
@@ -39,6 +40,7 @@ export function createMarkdownIt() {
     enabled: true, // ✅ Checkboxes interactives
     label: true,   // ✅ Avec label cliquable
   });
+  md.use(markdownItCallouts); // ✅ Support callouts GitHub/Obsidian [!NOTE]
   md.use(anchor, {
     slugify,
     level: [1,2,3,4,5,6],

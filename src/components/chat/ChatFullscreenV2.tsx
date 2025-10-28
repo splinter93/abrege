@@ -622,7 +622,11 @@ const ChatFullscreenV2: React.FC = () => {
   }, [cancelEditing]);
 
   // 🎯 Handlers optimisés  
-  const handleSendMessageInternal = useCallback(async (message: string | import('@/types/image').MessageContent, images?: import('@/types/image').ImageAttachment[]) => {
+  const handleSendMessageInternal = useCallback(async (
+    message: string | import('@/types/image').MessageContent, 
+    images?: import('@/types/image').ImageAttachment[],
+    notes?: Array<{ id: string; slug: string; title: string; markdown_content: string }>
+  ) => {
     // Vérifier si le message a du contenu (texte ou images)
     const hasTextContent = typeof message === 'string' ? message.trim() : true;
     const hasImages = images && images.length > 0;
@@ -767,7 +771,9 @@ const ChatFullscreenV2: React.FC = () => {
         uiContext: {
           ...llmContext,
           sessionId: currentSession.id
-        }
+        },
+        // 📎 Ajouter les notes attachées si présentes
+        ...(notes && notes.length > 0 && { attachedNotes: notes })
       };
 
       // ✅ Support multi-modal : Passer le contenu complet (texte ou texte+images)
@@ -875,7 +881,11 @@ const ChatFullscreenV2: React.FC = () => {
   }, [editingMessage, cancelEditing, requireAuth, setLoading, setError, syncSessions, loadInitialMessages, selectedAgent, llmContext, sendMessage]);
 
   // 🎯 Wrapper pour router entre édition et envoi normal
-  const handleSendMessage = useCallback(async (message: string | import('@/types/image').MessageContent, images?: import('@/types/image').ImageAttachment[]) => {
+  const handleSendMessage = useCallback(async (
+    message: string | import('@/types/image').MessageContent, 
+    images?: import('@/types/image').ImageAttachment[],
+    notes?: Array<{ id: string; slug: string; title: string; markdown_content: string }>
+  ) => {
     // ✏️ Si on est en mode édition, router vers handleEditSubmit
     if (editingMessage) {
       let textContent = '';
@@ -891,7 +901,7 @@ const ChatFullscreenV2: React.FC = () => {
     }
     
     // Mode normal
-    await handleSendMessageInternal(message, images);
+    await handleSendMessageInternal(message, images, notes);
   }, [editingMessage, handleEditSubmit, handleSendMessageInternal]);
 
   const handleSidebarToggle = useCallback(() => {
@@ -1066,8 +1076,8 @@ const ChatFullscreenV2: React.FC = () => {
 
               <AnimatePresence mode="sync">
                 {displayMessages.map((message, index) => {
-                  // ✅ TypeScript strict : Générer une clé unique sans 'as any'
-                  const keyParts = [message.role, message.timestamp];
+                  // ✅ TypeScript strict : Générer une clé unique garantie avec index
+                  const keyParts = [message.role, message.timestamp, index];
                   if (message.role === 'tool' && 'tool_call_id' in message) {
                     keyParts.push(message.tool_call_id || 'unknown');
                   }

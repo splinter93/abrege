@@ -235,115 +235,124 @@
 }
 
 /* ========================================
-   THÈME GLASS (GLASSMORPHISM)
+   THÈME BLUE MODE - DÉGRADÉS OPAQUES MODERNES
    ========================================
-   Usage : Ajouter .chat-theme-glass sur body
+   Usage : Ajouter .chat-theme-blue sur body
+   Style : Dégradés opaques, sans bordures, minimaliste premium
    ======================================== */
-.chat-theme-glass {
-  /* Backgrounds - Glass sobre avec dégradé bleu-violet visible */
-  --chat-bg-primary: linear-gradient(135deg, 
-    #181a22 0%,           /* Bleu-noir */
-    #21233a 50%,          /* Bleu-violet plus prononcé */
-    #181a22 100%);        /* Bleu-noir */
-  --chat-bg-secondary: #1a1c24;        /* Bleu-noir */
-  --chat-bg-tertiary: #1c1e26;         /* Bleu-noir moyen */
-  --chat-bg-input: rgba(40, 35, 60, 0.8);     /* Violet avec transparence */
-  --chat-bg-input-focus: rgba(50, 42, 75, 0.9);
-  --chat-bg-user-message: rgba(45, 38, 70, 0.8);
-  --chat-bg-user-message-hover: rgba(55, 45, 85, 0.9);
+.chat-theme-blue {
+  /* Background principal - Couleur solide sans gradient (plus simple) */
+  --chat-bg-primary: #16202d;          /* Couleur solide éclaircie */
+  --chat-bg-secondary: #1a2534;        /* Bleu foncé solide éclairci */
+  --chat-bg-tertiary: #1f2a3a;         /* Bleu moyen éclairci */
+  --chat-bg-input: #1f2a3a;            /* Opaque éclairci */
+  --chat-bg-input-focus: #243041;      /* Opaque plus clair éclairci */
+  --chat-bg-user-message: #1f2a3a;     /* Opaque éclairci */
+  --chat-bg-user-message-hover: #243041; /* Opaque plus clair éclairci */
   
-  /* Overlays - Reflets bleu-violet */
-  --chat-overlay-subtle: rgba(147, 112, 219, 0.05);   /* Violet clair */
-  --chat-overlay-soft: rgba(147, 112, 219, 0.08);
-  --chat-overlay-active: rgba(147, 112, 219, 0.12);
-  --chat-overlay-input: rgba(147, 112, 219, 0.1);
-  --chat-overlay-input-focus: rgba(147, 112, 219, 0.15);
-  --chat-overlay-hover: rgba(147, 112, 219, 0.15);
+  /* Overlays - Opaques pour messages/interactions */
+  --chat-overlay-subtle: #1a2534;      /* Bleu foncé opaque éclairci */
+  --chat-overlay-soft: #1f2a3a;        /* Bleu moyen opaque éclairci */
+  --chat-overlay-active: #243041;      /* Bleu clair opaque éclairci */
+  --chat-overlay-input: #1f2a3a;       /* Opaque éclairci */
+  --chat-overlay-input-focus: #243041; /* Opaque éclairci */
+  --chat-overlay-hover: #243041;       /* Opaque éclairci */
   
-  /* Texte - Nuances bleu-violet */
-  --chat-text-primary: #e8e4f3;        /* Blanc violet très léger */
-  --chat-text-secondary: #c5bfd9;      /* Gris violet clair */
-  --chat-text-muted: #9a92b3;          /* Gris violet */
-  --chat-text-code: #a49cbf;           /* Texte code blocks (muted éclairci ~5%) */
-  --chat-text-placeholder: #9c95b0;    /* Placeholder input (muted assombri ~1%) */
+  /* Texte - Blanc/gris clair sur bleu foncé */
+  --chat-text-primary: #e8eaed;        /* Blanc cassé */
+  --chat-text-secondary: #c5c7ca;      /* Gris clair */
+  --chat-text-muted: #9aa0a6;          /* Gris moyen */
+  --chat-text-code: #a8aeb4;           /* Texte code blocks */
+  --chat-text-placeholder: #9aa0a6;    /* Placeholder input */
   
-  /* Sidebar - Overlays violet pour mode glass */
-  --sidebar-search-overlay: rgba(147, 112, 219, 0.05);     /* Overlay recherche (plus transparent) */
-  --sidebar-search-overlay-focus: rgba(147, 112, 219, 0.08); /* Overlay recherche focus */
-  --sidebar-item-active: rgba(147, 112, 219, 0.08);   /* Conversation active (subtil) */
-  --sidebar-item-hover: rgba(147, 112, 219, 0.05);     /* Conversation hover (très subtil) */
+  /* Sidebar - Dégradés opaques */
+  --sidebar-search-overlay: #1a2534;   /* Opaque éclairci */
+  --sidebar-search-overlay-focus: #1f2a3a; /* Opaque éclairci */
+  --sidebar-item-active: #1f2a3a;      /* Opaque éclairci */
+  --sidebar-item-hover: #1a2534;       /* Opaque éclairci */
   
-  /* Bordures - Lueur violette */
-  --chat-border-subtle: rgba(147, 112, 219, 0.2);
-  --chat-border-soft: rgba(147, 112, 219, 0.15);
+  /* Bordures - AUCUNE (style moderne sans bordures) */
+  --chat-border-subtle: transparent;
+  --chat-border-soft: transparent;
   
-  /* Dégradés Aurora Glass - Bleu dominant avec transparence */
+  /* Dégradés Blue Mode - OPAQUES, style moderne très atténué (éclairci) */
   --chat-gradient-input: linear-gradient(135deg, 
-    rgba(40, 60, 100, 0.6) 0%, 
-    rgba(50, 80, 130, 0.4) 50%, 
-    rgba(40, 60, 100, 0.6) 100%);
+    #1f2a3a 0%, 
+    #202c3c 50%, 
+    #1f2a3a 100%);
   
   --chat-gradient-sidebar: linear-gradient(135deg, 
-    rgba(35, 55, 90, 0.7) 0%, 
-    rgba(45, 70, 120, 0.5) 50%, 
-    rgba(35, 55, 90, 0.7) 100%);
+    #1a2534 0%, 
+    #1c2736 50%, 
+    #1a2534 100%);
   
   --chat-gradient-user: linear-gradient(135deg, 
-    rgba(45, 65, 105, 0.6) 0%, 
-    rgba(55, 85, 135, 0.4) 50%, 
-    rgba(45, 65, 105, 0.6) 100%);
+    #1f2a3a 0%, 
+    #212e3e 50%, 
+    #1f2a3a 100%);
   
   --chat-gradient-user-hover: linear-gradient(135deg, 
-    rgba(55, 75, 115, 0.7) 0%, 
-    rgba(65, 95, 145, 0.5) 50%, 
-    rgba(55, 75, 115, 0.7) 100%);
+    #212e3d 0%, 
+    #233141 50%, 
+    #212e3d 100%);
   
   --chat-gradient-kebab: linear-gradient(135deg, 
-    rgba(40, 60, 100, 0.7) 0%, 
-    rgba(50, 80, 130, 0.5) 50%, 
-    rgba(40, 60, 100, 0.7) 100%);
+    #1f2a3a 0%, 
+    #212e3e 50%, 
+    #1f2a3a 100%);
   
   --chat-gradient-block: linear-gradient(135deg, 
-    rgba(40, 60, 100, 0.6) 0%, 
-    rgba(50, 80, 130, 0.4) 50%, 
-    rgba(40, 60, 100, 0.6) 100%); /* Code & Mermaid blocks */
+    #1f2a3a 0%, 
+    #212e3e 50%, 
+    #1f2a3a 100%); /* Code & Mermaid blocks */
   
   /* ✅ Surcharge directe de --blk-bg pour les code blocks */
   --blk-bg: var(--chat-gradient-block);
 }
 
-/* Effet backdrop-filter pour glass mode */
-.chat-theme-glass .chatgpt-container,
-.chat-theme-glass .sidebar-ultra-clean {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+/* Blue Mode - Spécificité augmentée pour éviter !important */
+/* Chat input avec dégradé opaque moderne */
+body.chat-theme-blue .chatgpt-input-area {
+  background: var(--chat-gradient-input);
+  border: none;
 }
 
-/* Chat input OPAQUE pour écrire sans voir le texte derrière */
-.chat-theme-glass .chatgpt-input-area {
-  background: linear-gradient(135deg, 
-    rgba(25, 40, 70, 1) 0%,     /* Bleu foncé assombri */
-    rgba(35, 55, 90, 1) 50%,    /* Bleu moyen assombri */
-    rgba(25, 40, 70, 1) 100%);  /* Bleu foncé assombri */
+/* Blue Mode - COULEUR SOLIDE (pas de gradient) pour éviter les problèmes de superposition */
+
+/* Header transparent - laisse passer le background du container */
+body.chat-theme-blue .chatgpt-header {
+  background: transparent;
+}
+
+/* Container avec couleur solide (pas de gradient) */
+body.chat-theme-blue .chatgpt-container {
+  background: var(--chat-bg-primary);
+}
+
+/* Content et main transparents */
+body.chat-theme-blue .chatgpt-content,
+body.chat-theme-blue .chatgpt-main {
+  background: transparent;
+}
+
+/* Sidebar et unified-sidebar - consolidé en un seul sélecteur */
+body.chat-theme-blue .sidebar-ultra-clean,
+body.chat-theme-blue .unified-sidebar {
+  background: var(--chat-gradient-sidebar);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 
-/* Header transparent en mode Glass pour laisser passer l'aurore */
-.chat-theme-glass .chatgpt-header {
-  background: transparent !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-/* Input container avec fade-out court pour masquer le texte qui scroll */
-.chat-theme-glass .chatgpt-input-container {
-  background: linear-gradient(to top, 
-    #1a1625 0%,              /* Opaque en bas */
-    #1a1625 20%,             /* Opaque jusqu'à 20% */
-    rgba(26, 22, 37, 0.5) 40%,  /* Semi-transparent */
-    rgba(26, 22, 37, 0) 70%);   /* Transparent à 70% */
-  z-index: 100;  /* Au-dessus des messages */
+/* Input container avec gradient fade-out pour masquer le texte qui scroll */
+body.chat-theme-blue .chatgpt-input-container {
+  background: linear-gradient(to top,
+    #16202d 0%,              /* Opaque en bas (éclairci) */
+    #16202d 15%,             /* Opaque court */
+    rgba(22, 32, 45, 0.9) 30%,  /* Très peu transparent */
+    rgba(22, 32, 45, 0.6) 50%,  /* Semi-transparent */
+    rgba(22, 32, 45, 0.25) 75%, /* Très transparent */
+    rgba(22, 32, 45, 0) 100%);  /* Transparent */
+  z-index: 100;
 }
 
 /* ========================================

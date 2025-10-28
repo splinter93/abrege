@@ -407,6 +407,116 @@ a {
   }
 
 /* ==========================================================================
+     CALLOUTS MARKDOWN [!NOTE] - COHÉRENT AVEC CODE BLOCKS
+   ========================================================================== */
+
+  .markdown-body .markdown-callout,
+  .public-note-container .markdown-body .markdown-callout,
+  .public-note-content-wrapper .markdown-body .markdown-callout,
+  .chat-markdown-content .markdown-callout,
+  .chat-markdown .markdown-callout {
+    background: var(--chat-gradient-block, linear-gradient(135deg, #20202a 0%, #25252f 50%, #20202a 100%));
+    border: none;
+    border-radius: 14px;
+    margin: 1.75rem 0;
+    padding: 0;
+    overflow: hidden;
+    filter: var(--code-brightness-filter, brightness(1.18));
+    position: relative;
+  }
+
+  /* Barre colorée à gauche selon le type */
+  .markdown-body .markdown-callout::before,
+  .public-note-container .markdown-body .markdown-callout::before,
+  .public-note-content-wrapper .markdown-body .markdown-callout::before,
+  .chat-markdown-content .markdown-callout::before,
+  .chat-markdown .markdown-callout::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--callout-color, #64748b);
+    border-radius: 2px 0 0 2px;
+  }
+
+  .markdown-callout-note::before { background: #64748b !important; }
+  .markdown-callout-tip::before { background: #eab308 !important; }
+  .markdown-callout-info::before { background: #0ea5e9 !important; }
+  .markdown-callout-warning::before { background: #f59e0b !important; }
+  .markdown-callout-danger::before,
+  .markdown-callout-error::before { background: #ef4444 !important; }
+  .markdown-callout-success::before { background: #22c55e !important; }
+
+  /* Header du callout */
+  .markdown-body .markdown-callout-header,
+  .public-note-container .markdown-body .markdown-callout-header,
+  .public-note-content-wrapper .markdown-body .markdown-callout-header,
+  .chat-markdown-content .markdown-callout-header,
+  .chat-markdown .markdown-callout-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: transparent;
+    border-bottom: none;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--chat-text-primary, #b5bcc4);
+    font-family: var(--font-chat-ui, var(--sans));
+  }
+
+  .markdown-body .markdown-callout-icon,
+  .public-note-container .markdown-body .markdown-callout-icon,
+  .public-note-content-wrapper .markdown-body .markdown-callout-icon,
+  .chat-markdown-content .markdown-callout-icon,
+  .chat-markdown .markdown-callout-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .markdown-body .markdown-callout-title,
+  .public-note-container .markdown-body .markdown-callout-title,
+  .public-note-content-wrapper .markdown-body .markdown-callout-title,
+  .chat-markdown-content .markdown-callout-title,
+  .chat-markdown .markdown-callout-title {
+    flex: 1;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+  }
+
+  /* Contenu du callout */
+  .markdown-body .markdown-callout-content,
+  .public-note-container .markdown-body .markdown-callout-content,
+  .public-note-content-wrapper .markdown-body .markdown-callout-content,
+  .chat-markdown-content .markdown-callout-content,
+  .chat-markdown .markdown-callout-content {
+    padding: 0 16px 16px 16px;
+    background: transparent;
+    color: var(--chat-text-primary, #b5bcc4);
+  }
+
+  .markdown-body .markdown-callout-content > *:first-child,
+  .public-note-container .markdown-body .markdown-callout-content > *:first-child,
+  .public-note-content-wrapper .markdown-body .markdown-callout-content > *:first-child,
+  .chat-markdown-content .markdown-callout-content > *:first-child,
+  .chat-markdown .markdown-callout-content > *:first-child {
+    margin-top: 0;
+  }
+
+  .markdown-body .markdown-callout-content > *:last-child,
+  .public-note-container .markdown-body .markdown-callout-content > *:last-child,
+  .public-note-content-wrapper .markdown-body .markdown-callout-content > *:last-child,
+  .chat-markdown-content .markdown-callout-content > *:last-child,
+  .chat-markdown .markdown-callout-content > *:last-child {
+    margin-bottom: 0;
+  }
+
+/* ==========================================================================
      TABLEAUX - DESIGN MODERNE ET ÉLÉGANT
    ========================================================================== */
 
