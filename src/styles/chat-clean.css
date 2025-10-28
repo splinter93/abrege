@@ -150,8 +150,9 @@ body:not(.chat-theme-light):not(.chat-theme-blue) {
   --chat-gradient-kebab: linear-gradient(135deg, #20202a 0%, #25252f 50%, #20202a 100%);
   --chat-gradient-block: linear-gradient(135deg, #20202a 0%, #25252f 50%, #20202a 100%); /* Code & Mermaid blocks */
   
-  /* ✅ Surcharge directe de --blk-bg pour les code blocks */
+  /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
   --blk-bg: var(--chat-gradient-block);
+  --blk-fg: var(--chat-text-secondary); /* ✅ Texte des blocs = secondaire */
 }
 
 /* ========================================
@@ -179,12 +180,9 @@ body.chat-theme-light,
   --chat-overlay-hover: rgba(0, 0, 0, 0.08);
   --chat-overlay-dark: rgba(0, 0, 0, 0.3);
   
-  /* Texte - Gris foncé avec bonne lisibilité */
-  --chat-text-primary: #2a2c2e;        /* Gris foncé (éclairci) */
-  --chat-text-secondary: #5a5d60;      /* Gris moyen (éclairci) */
-  --chat-text-muted: #8a8d90;          /* Gris clair (éclairci) */
-  --chat-text-code: #939699;           /* Texte code blocks (muted éclairci ~5%) */
-  --chat-text-placeholder: #8b8f93;    /* Placeholder input (muted assombri ~1%) */
+  /* Texte - SIMPLIFIÉ À 2 VARIABLES */
+  --chat-text-primary: #2a2c2e;        /* Texte principal (paragraphes, titres, messages) */
+  --chat-text-secondary: #6a6d70;      /* Texte secondaire (placeholders, boutons, blocs code/tableaux) */
   
   /* Sidebar - Overlays inversés pour mode clair */
   --sidebar-search-overlay: rgba(0, 0, 0, 0.02);     /* Overlay recherche (plus transparent) */
@@ -237,8 +235,9 @@ body.chat-theme-light,
     rgba(0, 0, 0, 0.08) 100%), 
     var(--chat-bg-primary); /* Code & Mermaid blocks */
   
-  /* ✅ Surcharge directe de --blk-bg pour les code blocks */
+  /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
   --blk-bg: var(--chat-gradient-block);
+  --blk-fg: var(--chat-text-secondary); /* ✅ Texte des blocs = secondaire */
 }
 
 /* ========================================
@@ -266,12 +265,9 @@ body.chat-theme-blue,
   --chat-overlay-input-focus: #2c3d4f; /* Opaque éclairci +5% */
   --chat-overlay-hover: #2c3d4f;       /* Opaque éclairci +5% */
   
-  /* Texte - Blanc/gris clair sur bleu foncé */
-  --chat-text-primary: #e8eaed;        /* Blanc cassé */
-  --chat-text-secondary: #c5c7ca;      /* Gris clair */
-  --chat-text-muted: #9aa0a6;          /* Gris moyen */
-  --chat-text-code: #a8aeb4;           /* Texte code blocks */
-  --chat-text-placeholder: #9aa0a6;    /* Placeholder input */
+  /* Texte - SIMPLIFIÉ À 2 VARIABLES */
+  --chat-text-primary: #e8eaed;        /* Texte principal (paragraphes, titres, messages) */
+  --chat-text-secondary: #a8aeb4;      /* Texte secondaire (placeholders, boutons, blocs code/tableaux) */
   
   /* Sidebar - Dégradés opaques */
   --sidebar-search-overlay: #22313f;   /* Opaque éclairci +5% */
@@ -302,8 +298,9 @@ body.chat-theme-blue,
     #304555 100%); /* Hover légèrement plus clair + gradient accentué + ÉCLAIRCI */
   --chat-gradient-kebab: var(--chat-gradient-block);
   
-  /* ✅ Surcharge directe de --blk-bg pour les code blocks */
+  /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
   --blk-bg: var(--chat-gradient-block);
+  --blk-fg: var(--chat-text-secondary); /* ✅ Texte des blocs = secondaire */
 }
 
 /* Blue Mode - Spécificité augmentée pour éviter !important */
@@ -571,7 +568,7 @@ body.chat-theme-blue .chatgpt-input-container {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   pointer-events: none;
 }
 
@@ -588,7 +585,7 @@ body.chat-theme-blue .chatgpt-input-container {
 }
 
 .sidebar-search-input-clean::placeholder {
-  color: var(--chat-text-muted); /* ✅ Même couleur que l'icône loupe */
+  color: var(--chat-text-secondary); /* ✅ Même couleur que l'icône loupe */
 }
 
 .sidebar-search-input-clean:focus {
@@ -655,7 +652,7 @@ body.chat-theme-blue .chatgpt-input-container {
   margin-top: 4px;
   background: transparent;
   border: none;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -1106,7 +1103,7 @@ body.chat-theme-blue .chatgpt-input-container {
 .chatgpt-message-loading-dot {
   width: 8px;
   height: 8px;
-  background: var(--chat-text-muted);
+  background: var(--chat-text-secondary);
   border-radius: 50%;
   animation: pulse 1.4s infinite ease-in-out;
 }
@@ -1190,12 +1187,11 @@ body.chat-theme-blue .chatgpt-input-container {
   padding: 8px 0 0 8px; /* Padding top augmenté de 5px à 8px */
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--chat-text-muted) transparent;
+  scrollbar-color: var(--chat-text-secondary) transparent;
 }
 
 .chatgpt-input-textarea::placeholder {
-  color: var(--chat-text-code-bright); /* ✅ Même couleur que code inline */
-  filter: var(--code-brightness-filter); /* ✅ Même filtre que code inline */
+  color: var(--chat-text-secondary); /* ✅ Texte secondaire */
   font-size: calc(var(--chat-font-size-base) * 1.02); /* +2% à peine */
 }
 
@@ -1208,7 +1204,7 @@ body.chat-theme-blue .chatgpt-input-container {
 }
 
 .chatgpt-input-textarea::-webkit-scrollbar-thumb {
-  background: var(--chat-text-muted);
+  background: var(--chat-text-secondary);
   border-radius: 2px;
 }
 
@@ -1379,7 +1375,7 @@ body.chat-theme-blue .chatgpt-input-container {
 }
 
 .chatgpt-input-send:disabled {
-  background: var(--chat-text-placeholder); /* Bouton en couleur placeholder (muted -1%) */
+  background: var(--chat-text-secondary); /* ✅ Bouton désactivé = texte secondaire */
   border: none;
   color: var(--chat-bg-secondary); /* Flèche un poil plus sombre */
   cursor: not-allowed;
@@ -1387,7 +1383,7 @@ body.chat-theme-blue .chatgpt-input-container {
 }
 
 .chatgpt-input-send:disabled:hover {
-  background: var(--chat-text-placeholder);
+  background: var(--chat-text-secondary);
   transform: none;
 }
 
@@ -1429,7 +1425,7 @@ body.chat-theme-blue .chatgpt-input-container {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--chat-text-muted);
+  background: var(--chat-text-secondary);
   animation: typingDot 1.4s ease-in-out infinite;
 }
 
@@ -1474,12 +1470,12 @@ body.chat-theme-blue .chatgpt-input-container {
 
 .editing-indicator svg {
   flex-shrink: 0;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
 }
 
 .editing-indicator span {
   flex: 1;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
 }
 
 .editing-cancel-btn {
@@ -1488,7 +1484,7 @@ body.chat-theme-blue .chatgpt-input-container {
   justify-content: center;
   background: transparent;
   border: none;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -1945,7 +1941,7 @@ body.chat-theme-blue .chatgpt-input-container {
   padding: 8px 12px 4px 12px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-family: var(--font-chat-ui);
@@ -2107,7 +2103,7 @@ body.chat-theme-blue .chatgpt-input-container {
 
 .chat-empty-agent-description {
   font-size: 16px; /* ✅ Légèrement plus grande */
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   margin: 0;
   line-height: 1.6;
   font-family: var(--font-chat-text);
@@ -2193,7 +2189,7 @@ body.chat-theme-blue .chatgpt-input-container {
 }
 
 .chat-note-search-icon {
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   flex-shrink: 0;
 }
 
@@ -2208,7 +2204,7 @@ body.chat-theme-blue .chatgpt-input-container {
 }
 
 .chat-note-search-input::placeholder {
-  color: var(--chat-text-placeholder);
+  color: var(--chat-text-secondary);
 }
 
 /* Header liste des notes */
@@ -2216,7 +2212,7 @@ body.chat-theme-blue .chatgpt-input-container {
   padding: 4px 8px 2px 8px; /* Réduit padding bottom de 4px → 2px */
   font-size: 11px;
   font-weight: 600;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-family: var(--font-chat-ui);
@@ -2244,7 +2240,7 @@ body.chat-theme-blue .chatgpt-input-container {
 .chat-note-list-empty {
   padding: 40px 20px;
   text-align: center;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   font-size: 13px;
   font-family: var(--font-chat-ui);
   animation: fadeIn 0.2s ease;
@@ -2271,7 +2267,7 @@ body.chat-theme-blue .chatgpt-input-container {
   width: 28px;
   height: 28px;
   border: 2.5px solid var(--chat-border-subtle);
-  border-top: 2.5px solid var(--chat-text-muted);
+  border-top: 2.5px solid var(--chat-text-secondary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -2282,7 +2278,7 @@ body.chat-theme-blue .chatgpt-input-container {
 }
 
 .chat-note-loading-text {
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   font-size: 13px;
   font-family: var(--font-chat-ui);
 }
@@ -2359,7 +2355,7 @@ body.chat-theme-blue .chatgpt-input-container {
 
 .chat-note-item-description {
   font-size: 12px;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2367,7 +2363,7 @@ body.chat-theme-blue .chatgpt-input-container {
 
 .chat-note-item-meta {
   font-size: 12px;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
 }
 
 /* Pills des notes sélectionnées */
@@ -2412,7 +2408,7 @@ body.chat-theme-blue .chatgpt-input-container {
 .chat-note-pill-remove {
   background: transparent;
   border: none;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
@@ -2500,7 +2496,7 @@ body.chat-theme-blue .chatgpt-input-container {
 
 .chat-image-drop-zone-hint {
   font-size: 12px;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
 }
 
 /* Spinner de traitement */
