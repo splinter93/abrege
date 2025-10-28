@@ -59,6 +59,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const assistantMessage = role === 'assistant' ? message as import('@/types/chat').AssistantMessage : null;
   const timeline = assistantMessage?.streamTimeline || assistantMessage?.stream_timeline;
   const hasStreamTimeline = role === 'assistant' && timeline && timeline.items && timeline.items.length > 0;
+  
+  // ✅ DEBUG: Logger la timeline pour comprendre le problème
+  if (role === 'assistant' && timeline) {
+    logger.dev('[ChatMessage] 📊 Timeline détectée:', {
+      messageId: message.id,
+      hasTimeline: !!timeline,
+      hasItems: !!(timeline.items),
+      itemsCount: timeline.items?.length || 0,
+      itemTypes: timeline.items?.map(i => i.type) || [],
+      firstItems: timeline.items?.slice(0, 2) || []
+    });
+  }
 
   // Cast pour accéder aux propriétés spécifiques du UserMessage
   const userMessage = role === 'user' ? message as import('@/types/chat').UserMessage : null;

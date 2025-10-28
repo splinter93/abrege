@@ -153,36 +153,29 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
               <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant">
                 <StreamTimelineRenderer
                   timeline={{
-                    items: streamingTimeline.map(item => {
-                      if (item.type === 'text') {
-                        return {
-                          type: 'text' as const,
-                          content: item.content || '',
-                          timestamp: item.timestamp,
-                          roundNumber: item.roundNumber
-                        };
-                      } else if (item.type === 'tool_execution') {
-                        return {
-                          type: 'tool_execution' as const,
-                          toolCalls: item.toolCalls || [],
-                          toolCount: item.toolCount || 0,
-                          timestamp: item.timestamp,
-                          roundNumber: item.roundNumber || 0
-                        };
-                      } else if (item.type === 'tool_result') {
-                        return {
-                          type: 'tool_result' as const,
-                          toolCallId: (item as { toolCallId?: string }).toolCallId || 'unknown',
-                          toolName: (item as { toolName?: string }).toolName || 'unknown',
-                          result: item.content || '',
-                          success: (item as { success?: boolean }).success ?? true,
-                          timestamp: item.timestamp
-                        };
-                      }
-                      // Exhaustive check
-                      const _exhaustive: never = item.type;
-                      throw new Error(`Type non géré: ${_exhaustive}`);
-                    }),
+                    items: streamingTimeline
+                      .filter(item => item.type !== 'tool_result') // ✅ VIRER les tool_result
+                      .map(item => {
+                        if (item.type === 'text') {
+                          return {
+                            type: 'text' as const,
+                            content: item.content || '',
+                            timestamp: item.timestamp,
+                            roundNumber: item.roundNumber
+                          };
+                        } else if (item.type === 'tool_execution') {
+                          return {
+                            type: 'tool_execution' as const,
+                            toolCalls: item.toolCalls || [],
+                            toolCount: item.toolCount || 0,
+                            timestamp: item.timestamp,
+                            roundNumber: item.roundNumber || 0
+                          };
+                        }
+                        // Exhaustive check (tool_result déjà filtré)
+                        const _exhaustive: never = item.type;
+                        throw new Error(`Type non géré: ${_exhaustive}`);
+                      }),
                     startTime: streamStartTime,
                     endTime: Date.now()
                   }}

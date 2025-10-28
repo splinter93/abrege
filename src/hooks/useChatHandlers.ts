@@ -110,19 +110,28 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
       return;
     }
       
+    // ✅ NETTOYER la timeline : Virer les tool_result individuels (déjà dans tool_execution)
+    const cleanedTimeline = streamTimeline ? {
+      ...streamTimeline,
+      items: streamTimeline.items.filter(item => item.type !== 'tool_result')
+    } : undefined;
+    
     const messageToAdd = {
       role: 'assistant' as const,
       content: finalContent,
       reasoning: fullReasoning,
       tool_calls: toolCalls || [],
       tool_results: toolResults || [],
-      stream_timeline: streamTimeline, // ✅ Sauvegarder la timeline pour ordre chronologique
+      stream_timeline: cleanedTimeline, // ✅ Timeline nettoyée (sans tool_result individuels)
       timestamp: new Date().toISOString()
     };
 
     logger.dev('[useChatHandlers] 📝 Ajout du message final complet avec timeline:', {
-      hasTimeline: !!streamTimeline,
-      timelineEvents: streamTimeline?.items.length || 0,
+      hasTimeline: !!cleanedTimeline,
+      originalTimelineEvents: streamTimeline?.items.length || 0,
+      cleanedTimelineEvents: cleanedTimeline?.items.length || 0,
+      removedToolResults: (streamTimeline?.items.length || 0) - (cleanedTimeline?.items.length || 0),
+      itemTypes: cleanedTimeline?.items.map(i => i.type) || [],
       hasToolCalls: !!(toolCalls && toolCalls.length > 0),
       hasToolResults: !!(toolResults && toolResults.length > 0),
       contentLength: finalContent.length
