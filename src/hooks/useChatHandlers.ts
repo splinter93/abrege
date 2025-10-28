@@ -116,13 +116,16 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
       reasoning: fullReasoning,
       tool_calls: toolCalls || [],
       tool_results: toolResults || [],
-      streamTimeline: streamTimeline, // ✅ NOUVEAU: Persister la timeline
+      stream_timeline: streamTimeline, // ✅ Sauvegarder la timeline pour ordre chronologique
       timestamp: new Date().toISOString()
     };
 
     logger.dev('[useChatHandlers] 📝 Ajout du message final complet avec timeline:', {
       hasTimeline: !!streamTimeline,
-      timelineEvents: streamTimeline?.items.length || 0
+      timelineEvents: streamTimeline?.items.length || 0,
+      hasToolCalls: !!(toolCalls && toolCalls.length > 0),
+      hasToolResults: !!(toolResults && toolResults.length > 0),
+      contentLength: finalContent.length
     });
     
     await addMessage(messageToAdd, { 

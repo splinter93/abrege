@@ -75,7 +75,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
 
   // ✅ NOUVEAU: Si une streamTimeline existe, l'utiliser pour le rendu
-  const hasStreamTimeline = role === 'assistant' && message.streamTimeline && message.streamTimeline.items.length > 0;
+  // Supporte à la fois camelCase (code) et snake_case (DB)
+  const assistantMessage = role === 'assistant' ? message as import('@/types/chat').AssistantMessage : null;
+  const timeline = assistantMessage?.streamTimeline || assistantMessage?.stream_timeline;
+  const hasStreamTimeline = role === 'assistant' && timeline && timeline.items && timeline.items.length > 0;
 
   // Cast pour accéder aux propriétés spécifiques du UserMessage
   const userMessage = role === 'user' ? message as import('@/types/chat').UserMessage : null;
@@ -121,7 +124,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
         {/* ✅ PRIORITÉ 1: Utiliser la timeline si disponible (capture l'ordre exact du stream) */}
         {hasStreamTimeline ? (
-          <StreamTimelineRenderer timeline={message.streamTimeline!} />
+          <StreamTimelineRenderer timeline={timeline!} />
         ) : (
           <>
             {/* FALLBACK: Rendu classique si pas de timeline */}

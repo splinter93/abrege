@@ -98,10 +98,29 @@ export class HistoryManager {
         throw new Error(`Failed to add message: ${error.message || 'Unknown error'}`);
       }
 
+      // ✅ UPDATE stream_timeline si présent (RPC ne supporte pas JSONB complexe)
+      if ('stream_timeline' in message && message.stream_timeline) {
+        const { error: updateError } = await supabase
+          .from('chat_messages')
+          .update({ stream_timeline: message.stream_timeline })
+          .eq('id', data.id);
+
+        if (updateError) {
+          logger.warn('[HistoryManager] ⚠️ Erreur UPDATE stream_timeline:', updateError);
+          // Non bloquant, on continue
+        } else {
+          logger.dev('[HistoryManager] ✅ stream_timeline sauvegardée:', {
+            messageId: data.id,
+            timelineEvents: message.stream_timeline.items?.length || 0
+          });
+        }
+      }
+
       logger.dev('[HistoryManager] ✅ Message ajouté:', {
         sessionId,
         sequenceNumber: data.sequence_number,
-        role: data.role
+        role: data.role,
+        hasStreamTimeline: 'stream_timeline' in message && !!message.stream_timeline
       });
 
       return data as ChatMessage;

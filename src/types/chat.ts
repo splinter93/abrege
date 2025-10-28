@@ -70,6 +70,8 @@ export interface AssistantMessage extends BaseMessage {
   tool_calls?: ToolCall[];
   tool_results?: ToolResult[];
   isStreaming?: boolean; // ✅ NOUVEAU : Indique si le message est en cours de streaming
+  streamTimeline?: import('@/types/streamTimeline').StreamTimeline; // ✅ Timeline pour ordre chronologique exact
+  stream_timeline?: import('@/types/streamTimeline').StreamTimeline; // ✅ Alias snake_case (DB)
 }
 
 /**

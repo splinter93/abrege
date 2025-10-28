@@ -12,7 +12,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { ChatMessage, Agent } from '@/types/chat';
+import type { ChatMessage as ChatMessageType, Agent } from '@/types/chat';
 import type { StreamTimelineItem } from '@/types/streamTimeline';
 import ChatMessage from './ChatMessage';
 import ChatEmptyState from './ChatEmptyState';
@@ -23,7 +23,7 @@ import StreamTimelineRenderer from './StreamTimelineRenderer';
  * Props du composant
  */
 export interface ChatMessagesAreaProps {
-  messages: ChatMessage[];
+  messages: ChatMessageType[];
   isLoading: boolean;
   isLoadingMore: boolean;
   hasMore: boolean;
