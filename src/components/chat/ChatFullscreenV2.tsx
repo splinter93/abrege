@@ -352,13 +352,9 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 Affichage de l'état d'authentification
   const renderAuthStatus = () => {
+    // ✅ Supprimé message "Vérification authentification" (inutile, gênant)
     if (authLoading) {
-      return (
-        <div className="flex items-center justify-center p-4 text-sm text-gray-500">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></div>
-          Vérification de l'authentification...
-        </div>
-      );
+      return null;
     }
     
     if (!user) {
