@@ -1,33 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { simpleLogger as logger } from '@/utils/logger';
-import { historyManager } from '@/services/chat/HistoryManager';
-import type { ChatMessage } from '@/types/chat';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * ✅ API: POST /api/chat/sessions/[sessionId]/messages/add
- * Ajoute un message atomiquement à une session
+ * Ajoute un message atomiquement via HistoryManager
  * 
- * SÉCURITÉ:
- * - Vérifie ownership de la session AVANT d'ajouter
- * - Utilise HistoryManager avec SERVICE_ROLE (atomicité garantie)
- * 
- * Body:
- * - role: 'user' | 'assistant' | 'tool' | 'system'
- * - content: string
- * - tool_calls?: JSONB (optionnel)
- * - tool_call_id?: string (optionnel)
- * - name?: string (optionnel)
- * - reasoning?: string (optionnel)
+ * Sécurité:
+ * - Vérifie auth token
+ * - Vérifie ownership session
+ * - Validation Zod
+ * - Appel HistoryManager (SERVICE_ROLE, atomique)
  * 
  * @returns {ChatMessage} - Message sauvegardé avec sequence_number
  */
 
-const bodySchema = z.object({
+const messageSchema = z.object({
   role: z.enum(['user', 'assistant', 'tool', 'system']),
   content: z.string(),
-  tool_calls: z.array(z.any()).optional(),
+  tool_calls: z.array(z.object({
+    id: z.string(),
+    type: z.literal('function'),
+    function: z.object({
+      name: z.string(),
+      arguments: z.string()
+    })
+  })).optional(),
   tool_call_id: z.string().optional(),
   name: z.string().optional(),
   reasoning: z.string().optional()
@@ -40,7 +39,11 @@ export async function POST(
   try {
     const { sessionId } = await params;
     
-    // Vérifier authentification
+    // 1. Validation body
+    const body = await req.json();
+    const message = messageSchema.parse(body);
+
+    // 2. Vérifier authentification
     const authHeader = req.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -49,39 +52,38 @@ export async function POST(
       );
     }
 
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.substring(7);
+
+    // 3. Vérifier ownership session
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     
-    // ✅ SÉCURITÉ: Vérifier ownership de la session AVANT
-    const userClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
       }
-    );
-    
-    const { data: sessionData, error: sessionError } = await userClient
+    });
+
+    const { data: session, error: sessionError } = await userClient
       .from('chat_sessions')
-      .select('id, user_id')
+      .select('id')
       .eq('id', sessionId)
       .single();
-    
-    if (sessionError || !sessionData) {
+
+    if (sessionError || !session) {
+      logger.error('[API /messages/add] ❌ Session non trouvée ou accès refusé:', sessionError);
       return NextResponse.json(
-        { success: false, error: 'Session introuvable ou accès refusé' },
+        { success: false, error: 'Session non trouvée' },
         { status: 404 }
       );
     }
 
-    // Parser body
-    const body = await req.json();
-    const message = bodySchema.parse(body);
+    // 4. Import dynamique HistoryManager (côté serveur uniquement)
+    const { historyManager } = await import('@/services/chat/HistoryManager');
 
-    // ✅ Ajouter message via HistoryManager (atomique avec SERVICE_ROLE)
+    // 5. Ajouter message atomiquement
     const savedMessage = await historyManager.addMessage(sessionId, message);
 
     logger.dev('[API /messages/add] ✅ Message ajouté:', {
@@ -102,15 +104,14 @@ export async function POST(
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Paramètres invalides', details: error.errors },
+        { success: false, error: 'Données invalides', details: error.errors },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { success: false, error: 'Erreur serveur', details: error instanceof Error ? error.message : 'Unknown' },
+      { success: false, error: 'Erreur serveur' },
       { status: 500 }
     );
   }
 }
-

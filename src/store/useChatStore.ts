@@ -4,12 +4,11 @@ import { Agent, ChatMessage, EditingState } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
 import { sessionSyncService } from '@/services/sessionSyncService';
 
-// Interface simplifiée pour le store (sans user_id, is_active, metadata)
+// Interface simplifiée pour le store
+// Messages gérés via useInfiniteMessages (lecture depuis chat_messages)
 export interface ChatSession {
   id: string;
   name: string;
-  thread: ChatMessage[];
-  history_limit: number;
   agent_id: string | null;
   created_at: string;
   updated_at: string;
@@ -46,7 +45,7 @@ interface ChatStore {
   createSession: (name?: string, agentId?: string | null) => Promise<void>;
   addMessage: (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean; updateExisting?: boolean }) => Promise<ChatMessage | null>;
   deleteSession: (sessionId: string) => Promise<void>;
-  updateSession: (sessionId: string, data: { name?: string; history_limit?: number }) => Promise<void>;
+  updateSession: (sessionId: string, data: { name?: string }) => Promise<void>;
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -125,8 +124,7 @@ export const useChatStore = create<ChatStore>()(
             logger.dev('[ChatStore] ✅ Nouvelle session créée:', {
               id: result.session.id,
               name: result.session.name,
-              agentId: result.session.agent_id,
-              threadLength: result.session.thread.length
+              agentId: result.session.agent_id
             });
           }
         } catch (error) {
@@ -177,7 +175,7 @@ export const useChatStore = create<ChatStore>()(
         }
       },
 
-      updateSession: async (sessionId: string, data: { name?: string; history_limit?: number }) => {
+      updateSession: async (sessionId: string, data: { name?: string }) => {
         try {
           await sessionSyncService.updateSessionAndSync(sessionId, data);
           get().syncSessions();

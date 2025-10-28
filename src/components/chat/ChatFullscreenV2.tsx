@@ -690,14 +690,14 @@ const ChatFullscreenV2: React.FC = () => {
 
       // ✅ REFACTOR: Charger historique depuis infiniteMessages (déjà en mémoire)
       // HistoryManager est côté serveur uniquement (SERVICE_ROLE)
-      const historyLimit = currentSession.history_limit || 30;
+      const MAX_HISTORY_FOR_LLM = 30; // Limite par défaut pour contexte LLM
       
       // ✅ Construire historique pour LLM depuis messages chargés
-      const limitedHistoryForLLM = infiniteMessages.slice(-historyLimit);
+      const limitedHistoryForLLM = infiniteMessages.slice(-MAX_HISTORY_FOR_LLM);
       
       logger.dev('[ChatFullscreenV2] 📤 Historique LLM depuis cache local:', {
         totalMessages: limitedHistoryForLLM.length,
-        maxMessages: historyLimit,
+        maxMessages: MAX_HISTORY_FOR_LLM,
         roles: limitedHistoryForLLM.map(m => m.role),
         hasImages,
         imageCount: images?.length || 0
@@ -786,83 +786,18 @@ const ChatFullscreenV2: React.FC = () => {
   }, [loading, currentSession, createSession, addMessage, selectedAgent, llmContext, sendMessage, setLoading, requireAuth]);
 
   // ✏️ Handler pour soumettre un message édité
+  // TODO: Réimplémenter l'édition de messages avec HistoryManager
+  // Ancienne route /api/ui/chat-sessions/:id/messages/:messageId/edit supprimée (legacy)
+  // Nouvelle implémentation devra utiliser historyManager.deleteMessagesAfter()
   const handleEditSubmit = useCallback(async (newContent: string, images?: import('@/types/image').ImageAttachment[]) => {
     if (!editingMessage || !currentSession || !requireAuth()) return;
     
     setLoading(true);
     
     try {
-      // 1. Appel API pour remplacer le message et supprimer les suivants
-      const tokenResult = await tokenManager.getValidToken();
-      if (!tokenResult.isValid || !tokenResult.token) {
-        throw new Error(tokenResult.error || 'Token non disponible');
-      }
-
-      const response = await fetch(
-        `/api/ui/chat-sessions/${currentSession.id}/messages/${editingMessage.messageId}/edit`,
-        {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${tokenResult.token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            content: newContent,
-            attachedImages: images?.map(img => ({
-              url: img.base64 || img.previewUrl,
-              fileName: img.fileName
-            }))
-          })
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Erreur lors de l\'édition du message');
-      }
-
-      // 2. Recharger la session depuis la DB pour avoir le thread à jour
-      await syncSessions();
-      
-      // 3. Forcer le rechargement des messages depuis l'API (sans clear brutal)
-      await loadInitialMessages();
-      
-      // 4. Récupérer la session fraîchement rechargée
-      const freshSession = useChatStore.getState().currentSession;
-      
-      if (!freshSession) {
-        throw new Error('Session perdue après édition');
-      }
-
-      // 5. Annuler le mode édition
       cancelEditing();
       setEditingContent('');
-
-      logger.info('[ChatFullscreenV2] ✅ Message édité avec succès:', {
-        messageId: editingMessage.messageId,
-        messagesDeleted: result.data.messagesDeleted
-      });
-
-      // 6. Préparer l'historique pour le LLM (messages jusqu'au message édité)
-      const historyForLLM = freshSession.thread.filter(m => 
-        m.role === 'user' || m.role === 'assistant' || m.role === 'tool'
-      );
-
-      // 7. Préparer le contexte pour le LLM
-      const contextForLLM = {
-        agent: selectedAgent,
-        skipAddingUserMessage: true, // ✅ Flag pour éviter de rajouter le message user qui est déjà dans l'historique
-        uiContext: {
-          ...llmContext,
-          sessionId: freshSession.id
-        }
-      };
-
-      // 8. Relancer la génération (le message édité est déjà dans historyForLLM)
-      // On passe une string vide car le message n'a pas besoin d'être rajouté
-      await sendMessage('', freshSession.id, contextForLLM, historyForLLM, tokenResult.token);
-
+      throw new Error('Édition de messages non implémentée (en cours de migration vers HistoryManager)');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'édition';
       logger.error('[ChatFullscreenV2] ❌ Erreur lors de l\'édition:', errorMessage);
@@ -870,7 +805,7 @@ const ChatFullscreenV2: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [editingMessage, cancelEditing, requireAuth, setLoading, setError, syncSessions, loadInitialMessages, selectedAgent, llmContext, sendMessage]);
+  }, [editingMessage, cancelEditing, requireAuth, setLoading, setError]);
 
   // 🎯 Wrapper pour router entre édition et envoi normal
   const handleSendMessage = useCallback(async (

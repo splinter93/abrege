@@ -35,12 +35,12 @@ export const ChatMessageSchema = z.object({
 
 /**
  * Schéma de validation pour les sessions de chat
+ * Messages gérés via useInfiniteMessages (chargement depuis chat_messages)
  */
 export const ChatSessionSchema = z.object({
   id: z.string(),
   name: z.string(),
-  thread: z.array(ChatMessageSchema),
-  history_limit: z.number().min(1).max(1000),
+  agent_id: z.string().nullable(),
   created_at: z.string(),
   updated_at: z.string()
 });

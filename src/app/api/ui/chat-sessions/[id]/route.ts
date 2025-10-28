@@ -23,8 +23,7 @@ const createSupabaseAdmin = () => {
 
 // Schéma de validation pour mettre à jour une session
 const updateSessionSchema = z.object({
-  name: z.string().min(1, 'Le nom ne peut pas être vide').max(255, 'Le nom est trop long').optional(),
-  history_limit: z.number().int().min(1).max(200).optional()
+  name: z.string().min(1, 'Le nom ne peut pas être vide').max(255, 'Le nom est trop long').optional()
 });
 
 /**
@@ -95,7 +94,7 @@ export async function PUT(
     // Vérifier que la session existe et appartient à l'utilisateur
     const { data: existingSession, error: fetchError } = await userClient
       .from('chat_sessions')
-      .select('id, name, history_limit')
+      .select('id, name, agent_id')
       .eq('id', sessionId)
       .eq('user_id', userId)
       .single();
@@ -121,16 +120,13 @@ export async function PUT(
     if (typeof validatedData.name === 'string' && validatedData.name.trim().length > 0) {
       updatePayload.name = validatedData.name.trim();
     }
-    if (typeof validatedData.history_limit === 'number') {
-      updatePayload.history_limit = validatedData.history_limit;
-    }
 
     if (Object.keys(updatePayload).length === 1) { // uniquement updated_at
       logger.dev('[Chat Session API] ℹ️ Aucun champ pertinent à mettre à jour');
       return NextResponse.json({ success: true, data: existingSession });
     }
 
-    // Mettre à jour la session (nom et/ou history_limit)
+    // Mettre à jour la session (nom)
     const { data: updatedSession, error: updateError } = await userClient
       .from('chat_sessions')
       .update(updatePayload)
@@ -389,136 +385,5 @@ export async function DELETE(
   }
 }
 
-/**
- * Endpoint pour ajouter un message à une session de chat
- * Usage: PATCH /api/ui/chat-sessions/[id]
- */
-export async function PATCH(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await context.params;
-    logger.dev('[Chat Session API] 💬 Ajout de message à la session:', id);
-    
-    // Vérifier la configuration Supabase
-    try {
-      getSupabaseConfig();
-    } catch (error) {
-      logger.error('[Chat Session API] ❌ Configuration Supabase manquante');
-      return NextResponse.json(
-        { error: 'Configuration serveur manquante' },
-        { status: 500 }
-      );
-    }
-    
-    // Récupérer l'utilisateur depuis l'en-tête d'autorisation
-    const authHeader = request.headers.get('authorization');
-    let userId: string;
-    let userToken: string;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      // Token JWT fourni
-      userToken = authHeader.substring(7);
-      const supabaseAdmin = createSupabaseAdmin();
-      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(userToken);
-      
-      if (authError || !user) {
-        logger.error('[Chat Session API] ❌ Erreur auth:', authError);
-        return NextResponse.json(
-          { error: 'Token invalide ou expiré' },
-          { status: 401 }
-        );
-      }
-      userId = user.id;
-    } else {
-      return NextResponse.json(
-        { error: 'Authentification requise' },
-        { status: 401 }
-      );
-    }
-
-    const sessionId = id;
-    const body = await request.json();
-    const { message } = body;
-
-    if (!message || typeof message !== 'object') {
-      return NextResponse.json(
-        { error: 'Message invalide' },
-        { status: 400 }
-      );
-    }
-
-    logger.dev('[Chat Session API] 📋 Message reçu:', message);
-
-    // Créer un client avec le contexte d'authentification de l'utilisateur
-    const { supabaseUrl } = getSupabaseConfig();
-    const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${userToken}`
-        }
-      }
-    });
-
-    // Récupérer la session actuelle
-    const { data: currentSession, error: fetchError } = await userClient
-      .from('chat_sessions')
-      .select('thread')
-      .eq('id', sessionId)
-      .eq('user_id', userId)
-      .single();
-
-    if (fetchError) {
-      if (fetchError.code === 'PGRST116') {
-        logger.error('[Chat Session API] ❌ Session non trouvée:', sessionId);
-        return NextResponse.json(
-          { error: 'Session non trouvée' },
-          { status: 404 }
-        );
-      }
-      
-      logger.error('[Chat Session API] ❌ Erreur récupération session:', fetchError);
-      return NextResponse.json(
-        { error: 'Erreur lors de la récupération de la session' },
-        { status: 500 }
-      );
-    }
-
-    // Ajouter le message au thread
-    const updatedThread = [...(currentSession.thread || []), message];
-
-    // Mettre à jour la session avec le nouveau message
-    const { data: updatedSession, error: updateError } = await userClient
-      .from('chat_sessions')
-      .update({ 
-        thread: updatedThread,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', sessionId)
-      .select()
-      .single();
-
-    if (updateError) {
-      logger.error('[Chat Session API] ❌ Erreur mise à jour session:', updateError);
-      return NextResponse.json(
-        { error: 'Erreur lors de la mise à jour de la session' },
-        { status: 500 }
-      );
-    }
-
-    logger.dev('[Chat Session API] ✅ Message ajouté avec succès');
-
-    return NextResponse.json({
-      success: true,
-      data: updatedSession
-    });
-
-  } catch (error) {
-    logger.error('[Chat Session API] ❌ Erreur serveur:', error);
-    return NextResponse.json(
-      { error: 'Erreur serveur interne' },
-      { status: 500 }
-    );
-  }
-} 
+// ✅ MÉTHODE SUPPRIMÉE (LEGACY): PATCH - Ajoutait messages au thread JSONB
+// Remplacé par: sessionSyncService.addMessageAndSync() → HistoryManager 

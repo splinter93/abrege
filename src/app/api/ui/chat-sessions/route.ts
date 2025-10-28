@@ -84,9 +84,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { name = 'Nouvelle conversation', history_limit = 30, agent_id = null } = body;
+    const { name = 'Nouvelle conversation', agent_id = null } = body;
 
-    logger.dev('[Chat Sessions API] 📋 Données reçues:', { name, history_limit, agent_id });
+    logger.dev('[Chat Sessions API] 📋 Données reçues:', { name, agent_id });
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
     const { supabaseUrl } = getSupabaseConfig();
@@ -103,8 +103,7 @@ export async function POST(request: NextRequest) {
     logger.dev('[Chat Sessions API] 💾 Données à insérer:', {
       user_id: userId,
       name,
-      thread: [],
-      history_limit,
+      agent_id,
       is_active: true,
       metadata: { created_via: 'api_endpoint' }
     });
@@ -114,8 +113,6 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: userId,
         name,
-        thread: [],
-        history_limit,
         agent_id,
         is_active: true,
         metadata: { created_via: 'api_endpoint' }
@@ -214,11 +211,10 @@ export async function GET(request: NextRequest) {
     // Récupérer les sessions de l'utilisateur avec le contexte utilisateur
     logger.dev('[Chat Sessions API] 🔍 Récupération sessions pour utilisateur:', userId);
     
-    // 🎯 Lazy loading: Ne charger QUE les métadonnées des sessions (sans threads)
-    // Les threads seront chargés à la demande via /messages/recent
+    // Messages chargés séparément via /api/chat/sessions/:id/messages/recent
     const { data: sessions, error } = await userClient
       .from('chat_sessions')
-      .select('id, name, history_limit, is_active, created_at, updated_at, metadata')
+      .select('id, name, agent_id, is_active, created_at, updated_at, metadata')
       .eq('user_id', userId)
       .eq('is_active', true)
       .order('updated_at', { ascending: false });
@@ -231,12 +227,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 🎯 Retourner les métadonnées SANS les threads
-    // Les messages seront chargés via le hook useInfiniteMessages
-    const sessionsMetadata = sessions.map(session => ({
-      ...session,
-      thread: [] // Thread vide, chargé à la demande
-    }));
+    // Sessions sans thread/history_limit (chargement messages via useInfiniteMessages)
+    const sessionsMetadata = sessions;
 
     logger.dev('[Chat Sessions API] ✅ Sessions récupérées (métadonnées only):', sessionsMetadata.length);
 

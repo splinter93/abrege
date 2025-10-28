@@ -65,21 +65,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
   const getToolResultsForAssistant = () => {
+    // Tool results sont maintenant toujours dans message.tool_results
+    // (chargés atomiquement depuis chat_messages)
     if (role === 'assistant' && message.tool_calls && message.tool_calls.length > 0) {
-      if (message.tool_results && message.tool_results.length > 0) {
-        return message.tool_results;
-      }
-      const currentSession = useChatStore.getState().currentSession;
-      if (currentSession) {
-        return currentSession.thread
-          .filter(msg => msg.role === 'tool' && message.tool_calls?.some(tc => tc.id === msg.tool_call_id))
-          .map(msg => ({
-            tool_call_id: msg.tool_call_id!,
-            name: msg.name!,
-            content: msg.content!,
-            success: parseSuccessFromContent(msg.content!)
-          }));
-      }
+      return message.tool_results || [];
     }
     return message.tool_results;
   };

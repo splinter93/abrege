@@ -62,12 +62,10 @@ export class SessionSyncService {
         throw new Error(response.error || 'Erreur récupération sessions');
       }
 
-      // Conversion simple
+      // Conversion simple (thread et history_limit supprimés)
       const convertedSessions = response.data.map(session => ({
         id: session.id,
         name: session.name,
-        thread: session.thread || [],
-        history_limit: session.history_limit || 30,
         agent_id: session.agent_id || null,
         created_at: session.created_at,
         updated_at: session.updated_at
@@ -79,7 +77,7 @@ export class SessionSyncService {
       };
 
     } catch (error) {
-      logger.error('API', '[SessionSync] ❌ Erreur synchronisation:', error);
+      logger.error('[SessionSync] ❌ Erreur synchronisation:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -108,8 +106,6 @@ export class SessionSyncService {
       const session: ChatSession = {
         id: response.data.id,
         name: response.data.name,
-        thread: response.data.thread || [],
-        history_limit: response.data.history_limit || 30,
         agent_id: response.data.agent_id || null,
         created_at: response.data.created_at,
         updated_at: response.data.updated_at
@@ -121,7 +117,7 @@ export class SessionSyncService {
       };
 
     } catch (error) {
-      logger.error('API', '[SessionSync] ❌ Erreur création session:', error);
+      logger.error('[SessionSync] ❌ Erreur création session:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -131,7 +127,7 @@ export class SessionSyncService {
 
   /**
    * 💬 Ajouter un message en DB puis synchroniser
-   * ✅ REFACTOR: Appelle API route /messages/add (sécurisée)
+   * ✅ NOUVEAU: Appelle route API /messages/add (atomique via HistoryManager)
    */
   async addMessageAndSync(sessionId: string, message: Omit<ChatMessage, 'id'>): Promise<{
     success: boolean;
@@ -145,35 +141,41 @@ export class SessionSyncService {
       });
       
       return await this.runExclusive(sessionId, async () => {
-        logger.dev('[SessionSync] 🔒 Dans runExclusive, appel addMessageToSession...');
+        logger.dev('[SessionSync] 🔒 Dans runExclusive, appel route /messages/add...');
         
-        // ✅ SÉCURITÉ: Appeler via API route (vérifie token)
-        const response = await this.chatSessionService.addMessageToSession(sessionId, message);
+        // ✅ Récupérer token auth
+        const { supabase } = await import('@/supabaseClient');
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
         
-        logger.dev('[SessionSync] 📥 Réponse addMessageToSession:', {
-          success: response.success,
-          hasData: !!response.data,
-          error: response.error
-        });
-        
-        if (!response.success || !response.data) {
-          const errorMsg = response.error || 'Erreur ajout message';
-          logger.error('[SessionSync] ❌ Response pas success:', {
-            success: response.success,
-            hasData: !!response.data,
-            error: errorMsg
-          });
-          throw new Error(errorMsg);
+        if (!token) {
+          throw new Error('Authentification requise');
         }
         
-        const savedMessage = response.data.message;
+        // ✅ Appel route API (serveur) qui utilise HistoryManager avec SERVICE_ROLE
+        const response = await fetch(`/api/chat/sessions/${sessionId}/messages/add`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(message)
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
         
-        if (!savedMessage) {
-          logger.error('[SessionSync] ❌ Message sauvegardé vide');
+        if (!result.success || !result.data?.message) {
           throw new Error('Message sauvegardé vide');
         }
         
-        logger.dev('[SessionSync] ✅ Message sauvegardé via API:', {
+        const savedMessage = result.data.message;
+        
+        logger.dev('[SessionSync] ✅ Message sauvegardé via route API:', {
           sessionId,
           role: savedMessage.role,
           sequenceNumber: savedMessage.sequence_number,
@@ -186,11 +188,6 @@ export class SessionSyncService {
         };
       });
     } catch (error) {
-      // ✅ Logger l'erreur RAW d'abord
-      console.error('[SessionSync] ❌ RAW ERROR:', error);
-      console.error('[SessionSync] ❌ ERROR TYPE:', typeof error);
-      console.error('[SessionSync] ❌ ERROR CONSTRUCTOR:', error?.constructor?.name);
-      
       const errorDetails = {
         errorType: error?.constructor?.name || 'Unknown',
         errorMessage: error instanceof Error ? error.message : String(error),
@@ -200,7 +197,6 @@ export class SessionSyncService {
         messageContent: message.content?.substring(0, 100)
       };
       
-      console.error('[SessionSync] ❌ ERROR DETAILS:', errorDetails);
       logger.error('[SessionSync] ❌ Erreur ajout message:', errorDetails);
       
       return {
@@ -227,7 +223,7 @@ export class SessionSyncService {
       return { success: true };
 
     } catch (error) {
-      logger.error('API', '[SessionSync] ❌ Erreur suppression session:', error);
+      logger.error('[SessionSync] ❌ Erreur suppression session:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -238,7 +234,7 @@ export class SessionSyncService {
   /**
    * ⚙️ Mettre à jour une session en DB puis synchroniser
    */
-  async updateSessionAndSync(sessionId: string, data: { name?: string; history_limit?: number }): Promise<{
+  async updateSessionAndSync(sessionId: string, data: { name?: string }): Promise<{
     success: boolean;
     error?: string;
   }> {
@@ -251,7 +247,7 @@ export class SessionSyncService {
         return { success: true };
       });
     } catch (error) {
-      logger.error('API', '[SessionSync] ❌ Erreur mise à jour session:', error);
+      logger.error('[SessionSync] ❌ Erreur mise à jour session:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -280,7 +276,7 @@ export class SessionSyncService {
         return { success: true };
       });
     } catch (error) {
-      logger.error('API', '[SessionSync] ❌ Erreur ajout batch:', error);
+      logger.error('[SessionSync] ❌ Erreur ajout batch:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'

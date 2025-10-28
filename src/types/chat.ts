@@ -187,13 +187,12 @@ export interface ChatSession {
   id: string;
   user_id: string;
   name: string;
-  thread: ChatMessage[];
   agent_id: string | null;
-  history_limit: number;
   is_active: boolean;
   metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  // Messages gérés via useInfiniteMessages (table chat_messages)
 }
 
 /**
@@ -202,7 +201,6 @@ export interface ChatSession {
 export interface CreateChatSessionData {
   name: string;
   agent_id?: string | null;
-  history_limit?: number;
   metadata?: Record<string, unknown>;
 }
 
@@ -212,7 +210,6 @@ export interface CreateChatSessionData {
 export interface UpdateChatSessionData {
   name?: string;
   agent_id?: string | null;
-  history_limit?: number;
   metadata?: Record<string, unknown>;
   is_active?: boolean;
 }

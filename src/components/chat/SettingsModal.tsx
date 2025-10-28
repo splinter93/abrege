@@ -38,8 +38,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   // Font state
   const [selectedFont, setSelectedFont] = useState<string>('figtree');
   const [selectedColorPalette, setSelectedColorPalette] = useState<string>('soft-dark');
-  const [historyLimit, setHistoryLimit] = useState<number>(10);
-  const [showHistoryTooltip, setShowHistoryTooltip] = useState(false);
 
   // Color palettes
   const availableColorPalettes = [
@@ -177,9 +175,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       }
     }
     
-    if (currentSession?.history_limit) {
-      setHistoryLimit(currentSession.history_limit);
-    }
   }, [currentSession, availableColorPalettes, darkenColor]);
 
   const handleFontChange = (fontValue: string) => {
@@ -221,14 +216,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleHistoryLimitChange = async (value: number) => {
-    if (value >= 1 && value <= 100) {
-      setHistoryLimit(value);
-      if (currentSession) {
-        await updateSession(currentSession.id, { history_limit: value });
-      }
-    }
-  };
+  // handleHistoryLimitChange supprimé (fonctionnalité obsolète)
 
   // Theme icons mapping
   const themeIcons: Record<ChatTheme, React.ReactNode> = {
@@ -324,36 +312,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               />
             </div>
 
-            {/* History limit */}
-            <div className="settings-field">
-              <div className="settings-field-label-group">
-                <label className="settings-field-label">Historique des messages</label>
-                <div className="settings-info-tooltip-wrapper">
-                  <button
-                    type="button"
-                    className="settings-info-icon"
-                    onClick={() => setShowHistoryTooltip(!showHistoryTooltip)}
-                    onBlur={() => setTimeout(() => setShowHistoryTooltip(false), 150)}
-                  >
-                    <Info size={16} />
-                  </button>
-                  {showHistoryTooltip && (
-                    <div className="settings-tooltip">
-                      Nombre de messages à conserver dans l'historique (1-100)
-                    </div>
-                  )}
-                </div>
-              </div>
-              <input
-                type="number"
-                value={historyLimit}
-                onChange={(e) => handleHistoryLimitChange(parseInt(e.target.value))}
-                className="settings-input"
-                min="1"
-                max="100"
-                placeholder="10"
-              />
-            </div>
+            {/* history_limit supprimé - Messages gérés via pagination automatique */}
           </div>
         );
       case 'account':
