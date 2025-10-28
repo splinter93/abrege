@@ -130,8 +130,19 @@
   --chat-z-overlay: 999;
   
   /* ========================================
-     DÉGRADÉS - Mode Dark par défaut (éclaircis)
+     CODE & TABLES BRIGHTNESS FILTER
      ======================================== */
+  --code-brightness-filter: brightness(1.18); /* ✅ Filtre réutilisable pour code/tables */
+}
+
+/* ========================================
+   THÈME DARK MODE (PAR DÉFAUT)
+   ========================================
+   Usage : Ajouter .chat-theme-dark sur body (ou par défaut si pas de classe)
+   ======================================== */
+.chat-theme-dark,
+body:not(.chat-theme-light):not(.chat-theme-blue) {
+  /* Dégradés - Mode Dark par défaut */
   --chat-gradient-input: linear-gradient(135deg, #20202a 0%, #25252f 50%, #20202a 100%);
   --chat-gradient-sidebar: linear-gradient(135deg, #1e1e28 0%, #2a2a35 50%, #1e1e28 100%);
   --chat-gradient-user: linear-gradient(135deg, #20202a 0%, #25252f 50%, #20202a 100%);
@@ -141,11 +152,6 @@
   
   /* ✅ Surcharge directe de --blk-bg pour les code blocks */
   --blk-bg: var(--chat-gradient-block);
-  
-  /* ========================================
-     CODE & TABLES BRIGHTNESS FILTER
-     ======================================== */
-  --code-brightness-filter: brightness(1.18); /* ✅ Filtre réutilisable pour code/tables */
 }
 
 /* ========================================
@@ -153,6 +159,7 @@
    ========================================
    Usage : Ajouter .chat-theme-light sur body
    ======================================== */
+body.chat-theme-light,
 .chat-theme-light {
   /* Backgrounds - Gris moyen moderne (style ChatGPT) */
   --chat-bg-primary: #c8c8c8;          /* Gris moyen foncé */
@@ -240,6 +247,7 @@
    Usage : Ajouter .chat-theme-blue sur body
    Style : Dégradés opaques, sans bordures, minimaliste premium
    ======================================== */
+body.chat-theme-blue,
 .chat-theme-blue {
   /* Background principal - Couleur solide sans gradient (plus simple) */
   --chat-bg-primary: #1e2c3d;          /* Couleur solide éclaircie +5% */
