@@ -4,14 +4,11 @@
  * 
  * Responsabilités:
  * - Trouver message à éditer
- * - DELETE cascade (messages après)
- * - Ajouter message édité
- * - Préparation contexte pour régénération LLM
+ * - DELETE cascade (message édité + tous ceux après)
+ * - Retourner token pour relance flow normal
  */
 
 import { tokenManager } from '@/utils/tokenManager';
-import { chatContextBuilder, type Note } from './ChatContextBuilder';
-import { sessionSyncService } from '@/services/sessionSyncService';
 import type { ChatSession } from '@/store/useChatStore';
 import type { Agent, ChatMessage } from '@/types/chat';
 import type { ImageAttachment } from '@/types/image';
@@ -38,8 +35,6 @@ export interface EditMessageOptions {
 export interface EditMessageResult {
   success: boolean;
   deletedCount?: number;
-  savedMessage?: ChatMessage;
-  context?: ReturnType<typeof chatContextBuilder.build>;
   token?: string;
   error?: string;
 }
@@ -93,20 +88,17 @@ export class ChatMessageEditService {
   }
 
   /**
-   * Édite un message avec régénération LLM
+   * Édite un message (delete cascade uniquement)
    * 
    * Flow atomique:
    * 1. Trouver message édité dans infiniteMessages
    * 2. Récupérer token auth
-   * 3. DELETE cascade (route /messages/delete-after)
-   * 4. Ajouter nouveau message édité
-   * 5. Préparer contexte pour régénération LLM
+   * 3. DELETE cascade (message édité + tous ceux après)
    * 
-   * Note: Le reload des messages et la relance LLM sont à faire
-   * par l'appelant après cette méthode.
+   * Note: L'appelant doit ensuite reload + renvoyer le message via flow normal
    * 
    * @param options - Options d'édition
-   * @returns Résultat avec message sauvegardé et contexte
+   * @returns Résultat avec deletedCount et token
    * @throws {NotFoundError} Si message introuvable
    * @throws {AuthError} Si token invalide
    * @throws {DeleteError} Si delete échoue
@@ -146,45 +138,23 @@ export class ChatMessageEditService {
 
       const token = tokenResult.token;
 
-      // 3. Supprimer les messages après le message édité
+      // 3. Supprimer le message édité ET tous ceux après
+      // ✅ afterSequence = sequence - 1 pour INCLURE le message édité
       const deleteResult = await this.deleteMessagesAfter(
         sessionId,
-        editedMessage.sequence_number,
+        editedMessage.sequence_number - 1,
         token
       );
 
-      logger.dev('[ChatMessageEditService] 🗑️ Messages supprimés:', {
+      logger.dev('[ChatMessageEditService] 🗑️ Messages supprimés (incluant le message édité):', {
         deletedCount: deleteResult.deletedCount,
-        afterSequence: editedMessage.sequence_number
-      });
-
-      // 4. Ajouter le nouveau message édité
-      const savedMessage = await this.addEditedMessage(
-        sessionId,
-        newContent,
-        images
-      );
-
-      if (!savedMessage) {
-        throw new Error('Erreur sauvegarde message édité');
-      }
-
-      logger.dev('[ChatMessageEditService] ✅ Message édité sauvegardé:', {
-        newSequenceNumber: savedMessage.sequence_number
-      });
-
-      // 5. Préparer contexte pour régénération LLM
-      const context = chatContextBuilder.build({
-        sessionId,
-        agentId: selectedAgent?.id,
-        llmContext
+        afterSequence: editedMessage.sequence_number - 1,
+        originalSequence: editedMessage.sequence_number
       });
 
       return {
         success: true,
         deletedCount: deleteResult.deletedCount,
-        savedMessage,
-        context,
         token
       };
 
@@ -299,45 +269,8 @@ export class ChatMessageEditService {
     }
   }
 
-  /**
-   * Ajoute le message édité en DB
-   * 
-   * Utilise sessionSyncService.addMessageAndSync() qui appelle
-   * la route API /messages/add (atomique via HistoryManager).
-   * 
-   * @param sessionId - ID de la session
-   * @param content - Nouveau contenu
-   * @param images - Images attachées (optionnel)
-   * @returns Message sauvegardé
-   * @throws {Error} Si la sauvegarde échoue
-   */
-  private async addEditedMessage(
-    sessionId: string,
-    content: string,
-    images?: ImageAttachment[]
-  ): Promise<ChatMessage> {
-    // Préparer le message
-    const attachedImages = images?.map(img => ({
-      url: img.base64,
-      fileName: img.fileName
-    }));
-
-    const messageToAdd: Omit<ChatMessage, 'id'> = {
-      role: 'user',
-      content,
-      timestamp: new Date().toISOString(),
-      ...(attachedImages && attachedImages.length > 0 && { attachedImages })
-    };
-
-    // Sauvegarder via sessionSyncService
-    const result = await sessionSyncService.addMessageAndSync(sessionId, messageToAdd);
-
-    if (!result.success || !result.message) {
-      throw new Error(result.error || 'Erreur sauvegarde message');
-    }
-
-    return result.message;
-  }
+  // ✅ SUPPRIMÉ: addEditedMessage
+  // Le message édité sera ajouté via le flow normal de sendMessage
 
   /**
    * Valide qu'un message peut être édité

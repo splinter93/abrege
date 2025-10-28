@@ -253,10 +253,10 @@ export function useChatMessageActions(
 
     setIsLoading(true);
     setError(null);
-    onEditingChange?.(true);
+    // ❌ NE PAS appeler onEditingChange(true) - déjà fait dans ChatFullscreenV2
 
     try {
-      // 1. Éditer via service
+      // 1. Éditer via service (delete cascade + add nouveau message)
       const editResult = await chatMessageEditService.edit({
         messageId,
         newContent,
@@ -272,34 +272,30 @@ export function useChatMessageActions(
         throw new Error(editResult.error || 'Erreur édition message');
       }
 
-      const { deletedCount, context, token } = editResult;
+      const { deletedCount, token } = editResult;
 
-      logger.dev('[useChatMessageActions] ✅ Message édité:', {
+      logger.dev('[useChatMessageActions] ✅ Messages supprimés (incluant message édité):', {
         deletedCount,
         newContentPreview: newContent.substring(0, 50)
       });
 
-      // 2. Reload messages depuis DB
+      // 2. Annuler le mode édition IMMÉDIATEMENT
+      onEditingChange?.(false);
+
+      // 3. Reload messages depuis DB
       clearInfiniteMessages();
       await loadInitialMessages();
 
-      logger.dev('[useChatMessageActions] ✅ Messages rechargés');
+      logger.dev('[useChatMessageActions] ✅ Messages rechargés, relance génération...');
 
-      // 3. Relancer LLM pour régénération
-      if (!token || !context) {
-        throw new Error('Données incomplètes pour régénération');
-      }
+      // 4. Renvoyer le message édité comme NOUVEAU message
+      // ✅ Utilise le flow normal sendMessage qui va :
+      //    - Ajouter le message user
+      //    - Appeler le LLM
+      //    - Gérer la réponse
+      await sendMessage(newContent, images);
 
-      // Passer message vide car le message user est déjà sauvegardé
-      await sendMessageFn(
-        '',
-        currentSession.id,
-        context,
-        infiniteMessages, // Historique rechargé
-        token
-      );
-
-      logger.dev('[useChatMessageActions] ✅ Régénération LLM lancée');
+      logger.dev('[useChatMessageActions] ✅ Message édité renvoyé (flow normal)');
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur édition message';
@@ -309,12 +305,12 @@ export function useChatMessageActions(
         stack: err instanceof Error ? err.stack : undefined
       });
 
-      // En cas d'erreur, recharger pour état cohérent
+      // En cas d'erreur, annuler l'édition et recharger
+      onEditingChange?.(false);
       await loadInitialMessages();
 
     } finally {
       setIsLoading(false);
-      onEditingChange?.(false);
     }
   }, [
     currentSession,
