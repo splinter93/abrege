@@ -598,7 +598,7 @@ a {
 .public-note-container .markdown-body th,
 .public-note-content-wrapper .markdown-body th {
   background: var(--surface-secondary);
-  color: var(--color-text-primary);
+  color: var(--chat-text-secondary);
   font-size: 0.75rem !important;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -627,7 +627,7 @@ a {
 .public-note-container .markdown-body tbody td:first-child,
 .public-note-content-wrapper .markdown-body tbody td:first-child {
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--chat-text-secondary);
 }
 
 /* Coins du tableau */
