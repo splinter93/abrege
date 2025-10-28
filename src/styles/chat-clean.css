@@ -57,7 +57,7 @@
      TEXTE - SIMPLIFIÉ À 2 VARIABLES (valeurs par défaut)
      ======================================== */
   --chat-text-primary: #b5bcc4;         /* Texte principal (messages, titres) */
-  --chat-text-secondary: #8a9199;       /* Texte secondaire (placeholders, boutons, blocs) */
+  --chat-text-secondary: #97a0a8;       /* Texte secondaire (placeholders, boutons, blocs) - Éclairci */
   --chat-text-success: #22c55e;         /* Texte succès */
   --chat-text-error: #ef4444;           /* Texte erreur */
   --chat-text-error-hover: #dc2626;     /* Texte erreur hover */
@@ -178,7 +178,7 @@ body.chat-theme-light,
   
   /* Texte - SIMPLIFIÉ À 2 VARIABLES */
   --chat-text-primary: #2a2c2e;        /* Texte principal (paragraphes, titres, messages) */
-  --chat-text-secondary: #6a6d70;      /* Texte secondaire (placeholders, boutons, blocs code/tableaux) */
+  --chat-text-secondary: #787b7e;      /* Texte secondaire (placeholders, boutons, blocs code/tableaux) - Éclairci */
   
   /* Sidebar - Overlays inversés pour mode clair */
   --sidebar-search-overlay: rgba(0, 0, 0, 0.02);     /* Overlay recherche (plus transparent) */
@@ -263,7 +263,7 @@ body.chat-theme-blue,
   
   /* Texte - SIMPLIFIÉ À 2 VARIABLES */
   --chat-text-primary: #e8eaed;        /* Texte principal (paragraphes, titres, messages) */
-  --chat-text-secondary: #a8aeb4;      /* Texte secondaire (placeholders, boutons, blocs code/tableaux) */
+  --chat-text-secondary: #b5bbc1;      /* Texte secondaire (placeholders, boutons, blocs code/tableaux) - Éclairci */
   
   /* Sidebar - Dégradés opaques UNIFIÉS */
   --sidebar-search-overlay: #364a60;   /* Barre recherche + Bouton nouvelle note = conversation active */
