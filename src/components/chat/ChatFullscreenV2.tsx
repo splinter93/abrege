@@ -37,7 +37,6 @@ import SidebarUltraClean from './SidebarUltraClean';
 
 import { simpleLogger as logger } from '@/utils/logger';
 
-import './ToolCallMessage.css';
 import '@/styles/chat-clean.css';
 import '@/styles/sidebar-collapsible.css';
 

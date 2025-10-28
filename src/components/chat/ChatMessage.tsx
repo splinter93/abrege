@@ -3,12 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChatMessage as ChatMessageType, 
-  isObservationMessage,
-  isToolResultSuccess 
+  isObservationMessage
 } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import UserMessageText from './UserMessageText';
-import ToolCallMessage from './ToolCallMessage';
 import { openImageModal } from './ImageModal';
 import BubbleButtons from './BubbleButtons';
 import ReasoningDropdown from './ReasoningDropdown';
@@ -17,7 +15,6 @@ import { useChatStore } from '@/store/useChatStore';
 import { useStreamingPreferences } from '@/hooks/useStreamingPreferences';
 import { simpleLogger as logger } from '@/utils/logger';
 import './ReasoningDropdown.css';
-import './ToolCallMessage.css';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -53,25 +50,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     if (content) setDisplayedContent(content);
   }, [content]);
 
-  const parseSuccessFromContent = (raw: string | null | undefined): boolean | undefined => {
-    if (!raw) return undefined;
-    try {
-      const data = JSON.parse(raw);
-      return isToolResultSuccess(data);
-    } catch {
-      // ignore non-JSON content
-      return undefined;
-    }
-  };
-
-  const getToolResultsForAssistant = () => {
-    // Tool results sont maintenant toujours dans message.tool_results
-    // (chargés atomiquement depuis chat_messages)
-    if (role === 'assistant' && message.tool_calls && message.tool_calls.length > 0) {
-      return message.tool_results || [];
-    }
-    return message.tool_results;
-  };
+  // ✅ SUPPRIMÉ: parseSuccessFromContent et getToolResultsForAssistant
+  // Plus utilisés car ToolCallMessage est remplacé par StreamTimelineRenderer
 
 
   // ✅ NOUVEAU: Si une streamTimeline existe, l'utiliser pour le rendu
@@ -127,8 +107,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           <StreamTimelineRenderer timeline={timeline!} />
         ) : (
           <>
-            {/* FALLBACK: Rendu classique si pas de timeline */}
-            
             {/* Contenu - texte avec liens pour user, markdown pour assistant */}
             {content && (
               <div className="chatgpt-message-content">
@@ -138,14 +116,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                   <EnhancedMarkdownMessage content={content} />
                 )}
               </div>
-            )}
-
-            {/* Tool calls - APRÈS le contenu pour respecter la chronologie */}
-            {role === 'assistant' && message.tool_calls && message.tool_calls.length > 0 && (
-              <ToolCallMessage
-                toolCalls={message.tool_calls}
-                toolResults={getToolResultsForAssistant() || []}
-              />
             )}
           </>
         )}
