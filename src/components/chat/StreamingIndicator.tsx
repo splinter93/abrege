@@ -58,7 +58,6 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
         );
 
       case 'executing':
-        console.log('[StreamingIndicator] Executing state:', { toolCallsLength: toolCalls.length, toolCalls });
         return (
           <div className="streaming-indicator executing">
             {toolCalls.length > 0 ? (

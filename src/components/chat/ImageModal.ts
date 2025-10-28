@@ -150,7 +150,7 @@ export function openImageModal(options: ImageModalOptions) {
         copyButton.classList.remove('copied');
       }, 2000);
     } catch (error) {
-      console.error('Erreur lors de la copie:', error);
+      // Erreur silencieuse acceptable (DOM, pas critique)
     }
   });
   
@@ -190,8 +190,7 @@ export function openImageModal(options: ImageModalOptions) {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
       } catch (fetchError) {
-        // ✅ FALLBACK CORS : Ouvrir dans nouvel onglet si fetch échoue
-        console.warn('Fetch failed (CORS?), fallback to window.open:', fetchError);
+        // ✅ FALLBACK CORS : Ouvrir dans nouvel onglet si fetch échoue (silencieux)
         const a = document.createElement('a');
         a.href = src;
         a.download = fileName;
@@ -221,7 +220,7 @@ export function openImageModal(options: ImageModalOptions) {
         downloadButton.classList.remove('downloaded');
       }, 2000);
     } catch (error) {
-      console.error('Erreur critique lors du téléchargement:', error);
+      // Erreur silencieuse acceptable (DOM, pas critique)
     }
   });
   

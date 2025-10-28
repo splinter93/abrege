@@ -57,16 +57,6 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
             // ✅ Un bloc est "en cours d'exécution" si on stream OU s'il n'a pas encore tous ses résultats
             const isExecuting = isActiveStreaming || !allToolsHaveResults;
             
-            console.log('[StreamTimelineRenderer] Tool execution:', {
-              toolCount: item.toolCount,
-              toolCalls: item.toolCalls,
-              toolCallsLength: item.toolCalls?.length,
-              isExecuting,
-              allToolsHaveResults,
-              isActiveStreaming,
-              toolResultsCount: toolResults.length
-            });
-            
             return (
               <div 
                 key={`exec-${index}`} 

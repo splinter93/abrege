@@ -2452,7 +2452,7 @@ body.chat-theme-anthracite .chatgpt-header {
   align-items: center;
   gap: 8px;
   padding: 4px 12px; /* Réduit de 6px à 4px */
-  background: var(--sidebar-item-hover); /* Fond subtil sans bordure */
+  background: rgba(128, 128, 128, 0.16); /* Fond subtil avec transparence légère */
   border: none;
   border-radius: 20px; /* Pill shape */
   color: var(--chat-text-primary);
@@ -2462,7 +2462,7 @@ body.chat-theme-anthracite .chatgpt-header {
 }
 
 .chat-note-pill:hover {
-  background: var(--sidebar-item-active); /* Légèrement plus sombre au hover */
+  background: rgba(128, 128, 128, 0.24); /* Légèrement plus visible au hover */
 }
 
 .chat-note-pill svg {

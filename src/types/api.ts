@@ -1,105 +1,56 @@
-import type { NextRequest } from 'next/server';
+/**
+ * Types pour les réponses API
+ * Remplace les 'any' par des interfaces strictes
+ * @module types/api
+ */
 
-// Types pour les paramètres d'API
-export interface ApiParams {
-  ref: string;
+/**
+ * Réponse API pour les notes récentes
+ */
+export interface RecentNoteAPIResponse {
+  id: string;
+  slug: string;
+  source_title: string;
+  markdown_content?: string;
+  word_count?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface ApiContext {
-  params: Promise<ApiParams>;
+/**
+ * Réponse API pour la recherche de notes
+ */
+export interface SearchNoteAPIResponse {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt?: string;
+  type: 'note' | 'classeur' | 'file';
+  classeur_id?: string;
+  folder_id?: string;
 }
 
-// Types pour les réponses d'API
-export interface ApiResponse<T = unknown> {
+/**
+ * Wrapper générique pour les réponses API
+ */
+export interface APIResponse<T> {
+  success: boolean;
   data?: T;
   error?: string;
-  details?: string[];
-  success?: boolean;
+  message?: string;
 }
 
-// Types pour les endpoints de notes
-export interface NoteUpdateData {
-  source_title?: string;
-  markdown_content?: string;
-  html_content?: string;
-  header_image?: string;
-  folder_id?: string | null;
+/**
+ * Réponse API pour liste de notes récentes
+ */
+export interface RecentNotesAPIResponse extends APIResponse<unknown> {
+  notes: RecentNoteAPIResponse[];
 }
 
-export interface NoteCreateData {
-  source_title: string;
-  notebook_id: string;
-  markdown_content?: string;
-  header_image?: string;
-  folder_id?: string | null;
+/**
+ * Réponse API pour recherche
+ */
+export interface SearchAPIResponse extends APIResponse<unknown> {
+  results: SearchNoteAPIResponse[];
+  total?: number;
 }
-
-export interface NotePublishData {
-  visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
-}
-
-export interface NoteAddContentData {
-  text: string;
-  position?: 'start' | 'end';
-}
-
-// Types pour les endpoints de dossiers
-export interface FolderUpdateData {
-  name?: string;
-  parent_id?: string | null;
-}
-
-export interface FolderCreateData {
-  name: string;
-  classeur_id: string;
-  parent_id?: string | null;
-}
-
-// Types pour les endpoints de classeurs
-export interface ClasseurUpdateData {
-  name?: string;
-  emoji?: string;
-  position?: number;
-}
-
-export interface ClasseurCreateData {
-  name: string;
-  emoji?: string;
-}
-
-// Types pour les endpoints de réorganisation
-export interface ReorderData {
-  classeurs: Array<{
-    id: string;
-    position: number;
-  }>;
-}
-
-// Types pour les fonctions d'API
-export type ApiHandler = (req: NextRequest, context: ApiContext) => Promise<Response>;
-
-// Types pour les erreurs
-export interface ApiError extends Error {
-  status?: number;
-  statusText?: string;
-}
-
-// Types pour l'authentification
-import { SupabaseClient } from '@supabase/supabase-js';
-
-export interface AuthenticatedClient {
-  supabase: SupabaseClient;
-  userId: string;
-}
-
-// Types pour les paramètres de requête
-export interface RequestParams {
-  [key: string]: string | string[] | undefined;
-}
-
-// Types pour les headers
-export interface ApiHeaders {
-  'Content-Type': string;
-  'Authorization'?: string;
-  [key: string]: string | undefined;
-} 
