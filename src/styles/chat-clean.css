@@ -47,11 +47,11 @@
   --chat-overlay-hover: rgba(255, 255, 255, 0.1);     /* Hover buttons */
   --chat-overlay-dark: rgba(0, 0, 0, 0.5);            /* Mobile overlay */
   
-  /* Sidebar - Overlays relatifs au background */
-  --sidebar-search-overlay: rgba(255, 255, 255, 0.02);     /* Overlay recherche (plus transparent) */
-  --sidebar-search-overlay-focus: rgba(255, 255, 255, 0.04); /* Overlay recherche focus */
-  --sidebar-item-active: rgba(255, 255, 255, 0.06);   /* Conversation active (subtil) */
-  --sidebar-item-hover: rgba(255, 255, 255, 0.04);     /* Conversation hover (très subtil) */
+  /* Sidebar - Progression naturelle des overlays */
+  --sidebar-search-overlay: rgba(255, 255, 255, 0.03);     /* Barre recherche + Bouton */
+  --sidebar-search-overlay-focus: rgba(255, 255, 255, 0.05); /* Focus (léger) */
+  --sidebar-item-hover: rgba(255, 255, 255, 0.07);     /* Hover (moyen) */
+  --sidebar-item-active: rgba(255, 255, 255, 0.09);   /* Active (fort) */
   
   /* ========================================
      TEXTE - SIMPLIFIÉ À 2 VARIABLES (valeurs par défaut)
@@ -138,12 +138,12 @@
    ======================================== */
 .chat-theme-dark,
 body:not(.chat-theme-light):not(.chat-theme-blue) {
-  /* Dégradés - Mode Dark LISSÉS + ACCENTUÉS - TOUS IDENTIQUES */
-  --chat-gradient-block: linear-gradient(135deg, #20202a 0%, #252530 50%, #20202a 100%); /* Gradient unifié pour TOUT */
+  /* Dégradés - Mode Dark ULTRA-LISSÉS - TOUS IDENTIQUES */
+  --chat-gradient-block: linear-gradient(135deg, #20202a 0%, #23232e 50%, #20202a 100%); /* Gradient unifié pour TOUT */
   --chat-gradient-input: var(--chat-gradient-block);
   --chat-gradient-sidebar: var(--chat-gradient-block); /* ✅ Même gradient que les blocs */
   --chat-gradient-user: var(--chat-gradient-block);
-  --chat-gradient-user-hover: linear-gradient(135deg, #24242e 0%, #292934 50%, #24242e 100%);
+  --chat-gradient-user-hover: linear-gradient(135deg, #24242e 0%, #272731 50%, #24242e 100%);
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
@@ -180,11 +180,11 @@ body.chat-theme-light,
   --chat-text-primary: #2a2c2e;        /* Texte principal (paragraphes, titres, messages) */
   --chat-text-secondary: #838689;      /* Texte secondaire (placeholders, boutons, blocs code/tableaux) - Éclairci +2 */
   
-  /* Sidebar - Overlays inversés pour mode clair */
-  --sidebar-search-overlay: rgba(0, 0, 0, 0.02);     /* Overlay recherche (plus transparent) */
-  --sidebar-search-overlay-focus: rgba(0, 0, 0, 0.04); /* Overlay recherche focus */
-  --sidebar-item-active: rgba(0, 0, 0, 0.06);   /* Conversation active (subtil) */
-  --sidebar-item-hover: rgba(0, 0, 0, 0.04);     /* Conversation hover (très subtil) */
+  /* Sidebar - Progression naturelle des overlays */
+  --sidebar-search-overlay: rgba(0, 0, 0, 0.03);     /* Barre recherche + Bouton */
+  --sidebar-search-overlay-focus: rgba(0, 0, 0, 0.05); /* Focus (léger) */
+  --sidebar-item-hover: rgba(0, 0, 0, 0.07);     /* Hover (moyen) */
+  --sidebar-item-active: rgba(0, 0, 0, 0.09);   /* Active (fort) */
   
   /* Bordures */
   --chat-border-subtle: rgba(0, 0, 0, 0.15);
@@ -194,12 +194,12 @@ body.chat-theme-light,
   --chat-accent-primary: #f97316;      /* Orange vif */
   --chat-accent-hover: #ea580c;        /* Orange foncé */
   
-  /* Dégradés mode clair - LISSÉS + ACCENTUÉS */
+  /* Dégradés mode clair - ULTRA-LISSÉS */
   --chat-gradient-block: linear-gradient(135deg, 
     rgba(0, 0, 0, 0.08) 0%, 
-    rgba(0, 0, 0, 0.12) 50%, 
+    rgba(0, 0, 0, 0.11) 50%, 
     rgba(0, 0, 0, 0.08) 100%), 
-    var(--chat-bg-primary); /* Gradient unifié LISSÉ + ACCENTUÉ pour TOUS les éléments */
+    var(--chat-bg-primary); /* Gradient unifié ULTRA-LISSÉ pour TOUS les éléments */
   
   /* ✅ TOUS les éléments (sidebar incluse) utilisent le même gradient */
   --chat-gradient-input: var(--chat-gradient-block);
@@ -208,13 +208,13 @@ body.chat-theme-light,
   
   --chat-gradient-user: linear-gradient(135deg, 
     rgba(0, 0, 0, 0.06) 0%, 
-    rgba(0, 0, 0, 0.10) 50%, 
+    rgba(0, 0, 0, 0.09) 50%, 
     rgba(0, 0, 0, 0.06) 100%), 
     var(--chat-bg-primary);
   
   --chat-gradient-user-hover: linear-gradient(135deg, 
     rgba(0, 0, 0, 0.1) 0%, 
-    rgba(0, 0, 0, 0.14) 50%, 
+    rgba(0, 0, 0, 0.13) 50%, 
     rgba(0, 0, 0, 0.1) 100%), 
     var(--chat-bg-primary);
   
@@ -252,21 +252,21 @@ body.chat-theme-blue,
   --chat-text-primary: #e8eaed;        /* Texte principal (paragraphes, titres, messages) */
   --chat-text-secondary: #bfc5cb;      /* Texte secondaire (placeholders, boutons, blocs code/tableaux) - Éclairci +2 */
   
-  /* Sidebar - Dégradés opaques UNIFIÉS */
-  --sidebar-search-overlay: #364a60;   /* Barre recherche + Bouton nouvelle note = conversation active */
-  --sidebar-search-overlay-focus: #364a60; /* Focus (même couleur) */
-  --sidebar-item-active: #364a60;      /* Item actif */
-  --sidebar-item-hover: #3e5268;       /* Hover items (plus clair que active) */
+  /* Sidebar - Progression naturelle depuis le gradient (#2d3f52 → #344962) */
+  --sidebar-search-overlay: #324458;   /* Barre recherche + Bouton (entre base et milieu) */
+  --sidebar-search-overlay-focus: #364a60; /* Focus (= milieu du gradient) */
+  --sidebar-item-hover: #3a4f65;       /* Hover (au-dessus du milieu) */
+  --sidebar-item-active: #3e546a;      /* Active (encore plus clair) */
   
   /* Bordures - AUCUNE (style moderne sans bordures) */
   --chat-border-subtle: transparent;
   --chat-border-soft: transparent;
   
-  /* Dégradés Blue Mode - LISSÉS + ACCENTUÉS */
+  /* Dégradés Blue Mode - ULTRA-LISSÉS */
   --chat-gradient-block: linear-gradient(135deg, 
     #2d3f52 0%, 
-    #344962 50%, 
-    #2d3f52 100%); /* Gradient unifié LISSÉ + ACCENTUÉ pour TOUS les éléments */
+    #31445a 50%, 
+    #2d3f52 100%); /* Gradient unifié ULTRA-LISSÉ pour TOUS les éléments */
   
   /* ✅ TOUS les éléments (sidebar incluse) utilisent le même gradient */
   --chat-gradient-input: var(--chat-gradient-block);
@@ -274,8 +274,8 @@ body.chat-theme-blue,
   --chat-gradient-user: var(--chat-gradient-block);
   --chat-gradient-user-hover: linear-gradient(135deg, 
     #304555 0%, 
-    #374f69 50%, 
-    #304555 100%); /* Hover légèrement plus clair + gradient accentué */
+    #344b5e 50%, 
+    #304555 100%); /* Hover légèrement plus clair + gradient lissé */
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
