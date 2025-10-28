@@ -8,10 +8,10 @@ import { useCallback, useRef } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import { buildMessageContent } from '@/utils/imageUtils';
 import type { ImageAttachment, MessageContent } from '@/types/image';
-import type { SelectedNote, NoteWithContent } from './useNotesLoader';
+import type { SelectedNote, NoteWithContent, NotesLoadStats } from './useNotesLoader';
 
 interface UseChatSendOptions {
-  loadNotes: (notes: SelectedNote[], options: { token: string; timeoutMs?: number }) => Promise<{ notes: NoteWithContent[]; stats: any }>;
+  loadNotes: (notes: SelectedNote[], options: { token: string; timeoutMs?: number }) => Promise<{ notes: NoteWithContent[]; stats: NotesLoadStats }>;
   getAccessToken: () => Promise<string | null>;
   onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[]) => void;
   setUploadError: (error: string | null) => void;
