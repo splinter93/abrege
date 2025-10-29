@@ -217,6 +217,9 @@ export class ChatMessageSendingService {
    * Le message temporaire est affiché immédiatement pendant
    * que la sauvegarde DB se fait en background.
    * 
+   * ✅ FIX: Utilise timestamp +1s dans le futur pour garantir
+   * qu'il sera TOUJOURS le dernier lors du tri, même après un reload DB
+   * 
    * @param message - Contenu du message
    * @param images - Images attachées (optionnel)
    * @returns Message temporaire
@@ -236,11 +239,15 @@ export class ChatMessageSendingService {
       fileName: img.fileName
     }));
 
+    // ✅ FIX SACCADE: Timestamp +1s dans le futur
+    // Garantit que le message temp sera APRÈS tous les messages DB lors du tri
+    const futureTimestamp = new Date(Date.now() + 1000).toISOString();
+
     const tempMessage: ChatMessage = {
       id: `temp-${Date.now()}`,
       role: 'user',
       content: messageText,
-      timestamp: new Date().toISOString(),
+      timestamp: futureTimestamp,
       sequence_number: 999999, // Temporaire, sera remplacé par la vraie valeur en DB
       ...(attachedImages && attachedImages.length > 0 && { attachedImages })
     };
