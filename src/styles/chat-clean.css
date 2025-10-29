@@ -1023,7 +1023,7 @@ body.chat-theme-anthracite .chatgpt-header {
 .chatgpt-message {
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--chat-space-lg);
+  margin-bottom: 10px; /* ✅ Resserré à 10px pour interface plus compacte */
   /* animation: fadeIn 0.2s ease-out; */ /* ✅ DÉSACTIVÉ: Cause clignotement à la fin du stream */
 }
 
@@ -1174,9 +1174,10 @@ body.chat-theme-anthracite .chatgpt-header {
 }
 
 .chatgpt-message-actions {
-  margin-top: var(--chat-space-sm);
+  margin-top: 2px; /* ✅ Resserré à 2px pour interface plus compacte */
   display: flex;
   gap: var(--chat-space-sm);
+  /* Pas de width fixe - suit naturellement la largeur de la bulle */
 }
 
 .chatgpt-message-error {
@@ -1580,7 +1581,7 @@ body.chat-theme-anthracite .chatgpt-header {
 
 .bubble-buttons {
   display: flex;
-  width: 100%; /* ✅ Prend toute la largeur du container */
+  /* Pas de width fixe - suit naturellement la largeur de la bulle */
   justify-content: flex-start;
   opacity: 0;
   transition: opacity var(--chat-transition-normal);
@@ -1591,13 +1592,14 @@ body.chat-theme-anthracite .chatgpt-header {
 }
 
 .chatgpt-message-user .bubble-buttons {
-  justify-content: flex-end; /* ✅ Aligné à droite du container */
-  margin-top: -4px; /* ✅ Remonté plus près de la bubble */
+  justify-content: flex-end; /* ✅ Aligné à droite comme la bulle */
+  margin-top: 2px; /* ✅ Descendu encore un peu */
+  /* Pas de width: 100% pour suivre naturellement l'alignement de la bulle */
 }
 
 .chatgpt-message-assistant .bubble-buttons {
   justify-content: flex-start; /* ✅ Aligné à gauche du container */
-  margin-top: -4px; /* ✅ Remonté plus près de la bubble */
+  margin-top: 2px; /* ✅ Descendu au même niveau que les boutons user */
 }
 
 .bubble-buttons-container {
@@ -1610,8 +1612,8 @@ body.chat-theme-anthracite .chatgpt-header {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 24px; /* ✅ Réduit de 28px à 24px */
+  height: 24px; /* ✅ Réduit de 28px à 24px */
   background: transparent;
   color: var(--chat-text-secondary);
   border: none;
