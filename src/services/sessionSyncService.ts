@@ -67,6 +67,7 @@ export class SessionSyncService {
         id: session.id,
         name: session.name,
         agent_id: session.agent_id || null,
+        is_empty: session.is_empty ?? true, // 🔥 Mapper is_empty (défaut true si absent)
         created_at: session.created_at,
         updated_at: session.updated_at
       }));
@@ -107,6 +108,7 @@ export class SessionSyncService {
         id: response.data.id,
         name: response.data.name,
         agent_id: response.data.agent_id || null,
+        is_empty: response.data.is_empty ?? true, // 🔥 Mapper is_empty
         created_at: response.data.created_at,
         updated_at: response.data.updated_at
       };

@@ -168,7 +168,6 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 MESSAGE ACTIONS (send/edit avec services)
   const messageActions = useChatMessageActions({
-    currentSession,
     selectedAgent,
     infiniteMessages,
     llmContext,
@@ -179,7 +178,6 @@ const ChatFullscreenV2: React.FC = () => {
     onEditingChange: (editing: boolean) => {
       if (!editing) cancelEditing();
     },
-    createSession,
     requireAuth,
     onBeforeSend: async () => {
       // ✅ CRITICAL: Reload messages AVANT de reset (sinon le message précédent disparaît)
@@ -425,20 +423,6 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [currentSession?.id, animations, isLoadingMessages, infiniteMessages.length, clearInfiniteMessages, streamingState]);
 
-  // ✅ NOUVEAU : Afficher empty state quand agent sélectionné sans session
-  useEffect(() => {
-    if (selectedAgent && !currentSession && !animations.messagesVisible) {
-      logger.dev('[ChatFullscreenV2] 🎨 Agent sélectionné sans session, affichage empty state');
-      animations.setDisplayedSessionId(null);
-      clearInfiniteMessages();
-      animations.resetAnimation();
-      
-      // Rendre visible après un tick pour smooth transition
-      requestAnimationFrame(() => {
-        animations.triggerFadeIn('temp-empty-state', [], messagesContainerRef);
-      });
-    }
-  }, [selectedAgent?.id, currentSession?.id, animations.messagesVisible]);
 
   // Animation + scroll quand session chargée
   useEffect(() => {

@@ -10,6 +10,7 @@ export interface ChatSession {
   id: string;
   name: string;
   agent_id: string | null;
+  is_empty?: boolean; // 🔥 Conversation vide (aucun message)
   created_at: string;
   updated_at: string;
 }
@@ -129,13 +130,13 @@ export const useChatStore = create<ChatStore>()(
               currentSession: result.session
             });
             
-            logger.dev('[ChatStore] ✅ Nouvelle session créée:', {
+            logger.dev('[ChatStore] ✅ Session créée (is_empty = true):', {
               id: result.session.id,
               name: result.session.name,
               agentId: result.session.agent_id
             });
 
-            return result.session; // ✅ Retourner la session créée
+            return result.session;
           }
           
           return null;

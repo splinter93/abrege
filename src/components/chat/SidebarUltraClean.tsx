@@ -4,6 +4,7 @@ import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
 import SettingsModal from './SettingsModal';
+import { simpleLogger as logger } from '@/utils/logger';
 import type { Agent } from '@/types/chat';
 
 // Types pour les sessions
@@ -73,10 +74,18 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   };
 
   const handleSelectAgent = async (agent: Agent) => {
-    // ✅ NOUVEAU : Sélectionner agent SANS créer session
-    // La session sera créée au premier message envoyé
+    // ✅ SIMPLE : Créer conversation vide immédiatement
     setSelectedAgent(agent);
-    setCurrentSession(null); // ✅ Reset session pour afficher empty state
+    
+    // Créer conversation avec l'agent (déjà met à jour currentSession dans le store)
+    const newSession = await createSession('Nouvelle conversation', agent.id);
+    
+    if (newSession) {
+      logger.dev('[SidebarUltraClean] ✅ Conversation vide créée:', newSession.id);
+    } else {
+      logger.error('[SidebarUltraClean] ❌ Échec création conversation');
+    }
+    
     if (!isDesktop) {
       onClose();
     }
@@ -88,10 +97,12 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
     // Elle se fermera à la fermeture de la modal
   };
 
-  // Filtrage des sessions
-  const filteredSessions = sessions.filter((session: ChatSession) =>
-    session.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filtrage des sessions : exclure les vides + recherche
+  const filteredSessions = sessions
+    .filter((session: ChatSession) => !session.is_empty) // 🔥 Masquer conversations vides
+    .filter((session: ChatSession) => 
+      session.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   return (
     <div className={`sidebar-ultra-clean ${isDesktop ? 'desktop' : 'mobile'} ${isOpen ? 'visible' : ''}`}>

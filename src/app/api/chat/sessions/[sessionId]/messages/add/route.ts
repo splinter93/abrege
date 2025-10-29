@@ -95,6 +95,22 @@ export async function POST(
     // 5. Ajouter message atomiquement
     const savedMessage = await historyManager.addMessage(sessionId, message);
 
+    // 🔥 Si 1er message → marquer conversation comme non-vide + update timestamp
+    if (savedMessage.sequence_number === 1) {
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+      const adminClient = createClient(supabaseUrl, serviceRoleKey);
+      
+      await adminClient
+        .from('chat_sessions')
+        .update({ 
+          is_empty: false,
+          updated_at: new Date().toISOString() // ✅ Force refresh pour trigger sync
+        })
+        .eq('id', sessionId);
+      
+      logger.dev('[API /messages/add] ✅ Conversation marquée non-vide (apparaîtra dans sidebar)');
+    }
+
     logger.dev('[API /messages/add] ✅ Message ajouté:', {
       sessionId,
       sequenceNumber: savedMessage.sequence_number,

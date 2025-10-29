@@ -115,6 +115,7 @@ export async function POST(request: NextRequest) {
         name,
         agent_id,
         is_active: true,
+        is_empty: true, // 🔥 Conversation vide par défaut
         metadata: { created_via: 'api_endpoint' }
       })
       .select()
@@ -214,7 +215,7 @@ export async function GET(request: NextRequest) {
     // Messages chargés séparément via /api/chat/sessions/:id/messages/recent
     const { data: sessions, error } = await userClient
       .from('chat_sessions')
-      .select('id, name, agent_id, is_active, created_at, updated_at, metadata')
+      .select('id, name, agent_id, is_active, is_empty, created_at, updated_at, metadata')
       .eq('user_id', userId)
       .eq('is_active', true)
       .order('updated_at', { ascending: false });

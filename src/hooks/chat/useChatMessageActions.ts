@@ -19,7 +19,7 @@ import {
   type EditMessageOptions as ServiceEditOptions
 } from '@/services/chat/ChatMessageEditService';
 import { sessionSyncService } from '@/services/sessionSyncService';
-import type { ChatSession } from '@/store/useChatStore';
+import { useChatStore } from '@/store/useChatStore';
 import type { Agent, ChatMessage } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { LLMContext } from '@/hooks/useLLMContext';
@@ -30,7 +30,6 @@ import { simpleLogger as logger } from '@/utils/logger';
    * Options du hook
    */
 export interface UseChatMessageActionsOptions {
-  currentSession: ChatSession | null;
   selectedAgent: Agent | null;
   infiniteMessages: ChatMessage[];
   llmContext: LLMContext;
@@ -45,7 +44,6 @@ export interface UseChatMessageActionsOptions {
   clearInfiniteMessages: () => void;
   loadInitialMessages: () => Promise<void>;
   onEditingChange?: (editing: boolean) => void;
-  createSession: (name?: string, agentId?: string | null) => Promise<ChatSession | null>; // ✅ Retourne session
   requireAuth: () => boolean;
   onBeforeSend?: () => Promise<void>; // ✅ NOUVEAU: Callback async avant envoi (reload + reset streaming)
 }
@@ -84,7 +82,6 @@ export function useChatMessageActions(
   options: UseChatMessageActionsOptions
 ): UseChatMessageActionsReturn {
   const {
-    currentSession,
     selectedAgent,
     infiniteMessages,
     llmContext,
@@ -93,14 +90,15 @@ export function useChatMessageActions(
     clearInfiniteMessages,
     loadInitialMessages,
     onEditingChange,
-    createSession,
     requireAuth,
     onBeforeSend
   } = options;
 
+  // 🔥 Lire currentSession depuis le store (toujours à jour)
+  const currentSession = useChatStore(state => state.currentSession);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [creatingSession, setCreatingSession] = useState(false); // ✅ Lock création session
 
   /**
    * Envoie un message
@@ -127,75 +125,30 @@ export function useChatMessageActions(
       return;
     }
 
-    // 🔒 LOCK : Empêcher spam création session si déjà en cours
-    if (creatingSession) {
-      logger.warn('[useChatMessageActions] ⚠️ Création session déjà en cours, message ignoré');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
-    // ✅ NOUVEAU : Créer session au premier message si pas de session
-    let sessionToUse = currentSession;
+    // ✅ Session doit exister (créée lors du clic sur agent)
     if (!currentSession) {
-      setCreatingSession(true); // 🔒 LOCK activé
-      
-      try {
-        logger.dev('[useChatMessageActions] 🆕 Premier message, création session avec agent:', selectedAgent?.name);
-        
-        // Créer session avec agent sélectionné
-        const newSession = await createSession(
-          'Nouvelle conversation', // ✅ Nom temporaire (Phase 2: IA générera nom intelligent)
-          selectedAgent?.id || null
-        );
-        
-        if (!newSession) {
-          throw new Error('Échec création session');
-        }
-        
-        sessionToUse = newSession; // ✅ Utiliser la session créée
-        logger.dev('[useChatMessageActions] ✅ Session créée:', {
-          sessionId: newSession.id,
-          agentId: newSession.agent_id
-        });
-      } finally {
-        setCreatingSession(false); // 🔒 LOCK relâché
-      }
+      throw new Error('Aucune session active');
     }
     
-    // ✅ Reset le streaming précédent (reload + vide la timeline affichée)
+    // ✅ Reset le streaming précédent
     if (onBeforeSend) {
       await onBeforeSend();
-      // onBeforeSend a reload les messages et attendu que infiniteMessages soit à jour
     }
 
     try {
-      // ✅ ATTENDRE encore un tick pour être SÛR que infiniteMessages est à jour
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
-      logger.dev('[useChatMessageActions] 📊 Historique pour nouveau message:', {
-        messagesCount: infiniteMessages.length,
-        lastMessageRole: infiniteMessages[infiniteMessages.length - 1]?.role,
-        lastMessagePreview: infiniteMessages[infiniteMessages.length - 1]?.content?.substring(0, 100)
-      });
-      
-      // ✅ CRITICAL: Utiliser sessionToUse qui peut être la session nouvellement créée
-      const finalSession = sessionToUse || currentSession;
-      
-      if (!finalSession) {
-        throw new Error('Aucune session disponible après création');
-      }
 
       // 1. Préparer l'envoi via service
       const prepareResult = await chatMessageSendingService.prepare({
         message,
         images,
         notes,
-        sessionId: finalSession.id,
-        currentSession: finalSession,
+        sessionId: currentSession.id,
+        currentSession,
         selectedAgent,
-        infiniteMessages, // ✅ Maintenant à jour avec le message précédent
+        infiniteMessages,
         llmContext
       });
 
@@ -224,12 +177,28 @@ export function useChatMessageActions(
         ...(tempMessage?.attachedImages && { attachedImages: tempMessage.attachedImages })
       };
 
-      sessionSyncService.addMessageAndSync(finalSession.id, messageToSave)
+      sessionSyncService.addMessageAndSync(currentSession.id, messageToSave)
         .then(saved => {
           if (saved.success) {
             logger.dev('[useChatMessageActions] ✅ Message user sauvegardé:', {
               sequenceNumber: saved.message?.sequence_number
             });
+            
+            // 🔥 Si 1er message → update optimiste is_empty dans le store
+            if (saved.message?.sequence_number === 1) {
+              const store = useChatStore.getState();
+              const updatedSessions = store.sessions.map(s => 
+                s.id === currentSession.id ? { ...s, is_empty: false } : s
+              );
+              store.setSessions(updatedSessions);
+              
+              // Update aussi currentSession
+              if (store.currentSession?.id === currentSession.id) {
+                store.setCurrentSession({ ...store.currentSession, is_empty: false });
+              }
+              
+              logger.dev('[useChatMessageActions] ✅ Conversation marquée non-vide (apparaît sidebar)');
+            }
           }
         })
         .catch(err => {
@@ -250,7 +219,7 @@ export function useChatMessageActions(
 
       await sendMessageFn(
         message,
-        finalSession.id,
+        currentSession.id,
         context,
         limitedHistory,
         token
@@ -269,16 +238,14 @@ export function useChatMessageActions(
       setIsLoading(false);
     }
   }, [
-    currentSession,
+    currentSession, // 🔥 Ajouté - sinon closure stale
     selectedAgent,
     infiniteMessages,
     llmContext,
     sendMessageFn,
     addInfiniteMessage,
-    createSession,
     requireAuth,
-    creatingSession, // ✅ Dépendance ajoutée
-    onBeforeSend // ✅ Manquait aussi
+    onBeforeSend
   ]);
 
   /**
