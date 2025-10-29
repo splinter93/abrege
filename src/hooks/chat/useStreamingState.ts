@@ -9,7 +9,7 @@
  * - Tracker les tool calls du round actuel
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { StreamTimelineItem } from '@/types/streamTimeline';
 import { simpleLogger as logger } from '@/utils/logger';
 
@@ -72,10 +72,13 @@ export function useStreamingState(): UseStreamingStateReturn {
   const [streamingState, setStreamingStateInternal] = useState<StreamingStateType>('idle');
   const [executingToolCount, setExecutingToolCount] = useState(0);
   const [currentToolName, setCurrentToolName] = useState('');
-  const [currentRound, setCurrentRound] = useState(0);
   const [streamingTimeline, setStreamingTimeline] = useState<StreamTimelineItem[]>([]);
   const [streamStartTime, setStreamStartTime] = useState(0);
   const [currentToolCalls, setCurrentToolCalls] = useState<ToolCall[]>([]);
+  
+  // ✅ FIX: useRef pour currentRound (éviter stale closure)
+  const currentRoundRef = useRef(0);
+  const [currentRound, setCurrentRound] = useState(0);
 
   /**
    * Démarre le streaming
@@ -85,6 +88,7 @@ export function useStreamingState(): UseStreamingStateReturn {
     setIsStreaming(true);
     setStreamingContent('');
     setCurrentRound(0);
+    currentRoundRef.current = 0; // ✅ Réinitialiser le ref aussi
     setStreamingStateInternal('thinking');
     setStreamingTimeline([]);
     setStreamStartTime(Date.now());
@@ -106,9 +110,10 @@ export function useStreamingState(): UseStreamingStateReturn {
     // Mettre à jour la timeline
     setStreamingTimeline(prev => {
       const lastItem = prev[prev.length - 1];
+      const currentRoundValue = currentRoundRef.current; // ✅ Utiliser ref (valeur à jour)
       
       // Si le dernier élément est un texte du même round, fusionner
-      if (lastItem && lastItem.type === 'text' && lastItem.roundNumber === currentRound) {
+      if (lastItem && lastItem.type === 'text' && lastItem.roundNumber === currentRoundValue) {
         return [
           ...prev.slice(0, -1),
           {
@@ -124,12 +129,12 @@ export function useStreamingState(): UseStreamingStateReturn {
         {
           type: 'text' as const,
           content: chunk,
-          roundNumber: currentRound,
+          roundNumber: currentRoundValue,
           timestamp: Date.now() - streamStartTime
         }
       ];
     });
-  }, [currentRound, streamStartTime]);
+  }, [streamStartTime]);
 
   /**
    * Change l'état du streaming
@@ -149,7 +154,11 @@ export function useStreamingState(): UseStreamingStateReturn {
   const addToolExecution = useCallback((toolCalls: ToolCall[], toolCount: number) => {
     setStreamingStateInternal('executing');
     setExecutingToolCount(toolCount);
-    setCurrentRound(prev => prev + 1);
+    
+    // ✅ FIX: Incrémenter le ref ET le state
+    const newRound = currentRoundRef.current + 1;
+    currentRoundRef.current = newRound;
+    setCurrentRound(newRound);
     
     // Stocker les tool calls pour affichage
     setCurrentToolCalls(toolCalls.map(tc => ({
@@ -157,9 +166,9 @@ export function useStreamingState(): UseStreamingStateReturn {
       success: undefined
     })));
     
-    // Ajouter à la timeline
-    setStreamingTimeline(prev => [
-      ...prev,
+    // Ajouter à la timeline avec le BON roundNumber
+    setStreamingTimeline(prevTimeline => [
+      ...prevTimeline,
       {
         type: 'tool_execution' as const,
         toolCalls: toolCalls.map(tc => ({
@@ -168,17 +177,17 @@ export function useStreamingState(): UseStreamingStateReturn {
           result: undefined
         })),
         toolCount,
-        roundNumber: currentRound,
+        roundNumber: newRound,
         timestamp: Date.now() - streamStartTime
       }
     ]);
     
     logger.dev('[useStreamingState] 🔧 Tool execution ajoutée:', {
       toolCount,
-      currentRound,
+      round: newRound,
       toolNames: toolCalls.map(tc => tc.function.name)
     });
-  }, [currentRound, streamStartTime]);
+  }, [streamStartTime]);
 
   /**
    * Met à jour le résultat d'un tool call
@@ -253,6 +262,7 @@ export function useStreamingState(): UseStreamingStateReturn {
     setExecutingToolCount(0);
     setCurrentToolName('');
     setCurrentRound(0);
+    currentRoundRef.current = 0; // ✅ Réinitialiser le ref aussi
     setStreamingTimeline([]);
     setStreamStartTime(0);
     setCurrentToolCalls([]);
