@@ -25,6 +25,8 @@ export interface StreamToolExecutionEvent {
       name: string;
       arguments: string;
     };
+    success?: boolean; // ✅ Statut du résultat (ajouté après exécution)
+    result?: string; // ✅ Résultat du tool call (ajouté après exécution)
   }>;
   toolCount: number;
   timestamp: number;

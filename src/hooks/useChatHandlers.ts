@@ -110,10 +110,32 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
       return;
     }
       
-    // ✅ NETTOYER la timeline : Virer les tool_result individuels (déjà dans tool_execution)
+    // ✅ NETTOYER + ENRICHIR la timeline
     const cleanedTimeline = streamTimeline ? {
       ...streamTimeline,
-      items: streamTimeline.items.filter(item => item.type !== 'tool_result')
+      items: streamTimeline.items
+        .filter(item => item.type !== 'tool_result') // Virer tool_result individuels
+        .map(item => {
+          // ✅ ENRICHIR tool_execution avec les résultats
+          if (item.type === 'tool_execution' && toolResults && toolResults.length > 0) {
+            return {
+              ...item,
+              toolCalls: item.toolCalls.map(tc => {
+                // Chercher le résultat correspondant
+                const result = toolResults.find(tr => tr.tool_call_id === tc.id);
+                if (result) {
+                  return {
+                    ...tc,
+                    success: result.success,
+                    result: result.content
+                  };
+                }
+                return tc;
+              })
+            };
+          }
+          return item;
+        })
     } : undefined;
     
     const messageToAdd = {
@@ -126,12 +148,17 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
       timestamp: new Date().toISOString()
     };
 
-    logger.dev('[useChatHandlers] 📝 Ajout du message final complet avec timeline:', {
+    logger.dev('[useChatHandlers] 📝 Ajout du message final complet avec timeline enrichie:', {
       hasTimeline: !!cleanedTimeline,
       originalTimelineEvents: streamTimeline?.items.length || 0,
       cleanedTimelineEvents: cleanedTimeline?.items.length || 0,
       removedToolResults: (streamTimeline?.items.length || 0) - (cleanedTimeline?.items.length || 0),
       itemTypes: cleanedTimeline?.items.map(i => i.type) || [],
+      toolExecutionBlocks: cleanedTimeline?.items.filter(i => i.type === 'tool_execution').length || 0,
+      toolCallsWithResults: cleanedTimeline?.items
+        .filter(i => i.type === 'tool_execution')
+        .flatMap(i => i.toolCalls)
+        .filter(tc => tc.success !== undefined).length || 0,
       hasToolCalls: !!(toolCalls && toolCalls.length > 0),
       hasToolResults: !!(toolResults && toolResults.length > 0),
       contentLength: finalContent.length
