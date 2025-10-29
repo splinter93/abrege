@@ -589,33 +589,13 @@ body.chat-theme-anthracite .chatgpt-header {
 .sidebar-search-clean {
   padding: 16px;
   border-bottom: none;
-  display: flex; /* ✅ Flexbox pour aligner recherche + bouton */
-  gap: 8px; /* ✅ Espace entre recherche et bouton */
-  align-items: center;
-}
-
-.sidebar-new-note-btn-top {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0; /* ✅ Ne pas réduire */
-  background: var(--sidebar-search-overlay); /* ✅ Même background que recherche */
-  border: none;
-  border-radius: var(--chat-radius-md);
-  color: var(--chat-text-secondary);
-  cursor: pointer;
-  transition: all var(--chat-transition-fast);
-}
-
-.sidebar-new-note-btn-top:hover {
-  background: var(--sidebar-search-overlay-focus);
-  color: var(--chat-text-primary);
 }
 
 .sidebar-search-clean > div {
   position: relative;
+  flex: 1; /* ✅ Prend toute la largeur disponible */
 }
 
 .sidebar-search-icon-clean {

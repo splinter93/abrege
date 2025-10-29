@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, User, Settings, SquarePen } from 'lucide-react';
+import { Search, X, User, Settings } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
@@ -39,13 +39,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Fonctions de gestion
-  const handleCreateNewSession = async () => {
-    await createSession('Nouvelle Conversation');
-    if (!isDesktop) {
-      onClose();
-    }
-  };
-
   const handleSelectSession = (session: ChatSession) => {
     setCurrentSession(session);
     if (!isDesktop) {
@@ -102,7 +95,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   return (
     <div className={`sidebar-ultra-clean ${isDesktop ? 'desktop' : 'mobile'} ${isOpen ? 'visible' : ''}`}>
 
-      {/* Barre de recherche avec bouton nouvelle note */}
+      {/* Barre de recherche */}
       <div className="sidebar-search-clean">
         <div style={{ position: 'relative', flex: 1 }}>
           <Search className="sidebar-search-icon-clean" size={16} />
@@ -114,13 +107,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <button
-          onClick={handleCreateNewSession}
-          className="sidebar-new-note-btn-top"
-          title="Nouvelle conversation"
-        >
-          <SquarePen size={16} />
-        </button>
       </div>
 
       {/* Contenu principal */}
@@ -142,6 +128,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                   <button
                     onClick={() => handleSelectAgent(agent)}
                     className={`sidebar-item-clean ${!currentSession && selectedAgent?.id === agent.id ? 'active' : ''}`}
+                    title="Nouvelle conversation"
                   >
                     <div className="sidebar-item-icon-clean">
                       {agent.profile_picture ? (
