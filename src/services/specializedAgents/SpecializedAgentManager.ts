@@ -4,7 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { simpleOrchestrator } from '@/services/llm/services/AgentOrchestrator';
+import { agentOrchestrator } from '@/services/llm/services/AgentOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 import { SchemaValidator } from './schemaValidator';
 import { MultimodalHandler } from './multimodalHandler';
@@ -490,7 +490,6 @@ export class SpecializedAgentManager {
       let query = supabase
         .from('agents')
         .select('*')
-        .eq('is_endpoint_agent', true)
         .eq('is_active', true);
 
       // Si c'est un UUID, chercher par ID, sinon par slug
@@ -1519,7 +1518,17 @@ Modèle utilisé : ${model}`;
       api_v2_capabilities: agent.api_v2_capabilities || ['get_note', 'update_note', 'search_notes', 'list_notes', 'create_note', 'delete_note']
     };
 
-    const orchestratorResult = await simpleOrchestrator.processMessage(
+    // 🔍 DEBUG: Vérifier l'agent config avant d'appeler l'orchestrateur
+    logger.info(`[SpecializedAgentManager] 🔍 Agent config avant orchestrateur:`, { 
+      traceId,
+      agentId: agent.id,
+      agentSlug: agent.slug,
+      agentName: agent.name || agent.display_name,
+      hasId: !!agent.id,
+      configKeys: Object.keys(agentConfigWithTools)
+    });
+
+    const orchestratorResult = await agentOrchestrator.processMessage(
       userMessage,
       {
         userToken,

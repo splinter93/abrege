@@ -163,27 +163,37 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
       }
     }
 
-    // ✅ ESSAYER L'API KEY
+    // ✅ ESSAYER L'API KEY (avec support impersonation via X-User-Id)
     const apiKey = request.headers.get('X-API-Key');
     if (apiKey) {
       try {
         logApi.info(`[AuthUtils] 🔑 Validation clé API: ${apiKey.substring(0, 20)}...`);
         const apiKeyUser = await validateApiKey(apiKey);
         if (apiKeyUser) {
-          logApi.info(`[AuthUtils] ✅ Clé API validée pour utilisateur: ${apiKeyUser.user_id}`);
+          // ✅ Si X-User-Id fourni avec une API Key valide, utiliser cet userId (impersonation)
+          const impersonatedUserId = request.headers.get('X-User-Id');
+          const finalUserId = impersonatedUserId || apiKeyUser.user_id;
+          
+          if (impersonatedUserId) {
+            logApi.info(`[AuthUtils] 👤 Impersonation via X-User-Id: ${impersonatedUserId}`);
+          }
+          
+          logApi.info(`[AuthUtils] ✅ Clé API validée pour utilisateur: ${finalUserId}`);
           return {
             success: true,
-            userId: apiKeyUser.user_id,
-            scopes: apiKeyUser.scopes || ['notes:read', 'classeurs:read', 'dossiers:read'],
+            userId: finalUserId,
+            scopes: apiKeyUser.scopes || DEFAULT_AGENT_SCOPES,
             authType: 'api_key'
           };
         } else {
-          logApi.warn(`[AuthUtils] ❌ Clé API invalide ou expirée`);
+          logApi.warn(`[AuthUtils] ❌ Clé API invalide ou expirée, passage au OAuth`);
         }
       } catch (apiKeyError) {
-        logApi.error(`[AuthUtils] ❌ Erreur validation clé API:`, apiKeyError);
+        logApi.error(`[AuthUtils] ❌ Erreur validation clé API, passage au OAuth:`, apiKeyError);
         // API Key invalide, essai OAuth
       }
+    } else {
+      logApi.info(`[AuthUtils] ⚠️ Pas de header X-API-Key, skip API Key auth`);
     }
     
     // ✅ ESSAYER LE TOKEN OAUTH
@@ -191,40 +201,59 @@ export async function getAuthenticatedUser(request: NextRequest): Promise<AuthRe
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       
+      logApi.info(`[AuthUtils] 🔍 Authorization Bearer trouvé:`, {
+        tokenLength: token.length,
+        tokenStart: token.substring(0, 30),
+        isJWT: token.includes('.')
+      });
+      
       try {
+        logApi.info(`[AuthUtils] 🔍 Tentative validation OAuth...`);
         const oauthUser = await oauthService.validateAccessToken(token);
         
         if (oauthUser) {
+          logApi.info(`[AuthUtils] ✅ OAuth validé pour user: ${oauthUser.user_id}`);
           return {
             success: true,
             userId: oauthUser.user_id,
             scopes: oauthUser.scopes,
             authType: 'oauth'
           };
+        } else {
+          logApi.info(`[AuthUtils] ⚠️ OAuth invalide, passage au JWT Supabase`);
         }
       } catch (oauthError) {
+        logApi.info(`[AuthUtils] ⚠️ Erreur OAuth, passage au JWT Supabase:`, oauthError);
         // Token OAuth invalide, essai JWT Supabase
       }
       
       // ✅ ESSAYER LE JWT SUPABASE (fallback)
       try {
+        logApi.info(`[AuthUtils] 🔍 Tentative validation JWT Supabase:`, {
+          tokenLength: token.length,
+          tokenStart: token.substring(0, 30),
+          tokenHasDots: token.includes('.'),
+          tokenParts: token.split('.').length
+        });
+        
         const supabaseWithToken = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          {
-            global: {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            }
-          }
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         );
         
-        const { data: { user }, error } = await supabaseWithToken.auth.getUser();
+        // ✅ CRITICAL FIX: Passer le token explicitement à getUser()
+        const { data: { user }, error } = await supabaseWithToken.auth.getUser(token);
         
         if (error || !user) {
+          logApi.warn(`[AuthUtils] ❌ JWT Supabase invalide:`, {
+            error: error?.message || 'User null',
+            errorStatus: error?.status,
+            tokenLength: token.length
+          });
           throw new Error('JWT invalide');
         }
+        
+        logApi.info(`[AuthUtils] ✅ JWT Supabase validé pour user: ${user.id}`);
 
         // 🔧 CORRECTION : Pour les agents spécialisés, ajouter des scopes par défaut
         // Vérifier si c'est un agent spécialisé (via le header X-Agent-Type ou autre indicateur)

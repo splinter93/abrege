@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
 
     // ✅ Charger les tools (OpenAPI + MCP) ET les endpoints
     let tools: Tool[] = [];
-    let openApiEndpoints = new Map<string, { url: string; method: string; headers?: Record<string, string> }>();
+    let openApiEndpoints = new Map<string, { method: string; path: string; apiKey?: string; headerName?: string; baseUrl: string }>();
     
     if (context.agentId) {
       try {
@@ -280,14 +280,11 @@ export async function POST(request: NextRequest) {
           
           // 2. Charger les tools MCP de l'agent
           const { mcpConfigService } = await import('@/services/llm/mcpConfigService');
-          const hybridTools = await mcpConfigService.buildHybridTools(
+          tools = await mcpConfigService.buildHybridTools(
             context.agentId,
             userToken,
             openApiTools
           ) as Tool[];
-          
-          // Limiter à 15 tools pour xAI
-          tools = hybridTools.slice(0, 15);
           
           const mcpCount = tools.filter(isMcpTool).length;
           const openApiCount = tools.length - mcpCount;
@@ -534,13 +531,6 @@ export async function POST(request: NextRequest) {
                   logger.dev(`[Stream Route] ⏭️ Tool MCP skip (géré par Groq): ${toolCall.function.name}`);
                   continue;
                 }
-                
-                // ✅ AUDIT DÉTAILLÉ : Logger avant exécution OpenAPI
-                logger.dev(`[Stream Route] 🚀 AVANT EXÉCUTION OPENAPI:`, {
-                  toolName: toolCall.function.name,
-                  toolId: toolCall.id,
-                  arguments: toolCall.function.arguments.substring(0, 100) + '...'
-                });
                 
                 // ✅ Exécuter le tool OpenAPI
                 const result = await openApiExecutor.executeToolCall(toolCall, userToken);

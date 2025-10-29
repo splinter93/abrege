@@ -107,29 +107,65 @@ export class SimpleOrchestrator {
 
   /**
    * Charger les schémas OpenAPI liés à un agent
+   * ✅ Support des UUIDs et slugs
    */
   private async loadAgentOpenApiSchemas(agentId?: string): Promise<Array<{ openapi_schema_id: string }>> {
-    if (!agentId) return [];
+    if (!agentId) {
+      logger.warn(`[SimpleOrchestrator] ⚠️ loadAgentOpenApiSchemas appelé sans agentId`);
+      return [];
+    }
 
     try {
+      logger.info(`[SimpleOrchestrator] 🔍 Chargement schémas OpenAPI pour agent: ${agentId}`);
+      
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
 
+      // ✅ Détecter si c'est un UUID ou un slug
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(agentId);
+      
+      let resolvedAgentId = agentId;
+      
+      // ✅ Si c'est un slug, résoudre l'UUID depuis la table agents
+      if (!isUUID) {
+        logger.info(`[SimpleOrchestrator] 🔍 Résolution du slug "${agentId}" en UUID...`);
+        
+        const { data: agent, error: agentError } = await supabase
+          .from('agents')
+          .select('id')
+          .eq('slug', agentId)
+          .eq('is_active', true)
+          .single();
+        
+        if (agentError || !agent) {
+          logger.warn(`[SimpleOrchestrator] ⚠️ Agent avec slug "${agentId}" non trouvé`);
+          return [];
+        }
+        
+        resolvedAgentId = agent.id;
+        logger.info(`[SimpleOrchestrator] ✅ Slug résolu: ${agentId} → ${resolvedAgentId}`);
+      }
+
+      // Charger les schémas OpenAPI liés
       const { data: links, error } = await supabase
         .from('agent_openapi_schemas')
         .select('openapi_schema_id')
-        .eq('agent_id', agentId);
+        .eq('agent_id', resolvedAgentId);
 
       if (error) {
-        logger.error(`[SimpleOrchestrator] ❌ Erreur chargement schémas agent:`, error);
+        logger.error(`[SimpleOrchestrator] ❌ Erreur chargement schémas agent ${resolvedAgentId}:`, error);
         return [];
       }
 
+      logger.info(`[SimpleOrchestrator] ✅ ${(links || []).length} schémas OpenAPI trouvés pour agent ${agentId} (${resolvedAgentId})`, {
+        schemaIds: (links || []).map(l => l.openapi_schema_id)
+      });
+
       return links || [];
     } catch (error) {
-      logger.error(`[SimpleOrchestrator] ❌ Erreur:`, error);
+      logger.error(`[SimpleOrchestrator] ❌ Erreur chargement schémas agent ${agentId}:`, error);
       return [];
     }
   }

@@ -338,6 +338,7 @@ export class OpenApiToolExecutor {
   /**
    * Construire les headers pour l'appel HTTP
    * ✅ FIXED: Utilise le userToken pour l'auth utilisateur
+   * ✅ CRITICAL: Ne jamais écraser le Bearer token avec l'API Key
    */
   private buildHeaders(endpoint: OpenApiEndpoint, userToken: string): Record<string, string> {
     const headers: Record<string, string> = {
@@ -345,20 +346,42 @@ export class OpenApiToolExecutor {
       'User-Agent': 'Scrivia-OpenAPI-Executor/1.0'
     };
 
-    // ✅ CRITICAL FIX: Utiliser le userToken pour l'auth utilisateur
-    if (userToken) {
-      headers['Authorization'] = `Bearer ${userToken}`;
-      logger.dev(`[OpenApiToolExecutor] 🔑 Token utilisateur ajouté`);
+    // Détecter si c'est l'API Scrivia
+    const isScriviaApi = endpoint.baseUrl?.includes('scrivia.app') || endpoint.baseUrl?.includes('localhost');
+    
+    // ✅ CRITICAL: Pour l'API Scrivia, utiliser l'API Key + X-User-Id pour impersonation
+    if (isScriviaApi && endpoint.apiKey) {
+      // API Key pour l'auth
+      if (endpoint.headerName) {
+        headers[endpoint.headerName] = endpoint.apiKey;
+      } else {
+        headers['X-API-Key'] = endpoint.apiKey;
+      }
+      
+      // Extraire userId du JWT pour l'impersonation
+      if (userToken && userToken.includes('.')) {
+        try {
+          const jwtPayload = JSON.parse(atob(userToken.split('.')[1]));
+          const userId = jwtPayload.sub || jwtPayload.user_id;
+          if (userId) {
+            headers['X-User-Id'] = userId;
+            logger.dev(`[OpenApiToolExecutor] 👤 API Scrivia: X-User-Id=${userId}`);
+          }
+        } catch (e) {
+          logger.warn(`[OpenApiToolExecutor] ⚠️ Impossible d'extraire userId du JWT`);
+        }
+      }
+      
+      return headers;
     }
 
-    // Combiner header name + api key (comme dans MCP servers)
+    // Pour les APIs externes (Pexels, Exa, etc.)
     if (endpoint.apiKey && endpoint.headerName) {
       headers[endpoint.headerName] = endpoint.apiKey;
-      logger.dev(`[OpenApiToolExecutor] 🔑 Clé API ajoutée au header "${endpoint.headerName}"`);
+      logger.dev(`[OpenApiToolExecutor] 🔑 API externe: ${endpoint.headerName}`);
     } else if (endpoint.apiKey) {
-      // Fallback sur X-API-Key si pas de header name spécifié
       headers['X-API-Key'] = endpoint.apiKey;
-      logger.dev(`[OpenApiToolExecutor] 🔑 Clé API ajoutée au header "X-API-Key" (fallback)`);
+      logger.dev(`[OpenApiToolExecutor] 🔑 API externe: X-API-Key`);
     }
 
     return headers;

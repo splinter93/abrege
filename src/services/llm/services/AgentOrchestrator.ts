@@ -107,29 +107,65 @@ export class AgentOrchestrator {
 
   /**
    * Charger les schémas OpenAPI liés à un agent
+   * ✅ Support des UUIDs et slugs
    */
   private async loadAgentOpenApiSchemas(agentId?: string): Promise<Array<{ openapi_schema_id: string }>> {
-    if (!agentId) return [];
+    if (!agentId) {
+      logger.warn(`[AgentOrchestrator] ⚠️ loadAgentOpenApiSchemas appelé sans agentId`);
+      return [];
+    }
 
     try {
+      logger.info(`[AgentOrchestrator] 🔍 Chargement schémas OpenAPI pour agent: ${agentId}`);
+      
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
 
+      // ✅ Détecter si c'est un UUID ou un slug
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(agentId);
+      
+      let resolvedAgentId = agentId;
+      
+      // ✅ Si c'est un slug, résoudre l'UUID depuis la table agents
+      if (!isUUID) {
+        logger.info(`[AgentOrchestrator] 🔍 Résolution du slug "${agentId}" en UUID...`);
+        
+        const { data: agent, error: agentError } = await supabase
+          .from('agents')
+          .select('id')
+          .eq('slug', agentId)
+          .eq('is_active', true)
+          .single();
+        
+        if (agentError || !agent) {
+          logger.warn(`[AgentOrchestrator] ⚠️ Agent avec slug "${agentId}" non trouvé`);
+          return [];
+        }
+        
+        resolvedAgentId = agent.id;
+        logger.info(`[AgentOrchestrator] ✅ Slug résolu: ${agentId} → ${resolvedAgentId}`);
+      }
+
+      // Charger les schémas OpenAPI liés
       const { data: links, error } = await supabase
         .from('agent_openapi_schemas')
         .select('openapi_schema_id')
-        .eq('agent_id', agentId);
+        .eq('agent_id', resolvedAgentId);
 
       if (error) {
-        logger.error(`[AgentOrchestrator] ❌ Erreur chargement schémas agent:`, error);
+        logger.error(`[AgentOrchestrator] ❌ Erreur chargement schémas agent ${resolvedAgentId}:`, error);
         return [];
       }
 
+      logger.info(`[AgentOrchestrator] ✅ ${(links || []).length} schémas OpenAPI trouvés pour agent ${agentId} (${resolvedAgentId})`, {
+        schemaIds: (links || []).map(l => l.openapi_schema_id)
+      });
+
       return links || [];
     } catch (error) {
-      logger.error(`[AgentOrchestrator] ❌ Erreur:`, error);
+      logger.error(`[AgentOrchestrator] ❌ Erreur chargement schémas agent ${agentId}:`, error);
       return [];
     }
   }
@@ -268,11 +304,13 @@ export class AgentOrchestrator {
       logger.info(`[AgentOrchestrator] 🎯 Agent Config reçu:`, {
         hasAgentConfig: !!context.agentConfig,
         agentId: agentConfig?.id,
+        agentSlug: agentConfig?.slug,
         agentName: agentConfig?.name,
         provider: agentConfig?.provider,
         model: agentConfig?.model,
         temperature: agentConfig?.temperature,
-        isDefault: !context.agentConfig
+        isDefault: !context.agentConfig,
+        hasOpenApiSchemas: !!agentConfig?.id
       });
       
       // ✅ NOUVEAU : Sélectionner le bon provider selon l'agent

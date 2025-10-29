@@ -265,16 +265,6 @@ export class OpenAPISchemaService {
           // Construire les paramètres du tool
           const parameters = this.buildToolParameters(op, pathName);
 
-          // ✅ WORKAROUND : Exclure les tools trop complexes pour xAI
-          const excludedTools = [
-            'applyContentOperations', // Trop complexe (nested objects profonds)
-          ];
-
-          if (excludedTools.includes(operationId)) {
-            logger.dev(`[OpenAPISchemaService] ⚠️ Tool exclu (trop complexe): ${operationId}`);
-            continue;
-          }
-
           // ✅ Construire le nom du tool avec préfixe namespace si disponible
           const toolName = namespace ? `${namespace}__${operationId}` : operationId;
           
