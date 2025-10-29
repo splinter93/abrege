@@ -29,7 +29,9 @@ const messageSchema = z.object({
   })).optional(),
   tool_call_id: z.string().optional(),
   name: z.string().optional(),
-  reasoning: z.string().optional()
+  reasoning: z.string().optional(),
+  stream_timeline: z.any().optional(), // ✅ CRITIQUE: Accepter la timeline (JSONB complexe)
+  tool_results: z.array(z.any()).optional() // ✅ Tool results aussi
 });
 
 export async function POST(
@@ -42,6 +44,12 @@ export async function POST(
     // 1. Validation body
     const body = await req.json();
     const message = messageSchema.parse(body);
+    
+    logger.dev('[API /messages/add] 📥 Message reçu:', {
+      role: message.role,
+      hasStreamTimeline: 'stream_timeline' in message,
+      streamTimelineType: typeof (message as any).stream_timeline
+    });
 
     // 2. Vérifier authentification
     const authHeader = req.headers.get('authorization');

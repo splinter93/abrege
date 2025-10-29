@@ -68,6 +68,13 @@ export class HistoryManager {
     message: Omit<ChatMessage, 'id' | 'sequence_number' | 'timestamp' | 'created_at'>
   ): Promise<ChatMessage> {
     try {
+      logger.dev('[HistoryManager] 📥 addMessage appelé:', {
+        sessionId,
+        role: message.role,
+        hasStreamTimeline: 'stream_timeline' in message && !!message.stream_timeline,
+        streamTimelineEvents: 'stream_timeline' in message && message.stream_timeline ? message.stream_timeline.items?.length : 0
+      });
+      
       const { data, error } = await supabase.rpc('add_message_atomic', {
         p_session_id: sessionId,
         p_role: message.role,
@@ -98,21 +105,48 @@ export class HistoryManager {
         throw new Error(`Failed to add message: ${error.message || 'Unknown error'}`);
       }
 
-      // ✅ UPDATE stream_timeline si présent (RPC ne supporte pas JSONB complexe)
-      if ('stream_timeline' in message && message.stream_timeline) {
+      // ✅ UPDATE stream_timeline + tool_results si présents (RPC ne supporte pas JSONB complexe)
+      if (('stream_timeline' in message && message.stream_timeline) || ('tool_results' in message && message.tool_results)) {
+        const updateData: Record<string, unknown> = {};
+        
+        if ('stream_timeline' in message && message.stream_timeline) {
+          updateData.stream_timeline = message.stream_timeline;
+        }
+        
+        if ('tool_results' in message && message.tool_results) {
+          updateData.tool_results = message.tool_results;
+        }
+        
         const { error: updateError } = await supabase
           .from('chat_messages')
-          .update({ stream_timeline: message.stream_timeline })
+          .update(updateData)
           .eq('id', data.id);
 
         if (updateError) {
-          logger.warn('[HistoryManager] ⚠️ Erreur UPDATE stream_timeline:', updateError);
+          logger.error('[HistoryManager] ❌ Erreur UPDATE JSONB fields:', {
+            error: updateError,
+            messageId: data.id,
+            fields: Object.keys(updateData)
+          });
           // Non bloquant, on continue
         } else {
-          logger.dev('[HistoryManager] ✅ stream_timeline sauvegardée:', {
+          logger.dev('[HistoryManager] ✅ JSONB fields sauvegardés:', {
             messageId: data.id,
-            timelineEvents: message.stream_timeline.items?.length || 0
+            streamTimelineEvents: 'stream_timeline' in message && message.stream_timeline ? message.stream_timeline.items?.length : 0,
+            toolResultsCount: 'tool_results' in message && message.tool_results ? message.tool_results.length : 0
           });
+        }
+        
+        // ✅ RE-SELECT le message pour récupérer les champs JSONB
+        const { data: fullMessage, error: selectError } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .eq('id', data.id)
+          .single();
+          
+        if (!selectError && fullMessage) {
+          logger.dev('[HistoryManager] ✅ Message complet rechargé avec JSONB');
+          return fullMessage as ChatMessage;
         }
       }
 
