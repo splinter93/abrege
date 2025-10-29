@@ -167,8 +167,13 @@ const ChatFullscreenV2: React.FC = () => {
         logger.dev('[ChatFullscreenV2] 🔄 Reload messages avant reset timeline');
         await loadInitialMessages();
         
-        // Petit délai pour que les messages s'affichent
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // ✅ CRITICAL: Attendre que infiniteMessages soit mis à jour (state async)
+        // Sinon l'historique passé au LLM sera incomplet
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        logger.dev('[ChatFullscreenV2] ✅ Messages rechargés:', {
+          messagesCount: infiniteMessages.length
+        });
       }
       
       // Maintenant on peut reset la timeline

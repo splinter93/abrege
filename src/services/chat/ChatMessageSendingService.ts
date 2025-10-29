@@ -28,9 +28,10 @@ export interface SendMessageOptions {
   sessionId: string;
   currentSession: ChatSession;
   selectedAgent: Agent | null;
-  infiniteMessages: ChatMessage[];
+  infiniteMessages: ChatMessage[]; // Utilisé comme fallback si reload DB échoue
   llmContext: LLMContext;
   maxHistoryForLLM?: number;
+  reloadHistory?: boolean; // ✅ NOUVEAU: Force reload depuis DB (évite historique stale)
 }
 
 /**

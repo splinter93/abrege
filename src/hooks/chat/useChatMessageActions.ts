@@ -134,15 +134,25 @@ export function useChatMessageActions(
       return;
     }
 
+    setIsLoading(true);
+    setError(null);
+    
     // ✅ Reset le streaming précédent (reload + vide la timeline affichée)
     if (onBeforeSend) {
       await onBeforeSend();
+      // onBeforeSend a reload les messages et attendu que infiniteMessages soit à jour
     }
-    
-    setIsLoading(true);
-    setError(null);
 
     try {
+      // ✅ ATTENDRE encore un tick pour être SÛR que infiniteMessages est à jour
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      logger.dev('[useChatMessageActions] 📊 Historique pour nouveau message:', {
+        messagesCount: infiniteMessages.length,
+        lastMessageRole: infiniteMessages[infiniteMessages.length - 1]?.role,
+        lastMessagePreview: infiniteMessages[infiniteMessages.length - 1]?.content?.substring(0, 100)
+      });
+      
       // 1. Préparer l'envoi via service
       const prepareResult = await chatMessageSendingService.prepare({
         message,
@@ -151,7 +161,7 @@ export function useChatMessageActions(
         sessionId: currentSession.id,
         currentSession,
         selectedAgent,
-        infiniteMessages,
+        infiniteMessages, // ✅ Maintenant à jour avec le message précédent
         llmContext
       });
 
