@@ -47,7 +47,7 @@ export interface UseChatMessageActionsOptions {
   onEditingChange?: (editing: boolean) => void;
   createSession: () => Promise<void>;
   requireAuth: () => boolean;
-  onBeforeSend?: () => void; // ✅ NOUVEAU: Callback avant envoi (reset streaming)
+  onBeforeSend?: () => Promise<void>; // ✅ NOUVEAU: Callback async avant envoi (reload + reset streaming)
 }
 
 /**
@@ -134,8 +134,10 @@ export function useChatMessageActions(
       return;
     }
 
-    // ✅ Reset le streaming précédent (vide la timeline affichée)
-    onBeforeSend?.();
+    // ✅ Reset le streaming précédent (reload + vide la timeline affichée)
+    if (onBeforeSend) {
+      await onBeforeSend();
+    }
     
     setIsLoading(true);
     setError(null);
@@ -194,6 +196,13 @@ export function useChatMessageActions(
       if (!token || !context || !limitedHistory) {
         throw new Error('Données incomplètes pour appel LLM');
       }
+
+      logger.dev('[useChatMessageActions] 📤 Envoi au LLM:', {
+        messagePreview: typeof message === 'string' ? message.substring(0, 100) : '[multi-modal]',
+        historyLength: limitedHistory.length,
+        historyRoles: limitedHistory.map(m => m.role),
+        context: context
+      });
 
       await sendMessageFn(
         message,

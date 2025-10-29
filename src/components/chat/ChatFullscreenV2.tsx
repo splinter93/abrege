@@ -135,7 +135,7 @@ const ChatFullscreenV2: React.FC = () => {
       
       if (toolCallId) {
         streamingState.updateToolResult(toolCallId, result, success);
-      } else {
+        } else {
         logger.warn('[ChatFullscreenV2] ⚠️ toolCallId manquant pour updateToolResult');
       }
       
@@ -161,10 +161,19 @@ const ChatFullscreenV2: React.FC = () => {
     },
     createSession,
     requireAuth,
-    onBeforeSend: () => {
-      // ✅ Reset le streaming précédent avant nouveau message
+    onBeforeSend: async () => {
+      // ✅ CRITICAL: Reload messages AVANT de reset (sinon le message précédent disparaît)
+      if (streamingState.streamingTimeline.length > 0) {
+        logger.dev('[ChatFullscreenV2] 🔄 Reload messages avant reset timeline');
+        await loadInitialMessages();
+        
+        // Petit délai pour que les messages s'affichent
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      
+      // Maintenant on peut reset la timeline
       streamingState.reset();
-      logger.dev('[ChatFullscreenV2] 🔄 Streaming précédent reset avant nouveau message');
+      logger.dev('[ChatFullscreenV2] ✅ Timeline reset, messages DB affichés');
     }
   });
 

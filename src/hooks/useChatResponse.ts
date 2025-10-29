@@ -314,7 +314,8 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                   timestamp: Date.now() - streamStartTime
                 });
                 
-                onToolResult?.(chunk.toolName || '', chunk, chunk.success || false, chunk.toolCallId);
+                // ✅ CRITIQUE: Passer chunk.result (pas chunk complet)
+                onToolResult?.(chunk.toolName || '', chunk.result, chunk.success || false, chunk.toolCallId);
               }
 
               // ✅ NOUVEAU: Gérer la fin d'un round assistant
