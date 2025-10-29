@@ -1,8 +1,9 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
+import type { ChatMessage } from '@/types/chat';
 
 interface UseChatScrollOptions {
   autoScroll?: boolean;
-  messages?: unknown[];
+  messages?: ChatMessage[]; // ✅ Type strict (pas unknown[])
   offsetTop?: number;            // espace sous le header quand on centre un message
   refreshOffset?: number;        // offset normal au refresh/chargement
 }
@@ -206,9 +207,9 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     const prevLast = prevMessages[prevMessages.length - 1];
     const currLast = messages[messages.length - 1];
     
-    // ✅ Comparer par ID pour détecter les NOUVEAUX messages (pour scroll)
-    const prevLastId = (prevLast as any)?.id || (prevLast as any)?.timestamp;
-    const currLastId = (currLast as any)?.id || (currLast as any)?.timestamp;
+    // ✅ Type-safe: Accès aux propriétés sans cast
+    const prevLastId = prevLast?.id || prevLast?.timestamp;
+    const currLastId = currLast?.id || currLast?.timestamp;
     const hasNewMessage = messages.length !== prevMessages.length || prevLastId !== currLastId;
 
     // ✅ Détecter les changements de contenu (même message qui update)
@@ -216,10 +217,9 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
 
     prevMessagesRef.current = messages;
 
-    // Détermine le rôle du dernier message
-    const lastMessage: any = currLast as any;
-    const isLastMessageUser = lastMessage && typeof lastMessage === 'object' && 'role' in lastMessage && lastMessage.role === 'user';
-    const isLastMessageAssistant = lastMessage && typeof lastMessage === 'object' && 'role' in lastMessage && lastMessage.role === 'assistant';
+    // ✅ Type-safe: Vérification rôle sans cast
+    const isLastMessageUser = currLast?.role === 'user';
+    const isLastMessageAssistant = currLast?.role === 'assistant';
 
     // 🎯 USER : Scroll seulement pour NOUVEAUX messages
     if (isLastMessageUser && hasNewMessage) {

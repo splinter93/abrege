@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { simpleLogger as logger } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
+import { streamTimelineSchema, toolResultSchema } from '@/utils/chatValidationSchemas';
 
 /**
  * ✅ API: POST /api/chat/sessions/[sessionId]/messages/add
@@ -10,7 +11,7 @@ import { createClient } from '@supabase/supabase-js';
  * Sécurité:
  * - Vérifie auth token
  * - Vérifie ownership session
- * - Validation Zod
+ * - Validation Zod stricte (0 any)
  * - Appel HistoryManager (SERVICE_ROLE, atomique)
  * 
  * @returns {ChatMessage} - Message sauvegardé avec sequence_number
@@ -30,8 +31,8 @@ const messageSchema = z.object({
   tool_call_id: z.string().optional(),
   name: z.string().optional(),
   reasoning: z.string().optional(),
-  stream_timeline: z.any().optional(), // ✅ CRITIQUE: Accepter la timeline (JSONB complexe)
-  tool_results: z.array(z.any()).optional() // ✅ Tool results aussi
+  stream_timeline: streamTimelineSchema.optional(), // ✅ Type strict
+  tool_results: z.array(toolResultSchema).optional() // ✅ Type strict
 });
 
 export async function POST(
@@ -47,8 +48,8 @@ export async function POST(
     
     logger.dev('[API /messages/add] 📥 Message reçu:', {
       role: message.role,
-      hasStreamTimeline: 'stream_timeline' in message,
-      streamTimelineType: typeof (message as any).stream_timeline
+      hasStreamTimeline: !!message.stream_timeline,
+      streamTimelineItems: message.stream_timeline?.items?.length || 0
     });
 
     // 2. Vérifier authentification
