@@ -48,13 +48,29 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
     logger.info(`[Groq API] 🎯 Lancement AgentOrchestrator pour session ${sessionId}`);
     const orchestratorStart = Date.now();
     
+    // ✅ Merger attachedNotes dans uiContext pour qu'elles soient injectées dans le prompt
+    const uiContextWithNotes = params.appContext?.uiContext ? {
+      ...params.appContext.uiContext,
+      ...(params.appContext.attachedNotes && params.appContext.attachedNotes.length > 0 && {
+        attachedNotes: params.appContext.attachedNotes
+      })
+    } : undefined;
+    
+    // 📎 LOG: Notes attachées détectées
+    if (params.appContext?.attachedNotes && params.appContext.attachedNotes.length > 0) {
+      logger.info('[Groq API] 📎 Notes attachées détectées:', {
+        count: params.appContext.attachedNotes.length,
+        titles: params.appContext.attachedNotes.map(n => n.title)
+      });
+    }
+    
     const chatResult = await agentOrchestrator.processMessage(
       params.message,
       {
         userToken: params.userToken,
         sessionId: params.sessionId,
         agentConfig: normalizedAgentConfig,
-        uiContext: params.appContext?.uiContext,
+        uiContext: uiContextWithNotes,
         maxToolCalls: 50
       },
       params.sessionHistory || []

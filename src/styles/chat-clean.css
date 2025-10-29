@@ -2525,6 +2525,31 @@ body.chat-theme-anthracite .chatgpt-header {
   color: var(--chat-accent-primary);
 }
 
+/* Container des notes dans les messages (plus compact) */
+.chatgpt-message-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px; /* Augmenté légèrement */
+}
+
+/* Pills des notes dans les messages (plus petites que dans l'input) */
+.chatgpt-message-notes .chat-note-pill {
+  padding: 3px 10px; /* Plus petit : 4px → 3px, 12px → 10px */
+  font-size: 12px; /* Plus petit : 13px → 12px */
+  gap: 6px; /* Plus compact : 8px → 6px */
+  border-radius: 16px; /* Plus petit : 20px → 16px */
+}
+
+.chatgpt-message-notes .chat-note-pill svg {
+  width: 12px; /* Plus petit : 14px → 12px */
+  height: 12px;
+}
+
+.chatgpt-message-notes .chat-note-pill-title {
+  max-width: 180px; /* Un peu plus court */
+}
+
 /* Container pour les images preview */
 .chat-images-preview-container {
   display: flex;

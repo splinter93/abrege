@@ -24,6 +24,7 @@ import { groqCircuitBreaker } from '@/services/circuitBreaker';
 import { addToolCallInstructions } from '../toolCallInstructions';
 import type { Tool, GroqMessage, McpCall } from '../types/strictTypes';
 import { isMcpTool } from '../types/strictTypes';
+import { systemMessageBuilder } from '../SystemMessageBuilder';
 
 /**
  * Contexte d'exécution
@@ -32,7 +33,14 @@ export interface ChatContext {
   userToken: string;
   sessionId: string;
   agentConfig?: AgentTemplateConfig;
-  uiContext?: UIContext;
+  uiContext?: UIContext & {
+    attachedNotes?: Array<{
+      id: string;
+      slug: string;
+      title: string;
+      markdown_content: string;
+    }>;
+  };
   maxToolCalls?: number;
 }
 
@@ -550,65 +558,18 @@ export class AgentOrchestrator {
   }
 
   /**
-   * Build system message
+   * Build system message using SystemMessageBuilder
+   * ✅ Utilise le builder centralisé qui gère attachedNotes
    */
   private buildSystemMessage(agentConfig: AgentTemplateConfig, uiContext?: UIContext | any): string {
-    let systemMessage = agentConfig.system_instructions;
-
-    if (uiContext) {
-      const contextParts: string[] = [];
-      
-      // ✅ NOUVEAU FORMAT (LLMContext)
-      if (uiContext.time && uiContext.device && uiContext.user) {
-        // Format ultra-compact
-        const deviceEmoji = uiContext.device.type === 'mobile' ? '📱' : uiContext.device.type === 'tablet' ? '📲' : '💻';
-        const localeFlag = uiContext.user.locale === 'fr' ? '🇫🇷' : '🇬🇧';
-        contextParts.push(`📅 ${uiContext.time.local} (${uiContext.timezone || uiContext.time.timezone}) | ${deviceEmoji} ${uiContext.device.type} | ${localeFlag} ${uiContext.user.locale.toUpperCase()}`);
-        
-        // Page actuelle
-        if (uiContext.page) {
-          const pageEmoji = {
-            chat: '💬',
-            editor: '✍️',
-            folder: '📁',
-            classeur: '📚',
-            home: '🏠'
-          }[uiContext.page.type] || '❓';
-          contextParts.push(`${pageEmoji} ${uiContext.page.type}${uiContext.page.action ? ` (${uiContext.page.action})` : ''}`);
-        }
-        
-        // Contexte actif
-        if (uiContext.active?.note) {
-          contextParts.push(`📝 Note: ${uiContext.active.note.title}`);
-        }
-        if (uiContext.active?.folder) {
-          contextParts.push(`📁 Dossier: ${uiContext.active.folder.name}`);
-        }
-        if (uiContext.active?.classeur) {
-          contextParts.push(`📚 Classeur: ${uiContext.active.classeur.name}`);
-        }
-      }
-      // ✅ ANCIEN FORMAT (UIContext) - Compatibilité
-      else if (uiContext.classeurContext || uiContext.noteContext) {
-        if (uiContext.classeurContext) {
-          contextParts.push(`Classeur actuel : "${uiContext.classeurContext.name}"`);
-        }
-        
-        if (uiContext.noteContext) {
-          contextParts.push(`Note actuelle : "${uiContext.noteContext.title}"`);
-          if (uiContext.noteContext.content) {
-            const preview = uiContext.noteContext.content.substring(0, 500);
-            contextParts.push(`Contenu (aperçu) : ${preview}...`);
-          }
-        }
-      }
-
-      if (contextParts.length > 0) {
-        systemMessage += '\n\n## Contexte\n' + contextParts.join('\n');
-      }
-    }
-
-    return systemMessage;
+    // Utiliser le SystemMessageBuilder centralisé qui gère les notes attachées
+    const result = systemMessageBuilder.buildSystemMessage(
+      agentConfig,
+      uiContext,
+      agentConfig.system_instructions || 'Tu es un assistant IA utile et bienveillant.'
+    );
+    
+    return result.content;
   }
 
   /**

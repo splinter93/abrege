@@ -11,6 +11,7 @@ import { openImageModal } from './ImageModal';
 import BubbleButtons from './BubbleButtons';
 import ReasoningDropdown from './ReasoningDropdown';
 import StreamTimelineRenderer from './StreamTimelineRenderer';
+import NotePreview from './NotePreview';
 import { useChatStore } from '@/store/useChatStore';
 import { useStreamingPreferences } from '@/hooks/useStreamingPreferences';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -76,6 +77,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   // Cast pour accéder aux propriétés spécifiques du UserMessage
   const userMessage = role === 'user' ? message as import('@/types/chat').UserMessage : null;
   const hasAttachedImages = userMessage?.attachedImages && userMessage.attachedImages.length > 0;
+  const hasAttachedNotes = userMessage?.attachedNotes && userMessage.attachedNotes.length > 0;
 
   // Handler pour ouvrir la modal au double-clic
   const handleImageDoubleClick = (imageSrc: string, fileName?: string) => {
@@ -101,6 +103,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 onDoubleClick={() => handleImageDoubleClick(img.url, img.fileName)}
                 style={{ cursor: 'pointer' }}
                 title="Double-cliquer pour agrandir"
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Notes attachées (messages user uniquement) */}
+        {hasAttachedNotes && (
+          <div className="chatgpt-message-notes">
+            {userMessage.attachedNotes!.map((note) => (
+              <NotePreview
+                key={note.id}
+                note={note}
               />
             ))}
           </div>

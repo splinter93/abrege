@@ -174,7 +174,8 @@ export function useChatMessageActions(
         role: 'user',
         content: tempMessage?.content || '',
         timestamp: new Date().toISOString(),
-        ...(tempMessage?.attachedImages && { attachedImages: tempMessage.attachedImages })
+        ...(tempMessage?.attachedImages && { attachedImages: tempMessage.attachedImages }),
+        ...(tempMessage?.attachedNotes && { attachedNotes: tempMessage.attachedNotes })
       };
 
       sessionSyncService.addMessageAndSync(currentSession.id, messageToSave)

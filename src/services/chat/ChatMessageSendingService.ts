@@ -130,7 +130,7 @@ export class ChatMessageSendingService {
       });
 
       // 2. Créer message temporaire pour optimistic UI
-      const tempMessage = this.buildTempUserMessage(message, images);
+      const tempMessage = this.buildTempUserMessage(message, images, notes);
 
       // 3. Construire historique limité pour LLM
       const limitedHistory = this.limitHistoryForLLM(infiniteMessages, maxHistoryForLLM);
@@ -222,11 +222,13 @@ export class ChatMessageSendingService {
    * 
    * @param message - Contenu du message
    * @param images - Images attachées (optionnel)
+   * @param notes - Notes attachées (optionnel)
    * @returns Message temporaire
    */
   private buildTempUserMessage(
     message: string | MessageContent,
-    images?: ImageAttachment[]
+    images?: ImageAttachment[],
+    notes?: Note[]
   ): ChatMessage {
     // Extraire le texte pour la sauvegarde
     const messageText = typeof message === 'string'
@@ -239,6 +241,14 @@ export class ChatMessageSendingService {
       fileName: img.fileName
     }));
 
+    // Extraire les métadonnées des notes (sans le contenu markdown)
+    const attachedNotes = notes?.map(note => ({
+      id: note.id,
+      slug: note.slug,
+      title: note.title,
+      word_count: note.markdown_content?.split(/\s+/).length || 0
+    }));
+
     // ✅ FIX SACCADE: Timestamp +1s dans le futur
     // Garantit que le message temp sera APRÈS tous les messages DB lors du tri
     const futureTimestamp = new Date(Date.now() + 1000).toISOString();
@@ -249,7 +259,8 @@ export class ChatMessageSendingService {
       content: messageText,
       timestamp: futureTimestamp,
       sequence_number: 999999, // Temporaire, sera remplacé par la vraie valeur en DB
-      ...(attachedImages && attachedImages.length > 0 && { attachedImages })
+      ...(attachedImages && attachedImages.length > 0 && { attachedImages }),
+      ...(attachedNotes && attachedNotes.length > 0 && { attachedNotes })
     };
 
     return tempMessage;

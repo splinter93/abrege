@@ -208,13 +208,21 @@ export async function POST(request: NextRequest) {
     logger.info(`[Stream Route] ✅ Provider ${providerType.toUpperCase()} créé avec modèle: ${model}`);
 
     // ✅ Construire le contexte UI (comme dans la route classique)
-    const uiContext = context.uiContext || {};
+    // 📎 Merger attachedNotes si présentes (viennent du ChatContextBuilder)
+    const uiContext = {
+      ...(context.uiContext || {}),
+      ...(context.attachedNotes && context.attachedNotes.length > 0 && {
+        attachedNotes: context.attachedNotes
+      })
+    };
     
     logger.dev('[Stream Route] 🕵️‍♂️ Contexte UI reçu:', {
       hasUIContext: !!context.uiContext,
       uiContextKeys: context.uiContext ? Object.keys(context.uiContext) : [],
       contextType: context.type,
-      contextId: context.id
+      contextId: context.id,
+      hasAttachedNotes: !!(context.attachedNotes && context.attachedNotes.length > 0),
+      attachedNotesCount: context.attachedNotes?.length || 0
     });
 
     // ✅ Construire le system message avec contexte (comme la route classique)
@@ -234,11 +242,22 @@ export async function POST(request: NextRequest) {
     
     const systemMessage = systemMessageResult.content;
     
+    // 📎 LOG: Vérifier si les notes ont été injectées dans le prompt
+    const hasNotesInPrompt = systemMessage.includes('📎 Notes Attachées par l\'Utilisateur');
+    
     logger.dev('[Stream Route] 📝 System message construit:', {
       length: systemMessage.length,
       hasContext: systemMessage.includes('Contexte actuel'),
+      hasNotesInPrompt,
       agentName: finalAgentConfig?.name || 'default'
     });
+    
+    if (hasNotesInPrompt && uiContext.attachedNotes) {
+      logger.info('[Stream Route] 📎 Notes injectées dans le prompt:', {
+        count: uiContext.attachedNotes.length,
+        titles: uiContext.attachedNotes.map((n: any) => n.title)
+      });
+    }
     
     // ✅ Construire le tableau de messages
     // Si skipAddingUserMessage est true (cas édition), ne pas rajouter le message user

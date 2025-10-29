@@ -57,6 +57,12 @@ export interface UserMessage extends BaseMessage {
     url: string; // Base64 data URI
     fileName?: string;
   }>;
+  attachedNotes?: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    word_count?: number;
+  }>;
 }
 
 /**

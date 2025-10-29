@@ -65,7 +65,10 @@ export class HistoryManager {
    */
   async addMessage(
     sessionId: string,
-    message: Omit<ChatMessage, 'id' | 'sequence_number' | 'timestamp' | 'created_at'>
+    message: Omit<ChatMessage, 'id' | 'sequence_number' | 'timestamp' | 'created_at'> & {
+      attachedImages?: Array<{ url: string; fileName?: string }>;
+      attachedNotes?: Array<{ id: string; slug: string; title: string; word_count?: number }>;
+    }
   ): Promise<ChatMessage> {
     try {
       logger.dev('[HistoryManager] 📥 addMessage appelé:', {
@@ -83,7 +86,9 @@ export class HistoryManager {
         p_tool_call_id: message.tool_call_id || null,
         p_name: message.name || null,
         p_reasoning: message.reasoning || null,
-        p_timestamp: new Date().toISOString()
+        p_timestamp: new Date().toISOString(),
+        p_attached_images: message.attachedImages || null,
+        p_attached_notes: message.attachedNotes || null
       });
 
       if (error) {
