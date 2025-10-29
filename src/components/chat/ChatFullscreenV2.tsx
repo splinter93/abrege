@@ -99,20 +99,35 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 HANDLERS CENTRALISÉS
   const { handleComplete, handleError, handleToolResult, handleToolExecutionComplete } = useChatHandlers({
     onComplete: async (fullContent, fullReasoning, toolCalls, toolResults, streamTimeline) => {
-      // ✅ FLOW SANS CLIGNOTEMENT:
-      // 1. Message déjà sauvegardé en DB par useChatHandlers.handleComplete
-      // 2. On garde le streaming affiché tel quel (pas de transition)
-      // 3. On change juste isStreaming → false pour que les loaders deviennent des checks
-      // 4. Le reset de la timeline se fera au prochain message user (via onBeforeSend)
+      // ✅ FLOW SANS SACCADE (version simple):
+      // 1. Message sauvegardé en DB par useChatHandlers.handleComplete
+      // 2. GARDER streaming affiché (pas de reload → pas de scroll bounce)
+      // 3. Ajouter message à infiniteMessages EN MÉMOIRE (historique complet)
+      // 4. Dernier assistant masqué automatiquement (car streamingTimeline.length > 0)
+      // 5. Au prochain message, onBeforeSend clear timeline → Message DB s'affiche
       
-      logger.dev('[ChatFullscreenV2] ✅ Streaming terminé, message en DB, garde affichage');
+      logger.dev('[ChatFullscreenV2] ✅ Streaming terminé, message en DB');
       
-      // Arrêter isStreaming pour passer les Loader → Check/X
-      streamingState.endStreaming(); // setIsStreaming(false) + setStreamingState('idle')
+      // Arrêter isStreaming
+      streamingState.endStreaming();
       
-      // ❌ NE PAS reset la timeline (garde l'affichage)
-      // ❌ NE PAS reload (évite clignotement)
-      // La timeline reste affichée jusqu'au prochain message
+      // ❌ PAS de reload (évite scroll bounce)
+      // ❌ PAS de clear timeline (garde affichage)
+      
+      // ✅ CRITICAL: Ajouter message à infiniteMessages EN MÉMOIRE
+      // Pour que l'historique du prochain message user soit complet
+      const messageForMemory: ChatMessage = {
+        role: 'assistant',
+        content: fullContent,
+        reasoning: fullReasoning,
+        tool_results: toolResults || [],
+        stream_timeline: streamTimeline,
+        timestamp: new Date().toISOString()
+      };
+      
+      addInfiniteMessage(messageForMemory);
+      
+      logger.dev('[ChatFullscreenV2] ✅ Message ajouté à infiniteMessages (mémoire), streaming garde');
     }
   });
 
@@ -501,6 +516,7 @@ const ChatFullscreenV2: React.FC = () => {
             isLoadingMore={isLoadingMore}
             hasMore={hasMore}
             isStreaming={streamingState.isStreaming}
+            isFading={streamingState.isFading}
             streamingTimeline={streamingState.streamingTimeline}
             streamStartTime={streamingState.streamStartTime}
             loading={messageActions.isLoading}

@@ -227,6 +227,7 @@ export async function POST(request: NextRequest) {
         type: context.type || 'chat_session',
         name: context.name || 'Chat',
         id: context.id || sessionId,
+        provider: providerType, // ✅ FIX CRITIQUE : Passer le provider pour activer les instructions spécifiques
         ...uiContext
       }
     );

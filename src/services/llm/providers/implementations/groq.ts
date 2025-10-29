@@ -414,8 +414,14 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       };
 
       // Gérer les tool calls pour les messages assistant
+      // ✅ SÉCURITÉ: Ne réinjecter tool_calls QUE si pas de tool_results
+      // Si tool_results présents → tool_calls déjà résolus (évite répétition bug)
       if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
-        messageObj.tool_calls = msg.tool_calls as ToolCall[];
+        if (!msg.tool_results || msg.tool_results.length === 0) {
+          messageObj.tool_calls = msg.tool_calls as ToolCall[];
+        } else {
+          logger.warn(`[GroqProvider] ⚠️ Skipping tool_calls (already resolved with ${msg.tool_results.length} results)`);
+        }
       }
 
       // Gérer les tool results pour les messages tool

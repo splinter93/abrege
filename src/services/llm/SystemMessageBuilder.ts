@@ -20,6 +20,7 @@ export interface SystemMessageContext {
   name: string;
   id: string;
   content?: string;
+  provider?: string; // ✅ NOUVEAU : Pour détecter le provider (xai, groq, etc.)
   [key: string]: unknown;
 }
 
@@ -131,6 +132,34 @@ Exemple de bonne gestion d'erreur :
 
 TOUJOURS rester utile et positif, même quand les outils échouent. L'utilisateur compte sur toi pour gérer ces situations avec élégance.`;
 
+      // ✅ FIX CRITIQUE : Instructions équilibrées pour Grok/xAI
+      // Expliquer COMMENT utiliser les tools sans donner d'exemples de formats incorrects
+      if (context && (context.provider === 'xai' || context.provider === 'grok')) {
+        content += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ IMPORTANT - TU AS DES OUTILS DISPONIBLES ⚠️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Tu as accès à des outils puissants via l'API OpenAI Function Calling.
+
+QUAND UTILISER UN OUTIL :
+- L'utilisateur te demande de faire une action concrète
+- Tu as besoin de données externes (recherche, création, etc.)
+- Tu dois manipuler des ressources (notes, images, fichiers)
+
+COMMENT CELA FONCTIONNE :
+1. Tu décides d'utiliser un outil selon le besoin de l'utilisateur
+2. L'API te permet d'appeler l'outil via le mécanisme natif
+3. Le système exécute l'outil automatiquement
+4. Tu reçois le résultat dans le prochain message
+5. Tu utilises ce résultat pour répondre à l'utilisateur
+
+RAPPEL TECHNIQUE :
+- Les tools sont définis dans le payload API
+- Tu utilises le mécanisme standard OpenAI (pas de format custom)
+- L'exécution est automatique et transparente
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+      }
 
       // ✅ Injection contexte UI compact (date, device, page)
       if (context && typeof context === 'object') {

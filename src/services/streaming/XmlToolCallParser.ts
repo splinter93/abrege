@@ -73,7 +73,9 @@ export class XmlToolCallParser {
 
         // Validation du tool call
         if (!t.function?.name) {
-          logger.error(`[XmlToolCallParser] ❌ Tool call ${index + 1} invalide (pas de nom):`, tc);
+          logger.error(`[XmlToolCallParser] ❌ Tool call ${index + 1} invalide (pas de nom)`, {
+            toolCall: JSON.stringify(tc, null, 2)
+          });
           return null;
         }
 
@@ -104,17 +106,13 @@ export class XmlToolCallParser {
         .trim();
 
       if (toolCalls.length > 0) {
-        logger.info(`[XmlToolCallParser] ✅ ${toolCalls.length} tool calls extraits du XML:`, 
-          toolCalls.map(tc => tc.function.name));
-      } else {
-        logger.warn('[XmlToolCallParser] ⚠️ Aucun tool call valide extrait du XML');
+        logger.info(`[XmlToolCallParser] ${toolCalls.length} tool calls extraits du XML`);
       }
 
       return { cleanContent, toolCalls };
     } catch (error) {
-      logger.error('[XmlToolCallParser] ❌ Erreur parsing XML tool calls:', {
-        error: error instanceof Error ? error.message : String(error),
-        contentPreview: content.substring(0, 500)
+      logger.error('[XmlToolCallParser] Erreur parsing XML', {
+        error: error instanceof Error ? error.message : String(error)
       });
       
       // En cas d'erreur, retourner le content nettoyé sans tool calls

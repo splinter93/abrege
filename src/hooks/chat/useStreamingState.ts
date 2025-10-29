@@ -39,6 +39,7 @@ export interface UseStreamingStateReturn {
   // États
   streamingContent: string;
   isStreaming: boolean;
+  isFading: boolean; // ✅ NOUVEAU: Pour transition fluide streaming → DB
   streamingState: StreamingStateType;
   executingToolCount: number;
   currentToolName: string;
@@ -54,6 +55,7 @@ export interface UseStreamingStateReturn {
   addToolExecution: (toolCalls: ToolCall[], toolCount: number) => void;
   updateToolResult: (toolCallId: string, result: unknown, success: boolean) => void;
   endStreaming: () => void;
+  setFading: (fading: boolean) => void; // ✅ NOUVEAU
   reset: () => void;
 }
 
@@ -69,6 +71,7 @@ export function useStreamingState(): UseStreamingStateReturn {
   // 🎯 États streaming
   const [streamingContent, setStreamingContent] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isFading, setIsFading] = useState(false); // ✅ NOUVEAU: Transition fluide
   const [streamingState, setStreamingStateInternal] = useState<StreamingStateType>('idle');
   const [executingToolCount, setExecutingToolCount] = useState(0);
   const [currentToolName, setCurrentToolName] = useState('');
@@ -86,6 +89,7 @@ export function useStreamingState(): UseStreamingStateReturn {
    */
   const startStreaming = useCallback(() => {
     setIsStreaming(true);
+    setIsFading(false); // ✅ Reset fading
     setStreamingContent('');
     setCurrentRound(0);
     currentRoundRef.current = 0; // ✅ Réinitialiser le ref aussi
@@ -258,11 +262,20 @@ export function useStreamingState(): UseStreamingStateReturn {
   }, [streamingContent.length, streamingTimeline.length, currentRound]);
 
   /**
+   * ✅ NOUVEAU: Active le fade out pour transition fluide
+   */
+  const setFading = useCallback((fading: boolean) => {
+    setIsFading(fading);
+    logger.dev(`[useStreamingState] ${fading ? '🌅' : '🌄'} Fading: ${fading}`);
+  }, []);
+
+  /**
    * Réinitialise complètement l'état
    */
   const reset = useCallback(() => {
     setStreamingContent('');
     setIsStreaming(false);
+    setIsFading(false); // ✅ Reset fading aussi
     setStreamingStateInternal('idle');
     setExecutingToolCount(0);
     setCurrentToolName('');
@@ -279,6 +292,7 @@ export function useStreamingState(): UseStreamingStateReturn {
     // États
     streamingContent,
     isStreaming,
+    isFading, // ✅ NOUVEAU
     streamingState,
     executingToolCount,
     currentToolName,
@@ -294,6 +308,7 @@ export function useStreamingState(): UseStreamingStateReturn {
     addToolExecution,
     updateToolResult,
     endStreaming,
+    setFading, // ✅ NOUVEAU
     reset
   };
 }

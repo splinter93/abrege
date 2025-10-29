@@ -2590,6 +2590,18 @@ body.chat-theme-anthracite .chatgpt-header {
   }
 }
 
+/* ========================================
+   TRANSITIONS STREAMING → DB
+   ======================================== */
+
+/* Fade out streaming avant clear (100ms) */
+.streaming-fade-out {
+  opacity: 0;
+  transition: opacity 100ms ease-out;
+}
+
+/* Fade in message DB (AnimatePresence gère automatiquement via motion) */
+
 /* Avertissement limite atteinte */
 .chat-image-limit-warning {
   display: flex;

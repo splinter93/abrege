@@ -28,6 +28,7 @@ export interface ChatMessagesAreaProps {
   isLoadingMore: boolean;
   hasMore: boolean;
   isStreaming: boolean;
+  isFading: boolean; // ✅ NOUVEAU: Pour transition fluide
   streamingTimeline: StreamTimelineItem[];
   streamStartTime: number;
   loading: boolean;
@@ -51,6 +52,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
   isLoadingMore,
   hasMore,
   isStreaming,
+  isFading, // ✅ NOUVEAU
   streamingTimeline,
   streamStartTime,
   loading,
@@ -95,9 +97,10 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
             }
             const fallbackKey = keyParts.join('-');
 
-            // ✅ Masquer le dernier message assistant s'il est en cours de streaming
+            // ✅ Masquer le dernier message assistant si streaming OU timeline active
+            // Évite doublon : streaming affiché via timeline, pas besoin du message DB
             const isLastAssistant = index === messages.length - 1 && message.role === 'assistant';
-            const isBeingStreamed = isLastAssistant && isStreaming;
+            const isBeingStreamed = isLastAssistant && (isStreaming || streamingTimeline.length > 0);
 
             if (isBeingStreamed) return null;
 
@@ -142,7 +145,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
         {/* PENDANT ET APRÈS LE STREAMING : StreamTimelineRenderer */}
         {/* ✅ Garde affiché tant que timeline non vide (pas de clignotement) */}
         {streamingTimeline.length > 0 && (
-          <div className="chatgpt-message chatgpt-message-assistant">
+          <div className={`chatgpt-message chatgpt-message-assistant ${isFading ? 'streaming-fade-out' : ''}`}>
             <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant">
               <StreamTimelineRenderer
                 timeline={{

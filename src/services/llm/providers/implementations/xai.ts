@@ -316,64 +316,9 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
     }
 
     try {
-      logger.dev(`[XAIProvider] 🌊 Streaming Chat Completions avec ${messages.length} messages`);
-      
-      // ✅ AUDIT DÉTAILLÉ : Logger les messages d'entrée
-      logger.dev(`[XAIProvider] 📋 MESSAGES D'ENTRÉE:`, {
-        count: messages.length,
-        roles: messages.map(m => m.role),
-        hasToolCalls: messages.some(m => m.tool_calls && m.tool_calls.length > 0),
-        hasToolResults: messages.some(m => m.tool_results && m.tool_results.length > 0)
-      });
-      
-      // Conversion des ChatMessage vers le format API
       const apiMessages = this.convertChatMessagesToApiFormat(messages);
       const payload = await this.preparePayload(apiMessages, tools);
-      payload.stream = true; // ✅ Activer streaming
-      
-      // ✅ AUDIT DÉTAILLÉ : Logger le payload complet envoyé à Grok
-      logger.info(`[XAIProvider] 🚀 PAYLOAD → GROK: ${payload.model} | ${payload.messages?.length} messages | ${payload.tools?.length || 0} tools`);
-      
-      // ✅ AUDIT DÉTAILLÉ : Logger les messages du payload
-      if (payload.messages && Array.isArray(payload.messages)) {
-        payload.messages.forEach((msg, index) => {
-          const contentType = typeof msg.content;
-          const isArray = Array.isArray(msg.content);
-          const contentPreview = contentType === 'string' 
-            ? (msg.content as string).substring(0, 100)
-            : isArray
-              ? `[${(msg.content as unknown[]).length} parts]`
-              : `OBJECT: ${JSON.stringify(msg.content).substring(0, 100)}`;
-          
-          logger.dev(`[XAIProvider] 📝 Message ${index + 1}:`, {
-            role: msg.role,
-            contentType: contentType,
-            isArray: isArray,
-            contentPreview: contentPreview,
-            hasToolCalls: !!msg.tool_calls,
-            toolCallsCount: msg.tool_calls?.length || 0,
-            hasToolCallId: !!msg.tool_call_id
-          });
-          
-          // ⚠️ ALERTE si le content est un objet (bug !)
-          if (contentType === 'object' && !isArray) {
-            logger.error(`[XAIProvider] ⚠️⚠️⚠️ MESSAGE ${index + 1} A UN CONTENT OBJET (PAS ARRAY) ! xAI va rejeter ça !`, msg.content);
-          }
-          
-          // 🔍 DEBUG: Log le contenu exact pour les messages multi-part
-          if (isArray && Array.isArray(msg.content)) {
-            logger.dev(`[XAIProvider] 🔍 MESSAGE ${index + 1} CONTENT EXACT:`, JSON.stringify(msg.content, null, 2));
-          }
-        });
-      }
-      
-      // ✅ AUDIT DÉTAILLÉ : Logger les tools
-      if (payload.tools && Array.isArray(payload.tools)) {
-        logger.dev(`[XAIProvider] 🔧 TOOLS ENVOYÉS:`, {
-          count: payload.tools.length,
-          names: payload.tools.map(t => t.function?.name || 'unknown')
-        });
-      }
+      payload.stream = true;
       
       // Appel API avec streaming
       const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
@@ -394,13 +339,6 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
         throw new Error('Response body is null');
       }
 
-      // ✅ AUDIT DÉTAILLÉ : Logger la réponse HTTP
-      logger.dev(`[XAIProvider] 📡 RÉPONSE HTTP REÇUE:`, {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-
       // Lire le stream SSE
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -410,10 +348,7 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
       while (true) {
         const { done, value } = await reader.read();
         
-        if (done) {
-          logger.dev(`[XAIProvider] ✅ Stream terminé après ${chunkCount} chunks`);
-          break;
-        }
+        if (done) break;
 
         // Décoder le chunk
         buffer += decoder.decode(value, { stream: true });
@@ -432,54 +367,17 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
           if (trimmed.startsWith('data: ')) {
             const data = trimmed.slice(6); // Enlever "data: "
             
-            // Fin du stream
-            if (data === '[DONE]') {
-              logger.dev('[XAIProvider] 🏁 Stream [DONE] reçu');
-              break;
-            }
+            if (data === '[DONE]') break;
 
             try {
               const parsed = JSON.parse(data) as XAIStreamChunk;
               chunkCount++;
               
-              // ✅ AUDIT DÉTAILLÉ : Logger chaque chunk reçu de Grok (DÉSACTIVÉ pour ne pas polluer)
-              // logger.dev(`[XAIProvider] 📦 CHUNK ${chunkCount} REÇU DE GROK:`, {
-              //   id: parsed.id,
-              //   model: parsed.model,
-              //   hasChoices: !!parsed.choices,
-              //   choicesCount: parsed.choices?.length || 0,
-              //   hasUsage: !!parsed.usage
-              // });
-              
-              // Extraire les informations du chunk
               const choice = parsed.choices?.[0];
               if (!choice) continue;
 
               const delta = choice.delta;
               const finishReason = choice.finish_reason;
-              
-              // ✅ AUDIT DÉTAILLÉ : Logger le contenu du chunk (DÉSACTIVÉ)
-              // logger.dev(`[XAIProvider] 📝 CHUNK CONTENU:`, {
-              //   hasContent: !!delta.content,
-              //   contentLength: delta.content?.length || 0,
-              //   hasToolCalls: !!delta.tool_calls,
-              //   toolCallsCount: delta.tool_calls?.length || 0,
-              //   hasReasoning: !!delta.reasoning,
-              //   reasoningLength: delta.reasoning?.length || 0,
-              //   finishReason: finishReason
-              // });
-              
-              // ✅ AUDIT DÉTAILLÉ : Logger les tool calls si présents (DÉSACTIVÉ)
-              if (delta.tool_calls && delta.tool_calls.length > 0) {
-                delta.tool_calls.forEach((tc, index) => {
-                  // logger.dev(`[XAIProvider] 🔧 TOOL CALL ${index + 1} DANS CHUNK:`, {
-                  //   id: tc.id,
-                  //   type: tc.type,
-                  //   functionName: tc.function?.name,
-                  //   argumentsLength: tc.function?.arguments?.length || 0
-                  // });
-                });
-              }
               
               const chunk: StreamChunk = {
                 type: 'delta'
@@ -500,15 +398,18 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
                     arguments: tc.function?.arguments || ''
                   }
                 }));
+              }
+              
+              // Parser XML si Grok envoie du code dans content
+              if (!chunk.tool_calls && delta.content && /<tool_calls>/i.test(delta.content)) {
+                const { XmlToolCallParser } = await import('@/services/streaming/XmlToolCallParser');
+                const { cleanContent, toolCalls } = XmlToolCallParser.parseXmlToolCalls(delta.content);
                 
-                logger.info(`[XAIProvider] ✅ Tool calls natifs reçus: ${chunk.tool_calls.length}`);
-              } else if (delta.content && /<tool_calls>/i.test(delta.content)) {
-                // ⚠️ ALERTE: Grok a envoyé du XML au lieu du format natif
-                logger.error(`[XAIProvider] ❌ ERREUR: Grok a envoyé du XML dans content au lieu du format natif !`);
-                logger.error(`[XAIProvider] 📝 Content reçu (premiers 500 chars):`, delta.content.substring(0, 500));
-                
-                // Le XmlToolCallParser dans StreamOrchestrator va gérer ça automatiquement
-                // On log juste pour diagnostiquer
+                chunk.content = cleanContent;
+                if (toolCalls.length > 0) {
+                  chunk.tool_calls = toolCalls;
+                  logger.warn(`[XAIProvider] XML tool calls convertis (${toolCalls.length})`);
+                }
               }
 
               // Reasoning (si supporté)
@@ -521,12 +422,8 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
                 chunk.usage = parsed.usage;
               }
 
-              // ✅ IMPORTANT : finish_reason indique la fin du stream
-              // 'tool_calls' = Le LLM veut appeler des tools
-              // 'stop' = Réponse complète normale
               if (finishReason) {
                 chunk.finishReason = finishReason;
-                logger.dev(`[XAIProvider] 🏁 FINISH REASON: ${finishReason}`);
               }
 
               yield chunk;
@@ -617,8 +514,14 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
       };
 
       // Gérer les tool calls pour les messages assistant
+      // ✅ SÉCURITÉ: Ne réinjecter tool_calls QUE si pas de tool_results
+      // Si tool_results présents → tool_calls déjà résolus (évite répétition bug)
       if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
-        messageObj.tool_calls = msg.tool_calls as ToolCall[];
+        if (!msg.tool_results || msg.tool_results.length === 0) {
+          messageObj.tool_calls = msg.tool_calls as ToolCall[];
+        } else {
+          logger.warn(`[XAIProvider] ⚠️ Skipping tool_calls in convertChatMessagesToApiFormat (already resolved)`);
+        }
       }
 
       // Gérer les tool results pour les messages tool
@@ -654,8 +557,14 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
       };
 
       // Gérer les tool calls pour les messages assistant
+      // ✅ SÉCURITÉ: Ne réinjecter tool_calls QUE si pas de tool_results
+      // Si tool_results présents → tool_calls déjà résolus (évite répétition bug)
       if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
-        messageObj.tool_calls = msg.tool_calls as ToolCall[];
+        if (!msg.tool_results || msg.tool_results.length === 0) {
+          messageObj.tool_calls = msg.tool_calls as ToolCall[];
+        } else {
+          logger.warn(`[XAIProvider] ⚠️ Skipping tool_calls (already resolved with ${msg.tool_results.length} results)`);
+        }
       }
 
       // Gérer les tool results pour les messages tool
@@ -712,19 +621,16 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
       stream: false
     };
 
-    // Ajouter les tools si présents
     if (tools && tools.length > 0) {
       payload.tools = tools;
       payload.tool_choice = 'auto';
-      
-      // ✅ DEBUG: Logger les tools pour identifier le problème
-      logger.dev(`[XAIProvider] 🔧 Envoi de ${tools.length} tools à xAI`);
-      logger.dev(`[XAIProvider] 📋 Premier tool:`, JSON.stringify(tools[0], null, 2));
     }
 
-    // Ajouter parallel_tool_calls si configuré
+    // Config parallel tool calls
     if (this.config.parallelToolCalls !== undefined) {
       payload.parallel_tool_calls = this.config.parallelToolCalls;
+    } else {
+      payload.parallel_tool_calls = false;
     }
     
     return payload;

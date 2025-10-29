@@ -138,12 +138,15 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
         })
     } : undefined;
     
+    // ✅ FIX BUG RÉPÉTITION: Ne PAS persister tool_calls sur message final
+    // Les tool_calls ont déjà été exécutés et leurs résultats sont dans tool_results
+    // Si on persiste tool_calls, le LLM les voit au prochain message et les ré-exécute
     const messageToAdd = {
       role: 'assistant' as const,
       content: finalContent,
       reasoning: fullReasoning,
-      tool_calls: toolCalls || [],
-      tool_results: toolResults || [],
+      // tool_calls: undefined, // ❌ Ne pas persister (déjà résolus)
+      tool_results: toolResults || [], // ✅ Garder seulement les résultats
       stream_timeline: cleanedTimeline, // ✅ Timeline nettoyée (sans tool_result individuels)
       timestamp: new Date().toISOString()
     };
