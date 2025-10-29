@@ -99,27 +99,20 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 HANDLERS CENTRALISÉS
   const { handleComplete, handleError, handleToolResult, handleToolExecutionComplete } = useChatHandlers({
     onComplete: async (fullContent, fullReasoning, toolCalls, toolResults, streamTimeline) => {
-      const assistantMessage: ChatMessage = {
-        id: `msg-${Date.now()}`,
-        role: 'assistant',
-        content: fullContent,
-        reasoning: fullReasoning,
-        tool_calls: toolCalls,
-        tool_results: toolResults,
-        streamTimeline,
-        timestamp: new Date().toISOString(),
-        sequence_number: 999998
-      };
+      // ✅ FLOW SANS CLIGNOTEMENT:
+      // 1. Message déjà sauvegardé en DB par useChatHandlers.handleComplete
+      // 2. On garde le streaming affiché tel quel (pas de transition)
+      // 3. On change juste isStreaming → false pour que les loaders deviennent des checks
+      // 4. Le reset de la timeline se fera au prochain message user (via onBeforeSend)
       
-      // ✅ SMOOTH TRANSITION: Fade out streaming d'abord
-      streamingState.endStreaming();
+      logger.dev('[ChatFullscreenV2] ✅ Streaming terminé, message en DB, garde affichage');
       
-      setTimeout(() => {
-        addInfiniteMessage(assistantMessage);
-        streamingState.reset();
-      }, 200);
-
-      logger.dev('[ChatFullscreenV2] ✅ Message assistant ajouté (transition smooth)');
+      // Arrêter isStreaming pour passer les Loader → Check/X
+      streamingState.endStreaming(); // setIsStreaming(false) + setStreamingState('idle')
+      
+      // ❌ NE PAS reset la timeline (garde l'affichage)
+      // ❌ NE PAS reload (évite clignotement)
+      // La timeline reste affichée jusqu'au prochain message
     }
   });
 
@@ -167,7 +160,12 @@ const ChatFullscreenV2: React.FC = () => {
       if (!editing) cancelEditing();
     },
     createSession,
-    requireAuth
+    requireAuth,
+    onBeforeSend: () => {
+      // ✅ Reset le streaming précédent avant nouveau message
+      streamingState.reset();
+      logger.dev('[ChatFullscreenV2] 🔄 Streaming précédent reset avant nouveau message');
+    }
   });
 
   // 🎯 SYNC AGENT avec session
@@ -369,13 +367,14 @@ const ChatFullscreenV2: React.FC = () => {
       animations.setDisplayedSessionId(null);
       animations.resetAnimation();
       clearInfiniteMessages();
+      streamingState.reset(); // ✅ Reset le streaming précédent aussi
       previousSessionIdRef.current = currentSession.id;
     }
 
     if (!isLoadingMessages && !animations.displayedSessionId && currentSession?.id) {
       animations.setDisplayedSessionId(currentSession.id);
     }
-  }, [currentSession?.id, animations, isLoadingMessages, infiniteMessages.length, clearInfiniteMessages]);
+  }, [currentSession?.id, animations, isLoadingMessages, infiniteMessages.length, clearInfiniteMessages, streamingState]);
 
   // Animation + scroll quand session chargée
   useEffect(() => {

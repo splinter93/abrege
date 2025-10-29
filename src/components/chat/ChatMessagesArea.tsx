@@ -139,52 +139,44 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
           </div>
         )}
 
-        {/* PENDANT LE STREAMING : StreamTimelineRenderer */}
-        <AnimatePresence mode="wait">
-          {isStreaming && streamingTimeline.length > 0 && (
-            <motion.div
-              key="streaming-message"
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="chatgpt-message chatgpt-message-assistant"
-            >
-              <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant">
-                <StreamTimelineRenderer
-                  timeline={{
-                    items: streamingTimeline
-                      .filter(item => item.type !== 'tool_result') // ✅ VIRER les tool_result
-                      .map(item => {
-                        if (item.type === 'text') {
-                          return {
-                            type: 'text' as const,
-                            content: item.content || '',
-                            timestamp: item.timestamp,
-                            roundNumber: item.roundNumber
-                          };
-                        } else if (item.type === 'tool_execution') {
-                          return {
-                            type: 'tool_execution' as const,
-                            toolCalls: item.toolCalls || [],
-                            toolCount: item.toolCount || 0,
-                            timestamp: item.timestamp,
-                            roundNumber: item.roundNumber || 0
-                          };
-                        }
-                        // Exhaustive check (tool_result déjà filtré)
-                        const _exhaustive: never = item.type;
-                        throw new Error(`Type non géré: ${_exhaustive}`);
-                      }),
-                    startTime: streamStartTime,
-                    endTime: Date.now()
-                  }}
-                  isActiveStreaming={isStreaming}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* PENDANT ET APRÈS LE STREAMING : StreamTimelineRenderer */}
+        {/* ✅ Garde affiché tant que timeline non vide (pas de clignotement) */}
+        {streamingTimeline.length > 0 && (
+          <div className="chatgpt-message chatgpt-message-assistant">
+            <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant">
+              <StreamTimelineRenderer
+                timeline={{
+                  items: streamingTimeline
+                    .filter(item => item.type !== 'tool_result') // ✅ VIRER les tool_result
+                    .map(item => {
+                      if (item.type === 'text') {
+                        return {
+                          type: 'text' as const,
+                          content: item.content || '',
+                          timestamp: item.timestamp,
+                          roundNumber: item.roundNumber
+                        };
+                      } else if (item.type === 'tool_execution') {
+                        return {
+                          type: 'tool_execution' as const,
+                          toolCalls: item.toolCalls || [],
+                          toolCount: item.toolCount || 0,
+                          timestamp: item.timestamp,
+                          roundNumber: item.roundNumber || 0
+                        };
+                      }
+                      // Exhaustive check (tool_result déjà filtré)
+                      const _exhaustive: never = item.type;
+                      throw new Error(`Type non géré: ${_exhaustive}`);
+                    }),
+                  startTime: streamStartTime,
+                  endTime: Date.now()
+                }}
+                isActiveStreaming={isStreaming}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Anchor pour scroll */}

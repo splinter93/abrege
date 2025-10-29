@@ -169,7 +169,8 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
       updateExisting: true
     });
     
-    options.onComplete?.(fullContent, fullReasoning, toolCalls, toolResults, streamTimeline);
+    // ✅ CRITIQUE: Passer la cleanedTimeline enrichie (pas l'originale)
+    options.onComplete?.(fullContent, fullReasoning, toolCalls, toolResults, cleanedTimeline);
   }, [requireAuth, addMessage, options]);
 
   const handleError = useCallback((errorMessage: string) => {

@@ -47,6 +47,7 @@ export interface UseChatMessageActionsOptions {
   onEditingChange?: (editing: boolean) => void;
   createSession: () => Promise<void>;
   requireAuth: () => boolean;
+  onBeforeSend?: () => void; // ✅ NOUVEAU: Callback avant envoi (reset streaming)
 }
 
 /**
@@ -93,7 +94,8 @@ export function useChatMessageActions(
     loadInitialMessages,
     onEditingChange,
     createSession,
-    requireAuth
+    requireAuth,
+    onBeforeSend
   } = options;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -132,6 +134,9 @@ export function useChatMessageActions(
       return;
     }
 
+    // ✅ Reset le streaming précédent (vide la timeline affichée)
+    onBeforeSend?.();
+    
     setIsLoading(true);
     setError(null);
 
