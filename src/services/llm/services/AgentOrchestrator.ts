@@ -326,7 +326,10 @@ export class AgentOrchestrator {
       let tools: Tool[] = [];
       
       // ✅ OPTIMISÉ : Charger tools ET endpoints depuis OpenApiSchemaService (parsing 1x)
+      // ❌ ZÉRO TOOLS HARDCODÉS : Seuls les schémas OpenAPI liés à l'agent sont utilisés
       const agentSchemas = await this.loadAgentOpenApiSchemas(agentConfig?.id);
+      
+      logger.info(`[AgentOrchestrator] 🔍 Tools loading: ${agentSchemas.length} schémas trouvés pour agent "${agentConfig?.name || 'default'}" (ID: ${agentConfig?.id || 'none'})`);
       
       if (agentSchemas.length > 0) {
         // Récupérer tools + endpoints en 1 seul parsing (centralisé)
@@ -383,11 +386,12 @@ export class AgentOrchestrator {
           });
         }
       } else {
-        // Aucun schéma OpenAPI assigné
+        // ❌ AUCUN SCHÉMA = AUCUN TOOL (comportement explicite, pas de magic)
+        tools = [];
+        logger.warn(`[AgentOrchestrator] ⚠️ Agent "${agentConfig?.name || 'default'}" (${selectedProvider}) sans schémas OpenAPI → 0 tools disponibles (comportement attendu, pas de tools hardcodés)`);
+        
         if (selectedProvider.toLowerCase() === 'xai') {
           // xAI sans schémas = pas de tools (comportement explicite)
-          tools = [];
-          logger.warn(`[AgentOrchestrator] ⚠️ Agent ${agentConfig?.name} (xAI) sans schémas OpenAPI - Aucun tool disponible`);
         } else {
           // Groq/OpenAI : MCP tools uniquement
           tools = await mcpConfigService.buildHybridTools(

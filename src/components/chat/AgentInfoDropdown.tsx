@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Agent } from '@/types/chat';
 import { Settings } from 'lucide-react';
@@ -11,11 +11,48 @@ interface AgentInfoDropdownProps {
   onClose: () => void;
 }
 
-const AgentInfoDropdown: React.FC<AgentInfoDropdownProps> = ({ agent, isOpen, onClose }) => {
-  if (!isOpen) return null;
+interface ToolInfo {
+  name: string;
+  type: 'openapi' | 'mcp';
+}
 
-  // Extraire les tools depuis api_v2_capabilities ou capabilities
-  const tools = agent.api_v2_capabilities || [];
+const AgentInfoDropdown: React.FC<AgentInfoDropdownProps> = ({ agent, isOpen, onClose }) => {
+  const [tools, setTools] = useState<ToolInfo[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !agent.id) return;
+
+    const fetchAgentTools = async () => {
+      setLoading(true);
+      try {
+        // Récupérer les schémas OpenAPI et serveurs MCP depuis l'API
+        const response = await fetch(`/api/agents/${agent.id}/tools`);
+        if (response.ok) {
+          const data = await response.json();
+          const toolsList: ToolInfo[] = [
+            ...(data.openapi_schemas || []).map((schema: { name: string }) => ({
+              name: schema.name,
+              type: 'openapi' as const
+            })),
+            ...(data.mcp_servers || []).map((server: { name: string }) => ({
+              name: server.name,
+              type: 'mcp' as const
+            }))
+          ];
+          setTools(toolsList);
+        }
+      } catch (error) {
+        console.error('Erreur chargement tools:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAgentTools();
+  }, [isOpen, agent.id]);
+
+  if (!isOpen) return null;
 
   return (
     <>
@@ -39,18 +76,27 @@ const AgentInfoDropdown: React.FC<AgentInfoDropdownProps> = ({ agent, isOpen, on
         </div>
 
         {/* Tools */}
-        {tools.length > 0 && (
+        {loading ? (
+          <div className="agent-dropdown-section">
+            <h4 className="agent-dropdown-section-title">Outils disponibles</h4>
+            <p className="agent-dropdown-loading">Chargement...</p>
+          </div>
+        ) : tools.length > 0 ? (
           <div className="agent-dropdown-section">
             <h4 className="agent-dropdown-section-title">Outils disponibles</h4>
             <div className="agent-dropdown-tools">
               {tools.map((tool, index) => (
-                <div key={index} className="agent-dropdown-tool-pill">
-                  {tool}
+                <div 
+                  key={index} 
+                  className="agent-dropdown-tool-pill"
+                  title={tool.type === 'openapi' ? 'Schéma OpenAPI' : 'Serveur MCP'}
+                >
+                  {tool.name}
                 </div>
               ))}
             </div>
           </div>
-        )}
+        ) : null}
 
         {/* Lien configuration */}
         <Link 
@@ -58,7 +104,7 @@ const AgentInfoDropdown: React.FC<AgentInfoDropdownProps> = ({ agent, isOpen, on
           className="agent-dropdown-config-link"
           onClick={onClose}
         >
-          <Settings size={16} />
+          <Settings size={14} />
           <span>Configurer l'agent</span>
         </Link>
       </div>

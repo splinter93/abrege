@@ -87,8 +87,9 @@ const DEFAULT_GROQ_RESPONSES_CONFIG: GroqResponsesConfig = {
   reasoningEffort: 'low',
   
   // Nouvelles fonctionnalités Responses API
-  enableBrowserSearch: true,
-  enableCodeExecution: true,
+  // ❌ DÉSACTIVÉS PAR DÉFAUT : Les tools doivent venir UNIQUEMENT des schémas OpenAPI de l'agent
+  enableBrowserSearch: false,
+  enableCodeExecution: false,
   enableStructuredOutput: true,
   enableImages: true
 };

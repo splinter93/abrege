@@ -61,7 +61,7 @@
 /* Modèle */
 .agent-dropdown-model {
   font-size: 12px;
-  color: var(--chat-text-muted);
+  color: var(--chat-text-secondary);
   margin: 0;
   font-family: var(--font-chat-ui);
 }
@@ -100,17 +100,26 @@
   font-weight: 500;
   color: var(--chat-text-secondary);
   font-family: var(--font-chat-ui);
+  cursor: default;
+}
+
+.agent-dropdown-loading {
+  font-size: 12px;
+  color: var(--chat-text-muted);
+  font-style: italic;
+  margin: 0;
+  font-family: var(--font-chat-ui);
 }
 
 /* Lien configuration */
 .agent-dropdown-config-link {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 6px;
+  padding: 6px 8px;
   background: transparent;
-  border-radius: 8px;
-  font-size: 13px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--chat-text-primary);
   text-decoration: none;
@@ -123,6 +132,8 @@
 }
 
 .agent-dropdown-config-link svg {
+  width: 14px;
+  height: 14px;
   color: var(--chat-text-muted);
 }
 
