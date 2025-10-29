@@ -18,6 +18,22 @@ interface StreamTimelineRendererProps {
 const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo(({ timeline, className = '', isActiveStreaming = false }) => {
   // État pour gérer l'expansion des blocs d'exécution
   const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set());
+  
+  // ✅ DEBUG: Logger ce qui est reçu
+  React.useEffect(() => {
+    const toolExecutionBlocks = timeline.items.filter(i => i.type === 'tool_execution');
+    const toolCallsWithSuccess = toolExecutionBlocks.flatMap(b => b.toolCalls).filter(tc => tc.success !== undefined);
+    
+    console.log('[StreamTimelineRenderer] 📊 Timeline reçue:', {
+      totalItems: timeline.items.length,
+      itemTypes: timeline.items.map(i => i.type),
+      toolExecutionBlocks: toolExecutionBlocks.length,
+      totalToolCalls: toolExecutionBlocks.flatMap(b => b.toolCalls).length,
+      toolCallsWithSuccess: toolCallsWithSuccess.length,
+      isActiveStreaming,
+      sampleToolCall: toolExecutionBlocks[0]?.toolCalls[0]
+    });
+  }, [timeline, isActiveStreaming]);
 
   const toggleBlock = (index: number) => {
     setExpandedBlocks(prev => {
@@ -51,6 +67,16 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
             
             // ✅ Un bloc est "en cours d'exécution" si on stream OU s'il n'a pas encore tous ses résultats
             const isExecuting = isActiveStreaming || !allToolsHaveResults;
+            
+            // ✅ DEBUG: Logger chaque bloc
+            console.log(`[StreamTimelineRenderer] 🔧 Tool execution bloc ${index}:`, {
+              toolCount: item.toolCount,
+              roundNumber: item.roundNumber,
+              allToolsHaveResults,
+              isActiveStreaming,
+              isExecuting,
+              toolCallsSuccess: item.toolCalls.map(tc => ({ id: tc.id, name: tc.function.name, success: tc.success }))
+            });
             
             return (
               <div 

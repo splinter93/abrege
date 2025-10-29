@@ -133,9 +133,19 @@ const ChatFullscreenV2: React.FC = () => {
       streamingState.addToolExecution(toolCalls, toolCount);
     },
     onToolResult: (toolName, result, success, toolCallId) => {
+      logger.dev('[ChatFullscreenV2] 🔧 onToolResult callback appelé:', {
+        toolName,
+                  success, 
+        toolCallId,
+        hasResult: !!result
+      });
+      
       if (toolCallId) {
         streamingState.updateToolResult(toolCallId, result, success);
+      } else {
+        logger.warn('[ChatFullscreenV2] ⚠️ toolCallId manquant pour updateToolResult');
       }
+      
       handleToolResult(toolName, result, success, toolCallId);
     },
     onToolExecutionComplete: handleToolExecutionComplete,

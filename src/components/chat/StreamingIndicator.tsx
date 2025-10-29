@@ -36,6 +36,22 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
   onToggle,
   isExpanded = false
 }) => {
+  // ✅ DEBUG: Logger les toolCalls reçus
+  React.useEffect(() => {
+    console.log('[StreamingIndicator] 📥 Props reçues:', {
+      state,
+      toolCount,
+      toolCallsCount: toolCalls.length,
+      toolCallsWithSuccess: toolCalls.filter(tc => tc.success !== undefined).length,
+      toolCallsDetails: toolCalls.map(tc => ({ 
+        id: tc.id, 
+        name: tc.name, 
+        success: tc.success,
+        hasResult: !!tc.result
+      }))
+    });
+  }, [state, toolCalls]);
+  
   if (state === 'idle') {
     return null;
   }
