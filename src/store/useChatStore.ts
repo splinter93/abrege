@@ -20,6 +20,7 @@ interface ChatStore {
   currentSession: ChatSession | null;
   selectedAgent: Agent | null;
   selectedAgentId: string | null;
+  agentNotFound: boolean; // ✅ Indicateur agent supprimé/introuvable
   isFullscreen: boolean;
   loading: boolean;
   error: string | null;
@@ -30,6 +31,7 @@ interface ChatStore {
   setCurrentSession: (session: ChatSession | null) => void;
   setSelectedAgent: (agent: Agent | null) => void;
   setSelectedAgentId: (agentId: string | null) => void;
+  setAgentNotFound: (notFound: boolean) => void; // ✅ Setter pour agent introuvable
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   
@@ -42,7 +44,7 @@ interface ChatStore {
   
   // ⚡ Actions avec fonctionnalités essentielles
   syncSessions: () => Promise<void>;
-  createSession: (name?: string, agentId?: string | null) => Promise<void>;
+  createSession: (name?: string, agentId?: string | null) => Promise<ChatSession | null>; // ✅ Retourne session créée
   addMessage: (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean; updateExisting?: boolean }) => Promise<ChatMessage | null>;
   deleteSession: (sessionId: string) => Promise<void>;
   updateSession: (sessionId: string, data: { name?: string }) => Promise<void>;
@@ -56,6 +58,7 @@ export const useChatStore = create<ChatStore>()(
       currentSession: null,
       selectedAgent: null,
       selectedAgentId: null,
+      agentNotFound: false, // ✅ Par défaut: agent OK
       isFullscreen: false,
       loading: false,
       error: null,
@@ -63,12 +66,17 @@ export const useChatStore = create<ChatStore>()(
 
       // 🔄 Actions de base
       setSessions: (sessions: ChatSession[]) => set({ sessions }),
-      setCurrentSession: (session: ChatSession | null) => set({ currentSession: session }),
+      setCurrentSession: (session: ChatSession | null) => set({ 
+        currentSession: session,
+        agentNotFound: false // ✅ Reset à chaque changement de session
+      }),
       setSelectedAgent: (agent: Agent | null) => set({ 
         selectedAgent: agent,
-        selectedAgentId: agent?.id || null 
+        selectedAgentId: agent?.id || null,
+        agentNotFound: false // ✅ Reset quand agent chargé avec succès
       }),
       setSelectedAgentId: (agentId: string | null) => set({ selectedAgentId: agentId }),
+      setAgentNotFound: (notFound: boolean) => set({ agentNotFound: notFound }),
       setLoading: (loading: boolean) => set({ loading }),
       setError: (error: string | null) => set({ error }),
 
@@ -109,7 +117,7 @@ export const useChatStore = create<ChatStore>()(
         }
       },
 
-      createSession: async (name: string = 'Nouvelle conversation', agentId?: string | null) => {
+      createSession: async (name: string = 'Nouvelle conversation', agentId?: string | null): Promise<ChatSession | null> => {
         try {
           const result = await sessionSyncService.createSessionAndSync(name, agentId);
           if (result.success && result.session) {
@@ -126,9 +134,14 @@ export const useChatStore = create<ChatStore>()(
               name: result.session.name,
               agentId: result.session.agent_id
             });
+
+            return result.session; // ✅ Retourner la session créée
           }
+          
+          return null;
         } catch (error) {
           logger.error('[ChatStore] Erreur createSession:', error);
+          return null;
         }
       },
 

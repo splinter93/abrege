@@ -18,6 +18,7 @@ import ChatMessage from './ChatMessage';
 import ChatEmptyState from './ChatEmptyState';
 import MessageLoader from './MessageLoader';
 import StreamTimelineRenderer from './StreamTimelineRenderer';
+import AgentDeletedMessage from './AgentDeletedMessage';
 
 /**
  * Props du composant
@@ -37,6 +38,7 @@ export interface ChatMessagesAreaProps {
   displayedSessionId: string | null;
   currentSessionId: string | null;
   selectedAgent: Agent | null;
+  agentNotFound: boolean; // ✅ Indicateur agent supprimé
   onEditMessage: (messageId: string, content: string, index: number) => void;
   containerRef: React.RefObject<HTMLDivElement>;
   messagesEndRef: React.RefObject<HTMLDivElement>;
@@ -61,6 +63,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
   displayedSessionId,
   currentSessionId,
   selectedAgent,
+  agentNotFound,
   onEditMessage,
   containerRef,
   messagesEndRef
@@ -73,12 +76,11 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
           opacity: messagesVisible || messages.length === 0 ? undefined : 0
         }}
       >
-        {/* Empty state - SEULEMENT pour nouvelle conversation */}
+        {/* Empty state - Agent sélectionné mais pas de messages */}
         {!isLoading && 
          messages.length === 0 && 
          selectedAgent && 
-         messagesVisible && 
-         displayedSessionId === currentSessionId && (
+         messagesVisible && (
           <ChatEmptyState agent={selectedAgent} />
         )}
 
@@ -179,6 +181,11 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
               />
             </div>
           </div>
+        )}
+
+        {/* Message agent supprimé - Affiché sous le dernier message si agent introuvable */}
+        {agentNotFound && messages.length > 0 && !isStreaming && (
+          <AgentDeletedMessage />
         )}
       </div>
 

@@ -73,9 +73,10 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   };
 
   const handleSelectAgent = async (agent: Agent) => {
-    // Créer une nouvelle conversation avec l'agent sélectionné
-    await createSession(`Chat avec ${agent.display_name || agent.name}`, agent.id);
+    // ✅ NOUVEAU : Sélectionner agent SANS créer session
+    // La session sera créée au premier message envoyé
     setSelectedAgent(agent);
+    setCurrentSession(null); // ✅ Reset session pour afficher empty state
     if (!isDesktop) {
       onClose();
     }
@@ -128,7 +129,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                   <button
                     onClick={() => handleSelectAgent(agent)}
                     className={`sidebar-item-clean sidebar-agent-item ${!currentSession && selectedAgent?.id === agent.id ? 'active' : ''}`}
-                    data-tooltip="Lancer un Chat"
                   >
                     <div className="sidebar-item-icon-clean">
                       {agent.profile_picture ? (
@@ -145,6 +145,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                       )}
                     </div>
                     <span>{agent.display_name || agent.name}</span>
+                    <span className="agent-hover-hint">Lancer un Chat</span>
                   </button>
                 </div>
               ))}

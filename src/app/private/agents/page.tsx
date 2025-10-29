@@ -11,7 +11,10 @@ import { useMcpServers } from "@/hooks/useMcpServers";
 import { useOpenApiSchemas } from "@/hooks/useOpenApiSchemas";
 import { SpecializedAgentConfig } from "@/types/specializedAgents";
 import { GROQ_MODELS_BY_CATEGORY, getModelInfo } from "@/constants/groqModels";
-import { Bot, Trash2, Save, X, ExternalLink, Plus, ChevronDown, ChevronUp, FileText, CheckCircle } from "lucide-react";
+import { Bot, Trash2, Save, X, ExternalLink, Plus, ChevronDown, ChevronUp, FileText, CheckCircle, Star } from "lucide-react";
+import { supabase } from "@/supabaseClient";
+import { useAuth } from "@/hooks/useAuth";
+import { simpleLogger as logger } from "@/utils/logger";
 import "@/styles/main.css";
 import "./agents.css";
 
@@ -32,6 +35,7 @@ export default function AgentsPage() {
  * Contenu de la page (séparé pour AuthGuard)
  */
 function AgentsPageContent() {
+  const { user } = useAuth();
   const {
     agents,
     loading,
@@ -72,6 +76,8 @@ function AgentsPageContent() {
   const [showMcpDropdown, setShowMcpDropdown] = useState(false);
   const [showOpenApiDropdown, setShowOpenApiDropdown] = useState(false);
   const [showParameters, setShowParameters] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [togglingFavorite, setTogglingFavorite] = useState(false);
   
   // Ref pour suivre si la sélection initiale a été faite
   const initialSelectionDone = useRef(false);
@@ -94,6 +100,28 @@ function AgentsPageContent() {
       handleSelectAgent(agents[0]);
     }
   }, [loading, agents.length, selectedAgent]);
+
+  /**
+   * Charge le statut favori de l'agent actuel
+   */
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      if (!user?.id || !selectedAgent?.id) {
+        setIsFavorite(false);
+        return;
+      }
+
+      const { data: userData } = await supabase
+        .from('users')
+        .select('favorite_agent_id')
+        .eq('id', user.id)
+        .single();
+
+      setIsFavorite(userData?.favorite_agent_id === selectedAgent.id);
+    };
+
+    checkFavoriteStatus();
+  }, [user?.id, selectedAgent?.id]);
 
 
   /**
@@ -176,6 +204,41 @@ function AgentsPageContent() {
   ) => {
     setEditedAgent(prev => prev ? { ...prev, [field]: value } : null);
     setHasChanges(true);
+  };
+
+  /**
+   * Toggle agent favori
+   * Écrase favorite_agent_id dans users avec l'ID de l'agent actuel
+   */
+  const handleToggleFavorite = async () => {
+    if (!user?.id || !selectedAgent?.id || togglingFavorite) return;
+
+    setTogglingFavorite(true);
+
+    try {
+      // Si déjà favori → retirer (null), sinon → définir
+      const newFavoriteId = isFavorite ? null : selectedAgent.id;
+
+      const { error } = await supabase
+        .from('users')
+        .update({ favorite_agent_id: newFavoriteId })
+        .eq('id', user.id);
+
+      if (error) {
+        logger.error('[AgentsPage] ❌ Erreur toggle favori:', error);
+        return;
+      }
+
+      setIsFavorite(!isFavorite);
+      logger.dev('[AgentsPage] ⭐ Agent favori mis à jour:', {
+        agentId: selectedAgent.id,
+        isFavorite: !isFavorite
+      });
+    } catch (err) {
+      logger.error('[AgentsPage] ❌ Erreur toggle favori:', err);
+    } finally {
+      setTogglingFavorite(false);
+    }
   };
 
 
@@ -307,6 +370,20 @@ function AgentsPageContent() {
                     {hasChanges && <span className="changes-indicator">●</span>}
                   </h2>
                   <div className="details-actions">
+                    {/* Bouton Agent Favori */}
+                    <button
+                      className={`btn-favorite ${isFavorite ? 'active' : ''}`}
+                      onClick={handleToggleFavorite}
+                      disabled={togglingFavorite}
+                      title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
+                    >
+                      <Star 
+                        size={16} 
+                        fill={isFavorite ? 'currentColor' : 'none'}
+                      />
+                      <span>{isFavorite ? 'Favori' : 'Favori'}</span>
+                    </button>
+                    
                     {hasChanges && (
                       <>
                         <button

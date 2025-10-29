@@ -1462,10 +1462,10 @@ Modèle utilisé : ${model}`;
     try {
       logger.dev(`[SpecializedAgentManager] 📋 Récupération liste des agents`, { userId });
 
+      // ✅ Charger TOUS les agents actifs (chat + endpoint)
       const { data: agents, error } = await supabase
         .from('agents')
         .select('*')
-        .eq('is_endpoint_agent', true)
         .eq('is_active', true)
         .order('priority', { ascending: false })
         .order('created_at', { ascending: false });

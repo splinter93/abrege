@@ -26,9 +26,9 @@ import type { LLMContext } from '@/hooks/useLLMContext';
 import type { Note } from '@/services/chat/ChatContextBuilder';
 import { simpleLogger as logger } from '@/utils/logger';
 
-/**
- * Options du hook
- */
+  /**
+   * Options du hook
+   */
 export interface UseChatMessageActionsOptions {
   currentSession: ChatSession | null;
   selectedAgent: Agent | null;
@@ -45,7 +45,7 @@ export interface UseChatMessageActionsOptions {
   clearInfiniteMessages: () => void;
   loadInitialMessages: () => Promise<void>;
   onEditingChange?: (editing: boolean) => void;
-  createSession: () => Promise<void>;
+  createSession: (name?: string, agentId?: string | null) => Promise<ChatSession | null>; // ✅ Retourne session
   requireAuth: () => boolean;
   onBeforeSend?: () => Promise<void>; // ✅ NOUVEAU: Callback async avant envoi (reload + reset streaming)
 }
@@ -100,6 +100,7 @@ export function useChatMessageActions(
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [creatingSession, setCreatingSession] = useState(false); // ✅ Lock création session
 
   /**
    * Envoie un message
@@ -126,16 +127,42 @@ export function useChatMessageActions(
       return;
     }
 
-    // ✅ Validation session
-    if (!currentSession) {
-      logger.dev('[useChatMessageActions] 🆕 Pas de session, création...');
-      await createSession();
-      setIsLoading(false);
+    // 🔒 LOCK : Empêcher spam création session si déjà en cours
+    if (creatingSession) {
+      logger.warn('[useChatMessageActions] ⚠️ Création session déjà en cours, message ignoré');
       return;
     }
 
     setIsLoading(true);
     setError(null);
+
+    // ✅ NOUVEAU : Créer session au premier message si pas de session
+    let sessionToUse = currentSession;
+    if (!currentSession) {
+      setCreatingSession(true); // 🔒 LOCK activé
+      
+      try {
+        logger.dev('[useChatMessageActions] 🆕 Premier message, création session avec agent:', selectedAgent?.name);
+        
+        // Créer session avec agent sélectionné
+        const newSession = await createSession(
+          'Nouvelle conversation', // ✅ Nom temporaire (Phase 2: IA générera nom intelligent)
+          selectedAgent?.id || null
+        );
+        
+        if (!newSession) {
+          throw new Error('Échec création session');
+        }
+        
+        sessionToUse = newSession; // ✅ Utiliser la session créée
+        logger.dev('[useChatMessageActions] ✅ Session créée:', {
+          sessionId: newSession.id,
+          agentId: newSession.agent_id
+        });
+      } finally {
+        setCreatingSession(false); // 🔒 LOCK relâché
+      }
+    }
     
     // ✅ Reset le streaming précédent (reload + vide la timeline affichée)
     if (onBeforeSend) {
@@ -153,13 +180,20 @@ export function useChatMessageActions(
         lastMessagePreview: infiniteMessages[infiniteMessages.length - 1]?.content?.substring(0, 100)
       });
       
+      // ✅ CRITICAL: Utiliser sessionToUse qui peut être la session nouvellement créée
+      const finalSession = sessionToUse || currentSession;
+      
+      if (!finalSession) {
+        throw new Error('Aucune session disponible après création');
+      }
+
       // 1. Préparer l'envoi via service
       const prepareResult = await chatMessageSendingService.prepare({
         message,
         images,
         notes,
-        sessionId: currentSession.id,
-        currentSession,
+        sessionId: finalSession.id,
+        currentSession: finalSession,
         selectedAgent,
         infiniteMessages, // ✅ Maintenant à jour avec le message précédent
         llmContext
@@ -190,7 +224,7 @@ export function useChatMessageActions(
         ...(tempMessage?.attachedImages && { attachedImages: tempMessage.attachedImages })
       };
 
-      sessionSyncService.addMessageAndSync(currentSession.id, messageToSave)
+      sessionSyncService.addMessageAndSync(finalSession.id, messageToSave)
         .then(saved => {
           if (saved.success) {
             logger.dev('[useChatMessageActions] ✅ Message user sauvegardé:', {
@@ -216,7 +250,7 @@ export function useChatMessageActions(
 
       await sendMessageFn(
         message,
-        currentSession.id,
+        finalSession.id,
         context,
         limitedHistory,
         token
@@ -242,7 +276,9 @@ export function useChatMessageActions(
     sendMessageFn,
     addInfiniteMessage,
     createSession,
-    requireAuth
+    requireAuth,
+    creatingSession, // ✅ Dépendance ajoutée
+    onBeforeSend // ✅ Manquait aussi
   ]);
 
   /**

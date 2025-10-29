@@ -20,6 +20,7 @@ export interface ChatHeaderProps {
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
   selectedAgent: Agent | null;
+  agentNotFound: boolean; // ✅ Indicateur agent supprimé
   agentDropdownOpen: boolean;
   onToggleAgentDropdown: () => void;
   isAuthenticated: boolean;
@@ -34,6 +35,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   sidebarOpen,
   onToggleSidebar,
   selectedAgent,
+  agentNotFound,
   agentDropdownOpen,
   onToggleAgentDropdown,
   isAuthenticated,
@@ -65,8 +67,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </svg>
         </button>
 
-        {/* Agent actif */}
-        {selectedAgent && (
+        {/* Agent actif ou agent introuvable */}
+        {selectedAgent ? (
           <div className="chat-active-agent-wrapper" style={{ position: 'relative' }}>
             <button
               className="chat-active-agent"
@@ -92,7 +94,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               onClose={() => onToggleAgentDropdown()}
             />
           </div>
-        )}
+        ) : agentNotFound ? (
+          <div className="chat-active-agent-wrapper">
+            <div className="chat-active-agent chat-agent-not-found">
+              <span className="agent-icon">⚠️</span>
+              <span className="agent-name agent-name-error">Agent introuvable</span>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="chatgpt-header-right">

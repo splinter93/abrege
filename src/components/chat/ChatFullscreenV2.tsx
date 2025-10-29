@@ -28,6 +28,8 @@ import { useStreamingState } from '@/hooks/chat/useStreamingState';
 import { useChatAnimations } from '@/hooks/chat/useChatAnimations';
 import { useChatMessageActions } from '@/hooks/chat/useChatMessageActions';
 import { useSyncAgentWithSession } from '@/hooks/chat/useSyncAgentWithSession';
+import { useFavoriteAgent } from '@/hooks/useFavoriteAgent';
+import { useAgents } from '@/hooks/useAgents';
 
 // 🎯 NOUVEAUX COMPOSANTS (Phase 3)
 import ChatHeader from './ChatHeader';
@@ -44,6 +46,7 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 HOOKS EXISTANTS (groupés pour lisibilité)
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const { requireAuth, user, loading: authLoading, isAuthenticated } = useAuthGuard();
+  const { agents, loading: agentsLoading } = useAgents();
   const llmContext = useLLMContext({
     includeRecent: false,
     includeDevice: true,
@@ -55,9 +58,11 @@ const ChatFullscreenV2: React.FC = () => {
     currentSession,
     selectedAgent,
     selectedAgentId,
+    agentNotFound,
     editingMessage,
     setCurrentSession,
     setSelectedAgent,
+    setAgentNotFound,
     syncSessions,
     createSession,
     addMessage,
@@ -203,7 +208,22 @@ const ChatFullscreenV2: React.FC = () => {
     selectedAgentId,
     user,
     authLoading,
-    onAgentLoaded: setSelectedAgent
+    onAgentLoaded: setSelectedAgent,
+    onAgentNotFound: () => setAgentNotFound(true) // ✅ Marquer agent comme introuvable
+  });
+
+  // 🎯 LOAD AGENT FAVORI au mount (uniquement si pas de session active)
+  useFavoriteAgent({
+    user: user ? { id: user.id } : null,
+    agents,
+    agentsLoading,
+    onAgentLoaded: (agent) => {
+      // ✅ Charger favori SEULEMENT si aucune session ni agent sélectionné
+      if (!currentSession && !selectedAgent && agent) {
+        setSelectedAgent(agent);
+        logger.dev('[ChatFullscreenV2] 🌟 Agent favori chargé par défaut:', agent.name);
+      }
+    }
   });
 
   // 🎯 UI STATE LOCAL (minimal - sidebar uniquement)
@@ -405,6 +425,21 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [currentSession?.id, animations, isLoadingMessages, infiniteMessages.length, clearInfiniteMessages, streamingState]);
 
+  // ✅ NOUVEAU : Afficher empty state quand agent sélectionné sans session
+  useEffect(() => {
+    if (selectedAgent && !currentSession && !animations.messagesVisible) {
+      logger.dev('[ChatFullscreenV2] 🎨 Agent sélectionné sans session, affichage empty state');
+      animations.setDisplayedSessionId(null);
+      clearInfiniteMessages();
+      animations.resetAnimation();
+      
+      // Rendre visible après un tick pour smooth transition
+      requestAnimationFrame(() => {
+        animations.triggerFadeIn('temp-empty-state', [], messagesContainerRef);
+      });
+    }
+  }, [selectedAgent?.id, currentSession?.id, animations.messagesVisible]);
+
   // Animation + scroll quand session chargée
   useEffect(() => {
     if (
@@ -442,13 +477,8 @@ const ChatFullscreenV2: React.FC = () => {
     return () => container.removeEventListener('scroll', handleScroll);
   }, [hasMore, isLoadingMore, loadMoreMessages]);
 
-  // Auto-sélection session si aucune active
-  useEffect(() => {
-    if (user && !authLoading && sessions.length > 0 && !currentSession) {
-      setCurrentSession(sessions[0]);
-      logger.dev('[ChatFullscreenV2] 📌 Auto-sélection session la plus récente');
-    }
-  }, [sessions.length, currentSession, setCurrentSession, user, authLoading]);
+  // ✅ SUPPRIMÉ : Plus d'auto-sélection de session
+  // L'utilisateur choisit explicitement (via agent favori ou clic sidebar)
 
   // 🎯 RENDU (100% déclaratif avec composants extraits)
   return (
@@ -457,6 +487,7 @@ const ChatFullscreenV2: React.FC = () => {
         sidebarOpen={sidebarOpen}
         onToggleSidebar={handleSidebarToggle}
         selectedAgent={selectedAgent}
+        agentNotFound={agentNotFound}
         agentDropdownOpen={agentDropdownOpen}
         onToggleAgentDropdown={() => setAgentDropdownOpen(!agentDropdownOpen)}
         isAuthenticated={isAuthenticated}
@@ -525,6 +556,7 @@ const ChatFullscreenV2: React.FC = () => {
             displayedSessionId={animations.displayedSessionId}
             currentSessionId={currentSession?.id || null}
             selectedAgent={selectedAgent}
+            agentNotFound={agentNotFound}
             onEditMessage={handleEditMessage}
             containerRef={messagesContainerRef}
             messagesEndRef={messagesEndRef}

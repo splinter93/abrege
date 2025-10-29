@@ -385,13 +385,13 @@ export class SpecializedAgentManagerV2 {
 
   /**
    * Liste tous les agents spécialisés
+   * ✅ Charger TOUS les agents actifs (chat + endpoint)
    */
   async listSpecializedAgents(): Promise<SpecializedAgentConfig[]> {
     try {
       const { data: agents, error } = await supabase
         .from('agents')
         .select('*')
-        .eq('is_endpoint_agent', true)
         .eq('is_active', true)
         .order('priority', { ascending: false });
 

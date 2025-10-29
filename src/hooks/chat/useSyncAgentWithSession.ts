@@ -23,6 +23,7 @@ export interface UseSyncAgentWithSessionOptions {
   user: unknown;
   authLoading: boolean;
   onAgentLoaded: (agent: Agent | null) => void;
+  onAgentNotFound?: () => void; // ✅ Callback pour agent introuvable
 }
 
 /**
@@ -42,7 +43,8 @@ export function useSyncAgentWithSession(
     selectedAgentId,
     user,
     authLoading,
-    onAgentLoaded
+    onAgentLoaded,
+    onAgentNotFound
   } = options;
 
   useEffect(() => {
@@ -83,6 +85,7 @@ export function useSyncAgentWithSession(
               sessionAgentId
             });
             onAgentLoaded(null);
+            onAgentNotFound?.(); // ✅ Notifier que l'agent est introuvable
             return;
           }
 
@@ -93,8 +96,9 @@ export function useSyncAgentWithSession(
               agentName: (agent as Agent).display_name || (agent as Agent).name
             });
           } else {
-            logger.warn('[useSyncAgentWithSession] ⚠️ Agent not found:', sessionAgentId);
+            logger.warn('[useSyncAgentWithSession] ⚠️ Agent not found (deleted):', sessionAgentId);
             onAgentLoaded(null);
+            onAgentNotFound?.(); // ✅ Notifier que l'agent a été supprimé
           }
         } catch (err) {
           logger.error('[useSyncAgentWithSession] ❌ Error loading agent:', {

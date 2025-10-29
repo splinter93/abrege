@@ -494,6 +494,50 @@ body.chat-theme-anthracite .chatgpt-header {
   white-space: nowrap;
 }
 
+/* Agent introuvable - styles d'erreur */
+.chat-agent-not-found {
+  cursor: default;
+  opacity: 0.8;
+}
+
+.agent-name-error {
+  color: var(--chat-text-error);
+}
+
+/* ========================================
+   AGENT DELETED MESSAGE
+   ======================================== */
+
+.agent-deleted-message {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.agent-deleted-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--chat-bg-error);
+  border: 1px solid var(--chat-border-error);
+  border-radius: var(--chat-radius-md);
+  max-width: 500px;
+}
+
+.agent-deleted-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.agent-deleted-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--chat-text-error);
+  font-family: var(--font-chat-ui);
+}
+
 .chatgpt-sidebar-toggle-btn-header {
   display: none; /* ✅ Caché en desktop par défaut */
   align-items: center;
@@ -747,37 +791,25 @@ body.chat-theme-anthracite .chatgpt-header {
   display: flex;
   align-items: center;
   gap: var(--chat-space-sm);
-  position: relative; /* ✅ Pour positionner le tooltip */
 }
 
 .sidebar-agent-row .sidebar-item-clean {
   font-weight: 600;
 }
 
-/* Tooltip custom pour agents - visible au hover */
-.sidebar-agent-item::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-left: 12px;
-  padding: 6px 12px;
-  background: var(--chat-gradient-block);
-  color: var(--chat-text-primary);
-  font-size: 12px;
+/* Hint "Lancer un Chat" - caché par défaut, visible au hover */
+.agent-hover-hint {
+  margin-left: auto;
+  font-size: 11px;
   font-weight: 500;
-  border-radius: 6px;
-  white-space: nowrap;
+  color: var(--chat-text-secondary);
   opacity: 0;
-  pointer-events: none;
   transition: opacity 0.2s ease;
-  z-index: 1001;
+  white-space: nowrap;
 }
 
-.sidebar-agent-item:hover::after {
-  opacity: 1;
-  transition-delay: 0.3s; /* ✅ Apparaît après 300ms de hover */
+.sidebar-agent-item:hover .agent-hover-hint {
+  opacity: 0.5; /* ✅ Plus transparent et discret (50%) */
 }
 
 /* Forcer la largeur des conversations à être identique aux agents */
