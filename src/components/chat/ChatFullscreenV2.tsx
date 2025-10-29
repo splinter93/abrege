@@ -210,16 +210,23 @@ const ChatFullscreenV2: React.FC = () => {
     onAgentNotFound: () => setAgentNotFound(true) // ✅ Marquer agent comme introuvable
   });
 
-  // 🎯 LOAD AGENT FAVORI au mount (uniquement si pas de session active)
+  // 🎯 LOAD AGENT FAVORI au mount + auto-créer session vide
   useFavoriteAgent({
     user: user ? { id: user.id } : null,
     agents,
     agentsLoading,
-    onAgentLoaded: (agent) => {
-      // ✅ Charger favori SEULEMENT si aucune session ni agent sélectionné
-      if (!currentSession && !selectedAgent && agent) {
+    onAgentLoaded: async (agent: Agent | null) => {
+      // ✅ Charger favori SEULEMENT si pas de session active ni agent déjà sélectionné
+      // Note: on vérifie sessions.length pour être sûr (currentSession peut être null même avec des sessions)
+      if (sessions.length === 0 && !selectedAgent && agent) {
         setSelectedAgent(agent);
-        logger.dev('[ChatFullscreenV2] 🌟 Agent favori chargé par défaut:', agent.name);
+        logger.dev('[ChatFullscreenV2] 🌟 Agent favori chargé:', agent.name);
+        
+        // ✅ Créer automatiquement une nouvelle conversation vide avec cet agent
+        const newSession = await createSession('Nouvelle conversation', agent.id);
+        if (newSession) {
+          logger.dev('[ChatFullscreenV2] ✅ Session vide créée automatiquement (is_empty: true)');
+        }
       }
     }
   });
