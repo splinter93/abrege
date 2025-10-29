@@ -43,16 +43,11 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
             );
 
           case 'tool_execution':
-            // ✅ Chercher les résultats correspondants dans la timeline
-            const toolResults = timeline.items.filter(
-              (ti): ti is StreamTimelineItem & { type: 'tool_result' } => 
-                ti.type === 'tool_result'
-            );
+            // ✅ NOUVEAU: Les résultats sont maintenant DANS les toolCalls (tc.success)
+            // Plus besoin de chercher les tool_result séparés (virés de la timeline)
             
-            // ✅ Vérifier si TOUS les tools de ce bloc ont un résultat
-            const allToolsHaveResults = item.toolCalls.every(tc => 
-              toolResults.some(tr => tr.toolCallId === tc.id)
-            );
+            // ✅ Vérifier si TOUS les tools ont leur résultat (success !== undefined)
+            const allToolsHaveResults = item.toolCalls.every(tc => tc.success !== undefined);
             
             // ✅ Un bloc est "en cours d'exécution" si on stream OU s'il n'a pas encore tous ses résultats
             const isExecuting = isActiveStreaming || !allToolsHaveResults;
@@ -67,17 +62,13 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
                   state={isExecuting ? "executing" : "completed"}
                   toolCount={item.toolCount}
                   roundNumber={item.roundNumber}
-                  toolCalls={item.toolCalls.map(tc => {
-                    // Trouver le résultat correspondant
-                    const result = toolResults.find(tr => tr.toolCallId === tc.id);
-                    return {
-                      id: tc.id,
-                      name: tc.function.name,
-                      arguments: tc.function.arguments,
-                      result: tc.result || (result ? (typeof result.result === 'string' ? result.result : JSON.stringify(result.result)) : undefined),
-                      success: tc.success !== undefined ? tc.success : result?.success
-                    };
-                  })}
+                  toolCalls={item.toolCalls.map(tc => ({
+                    id: tc.id,
+                    name: tc.function.name,
+                    arguments: tc.function.arguments,
+                    result: tc.result, // ✅ Déjà dans tc (mis à jour par updateToolResult)
+                    success: tc.success // ✅ Déjà dans tc
+                  }))}
                   isExpanded={expandedBlocks.has(index)}
                   onToggle={() => toggleBlock(index)}
                 />

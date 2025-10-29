@@ -201,40 +201,45 @@ export function useStreamingState(): UseStreamingStateReturn {
     result: unknown,
     success: boolean
   ) => {
+    const resultString = typeof result === 'string' ? result : JSON.stringify(result);
+    
     // Mettre à jour dans currentToolCalls
     setCurrentToolCalls(prev => prev.map(tc =>
       tc.id === toolCallId
-        ? {
-            ...tc,
-            success,
-            result: typeof result === 'string' ? result : JSON.stringify(result)
-          }
+        ? { ...tc, success, result: resultString }
         : tc
     ));
     
     // Mettre à jour dans la timeline
-    setStreamingTimeline(prev => prev.map(item => {
-      if (item.type === 'tool_execution' && item.toolCalls) {
-        return {
-          ...item,
-          toolCalls: item.toolCalls.map(tc => {
-            if (tc.id === toolCallId) {
-              return {
-                ...tc,
-                success,
-                result: typeof result === 'string' ? result : JSON.stringify(result)
-              };
-            }
-            return tc;
-          })
-        };
-      }
-      return item;
-    }));
-    
-    logger.dev('[useStreamingState] ✅ Tool result mis à jour:', {
-      toolCallId,
-      success
+    setStreamingTimeline(prev => {
+      const updated = prev.map(item => {
+        if (item.type === 'tool_execution' && item.toolCalls) {
+          return {
+            ...item,
+            toolCalls: item.toolCalls.map(tc => {
+              if (tc.id === toolCallId) {
+                return { ...tc, success, result: resultString };
+              }
+              return tc;
+            })
+          };
+        }
+        return item;
+      });
+      
+      logger.dev('[useStreamingState] ✅ Tool result mis à jour dans timeline:', {
+        toolCallId,
+        success,
+        resultPreview: resultString.substring(0, 100),
+        timelineItemsCount: updated.length,
+        toolExecutionBlocks: updated.filter(i => i.type === 'tool_execution').length,
+        toolCallsWithSuccess: updated
+          .filter(i => i.type === 'tool_execution')
+          .flatMap(i => i.toolCalls)
+          .filter(tc => tc.success !== undefined).length
+      });
+      
+      return updated;
     });
   }, []);
 
