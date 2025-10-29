@@ -127,8 +127,8 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                 <div key={agent.id} className="sidebar-agent-row">
                   <button
                     onClick={() => handleSelectAgent(agent)}
-                    className={`sidebar-item-clean ${!currentSession && selectedAgent?.id === agent.id ? 'active' : ''}`}
-                    title="Nouvelle conversation"
+                    className={`sidebar-item-clean sidebar-agent-item ${!currentSession && selectedAgent?.id === agent.id ? 'active' : ''}`}
+                    data-tooltip="Lancer un Chat"
                   >
                     <div className="sidebar-item-icon-clean">
                       {agent.profile_picture ? (

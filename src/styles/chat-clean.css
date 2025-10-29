@@ -747,10 +747,37 @@ body.chat-theme-anthracite .chatgpt-header {
   display: flex;
   align-items: center;
   gap: var(--chat-space-sm);
+  position: relative; /* ✅ Pour positionner le tooltip */
 }
 
 .sidebar-agent-row .sidebar-item-clean {
   font-weight: 600;
+}
+
+/* Tooltip custom pour agents - visible au hover */
+.sidebar-agent-item::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 12px;
+  padding: 6px 12px;
+  background: var(--chat-gradient-block);
+  color: var(--chat-text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1001;
+}
+
+.sidebar-agent-item:hover::after {
+  opacity: 1;
+  transition-delay: 0.3s; /* ✅ Apparaît après 300ms de hover */
 }
 
 /* Forcer la largeur des conversations à être identique aux agents */
