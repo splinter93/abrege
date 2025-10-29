@@ -92,7 +92,7 @@ Puis après résultat :
 
 JAMAIS appeler un outil sans expliquer avant ce que tu fais. L'utilisateur doit comprendre ton processus de pensée.
 
-IMPORTANT : Utilise UNIQUEMENT le mécanisme natif de function calling de l'API. N'écris JAMAIS manuellement du JSON ou du XML dans ton message pour appeler des outils. Les tool calls sont gérés automatiquement par l'API via un système structuré. Si tu écris du JSON ou du XML dans ton contenu, l'outil ne sera PAS exécuté.
+Les outils sont détectés et exécutés automatiquement par l'API. Tu n'as qu'à expliquer ton intention dans ton message.
 
 ⚠️ ANTI-HALLUCINATION CRITIQUE ⚠️
 
@@ -132,9 +132,15 @@ Exemple de bonne gestion d'erreur :
 TOUJOURS rester utile et positif, même quand les outils échouent. L'utilisateur compte sur toi pour gérer ces situations avec élégance.`;
 
 
-      // ✅ NOUVEAU : Injection contexte UI compact (date, device, page)
+      // ✅ Injection contexte UI compact (date, device, page)
       if (context && typeof context === 'object') {
-        const ctx = context as any; // Cast pour accéder aux props optionnelles
+        const ctx = context as import('@/types/llmContext').UIContext & {
+          attachedNotes?: Array<{
+            title: string;
+            slug: string;
+            markdown_content: string;
+          }>;
+        }; // ✅ Type strict (pas any)
         const contextParts: string[] = [];
         
         // Format ultra-compact avec emojis (comme AgentOrchestrator)
@@ -152,7 +158,7 @@ TOUJOURS rester utile et positif, même quand les outils échouent. L'utilisateu
               classeur: '📚',
               home: '🏠'
             };
-            const pageEmoji = pageEmojiMap[ctx.page.type as string] || '❓';
+            const pageEmoji = pageEmojiMap[ctx.page.type] || '❓';
             contextParts.push(`${pageEmoji} ${ctx.page.type}${ctx.page.action ? ` (${ctx.page.action})` : ''}`);
           }
           
@@ -180,7 +186,8 @@ TOUJOURS rester utile et positif, même quand les outils échouent. L'utilisateu
           content += `L'utilisateur a mentionné les notes suivantes avec @ (comme dans Cursor).\n`;
           content += `Tu DOIS te baser sur leur contenu pour répondre.\n\n`;
           
-          ctx.attachedNotes.forEach((note: any, index: number) => {
+          // ✅ Type-safe: Cast inline pour chaque note
+          ctx.attachedNotes.forEach((note: { title: string; slug: string; markdown_content: string }, index: number) => {
             content += `### Note ${index + 1}: ${note.title}\n`;
             content += `**Slug:** ${note.slug}\n\n`;
             content += `**Contenu:**\n\`\`\`markdown\n${note.markdown_content}\n\`\`\`\n\n`;

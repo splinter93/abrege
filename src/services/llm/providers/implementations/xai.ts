@@ -500,6 +500,15 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
                     arguments: tc.function?.arguments || ''
                   }
                 }));
+                
+                logger.info(`[XAIProvider] ✅ Tool calls natifs reçus: ${chunk.tool_calls.length}`);
+              } else if (delta.content && /<tool_calls>/i.test(delta.content)) {
+                // ⚠️ ALERTE: Grok a envoyé du XML au lieu du format natif
+                logger.error(`[XAIProvider] ❌ ERREUR: Grok a envoyé du XML dans content au lieu du format natif !`);
+                logger.error(`[XAIProvider] 📝 Content reçu (premiers 500 chars):`, delta.content.substring(0, 500));
+                
+                // Le XmlToolCallParser dans StreamOrchestrator va gérer ça automatiquement
+                // On log juste pour diagnostiquer
               }
 
               // Reasoning (si supporté)
