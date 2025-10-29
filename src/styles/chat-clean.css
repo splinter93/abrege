@@ -99,10 +99,11 @@
   --chat-space-xl: 24px;
   
   /* ========================================
-     PADDINGS RESPONSIVE - SYSTÈME UNIFIÉ
-     Appliqués simultanément au container messages et input
+     LARGEURS ET PADDINGS - SYSTÈME UNIFIÉ
+     Messages et Input utilisent les mêmes variables pour un alignement parfait
      ======================================== */
-  --chat-padding-horizontal: 24px;  /* Desktop par défaut */
+  --chat-container-width: 1000px;   /* Largeur max du contenu du chat */
+  --chat-padding-horizontal: 24px;  /* Padding horizontal (desktop par défaut) */
   --chat-space-2xl: 32px;
   
   /* ========================================
@@ -940,7 +941,7 @@ body.chat-theme-anthracite .chatgpt-header {
   }
   
   .chatgpt-input-area {
-    max-width: 1000px;
+    max-width: calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal));
   }
   
   /* ✅ Décalage uniquement quand sidebar ouverte (pas de resize) */
@@ -994,9 +995,9 @@ body.chat-theme-anthracite .chatgpt-header {
 }
 
 .chatgpt-messages {
-  max-width: 1000px;
+  max-width: var(--chat-container-width); /* ✅ Largeur synchronisée avec input */
   margin: 0 auto;
-  padding: var(--chat-space-xl) 0; /* Pas de padding horizontal - messages prennent 1000px */
+  padding: var(--chat-space-xl) var(--chat-padding-horizontal); /* ✅ Padding horizontal synchronisé */
   position: relative; /* Pour le centrage absolu de l'empty state */
   min-height: 100%; /* S'assure que le conteneur prend toute la hauteur */
   width: 100%;
@@ -1224,7 +1225,7 @@ body.chat-theme-anthracite .chatgpt-header {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 1000px;
+  max-width: calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)); /* ✅ Même largeur que messages (sans padding) */
   background: var(--chat-gradient-input);
   border-radius: var(--chat-radius-xl);
   padding: var(--chat-space-md);
@@ -1249,7 +1250,7 @@ body.chat-theme-anthracite .chatgpt-header {
 
 .chatgpt-input-textarea {
   width: 100%;
-  min-height: 18px;
+  min-height: 24px; /* ✅ Ajusté pour éviter scroll parasite (line-height calculé) */
   max-height: 80px;
   background: transparent;
   border: none;
@@ -1261,8 +1262,10 @@ body.chat-theme-anthracite .chatgpt-header {
   color: var(--chat-text-primary);
   padding: 8px 0 0 8px; /* Padding top augmenté de 5px à 8px */
   overflow-y: auto;
+  overflow-x: hidden; /* ✅ Pas de scroll horizontal */
   scrollbar-width: thin;
   scrollbar-color: var(--chat-text-secondary) transparent;
+  box-sizing: border-box; /* ✅ Padding inclus dans dimensions */
 }
 
 .chatgpt-input-textarea::placeholder {
@@ -1776,21 +1779,6 @@ body.chat-theme-anthracite .chatgpt-header {
   
   .chat-note-list::-webkit-scrollbar {
     display: none; /* Chrome/Safari */
-  }
-}
-
-/* ========================================
-   RESPONSIVE - DESKTOP
-   ======================================== */
-
-@media (min-width: 1200px) {
-  .chatgpt-input-container {
-    padding-left: var(--chat-space-xl);
-    padding-right: var(--chat-space-xl);
-  }
-  
-  .chatgpt-input-area {
-    max-width: 1000px;
   }
 }
 
