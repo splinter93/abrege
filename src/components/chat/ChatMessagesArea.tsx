@@ -106,15 +106,18 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
 
             if (isBeingStreamed) return null;
 
+            // ✅ Détecter si c'est un message nouvellement chargé (infinite scroll)
+            const isNewlyLoaded = '_isNewlyLoaded' in message && message._isNewlyLoaded;
+
             return (
               <motion.div
                 key={message.id || fallbackKey}
-                initial={false}
-                animate={{ opacity: 1 }}
+                initial={isNewlyLoaded ? { opacity: 0, y: 8 } : false}
+                animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{
-                  duration: 0.2,
-                  ease: [0.22, 1, 0.36, 1]
+                  duration: isNewlyLoaded ? 0.4 : 0.2,
+                  ease: [0.16, 1, 0.3, 1]
                 }}
               >
                 <ChatMessage

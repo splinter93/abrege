@@ -4,6 +4,13 @@ import { supabase } from '@/supabaseClient';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
+ * Marque des messages pour animation temporaire
+ */
+interface ChatMessageWithAnimation extends ChatMessage {
+  _isNewlyLoaded?: boolean;
+}
+
+/**
  * 🎯 Hook pour le lazy loading des messages avec infinite scroll
  * 
  * Fonctionnement:
@@ -163,14 +170,45 @@ export function useInfiniteMessages(
 
       const olderMessages = result.data.messages || [];
       
+      // ✅ PRÉSERVER la position de scroll pendant l'ajout des anciens messages
+      // Trouver le container scrollable
+      const container = document.querySelector('.chatgpt-messages-container') as HTMLElement;
+      const scrollHeightBefore = container?.scrollHeight || 0;
+      const scrollTopBefore = container?.scrollTop || 0;
+      
+      // ✅ Marquer les nouveaux messages pour animation
+      const markedMessages = olderMessages.map(msg => ({
+        ...msg,
+        _isNewlyLoaded: true
+      })) as ChatMessageWithAnimation[];
+      
       // 🎯 Ajouter les anciens messages AU DÉBUT du tableau
-      setMessages(prev => [...olderMessages, ...prev]);
+      setMessages(prev => [...markedMessages, ...prev]);
       setHasMore(result.data.hasMore || false);
+      
+      // ✅ Restaurer la position de scroll après le render (évite le jump au début)
+      requestAnimationFrame(() => {
+        if (container) {
+          const scrollHeightAfter = container.scrollHeight;
+          const heightDiff = scrollHeightAfter - scrollHeightBefore;
+          // Ajuster scrollTop pour compenser la hauteur ajoutée
+          container.scrollTop = scrollTopBefore + heightDiff;
+        }
+      });
+      
+      // ✅ Retirer le marqueur d'animation après 400ms (durée de l'animation)
+      setTimeout(() => {
+        setMessages(prev => prev.map(msg => {
+          const { _isNewlyLoaded, ...cleanMsg } = msg as ChatMessageWithAnimation;
+          return cleanMsg;
+        }));
+      }, 400);
 
-      logger.dev('[useInfiniteMessages] ✅ Messages anciens chargés:', {
+      logger.dev('[useInfiniteMessages] ✅ Messages anciens chargés (scroll préservé):', {
         count: olderMessages.length,
         hasMore: result.data.hasMore,
-        beforeSequence
+        beforeSequence,
+        heightAdded: container ? container.scrollHeight - scrollHeightBefore : 0
       });
 
     } catch (err) {
