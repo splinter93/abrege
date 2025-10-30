@@ -25,6 +25,8 @@ export interface NoteWithContent {
   slug: string;
   title: string;
   markdown_content: string;
+  updated_at?: string;  // Pour lastModified dans AttachedNotesFormatter
+  created_at?: string;
 }
 
 /**
@@ -69,50 +71,70 @@ export function useNotesLoader() {
   const loadQueue = useRef(new Map<string, Promise<NotesLoadResult>>());
 
   /**
-   * Charge une note individuelle depuis l'API
+   * Charge toutes les notes en batch (1 requête pour N notes)
+   * ✅ OPTIMISATION: Remplace N requêtes individuelles par 1 requête batch
    */
-  const fetchNoteContent = useCallback(async (
-    note: SelectedNote,
-    token: string,
-    index: number,
-    total: number
-  ): Promise<NoteWithContent | null> => {
+  const fetchNotesBatch = useCallback(async (
+    notes: SelectedNote[],
+    token: string
+  ): Promise<Map<string, NoteWithContent>> => {
     try {
-      logger.dev(`[useNotesLoader] 📡 [${index + 1}/${total}] Fetch: ${note.title}`);
+      logger.dev(`[useNotesLoader] 📡 Batch fetch de ${notes.length} note(s)`);
 
-      // ✅ OPTIMISATION: fields=content pour charger seulement le nécessaire (-30% bandwidth)
-      const response = await fetch(`/api/v2/note/${note.id}?fields=content`, {
+      // ✅ API Batch : 1 requête pour toutes les notes
+      const response = await fetch('/api/v2/notes/batch', {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          noteIds: notes.map(n => n.id)
+        })
       });
 
       if (!response.ok) {
-        logger.warn(`[useNotesLoader] ⚠️ [${index + 1}/${total}] HTTP ${response.status} pour: ${note.title}`);
-        return null;
+        logger.warn(`[useNotesLoader] ⚠️ Batch HTTP ${response.status}`);
+        return new Map();
       }
 
       const data = await response.json();
-      const noteData = data.note || data;
-
-      if (!noteData.markdown_content) {
-        logger.warn(`[useNotesLoader] ⚠️ [${index + 1}/${total}] Pas de contenu pour: ${note.title}`);
-        return null;
+      
+      if (!data.success || !data.notes) {
+        logger.warn('[useNotesLoader] ⚠️ Réponse batch invalide');
+        return new Map();
       }
 
-      logger.dev(`[useNotesLoader] ✅ [${index + 1}/${total}] Chargé: ${note.title} (${noteData.markdown_content.length} chars)`);
+      // Construire Map pour lookup rapide
+      const notesMap = new Map<string, NoteWithContent>();
+      
+      data.notes.forEach((noteData: {
+        id: string;
+        slug: string;
+        title: string;
+        markdown_content: string;
+        updated_at?: string;
+        created_at?: string;
+      }) => {
+        if (noteData.markdown_content) {
+          notesMap.set(noteData.id, {
+            id: noteData.id,
+            slug: noteData.slug,
+            title: noteData.title,
+            markdown_content: noteData.markdown_content,
+            updated_at: noteData.updated_at,
+            created_at: noteData.created_at
+          });
+        }
+      });
 
-      return {
-        id: note.id,
-        slug: note.slug,
-        title: note.title,
-        markdown_content: noteData.markdown_content
-      };
+      logger.info(`[useNotesLoader] ✅ Batch chargé: ${notesMap.size}/${notes.length} notes`);
+
+      return notesMap;
     } catch (fetchError) {
       const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
-      logger.error(`[useNotesLoader] ❌ [${index + 1}/${total}] Exception pour ${note.title}:`, errorMsg);
-      return null;
+      logger.error('[useNotesLoader] ❌ Exception batch:', errorMsg);
+      return new Map();
     }
   }, []);
 
@@ -162,54 +184,52 @@ export function useNotesLoader() {
 
   /**
    * Fonction interne de chargement (sans déduplication)
+   * ✅ OPTIMISATION: Utilise API batch (1 requête au lieu de N)
    */
   const loadNotesInternal = useCallback(async (
     notes: SelectedNote[],
     options: NotesLoaderOptions
   ): Promise<NotesLoadResult> => {
-    const { timeoutMs = 5000, token } = options;
+    const { timeoutMs = 3000, token } = options;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      logger.info(`[useNotesLoader] 📥 Chargement de ${notes.length} note(s)...`);
-
-      // Créer les promesses de chargement
-      const notePromises = notes.map((note, index) =>
-        fetchNoteContent(note, token, index, notes.length)
-      );
+      logger.info(`[useNotesLoader] 📥 Chargement batch de ${notes.length} note(s)...`);
 
       // Créer une promesse de timeout
-      const timeoutPromise = new Promise<null>((_, reject) => {
+      const timeoutPromise = new Promise<Map<string, NoteWithContent>>((_, reject) => {
         setTimeout(() => reject(new Error('Timeout')), timeoutMs);
       });
 
-      // Course entre le chargement et le timeout
-      let loadedNotes: (NoteWithContent | null)[];
+      // Course entre le chargement batch et le timeout
+      let notesMap: Map<string, NoteWithContent>;
       let timedOut = false;
 
       try {
-        loadedNotes = await Promise.race([
-          Promise.all(notePromises),
-          timeoutPromise.then(() => {
-            throw new Error('Timeout');
-          })
+        notesMap = await Promise.race([
+          fetchNotesBatch(notes, token),
+          timeoutPromise
         ]);
       } catch (timeoutError) {
-        // Timeout atteint, prendre ce qui a été chargé
-        logger.warn(`[useNotesLoader] ⏱️ Timeout de ${timeoutMs}ms atteint, utilisation des notes déjà chargées`);
+        // Timeout atteint
+        logger.warn(`[useNotesLoader] ⏱️ Timeout de ${timeoutMs}ms atteint`);
         timedOut = true;
-        
-        // Attendre un peu pour récupérer les notes qui ont réussi
-        await new Promise(resolve => setTimeout(resolve, 100));
-        loadedNotes = await Promise.allSettled(notePromises).then(results =>
-          results.map(result => result.status === 'fulfilled' ? result.value : null)
-        );
+        notesMap = new Map(); // Aucune note chargée
       }
 
-      // Filtrer les notes valides
-      const validNotes = loadedNotes.filter((n): n is NoteWithContent => n !== null);
+      // Construire array de notes dans l'ordre demandé
+      const validNotes: NoteWithContent[] = [];
+      
+      notes.forEach(note => {
+        const loadedNote = notesMap.get(note.id);
+        if (loadedNote) {
+          validNotes.push(loadedNote);
+        } else {
+          logger.dev(`[useNotesLoader] ⚠️ Note non chargée: ${note.title}`);
+        }
+      });
 
       const stats: NotesLoadStats = {
         requested: notes.length,
@@ -218,7 +238,7 @@ export function useNotesLoader() {
         timedOut
       };
 
-      logger.info('[useNotesLoader] ✅ Chargement terminé:', stats);
+      logger.info('[useNotesLoader] ✅ Chargement batch terminé:', stats);
 
       // Warning si échecs
       if (stats.failed > 0) {
@@ -241,7 +261,7 @@ export function useNotesLoader() {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchNoteContent]);
+  }, [fetchNotesBatch]);
 
   /**
    * Clear l'erreur actuelle

@@ -139,8 +139,31 @@ export function useChatMessageActions(
     }
 
     try {
+      // ✅ OPTIMISTIC UI : Créer et afficher message user IMMÉDIATEMENT
+      const textContent = typeof message === 'string' 
+        ? message 
+        : (Array.isArray(message) ? message.find(p => p.type === 'text')?.text || '' : '');
+      
+      const tempMessage: ChatMessage = {
+        id: `temp-${Date.now()}`,
+        role: 'user',
+        content: textContent,
+        timestamp: new Date().toISOString(),
+        ...(images && images.length > 0 && { attachedImages: images }),
+        ...(notes && notes.length > 0 && { 
+          attachedNotes: notes.map(n => ({
+            id: n.id,
+            slug: n.slug,
+            title: n.title
+          }))
+        })
+      };
 
-      // 1. Préparer l'envoi via service
+      // Afficher IMMÉDIATEMENT (avant chargement notes)
+      addInfiniteMessage(tempMessage);
+      logger.info('[useChatMessageActions] ⚡ Message user affiché instantanément (optimistic UI)');
+
+      // 1. Préparer l'envoi via service (charge notes en arrière-plan)
       const prepareResult = await chatMessageSendingService.prepare({
         message,
         images,
@@ -156,27 +179,20 @@ export function useChatMessageActions(
         throw new Error(prepareResult.error || 'Erreur préparation message');
       }
 
-      const { tempMessage, limitedHistory, context, token } = prepareResult;
+      const { limitedHistory, context, token } = prepareResult;
 
-      logger.dev('[useChatMessageActions] ✅ Message préparé:', {
-        hasTempMessage: !!tempMessage,
-        historyLength: limitedHistory?.length || 0
+      logger.dev('[useChatMessageActions] ✅ Contexte préparé:', {
+        historyLength: limitedHistory?.length || 0,
+        hasNotes: notes && notes.length > 0
       });
 
-      // 2. Affichage optimistic UI
-      if (tempMessage) {
-        addInfiniteMessage(tempMessage);
-        logger.dev('[useChatMessageActions] ⚡ Message user affiché (optimistic)');
-      }
-
-      // 3. Sauvegarder en background (non-bloquant)
-      // ✅ FIX: Typer comme UserMessage pour inclure attachedImages/attachedNotes
+      // 2. Sauvegarder en background (non-bloquant)
       const messageToSave = {
         role: 'user' as const,
-        content: tempMessage?.content || '',
-        timestamp: new Date().toISOString(),
-        ...(tempMessage?.attachedImages && { attachedImages: tempMessage.attachedImages }),
-        ...(tempMessage?.attachedNotes && { attachedNotes: tempMessage.attachedNotes })
+        content: tempMessage.content,
+        timestamp: tempMessage.timestamp,
+        ...(tempMessage.attachedImages && { attachedImages: tempMessage.attachedImages }),
+        ...(tempMessage.attachedNotes && { attachedNotes: tempMessage.attachedNotes })
       };
 
       sessionSyncService.addMessageAndSync(currentSession.id, messageToSave)
@@ -207,7 +223,7 @@ export function useChatMessageActions(
           logger.error('[useChatMessageActions] ❌ Erreur sauvegarde message user:', err);
         });
 
-      // 4. Appel LLM
+      // 3. Appel LLM (notes chargées et injectées dans contexte)
       if (!token || !context || !limitedHistory) {
         throw new Error('Données incomplètes pour appel LLM');
       }
@@ -216,7 +232,7 @@ export function useChatMessageActions(
         messagePreview: typeof message === 'string' ? message.substring(0, 100) : '[multi-modal]',
         historyLength: limitedHistory.length,
         historyRoles: limitedHistory.map(m => m.role),
-        context: context
+        hasNotes: notes && notes.length > 0
       });
 
       await sendMessageFn(

@@ -318,7 +318,8 @@ export interface RestoreFromTrashParams {
 
 // Agents
 export interface CreateAgentParams {
-  display_name: string;
+  name?: string; // Nom complet optionnel (ex: "Timothy Cavendish")
+  display_name: string; // Nom court affiché (ex: "Timothy")
   slug: string;
   description: string;
   model: string;
@@ -333,7 +334,8 @@ export interface CreateAgentParams {
 }
 
 export interface UpdateAgentParams {
-  display_name?: string;
+  name?: string; // Nom complet optionnel (ex: "Timothy Cavendish")
+  display_name?: string; // Nom court affiché (ex: "Timothy")
   description?: string;
   model?: string;
   system_instructions?: string;

@@ -90,7 +90,8 @@ export interface ValidationResult {
  */
 export interface CreateSpecializedAgentRequest {
   slug: string;
-  display_name: string;
+  name?: string; // Nom complet de l'agent (ex: "Timothy Cavendish"), par défaut = display_name
+  display_name: string; // Nom court affiché (ex: "Timothy")
   description: string;
   model: string;
   provider?: string;

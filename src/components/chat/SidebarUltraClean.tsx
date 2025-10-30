@@ -38,6 +38,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [isCreatingSession, setIsCreatingSession] = useState(false); // ✅ Bloquer clics pendant création
 
   // Fonctions de gestion
   const handleSelectSession = (session: ChatSession) => {
@@ -74,20 +75,37 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   };
 
   const handleSelectAgent = async (agent: Agent) => {
-    // ✅ SIMPLE : Créer conversation vide immédiatement
-    setSelectedAgent(agent);
-    
-    // Créer conversation avec l'agent (déjà met à jour currentSession dans le store)
-    const newSession = await createSession('Nouvelle conversation', agent.id);
-    
-    if (newSession) {
-      logger.dev('[SidebarUltraClean] ✅ Conversation vide créée:', newSession.id);
-    } else {
-      logger.error('[SidebarUltraClean] ❌ Échec création conversation');
+    // ✅ FIX RACE CONDITION : Ignorer clics si création déjà en cours
+    if (isCreatingSession) {
+      logger.dev('[SidebarUltraClean] ⏭️ Clic ignoré : création en cours');
+      return;
     }
     
-    if (!isDesktop) {
-      onClose();
+    setIsCreatingSession(true);
+    
+    try {
+      // ✅ FIX FLASH : Ne PAS appeler setSelectedAgent ici
+      // On laisse useSyncAgentWithSession le faire automatiquement après création
+      // → évite le double-set qui cause le clignotement
+      
+      // Créer conversation avec l'agent (met à jour currentSession dans le store)
+      const newSession = await createSession('Nouvelle conversation', agent.id);
+      
+      if (newSession) {
+        logger.dev('[SidebarUltraClean] ✅ Conversation créée, agent sera sync auto:', {
+          sessionId: newSession.id,
+          agentId: agent.id
+        });
+        // useSyncAgentWithSession va détecter le changement et charger l'agent
+      } else {
+        logger.error('[SidebarUltraClean] ❌ Échec création conversation');
+      }
+      
+      if (!isDesktop) {
+        onClose();
+      }
+    } finally {
+      setIsCreatingSession(false);
     }
   };
 
@@ -140,6 +158,8 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                   <button
                     onClick={() => handleSelectAgent(agent)}
                     className={`sidebar-item-clean sidebar-agent-item ${!currentSession && selectedAgent?.id === agent.id ? 'active' : ''}`}
+                    disabled={isCreatingSession}
+                    style={isCreatingSession ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
                   >
                     <div className="sidebar-item-icon-clean">
                       {agent.profile_picture ? (

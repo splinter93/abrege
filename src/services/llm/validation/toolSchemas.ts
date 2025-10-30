@@ -163,7 +163,8 @@ export const getAgentSchema = z.object({
 });
 
 export const createAgentSchema = z.object({
-  display_name: z.string().min(1).max(255, 'Nom trop long'),
+  name: z.string().min(1).max(255).optional(), // Nom complet optionnel (ex: "Timothy Cavendish")
+  display_name: z.string().min(1).max(255, 'Nom trop long'), // Nom court affiché (ex: "Timothy")
   slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/, 'Slug invalide (a-z, 0-9, -)'),
   description: z.string().max(1000),
   model: z.enum([

@@ -67,7 +67,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
     const { 
-      slug, display_name, description, model, system_instructions,
+      slug, name, display_name, description, model, system_instructions,
       input_schema, output_schema, provider = 'groq',
       is_chat_agent = false, temperature = 0.7, max_tokens = 4000,
       api_v2_capabilities
@@ -100,7 +100,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const specializedConfig: CreateSpecializedAgentRequest = {
       slug,
-      display_name,
+      name, // Nom complet optionnel (ex: "Timothy Cavendish")
+      display_name, // Nom court affiché (ex: "Timothy")
       description: description || '',
       model,
       provider,

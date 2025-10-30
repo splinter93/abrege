@@ -165,7 +165,8 @@ export interface OpenAPIProperty {
 
 export interface CreateSpecializedAgentRequest {
   readonly slug: string;
-  readonly display_name: string;
+  readonly name?: string; // Nom complet de l'agent (ex: "Timothy Cavendish"), par défaut = display_name
+  readonly display_name: string; // Nom court affiché (ex: "Timothy")
   readonly description: string;
   readonly model: string;
   readonly provider?: 'groq';

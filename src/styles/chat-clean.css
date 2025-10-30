@@ -1284,10 +1284,10 @@ body.chat-theme-anthracite .chatgpt-header {
   max-width: calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)); /* ✅ Même largeur que messages (sans padding) */
   background: var(--chat-gradient-input);
   border-radius: var(--chat-radius-xl);
-  padding: var(--chat-space-md);
+  padding: 12px; /* ✅ Padding normal pour épaisseur correcte */
   display: flex;
   flex-direction: column;
-  gap: var(--chat-space-md);
+  gap: 4px; /* ✅ Espace minimal entre textarea et toolbar */
   box-sizing: border-box;
 }
 
@@ -1307,7 +1307,7 @@ body.chat-theme-anthracite .chatgpt-header {
 .chatgpt-input-textarea {
   width: 100%;
   min-height: 24px; /* ✅ Ajusté pour éviter scroll parasite (line-height calculé) */
-  max-height: 80px;
+  max-height: 200px; /* ✅ AUGMENTÉ : 80px → 200px (réduit pour ne pas être coupé) */
   background: transparent;
   border: none;
   font-family: var(--font-chat-text) !important;
@@ -1316,11 +1316,11 @@ body.chat-theme-anthracite .chatgpt-header {
   font-size: var(--chat-font-size-base);
   line-height: var(--chat-line-height-normal);
   color: var(--chat-text-primary);
-  padding: 8px 0 0 8px; /* Padding top augmenté de 5px à 8px */
+  padding: 8px 0 0 8px; /* Padding top et left uniquement */
   overflow-y: auto;
   overflow-x: hidden; /* ✅ Pas de scroll horizontal */
-  scrollbar-width: thin;
-  scrollbar-color: var(--chat-text-secondary) transparent;
+  scrollbar-width: none; /* ✅ Scrollbar invisible */
+  transition: height 0.3s cubic-bezier(0.22, 1, 0.36, 1); /* ✅ Transition ultra-fluide (courbe expo-out) */
   box-sizing: border-box; /* ✅ Padding inclus dans dimensions */
 }
 
@@ -1334,12 +1334,7 @@ body.chat-theme-anthracite .chatgpt-header {
 }
 
 .chatgpt-input-textarea::-webkit-scrollbar {
-  width: 4px;
-}
-
-.chatgpt-input-textarea::-webkit-scrollbar-thumb {
-  background: var(--chat-text-secondary);
-  border-radius: 2px;
+  display: none; /* ✅ Scrollbar invisible sur Webkit */
 }
 
 .chatgpt-input-actions {

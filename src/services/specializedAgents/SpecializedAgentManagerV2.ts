@@ -325,7 +325,7 @@ export class SpecializedAgentManagerV2 {
 
       // Préparer les données
       const agentData = {
-        name: config.display_name,
+        name: config.name || config.display_name, // Utiliser name si fourni, sinon display_name
         slug: config.slug,
         display_name: config.display_name,
         description: config.description,

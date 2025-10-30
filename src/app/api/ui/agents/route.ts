@@ -95,7 +95,8 @@ export async function POST(request: NextRequest) {
     if (is_endpoint_agent) {
       const specializedConfig: CreateSpecializedAgentRequest = {
         slug,
-        display_name,
+        name, // Nom complet optionnel (ex: "Timothy Cavendish")
+        display_name, // Nom court affiché (ex: "Timothy")
         description: description || '',
         model,
         provider,

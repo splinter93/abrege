@@ -56,7 +56,7 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
         disabled={false}
         placeholder={
           selectedAgent
-            ? `Discuter avec ${selectedAgent.name}`
+            ? `Discuter avec ${selectedAgent.display_name || selectedAgent.name}`
             : "Commencez à discuter..."
         }
         sessionId={sessionId}

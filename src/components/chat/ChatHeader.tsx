@@ -78,13 +78,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               {selectedAgent.profile_picture ? (
                 <img
                   src={selectedAgent.profile_picture}
-                  alt={selectedAgent.name}
+                  alt={selectedAgent.display_name || selectedAgent.name}
                   className="agent-icon agent-avatar-header"
                 />
               ) : (
                 <span className="agent-icon">🤖</span>
               )}
-              <span className="agent-name">{selectedAgent.name}</span>
+              <span className="agent-name">{selectedAgent.display_name || selectedAgent.name}</span>
             </button>
 
             {/* Dropdown d'info agent */}
