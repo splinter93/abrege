@@ -91,8 +91,13 @@
     display: none !important;
   }
   
-  /* User bubbles - garde le dégradé gris glassmorphism existant */
-  /* Pas d'override */
+  /* User bubbles - Réduit taille et garde dégradé gris */
+  .chatgpt-message-bubble-user {
+    max-width: 70% !important;
+    padding: 10px 14px !important;
+    font-size: 14.5px !important;
+    line-height: 1.5 !important;
+  }
   
   .chatgpt-message-bubble-assistant {
     background: transparent !important;
@@ -107,10 +112,16 @@
   /* Retirer border-top qui crée la ligne horizontale */
   .chatgpt-input-area {
     border-top: none !important;
+    background: #000000 !important; /* Noir pur pour couvrir safe-area-bottom */
   }
   
   .chatgpt-main {
     border-bottom: none !important;
+  }
+  
+  /* Input wrapper garde son dégradé MAIS sur fond noir */
+  .chatgpt-input-wrapper {
+    /* Dégradé conservé par défaut */
   }
   
   /* ========================================
