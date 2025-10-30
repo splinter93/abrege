@@ -40,7 +40,7 @@
   
   .chatgpt-header {
     background: transparent !important;
-    border-bottom: 1px solid #1a1a1a;
+    border-bottom: none !important;
   }
   
   /* ========================================
