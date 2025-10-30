@@ -207,13 +207,10 @@ export async function POST(request: NextRequest) {
     
     logger.info(`[Stream Route] ✅ Provider ${providerType.toUpperCase()} créé avec modèle: ${model}`);
 
-    // ✅ Construire le contexte UI (comme dans la route classique)
-    // 📎 Merger attachedNotes si présentes (viennent du ChatContextBuilder)
+    // ✅ Construire le contexte UI (SANS attachedNotes - gérées séparément)
     const uiContext = {
-      ...(context.uiContext || {}),
-      ...(context.attachedNotes && context.attachedNotes.length > 0 && {
-        attachedNotes: context.attachedNotes
-      })
+      ...(context.uiContext || {})
+      // Notes ne sont PLUS passées ici (évite duplication tokens)
     };
     
     logger.dev('[Stream Route] 🕵️‍♂️ Contexte UI reçu:', {
@@ -225,7 +222,7 @@ export async function POST(request: NextRequest) {
       attachedNotesCount: context.attachedNotes?.length || 0
     });
 
-    // ✅ Construire le system message avec contexte (comme la route classique)
+    // ✅ Construire le system message SANS notes (instructions agent uniquement)
     const { SystemMessageBuilder } = await import('@/services/llm/SystemMessageBuilder');
     const systemMessageBuilder = SystemMessageBuilder.getInstance();
     
@@ -235,32 +232,55 @@ export async function POST(request: NextRequest) {
         type: context.type || 'chat_session',
         name: context.name || 'Chat',
         id: context.id || sessionId,
-        provider: providerType, // ✅ FIX CRITIQUE : Passer le provider pour activer les instructions spécifiques
-        ...uiContext
+        provider: providerType,
+        ...uiContext  // Sans attachedNotes
       }
     );
     
     const systemMessage = systemMessageResult.content;
     
-    // 📎 LOG: Vérifier si les notes ont été injectées dans le prompt
-    const hasNotesInPrompt = systemMessage.includes('📎 Notes Attachées par l\'Utilisateur');
-    
     logger.dev('[Stream Route] 📝 System message construit:', {
       length: systemMessage.length,
       hasContext: systemMessage.includes('Contexte actuel'),
-      hasNotesInPrompt,
       agentName: finalAgentConfig?.name || 'default'
     });
+
+    // ✅ NOUVEAU: Construire message contexte séparé style Cursor si notes présentes
+    const { attachedNotesFormatter } = await import('@/services/llm/AttachedNotesFormatter');
+    let contextMessage: ChatMessage | null = null;
     
-    if (hasNotesInPrompt && uiContext.attachedNotes) {
-      logger.info('[Stream Route] 📎 Notes injectées dans le prompt:', {
-        count: uiContext.attachedNotes.length,
-        titles: uiContext.attachedNotes.map((n: any) => n.title)
-      });
+    if (context.attachedNotes && context.attachedNotes.length > 0) {
+      try {
+        const contextContent = attachedNotesFormatter.buildContextMessage(context.attachedNotes);
+        
+        if (contextContent) {
+          contextMessage = {
+            // Role 'user' choisi pour compatibilité maximale tous providers
+            // Alternatives évaluées :
+            // - 'system' : Plus sémantique mais peut être mal géré par certains providers
+            // - 'developer' : Utilisé par Cursor mais pas supporté par Groq/XAI
+            // - 'user' : ✅ Supporté partout, traité comme contexte par LLM
+            role: 'user',
+            content: contextContent,
+            timestamp: new Date().toISOString()
+          };
+          
+          logger.info('[Stream Route] 📎 Contexte notes construit séparément (style Cursor):', {
+            count: context.attachedNotes.length,
+            contentLength: contextContent.length,
+            totalLines: context.attachedNotes.reduce((sum, n) => 
+              sum + (n.markdown_content?.split('\n').length || 0), 0
+            ),
+            titles: context.attachedNotes.map(n => n.title)
+          });
+        }
+      } catch (error) {
+        logger.error('[Stream Route] ❌ Erreur construction contexte notes:', error);
+        // Continue sans notes (fallback gracieux)
+      }
     }
     
-    // ✅ Construire le tableau de messages
-    // Si skipAddingUserMessage est true (cas édition), ne pas rajouter le message user
+    // ✅ Construire le tableau de messages avec contexte notes injecté AVANT user message
     const messages: ChatMessage[] = [
       {
         role: 'system',
@@ -268,6 +288,8 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString()
       },
       ...history,
+      // Injecter contexte notes juste avant le message user (si présent)
+      ...(contextMessage ? [contextMessage] : []),
       // N'ajouter le message user que si pas en mode skip
       ...(skipAddingUserMessage ? [] : [{
         role: 'user' as const,

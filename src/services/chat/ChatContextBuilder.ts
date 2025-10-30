@@ -19,6 +19,8 @@ export interface Note {
   slug: string;
   title: string;
   markdown_content: string;
+  updated_at?: string;  // Date de dernière modification (optionnel)
+  created_at?: string;  // Date de création (optionnel)
 }
 
 /**

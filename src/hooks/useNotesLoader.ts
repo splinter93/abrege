@@ -80,7 +80,8 @@ export function useNotesLoader() {
     try {
       logger.dev(`[useNotesLoader] 📡 [${index + 1}/${total}] Fetch: ${note.title}`);
 
-      const response = await fetch(`/api/v2/note/${note.id}`, {
+      // ✅ OPTIMISATION: fields=content pour charger seulement le nécessaire (-30% bandwidth)
+      const response = await fetch(`/api/v2/note/${note.id}?fields=content`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

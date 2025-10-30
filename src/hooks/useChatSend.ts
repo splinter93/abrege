@@ -89,9 +89,11 @@ export function useChatSend({
           throw new Error('Token non disponible');
         }
         
+        // ✅ OPTIMISATION: Timeout réduit 5s → 3s (suffisant pour la plupart des cas)
+        // Les notes sont déjà chargées en parallèle (Promise.all dans useNotesLoader)
         const { notes, stats } = await loadNotes(selectedNotes, { 
           token, 
-          timeoutMs: 5000 
+          timeoutMs: 3000 
         });
         
         notesWithContent = notes;

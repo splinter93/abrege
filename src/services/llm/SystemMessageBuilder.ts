@@ -209,22 +209,10 @@ RAPPEL TECHNIQUE :
           logger.dev(`[SystemMessageBuilder] 🌍 Contexte UI injecté (compact)`);
         }
         
-        // 📎 Ajouter les notes attachées (style Cursor)
-        if (ctx.attachedNotes && Array.isArray(ctx.attachedNotes) && ctx.attachedNotes.length > 0) {
-          content += `\n\n## 📎 Notes Attachées par l'Utilisateur\n\n`;
-          content += `L'utilisateur a mentionné les notes suivantes avec @ (comme dans Cursor).\n`;
-          content += `Tu DOIS te baser sur leur contenu pour répondre.\n\n`;
-          
-          // ✅ Type-safe: Cast inline pour chaque note
-          ctx.attachedNotes.forEach((note: { title: string; slug: string; markdown_content: string }, index: number) => {
-            content += `### Note ${index + 1}: ${note.title}\n`;
-            content += `**Slug:** ${note.slug}\n\n`;
-            content += `**Contenu:**\n\`\`\`markdown\n${note.markdown_content}\n\`\`\`\n\n`;
-            content += `---\n\n`;
-          });
-          
-          logger.dev(`[SystemMessageBuilder] 📎 ${ctx.attachedNotes.length} notes attachées ajoutées au contexte`);
-        }
+        // ✅ REFACTO: Notes attachées gérées séparément (évite duplication tokens)
+        // Les notes sont injectées comme message séparé dans la route API
+        // Voir: AttachedNotesFormatter.buildContextMessage() et /api/chat/llm/stream/route.ts
+        // Raison: Séparation données (notes) vs instructions (system), citations précises avec numéros de lignes
       }
 
       // 2. Template contextuel avec variables
