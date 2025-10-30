@@ -1136,7 +1136,7 @@ body.chat-theme-anthracite .chatgpt-header {
   color: var(--chat-text-primary);
   max-width: 70%;
   border: none;
-  padding: 12px 20px; /* ✅ Compacté verticalement */
+  padding: 11px 17px; /* ✅ Légèrement augmenté */
 }
 
 .chatgpt-message-bubble-user:hover {
@@ -1284,7 +1284,7 @@ body.chat-theme-anthracite .chatgpt-header {
   max-width: calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)); /* ✅ Même largeur que messages (sans padding) */
   background: var(--chat-gradient-input);
   border-radius: var(--chat-radius-xl);
-  padding: 12px; /* ✅ Padding normal pour épaisseur correcte */
+  padding: 16px 12px; /* ✅ Padding vertical augmenté : top/bottom 16px, left/right 12px */
   display: flex;
   flex-direction: column;
   gap: 4px; /* ✅ Espace minimal entre textarea et toolbar */
@@ -2210,6 +2210,8 @@ body.chat-theme-anthracite .chatgpt-header {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  user-select: none; /* ✅ Désactiver sélection */
+  pointer-events: none; /* ✅ Désactiver interactions */
 }
 
 .chat-empty-agent-placeholder {

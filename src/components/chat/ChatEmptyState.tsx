@@ -32,6 +32,7 @@ const ChatEmptyState: React.FC<ChatEmptyStateProps> = ({ agent }) => {
           <img 
             src={agent.profile_picture} 
             alt={agent.name}
+            draggable="false"
           />
         ) : (
           <div className="chat-empty-agent-placeholder">🤖</div>
