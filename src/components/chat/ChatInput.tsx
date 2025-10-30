@@ -22,6 +22,7 @@ import { useTextareaAutoResize } from '@/hooks/useTextareaAutoResize';
 import { useChatPrompts } from '@/hooks/useChatPrompts';
 import { useChatState } from '@/hooks/useChatState';
 import { useChatActions } from '@/hooks/useChatActions';
+import { useGlobalChatShortcuts } from '@/hooks/useGlobalChatShortcuts';
 import ChatInputContent from './ChatInputContent';
 import ChatInputToolbar from './ChatInputToolbar';
 import SlashMenu from './SlashMenu';
@@ -215,6 +216,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   // 🎯 Hook auto-resize textarea
   useTextareaAutoResize({ message, textareaRef });
+  
+  // 🎯 Raccourcis clavier globaux (Espace, /, @, Cmd+Enter)
+  useGlobalChatShortcuts({
+    textareaRef,
+    audioRecorderRef,
+    onOpenSlashMenu: () => openMenu('slash'),
+    onOpenNoteSelector: () => openMenu('notes'),
+    enabled: true
+  });
 
   // 🎯 Fermer les menus au clic extérieur
   useMultipleMenusClickOutside([
