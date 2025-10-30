@@ -8,7 +8,7 @@
 import React from 'react';
 import { Globe, CornerUpRight, Search, FileText, Zap, Target, Cpu } from 'react-feather';
 import { Lightbulb } from 'lucide-react';
-import AudioRecorder from './AudioRecorder';
+import AudioRecorder, { type AudioRecorderRef } from './AudioRecorder';
 import NoteSelector from './NoteSelector';
 import FileMenu from './FileMenu';
 import type { SelectedNote } from '@/hooks/useNotesLoader';
@@ -58,6 +58,7 @@ interface ChatInputToolbarProps {
   // Audio props
   onTranscriptionComplete: (text: string) => void;
   onAudioError: (error: string) => void;
+  audioRecorderRef?: React.RefObject<AudioRecorderRef | null>; // ✅ Ref pour raccourci clavier
   
   // Send props
   onSend: () => void;
@@ -117,6 +118,7 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
   // Audio
   onTranscriptionComplete,
   onAudioError,
+  audioRecorderRef,
   
   // Send
   onSend,
@@ -242,6 +244,7 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
       <div style={{ flex: 1 }}></div>
       
       <AudioRecorder 
+        ref={audioRecorderRef}
         onTranscriptionComplete={onTranscriptionComplete}
         onError={onAudioError}
         disabled={disabled}

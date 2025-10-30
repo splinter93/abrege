@@ -4,9 +4,10 @@
  * @module hooks/useChatActions
  */
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import type { ImageAttachment } from '@/types/image';
 import type { SelectedNote, NoteWithContent } from './useNotesLoader';
+import type { AudioRecorderRef } from '@/components/chat/AudioRecorder';
 
 interface UseChatActionsOptions {
   // État
@@ -16,6 +17,7 @@ interface UseChatActionsOptions {
   loading: boolean;
   disabled: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  audioRecorderRef?: React.RefObject<AudioRecorderRef | null>; // ✅ NOUVEAU: Ref pour Whisper
   
   // Setters
   setMessage: (message: string) => void;
@@ -39,6 +41,7 @@ export function useChatActions({
   loading,
   disabled,
   textareaRef,
+  audioRecorderRef,
   setMessage,
   setSelectedNotes,
   setAudioError,
@@ -79,13 +82,23 @@ export function useChatActions({
 
   /**
    * Handler pour la touche Enter
+   * ✅ Si en recording → Stop Whisper
+   * ✅ Sinon → Envoyer le message
    */
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      
+      // Si en recording, juste stop (pas d'envoi)
+      if (audioRecorderRef?.current?.isRecording()) {
+        audioRecorderRef.current.stopRecording();
+        return;
+      }
+      
+      // Sinon, envoyer normalement
       handleSend();
     }
-  }, [handleSend]);
+  }, [handleSend, audioRecorderRef]);
 
   /**
    * Handler pour la transcription audio complétée
@@ -110,6 +123,28 @@ export function useChatActions({
       return () => clearTimeout(timeoutId);
     }
   }, [textareaRef, setMessage, setAudioError]);
+
+  // ✅ RACCOURCI CLAVIER: Cmd+Enter pour Whisper (start/stop)
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Cmd+Enter (Mac) ou Ctrl+Enter (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        
+        if (!audioRecorderRef?.current) return;
+        
+        // Toggle: si en recording → stop, sinon → start
+        if (audioRecorderRef.current.isRecording()) {
+          audioRecorderRef.current.stopRecording();
+        } else {
+          audioRecorderRef.current.startRecording();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [audioRecorderRef]);
 
   return {
     handleInputChange,

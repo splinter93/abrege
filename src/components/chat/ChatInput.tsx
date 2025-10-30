@@ -65,6 +65,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const { prompts: allPrompts } = useEditorPrompts(user?.id);
   const { loadNotes } = useNotesLoader();
   
+  // ✅ Ref pour contrôler AudioRecorder via raccourci clavier
+  const audioRecorderRef = React.useRef<import('./AudioRecorder').AudioRecorderRef>(null);
+  
   // 🎯 Hook menus
   const {
     showFileMenu,
@@ -191,6 +194,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     loading,
     disabled,
     textareaRef,
+    audioRecorderRef, // ✅ Passer la ref pour raccourci Cmd+Enter
     setMessage,
     setSelectedNotes,
     setAudioError,
@@ -262,6 +266,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onFastReasoning={handleFastReasoning} onGeneralReasoning={handleGeneralReasoning}
         onAdvancedReasoning={handleAdvancedReasoning}
         onTranscriptionComplete={handleTranscriptionComplete} onAudioError={setAudioError}
+        audioRecorderRef={audioRecorderRef}
         onSend={handleSend} canSend={!!message.trim() || images.length > 0}
         disabled={disabled} loading={loading}
       />

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { Square, Loader } from 'react-feather';
 import { Mic } from 'lucide-react';
 import { logger } from '@/utils/logger';
@@ -12,6 +12,13 @@ interface AudioRecorderProps {
   variant?: 'chat' | 'toolbar';
 }
 
+// ✅ Interface pour exposer les méthodes via ref
+export interface AudioRecorderRef {
+  startRecording: () => void;
+  stopRecording: () => void;
+  isRecording: () => boolean;
+}
+
 interface RecordingState {
   isRecording: boolean;
   isProcessing: boolean;
@@ -19,12 +26,12 @@ interface RecordingState {
   audioBlob: Blob | null;
 }
 
-export default function AudioRecorder({ 
+const AudioRecorder = forwardRef<AudioRecorderRef, AudioRecorderProps>(({ 
   onTranscriptionComplete, 
   onError, 
   disabled = false,
   variant = 'chat'
-}: AudioRecorderProps) {
+}, ref) => {
   const [state, setState] = useState<RecordingState>({
     isRecording: false,
     isProcessing: false,
@@ -222,6 +229,13 @@ export default function AudioRecorder({
     };
   };
 
+  // ✅ Exposer les méthodes via ref pour raccourci clavier
+  useImperativeHandle(ref, () => ({
+    startRecording,
+    stopRecording,
+    isRecording: () => state.isRecording
+  }), [startRecording, stopRecording, state.isRecording]);
+
   const buttonState = getButtonState();
 
   return (
@@ -235,4 +249,8 @@ export default function AudioRecorder({
       {buttonState.icon}
     </button>
   );
-}
+});
+
+AudioRecorder.displayName = 'AudioRecorder';
+
+export default AudioRecorder;
