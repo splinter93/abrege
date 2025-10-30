@@ -1,19 +1,32 @@
 {
-  "name": "Scrivia",
+  "name": "Scrivia Chat",
   "short_name": "Scrivia",
-  "description": "Markdown knowledge base with LLM integration",
-  "start_url": "/",
+  "description": "Chat IA premium avec agents spécialisés, tool calls, et support multi-modal",
+  "start_url": "/chat",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#131313",
   "theme_color": "#131313",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/feather.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
-  ]
+  ],
+  "screenshots": []
 }
 

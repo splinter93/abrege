@@ -1,0 +1,233 @@
+/**
+ * PWA Mobile Styles
+ * - Safe areas iOS/Android (notches, navigation bars)
+ * - Dynamic viewport height
+ * - Full-screen layout support
+ * 
+ * Standard JEAN-CLAUDE: Mobile-first, performance, touch-optimized
+ */
+
+/* ========================================
+   SAFE AREAS - iOS/Android
+   ======================================== */
+
+:root {
+  /* Safe area insets pour notches/navigation bars */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  
+  /* Dynamic viewport height (meilleur que 100vh sur mobile) */
+  --vh: 1vh;
+}
+
+/* ========================================
+   BODY - FULLSCREEN LAYOUT
+   ======================================== */
+
+body.pwa-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height (iOS Safari) */
+  overflow: hidden;
+  overflow-x: hidden; /* Empêche scroll horizontal */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+/* Fix overflow horizontal général mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ========================================
+   CHAT HEADER - SAFE AREA TOP
+   ======================================== */
+
+.chat-header {
+  padding-top: max(12px, var(--safe-area-top));
+}
+
+/* Ajustement pour notch iPhone (si header transparent) */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .chat-header.transparent {
+    padding-top: calc(12px + env(safe-area-inset-top));
+  }
+}
+
+/* ========================================
+   CHAT INPUT - SAFE AREA BOTTOM
+   ======================================== */
+
+.chat-input-container {
+  padding-bottom: max(12px, var(--safe-area-bottom));
+}
+
+/* Fix iOS keyboard resize (input reste visible) */
+@supports (-webkit-touch-callout: none) {
+  .chat-input-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+  }
+  
+  /* En mode PWA standalone, utiliser safe-area */
+  @media (display-mode: standalone) {
+    .chat-input-container {
+      padding-bottom: max(16px, calc(12px + env(safe-area-inset-bottom)));
+    }
+  }
+}
+
+/* ========================================
+   MESSAGES CONTAINER - SCROLLABLE AREA
+   ======================================== */
+
+.chat-messages-area {
+  /* Hauteur dynamique (100vh - header - input) */
+  height: calc(100dvh - var(--header-height, 60px) - var(--input-height, 80px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  
+  /* Safe areas latérales (paysage iPhone Pro Max) */
+  padding-left: max(12px, var(--safe-area-left));
+  padding-right: max(12px, var(--safe-area-right));
+}
+
+/* ========================================
+   SIDEBAR - SAFE AREAS (si applicable)
+   ======================================== */
+
+.chat-sidebar {
+  padding-top: max(12px, var(--safe-area-top));
+  padding-bottom: max(12px, var(--safe-area-bottom));
+  padding-left: max(12px, var(--safe-area-left));
+}
+
+/* ========================================
+   MODALS - SAFE AREAS
+   ======================================== */
+
+.modal-fullscreen {
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.modal-close-btn {
+  top: max(12px, calc(12px + var(--safe-area-top)));
+  right: max(12px, calc(12px + var(--safe-area-right)));
+}
+
+/* ========================================
+   TOUCH OPTIMIZATIONS
+   ======================================== */
+
+/* Désactiver le highlight au tap (iOS Safari) */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Améliorer le scroll momentum (iOS) */
+.scrollable {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* Désactiver le zoom sur double-tap (iOS Safari) */
+button, a, input, textarea, select {
+  touch-action: manipulation;
+}
+
+/* ========================================
+   RESPONSIVE BREAKPOINTS
+   ======================================== */
+
+/* Mobile Small (320px - 375px) */
+@media (max-width: 375px) {
+  .chat-header {
+    padding-top: max(8px, var(--safe-area-top));
+  }
+  
+  .chat-input-container {
+    padding-bottom: max(8px, var(--safe-area-bottom));
+  }
+}
+
+/* Tablet (768px+) - Safe areas moins critiques */
+@media (min-width: 768px) {
+  body.pwa-fullscreen {
+    position: relative;
+    height: auto;
+  }
+}
+
+/* ========================================
+   PWA STANDALONE MODE
+   ======================================== */
+
+@media (display-mode: standalone) {
+  /* App installée - Safe areas prioritaires */
+  body {
+    background: var(--color-bg-primary);
+  }
+  
+  /* Empêcher le pull-to-refresh natif (Android) */
+  body {
+    overscroll-behavior-y: contain;
+  }
+  
+  /* Status bar overlay (iOS) */
+  .pwa-status-bar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--safe-area-top);
+    background: var(--color-bg-primary);
+    z-index: 9999;
+    pointer-events: none;
+  }
+}
+
+/* ========================================
+   LANDSCAPE MODE
+   ======================================== */
+
+@media (orientation: landscape) {
+  /* Réduire padding vertical en paysage */
+  .chat-header,
+  .chat-input-container {
+    padding-top: max(8px, var(--safe-area-top));
+    padding-bottom: max(8px, var(--safe-area-bottom));
+  }
+  
+  /* Utiliser safe areas latérales */
+  .chat-messages-area {
+    padding-left: max(16px, var(--safe-area-left));
+    padding-right: max(16px, var(--safe-area-right));
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY - REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+

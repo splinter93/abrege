@@ -15,6 +15,8 @@ import "../styles/unified-page-title.css";
 import "../styles/sidebar-collapsible.css";
 import "../styles/unified-page-layout.css";
 import "../styles/pages-unified-layout.css";
+import "../styles/pwa-mobile.css";
+import "../styles/chat-mobile.css";
 import "../components/editor/editor-header.css";
 import "../components/editor/editor-title.css";
 import "../components/editor/editor-content.css";
@@ -63,11 +65,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/feather.svg" type="image/svg+xml" />
         <link rel="manifest" href="/manifest.json" />
         
+        {/* PWA Icons */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
+        
         {/* PWA Status Bar - Contrôlée dynamiquement par ThemeColor.tsx */}
-        <meta name="theme-color" content="#121212" />
+        <meta name="theme-color" content="#131313" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Scrivia" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="application-name" content="Scrivia Chat" />
         
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -104,6 +113,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
           * { box-sizing: border-box; }
           
+          /* PWA SPLASH SCREEN */
+          #pwa-splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            background: #131313;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.3s ease;
+          }
+          #pwa-splash.hidden {
+            opacity: 0;
+            pointer-events: none;
+          }
+          #pwa-splash img {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+          }
+          
           /* CRITICAL SIDEBAR CSS - Éviter le flash de sidebar noire */
           .unified-sidebar {
             position: fixed !important;
@@ -131,6 +165,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         ` }} />
       </head>
       <body className={`${geistSans.className} ${geistSans.variable} ${geistMono.variable} ${notoSans.variable} app-container`}>
+        {/* PWA Splash Screen */}
+        <div id="pwa-splash">
+          <img src="/logo-scrivia-white.png" alt="Scrivia" />
+        </div>
+        
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            const splash = document.getElementById('pwa-splash');
+            if (splash) {
+              window.addEventListener('load', function() {
+                setTimeout(function() {
+                  splash.classList.add('hidden');
+                  setTimeout(function() {
+                    splash.remove();
+                  }, 300);
+                }, 800);
+              });
+            }
+          })();
+        ` }} />
+        
         <ThemeColor />
         <LanguageProvider>
           <Toaster position="top-right" />

@@ -1,4 +1,5 @@
 import path from 'path';
+import withPWA from '@ducanh2912/next-pwa';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -27,4 +28,48 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * PWA Configuration
+ * - Service Worker pour static assets uniquement
+ * - Cache-first pour images/fonts, Network-only pour API
+ * - Désactivé en dev pour éviter cache issues
+ */
+const pwaConfig = withPWA({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  workboxOptions: {
+    skipWaiting: true,
+    clientsClaim: true,
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'google-fonts',
+          expiration: {
+            maxEntries: 10,
+            maxAgeSeconds: 60 * 60 * 24 * 365 // 1 an
+          }
+        }
+      },
+      {
+        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'images',
+          expiration: {
+            maxEntries: 60,
+            maxAgeSeconds: 7 * 24 * 60 * 60 // 7 jours
+          }
+        }
+      },
+      {
+        urlPattern: /\/api\/.*/i,
+        handler: 'NetworkOnly'
+      }
+    ]
+  }
+});
+
+export default pwaConfig(nextConfig);
