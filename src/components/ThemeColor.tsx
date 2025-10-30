@@ -12,8 +12,15 @@ export default function ThemeColor() {
       const html = document.documentElement;
       let color = '#121212'; // Dark par défaut
       
-      // Détecter le thème actif
-      if (html.classList.contains('theme-blue') || 
+      // MODE STANDALONE (PWA installée) = Noir pur
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                          (window.navigator as any).standalone === true; // iOS
+      
+      if (isStandalone) {
+        color = '#000000'; // Noir pur pour app installée
+      }
+      // Détecter le thème actif (browser uniquement)
+      else if (html.classList.contains('theme-blue') || 
           html.classList.contains('chat-theme-blue')) {
         color = '#0f1419'; // Blue theme
       } else if (html.classList.contains('theme-light') || 
@@ -23,7 +30,7 @@ export default function ThemeColor() {
         color = '#121212'; // Dark theme
       }
       
-      console.log('[ThemeColor] Update:', color, 'Classes:', html.className);
+      console.log('[ThemeColor] Update:', color, 'Standalone:', isStandalone, 'Classes:', html.className);
       
       // Update la meta tag
       const metaTag = document.querySelector('meta[name="theme-color"]');
