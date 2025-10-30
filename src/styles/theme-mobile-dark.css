@@ -1,0 +1,131 @@
+/**
+ * THEME MOBILE DARK - Pure Black (PWA Standalone)
+ * S'applique automatiquement en mode app installée
+ * Standard JEAN-CLAUDE: <300 lignes
+ */
+
+/* ========================================
+   ACTIVATION AUTOMATIQUE MODE STANDALONE
+   ======================================== */
+
+@media (display-mode: standalone) {
+  body {
+    --chat-bg-primary: #000000;
+    --chat-bg-secondary: #0a0a0a;
+    --chat-text-primary: #ffffff;
+    --chat-text-secondary: #a0a0a0;
+    --chat-border: #1a1a1a;
+    --chat-border-subtle: #0f0f0f;
+  }
+  
+  /* ========================================
+     CONTAINER PRINCIPAL
+     ======================================== */
+  
+  .chatgpt-container {
+    background: #000000 !important;
+  }
+  
+  .chatgpt-content {
+    background: #000000 !important;
+  }
+  
+  .chatgpt-main {
+    background: #000000 !important;
+  }
+  
+  /* ========================================
+     HEADER
+     ======================================== */
+  
+  .chatgpt-header {
+    background: transparent !important;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  
+  /* ========================================
+     MESSAGES
+     ======================================== */
+  
+  .chatgpt-messages-container {
+    background: transparent !important;
+  }
+  
+  .chatgpt-message-bubble-user {
+    background: #1a1a1a !important;
+    border: 1px solid #2a2a2a;
+  }
+  
+  .chatgpt-message-bubble-assistant {
+    background: transparent !important;
+  }
+  
+  /* ========================================
+     INPUT AREA
+     ======================================== */
+  
+  .chatgpt-input-area {
+    background: transparent !important;
+    border-top: 1px solid #1a1a1a;
+  }
+  
+  .chatgpt-input-wrapper {
+    background: #0a0a0a !important;
+    border: 1px solid #1a1a1a;
+  }
+  
+  .chatgpt-input-textarea {
+    background: transparent !important;
+    color: #ffffff !important;
+  }
+  
+  .chatgpt-input-textarea::placeholder {
+    color: #505050 !important;
+  }
+  
+  /* ========================================
+     SIDEBAR
+     ======================================== */
+  
+  .sidebar-ultra-clean,
+  .unified-sidebar {
+    background: rgba(0, 0, 0, 0.95) !important;
+    border-right: 1px solid #1a1a1a;
+  }
+  
+  /* ========================================
+     BUTTONS
+     ======================================== */
+  
+  button {
+    color: #ffffff;
+  }
+  
+  .chatgpt-send-btn {
+    background: #1a1a1a !important;
+    border: 1px solid #2a2a2a;
+  }
+  
+  .chatgpt-send-btn:hover {
+    background: #2a2a2a !important;
+  }
+  
+  /* ========================================
+     SCROLLBAR
+     ======================================== */
+  
+  ::-webkit-scrollbar {
+    width: 8px;
+    background: #000000;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #1a1a1a;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2a2a2a;
+  }
+}
+
