@@ -124,31 +124,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }
           }
           
-          /* PWA SPLASH SCREEN */
-          #pwa-splash {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            height: 100dvh;
-            background: #000000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-            transition: opacity 0.3s ease;
-          }
-          #pwa-splash.hidden {
-            opacity: 0;
-            pointer-events: none;
-          }
-          #pwa-splash img {
-            width: 200px;
-            height: 200px;
-            object-fit: contain;
-          }
-          
           /* CRITICAL SIDEBAR CSS - Éviter le flash de sidebar noire */
           .unified-sidebar {
             position: fixed !important;
@@ -176,27 +151,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         ` }} />
       </head>
       <body className={`${geistSans.className} ${geistSans.variable} ${geistMono.variable} ${notoSans.variable} app-container`}>
-        {/* PWA Splash Screen */}
-        <div id="pwa-splash">
-          <img src="/simple logo.svg" alt="Scrivia" />
-        </div>
-        
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function() {
-            const splash = document.getElementById('pwa-splash');
-            if (splash) {
-              window.addEventListener('load', function() {
-                setTimeout(function() {
-                  splash.classList.add('hidden');
-                  setTimeout(function() {
-                    splash.remove();
-                  }, 300);
-                }, 800);
-              });
-            }
-          })();
-        ` }} />
-        
         <ThemeColor />
         <LanguageProvider>
           <Toaster position="top-right" />
