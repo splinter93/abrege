@@ -1,260 +1,96 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import type { ChatMessage } from '@/types/chat';
 
 interface UseChatScrollOptions {
   autoScroll?: boolean;
-  messages?: ChatMessage[]; // ✅ Type strict (pas unknown[])
-  offsetTop?: number;            // espace sous le header quand on centre un message
-  refreshOffset?: number;        // offset normal au refresh/chargement
+  messages?: ChatMessage[];
 }
 
 interface UseChatScrollReturn {
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  scrollToBottom: (force?: boolean) => void;
-  scrollToLastUserMessage: () => void;
-  scrollToLastAssistantMessage: () => void;
-  isNearBottom: boolean;
+  scrollToBottom: () => void;
 }
 
+/**
+ * Hook minimaliste pour le scroll auto
+ * 
+ * Fonctionnement :
+ * - Scroll au bas UNIQUEMENT quand un nouveau message USER arrive
+ * - RIEN pour les messages assistant (évite les saccades pendant le streaming)
+ * 
+ * Comportement du padding :
+ * - Par défaut : padding CSS normal (120px desktop, 100px mobile)
+ * - À l'envoi user : padding temporaire inline (75% viewport) pour remonter le message en haut
+ * - Le padding temporaire RESTE en place (pas de retour automatique)
+ * - Au refresh page : reset automatique au padding CSS (le style inline disparaît)
+ * 
+ * Pourquoi garder le padding temporaire ?
+ * - Évite que le message redescende après l'animation
+ * - L'utilisateur garde la vue sur son message pendant que l'assistant répond
+ * - UX fluide sans saccade
+ */
 export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScrollReturn {
-  const {
-    autoScroll = true,
-    messages = [],
-    offsetTop = 600,
-    refreshOffset = 40,
-  } = options;
+  const { autoScroll = true, messages = [] } = options;
   
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [isNearBottom, setIsNearBottom] = useState(true);
-  const lastScrollTimeRef = useRef<number>(0);
+  const prevMessagesRef = useRef(messages);
 
   // Trouver le container scrollable
   const getScrollContainer = useCallback(() => {
     return (
-      messagesEndRef.current?.closest(
-        '.chatgpt-messages-container, .messages-container, .chat-scroll-container'
-      ) as HTMLElement
+      messagesEndRef.current?.closest('.chatgpt-messages-container') as HTMLElement
     ) || (messagesEndRef.current?.parentElement as HTMLElement);
   }, []);
 
-  // Vérifier si l'utilisateur est près du bas
-  const checkScrollPosition = useCallback(() => {
+  /**
+   * Scroll au bas avec padding temporaire
+   * 
+   * Ajoute un padding inline de 75% du viewport pour que le message user
+   * remonte complètement en haut sous le header.
+   * 
+   * Le padding reste en place (pas de timeout) pour éviter que le message
+   * redescende pendant que l'assistant stream sa réponse.
+   */
+  const scrollToBottom = useCallback(() => {
     const container = getScrollContainer();
     if (!container) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = container;
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-    const near = distanceFromBottom <= 300;
     
-    setIsNearBottom(near);
-  }, [getScrollContainer]);
-
-  // 🎯 Scroll pour message USER (offset basé sur viewport)
-  const scrollToLastUserMessage = useCallback(() => {
-    const container = getScrollContainer();
-    if (!container) return;
-
-    // 🎯 Calculer l'offset basé sur le viewport (responsive)
+    // Calculer padding temporaire (75% du viewport)
     const viewportHeight = window.innerHeight;
-    const calculatedOffset = Math.floor(viewportHeight * 0.6); // 60% du viewport
+    const tempPadding = Math.floor(viewportHeight * 0.75);
     
-    // 🎯 AJOUTER l'espace vide sous les messages (responsive)
-    const messagesContainer = container.querySelector('.chatgpt-messages') as HTMLElement;
-    if (messagesContainer) {
-      messagesContainer.style.paddingBottom = `${calculatedOffset}px`;
-    }
-
-    // Scroll au MAXIMUM (comme avant)
-    const maxScroll = container.scrollHeight - container.clientHeight;
+    // Appliquer le padding inline (override le CSS)
+    container.style.paddingBottom = `${tempPadding}px`;
     
-    container.scrollTo({
-      top: maxScroll,
-      behavior: 'auto' // Instantané sans animation
-    });
-
-    lastScrollTimeRef.current = Date.now();
-  }, [getScrollContainer]);
-
-  // 🎯 Scroll pour refresh/chargement (offset normal = 40)
-  const scrollToBottom = useCallback((force = false) => {
-    const container = getScrollContainer();
-    if (!container) return;
-
-    // Clear le timeout précédent
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-
-    // 🎯 AJOUTER l'espace vide NORMAL sous les messages (pour voir tout le chat)
-    const messagesContainer = container.querySelector('.chatgpt-messages') as HTMLElement;
-    if (messagesContainer) {
-      messagesContainer.style.paddingBottom = `${refreshOffset}px`;
-    }
-
-    // 🎯 Si force=true, scroll avec animation custom (durée contrôlée)
-    if (force) {
-      const maxScrollTop = container.scrollHeight - container.clientHeight;
-      const targetScroll = Math.max(0, maxScrollTop);
-      const startScroll = container.scrollTop;
-      const distance = targetScroll - startScroll;
-      const duration = 800; // 🎨 Durée en ms (ajustable)
-      const startTime = performance.now();
-
-      const animateScroll = (currentTime: number) => {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Easing function (ease-in-out cubic pour fluidité)
-        const easeProgress = progress < 0.5
-          ? 4 * progress * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-        
-        container.scrollTop = startScroll + (distance * easeProgress);
-        
-        if (progress < 1) {
-          requestAnimationFrame(animateScroll);
-        }
-      };
-
-      requestAnimationFrame(animateScroll);
-      lastScrollTimeRef.current = Date.now();
-      return;
-    }
-
-    // Scroll optimisé sans manipulation du DOM (pour les autres cas)
-    scrollTimeoutRef.current = setTimeout(() => {
-      requestAnimationFrame(() => {
-        const maxScrollTop = container.scrollHeight - container.clientHeight;
-        
-        container.scrollTo({
-          top: Math.max(0, maxScrollTop),
-          behavior: 'auto' // Instantané sans animation
-        });
-        
-        lastScrollTimeRef.current = Date.now();
+    // Scroll au maximum avec le nouveau padding
+    requestAnimationFrame(() => {
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      container.scrollTo({
+        top: maxScroll,
+        behavior: 'smooth'
       });
-    }, 50);
-  }, [getScrollContainer, refreshOffset]);
-
-  // 🎯 Ajuster le padding SANS scroller (pour messages assistant)
-  const adjustPaddingForAssistant = useCallback(() => {
-    const container = getScrollContainer();
-    if (!container) return;
-
-    // Trouver le dernier message assistant
-    const assistantMessages = container.querySelectorAll('.chatgpt-message-assistant');
-    const lastAssistantMessage = assistantMessages[assistantMessages.length - 1] as HTMLElement;
-    
-    if (lastAssistantMessage) {
-      // ✅ Forcer un reflow pour obtenir la hauteur réelle après render
-      void lastAssistantMessage.offsetHeight;
-      
-      // Calculer la longueur du message (hauteur en pixels)
-      const messageHeight = lastAssistantMessage.offsetHeight;
-      
-      // 🎯 Calculer l'offset basé sur le viewport (responsive)
-      const viewportHeight = window.innerHeight;
-      const baseOffset = Math.floor(viewportHeight * 0.6); // 60% du viewport
-      
-      // Offset dynamique : baseOffset - longueur du message, minimum 40
-      const dynamicOffset = Math.max(40, baseOffset - messageHeight);
-      
-      // 🎯 AJUSTER le padding SANS scroller
-      const messagesContainer = container.querySelector('.chatgpt-messages') as HTMLElement;
-      if (messagesContainer) {
-        messagesContainer.style.paddingBottom = `${dynamicOffset}px`;
-      }
-      
-      // ✅ PAS DE SCROLL - Juste ajuster le padding pour éviter le scroll dans le vide
-    }
+    });
   }, [getScrollContainer]);
 
-  // 🎯 Scroll pour message ASSISTANT (si jamais besoin, gardé pour compatibilité)
-  const scrollToLastAssistantMessage = useCallback(() => {
-    adjustPaddingForAssistant();
-    // Pas de scroll, juste l'ajustement du padding
-  }, [adjustPaddingForAssistant]);
-
-  // Écouter le scroll pour détecter la position
-  useEffect(() => {
-    const container = getScrollContainer();
-    if (!container) return;
-
-    const handleScroll = () => {
-      checkScrollPosition();
-    };
-
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Vérifier la position initiale
-    checkScrollPosition();
-    
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-    };
-  }, [getScrollContainer, checkScrollPosition]);
-
-  // 🎯 Autoscroll CONDITIONNEL - Seulement pour messages user et NOUVEAUX messages assistant
-  const prevMessagesRef = useRef(messages);
-  const scrollThrottleRef = useRef<NodeJS.Timeout | null>(null);
-  const lastAssistantScrollRef = useRef<string | null>(null);
-  
+  // Autoscroll UNIQUEMENT pour nouveaux messages user
   useEffect(() => {
     if (!autoScroll || messages.length === 0) return;
 
     const prevMessages = prevMessagesRef.current;
-    const prevLast = prevMessages[prevMessages.length - 1];
     const currLast = messages[messages.length - 1];
     
-    // ✅ Type-safe: Accès aux propriétés sans cast
-    const prevLastId = prevLast?.id || prevLast?.timestamp;
-    const currLastId = currLast?.id || currLast?.timestamp;
-    const hasNewMessage = messages.length !== prevMessages.length || prevLastId !== currLastId;
-
-    // ✅ Détecter les changements de contenu (même message qui update)
-    const hasContentChanged = prevLast !== currLast;
-
+    // Détecter nouveau message
+    const hasNewMessage = messages.length !== prevMessages.length;
     prevMessagesRef.current = messages;
 
-    // ✅ Type-safe: Vérification rôle sans cast
-    const isLastMessageUser = currLast?.role === 'user';
-    const isLastMessageAssistant = currLast?.role === 'assistant';
-
-    // 🎯 USER : Scroll seulement pour NOUVEAUX messages
-    if (isLastMessageUser && hasNewMessage) {
-      if (scrollThrottleRef.current) clearTimeout(scrollThrottleRef.current);
-      scrollThrottleRef.current = setTimeout(() => {
-        scrollToLastUserMessage();
-      }, 150);
+    // Scroll UNIQUEMENT si c'est un message user
+    if (hasNewMessage && currLast?.role === 'user') {
+      setTimeout(() => scrollToBottom(), 100);
     }
-
-    // 🎯 ASSISTANT : Ajuster padding à chaque changement (même message), SANS scroller
-    if (isLastMessageAssistant && hasContentChanged) {
-      // Ajuster immédiatement pour éviter les 4px de scroll
-      requestAnimationFrame(() => {
-        adjustPaddingForAssistant();
-      });
-    }
-  }, [messages, autoScroll, scrollToLastUserMessage, adjustPaddingForAssistant]);
-
-  // Cleanup des timeouts
-  useEffect(() => {
-    return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      if (scrollThrottleRef.current) {
-        clearTimeout(scrollThrottleRef.current);
-      }
-    };
-  }, []);
+  }, [messages, autoScroll, scrollToBottom]);
 
   return {
     messagesEndRef,
-    scrollToBottom,
-    scrollToLastUserMessage,
-    scrollToLastAssistantMessage,
-    isNearBottom
+    scrollToBottom
   };
 }

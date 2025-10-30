@@ -1006,10 +1006,24 @@ body.chat-theme-anthracite .chatgpt-header {
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--chat-bg-primary);
-  padding-bottom: 100px; /* 🎯 Espace minimal pour streaming */
+  padding-bottom: 120px; /* 🎯 Padding normal */
   position: relative; /* Pour le centrage absolu de l'empty state */
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+/* ✅ Effet fade en haut (sous le header) - uniquement sur la zone chat */
+.chatgpt-messages-container::before {
+  content: '';
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 15px;
+  background: linear-gradient(to bottom, rgba(20, 22, 24, 0.95), rgba(20, 22, 24, 0));
+  pointer-events: none;
+  z-index: 10;
+  display: block;
 }
 
 /* Scrollbar zone messages ultra discrète et raccourcie */
@@ -1062,7 +1076,7 @@ body.chat-theme-anthracite .chatgpt-header {
 .chatgpt-message {
   display: flex;
   flex-direction: column;
-  margin-bottom: 10px; /* ✅ Resserré à 10px pour interface plus compacte */
+  margin-bottom: 6px; /* ✅ Resserré pour interface compacte */
   /* animation: fadeIn 0.2s ease-out; */ /* ✅ DÉSACTIVÉ: Cause clignotement à la fin du stream */
 }
 
@@ -1122,6 +1136,8 @@ body.chat-theme-anthracite .chatgpt-header {
   color: var(--chat-text-primary);
   max-width: 70%;
   border: none;
+  padding: 12px 20px; /* ✅ Compacté verticalement */
+  border-radius: var(--chat-radius-xl) var(--chat-radius-xl) 0 var(--chat-radius-xl); /* ✅ Coin bas-droit carré */
 }
 
 .chatgpt-message-bubble-user:hover {
@@ -1778,7 +1794,7 @@ body.chat-theme-anthracite .chatgpt-header {
   }
   
   .chatgpt-messages-container {
-    padding-bottom: 80px; /* 🎯 Mobile : espace minimal */
+    padding-bottom: 100px; /* 🎯 Mobile : padding normal */
   }
   
   .chatgpt-message-bubble-assistant {

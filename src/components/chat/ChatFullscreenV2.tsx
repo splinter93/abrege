@@ -89,7 +89,7 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 SCROLL AUTOMATION
   const { messagesEndRef, scrollToBottom } = useChatScroll({
-    autoScroll: true,
+    autoScroll: true, // ✅ Scroll auto pour messages user uniquement
     messages: infiniteMessages
   });
 
@@ -104,8 +104,7 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 HANDLERS CENTRALISÉS
   const { handleComplete, handleError, handleToolResult, handleToolExecutionComplete } = useChatHandlers({
     onComplete: async (fullContent, fullReasoning, toolCalls, toolResults, streamTimeline) => {
-      // ✅ FIX: Ajouter message assistant à infiniteMessages IMMÉDIATEMENT
-      // Comme ça l'historique est complet pour le prochain message
+      // ✅ Simple et propre : juste ajouter le message et reset le streaming
       const assistantMessage = {
         id: `msg-${Date.now()}-assistant`,
         role: 'assistant' as const,
@@ -117,11 +116,14 @@ const ChatFullscreenV2: React.FC = () => {
       };
       
       addInfiniteMessage(assistantMessage);
-      
-      logger.dev('[ChatFullscreenV2] ✅ Message assistant ajouté à infiniteMessages (historique complet)');
-      
-      // Arrêter isStreaming
       streamingState.endStreaming();
+      
+      // ✅ Reset padding temporaire après réponse assistant (revient au padding CSS normal)
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.style.paddingBottom = '';
+      }
+      
+      logger.dev('[ChatFullscreenV2] ✅ Message assistant ajouté, padding reset');
     }
   });
 
@@ -132,7 +134,12 @@ const ChatFullscreenV2: React.FC = () => {
     onStreamStart: streamingState.startStreaming,
     onStreamEnd: streamingState.endStreaming,
     onToolExecution: (toolCount, toolCalls) => {
-      streamingState.addToolExecution(toolCalls, toolCount);
+      // ✅ FIX TypeScript : Garantir type: 'function'
+      const typedToolCalls = toolCalls.map(tc => ({
+        ...tc,
+        type: 'function' as const
+      }));
+      streamingState.addToolExecution(typedToolCalls, toolCount);
     },
     onToolResult: (toolName, result, success, toolCallId) => {
       logger.dev('[ChatFullscreenV2] 🔧 onToolResult callback appelé:', {
@@ -394,6 +401,10 @@ const ChatFullscreenV2: React.FC = () => {
       animations.resetAnimation();
       clearInfiniteMessages();
       streamingState.reset(); // ✅ Reset le streaming précédent aussi
+      // ✅ Reset padding inline éventuel appliqué par useChatScroll (scroll padding temporaire)
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.style.paddingBottom = '';
+      }
       previousSessionIdRef.current = currentSession.id;
     }
 
