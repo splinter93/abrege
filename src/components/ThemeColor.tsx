@@ -10,6 +10,7 @@ export default function ThemeColor() {
   useEffect(() => {
     const updateThemeColor = () => {
       const html = document.documentElement;
+      const body = document.body;
       let color = '#121212'; // Dark par défaut
       
       // MODE STANDALONE (PWA installée) = Noir pur
@@ -18,6 +19,10 @@ export default function ThemeColor() {
       
       if (isStandalone) {
         color = '#000000'; // Noir pur pour app installée
+        
+        // FORCE noir pur sur html/body de manière agressive
+        html.style.setProperty('background', '#000000', 'important');
+        body.style.setProperty('background', '#000000', 'important');
       }
       // Détecter le thème actif (browser uniquement)
       else if (html.classList.contains('theme-blue') || 
