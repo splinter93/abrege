@@ -19,6 +19,38 @@
   }
   
   /* ========================================
+     FONTS - FALLBACK SYSTÈME SI GOOGLE FONTS FAIL
+     ======================================== */
+  
+  body,
+  .chatgpt-container,
+  .chatgpt-content,
+  .chat-markdown {
+    font-family: 'Inter', 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  }
+  
+  /* Headings */
+  .chat-markdown h1,
+  .chat-markdown h2,
+  .chat-markdown h3,
+  .chat-markdown h4,
+  .chat-markdown h5,
+  .chat-markdown h6 {
+    font-family: 'Inter', 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  }
+  
+  /* Input */
+  .chatgpt-input-textarea {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  }
+  
+  /* Code blocks */
+  .chat-markdown code,
+  .chat-markdown pre {
+    font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Consolas', monospace !important;
+  }
+  
+  /* ========================================
      CONTAINER PRINCIPAL
      ======================================== */
   
