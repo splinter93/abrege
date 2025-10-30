@@ -2284,7 +2284,7 @@ body.chat-theme-anthracite .chatgpt-header {
 /* Slash Menu (prompts chat) - plus compact */
 .chat-slash-menu {
   position: absolute;
-  bottom: calc(100% + 20px);
+  bottom: calc(100% + 0px);
   left: 0;
   background: var(--chat-gradient-input);
   border: none;

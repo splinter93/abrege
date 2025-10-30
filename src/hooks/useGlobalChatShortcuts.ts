@@ -89,14 +89,15 @@ export function useGlobalChatShortcuts({
         return;
       }
       
-      // ✅ / : Focus + insère "/" pour déclencher menu prompts
-      if (e.key === '/' && !isInInput && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+      // ✅ / : Focus + insère "/" pour déclencher menu prompts (support AZERTY: Slash = Shift+Period)
+      if (e.key === '/' && !isInInput && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         const textarea = textareaRef.current;
         if (textarea) {
           textarea.focus();
-          // Insérer "/" au début de la textarea
-          const newValue = '/' + textarea.value;
+          // Insérer "/" au début UNIQUEMENT si pas déjà présent
+          const current = textarea.value;
+          const newValue = current.startsWith('/') ? current : '/' + current;
           textarea.value = newValue;
           textarea.setSelectionRange(1, 1);
           // Syncer state React + déclencher détection
