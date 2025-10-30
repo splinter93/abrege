@@ -224,6 +224,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
     onOpenSlashMenu: () => openMenu('slash'),
     onOpenNoteSelector: () => openMenu('notes'),
     onCloseAllMenus: closeMenu,
+    onValueChange: (value, cursorPosition) => {
+      setMessage(value);
+      detectCommands(value, cursorPosition);
+    },
     enabled: true
   });
 

@@ -27,6 +27,7 @@ interface UseGlobalChatShortcutsOptions {
   onOpenSlashMenu?: () => void;
   onOpenNoteSelector?: () => void;
   onCloseAllMenus?: () => void; // ✅ Pour Esc
+  onValueChange?: (value: string, cursorPosition: number) => void; // ✅ Pour syncer state React
   enabled?: boolean;
 }
 
@@ -36,6 +37,7 @@ export function useGlobalChatShortcuts({
   onOpenSlashMenu,
   onOpenNoteSelector,
   onCloseAllMenus,
+  onValueChange,
   enabled = true
 }: UseGlobalChatShortcutsOptions) {
   
@@ -87,15 +89,18 @@ export function useGlobalChatShortcuts({
         return;
       }
       
-      // ✅ / : Focus + ouvre menu prompts (positionné au curseur)
+      // ✅ / : Focus + insère "/" pour déclencher menu prompts
       if (e.key === '/' && !isInInput && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         const textarea = textareaRef.current;
         if (textarea) {
           textarea.focus();
-          // Positionner le curseur au début pour que le menu apparaisse bien
-          textarea.setSelectionRange(0, 0);
-          setTimeout(() => onOpenSlashMenu?.(), 10);
+          // Insérer "/" au début de la textarea
+          const newValue = '/' + textarea.value;
+          textarea.value = newValue;
+          textarea.setSelectionRange(1, 1);
+          // Syncer state React + déclencher détection
+          onValueChange?.(newValue, 1);
         }
         return;
       }
@@ -116,7 +121,7 @@ export function useGlobalChatShortcuts({
     
     window.addEventListener('keydown', handleGlobalKeyPress);
     return () => window.removeEventListener('keydown', handleGlobalKeyPress);
-  }, [enabled, textareaRef, audioRecorderRef, onOpenSlashMenu, onOpenNoteSelector, onCloseAllMenus]);
+  }, [enabled, textareaRef, audioRecorderRef, onOpenSlashMenu, onOpenNoteSelector, onCloseAllMenus, onValueChange]);
 }
 
 
