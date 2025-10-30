@@ -66,6 +66,11 @@
   
   /* Pas d'override - laisse le style glassmorphism existant */
   
+  /* Mais force le background de la zone d'input pour couvrir safe-area-bottom */
+  .chatgpt-input-area {
+    background: #000000 !important;
+  }
+  
   /* ========================================
      SIDEBAR - GARDE DÉGRADÉ GRIS EXISTANT
      ======================================== */
