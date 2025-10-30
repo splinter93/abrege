@@ -112,17 +112,14 @@
   /* Retirer border-top qui crée la ligne horizontale */
   .chatgpt-input-area {
     border-top: none !important;
-    background: #000000 !important; /* Noir pur pour couvrir safe-area-bottom */
   }
   
   .chatgpt-main {
     border-bottom: none !important;
+    background: #000000 !important; /* Noir pur pour couvrir jusqu'au bout */
   }
   
-  /* Input wrapper garde son dégradé MAIS sur fond noir */
-  .chatgpt-input-wrapper {
-    /* Dégradé conservé par défaut */
-  }
+  /* Input garde son dégradé gris glassmorphism */
   
   /* ========================================
      SIDEBAR - GARDE DÉGRADÉ GRIS EXISTANT
