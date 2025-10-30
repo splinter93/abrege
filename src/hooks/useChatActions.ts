@@ -68,9 +68,14 @@ export function useChatActions({
         setMessage('');
         setSelectedNotes([]);
         clearImages();
+        
+        // ✅ Refocus la textarea pour continuer à taper (flow conversationnel)
+        setTimeout(() => {
+          textareaRef.current?.focus();
+        }, 50);
       }
     }
-  }, [message, images, selectedNotes, loading, disabled, send, setMessage, setSelectedNotes, clearImages]);
+  }, [message, images, selectedNotes, loading, disabled, send, setMessage, setSelectedNotes, clearImages, textareaRef]);
 
   /**
    * Handler pour la touche Enter
