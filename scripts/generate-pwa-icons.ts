@@ -15,7 +15,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const SOURCE_LOGO = path.join(__dirname, '../public/logo-scrivia-white.png');
+const SOURCE_LOGO = path.join(__dirname, '../public/simple logo.svg');
 const OUTPUT_DIR = path.join(__dirname, '../public');
 
 interface IconSize {
