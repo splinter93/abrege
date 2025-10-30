@@ -607,9 +607,9 @@ body.chat-theme-anthracite .chatgpt-header {
   top: 56px;
   left: 0;
   height: calc(100vh - 56px - 24px);
-  width: 280px;
+  width: 250px;
   background: var(--chat-gradient-sidebar);
-  transform: translateX(-280px);
+  transform: translateX(-250px);
   transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
               opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
   z-index: var(--chat-z-sidebar);
@@ -960,7 +960,7 @@ body.chat-theme-anthracite .chatgpt-header {
 
 /* Quand la sidebar est ouverte, décaler le contenu */
 .chatgpt-content.sidebar-open {
-  margin-left: 280px;
+  margin-left: 250px;
 }
 
 /* En mode responsive, garder la largeur fixe et laisser déborder */
@@ -985,7 +985,7 @@ body.chat-theme-anthracite .chatgpt-header {
   
   /* ✅ Décalage uniquement quand sidebar ouverte (pas de resize) */
   .chatgpt-content.sidebar-open {
-    margin-left: 280px;
+    margin-left: 250px;
   }
 }
 
@@ -1316,7 +1316,7 @@ body.chat-theme-anthracite .chatgpt-header {
   font-size: var(--chat-font-size-base);
   line-height: var(--chat-line-height-normal);
   color: var(--chat-text-primary);
-  padding: 8px 0 0 8px; /* Padding top et left uniquement */
+  padding: 8px 0 0 8px; /* Padding top et left */
   overflow-y: auto;
   overflow-x: hidden; /* ✅ Pas de scroll horizontal */
   scrollbar-width: none; /* ✅ Scrollbar invisible */
@@ -1808,10 +1808,10 @@ body.chat-theme-anthracite .chatgpt-header {
     font-size: 16px !important; /* Évite le zoom sur iOS */
   }
   
-  /* Garde le même style qu'en desktop : 280px avec border-radius */
+  /* Garde le même style qu'en desktop : 250px avec border-radius */
   .sidebar-ultra-clean {
-    /* Hérite des styles desktop (280px, border-radius, etc.) */
-    transform: translateX(-280px) !important;  /* ✅ Cachée par défaut */
+    /* Hérite des styles desktop (250px, border-radius, etc.) */
+    transform: translateX(-250px) !important;  /* ✅ Cachée par défaut */
   }
   
   .sidebar-ultra-clean.visible {
@@ -1829,7 +1829,7 @@ body.chat-theme-anthracite .chatgpt-header {
   
   /* ✅ Menu @ (Note Selector) - Adapté à la largeur mobile */
   .chat-note-selector {
-    width: 280px; /* Largeur fixe réduite pour mobile */
+    width: 250px; /* Largeur alignée avec sidebar */
     max-width: calc(100vw - 80px); /* Ne déborde jamais de l'écran */
   }
   
