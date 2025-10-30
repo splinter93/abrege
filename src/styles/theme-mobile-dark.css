@@ -91,18 +91,12 @@
     display: none !important;
   }
   
-  /* User bubbles - Réduit taille et assombrit dégradé */
+  /* User bubbles - Réduit taille et garde dégradé gris */
   .chatgpt-message-bubble-user {
     max-width: 70% !important;
     padding: 10px 14px !important;
     font-size: 14.5px !important;
     line-height: 1.5 !important;
-    background: linear-gradient(135deg, 
-      rgba(20, 20, 20, 0.6) 0%, 
-      rgba(30, 30, 30, 0.4) 100%) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
   }
   
   .chatgpt-message-bubble-assistant {
@@ -110,22 +104,14 @@
   }
   
   /* ========================================
-     INPUT AREA - DÉGRADÉ GRIS ASSOMBRI
+     INPUT AREA - GARDE DÉGRADÉ GRIS EXISTANT
      ======================================== */
   
-  /* Zone d'input - garde border-top none */
+  /* Pas d'override - laisse le style glassmorphism existant */
+  
+  /* Retirer border-top qui crée la ligne horizontale */
   .chatgpt-input-area {
     border-top: none !important;
-  }
-  
-  /* Input wrapper - dégradé assombri */
-  .chatgpt-input-wrapper {
-    background: linear-gradient(135deg, 
-      rgba(18, 18, 18, 0.7) 0%, 
-      rgba(25, 25, 25, 0.5) 100%) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
   }
   
   .chatgpt-main {
@@ -136,18 +122,10 @@
   /* Input garde son dégradé gris glassmorphism */
   
   /* ========================================
-     SIDEBAR - DÉGRADÉ GRIS ASSOMBRI
+     SIDEBAR - GARDE DÉGRADÉ GRIS EXISTANT
      ======================================== */
   
-  .sidebar-ultra-clean,
-  .unified-sidebar {
-    background: linear-gradient(180deg, 
-      rgba(15, 15, 15, 0.85) 0%, 
-      rgba(20, 20, 20, 0.75) 100%) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
-  }
+  /* Pas d'override - laisse le style glassmorphism existant */
   
   /* ========================================
      BUTTONS
