@@ -51,12 +51,16 @@
   
   .chatgpt-messages-container {
     background: transparent !important;
+    box-shadow: none !important;
   }
   
-  .chatgpt-message-bubble-user {
-    background: #1a1a1a !important;
-    border: 1px solid #2a2a2a;
+  /* Retirer le fade/blur sous le header */
+  .chatgpt-messages-container::before {
+    display: none !important;
   }
+  
+  /* User bubbles - garde le dégradé gris glassmorphism existant */
+  /* Pas d'override */
   
   .chatgpt-message-bubble-assistant {
     background: transparent !important;
