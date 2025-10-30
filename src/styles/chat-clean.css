@@ -1098,6 +1098,7 @@ body.chat-theme-anthracite .chatgpt-header {
 
 .chatgpt-message-user {
   align-items: flex-end;
+  animation: fadeInMessage 100ms ease-out;
 }
 
 .chatgpt-message-bubble {
@@ -1701,6 +1702,16 @@ body.chat-theme-anthracite .chatgpt-header {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ✅ Animation message user - Fade-in subtil 100ms */
+@keyframes fadeInMessage {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

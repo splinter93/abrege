@@ -449,14 +449,15 @@ export class OpenAPISchemaService {
 
   /**
    * Extraire les endpoints du schéma OpenAPI
+   * ✅ NOUVEAU: Extraction des query parameters
    */
   private extractEndpointsFromSchema(
     content: Record<string, unknown>, 
     apiKey?: string, 
     headerName?: string,
     baseUrl?: string
-  ): Map<string, { method: string; path: string; apiKey?: string; headerName?: string; baseUrl: string }> {
-    const endpoints = new Map<string, { method: string; path: string; apiKey?: string; headerName?: string; baseUrl: string }>();
+  ): Map<string, { method: string; path: string; apiKey?: string; headerName?: string; baseUrl: string; queryParams?: string[] }> {
+    const endpoints = new Map<string, { method: string; path: string; apiKey?: string; headerName?: string; baseUrl: string; queryParams?: string[] }>();
     
     try {
       const paths = content.paths as Record<string, Record<string, unknown>> | undefined;
@@ -489,12 +490,29 @@ export class OpenAPISchemaService {
           const operationId = op.operationId as string | undefined;
 
           if (operationId && typeof operationId === 'string') {
+            // ✅ NOUVEAU: Extraire les query parameters
+            const queryParams: string[] = [];
+            const parameters = op.parameters as Array<Record<string, unknown>> | undefined;
+            
+            if (parameters && Array.isArray(parameters)) {
+              for (const param of parameters) {
+                const paramIn = param.in as string | undefined;
+                const paramName = param.name as string | undefined;
+                
+                // Seuls les paramètres "in: query" sont des query params
+                if (paramIn === 'query' && paramName) {
+                  queryParams.push(paramName);
+                }
+              }
+            }
+
             endpoints.set(operationId, {
               method: method.toUpperCase(),
               path: pathName,
               apiKey,
               headerName,
-              baseUrl: baseUrl || ''
+              baseUrl: baseUrl || '',
+              queryParams: queryParams.length > 0 ? queryParams : undefined
             });
           }
         }

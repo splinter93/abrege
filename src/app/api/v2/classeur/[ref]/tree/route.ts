@@ -54,23 +54,40 @@ export async function GET(
   const classeurId = resolveResult.id;
 
   try {
-    // Récupérer le classeur principal
-    logApi.info(`🔍 Tentative récupération classeur: ${classeurId}`, context);
+    // ✅ OPTIMISATION: Paralléliser les 3 requêtes au lieu de les faire séquentiellement
+    logApi.info(`🚀 Requêtes parallèles: classeur, folders, notes`, context);
     
-    const { data: classeur, error: classeurError } = await supabase
-      .from('classeurs')
-      .select('id, name, description, emoji, position, slug, created_at, updated_at')
-      .eq('id', classeurId)
-      .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
-      .eq('is_in_trash', false) // 🔧 CORRECTION: Exclure les classeurs en corbeille
-      .single();
+    const [classeurResult, foldersResult, notesResult] = await Promise.all([
+      // Requête 1: Classeur principal
+      supabase
+        .from('classeurs')
+        .select('id, name, description, emoji, position, slug, created_at, updated_at')
+        .eq('id', classeurId)
+        .eq('user_id', userId)
+        .eq('is_in_trash', false)
+        .single(),
+      
+      // Requête 2: Dossiers (simplifié - uniquement classeur_id)
+      supabase
+        .from('folders')
+        .select('id, name, parent_id, created_at, position, slug, classeur_id')
+        .eq('classeur_id', classeurId)
+        .eq('user_id', userId)
+        .is('trashed_at', null)
+        .order('name'),
+      
+      // Requête 3: Notes (simplifié - uniquement classeur_id)
+      supabase
+        .from('articles')
+        .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id, slug')
+        .eq('classeur_id', classeurId)
+        .eq('user_id', userId)
+        .is('trashed_at', null)
+        .order('source_title')
+    ]);
 
-    if (classeurError) {
-      logApi.info(`❌ Erreur SQL récupération classeur: ${classeurError.message}`, context);
-      logApi.info(`❌ Code erreur: ${classeurError.code}`, context);
-      logApi.info(`❌ Détails: ${classeurError.details}`, context);
-    }
-
+    // Vérifier le classeur
+    const { data: classeur, error: classeurError } = classeurResult;
     if (classeurError || !classeur) {
       logApi.info(`❌ Classeur non trouvé: ${classeurId}`, context);
       return NextResponse.json(
@@ -79,18 +96,8 @@ export async function GET(
       );
     }
 
-    logApi.info(`✅ Classeur trouvé: ${classeur.name} (${classeur.id})`, context);
-
-    // 🔧 CORRECTION: Utiliser classeur_id ET notebook_id pour compatibilité
-    // Récupérer les dossiers du classeur
-    const { data: folders, error: foldersError } = await supabase
-      .from('folders')
-      .select('id, name, parent_id, created_at, position, slug, classeur_id, notebook_id')
-      .or(`classeur_id.eq.${classeurId},notebook_id.eq.${classeurId}`)
-      .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
-      .is('trashed_at', null) // 🔧 CORRECTION: Exclure les dossiers supprimés
-      .order('name');
-
+    // Vérifier les dossiers
+    const { data: folders, error: foldersError } = foldersResult;
     if (foldersError) {
       logApi.info(`❌ Erreur récupération dossiers: ${foldersError.message}`, context);
       return NextResponse.json(
@@ -99,17 +106,8 @@ export async function GET(
       );
     }
 
-    logApi.info(`✅ ${folders?.length || 0} dossiers récupérés`, context);
-
-    // Récupérer les notes du classeur
-    const { data: notes, error: notesError } = await supabase
-      .from('articles')
-      .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id, notebook_id')
-      .or(`classeur_id.eq.${classeurId},notebook_id.eq.${classeurId}`)
-      .eq('user_id', userId) // 🔧 SÉCURITÉ: Vérifier que l'utilisateur est propriétaire
-      .is('trashed_at', null) // 🔧 CORRECTION: Exclure les notes supprimées
-      .order('source_title');
-
+    // Vérifier les notes
+    const { data: notes, error: notesError } = notesResult;
     if (notesError) {
       logApi.info(`❌ Erreur récupération notes: ${notesError.message}`, context);
       return NextResponse.json(
@@ -118,7 +116,7 @@ export async function GET(
       );
     }
 
-    logApi.info(`✅ ${notes?.length || 0} notes récupérées`, context);
+    logApi.info(`✅ Classeur: ${classeur.name}, Dossiers: ${folders?.length || 0}, Notes: ${notes?.length || 0}`, context);
 
     // Construire l'arborescence
     const tree = buildTree(folders || [], notes || []);

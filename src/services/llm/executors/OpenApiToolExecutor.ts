@@ -9,6 +9,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 /**
  * Type pour les endpoints OpenAPI
  * ✅ STRICT: Types précis pour éviter les erreurs
+ * ✅ NOUVEAU: Support des query parameters pour tous les verbes HTTP
  */
 interface OpenApiEndpoint {
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -16,6 +17,7 @@ interface OpenApiEndpoint {
   apiKey?: string;
   headerName?: string;
   baseUrl?: string;
+  queryParams?: string[]; // Liste des noms de paramètres qui doivent aller dans la query string
 }
 
 /**
@@ -279,13 +281,30 @@ export class OpenApiToolExecutor {
     let url = baseUrl + path;
     logger.dev(`[OpenApiToolExecutor] 🔧 URL après substitution: ${url}`);
 
-    // ✅ Pour les GET: ajouter les params restants en query string (ceux qui ne sont pas des path params)
-    if (endpoint.method === 'GET') {
-      const params = new URLSearchParams();
+    // ✅ NOUVEAU: Ajouter les query parameters pour TOUTES les méthodes HTTP
+    // Si l'endpoint définit explicitement des queryParams, on les utilise
+    // Sinon (GET legacy), on inclut tous les params qui ne sont pas des path params
+    const params = new URLSearchParams();
+    
+    if (endpoint.queryParams && endpoint.queryParams.length > 0) {
+      // Cas 1: L'endpoint définit explicitement des query params (ex: Synesia avec "wait")
+      logger.dev(`[OpenApiToolExecutor] 🔧 Query params définis dans le schéma:`, endpoint.queryParams);
+      for (const paramName of endpoint.queryParams) {
+        const value = args[paramName];
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            for (const item of value) {
+              params.append(`${paramName}[]`, String(item));
+            }
+          } else {
+            params.append(paramName, String(value));
+          }
+        }
+      }
+    } else if (endpoint.method === 'GET') {
+      // Cas 2: GET legacy - tous les params non-path vont dans la query string
       for (const [key, value] of Object.entries(args)) {
-        // Ne pas ajouter les params déjà utilisés dans le path
         if (!usedParams.has(key) && value !== undefined && value !== null) {
-          // ✅ FIXED: Gestion des arrays dans query params
           if (Array.isArray(value)) {
             for (const item of value) {
               params.append(`${key}[]`, String(item));
@@ -295,9 +314,11 @@ export class OpenApiToolExecutor {
           }
         }
       }
-      if (params.toString()) {
-        url += '?' + params.toString();
-      }
+    }
+
+    if (params.toString()) {
+      url += '?' + params.toString();
+      logger.dev(`[OpenApiToolExecutor] 🔧 Query params ajoutés: ${params.toString()}`);
     }
 
     logger.dev(`[OpenApiToolExecutor] 🔧 URL finale: ${url}`);
@@ -306,7 +327,7 @@ export class OpenApiToolExecutor {
 
   /**
    * ✅ NOUVEAU: Construire le body pour POST/PUT/PATCH
-   * Exclut les path parameters du body
+   * Exclut les path parameters ET les query parameters du body
    */
   private buildRequestBody(endpoint: OpenApiEndpoint, args: Record<string, unknown>): string | undefined {
     // Seulement pour les méthodes qui envoient un body
@@ -318,10 +339,20 @@ export class OpenApiToolExecutor {
     const pathParamMatches = endpoint.path.match(/\{([^}]+)\}/g) || [];
     const pathParams = pathParamMatches.map(match => match.slice(1, -1)); // Enlever {}
     
-    // Filtrer les args pour exclure les path parameters
+    // Préparer la liste des params à exclure du body
+    const excludedParams = new Set<string>(pathParams);
+    
+    // ✅ NOUVEAU: Exclure aussi les query parameters du body
+    if (endpoint.queryParams) {
+      for (const queryParam of endpoint.queryParams) {
+        excludedParams.add(queryParam);
+      }
+    }
+    
+    // Filtrer les args pour exclure les path params et query params
     const bodyArgs: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(args)) {
-      if (!pathParams.includes(key)) {
+      if (!excludedParams.has(key)) {
         bodyArgs[key] = value;
       }
     }

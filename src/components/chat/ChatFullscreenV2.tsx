@@ -104,21 +104,24 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 HANDLERS CENTRALISÉS
   const { handleComplete, handleError, handleToolResult, handleToolExecutionComplete } = useChatHandlers({
     onComplete: async (fullContent, fullReasoning, toolCalls, toolResults, streamTimeline) => {
-      // ✅ FLOW ULTRA-SIMPLE (ZERO SACCADE):
-      // 1. Message sauvegardé en DB par useChatHandlers.handleComplete
-      // 2. Streaming reste affiché tel quel → AUCUN rerender, AUCUN changement
-      // 3. Au prochain message, onBeforeSend reload DB → Message DB s'affiche
+      // ✅ FIX: Ajouter message assistant à infiniteMessages IMMÉDIATEMENT
+      // Comme ça l'historique est complet pour le prochain message
+      const assistantMessage = {
+        id: `msg-${Date.now()}-assistant`,
+        role: 'assistant' as const,
+        content: fullContent,
+        reasoning: fullReasoning,
+        tool_results: toolResults || [],
+        stream_timeline: streamTimeline,
+        timestamp: new Date().toISOString()
+      };
       
-      logger.dev('[ChatFullscreenV2] ✅ Streaming terminé, message sauvegardé en DB');
+      addInfiniteMessage(assistantMessage);
       
-      // ✅ Arrêter isStreaming (mais timeline reste affichée)
+      logger.dev('[ChatFullscreenV2] ✅ Message assistant ajouté à infiniteMessages (historique complet)');
+      
+      // Arrêter isStreaming
       streamingState.endStreaming();
-      
-      // ❌ PAS de reload DB
-      // ❌ PAS de clear timeline
-      // ❌ PAS d'addInfiniteMessage (évite rerender + saccade)
-      
-      logger.dev('[ChatFullscreenV2] ✅ Timeline garde affichée, zéro rerender');
     }
   });
 
@@ -166,18 +169,11 @@ const ChatFullscreenV2: React.FC = () => {
     },
     requireAuth,
     onBeforeSend: async () => {
-      // ✅ FIX SACCADE: Reload UNIQUEMENT si streaming en cours (pas systématique)
-      if (streamingState.isStreaming) {
-        logger.dev('[ChatFullscreenV2] 🔄 Reload messages (streaming en cours)');
-        await loadInitialMessages();
-        
-        // ⚠️ Wait minimal pour que React propage le state (50ms au lieu de 200ms)
-        await new Promise(resolve => setTimeout(resolve, 50));
-      }
-      
-      // Reset streaming après reload (sinon message disparaît)
+      // ✅ SOLUTION SIMPLE: Juste reset la timeline
+      // Le message assistant est déjà dans infiniteMessages (ajouté par handleComplete)
+      // Donc pas besoin de reload !
       streamingState.reset();
-      logger.dev('[ChatFullscreenV2] ✅ onBeforeSend terminé');
+      logger.dev('[ChatFullscreenV2] ✅ Timeline reset, historique complet dans infiniteMessages');
     }
   });
 
