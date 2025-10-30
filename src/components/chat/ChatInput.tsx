@@ -217,12 +217,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
   // 🎯 Hook auto-resize textarea
   useTextareaAutoResize({ message, textareaRef });
   
-  // 🎯 Raccourcis clavier globaux (Espace, /, @, Cmd+Enter)
+  // 🎯 Raccourcis clavier globaux (Espace, /, @, Cmd+Enter, Esc)
   useGlobalChatShortcuts({
     textareaRef,
     audioRecorderRef,
     onOpenSlashMenu: () => openMenu('slash'),
     onOpenNoteSelector: () => openMenu('notes'),
+    onCloseAllMenus: closeMenu,
     enabled: true
   });
 

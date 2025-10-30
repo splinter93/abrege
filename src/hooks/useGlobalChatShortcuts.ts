@@ -6,10 +6,11 @@
  * - / : Focus + ouvre menu prompts
  * - @ : Focus + ouvre menu notes
  * - Cmd+Enter (ou Ctrl+Enter) : Toggle Whisper (start/stop recording)
+ * - Esc : Ferme tous les menus ouverts
  * 
  * Guards :
  * - Espace, /, @ : Actifs uniquement si aucun input/textarea n'a le focus
- * - Cmd+Enter : Fonctionne partout (même dans textarea pour flow conversationnel)
+ * - Cmd+Enter, Esc : Fonctionnent partout
  * 
  * Maintenabilité :
  * - Tous les raccourcis globaux centralisés ici (pas éparpillés)
@@ -25,6 +26,7 @@ interface UseGlobalChatShortcutsOptions {
   audioRecorderRef?: React.RefObject<AudioRecorderRef | null>; // ✅ Pour Whisper
   onOpenSlashMenu?: () => void;
   onOpenNoteSelector?: () => void;
+  onCloseAllMenus?: () => void; // ✅ Pour Esc
   enabled?: boolean;
 }
 
@@ -33,6 +35,7 @@ export function useGlobalChatShortcuts({
   audioRecorderRef,
   onOpenSlashMenu,
   onOpenNoteSelector,
+  onCloseAllMenus,
   enabled = true
 }: UseGlobalChatShortcutsOptions) {
   
@@ -40,6 +43,16 @@ export function useGlobalChatShortcuts({
     if (!enabled) return;
     
     const handleGlobalKeyPress = (e: KeyboardEvent) => {
+      // ✅ ESC : Ferme tous les menus + retire focus (fonctionne partout)
+      if (e.key === 'Escape') {
+        onCloseAllMenus?.();
+        // Retirer le focus de l'élément actif (évite l'encadré bleu)
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        return;
+      }
+      
       // ✅ CMD+ENTER : Toggle Whisper (fonctionne partout, même dans input)
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
         e.preventDefault();
@@ -103,7 +116,7 @@ export function useGlobalChatShortcuts({
     
     window.addEventListener('keydown', handleGlobalKeyPress);
     return () => window.removeEventListener('keydown', handleGlobalKeyPress);
-  }, [enabled, textareaRef, audioRecorderRef, onOpenSlashMenu, onOpenNoteSelector]);
+  }, [enabled, textareaRef, audioRecorderRef, onOpenSlashMenu, onOpenNoteSelector, onCloseAllMenus]);
 }
 
 
