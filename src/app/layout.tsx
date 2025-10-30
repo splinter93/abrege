@@ -70,10 +70,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
         
-        {/* PWA Status Bar - Contrôlée dynamiquement par ThemeColor.tsx */}
-        <meta name="theme-color" content="#131313" />
+        {/* PWA Status Bar - Noir pur pour app installée */}
+        <meta name="theme-color" content="#000000" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
         <meta name="apple-mobile-web-app-title" content="Scrivia" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="Scrivia Chat" />
@@ -121,7 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             width: 100%;
             height: 100vh;
             height: 100dvh;
-            background: #131313;
+            background: #000000;
             display: flex;
             align-items: center;
             justify-content: center;

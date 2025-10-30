@@ -52,19 +52,20 @@ html, body {
 /* Safe areas UNIQUEMENT en mode PWA standalone (pas en browser) */
 @media (display-mode: standalone) {
   html {
-    background: #131313 !important;
+    background: #000000 !important;
     min-height: 100vh;
     min-height: 100dvh;
   }
   
   body {
-    background: #131313 !important;
+    background: #000000 !important;
     min-height: 100vh;
     min-height: 100dvh;
   }
   
   /* Safe areas sur le container UNIQUEMENT en standalone */
   .chatgpt-container {
+    background: #000000 !important;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     padding-left: env(safe-area-inset-left, 0px);
