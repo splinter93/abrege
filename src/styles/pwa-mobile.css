@@ -72,6 +72,17 @@ html, body {
     padding-right: env(safe-area-inset-right, 0px);
     box-sizing: border-box;
   }
+  
+  /* Forcer sur content et main aussi */
+  .chatgpt-content,
+  .chatgpt-main {
+    background: #000000 !important;
+  }
+  
+  /* Header et input gardent leur style, juste le background global */
+  .chatgpt-header {
+    background: transparent !important;
+  }
 }
 
 /* ========================================
