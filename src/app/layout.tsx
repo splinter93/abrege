@@ -178,7 +178,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geistSans.className} ${geistSans.variable} ${geistMono.variable} ${notoSans.variable} app-container`}>
         {/* PWA Splash Screen */}
         <div id="pwa-splash">
-          <img src="/logo-scrivia-white.png" alt="Scrivia" />
+          <img src="/simple logo.svg" alt="Scrivia" />
         </div>
         
         <script dangerouslySetInnerHTML={{ __html: `
