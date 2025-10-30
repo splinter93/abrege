@@ -1,5 +1,8 @@
 import { createSupabaseClient } from '@/utils/supabaseClient';
-import type { ChatMessage } from '@/types/chat';
+import type { ChatMessage, AssistantMessage } from '@/types/chat';
+import { hasToolCalls } from '@/types/chat';
+import type { StreamTimeline } from '@/types/streamTimeline';
+import type { ToolCall } from '@/hooks/useChatHandlers';
 import { simpleLogger as logger } from '@/utils/logger';
 
 // ✅ Client Supabase avec SERVICE ROLE KEY (côté serveur uniquement)
@@ -71,24 +74,28 @@ export class HistoryManager {
     }
   ): Promise<ChatMessage> {
     try {
+      // ✅ Type guard pour stream_timeline
+      const assistantMsg = message as AssistantMessage;
+      const timeline = assistantMsg.stream_timeline as StreamTimeline | undefined;
+      
       logger.dev('[HistoryManager] 📥 addMessage appelé:', {
         sessionId,
         role: message.role,
-        hasStreamTimeline: 'stream_timeline' in message && !!message.stream_timeline,
-        streamTimelineEvents: 'stream_timeline' in message && message.stream_timeline ? message.stream_timeline.items?.length : 0
+        hasStreamTimeline: !!timeline,
+        streamTimelineEvents: timeline?.items?.length || 0
       });
       
       const { data, error } = await supabase.rpc('add_message_atomic', {
         p_session_id: sessionId,
         p_role: message.role,
         p_content: message.content,
-        p_tool_calls: message.tool_calls || null,
-        p_tool_call_id: message.tool_call_id || null,
-        p_name: message.name || null,
-        p_reasoning: message.reasoning || null,
+        p_tool_calls: (message as any).tool_calls || null,
+        p_tool_call_id: (message as any).tool_call_id || null,
+        p_name: (message as any).name || null,
+        p_reasoning: (message as any).reasoning || null,
         p_timestamp: new Date().toISOString(),
-        p_attached_images: message.attachedImages || null,
-        p_attached_notes: message.attachedNotes || null
+        p_attached_images: (message as any).attachedImages || null,
+        p_attached_notes: (message as any).attachedNotes || null
       });
 
       if (error) {
@@ -137,8 +144,8 @@ export class HistoryManager {
         } else {
           logger.dev('[HistoryManager] ✅ JSONB fields sauvegardés:', {
             messageId: data.id,
-            streamTimelineEvents: 'stream_timeline' in message && message.stream_timeline ? message.stream_timeline.items?.length : 0,
-            toolResultsCount: 'tool_results' in message && message.tool_results ? message.tool_results.length : 0
+            streamTimelineEvents: timeline?.items?.length || 0,
+            toolResultsCount: assistantMsg.tool_results?.length || 0
           });
         }
         
@@ -197,8 +204,13 @@ export class HistoryManager {
         throw error;
       }
 
-      // Reverse pour ordre chronologique
-      const sortedMessages = (messages || []).reverse() as ChatMessage[];
+      // Reverse pour ordre chronologique et mapper snake_case → camelCase
+      const sortedMessages = ((messages || []).reverse().map(msg => ({
+        ...msg,
+        // ✅ Mapper snake_case DB → camelCase frontend
+        ...(msg.attached_images && { attachedImages: msg.attached_images }),
+        ...(msg.attached_notes && { attachedNotes: msg.attached_notes })
+      }))) as ChatMessage[];
 
       // Vérifier s'il reste des messages plus anciens
       const { count } = await supabase
@@ -253,7 +265,13 @@ export class HistoryManager {
         throw error;
       }
 
-      const sortedMessages = (messages || []).reverse() as ChatMessage[];
+      // Reverse pour ordre chronologique et mapper snake_case → camelCase
+      const sortedMessages = ((messages || []).reverse().map(msg => ({
+        ...msg,
+        // ✅ Mapper snake_case DB → camelCase frontend
+        ...(msg.attached_images && { attachedImages: msg.attached_images }),
+        ...(msg.attached_notes && { attachedNotes: msg.attached_notes })
+      }))) as ChatMessage[];
 
       // Vérifier s'il reste des messages encore plus anciens
       const { count } = await supabase
@@ -366,9 +384,11 @@ export class HistoryManager {
     // 3. Trouver tool_call_ids des assistants récents
     const relevantToolCallIds = new Set<string>();
     recentConversational
-      .filter((m) => m.role === 'assistant' && m.tool_calls)
+      .filter(hasToolCalls) // ✅ Type guard
       .forEach((m) => {
-        m.tool_calls?.forEach((tc) => relevantToolCallIds.add(tc.id));
+        m.tool_calls.forEach((tc: ToolCall) => {
+          relevantToolCallIds.add(tc.id);
+        });
       });
 
     // 4. Garder seulement tools pertinents

@@ -170,8 +170,9 @@ export function useChatMessageActions(
       }
 
       // 3. Sauvegarder en background (non-bloquant)
-      const messageToSave: Omit<ChatMessage, 'id'> = {
-        role: 'user',
+      // ✅ FIX: Typer comme UserMessage pour inclure attachedImages/attachedNotes
+      const messageToSave = {
+        role: 'user' as const,
         content: tempMessage?.content || '',
         timestamp: new Date().toISOString(),
         ...(tempMessage?.attachedImages && { attachedImages: tempMessage.attachedImages }),

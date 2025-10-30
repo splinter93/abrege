@@ -32,7 +32,18 @@ const messageSchema = z.object({
   name: z.string().optional(),
   reasoning: z.string().optional(),
   stream_timeline: streamTimelineSchema.optional(), // ✅ Type strict
-  tool_results: z.array(toolResultSchema).optional() // ✅ Type strict
+  tool_results: z.array(toolResultSchema).optional(), // ✅ Type strict
+  // ✅ NOUVEAU : Support des attachments (images + notes)
+  attachedImages: z.array(z.object({
+    url: z.string(),
+    fileName: z.string().optional()
+  })).optional(),
+  attachedNotes: z.array(z.object({
+    id: z.string(),
+    slug: z.string(),
+    title: z.string(),
+    word_count: z.number().optional()
+  })).optional()
 });
 
 export async function POST(

@@ -166,23 +166,18 @@ const ChatFullscreenV2: React.FC = () => {
     },
     requireAuth,
     onBeforeSend: async () => {
-      // ✅ CRITICAL: Reload messages AVANT de reset (sinon le message précédent disparaît)
-      if (streamingState.streamingTimeline.length > 0) {
-        logger.dev('[ChatFullscreenV2] 🔄 Reload messages avant reset timeline');
+      // ✅ FIX SACCADE: Reload UNIQUEMENT si streaming en cours (pas systématique)
+      if (streamingState.isStreaming) {
+        logger.dev('[ChatFullscreenV2] 🔄 Reload messages (streaming en cours)');
         await loadInitialMessages();
         
-        // ✅ CRITICAL: Attendre que infiniteMessages soit mis à jour (state async)
-        // Sinon l'historique passé au LLM sera incomplet
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        logger.dev('[ChatFullscreenV2] ✅ Messages rechargés:', {
-          messagesCount: infiniteMessages.length
-        });
+        // ⚠️ Wait minimal pour que React propage le state (50ms au lieu de 200ms)
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
       
-      // Maintenant on peut reset la timeline
+      // Reset streaming après reload (sinon message disparaît)
       streamingState.reset();
-      logger.dev('[ChatFullscreenV2] ✅ Timeline reset, messages DB affichés');
+      logger.dev('[ChatFullscreenV2] ✅ onBeforeSend terminé');
     }
   });
 
@@ -335,13 +330,8 @@ const ChatFullscreenV2: React.FC = () => {
     if (animations.displayedSessionId !== currentSession?.id) return [];
     if (infiniteMessages.length === 0) return [];
     
-    const sorted = [...infiniteMessages].sort((a, b) => {
-        const timestampA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-        const timestampB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-        return timestampA - timestampB;
-    });
-
-    let filtered = sorted.filter(msg => {
+    // ✅ OPTIMISATION: Pas de sort, les messages sont déjà triés par sequence_number depuis DB
+    let filtered = infiniteMessages.filter(msg => {
       if (msg.role === 'user') return true;
       if (msg.role === 'assistant' && msg.content) return true;
       if (msg.role === 'tool') return true;
