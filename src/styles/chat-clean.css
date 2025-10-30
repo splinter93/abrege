@@ -2195,8 +2195,8 @@ body.chat-theme-anthracite .chatgpt-header {
 }
 
 .chat-empty-agent-avatar {
-  width: 140px;
-  height: 140px;
+  width: 180px; /* ✅ AUGMENTÉ : 140px → 180px */
+  height: 180px;
   border-radius: 50%;
   overflow: hidden;
   background: var(--chat-bg-secondary);
@@ -2213,12 +2213,12 @@ body.chat-theme-anthracite .chatgpt-header {
 }
 
 .chat-empty-agent-placeholder {
-  font-size: 64px;
+  font-size: 80px; /* ✅ AUGMENTÉ : 64px → 80px */
   line-height: 1;
 }
 
 .chat-empty-agent-name {
-  font-size: 28px;
+  font-size: 34px; /* ✅ AUGMENTÉ : 28px → 34px */
   font-weight: 600;
   color: var(--chat-text-primary);
   margin: 0;
@@ -2227,7 +2227,7 @@ body.chat-theme-anthracite .chatgpt-header {
 }
 
 .chat-empty-agent-description {
-  font-size: 16px; /* ✅ Légèrement plus grande */
+  font-size: 18px; /* ✅ AUGMENTÉ : 16px → 18px */
   color: var(--chat-text-secondary);
   margin: 0;
   line-height: 1.6;
