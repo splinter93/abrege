@@ -114,6 +114,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
           * { box-sizing: border-box; }
           
+          /* PWA STANDALONE - Noir pur partout pour couvrir safe areas */
+          @media (display-mode: standalone) {
+            html {
+              background: #000000 !important;
+            }
+            body {
+              background: #000000 !important;
+            }
+          }
+          
           /* PWA SPLASH SCREEN */
           #pwa-splash {
             position: fixed;
