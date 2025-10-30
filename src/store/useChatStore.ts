@@ -13,6 +13,7 @@ export interface ChatSession {
   is_empty?: boolean; // 🔥 Conversation vide (aucun message)
   created_at: string;
   updated_at: string;
+  last_message_at?: string | null; // ✅ Date du dernier message (pour tri sidebar)
 }
 
 interface ChatStore {

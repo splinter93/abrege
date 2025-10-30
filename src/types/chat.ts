@@ -200,6 +200,7 @@ export interface ChatSession {
   metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  last_message_at: string | null; // ✅ Date du dernier message (pour tri sidebar)
   // Messages gérés via useInfiniteMessages (table chat_messages)
 }
 

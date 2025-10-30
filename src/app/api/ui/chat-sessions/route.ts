@@ -215,10 +215,10 @@ export async function GET(request: NextRequest) {
     // Messages chargés séparément via /api/chat/sessions/:id/messages/recent
     const { data: sessions, error } = await userClient
       .from('chat_sessions')
-      .select('id, name, agent_id, is_active, is_empty, created_at, updated_at, metadata')
+      .select('id, name, agent_id, is_active, is_empty, created_at, updated_at, last_message_at, metadata')
       .eq('user_id', userId)
       .eq('is_active', true)
-      .order('updated_at', { ascending: false });
+      .order('last_message_at', { ascending: false, nullsFirst: false });
 
     if (error) {
       logger.error('[Chat Sessions API] ❌ Erreur récupération sessions:', error);

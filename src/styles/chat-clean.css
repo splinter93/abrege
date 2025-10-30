@@ -1137,7 +1137,6 @@ body.chat-theme-anthracite .chatgpt-header {
   max-width: 70%;
   border: none;
   padding: 12px 20px; /* ✅ Compacté verticalement */
-  border-radius: var(--chat-radius-xl) var(--chat-radius-xl) 0 var(--chat-radius-xl); /* ✅ Coin bas-droit carré */
 }
 
 .chatgpt-message-bubble-user:hover {

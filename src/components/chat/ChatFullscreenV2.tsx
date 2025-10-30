@@ -118,12 +118,29 @@ const ChatFullscreenV2: React.FC = () => {
       addInfiniteMessage(assistantMessage);
       streamingState.endStreaming();
       
-      // ✅ Reset padding temporaire après réponse assistant (revient au padding CSS normal)
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.style.paddingBottom = '';
-      }
-      
-      logger.dev('[ChatFullscreenV2] ✅ Message assistant ajouté, padding reset');
+      // ✅ Reset padding UNIQUEMENT si le message assistant dépasse (évite saccade si court)
+      requestAnimationFrame(() => {
+        const container = messagesContainerRef.current;
+        if (!container) return;
+        
+        // Trouver le dernier message assistant dans le DOM
+        const assistantMessages = container.querySelectorAll('.chatgpt-message-assistant');
+        const lastAssistant = assistantMessages[assistantMessages.length - 1] as HTMLElement;
+        
+        if (lastAssistant) {
+          const messageHeight = lastAssistant.offsetHeight;
+          const viewportHeight = window.innerHeight;
+          const threshold = viewportHeight * 0.5; // Si dépasse 50% du viewport
+          
+          // Reset padding seulement si le message est long
+          if (messageHeight > threshold) {
+            container.style.paddingBottom = '';
+            logger.dev('[ChatFullscreenV2] ✅ Message long → padding reset');
+          } else {
+            logger.dev('[ChatFullscreenV2] ✅ Message court → padding gardé');
+          }
+        }
+      });
     }
   });
 
