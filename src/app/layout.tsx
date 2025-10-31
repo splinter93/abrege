@@ -31,6 +31,7 @@ import "../components/editor/editor-modal.css";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import { Toaster } from "react-hot-toast";
 import ThemeColor from "@/components/ThemeColor";
+import PWASplash from "@/components/PWASplash";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -151,6 +152,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         ` }} />
       </head>
       <body className={`${geistSans.className} ${geistSans.variable} ${geistMono.variable} ${notoSans.variable} app-container`}>
+        <PWASplash />
         <ThemeColor />
         <LanguageProvider>
           <Toaster position="top-right" />
