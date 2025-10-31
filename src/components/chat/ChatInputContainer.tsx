@@ -28,7 +28,7 @@ export interface ChatInputContainerProps {
   onCancelEdit: () => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   renderAuthStatus: () => React.ReactNode;
-  selectedAgent: { name: string } | null;
+  selectedAgent: { name: string; display_name?: string } | null;
 }
 
 /**

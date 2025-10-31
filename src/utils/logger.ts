@@ -17,6 +17,7 @@ export enum LogCategory {
   TOOLBAR = 'TOOLBAR',
   EXTENSIONS = 'EXTENSIONS',
   API = 'API',
+  AUDIO = 'AUDIO',
   PERFORMANCE = 'PERFORMANCE'
 }
 
@@ -196,6 +197,18 @@ class Logger {
     this.info(LogCategory.API, message, data);
   }
 
+  audioError(message: string, data?: unknown, error?: Error): void {
+    this.error(LogCategory.AUDIO, message, data, error);
+  }
+
+  audioInfo(message: string, data?: unknown): void {
+    this.info(LogCategory.AUDIO, message, data);
+  }
+
+  audioDebug(message: string, data?: unknown): void {
+    this.debug(LogCategory.AUDIO, message, data);
+  }
+
   performance(category: LogCategory, operation: string, duration: number): void {
     this.info(LogCategory.PERFORMANCE, `${operation} completed in ${duration}ms`);
   }
@@ -231,6 +244,9 @@ export const {
   editorDebug,
   apiError,
   apiInfo,
+  audioError,
+  audioInfo,
+  audioDebug,
   performance
 } = logger;
 

@@ -197,10 +197,11 @@ export interface ChatSession {
   name: string;
   agent_id: string | null;
   is_active: boolean;
+  is_empty?: boolean; // Conversation vide (aucun message)
   metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
-  last_message_at: string | null; // ✅ Date du dernier message (pour tri sidebar)
+  last_message_at: string | null; // Date du dernier message (pour tri sidebar)
   // Messages gérés via useInfiniteMessages (table chat_messages)
 }
 

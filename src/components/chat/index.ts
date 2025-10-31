@@ -3,7 +3,7 @@ export { default as ChatFullscreenV2 } from './ChatFullscreenV2';
 // ChatModeToggle supprimé
 // ChatSidebar supprimé - utilise SidebarUltraClean
 export { default as ChatInput } from './ChatInput';
-export { default as ChatKebabMenu } from './ChatKebabMenu';
+// ChatKebabMenu supprimé - composant obsolète
 
 // Composants de rendu des messages
 export { default as EnhancedMarkdownMessage } from './EnhancedMarkdownMessage';

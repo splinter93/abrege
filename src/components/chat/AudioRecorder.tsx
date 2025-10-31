@@ -61,7 +61,7 @@ const AudioRecorder = forwardRef<AudioRecorderRef, AudioRecorderProps>(({
     if (disabled) return;
 
     try {
-      logger.debug('[AudioRecorder] 🎤 Démarrage de l\'enregistrement', {});
+      logger.audioDebug('🎤 Démarrage de l\'enregistrement');
 
       // Demander l'accès au microphone
       const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -111,10 +111,10 @@ const AudioRecorder = forwardRef<AudioRecorderRef, AudioRecorderProps>(({
 
       setState(prev => ({ ...prev, isRecording: true, duration: 0 }));
 
-      logger.debug('[AudioRecorder] ✅ Enregistrement démarré', {});
+      logger.audioDebug('✅ Enregistrement démarré');
 
     } catch (error) {
-      logger.error('[AudioRecorder] ❌ Erreur lors du démarrage:', error);
+      logger.audioError('❌ Erreur lors du démarrage', undefined, error instanceof Error ? error : new Error(String(error)));
       onError('Impossible d\'accéder au microphone. Vérifiez les permissions.');
     }
   }, [isAudioSupported, disabled, onError]);
@@ -123,7 +123,7 @@ const AudioRecorder = forwardRef<AudioRecorderRef, AudioRecorderProps>(({
   const stopRecording = useCallback(() => {
     if (!mediaRecorderRef.current || !state.isRecording) return;
 
-    logger.debug('[AudioRecorder] 🛑 Arrêt de l\'enregistrement');
+    logger.audioDebug('🛑 Arrêt de l\'enregistrement');
 
     // Arrêter l'enregistrement
     mediaRecorderRef.current.stop();
@@ -140,7 +140,7 @@ const AudioRecorder = forwardRef<AudioRecorderRef, AudioRecorderProps>(({
   // Traiter l'audio avec Whisper
   const processAudio = useCallback(async (audioBlob: Blob) => {
     try {
-      logger.debug('[AudioRecorder] 🎵 Traitement audio avec Whisper');
+      logger.audioDebug('🎵 Traitement audio avec Whisper');
 
       // Créer le FormData
       const formData = new FormData();
@@ -163,14 +163,14 @@ const AudioRecorder = forwardRef<AudioRecorderRef, AudioRecorderProps>(({
       const result = await response.json();
       
       if (result.success && result.data.text) {
-        logger.debug('[AudioRecorder] ✅ Transcription réussie:', result.data.text);
+        logger.audioDebug('✅ Transcription réussie', { text: result.data.text });
         onTranscriptionComplete(result.data.text.trim());
       } else {
         throw new Error('Aucun texte transcrit');
       }
 
     } catch (error) {
-      logger.error('[AudioRecorder] ❌ Erreur lors de la transcription:', error);
+      logger.audioError('❌ Erreur lors de la transcription', undefined, error instanceof Error ? error : new Error(String(error)));
       onError(error instanceof Error ? error.message : 'Erreur lors de la transcription');
     } finally {
       setState(prev => ({ 

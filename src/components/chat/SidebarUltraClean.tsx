@@ -5,16 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
 import SettingsModal from './SettingsModal';
 import { simpleLogger as logger } from '@/utils/logger';
-import type { Agent } from '@/types/chat';
-
-// Types pour les sessions
-interface ChatSession {
-  id: string;
-  name: string;
-  thread: unknown[];
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Agent, ChatSession } from '@/types/chat';
 
 interface SidebarUltraCleanProps {
   isOpen: boolean;
@@ -254,7 +245,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
           </div>
           <div className="sidebar-user-info-clean">
             <div className="sidebar-user-name-clean">
-              {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Utilisateur'}
+              {(user?.user_metadata?.full_name as string) || user?.email?.split('@')[0] || 'Utilisateur'}
             </div>
           </div>
         </button>

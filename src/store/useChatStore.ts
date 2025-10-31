@@ -1,20 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Agent, ChatMessage, EditingState } from '@/types/chat';
+import { Agent, ChatMessage, ChatSession, EditingState } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
 import { sessionSyncService } from '@/services/sessionSyncService';
-
-// Interface simplifiée pour le store
-// Messages gérés via useInfiniteMessages (lecture depuis chat_messages)
-export interface ChatSession {
-  id: string;
-  name: string;
-  agent_id: string | null;
-  is_empty?: boolean; // 🔥 Conversation vide (aucun message)
-  created_at: string;
-  updated_at: string;
-  last_message_at?: string | null; // ✅ Date du dernier message (pour tri sidebar)
-}
 
 interface ChatStore {
   // 🎯 État

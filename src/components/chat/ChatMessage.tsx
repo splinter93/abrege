@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChatMessage as ChatMessageType, 
-  isObservationMessage
+  isObservationMessage,
+  hasReasoning
 } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import UserMessageText from './UserMessageText';
@@ -13,7 +14,6 @@ import ReasoningDropdown from './ReasoningDropdown';
 import StreamTimelineRenderer from './StreamTimelineRenderer';
 import NotePreview from './NotePreview';
 import { useChatStore } from '@/store/useChatStore';
-import { useStreamingPreferences } from '@/hooks/useStreamingPreferences';
 import { simpleLogger as logger } from '@/utils/logger';
 import './ReasoningDropdown.css';
 
@@ -41,7 +41,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     return null;
   }
   
-  const { role, content, reasoning } = message;
+  const { role, content } = message;
 
   // Masquer les observations internes et messages tool
   if (isObservationMessage(message)) return null;
@@ -60,11 +60,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const assistantMessage = role === 'assistant' ? message as import('@/types/chat').AssistantMessage : null;
   const timeline = assistantMessage?.streamTimeline || assistantMessage?.stream_timeline;
   const hasStreamTimeline = role === 'assistant' && timeline && timeline.items && timeline.items.length > 0;
+  const reasoning = assistantMessage?.reasoning;
   
   // ✅ DEBUG: Logger la timeline ET le content pour comprendre le problème
   if (role === 'assistant') {
     logger.dev('[ChatMessage] 📊 Message assistant:', {
-      messageId: message.id,
+      messageId: assistantMessage?.id || 'unknown',
       hasTimeline: !!timeline,
       timelineItemsCount: timeline?.items?.length || 0,
       timelineItemTypes: timeline?.items?.map(i => i.type) || [],
@@ -175,7 +176,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 logger.error('Failed to copy text: ', err);
               }
             }}
-            onVoice={() => logger.debug('Lecture vocale du message')}
+            onVoice={() => logger.dev('Lecture vocale du message')}
             onEdit={onEdit}
             showVoiceButton={role === 'assistant'}
             showEditButton={role === 'user'}

@@ -155,7 +155,9 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
               <StreamTimelineRenderer
                 timeline={{
                   items: streamingTimeline
-                    .filter(item => item.type !== 'tool_result') // ✅ VIRER les tool_result
+                    .filter((item): item is Extract<typeof item, { type: 'text' | 'tool_execution' }> => 
+                      item.type !== 'tool_result'
+                    ) // ✅ VIRER les tool_result avec type predicate
                     .map(item => {
                       if (item.type === 'text') {
                         return {
@@ -164,7 +166,8 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
                           timestamp: item.timestamp,
                           roundNumber: item.roundNumber
                         };
-                      } else if (item.type === 'tool_execution') {
+                      } else {
+                        // item.type === 'tool_execution'
                         return {
                           type: 'tool_execution' as const,
                           toolCalls: item.toolCalls || [],
@@ -173,9 +176,6 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
                           roundNumber: item.roundNumber || 0
                         };
                       }
-                      // Exhaustive check (tool_result déjà filtré)
-                      const _exhaustive: never = item.type;
-                      throw new Error(`Type non géré: ${_exhaustive}`);
                     }),
                   startTime: streamStartTime,
                   endTime: Date.now()
