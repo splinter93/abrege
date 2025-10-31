@@ -11,6 +11,8 @@ import { Pencil, X } from 'lucide-react';
 import { Feather } from 'react-feather';
 import type { ImageAttachment } from '@/types/image';
 import type { SelectedNote } from '@/hooks/useNotesLoader';
+import type { NoteMention } from '@/types/noteMention';
+import TextareaWithMentions from './TextareaWithMentions';
 
 interface ChatInputContentProps {
   // Textarea
@@ -29,9 +31,13 @@ interface ChatInputContentProps {
   images: ImageAttachment[];
   onRemoveImage: (index: number) => void;
   
-  // Notes sélectionnées
+  // Notes sélectionnées (épinglage)
   selectedNotes: SelectedNote[];
   onRemoveNote: (noteId: string) => void;
+  
+  // Mentions légères (nouveau)
+  mentions?: NoteMention[];
+  onRemoveMention?: (mentionId: string) => void;
   
   // Édition
   editingMessageId: string | null | undefined;
@@ -55,6 +61,7 @@ interface ChatInputContentProps {
 /**
  * Composant ChatInputContent
  * Contenu principal du chat input (textarea + erreurs + previews)
+ * ✅ REFACTO : Mentions affichées comme badges (pattern images)
  */
 const ChatInputContent: React.FC<ChatInputContentProps> = ({
   message,
@@ -69,6 +76,8 @@ const ChatInputContent: React.FC<ChatInputContentProps> = ({
   onRemoveImage,
   selectedNotes,
   onRemoveNote,
+  mentions = [],
+  onRemoveMention,
   editingMessageId,
   onCancelEdit,
   isDragging,
@@ -173,19 +182,20 @@ const ChatInputContent: React.FC<ChatInputContentProps> = ({
         </div>
       )}
 
-      {/* Zone de texte principale */}
-      <div style={{ position: 'relative', flex: 1 }}>
-        <textarea
-          ref={textareaRef}
+      {/* Zone de texte principale avec mentions colorées */}
+      <div className="chatgpt-input-textarea-wrapper">
+        <TextareaWithMentions
           value={message}
           onChange={onChange}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
+          textareaRef={textareaRef}
+          mentions={mentions}
           className="chatgpt-input-textarea"
-          rows={1}
           disabled={false}
         />
-
+        
+        {/* Menus overlay (SlashMenu + MentionMenu) - position relative au wrapper */}
         {children}
       </div>
     </>

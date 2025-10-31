@@ -247,8 +247,11 @@ export async function POST(request: NextRequest) {
 
     // ✅ NOUVEAU: Construire message contexte séparé style Cursor si notes présentes
     const { attachedNotesFormatter } = await import('@/services/llm/AttachedNotesFormatter');
+    const { mentionedNotesFormatter } = await import('@/services/llm/MentionedNotesFormatter');
     let contextMessage: ChatMessage | null = null;
+    let mentionsMessage: ChatMessage | null = null;
     
+    // 📎 NOTES ÉPINGLÉES (chargement complet)
     if (context.attachedNotes && context.attachedNotes.length > 0) {
       try {
         const contextContent = attachedNotesFormatter.buildContextMessage(context.attachedNotes);
@@ -265,7 +268,7 @@ export async function POST(request: NextRequest) {
             timestamp: new Date().toISOString()
           };
           
-          logger.info('[Stream Route] 📎 Contexte notes construit séparément (style Cursor):', {
+          logger.info('[Stream Route] 📎 Contexte notes épinglées construit (full content):', {
             count: context.attachedNotes.length,
             contentLength: contextContent.length,
             totalLines: context.attachedNotes.reduce((sum, n) => 
@@ -280,7 +283,32 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // ✅ Construire le tableau de messages avec contexte notes injecté AVANT user message
+    // @ MENTIONS LÉGÈRES (métadonnées uniquement)
+    if (context.mentionedNotes && context.mentionedNotes.length > 0) {
+      try {
+        const mentionsContent = mentionedNotesFormatter.buildContextMessage(context.mentionedNotes);
+        
+        if (mentionsContent) {
+          mentionsMessage = {
+            role: 'user',
+            content: mentionsContent,
+            timestamp: new Date().toISOString()
+          };
+          
+          logger.info('[Stream Route] @ Contexte mentions légères construit (metadata only):', {
+            count: context.mentionedNotes.length,
+            contentLength: mentionsContent.length,
+            tokensEstimate: Math.ceil(mentionsContent.length / 4),
+            slugs: context.mentionedNotes.map(m => m.slug)
+          });
+        }
+      } catch (error) {
+        logger.error('[Stream Route] ❌ Erreur construction contexte mentions:', error);
+        // Continue sans mentions (fallback gracieux)
+      }
+    }
+    
+    // ✅ Construire le tableau de messages avec contextes injectés AVANT user message
     const messages: ChatMessage[] = [
       {
         role: 'system',
@@ -288,8 +316,10 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString()
       },
       ...history,
-      // Injecter contexte notes juste avant le message user (si présent)
+      // Injecter contexte notes épinglées (full content)
       ...(contextMessage ? [contextMessage] : []),
+      // Injecter contexte mentions légères (metadata only)
+      ...(mentionsMessage ? [mentionsMessage] : []),
       // N'ajouter le message user que si pas en mode skip
       ...(skipAddingUserMessage ? [] : [{
         role: 'user' as const,

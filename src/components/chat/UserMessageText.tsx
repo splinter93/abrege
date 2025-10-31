@@ -15,15 +15,31 @@ interface UserMessageTextProps {
 
 const UserMessageText: React.FC<UserMessageTextProps> = ({ content }) => {
   const processedContent = useMemo(() => {
-    // Regex pour détecter les URLs (http, https)
+    // Regex pour détecter les URLs ET les mentions
     const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const mentionRegex = /(@[^\s@]+)/g; // @suivi de caractères non-espaces
     
-    const parts: Array<{ type: 'text' | 'link'; content: string }> = [];
+    const parts: Array<{ type: 'text' | 'link' | 'mention'; content: string }> = [];
     let lastIndex = 0;
+    
+    // Créer un tableau de tous les matches (URLs + mentions) avec leur position
+    const allMatches: Array<{ type: 'link' | 'mention'; index: number; content: string }> = [];
+    
     let match;
-
     while ((match = urlRegex.exec(content)) !== null) {
-      // Ajouter le texte avant l'URL
+      allMatches.push({ type: 'link', index: match.index, content: match[0] });
+    }
+    
+    while ((match = mentionRegex.exec(content)) !== null) {
+      allMatches.push({ type: 'mention', index: match.index, content: match[0] });
+    }
+    
+    // Trier par position
+    allMatches.sort((a, b) => a.index - b.index);
+
+    // Parser en respectant l'ordre
+    for (const match of allMatches) {
+      // Ajouter le texte avant le match
       if (match.index > lastIndex) {
         parts.push({
           type: 'text',
@@ -31,13 +47,13 @@ const UserMessageText: React.FC<UserMessageTextProps> = ({ content }) => {
         });
       }
 
-      // Ajouter l'URL
+      // Ajouter le match (URL ou mention)
       parts.push({
-        type: 'link',
-        content: match[0]
+        type: match.type,
+        content: match.content
       });
 
-      lastIndex = match.index + match[0].length;
+      lastIndex = match.index + match.content.length;
     }
 
     // Ajouter le texte restant
@@ -85,6 +101,13 @@ const UserMessageText: React.FC<UserMessageTextProps> = ({ content }) => {
             >
               {part.content}
             </a>
+          );
+        }
+        if (part.type === 'mention') {
+          return (
+            <span key={index} className="user-message-mention">
+              {part.content}
+            </span>
           );
         }
         return <span key={index}>{part.content}</span>;

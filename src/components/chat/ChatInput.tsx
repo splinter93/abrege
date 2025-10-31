@@ -26,9 +26,10 @@ import { useGlobalChatShortcuts } from '@/hooks/useGlobalChatShortcuts';
 import ChatInputContent from './ChatInputContent';
 import ChatInputToolbar from './ChatInputToolbar';
 import SlashMenu from './SlashMenu';
+import MentionMenu from './MentionMenu';
 
 interface ChatInputProps {
-  onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[]) => void;
+  onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[], mentions?: import('@/types/noteMention').NoteMention[]) => void;
   loading: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
@@ -116,6 +117,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const {
     message,
     setMessage,
+    mentions,
+    setMentions,
     audioError,
     setAudioError,
     showImageSourceModal,
@@ -125,7 +128,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
     slashQuery,
     setSlashQuery,
     atMenuPosition,
-    setAtMenuPosition
+    setAtMenuPosition,
+    showMentionMenu,
+    setShowMentionMenu,
+    mentionMenuPosition,
+    setMentionMenuPosition,
+    mentionSearchQuery,
+    setMentionSearchQuery
   } = useChatState({ editingContent, textareaRef });
   
   const defaultReasoningLevel = getReasoningLevelFromModel(currentAgentModel);
@@ -171,6 +180,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setSlashQuery,
     setNoteSearchQuery,
     setAtMenuPosition,
+    showMentionMenu,
+    setShowMentionMenu,
+    setMentionMenuPosition,
+    setMentionSearchQuery,
     textareaRef
   });
   
@@ -192,26 +205,47 @@ const ChatInput: React.FC<ChatInputProps> = ({
     message,
     images,
     selectedNotes,
+    mentions,
     loading,
     disabled,
     textareaRef,
     audioRecorderRef, // ✅ Passer la ref pour raccourci Cmd+Enter
     setMessage,
     setSelectedNotes,
+    setMentions,
     setAudioError,
     detectCommands,
     send,
-    clearImages
+    clearImages,
+    showMentionMenu, // ✅ Bloquer Enter si menu ouvert
+    showSlashMenu // ✅ Bloquer Enter si menu ouvert
   });
 
-  // 🎯 Hook sélection notes avec textarea
-  const { handleSelectNoteWithTextarea } = useNoteSelectionWithTextarea({
-    handleSelectNote,
+  // 🎯 Hook sélection notes - Mode MENTION (@ dans textarea)
+  const { handleSelectNoteWithTextarea: handleSelectNoteForMention } = useNoteSelectionWithTextarea({
     message,
     setMessage,
+    mentions,
+    setMentions,
     textareaRef,
     closeMenu,
-    setNoteSearchQuery
+    setNoteSearchQuery,
+    mode: 'mention', // ✅ @ dans textarea = mention légère (state séparé)
+    onAttach: handleSelectNote,
+    onCloseMentionMenu: () => setShowMentionMenu(false) // ✅ Fermer mention menu
+  });
+  
+  // 🎯 Hook sélection notes - Mode ATTACH (bouton @)
+  const { handleSelectNoteWithTextarea: handleSelectNoteForAttach } = useNoteSelectionWithTextarea({
+    message,
+    setMessage,
+    mentions,
+    setMentions,
+    textareaRef,
+    closeMenu,
+    setNoteSearchQuery,
+    mode: 'attach', // ✅ Bouton @ = épinglage complet (selectedNotes[])
+    onAttach: handleSelectNote
   });
 
   // 🎯 Hook auto-resize textarea
@@ -255,19 +289,31 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onClearErrors={() => { setAudioError(null); setUploadError(null); }}
         images={images} onRemoveImage={removeImage}
         selectedNotes={selectedNotes} onRemoveNote={handleRemoveNote}
+        mentions={mentions} onRemoveMention={(id) => setMentions(mentions.filter(m => m.id !== id))}
         editingMessageId={editingMessageId} onCancelEdit={onCancelEdit}
         isDragging={isDragging} onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
         cameraInputRef={cameraInputRef} onCameraCapture={handleCameraCapture}
       >
         <SlashMenu showSlashMenu={showSlashMenu} filteredPrompts={filteredChatPrompts} onSelectPrompt={handleSelectPrompt} />
+        <MentionMenu
+          show={showMentionMenu}
+          searchQuery={mentionSearchQuery}
+          recentNotes={recentNotes}
+          searchedNotes={searchedNotes}
+          isSearching={isSearching}
+          position={mentionMenuPosition}
+          onSelectNote={handleSelectNoteForMention}
+          onClose={() => setShowMentionMenu(false)}
+        />
       </ChatInputContent>
 
       <ChatInputToolbar
         showNoteSelector={showNoteSelector} selectedNotes={selectedNotes} noteSearchQuery={noteSearchQuery}
         recentNotes={recentNotes} searchedNotes={searchedNotes} isSearching={isSearching}
         atMenuPosition={atMenuPosition} onToggleNoteSelector={() => toggleMenu('notes')}
-        onSelectNote={handleSelectNoteWithTextarea} onRemoveNote={handleRemoveNote}
+        onSelectNote={handleSelectNoteForAttach}
+        onRemoveNote={handleRemoveNote}
         onNoteSearchQueryChange={setNoteSearchQuery}
         showFileMenu={showFileMenu} showImageSourceModal={showImageSourceModal}
         imagesCount={images.length} onToggleFileMenu={() => toggleMenu('file')}

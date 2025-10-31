@@ -36,9 +36,9 @@ export interface UseChatMessageActionsOptions {
   sendMessageFn: (
     message: string | MessageContent,
     sessionId: string,
-    context: unknown,
-    history: ChatMessage[],
-    token: string
+    context?: Record<string, unknown>,
+    history?: ChatMessage[],
+    token?: string
   ) => Promise<void>;
   addInfiniteMessage: (msg: ChatMessage) => void;
   clearInfiniteMessages: () => void;
@@ -55,7 +55,8 @@ export interface UseChatMessageActionsReturn {
   sendMessage: (
     message: string | MessageContent,
     images?: ImageAttachment[],
-    notes?: Note[]
+    notes?: Note[],
+    mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number }>
   ) => Promise<void>;
   
   editMessage: (
@@ -102,6 +103,7 @@ export function useChatMessageActions(
 
   /**
    * Envoie un message
+   * ✅ NOUVEAU : Support mentions légères (métadonnées uniquement)
    * 
    * Flow:
    * 1. Validation session
@@ -112,12 +114,14 @@ export function useChatMessageActions(
    * 
    * @param message - Message à envoyer
    * @param images - Images attachées (optionnel)
-   * @param notes - Notes attachées (optionnel)
+   * @param notes - Notes attachées complètes (optionnel)
+   * @param mentions - Mentions légères (métadonnées uniquement)
    */
   const sendMessage = useCallback(async (
     message: string | MessageContent,
     images?: ImageAttachment[],
-    notes?: Note[]
+    notes?: Note[],
+    mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>
   ) => {
     // ✅ Auth guard
     if (!requireAuth()) {
@@ -168,6 +172,7 @@ export function useChatMessageActions(
         message,
         images,
         notes,
+        mentions, // ✅ NOUVEAU : Passer mentions légères au service
         sessionId: currentSession.id,
         currentSession,
         selectedAgent,

@@ -86,7 +86,7 @@
      TYPOGRAPHIE
      ======================================== */
   /* Les variables sont héritées de typography.css */
-  --chat-font-size-base: 16px;
+  --chat-font-size-base: 15px; /* ✅ Réduit pour meilleure densité */
   --chat-line-height-normal: 1.5;
   --chat-line-height-relaxed: 1.75;
   
@@ -1284,10 +1284,10 @@ body.chat-theme-anthracite .chatgpt-header {
   max-width: calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)); /* ✅ Même largeur que messages (sans padding) */
   background: var(--chat-gradient-input);
   border-radius: var(--chat-radius-xl);
-  padding: 16px 12px; /* ✅ Padding vertical augmenté : top/bottom 16px, left/right 12px */
+  padding: 12px 12px; /* ✅ Padding vertical réduit : top/bottom 12px, left/right 12px */
   display: flex;
   flex-direction: column;
-  gap: 4px; /* ✅ Espace minimal entre textarea et toolbar */
+  gap: 12px; /* ✅ Espace augmenté entre textarea et toolbar */
   box-sizing: border-box;
 }
 
@@ -2743,3 +2743,247 @@ body.chat-theme-anthracite .chatgpt-header {
     background: #e8e8e8;
   }
 } */
+
+/* ========================================
+   MENTION MENU - Autocomplete @ dans textarea
+   ========================================
+   Menu séparé de NoteSelector (bouton @)
+   Positionné dynamiquement au-dessus du @ tapé
+   ======================================== */
+
+.mention-menu {
+  position: absolute;
+  /* top et left calculés dynamiquement en JS */
+  background: var(--chat-gradient-input);
+  border: none; /* ✅ Épuré comme NoteSelector */
+  border-radius: var(--chat-radius-md);
+  padding: 8px; /* ✅ Padding direct (pas de header) */
+  width: 320px;
+  max-height: 280px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* ✅ Shadow plus légère */
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: mentionMenuFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); /* ✅ Animation dédiée */
+}
+
+/* Liste scrollable */
+.mention-menu-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.mention-menu-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mention-menu-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+/* États vides */
+.mention-menu-loading,
+.mention-menu-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 12px;
+  color: var(--chat-text-secondary);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Item note */
+.mention-menu-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px; /* ✅ Même radius que NoteSelector */
+  cursor: pointer;
+  transition: all 0.12s ease;
+  margin-bottom: 2px;
+}
+
+.mention-menu-item:hover,
+.mention-menu-item.selected {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px; /* ✅ Même radius au hover */
+  /* ✅ Pas de border-left : style épuré comme NoteSelector */
+}
+
+.mention-menu-item-icon {
+  color: var(--chat-accent-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.mention-menu-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.mention-menu-item-title {
+  color: var(--chat-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mention-menu-item-description {
+  color: var(--chat-text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.mention-menu-item-meta {
+  color: var(--chat-text-secondary);
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Animation spécifique MentionMenu (monte au-dessus) */
+@keyframes mentionMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-100% - 8px)) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-100%) scale(1);
+  }
+}
+
+/* ========================================
+   TEXTAREA WITH MENTIONS - Overlay coloré
+   ========================================
+   Pattern: Textarea transparent + overlay coloré dessous
+   ======================================== */
+
+.textarea-with-mentions-container {
+  position: relative;
+  width: 100%;
+  min-height: 24px;
+  display: flex;
+  flex-direction: column;
+  /* ✅ Pas de flex: 1 ici, géré par wrapper parent (.chatgpt-input-textarea-wrapper) */
+}
+
+/* Overlay texte coloré (dessous, z-index: 0) */
+.textarea-highlight-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.textarea-highlight-content {
+  /* ✅ IMPORTANT : Copier EXACTEMENT les styles du .chatgpt-input-textarea */
+  padding: 8px 0 0 8px;
+  font-size: var(--chat-font-size-base);
+  font-family: var(--font-chat-text) !important;
+  line-height: var(--chat-line-height-normal);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: var(--chat-text-primary);
+  min-height: 24px;
+  box-sizing: border-box;
+}
+
+/* Mentions colorées (gradient orange) */
+.textarea-mention-highlight {
+  background: linear-gradient(135deg, 
+    #c44820 0%,
+    #e55a2b 50%,
+    #d14d24 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: var(--font-chat-text) !important;
+  font-size: var(--chat-font-size-base);
+  line-height: var(--chat-line-height-normal);
+  font-weight: inherit;
+}
+
+/* ✅ Mentions dans les bubbles de messages (même style orange) */
+.user-message-mention {
+  background: linear-gradient(135deg, 
+    #c44820 0%,
+    #e55a2b 50%,
+    #d14d24 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 500; /* Légèrement plus bold pour visibilité */
+}
+
+/* Textarea transparent (dessus, z-index: 1) */
+.textarea-with-mentions-input {
+  position: relative; /* ✅ Relative pour auto-resize */
+  width: 100%;
+  /* ✅ Hauteur gérée dynamiquement par useTextareaAutoResize (pas de height CSS) */
+  min-height: 24px; /* ✅ Réduit : juste 1 ligne de texte (line-height) */
+  max-height: 200px; /* ✅ Limiter hauteur max comme ancien textarea */
+  z-index: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 8px 0 0 8px;
+  font-size: var(--chat-font-size-base);
+  font-family: var(--font-chat-text) !important;
+  line-height: var(--chat-line-height-normal);
+  color: transparent; /* ✅ Texte invisible (overlay visible dessous) */
+  caret-color: var(--chat-text-primary); /* ✅ Curseur visible */
+  -webkit-text-fill-color: transparent;
+  box-sizing: border-box;
+  overflow-y: auto; /* ✅ Scroll si dépasse max-height */
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.textarea-with-mentions-input::-webkit-scrollbar {
+  display: none;
+}
+
+.textarea-with-mentions-input::placeholder {
+  color: var(--chat-text-secondary);
+  -webkit-text-fill-color: var(--chat-text-secondary);
+  opacity: 0.7;
+}
+
+.textarea-with-mentions-input:focus::placeholder {
+  opacity: 0; /* ✅ Disparaît complètement au focus/clic */
+}
+
+/* ========================================
+   TEXTAREA WRAPPER - Pour positionnement menus
+   ======================================== */
+
+.chatgpt-input-textarea-wrapper {
+  position: relative;
+  flex: 1; /* Prendre l'espace disponible */
+  display: flex;
+  flex-direction: column;
+}

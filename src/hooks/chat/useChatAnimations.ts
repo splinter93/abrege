@@ -32,7 +32,7 @@ export interface UseChatAnimationsReturn {
   triggerFadeIn: (
     sessionId: string,
     messages: ChatMessage[],
-    containerRef: React.RefObject<HTMLDivElement>
+    containerRef: React.RefObject<HTMLDivElement | null>
   ) => void;
   
   resetAnimation: () => void;
@@ -80,7 +80,7 @@ export function useChatAnimations(
   const triggerFadeIn = useCallback((
     sessionId: string,
     messages: ChatMessage[],
-    containerRef: React.RefObject<HTMLDivElement>
+    containerRef: React.RefObject<HTMLDivElement | null>
   ) => {
     // Éviter les triggers multiples
     if (animationInProgressRef.current) {

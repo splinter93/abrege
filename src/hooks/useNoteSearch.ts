@@ -45,7 +45,8 @@ export function useNoteSearch({ getAccessToken }: UseNoteSearchOptions) {
           slug: note.slug,
           title: note.source_title || 'Sans titre',
           description: note.markdown_content?.substring(0, 200),
-          word_count: note.word_count
+          word_count: note.word_count,
+          created_at: note.created_at
         }));
         setRecentNotes(formattedNotes);
       }
@@ -88,7 +89,8 @@ export function useNoteSearch({ getAccessToken }: UseNoteSearchOptions) {
               id: note.id,
               slug: note.slug,
               title: note.title || 'Sans titre',
-              description: note.excerpt
+              description: note.excerpt,
+              created_at: note.created_at
             }));
           setSearchedNotes(formattedNotes);
         }
@@ -107,8 +109,10 @@ export function useNoteSearch({ getAccessToken }: UseNoteSearchOptions) {
     const isAlreadySelected = selectedNotes.find(n => n.id === note.id);
     if (isAlreadySelected) {
       setSelectedNotes(prev => prev.filter(n => n.id !== note.id));
+      logger.dev('[useNoteSearch] 🗑️ Note désépinglée:', { noteId: note.id, title: note.title });
     } else {
       setSelectedNotes(prev => [...prev, note]);
+      logger.dev('[useNoteSearch] 📎 Note épinglée:', { noteId: note.id, title: note.title, total: selectedNotes.length + 1 });
     }
     setNoteSearchQuery('');
   }, [selectedNotes]);

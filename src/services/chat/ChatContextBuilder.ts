@@ -30,6 +30,7 @@ export interface BuildContextOptions {
   sessionId: string;
   agentId?: string | null;
   notes?: Note[];
+  mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>; // ✅ NOUVEAU: Mentions légères
   llmContext: LLMContext;
 }
 
@@ -46,6 +47,7 @@ export interface LLMContextForOrchestrator {
     sessionId: string;
   };
   attachedNotes?: Note[];
+  mentionedNotes?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>; // ✅ NOUVEAU
 }
 
 /**
@@ -80,7 +82,7 @@ export class ChatContextBuilder {
    * @throws {ValidationError} Si sessionId manquant ou invalide
    */
   build(options: BuildContextOptions): LLMContextForOrchestrator {
-    const { sessionId, agentId, notes, llmContext } = options;
+    const { sessionId, agentId, notes, mentions, llmContext } = options;
 
     // Validation
     if (!sessionId || typeof sessionId !== 'string' || sessionId.trim() === '') {
@@ -109,6 +111,11 @@ export class ChatContextBuilder {
       context.attachedNotes = notes;
     }
 
+    // ✅ NOUVEAU : Ajouter mentions légères si présentes
+    if (mentions && mentions.length > 0) {
+      context.mentionedNotes = mentions;
+    }
+
     // Validation finale
     if (!this.validate(context)) {
       throw new Error('Contexte LLM invalide après construction');
@@ -118,6 +125,7 @@ export class ChatContextBuilder {
       sessionId,
       hasAgent: !!agentId,
       notesCount: notes?.length || 0,
+      mentionsCount: mentions?.length || 0,
       contextKeys: Object.keys(context)
     });
 

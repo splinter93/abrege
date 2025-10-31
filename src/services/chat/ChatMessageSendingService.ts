@@ -25,6 +25,7 @@ export interface SendMessageOptions {
   message: string | MessageContent;
   images?: ImageAttachment[];
   notes?: Note[];
+  mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>; // ✅ NOUVEAU: Mentions légères
   sessionId: string;
   currentSession: ChatSession;
   selectedAgent: Agent | null;
@@ -153,6 +154,7 @@ export class ChatMessageSendingService {
         sessionId,
         agentId: selectedAgent?.id,
         notes,
+        mentions: options.mentions, // ✅ NOUVEAU : Ajouter mentions légères
         llmContext
       });
 

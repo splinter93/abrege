@@ -15,6 +15,7 @@ export interface SelectedNote {
   title: string;
   description?: string;
   word_count?: number;
+  created_at?: string;
 }
 
 /**

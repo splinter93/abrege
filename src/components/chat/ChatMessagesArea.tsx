@@ -40,8 +40,8 @@ export interface ChatMessagesAreaProps {
   selectedAgent: Agent | null;
   agentNotFound: boolean; // ✅ Indicateur agent supprimé
   onEditMessage: (messageId: string, content: string, index: number) => void;
-  containerRef: React.RefObject<HTMLDivElement>;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }
 
 /**

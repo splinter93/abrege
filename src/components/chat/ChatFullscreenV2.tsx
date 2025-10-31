@@ -296,10 +296,12 @@ const ChatFullscreenV2: React.FC = () => {
   }, [cancelEditing]);
 
   // 🎯 WRAPPER send/edit avec routing édition
+  // ✅ NOUVEAU : Support mentions légères
   const handleSendMessage = useCallback(async (
     message: string | import('@/types/image').MessageContent,
     images?: import('@/types/image').ImageAttachment[],
-    notes?: Array<{ id: string; slug: string; title: string; markdown_content: string }>
+    notes?: Array<{ id: string; slug: string; title: string; markdown_content: string }>,
+    mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>
   ) => {
     // ✏️ Si en mode édition, router vers editMessage
     if (editingMessage) {
@@ -314,8 +316,8 @@ const ChatFullscreenV2: React.FC = () => {
       return;
     }
 
-    // Mode normal
-    await messageActions.sendMessage(message, images, notes);
+    // Mode normal (avec mentions légères)
+    await messageActions.sendMessage(message, images, notes, mentions);
   }, [editingMessage, messageActions]);
 
   // 🎯 RENDER AUTH STATUS

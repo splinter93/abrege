@@ -17,7 +17,8 @@ export interface ChatInputContainerProps {
   onSend: (
     message: string | MessageContent,
     images?: ImageAttachment[],
-    notes?: Note[]
+    notes?: Note[],
+    mentions?: import('@/types/noteMention').NoteMention[] // ✅ NOUVEAU : Mentions légères
   ) => void;
   loading: boolean;
   sessionId: string;
@@ -25,7 +26,7 @@ export interface ChatInputContainerProps {
   editingMessageId: string | null;
   editingContent: string;
   onCancelEdit: () => void;
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   renderAuthStatus: () => React.ReactNode;
   selectedAgent: { name: string } | null;
 }
