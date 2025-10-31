@@ -93,6 +93,9 @@ const ChatFullscreenV2: React.FC = () => {
     messages: infiniteMessages
   });
 
+  // 🎯 ÉTAT INITIALISATION (éviter race condition au premier chargement)
+  const [isInitializing, setIsInitializing] = useState(true);
+
   // 🎯 NOUVEAUX HOOKS CUSTOM (logique extraite)
   const streamingState = useStreamingState();
   
@@ -223,12 +226,26 @@ const ChatFullscreenV2: React.FC = () => {
         setSelectedAgent(agent);
         logger.dev('[ChatFullscreenV2] 🌟 Agent favori chargé au mount:', agent.name);
       }
+      // ✅ NOUVEAU : Marquer initialisation terminée (agent chargé ou non)
+      setIsInitializing(false);
+      logger.dev('[ChatFullscreenV2] ✅ Initialisation agent terminée', {
+        hasAgent: !!agent,
+        agentName: agent?.name || 'none'
+      });
     }
   });
 
   // 🎯 AUTO-CRÉER SESSION VIDE (responsabilité séparée)
   useEffect(() => {
-    if (!user || authLoading) return;
+    // ✅ FIX RACE CONDITION : Attendre fin initialisation agent favori
+    if (!user || authLoading || isInitializing) {
+      logger.dev('[ChatFullscreenV2] ⏭️ Skip création session:', {
+        hasUser: !!user,
+        authLoading,
+        isInitializing
+      });
+      return;
+    }
     
     // ✅ Créer session vide si AUCUNE session ET agent sélectionné
     // Note: async IIFE pour éviter warning useEffect avec async
@@ -243,7 +260,7 @@ const ChatFullscreenV2: React.FC = () => {
     };
     
     createInitialSession();
-  }, [sessions.length, selectedAgent?.id, currentSession?.id, user, authLoading, createSession]);
+  }, [sessions.length, selectedAgent?.id, currentSession?.id, user, authLoading, isInitializing, createSession]);
 
   // 🎯 UI STATE LOCAL (minimal - sidebar uniquement)
   const [sidebarOpen, setSidebarOpen] = useState(false);
