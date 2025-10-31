@@ -5,7 +5,7 @@
  */
 
 'use client';
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { ImageAttachment, MessageContent } from '@/types/image';
 import { useAuth } from '@/hooks/useAuth';
 import { useEditorPrompts } from '@/hooks/useEditorPrompts';
@@ -92,7 +92,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
     searchedNotes,
     isSearching,
     handleSelectNote,
-    handleRemoveNote
+    handleRemoveNote,
+    loadRecentNotes
   } = useNoteSearch({ getAccessToken });
   
   // 🎯 Hook upload images
@@ -273,6 +274,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
     { isOpen: showNoteSelector, menuClass: 'chat-note-selector', triggerClass: 'chatgpt-input-mention', onClose: closeMenu, additionalCleanup: () => setNoteSearchQuery('') },
     { isOpen: showSlashMenu, menuClass: 'chat-slash-menu', triggerClass: 'chatgpt-input-textarea', onClose: closeMenu, additionalCleanup: () => setSlashQuery('') }
   ]);
+
+  // ✅ FIX: Charger les notes récentes à l'ouverture du menu @ (pas au montage)
+  // Résout le bug : au premier chargement, le token n'est pas dispo → recentNotes vide
+  useEffect(() => {
+    if (showNoteSelector && recentNotes.length === 0) {
+      loadRecentNotes();
+    }
+  }, [showNoteSelector, recentNotes.length, loadRecentNotes]);
 
   return (
     <div 

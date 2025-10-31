@@ -122,10 +122,11 @@ export function useNoteSearch({ getAccessToken }: UseNoteSearchOptions) {
     setSelectedNotes(prev => prev.filter(n => n.id !== noteId));
   }, []);
 
-  // Charger les notes récentes au montage
-  useEffect(() => {
-    loadRecentNotes();
-  }, [loadRecentNotes]);
+  // ✅ FIX: Ne PAS charger au montage (token potentiellement pas dispo)
+  // Les notes seront chargées à l'ouverture du menu (via ChatInput)
+  // useEffect(() => {
+  //   loadRecentNotes();
+  // }, [loadRecentNotes]);
 
   return {
     selectedNotes,
