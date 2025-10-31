@@ -8,6 +8,7 @@ import { logger } from '@/utils/logger';
 interface AudioRecorderProps {
   onTranscriptionComplete: (text: string) => void;
   onError: (error: string) => void;
+  onRecordingStateChange?: (isRecording: boolean) => void; // ✅ Callback pour notifier changement état
   disabled?: boolean;
   variant?: 'chat' | 'toolbar';
 }
@@ -29,6 +30,7 @@ interface RecordingState {
 const AudioRecorder = forwardRef<AudioRecorderRef, AudioRecorderProps>(({ 
   onTranscriptionComplete, 
   onError, 
+  onRecordingStateChange,
   disabled = false,
   variant = 'chat'
 }, ref) => {
@@ -200,7 +202,10 @@ const AudioRecorder = forwardRef<AudioRecorderRef, AudioRecorderProps>(({
     };
   }, []);
 
-
+  // ✅ Notifier le changement d'état d'enregistrement
+  React.useEffect(() => {
+    onRecordingStateChange?.(state.isRecording);
+  }, [state.isRecording, onRecordingStateChange]);
 
   // Déterminer l'icône et la classe selon le variant
   const getButtonState = () => {

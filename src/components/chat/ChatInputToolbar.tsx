@@ -5,9 +5,9 @@
  */
 
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import { Globe, CornerUpRight, Search, FileText, Zap, Target, Cpu } from 'react-feather';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, Loader } from 'lucide-react';
 import AudioRecorder, { type AudioRecorderRef } from './AudioRecorder';
 import NoteSelector from './NoteSelector';
 import FileMenu from './FileMenu';
@@ -128,6 +128,9 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
   disabled = false,
   loading = false
 }) => {
+  // ✅ État local pour tracking de l'enregistrement audio
+  const [isRecording, setIsRecording] = useState(false);
+
   return (
     <div className="chatgpt-input-actions">
       {/* Bouton @ (Notes) */}
@@ -247,21 +250,19 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
         ref={audioRecorderRef}
         onTranscriptionComplete={onTranscriptionComplete}
         onError={onAudioError}
+        onRecordingStateChange={setIsRecording}
         disabled={disabled}
       />
       
       <button 
         onClick={onSend} 
-        disabled={!canSend || loading || disabled}
+        disabled={!canSend || loading || disabled || isRecording}
         className={`chatgpt-input-send ${loading ? 'loading' : ''}`}
         aria-label="Envoyer le message"
+        title={isRecording ? 'Enregistrement en cours...' : 'Envoyer le message'}
       >
         {loading ? (
-          <div className="chat-input-typing-dots">
-            <div className="chat-input-typing-dot"></div>
-            <div className="chat-input-typing-dot"></div>
-            <div className="chat-input-typing-dot"></div>
-          </div>
+          <Loader size={20} className="animate-spin" />
         ) : (
           <CornerUpRight size={20} />
         )}

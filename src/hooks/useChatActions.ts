@@ -83,8 +83,14 @@ export function useChatActions({
   /**
    * Handler pour l'envoi de message
    * ✅ REFACTO : Envoie mentions[] directement
+   * ✅ SÉCURITÉ : Bloque l'envoi si enregistrement audio en cours
    */
   const handleSend = useCallback(async () => {
+    // ✅ BLOQUER si enregistrement audio en cours
+    if (audioRecorderRef?.current?.isRecording()) {
+      return;
+    }
+    
     const hasContent = message.trim() || images.length > 0;
     if (hasContent && !loading && !disabled) {
       const success = await send(message.trim(), images, selectedNotes, mentions);
@@ -100,13 +106,22 @@ export function useChatActions({
         }, 50);
       }
     }
-  }, [message, images, selectedNotes, mentions, loading, disabled, send, setMessage, setSelectedNotes, setMentions, clearImages, textareaRef]);
+  }, [message, images, selectedNotes, mentions, loading, disabled, send, setMessage, setSelectedNotes, setMentions, clearImages, textareaRef, audioRecorderRef]);
   
   /**
-   * Handler pour la touche Enter
-   * ✅ Si en recording → Stop Whisper
-   * ✅ Sinon → Envoyer le message
-   * ✅ NOUVEAU : Intercepte aussi Backspace/Delete pour mentions atomiques
+   * Handler pour la touche Enter dans textarea
+   * 
+   * Gestion stricte :
+   * - Enter simple UNIQUEMENT (pas Shift+Enter, pas Cmd+Enter, pas Ctrl+Enter)
+   * - Shift+Enter → Nouvelle ligne (comportement natif textarea)
+   * - Cmd/Ctrl+Enter → Audio toggle (géré par useGlobalChatShortcuts, pas ici)
+   * 
+   * Sécurité :
+   * - Bloque si menu mention/slash ouvert (laisse le menu gérer)
+   * - Bloque si recording en cours (pas d'envoi pendant enregistrement)
+   * 
+   * Bonus :
+   * - Intercepte aussi Backspace/Delete pour mentions atomiques
    */
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // ✅ Vérifier suppression atomique mentions AVANT Enter
@@ -117,22 +132,23 @@ export function useChatActions({
       return;
     }
     
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // ✅ ENTER pour envoyer : UNIQUEMENT Enter simple (pas Cmd+Enter, ni Shift+Enter)
+    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
       // ✅ NOUVEAU : Bloquer Enter si un menu est ouvert (le menu gère Enter)
       if (showMentionMenu || showSlashMenu) {
         // Ne pas preventDefault ici, laisser le menu gérer
         return;
       }
       
-      e.preventDefault();
-      
-      // Si en recording, juste stop (pas d'envoi)
+      // ✅ SÉCURITÉ : Si en recording, bloquer complètement (ne rien faire)
       if (audioRecorderRef?.current?.isRecording()) {
-        audioRecorderRef.current.stopRecording();
-        return;
+        e.preventDefault();
+        return; // ✅ Pas d'envoi pendant enregistrement
       }
       
-      // Sinon, envoyer normalement
+      e.preventDefault();
+      
+      // Envoyer normalement (handleSend a sa propre vérification)
       handleSend();
     }
   }, [handleMentionDeletion, handleSend, audioRecorderRef, showMentionMenu, showSlashMenu]);

@@ -5,12 +5,16 @@
  * - Espace : Focus chat input (si pas déjà dans un input)
  * - / : Focus + ouvre menu prompts
  * - @ : Focus + ouvre menu notes
- * - Cmd+Enter (ou Ctrl+Enter) : Toggle Whisper (start/stop recording)
+ * - Cmd+Enter (ou Ctrl+Enter) : Toggle Whisper (start/stop recording) - JAMAIS envoi message
  * - Esc : Ferme tous les menus ouverts
  * 
  * Guards :
  * - Espace, /, @ : Actifs uniquement si aucun input/textarea n'a le focus
  * - Cmd+Enter, Esc : Fonctionnent partout
+ * 
+ * Séparation des responsabilités :
+ * - Enter simple pendant recording : Géré par useChatActions (bloque envoi)
+ * - Cmd+Enter : Géré ici (audio uniquement, stopPropagation pour éviter conflits)
  * 
  * Maintenabilité :
  * - Tous les raccourcis globaux centralisés ici (pas éparpillés)
@@ -56,8 +60,10 @@ export function useGlobalChatShortcuts({
       }
       
       // ✅ CMD+ENTER : Toggle Whisper (fonctionne partout, même dans input)
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      // ⚠️ Important : Vérifie !e.shiftKey pour ne pas interférer avec Cmd+Shift+Enter si besoin
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
+        e.stopPropagation(); // ✅ Empêche propagation vers autres handlers
         
         if (!audioRecorderRef?.current) return;
         
@@ -67,13 +73,6 @@ export function useGlobalChatShortcuts({
         } else {
           audioRecorderRef.current.startRecording();
         }
-        return;
-      }
-
-      // ✅ ENTER simple : Stop Whisper si en cours (global)
-      if (!e.shiftKey && e.key === 'Enter' && audioRecorderRef?.current?.isRecording()) {
-        e.preventDefault();
-        audioRecorderRef.current.stopRecording();
         return;
       }
       
