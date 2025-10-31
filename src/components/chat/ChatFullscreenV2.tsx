@@ -211,26 +211,39 @@ const ChatFullscreenV2: React.FC = () => {
     onAgentNotFound: () => setAgentNotFound(true) // ✅ Marquer agent comme introuvable
   });
 
-  // 🎯 LOAD AGENT FAVORI au mount + auto-créer session vide
+  // 🎯 LOAD AGENT FAVORI au mount (responsabilité unique : charger l'agent)
   useFavoriteAgent({
     user: user ? { id: user.id } : null,
     agents,
     agentsLoading,
-    onAgentLoaded: async (agent: Agent | null) => {
-      // ✅ Charger favori SEULEMENT si pas de session active ni agent déjà sélectionné
-      // Note: on vérifie sessions.length pour être sûr (currentSession peut être null même avec des sessions)
-      if (sessions.length === 0 && !selectedAgent && agent) {
+    onAgentLoaded: (agent: Agent | null) => {
+      // ✅ FIX RACE CONDITION : Charger l'agent favori TOUJOURS si aucun agent n'est sélectionné
+      // Peu importe le nombre de sessions existantes
+      if (!selectedAgent && agent) {
         setSelectedAgent(agent);
-        logger.dev('[ChatFullscreenV2] 🌟 Agent favori chargé:', agent.name);
-        
-        // ✅ Créer automatiquement une nouvelle conversation vide avec cet agent
-        const newSession = await createSession('Nouvelle conversation', agent.id);
-        if (newSession) {
-          logger.dev('[ChatFullscreenV2] ✅ Session vide créée automatiquement (is_empty: true)');
-        }
+        logger.dev('[ChatFullscreenV2] 🌟 Agent favori chargé au mount:', agent.name);
       }
     }
   });
+
+  // 🎯 AUTO-CRÉER SESSION VIDE (responsabilité séparée)
+  useEffect(() => {
+    if (!user || authLoading) return;
+    
+    // ✅ Créer session vide si AUCUNE session ET agent sélectionné
+    // Note: async IIFE pour éviter warning useEffect avec async
+    const createInitialSession = async () => {
+      if (sessions.length === 0 && selectedAgent && !currentSession) {
+        logger.dev('[ChatFullscreenV2] 🆕 Création session vide avec agent:', selectedAgent.name);
+        const newSession = await createSession('Nouvelle conversation', selectedAgent.id);
+        if (newSession) {
+          logger.dev('[ChatFullscreenV2] ✅ Session vide créée (is_empty: true)');
+        }
+      }
+    };
+    
+    createInitialSession();
+  }, [sessions.length, selectedAgent?.id, currentSession?.id, user, authLoading, createSession]);
 
   // 🎯 UI STATE LOCAL (minimal - sidebar uniquement)
   const [sidebarOpen, setSidebarOpen] = useState(false);
