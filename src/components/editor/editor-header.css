@@ -70,7 +70,7 @@
 
 .editor-header__actions {
   position: absolute;
-  right: var(--editor-padding-horizontal-desktop);
+  right: 10px; /* Décalé à droite, fixe à 10px du bord */
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -128,10 +128,7 @@
   }
   
   /* Logo reste à 4px (défini ligne 42) */
-  
-  .editor-header__actions {
-    right: var(--editor-padding-horizontal-tablet);
-  }
+  /* Actions restent à 10px (défini ligne 73) */
 }
 
 /* Mobile */
@@ -142,9 +139,9 @@
   }
   
   /* Logo reste à 4px (défini ligne 42) */
+  /* Actions restent à 10px (défini ligne 73) */
   
   .editor-header__actions {
-    right: var(--editor-padding-horizontal-mobile);
     gap: 2px;
   }
   
@@ -161,10 +158,7 @@
   }
   
   /* Logo reste à 4px (défini ligne 42) */
-  
-  .editor-header__actions {
-    right: var(--editor-padding-horizontal-mobile-sm);
-  }
+  /* Actions restent à 10px (défini ligne 73) */
 }
 
  
