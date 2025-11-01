@@ -1,10 +1,10 @@
 /* Styles pour le menu contextuel Notion-like */
 
 .context-menu {
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: #1a1a1a; /* Gris sombre cohérent avec l'app */
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.2);
   padding: 4px;
   min-width: 200px;
   max-width: 280px;
@@ -12,6 +12,7 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   line-height: 1.4;
+  color: #e5e7eb;
 }
 
 .context-menu-content {
@@ -33,12 +34,12 @@
   text-align: left;
   width: 100%;
   font-size: 14px;
-  color: #374151;
+  color: #e5e7eb; /* Texte clair pour fond sombre */
   position: relative;
 }
 
 .context-menu-item:hover:not(:disabled) {
-  background-color: #f3f4f6;
+  background-color: rgba(255, 255, 255, 0.08); /* Hover gris subtil */
 }
 
 .context-menu-item.selected {
