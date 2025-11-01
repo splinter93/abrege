@@ -61,14 +61,18 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
     if (!editor || !storeContent || hasLoadedInitialContentRef.current) return;
     
     // Charger le contenu initial
-    console.log('📥 Chargement initial du contenu depuis le store');
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug(LogCategory.EDITOR, '📥 Chargement initial du contenu depuis le store');
+    }
     editorState.setIsUpdatingFromStore(true);
     editor.commands.setContent(storeContent);
     hasLoadedInitialContentRef.current = true;
     
     setTimeout(() => {
       editorState.setIsUpdatingFromStore(false);
-      console.log('✅ Contenu initial chargé');
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, '✅ Contenu initial chargé');
+      }
     }, 100);
   }, [editor, storeContent, editorState]);
 
