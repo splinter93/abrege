@@ -851,6 +851,7 @@ h1 {
   font-family: var(--editor-font-family-headings);
   position: relative;
   scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
+  transition: background-color 0.6s ease, box-shadow 0.6s ease, padding 0.6s ease;
 }
 
 /* Supprimer la marge du premier titre dans le contenu */
@@ -877,6 +878,7 @@ h2 {
   font-family: var(--editor-font-family-headings);
   position: relative;
   scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
+  transition: background-color 0.6s ease, box-shadow 0.6s ease, padding 0.6s ease;
 }
 
 /* Supprimer la marge du premier titre H2 dans le contenu */
@@ -903,6 +905,7 @@ h3 {
   font-family: var(--editor-font-family-headings);
   position: relative;
   scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
+  transition: background-color 0.6s ease, box-shadow 0.6s ease, padding 0.6s ease;
 }
 
 /* Supprimer la marge du premier titre H3 dans le contenu */
@@ -910,6 +913,22 @@ h3 {
 .editor-content > h3:first-child,
 .markdown-body > h3:first-child {
   margin-top: var(--editor-heading-margin-top-first); /* 0 */
+}
+
+/* ==========================================================================
+   ANIMATION FLASH TOC - Titre visé
+   ========================================================================== */
+h1.active-flash,
+h2.active-flash,
+h3.active-flash,
+h4.active-flash,
+h5.active-flash,
+h6.active-flash {
+  background-color: rgba(255, 107, 53, 0.12); /* Orange subtil */
+  box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.08);
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-left: -8px;
 }
 
 /* NEUTRALISER LES BALISES STRONG DANS LES TITRES */
