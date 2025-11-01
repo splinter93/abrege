@@ -219,3 +219,12 @@
     background-color: transparent; 
   }
 }
+
+/* ==========================================================================
+   RESPONSIVE - Masquer la TOC en dessous de 1000px
+   ========================================================================== */
+@media (max-width: 1000px) {
+  .toc-container {
+    display: none !important;
+  }
+}

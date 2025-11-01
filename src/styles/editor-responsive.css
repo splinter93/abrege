@@ -48,8 +48,16 @@
    RESPONSIVE DESIGN
    ========================================================================== */
 
-/* En dessous de 1100px - Container intérieur devient fluide (évite coupure en wide mode) */
+/* En dessous de 1100px - Container fluide UNIQUEMENT en wide mode */
+/* Le mode normal (800px) garde sa largeur fixe jusqu'à 850px */
 @media (max-width: 1100px) {
+  .noteLayout.wide-mode .editor-content-inner {
+    max-width: 100%;
+  }
+}
+
+/* En dessous de 850px - Tous les modes deviennent fluides */
+@media (max-width: 850px) {
   .editor-content-inner {
     max-width: 100%;
   }

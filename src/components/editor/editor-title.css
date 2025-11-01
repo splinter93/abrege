@@ -59,6 +59,7 @@ textarea.editor-title-field {
   width: 100%;
   max-width: 100%; /* Force respect du container */
   min-height: 45px;
+  max-height: none; /* Pas de limite, s'étend autant que nécessaire */
   margin: 0 auto;
   display: block;
   padding: 0;
@@ -72,7 +73,8 @@ textarea.editor-title-field {
   box-sizing: border-box !important; /* FIX: force en prod */
   white-space: normal;
   word-break: break-word;
-  overflow: visible;
+  overflow-y: hidden; /* Pas de scroll vertical */
+  overflow-x: hidden; /* Pas de scroll horizontal */
   overflow-wrap: break-word; /* Force le wrap */
   resize: none;
   text-align: left;

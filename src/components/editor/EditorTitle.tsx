@@ -15,7 +15,12 @@ interface EditorTitleProps {
  * Champ de titre de l'éditeur, auto-resize, centré.
  */
 const EditorTitle: React.FC<EditorTitleProps> = ({ value, onChange, onBlur, placeholder, wideMode, disabled = false }) => {
-  const { textareaRef } = useAutoResize({ value, wideMode });
+  const { textareaRef } = useAutoResize({ 
+    value, 
+    wideMode,
+    minHeight: 45,
+    maxHeight: 600 // Permet jusqu'à 10-12 lignes sans scroll
+  });
 
   return (
     <div className="editor-title-wrapper">
