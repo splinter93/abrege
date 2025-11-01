@@ -57,12 +57,28 @@ export const EditorContextMenuContainer: React.FC<EditorContextMenuContainerProp
           if (editorState.contextMenu.hasSelection) {
             editor.chain().focus().deleteSelection().run();
           } else {
-            // Supprimer le bloc entier
+            // Supprimer le nœud à la position du curseur
             const pos = editorState.contextMenu.nodePosition;
-            const $pos = editor.state.doc.resolve(pos);
-            const start = $pos.before();
-            const end = $pos.after();
-            editor.chain().focus().deleteRange({ from: start, to: end }).run();
+            try {
+              const { state } = editor;
+              const $pos = state.doc.resolve(pos);
+              const node = $pos.node();
+              
+              // Pour les images et nœuds simples, supprimer le nœud directement
+              if (node && (node.type.name === 'image' || node.isLeaf)) {
+                const from = pos;
+                const to = pos + node.nodeSize;
+                editor.chain().focus().deleteRange({ from, to }).run();
+              } else {
+                // Pour les blocs normaux, supprimer entre before et after
+                const start = $pos.before();
+                const end = $pos.after();
+                editor.chain().focus().deleteRange({ from: start, to: end }).run();
+              }
+            } catch (err) {
+              // Fallback : supprimer la sélection courante
+              editor.chain().focus().deleteSelection().run();
+            }
           }
           break;
 

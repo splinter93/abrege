@@ -70,7 +70,7 @@
 
 .editor-header__actions {
   position: absolute;
-  right: 10px; /* Décalé à droite, fixe à 10px du bord */
+  right: 6px; /* Décalé à droite, fixe à 6px du bord */
   top: 50%;
   transform: translateY(-50%);
   display: flex;

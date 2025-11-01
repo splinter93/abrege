@@ -715,9 +715,9 @@ a {
   height: auto;
   margin: 1.75rem 0;
   display: block;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md); /* Cohérent avec ProseMirror */
-  box-shadow: var(--glass-shadow-soft);
+  border: none; /* Pas de bordure */
+  border-radius: var(--radius-md);
+  box-shadow: none; /* Pas d'ombre */
 }
 
 .markdown-body img:hover,
@@ -1101,9 +1101,9 @@ a {
   max-width: 100%;
   margin: 1.5rem 0;
   display: block;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md); /* Cohérent avec .editor-image */
-  box-shadow: var(--glass-shadow-soft);
+  border: none; /* Pas de bordure */
+  border-radius: var(--radius-md);
+  box-shadow: none; /* Pas d'ombre */
 }
 
 .ProseMirror img:hover {
@@ -1122,16 +1122,16 @@ a {
     height: auto;
     max-width: 100% ;
     margin: 0 auto;
-    border: 1px solid var(--border-subtle);
+    border: none; /* Pas de bordure */
     border-radius: var(--radius-md);
-    box-shadow: var(--glass-shadow-soft);
+    box-shadow: none; /* Pas d'ombre */
     object-fit: contain;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
+    transition: transform 0.3s ease;
+    background: none;
   }
   .ProseMirror .editor-image:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--glass-shadow-soft);
+    transform: none; /* Pas d'effet hover */
+    box-shadow: none;
   }
   .ProseMirror p:has(img),
   .ProseMirror p:has(.editor-image-wrapper) {
