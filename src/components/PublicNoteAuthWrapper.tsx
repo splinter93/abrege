@@ -30,6 +30,15 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
   const addNote = useFileSystemStore(s => s.addNote);
   const storeNote = useFileSystemStore(s => s.notes[note.id]);
 
+  // ✅ HOOKS RULES : Appeler tous les hooks AVANT les returns conditionnels
+  const { isAccessAllowed, isOwner, accessLevel } = useSecurityValidation(
+    { 
+      share_settings: note.share_settings, 
+      user_id: note.user_id 
+    },
+    currentUser?.id
+  );
+
   React.useEffect(() => {
     const loadPublicNote = async () => {
       try {
@@ -123,15 +132,6 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
       />
     );
   }
-
-  // ✅ SÉCURITÉ : Utiliser le hook centralisé pour la validation
-  const { isAccessAllowed, isOwner, accessLevel } = useSecurityValidation(
-    { 
-      share_settings: note.share_settings, 
-      user_id: note.user_id 
-    },
-    currentUser?.id
-  );
 
   // Si l'accès n'est pas autorisé
   if (!isAccessAllowed) {
