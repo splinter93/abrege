@@ -32,7 +32,7 @@
 
 .editor-title-wrapper {
   width: 100%;
-  /* max-width supprimé - hérite du container .editor-content-inner */
+  max-width: 100%; /* Force respect du container parent */
   margin: 0 auto;
   padding: 0; /* à ras du texte */
   display: flex;
@@ -40,6 +40,8 @@
   align-items: flex-start;
   min-height: auto; /* S'adapte automatiquement à la hauteur du contenu */
   margin-bottom: 0; /* aucun espace sous le titre */
+  box-sizing: border-box;
+  overflow: hidden; /* Évite tout débordement */
 }
 
 .editor-header.title-focused .editor-title-wrapper {
@@ -55,7 +57,7 @@
 .editor-title-span,
 textarea.editor-title-field {
   width: 100%;
-  /* max-width supprimé - hérite du container .editor-content-inner */
+  max-width: 100%; /* Force respect du container */
   min-height: 45px;
   margin: 0 auto;
   display: block;
@@ -71,6 +73,7 @@ textarea.editor-title-field {
   white-space: normal;
   word-break: break-word;
   overflow: visible;
+  overflow-wrap: break-word; /* Force le wrap */
   resize: none;
   text-align: left;
 } 
