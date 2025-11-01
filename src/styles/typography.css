@@ -918,25 +918,7 @@ h3 {
 /* ==========================================================================
    ANIMATION FLASH TOC - Titre visé
    ========================================================================== */
-.ProseMirror h1.active-flash,
-.ProseMirror h2.active-flash,
-.ProseMirror h3.active-flash,
-.ProseMirror h4.active-flash,
-.ProseMirror h5.active-flash,
-.ProseMirror h6.active-flash,
-.markdown-body h1.active-flash,
-.markdown-body h2.active-flash,
-.markdown-body h3.active-flash,
-h1.active-flash,
-h2.active-flash,
-h3.active-flash {
-  background-color: rgba(255, 107, 53, 0.15) !important; /* Orange subtil - forcé */
-  box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1) !important;
-  border-radius: 6px !important;
-  padding-left: 8px !important;
-  padding-right: 8px !important;
-  margin-left: -8px !important;
-}
+/* Active flash désactivé - géré en JS */
 
 /* NEUTRALISER LES BALISES STRONG DANS LES TITRES */
 /* Les titres ne doivent pas être en gras même s'ils contiennent des balises <strong> */

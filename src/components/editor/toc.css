@@ -145,7 +145,7 @@
 
 .toc-item-h2 {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--editor-text-color);
   margin-bottom: 4px;
   padding-left: 20px;
@@ -164,8 +164,7 @@
   background: rgba(107, 114, 128, 0.1);
   color: var(--text-primary);
   border-radius: 8px;
-  padding: 6px 8px;
-  margin: 2px 0;
+  /* Padding/margin supprimés pour éviter la saccade */
 }
 
 .toc-item.active {

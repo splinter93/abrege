@@ -57,33 +57,38 @@ export default function TableOfContents({ headings = [], currentId, containerRef
   const getTocItemClass = (level: number) => `toc-item toc-item-h${level}`;
 
   const handleHeadingClick = (h: Heading) => {
-    // Cas page publique : scroll sur l'id dans le DOM
-    const el = document.getElementById(h.id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      el.classList.add('active-flash');
-      setTimeout(() => el.classList.remove('active-flash'), 1400);
-      return;
-    }
-    // Cas éditeur (ProseMirror)
+    // Stratégie 1 : Chercher dans le container (ProseMirror ou markdown-body)
     if (containerRef?.current) {
+      // Chercher dans ProseMirror (mode édition) OU markdown-body (mode lecture)
       const proseMirrorContainer = containerRef.current.querySelector('.ProseMirror');
-      if (proseMirrorContainer) {
-        let el = proseMirrorContainer.querySelector(`#${CSS.escape(h.id)}`);
+      const markdownBodyContainer = containerRef.current.querySelector('.markdown-body');
+      const container = proseMirrorContainer || markdownBodyContainer;
+      
+      if (container) {
+        // Chercher par ID d'abord
+        let el = container.querySelector(`#${CSS.escape(h.id)}`);
+        
+        // Si pas d'ID, chercher par texte et assigner l'ID
         if (!el) {
-          const candidates = Array.from(proseMirrorContainer.querySelectorAll(`h${h.level}`)) as HTMLElement[];
+          const candidates = Array.from(container.querySelectorAll(`h${h.level}`)) as HTMLElement[];
           const match = candidates.find(node => node.textContent && h.text && node.textContent.trim() === h.text.trim());
           if (match) {
             match.setAttribute('id', h.id);
             el = match;
           }
         }
+        
         if (el) {
           (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
-          (el as HTMLElement).classList.add('active-flash');
-          setTimeout(() => (el as HTMLElement).classList.remove('active-flash'), 1400);
+          return;
         }
       }
+    }
+    
+    // Stratégie 2 : Fallback sur document.getElementById (page publique ou erreur)
+    const el = document.getElementById(h.id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 

@@ -870,8 +870,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               />
             )}
             <EditorContent>
-            {!isReadonly && (
               <div className="tiptap-editor-container" ref={editorContainerRef}>
+            {!isReadonly && (
+              <>
                 <TiptapEditorContent editor={editor} />
                 {/* Drag Handle intégré via NotionDragHandleExtension */}
                 {/* Table controls */}
@@ -921,11 +922,12 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
                     }
                   }}
                 />
-              </div>
+              </>
             )}
             {isReadonly && (
               <div className="markdown-body" dangerouslySetInnerHTML={{ __html: html }} />
             )}
+              </div>
           </EditorContent>
           </>
         )}
