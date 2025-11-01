@@ -127,10 +127,11 @@ export default function TableOfContents({ headings = [], currentId, containerRef
         ) : (
           headings.map((h, idx) => {
             const isH2 = h.level === 2;
-            const prevIsH2 = idx > 0 && headings[idx - 1].level === 2;
+            const prevWasH2 = idx > 0 && headings[idx - 1].level === 2;
             return (
               <React.Fragment key={h.id || `toc-item-${idx}`}>
-                {isH2 && idx > 0 && !prevIsH2 && (
+                {/* Séparateur avant chaque h2 (sauf le premier) */}
+                {isH2 && idx > 0 && (
                   <hr className="toc-separator" />
                 )}
                 <button

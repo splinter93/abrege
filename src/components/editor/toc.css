@@ -3,21 +3,29 @@
 .toc-container {
   position: fixed;
   right: 8px;
-  top: 383px;
+  top: 377px; /* Remonté de 6px */
   z-index: 30;
   font-family: 'Noto Sans', sans-serif;
-  transition: all 0.32s cubic-bezier(0.2, 0.8, 0.4, 1);
+  /* Transitions spécifiques pour animation fluide */
+  transition: 
+    width 0.25s ease-out,
+    padding 0.25s ease-out,
+    background 0.2s ease-out,
+    border 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    backdrop-filter 0.2s ease-out;
   pointer-events: all;
 }
 
 .toc-container.collapsed {
   min-width: 32px;
+  width: 32px;
   padding: 0;
   background: transparent;
   border: none;
   border-radius: 16px;
   color: var(--editor-text-color);
-  overflow-y: auto;
+  overflow: hidden; /* Cache le contenu pendant la transition */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -30,7 +38,7 @@
 }
 
 .toc-container.expanded {
-  width: 300px;
+  width: 270px; /* Plus compact: 300px → 270px */
   background: var(--surface-1);
   border: 1.5px solid var(--border-subtle);
   border-radius: 16px;
@@ -40,14 +48,14 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 0;
-  padding: 14px 18px;
-  padding-right: 12px;
+  padding: 10px 14px; /* Plus compact: 14px 18px → 10px 14px */
+  padding-right: 10px; /* Plus compact: 12px → 10px */
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   max-height: 56vh;
   transform: none;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  min-width: 300px;
+  min-width: 270px; /* Sync avec width */
   margin-right: 8px;
 }
 
@@ -147,17 +155,17 @@
   font-weight: 700;
   font-size: 14px;
   color: var(--editor-text-color);
-  margin-bottom: 4px;
-  padding-left: 20px;
+  margin-bottom: 2px; /* Plus compact */
+  padding-left: 12px; /* Plus compact: 20px → 12px */
 }
 
 .toc-item-h3 {
   font-weight: 400;
   font-size: 14px;
   color: var(--editor-text-color);
-  padding-left: 40px;
-  margin-bottom: 2px;
-  line-height: 1.7;
+  padding-left: 28px; /* Plus compact: 40px → 28px */
+  margin-bottom: 1px; /* Plus compact */
+  line-height: 1.4; /* Encore plus compact: 1.5 → 1.4 */
 }
 
 .toc-item:hover {
@@ -176,13 +184,23 @@
   font-weight: 600;
 }
 
-/* Séparateur entre sections */
+/* Séparateur entre sections h2 */
 .toc-separator {
   height: 1px;
-  background: var(--border-subtle);
+  background: rgba(255, 255, 255, 0.08); /* Gris subtil cohérent */
   border: none;
-  margin: 8px 0;
-  width: 100%;
+  margin: 10px auto; /* Plus d'espace + centré */
+  width: 75%; /* Encore plus court et élégant */
+}
+
+/* Scrollbar invisible pour TOC */
+.toc-container.expanded::-webkit-scrollbar {
+  display: none;
+}
+
+.toc-container.expanded {
+  -ms-overflow-style: none;  /* IE et Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 /* Animation de flash pour la navigation */
