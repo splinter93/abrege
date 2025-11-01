@@ -59,11 +59,14 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
   height: 100%;
   justify-content: center;
   align-items: center;
   position: relative;
-  overflow: visible;
+  overflow: visible; /* Important pour dropdowns */
+  box-sizing: border-box;
+  z-index: 1; /* Au-dessus du contenu mais sous les dropdowns */
 }
 
 .toolbar-main {
@@ -74,6 +77,17 @@
   flex-wrap: nowrap;
   min-height: 40px;
   width: 100%;
+  max-width: 100%;
+  overflow-x: auto; /* Scroll horizontal si nécessaire */
+  overflow-y: visible; /* ✅ Permettre dropdowns de sortir verticalement */
+  box-sizing: border-box;
+  /* Scrollbar cachée mais fonctionnelle */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.toolbar-main::-webkit-scrollbar {
+  display: none;
 }
 
 /* =============================================================================
@@ -257,6 +271,7 @@
 .font-selector {
   position: relative;
   margin: 0 8px;
+  z-index: 10; /* S'assurer que le dropdown sort bien */
 }
 
 /* Trigger Button */
@@ -308,7 +323,7 @@
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  z-index: 1000;
+  z-index: 9999; /* Très élevé pour passer au-dessus de tout */
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
   border-radius: var(--toolbar-radius-lg);
@@ -494,7 +509,7 @@
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  z-index: 1000;
+  z-index: 9999; /* Très élevé pour passer au-dessus de tout */
   background: var(--surface-1);
   border: 1px solid var(--border-subtle);
   border-radius: var(--toolbar-radius-lg);
@@ -547,6 +562,8 @@
   animation: slide-down 0.2s ease-out;
   backdrop-filter: blur(var(--toolbar-glass-blur));
   box-shadow: var(--toolbar-glass-shadow);
+  position: relative;
+  z-index: 9998; /* Juste en dessous des dropdowns */
 }
 
 .toolbar-advanced-label {
@@ -570,14 +587,36 @@
 }
 
 /* =============================================================================
+   CLASSES DE VISIBILITÉ RESPONSIVE
+   ========================================================================== */
+
+.toolbar-group-desktop-only {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--toolbar-gap-small);
+}
+
+.toolbar-btn--mobile-only {
+  display: none;
+}
+
+/* Touch targets mobiles */
+@media (hover: none) and (pointer: coarse) {
+  .toolbar-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* =============================================================================
    RESPONSIVE DESIGN
    ========================================================================== */
 
-/* Tablettes */
+/* Tablettes (768px - 1024px) */
 @media (max-width: 1024px) {
   .toolbar-main {
-    padding: 6px 12px;
-    gap: 12px;
+    padding: 6px var(--editor-padding-horizontal-tablet);
+    gap: 10px;
   }
   
   .toolbar-btn {
@@ -595,21 +634,34 @@
   }
 }
 
-/* Mobile large */
+/* Mobile (≤ 768px) */
 @media (max-width: 768px) {
   .modern-toolbar {
+    padding: 0 var(--editor-padding-horizontal-mobile);
     margin: 0 0 12px 0;
   }
   
   .toolbar-main {
-    padding: 4px var(--toolbar-gap-medium);
-    gap: var(--toolbar-gap-medium);
+    padding: 4px 0;
+    gap: 6px;
     min-height: 36px;
+  }
+  
+  /* Cacher groupes desktop only */
+  .toolbar-group-desktop-only {
+    display: none;
+  }
+  
+  /* Montrer bouton ... */
+  .toolbar-btn--mobile-only {
+    display: inline-flex;
   }
   
   .toolbar-btn {
     width: var(--toolbar-btn-size-sm);
     height: var(--toolbar-btn-size-sm);
+    min-width: var(--toolbar-btn-size-sm);
+    min-height: var(--toolbar-btn-size-sm);
   }
   
   .toolbar-btn svg {
@@ -638,26 +690,34 @@
   }
 }
 
-/* Mobile petit */
+/* Mobile small (≤ 480px) */
 @media (max-width: 480px) {
   .modern-toolbar {
+    padding: 0 var(--editor-padding-horizontal-mobile-sm);
     margin: 0 0 var(--toolbar-gap-medium) 0;
   }
   
   .toolbar-main {
-    padding: 4px 6px;
-    gap: var(--toolbar-gap-small);
+    padding: 4px 0;
+    gap: 4px;
     min-height: 32px;
   }
   
   .toolbar-btn {
     width: var(--toolbar-btn-size-xs);
     height: var(--toolbar-btn-size-xs);
+    min-width: var(--toolbar-btn-size-xs);
+    min-height: var(--toolbar-btn-size-xs);
   }
   
   .toolbar-btn svg {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
+  }
+  
+  /* Cacher même le micro sur très petit écran */
+  .toolbar-btn.audio-recorder-toolbar {
+    display: none;
   }
   
   .font-selector__trigger {

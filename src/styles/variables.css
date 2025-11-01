@@ -118,6 +118,18 @@
   --surface-1: #171717;
   --surface-2: #1c1c1c;
   --surface-3: #212121;
+
+  /* ========================================
+     PADDINGS RESPONSIVE (alignés avec chat)
+     ======================================== */
+  
+  --editor-padding-horizontal-desktop: 24px;
+  --editor-padding-horizontal-tablet: 28px;
+  --editor-padding-horizontal-mobile: 24px;
+  --editor-padding-horizontal-mobile-sm: 20px;
+  
+  /* Max-width éditeur (aligné avec chat) */
+  --editor-content-max-width: 1000px;
 }
 
 /* ==========================================================================

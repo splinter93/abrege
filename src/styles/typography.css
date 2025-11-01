@@ -90,8 +90,8 @@
      TAILLES HARMONISÉES - PREMIUM EDITOR (RÉDUITES DE 10%)
      ========================================================================== */
   --editor-title-size: 2.375rem;      /* 38px - taille optimisée */
-  --editor-body-size: 1.125rem;         /* 18px - taille cohérente avec les paragraphes et listes */
-  --editor-body-size-mobile: 1rem;      /* 16px - taille mobile cohérente */
+  --editor-body-size: 0.96875rem;      /* 15.5px - taille de base de l'éditeur */
+  --editor-body-size-mobile: 0.96875rem; /* 15.5px - taille mobile cohérente */
   --editor-h1-size: 1.8rem;             /* 28.8px - réduit de 10% (32px → 28.8px) */
 
   /* ==========================================================================
@@ -103,7 +103,7 @@
   /* ==========================================================================
      FONT-WEIGHTS CENTRALISÉS - PREMIUM EDITOR
      ========================================================================== */
-  --editor-title-weight: 800;         /* Poids pour les titres principaux - AUGMENTÉ */
+  --editor-title-weight: 700;         /* Poids pour les titres principaux - Réduit pour plus de finesse */
   --editor-h1-weight: 900;            /* Poids pour H1 - ULTRA-GRAS */
   --editor-h2-weight: 900;            /* Poids pour H2 - ULTRA-GRAS */
   --editor-h3-weight: 900;            /* Poids pour H3 - ULTRA-GRAS */
@@ -316,18 +316,13 @@
 /* ==========================================================================
    LAYOUT AVEC TITRE DANS L'IMAGE - POSITIONNEMENT
    ========================================================================== */
-/* Positionnement absolu du titre dans l'image */
+/* Le positionnement est maintenant géré par .header-image-title-container dans editor-header-image.css */
+/* Garder ces styles pour compatibilité mais ne pas positionner */
 .noteLayout.imageWithTitle .noteLayout-title {
-  position: absolute;
-  top: 200px;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 800px;
-  max-width: 800px;
+  /* Position gérée par .header-image-title-container maintenant */
   padding: 0;
   box-sizing: border-box;
   text-align: center;
-  z-index: 10;
 }
 
 .noteLayout.imageWithTitle .noteLayout-title > .editor-container-width {
@@ -466,6 +461,8 @@
 .noteLayout.imageOnly.wide-mode .noteLayout-content {
   padding-top: 12px; /* Augmenté de 8px à 12px */
 }
+
+/* Le responsive du titre dans l'image est maintenant géré dans editor-header-image.css */
 
 /* ==========================================================================
    STYLES PAGE PUBLIQUE

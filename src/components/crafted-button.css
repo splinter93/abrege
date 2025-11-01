@@ -1,0 +1,85 @@
+/**
+ * CRAFTED BUTTON - Badge en bas à droite
+ * Style dégradé gris comme les blocs du chat
+ */
+
+.crafted-button {
+  position: fixed;
+  bottom: 18px;
+  right: 24px;
+  z-index: 50;
+  
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  
+  padding: 8px 16px;
+  background: var(--chat-gradient-block, linear-gradient(135deg, #2d3f55 0%, #33475f 50%, #2d3f55 100%));
+  border: none;
+  border-radius: 999px; /* Pill shape */
+  filter: brightness(1.18);
+  
+  color: #9ca3af; /* Gris plus sombre */
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.crafted-button:hover {
+  background: var(--chat-gradient-user-hover, linear-gradient(135deg, #304558 0%, #364d63 50%, #304558 100%));
+  filter: brightness(1.22);
+  color: #d1d5db; /* Gris léger au hover */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.crafted-icon {
+  color: #9ca3af; /* Gris plus sombre */
+  flex-shrink: 0;
+}
+
+.crafted-button:hover .crafted-icon {
+  color: #d1d5db; /* Gris léger au hover */
+}
+
+.crafted-text {
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .crafted-button {
+    bottom: 16px;
+    right: 16px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .crafted-icon {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .crafted-button {
+    bottom: 12px;
+    right: 12px;
+  }
+  
+  .crafted-text {
+    display: none;
+  }
+  
+  .crafted-button {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+

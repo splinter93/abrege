@@ -1,0 +1,346 @@
+/**
+ * EDITOR TOOLBAR NEW - Style sobre et propre
+ * Boutons alignés horizontalement, pas de scroll, pas de merde
+ */
+
+/* =============================================================================
+   TOOLBAR CONTAINER
+   ========================================================================== */
+
+.editor-toolbar-new {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  padding: 0;
+  overflow: visible; /* Important pour dropdowns */
+  position: relative;
+  z-index: 1;
+}
+
+/* Supprimer tous les focus par défaut */
+.editor-toolbar-new *:focus {
+  outline: none !important;
+}
+
+.editor-toolbar-new button:focus {
+  outline: none !important;
+}
+
+/* =============================================================================
+   BOUTONS
+   ========================================================================== */
+
+.tb-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #9ca3af; /* Gris neutre */
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.tb-btn:hover {
+  background: var(--surface-2);
+  color: #d1d5db; /* Gris clair au hover */
+}
+
+.tb-btn.active {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.tb-btn:active {
+  transform: scale(0.95);
+}
+
+.tb-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Bouton AI - couleur orange */
+.tb-btn-ai {
+  color: #ff6b35;
+}
+
+.tb-btn-ai:hover {
+  background: rgba(255, 107, 53, 0.1);
+  color: #ff6b35;
+}
+
+/* Heading button spécial */
+.tb-btn-heading {
+  min-width: 48px;
+  padding: 0 6px;
+  color: #9ca3af; /* Gris neutre */
+}
+
+.tb-heading-label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-right: 2px;
+  color: #9ca3af; /* Gris neutre */
+}
+
+.tb-btn-heading:hover .tb-heading-label {
+  color: #d1d5db; /* Gris clair au hover */
+}
+
+/* =============================================================================
+   DIVIDER
+   ========================================================================== */
+
+.tb-divider {
+  width: 1px;
+  height: 20px;
+  background: #4b5563; /* Gris neutre pour divider */
+  opacity: 0.5;
+  flex-shrink: 0;
+  margin: 0 4px;
+}
+
+/* =============================================================================
+   FONT SELECTOR - Style blanc gris + override pour nouveau header
+   ========================================================================== */
+
+.editor-toolbar-new .font-selector {
+  position: relative;
+  z-index: 10;
+}
+
+.editor-toolbar-new .font-selector__trigger {
+  color: #9ca3af !important; /* Gris neutre */
+  background: rgba(255, 255, 255, 0.05) !important; /* Background léger */
+  border: 1px solid rgba(255, 255, 255, 0.08) !important; /* Bordure subtile */
+  border-radius: 6px !important;
+  padding: 0 10px !important;
+  height: 32px !important;
+  min-width: 90px !important;
+}
+
+.editor-toolbar-new .font-selector__trigger:hover:not(:disabled) {
+  color: #d1d5db !important; /* Gris clair au hover */
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.editor-toolbar-new .font-selector__label {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: inherit !important;
+}
+
+.editor-toolbar-new .font-selector__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 9999 !important; /* Très élevé */
+  background: rgba(23, 23, 23, 0.98) !important; /* Background sombre opaque */
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important; /* Ombre plus marquée */
+}
+
+/* Style des éléments internes du dropdown */
+.editor-toolbar-new .font-selector__search {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.editor-toolbar-new .font-selector__search svg {
+  color: #6b7280 !important;
+  flex-shrink: 0 !important;
+}
+
+.editor-toolbar-new .font-selector__search-input {
+  color: #d1d5db !important;
+  font-size: 14px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  flex: 1 !important;
+}
+
+.editor-toolbar-new .font-selector__search-input::placeholder {
+  color: #6b7280 !important;
+}
+
+.editor-toolbar-new .font-selector__scope {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 8px 12px !important;
+  display: flex !important;
+  gap: 4px !important;
+}
+
+.editor-toolbar-new .font-selector__scope-btn {
+  color: #9ca3af !important;
+  padding: 6px 12px !important;
+  font-size: 13px !important;
+  flex: 1 !important;
+  text-align: center !important;
+}
+
+.editor-toolbar-new .font-selector__scope-btn:hover {
+  color: #d1d5db !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.editor-toolbar-new .font-selector__scope-btn.active {
+  background: var(--accent-primary) !important;
+  color: white !important;
+}
+
+.editor-toolbar-new .font-selector__list {
+  padding: 4px !important;
+}
+
+.editor-toolbar-new .font-selector__item {
+  color: #9ca3af !important;
+  padding: 10px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border-radius: 6px !important;
+}
+
+.editor-toolbar-new .font-selector__item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #d1d5db !important;
+}
+
+.editor-toolbar-new .font-selector__item.selected {
+  background: var(--accent-primary) !important;
+  color: white !important;
+}
+
+.editor-toolbar-new .font-selector__item-name {
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
+
+.editor-toolbar-new .font-selector__item-category {
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  opacity: 0.6 !important;
+}
+
+/* =============================================================================
+   DROPDOWN
+   ========================================================================== */
+
+.tb-dropdown {
+  position: relative;
+}
+
+.tb-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 9999;
+  min-width: 140px;
+  background: rgba(23, 23, 23, 0.98); /* Background sombre opaque */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); /* Ombre plus marquée */
+  padding: 4px;
+  overflow: hidden;
+}
+
+.tb-dropdown-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #9ca3af; /* Gris neutre */
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.tb-dropdown-item:hover {
+  background: var(--surface-2);
+  color: #d1d5db; /* Gris clair au hover */
+}
+
+/* =============================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+/* Desktop only */
+.desktop-only {
+  display: flex;
+}
+
+.mobile-only {
+  display: none;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .editor-toolbar-new {
+    gap: 2px;
+  }
+  
+  .tb-btn {
+    height: 28px;
+    min-width: 28px;
+    padding: 0 6px;
+  }
+  
+  .tb-divider {
+    margin: 0 2px;
+  }
+  
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-only {
+    display: flex !important;
+  }
+}
+
+/* Mobile small */
+@media (max-width: 480px) {
+  .tb-btn {
+    height: 24px;
+    min-width: 24px;
+    padding: 0 4px;
+  }
+  
+  .tb-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .tb-heading-label {
+    font-size: 12px;
+  }
+}
+

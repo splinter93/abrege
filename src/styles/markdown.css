@@ -854,13 +854,13 @@ a {
    ========================================================================== */
 
 .markdown-body ::selection {
-  background: var(--color-accent);
-  color: white;
+  background: rgba(255, 255, 255, 0.08); /* Gris transparent comme le chat */
+  color: #ffffff;
   text-shadow: none;
 }
 .markdown-body ::-moz-selection {
-  background: var(--color-accent);
-  color: white;
+  background: rgba(255, 255, 255, 0.08); /* Gris transparent comme le chat */
+  color: #ffffff;
   text-shadow: none;
 }
 

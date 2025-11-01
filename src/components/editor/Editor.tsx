@@ -3,10 +3,10 @@ import React from 'react';
 // Ordre critique conservé dans editor-bundle.css
 import '@/styles/editor-bundle.css';
 import EditorLayout from './EditorLayout';
-import EditorHeader from './EditorHeader';
+import EditorHeaderNew from './EditorHeaderNew';
 import EditorContent from './EditorContent';
-import ModernToolbar from './ModernToolbar';
 import EditorHeaderImage from '@/components/EditorHeaderImage';
+import CraftedButton from '@/components/CraftedButton';
 import EditorKebabMenu from '@/components/EditorKebabMenu';
 import EditorTitle from './EditorTitle';
 import PublicTableOfContents from '@/components/TableOfContents';
@@ -637,53 +637,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     return [];
   }, [editor, contentHash]); // ✅ OPTIMISÉ: Utilise contentHash au lieu de editor.state.doc
 
-  const handlePreviewClick = React.useCallback(async () => {
-    try {
-      // Prendre le slug depuis le store local
-      const noteData = useFileSystemStore.getState().notes[noteId];
-      
-      // Vérifier si l'utilisateur est connecté et s'il est le créateur de la note
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Vous devez être connecté.');
-        return;
-      }
-
-      // Si la note est privée, vérifier que l'utilisateur est le créateur
-      if (noteData?.share_settings?.visibility === 'private') {
-        // Pour les notes privées, on permet toujours la prévisualisation au créateur
-        // La vérification se fait côté serveur
-      }
-      
-      if (!noteData?.slug) {
-        toast.error('Cette note n\'a pas de slug. Publiez-la d\'abord.');
-        return;
-      }
-
-      // Récupérer le username
-      const { data: userData } = await supabase
-        .from('users')
-        .select('username')
-        .eq('id', user.id)
-        .single();
-
-      if (!userData?.username) {
-        toast.error('Username non trouvé.');
-        return;
-      }
-
-      // Construire et ouvrir l'URL
-      const url = `${window.location.origin}/${userData.username}/${noteData.slug}`;
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, 'Ouverture de l\'URL publique:', url);
-      }
-      window.open(url, '_blank', 'noopener,noreferrer');
-      
-    } catch (error) {
-      logger.error(LogCategory.EDITOR, 'Erreur bouton œil:', error);
-      toast.error('Erreur lors de l\'ouverture de la prévisualisation');
-    }
-  }, [noteId]);
+  const handlePreviewClick = React.useCallback(() => {
+    // Toggle le mode preview (lecture seule)
+    editorState.togglePreviewMode();
+  }, [editorState]);
 
   React.useEffect(() => {
     if (!editor || isReadonly) return;
@@ -756,46 +713,20 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
         layoutClassName={editorState.headerImage.url ? (editorState.headerImage.titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout noImage'}
         header={(
           <>
-            <EditorHeader
-              headerImageUrl={null}
-              rightSlot={(
-                <>
-                  <button
-                    className={`editor-header-preview${editorState.ui.previewMode ? ' active' : ''}`}
-                    aria-label="Aperçu"
-                    title="Aperçu"
-                    onClick={handlePreviewClick}
-                  >
-                    <FiEye size={16} />
-                  </button>
-                  <button ref={kebabBtnRef} className="editor-header-kebab" aria-label="Options" title="Options" onClick={editorState.toggleKebabMenu}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="5" cy="12" r="2" fill="currentColor" />
-                      <circle cx="12" cy="12" r="2" fill="currentColor" />
-                      <circle cx="19" cy="12" r="2" fill="currentColor" />
-                    </svg>
-                  </button>
-                  <button
-                    className="editor-header-close"
-                    aria-label="Fermer"
-                    title="Fermer"
-                    onClick={() => router.back()}
-                  >
-                    <FiX size={16} />
-                  </button>
-                </>
-              )}
-            >
-              <ModernToolbar 
-                editor={isReadonly ? null : editor} 
-                setImageMenuOpen={editorState.setImageMenuOpen} 
-                onFontChange={handleFontChange}
-                currentFont={note?.font_family || 'Noto Sans'}
-                onTranscriptionComplete={handleTranscriptionComplete}
-              />
-            </EditorHeader>
-            {/* Add header image CTA when no image is set */}
-            {!editorState.headerImage.url && (
+            <EditorHeaderNew
+              editor={isReadonly ? null : editor}
+              onClose={() => router.back()}
+              onPreview={handlePreviewClick}
+              onMenuOpen={editorState.toggleKebabMenu}
+              onImageClick={() => editorState.setImageMenuOpen(true)}
+              onFontChange={handleFontChange}
+              currentFont={note?.font_family || 'Noto Sans'}
+              kebabBtnRef={kebabBtnRef}
+              readonly={isReadonly}
+              previewMode={editorState.ui.previewMode}
+            />
+            {/* Add header image CTA when no image is set - Masqué en preview */}
+            {!editorState.headerImage.url && !editorState.ui.previewMode && (
               <>
                 <div className="editor-add-header-image-row editor-full-width editor-add-image-center">
                   <div className="editor-container-width editor-image-container-width">
@@ -851,6 +782,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onImageMenuClose={() => editorState.setImageMenuOpen(false)}
               noteId={note.id}
               userId={userId}
+              titleElement={<EditorTitle value={editorState.document.title} onChange={editorState.setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." wideMode={editorState.ui.fullWidth} />}
+              previewMode={editorState.ui.previewMode}
             />
             <EditorKebabMenu
               open={editorState.menus.kebabOpen}
@@ -869,7 +802,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             />
           </>
         )}
-        title={<EditorTitle value={editorState.document.title} onChange={editorState.setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." wideMode={editorState.ui.fullWidth} />}
+        title={editorState.headerImage.titleInImage ? undefined : <EditorTitle value={editorState.document.title} onChange={editorState.setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." wideMode={editorState.ui.fullWidth} />}
         content={(
           <>
             {/* Floating menu Notion-like - rendu en dehors du conteneur */}
@@ -1057,6 +990,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
           <div>Note: {uiContext.activeNote?.name || 'N/A'}</div>
         </div>
       )}
+      
+      {/* Bouton "Crafted with Scrivia" - visible en mode preview */}
+      {editorState.ui.previewMode && <CraftedButton />}
       
     </>
   );

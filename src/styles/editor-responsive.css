@@ -1,0 +1,77 @@
+/**
+ * EDITOR RESPONSIVE - Paddings uniformes alignés avec chat
+ * ========================================================
+ * Container principal de l'éditeur avec padding responsive
+ * Desktop: 24px | Tablet: 16px | Mobile: 12px | Mobile-sm: 8px
+ */
+
+/* ==========================================================================
+   SÉLECTION DE TEXTE - Style unifié avec le chat
+   ========================================================================== */
+
+.ProseMirror ::selection,
+.editor-content ::selection,
+.editor-title-field::selection {
+  background: rgba(255, 255, 255, 0.08); /* Gris transparent comme le chat */
+  color: #ffffff;
+  text-shadow: none;
+}
+
+.ProseMirror ::-moz-selection,
+.editor-content ::-moz-selection,
+.editor-title-field::-moz-selection {
+  background: rgba(255, 255, 255, 0.08); /* Gris transparent comme le chat */
+  color: #ffffff;
+  text-shadow: none;
+}
+
+/* ==========================================================================
+   CONTAINER PRINCIPAL - Padding uniforme (wrapper extérieur)
+   ========================================================================== */
+
+.editor-content-wrapper {
+  width: 100%;
+  padding: 0 var(--editor-padding-horizontal-desktop);
+  box-sizing: border-box;
+}
+
+/* Container intérieur - 800px (ou 1000px en wide mode) centré */
+.editor-content-inner {
+  width: 100%;
+  max-width: var(--editor-content-width); /* 800px par défaut, 1000px en wide mode */
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+/* En dessous de 1100px - Container intérieur devient fluide (évite coupure en wide mode) */
+@media (max-width: 1100px) {
+  .editor-content-inner {
+    max-width: 100%;
+  }
+}
+
+/* Tablette (≤ 1024px) */
+@media (max-width: 1024px) {
+  .editor-content-wrapper {
+    padding: 0 var(--editor-padding-horizontal-tablet);
+  }
+}
+
+/* Mobile (≤ 768px) */
+@media (max-width: 768px) {
+  .editor-content-wrapper {
+    padding: 0 var(--editor-padding-horizontal-mobile);
+  }
+}
+
+/* Mobile small (≤ 480px) */
+@media (max-width: 480px) {
+  .editor-content-wrapper {
+    padding: 0 var(--editor-padding-horizontal-mobile-sm);
+  }
+}
+

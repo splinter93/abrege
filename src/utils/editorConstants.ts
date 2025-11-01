@@ -53,10 +53,10 @@ export const DEFAULT_HEADER_IMAGE_CONFIG = {
  */
 export const CONTEXT_MENU_CONFIG = {
   /** Décalage horizontal du menu kebab (en px) */
-  kebabMenuOffsetLeft: 150,
+  kebabMenuOffsetLeft: 143,
   
   /** Décalage vertical du menu kebab (en px) */
-  kebabMenuOffsetTop: 3,
+  kebabMenuOffsetTop: 4,
 } as const;
 
 /**

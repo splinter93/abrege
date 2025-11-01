@@ -14,6 +14,7 @@
 
 /* === UTILITAIRES ÉDITEUR === */
 @import './editor-utilities.css';
+@import './editor-responsive.css';
 
 /* === STYLES MARKDOWN === */
 @import './markdown.css';

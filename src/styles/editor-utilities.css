@@ -99,6 +99,8 @@
    RESPONSIVE UTILITIES
    ========================================================================== */
 
+/* Padding géré par editor-content-wrapper maintenant */
+/* Désactivé pour éviter double padding
 @media (max-width: 768px) {
   .editor-container-width,
   .editor-content-width {
@@ -114,4 +116,5 @@
     padding-right: var(--spacing-sm);
   }
 }
+*/
 

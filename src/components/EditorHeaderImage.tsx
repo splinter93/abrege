@@ -22,6 +22,8 @@ interface EditorHeaderImageProps {
   onImageMenuClose: () => void;
   noteId: string;
   userId: string;
+  titleElement?: React.ReactNode;
+  previewMode?: boolean;
 }
 
 const HEADER_IMAGES = [
@@ -58,6 +60,8 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   onImageMenuClose,
   noteId,
   userId,
+  titleElement,
+  previewMode = false,
 }) => {
   const [imageOffsetY, setImageOffsetY] = useState(headerImageOffset);
   const dragging = useRef(false);
@@ -186,13 +190,31 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
       <img
         src={headerImageUrl}
         alt="Header"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', filter: `blur(${headerImageBlur}px)`, transition: 'filter 0.2s', objectPosition: `center ${imageOffsetY}%`, cursor: dragging.current ? 'grabbing' : 'grab' }}
-        onMouseDown={handleMouseDown}
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          objectFit: 'cover', 
+          filter: `blur(${headerImageBlur}px)`, 
+          transition: 'filter 0.2s', 
+          objectPosition: `center ${imageOffsetY}%`, 
+          cursor: previewMode ? 'default' : (dragging.current ? 'grabbing' : 'grab')
+        }}
+        onMouseDown={previewMode ? undefined : handleMouseDown}
         draggable={false}
       />
       {/* Overlay visuel appliqué sur l'image */}
       <div style={{ position: 'absolute', inset: 0, background: `rgba(24,24,24,${0.08 + 0.14 * headerImageOverlay})`, pointerEvents: 'none', transition: 'background 0.2s' }} />
-      <div className="editor-header-image-btns" style={{
+      
+      {/* Titre dans l'image si headerTitleInImage est true */}
+      {headerTitleInImage && titleElement && (
+        <div className="header-image-title-container">
+          {titleElement}
+        </div>
+      )}
+      
+      {/* Boutons de contrôle - masqués en mode preview */}
+      {!previewMode && (
+        <div className="editor-header-image-btns" style={{
         position: 'absolute',
         top: '50%',
         right: 14,
@@ -276,8 +298,12 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
           </button>
         </Tooltip>
       </div>
-      {/* Menu contextuel pour l'image */}
-      <ImageMenu open={imageMenuOpen} onClose={onImageMenuClose} onInsertImage={onHeaderChange} noteId={noteId} userId={userId} />
+      )}
+      
+      {/* Menu contextuel pour l'image - masqué en preview */}
+      {!previewMode && (
+        <ImageMenu open={imageMenuOpen} onClose={onImageMenuClose} onInsertImage={onHeaderChange} noteId={noteId} userId={userId} />
+      )}
       {/* Modal ou menu pour les réglages */}
       {/* {imageSettingsOpen && (
         <div className="image-settings-modal">Réglages à implémenter…</div>

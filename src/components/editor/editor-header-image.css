@@ -6,12 +6,51 @@
   height: var(--editor-header-image-height); /* 280px - cohérent avec la page publique */
   background: var(--surface-2);
   border-radius: 0;
-  overflow: hidden;
+  overflow: hidden; /* Garder hidden pour l'image */
   margin-bottom: 2rem;
   box-shadow: 0 2px 24px rgba(0,0,0,0.08);
   display: flex;
   align-items: stretch;
   justify-content: center;
+}
+
+/* Container pour le titre dans l'image */
+.header-image-title-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
+  max-width: 800px;
+  z-index: 10;
+  text-align: center;
+  pointer-events: auto;
+}
+
+/* Wide mode - titre plus large */
+.noteLayout.imageWithTitle.wide-mode .header-image-title-container {
+  width: 1000px;
+  max-width: 1000px;
+}
+
+/* Style du titre dans l'image - texte blanc avec ombre */
+.header-image-title-container textarea,
+.header-image-title-container .editor-title-field {
+  color: white !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  text-align: center !important;
+  background: transparent !important;
+  font-size: var(--editor-title-size) !important;
+  font-weight: 800 !important;
+  font-family: var(--editor-font-family-headings) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.header-image-title-container .editor-title-wrapper {
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
 }
 
 .editor-header-image-img {
@@ -253,5 +292,20 @@
   .editor-header-image,
   .header-image {
     height: 120px !important;
+  }
+}
+
+/* Responsive - Titre dans l'image */
+@media (max-width: 768px) {
+  .header-image-title-container {
+    width: calc(100% - 24px);
+    max-width: calc(100% - 24px);
+  }
+}
+
+@media (max-width: 480px) {
+  .header-image-title-container {
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
   }
 } 
