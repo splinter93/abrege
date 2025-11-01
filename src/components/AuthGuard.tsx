@@ -36,20 +36,13 @@ export default function AuthGuard({
     }
   }, [user, loading, router, redirectTo]);
 
-  // Afficher le fallback pendant le chargement ou la redirection
+  // Pas de loader ici, laissé à la page
   if (loading || isRedirecting) {
     if (fallback) {
       return <>{fallback}</>;
     }
     
-    return (
-      <div className="page-loading">
-        <div className="page-loading-content">
-          <div className="page-loading-spinner"></div>
-          <p className="page-loading-message">Vérification de l'authentification...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Si l'utilisateur n'est pas authentifié, ne rien afficher (redirection en cours)

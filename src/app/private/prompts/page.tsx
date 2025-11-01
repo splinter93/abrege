@@ -98,9 +98,7 @@ function PromptsPageContent() {
           <UnifiedSidebar />
         </aside>
         <main className="page-content-area">
-          <div className="loading-state">
-            <p>Chargement...</p>
-          </div>
+          <SimpleLoadingState message="Chargement" />
         </main>
       </div>
     );

@@ -50,7 +50,7 @@ export const DossierLoadingState: React.FC<LoadingStateProps> = ({
         };
       default:
         return {
-          title: 'Chargement...'
+          title: 'Chargement'
         };
     }
   };
@@ -75,7 +75,7 @@ export const SimpleLoadingState: React.FC<{
   message?: string;
   className?: string;
 }> = ({ 
-  message = 'Chargement...',
+  message = 'Chargement',
   className = ''
 }) => {
   return (

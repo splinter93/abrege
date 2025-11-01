@@ -41,9 +41,7 @@ function FilesPageContent() {
           <UnifiedSidebar />
         </aside>
         <main className="page-content-area">
-          <div className="loading-state">
-            <p>Chargement...</p>
-          </div>
+          <SimpleLoadingState message="Chargement" />
         </main>
       </div>
     );
@@ -696,10 +694,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
           {/* Contenu des fichiers */}
           <div className="files-glass-content">
               {loading ? (
-              <div className="files-loading-state">
-                <div className="files-loading-spinner">⏳</div>
-                  <p>Chargement des fichiers...</p>
-                </div>
+                <SimpleLoadingState message="Chargement" />
               ) : error ? (
               <div className="files-error-state">
                 <div className="files-error-icon">⚠️</div>

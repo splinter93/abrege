@@ -9,6 +9,7 @@ import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import { Share2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import "@/styles/account.css";
+import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 
 interface SharedNote {
   id: string;
@@ -125,10 +126,7 @@ function SharedNotesContent() {
           </div>
           <div className="account-block-content">
             {loading ? (
-              <div className="account-loading-state">
-                <div className="account-loading-spinner"></div>
-                <p>Chargement des notes partagées...</p>
-              </div>
+              <SimpleLoadingState message="Chargement" />
             ) : receivedNotes.length === 0 ? (
               <div className="account-empty-state">
                 <span className="account-empty-icon">📥</span>
@@ -203,10 +201,7 @@ function SharedNotesContent() {
           </div>
           <div className="account-block-content">
             {loading ? (
-              <div className="account-loading-state">
-                <div className="account-loading-spinner"></div>
-                <p>Chargement de vos notes partagées...</p>
-              </div>
+              <SimpleLoadingState message="Chargement" />
             ) : sharedNotes.length === 0 ? (
               <div className="account-empty-state">
                 <span className="account-empty-icon">📤</span>

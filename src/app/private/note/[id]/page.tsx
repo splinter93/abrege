@@ -32,15 +32,15 @@ export default function NotePage() {
 
 
   if (!noteId) {
-    return <SimpleLoadingState message="ID de note non valide" />;
+    return <SimpleLoadingState message="Chargement" />;
   }
 
   if (loading && !note) {
-    return <SimpleLoadingState message="Chargement de la note…" />;
+    return <SimpleLoadingState message="Chargement" />;
   }
   
   if (error && !note) {
-    return <SimpleLoadingState message="Impossible d'ouvrir la note" />;
+    return <SimpleLoadingState message="Erreur" />;
   }
 
   // Render only the real Editor (which includes its own header/toolbar/kebab/TOC)

@@ -9,6 +9,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
+import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import { MessageSquare, Plus, Upload, Sparkles, Zap, Eye, Youtube, FileText, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
 import NotesCarouselNotion from '@/components/NotesCarouselNotion';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
@@ -35,13 +36,7 @@ function HomePageContent() {
   const { user, loading: authLoading } = useAuth();
   
   if (authLoading || !user?.id) {
-    return (
-      <div className="home-page-wrapper">
-        <div className="loading-state">
-          <p>Chargement...</p>
-        </div>
-      </div>
-    );
+    return <SimpleLoadingState message="Chargement" />;
   }
   
   return <AuthenticatedHomeContent user={user} />;

@@ -218,7 +218,7 @@ const Editor: React.FC<{
   });
 
   if (!note) {
-    return <div className="editor-flex-center editor-padding-standard">Chargement…</div>;
+    return null;
   }
 
   return (

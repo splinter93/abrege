@@ -145,7 +145,7 @@ export default function RecentActivityCard({
   };
 
   if (loading) {
-    return <SimpleLoadingState message="Chargement..." className="activity-loading-simple" />;
+    return <SimpleLoadingState message="Chargement" className="activity-loading-simple" />;
   }
 
   if (error) {

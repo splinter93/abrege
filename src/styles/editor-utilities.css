@@ -6,6 +6,35 @@
 */
 
 /* ==========================================================================
+   ANIMATIONS D'APPARITION
+   ========================================================================== */
+
+@keyframes editorSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Effet d'apparition slide-up subtil sur tout l'éditeur */
+/* Desktop : apparition rapide (100ms) - pas de splash */
+.editor-layout {
+  animation: editorSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+  opacity: 0;
+}
+
+/* Mobile : synchronisé avec le splash PWA (800ms) */
+@media (max-width: 768px) {
+  .editor-layout {
+    animation: editorSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
+  }
+}
+
+/* ==========================================================================
    SCROLLBAR PRINCIPALE - STYLE TRANSPARENT COMME LE CHAT
    ========================================================================== */
 

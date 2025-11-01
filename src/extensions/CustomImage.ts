@@ -1,5 +1,6 @@
 import Image from '@tiptap/extension-image';
 import type { NodeViewRendererProps } from '@tiptap/core';
+import { openImageModal } from '@/components/chat/ImageModal';
 
 const CustomImage = Image.extend({
   addNodeView() {
@@ -30,6 +31,20 @@ const CustomImage = Image.extend({
         img.src = src;
         img.className = 'editor-image';
         img.loading = 'lazy'; // Optimisation : lazy loading
+        img.style.cursor = 'pointer'; // ✅ Indiquer que l'image est cliquable
+        img.title = 'Double-cliquer pour agrandir';
+        
+        // ✅ Double-clic sur l'image pour ouvrir la modale
+        const handleDoubleClick = (e: Event) => {
+          e.stopPropagation();
+          e.preventDefault();
+          openImageModal({
+            src,
+            alt: node?.attrs?.alt
+          });
+        };
+        img.addEventListener('dblclick', handleDoubleClick);
+        
         dom.appendChild(img);
       }
 

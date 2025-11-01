@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { simpleLogger as logger } from "@/utils/logger";
 import "@/styles/main.css";
 import "./agents.css";
+import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 
 /**
  * Page de gestion des agents spécialisés
@@ -249,10 +250,7 @@ function AgentsPageContent() {
           <UnifiedSidebar />
         </aside>
         <main className="page-content-area">
-          <div className="loading-state">
-            <div className="loading-spinner" />
-            <p>Chargement des agents...</p>
-          </div>
+          <SimpleLoadingState message="Chargement" />
         </main>
       </div>
     );
@@ -358,10 +356,7 @@ function AgentsPageContent() {
           >
             {selectedAgent ? (
               loadingDetails ? (
-                <div className="loading-state">
-                  <div className="loading-spinner" />
-                  <p style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Chargement des détails...</p>
-                </div>
+                <SimpleLoadingState message="Chargement" />
               ) : (
               <div className="agent-details">
                 <div className="details-header">
@@ -542,9 +537,7 @@ function AgentsPageContent() {
           >
             {selectedAgent ? (
               loadingDetails ? (
-                <div className="loading-state">
-                  <div className="loading-spinner" />
-                </div>
+                <SimpleLoadingState message="Chargement" />
               ) : (
               <div className="agent-settings">
                 <div className="panel-header">

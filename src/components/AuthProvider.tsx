@@ -4,7 +4,7 @@ import { supabase } from "../supabaseClient";
 
 import type { Session } from "@supabase/supabase-js";
 import { useLanguageContext } from "../contexts/LanguageContext";
-import './PageLoading.css';
+import { SimpleLoadingState } from './DossierLoadingStates';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -38,16 +38,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ✅ CORRECTION : Afficher un loader pendant le chargement initial
+  // ✅ Pas de loader ici, le loader est géré par chaque page
   if (loading) {
-    return (
-      <div className="page-loading">
-        <div className="page-loading-content">
-          <div className="page-loading-spinner"></div>
-          <p className="page-loading-message">Chargement...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // ✅ CORRECTION : Si pas de session après chargement, rediriger

@@ -56,9 +56,7 @@ function SettingsPageContent() {
           <UnifiedSidebar />
         </aside>
         <main className="page-content-area">
-          <div className="loading-state">
-            <p>Chargement...</p>
-          </div>
+          <SimpleLoadingState message="Chargement" />
         </main>
       </div>
     );
@@ -292,10 +290,7 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
 
             {/* Liste des clés API */}
                 {loading ? (
-                  <div className="account-loading-state">
-                    <div className="account-loading-spinner"></div>
-                    <p>Chargement des clés API...</p>
-                  </div>
+                  <SimpleLoadingState message="Chargement" />
                 ) : apiKeys.length === 0 ? (
                   <div className="account-empty-state">
                     <span className="account-empty-icon">🔑</span>
