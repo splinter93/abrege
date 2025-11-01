@@ -26,13 +26,14 @@
   background: linear-gradient(135deg, #1a1d21 0%, #1c1f24 50%, #1a1d21 100%); /* Dégradé plus subtil au hover */
 }
 
-/* Supprimer tous les focus par défaut */
+/* Focus gris subtil au lieu de bleu */
 .editor-toolbar *:focus {
   outline: none !important;
 }
 
 .editor-toolbar button:focus {
   outline: none !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08); /* Gris transparent */
 }
 
 /* =============================================================================
@@ -60,12 +61,12 @@
 }
 
 .tb-btn:hover {
-  background: var(--surface-2);
-  color: #d1d5db; /* Gris clair au hover */
+  background: rgba(255, 255, 255, 0.1); /* Même hover que header buttons */
+  color: #ffffff; /* Blanc pur au hover */
 }
 
 .tb-btn.active {
-  background: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.12); /* Gris un peu plus marqué pour l'état actif */
   color: white;
 }
 
@@ -104,7 +105,7 @@
 }
 
 .tb-btn-heading:hover .tb-heading-label {
-  color: #d1d5db; /* Gris clair au hover */
+  color: #ffffff; /* Blanc pur au hover */
 }
 
 /* =============================================================================
@@ -144,8 +145,8 @@
 }
 
 .editor-toolbar .font-selector__trigger:hover:not(:disabled) {
-  color: #d1d5db !important; /* Gris clair au hover */
-  background: transparent !important; /* Pas de fond au hover */
+  color: #ffffff !important; /* Blanc pur au hover */
+  background: rgba(255, 255, 255, 0.1) !important; /* Même hover que header buttons */
 }
 
 .editor-toolbar .font-selector__label {

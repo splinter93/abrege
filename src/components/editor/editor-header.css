@@ -15,9 +15,9 @@
   width: 100%;
   height: 50px; /* Réduit pour header plus compact */
   display: flex;
-  align-items: flex-end; /* Alignement en bas du header */
+  align-items: center; /* Centré verticalement */
   justify-content: center;
-  padding: 0 var(--editor-padding-horizontal-desktop) 1px; /* Toolbar posée presque au bord du header */
+  padding: 0 var(--editor-padding-horizontal-desktop);
   background: transparent !important; /* Header transparent - toolbar flotte sur le contenu */
   border-bottom: none !important; /* Pas de bordure */
   z-index: 100;
@@ -55,7 +55,7 @@
 
 .editor-header__center {
   display: flex;
-  align-items: flex-end; /* Aligné en bas avec le parent */
+  align-items: center; /* Centré verticalement */
   justify-content: center;
   flex: 1;
   max-width: 100%;
