@@ -412,9 +412,9 @@
    PADDINGS SPÉCIFIQUES PAR MODE - OPTIMISÉS
    ========================================================================== */
 
-/* 1. Layout sans image - IDENTIQUE À imageOnly (le bouton image crée déjà l'espacement) */
+/* 1. Layout sans image - IDENTIQUE À imageOnly + padding top */
 .noteLayout.imageOnly.noImage .noteLayout-title {
-  padding-top: 0; /* Pas de padding, le bouton image + margin-bottom crée l'espace */
+  padding-top: 60px; /* Padding uniforme (le bouton image ne prend pas d'espace) */
 }
 
 /* 2. Layout avec titre dans l'image - PADDING MINIMAL */

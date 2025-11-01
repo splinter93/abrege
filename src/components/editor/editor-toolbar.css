@@ -12,10 +12,22 @@
   align-items: center;
   gap: 4px;
   height: 100%;
-  padding: 0;
+  padding: 4px 10px;
+  background: #1a1a1a; /* Background glass comme ImageMenu */
+  border: 1px solid rgba(255, 255, 255, 0.09); /* Bordure subtile */
+  border-radius: 20px; /* Très arrondi, presque pill */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2); /* Shadow glass */
+  backdrop-filter: blur(20px); /* Blur augmenté pour effet verre poli */
+  -webkit-backdrop-filter: blur(20px);
   overflow: visible; /* Important pour dropdowns */
   position: relative;
   z-index: 1;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.editor-toolbar:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3); /* Shadow plus forte */
+  border-color: rgba(107, 114, 128, 0.12); /* Bordure légèrement plus visible */
 }
 
 /* Supprimer tous les focus par défaut */

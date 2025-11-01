@@ -41,7 +41,7 @@
   text-align: center !important;
   background: transparent !important;
   font-size: var(--editor-title-size) !important;
-  font-weight: 800 !important;
+  font-weight: var(--editor-title-weight) !important; /* Cohérent avec mode normal (700) */
   font-family: var(--editor-font-family-headings) !important;
   line-height: 1.1 !important;
   letter-spacing: -0.02em !important;

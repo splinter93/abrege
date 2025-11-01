@@ -3,7 +3,7 @@
 .editor-toc,
 .editor-toc-uncollapsed {
   width: 220px;
-  background: #1a1a1a;
+  background: var(--surface-1); /* Variable au lieu de #1a1a1a */
   border-radius: 16px;
   color: #ededed;
   overflow-y: auto;
@@ -30,14 +30,14 @@
 }
 .editor-toc::-webkit-scrollbar-track,
 .editor-toc-uncollapsed::-webkit-scrollbar-track {
-  background: #1a1a1a;
+  background: var(--surface-1); /* Variable au lieu de #1a1a1a */
   border-radius: 8px;
 }
 
 .editor-toc-collapsed {
   width: 48px;
   min-width: 48px;
-  background: #1a1a1a;
+  background: var(--surface-1); /* Variable au lieu de #1a1a1a */
   border-radius: 16px;
   display: flex;
   flex-direction: column;
