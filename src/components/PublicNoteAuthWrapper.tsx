@@ -3,10 +3,11 @@
 import React from 'react';
 import { supabase } from '@/supabaseClient';
 import Editor from '@/components/editor/Editor';
-import ErrorPageActions from '@/components/ErrorPageActions';
-import LogoHeader from '@/components/LogoHeader';
+import ErrorPage from '@/components/ErrorPage';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
+import { useSecurityValidation } from '@/hooks/useSecurityValidation';
+import { logger, LogCategory } from '@/utils/logger';
 
 interface PublicNoteAuthWrapperProps {
   note: {
@@ -71,15 +72,19 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
         
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-        // Logger structuré au lieu de console.error
-        if (typeof window !== 'undefined') {
-          console.error('[PublicNoteAuthWrapper] Erreur chargement note publique:', {
-            error: errorMessage,
+        // Logger structuré avec contexte complet
+        logger.error(LogCategory.EDITOR, '[PublicNoteAuthWrapper] Erreur chargement note publique', {
+          error: {
+            message: errorMessage,
+            stack: err instanceof Error ? err.stack : undefined
+          },
+          context: {
             noteId: note.id,
             slug,
-            username
-          });
-        }
+            username,
+            timestamp: Date.now()
+          }
+        });
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -95,51 +100,49 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
   }
   
   if (error && !storeNote) {
-    return <SimpleLoadingState message="Impossible de charger la note" />;
+    // Déterminer le message selon le type d'erreur
+    const errorMessage = error.includes('non trouvée') 
+      ? 'Note non trouvée'
+      : error.includes('réseau') || error.includes('fetch')
+      ? 'Erreur de connexion'
+      : 'Impossible de charger la note';
+    
+    const errorDetails = error.includes('non trouvée')
+      ? 'La note demandée n\'existe pas ou a été supprimée.'
+      : error.includes('réseau') || error.includes('fetch')
+      ? 'Vérifiez votre connexion internet et réessayez.'
+      : 'Une erreur inattendue s\'est produite.';
+    
+    return (
+      <ErrorPage
+        icon={error.includes('réseau') ? 'network' : 'warning'}
+        title={errorMessage}
+        description={errorDetails}
+        subtitle={`Détails techniques : ${error}`}
+        showActions={true}
+      />
+    );
   }
 
-  // Vérifier si l'utilisateur est le propriétaire
-  const isOwner = currentUser?.id === ownerId;
+  // ✅ SÉCURITÉ : Utiliser le hook centralisé pour la validation
+  const { isAccessAllowed, isOwner, accessLevel } = useSecurityValidation(
+    { 
+      share_settings: note.share_settings, 
+      user_id: note.user_id 
+    },
+    currentUser?.id
+  );
 
-  // Si la note est privée/link-private et que l'utilisateur n'est pas le propriétaire
-  if ((note.share_settings?.visibility === 'private' || note.share_settings?.visibility === 'link-private') && !isOwner) {
+  // Si l'accès n'est pas autorisé
+  if (!isAccessAllowed) {
     return (
-      <div className="not-found-container">
-        <div className="not-found-content">
-          <div className="not-found-logo">
-            <LogoHeader size="medium" position="center" />
-          </div>
-          
-          <div className="not-found-icon">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path 
-                d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1Z" 
-                stroke="currentColor" 
-                strokeWidth="1.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-              <path 
-                d="M9 12L11 14L15 10" 
-                stroke="currentColor" 
-                strokeWidth="1.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          
-          <h1 className="not-found-title">Note privée</h1>
-          <p className="not-found-description">
-            Cette note est privée et n'est pas accessible publiquement.
-          </p>
-          <p className="not-found-subtitle">
-            Seul l'auteur peut consulter cette note.
-          </p>
-          
-          <ErrorPageActions />
-        </div>
-      </div>
+      <ErrorPage
+        icon="lock"
+        title="Note privée"
+        description="Cette note est privée et n'est pas accessible publiquement."
+        subtitle="Seul l'auteur peut consulter cette note."
+        showActions={true}
+      />
     );
   }
 

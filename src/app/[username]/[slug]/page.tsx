@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import '@/styles/error-pages.css'; // Uniquement pour les pages d'erreur
-import LogoHeader from '@/components/LogoHeader';
-import ErrorPageActions from '@/components/ErrorPageActions';
+import ErrorPage from '@/components/ErrorPage';
 import PublicNoteAuthWrapper from '@/components/PublicNoteAuthWrapper';
 import type { Metadata } from 'next';
 
@@ -76,13 +75,13 @@ export default async function Page(props: { params: Promise<{ username: string; 
 
   if (userError || !owner) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <div style={{ marginLeft: '4px', display: 'inline-block' }}>
-          <LogoHeader size="medium" position="center" />
-        </div>
-        <h1>Utilisateur non trouvé</h1>
-        <p>Vérifiez l&apos;URL ou contactez l&apos;auteur.</p>
-      </div>
+      <ErrorPage
+        icon="warning"
+        title="Utilisateur non trouvé"
+        description="L'utilisateur demandé n'existe pas ou a été supprimé."
+        subtitle="Vérifiez l'URL ou contactez l'auteur de la note."
+        showActions={true}
+      />
     );
   }
 
@@ -98,83 +97,27 @@ export default async function Page(props: { params: Promise<{ username: string; 
     .maybeSingle();
 
   if (noteError || !noteBySlug) {
-    // Note non trouvée - afficher une erreur au lieu de rediriger
     return (
-      <div className="not-found-container">
-        <div className="not-found-content">
-          <div className="not-found-logo">
-            <LogoHeader size="medium" position="center" />
-          </div>
-          
-          <div className="not-found-icon">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path 
-                d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2Z" 
-                stroke="currentColor" 
-                strokeWidth="1.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-              <path 
-                d="M14 2V8H20" 
-                stroke="currentColor" 
-                strokeWidth="1.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-              <path 
-                d="M16 13H8" 
-                stroke="currentColor" 
-                strokeWidth="1.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-              <path 
-                d="M16 17H8" 
-                stroke="currentColor" 
-                strokeWidth="1.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-              <path 
-                d="M10 9H8" 
-                stroke="currentColor" 
-                strokeWidth="1.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          
-          <h1 className="not-found-title">Note non trouvée</h1>
-          <p className="not-found-description">
-            Cette note n'existe pas ou n'est pas accessible.
-          </p>
-          <p className="not-found-subtitle">
-            Vérifiez l'URL ou contactez l'auteur.
-          </p>
-          
-          <ErrorPageActions />
-        </div>
-      </div>
+      <ErrorPage
+        icon="document"
+        title="Note non trouvée"
+        description="Cette note n'existe pas, a été supprimée ou n'est pas accessible."
+        subtitle="Vérifiez l'URL ou contactez l'auteur de la note."
+        showActions={true}
+      />
     );
   }
 
   // ✅ SÉCURITÉ : Vérification supplémentaire du slug
   if (noteBySlug.slug !== slug) {
-    // Slug mismatch détecté - rediriger vers le bon slug
     return (
-      <div className="not-found-container">
-        <div className="not-found-content">
-          <div className="not-found-logo">
-            <LogoHeader size="medium" position="center" />
-          </div>
-          <h1 className="not-found-title">Note non trouvée</h1>
-          <p className="not-found-description">
-            Cette note n'existe pas ou n'est pas accessible.
-          </p>
-        </div>
-      </div>
+      <ErrorPage
+        icon="warning"
+        title="URL invalide"
+        description="Le lien que vous avez suivi ne correspond pas à la note demandée."
+        subtitle="Vérifiez l'URL ou contactez l'auteur."
+        showActions={true}
+      />
     );
   }
 

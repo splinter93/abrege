@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
+import { logger, LogCategory } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -59,7 +60,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
         }
       } catch (error) {
         // Ignorer les erreurs d'authentification, on continue sans être connecté
-        console.log('Erreur auth header:', error);
+        logger.warn(LogCategory.API, '[PublicNote] Erreur auth header (non bloquante)', {
+          username,
+          slug,
+          error: error instanceof Error ? error.message : String(error)
+        });
       }
     }
     
@@ -86,7 +91,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
         }
       } catch (error) {
         // Ignorer les erreurs d'authentification, on continue sans être connecté
-        console.log('Erreur auth cookie:', error);
+        logger.warn(LogCategory.API, '[PublicNote] Erreur auth cookie (non bloquante)', {
+          username,
+          slug,
+          error: error instanceof Error ? error.message : String(error)
+        });
       }
     }
 
