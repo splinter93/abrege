@@ -13,7 +13,8 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 50px; /* Réduit pour header plus compact */
+  height: 50px; /* Hauteur fixe - ne change JAMAIS même si toolbar cachée */
+  min-height: 50px; /* Force la hauteur minimale */
   display: flex;
   align-items: center; /* Centré verticalement */
   justify-content: center;
@@ -134,7 +135,8 @@
 /* Mobile */
 @media (max-width: 768px) {
   .editor-header {
-    height: 48px; /* Mobile : un peu plus fin */
+    height: 48px; /* Hauteur fixe mobile */
+    min-height: 48px; /* Force la hauteur minimale mobile */
     padding: 0 var(--editor-padding-horizontal-mobile);
   }
   

@@ -713,7 +713,7 @@ a {
   width: 100%;
   max-width: 100%;
   height: auto;
-  margin: 1.75rem 0;
+  margin: 1.5rem 0 !important; /* Unifié avec .ProseMirror img - ne doit JAMAIS changer */
   display: block;
   border: none; /* Pas de bordure */
   border-radius: var(--radius-md);
