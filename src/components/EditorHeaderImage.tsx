@@ -24,6 +24,7 @@ interface EditorHeaderImageProps {
   userId: string;
   titleElement?: React.ReactNode;
   previewMode?: boolean;
+  readonly?: boolean;
 }
 
 const HEADER_IMAGES = [
@@ -48,6 +49,7 @@ function getRandomHeaderImage(current: string | null) {
 const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   headerImageUrl,
   headerImageOffset = 50,
+  readonly = false,
   headerImageBlur = 0,
   headerImageOverlay = 0,
   headerTitleInImage = false,
@@ -212,8 +214,8 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
         </div>
       )}
       
-      {/* Boutons de contrôle - masqués en mode preview */}
-      {!previewMode && (
+      {/* Boutons de contrôle - masqués en mode preview ou readonly */}
+      {!previewMode && !readonly && (
         <div className="editor-header-image-btns" style={{
         position: 'absolute',
         top: '50%',

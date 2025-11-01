@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import Link from 'next/link';
 import { FiEye, FiMoreHorizontal, FiX, FiEdit2 } from 'react-icons/fi';
 import LogoHeader from '@/components/LogoHeader';
 import EditorToolbar from './EditorToolbar';
@@ -22,6 +23,8 @@ interface EditorHeaderProps {
   readonly?: boolean;
   previewMode?: boolean;
   showToolbar?: boolean;
+  canEdit?: boolean; // Si l'user peut éditer (pour afficher le lien vers l'éditeur)
+  noteId?: string; // ID de la note pour le lien vers l'éditeur
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -36,6 +39,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   readonly = false,
   previewMode = false,
   showToolbar = true,
+  canEdit = true,
+  noteId,
 }) => {
   return (
     <div className="editor-header">
@@ -59,14 +64,29 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
 
       {/* Actions à droite */}
       <div className="editor-header__actions">
-        <button
-          className={`header-action-btn ${previewMode ? 'active' : ''}`}
-          onClick={onPreview}
-          aria-label={previewMode ? "Mode édition" : "Mode lecture"}
-          title={previewMode ? "Mode édition" : "Mode lecture"}
-        >
-          {previewMode ? <FiEdit2 size={18} /> : <FiEye size={18} />}
-        </button>
+        {/* Bouton Preview/Edit - 3 cas distincts */}
+        {readonly && !previewMode && canEdit && noteId ? (
+          // CAS 1 : Page publique (readonly=true, previewMode=false) + owner → Lien vers l'éditeur
+          <Link
+            href={`/private/note/${noteId}`}
+            className="header-action-btn header-action-btn--edit"
+            aria-label="Éditer cette note"
+            title="Éditer cette note"
+          >
+            <FiEdit2 size={18} />
+          </Link>
+        ) : !readonly || previewMode ? (
+          // CAS 2 : Page privée (readonly=false) OU mode preview → Toggle preview
+          <button
+            className={`header-action-btn ${previewMode ? 'active' : ''}`}
+            onClick={onPreview}
+            aria-label={previewMode ? "Mode édition" : "Mode lecture"}
+            title={previewMode ? "Mode édition" : "Mode lecture"}
+          >
+            {previewMode ? <FiEdit2 size={18} /> : <FiEye size={18} />}
+          </button>
+        ) : null}
+        {/* CAS 3 : Page publique + pas owner → Pas de bouton (null) */}
         
         <button
           ref={kebabBtnRef}

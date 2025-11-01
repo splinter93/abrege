@@ -9,10 +9,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { realtimeService, RealtimeConfig, RealtimeState, RealtimeEvent } from '@/services/RealtimeService';
 import { logger, LogCategory } from '@/utils/logger';
 
-interface UseRealtimeOptions {
+export interface UseRealtimeOptions {
   readonly userId: string;
   readonly noteId?: string;
   readonly debug?: boolean;
+  readonly enabled?: boolean; // Désactiver complètement le realtime si false
   readonly onEvent?: (event: RealtimeEvent) => void;
   readonly onStateChange?: (state: RealtimeState) => void;
 }
@@ -43,6 +44,7 @@ export function useRealtime({
   userId,
   noteId,
   debug = false,
+  enabled = true, // Par défaut activé
   onEvent,
   onStateChange
 }: UseRealtimeOptions): UseRealtimeReturn {
@@ -90,6 +92,10 @@ export function useRealtime({
 
   // Initialisation du service
   const initializeService = useCallback(async () => {
+    // Si désactivé (readonly/public page), ne rien faire
+    if (!enabled) {
+      return;
+    }
     
     if (!userId) {
       return;
@@ -161,10 +167,15 @@ export function useRealtime({
         isConnected: false
       }));
     }
-  }, [userId, noteId, debug, isInitialized]);
+  }, [userId, noteId, debug, enabled, isInitialized]);
 
   // Effet d'initialisation - seulement quand les paramètres essentiels changent
   useEffect(() => {
+    // Si désactivé (readonly/public page), ne rien faire
+    if (!enabled) {
+      return;
+    }
+    
     // Ignorer les userId invalides
     if (!userId || userId === 'anonymous') {
       return;

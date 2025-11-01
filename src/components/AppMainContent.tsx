@@ -1,16 +1,19 @@
 'use client';
 import { usePathname } from 'next/navigation';
 import Header from './Header';
-import PublicPageHeader from './PublicPageHeader';
 
 export default function AppMainContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isEditorPage = pathname?.startsWith('/note/') ?? false;
-  const isPublicPage = pathname?.includes('/') && !isEditorPage;
+  
+  // Pages qui utilisent l'Editor (privées) - pas de header externe
+  const isPrivateEditorPage = pathname?.includes('/note/') ?? false;
+  
+  // Afficher le header sauf sur les pages d'éditeur privé
+  const showHeader = !isPrivateEditorPage;
   
   return (
     <div className="app-main-content">
-      {isEditorPage ? null : isPublicPage ? <PublicPageHeader /> : <Header />}
+      {showHeader && <Header />}
       {children}
     </div>
   );

@@ -118,6 +118,17 @@
   color: #ff8c5a; /* Orange plus clair au hover */
 }
 
+/* Bouton Edit sur page publique - icône orange */
+.header-action-btn--edit {
+  background: transparent;
+  color: #ff6b35; /* Orange Scrivia */
+}
+
+.header-action-btn--edit:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ff8c5a; /* Orange plus clair au hover */
+}
+
 /* =============================================================================
    RESPONSIVE
    ========================================================================== */

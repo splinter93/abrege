@@ -8,12 +8,13 @@ interface EditorTitleProps {
   onBlur?: () => void;
   placeholder?: string;
   wideMode?: boolean; // Nouvelle prop pour le mode wide
+  disabled?: boolean; // Mode readonly
 }
 
 /**
  * Champ de titre de l'éditeur, auto-resize, centré.
  */
-const EditorTitle: React.FC<EditorTitleProps> = ({ value, onChange, onBlur, placeholder, wideMode }) => {
+const EditorTitle: React.FC<EditorTitleProps> = ({ value, onChange, onBlur, placeholder, wideMode, disabled = false }) => {
   const { textareaRef } = useAutoResize({ value, wideMode });
 
   return (
@@ -32,6 +33,8 @@ const EditorTitle: React.FC<EditorTitleProps> = ({ value, onChange, onBlur, plac
         aria-label="Titre de la note"
         role="textbox"
         tabIndex={0}
+        disabled={disabled}
+        readOnly={disabled}
       />
     </div>
   );

@@ -83,7 +83,12 @@ import type { Editor as TiptapEditor } from '@tiptap/react';
  * <Editor noteId="note-123" readonly={false} userId="user-456" />
  * ```
  */
-const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> = ({ noteId, readonly = false, userId: propUserId }) => {
+const Editor: React.FC<{ 
+  noteId: string; 
+  readonly?: boolean; 
+  userId?: string;
+  canEdit?: boolean; // Si l'user peut éditer (pour afficher le lien vers l'éditeur sur pages publiques)
+}> = ({ noteId, readonly = false, userId: propUserId, canEdit = true }) => {
   // 🔧 CORRECTION : Utiliser le vrai ID utilisateur de la session
   const { user } = useAuth();
   const userId = propUserId || user?.id || 'anonymous';
@@ -144,11 +149,15 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
   // Ref pour le bouton kebab (besoin de calcul de position)
   const kebabBtnRef = React.useRef<HTMLButtonElement | null>(null);
 
-  // 🔄 Realtime Integration - Service simple et robuste
+  // Mode readonly (pages publiques ou preview mode)
+  const isReadonly = readonly || editorState.ui.previewMode;
+
+  // 🔄 Realtime Integration - Désactivé en mode readonly (pages publiques)
   const realtime = useRealtime({
     userId,
     noteId,
     debug: false,
+    enabled: !isReadonly, // Désactiver complètement en readonly
     onEvent: (event) => {
       
       // Les événements sont déjà traités par le dispatcher
@@ -158,9 +167,6 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
     onStateChange: (state) => {
     }
   });
-
-  // Context menu géré par editorState
-  const isReadonly = readonly || editorState.ui.previewMode;
 
   const handleHeaderChange = React.useCallback(async (url: string | null) => {
     const normalize = (u: string | null): string | null => {
@@ -725,6 +731,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               readonly={isReadonly}
               previewMode={editorState.ui.previewMode}
               showToolbar={editorState.ui.showToolbar}
+              canEdit={canEdit}
+              noteId={noteId}
             />
             {/* Add header image CTA - calé en haut à droite sous le header */}
             {!editorState.headerImage.url && !editorState.ui.previewMode && (
@@ -778,8 +786,9 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               onImageMenuClose={() => editorState.setImageMenuOpen(false)}
               noteId={note.id}
               userId={userId}
-              titleElement={<EditorTitle value={editorState.document.title} onChange={editorState.setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." wideMode={editorState.ui.fullWidth} />}
+              titleElement={<EditorTitle value={editorState.document.title} onChange={editorState.setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." disabled={isReadonly} />}
               previewMode={editorState.ui.previewMode}
+              readonly={isReadonly}
             />
             <EditorKebabMenu
               open={editorState.menus.kebabOpen}
@@ -800,7 +809,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             />
           </>
         )}
-        title={editorState.headerImage.titleInImage ? undefined : <EditorTitle value={editorState.document.title} onChange={editorState.setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." wideMode={editorState.ui.fullWidth} />}
+        title={editorState.headerImage.titleInImage ? undefined : <EditorTitle value={editorState.document.title} onChange={editorState.setTitle} onBlur={handleTitleBlur} placeholder="Titre de la note..." disabled={isReadonly} />}
         content={(
           <>
             {/* Floating menu Notion-like - rendu en dehors du conteneur */}

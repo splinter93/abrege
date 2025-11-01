@@ -110,9 +110,7 @@ const Header: React.FC = () => {
       top: 0,
       zIndex: 100
     }}>
-      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginLeft: '4px' }}>
-        <LogoScrivia />
-      </Link>
+      <LogoScrivia />
       <div style={{ display: 'flex', alignItems: 'center', gap: 18, position: 'relative' }}>
         {/* Se connecter (si non connecté) */}
         {!isLoggedIn && (

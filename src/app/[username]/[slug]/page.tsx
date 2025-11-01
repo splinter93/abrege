@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
-import '@/styles/markdown.css';
-import '@/styles/error-pages.css';
+import '@/styles/error-pages.css'; // Uniquement pour les pages d'erreur
 import LogoHeader from '@/components/LogoHeader';
 import ErrorPageActions from '@/components/ErrorPageActions';
 import PublicNoteAuthWrapper from '@/components/PublicNoteAuthWrapper';
 import type { Metadata } from 'next';
+
+// Note: Les styles de l'éditeur (typography, markdown, etc.) sont gérés par le composant Editor via editor-bundle.css
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -86,13 +87,11 @@ export default async function Page(props: { params: Promise<{ username: string; 
   }
 
 
-  // Récupérer la note (même si elle est privée - le composant client gérera l'authentification)
+  // Récupérer la note (minimaliste - l'Editor chargera les détails via le store)
   // Utiliser le client service pour contourner RLS
   const { data: noteBySlug, error: noteError } = await supabaseService
     .from('articles')
-    .select(
-      'id, source_title, html_content, markdown_content, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, created_at, updated_at, share_settings, slug, user_id'
-    )
+    .select('id, user_id, share_settings, slug')
     .eq('slug', slug)
     .eq('user_id', owner.id)
     .limit(1)
