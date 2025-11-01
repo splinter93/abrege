@@ -18,7 +18,7 @@
   align-items: flex-end; /* Alignement en bas du header */
   justify-content: center;
   padding: 0 var(--editor-padding-horizontal-desktop) 1px; /* Toolbar posée presque au bord du header */
-  background: var(--color-bg-primary) !important; /* Même couleur que l'éditeur (#121212) - forcé */
+  background: transparent !important; /* Header transparent - toolbar flotte sur le contenu */
   border-bottom: none !important; /* Pas de bordure */
   z-index: 100;
   box-sizing: border-box;
@@ -43,6 +43,10 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
+  backdrop-filter: blur(10px); /* Blur pour rester lisible sur contenu */
+  -webkit-backdrop-filter: blur(10px);
+  padding: 4px 8px;
+  border-radius: 8px;
 }
 
 /* =============================================================================
@@ -73,6 +77,10 @@
   align-items: center;
   gap: 4px;
   z-index: 2;
+  backdrop-filter: blur(10px); /* Blur pour rester lisible sur contenu */
+  -webkit-backdrop-filter: blur(10px);
+  padding: 4px 8px;
+  border-radius: 8px;
 }
 
 .header-action-btn {
