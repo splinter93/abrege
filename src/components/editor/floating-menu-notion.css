@@ -46,22 +46,22 @@
   line-height: var(--fm-line-height);
   color: var(--fm-text-primary);
   
-  background: var(--fm-bg);
-  border: 1px solid var(--fm-border);
+  background: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%); /* Même dégradé que les autres menus */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: none; /* Pas de bordure */
   border-radius: var(--fm-radius);
-  box-shadow: var(--fm-shadow);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   
   /* Animation d'entrée */
   animation: floating-menu-enter var(--fm-duration) var(--fm-ease);
   transition: 
     box-shadow var(--fm-duration) var(--fm-ease),
-    border-color var(--fm-duration) var(--fm-ease),
     transform var(--fm-duration) var(--fm-ease);
 }
 
 .floating-menu-notion:hover {
-  box-shadow: var(--fm-shadow-hover);
-  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
 
 /* =========================
