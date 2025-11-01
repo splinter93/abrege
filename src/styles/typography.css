@@ -850,7 +850,7 @@ h1 {
   letter-spacing: -0.025em;    /* Légèrement plus serré */
   font-family: var(--editor-font-family-headings);
   position: relative;
-  scroll-margin-top: 6rem;
+  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
 }
 
 /* Supprimer la marge du premier titre dans le contenu */
@@ -876,7 +876,7 @@ h2 {
   letter-spacing: -0.02em;     /* Légèrement serré */
   font-family: var(--editor-font-family-headings);
   position: relative;
-  scroll-margin-top: 6rem;
+  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
 }
 
 /* Supprimer la marge du premier titre H2 dans le contenu */
@@ -902,7 +902,7 @@ h3 {
   letter-spacing: -0.015em;    /* Légèrement serré */
   font-family: var(--editor-font-family-headings);
   position: relative;
-  scroll-margin-top: 6rem;
+  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
 }
 
 /* Supprimer la marge du premier titre H3 dans le contenu */
@@ -947,7 +947,7 @@ h4 {
   color: #d0d0d0;              /* Gris clair adouci - direct */
   letter-spacing: -0.005em;
   font-family: var(--editor-font-family-headings);
-  scroll-margin-top: 6rem;
+  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
 }
 
 /* Supprimer la marge du premier titre H4 dans le contenu */
@@ -968,7 +968,7 @@ h5 {
   margin: 0.75rem 0 0.375rem 0;
   color: #d0d0d0;              /* Gris clair adouci - direct */
   font-family: var(--editor-font-family-headings);
-  scroll-margin-top: 6rem;
+  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
 }
 
 /* Supprimer la marge du premier titre H5 dans le contenu */
@@ -991,7 +991,7 @@ h6 {
   font-family: var(--editor-font-family-headings);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  scroll-margin-top: 6rem;
+  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
 }
 
 /* Supprimer la marge du premier titre H6 dans le contenu */
