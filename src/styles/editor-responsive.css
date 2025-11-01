@@ -31,7 +31,7 @@
 
 .editor-content-wrapper {
   width: 100%;
-  padding: 0 var(--editor-padding-horizontal-desktop);
+  padding: 0; /* Pas de padding ici (sinon décalage titre/contenu) */
   box-sizing: border-box;
 }
 
@@ -40,6 +40,7 @@
   width: 100%;
   max-width: var(--editor-content-width); /* 800px par défaut, 1000px en wide mode */
   margin: 0 auto;
+  padding: 0 var(--editor-padding-horizontal-desktop); /* Padding ici pour titre ET contenu */
   box-sizing: border-box;
 }
 
@@ -56,21 +57,21 @@
 
 /* Tablette (≤ 1024px) */
 @media (max-width: 1024px) {
-  .editor-content-wrapper {
+  .editor-content-inner {
     padding: 0 var(--editor-padding-horizontal-tablet);
   }
 }
 
 /* Mobile (≤ 768px) */
 @media (max-width: 768px) {
-  .editor-content-wrapper {
+  .editor-content-inner {
     padding: 0 var(--editor-padding-horizontal-mobile);
   }
 }
 
 /* Mobile small (≤ 480px) */
 @media (max-width: 480px) {
-  .editor-content-wrapper {
+  .editor-content-inner {
     padding: 0 var(--editor-padding-horizontal-mobile-sm);
   }
 }
