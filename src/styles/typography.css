@@ -267,7 +267,7 @@
 /* Style typographique complet du titre */
 .noteLayout-title textarea {
   width: 100%;
-  max-width: var(--editor-content-width);
+  /* max-width supprimé - hérite du container .editor-content-inner */
   box-sizing: border-box; /* FIX: empêche débordement en prod */
   font-size: var(--editor-title-size);
   font-weight: var(--editor-title-weight);
@@ -290,7 +290,7 @@
 /* Add editor H1 styling so typography applies when not using a textarea */
 .noteLayout-title h1 {
   width: 100%;
-  max-width: var(--editor-content-width);
+  /* max-width supprimé - hérite du container .editor-content-inner */
   box-sizing: border-box; /* FIX: empêche débordement en prod */
   font-size: var(--editor-title-size);
   font-weight: var(--editor-title-weight);
