@@ -724,6 +724,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               kebabBtnRef={kebabBtnRef}
               readonly={isReadonly}
               previewMode={editorState.ui.previewMode}
+              showToolbar={editorState.ui.showToolbar}
             />
             {/* Add header image CTA - calé en haut à droite sous le header */}
             {!editorState.headerImage.url && !editorState.ui.previewMode && (
@@ -790,6 +791,8 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               setSlashLang={handleSlashLangChange}
               fullWidth={editorState.ui.fullWidth}
               setFullWidth={handleFullWidthChange}
+              showToolbar={editorState.ui.showToolbar}
+              toggleToolbar={editorState.toggleToolbar}
               noteId={noteId}
               currentShareSettings={editorState.shareSettings}
               onShareSettingsChange={handleShareSettingsChange}

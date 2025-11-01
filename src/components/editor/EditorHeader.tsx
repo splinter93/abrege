@@ -21,6 +21,7 @@ interface EditorHeaderProps {
   kebabBtnRef?: React.RefObject<HTMLButtonElement>;
   readonly?: boolean;
   previewMode?: boolean;
+  showToolbar?: boolean;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -34,6 +35,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   kebabBtnRef,
   readonly = false,
   previewMode = false,
+  showToolbar = true,
 }) => {
   return (
     <div className="editor-header">
@@ -42,8 +44,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         <LogoHeader />
       </div>
 
-      {/* Toolbar au centre - cachée en mode preview */}
-      {!previewMode && (
+      {/* Toolbar au centre - cachée en mode preview ET si showToolbar = false */}
+      {!previewMode && showToolbar && (
         <div className="editor-header__center">
           <EditorToolbar 
             editor={editor} 

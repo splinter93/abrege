@@ -92,7 +92,7 @@
 /* Container du bouton "Add header image" - position absolute, ne prend PAS d'espace */
 .editor-add-header-image-row {
   position: absolute;
-  top: 66px; /* Juste sous le header (56px) + 10px */
+  top: 60px; /* Juste sous le header (50px) + 10px */
   right: 10px;
   z-index: 50;
   pointer-events: none; /* Ne bloque pas les clics */

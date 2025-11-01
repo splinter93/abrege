@@ -46,6 +46,7 @@ export interface UIState {
   a4Mode: boolean;
   fullWidth: boolean;
   slashLang: 'fr' | 'en';
+  showToolbar: boolean; // Toggle toolbar (future user preference)
 }
 
 /**
@@ -104,6 +105,8 @@ export interface EditorState {
   setA4Mode: (a4: boolean) => void;
   setFullWidth: (fullWidth: boolean) => void;
   setSlashLang: (lang: 'fr' | 'en') => void;
+  setShowToolbar: (show: boolean) => void;
+  toggleToolbar: () => void;
   
   // Actions - Context Menu
   openContextMenu: (position: { x: number; y: number }, nodeType: string, hasSelection: boolean, nodePosition: number) => void;
@@ -185,6 +188,14 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
   const [a4Mode, setA4Mode] = useState(options.initialA4Mode || false);
   const [fullWidth, setFullWidth] = useState(options.initialFullWidth || false);
   const [slashLang, setSlashLang] = useState<'fr' | 'en'>(options.initialSlashLang || 'en');
+  const [showToolbar, setShowToolbar] = useState(() => {
+    // LocalStorage temporaire - sera remplacé par user_preferences
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('editor-show-toolbar');
+      return stored !== null ? stored === 'true' : true; // true par défaut
+    }
+    return true;
+  });
   
   // État du menu contextuel
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -216,6 +227,17 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
   // Actions - UI
   const togglePreviewMode = useCallback(() => {
     setPreviewMode(prev => !prev);
+  }, []);
+  
+  const toggleToolbar = useCallback(() => {
+    setShowToolbar(prev => {
+      const newValue = !prev;
+      // Persister dans localStorage (temporaire avant user_preferences)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('editor-show-toolbar', String(newValue));
+      }
+      return newValue;
+    });
   }, []);
   
   // Actions - Context Menu
@@ -264,6 +286,7 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
       a4Mode,
       fullWidth,
       slashLang,
+      showToolbar,
     },
     contextMenu,
     shareSettings,
@@ -296,6 +319,8 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
     setA4Mode,
     setFullWidth,
     setSlashLang,
+    setShowToolbar,
+    toggleToolbar,
     
     // Actions - Context Menu
     openContextMenu,

@@ -15,6 +15,8 @@ interface EditorKebabMenuProps {
   setSlashLang: (lang: 'fr' | 'en') => void;
   fullWidth: boolean;
   setFullWidth: (v: boolean) => void;
+  showToolbar: boolean;
+  toggleToolbar: () => void;
   noteId: string;
   currentShareSettings: ShareSettings;
   onShareSettingsChange: (settings: ShareSettings) => Promise<void>;
@@ -31,6 +33,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   setSlashLang,
   fullWidth,
   setFullWidth,
+  showToolbar,
+  toggleToolbar,
   noteId,
   currentShareSettings,
   onShareSettingsChange,
@@ -111,6 +115,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       export: 'Exporter',
       wideMode: 'Mode Large',
       a4Mode: 'Mode A4',
+      toolbar: 'Toolbar',
       published: 'Publié',
       publish: 'Publier',
       comingSoon: 'Bientôt'
@@ -120,6 +125,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       export: 'Export',
       wideMode: 'Wide Mode',
       a4Mode: 'A4 Mode',
+      toolbar: 'Toolbar',
       published: 'Published',
       publish: 'Publish',
       comingSoon: 'Coming Soon'
@@ -146,6 +152,17 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       icon: <FiDownload size={18} />,
       onClick: () => { onClose(); },
       color: '#D4D4D4',
+      showCopyButton: false,
+    },
+    {
+      id: 'toolbar',
+      label: t.toolbar,
+      icon: showToolbar ? <FiCheck size={18} /> : null,
+      onClick: () => { 
+        toggleToolbar();
+        onClose(); 
+      },
+      color: showToolbar ? '#10b981' : '#D4D4D4',
       showCopyButton: false,
     },
     {

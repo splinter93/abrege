@@ -10,24 +10,20 @@
 .editor-toolbar {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px; /* Gap augmenté pour plus de respiration */
   height: 100%;
-  padding: 4px 10px;
-  background: #1a1a1a; /* Background glass comme ImageMenu */
-  border: 1px solid rgba(255, 255, 255, 0.09); /* Bordure subtile */
+  padding: 4px 16px; /* Padding horizontal augmenté pour éviter les boutons trop proches de l'arrondi */
+  background: linear-gradient(135deg, #181b1e 0%, #1a1d21 50%, #181b1e 100%); /* Dégradé plus subtil */
+  border: none;
   border-radius: 20px; /* Très arrondi, presque pill */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2); /* Shadow glass */
-  backdrop-filter: blur(20px); /* Blur augmenté pour effet verre poli */
-  -webkit-backdrop-filter: blur(20px);
   overflow: visible; /* Important pour dropdowns */
   position: relative;
   z-index: 1;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .editor-toolbar:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3); /* Shadow plus forte */
-  border-color: rgba(107, 114, 128, 0.12); /* Bordure légèrement plus visible */
+  background: linear-gradient(135deg, #1a1d21 0%, #1c1f24 50%, #1a1d21 100%); /* Dégradé plus subtil au hover */
 }
 
 /* Supprimer tous les focus par défaut */
@@ -117,11 +113,11 @@
 
 .tb-divider {
   width: 1px;
-  height: 20px;
-  background: #4b5563; /* Gris neutre pour divider */
-  opacity: 0.5;
+  height: 16px; /* Réduit de 20px à 16px */
+  background: rgba(255, 255, 255, 0.08); /* Gris très subtil */
+  opacity: 1; /* Opacité contrôlée par le background */
   flex-shrink: 0;
-  margin: 0 4px;
+  margin: 0 6px; /* Augmenté de 4px à 6px */
 }
 
 /* =============================================================================
@@ -134,25 +130,30 @@
 }
 
 .editor-toolbar .font-selector__trigger {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   color: #9ca3af !important; /* Gris neutre */
-  background: rgba(255, 255, 255, 0.05) !important; /* Background léger */
-  border: 1px solid rgba(255, 255, 255, 0.08) !important; /* Bordure subtile */
+  background: transparent !important; /* Pas de fond */
+  border: none !important; /* Pas de bordure */
   border-radius: 6px !important;
-  padding: 0 10px !important;
+  padding: 0 6px !important; /* Réduit pour coller au texte */
   height: 32px !important;
-  min-width: 90px !important;
+  min-width: auto !important; /* Largeur auto, juste le texte */
+  width: auto !important;
 }
 
 .editor-toolbar .font-selector__trigger:hover:not(:disabled) {
   color: #d1d5db !important; /* Gris clair au hover */
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: transparent !important; /* Pas de fond au hover */
 }
 
 .editor-toolbar .font-selector__label {
   font-size: 13px !important;
   font-weight: 500 !important;
   color: inherit !important;
+  text-align: center !important;
+  width: 100% !important;
 }
 
 .editor-toolbar .font-selector__dropdown {
