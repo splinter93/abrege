@@ -49,7 +49,10 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
         // 2. Charger la note via l'API publique (pas besoin d'auth)
         const response = await fetch(`/api/ui/public/note/${encodeURIComponent(username)}/${slug}`);
         if (!response.ok) {
-          throw new Error('Note non trouvée');
+          // Distinguer 404 (note privée/inexistante) des vraies erreurs
+          const errorData = await response.json().catch(() => ({}));
+          const isNotFound = response.status === 404;
+          throw new Error(isNotFound ? 'ACCESS_DENIED' : 'Note non trouvée');
         }
         
         const { note: publicNote } = await response.json();
@@ -81,20 +84,36 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
         
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-        // Logger structuré avec contexte complet
-        logger.error(LogCategory.EDITOR, '[PublicNoteAuthWrapper] Erreur chargement note publique', {
-          error: {
-            message: errorMessage,
-            stack: err instanceof Error ? err.stack : undefined
-          },
-          context: {
-            noteId: note.id,
-            slug,
-            username,
-            timestamp: Date.now()
-          }
-        });
-        setError(errorMessage);
+        
+        // Si c'est un accès refusé (note privée), logger en WARN (comportement attendu)
+        // Sinon logger en ERROR (vrai problème)
+        if (errorMessage === 'ACCESS_DENIED') {
+          logger.warn(LogCategory.EDITOR, '[PublicNoteAuthWrapper] Accès refusé à note privée (comportement normal)', {
+            context: {
+              noteId: note.id,
+              slug,
+              username,
+              visibility: note.share_settings.visibility,
+              hasCurrentUser: !!currentUser
+            }
+          });
+          setError('Note non accessible');
+        } else {
+          // Vraie erreur (réseau, serveur, etc.)
+          logger.error(LogCategory.EDITOR, '[PublicNoteAuthWrapper] Erreur chargement note publique', {
+            error: {
+              message: errorMessage,
+              stack: err instanceof Error ? err.stack : undefined
+            },
+            context: {
+              noteId: note.id,
+              slug,
+              username,
+              timestamp: Date.now()
+            }
+          });
+          setError(errorMessage);
+        }
       } finally {
         setLoading(false);
       }
