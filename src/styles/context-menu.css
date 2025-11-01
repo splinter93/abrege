@@ -1,10 +1,12 @@
 /* Styles pour le menu contextuel Notion-like */
 
 .context-menu {
-  background: #1a1a1a; /* Gris sombre cohérent avec l'app */
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%); /* Même dégradé que kebab */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: none; /* Pas de bordure */
   border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   padding: 4px;
   min-width: 200px;
   max-width: 280px;

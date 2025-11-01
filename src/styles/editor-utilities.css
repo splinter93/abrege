@@ -6,6 +6,52 @@
 */
 
 /* ==========================================================================
+   SCROLLBAR PRINCIPALE - STYLE TRANSPARENT COMME LE CHAT
+   ========================================================================== */
+
+/* Scrollbar pour l'éditeur modal */
+.editor-container::-webkit-scrollbar {
+  width: 12px;
+}
+
+.editor-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.editor-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15); /* Plus visible */
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+
+.editor-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22); /* Plus marqué au hover */
+  background-clip: padding-box;
+}
+
+/* Scrollbar pour le wrapper de contenu en fullscreen */
+.editor-content-wrapper::-webkit-scrollbar {
+  width: 12px;
+}
+
+.editor-content-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.editor-content-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15); /* Plus visible */
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+
+.editor-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22); /* Plus marqué au hover */
+  background-clip: padding-box;
+}
+
+/* ==========================================================================
    BACKGROUNDS UTILITAIRES
    ========================================================================== */
 

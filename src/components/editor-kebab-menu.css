@@ -1,3 +1,58 @@
+/* =============================================================================
+   MENU KEBAB - DROPDOWN
+   ========================================================================== */
+
+.editor-kebab-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 998;
+  background: transparent;
+}
+
+.editor-header-kebab-menu {
+  position: fixed;
+  background: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%); /* Dégradé un peu plus sombre */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: none; /* Pas de bordure */
+  border-radius: 8px;
+  padding: 6px;
+  min-width: 200px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  transform: translateX(-100%); /* Le menu s'aligne à droite de sa position (qui est le bord droit du bouton) */
+  margin-top: 5px; /* Petit espace sous le bouton */
+}
+
+.editor-header-kebab-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  color: #e5e7eb;
+  font-size: 14px;
+  font-weight: 500;
+  gap: 8px;
+}
+
+.editor-header-kebab-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.editor-header-kebab-menu-item:active {
+  transform: scale(0.98);
+}
+
+/* =============================================================================
+   TOGGLES ET RADIOS
+   ========================================================================== */
+
 .kebab-toggle {
   display: flex;
   align-items: center;

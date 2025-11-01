@@ -195,7 +195,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
       const rect = kebabBtnRef.current.getBoundingClientRect();
       editorState.setKebabPos({ 
         top: rect.bottom + CONTEXT_MENU_CONFIG.kebabMenuOffsetTop, 
-        left: rect.left - CONTEXT_MENU_CONFIG.kebabMenuOffsetLeft
+        left: rect.right // Position = bord droit du bouton, le CSS translateX(-100%) fera le reste
       });
     }
   }, [editorState.menus.kebabOpen, editorState.setKebabPos]);
