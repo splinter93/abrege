@@ -77,10 +77,10 @@ export default async function Page(props: { params: Promise<{ username: string; 
     return (
       <ErrorPage
         icon="warning"
-        title="Utilisateur non trouvé"
-        description="L'utilisateur demandé n'existe pas ou a été supprimé."
-        subtitle="Vérifiez l'URL ou contactez l'auteur de la note."
+        title="Page introuvable"
+        description="Cette page n'existe pas ou a été supprimée."
         showActions={true}
+        showBackButton={false}
       />
     );
   }
@@ -100,10 +100,10 @@ export default async function Page(props: { params: Promise<{ username: string; 
     return (
       <ErrorPage
         icon="document"
-        title="Note non trouvée"
-        description="Cette note n'existe pas, a été supprimée ou n'est pas accessible."
-        subtitle="Vérifiez l'URL ou contactez l'auteur de la note."
+        title="Note introuvable"
+        description="Cette note est privée ou a été supprimée."
         showActions={true}
+        showBackButton={false}
       />
     );
   }
@@ -113,10 +113,10 @@ export default async function Page(props: { params: Promise<{ username: string; 
     return (
       <ErrorPage
         icon="warning"
-        title="URL invalide"
-        description="Le lien que vous avez suivi ne correspond pas à la note demandée."
-        subtitle="Vérifiez l'URL ou contactez l'auteur."
+        title="Note introuvable"
+        description="Cette note est privée ou a été supprimée."
         showActions={true}
+        showBackButton={false}
       />
     );
   }

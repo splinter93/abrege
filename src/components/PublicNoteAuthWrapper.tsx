@@ -4,7 +4,7 @@ import React from 'react';
 import { supabase } from '@/supabaseClient';
 import Editor from '@/components/editor/Editor';
 import ErrorPage from '@/components/ErrorPage';
-import { SimpleLoadingState } from '@/components/DossierLoadingStates';
+import CenteredLoadingState from '@/components/CenteredLoadingState';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { useSecurityValidation } from '@/hooks/useSecurityValidation';
 import { logger, LogCategory } from '@/utils/logger';
@@ -124,30 +124,17 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
 
   // Pendant le chargement
   if (loading && !storeNote) {
-    return <SimpleLoadingState message="Chargement de la note…" />;
+    return <CenteredLoadingState message="Chargement" />;
   }
   
   if (error && !storeNote) {
-    // Déterminer le message selon le type d'erreur
-    const errorMessage = error.includes('non trouvée') 
-      ? 'Note non trouvée'
-      : error.includes('réseau') || error.includes('fetch')
-      ? 'Erreur de connexion'
-      : 'Impossible de charger la note';
-    
-    const errorDetails = error.includes('non trouvée')
-      ? 'La note demandée n\'existe pas ou a été supprimée.'
-      : error.includes('réseau') || error.includes('fetch')
-      ? 'Vérifiez votre connexion internet et réessayez.'
-      : 'Une erreur inattendue s\'est produite.';
-    
     return (
       <ErrorPage
-        icon={error.includes('réseau') ? 'network' : 'warning'}
-        title={errorMessage}
-        description={errorDetails}
-        subtitle={`Détails techniques : ${error}`}
+        icon="lock"
+        title="Note introuvable"
+        description="Cette note est privée ou a été supprimée."
         showActions={true}
+        showBackButton={false}
       />
     );
   }
@@ -157,10 +144,10 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
     return (
       <ErrorPage
         icon="lock"
-        title="Note privée"
-        description="Cette note est privée et n'est pas accessible publiquement."
-        subtitle="Seul l'auteur peut consulter cette note."
+        title="Note introuvable"
+        description="Cette note est privée ou a été supprimée."
         showActions={true}
+        showBackButton={false}
       />
     );
   }

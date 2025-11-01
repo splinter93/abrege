@@ -13,6 +13,7 @@ interface ErrorPageProps {
   subtitle?: string;
   icon?: 'document' | 'lock' | 'warning' | 'network';
   showActions?: boolean;
+  showBackButton?: boolean; // Afficher le bouton "Page précédente"
 }
 
 const ErrorPage: React.FC<ErrorPageProps> = ({ 
@@ -20,26 +21,31 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
   description, 
   subtitle, 
   icon = 'document',
-  showActions = true 
+  showActions = true,
+  showBackButton = false
 }) => {
   const getIcon = () => {
     switch (icon) {
       case 'lock':
         return (
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Panneau octogonal stop */}
             <path 
-              d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1Z" 
+              d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86L7.86 2z" 
               stroke="currentColor" 
-              strokeWidth="1.5" 
+              strokeWidth="2" 
               strokeLinecap="round" 
               strokeLinejoin="round"
             />
-            <path 
-              d="M9 12L11 14L15 10" 
+            {/* Barre horizontale */}
+            <line 
+              x1="8" 
+              y1="12" 
+              x2="16" 
+              y2="12" 
               stroke="currentColor" 
-              strokeWidth="1.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
+              strokeWidth="2" 
+              strokeLinecap="round"
             />
           </svg>
         );
@@ -133,7 +139,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
         <p className="not-found-description">{description}</p>
         {subtitle && <p className="not-found-subtitle">{subtitle}</p>}
         
-        {showActions && <ErrorPageActions />}
+        {showActions && <ErrorPageActions showBackButton={showBackButton} />}
       </div>
     </div>
   );
