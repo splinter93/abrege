@@ -1,43 +1,93 @@
+/**
+ * EditorHeader - Header sobre et propre pour l'éditeur
+ * Logo à gauche, toolbar au centre, 3 boutons à droite
+ */
+
 import React from 'react';
-import Link from 'next/link';
+import { FiEye, FiMoreHorizontal, FiX, FiEdit2 } from 'react-icons/fi';
 import LogoHeader from '@/components/LogoHeader';
+import EditorToolbar from './EditorToolbar';
+import type { FullEditorInstance } from '@/types/editor';
 import './editor-header.css';
 
 interface EditorHeaderProps {
-  headerImageUrl?: string | null;
-  children?: React.ReactNode; // Toolbar or other center actions
-  rightSlot?: React.ReactNode; // Actions aligned to the right
+  editor: FullEditorInstance | null;
+  onClose: () => void;
+  onPreview: () => void;
+  onMenuOpen: () => void;
+  onImageClick?: () => void;
+  onFontChange?: (fontName: string, scope?: 'all' | 'headings' | 'body') => void;
+  currentFont?: string;
+  kebabBtnRef?: React.RefObject<HTMLButtonElement>;
+  readonly?: boolean;
+  previewMode?: boolean;
 }
 
-/**
- * Header de l'éditeur : image d'en-tête + actions globales (toolbar, etc.)
- */
-const EditorHeader: React.FC<EditorHeaderProps> = ({ headerImageUrl, children, rightSlot }) => {
+const EditorHeader: React.FC<EditorHeaderProps> = ({
+  editor,
+  onClose,
+  onPreview,
+  onMenuOpen,
+  onImageClick,
+  onFontChange,
+  currentFont,
+  kebabBtnRef,
+  readonly = false,
+  previewMode = false,
+}) => {
   return (
-    <header className="editor-header" role="banner" aria-label="En-tête de l'éditeur">
-      {/* Logo gauche → home */}
-      <div className="editor-header-logo" aria-label="Aller à l'accueil">
-        <LogoHeader size="medium" position="left" />
+    <div className="editor-header">
+      {/* Logo à gauche */}
+      <div className="editor-header__logo">
+        <LogoHeader />
       </div>
-      {headerImageUrl && (
-        <img
-          src={headerImageUrl}
-          alt="Image d'en-tête"
-          className="editor-header-image-img"
-        />
-      )}
-      <div className="editor-header-toolbar-center">
-        <div className="editor-header-toolbar" role="toolbar" aria-label="Barre d'outils">
-          {children}
-        </div>
-      </div>
-      {rightSlot && (
-        <div className="editor-header-right" aria-label="Actions">
-          {rightSlot}
+
+      {/* Toolbar au centre - cachée en mode preview */}
+      {!previewMode && (
+        <div className="editor-header__center">
+          <EditorToolbar 
+            editor={editor} 
+            readonly={readonly} 
+            onImageClick={onImageClick}
+            onFontChange={onFontChange}
+            currentFont={currentFont}
+          />
         </div>
       )}
-    </header>
+
+      {/* Actions à droite */}
+      <div className="editor-header__actions">
+        <button
+          className={`header-action-btn ${previewMode ? 'active' : ''}`}
+          onClick={onPreview}
+          aria-label={previewMode ? "Mode édition" : "Mode lecture"}
+          title={previewMode ? "Mode édition" : "Mode lecture"}
+        >
+          {previewMode ? <FiEdit2 size={18} /> : <FiEye size={18} />}
+        </button>
+        
+        <button
+          ref={kebabBtnRef}
+          className="header-action-btn"
+          onClick={onMenuOpen}
+          aria-label="Menu"
+          title="Menu"
+        >
+          <FiMoreHorizontal size={18} />
+        </button>
+        
+        <button
+          className="header-action-btn"
+          onClick={onClose}
+          aria-label="Fermer"
+          title="Fermer"
+        >
+          <FiX size={18} />
+        </button>
+      </div>
+    </div>
   );
 };
 
-export default EditorHeader; 
+export default EditorHeader;
+

@@ -3,7 +3,7 @@ import React from 'react';
 // Ordre critique conservé dans editor-bundle.css
 import '@/styles/editor-bundle.css';
 import EditorLayout from './EditorLayout';
-import EditorHeaderNew from './EditorHeaderNew';
+import EditorHeader from './EditorHeader';
 import EditorContent from './EditorContent';
 import EditorHeaderImage from '@/components/EditorHeaderImage';
 import CraftedButton from '@/components/CraftedButton';
@@ -23,7 +23,7 @@ import lowlight from '@/utils/lowlightInstance';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import TableControls from '@/components/editor/TableControls';
 import FloatingMenuNotion from './FloatingMenuNotion';
-// import DragHandle from './DragHandle'; // Plus nécessaire - extension intégrée
+// DragHandle géré par NotionDragHandleExtension (voir editor-extensions.ts)
 import { useRouter } from 'next/navigation';
 import { FiEye, FiX, FiImage } from 'react-icons/fi';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
@@ -710,10 +710,10 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
           <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
         </div>
       <EditorLayout
-        layoutClassName={editorState.headerImage.url ? (editorState.headerImage.titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout noImage'}
+        layoutClassName={editorState.headerImage.url ? (editorState.headerImage.titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout imageOnly noImage'}
         header={(
           <>
-            <EditorHeaderNew
+            <EditorHeader
               editor={isReadonly ? null : editor}
               onClose={() => router.back()}
               onPreview={handlePreviewClick}
@@ -725,46 +725,41 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
               readonly={isReadonly}
               previewMode={editorState.ui.previewMode}
             />
-            {/* Add header image CTA when no image is set - Masqué en preview */}
+            {/* Add header image CTA - calé en haut à droite sous le header */}
             {!editorState.headerImage.url && !editorState.ui.previewMode && (
-              <>
-                <div className="editor-add-header-image-row editor-full-width editor-add-image-center">
-                  <div className="editor-container-width editor-image-container-width">
-                    <div
-                      className="editor-add-header-image"
-                      onDragOver={(e) => {
-                        const items = Array.from(e.dataTransfer?.items || []);
-                        if (items.some(it => it.kind === 'file')) e.preventDefault();
-                      }}
-                      onDrop={async (e) => {
-                        try {
-                          if (!e.dataTransfer) return;
-                          const files = Array.from(e.dataTransfer.files || []);
-                          if (!files.length) return;
-                          const image = files.find(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));
-                          if (!image) return;
-                          e.preventDefault();
-                          const { publicUrl } = await uploadImageForNote(image, noteId);
-                          handleHeaderChange(publicUrl);
-                        } catch {}
-                      }}
-                    >
-                      <button
-                        className="editor-add-header-image-btn"
-                        onClick={() => { 
-                          editorState.setImageMenuTarget('header'); 
-                          editorState.setImageMenuOpen(true); 
-                        }}
-                        aria-label="Ajouter une image d'en-tête"
-                        title="Ajouter une image d'en-tête"
-                      >
-                        <FiImage size={16} />
-                      </button>
-                    </div>
-                  </div>
+              <div className="editor-add-header-image-row editor-add-image-center">
+                <div
+                  className="editor-add-header-image"
+                  onDragOver={(e) => {
+                    const items = Array.from(e.dataTransfer?.items || []);
+                    if (items.some(it => it.kind === 'file')) e.preventDefault();
+                  }}
+                  onDrop={async (e) => {
+                    try {
+                      if (!e.dataTransfer) return;
+                      const files = Array.from(e.dataTransfer.files || []);
+                      if (!files.length) return;
+                      const image = files.find(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));
+                      if (!image) return;
+                      e.preventDefault();
+                      const { publicUrl } = await uploadImageForNote(image, noteId);
+                      handleHeaderChange(publicUrl);
+                    } catch {}
+                  }}
+                >
+                  <button
+                    className="editor-add-header-image-btn"
+                    onClick={() => { 
+                      editorState.setImageMenuTarget('header'); 
+                      editorState.setImageMenuOpen(true); 
+                    }}
+                    aria-label="Ajouter une image d'en-tête"
+                    title="Ajouter une image d'en-tête"
+                  >
+                    <FiImage size={20} />
+                  </button>
                 </div>
-                {/* ImageMenu is rendered globally below */}
-              </>
+              </div>
             )}
             <EditorHeaderImage
               headerImageUrl={editorState.headerImage.url}
@@ -875,7 +870,7 @@ const Editor: React.FC<{ noteId: string; readonly?: boolean; userId?: string }> 
             {!isReadonly && (
               <div className="tiptap-editor-container" ref={editorContainerRef}>
                 <TiptapEditorContent editor={editor} />
-                {/* Drag Handle intégré via l'extension DragHandleExtension */}
+                {/* Drag Handle intégré via NotionDragHandleExtension */}
                 {/* Table controls */}
                 <TableControls editor={editor} containerRef={editorContainerRef as React.RefObject<HTMLElement>} />
                 {/* Slash commands menu */}

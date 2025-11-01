@@ -22,7 +22,6 @@
 /* === COMPOSANTS UI === */
 @import './UnifiedToolbar.css';
 @import './context-menu.css';
-@import './callouts.css';
 @import './color-buttons.css';
 
 /* === EXTENSIONS TIPTAP === */
@@ -32,10 +31,7 @@
 @import './block-drag-drop.css';
 
 /* === DRAG HANDLES === */
-/* ⚠️ Seul notion-drag-handle.css est actif pour éviter les conflits */
-/* @import './drag-handle.css'; */        /* Désactivé - conflit de variables */
 @import './notion-drag-handle.css';       /* NotionDragHandle (ACTIF) */
-/* @import './tiptap-drag-handle-official.css'; */ /* Désactivé - styles DEBUG conflictuels */
 
 /* === AUTRES EXTENSIONS === */
 @import './mermaid.css';

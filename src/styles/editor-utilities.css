@@ -91,8 +91,41 @@
 
 .editor-add-image-center {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end; /* Calé à droite */
+  align-items: flex-start; /* En haut */
+  padding: 10px 10px 0 0; /* 10px du header en haut, 10px du bord droit */
+}
+
+/* Bouton "Add header image" - calé en haut à droite sous le header */
+.editor-add-header-image-row {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.editor-add-header-image {
+  display: inline-block;
+}
+
+.editor-add-header-image-btn {
+  display: flex;
   align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editor-add-header-image-btn:hover {
+  color: #d1d5db;
+  transform: scale(1.1);
+}
+
+.editor-add-header-image-btn:active {
+  transform: scale(1);
 }
 
 /* ==========================================================================

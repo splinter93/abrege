@@ -9,16 +9,14 @@ import PublicMarkdownRenderer from '@/components/PublicMarkdownRenderer';
 import { supabase } from '@/supabaseClient';
 import { Edit3 } from 'lucide-react';
 import Link from 'next/link';
-import '@/styles/public-note.css'; // CSS spécifique page publique - PRIORITÉ MAXIMALE
-import '@/styles/typography.css'; // Importer le CSS typography
-import '@/styles/design-system.css'; // Importer le design system pour les variables
+import '@/styles/typography.css'; // Typo centralisée
+import '@/styles/design-system.css'; // Variables design system
 import '@/styles/markdown.css'; // Styles markdown complets
-import '@/styles/unified-blocks.css'; // Système unifié pour tous les blocs - PRIORITÉ
-import '@/styles/mermaid.css'; // Styles Mermaid centralisés
+import '@/styles/unified-blocks.css'; // Code blocks et Mermaid
+import '@/styles/mermaid.css'; // Styles Mermaid
 import '@/styles/syntax-highlighting.css'; // Coloration syntaxique
-import '@/components/mermaid/MermaidModal.css'; // Styles de la modale Mermaid
-import '@/styles/checkbox-simple-approach.css'; // Styles des checkboxes
-import '@/styles/public-note-unified-styles.css'; // ✨ Scope spécifique pour page publique - DOIT ÊTRE EN DERNIER
+import '@/components/mermaid/MermaidModal.css'; // Modale Mermaid
+import '@/styles/checkbox-simple-approach.css'; // Checkboxes
 
 interface PublicNoteProps {
   note: {

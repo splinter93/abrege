@@ -103,7 +103,7 @@
   /* ==========================================================================
      FONT-WEIGHTS CENTRALISÉS - PREMIUM EDITOR
      ========================================================================== */
-  --editor-title-weight: 700;         /* Poids pour les titres principaux - Réduit pour plus de finesse */
+  --editor-title-weight: 700;         /* Poids pour les titres principaux - Bold */
   --editor-h1-weight: 900;            /* Poids pour H1 - ULTRA-GRAS */
   --editor-h2-weight: 900;            /* Poids pour H2 - ULTRA-GRAS */
   --editor-h3-weight: 900;            /* Poids pour H3 - ULTRA-GRAS */
@@ -269,7 +269,7 @@
   width: 100%;
   max-width: var(--editor-content-width);
   font-size: var(--editor-title-size);
-  font-weight: 800;
+  font-weight: var(--editor-title-weight);
   font-family: var(--editor-font-family-headings);
   color: #d0d0d0;              /* Gris clair adouci - direct */
   background: none;
@@ -291,7 +291,7 @@
   width: 100%;
   max-width: var(--editor-content-width);
   font-size: var(--editor-title-size);
-  font-weight: 800;
+  font-weight: var(--editor-title-weight);
   font-family: var(--editor-font-family-headings);
   color: var(--editor-text-color);
   background: none;
@@ -410,20 +410,9 @@
    PADDINGS SPÉCIFIQUES PAR MODE - OPTIMISÉS
    ========================================================================== */
 
-/* 1. Layout sans image - PADDING RÉDUIT */
-.noteLayout.noImage .noteLayout-title {
-  padding-top: 60px;
-}
-.noteLayout.noImage .noteLayout-title textarea {
-  padding: 0 0 16px 0; /* Padding augmenté sous le titre pour le mode sans image */
-}
-.noteLayout.noImage .noteLayout-content .editor-content {
-  padding-top: 0; /* Pas de padding en haut */
-}
-
-/* Wide mode sans image - PADDING ENCORE PLUS RÉDUIT */
-.noteLayout.noImage.wide-mode .noteLayout-title textarea {
-  padding: 0 0 12px 0; /* Espacement cohérent en wide mode pour le mode sans image */
+/* 1. Layout sans image - IDENTIQUE À imageOnly (le bouton image crée déjà l'espacement) */
+.noteLayout.imageOnly.noImage .noteLayout-title {
+  padding-top: 0; /* Pas de padding, le bouton image + margin-bottom crée l'espace */
 }
 
 /* 2. Layout avec titre dans l'image - PADDING MINIMAL */
@@ -830,10 +819,7 @@ body.public-note-page {
   background-color: transparent !important;
 }
 
-/* Match spacing between title and text for no-image layout to image-only layout */
-.noteLayout.noImage .noteLayout-title > .editor-container-width { padding-bottom: 16px; }
-.noteLayout.noImage .noteLayout-title textarea { padding-bottom: 16px; }
-.noteLayout.noImage .noteLayout-content { margin-top: 0; padding-top: 0; }
+/* Mode sans image = imageOnly avec padding top supplémentaire (géré ligne 414) */
 
 /* ==========================================================================
    RÈGLES POUR LA PAGE PUBLIQUE - SIMPLE ET EFFICACE

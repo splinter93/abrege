@@ -1,5 +1,5 @@
 /**
- * EditorToolbarNew - Toolbar sobre avec boutons essentiels
+ * EditorToolbar - Toolbar sobre avec boutons essentiels
  * Pas de scroll, pas de merde, juste les boutons alignés proprement
  */
 
@@ -23,9 +23,9 @@ import { BsChatQuote } from 'react-icons/bs';
 import { MdFormatListNumbered, MdGridOn } from 'react-icons/md';
 import type { FullEditorInstance } from '@/types/editor';
 import FontSelector from './FontSelector';
-import './editor-toolbar-new.css';
+import './editor-toolbar.css';
 
-interface EditorToolbarNewProps {
+interface EditorToolbarProps {
   editor: FullEditorInstance | null;
   readonly?: boolean;
   onImageClick?: () => void;
@@ -33,7 +33,7 @@ interface EditorToolbarNewProps {
   currentFont?: string;
 }
 
-const EditorToolbarNew: React.FC<EditorToolbarNewProps> = ({ 
+const EditorToolbar: React.FC<EditorToolbarProps> = ({ 
   editor, 
   readonly = false,
   onImageClick,
@@ -89,7 +89,7 @@ const EditorToolbarNew: React.FC<EditorToolbarNewProps> = ({
   };
 
   return (
-    <div className="editor-toolbar-new">
+    <div className="editor-toolbar">
       {/* Undo/Redo */}
       <button
         className="tb-btn desktop-only"
@@ -232,5 +232,5 @@ const EditorToolbarNew: React.FC<EditorToolbarNewProps> = ({
   );
 };
 
-export default EditorToolbarNew;
+export default EditorToolbar;
 

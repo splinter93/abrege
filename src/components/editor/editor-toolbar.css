@@ -1,5 +1,5 @@
 /**
- * EDITOR TOOLBAR NEW - Style sobre et propre
+ * EDITOR TOOLBAR - Style sobre et propre
  * Boutons alignés horizontalement, pas de scroll, pas de merde
  */
 
@@ -7,7 +7,7 @@
    TOOLBAR CONTAINER
    ========================================================================== */
 
-.editor-toolbar-new {
+.editor-toolbar {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -19,11 +19,11 @@
 }
 
 /* Supprimer tous les focus par défaut */
-.editor-toolbar-new *:focus {
+.editor-toolbar *:focus {
   outline: none !important;
 }
 
-.editor-toolbar-new button:focus {
+.editor-toolbar button:focus {
   outline: none !important;
 }
 
@@ -116,12 +116,12 @@
    FONT SELECTOR - Style blanc gris + override pour nouveau header
    ========================================================================== */
 
-.editor-toolbar-new .font-selector {
+.editor-toolbar .font-selector {
   position: relative;
   z-index: 10;
 }
 
-.editor-toolbar-new .font-selector__trigger {
+.editor-toolbar .font-selector__trigger {
   color: #9ca3af !important; /* Gris neutre */
   background: rgba(255, 255, 255, 0.05) !important; /* Background léger */
   border: 1px solid rgba(255, 255, 255, 0.08) !important; /* Bordure subtile */
@@ -131,19 +131,19 @@
   min-width: 90px !important;
 }
 
-.editor-toolbar-new .font-selector__trigger:hover:not(:disabled) {
+.editor-toolbar .font-selector__trigger:hover:not(:disabled) {
   color: #d1d5db !important; /* Gris clair au hover */
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-.editor-toolbar-new .font-selector__label {
+.editor-toolbar .font-selector__label {
   font-size: 13px !important;
   font-weight: 500 !important;
   color: inherit !important;
 }
 
-.editor-toolbar-new .font-selector__dropdown {
+.editor-toolbar .font-selector__dropdown {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -156,7 +156,7 @@
 }
 
 /* Style des éléments internes du dropdown */
-.editor-toolbar-new .font-selector__search {
+.editor-toolbar .font-selector__search {
   background: rgba(255, 255, 255, 0.03) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   padding: 10px 12px !important;
@@ -165,12 +165,12 @@
   gap: 8px !important;
 }
 
-.editor-toolbar-new .font-selector__search svg {
+.editor-toolbar .font-selector__search svg {
   color: #6b7280 !important;
   flex-shrink: 0 !important;
 }
 
-.editor-toolbar-new .font-selector__search-input {
+.editor-toolbar .font-selector__search-input {
   color: #d1d5db !important;
   font-size: 14px !important;
   padding: 0 !important;
@@ -179,11 +179,11 @@
   flex: 1 !important;
 }
 
-.editor-toolbar-new .font-selector__search-input::placeholder {
+.editor-toolbar .font-selector__search-input::placeholder {
   color: #6b7280 !important;
 }
 
-.editor-toolbar-new .font-selector__scope {
+.editor-toolbar .font-selector__scope {
   background: rgba(255, 255, 255, 0.02) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   padding: 8px 12px !important;
@@ -191,7 +191,7 @@
   gap: 4px !important;
 }
 
-.editor-toolbar-new .font-selector__scope-btn {
+.editor-toolbar .font-selector__scope-btn {
   color: #9ca3af !important;
   padding: 6px 12px !important;
   font-size: 13px !important;
@@ -199,21 +199,21 @@
   text-align: center !important;
 }
 
-.editor-toolbar-new .font-selector__scope-btn:hover {
+.editor-toolbar .font-selector__scope-btn:hover {
   color: #d1d5db !important;
   background: rgba(255, 255, 255, 0.05) !important;
 }
 
-.editor-toolbar-new .font-selector__scope-btn.active {
+.editor-toolbar .font-selector__scope-btn.active {
   background: var(--accent-primary) !important;
   color: white !important;
 }
 
-.editor-toolbar-new .font-selector__list {
+.editor-toolbar .font-selector__list {
   padding: 4px !important;
 }
 
-.editor-toolbar-new .font-selector__item {
+.editor-toolbar .font-selector__item {
   color: #9ca3af !important;
   padding: 10px 12px !important;
   display: flex !important;
@@ -222,22 +222,22 @@
   border-radius: 6px !important;
 }
 
-.editor-toolbar-new .font-selector__item:hover {
+.editor-toolbar .font-selector__item:hover {
   background: rgba(255, 255, 255, 0.08) !important;
   color: #d1d5db !important;
 }
 
-.editor-toolbar-new .font-selector__item.selected {
+.editor-toolbar .font-selector__item.selected {
   background: var(--accent-primary) !important;
   color: white !important;
 }
 
-.editor-toolbar-new .font-selector__item-name {
+.editor-toolbar .font-selector__item-name {
   font-weight: 500 !important;
   font-size: 14px !important;
 }
 
-.editor-toolbar-new .font-selector__item-category {
+.editor-toolbar .font-selector__item-category {
   font-size: 11px !important;
   text-transform: uppercase !important;
   opacity: 0.6 !important;
@@ -303,7 +303,7 @@
 
 /* Mobile */
 @media (max-width: 768px) {
-  .editor-toolbar-new {
+  .editor-toolbar {
     gap: 2px;
   }
   
