@@ -494,7 +494,7 @@
 
 /* ========================================
    TYPOGRAPHIE DES LISTES (UNIQUEMENT)
-   Structure/bullets gérés par unified-markdown.css
+   Structure/bullets gérés par editor-markdown.css et chat-markdown.css
    ======================================== */
 
 /* Typo des items de liste - PAS la structure */
@@ -528,7 +528,7 @@
     font-size: 1rem;                        /* 16px sur mobile */
   }
 
-  /* Typo listes mobile - structure gérée par unified-markdown.css */
+  /* Typo listes mobile - structure gérée par editor-markdown.css et chat-markdown.css */
   .editor-content li,
   .markdown-body li,
   .ProseMirror li {
@@ -998,7 +998,7 @@ p {
   -moz-osx-font-smoothing: grayscale;     /* Lissage sur macOS */
 }
 
-/* EXCEPTION: Paragraphes dans les task items - GÉRÉ PAR checkbox-simple-approach.css */
+/* EXCEPTION: Paragraphes dans les task items - GÉRÉ PAR checkboxes.css */
 /* Styles déplacés pour unification complète des checkboxes */
 
 .markdown-body p:last-child,

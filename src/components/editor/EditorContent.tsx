@@ -1,6 +1,5 @@
 import React from 'react';
 import './editor-content.css';
-import '@/styles/unified-markdown.css';
 
 interface EditorContentProps {
   children?: React.ReactNode;

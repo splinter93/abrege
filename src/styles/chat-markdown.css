@@ -1,0 +1,508 @@
+/* =============================================================================
+   CHAT MARKDOWN STYLES
+   =============================================================================
+   
+   Styles pour le chat uniquement (.chat-markdown)
+   
+   Variables dynamiques :
+   - --font-chat-text (change via SettingsModal)
+   - --font-chat-headings (change via SettingsModal)
+   - Couleurs changent via palettes de couleur
+   
+   Mêmes styles visuels que l'éditeur, mais avec variables indépendantes
+   ============================================================================= */
+
+/* =============================================================================
+   VARIABLES CHAT
+   ============================================================================= */
+
+:root {
+  /* Tailles de police */
+  --chat-text-xs: 0.75rem;
+  --chat-text-sm: 0.875rem;
+  --chat-text-base: 0.9375rem;
+  --chat-text-lg: 1.0625rem;
+  --chat-text-xl: 1.1875rem;
+  --chat-text-2xl: 1.4375rem;
+  --chat-text-3xl: 1.8125rem;
+  --chat-text-4xl: 2.1875rem;
+  --chat-text-5xl: 2.8125rem;
+  --chat-text-6xl: 3.5625rem;
+  
+  /* Line heights */
+  --chat-leading-tight: 1.25;
+  --chat-leading-snug: 1.375;
+  --chat-leading-normal: 1.5;
+  --chat-leading-relaxed: 1.625;
+  --chat-leading-loose: 1.75;
+  
+  /* Poids */
+  --chat-weight-normal: 400;
+  --chat-weight-medium: 500;
+  --chat-weight-semibold: 600;
+  --chat-weight-bold: 700;
+  --chat-weight-extrabold: 800;
+  
+  /* Espacements */
+  --chat-space-xs: 0.25rem;
+  --chat-space-sm: 0.5rem;
+  --chat-space-md: 0.75rem;
+  --chat-space-lg: 1rem;
+  --chat-space-xl: 1.5rem;
+  --chat-space-2xl: 2rem;
+  --chat-space-3xl: 3rem;
+  
+  /* Letter spacing */
+  --chat-tracking-tight: -0.025em;
+  --chat-tracking-normal: -0.01em;
+  --chat-tracking-wide: 0.025em;
+  --chat-tracking-wider: 0.05em;
+}
+
+/* =============================================================================
+   TYPOGRAPHIE DE BASE
+   ============================================================================= */
+
+.chat-markdown {
+  font-family: var(--font-chat-text) !important;
+  font-size: var(--chat-text-base);
+  line-height: var(--chat-leading-relaxed);
+  font-weight: var(--chat-weight-normal);
+  letter-spacing: var(--chat-tracking-normal);
+  color: var(--color-text-primary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  
+  /* Optimisations de rendu */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  
+  margin: 0;
+  padding: 0;
+}
+
+/* =============================================================================
+   TITRES
+   ============================================================================= */
+
+.chat-markdown h1 {
+  font-family: var(--font-chat-headings) !important;
+  font-size: var(--chat-text-5xl);
+  font-weight: var(--chat-weight-extrabold);
+  line-height: var(--chat-leading-tight);
+  letter-spacing: var(--chat-tracking-tight);
+  color: var(--color-text-primary);
+  margin: 1.5rem 0 1rem 0;
+}
+
+.chat-markdown h2 {
+  font-family: var(--font-chat-headings) !important;
+  font-size: var(--chat-text-4xl);
+  font-weight: var(--chat-weight-bold);
+  line-height: var(--chat-leading-tight);
+  letter-spacing: var(--chat-tracking-tight);
+  color: var(--color-text-primary);
+  margin: 1.25rem 0 0.875rem 0;
+}
+
+.chat-markdown h3 {
+  font-family: var(--font-chat-headings) !important;
+  font-size: var(--chat-text-3xl);
+  font-weight: var(--chat-weight-bold);
+  line-height: var(--chat-leading-snug);
+  letter-spacing: var(--chat-tracking-normal);
+  color: var(--color-text-primary);
+  margin: 1rem 0 0.75rem 0;
+}
+
+.chat-markdown h4 {
+  font-family: var(--font-chat-headings) !important;
+  font-size: var(--chat-text-2xl);
+  font-weight: var(--chat-weight-semibold);
+  line-height: var(--chat-leading-snug);
+  letter-spacing: var(--chat-tracking-normal);
+  color: var(--color-text-primary);
+  margin: var(--chat-space-lg) 0 var(--chat-space-sm) 0;
+}
+
+.chat-markdown h5 {
+  font-family: var(--font-chat-headings) !important;
+  font-size: var(--chat-text-xl);
+  font-weight: var(--chat-weight-semibold);
+  line-height: var(--chat-leading-normal);
+  letter-spacing: var(--chat-tracking-normal);
+  color: var(--color-text-secondary);
+  margin: var(--chat-space-md) 0 var(--chat-space-sm) 0;
+}
+
+.chat-markdown h6 {
+  font-family: var(--font-chat-headings) !important;
+  font-size: var(--chat-text-lg);
+  font-weight: var(--chat-weight-medium);
+  line-height: var(--chat-leading-normal);
+  letter-spacing: var(--chat-tracking-wide);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  margin: var(--chat-space-sm) 0 var(--chat-space-xs) 0;
+}
+
+/* =============================================================================
+   PARAGRAPHES
+   ============================================================================= */
+
+.chat-markdown p {
+  font-family: var(--font-chat-text) !important;
+  font-size: var(--chat-text-base);
+  font-weight: var(--chat-weight-normal);
+  line-height: var(--chat-leading-relaxed);
+  letter-spacing: var(--chat-tracking-normal);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--chat-space-lg) 0;
+}
+
+.chat-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+/* =============================================================================
+   EMPHASES
+   ============================================================================= */
+
+.chat-markdown strong {
+  font-family: var(--font-chat-text) !important;
+  font-weight: var(--chat-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.chat-markdown em {
+  font-family: var(--font-chat-text) !important;
+  font-style: italic;
+  color: var(--color-text-primary);
+  opacity: 0.9;
+}
+
+.chat-markdown u {
+  text-decoration: underline;
+}
+
+.chat-markdown s {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* =============================================================================
+   CODE INLINE
+   ============================================================================= */
+
+.chat-markdown code:not(pre code) {
+  background: var(--code-inline-bg, rgba(255, 255, 255, 0.08));
+  padding: 0.2rem 0.375rem;
+  border-radius: 0.25rem;
+  font-family: var(--font-monospace);
+  font-size: 0.875em;
+  color: var(--text-code, #e4e4e7);
+  font-weight: 400;
+  border: none;
+}
+
+/* =============================================================================
+   LISTES
+   ============================================================================= */
+
+/* Listes à puces - spécificité pour override Tailwind */
+.chat-markdown.chat-markdown ul:not(.contains-task-list),
+.chat-markdown ul:not(.contains-task-list) {
+  margin: 0.75rem 0 !important;
+  padding-left: 1.5rem !important;
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+}
+
+/* Listes numérotées */
+.chat-markdown.chat-markdown ol,
+.chat-markdown ol {
+  margin: 0.75rem 0 !important;
+  padding-left: 1.5rem !important;
+  list-style-type: decimal !important;
+  list-style-position: outside !important;
+}
+
+/* Items de liste normaux */
+.chat-markdown li:not(.task-list-item) {
+  margin: 0.5rem 0;
+  line-height: 1.75;
+}
+
+.chat-markdown li > p {
+  margin: 0;
+}
+
+/* Listes imbriquées */
+.chat-markdown ul ul {
+  margin: 0.25rem 0;
+  padding-left: 1.5rem;
+  list-style-type: circle !important;
+}
+
+.chat-markdown ul ul ul {
+  list-style-type: square !important;
+}
+
+.chat-markdown ol ol {
+  margin: 0.25rem 0;
+  padding-left: 1.5rem;
+}
+
+/* =============================================================================
+   TABLEAUX
+   ============================================================================= */
+
+.chat-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  background: var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
+  border-radius: 14px;
+  overflow: hidden;
+  border: none;
+  filter: brightness(1.18);
+}
+
+.chat-markdown th {
+  padding: 12px 16px !important;
+  text-align: left !important;
+  font-weight: 600 !important;
+  color: var(--chat-text-primary, #e4e4e7) !important;
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  font-size: var(--editor-body-size, 15.5px) !important;
+  font-family: var(--font-chat-text) !important;
+}
+
+.chat-markdown thead {
+  background: transparent;
+}
+
+.chat-markdown thead th {
+  background: transparent;
+}
+
+.chat-markdown td {
+  padding: 10px 16px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: var(--chat-text-secondary, #a1a1aa) !important;
+  font-size: var(--editor-body-size, 15.5px) !important;
+  font-family: var(--font-chat-text) !important;
+}
+
+.chat-markdown tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.chat-markdown tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Wrapper tableau scroll horizontal */
+.chat-markdown .table-wrapper-chat {
+  width: 100%;
+  overflow-x: visible;
+  margin: var(--chat-space-lg) 0;
+  border: none;
+  background: transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1024px) {
+  .chat-markdown .table-wrapper-chat {
+    overflow-x: auto;
+  }
+}
+
+.chat-markdown .table-wrapper-chat::-webkit-scrollbar {
+  height: 8px;
+}
+
+.chat-markdown .table-wrapper-chat::-webkit-scrollbar-track {
+  background: var(--chat-bg-tertiary);
+  border-radius: 4px;
+}
+
+.chat-markdown .table-wrapper-chat::-webkit-scrollbar-thumb {
+  background: var(--chat-text-muted);
+  border-radius: 4px;
+}
+
+.chat-markdown .table-wrapper-chat::-webkit-scrollbar-thumb:hover {
+  background: var(--chat-text-secondary);
+}
+
+/* =============================================================================
+   BLOCKQUOTES
+   ============================================================================= */
+
+.chat-markdown blockquote {
+  margin: 1rem 0;
+  padding: 1rem 0 1rem 1.25rem;
+  border-left: none;
+  background: transparent;
+  border-radius: 0;
+  font-style: normal;
+  color: var(--text-primary, #e4e4e7);
+  position: relative;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.chat-markdown blockquote::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  border-radius: 2px;
+  opacity: 0.6;
+}
+
+.chat-markdown blockquote p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.75;
+  font-weight: 500;
+}
+
+.chat-markdown blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* =============================================================================
+   LIENS
+   ============================================================================= */
+
+.chat-markdown a {
+  background: linear-gradient(135deg, #9a3412, #c2410c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-decoration: underline;
+  text-decoration-color: #9a3412;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.chat-markdown a:hover {
+  background: linear-gradient(135deg, #c2410c, #ea580c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-decoration-color: #c2410c;
+  text-underline-offset: 3px;
+}
+
+.chat-markdown a:focus {
+  outline: none;
+}
+
+/* =============================================================================
+   SÉPARATEURS
+   ============================================================================= */
+
+.chat-markdown hr {
+  margin: 2rem 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+/* =============================================================================
+   IMAGES
+   ============================================================================= */
+
+.chat-markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1rem 0;
+  display: block;
+}
+
+/* =============================================================================
+   BREAKS
+   ============================================================================= */
+
+.chat-markdown br {
+  content: '';
+  display: block;
+  margin: 0.5em 0;
+}
+
+/* =============================================================================
+   RESPONSIVE MOBILE
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .chat-markdown h1 { font-size: var(--chat-text-4xl); margin: var(--chat-space-2xl) 0 var(--chat-space-lg) 0; }
+  .chat-markdown h2 { font-size: var(--chat-text-3xl); margin: var(--chat-space-xl) 0 var(--chat-space-md) 0; }
+  .chat-markdown h3 { font-size: var(--chat-text-2xl); margin: var(--chat-space-lg) 0 var(--chat-space-sm) 0; }
+  .chat-markdown h4 { font-size: var(--chat-text-xl); }
+  .chat-markdown h5 { font-size: var(--chat-text-lg); }
+  .chat-markdown h6 { font-size: var(--chat-text-base); }
+  
+  .chat-markdown th,
+  .chat-markdown td {
+    padding: var(--chat-space-sm) var(--chat-space-md);
+    font-size: var(--chat-font-size-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-markdown table {
+    min-width: 500px;
+    table-layout: auto;
+  }
+  
+  .chat-markdown th,
+  .chat-markdown td {
+    white-space: nowrap;
+    padding: var(--chat-space-sm) var(--chat-space-md);
+    min-width: 100px;
+    max-width: none;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .chat-markdown th,
+  .chat-markdown td {
+    max-width: 300px;
+  }
+}
+
+/* =============================================================================
+   ACCESSIBILITÉ
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-markdown a {
+    transition: none;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .chat-markdown,
+  .chat-markdown h1,
+  .chat-markdown h2,
+  .chat-markdown h3,
+  .chat-markdown h4,
+  .chat-markdown h5,
+  .chat-markdown h6 {
+    color: var(--color-text-primary);
+  }
+}
+

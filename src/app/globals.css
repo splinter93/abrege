@@ -9,11 +9,8 @@
 /* Import du système glassmorphism centralisé */
 @import '../styles/glassmorphism-system.css';
 
-/* Import typography AVANT chat-markdown pour définir les variables */
+/* Import typography pour définir les variables */
 @import '../styles/typography.css';
-
-/* Import de la typographie markdown chat optimisée */
-@import '../styles/chat-markdown-typography.css';
 
 /* Import Tailwind CSS */
 @import '../styles/tailwind.css';
@@ -21,20 +18,17 @@
 /* Import du design system chat ChatGPT unifié */
 @import '../styles/chat-clean.css';
 
-/* Import des styles markdown unifiés (éditeur + chat + page publique) */
-@import '../styles/unified-markdown.css';
+/* Import des styles markdown - séparés par contexte */
+@import '../styles/chat-markdown.css';
 
 /* Import des code blocks unifiés */
 @import '../styles/unified-blocks.css';
 
+/* Import des checkboxes unifiées */
+@import '../styles/checkboxes.css';
+
 /* Import des utilitaires chat */
 @import '../styles/toolbar-consolidated.css';
-
-/* ☢️ FIX NUCLÉAIRE CHECKBOXES - DOIT ÊTRE EN DERNIER ! */
-/* @import '../styles/checkbox-fix-nuclear.css'; */ /* DÉSACTIVÉ - Trop compliqué */
-
-/* ✨ APPROCHE SIMPLE - COPIER LES LISTES NORMALES */
-@import '../styles/checkbox-simple-approach.css';
 
 :root {
   /* FALLBACKS - Éviter le flash blanc */
