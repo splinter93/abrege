@@ -153,13 +153,20 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
         }
         
         const menuHeight = 60; // Hauteur approximative du menu + espace
-        const top = topPosition - menuHeight;
+        let top = topPosition - menuHeight;
+        
+        // ✅ FIX: Si pas assez de place en haut, positionner EN DESSOUS
+        if (top < 10) {
+          // Positionner sous la sélection au lieu de forcer en haut
+          const bottomCoords = view.coordsAtPos(to);
+          top = bottomCoords.bottom + 10; // 10px sous la sélection
+        }
         
         // La position horizontale reste centrée sur la sélection
         const left = (startCoords.left + endCoords.left) / 2;
 
         setPosition({
-          top: Math.max(10, top), // Marge minimale du haut de la page
+          top: top,
           left: Math.max(10, left - 150), // Centrer le menu horizontalement
           visible: true
         });
