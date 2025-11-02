@@ -9,9 +9,11 @@
   max-width: 100%;
   margin: 0 auto;
   position: relative;
+  overflow: visible; /* ✅ Permet drag handles en dehors */
 }
 
 .editor-content {
+  position: relative; /* ✅ Nécessaire pour les drag handles */
   width: 100%;
   max-width: 100%;
   min-height: 100vh;
@@ -21,7 +23,9 @@
   padding: 0;
   margin: 0;
   resize: none;
-  overflow: visible;
+  overflow: visible; /* ✅ Permet drag handles en dehors (-75px left) */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .editor-content:focus {
@@ -39,7 +43,20 @@
   padding: 0;
   margin: 0;
   resize: none;
-  overflow: visible;
+  overflow: visible; /* ✅ Permet drag handles en dehors (-75px left) */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   TIPTAP CONTAINER - SUPPORT DRAG HANDLES
+   ========================================================================== */
+
+.tiptap-editor-container {
+  position: relative;
+  width: 100%;
+  overflow: visible; /* ✅ Permet drag handles à -75px */
 }
 
 /* ==========================================================================

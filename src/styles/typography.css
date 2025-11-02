@@ -162,19 +162,11 @@
   --editor-line-height-mobile: 1.7;      /* Line-height mobile, légèrement plus dense */
   --editor-line-height-relaxed: 1.85;    /* Line-height pour les paragraphes importants */
 
-  /* Rythme vertical harmonieux pour blog premium */
-  --editor-paragraph-margin-bottom: 1.25em; /* Marge SOUS les paragraphes - plus compact */
+  /* Espacements listes - utilisés par checkboxes.css (legacy) */
   --editor-list-margin-vertical: 1.25em;    /* Marge verticale pour les listes */
   --editor-list-item-margin-vertical: 0.375em; /* Marge entre les items de liste */
-
-  /* Espacements titres optimisés pour hiérarchie claire */
-  --editor-heading-margin-top: 1.25em;      /* Marge AU-DESSUS des titres - plus compact */
-  --editor-heading-margin-bottom: 0.5em;    /* Marge SOUS les titres - espacement optimal */
-  --editor-heading-margin-top-first: 0;     /* Pas de marge pour le premier titre */
-
-  /* Espacements spéciaux pour blog premium */
-  --editor-section-spacing: 1.5em;          /* Espacement entre sections */
-  --editor-block-spacing: 1.75em;           /* Espacement entre blocs (images, quotes, etc.) */
+  
+  /* Note: Les autres spacings markdown sont dans variables.css (--md-*) */
 
   /* ==========================================================================
      VARIABLES UI UNIFIÉES - POUR TOUS LES COMPOSANTS
@@ -220,240 +212,34 @@
 .font-cormorant-garamond { font-family: var(--font-cormorant-garamond); }
 
 /* ==========================================================================
-   LAYOUT TYPOGRAPHIQUE - NOTE HEADER
-   ==========================================================================
-   Intégré depuis NoteHeaderLayout.css
-   Gestion complète du positionnement titre/contenu
-*/
-
-/* Classe de base pour le layout */
-.noteLayout {
-  width: 100%;
-  transition: all var(--transition-normal);
-  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT */
-  background-color: var(--color-bg-primary) !important;
-}
-
-/* ==========================================================================
-   HEADERS - BACKGROUND COHÉRENT
+   STYLES TYPOGRAPHIQUES DU TITRE - TEXTAREA ET H1
    ========================================================================== */
-/* Headers de l'éditeur */
-.editor-header,
-.noteLayout-header {
-  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
-  background-color: var(--color-bg-header) !important;
-}
 
-/* Conteneur du titre */
-.noteLayout-title {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  transition: all var(--transition-normal);
-  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT */
-  background-color: var(--color-bg-primary) !important;
-}
-
-/* Conteneur du contenu */
-.noteLayout-content {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  transition: all var(--transition-normal);
-  background: var(--color-bg-primary) !important; /* VARIABLE CSS - COHÉRENT */
-  background-color: var(--color-bg-primary) !important;
-}
-
-/* Style typographique complet du titre */
+/* Typographie du titre textarea */
 .noteLayout-title textarea {
-  width: 100%;
-  /* max-width supprimé - hérite du container .editor-content-inner */
-  box-sizing: border-box; /* FIX: empêche débordement en prod */
   font-size: var(--editor-title-size);
   font-weight: var(--editor-title-weight);
   font-family: var(--editor-font-family-headings);
-  color: #d0d0d0;              /* Gris clair adouci - direct */
-  background: none;
-  border: none;
-  outline: none;
-  padding: var(--editor-title-padding);
-  margin: 0;
+  color: #d0d0d0;
   letter-spacing: var(--editor-title-letter-spacing);
-  resize: none;
-  overflow: visible;
   line-height: var(--editor-title-line-height);
-  min-height: var(--editor-title-min-height);
-  height: auto;
-  transition: all var(--transition-normal);
 }
 
-/* Add editor H1 styling so typography applies when not using a textarea */
+/* Typographie du titre H1 (non-textarea) */
 .noteLayout-title h1 {
-  width: 100%;
-  /* max-width supprimé - hérite du container .editor-content-inner */
-  box-sizing: border-box; /* FIX: empêche débordement en prod */
   font-size: var(--editor-title-size);
   font-weight: var(--editor-title-weight);
   font-family: var(--editor-font-family-headings);
   color: var(--editor-text-color);
-  background: none;
-  border: none;
-  outline: none;
-  padding: var(--editor-title-padding);
-  margin: 0;
   letter-spacing: var(--editor-title-letter-spacing);
   line-height: var(--editor-title-line-height);
 }
 
-/* Padding typographique du contenu */
-.noteLayout-content .editor-content {
-  padding: var(--editor-content-padding);
-}
-
-/* ==========================================================================
-   ANCIENS ÉTATS DU LAYOUT - SUPPRIMÉS POUR ÉVITER LES CONFLITS
-   ========================================================================== */
-/* Ces règles sont maintenant gérées dans la section "PADDINGS SPÉCIFIQUES PAR MODE" */
-
-/* ==========================================================================
-   LAYOUT AVEC TITRE DANS L'IMAGE - POSITIONNEMENT
-   ========================================================================== */
-/* Le positionnement est maintenant géré par .header-image-title-container dans editor-header-image.css */
-/* Garder ces styles pour compatibilité mais ne pas positionner */
-.noteLayout.imageWithTitle .noteLayout-title {
-  /* Position gérée par .header-image-title-container maintenant */
-  padding: 0;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-.noteLayout.imageWithTitle .noteLayout-title > .editor-container-width {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-}
-
-/* Style du titre dans l'image */
-.noteLayout.imageWithTitle .noteLayout-title {
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
+/* Titre dans l'image - couleur blanche */
 .noteLayout.imageWithTitle .noteLayout-title textarea {
   color: white;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  text-align: center;
-  width: 100%;
-  /* max-width supprimé - hérite du container */
-  white-space: pre-wrap;
-  overflow: visible;
-  background: transparent !important;
-  background-color: transparent !important;
 }
-
-/* Wide mode pour le titre dans l'image */
-.noteLayout.imageWithTitle.wide-mode .noteLayout-title {
-  width: 100%;
-  max-width: 100%;
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
-.noteLayout.imageWithTitle.wide-mode .noteLayout-title > .editor-container-width {
-  width: 100%;
-  max-width: 100%;
-}
-
-.noteLayout.imageWithTitle .noteLayout-content .editor-content {
-  padding-top: 0;
-}
-.noteLayout.imageWithTitle .noteLayout-content .markdown-body {
-  padding-top: 0;
-}
-
-/* ==========================================================================
-   LAYOUT IMAGE SEULE - POSITIONNEMENT
-   ========================================================================== */
-/* Alignement à gauche pour le titre sous l'image */
-.noteLayout.imageOnly .noteLayout-title {
-  text-align: left;
-}
-
-.noteLayout.imageOnly .noteLayout-title > .editor-container-width {
-  padding-bottom: 6px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .noteLayout-title textarea {
-    font-size: var(--editor-title-size-mobile);
-  }
-}
-
-/* ==========================================================================
-   WIDE MODE - PADDING OPTIMISÉ
-   ========================================================================== */
-/* Règles de base pour tous les layouts */
-.noteLayout .noteLayout-title {
-  display: flex;
-  justify-content: center;
-}
-
-.noteLayout .noteLayout-content {
-  margin-top: 0; /* Supprime la marge par défaut */
-}
-
-/* Standard paddings for content area - REDUITS pour le wide mode */
-.noteLayout .noteLayout-content .editor-content {
-  padding: 2px 0 72px 0;
-}
-
-/* ==========================================================================
-   PADDINGS SPÉCIFIQUES PAR MODE - OPTIMISÉS
-   ========================================================================== */
-
-/* 1. Layout sans image - IDENTIQUE À imageOnly + padding top */
-.noteLayout.imageOnly.noImage .noteLayout-title {
-  padding-top: 60px; /* Padding uniforme (le bouton image ne prend pas d'espace) */
-}
-
-/* 2. Layout avec titre dans l'image - PADDING MINIMAL */
-.noteLayout.imageWithTitle .noteLayout-title {
-  padding: 0;
-}
-.noteLayout.imageWithTitle .noteLayout-title textarea {
-  padding: 0 0 1px 0; /* Padding minimal */
-}
-.noteLayout.imageWithTitle .noteLayout-content {
-  margin-top: -24px;
-  padding-top: 18px; /* Augmenté de 12px à 18px */
-}
-
-/* Wide mode avec titre dans l'image */
-.noteLayout.imageWithTitle.wide-mode .noteLayout-title textarea {
-  padding: 0 0 1px 0; /* Padding ultra-minimal */
-}
-.noteLayout.imageWithTitle.wide-mode .noteLayout-content {
-  padding-top: 12px; /* Augmenté de 8px à 12px */
-}
-
-/* 3. Layout image seule - PADDING RÉDUIT */
-.noteLayout.imageOnly .noteLayout-title {
-  padding-top: 4px;
-}
-.noteLayout.imageOnly .noteLayout-title textarea {
-  padding: 0;
-}
-.noteLayout.imageOnly .noteLayout-content {
-  padding-top: 18px; /* Augmenté de 12px à 18px */
-}
-
-/* Wide mode image seule */
-.noteLayout.imageOnly.wide-mode .noteLayout-content {
-  padding-top: 12px; /* Augmenté de 8px à 12px */
-}
-
-/* Le responsive du titre dans l'image est maintenant géré dans editor-header-image.css */
 
 /* ==========================================================================
    STYLES PAGE PUBLIQUE
@@ -485,12 +271,9 @@
 /* Styles pour les titres dans l'éditeur - REMOVED TO AVOID CONFLICTS WITH MARKDOWN.CSS */
 /* .editor-content h1, h2, h3 are now handled by markdown.css with ultra-specific selectors */
 
-/* Styles pour les paragraphes dans l'éditeur */
-.editor-content p {
-  margin: 0 0 var(--editor-paragraph-margin-bottom) 0;
-  line-height: var(--editor-line-height-base);
-  font-family: var(--editor-font-family-body);
-}
+/* ✅ SUPPRIMÉ : Les paragraphes sont maintenant gérés dans editor-markdown.css
+   avec la variable unifiée --md-p-margin.
+   Cette règle causait des paddings parasites (1.25em au lieu de 0.5rem). */
 
 /* ========================================
    TYPOGRAPHIE DES LISTES (UNIQUEMENT)
@@ -519,14 +302,9 @@
 
   /* .editor-content h1, h2, h3 styles removed to avoid conflicts with markdown.css */
 
-  /* Premium mobile spacing */
-  .editor-content p,
-  .markdown-body p,
-  .ProseMirror p {
-    margin: 0 0 1.25em 0;
-    line-height: var(--editor-line-height-mobile); /* 1.65 */
-    font-size: 1rem;                        /* 16px sur mobile */
-  }
+  /* ✅ SUPPRIMÉ : Premium mobile spacing
+     Les paragraphes utilisent maintenant les variables unifiées --md-p-margin
+     Cette règle causait des paddings parasites en mobile (1.25em au lieu de 0.5rem). */
 
   /* Typo listes mobile - structure gérée par editor-markdown.css et chat-markdown.css */
   .editor-content li,
@@ -655,145 +433,35 @@
 }
 
 /* ==========================================================================
-   STYLES PAGE PUBLIQUE
-   ==========================================================================
-   Utilise les mêmes variables et logiques que l'éditeur
-*/
+   TYPOGRAPHIE PAGE PUBLIQUE
+   ========================================================================== */
 
-/* Forcer le thème sombre sur toute la page publique */
-html.public-note-page,
-body.public-note-page {
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-}
-
-/* Container principal de la page publique */
+/* Couleur du container (typographie) */
 .public-note-container {
-  width: 100vw;
-  min-height: 100vh;
-  background: var(--color-bg-primary) !important; /* ✅ TOUJOURS SOMBRE */
   color: var(--editor-text-color);
-  padding-bottom: 64px;
 }
 
-/* Image d'en-tête publique */
-.public-header-image {
-  width: 100%;
-  height: var(--editor-header-image-height); /* 280px - cohérent avec l'éditeur */
-  overflow: hidden;
-  margin-bottom: 32px;
-  position: relative;
-  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
-  background-color: var(--color-bg-header) !important;
-}
-
-.public-header-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 0;
-  transition: filter 0.2s;
-  background: var(--color-bg-header) !important; /* VARIABLE CSS - HEADER */
-  background-color: var(--color-bg-header) !important;
-}
-
-/* Overlay de l'image d'en-tête */
-.public-header-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  transition: background 0.2s;
-}
-
-/* Titre dans l'image d'en-tête */
-.public-header-title {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: auto;
-  max-width: var(--editor-content-width); /* Utilise la variable */
-  padding: 0;
-  box-sizing: border-box;
-  background: transparent !important; /* TRANSPARENT POUR TITRE DANS IMAGE */
-  background-color: transparent !important;
-  text-align: center;
-  z-index: 10;
-}
-
-/* Wrapper du contenu de la note publique */
-.public-note-content-wrapper {
-  max-width: var(--editor-content-width);
-  width: var(--editor-content-width);
-  margin: 0 auto;
-}
-
-/* Container de la TOC publique - styles de base seulement */
-.public-toc-container {
-  /* Position et layout gérés par public-note.css */
-  z-index: 20;
-}
-
-/* ==========================================================================
-   CORRECTIONS SPÉCIFIQUES PAGE PUBLIQUE
-   ==========================================================================
-*/
-
-/* Titre dans la page publique (pas dans l'image) - aligné à gauche */
+/* Titre dans la page publique (pas dans l'image) - typographie */
 .public-note-content-wrapper .noteLayout-title h1 {
-  text-align: left;
-  margin: 0;
-  padding: 0 0 4px 0; /* Même padding que l'éditeur */
-  max-width: var(--editor-content-width);
-  width: var(--editor-content-width);
-  line-height: 1.1;
   color: var(--editor-text-color);
   font-size: var(--editor-title-size);
   font-weight: var(--editor-h1-weight);
   font-family: var(--editor-font-family-headings);
+  line-height: 1.1;
 }
 
-/* Correction des paddings pour les pages publiques - ALIGNÉS AVEC L'ÉDITEUR */
-.public-note-content-wrapper .noteLayout-title {
-  padding-top: 55px; /* Même padding que l'éditeur */
-  margin: 0;
-}
-
+/* Couleur du contenu */
 .public-note-content-wrapper .noteLayout-content {
-  padding: 0;
-  margin: 0;
   color: var(--editor-text-color);
 }
 
-/* Titre dans l'image d'en-tête */
+/* Titre dans l'image d'en-tête - typographie */
 .public-header-title h1 {
   color: white;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   font-size: var(--editor-title-size);
   font-weight: var(--editor-h1-weight);
   font-family: var(--editor-font-family-headings);
-  margin: 0;
-  text-align: center;
-  width: auto;
-  max-width: var(--editor-content-width); /* Utilise la variable */
-  padding: 0 0 4px 0;
-  white-space: pre-wrap;
-  overflow: visible;
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
-/* Mode sans image = imageOnly avec padding top supplémentaire (géré ligne 414) */
-
-/* ==========================================================================
-   RÈGLES POUR LA PAGE PUBLIQUE - SIMPLE ET EFFICACE
-   ========================================================================== */
-/* Supprimer le padding du container H1 sur la page publique */
-.public-note-container .editor-container-width {
-  padding-bottom: 0 !important;
 }
 
 /* ==========================================================================
@@ -801,84 +469,20 @@ body.public-note-page {
    ========================================================================== */
 
 /* H1 - Blog Premium - Titre principal */
-.markdown-body h1,
-.ProseMirror h1,
-.editor-content h1,
-.noteLayout-title h1,
-.public-header-title h1,
-h1 {
-  font-size: 2.375rem;           /* 38px - taille optimisée */
-  font-weight: var(--editor-title-weight); /* Cohérent avec le titre textarea (700) */
-  line-height: var(--editor-line-height-tight); /* 1.3 */
-  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0; /* 2.75em 0 0.875em 0 */
-  color: #d0d0d0;              /* Gris clair adouci - direct */
-  letter-spacing: -0.025em;    /* Légèrement plus serré */
-  font-family: var(--editor-font-family-headings);
-  position: relative;
-  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
-  transition: background-color 0.6s ease, box-shadow 0.6s ease, padding 0.6s ease;
-}
-
-/* Supprimer la marge du premier titre dans le contenu */
-.ProseMirror > h1:first-child,
-.editor-content > h1:first-child,
-.markdown-body > h1:first-child {
-  margin-top: var(--editor-heading-margin-top-first); /* 0 */
-}
+/* ✅ SUPPRIMÉ : Les H1 sont maintenant gérés dans editor-markdown.css
+   avec les variables unifiées --md-h1-margin-top et --md-h1-margin-bottom.
+   Cette règle causait des paddings parasites (1.25em au lieu des valeurs unifiées).
+   Les font-size, font-weight, etc. restent dans editor-markdown.css */
 
 /* H2 - Blog Premium - Sous-titre principal */
-.markdown-body h2,
-.ProseMirror h2,
-.editor-content h2,
-.editor-content-wrapper h2,
-.noteLayout h2,
-.noteLayout-content h2,
-h2 {
-  font-size: 1.8rem;             /* Taille réduite de 10% pour H2 */
-  font-weight: 800;            /* Plus gras pour l'impact */
-  line-height: var(--editor-line-height-tight); /* 1.3 */
-  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0; /* 2.75em 0 0.875em 0 */
-  color: #d0d0d0;              /* Gris clair adouci - direct */
-  letter-spacing: -0.02em;     /* Légèrement serré */
-  font-family: var(--editor-font-family-headings);
-  position: relative;
-  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
-  transition: background-color 0.6s ease, box-shadow 0.6s ease, padding 0.6s ease;
-}
-
-/* Supprimer la marge du premier titre H2 dans le contenu */
-.ProseMirror > h2:first-child,
-.editor-content > h2:first-child,
-.markdown-body > h2:first-child {
-  margin-top: var(--editor-heading-margin-top-first); /* 0 */
-}
+/* ✅ SUPPRIMÉ : Les H2 sont maintenant gérés dans editor-markdown.css
+   avec les variables unifiées --md-h2-margin-top et --md-h2-margin-bottom.
+   Cette règle causait des paddings parasites. */
 
 /* H3 - Blog Premium - Titre de section */
-.markdown-body h3,
-.ProseMirror h3,
-.editor-content h3,
-.editor-content-wrapper h3,
-.noteLayout h3,
-.noteLayout-content h3,
-h3 {
-  font-size: 1.4625rem;         /* Taille réduite de 10% pour H3 */
-  font-weight: 700;            /* Plus gras pour l'impact */
-  line-height: var(--editor-line-height-tight); /* 1.3 */
-  margin: var(--editor-heading-margin-top) 0 var(--editor-heading-margin-bottom) 0; /* 2.75em 0 0.875em 0 */
-  color: #d0d0d0;              /* Gris clair adouci - direct */
-  letter-spacing: -0.015em;    /* Légèrement serré */
-  font-family: var(--editor-font-family-headings);
-  position: relative;
-  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
-  transition: background-color 0.6s ease, box-shadow 0.6s ease, padding 0.6s ease;
-}
-
-/* Supprimer la marge du premier titre H3 dans le contenu */
-.ProseMirror > h3:first-child,
-.editor-content > h3:first-child,
-.markdown-body > h3:first-child {
-  margin-top: var(--editor-heading-margin-top-first); /* 0 */
-}
+/* ✅ SUPPRIMÉ : Les H3 sont maintenant gérés dans editor-markdown.css
+   avec les variables unifiées --md-h3-margin-top et --md-h3-margin-bottom.
+   Cette règle causait des paddings parasites. */
 
 /* ==========================================================================
    ANIMATION FLASH TOC - Titre visé
@@ -908,95 +512,20 @@ h3 {
   font-weight: inherit;
 }
 
-/* H4 - Très gras partout */
-.markdown-body h4,
-.ProseMirror h4,
-.editor-content h4,
-h4 {
-  font-size: 1.25rem;
-  font-weight: 800;
-  line-height: 1.3;
-  margin: 0.875rem 0 0.4375rem 0;
-  color: #d0d0d0;              /* Gris clair adouci - direct */
-  letter-spacing: -0.005em;
-  font-family: var(--editor-font-family-headings);
-  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
-}
-
-/* Supprimer la marge du premier titre H4 dans le contenu */
-.ProseMirror > h4:first-child,
-.editor-content > h4:first-child,
-.markdown-body > h4:first-child {
-  margin-top: 0;
-}
-
-/* H5 - Gras partout */
-.markdown-body h5,
-.ProseMirror h5,
-.editor-content h5,
-h5 {
-  font-size: 1.125rem;
-  font-weight: 800;
-  line-height: 1.35;
-  margin: 0.75rem 0 0.375rem 0;
-  color: #d0d0d0;              /* Gris clair adouci - direct */
-  font-family: var(--editor-font-family-headings);
-  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
-}
-
-/* Supprimer la marge du premier titre H5 dans le contenu */
-.ProseMirror > h5:first-child,
-.editor-content > h5:first-child,
-.markdown-body > h5:first-child {
-  margin-top: 0;
-}
-
-/* H6 - Gras partout */
-.markdown-body h6,
-.ProseMirror h6,
-.editor-content h6,
-h6 {
-  font-size: 1rem;
-  font-weight: 800;
-  line-height: 1.4;
-  margin: 0.625rem 0 0.3125rem 0;
-  color: #d0d0d0;              /* Gris clair adouci - direct */
-  font-family: var(--editor-font-family-headings);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  scroll-margin-top: 30px; /* Espace précis au-dessus du titre visé */
-}
-
-/* Supprimer la marge du premier titre H6 dans le contenu */
-.ProseMirror > h6:first-child,
-.editor-content > h6:first-child,
-.markdown-body > h6:first-child {
-  margin-top: 0;
-}
+/* H4, H5, H6 - Blog Premium */
+/* ✅ SUPPRIMÉ : Les H4, H5, H6 sont maintenant gérés dans editor-markdown.css
+   avec les variables unifiées --md-h4/h5/h5-margin-top et --md-h4/h5/h6-margin-bottom.
+   Ces règles causaient des paddings parasites. */
 
 /* ==========================================================================
    TYPOGRAPHIE DES PARAGRAPHES - CENTRALISÉE
    ========================================================================== */
 
 /* Paragraphes - Blog Premium - Style optimal pour la lecture */
-.markdown-body p,
-.ProseMirror p,
-.editor-content p,
-p {
-  margin: 0 0 var(--editor-paragraph-margin-bottom) 0; /* 1.75em */
-  line-height: var(--editor-line-height-base); /* 1.75 */
-  font-weight: var(--editor-body-weight); /* 500 */
-  font-size: var(--editor-body-size); /* Utilise la variable centralisée */
-  color: var(--editor-text-color);
-  font-family: var(--editor-font-family-headings);
-  text-align: left;
-  hyphens: auto;
-  word-break: break-word;
-  max-width: 100%;
-  text-rendering: optimizeLegibility;     /* Amélioration du rendu */
-  -webkit-font-smoothing: antialiased;    /* Lissage des polices */
-  -moz-osx-font-smoothing: grayscale;     /* Lissage sur macOS */
-}
+/* ✅ SUPPRIMÉ : Les paragraphes sont maintenant gérés dans editor-markdown.css
+   avec la variable unifiée --md-p-margin.
+   Cette règle causait des paddings parasites (1.25em au lieu de 0.5rem).
+   Font-rendering et autres propriétés restent dans editor-markdown.css */
 
 /* EXCEPTION: Paragraphes dans les task items - GÉRÉ PAR checkboxes.css */
 /* Styles déplacés pour unification complète des checkboxes */
@@ -1026,27 +555,9 @@ p:last-child {
    BLOCKQUOTES - BLOG PREMIUM
    ========================================================================== */
 
-.markdown-body blockquote,
-.ProseMirror blockquote,
-.editor-content blockquote {
-  margin: var(--editor-block-spacing) 0; /* 2em */
-  padding: 1.5rem 2rem;
-  background: var(--color-bg-secondary); /* Fond plus sombre */
-  border-left: 4px solid #e55a2b; /* Orange adouci */
-  border-radius: 0 8px 8px 0;
-  font-size: var(--editor-body-size);     /* Utilise la variable centralisée */
-  line-height: var(--editor-line-height-relaxed); /* 1.8 */
-  color: var(--editor-text-color);
-  position: relative;
-}
-
-.markdown-body blockquote p,
-.ProseMirror blockquote p,
-.editor-content blockquote p {
-  margin: 0;
-  font-size: inherit;
-  line-height: inherit;
-}
+/* ✅ SUPPRIMÉ : Les blockquotes sont maintenant gérés dans editor-markdown.css
+   avec les variables unifiées --md-blockquote-margin et --md-blockquote-padding.
+   Ces règles causaient des conflits d'ordre de chargement. */
 
 /* ==========================================================================
    CODE BLOCKS & INLINE CODE - Styles now handled by unified-blocks.css
@@ -1063,28 +574,17 @@ p:last-child {
    IMAGES - BLOG PREMIUM
    ========================================================================== */
 
-.markdown-body img,
-.ProseMirror img,
-.editor-content img {
-  margin: var(--editor-block-spacing) 0; /* 2em */
-  max-width: 100%;
-  height: auto;
-  border: none; /* Aucun encadré - design épuré */
-  box-shadow: none;
-}
+/* ✅ Règles d'images déplacées dans editor-markdown.css pour éviter les conflits
+   Les images utilisent maintenant margin: 0.5rem 0 (défini dans editor-markdown.css)
+   qui est le même en mode édition et preview */
 
 /* ==========================================================================
    HORIZONTAL RULES - BLOG PREMIUM
    ========================================================================== */
 
-.markdown-body hr,
-.ProseMirror hr,
-.editor-content hr {
-  margin: var(--editor-section-spacing) 0; /* 3em */
-  border: none;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
-}
+/* ✅ SUPPRIMÉ : Les HR sont maintenant gérés dans editor-markdown.css
+   avec la variable unifiée --md-hr-margin.
+   Ces règles causaient des conflits d'ordre de chargement. */
 
 /* ==========================================================================
    MERMAID DIAGRAMS - IMPORT DU FICHIER CENTRALISÉ

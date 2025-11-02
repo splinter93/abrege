@@ -47,6 +47,18 @@ export function createMarkdownIt() {
     permalink: false // pas de lien, juste l'id
   });
   
+  // Custom renderer pour forcer les bullets sur les listes normales
+  md.renderer.rules.bullet_list_open = function(tokens, idx) {
+    const token = tokens[idx];
+    // Vérifier si c'est une task list (a l'attribut class="contains-task-list")
+    const isTaskList = token.attrGet('class')?.includes('task-list') || token.attrGet('class')?.includes('contains-task-list');
+    
+    if (isTaskList) {
+      return '<ul class="contains-task-list">\n';
+    }
+    return '<ul style="list-style-type: disc !important; padding-left: 1.5rem !important;">\n';
+  };
+  
   // Custom renderer pour les code blocks - même structure que mode édition avec boutons
   md.renderer.rules.fence = function(tokens, idx) {
     const token = tokens[idx];
@@ -91,15 +103,15 @@ export function createMarkdownIt() {
             <span class="toolbar-label">${langUpper}</span>
           </div>
           <div class="toolbar-right">
-            <button class="toolbar-btn copy-btn" title="Copier le code">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            <button class="toolbar-btn copy-btn" title="Copier le code" data-content="${md.utils.escapeHtml(content).replace(/"/g, '&quot;')}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
             </button>
             <button class="toolbar-btn expand-btn" title="Agrandir le code">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
               </svg>
             </button>
           </div>

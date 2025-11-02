@@ -192,7 +192,7 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
           </>
         )}
         {isReadonly && (
-          <div className="markdown-body" dangerouslySetInnerHTML={{ __html: html }} />
+          <div className="markdown-body editor-content-wrapper" dangerouslySetInnerHTML={{ __html: html }} />
         )}
       </div>
     </EditorContent>

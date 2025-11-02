@@ -1,0 +1,321 @@
+/* ==========================================================================
+   EDITOR LAYOUT MODES - STRUCTURE ET POSITIONNEMENT
+   ==========================================================================
+   Gestion complète des layouts de l'éditeur.
+   La typographie (fonts, sizes, colors, margins) est dans typography.css
+   
+   RESPONSABILITÉ :
+   - Structure des containers (.noteLayout, .noteLayout-title, .noteLayout-content)
+   - Modes de layout (imageWithTitle, imageOnly, noImage, wide-mode)
+   - Positionnement et dimensions
+   - Backgrounds des containers
+   - Page publique (structure layout)
+*/
+
+/* ==========================================================================
+   LAYOUT NOTE HEADER - STRUCTURE DE BASE
+   ========================================================================== */
+
+/* Classe de base pour le layout */
+.noteLayout {
+  width: 100%;
+  transition: all var(--transition-normal);
+  background: var(--color-bg-primary) !important;
+  background-color: var(--color-bg-primary) !important;
+}
+
+/* ==========================================================================
+   HEADERS - BACKGROUND COHÉRENT
+   ========================================================================== */
+.editor-header,
+.noteLayout-header {
+  background: var(--color-bg-header) !important;
+  background-color: var(--color-bg-header) !important;
+}
+
+/* ==========================================================================
+   CONTAINERS TITRE ET CONTENU - STRUCTURE
+   ========================================================================== */
+
+/* Conteneur du titre */
+/* ✅ Simple wrapper, pas de contrainte de largeur (géré par .editor-content-inner parent) */
+.noteLayout-title {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: var(--color-bg-primary) !important;
+  background-color: var(--color-bg-primary) !important;
+}
+
+/* Conteneur du contenu */
+/* ✅ Simple wrapper, pas de contrainte de largeur (géré par .editor-content-inner parent) */
+.noteLayout-content {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: visible; /* ✅ Permet drag handles en dehors */
+  background: var(--color-bg-primary) !important;
+  background-color: var(--color-bg-primary) !important;
+}
+
+/* ==========================================================================
+   TEXTAREA TITRE - STRUCTURE (typographie dans typography.css)
+   ========================================================================== */
+.noteLayout-title textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: none;
+  border: none;
+  outline: none;
+  padding: var(--editor-title-padding);
+  margin: 0;
+  resize: none;
+  overflow: visible; /* ✅ Permet drag handles en dehors */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-height: var(--editor-title-min-height);
+  height: auto;
+  transition: all var(--transition-normal);
+}
+
+/* H1 dans le titre (non-textarea) - structure */
+.noteLayout-title h1 {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: none;
+  border: none;
+  outline: none;
+  padding: var(--editor-title-padding);
+  margin: 0;
+}
+
+/* ==========================================================================
+   CONTENU EDITOR - STRUCTURE
+   ========================================================================== */
+.noteLayout-content .editor-content {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: var(--editor-content-padding); /* 6px 0 100px 0 - padding vertical uniquement */
+  overflow: visible; /* ✅ Permet drag handles en dehors */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ==========================================================================
+   MODE IMAGE AVEC TITRE DANS L'IMAGE - POSITIONNEMENT
+   ========================================================================== */
+
+.noteLayout.imageWithTitle .noteLayout-title {
+  padding: 0;
+  box-sizing: border-box;
+  text-align: center;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.noteLayout.imageWithTitle .noteLayout-title > .editor-container-width {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.noteLayout.imageWithTitle .noteLayout-title textarea {
+  text-align: center;
+  width: 100%;
+  white-space: pre-wrap;
+  overflow: visible;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Wide mode pour le titre dans l'image */
+.noteLayout.imageWithTitle.wide-mode .noteLayout-title {
+  width: 100%;
+  max-width: 100%;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.noteLayout.imageWithTitle.wide-mode .noteLayout-title > .editor-container-width {
+  width: 100%;
+  max-width: 100%;
+}
+
+.noteLayout.imageWithTitle .noteLayout-content .editor-content {
+  padding-top: 0;
+}
+
+.noteLayout.imageWithTitle .noteLayout-content .markdown-body {
+  padding-top: 0;
+}
+
+/* ==========================================================================
+   MODE IMAGE SEULE - POSITIONNEMENT
+   ========================================================================== */
+
+.noteLayout.imageOnly .noteLayout-title {
+  text-align: left;
+}
+
+.noteLayout.imageOnly .noteLayout-title > .editor-container-width {
+  padding-bottom: 6px;
+}
+
+/* ==========================================================================
+   PADDINGS SPÉCIFIQUES PAR MODE - OPTIMISÉS
+   ========================================================================== */
+
+/* 1. Layout sans image - padding top supplémentaire */
+.noteLayout.imageOnly.noImage .noteLayout-title {
+  padding-top: 60px;
+}
+
+/* 2. Layout avec titre dans l'image - PADDING MINIMAL */
+.noteLayout.imageWithTitle .noteLayout-title {
+  padding: 0;
+}
+
+.noteLayout.imageWithTitle .noteLayout-title textarea {
+  padding: 0 0 1px 0;
+}
+
+.noteLayout.imageWithTitle .noteLayout-content {
+  margin-top: -24px;
+  padding-top: 18px;
+}
+
+/* Wide mode avec titre dans l'image */
+.noteLayout.imageWithTitle.wide-mode .noteLayout-title textarea {
+  padding: 0 0 1px 0;
+}
+
+.noteLayout.imageWithTitle.wide-mode .noteLayout-content {
+  padding-top: 12px;
+}
+
+/* 3. Layout image seule - PADDING RÉDUIT */
+.noteLayout.imageOnly .noteLayout-title {
+  padding-top: 4px;
+}
+
+.noteLayout.imageOnly .noteLayout-title textarea {
+  padding: 0;
+}
+
+.noteLayout.imageOnly .noteLayout-content {
+  padding-top: 18px;
+}
+
+/* Wide mode image seule */
+.noteLayout.imageOnly.wide-mode .noteLayout-content {
+  padding-top: 12px;
+}
+
+/* ==========================================================================
+   PAGE PUBLIQUE - STRUCTURE LAYOUT
+   ========================================================================== */
+
+/* Forcer le thème sombre sur toute la page publique */
+html.public-note-page,
+body.public-note-page {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* Container principal de la page publique */
+.public-note-container {
+  width: 100vw;
+  min-height: 100vh;
+  background: var(--color-bg-primary) !important;
+  padding-bottom: 64px;
+}
+
+/* Image d'en-tête publique */
+.public-header-image {
+  width: 100%;
+  height: var(--editor-header-image-height);
+  overflow: hidden;
+  margin-bottom: 32px;
+  position: relative;
+  background: var(--color-bg-header) !important;
+  background-color: var(--color-bg-header) !important;
+}
+
+.public-header-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  transition: filter 0.2s;
+  background: var(--color-bg-header) !important;
+  background-color: var(--color-bg-header) !important;
+}
+
+/* Overlay de l'image d'en-tête */
+.public-header-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  transition: background 0.2s;
+}
+
+/* Titre dans l'image d'en-tête - POSITIONNEMENT */
+.public-header-title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  max-width: var(--editor-content-width);
+  padding: 0;
+  box-sizing: border-box;
+  background: transparent !important;
+  background-color: transparent !important;
+  text-align: center;
+  z-index: 10;
+}
+
+/* Wrapper du contenu de la note publique */
+.public-note-content-wrapper {
+  max-width: var(--editor-content-width);
+  width: var(--editor-content-width);
+  margin: 0 auto;
+}
+
+/* Container de la TOC publique */
+.public-toc-container {
+  z-index: 20;
+}
+
+/* Corrections paddings pour les pages publiques */
+.public-note-content-wrapper .noteLayout-title {
+  padding-top: 55px;
+  margin: 0;
+}
+
+.public-note-content-wrapper .noteLayout-content {
+  padding: 0;
+  margin: 0;
+}
+
+/* Supprimer le padding du container H1 sur la page publique */
+.public-note-container .editor-container-width {
+  padding-bottom: 0 !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE MOBILE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .noteLayout-title textarea {
+    font-size: var(--editor-title-size-mobile);
+  }
+}
+

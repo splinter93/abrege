@@ -10,10 +10,8 @@
 @import './variables.css';
 @import './design-system.css';
 @import './typography.css';
+@import './editor-layout-modes.css';
 @import './glassmorphism-variables.css';
-
-/* === STYLES MARKDOWN ÉDITEUR === */
-@import './editor-markdown.css';
 
 /* === UTILITAIRES ÉDITEUR === */
 @import './editor-utilities.css';
@@ -36,7 +34,10 @@
 /* === AUTRES EXTENSIONS === */
 @import './mermaid.css';
 
-/* === SYSTÈME UNIFIÉ === */
+/* === STYLES MARKDOWN ÉDITEUR === */
+@import './editor-markdown.css';
+
+/* === SYSTÈME UNIFIÉ (EN DERNIER pour override les blocs de code) === */
 @import './unified-blocks.css';
 @import './checkboxes.css';
 

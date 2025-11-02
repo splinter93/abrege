@@ -12,14 +12,18 @@
 /* Import typography pour définir les variables */
 @import '../styles/typography.css';
 
-/* Import Tailwind CSS */
+/* Import layout modes éditeur (structure et positionnement) */
+@import '../styles/editor-layout-modes.css';
+
+/* Import Tailwind CSS AVANT les styles markdown */
 @import '../styles/tailwind.css';
 
 /* Import du design system chat ChatGPT unifié */
 @import '../styles/chat-clean.css';
 
-/* Import des styles markdown - séparés par contexte */
+/* Import des styles markdown - APRÈS Tailwind pour override le reset */
 @import '../styles/chat-markdown.css';
+@import '../styles/editor-markdown.css';
 
 /* Import des code blocks unifiés */
 @import '../styles/unified-blocks.css';

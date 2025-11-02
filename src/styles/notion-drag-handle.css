@@ -53,27 +53,21 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: var(--notion-handle-size) !important;
-  height: var(--notion-handle-size) !important;
+  width: 20px !important;  /* Réduit de 44px à 20px */
+  height: 20px !important;  /* Réduit de 44px à 20px */
   padding: 0 !important;
   margin: 0 !important;
   background: transparent !important;
   border: none !important;
-  border-radius: 6px !important;
+  border-radius: 4px !important;
   cursor: grab !important;
   transition: all 150ms ease !important;
   outline: none !important;
 }
 
 .notion-drag-handle-btn:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  transform: none !important; /* Pas de scale pour rester cohérent avec le bouton + */
-}
-
-@media (prefers-color-scheme: dark) {
-  .notion-drag-handle-btn:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
-  }
+  background: transparent !important;  /* Pas de background au hover */
+  transform: none !important;
 }
 
 .notion-drag-handle-btn:active {

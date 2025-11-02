@@ -42,6 +42,9 @@
   margin: 0 auto;
   padding: 0 var(--editor-padding-horizontal-desktop); /* Padding ici pour titre ET contenu */
   box-sizing: border-box;
+  overflow: visible; /* ✅ Permet drag handles à -75px (word-wrap gère le texte) */
+  word-wrap: break-word; /* ✅ Force le wrap des mots longs */
+  overflow-wrap: break-word; /* ✅ Force le wrap moderne */
 }
 
 /* ==========================================================================

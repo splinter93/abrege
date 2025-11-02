@@ -29,34 +29,34 @@ let globalDragHandle: HTMLElement | null = null;
 let currentView: EditorView | null = null;
 
 // Version du handle pour forcer la recréation après changements de design
-const HANDLE_VERSION = 'v3.5'; // Détection listItem individuel + bouton + fonctionnel
+const HANDLE_VERSION = 'v4.1'; // Gap 12px + descendu de 11px + bouton + sans encadré
 
 function createDragHandle(): HTMLElement {
   // Créer le container pour les deux boutons (+ et ⋮⋮)
   const container = document.createElement('div');
-  container.className = 'notion-handle-container';
+  container.className = 'notion-drag-handle notion-handle-container';
   container.style.position = 'absolute';
   container.style.zIndex = '100';
   container.style.opacity = '0';
   container.style.transition = 'opacity 150ms ease';
   container.style.display = 'flex';
-  container.style.gap = '4px';
+  container.style.gap = '12px';  // Augmenté à 12px
   container.style.alignItems = 'center';
   
   // Créer le bouton "+" (à gauche)
   const plusBtn = document.createElement('button');
   plusBtn.className = 'notion-plus-btn';
   plusBtn.title = 'Ajouter un bloc';
-  plusBtn.style.width = '28px';
-  plusBtn.style.height = '28px';
+  plusBtn.style.width = '20px';  // Réduit
+  plusBtn.style.height = '20px';  // Réduit
   plusBtn.style.display = 'flex';
   plusBtn.style.alignItems = 'center';
   plusBtn.style.justifyContent = 'center';
   plusBtn.style.border = 'none';
-  plusBtn.style.background = 'transparent';
-  plusBtn.style.borderRadius = '4px';
+  plusBtn.style.background = 'transparent';  // Pas de background
+  plusBtn.style.borderRadius = '0';  // Pas d'encadré
   plusBtn.style.cursor = 'pointer';
-  plusBtn.style.color = 'rgba(255, 255, 255, 0.5)';
+  plusBtn.style.color = 'rgba(255, 255, 255, 0.5)';  // Gris subtil
   plusBtn.style.transition = 'all 150ms ease';
   plusBtn.innerHTML = `
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" data-v="3.2">
@@ -76,9 +76,9 @@ function createDragHandle(): HTMLElement {
     }
   }, 0);
   
-  // Hover effect sur le bouton +
+  // Hover effect sur le bouton + (sans background)
   plusBtn.addEventListener('mouseenter', () => {
-    plusBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+    plusBtn.style.background = 'transparent';  // Pas de background au hover
     plusBtn.style.color = 'rgba(255, 255, 255, 0.8)';
   });
   plusBtn.addEventListener('mouseleave', () => {
@@ -130,13 +130,13 @@ function createDragHandle(): HTMLElement {
   const dragBtn = document.createElement('div');
   dragBtn.className = 'notion-drag-handle-btn';
   dragBtn.title = 'Glisser pour déplacer';
-  dragBtn.style.width = '28px';
-  dragBtn.style.height = '28px';
+  dragBtn.style.width = '20px';  // Réduit (était 28px)
+  dragBtn.style.height = '20px';  // Réduit (était 28px)
   dragBtn.style.display = 'flex';
   dragBtn.style.alignItems = 'center';
   dragBtn.style.justifyContent = 'center';
   dragBtn.style.cursor = 'grab';
-  dragBtn.style.background = 'transparent';
+  dragBtn.style.background = 'transparent';  // Pas de background par défaut
   dragBtn.style.borderRadius = '4px';
   dragBtn.style.transition = 'all 150ms ease';
   dragBtn.innerHTML = `
@@ -150,9 +150,9 @@ function createDragHandle(): HTMLElement {
       </svg>
   `;
   
-  // Hover effect cohérent avec le bouton +
+  // Hover effect minimal (pas de background)
   dragBtn.addEventListener('mouseenter', () => {
-    dragBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+    dragBtn.style.background = 'transparent';  // Pas de background au hover
   });
   dragBtn.addEventListener('mouseleave', () => {
     dragBtn.style.background = 'transparent';
@@ -203,13 +203,14 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                 globalDragHandle = null;
               }
               
-              if (!globalDragHandle && view.dom && view.dom.parentElement) {
+              if (!globalDragHandle && view.dom) {
             globalDragHandle = createDragHandle();
                 globalDragHandle.setAttribute('data-version', HANDLE_VERSION);
             
-            const editorElement = view.dom.parentElement;
+            // Trouver .tiptap-editor-container (grand-parent) au lieu du parent direct
+            const editorElement = view.dom.closest('.tiptap-editor-container') || view.dom.parentElement;
             if (editorElement) {
-              editorElement.style.position = 'relative';
+              (editorElement as HTMLElement).style.position = 'relative';
               editorElement.appendChild(globalDragHandle);
 
               // DRAGSTART: Utiliser la méthode officielle Tiptap
@@ -320,14 +321,15 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                 globalDragHandle = null;
               }
               
-              if (!globalDragHandle && view.dom && view.dom.parentElement) {
+              if (!globalDragHandle && view.dom) {
                 requestAnimationFrame(() => {
-                  if (!globalDragHandle && view.dom && view.dom.parentElement) {
+                  if (!globalDragHandle && view.dom) {
                     globalDragHandle = createDragHandle();
                     globalDragHandle.setAttribute('data-version', HANDLE_VERSION);
-                    const editorElement = view.dom.parentElement;
+                    // Trouver .tiptap-editor-container (grand-parent) au lieu du parent direct
+                    const editorElement = view.dom.closest('.tiptap-editor-container') || view.dom.parentElement;
                     if (editorElement) {
-                      editorElement.style.position = 'relative';
+                      (editorElement as HTMLElement).style.position = 'relative';
                       editorElement.appendChild(globalDragHandle);
                       
                       // Ajouter les event listeners
@@ -445,8 +447,8 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                     const editorRect = view.dom.getBoundingClientRect();
 
                     // Positionner le container (+ à gauche du drag handle)
-                    globalDragHandle.style.left = `${rect.left - editorRect.left - 75}px`;
-                    globalDragHandle.style.top = `${rect.top - editorRect.top - 5}px`;
+                    globalDragHandle.style.left = `${rect.left - editorRect.left - 80}px`;  // Décalé un peu plus à gauche
+                    globalDragHandle.style.top = `${rect.top - editorRect.top + 6}px`;  // Descendu de 11px (-5 → +6)
                     globalDragHandle.style.opacity = '1';
                     
                     // Utiliser posAtDOM pour la position exacte

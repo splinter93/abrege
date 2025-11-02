@@ -5,10 +5,9 @@ import { Noto_Sans } from "next/font/google";
 // Ordre critique : variables de base en premier
 import "../styles/variables.css";
 import "../styles/design-system.css";
-import "../styles/typography.css";
+// ✅ typography.css est importé dans globals.css, pas besoin de le réimporter ici
 import "../styles/glassmorphism-variables.css";
 import "./globals.css";
-import "../styles/editor-markdown.css";
 import "../styles/editor.css";
 import "../styles/page-title-containers.css";
 import "../styles/unified-page-title.css";

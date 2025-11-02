@@ -120,9 +120,10 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
       'data-language', 'data-content', 'data-index', 'data-mermaid', 'data-mermaid-content',
       'colspan', 'rowspan', 'scope', 'headers',
       'width', 'height', 'align', 'valign',
-      'type', 'checked', 'disabled', // ✅ Attributs des checkboxes
-      'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', // ✅ SVG
-      'x', 'y', 'rx', 'ry', 'd', 'points', 'x1', 'y1', 'x2', 'y2' // ✅ SVG paths
+      'type', 'checked', 'disabled',
+      'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin',
+      'x', 'y', 'rx', 'ry', 'd', 'points', 'x1', 'y1', 'x2', 'y2',
+      'cx', 'cy', 'r', 'transform' // ✅ Attributs SVG supplémentaires
     ],
     ALLOW_DATA_ATTR: true,
     ALLOW_UNKNOWN_PROTOCOLS: false
@@ -209,16 +210,33 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
 
     const handleCopyClick = async (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      const button = target.closest('.copy-btn') as HTMLButtonElement;
+      const button = target.closest('.toolbar-btn.copy-btn') as HTMLButtonElement;
       if (!button) return;
+
+      e.preventDefault();
+      e.stopPropagation();
 
       const content = button.getAttribute('data-content');
       if (!content) return;
 
       try {
-        await navigator.clipboard.writeText(content);
+        // Décoder les entités HTML
+        const decoded = content.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+        await navigator.clipboard.writeText(decoded);
+        
+        // Changer icône en checkmark
+        const originalHTML = button.innerHTML;
+        button.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        `;
         button.classList.add('copied');
-        setTimeout(() => button.classList.remove('copied'), 2000);
+        
+        setTimeout(() => {
+          button.innerHTML = originalHTML;
+          button.classList.remove('copied');
+        }, 2000);
       } catch (err) {
         logger.error('Erreur copie code:', err);
       }
@@ -226,6 +244,54 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
 
     container.addEventListener('click', handleCopyClick);
     return () => container.removeEventListener('click', handleCopyClick);
+  }, [sanitizedHtml]);
+  
+  // ✅ Gérer les clics sur les boutons expand
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleExpandClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const button = target.closest('.toolbar-btn.expand-btn') as HTMLButtonElement;
+      if (!button) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const codeBlock = button.closest('.u-block--code');
+      const codeContent = codeBlock?.querySelector('pre code')?.textContent || '';
+      const lang = (codeBlock as HTMLElement)?.dataset?.language || 'text';
+
+      const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+      if (newWindow) {
+        newWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Code - ${lang.toUpperCase()}</title>
+            <style>
+              body { 
+                font-family: 'JetBrains Mono', monospace; 
+                background: #1a1a1a; 
+                color: #a0a0a0; 
+                margin: 0; 
+                padding: 20px; 
+                white-space: pre-wrap;
+                font-size: 14px;
+                line-height: 1.8;
+              }
+            </style>
+          </head>
+          <body>${codeContent}</body>
+          </html>
+        `);
+        newWindow.document.close();
+      }
+    };
+
+    container.addEventListener('click', handleExpandClick);
+    return () => container.removeEventListener('click', handleExpandClick);
   }, [sanitizedHtml]);
 
   return (

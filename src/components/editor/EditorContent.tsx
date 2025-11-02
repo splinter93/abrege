@@ -7,13 +7,12 @@ interface EditorContentProps {
 
 /**
  * Zone principale de contenu markdown (Tiptap/ProseMirror)
+ * Simple wrapper - pas de classes layout (déjà dans EditorLayout parent)
  */
 const EditorContent: React.FC<EditorContentProps> = ({ children }) => {
   return (
-    <div className="editor-content-wrapper markdown-body editor-container-width editor-text-left" style={{ maxWidth: 'var(--editor-content-width)', width: 'var(--editor-content-width)', margin: '0 auto' }}>
-      <div className="editor-content">
-        {children}
-      </div>
+    <div className="editor-content markdown-body">
+      {children}
     </div>
   );
 };

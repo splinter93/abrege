@@ -169,3 +169,40 @@ body.dark {
   /* Mais on garde pour compatibilité si du code vérifie .dark */
 }
 
+/* ==========================================================================
+   MARKDOWN SPACING - SOURCE UNIQUE DE VÉRITÉ
+   ==========================================================================
+   ⚠️ CRITIQUE : Ces variables sont utilisées PARTOUT (éditeur, chat, preview)
+   Modifier ICI et seulement ICI pour changer les espacements markdown.
+   ========================================================================== */
+:root {
+  /* Titres - top / bottom */
+  --md-h1-margin-top: 1.125rem;    /* 18px */
+  --md-h1-margin-bottom: 0.75rem;  /* 12px */
+  --md-h2-margin-top: 1rem;        /* 16px */
+  --md-h2-margin-bottom: 0.625rem; /* 10px */
+  --md-h3-margin-top: 0.875rem;    /* 14px */
+  --md-h3-margin-bottom: 0.5rem;   /* 8px */
+  --md-h4-margin-top: 0.75rem;     /* 12px */
+  --md-h4-margin-bottom: 0.375rem; /* 6px */
+  --md-h5-margin-top: 0.625rem;    /* 10px */
+  --md-h5-margin-bottom: 0.375rem; /* 6px */
+  --md-h6-margin-top: 0.625rem;    /* 10px */
+  --md-h6-margin-bottom: 0.25rem;  /* 4px */
+  
+  /* Contenu */
+  --md-p-margin: 0.5rem;           /* 8px */
+  --md-img-margin-top: 1rem;       /* 16px - UNIFORME partout par défaut */
+  --md-img-margin-bottom: 0.25rem; /* 4px - UNIFORME partout */
+  --md-img-margin-top-edit: 0.25rem; /* 4px - override pour mode édition seulement */
+  --md-list-margin: 0.5rem;        /* 8px */
+  --md-list-item-margin: 0.25rem;  /* 4px */
+  --md-list-nested-margin: 0.125rem; /* 2px */
+  
+  /* Blocs */
+  --md-table-margin: 1rem;         /* 16px */
+  --md-blockquote-margin: 0.875rem; /* 14px */
+  --md-blockquote-padding: 0.625rem; /* 10px */
+  --md-hr-margin: 1.25rem;         /* 20px */
+}
+

@@ -107,22 +107,25 @@
 .chat-markdown-content .toolbar-btn,
 .chat-markdown .toolbar-btn,
 .unified-block-toolbar .toolbar-btn { /* Added for chat CodeBlock */
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   gap: 0;
-  height: 28px;
-  width: 28px;
-  border: none;
-  border-radius: 8px; /* ✅ Cohérent avec boutons header chat */
-  background: transparent;
-  color: var(--blk-muted);
-  cursor: pointer;
-  outline: none;
-  padding: 0;
+  height: 28px !important;
+  width: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--blk-muted) !important;
+  cursor: pointer !important;
+  outline: none !important;
+  padding: 0 !important;
   font-family: var(--sans);
   font-size: 13px;
   font-weight: 500;
+  flex-shrink: 0 !important;
 }
 
 .ProseMirror .toolbar-btn:hover,
@@ -160,10 +163,11 @@
 .chat-markdown-content .toolbar-btn svg,
 .chat-markdown .toolbar-btn svg,
 .unified-block-toolbar .toolbar-btn svg { /* Added for chat CodeBlock */
-  width: 14px ;
-  height: 14px ;
-  display: block ;
-  flex-shrink: 0;
+  width: 14px !important;
+  height: 14px !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+  pointer-events: none !important; /* Le SVG ne capture pas les clics */
 }
 
 /* Body */
@@ -186,99 +190,34 @@
    CODE BLOCK VARIANT - ALIGNED WITH MERMAID
    ========================================================================== */
 
-/* RESET COMPLET des styles markdown.css pour les blocs de code */
-.markdown-body pre,
-.markdown-body pre code,
-.markdown-body .hljs,
-.public-note-container .markdown-body pre,
-.public-note-container .markdown-body pre code,
-.public-note-container .markdown-body .hljs,
-.public-note-content-wrapper .markdown-body pre,
-.public-note-content-wrapper .markdown-body pre code,
-.public-note-content-wrapper .markdown-body .hljs {
-  background: var(--blk-bg) ;
-  color: var(--blk-fg) ;
-  border: none ;
-  border-radius: var(--blk-radius) ;
-  padding: 16px 20px ;
-  margin: 1.75rem 0 ;
-  font-family: var(--mono) ;
-  font-size: 14px ;
-  line-height: 1.8 ;
-  text-decoration: none ;
-  border-bottom: none ;
-  text-underline-offset: unset ;
-  text-decoration-thickness: unset ;
-  font-weight: normal ;
-  font-style: normal ;
-  letter-spacing: normal ;
-  word-spacing: normal ;
-  text-transform: none ;
-  text-indent: 0 ;
-  text-shadow: none ;
-  white-space: pre ;
-  word-wrap: normal ;
-  word-break: normal ;
-  overflow-wrap: normal ;
-  hyphens: none ;
-}
-
-/* STYLES SIMPLES POUR TOUS LES BLOCS DE CODE */
-.markdown-body pre,
-.markdown-body pre code,
-.markdown-body .hljs,
-.public-note-container .markdown-body pre,
-.public-note-container .markdown-body pre code,
-.public-note-container .markdown-body .hljs,
-.public-note-content-wrapper .markdown-body pre,
-.public-note-content-wrapper .markdown-body pre code,
-.public-note-content-wrapper .markdown-body .hljs {
-  background: var(--color-bg-content); /* Variable unifiée pour les éléments de contenu */
-  color: var(--chat-text-secondary); /* ✅ Variable unifiée */
-  border: none ;
-  border-radius: 8px ;
-  padding: 16px 20px ;
-  margin: 1.75rem 0 ;
-  font-family: var(--font-base);
-  font-size: 14px ;
-  line-height: 1.8 ;
-  text-decoration: none ;
-  white-space: pre ;
-  overflow-x: auto ;
-  display: block ;
-}
+/* ✅ SUPPRIMÉ : Règles .ProseMirror pre causaient conflit de spécificité avec .u-block
+   Les code blocks en mode édition utilisent .u-block uniquement (généré par UnifiedCodeBlockExtension)
+   Les code blocks en mode lecture utilisent .markdown-body pre (fallback ci-dessous) */
 
 /* GESTION des blocs imbriqués - Si un .u-block contient un <pre> */
+/* ✅ SPÉCIFICITÉ MAXIMALE pour override les règles .ProseMirror pre */
+.ProseMirror .u-block pre,
+.ProseMirror .u-block pre code,
+.ProseMirror .u-block .hljs,
+.markdown-body .u-block pre,
+.markdown-body .u-block pre code,
+.markdown-body .u-block .hljs,
 .u-block pre,
 .u-block pre code,
 .u-block .hljs {
-  background: transparent ;
-  color: inherit ;
-  border: none ;
-  border-radius: 0 ;
-  padding: 0 ;
-  margin: 0 ;
-  font-family: inherit ;
-  font-size: inherit ;
-  line-height: inherit ;
+  background: transparent !important;
+  color: inherit !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
 }
 
-/* COULEUR SIMPLE POUR TOUS LES ÉLÉMENTS DE CODE */
-.markdown-body pre *,
-.markdown-body pre code *,
-.markdown-body .hljs *,
-.public-note-container .markdown-body pre *,
-.public-note-container .markdown-body pre code *,
-.public-note-container .markdown-body .hljs *,
-.public-note-content-wrapper .markdown-body pre *,
-.public-note-content-wrapper .markdown-body pre code *,
-.public-note-content-wrapper .markdown-body .hljs * {
-  color: var(--chat-text-secondary); /* ✅ Variable unifiée */
-  background: transparent ;
-  text-decoration: none ;
-  font-weight: normal ;
-  font-style: normal ;
-}
+/* ✅ SUPPRIMÉ : Règles .ProseMirror pre * trop générales, causent conflit
+   La couleur du code est gérée par les règles .u-block__body et .u-block--code */
 
 /* Le .u-block__body a déjà le padding et le style de base.
    Nous devons simplement nous assurer que la balise <pre> à l'intérieur
@@ -286,20 +225,21 @@
 .ProseMirror .u-block--code pre,
 .markdown-body .u-block--code pre,
 .chat-markdown-content .u-block--code pre {
-  margin: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  font-family: inherit; /* Hérite de --mono depuis .u-block__body */
-  font-size: inherit;   /* Hérite de 14px depuis .u-block__body */
-  line-height: inherit; /* Hérite de 1.8 depuis .u-block__body */
-  color: inherit;       /* Hérite de --blk-fg depuis .u-block__body */
-  overflow-x: auto;     /* Permet le défilement horizontal pour le code long */
-  white-space: pre;
-  text-decoration: none ;
-  border-bottom: none ;
-  text-underline-offset: unset ;
-  text-decoration-thickness: unset ;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  font-family: inherit !important; /* Hérite de --mono depuis .u-block__body */
+  font-size: inherit !important;   /* Hérite de 14px depuis .u-block__body */
+  line-height: inherit !important; /* Hérite de 1.8 depuis .u-block__body */
+  color: inherit !important;       /* Hérite de --blk-fg depuis .u-block__body */
+  overflow-x: auto !important;     /* Permet le défilement horizontal pour le code long */
+  white-space: pre !important;
+  text-decoration: none !important;
+  border-bottom: none !important;
+  text-underline-offset: unset !important;
+  text-decoration-thickness: unset !important;
+  filter: none !important; /* Pas de brightness sur le pre interne */
 }
 
 /* Neutralisation COMPLÈTE de la coloration syntaxique pour un style épuré */
@@ -326,12 +266,13 @@
 .ProseMirror .u-block--code pre code,
 .markdown-body .u-block--code pre code,
 .chat-markdown-content .u-block--code pre code {
-  background: none;
-  padding: 0;
-  text-decoration: none ;
-  border-bottom: none ;
-  text-underline-offset: unset ;
-  text-decoration-thickness: unset ;
+  background: none !important;
+  padding: 0 !important;
+  text-decoration: none !important;
+  border-bottom: none !important;
+  text-underline-offset: unset !important;
+  text-decoration-thickness: unset !important;
+  filter: none !important; /* Pas de brightness sur le code interne */
 }
 
 /* Fallback for inline code (not in a block) */
