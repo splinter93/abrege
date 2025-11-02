@@ -9,6 +9,9 @@
 /* Import du système glassmorphism centralisé */
 @import '../styles/glassmorphism-system.css';
 
+/* Import typography AVANT chat-markdown pour définir les variables */
+@import '../styles/typography.css';
+
 /* Import de la typographie markdown chat optimisée */
 @import '../styles/chat-markdown-typography.css';
 
@@ -20,6 +23,9 @@
 
 /* Import des styles markdown unifiés (éditeur + chat + page publique) */
 @import '../styles/unified-markdown.css';
+
+/* Import des code blocks unifiés */
+@import '../styles/unified-blocks.css';
 
 /* Import des utilitaires chat */
 @import '../styles/toolbar-consolidated.css';

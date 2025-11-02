@@ -55,8 +55,8 @@
    BASE MARKDOWN CHAT
    ======================================== */
 .chat-markdown {
-  /* Police de base - Inter pour tout le texte */
-  font-family: var(--font-chat-text);
+  /* Police de base - Variables chat spécifiques */
+  font-family: var(--font-chat-text) !important; /* ✅ Variable chat (Figtree par défaut) */
   font-size: var(--chat-text-base);
   line-height: var(--chat-leading-relaxed);
   font-weight: var(--chat-weight-normal);
@@ -80,7 +80,7 @@
 
 /* H1 - Titre principal */
 .chat-markdown h1 {
-  font-family: var(--font-chat-headings); /* Noto Sans */
+  font-family: var(--font-chat-headings) !important; /* ✅ Variable chat (Manrope par défaut) */
   font-size: var(--chat-text-5xl);
   font-weight: var(--chat-weight-extrabold);
   line-height: var(--chat-leading-tight);
@@ -92,7 +92,7 @@
 
 /* H2 - Sous-titre principal */
 .chat-markdown h2 {
-  font-family: var(--font-chat-headings); /* Noto Sans */
+  font-family: var(--font-chat-headings) !important; /* ✅ Variable chat (Manrope par défaut) */
   font-size: var(--chat-text-4xl);
   font-weight: var(--chat-weight-bold);
   line-height: var(--chat-leading-tight);
@@ -104,7 +104,7 @@
 
 /* H3 - Titre de section */
 .chat-markdown h3 {
-  font-family: var(--font-chat-headings); /* Noto Sans */
+  font-family: var(--font-chat-headings) !important; /* ✅ Variable chat (Manrope par défaut) */
   font-size: var(--chat-text-3xl);
   font-weight: var(--chat-weight-bold);
   line-height: var(--chat-leading-snug);
@@ -116,7 +116,7 @@
 
 /* H4 - Titre de sous-section */
 .chat-markdown h4 {
-  font-family: var(--font-chat-headings); /* Noto Sans */
+  font-family: var(--font-chat-headings) !important; /* ✅ Variable chat (Manrope par défaut) */
   font-size: var(--chat-text-2xl);
   font-weight: var(--chat-weight-semibold);
   line-height: var(--chat-leading-snug);
@@ -128,7 +128,7 @@
 
 /* H5 - Titre mineur */
 .chat-markdown h5 {
-  font-family: var(--font-chat-headings); /* Noto Sans */
+  font-family: var(--font-chat-headings) !important; /* ✅ Variable chat (Manrope par défaut) */
   font-size: var(--chat-text-xl);
   font-weight: var(--chat-weight-semibold);
   line-height: var(--chat-leading-normal);
@@ -140,7 +140,7 @@
 
 /* H6 - Titre minimal */
 .chat-markdown h6 {
-  font-family: var(--font-chat-headings); /* Noto Sans */
+  font-family: var(--font-chat-headings) !important; /* ✅ Variable chat (Manrope par défaut) */
   font-size: var(--chat-text-lg);
   font-weight: var(--chat-weight-medium);
   line-height: var(--chat-leading-normal);
@@ -157,7 +157,7 @@
 
 /* Paragraphes */
 .chat-markdown p {
-  font-family: var(--font-chat-text); /* Inter */
+  font-family: var(--font-chat-text) !important; /* ✅ Variable chat */
   font-size: var(--chat-text-base);
   font-weight: var(--chat-weight-normal);
   line-height: var(--chat-leading-relaxed);
@@ -173,14 +173,14 @@
 
 /* Texte en gras */
 .chat-markdown strong {
-  font-family: var(--font-chat-text); /* Inter */
+  font-family: var(--font-chat-text) !important; /* ✅ Variable chat */
   font-weight: var(--chat-weight-semibold);
   color: var(--color-text-primary);
 }
 
 /* Texte en italique */
 .chat-markdown em {
-  font-family: var(--font-chat-text); /* Inter */
+  font-family: var(--font-chat-text) !important; /* ✅ Variable chat */
   font-style: italic;
   color: var(--color-text-primary);
   opacity: 0.9;
@@ -261,7 +261,7 @@
   /* ✅ Pas de min/max-width - les colonnes s'adaptent automatiquement */
   color: var(--chat-text-primary);
   font-size: var(--editor-body-size, 15.5px); /* ✅ UNIFIÉ avec typography.css */
-  font-family: var(--editor-font-family-body, 'Inter', sans-serif); /* ✅ UNIFIÉ avec typography.css */
+  font-family: var(--font-chat-text) !important; /* ✅ Variable chat */
 }
 
 /* ✅ En-têtes sticky */

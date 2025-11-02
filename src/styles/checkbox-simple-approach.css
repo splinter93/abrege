@@ -37,7 +37,7 @@ ul[data-type="taskList"] li,
   margin-bottom: var(--editor-list-item-margin-vertical, 0.375rem) !important;
   line-height: var(--editor-line-height-base, 1.75) !important;
   position: relative !important;
-  font-family: var(--editor-font-family-body) !important;
+  font-family: var(--editor-font-family-body) !important; /* ✅ Variable dynamique */
   font-size: var(--editor-body-size) !important;
   font-weight: var(--editor-body-weight, 500) !important;
 }
@@ -64,7 +64,7 @@ ul[data-type="taskList"] li::marker,
   margin-bottom: var(--editor-list-item-margin-vertical, 0.375rem) !important;
   line-height: var(--editor-line-height-base, 1.75) !important;
   position: relative !important;
-  font-family: var(--editor-font-family-body) !important;
+  font-family: var(--editor-font-family-body) !important; /* ✅ Variable dynamique */
   font-size: var(--editor-body-size) !important;
   font-weight: var(--editor-body-weight, 500) !important;
 }
@@ -77,7 +77,7 @@ ul[data-type="taskList"] li::marker,
   display: none !important;
 }
 
-/* Chat - MÊME STYLE que ProseMirror */
+/* Chat - ZÉRO décalage (pas de margin négatif) */
 .chat-markdown li:has(> input[type="checkbox"]),
 .chat-markdown li.task-list-item,
 .chat-markdown .task-list-item {
@@ -85,12 +85,12 @@ ul[data-type="taskList"] li::marker,
   list-style: none !important;
   list-style-type: none !important;
   padding-left: 0 !important;
-  margin-left: -20px !important; /* ✅ Décalé de 20px vers la GAUCHE */
+  margin-left: 0 !important; /* ✅ ZÉRO décalage pour le chat */
   margin-top: var(--editor-list-item-margin-vertical, 0.375rem) !important;
   margin-bottom: var(--editor-list-item-margin-vertical, 0.375rem) !important;
   line-height: var(--editor-line-height-base, 1.75) !important;
   position: relative !important;
-  font-family: var(--editor-font-family-body) !important;
+  font-family: var(--editor-font-family-body) !important; /* ✅ Variable dynamique */
   font-size: var(--editor-body-size) !important;
   font-weight: var(--editor-body-weight, 500) !important;
 }
