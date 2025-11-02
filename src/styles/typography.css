@@ -87,12 +87,12 @@
   --font-cormorant-garamond: 'Cormorant Garamond', serif;
 
   /* ==========================================================================
-     TAILLES HARMONISÉES - PREMIUM EDITOR (RÉDUITES DE 10%)
+     TAILLES HARMONISÉES - PREMIUM EDITOR
      ========================================================================== */
   --editor-title-size: 2.375rem;      /* 38px - taille optimisée */
   --editor-body-size: 0.96875rem;      /* 15.5px - taille de base de l'éditeur */
   --editor-body-size-mobile: 0.96875rem; /* 15.5px - taille mobile cohérente */
-  --editor-h1-size: 1.8rem;             /* 28.8px - réduit de 10% (32px → 28.8px) */
+  --editor-h1-size: 2.375rem;         /* 38px */
 
   /* ==========================================================================
      HAUTEURS D'IMAGE D'EN-TÊTE - COHÉRENCE GLOBALE
@@ -116,26 +116,26 @@
   --editor-blockquote-weight: 600;    /* Poids pour les blockquotes */
   --editor-code-weight: 500;          /* Poids pour le code inline */
   --editor-checkbox-weight: 500;      /* Poids pour les checkboxes */
-  --editor-h2-size: 1.35rem;           /* 21.6px - réduit de 10% (24px → 21.6px) */
-  --editor-h3-size: 1.125rem;          /* 18px - réduit de 10% (20px → 18px) */
-  --editor-h4-size: 0.95625rem;        /* 15.3px - réduit de 10% (17px → 15.3px) */
-  --editor-h5-size: 0.84375rem;        /* 13.5px - réduit de 10% (15px → 13.5px) */
-  --editor-h6-size: 0.73125rem;        /* 11.7px - réduit de 10% (13px → 11.7px) */
+  --editor-h2-size: 1.75rem;          /* 28px */
+  --editor-h3-size: 1.5rem;           /* 24px */
+  --editor-h4-size: 1.25rem;          /* 20px */
+  --editor-h5-size: 1.125rem;         /* 18px */
+  --editor-h6-size: 1rem;             /* 16px */
 
-  /* === TAILLES SPÉCIALISÉES - PREMIUM (RÉDUITES DE 10%) === */
-  --editor-small-size: 0.73125rem;     /* 11.7px - réduit de 10% (13px → 11.7px) */
-  --editor-medium-size: 0.7875rem;     /* 12.6px - réduit de 10% (14px → 12.6px) */
-  --editor-large-size: 1.0125rem;      /* 16.2px - réduit de 10% (18px → 16.2px) */
-  --editor-xl-size: 1.125rem;          /* 18px - réduit de 10% (20px → 18px) */
-  --editor-xxl-size: 1.35rem;          /* 21.6px - réduit de 10% (24px → 21.6px) */
+  /* === TAILLES SPÉCIALISÉES - PREMIUM === */
+  --editor-small-size: 0.8125rem;     /* 13px */
+  --editor-medium-size: 0.875rem;     /* 14px */
+  --editor-large-size: 1.125rem;      /* 18px */
+  --editor-xl-size: 1.25rem;          /* 20px */
+  --editor-xxl-size: 1.5rem;          /* 24px */
 
   /* ==========================================================================
      RESPONSIVE TAILLES - PREMIUM
      ========================================================================== */
-  --editor-title-size-mobile: 1.8rem;   /* 28.8px - réduit de 10% (32px → 28.8px) */
-  --editor-h1-size-mobile: 1.575rem;      /* 25.2px - réduit de 10% (28px → 25.2px) */
-  --editor-h2-size-mobile: 1.2375rem;     /* 19.8px - réduit de 10% (22px → 19.8px) */
-  --editor-h3-size-mobile: 1.0125rem;     /* 16.2px - réduit de 10% (18px → 16.2px) */
+  --editor-title-size-mobile: 2.375rem;   /* 38px */
+  --editor-h1-size-mobile: 2rem;      /* 32px */
+  --editor-h2-size-mobile: 1.5rem;     /* 24px */
+  --editor-h3-size-mobile: 1.25rem;     /* 20px */
 
   /* ==========================================================================
      LARGEURS TYPOGRAPHIQUES - PREMIUM
@@ -176,10 +176,10 @@
   --ui-font-size-sm: 0.875rem;     /* 14px - pour le texte secondaire */
   --ui-font-size-md: 1rem;         /* 16px - pour le texte principal */
   --ui-font-size-lg: 1.125rem;     /* 18px - pour les sous-titres */
-  --ui-font-size-xl: 1.125rem;      /* 18px - réduit de 10% (20px → 18px) */
-  --ui-font-size-2xl: 1.35rem;      /* 21.6px - réduit de 10% (24px → 21.6px) */
-  --ui-font-size-3xl: 1.6875rem;    /* 27px - réduit de 10% (30px → 27px) */
-  --ui-font-size-4xl: 2.025rem;     /* 32.4px - réduit de 10% (36px → 32.4px) */
+  --ui-font-size-xl: 1.25rem;      /* 20px */
+  --ui-font-size-2xl: 1.5rem;      /* 24px */
+  --ui-font-size-3xl: 1.875rem;    /* 30px */
+  --ui-font-size-4xl: 2.25rem;     /* 36px */
 
   /* Line-heights pour composants UI - optimisés pour l'interface */
   --ui-line-height-tight: 1.25;    /* Pour les titres et labels */

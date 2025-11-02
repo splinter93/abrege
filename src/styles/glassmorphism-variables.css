@@ -138,7 +138,7 @@
      COULEURS DE TEXTE UNIFORMES
      ========================================================================== */
   
-  --text-primary: #ffffff;
+  --text-primary: #d0d0d0;  /* ✅ Même couleur que variables.css */
   --text-secondary: rgba(255, 255, 255, 0.8);
   --text-tertiary: rgba(255, 255, 255, 0.6);
   --text-muted: rgba(255, 255, 255, 0.5);

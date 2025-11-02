@@ -37,11 +37,11 @@
   --chat-leading-loose: 1.75;
   
   /* Poids */
-  --chat-weight-normal: 400;
-  --chat-weight-medium: 500;
-  --chat-weight-semibold: 600;
-  --chat-weight-bold: 700;
-  --chat-weight-extrabold: 800;
+  --chat-weight-normal: 500;  /* Augmenté de 400 à 500 */
+  --chat-weight-medium: 600;  /* Augmenté de 500 à 600 */
+  --chat-weight-semibold: 700;  /* Augmenté de 600 à 700 */
+  --chat-weight-bold: 750;  /* Augmenté de 700 à 750 */
+  --chat-weight-extrabold: 850;  /* Augmenté de 800 à 850 */
   
   /* Espacements */
   --chat-space-xs: 0.25rem;
