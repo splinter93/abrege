@@ -309,7 +309,7 @@
   color: var(--blk-fg);
   border: none;
   border-radius: var(--blk-radius);
-  margin: 1.75rem 0;
+  margin: 16px 0;  /* ✅ Aligné avec code blocks (au lieu de 1.75rem) */
   box-shadow: none;
   overflow: hidden;
   display: flex;
