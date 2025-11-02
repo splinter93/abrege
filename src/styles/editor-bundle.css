@@ -12,12 +12,12 @@
 @import './typography.css';
 @import './glassmorphism-variables.css';
 
+/* === STYLES MARKDOWN UNIFIÉS === */
+@import './unified-markdown.css';
+
 /* === UTILITAIRES ÉDITEUR === */
 @import './editor-utilities.css';
 @import './editor-responsive.css';
-
-/* === STYLES MARKDOWN === */
-@import './markdown.css';
 
 /* === COMPOSANTS UI === */
 @import './UnifiedToolbar.css';

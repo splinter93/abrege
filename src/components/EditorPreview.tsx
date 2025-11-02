@@ -1,5 +1,5 @@
 import React from 'react';
-import '@/styles/markdown.css';
+import '@/styles/unified-markdown.css';
 import TableOfContents from './TableOfContents';
 import { extractTOCWithSlugs } from '../utils/markdownTOC';
 

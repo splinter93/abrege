@@ -492,43 +492,19 @@
   font-family: var(--editor-font-family-body);
 }
 
-/* Styles pour les listes dans l'éditeur - Blog Premium */
-.editor-content ul,
-.editor-content ol,
-.markdown-body ul,
-.markdown-body ol,
-.ProseMirror ul,
-.ProseMirror ol {
-  margin: var(--editor-list-margin-vertical) 0; /* 1.75em */
-  padding-left: 1.3em;
-  font-family: var(--editor-font-family-body);
-  font-size: var(--editor-body-size);     /* Utilise la variable centralisée */
-  line-height: var(--editor-line-height-base); /* 1.75 */
-}
+/* ========================================
+   TYPOGRAPHIE DES LISTES (UNIQUEMENT)
+   Structure/bullets gérés par unified-markdown.css
+   ======================================== */
 
+/* Typo des items de liste - PAS la structure */
 .editor-content li,
 .markdown-body li,
 .ProseMirror li {
-  margin: var(--editor-list-item-margin-vertical) 0; /* 0.5em */
-  line-height: var(--editor-line-height-base); /* 1.75 */
   font-family: var(--editor-font-family-body);
-  font-size: var(--editor-body-size);     /* Utilise la variable centralisée */
-}
-
-/* Sous-listes - Indentation réduite */
-.editor-content ul ul,
-.editor-content ul ol,
-.editor-content ol ul,
-.editor-content ol ol,
-.markdown-body ul ul,
-.markdown-body ul ol,
-.markdown-body ol ul,
-.markdown-body ol ol,
-.ProseMirror ul ul,
-.ProseMirror ul ol,
-.ProseMirror ol ul,
-.ProseMirror ol ol {
-  padding-left: 1.0em; /* Indentation réduite pour les sous-listes */
+  font-size: var(--editor-body-size);
+  line-height: var(--editor-line-height-base);
+  color: var(--editor-text-color);
 }
 
 /* ==========================================================================
@@ -552,23 +528,12 @@
     font-size: 1rem;                        /* 16px sur mobile */
   }
 
-  .editor-content ul,
-  .editor-content ol,
-  .markdown-body ul,
-  .markdown-body ol,
-  .ProseMirror ul,
-  .ProseMirror ol {
-    margin: 1.25em 0;
-    padding-left: 1.2em;
-    font-size: 1rem;                        /* 16px sur mobile */
-  }
-
+  /* Typo listes mobile - structure gérée par unified-markdown.css */
   .editor-content li,
   .markdown-body li,
   .ProseMirror li {
-    margin: 0.4em 0;
+    font-size: 1rem; /* 16px sur mobile */
     line-height: var(--editor-line-height-mobile); /* 1.65 */
-    font-size: 1rem;                        /* 16px sur mobile */
   }
 }
 
@@ -1033,13 +998,8 @@ p {
   -moz-osx-font-smoothing: grayscale;     /* Lissage sur macOS */
 }
 
-/* EXCEPTION: Paragraphes dans les task items - pas de marge ! */
-.ProseMirror li[data-type="taskItem"] p,
-.ProseMirror .task-list-item p,
-.markdown-body li:has(> input[type="checkbox"]) p {
-  margin: 0 !important;
-  display: inline !important; /* Force inline pour rester sur la même ligne */
-}
+/* EXCEPTION: Paragraphes dans les task items - GÉRÉ PAR checkbox-simple-approach.css */
+/* Styles déplacés pour unification complète des checkboxes */
 
 .markdown-body p:last-child,
 .ProseMirror p:last-child,

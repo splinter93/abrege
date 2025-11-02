@@ -30,8 +30,7 @@
 .markdown-body .u-block,
 .public-note-container .markdown-body .u-block,
 .chat-markdown-content .u-block,
-.chat-markdown .u-block,
-.code-block-wrapper { /* Added code-block-wrapper for chat */
+.chat-markdown .u-block {
   background: var(--blk-bg) ;
   color: var(--blk-fg) ;
   border: none ;
@@ -495,17 +494,11 @@
    ========================================================================== */
 
 /* Override chat-specific styles for code blocks - Hérite du style unifié */
-.chat-markdown .code-block-wrapper {
+.chat-markdown .u-block--code {
   /* Hérite des styles .u-block génériques avec gradient */
   margin: 16px 0 !important; /* Juste le margin spécifique au chat */
 }
 
-.chat-markdown .u-block--code {
-  /* Hérite des styles .u-block génériques avec gradient */
-  margin: 0 !important; /* Pas de margin doublon */
-}
-
-.chat-markdown .code-block-wrapper .u-block__body,
 .chat-markdown .u-block--code .u-block__body {
   padding: 16px 20px !important;
   flex: 1 !important;

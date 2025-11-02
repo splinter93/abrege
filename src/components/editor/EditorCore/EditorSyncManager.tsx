@@ -55,6 +55,7 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
 }) => {
   // 🔧 FIX: Ref pour tracker le chargement initial
   const hasLoadedInitialContentRef = React.useRef(false);
+  const lastStoreSyncRef = React.useRef<string>('');
   
   // 🔄 Charger le contenu initial UNE SEULE FOIS
   React.useEffect(() => {
@@ -67,6 +68,7 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
     editorState.setIsUpdatingFromStore(true);
     editor.commands.setContent(storeContent);
     hasLoadedInitialContentRef.current = true;
+    lastStoreSyncRef.current = normalizeMarkdown(storeContent);
     
     setTimeout(() => {
       editorState.setIsUpdatingFromStore(false);
@@ -75,6 +77,35 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
       }
     }, 100);
   }, [editor, storeContent, editorState]);
+
+  // ⚠️ DÉSACTIVÉ : Sync realtime causait bugs (effacement caractères, retours auto)
+  // En mode édition, pas de sync du store → éditeur
+  // Le realtime fonctionne uniquement en readonly
+  /*
+  React.useEffect(() => {
+    if (!editor || !hasLoadedInitialContentRef.current || editorState.internal.isUpdatingFromStore) return;
+    
+    const normalizedStoreContent = normalizeMarkdown(storeContent);
+    const currentEditorContent = normalizeMarkdown(getEditorMarkdown(editor));
+    
+    // Si le store a changé ET est différent de l'éditeur
+    if (normalizedStoreContent !== lastStoreSyncRef.current && 
+        normalizedStoreContent !== currentEditorContent) {
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, '🔄 Mise à jour realtime détectée, sync store → éditeur');
+      }
+      
+      editorState.setIsUpdatingFromStore(true);
+      editor.commands.setContent(storeContent);
+      lastStoreSyncRef.current = normalizedStoreContent;
+      
+      setTimeout(() => {
+        editorState.setIsUpdatingFromStore(false);
+      }, 100);
+    }
+  }, [storeContent, editor, editorState]);
+  */
 
   // Ce composant ne rend rien
   return null;

@@ -97,8 +97,8 @@ export function createEditorExtensions(
         horizontalRule: true,
         codeBlock: true,
         
-        // ❌ Désactivé (peut causer problèmes)
-        hardBreak: false,
+        // ✅ Réactivé pour les blockquotes (Shift+Enter pour line break)
+        hardBreak: true,
         dropcursor: true,
         gapcursor: true,
       }),
@@ -157,6 +157,7 @@ export function createEditorExtensions(
       // CRITIQUE : transformPastedText et transformCopiedText DOIVENT rester false
       Markdown.configure({ 
         html: false,
+        breaks: true, // ✅ TEST - Convertir retours simples en <br> (comme markdown-it)
         transformPastedText: false,   // ✅ SAFE - Ne transforme PAS automatiquement
         transformCopiedText: false,   // ✅ SAFE - Ne transforme PAS automatiquement
       }),
@@ -188,7 +189,7 @@ export function createEditorExtensions(
       StarterKit.configure({ 
         // Configuration minimale pour éviter les conflits
         codeBlock: false, // Désactiver - on utilise UnifiedCodeBlockExtension
-        hardBreak: false, // ✅ SAFE - Désactivé définitivement
+        hardBreak: true, // ✅ TEST - Réactivé pour blockquotes (Shift+Enter)
         blockquote: false, // Désactiver - on utilise Blockquote standalone
         bulletList: false, // Désactiver - on utilise BulletList standalone
         orderedList: false, // Désactiver - on utilise OrderedList standalone  
@@ -226,6 +227,7 @@ export function createEditorExtensions(
       CustomImage.configure({ inline: false }),
       Markdown.configure({ 
         html: false,
+        breaks: true, // ✅ TEST - Convertir retours simples en <br> (comme markdown-it)
         // ✅ SAFE - Désactivé définitivement (causait espace → retour ligne)
         transformPastedText: false,
         transformCopiedText: false,

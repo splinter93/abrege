@@ -46,5 +46,70 @@ export function createMarkdownIt() {
     level: [1,2,3,4,5,6],
     permalink: false // pas de lien, juste l'id
   });
+  
+  // Custom renderer pour les code blocks - même structure que mode édition avec boutons
+  md.renderer.rules.fence = function(tokens, idx) {
+    const token = tokens[idx];
+    const content = token.content;
+    const lang = token.info.trim() || 'text';
+    const langUpper = lang.toUpperCase();
+    
+    // Mermaid : structure spéciale avec data-mermaid pour le rendu
+    if (lang === 'mermaid') {
+      return `
+        <div class="u-block u-block--mermaid" data-mermaid="true">
+          <div class="u-block__toolbar">
+            <div class="toolbar-left">
+              <span class="toolbar-label">MERMAID</span>
+            </div>
+            <div class="toolbar-right">
+              <button class="toolbar-btn copy-btn" title="Copier le code Mermaid">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </button>
+              <button class="toolbar-btn expand-btn" title="Agrandir le diagramme">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="u-block__body" data-mermaid-content="${md.utils.escapeHtml(content).replace(/"/g, '&quot;')}">
+            <pre style="display:none;"><code>${md.utils.escapeHtml(content)}</code></pre>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Code blocks normaux
+    return `
+      <div class="u-block u-block--code" data-language="${lang}">
+        <div class="u-block__toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-label">${langUpper}</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="toolbar-btn copy-btn" title="Copier le code">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            </button>
+            <button class="toolbar-btn expand-btn" title="Agrandir le code">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="u-block__body">
+          <pre><code class="language-${lang}">${md.utils.escapeHtml(content)}</code></pre>
+        </div>
+      </div>
+    `;
+  };
+  
   return md;
 } 

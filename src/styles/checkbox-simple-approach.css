@@ -8,25 +8,33 @@
 /* Le UL parent - RÉDUIT pour aligner à gauche */
 ul[data-type="taskList"],
 .ProseMirror ul[data-type="taskList"],
-.public-note-container ul[data-type="taskList"] {
+.markdown-body ul[data-type="taskList"],
+.markdown-body ul.contains-task-list,
+.chat-markdown ul[data-type="taskList"],
+.chat-markdown ul.contains-task-list,
+.public-note-container ul[data-type="taskList"],
+.public-note-container ul.contains-task-list {
   margin: var(--editor-list-margin-vertical, 1.25rem) 0 !important;
   padding-left: 0 !important; /* ← SUPPRIMÉ pour aligner à gauche */
   line-height: var(--editor-line-height-base, 1.75) !important;
+  list-style-type: none !important; /* ✅ Enlever les bullets des task lists */
 }
 
-/* Les LI - PAS de padding pour aligner à gauche */
+/* Les LI - Aligné à gauche en mode édition (ProseMirror) */
 ul[data-type="taskList"] li,
 .ProseMirror li[data-type="taskItem"],
 .ProseMirror .task-list-item,
-.markdown-body li:has(> input[type="checkbox"]),
-.public-note-container .markdown-body li:has(> input[type="checkbox"]) {
+.ProseMirror li:has(> input[type="checkbox"]) {
   /* Annuler le flexbox */
   display: block !important;
   
-  /* Aligné à gauche comme les listes normales */
+  /* Décalé de 10px vers la GAUCHE */
   list-style: none !important;
-  padding-left: 0 !important; /* ← SUPPRIMÉ pour aligner à gauche */
-  margin: var(--editor-list-item-margin-vertical, 0.375rem) 0 !important;
+  list-style-type: none !important;
+  padding-left: 0 !important;
+  margin-left: -20px !important; /* ✅ Décalé de 20px vers la GAUCHE */
+  margin-top: var(--editor-list-item-margin-vertical, 0.375rem) !important;
+  margin-bottom: var(--editor-list-item-margin-vertical, 0.375rem) !important;
   line-height: var(--editor-line-height-base, 1.75) !important;
   position: relative !important;
   font-family: var(--editor-font-family-body) !important;
@@ -34,57 +42,152 @@ ul[data-type="taskList"] li,
   font-weight: var(--editor-body-weight, 500) !important;
 }
 
-/* La checkbox en position normale (flow) */
+ul[data-type="taskList"] li::marker,
+.ProseMirror li[data-type="taskItem"]::marker,
+.ProseMirror .task-list-item::marker,
+.ProseMirror li:has(> input[type="checkbox"])::marker {
+  content: none !important;
+  display: none !important;
+}
+
+/* Readonly - MÊME ALIGNEMENT que ProseMirror */
+.markdown-body li:has(> input[type="checkbox"]),
+.markdown-body li.task-list-item,
+.public-note-container .markdown-body li:has(> input[type="checkbox"]),
+.public-note-container .markdown-body li.task-list-item {
+  display: block !important;
+  list-style: none !important;
+  list-style-type: none !important;
+  padding-left: 0 !important;
+  margin-left: -20px !important; /* ✅ Décalé de 20px vers la GAUCHE */
+  margin-top: var(--editor-list-item-margin-vertical, 0.375rem) !important;
+  margin-bottom: var(--editor-list-item-margin-vertical, 0.375rem) !important;
+  line-height: var(--editor-line-height-base, 1.75) !important;
+  position: relative !important;
+  font-family: var(--editor-font-family-body) !important;
+  font-size: var(--editor-body-size) !important;
+  font-weight: var(--editor-body-weight, 500) !important;
+}
+
+.markdown-body li:has(> input[type="checkbox"])::marker,
+.markdown-body li.task-list-item::marker,
+.public-note-container .markdown-body li:has(> input[type="checkbox"])::marker,
+.public-note-container .markdown-body li.task-list-item::marker {
+  content: none !important;
+  display: none !important;
+}
+
+/* Chat - MÊME STYLE que ProseMirror */
+.chat-markdown li:has(> input[type="checkbox"]),
+.chat-markdown li.task-list-item,
+.chat-markdown .task-list-item {
+  display: block !important;
+  list-style: none !important;
+  list-style-type: none !important;
+  padding-left: 0 !important;
+  margin-left: -20px !important; /* ✅ Décalé de 20px vers la GAUCHE */
+  margin-top: var(--editor-list-item-margin-vertical, 0.375rem) !important;
+  margin-bottom: var(--editor-list-item-margin-vertical, 0.375rem) !important;
+  line-height: var(--editor-line-height-base, 1.75) !important;
+  position: relative !important;
+  font-family: var(--editor-font-family-body) !important;
+  font-size: var(--editor-body-size) !important;
+  font-weight: var(--editor-body-weight, 500) !important;
+}
+
+.chat-markdown li:has(> input[type="checkbox"])::marker,
+.chat-markdown li.task-list-item::marker,
+.chat-markdown .task-list-item::marker {
+  content: none !important;
+  display: none !important;
+}
+
+/* ============================================================================
+   CHECKBOX VISUELLE - ULTRA-SPÉCIFIQUE POUR FORCER PARTOUT
+   ============================================================================ */
+
+/* Mode lecture + Chat - 3px */
+.markdown-body ul li input[type="checkbox"],
+.markdown-body li input[type="checkbox"],
+.chat-markdown ul li input[type="checkbox"],
+.chat-markdown li input[type="checkbox"],
+.chat-markdown .task-list-item input[type="checkbox"],
+.chat-markdown .task-list-item-checkbox,
+.public-note-container .markdown-body li input[type="checkbox"] {
+  /* Checkbox inline avec le texte */
+  display: inline-block !important;
+  vertical-align: calc(-0.23em - 1px) !important; /* ✅ Descendu de 1px */
+  margin: 0 !important;
+  margin-right: 3px !important; /* ✅ 3px en mode lecture/chat */
+  margin-top: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  flex: none !important;
+  float: none !important;
+  position: relative !important;
+  
+  /* Styles visuels ChatGPT */
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border: none !important;
+  border-radius: 5px !important;
+  background: var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)) !important;
+  filter: var(--code-brightness-filter, brightness(1.18)) !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ProseMirror (mode édition) - 8px pour plus d'espace */
 ul[data-type="taskList"] li input[type="checkbox"],
 .ProseMirror li[data-type="taskItem"] input[type="checkbox"],
 .ProseMirror .task-list-item input[type="checkbox"],
-.markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"],
-.public-note-container .markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"] {
-  /* Checkbox inline avec le texte */
-  display: inline-block !important;
-  vertical-align: -0.23em !important; /* Descend la checkbox davantage */
-  margin: 0 !important;
-  margin-right: 0.4em !important; /* Petit espace avec le texte */
-  margin-top: 0 !important;
-  width: 1.2em !important;
-  height: 1.2em !important;
-  flex: none !important;
-  float: none !important;
-  position: relative !important; /* IMPORTANT pour le ::after */
-  
-  /* Styles visuels de la checkbox */
-  appearance: none !important;
-  border: 2px solid var(--border-subtle, #666) !important;
-  border-radius: 6px !important;
-  background: var(--color-bg-content, #2a2a2a) !important;
-  cursor: pointer !important;
+.ProseMirror li:has(> input[type="checkbox"]) input[type="checkbox"] {
+  margin-right: 8px !important; /* ✅ 8px en mode édition pour plus d'espace */
 }
 
-/* La checkbox cochée */
+/* La checkbox cochée - Garde le gradient gris */
 ul[data-type="taskList"] li input[type="checkbox"]:checked,
 .ProseMirror li[data-type="taskItem"] input[type="checkbox"]:checked,
 .ProseMirror .task-list-item input[type="checkbox"]:checked,
-.markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"]:checked,
-.public-note-container .markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"]:checked {
-  border-color: #ff6b35 !important;
-  background: #ff6b35 !important;
+.ProseMirror li:has(> input[type="checkbox"]) input[type="checkbox"]:checked,
+.markdown-body ul li input[type="checkbox"]:checked,
+.markdown-body li input[type="checkbox"]:checked,
+.chat-markdown ul li input[type="checkbox"]:checked,
+.chat-markdown li input[type="checkbox"]:checked,
+.chat-markdown .task-list-item input[type="checkbox"]:checked,
+.chat-markdown .task-list-item-checkbox:checked,
+.public-note-container .markdown-body li input[type="checkbox"]:checked {
+  background: var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)) !important;
+  filter: var(--code-brightness-filter, brightness(1.18)) !important;
+  border: none !important;
+  opacity: 1 !important;
 }
 
-/* Le symbole ✓ - DOIT être positionné au centre de la checkbox */
+/* Le symbole ✓ ORANGE - Par-dessus le gradient gris */
 ul[data-type="taskList"] li input[type="checkbox"]:checked::after,
 .ProseMirror li[data-type="taskItem"] input[type="checkbox"]:checked::after,
 .ProseMirror .task-list-item input[type="checkbox"]:checked::after,
-.markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"]:checked::after,
-.public-note-container .markdown-body li:has(> input[type="checkbox"]) input[type="checkbox"]:checked::after {
+.ProseMirror li:has(> input[type="checkbox"]) input[type="checkbox"]:checked::after,
+.markdown-body ul li input[type="checkbox"]:checked::after,
+.markdown-body li input[type="checkbox"]:checked::after,
+.chat-markdown ul li input[type="checkbox"]:checked::after,
+.chat-markdown li input[type="checkbox"]:checked::after,
+.chat-markdown .task-list-item input[type="checkbox"]:checked::after,
+.chat-markdown .task-list-item-checkbox:checked::after,
+.public-note-container .markdown-body li input[type="checkbox"]:checked::after {
   content: '✓' !important;
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
-  color: white !important;
-  font-size: 1em !important;
-  font-weight: bold !important;
+  color: var(--chat-accent-primary, #ea580c) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
   line-height: 1 !important;
+  font-family: var(--font-chat-text, 'Inter', sans-serif) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -95,7 +198,11 @@ ul[data-type="taskList"] li > *:not(input[type="checkbox"]),
 .ProseMirror li[data-type="taskItem"] > *:not(input[type="checkbox"]),
 .ProseMirror .task-list-item > *:not(input[type="checkbox"]),
 .markdown-body li:has(> input[type="checkbox"]) > *:not(input[type="checkbox"]),
-.public-note-container .markdown-body li:has(> input[type="checkbox"]) > *:not(input[type="checkbox"]) {
+.markdown-body li.task-list-item > *:not(input[type="checkbox"]),
+.chat-markdown li:has(> input[type="checkbox"]) > *:not(input[type="checkbox"]),
+.chat-markdown li.task-list-item > *:not(input[type="checkbox"]),
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) > *:not(input[type="checkbox"]),
+.public-note-container .markdown-body li.task-list-item > *:not(input[type="checkbox"]) {
   display: inline !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -106,7 +213,11 @@ ul[data-type="taskList"] li p,
 .ProseMirror li[data-type="taskItem"] p,
 .ProseMirror .task-list-item p,
 .markdown-body li:has(> input[type="checkbox"]) p,
-.public-note-container .markdown-body li:has(> input[type="checkbox"]) p {
+.markdown-body li.task-list-item p,
+.chat-markdown li:has(> input[type="checkbox"]) p,
+.chat-markdown li.task-list-item p,
+.public-note-container .markdown-body li:has(> input[type="checkbox"]) p,
+.public-note-container .markdown-body li.task-list-item p {
   display: inline !important;
   margin: 0 !important;
 }
@@ -118,6 +229,8 @@ ul[data-type="taskList"] li span,
 .ProseMirror li[data-type="taskItem"] span,
 .ProseMirror .task-list-item div,
 .ProseMirror .task-list-item span,
+.markdown-body li.task-list-item div,
+.markdown-body li.task-list-item span,
 .public-note-container .markdown-body li div,
 .public-note-container .markdown-body li span {
   display: inline !important;
@@ -128,7 +241,9 @@ ul[data-type="taskList"] li span,
 ul[data-type="taskList"] li > label,
 .ProseMirror li[data-type="taskItem"] > label,
 .ProseMirror .task-list-item > label,
-.public-note-container .markdown-body li > label {
+.markdown-body li.task-list-item > label,
+.public-note-container .markdown-body li > label,
+.public-note-container .markdown-body li.task-list-item > label {
   display: inline !important;
   margin: 0 !important;
   padding: 0 !important;

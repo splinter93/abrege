@@ -249,7 +249,7 @@
   overflow: hidden;
 }
 
-/* ✅ Colonnes adaptatives */
+/* ✅ Colonnes adaptatives - UNIFIÉ avec typography.css */
 .chat-markdown th,
 .chat-markdown td {
   padding: var(--chat-space-md);
@@ -260,6 +260,8 @@
   overflow-wrap: break-word;
   /* ✅ Pas de min/max-width - les colonnes s'adaptent automatiquement */
   color: var(--chat-text-primary);
+  font-size: var(--editor-body-size, 15.5px); /* ✅ UNIFIÉ avec typography.css */
+  font-family: var(--editor-font-family-body, 'Inter', sans-serif); /* ✅ UNIFIÉ avec typography.css */
 }
 
 /* ✅ En-têtes sticky */

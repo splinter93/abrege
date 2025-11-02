@@ -1,10 +1,9 @@
 "use client";
-import React, { useMemo, useEffect, useRef, useCallback, useState } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import { useMarkdownRender } from '../../hooks/editor/useMarkdownRender';
 import { detectMermaidBlocks, validateMermaidSyntax, cleanMermaidContent } from './mermaidService';
 import MermaidRenderer from '@/components/mermaid/MermaidRenderer';
-import { createRoot, Root } from 'react-dom/client';
 import { simpleLogger as logger } from '@/utils/logger';
 import { openImageModal } from './ImageModal';
 import '@/styles/mermaid.css';
@@ -13,158 +12,6 @@ import '@/styles/unified-blocks.css';
 interface EnhancedMarkdownMessageProps {
   content: string;
 }
-
-// Hook personnalisé pour gérer les racines React de manière sécurisée
-const useSafeReactRoots = () => {
-  const rootsRef = useRef<Map<HTMLElement, Root>>(new Map());
-  const isUnmountingRef = useRef(false);
-
-  const createSafeRoot = useCallback((element: HTMLElement): Root | null => {
-    if (isUnmountingRef.current || !element.isConnected) {
-      return null;
-    }
-
-    try {
-      const root = createRoot(element);
-      rootsRef.current.set(element, root);
-      return root;
-    } catch (error) {
-      logger.warn('Error creating React root:', error);
-      return null;
-    }
-  }, []);
-
-  const renderSafeRoot = useCallback((root: Root | null, element: React.ReactElement) => {
-    if (!root || isUnmountingRef.current) return false;
-
-    try {
-      root.render(element);
-      return true;
-    } catch (error) {
-      logger.warn('Error rendering to React root:', error);
-      return false;
-    }
-  }, []);
-
-  const unmountAllRoots = useCallback(() => {
-    isUnmountingRef.current = true;
-    
-    // Utiliser requestAnimationFrame pour démonter après le cycle de rendu actuel
-    requestAnimationFrame(() => {
-      rootsRef.current.forEach((root, element) => {
-        try {
-          // Vérifier si l'élément existe encore dans le DOM
-          if (element.isConnected && root) {
-            root.unmount();
-          }
-        } catch (error) {
-          // Ignorer silencieusement les erreurs de démontage pendant le rendu
-          if (process.env.NODE_ENV === 'development') {
-            logger.warn('Error unmounting root:', error);
-          }
-        }
-      });
-      rootsRef.current.clear();
-      isUnmountingRef.current = false;
-    });
-  }, []);
-
-  return {
-    createSafeRoot,
-    renderSafeRoot,
-    unmountAllRoots,
-    isUnmounting: isUnmountingRef.current
-  };
-};
-
-// Composant pour remplacer les wrappers de code blocks par CodeBlock React
-const CodeBlockReplacer: React.FC<{ containerRef: React.RefObject<HTMLDivElement | null> }> = React.memo(({ containerRef }) => {
-  const { createSafeRoot, renderSafeRoot, unmountAllRoots } = useSafeReactRoots();
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    // Utiliser un timeout pour s'assurer que le HTML est injecté
-    const timeoutId = setTimeout(() => {
-      // Trouver tous les wrappers de code blocks
-      const codeBlockWrappers = containerRef.current?.querySelectorAll('.code-block-wrapper');
-      
-      if (!codeBlockWrappers || codeBlockWrappers.length === 0) return;
-      
-      codeBlockWrappers.forEach((wrapper, index) => {
-        // Vérifier si ce wrapper a déjà été traité
-        if (wrapper.hasAttribute('data-processed')) return;
-        
-        const language = wrapper.getAttribute('data-language') || '';
-        const content = wrapper.getAttribute('data-content') || '';
-        
-        // Marquer comme traité
-        wrapper.setAttribute('data-processed', 'true');
-        
-        // Créer une racine React sécurisée pour ce wrapper
-        const root = createSafeRoot(wrapper as HTMLElement);
-        
-        if (root) {
-          // Rendre un code block avec toolbar (comme dans l'éditeur)
-          renderSafeRoot(root, 
-            <div className="u-block u-block--code">
-              <div className="u-block__toolbar">
-                <div className="toolbar-left">
-                  <span className="toolbar-label">{language.toUpperCase() || 'CODE'}</span>
-                </div>
-                <div className="toolbar-right">
-                  <button 
-                    className="toolbar-btn copy-btn" 
-                    title="Copier le code"
-                    onClick={async (e) => {
-                      try {
-                        await navigator.clipboard.writeText(content);
-                        const btn = e.currentTarget;
-                        // ✅ Vérifier que le bouton existe toujours après le await (streaming rapide)
-                        if (btn && btn.classList) {
-                          btn.classList.add('copied');
-                          setTimeout(() => {
-                            if (btn && btn.classList) {
-                              btn.classList.remove('copied');
-                            }
-                          }, 2000);
-                        }
-                      } catch (err) {
-                        logger.error('Erreur copie code:', err);
-                      }
-                    }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div className="u-block__body">
-                <pre>
-                  <code className={`language-${language}`}>
-                    {content}
-                  </code>
-                </pre>
-              </div>
-            </div>
-          );
-        }
-      });
-    }, 0);
-
-    // Cleanup function - démontage sécurisé
-    return () => {
-      clearTimeout(timeoutId);
-      unmountAllRoots();
-    };
-  }, [containerRef, createSafeRoot, renderSafeRoot, unmountAllRoots]);
-
-  return null;
-});
-
-CodeBlockReplacer.displayName = 'CodeBlockReplacer';
 
 // Composant séparé pour les blocs de texte avec support des code blocks
 const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ content, index }) => {
@@ -226,15 +73,43 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
           match === '<' ? '&lt;' : '&gt;'
         );
         
-        // Créer un wrapper sécurisé
-        const wrapper = doc.createElement('div');
-        wrapper.className = 'code-block-wrapper';
-        wrapper.setAttribute('data-language', language);
-        wrapper.setAttribute('data-content', codeContent);
-        wrapper.setAttribute('data-index', blockIndex.toString());
+        // ✅ FIX RADICAL: Créer directement la structure u-block complète (pas de wrapper intermédiaire)
+        const blockContainer = doc.createElement('div');
+        blockContainer.className = 'u-block u-block--code';
         
-        // Remplacer le pre par notre wrapper
-        preElement.parentNode?.replaceChild(wrapper, preElement);
+        // Toolbar
+        const toolbar = doc.createElement('div');
+        toolbar.className = 'u-block__toolbar';
+        toolbar.innerHTML = `
+          <div class="toolbar-left">
+            <span class="toolbar-label">${(language || 'CODE').toUpperCase()}</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="toolbar-btn copy-btn" title="Copier le code" data-content="${codeContent.replace(/"/g, '&quot;')}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            </button>
+          </div>
+        `;
+        
+        // Body
+        const body = doc.createElement('div');
+        body.className = 'u-block__body';
+        const pre = doc.createElement('pre');
+        const code = doc.createElement('code');
+        code.className = `language-${language}`;
+        code.textContent = codeElement.textContent || '';
+        pre.appendChild(code);
+        body.appendChild(pre);
+        
+        // Assembler
+        blockContainer.appendChild(toolbar);
+        blockContainer.appendChild(body);
+        
+        // Remplacer le pre par notre u-block complet
+        preElement.parentNode?.replaceChild(blockContainer, preElement);
       });
       
       return doc.body.innerHTML;
@@ -363,16 +238,39 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
     };
   }, [sanitizedHtml]);
   
+  // ✅ Gérer les clics sur les boutons copy après le render
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleCopyClick = async (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const button = target.closest('.copy-btn') as HTMLButtonElement;
+      if (!button) return;
+
+      const content = button.getAttribute('data-content');
+      if (!content) return;
+
+      try {
+        await navigator.clipboard.writeText(content);
+        button.classList.add('copied');
+        setTimeout(() => button.classList.remove('copied'), 2000);
+      } catch (err) {
+        logger.error('Erreur copie code:', err);
+      }
+    };
+
+    container.addEventListener('click', handleCopyClick);
+    return () => container.removeEventListener('click', handleCopyClick);
+  }, [sanitizedHtml]);
+
   return (
-    <>
-      <div 
-        ref={containerRef}
-        key={`text-${index}`}
-        className="chat-markdown"
-        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-      />
-      <CodeBlockReplacer containerRef={containerRef} />
-    </>
+    <div 
+      ref={containerRef}
+      key={`text-${index}`}
+      className="chat-markdown"
+      dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+    />
   );
 });
 
