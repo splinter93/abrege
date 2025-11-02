@@ -192,9 +192,9 @@ body.dark {
   
   /* Contenu */
   --md-p-margin: 0.5rem;           /* 8px */
-  --md-img-margin-top: 1rem;       /* 16px - UNIFORME partout par défaut */
+  --md-img-margin-top: 0.25rem;    /* 4px - Aligné avec mode édition */
   --md-img-margin-bottom: 0.25rem; /* 4px - UNIFORME partout */
-  --md-img-margin-top-edit: 0.25rem; /* 4px - override pour mode édition seulement */
+  --md-img-margin-top-edit: 0.25rem; /* 4px - même valeur partout maintenant */
   --md-list-margin: 0.5rem;        /* 8px */
   --md-list-item-margin: 0.25rem;  /* 4px */
   --md-list-nested-margin: 0.125rem; /* 2px */
