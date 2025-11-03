@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiGlobe, FiCheck } from 'react-icons/fi';
 import './editor-kebab-menu.css';
 import ShareMenu from './ShareMenu';
-import type { ShareSettings } from '@/types/sharing';
+import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
 
 interface EditorKebabMenuProps {
@@ -19,7 +19,7 @@ interface EditorKebabMenuProps {
   toggleToolbar: () => void;
   noteId: string;
   currentShareSettings: ShareSettings;
-  onShareSettingsChange: (settings: ShareSettings) => Promise<void>;
+  onShareSettingsChange: (settings: ShareSettingsUpdate) => Promise<void>;
   publicUrl?: string;
 }
 

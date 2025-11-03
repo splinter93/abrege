@@ -48,58 +48,78 @@ export function useEditorEffects({
   handlers
 }: UseEditorEffectsOptions): void {
   
+  // ✅ EXTRACTION: Extraire les fonctions pour éviter les dépendances circulaires
+  const { 
+    setNoteLoaded, 
+    updateTOC, 
+    setTitle, 
+    setKebabPos,
+    setHeaderImageUrl,
+    setHeaderImageOffset,
+    setHeaderImageBlur,
+    setHeaderImageOverlay,
+    setHeaderTitleInImage,
+    setFullWidth,
+    openContextMenu
+  } = editorState;
+  
+  const noteLoaded = editorState.document.noteLoaded;
+  const kebabOpen = editorState.menus.kebabOpen;
+  const fullWidth = editorState.ui.fullWidth;
+  const title = editorState.document.title;
+  
   // Effect: Forcer la mise à jour de la TOC quand la note arrive
   useEffect(() => {
-    if (note && content && !editorState.document.noteLoaded) {
-      editorState.setNoteLoaded(true);
-      editorState.updateTOC();
+    if (note && content && !noteLoaded) {
+      setNoteLoaded(true);
+      updateTOC();
     }
-  }, [note, content, noteId, editorState.document.noteLoaded, editorState]);
+  }, [note, content, noteId, noteLoaded, setNoteLoaded, updateTOC]);
 
   // Effect: Synchroniser le titre avec la note
   useEffect(() => { 
-    editorState.setTitle(note?.source_title || ''); 
-  }, [note?.source_title, editorState]);
+    setTitle(note?.source_title || ''); 
+  }, [note?.source_title, setTitle]);
 
   // Effect: Position menu kebab
   useEffect(() => {
-    if (editorState.menus.kebabOpen && kebabBtnRef.current) {
+    if (kebabOpen && kebabBtnRef.current) {
       const rect = kebabBtnRef.current.getBoundingClientRect();
-      editorState.setKebabPos({ 
+      setKebabPos({ 
         top: rect.bottom + CONTEXT_MENU_CONFIG.kebabMenuOffsetTop, 
         left: rect.right
       });
     }
-  }, [editorState.menus.kebabOpen, editorState, kebabBtnRef]);
+  }, [kebabOpen, kebabBtnRef, setKebabPos]);
 
   // Effect: Sync header image
   useEffect(() => {
-    if (note?.header_image) editorState.setHeaderImageUrl(note.header_image);
-  }, [note?.header_image, editorState]);
+    if (note?.header_image) setHeaderImageUrl(note.header_image);
+  }, [note?.header_image, setHeaderImageUrl]);
 
   // Effect: Hydrate appearance fields from note
   useEffect(() => {
-    if (typeof note?.header_image_offset === 'number') editorState.setHeaderImageOffset(note.header_image_offset);
-  }, [note?.header_image_offset, editorState]);
+    if (typeof note?.header_image_offset === 'number') setHeaderImageOffset(note.header_image_offset);
+  }, [note?.header_image_offset, setHeaderImageOffset]);
   
   useEffect(() => {
-    if (typeof note?.header_image_blur === 'number') editorState.setHeaderImageBlur(note.header_image_blur);
-  }, [note?.header_image_blur, editorState]);
+    if (typeof note?.header_image_blur === 'number') setHeaderImageBlur(note.header_image_blur);
+  }, [note?.header_image_blur, setHeaderImageBlur]);
   
   useEffect(() => {
-    if (typeof note?.header_image_overlay === 'number') editorState.setHeaderImageOverlay(note.header_image_overlay);
-  }, [note?.header_image_overlay, editorState]);
+    if (typeof note?.header_image_overlay === 'number') setHeaderImageOverlay(note.header_image_overlay);
+  }, [note?.header_image_overlay, setHeaderImageOverlay]);
   
   useEffect(() => {
-    if (typeof note?.header_title_in_image === 'boolean') editorState.setHeaderTitleInImage(note.header_title_in_image);
-  }, [note?.header_title_in_image, editorState]);
+    if (typeof note?.header_title_in_image === 'boolean') setHeaderTitleInImage(note.header_title_in_image);
+  }, [note?.header_title_in_image, setHeaderTitleInImage]);
 
   // Effect: Initialisation du wide mode depuis la note
   useEffect(() => {
-    if (typeof note?.wide_mode === 'boolean' && !editorState.ui.fullWidth) {
-      editorState.setFullWidth(note.wide_mode);
+    if (typeof note?.wide_mode === 'boolean' && !fullWidth) {
+      setFullWidth(note.wide_mode);
     }
-  }, [note?.wide_mode, editorState.ui.fullWidth, editorState]);
+  }, [note?.wide_mode, fullWidth, setFullWidth]);
 
   // Effect: Gestion du menu contextuel
   useEffect(() => {
@@ -109,24 +129,24 @@ export function useEditorEffects({
       if (isReadonly) return;
       
       const { coords, nodeType, hasSelection, position } = event.detail;
-      editorState.openContextMenu(coords, nodeType, hasSelection, position);
+      openContextMenu(coords, nodeType, hasSelection, position);
     };
 
     document.addEventListener('tiptap-context-menu', handleContextMenu as EventListener);
     return () => document.removeEventListener('tiptap-context-menu', handleContextMenu as EventListener);
-  }, [isReadonly, editorState]);
+  }, [isReadonly, openContextMenu]);
 
   // Effect: Mettre à jour la TOC quand l'éditeur change
   useEffect(() => {
     if (!editor) return;
     
-    const debouncedUpdateTOC = debounce(editorState.updateTOC, DEBOUNCE_DELAYS.TOC_UPDATE);
+    const debouncedUpdateTOC = debounce(updateTOC, DEBOUNCE_DELAYS.TOC_UPDATE);
     editor.on('update', debouncedUpdateTOC);
     
     return () => {
       editor.off('update', debouncedUpdateTOC);
     };
-  }, [editor, editorState]);
+  }, [editor, updateTOC]);
 
   // Effect: Slash menu
   useEffect(() => {
@@ -163,12 +183,12 @@ export function useEditorEffects({
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { 
         e.preventDefault(); 
-        handlers.handleSave(editorState.document.title || 'Untitled', content); 
+        handlers.handleSave(title || 'Untitled', content); 
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [handlers, editorState.document.title, content]);
+  }, [handlers, title, content]);
 
   // Effect: Drag & drop d'images
   useEffect(() => {

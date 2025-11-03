@@ -259,6 +259,11 @@ const Editor: React.FC<{
                     editorState.setImageMenuOpen(true); 
                   }}
             onSlashInsert={(cmd) => handlersWithEditor.handleSlashCommandInsert(cmd)}
+            noteId={note?.id}
+            noteTitle={note?.source_title}
+            noteContent={rawContent}
+            noteSlug={note?.slug}
+            classeurId={note?.classeur_id}
           />
         )}
       />

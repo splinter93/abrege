@@ -14,6 +14,19 @@ interface ExecutePromptResult {
 }
 
 /**
+ * Contexte enrichi pour l'exécution de prompts éditeur
+ * Permet à l'AI d'avoir accès au contenu complet de la note
+ */
+interface EditorPromptContext {
+  noteId: string;
+  noteTitle: string;
+  noteContent: string; // Contenu markdown complet
+  noteSlug?: string;
+  classeurId?: string;
+  classeurName?: string;
+}
+
+/**
  * Service pour exécuter les prompts éditeur avec les agents spécialisés
  */
 export class EditorPromptExecutor {
@@ -216,13 +229,15 @@ export class EditorPromptExecutor {
    * @param selectedText - Texte sélectionné
    * @param userToken - Token utilisateur
    * @param onChunk - Callback appelé pour chaque chunk reçu
+   * @param noteContext - Contexte enrichi de la note (optionnel, pour meilleure AI)
    * @returns Résultat final
    */
   static async executePromptStream(
     prompt: EditorPrompt,
     selectedText: string,
     userToken: string,
-    onChunk: (chunk: string) => void
+    onChunk: (chunk: string) => void,
+    noteContext?: EditorPromptContext
   ): Promise<ExecutePromptResult> {
     try {
       logger.info('[EditorPromptExecutor] 🌊 Exécution prompt en streaming:', prompt.name);
@@ -248,6 +263,39 @@ export class EditorPromptExecutor {
       // Générer un sessionId temporaire pour cette exécution
       const tempSessionId = `prompt_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
+      // ✅ NOUVEAU : Construire attachedNotes si contexte fourni (comme dans le chat)
+      const attachedNotes = noteContext ? [{
+        id: noteContext.noteId,
+        title: noteContext.noteTitle,
+        markdown_content: noteContext.noteContent,
+        slug: noteContext.noteSlug,
+        classeur_id: noteContext.classeurId
+      }] : undefined;
+
+      // ✅ NOUVEAU : Construire UI context enrichi
+      const uiContext = noteContext ? {
+        page: { type: 'editor', action: 'ask_ai' },
+        active: {
+          note: {
+            title: noteContext.noteTitle,
+            id: noteContext.noteId
+          },
+          ...(noteContext.classeurName && {
+            classeur: {
+              name: noteContext.classeurName,
+              id: noteContext.classeurId
+            }
+          })
+        }
+      } : undefined;
+
+      logger.dev('[EditorPromptExecutor] 📎 Contexte enrichi:', {
+        hasNoteContext: !!noteContext,
+        hasAttachedNotes: !!attachedNotes,
+        noteTitle: noteContext?.noteTitle,
+        contentLength: noteContext?.noteContent?.length
+      });
+
       // ✅ FIX: Utiliser la route /stream pour le streaming SSE
       const response = await fetch('/api/chat/llm/stream', {
         method: 'POST',
@@ -263,7 +311,10 @@ export class EditorPromptExecutor {
             agentId: prompt.agent_id,
             promptId: prompt.id,
             promptName: prompt.name,
-            selectedText: selectedText.substring(0, 200)
+            selectedText: selectedText.substring(0, 200),
+            // ✅ NOUVEAU : Ajouter notes attachées et UI context
+            attachedNotes,
+            uiContext
           },
           history: []
           // Pas besoin de provider ni stream: la route /stream streame toujours

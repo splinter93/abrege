@@ -24,6 +24,13 @@ interface EditorMainContentProps {
   slashLang: 'fr' | 'en';
   onOpenImageMenu: () => void;
   onSlashInsert: (cmd: SlashCommand) => void;
+  // Props pour contexte enrichi Ask AI
+  noteId?: string;
+  noteTitle?: string;
+  noteContent?: string;
+  noteSlug?: string;
+  classeurId?: string;
+  classeurName?: string;
 }
 
 const EditorMainContent: React.FC<EditorMainContentProps> = ({
@@ -34,7 +41,13 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
   slashMenuRef,
   slashLang,
   onOpenImageMenu,
-  onSlashInsert
+  onSlashInsert,
+  noteId,
+  noteTitle,
+  noteContent,
+  noteSlug,
+  classeurId,
+  classeurName
 }) => {
   // Attacher les event listeners et rendre mermaid en readonly
   useEffect(() => {
@@ -169,8 +182,16 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
       <div className="tiptap-editor-container" ref={editorContainerRef}>
         {!isReadonly && (
           <>
-            {/* Floating menu Notion-like */}
-            <FloatingMenuNotion editor={editor} />
+            {/* Floating menu Notion-like avec contexte enrichi */}
+            <FloatingMenuNotion 
+              editor={editor}
+              noteId={noteId}
+              noteTitle={noteTitle}
+              noteContent={noteContent}
+              noteSlug={noteSlug}
+              classeurId={classeurId}
+              classeurName={classeurName}
+            />
             
             {/* Contenu Tiptap */}
             <TiptapEditorContent editor={editor} />

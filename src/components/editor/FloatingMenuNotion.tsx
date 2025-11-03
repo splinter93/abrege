@@ -29,6 +29,12 @@ import AskAIMenu from './AskAIMenu';
 
 interface FloatingMenuNotionProps {
   editor: Editor | null;
+  noteId?: string;
+  noteTitle?: string;
+  noteContent?: string;
+  noteSlug?: string;
+  classeurId?: string;
+  classeurName?: string;
 }
 
 interface MenuPosition {
@@ -38,7 +44,13 @@ interface MenuPosition {
 }
 
 const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({ 
-  editor
+  editor,
+  noteId,
+  noteTitle,
+  noteContent,
+  noteSlug,
+  classeurId,
+  classeurName
 }) => {
   const { user, getAccessToken } = useAuth();
   const [position, setPosition] = useState<MenuPosition>({
@@ -438,6 +450,22 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
                 let accumulatedContent = '';
                 const startPos = insertPosition;
                 
+                // ✅ NOUVEAU : Construire le contexte enrichi de la note
+                const noteContext = noteId && noteTitle && noteContent ? {
+                  noteId,
+                  noteTitle,
+                  noteContent,
+                  noteSlug,
+                  classeurId,
+                  classeurName
+                } : undefined;
+
+                logger.dev('[FloatingMenuNotion] 📎 Contexte note pour Ask AI:', {
+                  hasContext: !!noteContext,
+                  noteTitle: noteContext?.noteTitle,
+                  contentLength: noteContext?.noteContent?.length
+                });
+                
                 const result = await EditorPromptExecutor.executePromptStream(
                   prompt,
                   text,
@@ -458,7 +486,8 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
                       .focus(startPos)
                       .insertContent({ type: 'text', text: accumulatedContent }) // Texte brut (pas de parsing)
                       .run();
-                  }
+                  },
+                  noteContext // ✅ NOUVEAU : Passer le contexte enrichi
                 );
 
                 logger.info('[FloatingMenuNotion] ✅ Streaming terminé, conversion en markdown...', {

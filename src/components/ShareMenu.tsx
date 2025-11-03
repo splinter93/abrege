@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { FiShare2, FiCopy, FiLink, FiLock, FiGlobe, FiX, FiCheck } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
@@ -31,21 +32,6 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
       setVisibility(currentSettings.visibility);
     }
   }, [currentSettings?.visibility]);
-
-  // Gérer la fermeture en cliquant à l'extérieur
-  React.useEffect(() => {
-    if (!isOpen) return;
-    
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Element;
-      if (!target.closest('.share-menu')) {
-        onClose();
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onClose]);
 
   const visibilityOptions = [
     {
@@ -115,8 +101,12 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  // Render dans un portal pour éviter les problèmes de z-index/CSS
+  return ReactDOM.createPortal(
     <>
+      {/* Overlay pour fermer en cliquant à l'extérieur */}
+      <div className="share-menu-overlay" onClick={onClose} />
+      
       <div className="share-menu">
         {/* Header */}
         <div className="share-menu-header">
@@ -194,7 +184,8 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
           </button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };
 
