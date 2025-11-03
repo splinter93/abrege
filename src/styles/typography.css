@@ -89,10 +89,10 @@
   /* ==========================================================================
      TAILLES HARMONISÉES - PREMIUM EDITOR
      ========================================================================== */
-  --editor-title-size: 2.375rem;      /* 38px - taille optimisée */
+  --editor-title-size: 2.25rem;      /* 36px - Aligné avec chat (sweet spot) */
   --editor-body-size: 0.96875rem;      /* 15.5px - taille de base de l'éditeur */
   --editor-body-size-mobile: 0.96875rem; /* 15.5px - taille mobile cohérente */
-  --editor-h1-size: 2.375rem;         /* 38px */
+  --editor-h1-size: 2.25rem;         /* 36px - Aligné avec chat */
 
   /* ==========================================================================
      HAUTEURS D'IMAGE D'EN-TÊTE - COHÉRENCE GLOBALE
@@ -103,10 +103,10 @@
   /* ==========================================================================
      FONT-WEIGHTS CENTRALISÉS - PREMIUM EDITOR
      ========================================================================== */
-  --editor-title-weight: 700;         /* Poids pour les titres principaux - Bold */
-  --editor-h1-weight: 900;            /* Poids pour H1 - ULTRA-GRAS */
-  --editor-h2-weight: 900;            /* Poids pour H2 - ULTRA-GRAS */
-  --editor-h3-weight: 900;            /* Poids pour H3 - ULTRA-GRAS */
+  --editor-title-weight: 775;         /* Poids pour les titres principaux - Aligné avec H1 */
+  --editor-h1-weight: 775;            /* Poids pour H1 - Aligné */
+  --editor-h2-weight: 725;            /* Poids pour H2 - Aligné */
+  --editor-h3-weight: 725;            /* Poids pour H3 - Aligné */
   --editor-h4-weight: 800;            /* Poids pour H4 - TRÈS GRAS */
   --editor-h5-weight: 800;            /* Poids pour H5 - TRÈS GRAS */
   --editor-h6-weight: 800;            /* Poids pour H6 - TRÈS GRAS */
