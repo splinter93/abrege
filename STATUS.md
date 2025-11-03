@@ -12,21 +12,28 @@
 
 ---
 
-## 🔴 BLOQUEURS (3)
+## 🔴 BLOQUEURS (4)
 
-### 1. Paste Markdown cassé
+### 1. SystemMessageBuilder fait dérailler tool calls ⚠️ **CRITIQUE**
+- **Problème :** System message trop verbeux (268 lignes), règles qui confusent le LLM
+- **Impact :** ⭐⭐⭐⭐⭐ Tool calls = core feature
+- **Effort :** 1-2j
+- **Fichier :** `src/services/llm/SystemMessageBuilder.ts`
+- **Solution :** Simplifier à < 50 lignes, supprimer les pavés de règles
+
+### 2. Paste Markdown cassé
 - **Problème :** Coller markdown ouvre bloc code ou ne formate pas
 - **Impact :** ⭐⭐⭐⭐⭐ Productivité
 - **Effort :** 2-3j
 - **Fichier :** `src/extensions/MarkdownPasteHandler.ts`
 
-### 2. URLs publiques non SEO-friendly
+### 3. URLs publiques non SEO-friendly
 - **Problème :** `/id/[uuid]` au lieu de `/username/slug`
 - **Impact :** ⭐⭐⭐⭐ SEO + partage
 - **Effort :** 1-2j
 - **Fichier :** `src/app/[username]/[slug]/page.tsx`
 
-### 3. Bullet lists cassées en preview
+### 4. Bullet lists cassées en preview
 - **Problème :** Listes mal affichées en mode preview
 - **Impact :** ⭐⭐⭐ Lisibilité
 - **Effort :** 0.5j
@@ -36,11 +43,11 @@
 
 ## 🟡 À AMÉLIORER (2)
 
-### 4. Toolbar code blocks chat
+### 5. Toolbar code blocks chat
 - **Impact :** ⭐⭐ Polish visuel
 - **Effort :** 0.5j
 
-### 5. Logique chargement chat
+### 6. Logique chargement chat
 - **Impact :** ⭐⭐ UX
 - **Effort :** 1j
 
@@ -48,7 +55,7 @@
 
 ## 🟢 DETTE TECHNIQUE (1)
 
-### 6. Composants trop gros
+### 7. Composants trop gros
 - FloatingMenuNotion (529L), NotionDragHandleExtension (500L)
 - **Impact :** ⭐ Long terme
 - **Effort :** 2-3j
@@ -79,8 +86,9 @@
 ## 🎯 PROCHAINE SESSION
 
 **Focus immédiat :**
-1. Paste Markdown (2-3j)
-2. URLs publiques (1-2j)
+1. **SystemMessageBuilder (1-2j)** - CRITIQUE : tool calls cassés
+2. Paste Markdown (2-3j)
+3. URLs publiques (1-2j)
 
-**Objectif :** Chat 9/10 en 2 semaines
+**Objectif :** Chat 9/10 en 2 semaines (commence par fixer tool calls)
 
