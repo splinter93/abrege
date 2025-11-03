@@ -162,6 +162,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
+    // 🔧 Maintenant qu'on a l'ID, générer l'URL publique permanente (avec ID, robuste aux changements de titre)
+    try {
+      const finalPublicUrl = await SlugAndUrlService.buildPublicUrl(userId, note.id, supabase);
+      
+      // Mettre à jour la note avec l'URL publique
+      const { error: updateUrlError } = await supabase
+        .from('articles')
+        .update({ public_url: finalPublicUrl })
+        .eq('id', note.id)
+        .eq('user_id', userId);
+
+      if (updateUrlError) {
+        logApi.warn(`⚠️ Erreur mise à jour URL publique: ${updateUrlError.message}`, updateUrlError);
+      } else {
+        note.public_url = finalPublicUrl; // Mettre à jour l'objet retourné
+        logApi.info(`✅ URL publique générée: ${finalPublicUrl}`, context);
+      }
+    } catch (urlError) {
+      logApi.warn(`⚠️ Erreur génération URL publique (non bloquant): ${urlError}`, urlError);
+    }
+
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Note créée en ${apiTime}ms`, context);
 

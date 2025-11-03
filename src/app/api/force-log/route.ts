@@ -21,7 +21,7 @@ export async function GET() {
       NODE_ENV: process.env.NODE_ENV,
       VERCEL: process.env.VERCEL,
       VERCEL_URL: process.env.VERCEL_URL,
-      NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+      NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     }
   });
 }
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         NODE_ENV: process.env.NODE_ENV,
         VERCEL: process.env.VERCEL,
         VERCEL_URL: process.env.VERCEL_URL,
-        NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+        NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
         hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       }
     });

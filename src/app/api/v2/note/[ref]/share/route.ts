@@ -215,19 +215,19 @@ export async function PATCH(
       updated_at: new Date().toISOString()
     };
 
-    // Mettre à jour l'URL publique si la visibilité change
+    // Mettre à jour l'URL publique si la visibilité change ou si elle n'existe pas
     if (validatedData.visibility && validatedData.visibility !== currentShareSettings.visibility) {
       if (validatedData.visibility === 'link-private' || validatedData.visibility === 'link-public') {
-        // Générer une URL publique basée sur le slug et le username
-        updateData.public_url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/${userData.username}/${currentNote.slug}`;
+        // Générer une URL publique permanente avec ID (robuste aux changements de titre)
+        updateData.public_url = `${process.env.NEXT_PUBLIC_SITE_URL}/@${userData.username}/id/${noteId}`;
       }
       // Note: On ne supprime plus l'URL publique quand on passe en privé
       // L'URL publique reste disponible pour le créateur même si la note est privée
     }
 
     // Si l'URL publique n'existe pas, la générer (même pour les notes privées)
-    if (!currentNote.public_url && currentNote.slug) {
-      updateData.public_url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/public/note/${userData.username}/${currentNote.slug}`;
+    if (!currentNote.public_url) {
+      updateData.public_url = `${process.env.NEXT_PUBLIC_SITE_URL}/@${userData.username}/id/${noteId}`;
     }
 
     // Mettre à jour la note

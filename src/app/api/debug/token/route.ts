@@ -38,7 +38,6 @@ export async function POST(request: NextRequest) {
       NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       VERCEL_URL: process.env.VERCEL_URL || null,
-      NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || null,
       NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || null,
     };
 
@@ -69,7 +68,7 @@ export async function POST(request: NextRequest) {
     // 5. Tester la connectivité aux endpoints V2
     const baseUrl = process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}` 
-      : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+      : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     
     diagnostics.apiEndpoints = {
       baseUrl,

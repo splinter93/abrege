@@ -4,7 +4,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL!;
+const apiBaseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
 
 /**
  * Service centralisé pour la gestion des slugs et URLs publiques
@@ -19,7 +19,7 @@ export class SlugAndUrlService {
    * @param userId - L'ID de l'utilisateur
    * @param noteId - L'ID de la note (optionnel, pour les mises à jour)
    * @param clientOverride - Client Supabase personnalisé (optionnel)
-   * @returns Le slug généré
+   * @returns Le slug généré et l'URL publique permanente (avec ID)
    */
   static async generateSlugAndUpdateUrl(
     title: string,
@@ -44,8 +44,9 @@ export class SlugAndUrlService {
         throw new Error(`Impossible de récupérer le username pour l'utilisateur ${userId}`);
       }
 
-      // 3. Construire l'URL publique
-      const publicUrl = `${apiBaseUrl}/${user.username}/${slug}`;
+      // 3. Construire l'URL publique PERMANENTE avec ID (robuste aux changements de titre)
+      // Format: @username/id/noteId → redirige vers @username/slug (SEO preserved)
+      const publicUrl = noteId ? `${apiBaseUrl}/@${user.username}/id/${noteId}` : null;
 
       // 4. Si on a un noteId, mettre à jour la base de données
       if (noteId) {
@@ -119,7 +120,7 @@ export class SlugAndUrlService {
         logger.dev(`Titre inchangé pour la note ${noteId}, pas de mise à jour du slug`);
         return { 
           slug: note.slug!, 
-          publicUrl: note.public_url || await this.buildPublicUrl(userId, note.slug!, supabase)
+          publicUrl: note.public_url || await this.buildPublicUrl(userId, noteId, supabase)
         };
       }
 
@@ -154,13 +155,13 @@ export class SlugAndUrlService {
   }
 
   /**
-   * Construit l'URL publique pour une note
+   * Construit l'URL publique permanente pour une note
    * @param userId - L'ID de l'utilisateur
-   * @param slug - Le slug de la note
+   * @param noteId - L'ID de la note
    * @param clientOverride - Client Supabase personnalisé (optionnel)
-   * @returns L'URL publique
+   * @returns L'URL publique permanente (avec ID)
    */
-  static async buildPublicUrl(userId: string, slug: string, clientOverride?: ReturnType<typeof createClient>): Promise<string> {
+  static async buildPublicUrl(userId: string, noteId: string, clientOverride?: ReturnType<typeof createClient>): Promise<string> {
     const supabase = clientOverride || this.supabase;
     
     const { data: user, error: userError } = await supabase
@@ -173,7 +174,7 @@ export class SlugAndUrlService {
       throw new Error(`Impossible de récupérer le username pour l'utilisateur ${userId}`);
     }
 
-    return `${apiBaseUrl}/${user.username}/${slug}`;
+    return `${apiBaseUrl}/@${user.username}/id/${noteId}`;
   }
 
   /**
@@ -219,7 +220,8 @@ export class SlugAndUrlService {
           continue;
         }
 
-        const expectedUrl = `${apiBaseUrl}/${user.username}/${note.slug}`;
+        // URL permanente avec ID (robuste aux changements de titre)
+        const expectedUrl = `${apiBaseUrl}/@${user.username}/id/${note.id}`;
         
         // Vérifier si l'URL publique est correcte
         if (note.public_url !== expectedUrl) {
@@ -298,9 +300,9 @@ export class SlugAndUrlService {
           report.validSlugs++;
         }
 
-        // Vérifier l'URL publique
+        // Vérifier l'URL publique (format permanent avec ID)
         if (note.public_url) {
-          const expectedUrl = `${apiBaseUrl}/${username}/${note.slug}`;
+          const expectedUrl = `${apiBaseUrl}/@${username}/id/${note.id}`;
           if (note.public_url === expectedUrl) {
             report.validUrls++;
           } else {
@@ -314,7 +316,7 @@ export class SlugAndUrlService {
           report.issues.push({
             noteId: note.id,
             issue: 'URL publique manquante',
-            fix: `Générer: ${apiBaseUrl}/${username}/${note.slug}`
+            fix: `Générer: ${apiBaseUrl}/@${username}/id/${note.id}`
           });
         }
       }

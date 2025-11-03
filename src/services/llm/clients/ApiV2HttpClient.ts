@@ -54,15 +54,14 @@ export class ApiV2HttpClient {
     logger.info(`[ApiV2HttpClient] 🔍 Env vars:`, {
       VERCEL: process.env.VERCEL,
       VERCEL_URL: process.env.VERCEL_URL,
-      NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
       NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     });
     
     // 🔧 SERVER-SIDE (Vercel Production)
     // PROBLÈME : VERCEL_URL pointe vers l'URL interne, pas le domaine custom
     // SOLUTION : Utiliser le domaine custom pour les appels internes
-    if (process.env.VERCEL && process.env.NEXT_PUBLIC_API_BASE_URL) {
-      const customUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (process.env.VERCEL && process.env.NEXT_PUBLIC_SITE_URL) {
+      const customUrl = process.env.NEXT_PUBLIC_SITE_URL;
       logger.info(`[ApiV2HttpClient] 🌐 Custom URL (domaine): ${customUrl}`);
       return customUrl;
     }
