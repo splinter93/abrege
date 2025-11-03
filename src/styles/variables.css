@@ -192,9 +192,10 @@ body.dark {
   
   /* Contenu */
   --md-p-margin: 0.5rem;           /* 8px */
-  --md-img-margin-top: 1rem;       /* 16px - UNIFORME partout par défaut */
-  --md-img-margin-bottom: 0.875rem; /* 14px - Augmenté de 10px (4px → 14px) */
-  --md-img-margin-top-edit: 0.25rem; /* 4px - override pour mode édition seulement */
+  --md-img-margin-top: 1rem;       /* 16px - lecture/chat */
+  --md-img-margin-bottom: 1.125rem; /* 18px - lecture/chat */
+  --md-img-margin-top-edit: 0.25rem; /* 4px - override édition */
+  --md-img-margin-bottom-edit: 0.25rem; /* 4px - override édition */
   --md-list-margin: 0.5rem;        /* 8px */
   --md-list-item-margin: 0.25rem;  /* 4px */
   --md-list-nested-margin: 0.125rem; /* 2px */

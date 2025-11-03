@@ -383,33 +383,19 @@ div.markdown-body ul[data-type="taskList"],
   max-width: 100%;
   height: auto;
   border-radius: 8px;
-  margin-top: var(--md-img-margin-top); /* 16px par défaut */
-  margin-bottom: 0; /* Pas de margin en bas */
+  margin-top: var(--md-img-margin-top); /* 16px par défaut lecture/chat */
+  margin-bottom: var(--md-img-margin-bottom); /* 12px par défaut lecture/chat */
   display: block;
 }
 
-/* Override SPÉCIFIQUE pour mode ÉDITION uniquement : padding compact */
+/* Override SPÉCIFIQUE pour mode ÉDITION uniquement : margins ultra-compacts */
 .ProseMirror img {
-  margin-top: var(--md-img-margin-top-edit); /* 4px en édition seulement */
+  margin-top: var(--md-img-margin-top-edit); /* 4px en édition */
+  margin-bottom: -9px; /* -9px en édition (négatif pour compenser padding) */
 }
 
-/* Éléments après une image : espacement contrôlé */
-.ProseMirror img + p,
-.ProseMirror img + h1,
-.ProseMirror img + h2,
-.ProseMirror img + h3,
-.ProseMirror img + h4,
-.ProseMirror img + h5,
-.ProseMirror img + h6,
-.markdown-body img + p,
-.markdown-body img + h1,
-.markdown-body img + h2,
-.markdown-body img + h3,
-.markdown-body img + h4,
-.markdown-body img + h5,
-.markdown-body img + h6 {
-  margin-top: var(--md-img-margin-bottom); /* 4px seulement */
-}
+/* ✅ SUPPRIMÉ : L'espacement est maintenant géré directement par margin-bottom de l'image
+   Ces règles causaient des espacements doubles */
 
 /* =============================================================================
    BREAKS
