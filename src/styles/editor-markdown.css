@@ -368,9 +368,24 @@ div.markdown-body ul[data-type="taskList"],
 .markdown-body hr {
   margin: var(--md-hr-margin) 0;
   border: none;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 1px;
+  height: 2.5px;
+  background: var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
+  border-radius: 2px;
+  opacity: 0.6;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 10%,
+    black 90%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 10%,
+    black 90%,
+    transparent 100%
+  );
 }
 
 /* =============================================================================
