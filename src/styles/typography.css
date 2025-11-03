@@ -110,7 +110,7 @@
   --editor-h4-weight: 800;            /* Poids pour H4 - TRÈS GRAS */
   --editor-h5-weight: 800;            /* Poids pour H5 - TRÈS GRAS */
   --editor-h6-weight: 800;            /* Poids pour H6 - TRÈS GRAS */
-  --editor-body-weight: 450;          /* Poids pour le contenu principal */
+  --editor-body-weight: 400;          /* Poids pour le contenu principal */
   --editor-strong-weight: 700;        /* Poids pour le texte en gras */
   --editor-table-header-weight: 900;  /* Poids pour les en-têtes de tableau */
   --editor-blockquote-weight: 600;    /* Poids pour les blockquotes */
@@ -220,7 +220,7 @@
   font-size: var(--editor-title-size);
   font-weight: var(--editor-title-weight);
   font-family: var(--editor-font-family-headings);
-  color: #d0d0d0;
+  color: var(--text-primary); /* ✅ Utilise la variable (Sombre Doux #B5BCC4) */
   letter-spacing: var(--editor-title-letter-spacing);
   line-height: var(--editor-title-line-height);
 }

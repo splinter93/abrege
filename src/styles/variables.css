@@ -48,13 +48,13 @@
      TEXTES - SOMBRE PAR DÉFAUT
      ======================================== */
   
-  --color-text-primary: #d0d0d0;
+  --color-text-primary: #B5BCC4;
   --color-text-secondary: #A0A0A0;
   --color-text-muted: #6A6A6A;
   --color-text-danger: #FF5C5C;
   
   /* Alias texte */
-  --text-primary: #d0d0d0;
+  --text-primary: #B5BCC4;
   --text-secondary: #a3a3a3;
   --text-tertiary: #737373;
   --text-disabled: #666666;

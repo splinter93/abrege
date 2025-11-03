@@ -37,7 +37,7 @@
   --chat-leading-loose: 1.8;
   
   /* Poids */
-  --chat-weight-normal: 550;  /* Augmenté à 550 pour texte plus visible */
+  --chat-weight-normal: 425;  /* Légèrement plus visible que l'éditeur */
   --chat-weight-medium: 600;  /* Augmenté de 500 à 600 */
   --chat-weight-semibold: 750;  /* Augmenté à 750 pour titres */
   --chat-weight-bold: 800;  /* Augmenté à 800 pour titres */
