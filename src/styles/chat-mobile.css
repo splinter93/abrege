@@ -184,7 +184,7 @@
 /* ========== ACCESSIBILITY ========== */
 
 @media (prefers-contrast: high) {
-  .chat-markdown { color: var(--color-text-primary); font-weight: 500; }
+  .chat-markdown { color: var(--chat-text-primary); font-weight: 500; }
   .chat-message { border: 2px solid var(--color-border); }
 }
 

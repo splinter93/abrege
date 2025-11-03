@@ -237,10 +237,19 @@ export class EditorPromptExecutor {
         return { success: false, error: 'Agent non disponible ou inactif' };
       }
 
-      const finalPrompt = this.replaceSelection(prompt.prompt_template, selectedText);
+      let finalPrompt = this.replaceSelection(prompt.prompt_template, selectedText);
+      
+      // ✅ FIX: Si le template ne contient pas {selection}, ajouter le texte à la fin
+      if (!prompt.prompt_template.includes('{selection}')) {
+        logger.dev('[EditorPromptExecutor] ⚠️ Template sans {selection}, ajout du texte à la fin');
+        finalPrompt = `${prompt.prompt_template}\n\nTexte à traiter :\n${selectedText}`;
+      }
 
-      // Appel en mode streaming
-      const response = await fetch('/api/chat/llm', {
+      // Générer un sessionId temporaire pour cette exécution
+      const tempSessionId = `prompt_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+      // ✅ FIX: Utiliser la route /stream pour le streaming SSE
+      const response = await fetch('/api/chat/llm/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -250,14 +259,14 @@ export class EditorPromptExecutor {
           message: finalPrompt,
           context: {
             type: 'editor_prompt',
+            sessionId: tempSessionId,
             agentId: prompt.agent_id,
             promptId: prompt.id,
             promptName: prompt.name,
             selectedText: selectedText.substring(0, 200)
           },
-          history: [],
-          provider: 'groq',
-          stream: true
+          history: []
+          // Pas besoin de provider ni stream: la route /stream streame toujours
         })
       });
 
@@ -269,25 +278,42 @@ export class EditorPromptExecutor {
         };
       }
 
-      // Lire le stream
+      // ✅ Parser le stream SSE avec StreamParser
+      const { StreamParser } = await import('@/services/streaming/StreamParser');
+      const parser = new StreamParser();
+      
       const reader = response.body?.getReader();
       if (!reader) {
         return { success: false, error: 'Stream non disponible' };
       }
 
-      const decoder = new TextDecoder();
       let fullResponse = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        fullResponse += chunk;
-        onChunk(chunk);
+        // Parser les chunks SSE
+        const chunks = parser.parseChunk(value);
+        
+        for (const chunk of chunks) {
+          if (chunk.type === 'delta' && chunk.content) {
+            // Accumuler et envoyer au callback
+            fullResponse += chunk.content;
+            onChunk(chunk.content);
+          } else if (chunk.type === 'error') {
+            logger.error('[EditorPromptExecutor] ❌ Erreur streaming:', chunk.error);
+            return {
+              success: false,
+              error: chunk.error || 'Erreur inconnue'
+            };
+          }
+        }
       }
 
-      logger.info('[EditorPromptExecutor] ✅ Streaming terminé');
+      logger.info('[EditorPromptExecutor] ✅ Streaming terminé:', {
+        totalLength: fullResponse.length
+      });
 
       return {
         success: true,

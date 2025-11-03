@@ -17,7 +17,7 @@
     line-height: var(--chat-leading-relaxed);
     font-weight: var(--chat-weight-normal);
     letter-spacing: var(--chat-tracking-normal);
-    color: var(--color-text-primary);
+    color: var(--chat-text-primary);
   }
 
   /* ========================================

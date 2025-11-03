@@ -120,57 +120,38 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
         const { view } = editor;
         const { from, to } = selection;
 
-        // Obtenir le nœud DOM au début de la sélection
-        const { node: domNode } = view.domAtPos(from);
-        let currentNode: Node | null = domNode;
-
-        // Remonter dans l'arbre DOM pour trouver le parent de type bloc
-        let blockParent: HTMLElement | null = null;
-        while (currentNode && currentNode !== view.dom) {
-          if (currentNode.nodeType === Node.ELEMENT_NODE) {
-            const element = currentNode as HTMLElement;
-            const style = window.getComputedStyle(element);
-            
-            if (style.display === 'block' || style.display === 'list-item') {
-              blockParent = element;
-              break;
-            }
-          }
-          currentNode = currentNode.parentNode;
-        }
-
+        // ✅ LIKE MENTION MENU : Position relative au conteneur éditeur
+        const editorElement = view.dom;
+        const editorRect = editorElement.getBoundingClientRect();
+        
+        // Coordonnées de la sélection (absolues page)
         const startCoords = view.coordsAtPos(from);
         const endCoords = view.coordsAtPos(to);
         
-        let topPosition: number;
-        if (blockParent) {
-          // Si on a trouvé le bloc parent, on utilise sa position supérieure
-          const rect = blockParent.getBoundingClientRect();
-          topPosition = rect.top;
-        } else {
-          // Sinon, on se rabat sur la position du curseur
-          topPosition = startCoords.top;
-        }
+        // ✅ Convertir en coordonnées relatives à l'éditeur
+        const relativeTop = startCoords.top - editorRect.top;
+        const relativeLeft = (startCoords.left + endCoords.left) / 2 - editorRect.left;
         
-        const menuHeight = 60; // Hauteur approximative du menu + espace
-        let top = topPosition - menuHeight;
+        // ✅ Position verticale : 60px au-dessus de la sélection
+        const menuHeight = 60;
+        let top = relativeTop - menuHeight;
         
-        // ✅ FIX: Si pas assez de place en haut, positionner EN DESSOUS
+        // Si pas assez de place en haut, positionner EN DESSOUS
         if (top < 10) {
-          // Positionner sous la sélection au lieu de forcer en haut
-          const bottomCoords = view.coordsAtPos(to);
-          top = bottomCoords.bottom + 10; // 10px sous la sélection
+          top = (endCoords.bottom - editorRect.top) + 10;
         }
         
-        // La position horizontale reste centrée sur la sélection
-        const left = (startCoords.left + endCoords.left) / 2;
+        // ✅ Position horizontale : Centrée sur la sélection
+        let left = relativeLeft - 150; // Centrer le menu (300px de large)
+        
+        // Empêcher débordement horizontal
+        left = Math.max(10, Math.min(left, editorRect.width - 310));
 
         setPosition({
           top: top,
-          left: Math.max(10, left - 150), // Centrer le menu horizontalement
+          left: left,
           visible: true
         });
-
 
       } catch (error) {
         // Erreur lors du calcul de la position du menu flottant
@@ -223,20 +204,27 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
   useEffect(() => {
     if (!editor) return;
 
-    const handleSelectionUpdate = () => {
+    const handleSelectionUpdate = ({ transaction }: { transaction?: any }) => {
       // 🔧 FIX : Ne pas mettre à jour si on est en train de drag
       if (isDraggingRef.current) {
         return;
       }
+      
+      // ✅ FIX : Ne recalculer que si la sélection a vraiment changé (pas juste un scroll)
+      if (transaction && !transaction.selectionSet) {
+        return;
+      }
+      
       updatePosition();
     };
 
     editor.on('selectionUpdate', handleSelectionUpdate);
-    editor.on('transaction', handleSelectionUpdate);
+    // ✅ Supprimer l'écoute de 'transaction' qui se déclenche trop souvent (scroll, etc.)
+    // editor.on('transaction', handleSelectionUpdate);
 
     return () => {
       editor.off('selectionUpdate', handleSelectionUpdate);
-      editor.off('transaction', handleSelectionUpdate);
+      // editor.off('transaction', handleSelectionUpdate);
       // Nettoyer le timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -323,9 +311,9 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
       ref={menuRef}
       className="floating-menu-notion"
       style={{
-        position: 'fixed',
-        top: position.top,
-        left: position.left,
+        position: 'absolute',
+        top: `${position.top}px`,
+        left: `${position.left}px`,
         zIndex: 9999
       }}
     >
@@ -365,7 +353,7 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
           return (
             <button
               key={command.id}
-              className={`floating-menu-button ${command.className || ''} ${isActive ? 'active' : ''}`}
+              className={`floating-menu-button ${isActive ? 'active' : ''}`}
               onClick={command.action}
               title={command.label}
               aria-label={command.label}
@@ -375,6 +363,17 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
             </button>
           );
         })}
+
+        {isExecuting && (
+          <div className="streaming-indicator">
+            <span>L'IA écrit</span>
+            <div className="streaming-dots">
+              <div className="streaming-dot"></div>
+              <div className="streaming-dot"></div>
+              <div className="streaming-dot"></div>
+            </div>
+          </div>
+        )}
       </div>
       {isTransformMenuOpen && editor && (
         <div className="transform-menu-container">
@@ -395,58 +394,100 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
               }
 
               setIsExecuting(true);
-              logger.info('[FloatingMenuNotion] 🚀 Exécution prompt:', prompt.name);
+              logger.info('[FloatingMenuNotion] 🚀 Exécution prompt (streaming):', prompt.name);
 
               try {
-                const result = await EditorPromptExecutor.executePrompt(
+                // 🎯 Préparer la position d'insertion selon le mode
+                const insertionMode = prompt.insertion_mode || 'replace';
+                const { from, to } = editor.state.selection;
+                
+                // Sauvegarder la position d'insertion
+                let insertPosition = from;
+                
+                // Préparer le curseur selon le mode d'insertion
+                switch (insertionMode) {
+                  case 'replace':
+                    // Supprimer la sélection AVANT le streaming
+                    editor.chain().focus().deleteSelection().run();
+                    insertPosition = editor.state.selection.from;
+                    logger.dev('[FloatingMenuNotion] 🎯 Mode replace: sélection supprimée');
+                    break;
+                    
+                  case 'append':
+                    // Positionner après la sélection avec saut de ligne
+                    editor.chain().focus(to).insertContent('\n\n').run();
+                    insertPosition = editor.state.selection.from;
+                    logger.dev('[FloatingMenuNotion] 🎯 Mode append: curseur après sélection');
+                    break;
+                    
+                  case 'prepend':
+                    // Positionner avant la sélection
+                    editor.chain().focus(from).run();
+                    insertPosition = from;
+                    logger.dev('[FloatingMenuNotion] 🎯 Mode prepend: curseur avant sélection');
+                    break;
+                    
+                  default:
+                    // Fallback sur replace
+                    editor.chain().focus().deleteSelection().run();
+                    insertPosition = editor.state.selection.from;
+                    logger.warn('[FloatingMenuNotion] ⚠️ Mode d\'insertion inconnu, fallback sur replace');
+                }
+
+                // 🌊 STREAMING : Texte brut pendant stream + Markdown parsé à la fin
+                let accumulatedContent = '';
+                const startPos = insertPosition;
+                
+                const result = await EditorPromptExecutor.executePromptStream(
                   prompt,
                   text,
-                  user.id
+                  user.id,
+                  (chunk: string) => {
+                    // ✅ Accumuler le contenu complet
+                    accumulatedContent += chunk;
+                    
+                    // ✅ Pendant le streaming : Insertion en TEXTE BRUT uniquement (pas de parsing)
+                    // Remplacer tout le texte brut accumulé à chaque chunk
+                    const currentLength = editor.state.doc.textBetween(startPos, editor.state.doc.content.size).length;
+                    const endPos = startPos + Math.min(accumulatedContent.length, currentLength + chunk.length);
+                    
+                    editor.chain()
+                      .focus()
+                      .setTextSelection({ from: startPos, to: Math.min(endPos, editor.state.doc.content.size) })
+                      .deleteSelection()
+                      .focus(startPos)
+                      .insertContent({ type: 'text', text: accumulatedContent }) // Texte brut (pas de parsing)
+                      .run();
+                  }
                 );
 
-                logger.info('[FloatingMenuNotion] 📊 Résultat:', result);
+                logger.info('[FloatingMenuNotion] ✅ Streaming terminé, conversion en markdown...', {
+                  success: result.success,
+                  mode: insertionMode,
+                  contentLength: accumulatedContent.length
+                });
 
-                if (result.success && result.response) {
-                  // 📝 DESIGN INTENTIONNEL : Insertion dans l'éditeur local (pas de save auto)
-                  // L'utilisateur décide : CMD+S pour sauvegarder, CMD+Z pour annuler
-                  // Permet aussi le streaming en temps réel à l'avenir
+                // ✅ À LA FIN : Remplacer le texte brut par du markdown parsé
+                if (result.success && accumulatedContent) {
+                  const endPos = startPos + accumulatedContent.length;
+                  editor.chain()
+                    .focus()
+                    .setTextSelection({ from: startPos, to: Math.min(endPos, editor.state.doc.content.size) })
+                    .deleteSelection()
+                    .focus(startPos)
+                    .insertContent(accumulatedContent) // Parse le markdown complet maintenant
+                    .run();
                   
-                  // 🔧 NOUVEAU: Gestion des modes d'insertion (replace, append, prepend)
-                  const insertionMode = prompt.insertion_mode || 'replace';
-                  const { from, to } = editor.state.selection;
-                  
-                  switch (insertionMode) {
-                    case 'replace':
-                      // Comportement par défaut : remplacer la sélection
-                      editor.chain().focus().deleteSelection().insertContent(result.response).run();
-                      logger.info('[FloatingMenuNotion] ✅ Prompt exécuté - Sélection remplacée');
-                      break;
-                      
-                    case 'append':
-                      // Ajouter après la sélection (sans la supprimer)
-                      editor.chain()
-                        .focus(to) // Position après la sélection
-                        .insertContent('\n\n' + result.response) // Avec saut de ligne
-                        .run();
-                      logger.info('[FloatingMenuNotion] ✅ Prompt exécuté - Contenu ajouté après');
-                      break;
-                      
-                    case 'prepend':
-                      // Ajouter avant la sélection (sans la supprimer)
-                      editor.chain()
-                        .focus(from) // Position avant la sélection
-                        .insertContent(result.response + '\n\n') // Avec saut de ligne
-                        .run();
-                      logger.info('[FloatingMenuNotion] ✅ Prompt exécuté - Contenu ajouté avant');
-                      break;
-                      
-                    default:
-                      // Fallback sur replace
-                      editor.chain().focus().deleteSelection().insertContent(result.response).run();
-                      logger.warn('[FloatingMenuNotion] ⚠️ Mode d\'insertion inconnu, fallback sur replace');
-                  }
-                } else {
-                  logger.error('[FloatingMenuNotion] ❌ Erreur exécution:', result.error || 'Erreur inconnue');
+                  logger.info('[FloatingMenuNotion] ✅ Markdown converti avec succès');
+                }
+
+                // Ajouter saut de ligne après si mode prepend
+                if (insertionMode === 'prepend' && result.success) {
+                  editor.commands.insertContent('\n\n');
+                }
+
+                if (!result.success) {
+                  logger.error('[FloatingMenuNotion] ❌ Erreur streaming:', result.error || 'Erreur inconnue');
                 }
               } catch (error) {
                 logger.error('[FloatingMenuNotion] ❌ Erreur:', error);

@@ -46,7 +46,7 @@
 .markdown-body h2 {
   font-family: var(--editor-font-family-body);  /* ✅ Même police que le texte */
   font-size: var(--editor-h2-size);  /* ✅ Variable dynamique */
-  font-weight: 625;
+  font-weight: 650;
   margin: var(--md-h2-margin-top) 0 var(--md-h2-margin-bottom) 0;
   line-height: 1.4;
   color: var(--text-primary, #e4e4e7);
@@ -57,7 +57,7 @@
 .markdown-body h3 {
   font-family: var(--editor-font-family-body);  /* ✅ Même police que le texte */
   font-size: var(--editor-h3-size);  /* ✅ Variable dynamique */
-  font-weight: 625;
+  font-weight: 650;
   margin: var(--md-h3-margin-top) 0 var(--md-h3-margin-bottom) 0;
   line-height: 1.5;
   color: var(--text-primary, #e4e4e7);
@@ -68,7 +68,7 @@
 .markdown-body h4 {
   font-family: var(--editor-font-family-body);  /* ✅ Même police que le texte */
   font-size: var(--editor-h4-size);  /* ✅ Variable dynamique */
-  font-weight: 600;
+  font-weight: 625;
   margin: var(--md-h4-margin-top) 0 var(--md-h4-margin-bottom) 0;
   line-height: 1.5;
   color: var(--text-primary, #e4e4e7);
@@ -78,7 +78,7 @@
 .markdown-body h5 {
   font-family: var(--editor-font-family-body);  /* ✅ Même police que le texte */
   font-size: var(--editor-h5-size);  /* ✅ Variable dynamique */
-  font-weight: 600;
+  font-weight: 625;
   margin: var(--md-h5-margin-top) 0 var(--md-h5-margin-bottom) 0;
   line-height: 1.6;
   color: var(--text-primary, #e4e4e7);
@@ -88,7 +88,7 @@
 .markdown-body h6 {
   font-family: var(--editor-font-family-body);  /* ✅ Même police que le texte */
   font-size: var(--editor-h6-size);  /* ✅ Variable dynamique */
-  font-weight: 600;
+  font-weight: 625;
   margin: var(--md-h6-margin-top) 0 var(--md-h6-margin-bottom) 0;
   line-height: 1.6;
   color: var(--text-secondary, #a1a1aa);

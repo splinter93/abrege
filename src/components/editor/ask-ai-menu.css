@@ -4,16 +4,17 @@
 
 .ask-ai-menu {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% - 1px); /* ✅ Descendu de 2px */
   left: 0;
   min-width: 240px;
-  background: var(--surface-1);
-  border: 1px solid var(--border-subtle);
+  background: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%); /* ✅ Même dégradé que floating menu */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: none; /* ✅ Pas de bordure */
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); /* ✅ Même ombre que floating menu */
   z-index: 10000;
   animation: slideDown 0.2s ease-out;
-  backdrop-filter: blur(10px);
 }
 
 @keyframes slideDown {
@@ -29,10 +30,10 @@
 
 .ask-ai-header {
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* ✅ Bordure cohérente avec le gradient */
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.5); /* ✅ Texte cohérent */
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -118,8 +119,8 @@
   padding: 8px 12px;
   background: transparent;
   border: none;
-  border-top: 1px solid var(--border-subtle);
-  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.08); /* ✅ Bordure cohérente */
+  color: rgba(255, 255, 255, 0.5); /* ✅ Texte cohérent */
   cursor: pointer;
   transition: all 0.15s ease;
   font-size: 13px;
@@ -182,11 +183,5 @@
   background: var(--text-muted);
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .ask-ai-menu {
-    background: var(--surface-1);
-    border-color: var(--border-subtle);
-  }
-}
+/* Dark mode - Désactivé : utilise maintenant le gradient du floating menu */
 

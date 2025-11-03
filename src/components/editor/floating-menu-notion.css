@@ -6,6 +6,15 @@
  */
 
 /* =========================
+   CONTENEUR ÉDITEUR - POSITION RELATIVE
+   ========================= */
+
+/* ✅ REQUIS : Position relative pour le menu flottant */
+.tiptap-editor-container {
+  position: relative;
+}
+
+/* =========================
    VARIABLES CSS - NOTION-LIKE DARK THEME
    ========================= */
 :root {
@@ -184,14 +193,14 @@
    ========================= */
 .transform-menu-container {
   position: absolute;
-  top: calc(100% + 6px); /* Position below the main menu */
+  top: calc(100% - 1px); /* ✅ Descendu de 2px */
   left: 0;
   z-index: 10;
 }
 
 .ask-ai-menu-container {
   position: absolute;
-  top: calc(100% + 6px); /* Position below the main menu */
+  top: calc(100% - 1px); /* ✅ Descendu de 2px */
   left: 120px; /* Position à droite du bouton Ask AI */
   z-index: 10;
 }
@@ -265,6 +274,68 @@
   
   .button-label {
     font-size: 11px;
+  }
+}
+
+/* =========================
+   INDICATEUR STREAMING
+   ========================= */
+.streaming-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin-left: 4px;
+  border-radius: 6px;
+  background: rgba(255, 107, 53, 0.1);
+  color: #ff6b35;
+  font-size: 12px;
+  font-weight: 500;
+  animation: pulse-streaming 2s ease-in-out infinite;
+}
+
+.streaming-indicator .streaming-dots {
+  display: flex;
+  gap: 3px;
+}
+
+.streaming-indicator .streaming-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+
+.streaming-indicator .streaming-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.streaming-indicator .streaming-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.streaming-indicator .streaming-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dot-pulse {
+  0%, 80%, 100% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes pulse-streaming {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
   }
 }
 

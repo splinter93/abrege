@@ -85,9 +85,6 @@ const AskAIMenu: React.FC<AskAIMenuProps> = ({
   if (loading) {
     return (
       <div className="ask-ai-menu">
-        <div className="ask-ai-header">
-          <span>Actions IA</span>
-        </div>
         <div className="ask-ai-loading">
           <span>Chargement...</span>
         </div>
@@ -98,9 +95,6 @@ const AskAIMenu: React.FC<AskAIMenuProps> = ({
   if (prompts.length === 0) {
     return (
       <div className="ask-ai-menu">
-        <div className="ask-ai-header">
-          <span>Actions IA</span>
-        </div>
         <div className="ask-ai-empty">
           <span>Aucun prompt disponible</span>
         </div>
@@ -110,9 +104,6 @@ const AskAIMenu: React.FC<AskAIMenuProps> = ({
 
   return (
     <div className="ask-ai-menu">
-      <div className="ask-ai-header">
-        <span>Actions IA</span>
-      </div>
       <div className="ask-ai-items">
         {displayedPrompts.map((prompt) => {
           const Icon = getIconComponent(prompt.icon);
