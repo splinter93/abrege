@@ -10,6 +10,7 @@ import { getSelectionRanges, NodeRangeSelection } from '@tiptap/extension-node-r
 import type { EditorView } from '@tiptap/pm/view';
 import type { Node, Slice } from '@tiptap/pm/model';
 import type { EditorState } from '@tiptap/pm/state';
+import { simpleLogger as logger } from '@/utils/logger';
 
 /**
  * Type pour la propriété dragging de ProseMirror
@@ -120,7 +121,7 @@ function createDragHandle(): HTMLElement {
             currentView.focus();
           }
         } catch (error) {
-          console.error('Erreur lors de la création de ligne:', error);
+          logger.error('[NotionDragHandle] Erreur lors de la création de ligne:', error);
         }
       }
     }

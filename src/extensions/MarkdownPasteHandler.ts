@@ -3,6 +3,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { DOMParser as ProseMirrorDOMParser } from '@tiptap/pm/model';
 import type MarkdownIt from 'markdown-it';
 import { createMarkdownIt } from '@/utils/markdownItConfig';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface Options {
   /**
@@ -84,7 +85,7 @@ const MarkdownPasteHandler = Extension.create<Options>({
                 view.dispatch(tr);
                 return true;
               } catch (err) {
-                console.error('[markdownPasteHandler] convert error:', err);
+                logger.error('[MarkdownPasteHandler] convert error:', err);
                 // Fallback: insertText propre
                 const tr = view.state.tr.insertText(mdText, view.state.selection.from, view.state.selection.to).scrollIntoView();
                 view.dispatch(tr);

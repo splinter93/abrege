@@ -216,14 +216,9 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
   useEffect(() => {
     if (!editor) return;
 
-    const handleSelectionUpdate = ({ transaction }: { transaction?: any }) => {
+    const handleSelectionUpdate = () => {
       // 🔧 FIX : Ne pas mettre à jour si on est en train de drag
       if (isDraggingRef.current) {
-        return;
-      }
-      
-      // ✅ FIX : Ne recalculer que si la sélection a vraiment changé (pas juste un scroll)
-      if (transaction && !transaction.selectionSet) {
         return;
       }
       

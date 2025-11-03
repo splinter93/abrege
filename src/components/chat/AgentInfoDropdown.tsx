@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Agent } from '@/types/chat';
 import { Settings } from 'lucide-react';
+import { simpleLogger as logger } from '@/utils/logger';
 import './AgentInfoDropdown.css';
 
 interface AgentInfoDropdownProps {
@@ -43,7 +44,7 @@ const AgentInfoDropdown: React.FC<AgentInfoDropdownProps> = ({ agent, isOpen, on
           setTools(toolsList);
         }
       } catch (error) {
-        console.error('Erreur chargement tools:', error);
+        logger.error('[AgentInfoDropdown] Erreur chargement tools:', error);
       } finally {
         setLoading(false);
       }

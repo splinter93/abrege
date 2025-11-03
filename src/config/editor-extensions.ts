@@ -4,6 +4,7 @@
  */
 
 import StarterKit from '@tiptap/starter-kit';
+import { simpleLogger as logger } from '@/utils/logger';
 import Blockquote from '@tiptap/extension-blockquote';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
@@ -31,9 +32,8 @@ import CalloutExtension from '@/extensions/CalloutExtension';
 // - SpaceHandlingExtension: Causait des conflits (déjà supprimé)
 // - BlockDragDropExtension: Désactivé temporairement
 import SlashMenuExtension from '@/extensions/SlashMenuExtension';
-// ⚠️ DRAG HANDLES - NE PAS MODIFIER - Voir docs/DRAG-HANDLES-AUDIT.md
-import { SimpleDragHandleExtension } from '@/extensions/SimpleDragHandleExtension'; // Backup
-import { NotionDragHandleExtension } from '@/extensions/NotionDragHandleExtension'; // ACTIF
+// ✅ DRAG HANDLE - Notion-style (SEUL utilisé en prod)
+import { NotionDragHandleExtension } from '@/extensions/NotionDragHandleExtension';
 import Color from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Highlight from '@tiptap/extension-highlight';
@@ -72,7 +72,7 @@ export function createEditorExtensions(
 
   // 🔧 DEBUG: Si aucune config n'est activée, retourner config minimale mais fonctionnelle
   if (!config.core && !config.advanced && !config.experimental) {
-    console.log('🔧 [DEBUG] Mode PROGRESSIF - Réactivation extensions essentielles');
+    logger.dev('[EditorExtensions] 🔧 Mode PROGRESSIF - Réactivation extensions essentielles');
     extensions.push(
       // StarterKit avec configuration optimale
       StarterKit.configure({
@@ -179,7 +179,7 @@ export function createEditorExtensions(
         handleClass: 'notion-drag-handle',
       })
     );
-    console.log('🔧 [DEBUG] Extensions actives:', extensions.length);
+    logger.dev('[EditorExtensions] 🔧 Extensions actives:', extensions.length);
     return extensions;
   }
 
@@ -270,22 +270,10 @@ export function createEditorExtensions(
     // Les extensions problématiques ont été retirées
   }
 
-  // ⚠️ DRAG HANDLES - RÉACTIVÉ (testé et validé après fix curseur)
-  // Voir docs/DRAG-HANDLES-AUDIT.md pour détails complets
-  // Extension active: NotionDragHandleExtension (version finale)
-  // Extensions backup: SimpleDragHandleExtension, DragHandleExtension (conservées)
+  // ✅ DRAG HANDLE Notion-style (seule extension utilisée)
   extensions.push(
     NotionDragHandleExtension.configure({
       handleClass: 'notion-drag-handle',
-      // onNodeChange désactivé en prod pour performance
-      // onNodeChange: ({ node, pos }) => {
-      //   if (process.env.NODE_ENV === 'development') {
-      //     console.log('🎯 Drag handle:', { 
-      //       nodeType: node?.type.name, 
-      //       pos 
-      //     });
-      //   }
-      // },
     })
   );
 

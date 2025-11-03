@@ -218,7 +218,7 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     logger.debug(LogCategory.EDITOR, 'Exécution slash command', { cmdId: cmd.id });
     if (typeof cmd.action === 'function') {
       try {
-        cmd.action(editor as any); // Type assertion pour compatibilité
+        cmd.action(editor); // ✅ Type safe (SlashCommand.action accepte TiptapEditor)
         logger.debug(LogCategory.EDITOR, 'Slash command réussie', { cmdId: cmd.id });
       } catch (error) {
         logger.error(LogCategory.EDITOR, 'Erreur exécution commande:', error);

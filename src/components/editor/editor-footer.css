@@ -9,8 +9,8 @@
   bottom: 0;
   width: 100vw;
   height: 28px;
-  background: #141416;
-  border-top: 0.5px solid #2a2a2c;
+  background: var(--color-bg-header);
+  border-top: 0.5px solid var(--border-subtle);
   color: var(--text-3);
   font-size: var(--ui-font-size-xs);
   font-family: var(--editor-font-family);
@@ -49,7 +49,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #141416;
+  background: var(--color-bg-header);
   border-top: 1px solid var(--border-subtle);
   color: var(--text-3);
   font-size: var(--ui-font-size-sm);

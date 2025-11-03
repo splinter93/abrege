@@ -36,6 +36,13 @@
   --color-bg-hover: rgba(255, 255, 255, 0.05);
   --color-bg-header: #171717;
   
+  /* Menus et dropdowns */
+  --menu-bg-gradient: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%);
+  --menu-border: none;
+  --menu-border-radius: 8px;
+  --menu-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --menu-backdrop-blur: blur(20px);
+  
   /* Surfaces (alias) */
   --surface-primary: #171717;
   --surface-secondary: #1c1c1c;

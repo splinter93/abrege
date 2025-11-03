@@ -2,12 +2,12 @@
 
 .transform-menu {
   width: 240px;
-  background: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%); /* ✅ Même dégradé que floating menu */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: none; /* ✅ Pas de bordure */
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); /* ✅ Même ombre que floating menu */
+  background: var(--menu-bg-gradient);
+  backdrop-filter: var(--menu-backdrop-blur);
+  -webkit-backdrop-filter: var(--menu-backdrop-blur);
+  border: var(--menu-border);
+  border-radius: var(--menu-border-radius);
+  box-shadow: var(--menu-shadow);
   color: var(--text-primary);
   padding: 0;
   animation: transform-menu-enter 0.2s ease-out;

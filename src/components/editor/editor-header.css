@@ -13,13 +13,13 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: 50px; /* Hauteur fixe - ne change JAMAIS même si toolbar cachée */
-  min-height: 50px; /* Force la hauteur minimale */
+  height: 44px; /* Hauteur fixe - ne change JAMAIS même si toolbar cachée */
+  min-height: 44px; /* Force la hauteur minimale */
   display: flex;
   align-items: center; /* Centré verticalement */
   justify-content: center;
   padding: 0 var(--editor-padding-horizontal-desktop);
-  background: transparent !important; /* Header transparent - toolbar flotte sur le contenu */
+  background: #171717; /* Test #171717 (--color-bg-header) */
   border-bottom: none !important; /* Pas de bordure */
   z-index: 100;
   box-sizing: border-box;

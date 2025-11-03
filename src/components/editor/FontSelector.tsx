@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { FiSearch } from 'react-icons/fi';
 import Tooltip from '@/components/Tooltip';
 
 interface FontOption {
@@ -51,15 +50,10 @@ const FontSelector: React.FC<FontSelectorProps> = ({
   disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [fontScope, setFontScope] = useState<'all' | 'headings' | 'body'>('all');
   const menuRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const currentFontData = FONTS.find(f => f.name === currentFont) || FONTS[0];
-  const filteredFonts = FONTS.filter(font =>
-    font.label.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -77,18 +71,11 @@ const FontSelector: React.FC<FontSelectorProps> = ({
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [isOpen]);
-
   const handleFontSelect = (fontName: string) => {
     if (onFontChange) {
       onFontChange(fontName, fontScope);
     }
     setIsOpen(false);
-    setSearchTerm('');
   };
 
   return (
@@ -107,18 +94,6 @@ const FontSelector: React.FC<FontSelectorProps> = ({
       
       {isOpen && (
         <div className="font-selector__dropdown">
-          <div className="font-selector__search">
-            <FiSearch size={16} />
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Rechercher une police..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="font-selector__search-input"
-            />
-          </div>
-
           <div className="font-selector__scope">
             <button
               className={`font-selector__scope-btn ${fontScope === 'all' ? 'active' : ''}`}
@@ -141,20 +116,16 @@ const FontSelector: React.FC<FontSelectorProps> = ({
           </div>
 
           <div className="font-selector__list">
-            {filteredFonts.length > 0 ? (
-              filteredFonts.map((font) => (
-                <button
-                  key={font.name}
-                  className={`font-selector__item ${currentFont === font.name ? 'selected' : ''}`}
-                  onClick={() => handleFontSelect(font.name)}
-                >
-                  <span className="font-selector__item-name">{font.label}</span>
-                  <span className="font-selector__item-category">{font.category}</span>
-                </button>
-              ))
-            ) : (
-              <div className="font-selector__empty">Aucune police trouvée</div>
-            )}
+            {FONTS.map((font) => (
+              <button
+                key={font.name}
+                className={`font-selector__item ${currentFont === font.name ? 'selected' : ''}`}
+                onClick={() => handleFontSelect(font.name)}
+              >
+                <span className="font-selector__item-name">{font.label}</span>
+                <span className="font-selector__item-category">{font.category}</span>
+              </button>
+            ))}
           </div>
         </div>
       )}

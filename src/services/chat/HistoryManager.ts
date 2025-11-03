@@ -74,9 +74,17 @@ export class HistoryManager {
     }
   ): Promise<ChatMessage> {
     try {
-      // ✅ Type guard pour stream_timeline
-      const assistantMsg = message as AssistantMessage;
-      const timeline = assistantMsg.stream_timeline as StreamTimeline | undefined;
+      // ✅ Type-safe: Extraire propriétés selon le type de message
+      const isAssistant = message.role === 'assistant';
+      const isTool = message.role === 'tool';
+      const isUser = message.role === 'user';
+      
+      // ✅ Type guards pour accès safe
+      const assistantMsg = isAssistant ? message as AssistantMessage : null;
+      const toolMsg = isTool ? message as ToolMessage : null;
+      const userMsg = isUser ? message as UserMessage : null;
+      
+      const timeline = assistantMsg?.stream_timeline as StreamTimeline | undefined;
       
       logger.dev('[HistoryManager] 📥 addMessage appelé:', {
         sessionId,
@@ -89,13 +97,13 @@ export class HistoryManager {
         p_session_id: sessionId,
         p_role: message.role,
         p_content: message.content,
-        p_tool_calls: (message as any).tool_calls || null,
-        p_tool_call_id: (message as any).tool_call_id || null,
-        p_name: (message as any).name || null,
-        p_reasoning: (message as any).reasoning || null,
+        p_tool_calls: assistantMsg?.tool_calls || null,
+        p_tool_call_id: toolMsg?.tool_call_id || null,
+        p_name: toolMsg?.name || null,
+        p_reasoning: assistantMsg?.reasoning || null,
         p_timestamp: new Date().toISOString(),
-        p_attached_images: (message as any).attachedImages || null,
-        p_attached_notes: (message as any).attachedNotes || null
+        p_attached_images: userMsg?.attachedImages || null,
+        p_attached_notes: userMsg?.attachedNotes || null
       });
 
       if (error) {

@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { Check, X, Loader2 } from 'lucide-react';
+import { simpleLogger as logger } from '@/utils/logger';
 import './StreamingIndicator.css';
 
 export type StreamingState = 'thinking' | 'executing' | 'responding' | 'completed' | 'idle';
@@ -36,9 +37,9 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
   onToggle,
   isExpanded = false
 }) => {
-  // ✅ DEBUG: Logger les toolCalls reçus
+  // ✅ Logger les toolCalls reçus (dev only)
   React.useEffect(() => {
-    console.log('[StreamingIndicator] 📥 Props reçues:', {
+    logger.dev('[StreamingIndicator] 📥 Props reçues:', {
       state,
       toolCount,
       toolCallsCount: toolCalls.length,

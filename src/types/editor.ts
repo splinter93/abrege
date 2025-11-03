@@ -53,7 +53,7 @@ export interface SlashCommand {
   label: Record<string, string>;
   description: Record<string, string>;
   preview?: string;
-  action?: (editor: FullEditorInstance) => void;
+  action?: (editor: TiptapEditor) => void; // ✅ Type générique Tiptap (pas FullEditorInstance)
   [key: string]: unknown;
 }
 
