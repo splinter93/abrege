@@ -86,11 +86,24 @@ export class HistoryManager {
       
       const timeline = assistantMsg?.stream_timeline as StreamTimeline | undefined;
       
+      // ✅ TypeScript strict : Le paramètre a déjà attachedImages/attachedNotes dans son type
+      const attachedImages = isUser ? message.attachedImages : null;
+      const attachedNotes = isUser ? message.attachedNotes : null;
+      
       logger.dev('[HistoryManager] 📥 addMessage appelé:', {
         sessionId,
         role: message.role,
         hasStreamTimeline: !!timeline,
-        streamTimelineEvents: timeline?.items?.length || 0
+        streamTimelineEvents: timeline?.items?.length || 0,
+        hasAttachedImages: !!attachedImages,
+        attachedImagesCount: (attachedImages || []).length,
+        hasAttachedNotes: !!attachedNotes,
+        attachedNotesCount: (attachedNotes || []).length
+      });
+      
+      logger.dev('[HistoryManager] 📤 Envoi à add_message_atomic:', {
+        p_attached_images: attachedImages,
+        p_attached_notes: attachedNotes
       });
       
       const { data, error } = await supabase.rpc('add_message_atomic', {
@@ -102,8 +115,8 @@ export class HistoryManager {
         p_name: toolMsg?.name || null,
         p_reasoning: assistantMsg?.reasoning || null,
         p_timestamp: new Date().toISOString(),
-        p_attached_images: userMsg?.attachedImages || null,
-        p_attached_notes: userMsg?.attachedNotes || null
+        p_attached_images: attachedImages,
+        p_attached_notes: attachedNotes
       });
 
       if (error) {

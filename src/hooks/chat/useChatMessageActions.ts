@@ -153,7 +153,12 @@ export function useChatMessageActions(
         role: 'user',
         content: textContent,
         timestamp: new Date().toISOString(),
-        ...(images && images.length > 0 && { attachedImages: images }),
+        ...(images && images.length > 0 && { 
+          attachedImages: images.map(img => ({
+            url: img.base64,
+            fileName: img.fileName
+          }))
+        }),
         ...(notes && notes.length > 0 && { 
           attachedNotes: notes.map(n => ({
             id: n.id,
