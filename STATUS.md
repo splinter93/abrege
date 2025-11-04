@@ -12,29 +12,21 @@
 
 ---
 
-## 🔴 BLOQUEURS (4)
+## 🔴 BLOQUEURS (3)
 
-### 1. SystemMessageBuilder fait dérailler tool calls ⚠️ **CRITIQUE**
-- **Problème :** System message trop verbeux (367 lignes fichier), 96 lignes de pollution
-- **Impact :** ⭐⭐⭐⭐⭐ Tool calls = core feature
-- **Effort :** 2h (plan détaillé prêt)
-- **Fichier :** `src/services/llm/SystemMessageBuilder.ts`
-- **Plan :** `PLAN-SYSTEMMESSAGE-SIMPLIFICATION.md`
-- **Solution :** Virer 96 lignes pollution + enrichir contexte UI
-
-### 2. Paste Markdown cassé
+### 1. Paste Markdown cassé
 - **Problème :** Coller markdown ouvre bloc code ou ne formate pas
 - **Impact :** ⭐⭐⭐⭐⭐ Productivité
 - **Effort :** 2-3j
 - **Fichier :** `src/extensions/MarkdownPasteHandler.ts`
 
-### 3. URLs publiques non SEO-friendly
+### 2. URLs publiques non SEO-friendly
 - **Problème :** `/id/[uuid]` au lieu de `/username/slug`
 - **Impact :** ⭐⭐⭐⭐ SEO + partage
 - **Effort :** 1-2j
 - **Fichier :** `src/app/[username]/[slug]/page.tsx`
 
-### 4. Bullet lists cassées en preview
+### 3. Bullet lists cassées en preview
 - **Problème :** Listes mal affichées en mode preview
 - **Impact :** ⭐⭐⭐ Lisibilité
 - **Effort :** 0.5j
@@ -44,11 +36,11 @@
 
 ## 🟡 À AMÉLIORER (2)
 
-### 5. Toolbar code blocks chat
+### 4. Toolbar code blocks chat
 - **Impact :** ⭐⭐ Polish visuel
 - **Effort :** 0.5j
 
-### 6. Logique chargement chat
+### 5. Logique chargement chat
 - **Impact :** ⭐⭐ UX
 - **Effort :** 1j
 
@@ -56,7 +48,7 @@
 
 ## 🟢 DETTE TECHNIQUE (1)
 
-### 7. Composants trop gros
+### 6. Composants trop gros
 - FloatingMenuNotion (529L), NotionDragHandleExtension (500L)
 - **Impact :** ⭐ Long terme
 - **Effort :** 2-3j
@@ -64,8 +56,16 @@
 
 ---
 
-## ✅ RÉCEMMENT CORRIGÉ (2025-11-03)
+## ✅ RÉCEMMENT CORRIGÉ
 
+### 2025-11-04 ⭐ **SystemMessageBuilder simplifié**
+- ✅ **105 lignes pollution virées** (pavés tool calls + Grok + expertise)
+- ✅ **Contexte enrichi** (user stats, session, notifications)
+- ✅ **Tool calls fluides** (enchaînement OK sur GPT OSS, Groq, modèles natifs)
+- ✅ **0 régression** détectée
+- Résultat : 367 → 348 lignes, -60% tokens runtime, +300% qualité contexte
+
+### 2025-11-03
 - ✅ Type safety chat (any → type guards)
 - ✅ Suppression 3005 lignes code mort
 - ✅ Extensions drag handle nettoyées
@@ -87,9 +87,9 @@
 ## 🎯 PROCHAINE SESSION
 
 **Focus immédiat :**
-1. **SystemMessageBuilder (1-2j)** - CRITIQUE : tool calls cassés
-2. Paste Markdown (2-3j)
-3. URLs publiques (1-2j)
+1. Paste Markdown (2-3j) - BLOQUEUR #1
+2. URLs publiques (1-2j) - BLOQUEUR #2
+3. Bullet lists preview (0.5j) - Quick win
 
-**Objectif :** Chat 9/10 en 2 semaines (commence par fixer tool calls)
+**Objectif :** Chat 9/10 en 1-2 semaines (SystemMessageBuilder ✅ résolu)
 
