@@ -15,6 +15,7 @@ import UnifiedSidebar from '@/components/UnifiedSidebar';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
 import AuthGuard from '@/components/AuthGuard';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { EditorPrompt, EditorPromptCreateRequest } from '@/types/editorPrompts';
 import { simpleLogger as logger } from '@/utils/logger';
 import { Zap } from 'lucide-react';
