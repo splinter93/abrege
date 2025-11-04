@@ -343,7 +343,6 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      let chunkCount = 0;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -371,7 +370,6 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
 
             try {
               const parsed = JSON.parse(data) as XAIStreamChunk;
-              chunkCount++;
               
               const choice = parsed.choices?.[0];
               if (!choice) continue;

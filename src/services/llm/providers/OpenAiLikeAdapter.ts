@@ -3,7 +3,6 @@ import {
   validateToolArguments, 
   validateToolResult,
   ToolCall,
-  ToolArguments,
   ToolResult 
 } from '../schemas';
 import type { Tool } from '../types/strictTypes';

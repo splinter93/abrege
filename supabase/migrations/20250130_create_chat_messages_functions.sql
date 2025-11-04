@@ -146,3 +146,4 @@ GRANT EXECUTE ON FUNCTION public.get_next_sequence(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.add_message_atomic TO authenticated;
 GRANT EXECUTE ON FUNCTION public.delete_messages_after TO authenticated;
 
+

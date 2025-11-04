@@ -1,7 +1,6 @@
 import { ChatSessionService } from './chatSessionService';
 import type { ChatSession } from '@/store/useChatStore';
 import type { ChatMessage } from '@/types/chat';
-import { useChatStore } from '@/store/useChatStore';
 import { simpleLogger as logger } from '@/utils/logger';
 import { batchMessageService } from './batchMessageService';
 

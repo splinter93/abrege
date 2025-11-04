@@ -21,8 +21,7 @@ import { mcpConfigService } from '../mcpConfigService';
 import { openApiSchemaService } from '../openApiSchemaService';
 import { createClient } from '@supabase/supabase-js';
 import { groqCircuitBreaker } from '@/services/circuitBreaker';
-import { addToolCallInstructions } from '../toolCallInstructions';
-import type { Tool, GroqMessage, McpCall } from '../types/strictTypes';
+import type { Tool, McpCall } from '../types/strictTypes';
 import { isMcpTool } from '../types/strictTypes';
 import { systemMessageBuilder } from '../SystemMessageBuilder';
 
@@ -328,7 +327,7 @@ export class AgentOrchestrator {
       logger.info(`[AgentOrchestrator] 🚀 Provider final sélectionné: ${selectedProvider.toUpperCase()}`);
       
       const systemMessage = this.buildSystemMessage(agentConfig, context.uiContext);
-      let messages = this.historyBuilder.buildInitialHistory(systemMessage, message, history);
+      const messages = this.historyBuilder.buildInitialHistory(systemMessage, message, history);
 
       // ✅ NOUVEAU : Sélectionner les tools selon le provider
       let tools: Tool[] = [];

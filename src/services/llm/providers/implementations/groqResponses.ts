@@ -1,4 +1,4 @@
-import { BaseProvider, type ProviderCapabilities, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
+import { BaseProvider, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
 import type { LLMProvider, AppContext } from '../../types';
 import type { ChatMessage } from '@/types/chat';
 import { logger } from '@/utils/logger';
@@ -10,7 +10,6 @@ import type {
   FunctionTool,
   ToolCall
 } from '../../types/strictTypes';
-import { isMcpTool } from '../../types/strictTypes';
 
 /**
  * Configuration spécifique à Groq Responses API

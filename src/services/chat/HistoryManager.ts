@@ -82,7 +82,6 @@ export class HistoryManager {
       // ✅ Type guards pour accès safe
       const assistantMsg = isAssistant ? message as AssistantMessage : null;
       const toolMsg = isTool ? message as ToolMessage : null;
-      const userMsg = isUser ? message as UserMessage : null;
       
       const timeline = assistantMsg?.stream_timeline as StreamTimeline | undefined;
       

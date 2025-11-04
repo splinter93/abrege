@@ -21,7 +21,7 @@ import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { useInfiniteMessages } from '@/hooks/useInfiniteMessages';
 import { isEmptyAnalysisMessage } from '@/types/chat';
-import type { ChatMessage, Agent } from '@/types/chat';
+import type { Agent } from '@/types/chat';
 
 // 🎯 NOUVEAUX HOOKS (Phase 2)
 import { useStreamingState } from '@/hooks/chat/useStreamingState';
@@ -60,12 +60,10 @@ const ChatFullscreenV2: React.FC = () => {
     selectedAgentId,
     agentNotFound,
     editingMessage,
-    setCurrentSession,
     setSelectedAgent,
     setAgentNotFound,
     syncSessions,
     createSession,
-    addMessage,
     startEditingMessage,
     cancelEditing
   } = useChatStore();
@@ -88,7 +86,7 @@ const ChatFullscreenV2: React.FC = () => {
   });
 
   // 🎯 SCROLL AUTOMATION
-  const { messagesEndRef, scrollToBottom } = useChatScroll({
+  const { messagesEndRef } = useChatScroll({
     autoScroll: true, // ✅ Scroll auto pour messages user uniquement
     messages: infiniteMessages
   });
@@ -148,7 +146,7 @@ const ChatFullscreenV2: React.FC = () => {
   });
 
   // 🎯 CHAT RESPONSE (streaming)
-  const { isProcessing, sendMessage } = useChatResponse({
+  const { sendMessage } = useChatResponse({
     useStreaming: true,
     onStreamChunk: streamingState.updateContent,
     onStreamStart: streamingState.startStreaming,
@@ -265,7 +263,7 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 UI STATE LOCAL (minimal - sidebar uniquement)
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
-  const [wideMode, setWideMode] = useState(false);
+  const [wideMode] = useState(false);
   const [agentDropdownOpen, setAgentDropdownOpen] = useState(false);
   const [editingContent, setEditingContent] = useState('');
 

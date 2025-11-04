@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import './BubbleButtons.css';
 import { FiCopy, FiCheck } from 'react-icons/fi';

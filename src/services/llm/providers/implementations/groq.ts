@@ -1,9 +1,8 @@
-import { BaseProvider, type ProviderCapabilities, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
+import { BaseProvider, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
 import type { LLMProvider, AppContext } from '../../types';
 import type { ChatMessage } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSystemMessage } from '../../templates';
-import { systemMessageBuilder } from '../../SystemMessageBuilder';
 import type {
   LLMResponse,
   ToolCall,
@@ -13,9 +12,7 @@ import type {
   GroqMessage,
   GroqChatCompletionResponse,
   GroqResponsesApiResponse,
-  GroqResponsesApiOutput,
-  McpCall,
-  Usage
+  McpCall
 } from '../../types/strictTypes';
 import { isMcpTool } from '../../types/strictTypes';
 
@@ -1388,7 +1385,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         0x00, 0x00, 0x00, 0x00  // data size (0 bytes)
       ]);
 
-      const result = await this.transcribeAudio(testAudioBuffer, {
+      await this.transcribeAudio(testAudioBuffer, {
         responseFormat: 'text',
         temperature: 0
       });

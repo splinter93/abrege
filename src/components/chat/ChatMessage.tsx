@@ -1,10 +1,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChatMessage as ChatMessageType, 
-  isObservationMessage,
-  hasReasoning
+  isObservationMessage
 } from '@/types/chat';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import UserMessageText from './UserMessageText';
@@ -13,7 +11,6 @@ import BubbleButtons from './BubbleButtons';
 import ReasoningDropdown from './ReasoningDropdown';
 import StreamTimelineRenderer from './StreamTimelineRenderer';
 import NotePreview from './NotePreview';
-import { useChatStore } from '@/store/useChatStore';
 import { simpleLogger as logger } from '@/utils/logger';
 import './ReasoningDropdown.css';
 

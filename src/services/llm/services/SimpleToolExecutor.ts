@@ -68,14 +68,13 @@ export class SimpleToolExecutor {
     context: ExecutionContext,
     llmCallback: LLMCallback
   ): Promise<ExecutionResult> {
-    const { userToken, sessionId } = context;
+    const { userToken } = context;
     const maxRetries = context.maxRetries || this.maxRetries;
-    const maxToolCalls = context.maxToolCalls || this.maxToolCalls;
 
     logger.info(`[SimpleToolExecutor] 🚀 Démarrage exécution ${toolCalls.length} tools`);
 
-    let allToolCalls: ToolCall[] = [...toolCalls];
-    let allResults: ToolResult[] = [];
+    const allToolCalls: ToolCall[] = [...toolCalls];
+    const allResults: ToolResult[] = [];
     let retryCount = 0;
     let currentToolCalls = toolCalls;
 

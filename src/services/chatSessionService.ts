@@ -1,5 +1,4 @@
 import type { 
-  ChatSession, 
   CreateChatSessionData, 
   UpdateChatSessionData, 
   ChatMessage,
@@ -8,7 +7,6 @@ import type {
 } from '@/types/chat';
 import { supabase } from '@/supabaseClient';
 import { logger } from '@/utils/logger';
-import { chatImageUploadService, type ChatImageToUpload, type UploadedChatImage } from './chatImageUploadService';
 
 /**
  * Service pour gérer les sessions de chat
@@ -72,7 +70,7 @@ export class ChatSessionService {
       let data;
       try {
         data = await response.json();
-      } catch (error) {
+      } catch {
         // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
         const textResponse = await response.text();
         logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue', { preview: textResponse.substring(0, 200) });
@@ -153,7 +151,7 @@ export class ChatSessionService {
       let responseData;
       try {
         responseData = await response.json();
-      } catch (error) {
+      } catch {
         // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
         const textResponse = await response.text();
         logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue', { preview: textResponse.substring(0, 200) });
@@ -289,7 +287,7 @@ export class ChatSessionService {
    */
   private async sanitizeMessageForPersistence(
     message: Omit<ChatMessage, 'id'>,
-    sessionId: string
+    _sessionId: string
   ): Promise<Omit<ChatMessage, 'id'>> {
     const sanitized: Omit<ChatMessage, 'id'> & { [key: string]: unknown } = { ...message };
 
@@ -309,7 +307,7 @@ export class ChatSessionService {
         sanitized.content = JSON.stringify(multiModalContent);
         
         const imageCount = multiModalContent.images?.length || 0;
-        logger.debug('[ChatSessionService] 💾 Content multi-modal sérialisé: texte + ${imageCount} URL(s) S3');
+        logger.debug(`[ChatSessionService] 💾 Content multi-modal sérialisé: texte + ${imageCount} URL(s) S3`);
       }
     }
 

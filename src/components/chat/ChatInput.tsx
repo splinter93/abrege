@@ -10,7 +10,7 @@ import type { ImageAttachment, MessageContent } from '@/types/image';
 import { useAuth } from '@/hooks/useAuth';
 import { useEditorPrompts } from '@/hooks/useEditorPrompts';
 import { useMenus } from '@/hooks/useMenus';
-import { useNotesLoader, type SelectedNote, type NoteWithContent } from '@/hooks/useNotesLoader';
+import { useNotesLoader, type NoteWithContent } from '@/hooks/useNotesLoader';
 import { useNoteSearch } from '@/hooks/useNoteSearch';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { useChatInputHandlers } from '@/hooks/useChatInputHandlers';

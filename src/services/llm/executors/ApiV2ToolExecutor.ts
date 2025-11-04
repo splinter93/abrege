@@ -7,7 +7,6 @@ import { ToolCall, ToolResult } from '../types/apiV2Types';
 import { ApiV2HttpClient } from '../clients/ApiV2HttpClient';
 import { simpleLogger as logger } from '@/utils/logger';
 import { validateToolArgs } from '../validation/toolSchemas';
-import type { ToolHandlerMap } from '../types/strictTypes';
 
 /**
  * Type pour les handlers de tools
