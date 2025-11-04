@@ -33,6 +33,8 @@ const createPromptSchema = z.object({
   category: z.string().nullable().optional(),
   position: z.number().int().min(0).optional(),
   user_id: z.string().uuid('User ID invalide'),
+  // Contexte d'utilisation
+  context: z.enum(['editor', 'chat', 'both']).optional(),
   // Nouveaux champs pour insertion flexible et structured outputs
   insertion_mode: z.enum(['replace', 'append', 'prepend']).optional(),
   use_structured_output: z.boolean().optional(),
@@ -153,6 +155,7 @@ export async function POST(request: NextRequest) {
         is_active: true,
         is_default: false,
         category: data.category ?? null,
+        context: data.context ?? 'editor',
         // Nouveaux champs
         insertion_mode: data.insertion_mode ?? 'replace',
         use_structured_output: data.use_structured_output ?? false,
