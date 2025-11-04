@@ -379,8 +379,8 @@ export class AgentOrchestrator {
           const openApiCount = tools.filter((t) => !isMcpTool(t)).length;
           
           // ✅ Générer l'index de diagnostic pour les tools OpenAPI
-          const openApiTools = tools.filter((t) => !isMcpTool(t));
-          const toolsIndex = this.buildToolsIndex(openApiTools);
+          const filteredOpenApiTools = tools.filter((t) => !isMcpTool(t));
+          const toolsIndex = this.buildToolsIndex(filteredOpenApiTools);
           
           // 🎯 LOG FOCUS TOOLS : Affichage détaillé des tools disponibles
           logger.info(`[TOOLS] Agent: ${agentConfig?.name || 'default'}`, {
@@ -389,7 +389,7 @@ export class AgentOrchestrator {
             mcp: mcpCount,
             openapi: openApiCount,
             index: toolsIndex,
-            sample: openApiTools.map(t => (t as any).function?.name).slice(0, 10)
+            sample: filteredOpenApiTools.map(t => (t as any).function?.name).slice(0, 10)
           });
         }
       } else {
