@@ -29,7 +29,7 @@ import SlashMenu from './SlashMenu';
 import MentionMenu from './MentionMenu';
 
 interface ChatInputProps {
-  onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[], mentions?: import('@/types/noteMention').NoteMention[]) => void;
+  onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[], mentions?: import('@/types/noteMention').NoteMention[], usedPrompts?: import('@/types/promptMention').PromptMention[]) => void;
   loading: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
@@ -120,6 +120,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setMessage,
     mentions,
     setMentions,
+    usedPrompts,
+    setUsedPrompts,
     audioError,
     setAudioError,
     showImageSourceModal,
@@ -128,6 +130,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setReasoningOverride,
     slashQuery,
     setSlashQuery,
+    slashMenuPosition,
+    setSlashMenuPosition,
     atMenuPosition,
     setAtMenuPosition,
     showMentionMenu,
@@ -169,7 +173,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setReasoningOverride,
     setShowImageSourceModal,
     openCamera,
-    processAndUploadImage
+    processAndUploadImage,
+    usedPrompts,
+    setUsedPrompts
   });
   
   // 🎯 Hook détection commandes
@@ -185,6 +191,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setShowMentionMenu,
     setMentionMenuPosition,
     setMentionSearchQuery,
+    setSlashMenuPosition,
     textareaRef
   });
   
@@ -207,6 +214,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     images,
     selectedNotes,
     mentions,
+    usedPrompts,
     loading,
     disabled,
     textareaRef,
@@ -214,6 +222,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setMessage,
     setSelectedNotes,
     setMentions,
+    setUsedPrompts,
     setAudioError,
     detectCommands,
     send,
@@ -299,12 +308,19 @@ const ChatInput: React.FC<ChatInputProps> = ({
         images={images} onRemoveImage={removeImage}
         selectedNotes={selectedNotes} onRemoveNote={handleRemoveNote}
         mentions={mentions} onRemoveMention={(id) => setMentions(mentions.filter(m => m.id !== id))}
+        usedPrompts={usedPrompts}
         editingMessageId={editingMessageId} onCancelEdit={onCancelEdit}
         isDragging={isDragging} onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}
         cameraInputRef={cameraInputRef} onCameraCapture={handleCameraCapture}
       >
-        <SlashMenu showSlashMenu={showSlashMenu} filteredPrompts={filteredChatPrompts} onSelectPrompt={handleSelectPrompt} />
+        <SlashMenu 
+          show={showSlashMenu}
+          filteredPrompts={filteredChatPrompts} 
+          onSelectPrompt={handleSelectPrompt}
+          onClose={closeMenu}
+          position={slashMenuPosition}
+        />
         <MentionMenu
           show={showMentionMenu}
           searchQuery={mentionSearchQuery}

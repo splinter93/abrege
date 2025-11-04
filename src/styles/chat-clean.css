@@ -2324,21 +2324,32 @@ body.chat-theme-anthracite .chatgpt-header {
 /* Slash Menu (prompts chat) - plus compact */
 .chat-slash-menu {
   position: absolute;
-  bottom: calc(100% + 0px);
-  left: 0;
+  /* top et left calculés dynamiquement en JS (comme mention-menu) */
   background: var(--chat-gradient-input);
   border: none;
   border-radius: var(--chat-radius-md);
   padding: 8px;
   width: 280px;
-  max-height: 300px;
+  max-height: 280px;
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  animation: menuFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1001;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  overflow: hidden;
+  animation: slashMenuFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Animation pour SlashMenu (fade in simple sans transform) */
+@keyframes slashMenuFadeIn {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
 }
 
 /* Search input dans le selector */
@@ -2517,7 +2528,9 @@ body.chat-theme-anthracite .chatgpt-header {
 }
 
 .chat-note-item-title {
-  font-weight: 500;
+  font-family: var(--font-chat-text);
+  font-size: var(--chat-font-size-base);
+  font-weight: normal; /* ✅ Même weight que textarea (pas bold) */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2948,6 +2961,30 @@ body.chat-theme-anthracite .chatgpt-header {
   box-sizing: border-box;
 }
 
+/* Fix mobile : Sync exact avec textarea pour éviter décalage */
+@media (max-width: 1024px) {
+  .textarea-highlight-content {
+    /* Force exactement les mêmes styles que le textarea */
+    padding: 8px 0 0 8px;
+    font-size: var(--chat-font-size-base);
+    line-height: var(--chat-line-height-normal);
+    letter-spacing: normal;
+    word-spacing: normal;
+  }
+  
+  .textarea-highlight-overlay {
+    /* S'assurer que l'overlay couvre exactement le textarea */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+}
+
 /* Mentions colorées (gradient orange) */
 .textarea-mention-highlight {
   background: linear-gradient(135deg, 
@@ -2977,6 +3014,40 @@ body.chat-theme-anthracite .chatgpt-header {
   font-weight: 500; /* Légèrement plus bold pour visibilité */
 }
 
+/* ========================================
+   PROMPTS HIGHLIGHTS (Vert)
+   Pattern: Même système que mentions mais couleur différente
+   ======================================== */
+
+/* Prompts colorés dans textarea (gradient vert) */
+.textarea-prompt-highlight {
+  background: linear-gradient(135deg, 
+    #10b981 0%,    /* Vert */
+    #34d399 50%,   /* Vert plus clair */
+    #059669 100%   /* Vert plus foncé */
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: var(--font-chat-text) !important;
+  font-size: var(--chat-font-size-base);
+  line-height: var(--chat-line-height-normal);
+  font-weight: inherit;
+}
+
+/* ✅ Prompts dans les bubbles de messages (même style vert) */
+.user-message-prompt {
+  background: linear-gradient(135deg, 
+    #10b981 0%,
+    #34d399 50%,
+    #059669 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 500; /* Légèrement plus bold pour visibilité */
+}
+
 /* Textarea transparent (dessus, z-index: 1) */
 .textarea-with-mentions-input {
   position: relative; /* ✅ Relative pour auto-resize */
@@ -2996,6 +3067,8 @@ body.chat-theme-anthracite .chatgpt-header {
   color: transparent; /* ✅ Texte invisible (overlay visible dessous) */
   caret-color: var(--chat-text-primary); /* ✅ Curseur visible */
   -webkit-text-fill-color: transparent;
+  -webkit-user-select: text; /* ✅ Fix iOS selection */
+  opacity: 1; /* ✅ Force opacity 1 pour éviter double transparence */
   box-sizing: border-box;
   overflow-y: auto; /* ✅ Scroll si dépasse max-height */
   overflow-x: hidden;
@@ -3014,6 +3087,55 @@ body.chat-theme-anthracite .chatgpt-header {
 
 .textarea-with-mentions-input:focus::placeholder {
   opacity: 0; /* ✅ Disparaît complètement au focus/clic */
+}
+
+/* Fix sélection : Force transparence du texte même quand sélectionné */
+.textarea-with-mentions-input::selection {
+  background: rgba(255, 255, 255, 0.2); /* Highlight gris neutre */
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.textarea-with-mentions-input::-moz-selection {
+  background: rgba(255, 255, 255, 0.2);
+  color: transparent !important;
+}
+
+/* Fix mobile : Force transparence du texte sur iOS/Android */
+@supports (-webkit-touch-callout: none) {
+  /* iOS uniquement */
+  .textarea-with-mentions-input {
+    -webkit-text-fill-color: transparent !important;
+    -webkit-appearance: none;
+  }
+  
+  .textarea-with-mentions-input::selection {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  /* En dessous de 1024px : Force transparence absolue */
+  .textarea-with-mentions-input {
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+  
+  /* Sélection en mobile */
+  .textarea-with-mentions-input::selection {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    text-shadow: none !important;
+  }
+  
+  .textarea-with-mentions-input::-moz-selection {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: transparent !important;
+    text-shadow: none !important;
+  }
 }
 
 /* ========================================

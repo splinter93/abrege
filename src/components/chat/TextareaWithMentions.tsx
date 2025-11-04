@@ -8,6 +8,7 @@
 'use client';
 import React, { useRef, useEffect, useMemo } from 'react';
 import type { NoteMention } from '@/types/noteMention';
+import type { PromptMention } from '@/types/promptMention';
 import { simpleLogger as logger } from '@/utils/logger';
 
 interface TextareaWithMentionsProps {
@@ -26,8 +27,11 @@ interface TextareaWithMentionsProps {
   /** Ref du textarea */
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   
-  /** Mentions actives (pour matcher les titres) */
+  /** Mentions actives (pour matcher les slugs) */
   mentions: NoteMention[];
+  
+  /** Prompts utilisés (pour matcher les noms) */
+  usedPrompts: PromptMention[];
   
   /** Classes CSS additionnelles */
   className?: string;
@@ -37,12 +41,13 @@ interface TextareaWithMentionsProps {
 }
 
 /**
- * Part de texte (normal ou mention)
+ * Part de texte (normal, mention, ou prompt)
  */
 interface TextPart {
-  type: 'text' | 'mention';
+  type: 'text' | 'mention' | 'prompt';
   content: string;
   mentionData?: NoteMention;
+  promptData?: PromptMention;
 }
 
 /**
@@ -56,72 +61,105 @@ const TextareaWithMentions: React.FC<TextareaWithMentionsProps> = ({
   placeholder,
   textareaRef,
   mentions,
+  usedPrompts,
   className = '',
   disabled = false
 }) => {
   const highlightRef = useRef<HTMLDivElement>(null);
   
   /**
-   * Parse le texte pour identifier les mentions
-   * Cherche les titres des mentions dans le texte
+   * Parse le texte pour identifier les mentions ET les prompts
+   * - Mentions: @slug (orange) - UNIQUEMENT celles dans mentions[]
+   * - Prompts: /Nom (vert) - UNIQUEMENT ceux dans usedPrompts[]
+   * 
+   * ✅ REFACTO : Whitelist exacte (pas de regex générique)
    */
   const textParts = useMemo(() => {
-    if (!value || mentions.length === 0) {
-      return [{ type: 'text' as const, content: value || '' }];
+    if (!value) {
+      return [{ type: 'text' as const, content: '' }];
     }
     
     const parts: TextPart[] = [];
-    let remaining = value;
-    let processed = 0;
     
-    // Trier mentions par position dans le texte (première occurrence)
-    const sortedMentions = [...mentions].sort((a, b) => {
-      const indexA = value.indexOf(a.title);
-      const indexB = value.indexOf(b.title);
-      return indexA - indexB;
-    });
+    // Trouver toutes les occurrences (prompts + mentions)
+    const allMatches: Array<{ type: 'mention' | 'prompt'; index: number; length: number; content: string; mentionData?: NoteMention; promptData?: PromptMention }> = [];
     
-    sortedMentions.forEach(mention => {
-      // Chercher @Titre dans le texte
-      const searchPattern = `@${mention.title}`;
-      const index = remaining.indexOf(searchPattern);
+    // ✅ Détecter UNIQUEMENT les prompts stockés dans usedPrompts[]
+    usedPrompts.forEach(prompt => {
+      const searchPattern = `/${prompt.name}`;
+      let index = value.indexOf(searchPattern);
       
-      if (index !== -1) {
-        // Texte avant la mention
-        if (index > 0) {
-          parts.push({
-            type: 'text',
-            content: remaining.substring(0, index)
-          });
-        }
-        
-        // La mention elle-même (avec @)
-        parts.push({
-          type: 'mention',
-          content: searchPattern, // @Titre
-          mentionData: mention
+      // Chercher toutes les occurrences de ce prompt
+      while (index !== -1) {
+        allMatches.push({
+          type: 'prompt',
+          index,
+          length: searchPattern.length,
+          content: searchPattern,
+          promptData: prompt
         });
-        
-        // Continuer avec le reste
-        remaining = remaining.substring(index + searchPattern.length);
+        index = value.indexOf(searchPattern, index + 1);
       }
     });
     
+    // ✅ Détecter UNIQUEMENT les mentions stockées dans mentions[]
+    mentions.forEach(mention => {
+      const searchPattern = `@${mention.slug}`;
+      let index = value.indexOf(searchPattern);
+      
+      // Chercher toutes les occurrences de cette mention
+      while (index !== -1) {
+        allMatches.push({
+          type: 'mention',
+          index,
+          length: searchPattern.length,
+          content: searchPattern,
+          mentionData: mention
+        });
+        index = value.indexOf(searchPattern, index + 1);
+      }
+    });
+    
+    // Trier par position
+    allMatches.sort((a, b) => a.index - b.index);
+    
+    // Parser le texte
+    let lastIndex = 0;
+    for (const item of allMatches) {
+      // Texte avant
+      if (item.index > lastIndex) {
+        parts.push({
+          type: 'text',
+          content: value.substring(lastIndex, item.index)
+        });
+      }
+      
+      // Mention ou Prompt
+      parts.push({
+        type: item.type,
+        content: item.content,
+        mentionData: item.mentionData
+      });
+      
+      lastIndex = item.index + item.length;
+    }
+    
     // Texte restant
-    if (remaining) {
+    if (lastIndex < value.length) {
       parts.push({
         type: 'text',
-        content: remaining
+        content: value.substring(lastIndex)
       });
     }
     
     logger.dev('[TextareaWithMentions] 📊 Texte parsé:', {
       partsCount: parts.length,
-      mentionsFound: parts.filter(p => p.type === 'mention').length
+      mentionsFound: parts.filter(p => p.type === 'mention').length,
+      promptsFound: parts.filter(p => p.type === 'prompt').length
     });
     
     return parts.length > 0 ? parts : [{ type: 'text' as const, content: value }];
-  }, [value, mentions]);
+  }, [value, mentions, usedPrompts]);
   
   /**
    * Synchroniser le scroll de l'overlay avec le textarea
@@ -159,7 +197,18 @@ const TextareaWithMentions: React.FC<TextareaWithMentionsProps> = ({
                 <span 
                   key={`mention-${index}`}
                   className="textarea-mention-highlight"
-                  title={`${part.mentionData?.title}\nSlug: ${part.mentionData?.slug}\nID: ${part.mentionData?.id}`}
+                  title={`📝 ${part.mentionData?.title}\n${part.mentionData?.description || 'Pas de description'}`}
+                >
+                  {part.content}
+                </span>
+              );
+            }
+            if (part.type === 'prompt') {
+              return (
+                <span 
+                  key={`prompt-${index}`}
+                  className="textarea-prompt-highlight"
+                  title={`🎯 ${part.promptData?.name}\n${part.promptData?.description || 'Pas de description'}`}
                 >
                   {part.content}
                 </span>

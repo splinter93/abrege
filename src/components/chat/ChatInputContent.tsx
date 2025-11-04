@@ -12,6 +12,7 @@ import { Feather } from 'react-feather';
 import type { ImageAttachment } from '@/types/image';
 import type { SelectedNote } from '@/hooks/useNotesLoader';
 import type { NoteMention } from '@/types/noteMention';
+import type { PromptMention } from '@/types/promptMention';
 import TextareaWithMentions from './TextareaWithMentions';
 
 interface ChatInputContentProps {
@@ -38,6 +39,9 @@ interface ChatInputContentProps {
   // Mentions légères (nouveau)
   mentions?: NoteMention[];
   onRemoveMention?: (mentionId: string) => void;
+  
+  // Prompts utilisés (nouveau)
+  usedPrompts?: PromptMention[];
   
   // Édition
   editingMessageId: string | null | undefined;
@@ -78,6 +82,7 @@ const ChatInputContent: React.FC<ChatInputContentProps> = ({
   onRemoveNote,
   mentions = [],
   onRemoveMention,
+  usedPrompts = [],
   editingMessageId,
   onCancelEdit,
   isDragging,
@@ -191,6 +196,7 @@ const ChatInputContent: React.FC<ChatInputContentProps> = ({
           placeholder={placeholder}
           textareaRef={textareaRef}
           mentions={mentions}
+          usedPrompts={usedPrompts}
           className="chatgpt-input-textarea"
           disabled={false}
         />

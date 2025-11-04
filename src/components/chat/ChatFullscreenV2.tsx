@@ -324,12 +324,13 @@ const ChatFullscreenV2: React.FC = () => {
   }, [cancelEditing]);
 
   // 🎯 WRAPPER send/edit avec routing édition
-  // ✅ NOUVEAU : Support mentions légères
+  // ✅ NOUVEAU : Support mentions légères + prompts
   const handleSendMessage = useCallback(async (
     message: string | import('@/types/image').MessageContent,
     images?: import('@/types/image').ImageAttachment[],
     notes?: Array<{ id: string; slug: string; title: string; markdown_content: string }>,
-    mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>
+    mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>,
+    usedPrompts?: Array<{ id: string; name: string; prompt_template: string; description?: string | null; context: 'editor' | 'chat' | 'both'; agent_id?: string | null }> // ✅ NOUVEAU
   ) => {
     // ✏️ Si en mode édition, router vers editMessage
     if (editingMessage) {
@@ -344,7 +345,7 @@ const ChatFullscreenV2: React.FC = () => {
       return;
     }
 
-    // Mode normal (avec mentions légères)
+    // Mode normal (avec mentions légères - usedPrompts ignoré car déjà remplacé dans useChatSend)
     await messageActions.sendMessage(message, images, notes, mentions);
   }, [editingMessage, messageActions]);
 

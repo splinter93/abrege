@@ -10,6 +10,7 @@ import { buildMessageContent } from '@/utils/imageUtils';
 import type { ImageAttachment, MessageContent } from '@/types/image';
 import type { SelectedNote, NoteWithContent, NotesLoadStats } from './useNotesLoader';
 import type { NoteMention } from '@/types/noteMention';
+import type { PromptMention } from '@/types/promptMention';
 
 interface UseChatSendOptions {
   loadNotes: (notes: SelectedNote[], options: { token: string; timeoutMs?: number }) => Promise<{ notes: NoteWithContent[]; stats: NotesLoadStats }>;
@@ -32,38 +33,54 @@ export function useChatSend({
   const sendQueue = useRef(new Map<string, Promise<boolean>>());
   
   /**
-   * Envoie un message avec notes, images et mentions (avec déduplication)
+   * Remplace les prompts /Nom par leurs templates
+   * ✅ REFACTO : Utilise UNIQUEMENT usedPrompts[] (whitelist exacte)
    */
-  const send = useCallback(async (
-    message: string,
-    images: ImageAttachment[],
-    selectedNotes: SelectedNote[],
-    mentions: NoteMention[] // ✅ NOUVEAU : Mentions en param direct
-  ) => {
-    // Générer un ID unique pour cette opération
-    const operationId = `${message}-${images.map(i => i.id).join(',')}-${selectedNotes.map(n => n.id).join(',')}-${mentions.map(m => m.id).join(',')}`;
-    
-    // Vérifier si cette opération est déjà en cours
-    if (sendQueue.current.has(operationId)) {
-      logger.dev(`[useChatSend] 🔄 Déduplication: envoi ${operationId} déjà en cours`);
-      return sendQueue.current.get(operationId)!;
+  const replacePromptsWithTemplates = useCallback((message: string, usedPrompts: PromptMention[]): string => {
+    if (usedPrompts.length === 0) {
+      return message;
     }
-
-    // Créer la promesse d'envoi
-    const sendPromise = sendInternal(message, images, selectedNotes, mentions);
     
-    // Stocker dans la queue
-    sendQueue.current.set(operationId, sendPromise);
+    let finalMessage = message;
+    let replacedCount = 0;
     
-    try {
-      const result = await sendPromise;
-      return result;
-    } finally {
-      // Nettoyer la queue
-      sendQueue.current.delete(operationId);
+    // ✅ Parcourir UNIQUEMENT les prompts utilisés (whitelist)
+    for (const prompt of usedPrompts) {
+      const promptPattern = `/${prompt.name}`;
+      
+      // Vérifier que le template existe et n'est pas vide
+      if (!prompt.prompt_template || !prompt.prompt_template.trim()) {
+        logger.warn('[useChatSend] ⚠️ Template vide ignoré:', {
+          promptName: prompt.name,
+          promptId: prompt.id
+        });
+        continue;
+      }
+      
+      // Chercher et remplacer toutes les occurrences de ce prompt
+      if (finalMessage.includes(promptPattern)) {
+        finalMessage = finalMessage.replace(promptPattern, prompt.prompt_template + '\n\n');
+        replacedCount++;
+        
+        logger.info('[useChatSend] ✅ Prompt remplacé:', {
+          promptName: prompt.name,
+          promptId: prompt.id,
+          templateLength: prompt.prompt_template.length
+        });
+      }
     }
-  }, [loadNotes, getAccessToken, onSend, setUploadError]);
-
+    
+    if (replacedCount > 0) {
+      logger.info('[useChatSend] ✨ Remplacement terminé:', {
+        count: replacedCount,
+        originalLength: message.length,
+        finalLength: finalMessage.length
+      });
+    }
+    
+    return finalMessage;
+  }, []);
+  
   /**
    * Fonction interne d'envoi (sans déduplication)
    * ✅ REFACTO : Mentions déjà en state (pas de parsing)
@@ -72,13 +89,15 @@ export function useChatSend({
     message: string,
     images: ImageAttachment[],
     selectedNotes: SelectedNote[],
-    mentions: NoteMention[]
+    mentions: NoteMention[],
+    usedPrompts: PromptMention[]
   ) => {
     logger.dev('[useChatSend] 🚀 START', {
       messageLength: message.length,
       imagesCount: images.length,
       notesCount: selectedNotes.length,
-      mentionsCount: mentions.length
+      mentionsCount: mentions.length,
+      promptsCount: usedPrompts.length
     });
     
     try {
@@ -111,9 +130,12 @@ export function useChatSend({
         }
       }
       
+      // ✅ Remplacer les prompts /Nom par leurs templates (whitelist exacte)
+      const messageWithPrompts = replacePromptsWithTemplates(message, usedPrompts);
+      
       // ✅ Construire contenu
       const content = buildMessageContent(
-        message || 'Regarde cette image', 
+        messageWithPrompts || 'Regarde cette image', 
         images
       );
       
@@ -125,7 +147,8 @@ export function useChatSend({
       
       logger.dev('[useChatSend] ✅ COMPLETE', {
         mentionsSent: mentionsToSend?.length || 0,
-        hasMentions: !!mentionsToSend
+        hasMentions: !!mentionsToSend,
+        promptsReplaced: usedPrompts.length
       });
       
       return true;
@@ -134,7 +157,41 @@ export function useChatSend({
       setUploadError('Erreur lors de l\'envoi du message');
       return false;
     }
-  }, [loadNotes, getAccessToken, onSend, setUploadError]);
+  }, [loadNotes, getAccessToken, onSend, setUploadError, replacePromptsWithTemplates]);
+
+  /**
+   * Envoie un message avec notes, images et mentions (avec déduplication)
+   */
+  const send = useCallback(async (
+    message: string,
+    images: ImageAttachment[],
+    selectedNotes: SelectedNote[],
+    mentions: NoteMention[],
+    usedPrompts: PromptMention[] // ✅ NOUVEAU : Prompts utilisés
+  ) => {
+    // Générer un ID unique pour cette opération
+    const operationId = `${message}-${images.map(i => i.id).join(',')}-${selectedNotes.map(n => n.id).join(',')}-${mentions.map(m => m.id).join(',')}-${usedPrompts.map(p => p.id).join(',')}`;
+    
+    // Vérifier si cette opération est déjà en cours
+    if (sendQueue.current.has(operationId)) {
+      logger.dev(`[useChatSend] 🔄 Déduplication: envoi ${operationId} déjà en cours`);
+      return sendQueue.current.get(operationId)!;
+    }
+
+    // Créer la promesse d'envoi
+    const sendPromise = sendInternal(message, images, selectedNotes, mentions, usedPrompts);
+    
+    // Stocker dans la queue
+    sendQueue.current.set(operationId, sendPromise);
+    
+    try {
+      const result = await sendPromise;
+      return result;
+    } finally {
+      // Nettoyer la queue
+      sendQueue.current.delete(operationId);
+    }
+  }, [sendInternal]);
 
   return { send };
 }

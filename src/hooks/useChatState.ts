@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import type { NoteMention } from '@/types/noteMention';
+import type { PromptMention } from '@/types/promptMention';
 
 interface UseChatStateOptions {
   editingContent?: string;
@@ -30,9 +31,13 @@ export function useChatState({
   const [reasoningOverride, setReasoningOverride] = useState<'advanced' | 'general' | 'fast' | null>(null);
   const [slashQuery, setSlashQuery] = useState('');
   const [atMenuPosition, setAtMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [slashMenuPosition, setSlashMenuPosition] = useState<{ top: number; left: number } | null>(null);
   
   // ✅ NOUVEAU : Mentions légères (state séparé comme images[])
   const [mentions, setMentions] = useState<NoteMention[]>([]);
+  
+  // ✅ NOUVEAU : Prompts utilisés (state séparé comme mentions[])
+  const [usedPrompts, setUsedPrompts] = useState<PromptMention[]>([]);
   
   // ✅ NOUVEAU : Mention menu (séparé de NoteSelector)
   const [showMentionMenu, setShowMentionMenu] = useState(false);
@@ -60,6 +65,10 @@ export function useChatState({
     mentions,
     setMentions,
     
+    // Prompts
+    usedPrompts,
+    setUsedPrompts,
+    
     // Erreurs
     audioError,
     setAudioError,
@@ -75,6 +84,8 @@ export function useChatState({
     // Slash commands
     slashQuery,
     setSlashQuery,
+    slashMenuPosition,
+    setSlashMenuPosition,
     
     // Menu position
     atMenuPosition,

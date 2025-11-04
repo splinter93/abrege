@@ -7,6 +7,7 @@
 import { useCallback } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { EditorPrompt } from '@/types/editorPrompts';
+import type { PromptMention } from '@/types/promptMention';
 
 interface UseChatInputHandlersOptions {
   closeMenu: () => void;
@@ -18,6 +19,8 @@ interface UseChatInputHandlersOptions {
   setShowImageSourceModal: (show: boolean) => void;
   openCamera: () => void;
   processAndUploadImage: (file: File) => Promise<boolean>;
+  usedPrompts: PromptMention[]; // ✅ NOUVEAU : Liste des prompts utilisés
+  setUsedPrompts: React.Dispatch<React.SetStateAction<PromptMention[]>>; // ✅ NOUVEAU
 }
 
 /**
@@ -32,7 +35,9 @@ export function useChatInputHandlers({
   setReasoningOverride,
   setShowImageSourceModal,
   openCamera,
-  processAndUploadImage
+  processAndUploadImage,
+  usedPrompts,
+  setUsedPrompts
 }: UseChatInputHandlersOptions) {
   
   // File Menu handlers
@@ -96,15 +101,64 @@ export function useChatInputHandlers({
 
   // Prompt handlers
   const handleSelectPrompt = useCallback((prompt: EditorPrompt) => {
-    const promptContent = prompt.prompt_template.replace('{selection}', '');
-    setMessage(promptContent);
+    if (!textareaRef.current) return;
+    
+    const cursorPosition = textareaRef.current.selectionStart;
+    const textBeforeCursor = textareaRef.current.value.substring(0, cursorPosition);
+    const lastSlashIndex = textBeforeCursor.lastIndexOf('/');
+    
+    if (lastSlashIndex === -1) {
+      logger.warn('[useChatInputHandlers] ⚠️ Pas de / trouvé');
+      return;
+    }
+    
+    // ✅ Remplacer /query par /Nom + espace (exactement comme mentions avec @slug)
+    const before = textareaRef.current.value.substring(0, lastSlashIndex);
+    const after = textareaRef.current.value.substring(cursorPosition);
+    const promptText = `/${prompt.name}`;
+    const newMessage = before + promptText + ' ' + after;
+    
+    // ✅ Ajouter à usedPrompts[] (comme mentions[])
+    const newPrompt: PromptMention = {
+      id: prompt.id,
+      name: prompt.name,
+      prompt_template: prompt.prompt_template,
+      description: prompt.description,
+      context: prompt.context,
+      agent_id: prompt.agent_id
+    };
+    
+    // Éviter doublons
+    if (!usedPrompts.find(p => p.id === prompt.id)) {
+      setUsedPrompts(prev => [...prev, newPrompt]);
+    }
+    
+    // ✅ Calculer nouvelle position curseur (APRÈS /Nom + espace)
+    const newCursorPosition = lastSlashIndex + promptText.length + 1;
+    
+    logger.dev('[useChatInputHandlers] 📝 Prompt ajouté:', {
+      promptName: prompt.name,
+      promptId: prompt.id,
+      insertedText: `${promptText} `,
+      newCursor: newCursorPosition,
+      totalPrompts: usedPrompts.length + 1
+    });
+    
+    setMessage(newMessage);
     closeMenu();
     setSlashQuery('');
     
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [textareaRef, closeMenu, setMessage, setSlashQuery]);
+    // ✅ Repositionner curseur APRÈS /Nom
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.selectionStart = newCursorPosition;
+        textareaRef.current.selectionEnd = newCursorPosition;
+        
+        logger.dev('[useChatInputHandlers] ✅ Curseur positionné à', newCursorPosition);
+      }
+    }, 20);
+  }, [textareaRef, closeMenu, setMessage, setSlashQuery, usedPrompts, setUsedPrompts]);
 
   // Browse Computer handler
   const handleBrowseComputer = useCallback(() => {

@@ -19,6 +19,8 @@ interface InputDetectionOptions {
   setShowMentionMenu: (show: boolean) => void;
   setMentionMenuPosition: (position: { top: number; left: number } | null) => void;
   setMentionSearchQuery: (query: string) => void;
+  // ✅ NOUVEAU : Slash menu position (comme mention menu)
+  setSlashMenuPosition: (position: { top: number; left: number } | null) => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
@@ -37,6 +39,7 @@ export function useInputDetection({
   setShowMentionMenu,
   setMentionMenuPosition,
   setMentionSearchQuery,
+  setSlashMenuPosition,
   textareaRef
 }: InputDetectionOptions) {
   
@@ -47,33 +50,88 @@ export function useInputDetection({
     value: string,
     cursorPosition: number
   ) => {
-    // 🎯 Détection slash command au DÉBUT uniquement
-    if (value.startsWith('/')) {
-      if (value.includes(' ')) {
+    const textBeforeCursor = value.substring(0, cursorPosition);
+    
+    // 🎯 Détection slash command PARTOUT dans le texte (comme mentions @)
+    const lastSlashIndex = textBeforeCursor.lastIndexOf('/');
+    
+    if (lastSlashIndex !== -1) {
+      const textAfterSlash = textBeforeCursor.substring(lastSlashIndex + 1);
+      
+      if (textAfterSlash.includes(' ') || textAfterSlash.includes('\n')) {
+        // Fermer slash menu si espace/newline après /
+        if (showSlashMenu) {
+          closeMenu();
+          setSlashQuery('');
+          setSlashMenuPosition(null);
+        }
+      } else {
+        // Calculer position du menu AU-DESSUS du /
+        if (textareaRef.current) {
+          const textBeforeSlash = value.substring(0, lastSlashIndex);
+          const lines = textBeforeSlash.split('\n');
+          const lineIndex = lines.length - 1;
+          const textInLine = lines[lineIndex] || '';
+          
+          const textarea = textareaRef.current;
+          const computedStyle = window.getComputedStyle(textarea);
+          
+          // ✅ MESURE RÉELLE de la largeur du texte avec Canvas
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          if (context) {
+            const fontSize = computedStyle.fontSize;
+            const fontFamily = computedStyle.fontFamily;
+            context.font = `${fontSize} ${fontFamily}`;
+            
+            // Mesurer la largeur réelle du texte jusqu'au /
+            const textWidth = context.measureText(textInLine).width;
+            let left = textWidth + 16; // +16 pour padding textarea
+            
+            // ✅ Empêcher le menu de déborder à droite
+            const menuWidth = 320;
+            const textareaWidth = textarea.offsetWidth;
+            const maxLeft = textareaWidth - menuWidth - 16;
+            
+            if (left > maxLeft) {
+              left = Math.max(16, maxLeft);
+            }
+            
+            // Position verticale
+            const lineHeight = parseFloat(computedStyle.lineHeight) || 24;
+            const paddingTop = parseFloat(computedStyle.paddingTop) || 8;
+            const top = (lineIndex * lineHeight) + paddingTop - textarea.scrollTop + 1; // +1px pour alignement
+            
+            setSlashMenuPosition({ top, left });
+          }
+        }
+        
+        // Query de recherche
+        const query = textAfterSlash.toLowerCase();
+        setSlashQuery(query);
+        
+        // ✅ Attendre que position soit set avant d'ouvrir le menu
+        requestAnimationFrame(() => {
+          openMenu('slash');
+        });
+      }
+    } else {
+      // Fermer slash menu si plus de /
+      if (showSlashMenu && !value.includes('/')) {
         closeMenu();
         setSlashQuery('');
-      } else {
-        const query = value.substring(1).toLowerCase();
-        setSlashQuery(query);
-        openMenu('slash');
+        setSlashMenuPosition(null);
       }
-      
-      if (showNoteSelector) {
-        closeMenu();
-        setNoteSearchQuery('');
-      }
-      return; // Skip mention detection
-    } 
+    }
     
-    // Fermer slash menu si on ne commence plus par "/"
-    if (showSlashMenu) {
+    // Fermer NoteSelector si slash menu ouvert
+    if (showSlashMenu && showNoteSelector) {
       closeMenu();
-      setSlashQuery('');
+      setNoteSearchQuery('');
     }
     
     // 🎯 Détection @ mentions PARTOUT dans le texte
     // ✅ NOUVEAU : Utilise MentionMenu séparé (pas NoteSelector)
-    const textBeforeCursor = value.substring(0, cursorPosition);
     const lastAtIndex = textBeforeCursor.lastIndexOf('@');
     
     if (lastAtIndex !== -1) {
@@ -155,6 +213,7 @@ export function useInputDetection({
     setShowMentionMenu,
     setMentionMenuPosition,
     setMentionSearchQuery,
+    setSlashMenuPosition,
     textareaRef
   ]);
 

@@ -60,10 +60,10 @@ export function useNoteSelectionWithTextarea({
         return;
       }
       
-      // ✅ Remplacer @query par @ + TITRE + espace (ex: "@Architecture Système ")
+      // ✅ Remplacer @query par @ + SLUG + espace (ex: "@architecture-systeme ")
       const before = message.substring(0, lastAtIndex);
       const after = message.substring(cursorPosition);
-      const mentionText = `@${note.title}`;
+      const mentionText = `@${note.slug}`;
       const newMessage = before + mentionText + ' ' + after;
       
       // ✅ Ajouter à mentions[] (comme images[])

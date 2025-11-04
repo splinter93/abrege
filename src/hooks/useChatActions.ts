@@ -8,6 +8,8 @@ import { useCallback } from 'react';
 import type { ImageAttachment } from '@/types/image';
 import type { SelectedNote, NoteWithContent } from './useNotesLoader';
 import type { AudioRecorderRef } from '@/components/chat/AudioRecorder';
+import type { NoteMention } from '@/types/noteMention';
+import type { PromptMention } from '@/types/promptMention';
 import { useMentionDeletion } from './useMentionDeletion';
 
 interface UseChatActionsOptions {
@@ -15,7 +17,8 @@ interface UseChatActionsOptions {
   message: string;
   images: ImageAttachment[];
   selectedNotes: SelectedNote[];
-  mentions: import('@/types/noteMention').NoteMention[]; // ✅ NOUVEAU
+  mentions: NoteMention[];
+  usedPrompts: PromptMention[]; // ✅ NOUVEAU
   loading: boolean;
   disabled: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -24,12 +27,13 @@ interface UseChatActionsOptions {
   // Setters
   setMessage: (message: string) => void;
   setSelectedNotes: (notes: SelectedNote[]) => void;
-  setMentions: (mentions: import('@/types/noteMention').NoteMention[]) => void; // ✅ NOUVEAU
+  setMentions: (mentions: NoteMention[]) => void;
+  setUsedPrompts: (prompts: PromptMention[]) => void; // ✅ NOUVEAU
   setAudioError: (error: string | null) => void;
   
   // Fonctions
   detectCommands: (value: string, cursorPosition: number) => void;
-  send: (message: string, images: ImageAttachment[], notes: SelectedNote[], mentions: import('@/types/noteMention').NoteMention[]) => Promise<boolean>; // ✅ NOUVEAU param
+  send: (message: string, images: ImageAttachment[], notes: SelectedNote[], mentions: NoteMention[], usedPrompts: PromptMention[]) => Promise<boolean>; // ✅ NOUVEAU param
   clearImages: () => void;
   
   // Menus (pour bloquer Enter)
@@ -46,6 +50,7 @@ export function useChatActions({
   images,
   selectedNotes,
   mentions,
+  usedPrompts,
   loading,
   disabled,
   textareaRef,
@@ -53,6 +58,7 @@ export function useChatActions({
   setMessage,
   setSelectedNotes,
   setMentions,
+  setUsedPrompts,
   setAudioError,
   detectCommands,
   send,
@@ -61,12 +67,14 @@ export function useChatActions({
   showSlashMenu
 }: UseChatActionsOptions) {
   
-  // ✅ Hook pour suppression atomique des mentions
+  // ✅ Hook pour suppression atomique des mentions ET prompts
   const { handleKeyDown: handleMentionDeletion } = useMentionDeletion({
     message,
     setMessage,
     mentions,
     setMentions,
+    usedPrompts,
+    setUsedPrompts,
     textareaRef
   });
   
@@ -93,11 +101,12 @@ export function useChatActions({
     
     const hasContent = message.trim() || images.length > 0;
     if (hasContent && !loading && !disabled) {
-      const success = await send(message.trim(), images, selectedNotes, mentions);
+      const success = await send(message.trim(), images, selectedNotes, mentions, usedPrompts);
       if (success) {
         setMessage('');
         setSelectedNotes([]);
         setMentions([]); // ✅ Clear mentions après envoi
+        setUsedPrompts([]); // ✅ Clear prompts après envoi
         clearImages();
         
         // ✅ Refocus la textarea pour continuer à taper (flow conversationnel)
@@ -110,7 +119,7 @@ export function useChatActions({
         }
       }
     }
-  }, [message, images, selectedNotes, mentions, loading, disabled, send, setMessage, setSelectedNotes, setMentions, clearImages, textareaRef, audioRecorderRef]);
+  }, [message, images, selectedNotes, mentions, usedPrompts, loading, disabled, send, setMessage, setSelectedNotes, setMentions, setUsedPrompts, clearImages, textareaRef, audioRecorderRef]);
   
   /**
    * Handler pour la touche Enter dans textarea

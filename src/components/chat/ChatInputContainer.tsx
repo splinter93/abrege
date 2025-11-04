@@ -18,7 +18,8 @@ export interface ChatInputContainerProps {
     message: string | MessageContent,
     images?: ImageAttachment[],
     notes?: Note[],
-    mentions?: import('@/types/noteMention').NoteMention[] // ✅ NOUVEAU : Mentions légères
+    mentions?: import('@/types/noteMention').NoteMention[], // ✅ Mentions légères
+    usedPrompts?: import('@/types/promptMention').PromptMention[] // ✅ NOUVEAU : Prompts utilisés
   ) => void;
   loading: boolean;
   sessionId: string;

@@ -15,15 +15,16 @@ interface UserMessageTextProps {
 
 const UserMessageText: React.FC<UserMessageTextProps> = ({ content }) => {
   const processedContent = useMemo(() => {
-    // Regex pour détecter les URLs ET les mentions
+    // Regex pour détecter les URLs, mentions ET prompts
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const mentionRegex = /(@[^\s@]+)/g; // @suivi de caractères non-espaces
+    const promptRegex = /(\/[A-ZÀ-Ýa-zà-ÿ][^\s@]*(?:\s+[^\s@]+)*?\s*)(?=@|\n|$)/g; // / + texte + espaces
     
-    const parts: Array<{ type: 'text' | 'link' | 'mention'; content: string }> = [];
+    const parts: Array<{ type: 'text' | 'link' | 'mention' | 'prompt'; content: string }> = [];
     let lastIndex = 0;
     
-    // Créer un tableau de tous les matches (URLs + mentions) avec leur position
-    const allMatches: Array<{ type: 'link' | 'mention'; index: number; content: string }> = [];
+    // Créer un tableau de tous les matches (URLs + mentions + prompts) avec leur position
+    const allMatches: Array<{ type: 'link' | 'mention' | 'prompt'; index: number; content: string }> = [];
     
     let match;
     while ((match = urlRegex.exec(content)) !== null) {
@@ -32,6 +33,10 @@ const UserMessageText: React.FC<UserMessageTextProps> = ({ content }) => {
     
     while ((match = mentionRegex.exec(content)) !== null) {
       allMatches.push({ type: 'mention', index: match.index, content: match[0] });
+    }
+    
+    while ((match = promptRegex.exec(content)) !== null) {
+      allMatches.push({ type: 'prompt', index: match.index, content: match[0] });
     }
     
     // Trier par position
@@ -47,7 +52,7 @@ const UserMessageText: React.FC<UserMessageTextProps> = ({ content }) => {
         });
       }
 
-      // Ajouter le match (URL ou mention)
+      // Ajouter le match (URL, mention, ou prompt)
       parts.push({
         type: match.type,
         content: match.content
@@ -106,6 +111,13 @@ const UserMessageText: React.FC<UserMessageTextProps> = ({ content }) => {
         if (part.type === 'mention') {
           return (
             <span key={index} className="user-message-mention">
+              {part.content}
+            </span>
+          );
+        }
+        if (part.type === 'prompt') {
+          return (
+            <span key={index} className="user-message-prompt">
               {part.content}
             </span>
           );
