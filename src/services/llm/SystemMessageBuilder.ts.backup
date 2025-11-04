@@ -76,6 +76,91 @@ export class SystemMessageBuilder {
         logger.dev(`[SystemMessageBuilder] ⚙️ Template par défaut utilisé`);
       }
 
+      // ✅ NOUVEAU : Instructions pour tool calls avec explication
+      content += `\n\n## Utilisation des Outils
+
+RÈGLE IMPORTANTE : Avant d'appeler un outil, tu DOIS TOUJOURS :
+1. Expliquer brièvement ce que tu vas faire et pourquoi dans le champ "content"
+2. Puis appeler l'outil dans le même message (content + tool_calls simultanés)
+3. Après avoir reçu le résultat, commenter ce que tu as obtenu
+
+Exemple de bon comportement :
+- content: "Je vais chercher des informations sur X en utilisant l'outil Y..."
+- tool_calls: [{ name: "Y", arguments: {...} }]
+
+Puis après résultat :
+- content: "J'ai trouvé que... [analyse du résultat]"
+
+JAMAIS appeler un outil sans expliquer avant ce que tu fais. L'utilisateur doit comprendre ton processus de pensée.
+
+Les outils sont détectés et exécutés automatiquement par l'API. Tu n'as qu'à expliquer ton intention dans ton message.
+
+⚠️ ANTI-HALLUCINATION CRITIQUE ⚠️
+
+RÈGLE ABSOLUE : N'invente JAMAIS de données avant d'avoir reçu le résultat d'un outil.
+
+Comportement INTERDIT :
+❌ "Je vais chercher une image de chat... [affiche une image inventée] ...Maintenant je cherche un chien..."
+❌ Afficher des URLs, des images, des données, des résultats AVANT d'avoir appelé l'outil
+❌ Prétendre avoir obtenu un résultat alors que l'outil n'a pas encore été exécuté
+
+Comportement REQUIS :
+✅ "Je vais chercher une image de chat..." [tool_call] → ATTENDRE LE RÉSULTAT
+✅ Après réception : "J'ai obtenu cette image : [URL réelle du résultat]"
+✅ Ne jamais afficher de contenu spécifique (URL, données, etc.) avant d'avoir le résultat réel
+
+Si tu as besoin de plusieurs outils séquentiels :
+1. Appelle le PREMIER outil UNIQUEMENT
+2. ATTENDS le résultat
+3. Commente le résultat obtenu
+4. Puis appelle le SECOND outil si nécessaire
+5. ATTENDS à nouveau
+
+NE JAMAIS prévoir, inventer, ou afficher des résultats imaginaires. TOUJOURS attendre le résultat réel.
+
+## Gestion des Erreurs
+
+Si un outil échoue ou retourne une erreur :
+1. NE PAS paniquer ou abandonner
+2. Expliquer à l'utilisateur ce qui s'est passé de manière claire et rassurante
+3. Proposer une alternative ou une solution de contournement
+4. Si possible, réessayer avec des paramètres différents
+
+Exemple de bonne gestion d'erreur :
+- "L'outil X a rencontré un problème technique (détails : ...). Pas de souci, je vais essayer Y à la place."
+- Ou : "La recherche n'a pas fonctionné comme prévu. Laisse-moi réessayer avec des paramètres ajustés."
+
+TOUJOURS rester utile et positif, même quand les outils échouent. L'utilisateur compte sur toi pour gérer ces situations avec élégance.`;
+
+      // ✅ FIX CRITIQUE : Instructions équilibrées pour Grok/xAI
+      // Expliquer COMMENT utiliser les tools sans donner d'exemples de formats incorrects
+      if (context && (context.provider === 'xai' || context.provider === 'grok')) {
+        content += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ IMPORTANT - TU AS DES OUTILS DISPONIBLES ⚠️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Tu as accès à des outils puissants via l'API OpenAI Function Calling.
+
+QUAND UTILISER UN OUTIL :
+- L'utilisateur te demande de faire une action concrète
+- Tu as besoin de données externes (recherche, création, etc.)
+- Tu dois manipuler des ressources (notes, images, fichiers)
+
+COMMENT CELA FONCTIONNE :
+1. Tu décides d'utiliser un outil selon le besoin de l'utilisateur
+2. L'API te permet d'appeler l'outil via le mécanisme natif
+3. Le système exécute l'outil automatiquement
+4. Tu reçois le résultat dans le prochain message
+5. Tu utilises ce résultat pour répondre à l'utilisateur
+
+RAPPEL TECHNIQUE :
+- Les tools sont définis dans le payload API
+- Tu utilises le mécanisme standard OpenAI (pas de format custom)
+- L'exécution est automatique et transparente
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+      }
+
       // ✅ Injection contexte UI compact (date, device, page)
       if (context && typeof context === 'object') {
         const ctx = context as import('@/types/llmContext').UIContext & {
@@ -123,65 +208,6 @@ export class SystemMessageBuilder {
           content += `\n\n⚠️ Date/heure ci-dessus = MAINTENANT (actualisée automatiquement). Ne cherche pas l'heure ailleurs.`;
           logger.dev(`[SystemMessageBuilder] 🌍 Contexte UI injecté (compact)`);
         }
-
-        // ✅ ENRICHISSEMENT : User stats, session, notifications
-        const enrichedParts: string[] = [];
-
-        // User stats (si disponible)
-        if (ctx.user) {
-          const userParts: string[] = [];
-          
-          if ((ctx.user as any).last_login) {
-            const lastLoginAgo = this.getTimeAgo((ctx.user as any).last_login);
-            userParts.push(`🕒 Dernière connexion: ${lastLoginAgo}`);
-          }
-          
-          if ((ctx.user as any).stats) {
-            const stats = (ctx.user as any).stats;
-            if (stats.notes_count !== undefined || stats.sessions_count !== undefined) {
-              const notesStr = stats.notes_count !== undefined ? `${stats.notes_count} notes` : '';
-              const sessionsStr = stats.sessions_count !== undefined ? `${stats.sessions_count} sessions` : '';
-              const statsStr = [notesStr, sessionsStr].filter(Boolean).join(' | ');
-              if (statsStr) userParts.push(`📊 ${statsStr}`);
-            }
-          }
-          
-          if ((ctx.user as any).notifications_count && (ctx.user as any).notifications_count > 0) {
-            userParts.push(`🔔 ${(ctx.user as any).notifications_count} notifications non lues`);
-          }
-
-          if (userParts.length > 0) {
-            enrichedParts.push(`## Utilisateur\n${userParts.join('\n')}`);
-          }
-        }
-
-        // Session info (si disponible)
-        if ((ctx as any).session) {
-          const session = (ctx as any).session;
-          const sessionParts: string[] = [];
-          
-          if (session.message_count !== undefined && session.message_count > 0) {
-            sessionParts.push(`💬 ${session.message_count} messages dans cette session`);
-          }
-          
-          if (session.tools_used && Array.isArray(session.tools_used) && session.tools_used.length > 0) {
-            const recentTools = session.tools_used.slice(-3).join(', ');
-            sessionParts.push(`🔧 Tools utilisés: ${recentTools}`);
-          }
-          
-          if (session.attached_notes_count && session.attached_notes_count > 0) {
-            sessionParts.push(`📎 ${session.attached_notes_count} note(s) attachée(s)`);
-          }
-
-          if (sessionParts.length > 0) {
-            enrichedParts.push(`## Session\n${sessionParts.join('\n')}`);
-          }
-        }
-
-        if (enrichedParts.length > 0) {
-          content += `\n\n${enrichedParts.join('\n\n')}`;
-          logger.dev(`[SystemMessageBuilder] ✨ Contexte enrichi (user stats + session)`);
-        }
         
         // ✅ REFACTO: Notes attachées gérées séparément (évite duplication tokens)
         // Les notes sont injectées comme message séparé dans la route API
@@ -203,19 +229,39 @@ export class SystemMessageBuilder {
         }
       }
 
-      // 3. Personnalité (optionnel - feature smart pour dupliquer agents)
+      // 3. Personnalité (optionnel)
       if (agentConfig.personality?.trim()) {
         content += `\n\n## Personnalité\n${agentConfig.personality.trim()}`;
         hasPersonality = true;
         logger.dev(`[SystemMessageBuilder] 🎭 Personnalité ajoutée`);
       }
 
-      // ✅ SIMPLIFIÉ : Expertise et capabilities supprimés (redondant avec system_instructions)
+      // 4. Domaines d'expertise (optionnel)
+      if (agentConfig.expertise && agentConfig.expertise.length > 0) {
+        const expertiseList = agentConfig.expertise.filter(e => e?.trim()).join(', ');
+        if (expertiseList) {
+          content += `\n\n## Domaines d'expertise\n${expertiseList}`;
+          hasExpertise = true;
+          logger.dev(`[SystemMessageBuilder] 🎓 Expertise ajoutée`);
+        }
+      }
+
+      // 5. Capacités (optionnel)
+      if (agentConfig.capabilities && agentConfig.capabilities.length > 0) {
+        const capabilitiesList = agentConfig.capabilities.filter(c => c?.trim()).join(', ');
+        if (capabilitiesList) {
+          content += `\n\n## Capacités\n${capabilitiesList}`;
+          hasCapabilities = true;
+          logger.dev(`[SystemMessageBuilder] 🔧 Capacités ajoutées`);
+        }
+      }
 
       logger.dev(`[SystemMessageBuilder] ✅ Message système construit (${content.length} chars)`, {
         hasCustomInstructions,
         hasContextTemplate,
-        hasPersonality
+        hasPersonality,
+        hasExpertise,
+        hasCapabilities
       });
 
       return {
@@ -223,8 +269,8 @@ export class SystemMessageBuilder {
         hasCustomInstructions,
         hasContextTemplate,
         hasPersonality,
-        hasExpertise: false, // Supprimé (redondant)
-        hasCapabilities: false // Supprimé (redondant)
+        hasExpertise,
+        hasCapabilities
       };
 
     } catch (error) {
@@ -239,33 +285,6 @@ export class SystemMessageBuilder {
         hasExpertise: false,
         hasCapabilities: false
       };
-    }
-  }
-
-  /**
-   * Convertit un timestamp en format "il y a X temps" lisible
-   */
-  private getTimeAgo(timestamp: string): string {
-    try {
-      const now = new Date();
-      const then = new Date(timestamp);
-      const diff = now.getTime() - then.getTime();
-      
-      const minutes = Math.floor(diff / 60000);
-      const hours = Math.floor(diff / 3600000);
-      const days = Math.floor(diff / 86400000);
-      
-      if (minutes < 1) return 'à l\'instant';
-      if (minutes < 60) return `il y a ${minutes} min`;
-      if (hours < 24) return `il y a ${hours}h`;
-      if (days === 1) return 'hier';
-      if (days < 7) return `il y a ${days} jours`;
-      if (days < 30) return `il y a ${Math.floor(days / 7)} semaine${Math.floor(days / 7) > 1 ? 's' : ''}`;
-      if (days < 365) return `il y a ${Math.floor(days / 30)} mois`;
-      return `il y a ${Math.floor(days / 365)} an${Math.floor(days / 365) > 1 ? 's' : ''}`;
-    } catch (error) {
-      logger.error('[SystemMessageBuilder] ❌ Erreur getTimeAgo:', error);
-      return 'récemment';
     }
   }
 
