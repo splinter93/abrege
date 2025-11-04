@@ -53,10 +53,10 @@ export default async function Page(props: { params: Promise<{ username: string; 
           
           <h1 className="not-found-title">Utilisateur non trouvé</h1>
           <p className="not-found-description">
-            Cet utilisateur n'existe pas ou n'est pas accessible.
+            Cet utilisateur n&apos;existe pas ou n&apos;est pas accessible.
           </p>
           <p className="not-found-subtitle">
-            Vérifiez l'URL ou contactez l'auteur.
+            Vérifiez l&apos;URL ou contactez l&apos;auteur.
           </p>
           
           <ErrorPageActions />
@@ -124,10 +124,10 @@ export default async function Page(props: { params: Promise<{ username: string; 
           
           <h1 className="not-found-title">Note non trouvée ou non publiée</h1>
           <p className="not-found-description">
-            Cette note n'existe pas ou n'est pas accessible publiquement.
+            Cette note n&apos;existe pas ou n&apos;est pas accessible publiquement.
           </p>
           <p className="not-found-subtitle">
-            Vérifiez l'URL ou contactez l'auteur.
+            Vérifiez l&apos;URL ou contactez l&apos;auteur.
           </p>
           
           <ErrorPageActions />

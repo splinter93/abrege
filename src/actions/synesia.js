@@ -23,7 +23,7 @@ export const sendPayloadToSynesia = async ({ url, type, classeurId }) => {
       classeur_id: classeurId,
     });
 
-    console.log('Article créé en BDD, en attente du résumé:', newArticle.note);
+    logger.dev('[Synesia] Article créé en BDD, en attente du résumé:', newArticle.note);
     
     // Vous pouvez ici ajouter la logique pour appeler un service externe (Synesia)
     // en lui passant le `newArticle.id` pour qu'il puisse mettre à jour l'article plus tard.

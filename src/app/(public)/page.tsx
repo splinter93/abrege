@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useRouter } from 'next/navigation';
@@ -10,7 +10,7 @@ import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
-import { MessageSquare, Plus, Upload, Sparkles, Zap, Eye, Youtube, FileText, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageSquare, Plus, Upload, Youtube, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
 import NotesCarouselNotion from '@/components/NotesCarouselNotion';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
@@ -20,7 +20,6 @@ import SearchBar, { SearchResult } from '@/components/SearchBar';
 import { motion } from 'framer-motion';
 import './home.css';
 import './dashboard.css';
-import Link from 'next/link';
 
 export default function HomePage() {
   return (
@@ -47,7 +46,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
   const notesScrollRef = useRef<HTMLDivElement>(null);
   const filesScrollRef = useRef<HTMLDivElement>(null);
 
-  const { stats, loading: statsLoading } = useUserStats();
+  const { stats } = useUserStats();
 
   const { handleError } = useSecureErrorHandler({
     context: 'HomePage',
@@ -67,7 +66,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
   }, [router]);
 
   // Callback pour gérer les résultats de recherche
-  const handleSearchResult = useCallback((result: SearchResult) => {
+  const handleSearchResult = useCallback((_result: SearchResult) => {
     // Navigation par défaut du composant SearchBar
     // Le composant gère déjà la navigation
   }, []);
