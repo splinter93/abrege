@@ -330,7 +330,7 @@ const ChatFullscreenV2: React.FC = () => {
     images?: import('@/types/image').ImageAttachment[],
     notes?: Array<{ id: string; slug: string; title: string; markdown_content: string }>,
     mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>,
-    usedPrompts?: Array<{ id: string; name: string; prompt_template: string; description?: string | null; context: 'editor' | 'chat' | 'both'; agent_id?: string | null }> // ✅ NOUVEAU
+    usedPrompts?: import('@/types/promptMention').PromptMention[] // ✅ NOUVEAU : Prompts metadata (slug au lieu de name)
   ) => {
     // ✏️ Si en mode édition, router vers editMessage
     if (editingMessage) {
@@ -345,8 +345,8 @@ const ChatFullscreenV2: React.FC = () => {
       return;
     }
 
-    // Mode normal (avec mentions légères - usedPrompts ignoré car déjà remplacé dans useChatSend)
-    await messageActions.sendMessage(message, images, notes, mentions);
+    // Mode normal (avec mentions légères + prompts metadata)
+    await messageActions.sendMessage(message, images, notes, mentions, usedPrompts);
   }, [editingMessage, messageActions]);
 
   // 🎯 RENDER AUTH STATUS

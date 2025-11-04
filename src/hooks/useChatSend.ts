@@ -33,55 +33,6 @@ export function useChatSend({
   const sendQueue = useRef(new Map<string, Promise<boolean>>());
   
   /**
-   * Remplace les prompts /Nom par leurs templates
-   * ✅ REFACTO : Utilise UNIQUEMENT usedPrompts[] (whitelist exacte)
-   */
-  const replacePromptsWithTemplates = useCallback((message: string, usedPrompts: PromptMention[]): string => {
-    if (usedPrompts.length === 0) {
-      return message;
-    }
-    
-    let finalMessage = message;
-    let replacedCount = 0;
-    
-    // ✅ Parcourir UNIQUEMENT les prompts utilisés (whitelist)
-    for (const prompt of usedPrompts) {
-      const promptPattern = `/${prompt.name}`;
-      
-      // Vérifier que le template existe et n'est pas vide
-      if (!prompt.prompt_template || !prompt.prompt_template.trim()) {
-        logger.warn('[useChatSend] ⚠️ Template vide ignoré:', {
-          promptName: prompt.name,
-          promptId: prompt.id
-        });
-        continue;
-      }
-      
-      // Chercher et remplacer toutes les occurrences de ce prompt
-      if (finalMessage.includes(promptPattern)) {
-        finalMessage = finalMessage.replace(promptPattern, prompt.prompt_template + '\n\n');
-        replacedCount++;
-        
-        logger.info('[useChatSend] ✅ Prompt remplacé:', {
-          promptName: prompt.name,
-          promptId: prompt.id,
-          templateLength: prompt.prompt_template.length
-        });
-      }
-    }
-    
-    if (replacedCount > 0) {
-      logger.info('[useChatSend] ✨ Remplacement terminé:', {
-        count: replacedCount,
-        originalLength: message.length,
-        finalLength: finalMessage.length
-      });
-    }
-    
-    return finalMessage;
-  }, []);
-  
-  /**
    * Fonction interne d'envoi (sans déduplication)
    * ✅ REFACTO : Mentions déjà en state (pas de parsing)
    */
@@ -92,13 +43,14 @@ export function useChatSend({
     mentions: NoteMention[],
     usedPrompts: PromptMention[]
   ) => {
-    logger.dev('[useChatSend] 🚀 START', {
-      messageLength: message.length,
-      imagesCount: images.length,
-      notesCount: selectedNotes.length,
-      mentionsCount: mentions.length,
-      promptsCount: usedPrompts.length
-    });
+      logger.dev('[useChatSend] 🚀 START', {
+        messageLength: message.length,
+        imagesCount: images.length,
+        notesCount: selectedNotes.length,
+        mentionsCount: mentions.length,
+        promptsCount: usedPrompts.length,
+        messageContent: message.substring(0, 100) // Preview pour debug
+      });
     
     try {
       // ✅ Notes épinglées (chargement complet - ancien système)
@@ -130,25 +82,24 @@ export function useChatSend({
         }
       }
       
-      // ✅ Remplacer les prompts /Nom par leurs templates (whitelist exacte)
-      const messageWithPrompts = replacePromptsWithTemplates(message, usedPrompts);
-      
-      // ✅ Construire contenu
+      // ✅ Construire contenu (garde /slug tel quel - remplacement au backend)
       const content = buildMessageContent(
-        messageWithPrompts || 'Regarde cette image', 
+        message || 'Regarde cette image', 
         images
       );
       
-      // ✅ Envoyer avec mentions légères + notes épinglées
-      // Ne passer mentions que si vraiment présentes (éviter tableau vide)
+      // ✅ Envoyer avec mentions légères + prompts metadata + notes épinglées
+      // Ne passer mentions/prompts que si vraiment présents (éviter tableau vide)
       const mentionsToSend = mentions && mentions.length > 0 ? mentions : undefined;
+      const promptsToSend = usedPrompts && usedPrompts.length > 0 ? usedPrompts : undefined;
       
-      onSend(content, images, notesWithContent, mentionsToSend);
+      onSend(content, images, notesWithContent, mentionsToSend, promptsToSend);
       
       logger.dev('[useChatSend] ✅ COMPLETE', {
         mentionsSent: mentionsToSend?.length || 0,
+        promptsSent: promptsToSend?.length || 0,
         hasMentions: !!mentionsToSend,
-        promptsReplaced: usedPrompts.length
+        hasPrompts: !!promptsToSend
       });
       
       return true;
@@ -157,7 +108,7 @@ export function useChatSend({
       setUploadError('Erreur lors de l\'envoi du message');
       return false;
     }
-  }, [loadNotes, getAccessToken, onSend, setUploadError, replacePromptsWithTemplates]);
+  }, [loadNotes, getAccessToken, onSend, setUploadError]);
 
   /**
    * Envoie un message avec notes, images et mentions (avec déduplication)

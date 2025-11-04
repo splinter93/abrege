@@ -308,6 +308,60 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    // ✅ NOUVEAU : Remplacer prompts /slug par templates avant LLM
+    let processedMessage = message;
+    if (!skipAddingUserMessage && message && typeof message === 'string') {
+      // Récupérer prompts depuis le dernier message user de l'historique
+      const lastUserMessage = [...history].reverse().find(m => m.role === 'user') as import('@/types/chat').UserMessage | undefined;
+      const prompts = lastUserMessage?.prompts || context.prompts || [];
+      
+      if (prompts.length > 0) {
+        try {
+          // Charger templates depuis DB
+          const promptIds = prompts.map(p => p.id);
+          const { data: promptsFromDB } = await supabase
+            .from('editor_prompts')
+            .select('id, slug, prompt_template')
+            .in('id', promptIds);
+          
+          if (promptsFromDB && promptsFromDB.length > 0) {
+            // Créer Map pour lookup rapide
+            const templateMap = new Map<string, string>();
+            promptsFromDB.forEach(p => {
+              templateMap.set(p.slug, p.prompt_template);
+            });
+            
+            // Remplacer chaque /slug par son template
+            let finalContent = processedMessage;
+            for (const prompt of prompts) {
+              const pattern = `/${prompt.slug}`;
+              const template = templateMap.get(prompt.slug);
+              
+              if (template && template.trim() && finalContent.includes(pattern)) {
+                finalContent = finalContent.replace(pattern, template + '\n\n');
+                logger.dev('[Stream Route] ✅ Prompt remplacé:', {
+                  slug: prompt.slug,
+                  name: prompt.name,
+                  templateLength: template.length
+                });
+              }
+            }
+            
+            processedMessage = finalContent;
+            
+            logger.info('[Stream Route] 📝 Prompts remplacés:', {
+              count: prompts.length,
+              originalLength: message.length,
+              finalLength: processedMessage.length
+            });
+          }
+        } catch (promptError) {
+          logger.error('[Stream Route] ❌ Erreur remplacement prompts:', promptError);
+          // Continue sans remplacement (fallback gracieux)
+        }
+      }
+    }
+    
     // ✅ Construire le tableau de messages avec contextes injectés AVANT user message
     const messages: ChatMessage[] = [
       {
@@ -320,10 +374,10 @@ export async function POST(request: NextRequest) {
       ...(contextMessage ? [contextMessage] : []),
       // Injecter contexte mentions légères (metadata only)
       ...(mentionsMessage ? [mentionsMessage] : []),
-      // N'ajouter le message user que si pas en mode skip
+      // N'ajouter le message user que si pas en mode skip (avec prompts remplacés)
       ...(skipAddingUserMessage ? [] : [{
         role: 'user' as const,
-        content: message,
+        content: processedMessage,
         timestamp: new Date().toISOString()
       }])
     ];

@@ -41,6 +41,7 @@ export interface EditorPrompt {
   user_id: string;
   agent_id: string | null;
   name: string;
+  slug: string; // ✅ NOUVEAU : Slug unique pour mentions /slug
   description?: string | null;
   prompt_template: string;
   icon: string;

@@ -56,7 +56,8 @@ export interface UseChatMessageActionsReturn {
     message: string | MessageContent,
     images?: ImageAttachment[],
     notes?: Note[],
-    mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number }>
+    mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number }>,
+    prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }> // ✅ NOUVEAU : Prompts metadata
   ) => Promise<void>;
   
   editMessage: (
@@ -103,7 +104,7 @@ export function useChatMessageActions(
 
   /**
    * Envoie un message
-   * ✅ NOUVEAU : Support mentions légères (métadonnées uniquement)
+   * ✅ NOUVEAU : Support mentions légères + prompts metadata
    * 
    * Flow:
    * 1. Validation session
@@ -112,16 +113,18 @@ export function useChatMessageActions(
    * 4. Sauvegarde background (addMessage)
    * 5. Appel LLM via sendMessageFn
    * 
-   * @param message - Message à envoyer
+   * @param message - Message à envoyer (contient /slug tel quel)
    * @param images - Images attachées (optionnel)
    * @param notes - Notes attachées complètes (optionnel)
    * @param mentions - Mentions légères (métadonnées uniquement)
+   * @param prompts - Prompts metadata (métadonnées uniquement - remplacement au backend)
    */
   const sendMessage = useCallback(async (
     message: string | MessageContent,
     images?: ImageAttachment[],
     notes?: Note[],
-    mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>
+    mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>,
+    prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>
   ) => {
     // ✅ Auth guard
     if (!requireAuth()) {
@@ -165,7 +168,9 @@ export function useChatMessageActions(
             slug: n.slug,
             title: n.title
           }))
-        })
+        }),
+        ...(mentions && mentions.length > 0 && { mentions }),
+        ...(prompts && prompts.length > 0 && { prompts }) // ✅ NOUVEAU : Metadata prompts
       };
 
       // Afficher IMMÉDIATEMENT (avant chargement notes)
@@ -177,7 +182,8 @@ export function useChatMessageActions(
         message,
         images,
         notes,
-        mentions, // ✅ NOUVEAU : Passer mentions légères au service
+        mentions, // ✅ Mentions légères
+        prompts, // ✅ NOUVEAU : Prompts metadata
         sessionId: currentSession.id,
         currentSession,
         selectedAgent,
@@ -202,7 +208,9 @@ export function useChatMessageActions(
         content: tempMessage.content,
         timestamp: tempMessage.timestamp,
         ...(tempMessage.attachedImages && { attachedImages: tempMessage.attachedImages }),
-        ...(tempMessage.attachedNotes && { attachedNotes: tempMessage.attachedNotes })
+        ...(tempMessage.attachedNotes && { attachedNotes: tempMessage.attachedNotes }),
+        ...(mentions && mentions.length > 0 && { mentions }),
+        ...(prompts && prompts.length > 0 && { prompts }) // ✅ NOUVEAU : Metadata prompts
       };
 
       sessionSyncService.addMessageAndSync(currentSession.id, messageToSave)

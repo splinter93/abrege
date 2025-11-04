@@ -71,6 +71,8 @@ export class HistoryManager {
     message: Omit<ChatMessage, 'id' | 'sequence_number' | 'timestamp' | 'created_at'> & {
       attachedImages?: Array<{ url: string; fileName?: string }>;
       attachedNotes?: Array<{ id: string; slug: string; title: string; word_count?: number }>;
+      mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>;
+      prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>;
     }
   ): Promise<ChatMessage> {
     try {
@@ -85,9 +87,11 @@ export class HistoryManager {
       
       const timeline = assistantMsg?.stream_timeline as StreamTimeline | undefined;
       
-      // ✅ TypeScript strict : Le paramètre a déjà attachedImages/attachedNotes dans son type
+      // ✅ TypeScript strict : Le paramètre a déjà attachedImages/attachedNotes/mentions/prompts dans son type
       const attachedImages = isUser ? message.attachedImages : null;
       const attachedNotes = isUser ? message.attachedNotes : null;
+      const mentions = isUser ? message.mentions : null;
+      const prompts = isUser ? message.prompts : null;
       
       logger.dev('[HistoryManager] 📥 addMessage appelé:', {
         sessionId,
@@ -97,12 +101,18 @@ export class HistoryManager {
         hasAttachedImages: !!attachedImages,
         attachedImagesCount: (attachedImages || []).length,
         hasAttachedNotes: !!attachedNotes,
-        attachedNotesCount: (attachedNotes || []).length
+        attachedNotesCount: (attachedNotes || []).length,
+        hasMentions: !!mentions,
+        mentionsCount: (mentions || []).length,
+        hasPrompts: !!prompts,
+        promptsCount: (prompts || []).length
       });
       
       logger.dev('[HistoryManager] 📤 Envoi à add_message_atomic:', {
         p_attached_images: attachedImages,
-        p_attached_notes: attachedNotes
+        p_attached_notes: attachedNotes,
+        p_mentions: mentions,
+        p_prompts: prompts
       });
       
       const { data, error } = await supabase.rpc('add_message_atomic', {
@@ -115,7 +125,9 @@ export class HistoryManager {
         p_reasoning: assistantMsg?.reasoning || null,
         p_timestamp: new Date().toISOString(),
         p_attached_images: attachedImages,
-        p_attached_notes: attachedNotes
+        p_attached_notes: attachedNotes,
+        p_mentions: mentions || null, // ✅ NOUVEAU
+        p_prompts: prompts || null    // ✅ NOUVEAU
       });
 
       if (error) {

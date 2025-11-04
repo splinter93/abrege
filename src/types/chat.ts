@@ -63,6 +63,10 @@ export interface UserMessage extends BaseMessage {
     title: string;
     word_count?: number;
   }>;
+  /** Mentions légères de notes (metadata ~10-20 tokens) */
+  mentions?: import('@/types/noteMention').NoteMention[];
+  /** Mentions légères de prompts (metadata ~10-20 tokens) */
+  prompts?: import('@/types/promptMention').PromptMention[];
 }
 
 /**

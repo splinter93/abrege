@@ -136,7 +136,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             {content && (
               <div className="chatgpt-message-content">
                 {role === 'user' ? (
-                  <UserMessageText content={content} />
+                  <UserMessageText 
+                    content={content}
+                    mentions={userMessage?.mentions}
+                    prompts={userMessage?.prompts}
+                  />
                 ) : (
                   <EnhancedMarkdownMessage content={content} />
                 )}

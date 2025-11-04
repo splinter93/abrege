@@ -86,7 +86,7 @@ const TextareaWithMentions: React.FC<TextareaWithMentionsProps> = ({
     
     // ✅ Détecter UNIQUEMENT les prompts stockés dans usedPrompts[]
     usedPrompts.forEach(prompt => {
-      const searchPattern = `/${prompt.name}`;
+      const searchPattern = `/${prompt.slug}`; // ✅ NOUVEAU : Utilise slug
       let index = value.indexOf(searchPattern);
       
       // Chercher toutes les occurrences de ce prompt

@@ -103,10 +103,10 @@ export function useMentionDeletion({
       }
     }
     
-    // 2️⃣ Vérifier prompts (format: /Nom du prompt)
+    // 2️⃣ Vérifier prompts (format: /slug)
     // ✅ Utiliser UNIQUEMENT les prompts stockés dans usedPrompts[] (comme mentions)
     for (const prompt of usedPrompts) {
-      const promptText = `/${prompt.name}`;
+      const promptText = `/${prompt.slug}`; // ✅ NOUVEAU : Utilise slug
       const promptIndex = message.indexOf(promptText);
       
       if (promptIndex === -1) continue;
@@ -132,6 +132,7 @@ export function useMentionDeletion({
         const newPrompts = usedPrompts.filter(p => p.id !== prompt.id);
         
         logger.dev('[useMentionDeletion] 🗑️ Prompt supprimé atomiquement:', {
+          promptSlug: prompt.slug,
           promptName: prompt.name,
           promptLength: promptText.length,
           newCursor: promptStart

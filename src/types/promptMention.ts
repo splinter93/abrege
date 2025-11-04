@@ -1,33 +1,39 @@
 /**
  * Types pour les mentions de prompts dans le chat
- * Pattern : Identique à NoteMention (state stocké)
+ * Pattern : Identique à NoteMention (metadata légère)
  * Conformité : ZERO any, interfaces explicites
  * @module types/promptMention
  */
 
 /**
- * Mention d'un prompt (métadonnées pour remplacement)
+ * Mention d'un prompt (métadonnées légères pour metadata DB)
  * 
  * Pattern : Stockée dans state[] comme mentions[] et images[]
- * Usage : Permet de remplacer /Nom par template au moment de l'envoi
+ * Usage : Metadata envoyée au backend pour remplacement /slug par template
+ * 
+ * ✅ REFACTO : Utilise slug (comme mentions @slug)
+ * ✅ Metadata légère (pas de prompt_template - économie tokens)
  */
 export interface PromptMention {
   /** ID unique du prompt (UUID) */
   id: string;
   
-  /** Nom du prompt (affiché comme /Nom) */
-  name: string;
+  /** Slug unique du prompt (pour /slug dans texte) */
+  slug: string;
   
-  /** Template complet du prompt */
-  prompt_template: string;
+  /** Nom du prompt (pour affichage tooltip) */
+  name: string;
   
   /** Description courte (optionnelle) */
   description?: string | null;
   
-  /** Contexte d'utilisation */
-  context: 'editor' | 'chat' | 'both';
+  /** Contexte d'utilisation (optionnel, pour validation) */
+  context?: 'editor' | 'chat' | 'both';
   
   /** Agent ID associé (optionnel) */
   agent_id?: string | null;
+  
+  /** Template complet (optionnel - chargé par backend si besoin) */
+  prompt_template?: string;
 }
 

@@ -43,6 +43,23 @@ const messageSchema = z.object({
     slug: z.string(),
     title: z.string(),
     word_count: z.number().optional()
+  })).optional(),
+  // ✅ NOUVEAU : Metadata légère (mentions + prompts)
+  mentions: z.array(z.object({
+    id: z.string(),
+    slug: z.string(),
+    title: z.string(),
+    description: z.string().optional(),
+    word_count: z.number().optional(),
+    created_at: z.string().optional()
+  })).optional(),
+  prompts: z.array(z.object({
+    id: z.string(),
+    slug: z.string(),
+    name: z.string(),
+    description: z.string().nullable().optional(),
+    context: z.enum(['editor', 'chat', 'both']).optional(),
+    agent_id: z.string().nullable().optional()
   })).optional()
 });
 

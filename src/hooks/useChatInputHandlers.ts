@@ -112,20 +112,21 @@ export function useChatInputHandlers({
       return;
     }
     
-    // ✅ Remplacer /query par /Nom + espace (exactement comme mentions avec @slug)
+    // ✅ Remplacer /query par /slug + espace (exactement comme mentions avec @slug)
     const before = textareaRef.current.value.substring(0, lastSlashIndex);
     const after = textareaRef.current.value.substring(cursorPosition);
-    const promptText = `/${prompt.name}`;
+    const promptText = `/${prompt.slug}`; // ✅ NOUVEAU : Utilise slug au lieu de name
     const newMessage = before + promptText + ' ' + after;
     
-    // ✅ Ajouter à usedPrompts[] (comme mentions[])
+    // ✅ Ajouter à usedPrompts[] (metadata légère - pas de template)
     const newPrompt: PromptMention = {
       id: prompt.id,
+      slug: prompt.slug, // ✅ NOUVEAU
       name: prompt.name,
-      prompt_template: prompt.prompt_template,
       description: prompt.description,
       context: prompt.context,
       agent_id: prompt.agent_id
+      // ✅ PAS prompt_template (metadata légère, chargé par backend si besoin)
     };
     
     // Éviter doublons
@@ -133,10 +134,11 @@ export function useChatInputHandlers({
       setUsedPrompts(prev => [...prev, newPrompt]);
     }
     
-    // ✅ Calculer nouvelle position curseur (APRÈS /Nom + espace)
+    // ✅ Calculer nouvelle position curseur (APRÈS /slug + espace)
     const newCursorPosition = lastSlashIndex + promptText.length + 1;
     
     logger.dev('[useChatInputHandlers] 📝 Prompt ajouté:', {
+      promptSlug: prompt.slug,
       promptName: prompt.name,
       promptId: prompt.id,
       insertedText: `${promptText} `,
@@ -148,7 +150,7 @@ export function useChatInputHandlers({
     closeMenu();
     setSlashQuery('');
     
-    // ✅ Repositionner curseur APRÈS /Nom
+    // ✅ Repositionner curseur APRÈS /slug
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
