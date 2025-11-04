@@ -58,7 +58,20 @@ export function handleRealtimeEvent(event: { type: string, payload: unknown, tim
       store.renameNote(payload.id, payload.title || payload.source_title);
       break;
     case 'note.moved':
-      store.moveNote(payload.id, payload.folder_id, payload.classeur_id);
+      // 🔧 FIX: Vérifier si le déplacement est nécessaire pour éviter les boucles infinies
+      const noteToMove = store.notes[payload.id];
+      if (noteToMove) {
+        const needsMove = 
+          noteToMove.folder_id !== payload.folder_id ||
+          noteToMove.classeur_id !== payload.classeur_id;
+        
+        if (needsMove) {
+          store.moveNote(payload.id, payload.folder_id, payload.classeur_id);
+        }
+      } else {
+        // Note n'existe pas encore, on la déplace quand même
+        store.moveNote(payload.id, payload.folder_id, payload.classeur_id);
+      }
       break;
     case 'note.updated':
     case 'note.update': // Support pour les deux formats
@@ -103,7 +116,20 @@ export function handleRealtimeEvent(event: { type: string, payload: unknown, tim
       store.renameFolder(payload.id, payload.name);
       break;
     case 'folder.moved':
-      store.moveFolder(payload.id, payload.parent_id, payload.classeur_id);
+      // 🔧 FIX: Vérifier si le déplacement est nécessaire pour éviter les boucles infinies
+      const folderToMove = store.folders[payload.id];
+      if (folderToMove) {
+        const needsMove = 
+          folderToMove.parent_id !== payload.parent_id ||
+          folderToMove.classeur_id !== payload.classeur_id;
+        
+        if (needsMove) {
+          store.moveFolder(payload.id, payload.parent_id, payload.classeur_id);
+        }
+      } else {
+        // Dossier n'existe pas encore, on le déplace quand même
+        store.moveFolder(payload.id, payload.parent_id, payload.classeur_id);
+      }
       break;
     case 'folder.updated':
       store.updateFolder(payload.id, payload);

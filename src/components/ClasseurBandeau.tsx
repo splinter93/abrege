@@ -212,24 +212,16 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
     setActiveId(null);
   }, [classeurs, onReorderClasseurs]);
 
-  // Hook pour le drag & drop cross-classeur
+  // Hook pour le drag & drop cross-classeur (handlers pour les icônes)
   const {
     handleDrop: handleCrossClasseurDrop,
     handleDragOver: handleCrossClasseurDragOver,
     handleDragLeave: handleCrossClasseurDragLeave,
-    setupCrossClasseurListener,
-    cleanupCrossClasseurListener
   } = useCrossClasseurDrag({
     classeurId: activeClasseurId || '',
     onRefresh: () => {}, // Pas de refresh nécessaire ici
     onSetRefreshKey: () => {} // Pas de refresh key nécessaire ici
   });
-
-  // Configurer l'écouteur cross-classeur
-  useEffect(() => {
-    const handler = setupCrossClasseurListener();
-    return () => cleanupCrossClasseurListener(handler);
-  }, [setupCrossClasseurListener, cleanupCrossClasseurListener]);
 
   /**
    * Handler pour le drop sur les icônes des classeurs

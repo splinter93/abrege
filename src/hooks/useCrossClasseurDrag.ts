@@ -146,48 +146,21 @@ export const useCrossClasseurDrag = ({
 
   /**
    * Configure l'écouteur d'événements cross-classeur
+   * ⚠️ DEPRECATED: Ce hook est remplacé par useFolderDragAndDrop
+   * Gardé pour compatibilité mais ne devrait plus être utilisé
    */
   const setupCrossClasseurListener = useCallback(() => {
-    const handler = async (e: Event) => {
-      const customEvent = e as CustomEvent<DropEventDetail>;
-      const { classeurId: targetClasseurId, itemId, itemType } = customEvent.detail || {};
-      if (!targetClasseurId || !itemId || !itemType) return;
-
-      toast.loading('Déplacement en cours...');
-
-      try {
-        if (targetClasseurId === classeurId) {
-          // Drop sur le tab du classeur courant => move à la racine
-          // Cette logique sera gérée par le composant parent
-          if (onRefresh) {
-            onRefresh();
-          }
-        } else {
-          // Cross-classeur: déplacer dans targetClasseurId et racine
-          if (itemType === 'folder') {
-            await v2UnifiedApi.moveFolder(itemId, null, targetClasseurId);
-          } else {
-            await v2UnifiedApi.moveNote(itemId, null, targetClasseurId);
-          }
-          
-          // Forcer un refresh local pour que l'item disparaisse du classeur courant
-          if (onSetRefreshKey) {
-            onSetRefreshKey((k) => k + 1);
-          }
-        }
-        toast.dismiss();
-        toast.success('Déplacement terminé !');
-      } catch (err) {
-        toast.dismiss();
-        toast.error('Erreur lors du déplacement.');
-        if (process.env.NODE_ENV === 'development') {
-          logger.error('[CrossClasseurDrag] Déplacement ERROR', err);
-        }
-      }
-    };
-
-    window.addEventListener(CUSTOM_EVENTS.DROP_TO_CLASSEUR, handler);
-    return handler;
+    // 🔧 CRITICAL FIX: Cette fonction ne doit plus être utilisée
+    // Les deux hooks (useCrossClasseurDrag et useFolderDragAndDrop) écoutaient
+    // le même événement, causant des appels multiples.
+    // Le nettoyage est maintenant géré uniquement par useFolderDragAndDrop
+    
+    if (process.env.NODE_ENV === 'development') {
+      logger.warn('[CrossClasseurDrag] ⚠️ setupCrossClasseurListener est deprecated - utiliser useFolderDragAndDrop');
+    }
+    
+    // Retourner une fonction vide pour la compatibilité
+    return () => {};
   }, [classeurId, onRefresh, onSetRefreshKey]);
 
   /**

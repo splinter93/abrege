@@ -118,25 +118,64 @@ export const useFolderDragAndDrop = ({
       toast.loading('Déplacement en cours...');
 
       try {
+        // 🔧 FIX: Vérifier si le déplacement est nécessaire avant de déplacer
+        const store = useFileSystemStore.getState();
+        let needsMove = false;
+        
         if (targetClasseurId === classeurId) {
           // Drop sur le tab du classeur courant => move à la racine
-          await moveItem(itemId, null, itemType);
-          refreshNow();
-        } else {
-          // Cross-classeur: déplacer dans targetClasseurId et racine
+          // Vérifier si l'élément n'est pas déjà à la racine du classeur courant
           if (itemType === 'folder') {
-            // Pour les dossiers, on peut maintenant changer le classeur
-            await v2UnifiedApi.moveFolder(itemId, null, targetClasseurId);
+            const folder = store.folders[itemId];
+            needsMove = folder && (folder.parent_id !== null || folder.classeur_id !== classeurId);
           } else {
-            // Pour les notes, on peut changer le classeur
-            await v2UnifiedApi.moveNote(itemId, null, targetClasseurId);
+            const note = store.notes[itemId];
+            needsMove = note && (note.folder_id !== null || note.classeur_id !== classeurId);
           }
-          // Pas besoin de modifier le store manuellement: V2UnifiedApi a déjà mis à jour Zustand
-          // On force un refresh local pour que l'item disparaisse du classeur courant
-          setRefreshKey((k) => k + 1);
+          
+          if (needsMove) {
+            await moveItem(itemId, null, itemType);
+            refreshNow();
+            toast.dismiss();
+            toast.success('Déplacement terminé !');
+          } else {
+            toast.dismiss();
+            if (process.env.NODE_ENV === 'development') {
+              logger.dev('[FolderDragAndDrop] Déplacement ignoré - élément déjà à la bonne position');
+            }
+          }
+        } else {
+          // Cross-classeur: vérifier si le déplacement est nécessaire
+          if (itemType === 'folder') {
+            const folder = store.folders[itemId];
+            needsMove = folder && (folder.parent_id !== null || folder.classeur_id !== targetClasseurId);
+          } else {
+            const note = store.notes[itemId];
+            needsMove = note && (note.folder_id !== null || note.classeur_id !== targetClasseurId);
+          }
+          
+          if (needsMove) {
+            // Cross-classeur: déplacer dans targetClasseurId et racine
+            if (itemType === 'folder') {
+              // Pour les dossiers, on peut maintenant changer le classeur
+              await v2UnifiedApi.moveFolder(itemId, null, targetClasseurId);
+            } else {
+              // Pour les notes, on peut changer le classeur
+              await v2UnifiedApi.moveNote(itemId, null, targetClasseurId);
+            }
+            // Pas besoin de modifier le store manuellement: V2UnifiedApi a déjà mis à jour Zustand
+            // On force un refresh local pour que l'item disparaisse du classeur courant
+            setRefreshKey((k) => k + 1);
+            
+            toast.dismiss();
+            toast.success('Déplacement terminé !');
+          } else {
+            toast.dismiss();
+            if (process.env.NODE_ENV === 'development') {
+              logger.dev('[FolderDragAndDrop] Déplacement ignoré - élément déjà à la bonne position');
+            }
+          }
         }
-        toast.dismiss();
-        toast.success('Déplacement terminé !');
       } catch (err) {
         toast.dismiss();
         toast.error('Erreur lors du déplacement.');

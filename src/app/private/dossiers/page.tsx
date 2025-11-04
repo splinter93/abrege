@@ -465,24 +465,16 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
     setCurrentFolderId(undefined);
   }, [setActiveClasseurId, setCurrentFolderId]);
 
-  // Hook pour le drag & drop cross-classeur
+  // Hook pour le drag & drop cross-classeur (handlers pour les onglets)
   const {
     handleDrop: handleCrossClasseurDrop,
     handleDragOver: handleCrossClasseurDragOver,
     handleDragLeave: handleCrossClasseurDragLeave,
-    setupCrossClasseurListener,
-    cleanupCrossClasseurListener
   } = useCrossClasseurDrag({
     classeurId: activeClasseurId || '',
     onRefresh: refreshData,
     onSetRefreshKey: () => {} // Pas de refresh key nécessaire ici
   });
-
-  // Configurer l'écouteur cross-classeur
-  useEffect(() => {
-    const handler = setupCrossClasseurListener();
-    return () => cleanupCrossClasseurListener();
-  }, [setupCrossClasseurListener, cleanupCrossClasseurListener]);
 
   /**
    * Handler pour le drop sur les onglets des classeurs
