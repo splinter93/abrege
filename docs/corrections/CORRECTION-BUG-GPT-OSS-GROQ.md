@@ -33,42 +33,53 @@
 
 ## 🎯 ROOT CAUSE
 
-### Fichier : `src/services/specializedAgents/services/AgentExecutor.ts`
+### Fichier : `src/services/llm/services/AgentOrchestrator.ts`
 
-**Ligne 15** (Import incorrect) :
+**Ligne 344** (Première déclaration) :
 ```typescript
-import { simpleOrchestrator } from '@/services/llm/services/AgentOrchestrator';
+const { tools: openApiTools, endpoints } = await openApiSchemaService.getToolsAndEndpointsFromSchemas(schemaIds);
 ```
 
-**Ligne 192** (Variable inexistante) :
+**Ligne 382** (Redéclaration - TDZ !) :
 ```typescript
-const orchestratorResult = await agenticOrchestrator.processMessage(
+const openApiTools = tools.filter((t) => !isMcpTool(t));
 ```
 
 ### Problème
-1. **Import** : `simpleOrchestrator` (n'existe PAS)
-2. **Utilisation** : `agenticOrchestrator` (n'existe PAS non plus)
-3. **Export réel** : `agentOrchestrator` (seul export valide)
+1. **Variable `openApiTools` déclarée 2 fois** dans la même fonction (`processMessage`)
+2. **Temporal Dead Zone (TDZ)** : La redéclaration avec `const` crée une zone morte
+3. **Minification** : Webpack transforme `openApiTools` en `d` → erreur cryptique
 
-**Conséquence** : Variable `agenticOrchestrator` non définie → erreur TDZ (Temporal Dead Zone) lors de l'accès.
+**Conséquence** : `ReferenceError: Cannot access 'd' before initialization` après minification/build.
 
 ---
 
 ## ✅ CORRECTION APPLIQUÉE
 
-### Changement 1 : Import corrigé
+### Changement : Renommer la variable dupliquée
 ```diff
-- import { simpleOrchestrator } from '@/services/llm/services/AgentOrchestrator';
-+ import { agentOrchestrator } from '@/services/llm/services/AgentOrchestrator';
+  const mcpCount = tools.filter((t) => isMcpTool(t)).length;
+  const openApiCount = tools.filter((t) => !isMcpTool(t)).length;
+  
+  // ✅ Générer l'index de diagnostic pour les tools OpenAPI
+- const openApiTools = tools.filter((t) => !isMcpTool(t));
++ const filteredOpenApiTools = tools.filter((t) => !isMcpTool(t));
+- const toolsIndex = this.buildToolsIndex(openApiTools);
++ const toolsIndex = this.buildToolsIndex(filteredOpenApiTools);
+  
+  // 🎯 LOG FOCUS TOOLS : Affichage détaillé des tools disponibles
+  logger.info(`[TOOLS] Agent: ${agentConfig?.name || 'default'}`, {
+    provider: selectedProvider,
+    total: tools.length,
+    mcp: mcpCount,
+    openapi: openApiCount,
+    index: toolsIndex,
+-   sample: openApiTools.map(t => (t as any).function?.name).slice(0, 10)
++   sample: filteredOpenApiTools.map(t => (t as any).function?.name).slice(0, 10)
+  });
 ```
 
-### Changement 2 : Utilisation corrigée
-```diff
-- const orchestratorResult = await agenticOrchestrator.processMessage(
-+ const orchestratorResult = await agentOrchestrator.processMessage(
-```
-
-**Fichier modifié** : `src/services/specializedAgents/services/AgentExecutor.ts`
+**Fichier modifié** : `src/services/llm/services/AgentOrchestrator.ts`
 
 ---
 
@@ -110,33 +121,48 @@ Options :
 ```bash
 # Test Josselin (GPT OSS 120B)
 ❌ ÉCHEC : "Cannot access 'd' before initialization"
+
+# Test Wade (GPT OSS 20B)
+❌ ÉCHEC : "Cannot access 'd' before initialization"
 ```
 
 ### Après Correction + Redémarrage
 ```bash
 # Test Josselin (GPT OSS 120B)
-✅ SUCCÈS : Réponse générée correctement
+✅ SUCCÈS : Réponse générée en 1.1s
+Response: "Pour exécuter cette tâche, il me faut le **référentiel..."
+
+# Test Wade (GPT OSS 20B)
+✅ SUCCÈS : Réponse générée en 1.1s
+Response: "# Wade, le Mercenaire du Markdown..."
 ```
 
-### Tests Additionnels Requis
-- [ ] Wade (GPT OSS 20B)
-- [ ] Tous agents GPT OSS dans le système
-- [ ] Vérifier pas de régression sur Llama/Grok
+### Tests Validés
+- [x] Josselin (GPT OSS 120B) ✅
+- [x] Wade (GPT OSS 20B) ✅
+- [x] Visionnaire (Llama 4) - Pas de régression ✅
+- [x] Timothy (Grok) - Pas de régression ✅
 
 ---
 
 ## 📚 IMPACT SUR LE CODEBASE
 
 ### Fichiers Modifiés
-1. `src/services/specializedAgents/services/AgentExecutor.ts` (2 lignes)
+1. `src/services/llm/services/AgentOrchestrator.ts` (3 lignes modifiées)
+   - Ligne 382 : Renommer `openApiTools` en `filteredOpenApiTools`
+   - Ligne 383 : Utiliser `filteredOpenApiTools` dans buildToolsIndex
+   - Ligne 392 : Utiliser `filteredOpenApiTools` dans le sample
+
+2. `src/services/specializedAgents/services/AgentExecutor.ts` (2 lignes - fausse piste initiale)
+   - Import corrigé mais n'était pas la vraie cause
 
 ### Fichiers Impactés (aucune modification nécessaire)
-- `src/services/llm/services/AgentOrchestrator.ts` ✅ (export correct)
-- `src/services/specializedAgents/SpecializedAgentManager.ts` ✅ (import correct)
-- `src/services/specializedAgents/SpecializedAgentManagerV2.ts` ✅ (import correct)
+- `src/services/specializedAgents/SpecializedAgentManager.ts` ✅
+- `src/services/specializedAgents/SpecializedAgentManagerV2.ts` ✅
+- Tous les autres providers (xAI, OpenAI) ✅
 
 ### Régression Potentielle
-❌ **AUCUNE** : L'ancien import n'était jamais appelé (code mort)
+❌ **AUCUNE** : Simple renommage de variable, pas de changement de logique
 
 ---
 
@@ -176,10 +202,11 @@ Options :
 - [x] Code corrigé
 - [x] Build réussi
 - [x] Linting passé
-- [ ] Serveur redémarré
-- [ ] Tests validation Josselin
-- [ ] Tests validation Wade
-- [ ] Tests validation tous agents GPT OSS
+- [x] Serveur redémarré (Vercel auto-deploy)
+- [x] Tests validation Josselin ✅
+- [x] Tests validation Wade ✅
+- [x] Tests validation tous agents GPT OSS ✅
+- [x] Pas de régression sur Llama/Grok ✅
 - [ ] Monitoring post-déploiement (24h)
 
 ---
