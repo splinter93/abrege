@@ -27,10 +27,13 @@
 
 **Impact :** ⭐⭐⭐⭐⭐ (tool calls = fonctionnalité core du chat)
 
-**Solution recommandée :**
-- Supprimer les 200 lignes de "règles" et "exemples"
-- Garder uniquement : "Tu es X. Utilise les outils disponibles si nécessaire."
-- Le LLM sait déjà comment utiliser les tools (API native)
+**Plan d'action détaillé :** Voir `PLAN-SYSTEMMESSAGE-SIMPLIFICATION.md`
+
+**Solution :**
+1. Virer 96 lignes de pollution (pavés tool calls + grok + expertise)
+2. Enrichir contexte UI (user stats, session, notifications)
+3. Garder : instructions, contexte, personnalité, template
+4. Résultat : 50-100 lignes clean vs 150-300 actuellement
 
 ---
 

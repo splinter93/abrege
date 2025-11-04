@@ -15,11 +15,12 @@
 ## 🔴 BLOQUEURS (4)
 
 ### 1. SystemMessageBuilder fait dérailler tool calls ⚠️ **CRITIQUE**
-- **Problème :** System message trop verbeux (268 lignes), règles qui confusent le LLM
+- **Problème :** System message trop verbeux (367 lignes fichier), 96 lignes de pollution
 - **Impact :** ⭐⭐⭐⭐⭐ Tool calls = core feature
-- **Effort :** 1-2j
+- **Effort :** 2h (plan détaillé prêt)
 - **Fichier :** `src/services/llm/SystemMessageBuilder.ts`
-- **Solution :** Simplifier à < 50 lignes, supprimer les pavés de règles
+- **Plan :** `PLAN-SYSTEMMESSAGE-SIMPLIFICATION.md`
+- **Solution :** Virer 96 lignes pollution + enrichir contexte UI
 
 ### 2. Paste Markdown cassé
 - **Problème :** Coller markdown ouvre bloc code ou ne formate pas
