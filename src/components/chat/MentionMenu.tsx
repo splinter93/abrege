@@ -13,7 +13,7 @@
 
 'use client';
 import React, { useEffect, useRef } from 'react';
-import { FileText } from 'react-feather';
+import { Feather } from 'react-feather';
 import type { SelectedNote } from '@/hooks/useNotesLoader';
 
 interface MentionMenuProps {
@@ -140,7 +140,7 @@ const MentionMenu: React.FC<MentionMenuProps> = ({
               onClick={() => onSelectNote(note)}
               onMouseEnter={() => setSelectedIndex(index)}
             >
-              <FileText size={16} className="mention-menu-item-icon" />
+              <Feather size={16} className="mention-menu-item-icon" />
               <div className="mention-menu-item-content">
                 <div className="mention-menu-item-title">{note.title}</div>
                 {note.description && (

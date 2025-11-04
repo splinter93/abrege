@@ -2529,7 +2529,7 @@ body.chat-theme-anthracite .chatgpt-header {
 
 .chat-note-item-title {
   font-family: var(--font-chat-text);
-  font-size: var(--chat-font-size-base);
+  font-size: 14px; /* ✅ Même taille que mention-menu-item-title */
   font-weight: normal; /* ✅ Même weight que textarea (pas bold) */
   white-space: nowrap;
   overflow: hidden;

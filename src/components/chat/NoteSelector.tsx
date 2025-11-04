@@ -132,6 +132,8 @@ export default React.memo(NoteSelector, (prev, next) => {
     prev.showNoteSelector === next.showNoteSelector &&
     prev.noteSearchQuery === next.noteSearchQuery &&
     prev.selectedNotes.length === next.selectedNotes.length &&
+    prev.recentNotes.length === next.recentNotes.length && // ✅ NOUVEAU : Comparer recentNotes
+    prev.searchedNotes.length === next.searchedNotes.length && // ✅ NOUVEAU : Comparer searchedNotes
     prev.isSearching === next.isSearching &&
     prev.disabled === next.disabled &&
     prev.loading === next.loading

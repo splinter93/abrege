@@ -284,13 +284,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
     { isOpen: showSlashMenu, menuClass: 'chat-slash-menu', triggerClass: 'chatgpt-input-textarea', onClose: closeMenu, additionalCleanup: () => setSlashQuery('') }
   ]);
 
-  // ✅ FIX: Charger les notes récentes à l'ouverture du menu @ (pas au montage)
+  // ✅ FIX: Charger les notes récentes à l'ouverture des menus @ (pas au montage)
   // Résout le bug : au premier chargement, le token n'est pas dispo → recentNotes vide
+  // 🔧 AMÉLIORATION : Charger à CHAQUE ouverture (pas seulement si vide)
+  // Car le premier appel peut échouer silencieusement (token pas prêt)
   useEffect(() => {
-    if (showNoteSelector && recentNotes.length === 0) {
+    // Charger si menu épingler OU menu mention s'ouvre
+    if (showNoteSelector || showMentionMenu) {
       loadRecentNotes();
     }
-  }, [showNoteSelector, recentNotes.length, loadRecentNotes]);
+  }, [showNoteSelector, showMentionMenu, loadRecentNotes]);
 
   return (
     <div 

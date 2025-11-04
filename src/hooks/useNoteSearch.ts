@@ -22,12 +22,31 @@ export function useNoteSearch({ getAccessToken }: UseNoteSearchOptions) {
   const [recentNotes, setRecentNotes] = useState<SelectedNote[]>([]);
   const [searchedNotes, setSearchedNotes] = useState<SelectedNote[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  
+  // ✅ Cache avec TTL pour éviter appels API redondants
+  const [lastLoadTime, setLastLoadTime] = useState<number>(0);
+  const CACHE_TTL_MS = 30000; // 30 secondes
 
-  // Charger les notes récentes
+  // Charger les notes récentes (avec cache intelligent)
   const loadRecentNotes = useCallback(async () => {
+    // ✅ Skip si cache valide (< 30s)
+    const now = Date.now();
+    if (now - lastLoadTime < CACHE_TTL_MS && recentNotes.length > 0) {
+      logger.dev('[useNoteSearch] ⚡ Cache valide, skip reload:', {
+        age: Math.round((now - lastLoadTime) / 1000) + 's',
+        count: recentNotes.length
+      });
+      return;
+    }
+    
     try {
       const token = await getAccessToken();
-      if (!token) return;
+      if (!token) {
+        logger.warn('[useNoteSearch] ⚠️ Token non disponible, skip load');
+        return;
+      }
+
+      logger.dev('[useNoteSearch] 🔄 Chargement notes récentes...');
 
       const response = await fetch('/api/v2/note/recent?limit=10', {
         headers: {
@@ -49,11 +68,16 @@ export function useNoteSearch({ getAccessToken }: UseNoteSearchOptions) {
           created_at: note.created_at
         }));
         setRecentNotes(formattedNotes);
+        setLastLoadTime(Date.now()); // ✅ Mettre à jour cache timestamp
+        
+        logger.dev('[useNoteSearch] ✅ Notes récentes chargées:', {
+          count: formattedNotes.length
+        });
       }
     } catch (error) {
       logger.error('[useNoteSearch] Erreur chargement notes récentes:', error);
     }
-  }, [getAccessToken]);
+  }, [getAccessToken, lastLoadTime, recentNotes.length]);
 
   // Recherche de notes avec debounce
   useEffect(() => {
