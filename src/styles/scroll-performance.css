@@ -1,0 +1,152 @@
+/* ==========================================================================
+   SCROLL PERFORMANCE - Optimisations globales
+   ========================================================================== 
+   
+   Optimisations pour scroll ultra-fluide sans saccades :
+   - GPU acceleration
+   - Font rendering optimisé  
+   - Isolation des repaints
+   - Passive event listeners (géré en JS)
+   
+   ========================================================================== */
+
+/* ==========================================================================
+   GPU ACCELERATION - UNIQUEMENT zones scrollables
+   ========================================================================== */
+
+/* Base html/body - Font rendering uniquement */
+html,
+body {
+  /* Font rendering optimisé (anti-aliasing) */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  
+  /* Pas de smooth scroll sur html - Laisse le browser gérer */
+  scroll-behavior: auto !important;
+}
+
+/* ⚡ GPU ACCELERATION - UNIQUEMENT contenus scrollables */
+/* Chat messages container */
+.chatgpt-messages-container,
+.chat-messages-area {
+  /* GPU acceleration */
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  
+  /* Isolation des repaints */
+  contain: layout paint;
+  
+  /* Optimisation scroll momentum sur mobile */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Éditeur de notes */
+.noteLayout-content,
+.editor-content-wrapper,
+.page-content-area {
+  /* GPU acceleration */
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  
+  /* ⚠️ PAS de contain: paint (cache les drag handles en absolute) */
+  /* contain: layout; permet l'isolation sans clipper les absolute */
+  
+  /* Optimisation scroll momentum sur mobile */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================================================================
+   TEXTE - Font rendering optimisé (UNIQUEMENT contenus scrollables)
+   ========================================================================== */
+
+/* Texte dans les zones scrollables uniquement */
+.chatgpt-messages-container .chat-message,
+.chatgpt-messages-container .message-content,
+.noteLayout-content .markdown-body,
+.noteLayout-content .ProseMirror,
+.editor-content-wrapper .editor-content {
+  /* Font rendering précis (évite les "sauts" de pixels pendant scroll) */
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+  
+  /* Backface visibility (évite flickering) */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* ==========================================================================
+   TRANSITIONS - Désactivées pendant scroll
+   ========================================================================== */
+
+/* Désactive les transitions pendant scroll pour éviter saccades */
+.scrolling * {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* ==========================================================================
+   IMAGES - UNIQUEMENT dans contenus scrollables
+   ========================================================================== */
+
+.chatgpt-messages-container img,
+.noteLayout-content img,
+.editor-content-wrapper img {
+  /* Force GPU compositing pour les images */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  
+  /* Évite les reflows pendant chargement */
+  content-visibility: auto;
+}
+
+/* ==========================================================================
+   CODE BLOCKS - UNIQUEMENT dans contenus scrollables
+   ========================================================================== */
+
+.chatgpt-messages-container pre,
+.chatgpt-messages-container code,
+.noteLayout-content pre,
+.noteLayout-content code,
+.editor-content-wrapper pre,
+.editor-content-wrapper code {
+  /* Isolation des repaints (syntax highlighting ne force pas repaint scroll) */
+  contain: layout style paint;
+}
+
+/* ==========================================================================
+   MOBILE - Touch optimisations (zones scrollables uniquement)
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  /* Mobile : momentum scrolling sur contenus scrollables */
+  .chatgpt-messages-container,
+  .chat-messages-area,
+  .noteLayout-content,
+  .editor-content-wrapper,
+  .page-content-area {
+    /* Momentum scrolling iOS */
+    -webkit-overflow-scrolling: touch;
+    
+    /* Évite le bounce sur iOS qui peut causer saccades */
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* ==========================================================================
+   DESKTOP - Scroll wheel optimization (zones scrollables uniquement)
+   ========================================================================== */
+
+@media (min-width: 769px) {
+  /* Desktop : GPU acceleration sur contenus scrollables */
+  .chatgpt-messages-container,
+  .chat-messages-area,
+  .noteLayout-content,
+  .editor-content-wrapper,
+  .page-content-area {
+    /* Hardware acceleration */
+    will-change: transform;
+  }
+}
+
+

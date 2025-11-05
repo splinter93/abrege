@@ -6,6 +6,9 @@
 /* Import des variables en premier */
 @import '../styles/variables.css';
 
+/* ⚡ Import des optimisations scroll (GPU acceleration, font rendering) */
+@import '../styles/scroll-performance.css';
+
 /* Import du système glassmorphism centralisé */
 @import '../styles/glassmorphism-system.css';
 

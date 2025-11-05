@@ -28,9 +28,7 @@
 }
 
 /* Styles de base pour la page publique */
-html {
-  scroll-behavior: smooth;
-}
+/* ⚠️ scroll-behavior géré dans scroll-performance.css */
 
 /* Transitions fluides - Gérées par le système de design */
 /* transition: all 0.2s ease-in-out; */ 

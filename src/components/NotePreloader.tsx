@@ -2,6 +2,7 @@ import React, { useEffect, useCallback } from 'react';
 import { optimizedNoteService } from '@/services/optimizedNoteService';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { supabase } from '@/supabaseClient';
+import { simpleLogger } from '@/utils/logger';
 
 interface NotePreloaderProps {
   classeurId?: string;
@@ -81,7 +82,8 @@ const NotePreloader: React.FC<NotePreloaderProps> = ({
         });
       }
     } catch (error) {
-      console.debug('[NotePreloader] Classeur preload error:', error);
+      // Erreur silencieuse pour préchargement background
+      simpleLogger.dev('[NotePreloader] Classeur preload error:', error);
     }
   }, [classeurId, userId, enabled, maxNotes, setNotes]);
 
@@ -109,7 +111,8 @@ const NotePreloader: React.FC<NotePreloaderProps> = ({
         Promise.allSettled(preloadPromises);
       }
     } catch (error) {
-      console.debug('[NotePreloader] Folder preload error:', error);
+      // Erreur silencieuse pour préchargement background
+      simpleLogger.dev('[NotePreloader] Folder preload error:', error);
     }
   }, [folderId, userId, enabled, maxNotes]);
 
@@ -136,7 +139,8 @@ const NotePreloader: React.FC<NotePreloaderProps> = ({
         Promise.allSettled(preloadPromises);
       }
     } catch (error) {
-      console.debug('[NotePreloader] Recent notes preload error:', error);
+      // Erreur silencieuse pour préchargement background
+      simpleLogger.dev('[NotePreloader] Recent notes preload error:', error);
     }
   }, [userId, enabled, maxNotes]);
 

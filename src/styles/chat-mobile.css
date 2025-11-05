@@ -190,7 +190,7 @@
 
 @media (max-width: 768px) {
   .chat-messages-area {
-    scroll-behavior: smooth;
+    /* scroll-behavior: smooth; */ /* ⚠️ Géré dans scroll-performance.css */
     -webkit-overflow-scrolling: touch;
   }
   .chat-message { animation: none; }

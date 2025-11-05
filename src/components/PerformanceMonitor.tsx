@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { noteConcurrencyManager } from '@/utils/concurrencyManager';
 import { optimizedNoteService } from '@/services/optimizedNoteService';
+import { simpleLogger } from '@/utils/logger';
 
 interface PerformanceMetrics {
   cacheStats: {
@@ -165,7 +166,7 @@ const PerformanceMonitor: React.FC<{ visible?: boolean }> = ({ visible = false }
             <button
               onClick={() => {
                 optimizedNoteService.invalidateAllCache();
-                console.log('[PerformanceMonitor] 🗑️ Cache vidé');
+                simpleLogger.dev('[PerformanceMonitor] 🗑️ Cache vidé');
               }}
               style={{
                 padding: '4px 8px',
@@ -182,7 +183,7 @@ const PerformanceMonitor: React.FC<{ visible?: boolean }> = ({ visible = false }
             <button
               onClick={() => {
                 noteConcurrencyManager.abortAll();
-                console.log('[PerformanceMonitor] ⏹️ Toutes les promesses annulées');
+                simpleLogger.dev('[PerformanceMonitor] ⏹️ Toutes les promesses annulées');
               }}
               style={{
                 padding: '4px 8px',

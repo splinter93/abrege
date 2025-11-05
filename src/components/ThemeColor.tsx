@@ -1,16 +1,19 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { simpleLogger } from '@/utils/logger';
 
 /**
  * Composant client qui met à jour la meta tag theme-color
  * Détecte le thème actif et applique la bonne couleur
+ * ⚡ Optimisé pour performance : debouncing + passive listeners
  */
 export default function ThemeColor() {
+  const prevColorRef = useRef<string | null>(null);
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+  
   useEffect(() => {
-    // ✅ Ref pour éviter logs répétés
-    const prevColorRef = useRef<string | null>(null);
-    
     const updateThemeColor = () => {
       const html = document.documentElement;
       const body = document.body;
@@ -22,8 +25,6 @@ export default function ThemeColor() {
       
       if (isStandalone) {
         color = '#000000'; // Noir pur pour app installée
-        
-        // FORCE noir pur sur html/body de manière agressive
         html.style.setProperty('background', '#000000', 'important');
         body.style.setProperty('background', '#000000', 'important');
       }
@@ -38,50 +39,65 @@ export default function ThemeColor() {
         color = '#121212'; // Dark theme
       }
       
-      // ✅ Log seulement si couleur a changé (réduit 30+ logs → 2-3 logs)
+      // Update seulement si couleur a changé
       if (color !== prevColorRef.current) {
-        console.log('[ThemeColor] Update:', color, 'Standalone:', isStandalone);
         prevColorRef.current = color;
+        const metaTag = document.querySelector('meta[name="theme-color"]');
+        if (metaTag) {
+          metaTag.setAttribute('content', color);
+        }
+        simpleLogger.dev(`[ThemeColor] Updated: ${color}`);
+      }
+    };
+    
+    // ⚡ Debounced avec RAF pour synchroniser avec browser paint
+    const debouncedUpdate = () => {
+      // Cancel RAF/timeout précédents
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
       }
       
-      // Update la meta tag
-      const metaTag = document.querySelector('meta[name="theme-color"]');
-      if (metaTag) {
-        metaTag.setAttribute('content', color);
-      }
+      // Utiliser RAF + timeout pour éviter updates pendant scroll
+      updateTimeoutRef.current = setTimeout(() => {
+        rafIdRef.current = requestAnimationFrame(updateThemeColor);
+      }, 100);
     };
     
     // Update initial immédiat
     updateThemeColor();
     
-    // Re-update après 100ms pour s'assurer que les CSS sont chargés
+    // Re-update après chargement CSS
     setTimeout(updateThemeColor, 100);
-    setTimeout(updateThemeColor, 500);
     
-    // ✅ Update périodique moins agressif (5s au lieu de 1s, réduit logs)
-    const interval = setInterval(updateThemeColor, 5000);
-    
-    // Observer les changements de classe
-    const observer = new MutationObserver(updateThemeColor);
+    // ⚡ MutationObserver DEBOUNCED (évite saccades de scroll)
+    const observer = new MutationObserver(debouncedUpdate);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class'],
     });
     
-    // Update au focus/visibilité
+    // ⚡ Event listeners DEBOUNCED
     const handleVisibility = () => {
       if (!document.hidden) {
-        updateThemeColor();
+        debouncedUpdate();
       }
     };
     
-    window.addEventListener('focus', updateThemeColor);
-    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', debouncedUpdate, { passive: true } as any);
+    document.addEventListener('visibilitychange', handleVisibility, { passive: true } as any);
     
     return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
       observer.disconnect();
-      clearInterval(interval);
-      window.removeEventListener('focus', updateThemeColor);
+      window.removeEventListener('focus', debouncedUpdate);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);

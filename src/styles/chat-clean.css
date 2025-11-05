@@ -2406,7 +2406,7 @@ body.chat-theme-anthracite .chatgpt-header {
   gap: 2px;
   max-height: none; /* Pas de limite pour voir au moins 5 notes */
   overflow-y: auto;
-  scroll-behavior: smooth; /* Scroll fluide */
+  /* scroll-behavior: smooth; */ /* ⚠️ Géré dans scroll-performance.css */
   scrollbar-gutter: stable; /* Évite le jump quand scrollbar apparaît */
   position: relative;
 }
