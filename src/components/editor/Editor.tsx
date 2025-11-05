@@ -43,8 +43,10 @@ interface NoteUpdate {
 }
 import { createEditorExtensions, PRODUCTION_EXTENSIONS_CONFIG } from '@/config/editor-extensions';
 import ContextMenu from './ContextMenu';
-import { useUIContext } from '@/hooks/useUIContext';
 import type { Editor as TiptapEditor } from '@tiptap/react';
+// ✅ NOUVEAUX IMPORTS - Sidebar Navigation
+import EditorSidebar from './EditorSidebar';
+import { useEditorNavigation } from '@/hooks/useEditorNavigation';
 
 /**
  * Composant principal de l'éditeur de notes
@@ -79,16 +81,6 @@ const Editor: React.FC<{
   const selectNote = React.useCallback((s: FileSystemState) => s.notes[noteId], [noteId]);
   const note = useFileSystemStore(selectNote);
   
-  // Collecter le contexte UI pour l'injection dans le chat
-  const uiContext = useUIContext({
-    activeNote: note ? {
-      id: note.id,
-      slug: note.slug || note.id,
-      name: note.source_title || 'Note sans titre'
-    } : undefined
-  });
-
-  // 🔍 DEBUG: Log du contexte UI collecté
   const updateNote = useFileSystemStore(s => s.updateNote);
   // ✅ PRÉTRAITER le Markdown pour échapper les ~ dans les tables (fix LLM)
   const rawContent = note?.markdown_content || '';
@@ -118,6 +110,9 @@ const Editor: React.FC<{
   const kebabBtnRef = React.useRef<HTMLButtonElement>(null) as React.RefObject<HTMLButtonElement>;
   const slashMenuRef = React.useRef<EditorSlashMenuHandle | null>(null);
   const editorContainerRef = React.useRef<HTMLDivElement | null>(null);
+
+  // ✅ Sidebar Navigation - Pattern chat (hover zone + transform)
+  const [sidebarVisible, setSidebarVisible] = React.useState(false);
 
   // Mode readonly (pages publiques ou preview mode)
   const isReadonly = readonly || editorState.ui.previewMode;
@@ -197,6 +192,22 @@ const Editor: React.FC<{
     note
   });
 
+  // ✅ NOUVEAUX HOOKS - Navigation entre notes
+  const { switchNote } = useEditorNavigation({
+    currentNoteId: noteId,
+    hasUnsavedChanges: () => {
+      // Vérifier si l'éditeur a des modifications non sauvegardées
+      if (!editor) return false;
+      const editorContent = editor.getText();
+      const originalContent = rawContent || '';
+      return editorContent !== originalContent;
+    },
+    onBeforeNavigate: () => {
+      // Cleanup avant navigation (optionnel)
+      logger.dev('[Editor] Navigation vers une autre note...');
+    }
+  });
+
   // ✅ REFACTO: Tous les effects extraits dans useEditorEffects
   useEditorEffects({
     editor,
@@ -223,6 +234,26 @@ const Editor: React.FC<{
 
   return (
     <>
+      {/* ✅ Sidebar Navigation - Pattern chat exact */}
+      {!isReadonly && (
+        <>
+          {/* Hover zone 100px à gauche */}
+          <div
+            className="editor-sidebar-hover-zone"
+            onMouseEnter={() => setSidebarVisible(true)}
+            onMouseLeave={() => setSidebarVisible(false)}
+          />
+          
+          {/* Sidebar (transform slide) */}
+          <EditorSidebar
+            isVisible={sidebarVisible}
+            currentNoteId={noteId}
+            currentClasseurId={note?.classeur_id}
+            onNoteSelect={switchNote}
+          />
+        </>
+      )}
+
       {/* 🔄 Realtime System - Service simple et robuste */}
         <div className="editor-toc-fixed">
           <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
@@ -296,27 +327,6 @@ const Editor: React.FC<{
       {/* 🔍 Realtime Status (dev only) */}
       {process.env.NODE_ENV === 'development' && userId && (
         <RealtimeStatus userId={userId} noteId={noteId} />
-      )}
-      
-      {/* 🧪 Test simple du contexte UI */}
-      {process.env.NODE_ENV === 'development' && uiContext && (
-        <div style={{
-          position: 'fixed',
-          top: '10px',
-          left: '10px',
-          background: 'rgba(0,0,0,0.8)',
-          color: 'white',
-          padding: '10px',
-          borderRadius: '8px',
-          fontSize: '12px',
-          zIndex: 9999,
-          maxWidth: '300px'
-        }}>
-          <div><strong>🎯 Contexte UI:</strong></div>
-          <div>Utilisateur: {uiContext.user?.name || 'N/A'}</div>
-          <div>Page: {uiContext.page?.name || 'N/A'}</div>
-          <div>Note: {uiContext.activeNote?.name || 'N/A'}</div>
-        </div>
       )}
       
       {/* Bouton "Crafted with Scrivia" - visible en mode preview */}

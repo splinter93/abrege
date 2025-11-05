@@ -29,11 +29,15 @@ export function useNoteSearch({ getAccessToken }: UseNoteSearchOptions) {
 
   // Charger les notes récentes (avec cache intelligent)
   const loadRecentNotes = useCallback(async () => {
-    // ✅ Skip si cache valide (< 30s)
+    // ✅ Skip si cache valide (< 30s) ET notes déjà chargées
+    // Note: On utilise une closure pour accéder à recentNotes sans le mettre dans les deps
     const now = Date.now();
-    if (now - lastLoadTime < CACHE_TTL_MS && recentNotes.length > 0) {
+    const cacheAge = now - lastLoadTime;
+    const hasCachedNotes = recentNotes.length > 0;
+    
+    if (cacheAge < CACHE_TTL_MS && hasCachedNotes) {
       logger.dev('[useNoteSearch] ⚡ Cache valide, skip reload:', {
-        age: Math.round((now - lastLoadTime) / 1000) + 's',
+        age: Math.round(cacheAge / 1000) + 's',
         count: recentNotes.length
       });
       return;
@@ -77,7 +81,9 @@ export function useNoteSearch({ getAccessToken }: UseNoteSearchOptions) {
     } catch (error) {
       logger.error('[useNoteSearch] Erreur chargement notes récentes:', error);
     }
-  }, [getAccessToken, lastLoadTime, recentNotes.length]);
+    // ✅ FIX: Ne PAS mettre recentNotes.length dans les deps (cause infinite loop)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getAccessToken, lastLoadTime]);
 
   // Recherche de notes avec debounce
   useEffect(() => {

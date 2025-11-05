@@ -81,6 +81,7 @@ export const useOptimizedNoteLoader = ({
         { maxRetries: 2, baseDelay: 500 }
       );
       console.log('[useOptimizedNoteLoader] ✅ Métadonnées récupérées:', metadata);
+      console.log('[useOptimizedNoteLoader] 🔍 classeur_id:', metadata.classeur_id);
       
       // Créer la note avec les métadonnées
       const noteData = {
@@ -101,7 +102,8 @@ export const useOptimizedNoteLoader = ({
         slug: metadata.slug,
         public_url: '',
         visibility: 'private',
-        folder_id: metadata.folder_id
+        folder_id: metadata.folder_id,
+        classeur_id: metadata.classeur_id // ✅ AJOUTÉ
       };
 
       // Ajouter/mettre à jour la note dans le store

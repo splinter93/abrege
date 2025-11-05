@@ -65,6 +65,10 @@ export interface FileSystemState {
   classeurs: Record<string, Classeur>;
   activeClasseurId?: string | null;
   
+  // UI State - Editor Sidebar
+  editorSidebarOpen: boolean;
+  setEditorSidebarOpen: (open: boolean) => void;
+  
   // Actions notes - MUTATIONS LOCALES (sans fetch)
   addNote: (note: Note) => void;
   removeNote: (id: string) => void;
@@ -118,6 +122,10 @@ export const useFileSystemStore = create<FileSystemState>()((set) => ({
   folders: {},
   classeurs: {},
   activeClasseurId: null,
+  
+  // UI State - Editor Sidebar
+  editorSidebarOpen: false,
+  setEditorSidebarOpen: (open: boolean) => set({ editorSidebarOpen: open }),
   
   // Notes - MUTATIONS LOCALES
   addNote: (note: Note) => set(state => ({ 
