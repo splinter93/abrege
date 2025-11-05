@@ -30,6 +30,7 @@ let globalDragHandle: HTMLElement | null = null;
 let currentView: EditorView | null = null;
 let hideTimeout: NodeJS.Timeout | null = null; // Timeout pour délai avant hide
 let hoverBridge: HTMLElement | null = null; // Zone invisible à gauche pour hover
+let listenersAttached = false; // Flag pour éviter duplication des listeners
 
 // Version du handle pour forcer la recréation après changements de design
 const HANDLE_VERSION = 'v5.4'; // Bridge 160px + couleur var(--text-primary) brightness(0.55)
@@ -311,6 +312,9 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                 hoverBridge = null;
               }
               
+              // ✅ Reset le flag listeners pour recréation
+              listenersAttached = false;
+              
               if (!globalDragHandle && view.dom) {
             globalDragHandle = createDragHandle();
                 globalDragHandle.setAttribute('data-version', HANDLE_VERSION);
@@ -327,8 +331,12 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                 editorElement.appendChild(hoverBridge);
               }
 
-              // DRAGSTART: Utiliser la méthode officielle Tiptap
-              globalDragHandle.addEventListener('dragstart', (e: DragEvent) => {
+              // ✅ Attacher les listeners UNE SEULE FOIS
+              if (!listenersAttached) {
+                listenersAttached = true;
+                
+                // DRAGSTART: Utiliser la méthode officielle Tiptap
+                globalDragHandle.addEventListener('dragstart', (e: DragEvent) => {
                 const posStr = globalDragHandle?.getAttribute('data-node-pos');
                 const pos = posStr ? parseInt(posStr) : -1;
                 
@@ -387,22 +395,23 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                 }
               });
 
-              // DRAGEND: Réinitialiser la sélection pour débloquer l'input
-              globalDragHandle.addEventListener('dragend', () => {
-                if (currentView) {
-                  // Attendre un peu que ProseMirror finisse le drop
-                  setTimeout(() => {
-                    const { tr, doc } = currentView!.state;
-                    const { TextSelection } = require('@tiptap/pm/state');
-                    
-                    // Créer une TextSelection vide à la position courante
-                    const currentPos = currentView!.state.selection.from;
-                    const selection = TextSelection.create(doc, currentPos);
-                    tr.setSelection(selection);
-                    currentView!.dispatch(tr);
-                  }, 100);
-                }
-              });
+                // DRAGEND: Réinitialiser la sélection pour débloquer l'input
+                globalDragHandle.addEventListener('dragend', () => {
+                  if (currentView) {
+                    // Attendre un peu que ProseMirror finisse le drop
+                    setTimeout(() => {
+                      const { tr, doc } = currentView!.state;
+                      const { TextSelection } = require('@tiptap/pm/state');
+                      
+                      // Créer une TextSelection vide à la position courante
+                      const currentPos = currentView!.state.selection.from;
+                      const selection = TextSelection.create(doc, currentPos);
+                      tr.setSelection(selection);
+                      currentView!.dispatch(tr);
+                    }, 100);
+                  }
+                });
+              } // ✅ Fin du if (!listenersAttached)
             }
           }
             }); // Fin du 2ème RAF
@@ -428,6 +437,9 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                 hoverBridge.parentNode.removeChild(hoverBridge);
                 hoverBridge = null;
               }
+              
+              // ✅ Reset le flag listeners
+              listenersAttached = false;
               
               currentView = null;
             }
@@ -459,6 +471,9 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                   hoverBridge.parentNode.removeChild(hoverBridge);
                   hoverBridge = null;
                 }
+                
+                // ✅ Reset le flag listeners pour recréation
+                listenersAttached = false;
               }
               
               if (!globalDragHandle && view.dom) {
@@ -478,73 +493,9 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                         editorElement.appendChild(hoverBridge);
                       }
                       
-                      // Ajouter les event listeners
-                      globalDragHandle.addEventListener('dragstart', (e: DragEvent) => {
-                    const posStr = globalDragHandle?.getAttribute('data-node-pos');
-                    const pos = posStr ? parseInt(posStr) : -1;
-                    
-                    if (pos >= 0 && currentView && e.dataTransfer) {
-                      const { doc } = currentView.state;
-                      const $pos = doc.resolve(pos);
-                      const node = $pos.nodeAfter;
-                      
-                      if (!node) return;
-                      
-                      const from = pos;
-                      const to = pos + node.nodeSize;
-                      const $from = doc.resolve(from);
-                      const $to = doc.resolve(to);
-                      
-                      const ranges = getSelectionRanges($from, $to, 0);
-                      
-                      if (!ranges.length) {
-                        return;
-                      }
-                      
-                      const selection = NodeRangeSelection.create(doc, from, to);
-                      const slice = selection.content();
-                      
-                      // Type assertion nécessaire car dragging est une propriété interne de ProseMirror
-                      (currentView as EditorView & { dragging?: DraggingInfo | null }).dragging = { slice, move: true };
-                      
-                      const tr = currentView.state.tr.setSelection(selection);
-                      currentView.dispatch(tr);
-                      
-                      const wrapper = document.createElement('div');
-                      wrapper.style.position = 'absolute';
-                      wrapper.style.top = '-10000px';
-                      
-                      const domNode = currentView.nodeDOM(from) as HTMLElement;
-                      if (domNode) {
-                        const cloned = domNode.cloneNode(true) as HTMLElement;
-                        wrapper.appendChild(cloned);
-                      }
-                      
-                      document.body.appendChild(wrapper);
-                      e.dataTransfer.setDragImage(wrapper, 0, 0);
-                      
-                      document.addEventListener('drop', () => {
-                        if (wrapper.parentNode) {
-                          wrapper.parentNode.removeChild(wrapper);
-                        }
-                      }, { once: true });
+                      // ✅ Les listeners sont déjà attachés dans la création initiale
+                      // Pas besoin de les réattacher ici (évite duplication)
                     }
-                  });
-                  
-                  globalDragHandle.addEventListener('dragend', () => {
-                    if (currentView) {
-                      setTimeout(() => {
-                        const { tr, doc } = currentView!.state;
-                        const { TextSelection } = require('@tiptap/pm/state');
-                        
-                        const currentPos = currentView!.state.selection.from;
-                        const selection = TextSelection.create(doc, currentPos);
-                        tr.setSelection(selection);
-                        currentView!.dispatch(tr);
-                      }, 100);
-                    }
-                  });
-                  }
                 }
                 });
               }
