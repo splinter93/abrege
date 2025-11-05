@@ -4,6 +4,7 @@ import './editor-kebab-menu.css';
 import ShareMenu from './ShareMenu';
 import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
+import { simpleLogger as logger } from '@/utils/logger';
 
 interface EditorKebabMenuProps {
   open: boolean;
@@ -84,7 +85,9 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   
   // Vérification de sécurité pour currentShareSettings
   if (!currentShareSettings) {
-    console.warn('EditorKebabMenu: currentShareSettings is undefined, using default');
+    if (process.env.NODE_ENV === 'development') {
+      logger.dev('[EditorKebabMenu] currentShareSettings is undefined, using default');
+    }
     // Utiliser des valeurs par défaut au lieu de retourner null
     const defaultSettings = getDefaultShareSettings();
     currentShareSettings = defaultSettings;
@@ -201,10 +204,11 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         className="editor-header-kebab-menu"
         ref={menuRef}
         style={{ 
-          top: position.top, 
-          left: position.left, 
-          position: 'fixed',
-          zIndex: shareMenuOpen ? 999 : 1000 // Plus bas que ShareMenu quand il est ouvert
+          position: 'absolute',  /* ✅ Absolute pour suivre le header sticky */
+          top: '100%',           /* ✅ Juste sous le header */
+          right: '55px',        /* ✅ Décalé 100px vers la gauche (6px + 100px) */
+          marginTop: '0px',      /* ✅ Petit espace sous le header */
+          zIndex: shareMenuOpen ? 999 : 1000
         }}
       >
         {menuOptions.map((opt) => (

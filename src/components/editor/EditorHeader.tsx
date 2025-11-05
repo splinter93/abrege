@@ -25,6 +25,7 @@ interface EditorHeaderProps {
   showToolbar?: boolean;
   canEdit?: boolean; // Si l'user peut éditer (pour afficher le lien vers l'éditeur)
   noteId?: string; // ID de la note pour le lien vers l'éditeur
+  kebabMenu?: React.ReactNode; // ✅ Menu kebab rendu dans le header
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -41,6 +42,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   showToolbar = true,
   canEdit = true,
   noteId,
+  kebabMenu
 }) => {
   return (
     <div className="editor-header">
@@ -107,6 +109,9 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
           <FiX size={18} />
         </button>
       </div>
+      
+      {/* ✅ Menu kebab rendu dans le header pour suivre le sticky */}
+      {kebabMenu}
     </div>
   );
 };

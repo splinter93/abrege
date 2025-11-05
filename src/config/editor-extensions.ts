@@ -291,6 +291,7 @@ export function createEditorExtensions(
   // Mode PROGRESSIF (lignes 74-183) ajoute déjà NotionDragHandleExtension
   const hasNotionDragHandle = extensions.some(ext => 
     ext.name === 'notionDragHandle' || 
+    // ⚠️ any acceptable: TipTap Extension type non exporté, pas d'alternative
     (ext as any).type?.name === 'notionDragHandle'
   );
   

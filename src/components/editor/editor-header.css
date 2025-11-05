@@ -23,6 +23,8 @@
   border-bottom: none !important; /* Pas de bordure */
   z-index: 100;
   box-sizing: border-box;
+  /* ✅ Pour que le menu kebab absolute se positionne correctement */
+  /* Note: on ne met PAS position: relative car sticky est déjà positionné */
 }
 
 /* Supprimer tous les focus par défaut */
@@ -97,6 +99,7 @@
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
+  position: relative; /* ✅ Pour que le menu kebab absolute se positionne correctement */
 }
 
 .header-action-btn:hover {

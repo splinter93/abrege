@@ -81,13 +81,13 @@ export function useEditorEffects({
     setTitle(note?.source_title || ''); 
   }, [note?.source_title, setTitle]);
 
-  // Effect: Position menu kebab
+  // Effect: Position menu kebab (plus besoin de scroll listener car absolute dans header sticky)
   useEffect(() => {
     if (kebabOpen && kebabBtnRef.current) {
       const rect = kebabBtnRef.current.getBoundingClientRect();
       setKebabPos({ 
         top: rect.bottom + CONTEXT_MENU_CONFIG.kebabMenuOffsetTop, 
-        left: rect.right
+        left: rect.right - 200
       });
     }
   }, [kebabOpen, kebabBtnRef, setKebabPos]);

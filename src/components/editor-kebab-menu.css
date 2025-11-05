@@ -13,18 +13,16 @@
 }
 
 .editor-header-kebab-menu {
-  position: fixed;
-  background: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%); /* Dégradé un peu plus sombre */
+  /* ✅ Position gérée en inline (absolute, top: 100%, right: 6px) pour suivre le header sticky */
+  background: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: none; /* Pas de bordure */
+  border: none;
   border-radius: 8px;
   padding: 6px;
   min-width: 200px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  z-index: 1000;
-  transform: translateX(-100%); /* Le menu s'aligne à droite de sa position (qui est le bord droit du bouton) */
-  margin-top: 5px; /* Petit espace sous le bouton */
+  /* z-index géré en inline pour éviter conflits */
 }
 
 .editor-header-kebab-menu-item {

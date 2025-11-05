@@ -60,6 +60,27 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
         showToolbar={editorState.ui.showToolbar}
         canEdit={canEdit}
         noteId={noteId}
+        kebabMenu={
+          editorState.menus.kebabOpen && (
+            <EditorKebabMenu
+              open={editorState.menus.kebabOpen}
+              position={editorState.menus.kebabPos}
+              onClose={() => editorState.setKebabOpen(false)}
+              a4Mode={editorState.ui.a4Mode}
+              setA4Mode={handlers.handleA4ModeChange}
+              slashLang={editorState.ui.slashLang}
+              setSlashLang={handlers.handleSlashLangChange}
+              fullWidth={editorState.ui.fullWidth}
+              setFullWidth={handlers.handleFullWidthChange}
+              showToolbar={editorState.ui.showToolbar}
+              toggleToolbar={editorState.toggleToolbar}
+              noteId={noteId}
+              currentShareSettings={editorState.shareSettings}
+              onShareSettingsChange={handleShareSettingsChange}
+              publicUrl={publicUrl}
+            />
+          )
+        }
       />
       
       {/* Add header image CTA */}
@@ -126,24 +147,6 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
         }
         previewMode={editorState.ui.previewMode}
         readonly={isReadonly}
-      />
-      
-      <EditorKebabMenu
-        open={editorState.menus.kebabOpen}
-        position={editorState.menus.kebabPos}
-        onClose={() => editorState.setKebabOpen(false)}
-        a4Mode={editorState.ui.a4Mode}
-        setA4Mode={handlers.handleA4ModeChange}
-        slashLang={editorState.ui.slashLang}
-        setSlashLang={handlers.handleSlashLangChange}
-        fullWidth={editorState.ui.fullWidth}
-        setFullWidth={handlers.handleFullWidthChange}
-        showToolbar={editorState.ui.showToolbar}
-        toggleToolbar={editorState.toggleToolbar}
-        noteId={noteId}
-        currentShareSettings={editorState.shareSettings}
-        onShareSettingsChange={handleShareSettingsChange}
-        publicUrl={publicUrl}
       />
     </>
   );
