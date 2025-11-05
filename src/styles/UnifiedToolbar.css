@@ -9,9 +9,25 @@
 /* La classe .font-monospace est définie dans typography.css */
 /* On ajoute juste la couleur ici pour les éléments de code */
 .code-block-container pre,
-.code-block-container code,
-.mermaid-edit-textarea {
+.code-block-container code {
     color: var(--text-muted, #6b7280);
+}
+
+/* ✅ Textarea édition Mermaid - Style comme bloc code */
+.mermaid-edit-textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 16px 20px;
+    background: var(--blk-bg) !important; /* ✅ Même dégradé que blocs code */
+    color: var(--blk-fg) !important; /* ✅ Texte visible */
+    border: none !important;
+    border-radius: 0 !important; /* Pas de radius, déjà sur container */
+    font-family: var(--mono) !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    resize: vertical;
+    outline: none !important;
+    filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Même brightness */
 }
 
 /* =================================================================
