@@ -65,7 +65,14 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
         
         if (body && mermaidContent) {
           try {
-            await initializeMermaid();
+            // ✅ Forcer réinitialisation avec htmlLabels: false
+            await initializeMermaid({ 
+              flowchart: { 
+                htmlLabels: false,
+                wrap: true,
+                wrapPadding: 20
+              } 
+            });
             const mermaid = await import('mermaid');
             
             const normalizedContent = normalizeMermaidContent(mermaidContent);
@@ -73,9 +80,13 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
             const result = await mermaid.default.render(id, normalizedContent);
             
             if (result?.svg) {
+              let svg = result.svg;
+              
+              // ✅ Laisser Mermaid gérer le layout - pas de transformation SVG
+              
               const svgContainer = document.createElement('div');
               svgContainer.className = 'mermaid-svg-container';
-              svgContainer.innerHTML = result.svg;
+              svgContainer.innerHTML = svg;
               body.innerHTML = '';
               body.appendChild(svgContainer);
             }

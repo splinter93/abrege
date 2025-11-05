@@ -140,7 +140,7 @@ export class MermaidRenderer {
 
       // Vérifier le résultat
       if (result && typeof result === 'object' && 'svg' in result) {
-        const svg = result.svg as string;
+        let svg = result.svg as string;
         
         // Vérifier si c'est un SVG d'erreur
         if (isMermaidErrorSvg(svg)) {
@@ -151,6 +151,8 @@ export class MermaidRenderer {
         if (!svg.includes('<svg') || !svg.includes('</svg>')) {
           throw new Error('SVG invalide retourné par Mermaid');
         }
+
+        // ✅ Laisser Mermaid gérer le layout - pas de transformation SVG
 
         onProgress?.('success');
         logger.info(`Diagramme ${diagramType} rendu avec succès`);

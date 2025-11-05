@@ -385,9 +385,6 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
       // Créer le conteneur SVG pour le diagramme agrandi
       const svgContainer = document.createElement('div');
       svgContainer.style.cssText = `
-        display: flex;
-        align-items: center;
-        justify-content: center;
         width: 100%;
         height: 100%;
       `;

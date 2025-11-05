@@ -418,13 +418,17 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
     const result = await mermaid.default.render(id, normalizedContent);
     
     if (result && result.svg) {
+      let svg = result.svg;
+      
+      // ✅ Laisser Mermaid gérer le layout - pas de transformation SVG
+      
       // Nettoyer le contenu du body
       container.innerHTML = '';
 
       // Créer le conteneur SVG
       const svgContainer = document.createElement('div');
       svgContainer.className = 'mermaid-svg-container';
-      svgContainer.innerHTML = result.svg;
+      svgContainer.innerHTML = svg;
       
       // Mettre à jour les classes du conteneur parent
       container.parentElement?.classList.remove('mermaid-loading');

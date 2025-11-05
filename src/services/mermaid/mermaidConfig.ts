@@ -327,15 +327,15 @@ export const defaultMermaidConfig: MermaidConfig = {
   fontFamily: 'Figtree, Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', /* ✅ Cohérent avec --font-chat-text */
   fontSize: 18, /* ✅ Augmenté pour lisibilité */
   
-  // Configuration Flowchart
+  // Configuration Flowchart - Config par défaut Mermaid (minimal override)
   flowchart: {
     useMaxWidth: true,
     htmlLabels: true,
     curve: 'basis',
-    padding: 30, /* ✅ Augmenté pour éviter texte coupé */
-    nodeSpacing: 60, /* ✅ Plus d'espace entre nœuds */
-    rankSpacing: 60, /* ✅ Plus d'espace entre rangs */
-    diagramPadding: 30, /* ✅ Plus de padding global */
+    padding: 20,
+    nodeSpacing: 50,
+    rankSpacing: 50,
+    diagramPadding: 20,
   },
   
   // Configuration Sequence

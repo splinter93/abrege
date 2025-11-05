@@ -54,13 +54,9 @@
   font-size: 18px !important;
 }
 
-/* Texte dans les noeuds - centrage */
+/* Texte dans les noeuds - MINIMAL */
 .mermaid-svg-container .nodeLabel {
   color: #ffffff !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
 }
 
 .mermaid-svg-container .node text {
@@ -69,26 +65,18 @@
   dominant-baseline: central !important; /* ✅ Centrage vertical */
 }
 
-/* Labels dans foreignObject */
+/* Labels dans foreignObject - MINIMAL, laisser Mermaid gérer le layout */
 .mermaid-svg-container foreignObject {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 18px !important; /* ✅ Augmenté pour lisibilité */
+  font-size: 16px !important;
 }
 
 .mermaid-svg-container foreignObject > div,
 .mermaid-svg-container foreignObject > span,
 .mermaid-svg-container foreignObject p {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  width: 100% !important;
-  height: 100% !important;
-  font-family: var(--font-chat-text) !important; /* ✅ Cohérent avec chat */
-  font-size: 18px !important; /* ✅ Augmenté pour lisibilité */
-  line-height: 1.4 !important;
+  font-family: var(--font-chat-text) !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+  color: #ffffff !important;
 }
 
 /* Style des liens/flèches */
@@ -253,26 +241,18 @@
   fill: #ffffff !important;
 }
 
-/* ✅ Labels dans foreignObject - modale */
+/* ✅ Labels dans foreignObject - modale - MINIMAL */
 .mermaid-modal foreignObject {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 18px !important; /* ✅ Augmenté pour lisibilité */
+  font-size: 16px !important;
 }
 
 .mermaid-modal foreignObject > div,
 .mermaid-modal foreignObject > span,
 .mermaid-modal foreignObject p {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  width: 100% !important;
-  height: 100% !important;
-  font-family: var(--font-chat-text) !important; /* ✅ Cohérent avec chat */
-  font-size: 18px !important; /* ✅ Augmenté pour lisibilité */
-  line-height: 1.4 !important;
+  font-family: var(--font-chat-text) !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+  color: #ffffff !important;
 }
 
 /* Rayons de bordure pour tous les rectangles dans la modale Mermaid */
@@ -321,21 +301,11 @@
   -webkit-backdrop-filter: blur(10px) !important; /* ✅ Safari */
 }
 
-/* ✅ Styles de texte spécifiques pour la modale */
+/* ✅ Styles de texte spécifiques pour la modale - MINIMAL */
 .mermaid-modal .nodeLabel,
 .mermaid-modal .flowchart-label,
 .mermaid-modal .label {
   color: #ffffff !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-}
-
-.mermaid-modal .label-container {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
 }
 
 .mermaid-modal .node text {
