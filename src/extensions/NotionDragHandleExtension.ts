@@ -28,9 +28,91 @@ export interface NotionDragHandleOptions {
 
 let globalDragHandle: HTMLElement | null = null;
 let currentView: EditorView | null = null;
+let hideTimeout: NodeJS.Timeout | null = null; // Timeout pour délai avant hide
+let hoverBridge: HTMLElement | null = null; // Zone invisible à gauche pour hover
 
 // Version du handle pour forcer la recréation après changements de design
-const HANDLE_VERSION = 'v4.2'; // Tailles réduites : 18x18 buttons, gap 8px, opacité 0.35 (discret)
+const HANDLE_VERSION = 'v5.4'; // Bridge 160px + couleur var(--text-primary) brightness(0.55)
+
+/**
+ * Créer une zone invisible à gauche de l'éditeur
+ * Permet de garder les handles visibles quand la souris va vers eux
+ */
+function createHoverBridge(): HTMLElement {
+  const bridge = document.createElement('div');
+  bridge.className = 'notion-hover-bridge';
+  bridge.style.position = 'absolute';
+  bridge.style.left = '-160px'; // 160px à gauche de l'éditeur
+  bridge.style.top = '0';
+  bridge.style.width = '160px'; // Largeur de la zone (ultra-confortable)
+  bridge.style.height = '100%';
+  bridge.style.zIndex = '99'; // Sous les handles (z-index: 100)
+  bridge.style.pointerEvents = 'auto';
+  bridge.style.background = 'transparent';
+  // bridge.style.background = 'rgba(255, 0, 0, 0.1)'; // DEBUG: décommenter pour voir la zone
+  
+  // ✅ FIX: Listeners sur la bridge pour maintenir les handles
+  bridge.addEventListener('mouseenter', () => {
+    // Annuler le timeout de hide
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+  });
+  
+  bridge.addEventListener('mousemove', (e: MouseEvent) => {
+    // Annuler le timeout
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+    
+    // Détecter quel bloc est à la hauteur Y de la souris
+    if (currentView && globalDragHandle) {
+      const editorRect = currentView.dom.getBoundingClientRect();
+      const mouseY = e.clientY;
+      
+      // Trouver tous les blocs de premier niveau
+      const blocks = Array.from(currentView.dom.children) as HTMLElement[];
+      
+      for (const block of blocks) {
+        const blockRect = block.getBoundingClientRect();
+        
+        // Si la souris est à la hauteur de ce bloc
+        if (mouseY >= blockRect.top && mouseY <= blockRect.bottom) {
+          // Positionner les handles sur ce bloc
+          globalDragHandle.style.left = `${blockRect.left - editorRect.left - 80}px`;
+          globalDragHandle.style.top = `${blockRect.top - editorRect.top + 6}px`;
+          globalDragHandle.style.opacity = '1';
+          
+          // Sauvegarder la position du bloc
+          try {
+            const blockStartPos = currentView.posAtDOM(block, 0);
+            globalDragHandle.setAttribute('data-node-pos', blockStartPos.toString());
+          } catch (e) {
+            // Ignore errors
+          }
+          
+          break;
+        }
+      }
+    }
+  });
+  
+  bridge.addEventListener('mouseleave', () => {
+    // Délai avant de cacher
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+    }
+    hideTimeout = setTimeout(() => {
+      if (globalDragHandle) {
+        globalDragHandle.style.opacity = '0';
+      }
+    }, 200);
+  });
+  
+  return bridge;
+}
 
 function createDragHandle(): HTMLElement {
   // Créer le container pour les deux boutons (+ et ⋮⋮)
@@ -41,15 +123,15 @@ function createDragHandle(): HTMLElement {
   container.style.opacity = '0';
   container.style.transition = 'opacity 150ms ease, top 180ms cubic-bezier(0.22, 1, 0.36, 1), left 180ms cubic-bezier(0.22, 1, 0.36, 1)';
   container.style.display = 'flex';
-  container.style.gap = '8px';  // Réduit 12→8 (plus compact)
+  container.style.gap = '12px';  // Espacé 8→12
   container.style.alignItems = 'center';
   
   // Créer le bouton "+" (à gauche)
   const plusBtn = document.createElement('button');
   plusBtn.className = 'notion-plus-btn';
   plusBtn.title = 'Ajouter un bloc';
-  plusBtn.style.width = '18px';  // Réduit 20→18
-  plusBtn.style.height = '18px';  // Réduit 20→18
+  plusBtn.style.width = '20px';  // Légèrement plus gros pour le cercle
+  plusBtn.style.height = '20px';
   plusBtn.style.display = 'flex';
   plusBtn.style.alignItems = 'center';
   plusBtn.style.justifyContent = 'center';
@@ -57,23 +139,25 @@ function createDragHandle(): HTMLElement {
   plusBtn.style.background = 'transparent';
   plusBtn.style.borderRadius = '0';
   plusBtn.style.cursor = 'pointer';
-  plusBtn.style.color = 'rgba(255, 255, 255, 0.35)';  // Plus discret 0.5→0.35
-  plusBtn.style.transition = 'all 150ms ease';
+  plusBtn.style.color = 'var(--text-primary)';  // ✅ Couleur du texte
+  plusBtn.style.filter = 'brightness(0.55)';    // ✅ 45% plus sombre (très discret)
+  plusBtn.style.transition = 'all 150ms ease, filter 150ms ease';
   plusBtn.innerHTML = `
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="16"></line>
+      <line x1="8" y1="12" x2="16" y2="12"></line>
     </svg>
   `;
   
   // Hover effect sur le bouton + (sans background)
   plusBtn.addEventListener('mouseenter', () => {
     plusBtn.style.background = 'transparent';
-    plusBtn.style.color = 'rgba(255, 255, 255, 0.8)';  // Fort au hover
+    plusBtn.style.filter = 'brightness(1)';  // ✅ Couleur normale au hover
   });
   plusBtn.addEventListener('mouseleave', () => {
     plusBtn.style.background = 'transparent';
-    plusBtn.style.color = 'rgba(255, 255, 255, 0.35)';  // Discret par défaut
+    plusBtn.style.filter = 'brightness(0.55)';  // ✅ 45% plus sombre (très discret)
   });
   
   // Click sur le bouton + pour créer une ligne vide sous le bloc
@@ -101,9 +185,10 @@ function createDragHandle(): HTMLElement {
             const paragraph = state.schema.nodes.paragraph.create();
             const transaction = tr.insert(afterPos, paragraph);
             
-            // Placer le curseur dans le nouveau paragraphe (utiliser transaction.doc, pas doc)
+            // Placer le curseur dans le nouveau paragraphe
+            const { TextSelection } = require('@tiptap/pm/state');
             transaction.setSelection(
-              state.selection.constructor.near(transaction.doc.resolve(afterPos + 1))
+              TextSelection.near(transaction.doc.resolve(afterPos + 1))
             );
             
             dispatch(transaction);
@@ -128,9 +213,11 @@ function createDragHandle(): HTMLElement {
   dragBtn.style.cursor = 'grab';
   dragBtn.style.background = 'transparent';
   dragBtn.style.borderRadius = '4px';
-  dragBtn.style.transition = 'all 150ms ease';
+  dragBtn.style.color = 'var(--text-primary)';  // ✅ Couleur du texte
+  dragBtn.style.filter = 'brightness(0.55)';    // ✅ 45% plus sombre (très discret)
+  dragBtn.style.transition = 'all 150ms ease, filter 150ms ease';
   dragBtn.innerHTML = `
-    <svg width="14" height="22" viewBox="0 0 14 22" fill="rgba(255, 255, 255, 0.35)">
+    <svg width="14" height="22" viewBox="0 0 14 22" fill="currentColor">
       <circle cx="4" cy="4" r="1"/>
       <circle cx="10" cy="4" r="1"/>
       <circle cx="4" cy="11" r="1"/>
@@ -143,22 +230,37 @@ function createDragHandle(): HTMLElement {
   // Hover effect minimal (plus visible au hover)
   dragBtn.addEventListener('mouseenter', () => {
     dragBtn.style.background = 'transparent';
-    const svg = dragBtn.querySelector('svg');
-    if (svg) {
-      svg.setAttribute('fill', 'rgba(255, 255, 255, 0.7)');
-    }
+    dragBtn.style.filter = 'brightness(1)';  // ✅ Couleur normale au hover
   });
   dragBtn.addEventListener('mouseleave', () => {
     dragBtn.style.background = 'transparent';
-    const svg = dragBtn.querySelector('svg');
-    if (svg) {
-      svg.setAttribute('fill', 'rgba(255, 255, 255, 0.35)');
-    }
+    dragBtn.style.filter = 'brightness(0.55)';  // ✅ 45% plus sombre (très discret)
   });
   
   // Rendre le container draggable
   container.draggable = true;
   container.style.pointerEvents = 'auto';
+  
+  // ✅ FIX: Empêcher la disparition quand la souris entre dans les handles
+  container.addEventListener('mouseenter', () => {
+    // Annuler le timeout de hide
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+    // Forcer la visibilité
+    container.style.opacity = '1';
+  });
+  
+  // ✅ FIX: Délai avant de cacher quand on quitte les handles
+  container.addEventListener('mouseleave', () => {
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+    }
+    hideTimeout = setTimeout(() => {
+      container.style.opacity = '0';
+    }, 200);
+  });
   
   // Ajouter les boutons au container
   container.appendChild(plusBtn);
@@ -201,6 +303,14 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                 globalDragHandle = null;
               }
               
+              // ✅ Détruire aussi la bridge pour la recréer
+              if (hoverBridge) {
+                if (hoverBridge.parentNode) {
+                  hoverBridge.parentNode.removeChild(hoverBridge);
+                }
+                hoverBridge = null;
+              }
+              
               if (!globalDragHandle && view.dom) {
             globalDragHandle = createDragHandle();
                 globalDragHandle.setAttribute('data-version', HANDLE_VERSION);
@@ -210,6 +320,12 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
             if (editorElement) {
               (editorElement as HTMLElement).style.position = 'relative';
               editorElement.appendChild(globalDragHandle);
+              
+              // ✅ Créer et ajouter la zone bridge
+              if (!hoverBridge) {
+                hoverBridge = createHoverBridge();
+                editorElement.appendChild(hoverBridge);
+              }
 
               // DRAGSTART: Utiliser la méthode officielle Tiptap
               globalDragHandle.addEventListener('dragstart', (e: DragEvent) => {
@@ -295,10 +411,24 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
           // Retourner un objet de cleanup
           return {
             destroy: () => {
+              // ✅ Nettoyer le timeout
+              if (hideTimeout) {
+                clearTimeout(hideTimeout);
+                hideTimeout = null;
+              }
+              
+              // ✅ Nettoyer les handles
               if (globalDragHandle && globalDragHandle.parentNode) {
                 globalDragHandle.parentNode.removeChild(globalDragHandle);
                 globalDragHandle = null;
               }
+              
+              // ✅ Nettoyer la bridge
+              if (hoverBridge && hoverBridge.parentNode) {
+                hoverBridge.parentNode.removeChild(hoverBridge);
+                hoverBridge = null;
+              }
+              
               currentView = null;
             }
           };
@@ -309,6 +439,12 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
             mousemove: (view: EditorView, event: MouseEvent) => {
               currentView = view;
               
+              // ✅ Annuler le timeout de hide si on survole un nouveau bloc
+              if (hideTimeout) {
+                clearTimeout(hideTimeout);
+                hideTimeout = null;
+              }
+              
               // ✅ FIX: Créer le handle si il n'existe pas encore (fallback de sécurité)
               // Utiliser RAF pour garantir le DOM prêt même dans le fallback
               // Détruire l'ancien handle s'il existe avec une version obsolète
@@ -317,6 +453,12 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                   globalDragHandle.parentNode.removeChild(globalDragHandle);
                 }
                 globalDragHandle = null;
+                
+                // ✅ Détruire aussi la bridge
+                if (hoverBridge && hoverBridge.parentNode) {
+                  hoverBridge.parentNode.removeChild(hoverBridge);
+                  hoverBridge = null;
+                }
               }
               
               if (!globalDragHandle && view.dom) {
@@ -329,6 +471,12 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                     if (editorElement) {
                       (editorElement as HTMLElement).style.position = 'relative';
                       editorElement.appendChild(globalDragHandle);
+                      
+                      // ✅ Créer et ajouter la bridge (fallback)
+                      if (!hoverBridge) {
+                        hoverBridge = createHoverBridge();
+                        editorElement.appendChild(hoverBridge);
+                      }
                       
                       // Ajouter les event listeners
                       globalDragHandle.addEventListener('dragstart', (e: DragEvent) => {
@@ -444,6 +592,12 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                     const rect = targetElement.getBoundingClientRect();
                     const editorRect = view.dom.getBoundingClientRect();
 
+                    // ✅ Annuler le timeout de hide quand on affiche les handles
+                    if (hideTimeout) {
+                      clearTimeout(hideTimeout);
+                      hideTimeout = null;
+                    }
+                    
                     // Positionner le container (+ à gauche du drag handle)
                     globalDragHandle.style.left = `${rect.left - editorRect.left - 80}px`;  // Décalé un peu plus à gauche
                     globalDragHandle.style.top = `${rect.top - editorRect.top + 6}px`;  // Descendu de 11px (-5 → +6)
@@ -479,11 +633,22 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
               if (!globalDragHandle) return false;
               
               const relatedTarget = event.relatedTarget as HTMLElement;
+              
+              // ✅ Si la souris entre dans les handles, ne pas cacher
               if (relatedTarget && (relatedTarget === globalDragHandle || globalDragHandle.contains(relatedTarget))) {
                 return false;
               }
-
-              globalDragHandle.style.opacity = '0';
+              
+              // ✅ Délai avant de cacher (laisse le temps d'aller vers les handles)
+              if (hideTimeout) {
+                clearTimeout(hideTimeout);
+              }
+              
+              hideTimeout = setTimeout(() => {
+                if (globalDragHandle) {
+                  globalDragHandle.style.opacity = '0';
+                }
+              }, 300); // 300ms = temps confortable pour aller vers les handles
               
               return false;
             },

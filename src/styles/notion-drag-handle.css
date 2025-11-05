@@ -7,14 +7,15 @@
    VARIABLES
    ================================================================= */
 :root {
-  --notion-handle-size: 18px; /* Réduit 44→18 (discret) */
+  --notion-handle-size: 18px;
   --notion-handle-gap: 8px;
-  --notion-handle-bg: transparent; /* Pas de background */
+  --notion-handle-bg: transparent;
   --notion-handle-bg-hover: transparent;
   --notion-handle-border: rgba(0, 0, 0, 0.12);
-  --notion-handle-shadow: none; /* Pas de shadow */
-  --notion-handle-icon: rgba(0, 0, 0, 0.35); /* Discret 0.5→0.35 */
-  --notion-handle-icon-hover: rgba(0, 0, 0, 0.7);
+  --notion-handle-shadow: none;
+  /* ✅ Couleur basée sur --text-primary avec brightness -10% */
+  --notion-handle-icon: var(--text-primary);
+  --notion-handle-icon-hover: var(--text-primary);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,8 +24,9 @@
     --notion-handle-bg-hover: transparent;
     --notion-handle-border: rgba(255, 255, 255, 0.12);
     --notion-handle-shadow: none;
-    --notion-handle-icon: rgba(255, 255, 255, 0.35); /* Discret 0.5→0.35 */
-    --notion-handle-icon-hover: rgba(255, 255, 255, 0.7);
+    /* ✅ Couleur basée sur --text-primary */
+    --notion-handle-icon: var(--text-primary);
+    --notion-handle-icon-hover: var(--text-primary);
   }
 }
 
@@ -48,27 +50,39 @@
 }
 
 /* =================================================================
-   BOUTON DU HANDLE
+   BOUTONS (+ et drag handle)
    ================================================================= */
+.notion-plus-btn,
 .notion-drag-handle-btn {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 18px !important;  /* Réduit 20→18 (discret) */
-  height: 18px !important;  /* Réduit 20→18 (discret) */
   padding: 0 !important;
   margin: 0 !important;
   background: transparent !important;
   border: none !important;
   border-radius: 4px !important;
-  cursor: grab !important;
-  transition: all 150ms ease !important;
   outline: none !important;
+  color: var(--text-primary) !important; /* ✅ Couleur texte */
+  filter: brightness(0.55); /* ✅ 45% plus sombre (très discret) */
+  transition: all 150ms ease, filter 150ms ease !important;
 }
 
+.notion-plus-btn {
+  width: 20px !important;  /* Légèrement plus gros pour cercle */
+  height: 20px !important;
+  cursor: pointer !important;
+}
+
+.notion-drag-handle-btn {
+  width: 18px !important;
+  height: 18px !important;
+  cursor: grab !important;
+}
+
+.notion-plus-btn:hover,
 .notion-drag-handle-btn:hover {
-  background: transparent !important;  /* Pas de background au hover */
-  transform: none !important;
+  filter: brightness(1) !important; /* ✅ Couleur normale au hover */
 }
 
 .notion-drag-handle-btn:active {
@@ -77,29 +91,35 @@
 }
 
 /* =================================================================
-   ICÔNE
+   ICÔNES SVG
    ================================================================= */
-.notion-drag-handle-btn svg {
-  width: 14px !important;  /* Réduit 16→14 (discret) */
-  height: 22px !important; /* Réduit 26→22 (plus court) */
-  color: var(--notion-handle-icon) !important;
-  transition: color 150ms ease !important;
+.notion-plus-btn svg {
+  width: 18px !important;
+  height: 18px !important;
 }
 
-.notion-drag-handle-btn:hover svg {
-  color: var(--notion-handle-icon-hover) !important;
+.notion-drag-handle-btn svg {
+  width: 14px !important;
+  height: 22px !important;
 }
+
+/* ✅ Le filter brightness est appliqué sur le bouton parent, pas besoin de le répéter sur le SVG */
 
 /* =================================================================
    RESPONSIVE
    ================================================================= */
 @media (max-width: 768px) {
   :root {
-    --notion-handle-size: 20px; /* Réduit 40→20 (cohérent) */
+    --notion-handle-size: 20px;
+  }
+  
+  .notion-plus-btn svg {
+    width: 20px !important;  /* Légèrement plus gros sur mobile */
+    height: 20px !important;
   }
   
   .notion-drag-handle-btn svg {
-    width: 16px !important;  /* Réduit 24→16 */
+    width: 16px !important;
     height: 24px !important; /* Légèrement plus grand sur mobile */
   }
 }
@@ -107,6 +127,7 @@
 /* =================================================================
    ACCESSIBILITÉ
    ================================================================= */
+.notion-plus-btn:focus-visible,
 .notion-drag-handle-btn:focus-visible {
   outline: 2px solid var(--accent-primary, #e55a2c) !important;
   outline-offset: 2px !important;
@@ -114,6 +135,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .notion-drag-handle,
+  .notion-plus-btn,
   .notion-drag-handle-btn {
     transition: none !important;
   }
