@@ -16,15 +16,15 @@
 
 /* Ligne de drop ProseMirror native */
 .ProseMirror-dropcursor {
-  position: absolute;
-  pointer-events: none;
-  height: 0;
-  border: none;
-  border-top: 3px solid var(--accent-primary, #6366f1);
-  margin: 0;
-  animation: dropcursor-pulse 1.5s ease-in-out infinite;
-  filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.5));
-  z-index: 50;
+  position: absolute !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  border: none !important;
+  border-top: 3px solid #e55a2c !important;
+  margin: 0 !important;
+  animation: dropcursor-pulse 1.5s ease-in-out infinite !important;
+  filter: drop-shadow(0 0 6px rgba(229, 90, 44, 0.6)) !important;
+  z-index: 50 !important;
 }
 
 /* Animation pulse pour la ligne de drop */
@@ -34,15 +34,9 @@
     transform: scaleX(1);
   }
   50% {
-    opacity: 0.7;
-    transform: scaleX(0.98);
+    opacity: 0.8;
+    transform: scaleX(0.97);
   }
-}
-
-/* Variant pour thème clair (si besoin) */
-.light-theme .ProseMirror-dropcursor {
-  border-top-color: var(--accent-primary, #4f46e5);
-  filter: drop-shadow(0 0 4px rgba(79, 70, 229, 0.4));
 }
 
 /* ==========================================================================
