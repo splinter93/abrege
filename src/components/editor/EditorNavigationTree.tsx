@@ -138,7 +138,8 @@ const FolderTreeItem = React.memo(function FolderTreeItem({
   const hasChildren = (folder.children && folder.children.length > 0) || (folder.notes && folder.notes.length > 0);
 
   // Indentation dynamique (16px par niveau)
-  const paddingLeft = 10 + (level * 16);
+  // ✅ Base 8px + offset par niveau pour décalage subtil vers la droite
+  const paddingLeft = 8 + (level * 16);
 
   return (
     <>
@@ -211,8 +212,8 @@ const NoteTreeItem = React.memo(function NoteTreeItem({
   const isActive = note.id === currentNoteId;
 
   // Indentation dynamique (16px par niveau)
-  // ✅ Même alignement que dossiers (pas de +16 supplémentaire)
-  const paddingLeft = 10 + (level * 16);
+  // ✅ Base 8px + offset par niveau pour décalage subtil vers la droite
+  const paddingLeft = 8 + (level * 16);
 
   return (
     <div

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { supabase } from '@/supabaseClient';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -41,6 +41,8 @@ export default function ClasseurSelector({
   
   const [classeurs, setClasseurs] = useState<ClasseurOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   /**
    * Charger la liste des classeurs (lightweight)
@@ -124,13 +126,33 @@ export default function ClasseurSelector({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handler changement
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newClasseurId = e.target.value;
-    if (newClasseurId) {
-      onClasseurChange(newClasseurId);
-    }
+  // Handler sélection d'un classeur
+  const handleSelectClasseur = useCallback((classeurId: string) => {
+    onClasseurChange(classeurId);
+    setIsOpen(false);
   }, [onClasseurChange]);
+
+  // Toggle dropdown
+  const toggleDropdown = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  // Fermer dropdown au clic extérieur
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   if (loading) {
     return (
@@ -152,21 +174,46 @@ export default function ClasseurSelector({
     );
   }
 
+  // Trouver le classeur sélectionné
+  const selectedClasseur = classeurs.find(c => c.id === selectedClasseurId);
+
   return (
-    <div className="classeur-selector">
-      <select
-        className="classeur-selector-select"
-        value={selectedClasseurId || ''}
-        onChange={handleChange}
+    <div className="classeur-selector" ref={dropdownRef}>
+      {/* Bouton principal */}
+      <button
+        type="button"
+        className={`classeur-selector-button ${isOpen ? 'open' : ''}`}
+        onClick={toggleDropdown}
       >
+        <span className="classeur-selector-emoji">
+          {selectedClasseur?.emoji || '📁'}
+        </span>
+        <span className="classeur-selector-name">
+          {selectedClasseur?.name || 'Sélectionner un classeur'}
+        </span>
+        <ChevronDown 
+          className={`classeur-selector-chevron ${isOpen ? 'rotate' : ''}`}
+          size={16} 
+        />
+      </button>
+
+      {/* Dropdown menu - Toujours dans le DOM pour transition */}
+      <div className={`classeur-selector-dropdown ${isOpen ? 'open' : ''}`}>
         {classeurs.map(classeur => (
-          <option key={classeur.id} value={classeur.id}>
-            {classeur.emoji || '📁'} {classeur.name}
-          </option>
+          <button
+            key={classeur.id}
+            type="button"
+            className={`classeur-selector-option ${classeur.id === selectedClasseurId ? 'active' : ''}`}
+            onClick={() => handleSelectClasseur(classeur.id)}
+          >
+            <span className="classeur-selector-option-emoji">
+              {classeur.emoji || '📁'}
+            </span>
+            <span className="classeur-selector-option-name">
+              {classeur.name}
+            </span>
+          </button>
         ))}
-      </select>
-      <div className="classeur-selector-icon">
-        <ChevronDown size={16} />
       </div>
     </div>
   );

@@ -138,6 +138,9 @@
   
   /* Max-width éditeur (aligné avec chat) */
   --editor-content-max-width: 1000px;
+  
+  /* Hauteur header éditeur (utilisée pour sidebar, etc.) */
+  --editor-header-height: 44px;
 }
 
 /* ==========================================================================

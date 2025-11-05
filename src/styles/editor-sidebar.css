@@ -10,10 +10,10 @@
 
 .editor-sidebar-hover-zone {
   position: fixed;
-  top: 60px; /* Sous header éditeur */
+  top: var(--editor-header-height, 44px); /* ✅ Dynamique: s'adapte au header */
   left: 0;
   width: 100px; /* ✅ Même que chat: 100px */
-  height: calc(100vh - 60px);
+  height: calc(100vh - var(--editor-header-height, 44px));
   z-index: 99;
   pointer-events: auto;
 }
@@ -24,13 +24,13 @@
 
 .editor-sidebar {
   position: fixed;
-  top: 60px; /* ✅ Sous header éditeur */
+  top: var(--editor-header-height, 44px); /* ✅ Dynamique: s'adapte au header */
   left: 0;
-  height: calc(100vh - 60px - 24px); /* ✅ Même que chat: -24px en bas */
-  width: 250px; /* ✅ Même que chat: 250px */
+  height: calc(100vh - var(--editor-header-height, 44px) - 24px); /* ✅ Dynamique - padding bottom */
+  width: 280px; /* ✅ Élargie: 250px → 280px pour lisibilité */
   /* ✅ Dégradé gris exact chat */
   background: linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%);
-  transform: translateX(-250px); /* ✅ Caché par défaut */
+  transform: translateX(-280px); /* ✅ Caché par défaut (largeur sidebar) */
   transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
   z-index: 100;
   display: flex;
@@ -120,39 +120,145 @@
 .classeur-selector {
   position: relative;
   width: 100%;
+  margin-bottom: 16px;
 }
 
-.classeur-selector-select {
+/* ========================================
+   BOUTON PRINCIPAL
+   ======================================== */
+
+.classeur-selector-button {
   width: 100%;
-  padding: 10px 32px 10px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: none; /* ✅ Pas de bordure */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05); /* ✅ Pas de bordure, juste background */
+  border: none;
   border-radius: 8px;
   color: var(--chat-text-primary);
-  font-size: 13px;
+  font-size: 14px;
+  font-family: var(--font-chat-text);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.classeur-selector-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.classeur-selector-button.open {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.classeur-selector-emoji {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.classeur-selector-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classeur-selector-chevron {
+  flex-shrink: 0;
+  color: var(--chat-text-tertiary);
+  transition: transform 0.2s ease;
+}
+
+.classeur-selector-chevron.rotate {
+  transform: rotate(180deg);
+}
+
+/* ========================================
+   DROPDOWN MENU (EXPANSION INLINE)
+   ======================================== */
+
+.classeur-selector-dropdown {
+  overflow: hidden;
+  max-height: 0; /* ✅ Collapsed par défaut */
+  opacity: 0;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.25s ease,
+              margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 0;
+  background: rgba(255, 255, 255, 0.03); /* ✅ Background subtil pour distinction */
+  border-radius: 8px;
+  padding: 0 6px;
+}
+
+.classeur-selector-dropdown.open {
+  max-height: 400px; /* ✅ Expanded (ajuster si besoin) */
+  opacity: 1;
+  margin-top: 8px; /* ✅ Espacement avec le bouton */
+  padding: 6px;
+}
+
+/* Scrollbar dropdown INVISIBLE (même que sidebar principale) */
+.classeur-selector-dropdown.open {
+  overflow-y: auto;
+  scrollbar-width: none; /* ✅ Firefox */
+  -ms-overflow-style: none; /* ✅ IE/Edge */
+}
+
+.classeur-selector-dropdown.open::-webkit-scrollbar {
+  display: none; /* ✅ Chrome/Safari/Opera */
+}
+
+/* ========================================
+   OPTIONS DROPDOWN
+   ======================================== */
+
+.classeur-selector-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px; /* ✅ Espace emoji ↔ nom */
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--chat-text-secondary);
+  font-size: 14px;
   font-family: var(--font-chat-text);
   font-weight: 500;
-  outline: none;
+  text-align: left;
   cursor: pointer;
-  appearance: none;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
+  outline: none;
 }
 
-.classeur-selector-select:hover {
-  background: rgba(255, 255, 255, 0.08); /* ✅ Juste background change */
+.classeur-selector-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--chat-text-primary);
 }
 
-.classeur-selector-select:focus {
-  background: rgba(255, 255, 255, 0.12); /* ✅ Juste background change */
+.classeur-selector-option.active {
+  background: rgba(229, 90, 44, 0.15); /* ✅ Orange pour option active */
+  color: var(--chat-text-primary);
+  font-weight: 600;
 }
 
-.classeur-selector-icon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: var(--chat-text-tertiary);
+.classeur-selector-option.active:hover {
+  background: rgba(229, 90, 44, 0.22);
+}
+
+.classeur-selector-option-emoji {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.classeur-selector-option-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .classeur-selector-placeholder {
@@ -183,14 +289,15 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px; /* ✅ Même que chat items */
+  padding: 10px 12px; /* ✅ Padding-left géré en JS (inline style) */
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
   font-size: 13px;
+  font-family: var(--font-chat-text); /* ✅ Figtree (même que chat) */
   color: var(--chat-text-secondary);
   user-select: none;
-  margin-bottom: 2px;
+  margin: 0 0 3px 0; /* ✅ Margin-bottom: 3px (légèrement compact) */
 }
 
 .editor-sidebar-folder:hover,
@@ -199,11 +306,16 @@
   color: var(--chat-text-primary);
 }
 
-/* Note active */
+/* Note active (highlight) */
 .editor-sidebar-note.active {
   background: rgba(229, 90, 44, 0.15); /* ✅ Accent orange */
   color: var(--chat-text-primary);
   font-weight: 500;
+}
+
+/* Note active + hover (cumul) */
+.editor-sidebar-note.active:hover {
+  background: rgba(229, 90, 44, 0.22); /* ✅ Plus intense au hover */
 }
 
 .editor-sidebar-note.active .editor-sidebar-icon {
@@ -255,6 +367,7 @@
   padding: 32px 16px;
   color: var(--chat-text-tertiary);
   font-size: 13px;
+  font-family: var(--font-chat-text); /* ✅ Figtree */
 }
 
 .editor-sidebar-error {
@@ -264,6 +377,7 @@
   border-radius: 8px;
   color: #ff3b30;
   font-size: 12px;
+  font-family: var(--font-chat-text); /* ✅ Figtree */
   text-align: center;
 }
 
@@ -272,6 +386,7 @@
   text-align: center;
   color: var(--chat-text-tertiary);
   font-size: 12px;
+  font-family: var(--font-chat-text); /* ✅ Figtree */
 }
 
 /* ========================================
@@ -281,7 +396,7 @@
 @media (max-width: 1024px) {
   /* Hérite des styles desktop */
   .editor-sidebar {
-    transform: translateX(-250px);
+    transform: translateX(-280px); /* ✅ Sync avec largeur sidebar */
   }
 
   .editor-sidebar.visible {
