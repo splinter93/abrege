@@ -102,6 +102,9 @@ export function createEditorExtensions(
         hardBreak: true,
         dropcursor: false, // ✅ Désactivé - configuré séparément en orange
         gapcursor: true,
+        // ✅ FIX DOUBLONS: Désactiver extensions configurées séparément
+        link: false, // Désactiver - on utilise LinkExtension standalone
+        underline: false, // Désactiver - on utilise Underline standalone (si inclus)
       }),
       
       // ✅ Dropcursor configuré avec couleur orange Scrivia
@@ -202,6 +205,9 @@ export function createEditorExtensions(
         orderedList: false, // Désactiver - on utilise OrderedList standalone  
         listItem: false, // Désactiver - on utilise ListItem standalone
         dropcursor: false, // ✅ Désactivé - configuré séparément en orange
+        // ✅ FIX DOUBLONS: Désactiver extensions configurées séparément
+        link: false, // Désactiver - on utilise LinkExtension standalone
+        underline: false, // Désactiver - on utilise Underline standalone (si inclus)
       }),
       
       // ✅ Dropcursor configuré avec couleur orange Scrivia
