@@ -38,7 +38,7 @@
   margin: 1.75rem 0 ;
   display: flex ;
   flex-direction: column ;
-  overflow: hidden ;
+  /* ✅ PAS de overflow ici - géré individuellement sur toolbar et body */
   filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Brightness unifié */
 }
 
@@ -52,12 +52,14 @@
   display: flex !important; /* Force avec !important pour page publique */
   align-items: center !important;
   justify-content: space-between !important;
-  height: var(--blk-toolbar-h) !important;
-  padding: 0 8px 0 var(--blk-pad-x) !important;
+  min-height: var(--blk-toolbar-h) !important; /* ✅ min-height au lieu de height fixe */
+  height: auto !important; /* ✅ Hauteur auto pour contenir les boutons */
+  padding: 6px 8px 6px var(--blk-pad-x) !important; /* ✅ Padding vertical 6px */
   background: transparent !important;
   border-bottom: none !important;
   user-select: none !important;
   flex-shrink: 0 !important;
+  overflow: visible !important; /* ✅ CRITIQUE: Boutons peuvent dépasser sans être coupés */
 }
 
 .ProseMirror .u-block__toolbar .toolbar-left,
@@ -112,21 +114,23 @@
   align-items: center !important;
   justify-content: center !important;
   gap: 0;
-  height: 28px !important;
-  width: 28px !important;
-  min-width: 28px !important;
-  min-height: 28px !important;
+  height: 26px !important; /* ✅ Réduit à 26px (plus compact) */
+  width: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
   border: none !important;
-  border-radius: 8px !important;
+  border-radius: 6px !important; /* ✅ Réduit aussi le radius */
   background: transparent !important;
   color: var(--blk-muted) !important;
   cursor: pointer !important;
   outline: none !important;
   padding: 0 !important;
+  margin: 0 !important;
   font-family: var(--sans);
   font-size: 13px;
   font-weight: 500;
   flex-shrink: 0 !important;
+  overflow: visible !important;
 }
 
 .ProseMirror .toolbar-btn:hover,
@@ -134,8 +138,8 @@
 .chat-markdown-content .toolbar-btn:hover,
 .chat-markdown .toolbar-btn:hover,
 .unified-block-toolbar .toolbar-btn:hover {
-  background: rgba(255,255,255,0.08);
-  color: var(--blk-fg);
+  background: rgba(255, 255, 255, 0.12) !important; /* ✅ Plus visible */
+  color: var(--text-primary) !important;
 }
 
 .ProseMirror .toolbar-btn:focus,
@@ -169,6 +173,17 @@
   display: block !important;
   flex-shrink: 0 !important;
   pointer-events: none !important; /* Le SVG ne capture pas les clics */
+  margin: auto !important; /* ✅ Centrage parfait dans bouton 26px */
+}
+
+/* ✅ CRITIQUE: Forcer dimensions sur rect SVG (DOMPurify les retire) */
+.ProseMirror .toolbar-btn svg rect,
+.markdown-body .toolbar-btn svg rect,
+.chat-markdown-content .toolbar-btn svg rect,
+.chat-markdown .toolbar-btn svg rect,
+.unified-block-toolbar .toolbar-btn svg rect {
+  width: 13px !important;
+  height: 13px !important;
 }
 
 /* Body */
@@ -180,7 +195,8 @@
   padding: 16px 20px;
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: auto; /* ✅ Scroll sur body uniquement, pas sur toolbar */
+  border-radius: 0 0 var(--blk-radius) var(--blk-radius); /* ✅ Radius bas uniquement */
   font-family: var(--mono);
   font-size: 14px;
   line-height: 1.8;
