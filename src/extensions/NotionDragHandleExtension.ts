@@ -30,7 +30,7 @@ let globalDragHandle: HTMLElement | null = null;
 let currentView: EditorView | null = null;
 
 // Version du handle pour forcer la recréation après changements de design
-const HANDLE_VERSION = 'v4.1'; // Gap 12px + descendu de 11px + bouton + sans encadré
+const HANDLE_VERSION = 'v4.2'; // Tailles réduites : 18x18 buttons, gap 8px, opacité 0.35 (discret)
 
 function createDragHandle(): HTMLElement {
   // Créer le container pour les deux boutons (+ et ⋮⋮)
@@ -39,52 +39,41 @@ function createDragHandle(): HTMLElement {
   container.style.position = 'absolute';
   container.style.zIndex = '100';
   container.style.opacity = '0';
-  container.style.transition = 'opacity 150ms ease, top 180ms cubic-bezier(0.22, 1, 0.36, 1), left 180ms cubic-bezier(0.22, 1, 0.36, 1)'; // ✅ Transition fluide position
+  container.style.transition = 'opacity 150ms ease, top 180ms cubic-bezier(0.22, 1, 0.36, 1), left 180ms cubic-bezier(0.22, 1, 0.36, 1)';
   container.style.display = 'flex';
-  container.style.gap = '12px';  // Augmenté à 12px
+  container.style.gap = '8px';  // Réduit 12→8 (plus compact)
   container.style.alignItems = 'center';
   
   // Créer le bouton "+" (à gauche)
   const plusBtn = document.createElement('button');
   plusBtn.className = 'notion-plus-btn';
   plusBtn.title = 'Ajouter un bloc';
-  plusBtn.style.width = '20px';  // Réduit
-  plusBtn.style.height = '20px';  // Réduit
+  plusBtn.style.width = '18px';  // Réduit 20→18
+  plusBtn.style.height = '18px';  // Réduit 20→18
   plusBtn.style.display = 'flex';
   plusBtn.style.alignItems = 'center';
   plusBtn.style.justifyContent = 'center';
   plusBtn.style.border = 'none';
-  plusBtn.style.background = 'transparent';  // Pas de background
-  plusBtn.style.borderRadius = '0';  // Pas d'encadré
+  plusBtn.style.background = 'transparent';
+  plusBtn.style.borderRadius = '0';
   plusBtn.style.cursor = 'pointer';
-  plusBtn.style.color = 'rgba(255, 255, 255, 0.5)';  // Gris subtil
+  plusBtn.style.color = 'rgba(255, 255, 255, 0.35)';  // Plus discret 0.5→0.35
   plusBtn.style.transition = 'all 150ms ease';
   plusBtn.innerHTML = `
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" data-v="3.2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <line x1="12" y1="5" x2="12" y2="19"></line>
       <line x1="5" y1="12" x2="19" y2="12"></line>
     </svg>
   `;
   
-  // FORCER la taille du SVG après création
-  setTimeout(() => {
-    const svg = plusBtn.querySelector('svg');
-    if (svg) {
-      svg.setAttribute('width', '20');
-      svg.setAttribute('height', '20');
-      svg.style.width = '20px';
-      svg.style.height = '20px';
-    }
-  }, 0);
-  
   // Hover effect sur le bouton + (sans background)
   plusBtn.addEventListener('mouseenter', () => {
-    plusBtn.style.background = 'transparent';  // Pas de background au hover
-    plusBtn.style.color = 'rgba(255, 255, 255, 0.8)';
+    plusBtn.style.background = 'transparent';
+    plusBtn.style.color = 'rgba(255, 255, 255, 0.8)';  // Fort au hover
   });
   plusBtn.addEventListener('mouseleave', () => {
     plusBtn.style.background = 'transparent';
-    plusBtn.style.color = 'rgba(255, 255, 255, 0.5)';
+    plusBtn.style.color = 'rgba(255, 255, 255, 0.35)';  // Discret par défaut
   });
   
   // Click sur le bouton + pour créer une ligne vide sous le bloc
@@ -131,32 +120,40 @@ function createDragHandle(): HTMLElement {
   const dragBtn = document.createElement('div');
   dragBtn.className = 'notion-drag-handle-btn';
   dragBtn.title = 'Glisser pour déplacer';
-  dragBtn.style.width = '20px';  // Réduit (était 28px)
-  dragBtn.style.height = '20px';  // Réduit (était 28px)
+  dragBtn.style.width = '18px';  // Réduit 20→18
+  dragBtn.style.height = '18px';  // Réduit 20→18
   dragBtn.style.display = 'flex';
   dragBtn.style.alignItems = 'center';
   dragBtn.style.justifyContent = 'center';
   dragBtn.style.cursor = 'grab';
-  dragBtn.style.background = 'transparent';  // Pas de background par défaut
+  dragBtn.style.background = 'transparent';
   dragBtn.style.borderRadius = '4px';
   dragBtn.style.transition = 'all 150ms ease';
   dragBtn.innerHTML = `
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="rgba(255, 255, 255, 0.5)">
-      <circle cx="5" cy="4" r="1.5"/>
-      <circle cx="11" cy="4" r="1.5"/>
-      <circle cx="5" cy="8" r="1.5"/>
-      <circle cx="11" cy="8" r="1.5"/>
-      <circle cx="5" cy="12" r="1.5"/>
-      <circle cx="11" cy="12" r="1.5"/>
-      </svg>
+    <svg width="14" height="22" viewBox="0 0 14 22" fill="rgba(255, 255, 255, 0.35)">
+      <circle cx="4" cy="4" r="1"/>
+      <circle cx="10" cy="4" r="1"/>
+      <circle cx="4" cy="11" r="1"/>
+      <circle cx="10" cy="11" r="1"/>
+      <circle cx="4" cy="18" r="1"/>
+      <circle cx="10" cy="18" r="1"/>
+    </svg>
   `;
   
-  // Hover effect minimal (pas de background)
+  // Hover effect minimal (plus visible au hover)
   dragBtn.addEventListener('mouseenter', () => {
-    dragBtn.style.background = 'transparent';  // Pas de background au hover
+    dragBtn.style.background = 'transparent';
+    const svg = dragBtn.querySelector('svg');
+    if (svg) {
+      svg.setAttribute('fill', 'rgba(255, 255, 255, 0.7)');
+    }
   });
   dragBtn.addEventListener('mouseleave', () => {
     dragBtn.style.background = 'transparent';
+    const svg = dragBtn.querySelector('svg');
+    if (svg) {
+      svg.setAttribute('fill', 'rgba(255, 255, 255, 0.35)');
+    }
   });
   
   // Rendre le container draggable

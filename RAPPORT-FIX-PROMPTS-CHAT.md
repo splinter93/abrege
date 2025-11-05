@@ -205,3 +205,4 @@ DROP INDEX IF EXISTS idx_editor_prompts_context;
 **✅ Réparation Terminée**  
 Code prêt pour production, migration en attente d'application.
 
+

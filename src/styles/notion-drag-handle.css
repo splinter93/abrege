@@ -7,23 +7,23 @@
    VARIABLES
    ================================================================= */
 :root {
-  --notion-handle-size: 44px; /* Taille augmentée pour meilleure visibilité */
+  --notion-handle-size: 18px; /* Réduit 44→18 (discret) */
   --notion-handle-gap: 8px;
-  --notion-handle-bg: rgba(255, 255, 255, 0.95);
-  --notion-handle-bg-hover: rgba(255, 255, 255, 1);
+  --notion-handle-bg: transparent; /* Pas de background */
+  --notion-handle-bg-hover: transparent;
   --notion-handle-border: rgba(0, 0, 0, 0.12);
-  --notion-handle-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  --notion-handle-icon: rgba(0, 0, 0, 0.5);
+  --notion-handle-shadow: none; /* Pas de shadow */
+  --notion-handle-icon: rgba(0, 0, 0, 0.35); /* Discret 0.5→0.35 */
   --notion-handle-icon-hover: rgba(0, 0, 0, 0.7);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --notion-handle-bg: rgba(255, 255, 255, 0.08);
-    --notion-handle-bg-hover: rgba(255, 255, 255, 0.12);
+    --notion-handle-bg: transparent;
+    --notion-handle-bg-hover: transparent;
     --notion-handle-border: rgba(255, 255, 255, 0.12);
-    --notion-handle-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    --notion-handle-icon: rgba(255, 255, 255, 0.5);
+    --notion-handle-shadow: none;
+    --notion-handle-icon: rgba(255, 255, 255, 0.35); /* Discret 0.5→0.35 */
     --notion-handle-icon-hover: rgba(255, 255, 255, 0.7);
   }
 }
@@ -54,8 +54,8 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 20px !important;  /* Réduit de 44px à 20px */
-  height: 20px !important;  /* Réduit de 44px à 20px */
+  width: 18px !important;  /* Réduit 20→18 (discret) */
+  height: 18px !important;  /* Réduit 20→18 (discret) */
   padding: 0 !important;
   margin: 0 !important;
   background: transparent !important;
@@ -80,8 +80,8 @@
    ICÔNE
    ================================================================= */
 .notion-drag-handle-btn svg {
-  width: 20px !important;
-  height: 34px !important; /* Encore plus allongé verticalement */
+  width: 14px !important;  /* Réduit 16→14 (discret) */
+  height: 22px !important; /* Réduit 26→22 (plus court) */
   color: var(--notion-handle-icon) !important;
   transition: color 150ms ease !important;
 }
@@ -95,12 +95,12 @@
    ================================================================= */
 @media (max-width: 768px) {
   :root {
-    --notion-handle-size: 40px; /* Encore plus gros sur mobile */
+    --notion-handle-size: 20px; /* Réduit 40→20 (cohérent) */
   }
   
   .notion-drag-handle-btn svg {
-    width: 24px !important;
-    height: 24px !important;
+    width: 16px !important;  /* Réduit 24→16 */
+    height: 24px !important; /* Légèrement plus grand sur mobile */
   }
 }
 

@@ -60,3 +60,4 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Commentaire explicatif
 COMMENT ON COLUMN editor_prompts.context IS 'Contexte d''utilisation du prompt: editor (éditeur uniquement), chat (chat uniquement), ou both (les deux)';
 
+
