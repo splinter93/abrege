@@ -49,6 +49,20 @@ import EditorSidebar from './EditorSidebar';
 import { useEditorNavigation } from '@/hooks/useEditorNavigation';
 
 /**
+ * Nettoie les SVG Mermaid orphelins du DOM
+ */
+function cleanupMermaidSVGs() {
+  try {
+    const orphanedSVGs = document.querySelectorAll('body > svg[id^="mermaid-"]');
+    orphanedSVGs.forEach(svg => svg.remove());
+    const orphanedDivs = document.querySelectorAll('body > div[id^="dmermaid-"]');
+    orphanedDivs.forEach(div => div.remove());
+  } catch (error) {
+    logger.error('[Editor] Erreur cleanup Mermaid:', error);
+  }
+}
+
+/**
  * Composant principal de l'éditeur de notes
  * 
  * @description Éditeur de texte riche basé sur Tiptap avec support Markdown.
@@ -233,6 +247,17 @@ const Editor: React.FC<{
     content,
     forceTOCUpdate: editorState.document.forceTOCUpdate
   });
+
+  // ✅ CLEANUP: Nettoyer SVG Mermaid orphelins au unmount et à chaque changement de page
+  React.useEffect(() => {
+    // Cleanup au changement de note (noteId change)
+    cleanupMermaidSVGs();
+    
+    // Cleanup au unmount du composant
+    return () => {
+      cleanupMermaidSVGs();
+    };
+  }, [noteId]);
 
   if (!note) {
     return null;

@@ -13,6 +13,30 @@ import { NodeViewProps } from '@tiptap/react';
 import { createCodeBlockToolbar } from './CodeBlockToolbar';
 import '@/styles/UnifiedToolbar.css';
 
+/**
+ * Nettoie TOUS les SVG Mermaid orphelins du DOM
+ * Ces SVG d'erreur sont ajoutés directement au <body> par Mermaid et restent collés
+ */
+function cleanupMermaidSVGs() {
+  try {
+    // Nettoyer tous les SVG avec id mermaid-* directement dans le body
+    const orphanedSVGs = document.querySelectorAll('body > svg[id^="mermaid-"]');
+    orphanedSVGs.forEach(svg => {
+      logger.dev('[Mermaid] Cleanup SVG orphelin:', svg.id);
+      svg.remove();
+    });
+    
+    // Nettoyer aussi les div temporaires que Mermaid pourrait créer
+    const orphanedDivs = document.querySelectorAll('body > div[id^="dmermaid-"]');
+    orphanedDivs.forEach(div => {
+      logger.dev('[Mermaid] Cleanup div orphelin:', div.id);
+      div.remove();
+    });
+  } catch (error) {
+    logger.error('[Mermaid] Erreur cleanup SVG:', error);
+  }
+}
+
 const UnifiedCodeBlockExtension = CodeBlockLowlight.extend({
   name: 'codeBlock', // Nom standard pour remplacer l'extension native
   
@@ -33,6 +57,11 @@ const UnifiedCodeBlockExtension = CodeBlockLowlight.extend({
         return createCodeBlockNodeView(node, getPos, editor);
       }
     };
+  },
+
+  onDestroy() {
+    // ✅ Nettoyer TOUS les SVG Mermaid orphelins du DOM (erreurs qui restent collées)
+    cleanupMermaidSVGs();
   },
 });
 
@@ -442,6 +471,9 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
     
   } catch (error) {
     logger.error('Erreur lors du rendu Mermaid dans l\'éditeur:', error);
+    
+    // ✅ CRITIQUE: Nettoyer les SVG orphelins que Mermaid a pu ajouter au body
+    cleanupMermaidSVGs();
     
     // Nettoyer le contenu du body
     container.innerHTML = '';
