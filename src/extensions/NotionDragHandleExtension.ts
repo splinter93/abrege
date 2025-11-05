@@ -33,7 +33,7 @@ let hoverBridge: HTMLElement | null = null; // Zone invisible à gauche pour hov
 let listenersAttached = false; // Flag pour éviter duplication des listeners
 
 // Version du handle pour forcer la recréation après changements de design
-const HANDLE_VERSION = 'v5.4'; // Bridge 160px + couleur var(--text-primary) brightness(0.55)
+const HANDLE_VERSION = 'v5.6'; // Drag image stylée (padding, shadow, max-width 600px)
 
 /**
  * Créer une zone invisible à gauche de l'éditeur
@@ -372,19 +372,43 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                   const tr = currentView.state.tr.setSelection(selection);
                   currentView.dispatch(tr);
                   
-                  // Créer l'image de drag
+                  // ✅ Créer une drag image stylée et élégante
                   const wrapper = document.createElement('div');
                   wrapper.style.position = 'absolute';
                   wrapper.style.top = '-10000px';
+                  wrapper.style.maxWidth = '600px'; // Limite la largeur
+                  wrapper.style.padding = '12px 16px';
+                  wrapper.style.background = 'var(--color-bg-surface-1, #1a1a1a)';
+                  wrapper.style.border = '1px solid var(--color-border, rgba(255,255,255,0.1))';
+                  wrapper.style.borderRadius = '8px';
+                  wrapper.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
+                  wrapper.style.opacity = '0.95';
+                  wrapper.style.color = 'var(--text-primary, #B5BCC4)';
+                  wrapper.style.fontFamily = 'var(--editor-font-family-body)';
+                  wrapper.style.fontSize = 'var(--editor-body-size, 1.0625rem)';
+                  wrapper.style.lineHeight = 'var(--editor-line-height-base, 1.75)';
                   
                   const domNode = currentView.nodeDOM(from) as HTMLElement;
                   if (domNode) {
                     const cloned = domNode.cloneNode(true) as HTMLElement;
+                    
+                    // ✅ Copier les styles calculés du node
+                    const computedStyle = window.getComputedStyle(domNode);
+                    cloned.style.fontSize = computedStyle.fontSize;
+                    cloned.style.fontWeight = computedStyle.fontWeight;
+                    cloned.style.lineHeight = computedStyle.lineHeight;
+                    cloned.style.color = computedStyle.color;
+                    cloned.style.margin = '0';
+                    cloned.style.padding = '0';
+                    
+                    // ✅ Appliquer les classes CSS de l'éditeur pour le styling
+                    cloned.classList.add('ProseMirror');
+                    
                     wrapper.appendChild(cloned);
                   }
                   
                   document.body.appendChild(wrapper);
-                  e.dataTransfer.setDragImage(wrapper, 0, 0);
+                  e.dataTransfer.setDragImage(wrapper, 20, 20);
                   
                   // Cleanup
                   document.addEventListener('drop', () => {
