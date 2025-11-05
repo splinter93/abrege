@@ -40,6 +40,7 @@ import Highlight from '@tiptap/extension-highlight';
 import Mention from '@tiptap/extension-mention';
 import Emoji from '@tiptap/extension-emoji';
 import FloatingMenu from '@tiptap/extension-floating-menu';
+import Dropcursor from '@tiptap/extension-dropcursor';
 import type { Extension, AnyExtension } from '@tiptap/core';
 import type lowlight from '@/utils/lowlightInstance';
 
@@ -99,8 +100,14 @@ export function createEditorExtensions(
         
         // ✅ Réactivé pour les blockquotes (Shift+Enter pour line break)
         hardBreak: true,
-        dropcursor: true,
+        dropcursor: false, // ✅ Désactivé - configuré séparément en orange
         gapcursor: true,
+      }),
+      
+      // ✅ Dropcursor configuré avec couleur orange Scrivia
+      Dropcursor.configure({
+        color: '#e55a2c',
+        width: 3,
       }),
       
       // ✅ Extensions essentielles réactivées
@@ -194,7 +201,15 @@ export function createEditorExtensions(
         bulletList: false, // Désactiver - on utilise BulletList standalone
         orderedList: false, // Désactiver - on utilise OrderedList standalone  
         listItem: false, // Désactiver - on utilise ListItem standalone
+        dropcursor: false, // ✅ Désactivé - configuré séparément en orange
       }),
+      
+      // ✅ Dropcursor configuré avec couleur orange Scrivia
+      Dropcursor.configure({
+        color: '#e55a2c',
+        width: 3,
+      }),
+      
       Blockquote,
       Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),

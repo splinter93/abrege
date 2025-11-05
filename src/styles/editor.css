@@ -14,30 +14,17 @@
    DROP CURSOR - Ligne de drop pour le drag & drop
    ========================================================================== */
 
-/* Ligne de drop ProseMirror native */
+/* Ligne de drop ProseMirror - Orange atténué avec radius */
 .ProseMirror-dropcursor {
   position: absolute !important;
   pointer-events: none !important;
-  height: 0 !important;
-  border: none !important;
-  border-top: 3px solid #e55a2c !important;
+  height: 3px !important;
+  border-radius: 2px !important;
   margin: 0 !important;
-  animation: dropcursor-pulse 1.5s ease-in-out infinite !important;
-  filter: drop-shadow(0 0 6px rgba(229, 90, 44, 0.6)) !important;
+  opacity: 0.9 !important;
   z-index: 50 !important;
 }
 
-/* Animation pulse pour la ligne de drop */
-@keyframes dropcursor-pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scaleX(0.97);
-  }
-}
 
 /* ==========================================================================
    STYLES DES BOUTONS DE COPIE DES BLOCS DE CODE
