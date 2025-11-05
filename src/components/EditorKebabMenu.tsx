@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiGlobe, FiCheck } from 'react-icons/fi';
+import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiGlobe, FiCheck, FiEye, FiEyeOff } from 'react-icons/fi';
 import './editor-kebab-menu.css';
 import ShareMenu from './ShareMenu';
 import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
@@ -160,7 +160,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     {
       id: 'toolbar',
       label: t.toolbar,
-      icon: showToolbar ? <FiCheck size={18} /> : null,
+      icon: showToolbar ? <FiEye size={18} /> : <FiEyeOff size={18} />,
       onClick: () => { 
         toggleToolbar();
         onClose(); 

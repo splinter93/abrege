@@ -23,8 +23,16 @@
   border-bottom: none !important; /* Pas de bordure */
   z-index: 100;
   box-sizing: border-box;
+  transition: background 200ms ease, backdrop-filter 200ms ease; /* ✅ Transition fluide */
   /* ✅ Pour que le menu kebab absolute se positionne correctement */
   /* Note: on ne met PAS position: relative car sticky est déjà positionné */
+}
+
+/* Header transparent quand toolbar masquée */
+.editor-header--transparent {
+  background: transparent !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* Supprimer tous les focus par défaut */

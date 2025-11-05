@@ -45,7 +45,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   kebabMenu
 }) => {
   return (
-    <div className="editor-header">
+    <div className={`editor-header ${!showToolbar ? 'editor-header--transparent' : ''}`}>
       {/* Logo à gauche */}
       <div className="editor-header__logo">
         <LogoHeader />
