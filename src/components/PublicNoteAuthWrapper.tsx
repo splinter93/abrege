@@ -134,8 +134,8 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
     loadPublicNote();
   }, [note.id, slug, username, addNote]);
 
-  // Pendant le chargement
-  if (loading && !storeNote) {
+  // Pendant le chargement (inclut vérification auth)
+  if (loading) {
     return <CenteredLoadingState message="Chargement" />;
   }
   
@@ -151,6 +151,7 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
     );
   }
 
+  // ✅ FIX : Vérifier isAccessAllowed APRÈS loading (currentUser sera défini)
   // Si l'accès n'est pas autorisé
   if (!isAccessAllowed) {
     return (

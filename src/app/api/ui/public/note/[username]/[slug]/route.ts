@@ -55,8 +55,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
         const token = authHeader.substring(7);
         // Utiliser le client service pour l'authentification
         const { data: { user: authUser }, error: authError } = await supabaseService.auth.getUser(token);
+        
+        logger.dev(LogCategory.API, '[PublicNote] 🔑 Auth header check:', {
+          hasAuthUser: !!authUser,
+          authUserId: authUser?.id,
+          noteOwnerId: user.id,
+          match: authUser?.id === user.id
+        });
+        
         if (!authError && authUser && authUser.id === user.id) {
           isCreator = true;
+          logger.info(LogCategory.API, '[PublicNote] ✅ Créateur détecté via Authorization header');
         }
       } catch (error) {
         // Ignorer les erreurs d'authentification, on continue sans être connecté
@@ -111,13 +120,28 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     // Si ce n'est pas le créateur, exclure les notes privées
     if (!isCreator) {
       noteQuery = noteQuery.not('share_settings->>visibility', 'eq', 'private');
+      logger.dev(LogCategory.API, '[PublicNote] 🔒 Non-créateur : filtre notes privées');
+    } else {
+      logger.info(LogCategory.API, '[PublicNote] ✅ Créateur : accès complet (y compris privées)');
     }
 
     const { data: note, error: noteError } = await noteQuery
       .limit(1)
       .maybeSingle();
     
+    logger.dev(LogCategory.API, '[PublicNote] 📥 Résultat query:', {
+      found: !!note,
+      visibility: note?.share_settings?.visibility,
+      isCreator
+    });
+    
     if (noteError || !note) {
+      logger.warn(LogCategory.API, '[PublicNote] ❌ Note non trouvée', {
+        username,
+        slug,
+        isCreator,
+        error: noteError?.message
+      });
       return new Response(JSON.stringify({ error: 'Note non trouvée ou non publiée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
