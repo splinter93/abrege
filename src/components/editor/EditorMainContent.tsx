@@ -6,7 +6,7 @@
 import React, { useEffect } from 'react';
 import { EditorContent as TiptapEditorContent } from '@tiptap/react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
-import FloatingMenuNotion from './FloatingMenuNotion';
+import FloatingMenuNotion from './floating-menu-notion';
 import EditorContent from './EditorContent';
 import TableControls from './TableControls';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';

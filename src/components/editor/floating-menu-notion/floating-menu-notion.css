@@ -1,0 +1,359 @@
+/**
+ * Styles pour le menu flottant Notion-like
+ * 
+ * @description Design inspiré de Notion avec animations fluides
+ * et interface épurée pour les options de formatage.
+ */
+
+/* =========================
+   CONTENEUR ÉDITEUR - POSITION RELATIVE
+   ========================= */
+
+/* ✅ REQUIS : Position relative pour le menu flottant */
+.tiptap-editor-container {
+  position: relative;
+}
+
+/* =========================
+   VARIABLES CSS - NOTION-LIKE DARK THEME
+   ========================= */
+:root {
+  --fm-bg: #141414; /* Plus foncé comme le slash menu */
+  --fm-border: rgba(255, 255, 255, 0.09);
+  --fm-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  --fm-shadow-hover: 0 12px 24px rgba(0, 0, 0, 0.4);
+  --fm-radius: 8px;
+  --fm-padding: 4px;
+  --fm-gap: 0px; /* Reduced gap for tighter look */
+  
+  --fm-text-primary: rgba(255, 255, 255, 0.9);
+  --fm-text-secondary: rgba(255, 255, 255, 0.5);
+  --fm-text-tertiary: #9b9b9b;
+  
+  --fm-accent: #e55a2c; /* Orange accent - cohérent avec le design system */
+  --fm-accent-hover: #d04a1c;
+  --fm-accent-bg: rgba(229, 90, 44, 0.2);
+  
+  --fm-button-bg: transparent;
+  --fm-button-bg-hover: rgba(255, 255, 255, 0.08);
+  --fm-button-bg-active: var(--fm-accent-bg);
+  
+  --fm-font: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --fm-font-size: 14px;
+  --fm-line-height: 1.4;
+  
+  --fm-duration: 150ms;
+  --fm-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =========================
+   CONTAINER PRINCIPAL
+   ========================= */
+.floating-menu-notion {
+  font-family: var(--fm-font);
+  font-size: var(--fm-font-size);
+  line-height: var(--fm-line-height);
+  color: var(--fm-text-primary);
+  
+  background: var(--menu-bg-gradient);
+  backdrop-filter: var(--menu-backdrop-blur);
+  -webkit-backdrop-filter: var(--menu-backdrop-blur);
+  border: var(--menu-border);
+  border-radius: var(--menu-border-radius);
+  box-shadow: var(--menu-shadow);
+  
+  /* Animation d'entrée */
+  animation: floating-menu-enter var(--fm-duration) var(--fm-ease);
+  transition: 
+    box-shadow var(--fm-duration) var(--fm-ease),
+    transform var(--fm-duration) var(--fm-ease);
+}
+
+.floating-menu-notion:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* =========================
+   CONTENU DU MENU
+   ========================= */
+.floating-menu-content {
+  display: flex;
+  align-items: center;
+  gap: var(--fm-gap);
+  padding: var(--fm-padding);
+}
+
+/* =========================
+   BOUTONS DU MENU
+   ========================= */
+.floating-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  padding: 8px 10px;
+  margin: 0;
+  border: none;
+  border-radius: 6px;
+  
+  background: var(--fm-button-bg);
+  color: var(--fm-text-primary);
+  
+  font-family: var(--fm-font);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  
+  cursor: pointer;
+  user-select: none;
+  
+  transition: all var(--fm-duration) var(--fm-ease);
+  
+  /* Éviter le débordement */
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.floating-menu-button:hover {
+  background: var(--fm-button-bg-hover);
+  color: var(--fm-text-primary);
+}
+
+.floating-menu-button:active {
+  transform: translateY(1px);
+}
+
+.floating-menu-button.active {
+  background: var(--fm-button-bg-active);
+  color: var(--fm-accent);
+}
+
+.floating-menu-button.active:hover {
+  background: var(--fm-accent-bg);
+}
+
+.floating-menu-button span {
+  display: none; /* Hide text labels by default for a cleaner look */
+}
+
+.floating-menu-button.transform-button span {
+  display: inline; /* Only show text for the transform button */
+  font-size: 13px;
+}
+
+.floating-menu-button.transform-button {
+  padding: 8px 12px;
+}
+
+.chevron-icon {
+  margin-left: 4px;
+  transition: transform 150ms ease;
+}
+
+.transform-button[aria-expanded="true"] .chevron-icon {
+  transform: rotate(180deg);
+}
+
+/* Ask AI Button - Orange Theme */
+.floating-menu-button.ask-ai-dropdown-button {
+  padding: 8px 12px;
+  color: #ff6b35;
+}
+
+.floating-menu-button.ask-ai-dropdown-button span {
+  display: inline;
+  font-size: 13px;
+}
+
+.floating-menu-button.ask-ai-dropdown-button:hover {
+  background: rgba(255, 107, 53, 0.1);
+  color: #ff5722;
+}
+
+.ask-ai-dropdown-button[aria-expanded="true"] .chevron-icon {
+  transform: rotate(180deg);
+}
+
+.ask-ai-dropdown-button svg {
+  color: currentColor;
+}
+
+/* =========================
+   SÉPARATEUR
+   ========================= */
+.separator {
+  width: 1px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.15);
+  margin: 0 4px;
+}
+
+/* =========================
+   CONTAINER SOUS-MENU
+   ========================= */
+.transform-menu-container {
+  position: absolute;
+  top: calc(100% - 1px); /* ✅ Descendu de 2px */
+  left: 0;
+  z-index: 10;
+}
+
+.ask-ai-menu-container {
+  position: absolute;
+  top: calc(100% - 1px); /* ✅ Descendu de 2px */
+  left: 120px; /* Position à droite du bouton Ask AI */
+  z-index: 10;
+}
+
+/* =========================
+   LABELS DES BOUTONS
+   ========================= */
+.button-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Masquer les labels sur petits écrans */
+@media (max-width: 480px) {
+  .button-label {
+    display: none;
+  }
+  
+  .floating-menu-button {
+    padding: 8px;
+    min-width: 32px;
+    justify-content: center;
+  }
+}
+
+/* =========================
+   ANIMATIONS
+   ========================= */
+@keyframes floating-menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================
+   ÉTATS SPÉCIAUX
+   ========================= */
+.floating-menu-button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.floating-menu-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.floating-menu-button:disabled:hover {
+  background: var(--fm-button-bg);
+  transform: none;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 768px) {
+  .floating-menu-notion {
+    font-size: 13px;
+  }
+  
+  .floating-menu-button {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+  
+  .button-label {
+    font-size: 11px;
+  }
+}
+
+/* =========================
+   INDICATEUR STREAMING
+   ========================= */
+.streaming-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin-left: 4px;
+  border-radius: 6px;
+  background: rgba(255, 107, 53, 0.1);
+  color: #ff6b35;
+  font-size: 12px;
+  font-weight: 500;
+  animation: pulse-streaming 2s ease-in-out infinite;
+}
+
+.streaming-indicator .streaming-dots {
+  display: flex;
+  gap: 3px;
+}
+
+.streaming-indicator .streaming-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+
+.streaming-indicator .streaming-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.streaming-indicator .streaming-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.streaming-indicator .streaming-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dot-pulse {
+  0%, 80%, 100% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes pulse-streaming {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* =========================
+   THÈME SOMBRE (FUTUR)
+   ========================= */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fm-bg: #141414;
+    --fm-border: rgba(255, 255, 255, 0.1);
+    --fm-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --fm-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+    
+    --fm-text-primary: #ffffff;
+    --fm-text-secondary: #b3b3b3;
+    --fm-text-tertiary: #808080;
+    
+    --fm-button-bg-hover: rgba(255, 255, 255, 0.08);
+    --fm-button-bg-active: rgba(229, 90, 44, 0.2); /* Orange - cohérent */
+  }
+}
