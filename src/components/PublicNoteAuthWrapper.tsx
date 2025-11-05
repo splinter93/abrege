@@ -43,11 +43,23 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
     const loadPublicNote = async () => {
       try {
         // 1. Vérifier l'auth (optionnel pour les notes publiques)
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user || null;
+        const token = session?.access_token || null;
         setCurrentUser(user);
 
-        // 2. Charger la note via l'API publique (pas besoin d'auth)
-        const response = await fetch(`/api/ui/public/note/${encodeURIComponent(username)}/${slug}`);
+        // 2. Charger la note via l'API publique (avec token si connecté)
+        // ✅ FIX : Passer token pour que l'API sache qu'on est le créateur
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json'
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(`/api/ui/public/note/${encodeURIComponent(username)}/${slug}`, {
+          headers
+        });
         if (!response.ok) {
           // Distinguer 404 (note privée/inexistante) des vraies erreurs
           const errorData = await response.json().catch(() => ({}));
