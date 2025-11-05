@@ -423,19 +423,25 @@
   padding: 16px;
 }
 
-/* Header erreur Mermaid */
-.mermaid-error-header {
+/* Icône erreur Mermaid - Centré en haut */
+.mermaid-error-icon {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #ef4444;
-  font-weight: 600;
-  font-size: 14px;
+  justify-content: center;
+  margin-bottom: 8px;
 }
 
-.mermaid-error-header svg {
-  flex-shrink: 0;
+.mermaid-error-icon svg {
   stroke: #ef4444;
+}
+
+/* Titre erreur Mermaid - En dessous de l'icône */
+.mermaid-error-title {
+  text-align: center;
+  color: #ef4444;
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 12px;
 }
 
 /* Message erreur Mermaid */

@@ -453,14 +453,14 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
     
     errorContent.innerHTML = `
-      <div class="mermaid-error-header">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <div class="mermaid-error-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10" />
           <line x1="15" y1="9" x2="9" y2="15" />
           <line x1="9" y1="9" x2="15" y2="15" />
         </svg>
-        <span>Erreur de rendu du diagramme</span>
       </div>
+      <div class="mermaid-error-title">Erreur de rendu du diagramme</div>
       <div class="mermaid-error-message">
         <strong>Cause :</strong>
         <pre class="mermaid-error-text">${errorMessage}</pre>
