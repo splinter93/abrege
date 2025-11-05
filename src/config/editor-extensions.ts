@@ -33,7 +33,7 @@ import CalloutExtension from '@/extensions/CalloutExtension';
 // - BlockDragDropExtension: Désactivé temporairement
 import SlashMenuExtension from '@/extensions/SlashMenuExtension';
 // ✅ DRAG HANDLE - Notion-style (SEUL utilisé en prod)
-import { NotionDragHandleExtension } from '@/extensions/NotionDragHandleExtension';
+import { NotionDragHandleExtension } from '@/extensions/notion-drag-handle';
 import Color from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Highlight from '@tiptap/extension-highlight';
