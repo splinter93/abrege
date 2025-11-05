@@ -26,15 +26,16 @@
 
   /* ========================================
      BACKGROUNDS - SOMBRE PAR DÉFAUT
+     ✅ SYNCHRONIZED avec chat-clean.css (--chat-bg-*)
      ======================================== */
   
-  --color-bg-primary: #121212;
-  --color-bg-secondary: #171717;
-  --color-bg-tertiary: #1c1c1c;
+  --color-bg-primary: #0e1012;         /* ✅ Synchronisé avec --chat-bg-primary */
+  --color-bg-secondary: #121416;       /* ✅ Synchronisé avec --chat-bg-secondary */
+  --color-bg-tertiary: #161819;        /* ✅ Synchronisé avec --chat-bg-tertiary */
   --color-bg-elevated: #2C2C2C;
-  --color-bg-content: #202020;
+  --color-bg-content: #1e2022;         /* ✅ Synchronisé avec --chat-bg-input */
   --color-bg-hover: rgba(255, 255, 255, 0.05);
-  --color-bg-header: #171717;
+  --color-bg-header: #0e1012;          /* ✅ Synchronisé avec --chat-bg-primary */
   
   /* Menus et dropdowns */
   --menu-bg-gradient: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%);
@@ -43,13 +44,13 @@
   --menu-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   --menu-backdrop-blur: blur(20px);
   
-  /* Surfaces (alias) */
-  --surface-primary: #171717;
-  --surface-secondary: #1c1c1c;
-  --surface-tertiary: #212121;
-  --surface-elevated: #1c1c1c;
-  --surface-background: #121212;
-  --surface-hover: #212121;
+  /* Surfaces (alias) - ✅ SYNCHRONIZED */
+  --surface-primary: #121416;          /* ✅ Synchronisé avec --chat-bg-secondary */
+  --surface-secondary: #161819;        /* ✅ Synchronisé avec --chat-bg-tertiary */
+  --surface-tertiary: #1a1c1e;
+  --surface-elevated: #161819;
+  --surface-background: #0e1012;       /* ✅ Synchronisé avec --chat-bg-primary */
+  --surface-hover: #1a1c1e;
 
   /* ========================================
      TEXTES - SOMBRE PAR DÉFAUT

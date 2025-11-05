@@ -28,10 +28,10 @@
   /* ========================================
      BACKGROUNDS - Surfaces principales
      ======================================== */
-  --chat-bg-primary: #141618;           /* Container, header, messages (teinte slate) */
-  --chat-bg-secondary: #181a1c;         /* Réservé pour surfaces alternatives (teinte slate) */
-  --chat-bg-tertiary: #1a1c1e;          /* Sidebar, chat input area (teinte slate) */
-  --chat-bg-input: #242424;             /* Input search, formulaires (+2%) */
+  --chat-bg-primary: #0e1012;           /* Container, header, messages (teinte slate assombrie -2) */
+  --chat-bg-secondary: #121416;         /* Réservé pour surfaces alternatives (teinte slate) */
+  --chat-bg-tertiary: #161819;          /* Sidebar, chat input area (teinte slate) */
+  --chat-bg-input: #1e2022;             /* Input search, formulaires (assombri proportionnellement) */
   --chat-bg-input-focus: #2a2a2a;       /* Input au focus (+2%) */
   --chat-bg-user-message: #232323;      /* Bulle message user (+2%) */
   --chat-bg-user-message-hover: #252525; /* Bulle user au hover (+2%) */
@@ -1041,8 +1041,8 @@ body.chat-theme-anthracite .chatgpt-header {
   top: 0;
   left: 0;
   right: 0;
-  height: 15px;
-  background: linear-gradient(to bottom, rgba(20, 22, 24, 0.95), rgba(20, 22, 24, 0));
+  height: 5px; /* ✅ Réduit 8px → 5px (transition très courte et nette) */
+  background: linear-gradient(to bottom, rgba(14, 16, 18, 1), rgba(14, 16, 18, 0)); /* ✅ Assombri subtilement (16,18,20 → 14,16,18) */
   pointer-events: none;
   z-index: 10;
   display: block;

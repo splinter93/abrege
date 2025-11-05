@@ -69,7 +69,7 @@
 .editor-header-image-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(24, 24, 24, 0.08);
+  background: rgba(14, 16, 18, 0.08); /* ✅ Synchronisé avec --chat-bg-primary (14,16,18) */
   pointer-events: none;
   transition: background 0.2s;
   z-index: 2;

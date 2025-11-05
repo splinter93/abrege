@@ -19,7 +19,7 @@
   align-items: center; /* Centré verticalement */
   justify-content: center;
   padding: 0 var(--editor-padding-horizontal-desktop);
-  background: #171717; /* Test #171717 (--color-bg-header) */
+  background: var(--color-bg-header); /* ✅ Variable au lieu de hardcodé */
   border-bottom: none !important; /* Pas de bordure */
   z-index: 100;
   box-sizing: border-box;
