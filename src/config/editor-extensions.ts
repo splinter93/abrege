@@ -262,6 +262,8 @@ export function createEditorExtensions(
     );
   }
 
+  // Extensions avancées incluent déjà NotionDragHandleExtension (ajouté en mode PROGRESSIF)
+  
   // Extensions expérimentales (désactivées par défaut)
   // ⚠️ Extensions problématiques retirées en Phase 6 du refactoring
   // Voir docs/DRAG-HANDLES-AUDIT.md pour détails
@@ -270,12 +272,20 @@ export function createEditorExtensions(
     // Les extensions problématiques ont été retirées
   }
 
-  // ✅ DRAG HANDLE Notion-style (seule extension utilisée)
-  extensions.push(
-    NotionDragHandleExtension.configure({
-      handleClass: 'notion-drag-handle',
-    })
+  // ✅ DRAG HANDLE Notion-style ajouté UNIQUEMENT si pas déjà en mode PROGRESSIF
+  // Mode PROGRESSIF (lignes 74-183) ajoute déjà NotionDragHandleExtension
+  const hasNotionDragHandle = extensions.some(ext => 
+    ext.name === 'notionDragHandle' || 
+    (ext as any).type?.name === 'notionDragHandle'
   );
+  
+  if (!hasNotionDragHandle) {
+    extensions.push(
+      NotionDragHandleExtension.configure({
+        handleClass: 'notion-drag-handle',
+      })
+    );
+  }
 
   // Extensions de performance
   if (config.performance) {

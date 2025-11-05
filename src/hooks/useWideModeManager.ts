@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 /**
  * Hook pour gérer le changement de wide_mode dans l'éditeur
@@ -22,10 +22,15 @@ export const useWideModeManager = (isWideMode: boolean | null | undefined) => {
     }
   }, []);
 
+  // Ref pour éviter re-renders inutiles
+  const prevWideModeRef = useRef<boolean | null>(null);
+
   // Appliquer le mode actuel au chargement et quand il change
   useEffect(() => {
-    if (typeof isWideMode === 'boolean') {
+    // ✅ Skip si même valeur (évite logs répétés)
+    if (typeof isWideMode === 'boolean' && isWideMode !== prevWideModeRef.current) {
       changeWideMode(isWideMode);
+      prevWideModeRef.current = isWideMode;
     }
   }, [isWideMode, changeWideMode]);
 

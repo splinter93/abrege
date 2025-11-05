@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * Composant client qui met à jour la meta tag theme-color
@@ -8,6 +8,9 @@ import { useEffect } from 'react';
  */
 export default function ThemeColor() {
   useEffect(() => {
+    // ✅ Ref pour éviter logs répétés
+    const prevColorRef = useRef<string | null>(null);
+    
     const updateThemeColor = () => {
       const html = document.documentElement;
       const body = document.body;
@@ -35,7 +38,11 @@ export default function ThemeColor() {
         color = '#121212'; // Dark theme
       }
       
-      console.log('[ThemeColor] Update:', color, 'Standalone:', isStandalone, 'Classes:', html.className);
+      // ✅ Log seulement si couleur a changé (réduit 30+ logs → 2-3 logs)
+      if (color !== prevColorRef.current) {
+        console.log('[ThemeColor] Update:', color, 'Standalone:', isStandalone);
+        prevColorRef.current = color;
+      }
       
       // Update la meta tag
       const metaTag = document.querySelector('meta[name="theme-color"]');
@@ -51,8 +58,8 @@ export default function ThemeColor() {
     setTimeout(updateThemeColor, 100);
     setTimeout(updateThemeColor, 500);
     
-    // Update périodique agressif (Android peut reset)
-    const interval = setInterval(updateThemeColor, 1000);
+    // ✅ Update périodique moins agressif (5s au lieu de 1s, réduit logs)
+    const interval = setInterval(updateThemeColor, 5000);
     
     // Observer les changements de classe
     const observer = new MutationObserver(updateThemeColor);

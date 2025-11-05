@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 /**
  * Hook pour gérer le changement de police dans l'éditeur
@@ -37,16 +37,14 @@ export const useFontManager = (currentFont: string | null | undefined) => {
       // Changer les variables CSS selon le scope
       if (scope === 'all' || scope === 'headings') {
         document.documentElement.style.setProperty('--editor-font-family-headings', fontFamily);
-        console.log(`[FontManager] 🎯 Headings changés: ${fontFamily}`);
       }
       if (scope === 'all' || scope === 'body') {
         document.documentElement.style.setProperty('--editor-font-family-body', fontFamily);
-        console.log(`[FontManager] 🎯 Body changé: ${fontFamily}`);
       }
       
+      // ✅ Log seulement en dev et de manière concise
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[FontManager] 🎨 Police changée: ${fontName} (${scope}) → ${fontFamily}`);
-        console.log(`[FontManager] 🔍 Scope reçu: "${scope}"`);
+        console.log(`[FontManager] 🎨 Police changée: ${fontName} (${scope})`);
       }
       
     } catch (error) {
@@ -54,10 +52,15 @@ export const useFontManager = (currentFont: string | null | undefined) => {
     }
   }, []);
 
-  // Appliquer la police actuelle au chargement
+  // Ref pour éviter re-renders inutiles
+  const prevFontRef = useRef<string | null>(null);
+
+  // Appliquer la police actuelle au chargement et quand elle change
   useEffect(() => {
-    if (currentFont) {
+    // ✅ Skip si même valeur (évite logs répétés)
+    if (currentFont && currentFont !== prevFontRef.current) {
       changeFont(currentFont);
+      prevFontRef.current = currentFont;
     }
   }, [currentFont, changeFont]);
 
