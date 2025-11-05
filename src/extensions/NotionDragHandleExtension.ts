@@ -4,8 +4,7 @@
  */
 
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { NodeSelection } from '@tiptap/pm/state';
+import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import { getSelectionRanges, NodeRangeSelection } from '@tiptap/extension-node-range';
 import type { EditorView } from '@tiptap/pm/view';
 import type { Node, Slice } from '@tiptap/pm/model';
@@ -26,14 +25,40 @@ export interface NotionDragHandleOptions {
   onNodeChange?: (options: { node: Node; pos: number; editor: EditorState }) => void;
 }
 
-let globalDragHandle: HTMLElement | null = null;
-let currentView: EditorView | null = null;
-let hideTimeout: NodeJS.Timeout | null = null; // Timeout pour délai avant hide
-let hoverBridge: HTMLElement | null = null; // Zone invisible à gauche pour hover
-let listenersAttached = false; // Flag pour éviter duplication des listeners
+// ============================================================================
+// CONSTANTES
+// ============================================================================
 
-// Version du handle pour forcer la recréation après changements de design
-const HANDLE_VERSION = 'v5.6'; // Drag image stylée (padding, shadow, max-width 600px)
+/** Version du handle pour forcer la recréation après changements de design */
+const HANDLE_VERSION = 'v5.7'; // Memory leaks fixed, listeners cleanup
+
+/** Offsets pour positionnement des handles */
+const HANDLE_LEFT_OFFSET = -80; // px à gauche du bloc
+const HANDLE_TOP_OFFSET = 6; // px du haut du bloc
+
+/** Largeur de la zone hover bridge (zone invisible à gauche) */
+const HOVER_BRIDGE_WIDTH = 160; // px
+
+/** Délais avant hide des handles */
+const HIDE_DELAY_HANDLES = 200; // ms quand on quitte les handles
+const HIDE_DELAY_EDITOR = 300; // ms quand on quitte l'éditeur
+
+/** Délai pour cleanup de la drag image */
+const DRAG_IMAGE_CLEANUP_DELAY = 100; // ms
+
+/** Délai après dragend pour reset sélection */
+const DRAGEND_SELECTION_DELAY = 100; // ms
+
+// ============================================================================
+// VARIABLES GLOBALES MODULE
+// ============================================================================
+
+let globalDragHandle: HTMLElement | null = null;
+let globalDragHandleCleanup: (() => void) | null = null; // Cleanup listeners
+let currentView: EditorView | null = null;
+let hideTimeout: NodeJS.Timeout | null = null;
+let hoverBridge: HTMLElement | null = null;
+let listenersAttached = false;
 
 /**
  * Créer une zone invisible à gauche de l'éditeur
@@ -43,9 +68,9 @@ function createHoverBridge(): HTMLElement {
   const bridge = document.createElement('div');
   bridge.className = 'notion-hover-bridge';
   bridge.style.position = 'absolute';
-  bridge.style.left = '-160px'; // 160px à gauche de l'éditeur
+  bridge.style.left = `-${HOVER_BRIDGE_WIDTH}px`;
   bridge.style.top = '0';
-  bridge.style.width = '160px'; // Largeur de la zone (ultra-confortable)
+  bridge.style.width = `${HOVER_BRIDGE_WIDTH}px`;
   bridge.style.height = '100%';
   bridge.style.zIndex = '99'; // Sous les handles (z-index: 100)
   bridge.style.pointerEvents = 'auto';
@@ -82,16 +107,16 @@ function createHoverBridge(): HTMLElement {
         // Si la souris est à la hauteur de ce bloc
         if (mouseY >= blockRect.top && mouseY <= blockRect.bottom) {
           // Positionner les handles sur ce bloc
-          globalDragHandle.style.left = `${blockRect.left - editorRect.left - 80}px`;
-          globalDragHandle.style.top = `${blockRect.top - editorRect.top + 6}px`;
+          globalDragHandle.style.left = `${blockRect.left - editorRect.left + HANDLE_LEFT_OFFSET}px`;
+          globalDragHandle.style.top = `${blockRect.top - editorRect.top + HANDLE_TOP_OFFSET}px`;
           globalDragHandle.style.opacity = '1';
           
           // Sauvegarder la position du bloc
           try {
             const blockStartPos = currentView.posAtDOM(block, 0);
             globalDragHandle.setAttribute('data-node-pos', blockStartPos.toString());
-          } catch (e) {
-            // Ignore errors
+          } catch (error) {
+            logger.dev('[NotionDragHandle] Erreur posAtDOM dans bridge:', error);
           }
           
           break;
@@ -109,10 +134,185 @@ function createHoverBridge(): HTMLElement {
       if (globalDragHandle) {
         globalDragHandle.style.opacity = '0';
       }
-    }, 200);
+    }, HIDE_DELAY_HANDLES);
   });
   
   return bridge;
+}
+
+/**
+ * Attacher les listeners drag/drop sur le handle
+ * Retourne une fonction cleanup pour éviter les memory leaks
+ */
+function attachDragListeners(
+  dragHandle: HTMLElement,
+  view: EditorView
+): () => void {
+  const dragBtn = dragHandle.querySelector('.notion-drag-handle-btn') as HTMLElement;
+  if (!dragBtn) {
+    logger.error('[NotionDragHandle] dragBtn non trouvé dans attachDragListeners');
+    return () => {}; // Cleanup vide
+  }
+
+  // Handler dragstart
+  const handleDragStart = (e: DragEvent) => {
+    const posStr = dragHandle.getAttribute('data-node-pos');
+    const pos = posStr ? parseInt(posStr) : -1;
+
+    if (pos >= 0 && e.dataTransfer) {
+      const { doc } = view.state;
+      const $pos = doc.resolve(pos);
+      const node = $pos.nodeAfter;
+
+      if (!node) return;
+
+      // Créer les ranges avec getSelectionRanges (méthode Tiptap)
+      const from = pos;
+      const to = pos + node.nodeSize;
+      const $from = doc.resolve(from);
+      const $to = doc.resolve(to);
+
+      const ranges = getSelectionRanges($from, $to, 0);
+
+      if (!ranges.length) {
+        return;
+      }
+
+      // Créer la sélection et la slice
+      const selection = NodeRangeSelection.create(doc, from, to);
+      const slice = selection.content();
+
+      // ✅ MAGIE: Dire à ProseMirror qu'on drag
+      // ProseMirror va AUTOMATIQUEMENT gérer le drop !
+      (view as EditorView & { dragging?: DraggingInfo | null }).dragging = {
+        slice,
+        move: true,
+      };
+
+      // Sélectionner le bloc visuellement
+      const tr = view.state.tr.setSelection(selection);
+      view.dispatch(tr);
+
+      // ✅ Créer une drag image custom avec STYLES selon le type de bloc
+      try {
+        // Extraire le texte du bloc
+        let textContent = slice.content.textBetween(0, slice.content.size, '\n', '\n');
+        if (!textContent || textContent.trim() === '') {
+          textContent = node.type.name; // Fallback: nom du type de bloc
+        }
+
+        // Détecter le type de bloc pour adapter les styles
+        const nodeType = node.type.name;
+        const nodeLevel = node.attrs?.level || 0;
+
+        // Styles de base
+        let fontSize = '15px';
+        let fontWeight = '400';
+        let color = '#B5BCC4';
+
+        // Adapter selon le type
+        if (nodeType === 'heading') {
+          fontWeight = '600';
+          color = '#FFFFFF';
+          switch (nodeLevel) {
+            case 1:
+              fontSize = '28px';
+              fontWeight = '700';
+              break;
+            case 2:
+              fontSize = '22px';
+              fontWeight = '600';
+              break;
+            case 3:
+              fontSize = '18px';
+              fontWeight = '600';
+              break;
+            case 4:
+              fontSize = '16px';
+              fontWeight = '600';
+              break;
+            default:
+              fontSize = '15px';
+              fontWeight = '600';
+          }
+        } else if (nodeType === 'codeBlock') {
+          fontSize = '14px';
+          fontWeight = '400';
+          color = '#A8B4C0';
+        } else if (nodeType === 'blockquote') {
+          fontSize = '15px';
+          fontWeight = '400';
+          color = '#8B95A0';
+        }
+
+        // Créer le wrapper pour la drag image
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: -9999px;
+          max-width: 500px;
+          padding: 10px 14px;
+          background: #1a1a1a;
+          color: ${color};
+          border-radius: 6px;
+          box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+          font-family: 'Noto Sans', sans-serif;
+          font-size: ${fontSize};
+          font-weight: ${fontWeight};
+          line-height: 1.4;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          z-index: 99999;
+        `;
+        wrapper.textContent = textContent;
+
+        document.body.appendChild(wrapper);
+
+        // Forcer le reflow
+        void wrapper.offsetHeight;
+
+        // setDragImage DOIT être synchrone dans dragstart
+        e.dataTransfer.setDragImage(wrapper, 10, 10);
+
+        // Cleanup après le drag
+        setTimeout(() => {
+          if (wrapper.parentNode) {
+            wrapper.parentNode.removeChild(wrapper);
+          }
+        }, DRAG_IMAGE_CLEANUP_DELAY);
+      } catch (err) {
+        logger.error('[NotionDragHandle] Erreur drag image:', err);
+      }
+    }
+  };
+
+  // Handler dragend
+  const handleDragEnd = () => {
+    if (view) {
+      // Attendre un peu que ProseMirror finisse le drop
+      setTimeout(() => {
+        const { tr, doc } = view.state;
+
+        // Créer une TextSelection vide à la position courante
+        const currentPos = view.state.selection.from;
+        const selection = TextSelection.create(doc, currentPos);
+        tr.setSelection(selection);
+        view.dispatch(tr);
+      }, DRAGEND_SELECTION_DELAY);
+    }
+  };
+
+  // Attacher les listeners
+  dragBtn.addEventListener('dragstart', handleDragStart as EventListener);
+  dragBtn.addEventListener('dragend', handleDragEnd);
+
+  // Retourner la fonction cleanup
+  return () => {
+    dragBtn.removeEventListener('dragstart', handleDragStart as EventListener);
+    dragBtn.removeEventListener('dragend', handleDragEnd);
+  };
 }
 
 function createDragHandle(): HTMLElement {
@@ -143,6 +343,7 @@ function createDragHandle(): HTMLElement {
   plusBtn.style.color = 'var(--text-primary)';  // ✅ Couleur du texte
   plusBtn.style.filter = 'brightness(0.55)';    // ✅ 45% plus sombre (très discret)
   plusBtn.style.transition = 'all 150ms ease, filter 150ms ease';
+  plusBtn.draggable = false; // ✅ Empêcher le + d'être draggable
   plusBtn.innerHTML = `
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="12" cy="12" r="10"/>
@@ -159,6 +360,12 @@ function createDragHandle(): HTMLElement {
   plusBtn.addEventListener('mouseleave', () => {
     plusBtn.style.background = 'transparent';
     plusBtn.style.filter = 'brightness(0.55)';  // ✅ 45% plus sombre (très discret)
+  });
+  
+  // ✅ Empêcher le drag du bouton +
+  plusBtn.addEventListener('dragstart', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
   });
   
   // Click sur le bouton + pour créer une ligne vide sous le bloc
@@ -187,7 +394,6 @@ function createDragHandle(): HTMLElement {
             const transaction = tr.insert(afterPos, paragraph);
             
             // Placer le curseur dans le nouveau paragraphe
-            const { TextSelection } = require('@tiptap/pm/state');
             transaction.setSelection(
               TextSelection.near(transaction.doc.resolve(afterPos + 1))
             );
@@ -225,7 +431,7 @@ function createDragHandle(): HTMLElement {
       <circle cx="10" cy="11" r="1"/>
       <circle cx="4" cy="18" r="1"/>
       <circle cx="10" cy="18" r="1"/>
-    </svg>
+      </svg>
   `;
   
   // Hover effect minimal (plus visible au hover)
@@ -238,8 +444,9 @@ function createDragHandle(): HTMLElement {
     dragBtn.style.filter = 'brightness(0.55)';  // ✅ 45% plus sombre (très discret)
   });
   
-  // Rendre le container draggable
-  container.draggable = true;
+  // ✅ Rendre UNIQUEMENT le dragBtn draggable
+  dragBtn.draggable = true;
+  container.draggable = false; // Container PAS draggable
   container.style.pointerEvents = 'auto';
   
   // ✅ FIX: Empêcher la disparition quand la souris entre dans les handles
@@ -260,7 +467,7 @@ function createDragHandle(): HTMLElement {
     }
     hideTimeout = setTimeout(() => {
       container.style.opacity = '0';
-    }, 200);
+    }, HIDE_DELAY_HANDLES);
   });
   
   // Ajouter les boutons au container
@@ -298,6 +505,12 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
             requestAnimationFrame(() => {
               // ✅ FIX: TOUJOURS détruire l'ancien handle pour forcer la recréation avec les nouveaux styles
               if (globalDragHandle) {
+                // ✅ Nettoyer les listeners AVANT de détruire (FIX MEMORY LEAK)
+                if (globalDragHandleCleanup) {
+                  globalDragHandleCleanup();
+                  globalDragHandleCleanup = null;
+                }
+                
                 if (globalDragHandle.parentNode) {
                   globalDragHandle.parentNode.removeChild(globalDragHandle);
                 }
@@ -324,7 +537,7 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
             if (editorElement) {
               (editorElement as HTMLElement).style.position = 'relative';
               editorElement.appendChild(globalDragHandle);
-              
+
               // ✅ Créer et ajouter la zone bridge
               if (!hoverBridge) {
                 hoverBridge = createHoverBridge();
@@ -334,108 +547,8 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
               // ✅ Attacher les listeners UNE SEULE FOIS
               if (!listenersAttached) {
                 listenersAttached = true;
-                
-                // DRAGSTART: Utiliser la méthode officielle Tiptap
-                globalDragHandle.addEventListener('dragstart', (e: DragEvent) => {
-                const posStr = globalDragHandle?.getAttribute('data-node-pos');
-                const pos = posStr ? parseInt(posStr) : -1;
-                
-                if (pos >= 0 && currentView && e.dataTransfer) {
-                  const { doc } = currentView.state;
-                  const $pos = doc.resolve(pos);
-                  const node = $pos.nodeAfter;
-                  
-                  if (!node) return;
-                  
-                  // Créer les ranges avec getSelectionRanges (méthode Tiptap)
-                  const from = pos;
-                  const to = pos + node.nodeSize;
-                  const $from = doc.resolve(from);
-                  const $to = doc.resolve(to);
-                  
-                  const ranges = getSelectionRanges($from, $to, 0);
-                  
-                  if (!ranges.length) {
-                    return;
-                  }
-                  
-                  // Créer la sélection et la slice
-                  const selection = NodeRangeSelection.create(doc, from, to);
-                  const slice = selection.content();
-                  
-                  // CRITICAL: Dire à ProseMirror qu'on drag
-                  // ProseMirror va AUTOMATIQUEMENT gérer le drop/insert/delete !
-                  // Type assertion nécessaire car dragging est une propriété interne de ProseMirror
-                  (currentView as EditorView & { dragging?: DraggingInfo | null }).dragging = { slice, move: true };
-                  
-                  // Sélectionner le bloc
-                  const tr = currentView.state.tr.setSelection(selection);
-                  currentView.dispatch(tr);
-                  
-                  // ✅ Créer une drag image stylée et élégante
-                  const wrapper = document.createElement('div');
-                  wrapper.style.position = 'absolute';
-                  wrapper.style.top = '-10000px';
-                  wrapper.style.maxWidth = '600px'; // Limite la largeur
-                  wrapper.style.padding = '12px 16px';
-                  wrapper.style.background = 'var(--color-bg-surface-1, #1a1a1a)';
-                  wrapper.style.border = '1px solid var(--color-border, rgba(255,255,255,0.1))';
-                  wrapper.style.borderRadius = '8px';
-                  wrapper.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
-                  wrapper.style.opacity = '0.95';
-                  wrapper.style.color = 'var(--text-primary, #B5BCC4)';
-                  wrapper.style.fontFamily = 'var(--editor-font-family-body)';
-                  wrapper.style.fontSize = 'var(--editor-body-size, 1.0625rem)';
-                  wrapper.style.lineHeight = 'var(--editor-line-height-base, 1.75)';
-                  
-                  const domNode = currentView.nodeDOM(from) as HTMLElement;
-                  if (domNode) {
-                    const cloned = domNode.cloneNode(true) as HTMLElement;
-                    
-                    // ✅ Copier les styles calculés du node
-                    const computedStyle = window.getComputedStyle(domNode);
-                    cloned.style.fontSize = computedStyle.fontSize;
-                    cloned.style.fontWeight = computedStyle.fontWeight;
-                    cloned.style.lineHeight = computedStyle.lineHeight;
-                    cloned.style.color = computedStyle.color;
-                    cloned.style.margin = '0';
-                    cloned.style.padding = '0';
-                    
-                    // ✅ Appliquer les classes CSS de l'éditeur pour le styling
-                    cloned.classList.add('ProseMirror');
-                    
-                    wrapper.appendChild(cloned);
-                  }
-                  
-                  document.body.appendChild(wrapper);
-                  e.dataTransfer.setDragImage(wrapper, 20, 20);
-                  
-                  // Cleanup
-                  document.addEventListener('drop', () => {
-                    if (wrapper.parentNode) {
-                      wrapper.parentNode.removeChild(wrapper);
-                    }
-                  }, { once: true });
-                }
-              });
-
-                // DRAGEND: Réinitialiser la sélection pour débloquer l'input
-                globalDragHandle.addEventListener('dragend', () => {
-                  if (currentView) {
-                    // Attendre un peu que ProseMirror finisse le drop
-                    setTimeout(() => {
-                      const { tr, doc } = currentView!.state;
-                      const { TextSelection } = require('@tiptap/pm/state');
-                      
-                      // Créer une TextSelection vide à la position courante
-                      const currentPos = currentView!.state.selection.from;
-                      const selection = TextSelection.create(doc, currentPos);
-                      tr.setSelection(selection);
-                      currentView!.dispatch(tr);
-                    }, 100);
-                  }
-                });
-              } // ✅ Fin du if (!listenersAttached)
+                globalDragHandleCleanup = attachDragListeners(globalDragHandle, view);
+              }
             }
           }
             }); // Fin du 2ème RAF
@@ -448,6 +561,12 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
               if (hideTimeout) {
                 clearTimeout(hideTimeout);
                 hideTimeout = null;
+              }
+              
+              // ✅ Nettoyer les listeners drag (FIX MEMORY LEAK)
+              if (globalDragHandleCleanup) {
+                globalDragHandleCleanup();
+                globalDragHandleCleanup = null;
               }
               
               // ✅ Nettoyer les handles
@@ -485,6 +604,12 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
               // Utiliser RAF pour garantir le DOM prêt même dans le fallback
               // Détruire l'ancien handle s'il existe avec une version obsolète
               if (globalDragHandle && globalDragHandle.getAttribute('data-version') !== HANDLE_VERSION) {
+                // ✅ Nettoyer les listeners AVANT de détruire (FIX MEMORY LEAK)
+                if (globalDragHandleCleanup) {
+                  globalDragHandleCleanup();
+                  globalDragHandleCleanup = null;
+                }
+                
                 if (globalDragHandle.parentNode) {
                   globalDragHandle.parentNode.removeChild(globalDragHandle);
                 }
@@ -517,9 +642,12 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                         editorElement.appendChild(hoverBridge);
                       }
                       
-                      // ✅ Les listeners sont déjà attachés dans la création initiale
-                      // Pas besoin de les réattacher ici (évite duplication)
-                    }
+                      // ✅ FIX BUG: Attacher les listeners dans le fallback aussi !
+                      if (!listenersAttached) {
+                        listenersAttached = true;
+                        globalDragHandleCleanup = attachDragListeners(globalDragHandle, view);
+                      }
+                  }
                 }
                 });
               }
@@ -572,10 +700,10 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                       clearTimeout(hideTimeout);
                       hideTimeout = null;
                     }
-                    
+
                     // Positionner le container (+ à gauche du drag handle)
-                    globalDragHandle.style.left = `${rect.left - editorRect.left - 80}px`;  // Décalé un peu plus à gauche
-                    globalDragHandle.style.top = `${rect.top - editorRect.top + 6}px`;  // Descendu de 11px (-5 → +6)
+                    globalDragHandle.style.left = `${rect.left - editorRect.left + HANDLE_LEFT_OFFSET}px`;
+                    globalDragHandle.style.top = `${rect.top - editorRect.top + HANDLE_TOP_OFFSET}px`;
                     globalDragHandle.style.opacity = '1';
                     
                     // Utiliser posAtDOM pour la position exacte
@@ -613,7 +741,7 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
               if (relatedTarget && (relatedTarget === globalDragHandle || globalDragHandle.contains(relatedTarget))) {
                 return false;
               }
-              
+
               // ✅ Délai avant de cacher (laisse le temps d'aller vers les handles)
               if (hideTimeout) {
                 clearTimeout(hideTimeout);
@@ -621,9 +749,9 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
               
               hideTimeout = setTimeout(() => {
                 if (globalDragHandle) {
-                  globalDragHandle.style.opacity = '0';
+              globalDragHandle.style.opacity = '0';
                 }
-              }, 300); // 300ms = temps confortable pour aller vers les handles
+              }, HIDE_DELAY_EDITOR);
               
               return false;
             },
