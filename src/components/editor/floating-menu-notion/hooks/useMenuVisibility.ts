@@ -99,14 +99,16 @@ export function useMenuVisibility({
   // Gérer le clic en dehors du menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      // ✅ Ne cacher le menu que s'il est déjà visible
+      // Évite de cacher le menu pendant un triple-clic
+      if (menuRef.current && !menuRef.current.contains(event.target as Node) && position.visible) {
         setPosition(prev => ({ ...prev, visible: false }));
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [setPosition]);
+  }, [setPosition, position.visible]);
 
   return {
     menuRef,

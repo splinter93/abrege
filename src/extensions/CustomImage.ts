@@ -33,6 +33,13 @@ const CustomImage = Image.extend({
         img.loading = 'lazy'; // Optimisation : lazy loading
         img.style.cursor = 'pointer'; // ✅ Indiquer que l'image est cliquable
         img.title = 'Double-cliquer pour agrandir';
+        img.draggable = false; // ✅ Bloquer le drag natif du navigateur
+        
+        // ✅ Empêcher le drag natif (évite la duplication d'image)
+        img.addEventListener('dragstart', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
         
         // ✅ Double-clic sur l'image pour ouvrir la modale
         const handleDoubleClick = (e: Event) => {
