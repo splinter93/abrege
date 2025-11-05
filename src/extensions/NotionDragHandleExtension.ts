@@ -39,7 +39,7 @@ function createDragHandle(): HTMLElement {
   container.style.position = 'absolute';
   container.style.zIndex = '100';
   container.style.opacity = '0';
-  container.style.transition = 'opacity 150ms ease';
+  container.style.transition = 'opacity 150ms ease, top 180ms cubic-bezier(0.22, 1, 0.36, 1), left 180ms cubic-bezier(0.22, 1, 0.36, 1)'; // ✅ Transition fluide position
   container.style.display = 'flex';
   container.style.gap = '12px';  // Augmenté à 12px
   container.style.alignItems = 'center';
