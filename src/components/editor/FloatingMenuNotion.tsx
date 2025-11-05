@@ -275,20 +275,6 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = ({
       isActive: () => editor?.isActive('underline') || false
     },
     {
-      id: 'strikethrough',
-      icon: FiEdit3,
-      label: 'Barré',
-      action: () => editor?.chain().focus().toggleStrike().run(),
-      isActive: () => editor?.isActive('strike') || false
-    },
-    {
-      id: 'highlight',
-      icon: FiEdit3,
-      label: 'Surligner',
-      action: () => editor?.chain().focus().toggleHighlight().run(),
-      isActive: () => editor?.isActive('highlight') || false
-    },
-    {
       id: 'code',
       icon: FiCode,
       label: 'Code',
