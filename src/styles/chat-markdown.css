@@ -262,6 +262,7 @@
 
 .chat-markdown table {
   width: 100%;
+  max-width: 100%; /* ✅ Ne jamais dépasser container */
   border-collapse: collapse;
   margin: var(--md-chat-table-margin) 0;  /* ✅ Variable chat */
   background: var(--blk-bg); /* ✅ Même gradient que code blocks */
@@ -269,6 +270,7 @@
   overflow: hidden;
   border: none;
   filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Même brightness que code blocks */
+  table-layout: auto; /* ✅ Layout automatique pour colonnes adaptatives */
 }
 
 .chat-markdown th {
@@ -280,6 +282,8 @@
   border-bottom: 0.5px solid rgba(255, 255, 255, 0.04) !important; /* ✅ Ligne ultra-fine */
   font-size: var(--editor-body-size, 15.5px) !important;
   font-family: var(--font-chat-text) !important;
+  white-space: normal !important; /* ✅ Permet wrap (évite dépassement headers longs) */
+  word-break: break-word !important; /* ✅ Casse mots très longs */
 }
 
 .chat-markdown thead {
@@ -296,6 +300,8 @@
   color: var(--chat-text-secondary, #a1a1aa) !important;
   font-size: var(--editor-body-size, 15.5px) !important;
   font-family: var(--font-chat-text) !important;
+  white-space: normal !important; /* ✅ Permet wrap du texte */
+  word-break: break-word !important; /* ✅ Casse mots très longs */
 }
 
 .chat-markdown tbody tr:last-child td {
@@ -309,17 +315,12 @@
 /* Wrapper tableau scroll horizontal */
 .chat-markdown .table-wrapper-chat {
   width: 100%;
-  overflow-x: visible;
+  overflow-x: auto; /* ✅ Auto sur TOUS devices (évite dépassement) */
   margin: var(--md-table-margin) 0;
   border: none;
   background: transparent;
   -webkit-overflow-scrolling: touch;
-}
-
-@media (max-width: 1024px) {
-  .chat-markdown .table-wrapper-chat {
-    overflow-x: auto;
-  }
+  max-width: 100%; /* ✅ Force respect largeur container */
 }
 
 .chat-markdown .table-wrapper-chat::-webkit-scrollbar {
@@ -493,16 +494,17 @@
 
 @media (max-width: 480px) {
   .chat-markdown table {
-    min-width: 500px;
+    min-width: 100%; /* ✅ Pas de min-width fixe (s'adapte au container) */
     table-layout: auto;
   }
   
   .chat-markdown th,
   .chat-markdown td {
-    white-space: nowrap;
+    white-space: normal; /* ✅ Permet wrap du texte (évite dépassement) */
     padding: var(--chat-space-sm) var(--chat-space-md);
-    min-width: 100px;
+    min-width: 80px; /* ✅ Réduit 100px → 80px pour colonnes plus étroites */
     max-width: none;
+    word-break: break-word; /* ✅ Casse mots longs si nécessaire */
   }
 }
 
