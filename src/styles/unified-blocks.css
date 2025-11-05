@@ -417,6 +417,82 @@
 .chat-markdown-content .u-block__body .mermaid-error-content,
 .chat-markdown .u-block__body .mermaid-error-content {
   color: var(--blk-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+/* Header erreur Mermaid */
+.mermaid-error-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ef4444;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.mermaid-error-header svg {
+  flex-shrink: 0;
+  stroke: #ef4444;
+}
+
+/* Message erreur Mermaid */
+.mermaid-error-message {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mermaid-error-message strong {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mermaid-error-text {
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid #ef4444;
+  padding: 12px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: #fca5a5;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+  cursor: text;
+}
+
+/* Bouton copier erreur */
+.mermaid-error-copy-btn {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.mermaid-error-copy-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+.mermaid-error-copy-btn svg {
+  flex-shrink: 0;
+  stroke: currentColor;
 }
 
 .mermaid-spinner {

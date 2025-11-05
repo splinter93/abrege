@@ -449,6 +449,9 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
     // Créer le contenu d'erreur
     const errorContent = document.createElement('div');
     errorContent.className = 'mermaid-error-content';
+    
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    
     errorContent.innerHTML = `
       <div class="mermaid-error-header">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -460,9 +463,34 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
       </div>
       <div class="mermaid-error-message">
         <strong>Cause :</strong>
-        <pre>${error instanceof Error ? error.message : 'Erreur inconnue'}</pre>
+        <pre class="mermaid-error-text">${errorMessage}</pre>
       </div>
+      <button class="mermaid-error-copy-btn" title="Copier l'erreur">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+        <span>Copier l'erreur</span>
+      </button>
     `;
+    
+    // Ajouter event listener pour copier
+    const copyBtn = errorContent.querySelector('.mermaid-error-copy-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(errorMessage);
+          const span = copyBtn.querySelector('span');
+          if (span) {
+            const originalText = span.textContent;
+            span.textContent = 'Copié !';
+            setTimeout(() => { span.textContent = originalText; }, 2000);
+          }
+        } catch (err) {
+          logger.error('[Mermaid] Erreur copie:', err);
+        }
+      });
+    }
     
     // Mettre à jour les classes du conteneur parent
     container.parentElement?.classList.remove('mermaid-loading');
