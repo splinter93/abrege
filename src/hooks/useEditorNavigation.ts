@@ -11,7 +11,6 @@
 
 import { useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { simpleLogger as logger } from '@/utils/logger';
 
 interface UseEditorNavigationOptions {
@@ -38,7 +37,7 @@ interface UseEditorNavigationReturn {
  * const { switchNote, isNavigating } = useEditorNavigation({
  *   currentNoteId: noteId,
  *   hasUnsavedChanges: () => editor?.state.doc.content.size > 0,
- *   onBeforeNavigate: () => console.log('Navigating...')
+ *   onBeforeNavigate: () => logger.dev('Navigating...')
  * });
  * 
  * // Dans un handler
@@ -52,7 +51,6 @@ export function useEditorNavigation({
 }: UseEditorNavigationOptions): UseEditorNavigationReturn {
   
   const router = useRouter();
-  const notes = useFileSystemStore(s => s.notes);
   
   // Lock pour éviter navigation simultanée
   const isNavigatingRef = useRef(false);
@@ -62,11 +60,12 @@ export function useEditorNavigation({
    * 
    * Flow:
    * 1. Check si déjà sur cette note → skip
-   * 2. Check unsaved changes → confirm si nécessaire
-   * 3. Lock navigation
-   * 4. Callback onBeforeNavigate (cleanup)
-   * 5. Client-side navigation (Next.js router)
-   * 6. Unlock navigation
+   * 2. Check lock (navigation déjà en cours)
+   * 3. Check unsaved changes → confirm si nécessaire
+   * 4. Lock navigation
+   * 5. Callback onBeforeNavigate (cleanup)
+   * 6. Client-side navigation (Next.js router)
+   * 7. Unlock navigation
    */
   const switchNote = useCallback(async (noteId: string) => {
     // 1. Skip si déjà sur cette note
@@ -75,21 +74,13 @@ export function useEditorNavigation({
       return;
     }
 
-    // 2. Check si note existe
-    const targetNote = notes[noteId];
-    if (!targetNote) {
-      logger.warn('[useEditorNavigation] ⚠️  Note introuvable', { noteId });
-      // TODO: Afficher toast erreur
-      return;
-    }
-
-    // 3. Check lock (navigation déjà en cours)
+    // 2. Check lock (navigation déjà en cours)
     if (isNavigatingRef.current) {
       logger.warn('[useEditorNavigation] ⚠️  Navigation déjà en cours, skip');
       return;
     }
 
-    // 4. Check unsaved changes
+    // 3. Check unsaved changes
     const hasChanges = hasUnsavedChanges();
     if (hasChanges) {
       // ⚠️ WARN utilisateur
@@ -104,37 +95,37 @@ export function useEditorNavigation({
     }
 
     try {
-      // 5. Lock navigation
+      // 4. Lock navigation
       isNavigatingRef.current = true;
       
       logger.info('[useEditorNavigation] 🚀 Switch note', {
         from: currentNoteId,
-        to: noteId,
-        title: targetNote.source_title
+        to: noteId
       });
 
-      // 6. Callback onBeforeNavigate (cleanup, etc.)
+      // 5. Callback onBeforeNavigate (cleanup, etc.)
       if (onBeforeNavigate) {
         onBeforeNavigate();
       }
 
-      // 7. Client-side navigation (Next.js App Router)
-      // Format: /notes/[noteId] OU /notes/[slug] selon routing
-      router.push(`/notes/${noteId}`);
+      // 6. Client-side navigation (Next.js App Router)
+      // ✅ scroll: false pour garder la position et éviter le flash
+      // Format: /private/note/[noteId]
+      router.push(`/private/note/${noteId}`, { scroll: false });
       
     } catch (error) {
-      logger.error('[useEditorNavigation] ❌ Erreur navigation', {
-        error: error instanceof Error ? error.message : String(error),
-        noteId
-      });
+      logger.error(
+        `[useEditorNavigation] ❌ Erreur navigation vers note ${noteId}`,
+        error
+      );
       // TODO: Afficher toast erreur
     } finally {
-      // 8. Unlock après un délai (éviter double-click)
+      // 7. Unlock après un délai (éviter double-click)
       setTimeout(() => {
         isNavigatingRef.current = false;
       }, 500);
     }
-  }, [currentNoteId, notes, hasUnsavedChanges, onBeforeNavigate, router]);
+  }, [currentNoteId, hasUnsavedChanges, onBeforeNavigate, router]);
 
   return {
     switchNote,

@@ -218,7 +218,7 @@ const NoteTreeItem = React.memo(function NoteTreeItem({
   return (
     <div
       className={`editor-sidebar-note ${isActive ? 'active' : ''}`}
-      onClick={() => onNoteClick(note.id)}
+      onDoubleClick={() => onNoteClick(note.id)}
       style={{ paddingLeft: `${paddingLeft}px` }}
     >
       {/* Icône */}

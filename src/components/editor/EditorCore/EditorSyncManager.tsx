@@ -19,6 +19,9 @@ export interface EditorSyncManagerProps {
   
   /** État de l'éditeur */
   editorState: EditorState;
+  
+  /** ID de la note (pour détecter changement de note) */
+  noteId: string;
 }
 
 /**
@@ -45,6 +48,7 @@ function normalizeMarkdown(content: string): string {
  *   editor={editor}
  *   storeContent={note?.markdown_content || ''}
  *   editorState={editorState}
+ *   noteId={noteId}
  * />
  * ```
  */
@@ -52,12 +56,30 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
   editor,
   storeContent,
   editorState,
+  noteId,
 }) => {
   // 🔧 FIX: Ref pour tracker le chargement initial
   const hasLoadedInitialContentRef = React.useRef(false);
   const lastStoreSyncRef = React.useRef<string>('');
+  const lastNoteIdRef = React.useRef<string>(noteId);
   
-  // 🔄 Charger le contenu initial UNE SEULE FOIS
+  // ✅ OPTIMISATION: Reset flag quand noteId change (navigation entre notes)
+  React.useEffect(() => {
+    if (noteId !== lastNoteIdRef.current) {
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, '🔄 Changement de note détecté, reset sync manager', {
+          from: lastNoteIdRef.current,
+          to: noteId
+        });
+      }
+      
+      // Reset le flag pour permettre le chargement de la nouvelle note
+      hasLoadedInitialContentRef.current = false;
+      lastNoteIdRef.current = noteId;
+    }
+  }, [noteId]);
+  
+  // 🔄 Charger le contenu initial (ou le recharger si noteId a changé)
   React.useEffect(() => {
     if (!editor || !storeContent || hasLoadedInitialContentRef.current) return;
     

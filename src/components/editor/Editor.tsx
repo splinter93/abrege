@@ -20,7 +20,7 @@ import { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import { useRouter } from 'next/navigation';
 import ImageMenu from '@/components/ImageMenu';
 import { useAuth } from '@/hooks/useAuth';
-import { logger, LogCategory } from '@/utils/logger';
+import { simpleLogger as logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance } from '@/types/editor';
 import { useRealtime } from '@/hooks/useRealtime';
 import RealtimeStatus from '@/components/RealtimeStatus';
@@ -198,9 +198,15 @@ const Editor: React.FC<{
     hasUnsavedChanges: () => {
       // Vérifier si l'éditeur a des modifications non sauvegardées
       if (!editor) return false;
-      const editorContent = editor.getText();
-      const originalContent = rawContent || '';
-      return editorContent !== originalContent;
+      
+      // ✅ Comparer le markdown de l'éditeur avec le contenu original
+      const editorMarkdown = editor.storage?.markdown?.getMarkdown?.() || '';
+      const originalMarkdown = rawContent || '';
+      
+      // Normaliser les deux pour comparaison (trim + normaliser newlines)
+      const normalize = (md: string) => md.trim().replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n');
+      
+      return normalize(editorMarkdown) !== normalize(originalMarkdown);
     },
     onBeforeNavigate: () => {
       // Cleanup avant navigation (optionnel)
@@ -317,11 +323,12 @@ const Editor: React.FC<{
         }}
       />
       
-      {/* ✅ EditorSyncManager SIMPLIFIÉ - Charge le contenu UNE FOIS seulement */}
+      {/* ✅ EditorSyncManager OPTIMISÉ - Recharge automatiquement quand noteId change */}
       <EditorSyncManager
         editor={editor}
         storeContent={rawContent}
         editorState={editorState}
+        noteId={noteId}
       />
       
       {/* 🔍 Realtime Status (dev only) */}
