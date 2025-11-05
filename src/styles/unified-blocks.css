@@ -81,9 +81,10 @@
 .unified-block-toolbar .toolbar-right { /* Added for chat CodeBlock */
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px; /* ✅ Augmenté de 4px à 6px pour éviter boutons coupés */
   flex-shrink: 0;
   margin-left: auto;
+  padding-right: 4px; /* ✅ Espace à droite pour éviter coupure */
 }
 
 .ProseMirror .u-block__toolbar .toolbar-label,
