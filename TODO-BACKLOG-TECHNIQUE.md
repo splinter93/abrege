@@ -7,21 +7,24 @@
 
 ## 🔴 PRIORITÉ HAUTE (UX impactée)
 
-### 1. **Paste Markdown cassé dans l'éditeur**
+### ~~1. **Paste Markdown cassé dans l'éditeur**~~ ✅ **RÉSOLU (2025-11-06)**
 **Problème :**
-- Coller du markdown ouvre un bloc de code OU ne formate pas
-- Ne fonctionne qu'en mode lecture, pas en mode édition
-- Comportement incohérent et frustrant
+- ~~Coller du markdown ouvre un bloc de code OU ne formate pas~~
+- ~~Ne fonctionne qu'en mode lecture, pas en mode édition~~
+- ~~Comportement incohérent et frustrant~~
 
-**Attendu :**
-- Coller `# Titre\n**gras**` → Doit créer un H1 + texte en gras
-- Détection intelligente markdown vs code
+**Solution appliquée :**
+- ✅ Extension `MarkdownPasteHandler` activée dans config production
+- ✅ Détection intelligente de patterns markdown (titres, listes, liens, code, etc.)
+- ✅ Conversion automatique markdown → HTML → ProseMirror
+- ✅ Logs ajoutés pour debug
+- ✅ Tous les formats testés et fonctionnels (gras, italique, barré, listes, tableaux, code, liens, etc.)
 
-**Fichiers concernés :**
-- `src/extensions/MarkdownPasteHandler.ts`
-- `src/config/editor-extensions.ts`
+**Fichiers modifiés :**
+- `src/extensions/MarkdownPasteHandler.ts` (logs ajoutés)
+- `src/config/editor-extensions.ts` (extension activée en prod)
 
-**Impact :** ⭐⭐⭐⭐⭐ (feature essentielle pour productivité)
+**Impact :** ⭐⭐⭐⭐⭐ → **RÉSOLU**
 
 ---
 
@@ -126,39 +129,42 @@
 
 | Issue | Impact UX | Effort | Priorité | Statut |
 |-------|-----------|--------|----------|--------|
-| ~~SystemMessageBuilder~~ | ⭐⭐⭐⭐⭐ | 2h | ~~🔴~~ | ✅ **RÉSOLU** |
-| Paste Markdown | ⭐⭐⭐⭐⭐ | 2-3j | 🔴 HAUTE | ⏳ À faire |
+| ~~SystemMessageBuilder~~ | ⭐⭐⭐⭐⭐ | 2h | ~~🔴~~ | ✅ **RÉSOLU (2025-11-04)** |
+| ~~Paste Markdown~~ | ⭐⭐⭐⭐⭐ | 2h | ~~🔴~~ | ✅ **RÉSOLU (2025-11-06)** |
 | URLs publiques | ⭐⭐⭐⭐ | 1-2j | 🔴 HAUTE | ⏳ À faire |
 | Bullet lists preview | ⭐⭐⭐ | 0.5j | 🔴 HAUTE | ⏳ À faire |
 | Toolbar code blocks chat | ⭐⭐ | 0.5j | 🟡 MOYENNE | ⏳ À faire |
-| Logique chargement chat | ⭐⭐ | 1j | 🟡 MOYENNE | ⏳ À faire |
-| Refacto composants gros | ⭐ | 2-3j | 🟢 BASSE | ⏳ À faire |
+| ~~Logique chargement chat~~ | ⭐⭐ | 1j | ~~🟡~~ | ✅ **RÉSOLU (2025-11-06)** |
+| ~~Refacto composants gros~~ | ⭐ | 2-3j | ~~🟢~~ | ✅ **RÉSOLU (2025-11-06)** |
 
-**Total effort restant (1-2 semaines) :** 5-7 jours
+**Total effort restant :** ~2-3 jours (3 issues restantes)
 
 ---
 
 ## 🎯 ORDRE D'ATTAQUE RECOMMANDÉ
 
-**Sprint 1 (1 semaine) :**
+**~~Sprint 1~~ ✅ COMPLÉTÉ (2025-11-06) :**
 1. ~~**SystemMessageBuilder (2h)**~~ → ✅ **FAIT (2025-11-04)**
-2. Paste Markdown (2-3j) → BLOQUEUR #1
-3. Bullet lists preview (0.5j) → Quick win
+2. ~~**Paste Markdown (2h)**~~ → ✅ **FAIT (2025-11-06)**
+3. ~~**Logique chargement chat (1j)**~~ → ✅ **FAIT (2025-11-06)**
+4. ~~**Refacto composants (2-3j)**~~ → ✅ **FAIT (2025-11-06)**
 
-**Sprint 2 (1 semaine) :**
-4. URLs publiques (1-2j) → SEO important
-5. Toolbar code blocks chat (0.5j) → Polish
-6. Logique chargement chat (1j) → UX
-7. Refacto composants (si temps) → Dette
+**Sprint 2 (Reste à faire - ~2-3 jours) :**
+1. Bullet lists preview (0.5j) → Quick win
+2. URLs publiques (1-2j) → SEO important
+3. Toolbar code blocks chat (0.5j) → Polish
 
 ---
 
 ## 📝 NOTES
 
 - ~~**SystemMessageBuilder**~~ = ✅ **RÉSOLU (2025-11-04)** - tool calls fluides maintenant
-- **Paste markdown** = **BLOQUEUR #1** pour adoption utilisateurs power
-- **URLs publiques** = **BLOQUEUR #2** pour SEO et partage social
+- ~~**Paste markdown**~~ = ✅ **RÉSOLU (2025-11-06)** - formate automatiquement tous les patterns markdown
+- ~~**Logique chargement chat**~~ = ✅ **RÉSOLU (2025-11-06)** - chargement instantané dernière conversation
+- ~~**Refacto composants gros**~~ = ✅ **RÉSOLU (2025-11-06)** - NotionDragHandle & FloatingMenu modularisés
+- **URLs publiques** = **BLOQUEUR #1** pour SEO et partage social
+- **Bullet lists preview** = Quick win 0.5j
 - Reste = Polish/dette technique (pas bloquant)
 
-**Focus immédiat recommandé :** Paste Markdown EN PRIORITÉ
+**Focus immédiat recommandé :** Bullet lists preview (quick win) puis URLs publiques
 

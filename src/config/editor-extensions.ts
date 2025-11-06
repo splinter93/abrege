@@ -25,6 +25,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import UnifiedCodeBlockExtension from '@/extensions/UnifiedCodeBlockExtension';
 import ContextMenuExtension from '@/extensions/ContextMenuExtension';
 import CalloutExtension from '@/extensions/CalloutExtension';
+import MarkdownPasteHandler from '@/extensions/MarkdownPasteHandler';
 // ⚠️ EXTENSIONS PROBLÉMATIQUES RETIRÉES (non liées aux drag handles):
 // - BoxSelectionExtension: Causait des problèmes de sélection
 // - SelectionExtension: Causait des problèmes de sélection
@@ -75,6 +76,11 @@ export function createEditorExtensions(
   if (!config.core && !config.advanced && !config.experimental) {
     logger.dev('[EditorExtensions] 🔧 Mode PROGRESSIF - Réactivation extensions essentielles');
     extensions.push(
+      // ✅ Markdown Paste Handler - DOIT être EN PREMIER (priorité handler paste)
+      MarkdownPasteHandler.configure({
+        preferPlainText: false,
+      }),
+      
       // StarterKit avec configuration optimale
       StarterKit.configure({
         // ✅ Essentiel
@@ -252,6 +258,10 @@ export function createEditorExtensions(
         // ✅ SAFE - Désactivé définitivement (causait espace → retour ligne)
         transformPastedText: false,
         transformCopiedText: false,
+      }),
+      // ✅ Markdown Paste Handler - Convertit markdown collé en mise en forme
+      MarkdownPasteHandler.configure({
+        preferPlainText: false,
       }),
       Placeholder.configure({
         placeholder: 'Écrivez quelque chose d\'incroyable...',

@@ -47,7 +47,12 @@ const MarkdownPasteHandler = Extension.create<Options>({
     };
   },
 
+  onCreate() {
+    logger.dev('[MarkdownPasteHandler] ✅ Extension créée et active !');
+  },
+
   addProseMirrorPlugins() {
+    logger.dev('[MarkdownPasteHandler] 🔌 addProseMirrorPlugins appelé');
     const key = new PluginKey('markdownPasteHandler');
 
     return [
@@ -55,6 +60,8 @@ const MarkdownPasteHandler = Extension.create<Options>({
         key,
         props: {
           handlePaste: (view, event) => {
+            logger.dev('[MarkdownPasteHandler] 🚨 PASTE EVENT INTERCEPTÉ !');
+
             const data = (event as ClipboardEvent).clipboardData;
             if (!data) return false;
 
@@ -64,14 +71,23 @@ const MarkdownPasteHandler = Extension.create<Options>({
               data.getData('text/x-markdown') ||
               data.getData('text/plain');
 
+            logger.dev('[MarkdownPasteHandler] 📋 Paste détecté:', {
+              length: mdText.length,
+              preview: mdText.substring(0, 100)
+            });
+
             const hasMarkdown = looksLikeMarkdown(mdText);
+            logger.dev('[MarkdownPasteHandler] 🔍 Markdown détecté ?', hasMarkdown);
 
             // Si c'est du Markdown → on convertit via markdown-it, on parse en PM Slice, et on remplace la sélection.
             if (hasMarkdown) {
+              logger.dev('[MarkdownPasteHandler] ✅ Conversion markdown → HTML...');
               event.preventDefault();
               try {
                 const md = this.options.markdownIt ?? createMarkdownIt();
                 const html = md.render(mdText.trim());
+
+                logger.dev('[MarkdownPasteHandler] 📝 HTML généré:', html.substring(0, 200));
 
                 const wrap = document.createElement('div');
                 wrap.innerHTML = html;
@@ -81,8 +97,12 @@ const MarkdownPasteHandler = Extension.create<Options>({
                 // parseSlice → évite de recréer un doc complet, parfait pour remplacer la sélection
                 const slice = parser.parseSlice(wrap);
 
+                logger.dev('[MarkdownPasteHandler] 🎯 ProseMirror slice créé, insertion...');
+
                 const tr = view.state.tr.replaceSelection(slice).scrollIntoView();
                 view.dispatch(tr);
+                
+                logger.dev('[MarkdownPasteHandler] ✅ Markdown collé et formaté !');
                 return true;
               } catch (err) {
                 logger.error('[MarkdownPasteHandler] convert error:', err);
