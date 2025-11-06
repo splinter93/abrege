@@ -139,10 +139,16 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
           </div>
         </div>
 
-        {/* Section lien public */}
-        {(visibility === 'link-public' || visibility === 'link-private') && publicUrl && (
+        {/* Section lien public - Afficher TOUJOURS si publicUrl existe */}
+        {publicUrl && (
           <div className="share-menu-section">
             <h4>🔗 Lien de partage</h4>
+            {visibility === 'private' && (
+              <div className="seo-warning" style={{ marginBottom: '8px', background: 'rgba(255,107,53,0.1)', borderColor: '#ff6b35' }}>
+                <FiLock size={16} />
+                <span>Lien inactif tant que la note est privée</span>
+              </div>
+            )}
             <div className="link-section">
               <div className="link-input-group">
                 <input

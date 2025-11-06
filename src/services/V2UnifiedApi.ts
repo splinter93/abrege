@@ -328,6 +328,13 @@ export class V2UnifiedApi {
         throw new Error(result.error || 'Erreur lors de la mise à jour de la note');
       }
 
+      // ✅ CRITIQUE: Synchroniser le store avec la réponse serveur (source de vérité)
+      // Ceci prévient les problèmes de désynchronisation (ex: share_settings qui reviennent à l'ancien état)
+      if (result.note) {
+        logger.debug(LogCategory.API, '[V2UnifiedApi] Synchronisation store avec réponse serveur');
+        store.updateNote(cleanNoteId, result.note);
+      }
+
       // 🎯 Le polling ciblé est maintenant géré par le système ciblé
 
       const duration = Date.now() - startTime;

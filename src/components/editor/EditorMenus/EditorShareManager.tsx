@@ -154,6 +154,23 @@ export function useShareManager({
         try {
           responseData = JSON.parse(responseText);
           logger.info(LogCategory.EDITOR, 'Données de réponse:', responseData);
+          
+          // ✅ CRITIQUE: Mettre à jour public_url dans le store si retourné par l'API
+          if (responseData.public_url) {
+            logger.info(LogCategory.EDITOR, 'Mise à jour public_url dans le store:', responseData.public_url);
+            onUpdate(noteId, { 
+              public_url: responseData.public_url 
+            });
+          }
+          
+          // ✅ CRITIQUE: Mettre à jour share_settings avec la réponse serveur (source de vérité)
+          if (responseData.share_settings) {
+            logger.info(LogCategory.EDITOR, 'Mise à jour share_settings depuis serveur:', responseData.share_settings);
+            editorState.setShareSettings(responseData.share_settings);
+            onUpdate(noteId, { 
+              share_settings: responseData.share_settings 
+            });
+          }
         } catch (parseError) {
           logger.error(LogCategory.EDITOR, 'Réponse non-JSON reçue:', responseText);
           responseData = { message: responseText };
