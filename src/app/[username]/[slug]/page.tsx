@@ -26,14 +26,23 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
     .maybeSingle();
   if (!user) return { title: 'Note introuvable – Scrivia' };
 
-  // Chercher la note par slug et user_id (même si privée - pour le titre de la page)
-  const { data: note } = await supabaseService
+  // ✅ Détecter si [slug] est un UUID ou un slug
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+
+  // Chercher la note par slug ou id selon le format
+  let noteQuery = supabaseService
     .from('articles')
     .select('source_title, markdown_content, header_image')
-    .eq('slug', slug)
     .eq('user_id', user.id)
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
+
+  if (isUUID) {
+    noteQuery = noteQuery.eq('id', slug);
+  } else {
+    noteQuery = noteQuery.eq('slug', slug);
+  }
+
+  const { data: note } = await noteQuery.maybeSingle();
   if (!note) return { title: 'Note introuvable – Scrivia' };
   
   const title = note.source_title + ' – Scrivia';
@@ -61,7 +70,6 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
 export default async function Page(props: { params: Promise<{ username: string; slug: string }> }) {
   const { username, slug } = await props.params;
 
-
   // Décoder l'username (retirer le @ et décoder l'URL)
   const decodedUsername = decodeURIComponent(username).replace(/^@/, '');
 
@@ -85,18 +93,28 @@ export default async function Page(props: { params: Promise<{ username: string; 
     );
   }
 
+  // ✅ NOUVEAU : Détecter si [slug] est un UUID (URL permanente) ou un slug (URL SEO)
+  // UUID format: 8-4-4-4-12 caractères hexadécimaux
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
 
   // Récupérer la note (minimaliste - l'Editor chargera les détails via le store)
   // Utiliser le client service pour contourner RLS
-  const { data: noteBySlug, error: noteError } = await supabaseService
+  let noteQuery = supabaseService
     .from('articles')
     .select('id, user_id, share_settings, slug')
-    .eq('slug', slug)
     .eq('user_id', owner.id)
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
 
-  if (noteError || !noteBySlug) {
+  // Chercher par ID si UUID, sinon par slug
+  if (isUUID) {
+    noteQuery = noteQuery.eq('id', slug);
+  } else {
+    noteQuery = noteQuery.eq('slug', slug);
+  }
+
+  const { data: note, error: noteError } = await noteQuery.maybeSingle();
+
+  if (noteError || !note) {
     return (
       <ErrorPage
         icon="document"
@@ -108,8 +126,9 @@ export default async function Page(props: { params: Promise<{ username: string; 
     );
   }
 
-  // ✅ SÉCURITÉ : Vérification supplémentaire du slug
-  if (noteBySlug.slug !== slug) {
+  // ✅ SÉCURITÉ : Vérification supplémentaire
+  // Si recherche par slug, vérifier que le slug correspond
+  if (!isUUID && note.slug !== slug) {
     return (
       <ErrorPage
         icon="warning"
@@ -121,7 +140,6 @@ export default async function Page(props: { params: Promise<{ username: string; 
     );
   }
 
-
   // Utiliser le composant client pour gérer l'authentification
-  return <PublicNoteAuthWrapper note={noteBySlug} slug={slug} ownerId={owner.id} username={decodedUsername} />;
+  return <PublicNoteAuthWrapper note={note} slug={slug} ownerId={owner.id} username={decodedUsername} />;
 } 

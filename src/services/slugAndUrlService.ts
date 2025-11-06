@@ -45,8 +45,9 @@ export class SlugAndUrlService {
       }
 
       // 3. Construire l'URL publique PERMANENTE avec ID (robuste aux changements de titre)
-      // Format: @username/id/noteId → redirige vers @username/slug (SEO preserved)
-      const publicUrl = noteId ? `${apiBaseUrl}/@${user.username}/id/${noteId}` : null;
+      // Format: @username/[uuid] → URL permanente (fonctionne même si slug change)
+      // La même route gère aussi @username/[slug] pour le SEO
+      const publicUrl = noteId ? `${apiBaseUrl}/@${user.username}/${noteId}` : null;
 
       // 4. Si on a un noteId, mettre à jour la base de données
       if (noteId) {
@@ -174,7 +175,8 @@ export class SlugAndUrlService {
       throw new Error(`Impossible de récupérer le username pour l'utilisateur ${userId}`);
     }
 
-    return `${apiBaseUrl}/@${user.username}/id/${noteId}`;
+    // ✅ Format simplifié : @username/[uuid] (sans /id/)
+    return `${apiBaseUrl}/@${user.username}/${noteId}`;
   }
 
   /**
