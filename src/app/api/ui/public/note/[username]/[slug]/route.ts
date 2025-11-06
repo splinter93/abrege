@@ -102,30 +102,49 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     // Si pas d'Authorization header, essayer avec les cookies Supabase
     if (!isCreator) {
       try {
+        logger.dev(LogCategory.API, '[PublicNote] 🍪 Tentative auth par cookie...');
+        
         // Récupérer tous les cookies
         const cookies = req.headers.get('cookie');
         if (cookies) {
+          logger.dev(LogCategory.API, '[PublicNote] 🍪 Cookies trouvés');
+          
           // Chercher le token d'accès Supabase dans les cookies
           const accessTokenMatch = cookies.match(/sb-[^-]+-auth-token=([^;]+)/);
           if (accessTokenMatch) {
-            const cookieValue = decodeURIComponent(accessTokenMatch[1]);
-            const cookieData = JSON.parse(cookieValue);
-            const token = cookieData.access_token;
+            logger.dev(LogCategory.API, '[PublicNote] 🍪 Token Supabase trouvé dans cookie');
             
-            if (token) {
-              const { data: { user: authUser }, error: authError } = await supabaseService.auth.getUser(token);
-              if (!authError && authUser && authUser.id === user.id) {
-                isCreator = true;
+            try {
+              const cookieValue = decodeURIComponent(accessTokenMatch[1]);
+              const cookieData = JSON.parse(cookieValue);
+              const token = cookieData.access_token;
+              
+              if (token) {
+                logger.dev(LogCategory.API, '[PublicNote] 🍪 access_token extrait du cookie');
+                const { data: { user: authUser }, error: authError } = await supabaseService.auth.getUser(token);
+                if (!authError && authUser && authUser.id === user.id) {
+                  isCreator = true;
+                  logger.info(LogCategory.API, '[PublicNote] ✅ Créateur détecté via cookie');
+                }
               }
+            } catch (parseError) {
+              logger.warn(LogCategory.API, '[PublicNote] ⚠️ Erreur parsing cookie JSON', {
+                error: parseError instanceof Error ? parseError.message : String(parseError)
+              });
             }
+          } else {
+            logger.dev(LogCategory.API, '[PublicNote] 🍪 Pas de token Supabase dans cookies');
           }
+        } else {
+          logger.dev(LogCategory.API, '[PublicNote] 🍪 Pas de cookies');
         }
       } catch (error) {
         // Ignorer les erreurs d'authentification, on continue sans être connecté
         logger.warn(LogCategory.API, '[PublicNote] Erreur auth cookie (non bloquante)', {
           username,
           slug,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
         });
       }
     }
