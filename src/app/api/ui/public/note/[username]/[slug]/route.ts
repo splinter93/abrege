@@ -154,9 +154,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       logger.info(LogCategory.API, '[PublicNote] ✅ Créateur : accès complet (y compris privées)');
     }
 
-    const { data: note, error: noteError } = await noteQuery
-      .limit(1)
-      .maybeSingle();
+    logger.dev(LogCategory.API, '[PublicNote] 🔄 Exécution query DB...');
+    
+    let note, noteError;
+    try {
+      const result = await noteQuery.limit(1).maybeSingle();
+      note = result.data;
+      noteError = result.error;
+      
+      logger.dev(LogCategory.API, '[PublicNote] ✅ Query DB terminée:', {
+        hasData: !!note,
+        hasError: !!noteError
+      });
+    } catch (dbErr) {
+      logger.error(LogCategory.API, '[PublicNote] ❌ Exception durant query DB:', {
+        error: dbErr instanceof Error ? dbErr.message : String(dbErr),
+        stack: dbErr instanceof Error ? dbErr.stack : undefined
+      });
+      throw dbErr; // Re-throw pour le catch global
+    }
     
     logger.dev(LogCategory.API, '[PublicNote] 📥 Résultat query:', {
       found: !!note,
@@ -188,9 +204,39 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       return new Response(JSON.stringify({ error: 'Note non trouvée ou non publiée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
 
+    logger.info(LogCategory.API, '[PublicNote] ✅ Note trouvée et retournée', {
+      username,
+      slug,
+      noteId: note.id,
+      visibility: note.share_settings?.visibility
+    });
+
     return new Response(JSON.stringify({ note }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err: unknown) {
     const error = err as Error;
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
+    
+    logger.error(LogCategory.API, '[PublicNote] ❌ ERREUR FATALE (catch global):', {
+      username,
+      slug,
+      error: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
+    // Log dans console aussi pour Vercel
+    console.error('[PublicNote] ERREUR 500:', {
+      username,
+      slug,
+      message: error.message,
+      stack: error.stack
+    });
+    
+    return new Response(
+      JSON.stringify({ 
+        error: 'Erreur interne du serveur',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      }), 
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 } 
