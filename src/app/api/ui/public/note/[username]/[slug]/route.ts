@@ -20,12 +20,20 @@ const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
  * Réponse : { note: { source_title, html_content, header_image, created_at, updated_at } }
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ username: string; slug: string }> }): Promise<Response> {
+  let username = '';
+  let slug = '';
+  
   try {
     const schema = z.object({
       username: z.string().min(1, 'username requis'),
       slug: z.string().min(1, 'slug requis'),
     });
-    const { username, slug } = await params;
+    const resolvedParams = await params;
+    username = resolvedParams.username;
+    slug = resolvedParams.slug;
+    
+    logger.dev(LogCategory.API, '[PublicNote] 🚀 Début requête:', { username, slug });
+    
     const parseResult = schema.safeParse({ username, slug });
     if (!parseResult.success) {
       return new Response(
