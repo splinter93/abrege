@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     username = resolvedParams.username;
     slug = resolvedParams.slug;
     
-    logger.dev(LogCategory.API, '[PublicNote] 🚀 Début requête:', { username, slug });
+    logger.debug(LogCategory.API, '[PublicNote] 🚀 Début requête:', { username, slug });
     
     const parseResult = schema.safeParse({ username, slug });
     if (!parseResult.success) {
