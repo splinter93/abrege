@@ -47,6 +47,7 @@ import type { Editor as TiptapEditor } from '@tiptap/react';
 // ✅ NOUVEAUX IMPORTS - Sidebar Navigation
 import EditorSidebar from './EditorSidebar';
 import { useEditorNavigation } from '@/hooks/useEditorNavigation';
+import { EmbedDepthProvider } from '@/contexts/EmbedDepthContext';
 
 /**
  * Nettoie les SVG Mermaid orphelins du DOM
@@ -127,6 +128,14 @@ const Editor: React.FC<{
 
   // ✅ Sidebar Navigation - Pattern chat (hover zone + transform)
   const [sidebarVisible, setSidebarVisible] = React.useState(false);
+  
+  // ✅ FIX React 18: Ne render l'éditeur que quand le contenu initial est chargé
+  const [isContentReady, setIsContentReady] = React.useState(false);
+  
+  // Reset isContentReady quand noteId change
+  React.useEffect(() => {
+    setIsContentReady(false);
+  }, [noteId]);
 
   // Mode readonly (pages publiques ou preview mode)
   const isReadonly = readonly || editorState.ui.previewMode;
@@ -185,13 +194,15 @@ const Editor: React.FC<{
   });
 
   // Real Tiptap editor instance
+  // ✅ FIX React 18: Ne pas passer le contenu initial pour éviter création synchrone des NodeViews
+  // Le contenu sera chargé par EditorSyncManager dans queueMicrotask
   const editor = useEditor({
     editable: !isReadonly,
     immediatelyRender: false,
     extensions: createEditorExtensions(PRODUCTION_EXTENSIONS_CONFIG, lowlight),
-    content: rawContent || '',
+    content: '', // ✅ Vide au départ, EditorSyncManager chargera le contenu
     onUpdate: handlers.handleEditorUpdate,
-  });
+  }); // ✅ SANS dépendance - EditorSyncManager gère le rechargement si noteId change
 
   // ✅ REFACTO: Mettre à jour le handler avec l'instance editor réelle
   const handlersWithEditor = useEditorHandlers({
@@ -264,7 +275,7 @@ const Editor: React.FC<{
   }
 
   return (
-    <>
+    <EmbedDepthProvider>
       {/* ✅ Sidebar Navigation - Pattern chat exact */}
       {!isReadonly && (
         <>
@@ -326,6 +337,7 @@ const Editor: React.FC<{
             noteContent={rawContent}
             noteSlug={note?.slug}
             classeurId={note?.classeur_id}
+            isContentReady={isContentReady}
           />
         )}
       />
@@ -354,6 +366,7 @@ const Editor: React.FC<{
         storeContent={rawContent}
         editorState={editorState}
         noteId={noteId}
+        onInitialContentLoaded={() => setIsContentReady(true)}
       />
       
       {/* 🔍 Realtime Status (dev only) */}
@@ -364,7 +377,7 @@ const Editor: React.FC<{
       {/* Bouton "Crafted with Scrivia" - visible en mode preview */}
       {editorState.ui.previewMode && <CraftedButton />}
       
-    </>
+    </EmbedDepthProvider>
   );
 };
 

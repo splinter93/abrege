@@ -10,7 +10,12 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   trailingSlash: false,
-  serverExternalPackages: ['@supabase/supabase-js'],
+  serverExternalPackages: [
+    '@supabase/supabase-js',
+    'markdown-it',
+    'markdown-it-anchor',
+    'markdown-it-task-lists'
+  ],
   webpack: (config: any, options: any) => {
     // Resolve '@' to the 'src' directory
     config.resolve.alias = {
@@ -21,7 +26,12 @@ const nextConfig = {
     // Optimize for production builds
     if (options.isServer) {
       config.externals = config.externals || [];
-      config.externals.push('@supabase/supabase-js');
+      config.externals.push(
+        '@supabase/supabase-js',
+        'markdown-it',
+        'markdown-it-anchor',
+        'markdown-it-task-lists'
+      );
     }
     
     return config;

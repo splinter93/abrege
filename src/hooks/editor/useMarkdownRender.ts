@@ -1,5 +1,4 @@
-import { useMemo, useRef } from 'react';
-import { createMarkdownIt } from '@/utils/markdownItConfig';
+import { useMemo, useRef, useEffect, useState } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import type MarkdownIt from 'markdown-it';
 
@@ -83,25 +82,47 @@ function cleanMarkdownContent(content: string): string {
 /**
  * Hook de rendu Markdown optimisé
  * Gestion améliorée des tableaux et performance optimisée
+ * ✅ FIX: Import dynamique de markdown-it pour éviter erreurs SSR Next.js
  */
 export const useMarkdownRender = ({
   content,
 }: UseMarkdownRenderProps): UseMarkdownRenderReturn => {
-  const mdRef = useRef<ReturnType<typeof createMarkdownIt> | null>(null);
+  const mdRef = useRef<MarkdownIt | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
-  // Initialisation paresseuse de markdown-it
-  if (!mdRef.current) {
-    mdRef.current = createMarkdownIt();
-  }
+  // ✅ Initialisation dynamique de markdown-it côté client uniquement
+  useEffect(() => {
+    if (typeof window === 'undefined') return; // Skip SSR
+    
+    if (!mdRef.current) {
+      import('@/utils/markdownItConfig')
+        .then(({ createMarkdownIt }) => {
+          mdRef.current = createMarkdownIt();
+          setIsReady(true);
+        })
+        .catch((error) => {
+          logger.error('[useMarkdownRender] Erreur chargement markdown-it:', error);
+          setIsReady(true); // Set ready anyway pour afficher le fallback
+        });
+    }
+  }, []);
 
   // Rendu optimisé avec useMemo
   const { html, isRendering } = useMemo(() => {
+    // Si markdown-it n'est pas encore chargé, retourner loading state
+    if (!isReady || !mdRef.current) {
+      return {
+        html: '<div class="markdown-loading">Chargement...</div>',
+        isRendering: true
+      };
+    }
+
     try {
       // Nettoyer le contenu
       const cleanedContent = cleanMarkdownContent(content);
       
       // Rendu avec markdown-it
-      const rendered = mdRef.current!.render(cleanedContent);
+      const rendered = mdRef.current.render(cleanedContent);
       
       return {
         html: rendered,
@@ -116,7 +137,7 @@ export const useMarkdownRender = ({
         isRendering: false
       };
     }
-  }, [content]);
+  }, [content, isReady]);
 
   return {
     html,

@@ -29,8 +29,15 @@ const ContextMenuExtension = Extension.create({
               
               const { state } = view;
               const $pos = state.doc.resolve(pos.pos);
-              const node = $pos.parent;
-              const nodeType = node.type.name;
+              
+              // ✅ Chercher le node le plus spécifique (nodeAfter ou parent)
+              let node = $pos.nodeAfter || $pos.parent;
+              let nodeType = node.type.name;
+              
+              // ✅ Si on clique dans un noteEmbed, utiliser son type
+              if ($pos.nodeAfter && $pos.nodeAfter.type.name === 'noteEmbed') {
+                nodeType = 'noteEmbed';
+              }
               
               // Vérifier s'il y a une sélection
               const hasSelection = !state.selection.empty;

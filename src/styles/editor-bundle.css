@@ -33,6 +33,7 @@
 
 /* === AUTRES EXTENSIONS === */
 @import './mermaid.css';
+@import './note-embed.css';
 
 /* === STYLES MARKDOWN ÉDITEUR === */
 @import './editor-markdown.css';

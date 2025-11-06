@@ -7,8 +7,9 @@ import React from 'react';
 import type { FullEditorInstance } from '@/types/editor';
 import type { EditorState } from '@/hooks/editor/useEditorState';
 import { TIMEOUTS } from '@/utils/editorConstants';
-import { logger, LogCategory } from '@/utils/logger';
+import { simpleLogger as logger } from '@/utils/logger';
 import { hashString, getEditorMarkdown } from '@/utils/editorHelpers';
+import { preprocessEmbeds } from '@/utils/preprocessEmbeds';
 
 export interface EditorSyncManagerProps {
   /** Instance de l'éditeur Tiptap */
@@ -22,6 +23,9 @@ export interface EditorSyncManagerProps {
   
   /** ID de la note (pour détecter changement de note) */
   noteId: string;
+  
+  /** Callback quand le contenu initial est chargé */
+  onInitialContentLoaded?: () => void;
 }
 
 /**
@@ -57,48 +61,47 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
   storeContent,
   editorState,
   noteId,
+  onInitialContentLoaded,
 }) => {
-  // 🔧 FIX: Ref pour tracker le chargement initial
+  // 🔧 FIX: Ref pour tracker le chargement initial - TOUJOURS démarrer à false
   const hasLoadedInitialContentRef = React.useRef(false);
   const lastStoreSyncRef = React.useRef<string>('');
-  const lastNoteIdRef = React.useRef<string>(noteId);
+  const lastNoteIdRef = React.useRef<string>('');
   
-  // ✅ OPTIMISATION: Reset flag quand noteId change (navigation entre notes)
-  React.useEffect(() => {
-    if (noteId !== lastNoteIdRef.current) {
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, '🔄 Changement de note détecté, reset sync manager', {
-          from: lastNoteIdRef.current,
-          to: noteId
-        });
-      }
-      
-      // Reset le flag pour permettre le chargement de la nouvelle note
-      hasLoadedInitialContentRef.current = false;
-      lastNoteIdRef.current = noteId;
-    }
-  }, [noteId]);
+  // ✅ CRITIQUE: Reset au premier mount si noteId change
+  if (lastNoteIdRef.current !== noteId) {
+    hasLoadedInitialContentRef.current = false;
+    lastNoteIdRef.current = noteId;
+  }
   
   // 🔄 Charger le contenu initial (ou le recharger si noteId a changé)
   React.useEffect(() => {
-    if (!editor || !storeContent || hasLoadedInitialContentRef.current) return;
+    // ✅ FIX: Attendre que l'éditeur ET le contenu soient prêts
+    // Ne pas charger si le contenu est vide (la note n'est pas encore fetch depuis la DB)
+    if (!editor || hasLoadedInitialContentRef.current || !storeContent) return;
     
-    // Charger le contenu initial
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug(LogCategory.EDITOR, '📥 Chargement initial du contenu depuis le store');
-    }
     editorState.setIsUpdatingFromStore(true);
-    editor.commands.setContent(storeContent);
-    hasLoadedInitialContentRef.current = true;
-    lastStoreSyncRef.current = normalizeMarkdown(storeContent);
     
+    // ✅ FIX React 18: Utiliser setTimeout au lieu de queueMicrotask pour plus de sécurité
+    // Garantit que le setContent est complètement hors du cycle de render React
     setTimeout(() => {
-      editorState.setIsUpdatingFromStore(false);
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, '✅ Contenu initial chargé');
-      }
-    }, 100);
-  }, [editor, storeContent, editorState]);
+      if (!editor) return;
+      
+      // ✅ Preprocesser {{embed:xyz}} → HTML pour que Tiptap puisse créer les nodes
+      // Le serializer addStorage() reconvertira en {{embed:xyz}} à la sauvegarde
+      const processedContent = preprocessEmbeds(storeContent);
+      editor.commands.setContent(processedContent);
+      
+      hasLoadedInitialContentRef.current = true;
+      lastStoreSyncRef.current = normalizeMarkdown(storeContent);
+      
+      // Appeler onInitialContentLoaded après un court délai pour s'assurer que tout est stable
+      setTimeout(() => {
+        editorState.setIsUpdatingFromStore(false);
+        onInitialContentLoaded?.();
+      }, 50);
+    }, 0);
+  }, [editor, storeContent, editorState, onInitialContentLoaded]);
 
   // ⚠️ DÉSACTIVÉ : Sync realtime causait bugs (effacement caractères, retours auto)
   // En mode édition, pas de sync du store → éditeur

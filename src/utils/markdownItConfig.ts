@@ -3,6 +3,7 @@ import markdownItGithubTables from './markdownItGithubTables';
 import markdownItTaskLists from 'markdown-it-task-lists';
 import anchor from 'markdown-it-anchor';
 import { slugify } from './markdownTOC';
+import { markdownItNoteEmbed } from '@/extensions/markdown-it-note-embed';
 // import { markdownItCallouts } from './markdownItCallouts'; // ⚠️ DÉSACTIVÉ: Casse le parsing markdown
 
 // Configuration markdown-it avec support GFM (tables) via plugin local
@@ -46,6 +47,9 @@ export function createMarkdownIt() {
     level: [1,2,3,4,5,6],
     permalink: false // pas de lien, juste l'id
   });
+  
+  // ✅ Plugin custom pour parser les note embeds {{embed:noteRef|title}}
+  md.use(markdownItNoteEmbed);
   
   // Custom renderer pour forcer les bullets sur les listes normales
   md.renderer.rules.bullet_list_open = function(tokens, idx) {

@@ -141,6 +141,11 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
       icon: <FiMinus size={16} />
     });
 
+    // ✅ Pour les note embeds, pas d'actions de transformation (nodes spéciaux)
+    if (nodeType === 'noteEmbed') {
+      return baseActions; // Seulement dupliquer et supprimer
+    }
+
     return [...baseActions, ...transformActions];
   }, [nodeType]);
 

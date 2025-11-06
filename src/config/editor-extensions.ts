@@ -26,6 +26,9 @@ import UnifiedCodeBlockExtension from '@/extensions/UnifiedCodeBlockExtension';
 import ContextMenuExtension from '@/extensions/ContextMenuExtension';
 import CalloutExtension from '@/extensions/CalloutExtension';
 import MarkdownPasteHandler from '@/extensions/MarkdownPasteHandler';
+import NoteEmbedExtension from '@/extensions/NoteEmbedExtension';
+import { markdownItNoteEmbed } from '@/extensions/markdown-it-note-embed';
+
 // ⚠️ EXTENSIONS PROBLÉMATIQUES RETIRÉES (non liées aux drag handles):
 // - BoxSelectionExtension: Causait des problèmes de sélection
 // - SelectionExtension: Causait des problèmes de sélection
@@ -76,7 +79,12 @@ export function createEditorExtensions(
   if (!config.core && !config.advanced && !config.experimental) {
     logger.dev('[EditorExtensions] 🔧 Mode PROGRESSIF - Réactivation extensions essentielles');
     extensions.push(
-      // ✅ Markdown Paste Handler - DOIT être EN PREMIER (priorité handler paste)
+      // ✅ Note Embed - PRIORITÉ 1 (doit intercepter URLs Scrivia avant MarkdownPasteHandler)
+      NoteEmbedExtension.configure({
+        maxDepth: 3
+      }),
+      
+      // ✅ Markdown Paste Handler - PRIORITÉ 2
       MarkdownPasteHandler.configure({
         preferPlainText: false,
       }),
@@ -172,10 +180,12 @@ export function createEditorExtensions(
       // ✅ Markdown RÉACTIVÉE en mode SAFE
       // CRITIQUE : transformPastedText et transformCopiedText DOIVENT rester false
       Markdown.configure({ 
-        html: false,
-        breaks: true, // ✅ TEST - Convertir retours simples en <br> (comme markdown-it)
+        html: true, // ✅ Nécessaire pour parser le HTML généré par preprocessEmbeds()
+        breaks: true, // ✅ Convertir retours simples en <br>
         transformPastedText: false,   // ✅ SAFE - Ne transforme PAS automatiquement
         transformCopiedText: false,   // ✅ SAFE - Ne transforme PAS automatiquement
+        // ✅ Plugin markdown-it custom pour parser {{embed:noteRef}}
+        extensions: [markdownItNoteEmbed],
       }),
       
       // ✅ Extensions avancées réactivées
@@ -202,6 +212,16 @@ export function createEditorExtensions(
   // Extensions de base (toujours activées)
   if (config.core) {
     extensions.push(
+      // ✅ Note Embed - PRIORITÉ 1 (intercepter URLs Scrivia en premier)
+      NoteEmbedExtension.configure({
+        maxDepth: 3
+      }),
+      
+      // ✅ Markdown Paste Handler - PRIORITÉ 2
+      MarkdownPasteHandler.configure({
+        preferPlainText: false,
+      }),
+      
       StarterKit.configure({ 
         // Configuration minimale pour éviter les conflits
         codeBlock: false, // Désactiver - on utilise UnifiedCodeBlockExtension
@@ -253,15 +273,13 @@ export function createEditorExtensions(
       }),
       CustomImage.configure({ inline: false }),
       Markdown.configure({ 
-        html: false,
-        breaks: true, // ✅ TEST - Convertir retours simples en <br> (comme markdown-it)
+        html: true, // ✅ Nécessaire pour parser le HTML généré par preprocessEmbeds()
+        breaks: true, // ✅ Convertir retours simples en <br>
         // ✅ SAFE - Désactivé définitivement (causait espace → retour ligne)
         transformPastedText: false,
         transformCopiedText: false,
-      }),
-      // ✅ Markdown Paste Handler - Convertit markdown collé en mise en forme
-      MarkdownPasteHandler.configure({
-        preferPlainText: false,
+        // ✅ Plugin markdown-it custom pour parser {{embed:noteRef}}
+        extensions: [markdownItNoteEmbed],
       }),
       Placeholder.configure({
         placeholder: 'Écrivez quelque chose d\'incroyable...',
@@ -290,6 +308,7 @@ export function createEditorExtensions(
     extensions.push(
       ContextMenuExtension,
       CalloutExtension
+      // NOTE: NoteEmbedExtension est déjà ajouté en PRIORITÉ 1 dans config.core
     );
   }
 

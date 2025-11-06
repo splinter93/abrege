@@ -10,15 +10,16 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { ref: string } }
+  { params }: { params: Promise<{ ref: string }> }
 ): Promise<NextResponse> {
   const startTime = Date.now();
+  const { ref } = await params;
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
   const context = {
     operation: 'v2_note_get',
     component: 'API_V2',
     clientType,
-    ref: params.ref
+    ref
   };
 
   logApi.info('🚀 Début récupération note v2', context);
@@ -34,7 +35,7 @@ export async function GET(
   }
 
   const userId = authResult.userId!;
-  const noteRef = params.ref;
+  const noteRef = ref;
 
   // Récupérer le paramètre fields pour déterminer ce qui doit être retourné
   const { searchParams } = new URL(request.url);

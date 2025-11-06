@@ -46,10 +46,30 @@ export const EditorContextMenuContainer: React.FC<EditorContextMenuContainerProp
       switch (action) {
         case 'duplicate':
           // Dupliquer le bloc actuel
-          const { state } = editor.view;
-          const { from, to } = state.selection;
-          const selectedContent = state.doc.slice(from, to);
-          editor.chain().focus().insertContent(selectedContent.content).run();
+          const pos = editorState.contextMenu.nodePosition;
+          const nodeType = editorState.contextMenu.nodeType;
+          
+          try {
+            const { state } = editor;
+            const $pos = state.doc.resolve(pos);
+            
+            // ✅ Pour les nodes atomiques (noteEmbed, image), dupliquer le node directement
+            if (nodeType === 'noteEmbed' || nodeType === 'image') {
+              const node = $pos.nodeAfter;
+              if (node) {
+                const insertPos = pos + node.nodeSize;
+                editor.chain().focus().insertContentAt(insertPos, node.toJSON()).run();
+                break;
+              }
+            }
+            
+            // Pour les autres, dupliquer la sélection
+            const { from, to } = state.selection;
+            const selectedContent = state.doc.slice(from, to);
+            editor.chain().focus().insertContent(selectedContent.content).run();
+          } catch (err) {
+            logger.error(LogCategory.EDITOR, 'Erreur duplication:', err);
+          }
           break;
 
         case 'delete':
@@ -59,13 +79,28 @@ export const EditorContextMenuContainer: React.FC<EditorContextMenuContainerProp
           } else {
             // Supprimer le nœud à la position du curseur
             const pos = editorState.contextMenu.nodePosition;
+            const nodeType = editorState.contextMenu.nodeType;
+            
             try {
               const { state } = editor;
               const $pos = state.doc.resolve(pos);
+              
+              // ✅ Pour les nodes atomiques (noteEmbed, image), chercher nodeAfter
+              if (nodeType === 'noteEmbed' || nodeType === 'image') {
+                const node = $pos.nodeAfter;
+                if (node) {
+                  const from = pos;
+                  const to = pos + node.nodeSize;
+                  editor.chain().focus().deleteRange({ from, to }).run();
+                  break;
+                }
+              }
+              
+              // Pour les autres nodes, utiliser l'ancienne logique
               const node = $pos.node();
               
-              // Pour les images et nœuds simples, supprimer le nœud directement
-              if (node && (node.type.name === 'image' || node.isLeaf)) {
+              // Pour les nœuds simples, supprimer le nœud directement
+              if (node && node.isLeaf) {
                 const from = pos;
                 const to = pos + node.nodeSize;
                 editor.chain().focus().deleteRange({ from, to }).run();

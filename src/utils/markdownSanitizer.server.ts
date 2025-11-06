@@ -44,7 +44,7 @@ export function sanitizeMarkdownContent(content: string): string {
   // ⚠️ HTML/caractères dangereux détectés → échapper automatiquement
   logApi.warn('⚠️ [SANITIZER] HTML brut détecté dans markdown_content, échappement automatique appliqué');
   
-  // 🔒 ÉTAPE 1: Protéger les blocs de code ET les blockquotes markdown
+  // 🔒 ÉTAPE 1: Protéger les blocs de code ET les blockquotes markdown ET les embeds
   // Ces éléments markdown ne sont jamais exécutés comme du HTML
   const protectedBlocks: string[] = [];
   const placeholder = '___PROTECTED_BLOCK_';
@@ -66,6 +66,14 @@ export function sanitizeMarkdownContent(content: string): string {
   // Extraire les blockquotes markdown (lignes commençant par >)
   // Protège les > en début de ligne qui sont des marqueurs de quote markdown
   processed = processed.replace(/(^>.*$)/gm, (match) => {
+    const index = protectedBlocks.length;
+    protectedBlocks.push(match);
+    return `${placeholder}${index}___`;
+  });
+  
+  // ✅ NOUVEAU: Protéger la syntaxe des embeds {{embed:...}}
+  // Cette syntaxe markdown custom ne doit JAMAIS être échappée
+  processed = processed.replace(/(\{\{embed:[^}]+\}\})/g, (match) => {
     const index = protectedBlocks.length;
     protectedBlocks.push(match);
     return `${placeholder}${index}___`;

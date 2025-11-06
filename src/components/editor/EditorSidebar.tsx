@@ -5,6 +5,7 @@ import { Search, Loader2 } from 'lucide-react';
 import ClasseurSelector from './ClasseurSelector';
 import EditorNavigationTree from './EditorNavigationTree';
 import { useClasseurTree } from '@/hooks/editor/useClasseurTree';
+import { simpleLogger as logger } from '@/utils/logger';
 import '@/styles/editor-sidebar.css';
 
 /**
@@ -42,12 +43,16 @@ export default function EditorSidebar({
   // ✅ Initialiser avec le classeur de la note actuelle
   const [selectedClasseurId, setSelectedClasseurId] = useState<string | null>(currentClasseurId || null);
   
-  // ✅ Mettre à jour si le classeur de la note change
+  // ✅ Mettre à jour directement quand le classeur de la note change
   useEffect(() => {
-    if (currentClasseurId && currentClasseurId !== selectedClasseurId) {
+    if (currentClasseurId) {
+      logger.dev('[EditorSidebar] 🔄 Mise à jour classeur sélectionné:', {
+        ancien: selectedClasseurId,
+        nouveau: currentClasseurId
+      });
       setSelectedClasseurId(currentClasseurId);
     }
-  }, [currentClasseurId, selectedClasseurId]);
+  }, [currentClasseurId]); // ✅ Sans selectedClasseurId dans les deps
   
   // Search query local
   const [searchQuery, setSearchQuery] = useState('');

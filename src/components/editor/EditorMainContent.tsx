@@ -14,6 +14,7 @@ import type { SlashCommand } from '@/types/editor';
 import { initializeMermaid } from '@/services/mermaid/mermaidConfig';
 import { normalizeMermaidContent } from '@/components/chat/mermaidService';
 import { openMermaidModal } from '@/components/mermaid/MermaidModal';
+import { NoteEmbedHydrator } from './NoteEmbedHydrator';
 
 interface EditorMainContentProps {
   isReadonly: boolean;
@@ -31,6 +32,8 @@ interface EditorMainContentProps {
   noteSlug?: string;
   classeurId?: string;
   classeurName?: string;
+  // ✅ FIX React 18: Attendre que le contenu initial soit chargé
+  isContentReady?: boolean;
 }
 
 const EditorMainContent: React.FC<EditorMainContentProps> = ({
@@ -47,7 +50,8 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
   noteContent,
   noteSlug,
   classeurId,
-  classeurName
+  classeurName,
+  isContentReady = true, // Default true pour compatibilité
 }) => {
   // Attacher les event listeners et rendre mermaid en readonly
   useEffect(() => {
@@ -190,7 +194,7 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
 
   return (
     <EditorContent>
-      <div className="tiptap-editor-container" ref={editorContainerRef}>
+      <div className="tiptap-editor-container" ref={editorContainerRef} style={{ position: 'relative' }}>
         {!isReadonly && (
           <>
             {/* Floating menu Notion-like avec contexte enrichi */}
@@ -205,7 +209,27 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
             />
             
             {/* Contenu Tiptap */}
+            {/* ✅ TOUJOURS rendu pour que les drag handles fonctionnent */}
             <TiptapEditorContent editor={editor} />
+            
+            {/* Loading overlay si pas prêt */}
+            {!isContentReady && (
+              <div className="editor-loading-overlay" style={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'var(--color-bg-primary, #0a0a0a)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-color-secondary)',
+                zIndex: 10
+              }}>
+                Chargement de l'éditeur...
+              </div>
+            )}
             
             {/* Table controls */}
             <TableControls 
@@ -224,7 +248,18 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
           </>
         )}
         {isReadonly && (
-          <div className="markdown-body editor-content-wrapper" dangerouslySetInnerHTML={{ __html: html }} />
+          <>
+            <div 
+              ref={editorContainerRef as React.RefObject<HTMLDivElement>}
+              className="markdown-body editor-content-wrapper" 
+              dangerouslySetInnerHTML={{ __html: html }} 
+            />
+            {/* ✅ Hydrater les note embeds en mode preview */}
+            <NoteEmbedHydrator
+              containerRef={editorContainerRef as React.RefObject<HTMLElement>}
+              htmlContent={html}
+            />
+          </>
         )}
       </div>
     </EditorContent>

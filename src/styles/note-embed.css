@@ -1,0 +1,321 @@
+/**
+ * Styles pour les Note Embeds (Notion-style)
+ * Design minimaliste Scrivia avec hover effects
+ */
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CONTAINER PRINCIPAL
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ✅ Styles identiques pour mode édition et preview */
+.note-embed,
+.ProseMirror .note-embed,
+.markdown-body .note-embed,
+.public-note-container .note-embed {
+  margin: 1.5rem 0 !important;
+  width: 100% !important;
+  display: block !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  /* ✅ Désactiver le drag sur tout le bloc (drag via handles uniquement) */
+  user-drag: none !important;
+  -webkit-user-drag: none !important;
+  -moz-user-drag: none !important;
+}
+
+/* ✅ Styles identiques pour mode édition et preview */
+.note-embed__card,
+.ProseMirror .note-embed__card,
+.markdown-body .note-embed__card,
+.public-note-container .note-embed__card {
+  background: var(--color-bg-surface-1, #1a1a1a) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+  transition: background 150ms ease !important;
+  display: block !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  /* ✅ Désactiver le drag sur la carte */
+  user-drag: none !important;
+  -webkit-user-drag: none !important;
+  -moz-user-drag: none !important;
+}
+
+.note-embed__card:hover,
+.ProseMirror .note-embed__card:hover,
+.markdown-body .note-embed__card:hover,
+.public-note-container .note-embed__card:hover {
+  background: var(--color-bg-surface-2, rgba(255, 255, 255, 0.05)) !important;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HEADER IMAGE
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ✅ Styles identiques pour mode édition et preview */
+.note-embed__header-image,
+.ProseMirror .note-embed__header-image,
+.markdown-body .note-embed__header-image,
+.public-note-container .note-embed__header-image {
+  width: 100% !important;
+  max-height: 200px !important;
+  overflow: hidden !important;
+  background: var(--color-bg-surface-2, #2a2a2a) !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  /* ✅ Border-radius seulement en haut pour intégrer l'image dans la carte */
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.note-embed__header-image img,
+.ProseMirror .note-embed__header-image img,
+.markdown-body .note-embed__header-image img,
+.public-note-container .note-embed__header-image img {
+  width: 100% !important;
+  height: 200px !important;
+  max-height: 200px !important;
+  object-fit: cover !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  /* ✅ Pas de border-radius en bas - image intégrée dans la carte */
+  border-radius: 8px 8px 0 0 !important;
+  /* ✅ Désactiver le drag natif sur les images (sans bloquer le click) */
+  user-drag: none !important;
+  -webkit-user-drag: none !important;
+  -moz-user-drag: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  draggable: false !important;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CONTENU
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ✅ Styles identiques pour mode édition et preview */
+.note-embed__content,
+.ProseMirror .note-embed__content,
+.markdown-body .note-embed__content,
+.public-note-container .note-embed__content {
+  padding: 1.5rem !important;
+  display: block !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.note-embed__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.note-embed__title-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.note-embed__icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.note-embed__title h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.note-embed__depth {
+  font-size: 0.75rem;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ✅ Styles identiques pour mode édition et preview */
+.note-embed__body,
+.ProseMirror .note-embed__body,
+.markdown-body .note-embed__body,
+.public-note-container .note-embed__body {
+  max-height: 400px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7)) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
+}
+
+/* Fade effect en bas si contenu trop long */
+.note-embed__body::after,
+.ProseMirror .note-embed__body::after,
+.markdown-body .note-embed__body::after,
+.public-note-container .note-embed__body::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 60px !important;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--color-bg-surface-1, #1a1a1a)
+  ) !important;
+  pointer-events: none !important;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   FOOTER
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ✅ Footer supprimé - plus de slug, plus de ligne */
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   LOADING STATE
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.note-embed--loading .note-embed__skeleton {
+  background: var(--color-bg-surface-1, #1a1a1a);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.note-embed__skeleton-header {
+  width: 100%;
+  height: 160px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.note-embed__skeleton-title {
+  width: 60%;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.note-embed__skeleton-content {
+  width: 100%;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.note-embed__skeleton-footer {
+  width: 40%;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ERROR STATE
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.note-embed--error .note-embed__error {
+  background: var(--color-bg-surface-1, #1a1a1a);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.note-embed__error-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.note-embed__error-content {
+  flex: 1;
+}
+
+.note-embed__error-title {
+  font-weight: 600;
+  color: rgba(255, 59, 48, 0.9);
+  margin-bottom: 0.25rem;
+}
+
+.note-embed__error-message {
+  font-size: 0.9rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  margin-bottom: 0.5rem;
+}
+
+.note-embed__error-ref {
+  font-size: 0.8rem;
+  font-family: var(--mono, 'Courier New', monospace);
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  opacity: 0.7;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MAX DEPTH WARNING
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.note-embed--max-depth .note-embed__max-depth-warning {
+  background: var(--color-bg-surface-1, #1a1a1a);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  font-size: 0.9rem;
+}
+
+.note-embed__max-depth-warning a {
+  color: var(--accent-hover, #ff7f50);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   RESPONSIVE
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+@media (max-width: 768px) {
+  .note-embed__content {
+    padding: 1rem;
+  }
+
+  .note-embed__title h3 {
+    font-size: 1.1rem;
+  }
+
+  .note-embed__body {
+    max-height: 300px;
+    font-size: 0.9rem;
+  }
+
+  .note-embed__header-image img {
+    height: 150px;
+  }
+}
+
