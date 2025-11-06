@@ -35,15 +35,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     }
 
     // Chercher l'utilisateur par username
+    logger.dev(LogCategory.API, '[PublicNote] 🔍 Recherche utilisateur:', { username });
+    
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('id')
       .eq('username', username)
       .limit(1)
       .maybeSingle();
-    if (userError || !user) {
+    
+    if (userError) {
+      logger.error(LogCategory.API, '[PublicNote] ❌ Erreur DB users:', { 
+        username, 
+        error: userError.message 
+      });
+      return new Response(JSON.stringify({ error: 'Erreur serveur lors de la recherche utilisateur.' }), { status: 500, headers: { "Content-Type": "application/json" } });
+    }
+    
+    if (!user) {
+      logger.warn(LogCategory.API, '[PublicNote] ⚠️ Utilisateur non trouvé:', { username });
       return new Response(JSON.stringify({ error: 'Utilisateur non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
+    
+    logger.dev(LogCategory.API, '[PublicNote] ✅ Utilisateur trouvé:', { username, userId: user.id });
 
     // Vérifier si l'utilisateur est connecté (pour permettre au créateur de voir sa note privée)
     let isCreator = false;
@@ -147,15 +161,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     logger.dev(LogCategory.API, '[PublicNote] 📥 Résultat query:', {
       found: !!note,
       visibility: note?.share_settings?.visibility,
-      isCreator
+      isCreator,
+      hasError: !!noteError
     });
     
-    if (noteError || !note) {
-      logger.warn(LogCategory.API, '[PublicNote] ❌ Note non trouvée', {
+    if (noteError) {
+      logger.error(LogCategory.API, '[PublicNote] ❌ Erreur DB articles:', {
         username,
         slug,
+        isUUID,
         isCreator,
-        error: noteError?.message
+        error: noteError.message,
+        code: noteError.code,
+        details: noteError.details
+      });
+      return new Response(JSON.stringify({ error: 'Erreur serveur lors de la recherche de la note.' }), { status: 500, headers: { "Content-Type": "application/json" } });
+    }
+    
+    if (!note) {
+      logger.warn(LogCategory.API, '[PublicNote] ⚠️ Note non trouvée', {
+        username,
+        slug,
+        isUUID,
+        isCreator
       });
       return new Response(JSON.stringify({ error: 'Note non trouvée ou non publiée.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
