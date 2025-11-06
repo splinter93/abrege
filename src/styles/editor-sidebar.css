@@ -26,10 +26,10 @@
   position: fixed;
   top: var(--editor-header-height, 44px); /* ✅ Dynamique: s'adapte au header */
   left: 0;
-  height: calc(100vh - var(--editor-header-height, 44px) - 24px); /* ✅ Dynamique - padding bottom */
+  height: calc(100vh - var(--editor-header-height, 44px)); /* ✅ Descend jusqu'en bas */
   width: 280px; /* ✅ Élargie: 250px → 280px pour lisibilité */
-  /* ✅ Dégradé gris exact chat */
-  background: linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%);
+  /* ✅ Dégradé anthracite équilibré - Juste milieu entre distinction et sobriété */
+  background: linear-gradient(180deg, #181a22 0%, #1a1c24 100%);
   transform: translateX(-280px); /* ✅ Caché par défaut (largeur sidebar) */
   transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
   z-index: 100;
@@ -38,7 +38,7 @@
   padding: 0;
   overflow: hidden;
   margin-bottom: 0;
-  border-radius: 0 12px 12px 0; /* ✅ Radius uniquement droite */
+  border-radius: 0 12px 0 0; /* ✅ Radius uniquement coin haut-droit */
 }
 
 /* ✅ Visible (translate 0) */
@@ -51,7 +51,7 @@
    ======================================== */
 
 .editor-sidebar-search-clean {
-  padding: 16px; /* ✅ Même que chat */
+  padding: 12px 14px; /* ✅ Compact : 12px vertical, 14px horizontal */
   border-bottom: none; /* ✅ Pas de divider */
   display: flex;
   align-items: center;
@@ -74,9 +74,9 @@
 .editor-sidebar-search-input-clean {
   width: 100%;
   padding: 8px 12px 8px 38px; /* ✅ Padding left pour icône */
-  background: rgba(255, 255, 255, 0.08); /* ✅ Même background que chat */
+  background: rgba(255, 255, 255, 0.04); /* ✅ Plus transparent */
   border: none; /* ✅ Pas de bordure */
-  border-radius: 8px;
+  border-radius: 999px; /* ✅ Pill style (capsule) */
   color: var(--chat-text-primary);
   font-size: 13px;
   font-family: var(--font-chat-text);
@@ -89,7 +89,7 @@
 }
 
 .editor-sidebar-search-input-clean:focus {
-  background: rgba(255, 255, 255, 0.12); /* ✅ Juste background change */
+  background: rgba(255, 255, 255, 0.08); /* ✅ Plus visible au focus */
 }
 
 /* ========================================
@@ -99,7 +99,7 @@
 .editor-sidebar-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px; /* ✅ Même que chat: var(--chat-space-lg) = 16px */
+  padding: 0 14px 14px 14px; /* ✅ Compact : 0 top (collé à search), 14px autres côtés */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
 }
@@ -114,13 +114,32 @@
    ======================================== */
 
 .editor-sidebar-classeur-section {
-  margin-bottom: 20px; /* ✅ Même que chat sections */
+  margin-bottom: 14px; /* ✅ Compact : espace avec notes */
+  padding-bottom: 8px; /* ✅ Espace pour séparateur */
+  position: relative;
+}
+
+/* ✅ Séparateur élégant après les classeurs */
+.editor-sidebar-classeur-section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 4px;
+  right: 4px;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.1) 20%, 
+    rgba(255, 255, 255, 0.15) 50%, 
+    rgba(255, 255, 255, 0.1) 80%, 
+    transparent 100%
+  );
 }
 
 .classeur-selector {
   position: relative;
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 0; /* ✅ Pas de margin supplémentaire */
 }
 
 /* ========================================
@@ -132,12 +151,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.05); /* ✅ Pas de bordure, juste background */
+  padding: 8px 4px; /* ✅ Padding réduit pour look minimaliste */
+  background: transparent; /* ✅ Pas de background */
   border: none;
   border-radius: 8px;
   color: var(--chat-text-primary);
-  font-size: 14px;
+  font-size: 15px; /* ✅ Plus gros: 14px → 15px */
   font-family: var(--font-chat-text);
   font-weight: 600;
   text-align: left;
@@ -147,15 +166,15 @@
 }
 
 .classeur-selector-button:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04); /* ✅ Hover très subtil */
 }
 
 .classeur-selector-button.open {
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent; /* ✅ Pas de background même ouvert */
 }
 
 .classeur-selector-emoji {
-  font-size: 18px;
+  font-size: 20px; /* ✅ Plus gros: 18px → 20px */
   flex-shrink: 0;
 }
 
@@ -188,16 +207,16 @@
               opacity 0.25s ease,
               margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-top: 0;
-  background: rgba(255, 255, 255, 0.03); /* ✅ Background subtil pour distinction */
+  background: transparent; /* ✅ Pas de background */
   border-radius: 8px;
-  padding: 0 6px;
+  padding: 0;
 }
 
 .classeur-selector-dropdown.open {
   max-height: 400px; /* ✅ Expanded (ajuster si besoin) */
   opacity: 1;
-  margin-top: 8px; /* ✅ Espacement avec le bouton */
-  padding: 6px;
+  margin-top: 6px; /* ✅ Espacement cohérent */
+  padding: 0;
 }
 
 /* Scrollbar dropdown INVISIBLE (même que sidebar principale) */
@@ -219,13 +238,13 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px; /* ✅ Espace emoji ↔ nom */
-  padding: 10px 12px;
+  gap: 10px; /* ✅ Espace cohérent avec items */
+  padding: 7px 4px; /* ✅ Compact : cohérent avec notes/dossiers */
   background: transparent;
   border: none;
   border-radius: 6px;
   color: var(--chat-text-secondary);
-  font-size: 14px;
+  font-size: 14px; /* ✅ Plus gros: 13px → 14px */
   font-family: var(--font-chat-text);
   font-weight: 500;
   text-align: left;
@@ -235,22 +254,22 @@
 }
 
 .classeur-selector-option:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06); /* ✅ Hover très subtil */
   color: var(--chat-text-primary);
 }
 
 .classeur-selector-option.active {
-  background: rgba(229, 90, 44, 0.15); /* ✅ Orange pour option active */
-  color: var(--chat-text-primary);
+  background: transparent; /* ✅ Pas de background */
+  color: rgb(229, 90, 44); /* ✅ Juste la couleur orange */
   font-weight: 600;
 }
 
 .classeur-selector-option.active:hover {
-  background: rgba(229, 90, 44, 0.22);
+  background: rgba(229, 90, 44, 0.08); /* ✅ Hover très léger */
 }
 
 .classeur-selector-option-emoji {
-  font-size: 18px;
+  font-size: 19px; /* ✅ Plus gros: 18px → 19px */
   flex-shrink: 0;
 }
 
@@ -289,15 +308,15 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px; /* ✅ Padding-left géré en JS (inline style) */
-  border-radius: 8px;
+  padding: 10px 8px; /* ✅ Plus de padding vertical pour taille augmentée */
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
-  font-size: 13px;
+  font-size: 14px; /* ✅ Plus gros : 13px → 14px */
   font-family: var(--font-chat-text); /* ✅ Figtree (même que chat) */
   color: var(--chat-text-secondary);
   user-select: none;
-  margin: 0 0 3px 0; /* ✅ Margin-bottom: 3px (légèrement compact) */
+  margin: 0 0 3px 0; /* ✅ Plus aéré : 3px entre items */
 }
 
 .editor-sidebar-folder:hover,
@@ -308,18 +327,18 @@
 
 /* Note active (highlight) */
 .editor-sidebar-note.active {
-  background: rgba(229, 90, 44, 0.15); /* ✅ Accent orange */
+  background: rgba(255, 255, 255, 0.08); /* ✅ Gris léger */
   color: var(--chat-text-primary);
   font-weight: 500;
 }
 
 /* Note active + hover (cumul) */
 .editor-sidebar-note.active:hover {
-  background: rgba(229, 90, 44, 0.22); /* ✅ Plus intense au hover */
+  background: rgba(255, 255, 255, 0.12); /* ✅ Gris un peu plus intense au hover */
 }
 
 .editor-sidebar-note.active .editor-sidebar-icon {
-  color: rgb(229, 90, 44) !important; /* ✅ Orange si active */
+  color: rgb(156, 163, 175) !important; /* ✅ Gris élégant si active */
 }
 
 /* Icons */
@@ -338,7 +357,7 @@
 }
 
 .editor-sidebar-note .editor-sidebar-icon {
-  color: rgb(59, 130, 246); /* Bleu */
+  color: rgb(156, 163, 175); /* Gris élégant (gray-400) */
 }
 
 /* Dossiers avec enfants */

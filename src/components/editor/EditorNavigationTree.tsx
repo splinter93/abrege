@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Folder, FileText } from 'lucide-react';
+import { Folder, Feather } from 'lucide-react';
 import type { TreeFolder, TreeNote } from '@/hooks/editor/useClasseurTree';
 
 /**
@@ -149,10 +149,10 @@ const FolderTreeItem = React.memo(function FolderTreeItem({
         onClick={() => onToggleFolder(folder.id)}
         style={{ paddingLeft: `${paddingLeft}px` }}
       >
-        {/* Icône */}
-        <div className="editor-sidebar-icon">
-          <Folder size={16} />
-        </div>
+      {/* Icône */}
+      <div className="editor-sidebar-icon">
+        <Folder size={17} />
+      </div>
         
         {/* Nom */}
         <div className="editor-sidebar-item-title">
@@ -223,7 +223,7 @@ const NoteTreeItem = React.memo(function NoteTreeItem({
     >
       {/* Icône */}
       <div className="editor-sidebar-icon">
-        <FileText size={16} />
+        <Feather size={17} />
       </div>
       
       {/* Titre */}

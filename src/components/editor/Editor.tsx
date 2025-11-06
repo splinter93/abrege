@@ -217,22 +217,9 @@ const Editor: React.FC<{
     note
   });
 
-  // ✅ NOUVEAUX HOOKS - Navigation entre notes
+  // ✅ Navigation entre notes (sans popup confirmation car autosave actif)
   const { switchNote } = useEditorNavigation({
     currentNoteId: noteId,
-    hasUnsavedChanges: () => {
-      // Vérifier si l'éditeur a des modifications non sauvegardées
-      if (!editor) return false;
-      
-      // ✅ Comparer le markdown de l'éditeur avec le contenu original
-      const editorMarkdown = editor.storage?.markdown?.getMarkdown?.() || '';
-      const originalMarkdown = rawContent || '';
-      
-      // Normaliser les deux pour comparaison (trim + normaliser newlines)
-      const normalize = (md: string) => md.trim().replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n');
-      
-      return normalize(editorMarkdown) !== normalize(originalMarkdown);
-    },
     onBeforeNavigate: () => {
       // Cleanup avant navigation (optionnel)
       logger.dev('[Editor] Navigation vers une autre note...');

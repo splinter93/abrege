@@ -2,7 +2,7 @@
  * Hook useEditorNavigation
  * 
  * Gère la navigation entre notes dans l'éditeur
- * - Switch note avec vérification unsaved changes
+ * - Switch note instantané (pas de popup confirmation)
  * - Update store (useFileSystemStore)
  * - Client-side navigation (Next.js router)
  * 
@@ -16,8 +16,6 @@ import { simpleLogger as logger } from '@/utils/logger';
 interface UseEditorNavigationOptions {
   /** ID de la note actuellement ouverte */
   currentNoteId: string;
-  /** Fonction pour vérifier si l'éditeur a des modifications non sauvegardées */
-  hasUnsavedChanges: () => boolean;
   /** Callback optionnel appelé avant navigation (pour cleanup, etc.) */
   onBeforeNavigate?: () => void;
 }
@@ -36,7 +34,6 @@ interface UseEditorNavigationReturn {
  * ```typescript
  * const { switchNote, isNavigating } = useEditorNavigation({
  *   currentNoteId: noteId,
- *   hasUnsavedChanges: () => editor?.state.doc.content.size > 0,
  *   onBeforeNavigate: () => logger.dev('Navigating...')
  * });
  * 
@@ -46,7 +43,6 @@ interface UseEditorNavigationReturn {
  */
 export function useEditorNavigation({
   currentNoteId,
-  hasUnsavedChanges,
   onBeforeNavigate
 }: UseEditorNavigationOptions): UseEditorNavigationReturn {
   
@@ -61,11 +57,12 @@ export function useEditorNavigation({
    * Flow:
    * 1. Check si déjà sur cette note → skip
    * 2. Check lock (navigation déjà en cours)
-   * 3. Check unsaved changes → confirm si nécessaire
-   * 4. Lock navigation
-   * 5. Callback onBeforeNavigate (cleanup)
-   * 6. Client-side navigation (Next.js router)
-   * 7. Unlock navigation
+   * 3. Lock navigation
+   * 4. Callback onBeforeNavigate (cleanup)
+   * 5. Client-side navigation (Next.js router)
+   * 6. Unlock navigation
+   * 
+   * Note : Pas de confirmation popup car autosave gère la sauvegarde automatiquement
    */
   const switchNote = useCallback(async (noteId: string) => {
     // 1. Skip si déjà sur cette note
@@ -80,22 +77,8 @@ export function useEditorNavigation({
       return;
     }
 
-    // 3. Check unsaved changes
-    const hasChanges = hasUnsavedChanges();
-    if (hasChanges) {
-      // ⚠️ WARN utilisateur
-      const confirmed = window.confirm(
-        'Vous avez des modifications non sauvegardées. Voulez-vous continuer sans sauvegarder ?'
-      );
-      
-      if (!confirmed) {
-        logger.dev('[useEditorNavigation] ❌ Navigation annulée par l\'utilisateur');
-        return;
-      }
-    }
-
     try {
-      // 4. Lock navigation
+      // 3. Lock navigation
       isNavigatingRef.current = true;
       
       logger.info('[useEditorNavigation] 🚀 Switch note', {
@@ -103,12 +86,12 @@ export function useEditorNavigation({
         to: noteId
       });
 
-      // 5. Callback onBeforeNavigate (cleanup, etc.)
+      // 4. Callback onBeforeNavigate (cleanup, etc.)
       if (onBeforeNavigate) {
         onBeforeNavigate();
       }
 
-      // 6. Client-side navigation (Next.js App Router)
+      // 5. Client-side navigation (Next.js App Router)
       // ✅ scroll: false pour garder la position et éviter le flash
       // Format: /private/note/[noteId]
       router.push(`/private/note/${noteId}`, { scroll: false });
@@ -120,16 +103,15 @@ export function useEditorNavigation({
       );
       // TODO: Afficher toast erreur
     } finally {
-      // 7. Unlock après un délai (éviter double-click)
+      // 6. Unlock après un délai (éviter double-click)
       setTimeout(() => {
         isNavigatingRef.current = false;
       }, 500);
     }
-  }, [currentNoteId, hasUnsavedChanges, onBeforeNavigate, router]);
+  }, [currentNoteId, onBeforeNavigate, router]);
 
   return {
     switchNote,
     isNavigating: isNavigatingRef.current
   };
 }
-
