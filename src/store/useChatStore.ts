@@ -101,6 +101,7 @@ export const useChatStore = create<ChatStore>()(
           const result = await sessionSyncService.syncSessionsFromDB();
           if (result.success && result.sessions) {
             get().setSessions(result.sessions);
+            // ✅ AUTO-SELECT géré dans ChatFullscreenV2 (pas ici, séparation responsabilités)
           }
         } catch (error) {
           logger.error('[ChatStore] Erreur syncSessions:', error);

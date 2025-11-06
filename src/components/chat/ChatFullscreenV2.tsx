@@ -22,13 +22,13 @@ import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { useInfiniteMessages } from '@/hooks/useInfiniteMessages';
 import { isEmptyAnalysisMessage } from '@/types/chat';
 import type { Agent } from '@/types/chat';
+import { supabase } from '@/supabaseClient';
 
 // 🎯 NOUVEAUX HOOKS (Phase 2)
 import { useStreamingState } from '@/hooks/chat/useStreamingState';
 import { useChatAnimations } from '@/hooks/chat/useChatAnimations';
 import { useChatMessageActions } from '@/hooks/chat/useChatMessageActions';
 import { useSyncAgentWithSession } from '@/hooks/chat/useSyncAgentWithSession';
-import { useFavoriteAgent } from '@/hooks/useFavoriteAgent';
 import { useAgents } from '@/hooks/useAgents';
 
 // 🎯 NOUVEAUX COMPOSANTS (Phase 3)
@@ -62,6 +62,7 @@ const ChatFullscreenV2: React.FC = () => {
     editingMessage,
     setSelectedAgent,
     setAgentNotFound,
+    setCurrentSession,
     syncSessions,
     createSession,
     startEditingMessage,
@@ -212,53 +213,80 @@ const ChatFullscreenV2: React.FC = () => {
     onAgentNotFound: () => setAgentNotFound(true) // ✅ Marquer agent comme introuvable
   });
 
-  // 🎯 LOAD AGENT FAVORI au mount (responsabilité unique : charger l'agent)
-  useFavoriteAgent({
-    user: user ? { id: user.id } : null,
-    agents,
-    agentsLoading,
-    onAgentLoaded: (agent: Agent | null) => {
-      // ✅ FIX RACE CONDITION : Charger l'agent favori TOUJOURS si aucun agent n'est sélectionné
-      // Peu importe le nombre de sessions existantes
-      if (!selectedAgent && agent) {
-        setSelectedAgent(agent);
-        logger.dev('[ChatFullscreenV2] 🌟 Agent favori chargé au mount:', agent.name);
-      }
-      // ✅ NOUVEAU : Marquer initialisation terminée (agent chargé ou non)
-      setIsInitializing(false);
-      logger.dev('[ChatFullscreenV2] ✅ Initialisation agent terminée', {
-        hasAgent: !!agent,
-        agentName: agent?.name || 'none'
-      });
-    }
-  });
-
-  // 🎯 AUTO-CRÉER SESSION VIDE (responsabilité séparée)
+  // 🎯 SYNC SESSIONS + AUTO-SELECT DERNIÈRE CONVERSATION + AGENT (flow séquentiel optimal)
   useEffect(() => {
-    // ✅ FIX RACE CONDITION : Attendre fin initialisation agent favori
-    if (!user || authLoading || isInitializing) {
-      logger.dev('[ChatFullscreenV2] ⏭️ Skip création session:', {
-        hasUser: !!user,
-        authLoading,
-        isInitializing
-      });
+    // ✅ Attendre auth uniquement (pas isInitializing, car on gère l'init ici)
+    if (!user || authLoading || agentsLoading) {
       return;
     }
-    
-    // ✅ Créer session vide si AUCUNE session ET agent sélectionné
-    // Note: async IIFE pour éviter warning useEffect avec async
-    const createInitialSession = async () => {
-      if (sessions.length === 0 && selectedAgent && !currentSession) {
-        logger.dev('[ChatFullscreenV2] 🆕 Création session vide avec agent:', selectedAgent.name);
-        const newSession = await createSession('Nouvelle conversation', selectedAgent.id);
-        if (newSession) {
-          logger.dev('[ChatFullscreenV2] ✅ Session vide créée (is_empty: true)');
+
+    // ✅ FIX RACE CONDITION : Tout séquentiel (sessions → session → agent)
+    let isMounted = true;
+
+    const initializeChat = async () => {
+      try {
+        // 1️⃣ Sync sessions depuis DB
+        await syncSessions();
+        
+        if (!isMounted) return;
+        
+        // 2️⃣ Lire l'état actuel du store (mis à jour par syncSessions)
+        const storeState = useChatStore.getState();
+        
+        // 3️⃣ Auto-select dernière conversation si aucune session active
+        if (!storeState.currentSession && storeState.sessions.length > 0) {
+          // Sessions déjà triées par updated_at DESC (plus récente en premier)
+          const lastSession = storeState.sessions[0];
+          setCurrentSession(lastSession);
+          logger.dev('[ChatFullscreenV2] 🎯 Auto-select dernière conversation:', {
+            id: lastSession.id,
+            name: lastSession.name,
+            agentId: lastSession.agent_id
+          });
+
+          // 4️⃣ Charger l'agent de la session (si agent_id existe)
+          if (lastSession.agent_id && agents.length > 0) {
+            const sessionAgent = agents.find(a => a.id === lastSession.agent_id);
+            if (sessionAgent) {
+              setSelectedAgent(sessionAgent);
+              logger.dev('[ChatFullscreenV2] ✅ Agent de la session chargé:', sessionAgent.name);
+            }
+          }
+        } else if (storeState.sessions.length === 0 && agents.length > 0) {
+          // 5️⃣ FALLBACK : Aucune session → charger agent favori
+          const { data: userData } = await supabase
+            .from('users')
+            .select('favorite_agent_id')
+            .eq('id', user.id)
+            .single();
+
+          const favoriteAgentId = userData?.favorite_agent_id;
+          const favoriteAgent = favoriteAgentId 
+            ? agents.find(a => a.id === favoriteAgentId) 
+            : agents[0];
+
+          if (favoriteAgent) {
+            setSelectedAgent(favoriteAgent);
+            logger.dev('[ChatFullscreenV2] 🌟 Agent favori chargé (aucune session):', favoriteAgent.name);
+          }
         }
+
+        // 6️⃣ Marquer initialisation terminée
+        setIsInitializing(false);
+        logger.dev('[ChatFullscreenV2] ✅ Initialisation chat terminée');
+
+      } catch (error) {
+        logger.error('[ChatFullscreenV2] ❌ Erreur initialisation chat:', error);
+        setIsInitializing(false);
       }
     };
-    
-    createInitialSession();
-  }, [sessions.length, selectedAgent?.id, currentSession?.id, user, authLoading, isInitializing, createSession]);
+
+    initializeChat();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, authLoading, agentsLoading, agents, syncSessions, setCurrentSession, setSelectedAgent]);
 
   // 🎯 UI STATE LOCAL (minimal - sidebar uniquement)
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -435,12 +463,7 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [currentSession?.id, isDesktop, sidebarOpen]);
 
-  // Sync sessions on auth
-  useEffect(() => {
-    if (user && !authLoading) {
-      syncSessions();
-    }
-  }, [syncSessions, user, authLoading]);
+  // ✅ REMOVED: Sync sessions déplacé dans useEffect optimisé ci-dessus (évite duplication)
 
   // Détecter changement session et vider immédiatement
   useEffect(() => {
