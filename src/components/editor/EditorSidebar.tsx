@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, Plus } from 'lucide-react';
 import ClasseurSelector from './ClasseurSelector';
 import EditorNavigationTree from './EditorNavigationTree';
 import { useClasseurTree } from '@/hooks/editor/useClasseurTree';
+import { useCreateNote } from '@/hooks/editor/useCreateNote';
 import { simpleLogger as logger } from '@/utils/logger';
 import '@/styles/editor-sidebar.css';
 
@@ -66,6 +67,12 @@ export default function EditorSidebar({
     depth: 2
   });
 
+  // Hook création rapide de note
+  const { createNote, isCreating } = useCreateNote({
+    classeurId: selectedClasseurId || '',
+    defaultTitle: 'Nouvelle note'
+  });
+
   // Handler changement classeur
   const handleClasseurChange = useCallback((classeurId: string) => {
     setSelectedClasseurId(classeurId);
@@ -103,6 +110,27 @@ export default function EditorSidebar({
             onClasseurChange={handleClasseurChange}
           />
         </div>
+
+        {/* Bouton Nouvelle Note */}
+        {selectedClasseurId && (
+          <button
+            className="editor-sidebar-new-note-btn"
+            onClick={createNote}
+            disabled={isCreating || !selectedClasseurId}
+          >
+            {isCreating ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Création...</span>
+              </>
+            ) : (
+              <>
+                <Plus size={16} />
+                <span>Nouvelle note</span>
+              </>
+            )}
+          </button>
+        )}
 
         {/* Navigation Tree */}
         {loading && (

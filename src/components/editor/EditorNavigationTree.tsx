@@ -215,10 +215,36 @@ const NoteTreeItem = React.memo(function NoteTreeItem({
   // ✅ Base 8px + offset par niveau pour décalage subtil vers la droite
   const paddingLeft = 8 + (level * 16);
 
+  /**
+   * Handler pour le début du drag
+   * Transfère le noteId via dataTransfer pour le drop dans l'éditeur
+   */
+  const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    // Stocker le noteId dans le dataTransfer
+    e.dataTransfer.setData('application/x-scrivia-note-id', note.id);
+    
+    // Type d'effet : copy (indique qu'on copie la note, pas qu'on la déplace)
+    e.dataTransfer.effectAllowed = 'copy';
+    
+    // Ajouter classe pour feedback visuel
+    e.currentTarget.classList.add('dragging');
+  }, [note.id]);
+
+  /**
+   * Handler pour la fin du drag
+   * Nettoie le feedback visuel
+   */
+  const handleDragEnd = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.currentTarget.classList.remove('dragging');
+  }, []);
+
   return (
     <div
       className={`editor-sidebar-note ${isActive ? 'active' : ''}`}
       onDoubleClick={() => onNoteClick(note.id)}
+      draggable={true}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       style={{ paddingLeft: `${paddingLeft}px` }}
     >
       {/* Icône */}

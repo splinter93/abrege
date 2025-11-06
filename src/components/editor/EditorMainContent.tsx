@@ -212,24 +212,7 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
             {/* ✅ TOUJOURS rendu pour que les drag handles fonctionnent */}
             <TiptapEditorContent editor={editor} />
             
-            {/* Loading overlay si pas prêt */}
-            {!isContentReady && (
-              <div className="editor-loading-overlay" style={{ 
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'var(--color-bg-primary, #0a0a0a)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--text-color-secondary)',
-                zIndex: 10
-              }}>
-                Chargement de l'éditeur...
-              </div>
-            )}
+            {/* ✅ Loading géré par EditorSyncManager - Pas besoin d'overlay visible */}
             
             {/* Table controls */}
             <TableControls 

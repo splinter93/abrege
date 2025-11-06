@@ -288,6 +288,54 @@
 }
 
 /* ========================================
+   BOUTON NOUVELLE NOTE
+   ======================================== */
+
+.editor-sidebar-new-note-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.06); /* ✅ Transparent neutre */
+  border: none;
+  border-radius: 8px;
+  color: var(--chat-text-primary); /* ✅ Couleur neutre */
+  font-size: 13px;
+  font-family: var(--font-chat-text);
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+  margin-bottom: 16px; /* ✅ Espace avec la liste de notes */
+}
+
+.editor-sidebar-new-note-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.10); /* ✅ Hover subtil */
+  transform: translateY(-1px); /* ✅ Léger lift */
+}
+
+.editor-sidebar-new-note-btn:active:not(:disabled) {
+  transform: translateY(0); /* ✅ Reset au click */
+}
+
+.editor-sidebar-new-note-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.editor-sidebar-new-note-btn .animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ========================================
    NAVIGATION TREE
    ======================================== */
 
@@ -310,13 +358,17 @@
   gap: 10px;
   padding: 10px 8px; /* ✅ Plus de padding vertical pour taille augmentée */
   border-radius: 6px;
-  cursor: pointer;
   transition: all 0.15s ease;
   font-size: 14px; /* ✅ Plus gros : 13px → 14px */
   font-family: var(--font-chat-text); /* ✅ Figtree (même que chat) */
   color: var(--chat-text-secondary);
   user-select: none;
   margin: 0 0 3px 0; /* ✅ Plus aéré : 3px entre items */
+}
+
+/* Curseur par défaut */
+.editor-sidebar-folder {
+  cursor: pointer;
 }
 
 .editor-sidebar-folder:hover,
@@ -363,6 +415,26 @@
 /* Dossiers avec enfants */
 .editor-sidebar-folder.has-children {
   font-weight: 500;
+}
+
+/* ========================================
+   DRAG & DROP FEEDBACK
+   ======================================== */
+
+/* Curseur grab sur les notes (draggable) */
+.editor-sidebar-note {
+  cursor: grab;
+}
+
+.editor-sidebar-note:active {
+  cursor: grabbing;
+}
+
+/* Note en cours de drag */
+.editor-sidebar-note.dragging {
+  opacity: 0.4;
+  cursor: grabbing !important;
+  transform: scale(0.98);
 }
 
 /* Titre */

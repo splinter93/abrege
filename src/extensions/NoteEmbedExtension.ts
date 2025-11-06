@@ -242,12 +242,65 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
                 const tr = view.state.tr.replaceSelectionWith(node);
                 view.dispatch(tr);
                 
-                logger.dev('[NoteEmbed] ✅ Embed inséré:', noteRef);
+                logger.dev('[NoteEmbed] ✅ Embed inséré via paste:', noteRef);
                 return true;
               }
             }
 
             return false;
+          },
+
+          handleDrop: (view, event) => {
+            const dataTransfer = (event as DragEvent).dataTransfer;
+            if (!dataTransfer) return false;
+
+            // Récupérer le noteId depuis le drag
+            const noteId = dataTransfer.getData('application/x-scrivia-note-id');
+            if (!noteId) return false;
+
+            logger.dev('[NoteEmbed] 📥 Drop détecté:', { noteId });
+
+            // Valider le format UUID ou slug
+            const isValidFormat = /^[a-f0-9-]{36}$|^[a-z0-9-]+$/.test(noteId);
+            if (!isValidFormat) {
+              logger.warn('[NoteEmbed] ⚠️  Format noteId invalide:', noteId);
+              return false;
+            }
+
+            event.preventDefault();
+            
+            // Obtenir la position du drop
+            const coordinates = view.posAtCoords({
+              left: event.clientX,
+              top: event.clientY
+            });
+            
+            if (!coordinates) {
+              logger.warn('[NoteEmbed] ⚠️  Impossible de déterminer la position du drop');
+              return false;
+            }
+
+            try {
+              // Créer le node noteEmbed
+              const node = view.state.schema.nodes.noteEmbed.create({
+                noteRef: noteId,
+                depth: 0,
+              });
+              
+              // Insérer à la position du drop
+              const tr = view.state.tr.insert(coordinates.pos, node);
+              view.dispatch(tr);
+              
+              logger.info('[NoteEmbed] ✅ Embed inséré via drag & drop:', {
+                noteId,
+                position: coordinates.pos
+              });
+              
+              return true;
+            } catch (error) {
+              logger.error('[NoteEmbed] ❌ Erreur insertion embed:', error);
+              return false;
+            }
           },
         },
       }),
