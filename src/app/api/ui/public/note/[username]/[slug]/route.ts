@@ -43,7 +43,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     }
 
     // Chercher l'utilisateur par username
-    logger.dev(LogCategory.API, '[PublicNote] 🔍 Recherche utilisateur:', { username });
+    logger.debug(LogCategory.API, '[PublicNote] 🔍 Recherche utilisateur:', { username });
     
     const { data: user, error: userError } = await supabase
       .from('users')
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       return new Response(JSON.stringify({ error: 'Utilisateur non trouvé.' }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
     
-    logger.dev(LogCategory.API, '[PublicNote] ✅ Utilisateur trouvé:', { username, userId: user.id });
+    logger.debug(LogCategory.API, '[PublicNote] ✅ Utilisateur trouvé:', { username, userId: user.id });
 
     // Vérifier si l'utilisateur est connecté (pour permettre au créateur de voir sa note privée)
     let isCreator = false;
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
         // Utiliser le client service pour l'authentification
         const { data: { user: authUser }, error: authError } = await supabaseService.auth.getUser(token);
         
-        logger.dev(LogCategory.API, '[PublicNote] 🔑 Auth header check:', {
+        logger.debug(LogCategory.API, '[PublicNote] 🔑 Auth header check:', {
           hasAuthUser: !!authUser,
           authUserId: authUser?.id,
           noteOwnerId: user.id,
@@ -102,17 +102,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     // Si pas d'Authorization header, essayer avec les cookies Supabase
     if (!isCreator) {
       try {
-        logger.dev(LogCategory.API, '[PublicNote] 🍪 Tentative auth par cookie...');
+        logger.debug(LogCategory.API, '[PublicNote] 🍪 Tentative auth par cookie...');
         
         // Récupérer tous les cookies
         const cookies = req.headers.get('cookie');
         if (cookies) {
-          logger.dev(LogCategory.API, '[PublicNote] 🍪 Cookies trouvés');
+          logger.debug(LogCategory.API, '[PublicNote] 🍪 Cookies trouvés');
           
           // Chercher le token d'accès Supabase dans les cookies
           const accessTokenMatch = cookies.match(/sb-[^-]+-auth-token=([^;]+)/);
           if (accessTokenMatch) {
-            logger.dev(LogCategory.API, '[PublicNote] 🍪 Token Supabase trouvé dans cookie');
+            logger.debug(LogCategory.API, '[PublicNote] 🍪 Token Supabase trouvé dans cookie');
             
             try {
               const cookieValue = decodeURIComponent(accessTokenMatch[1]);
@@ -120,7 +120,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
               const token = cookieData.access_token;
               
               if (token) {
-                logger.dev(LogCategory.API, '[PublicNote] 🍪 access_token extrait du cookie');
+                logger.debug(LogCategory.API, '[PublicNote] 🍪 access_token extrait du cookie');
                 const { data: { user: authUser }, error: authError } = await supabaseService.auth.getUser(token);
                 if (!authError && authUser && authUser.id === user.id) {
                   isCreator = true;
@@ -133,10 +133,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
               });
             }
           } else {
-            logger.dev(LogCategory.API, '[PublicNote] 🍪 Pas de token Supabase dans cookies');
+            logger.debug(LogCategory.API, '[PublicNote] 🍪 Pas de token Supabase dans cookies');
           }
         } else {
-          logger.dev(LogCategory.API, '[PublicNote] 🍪 Pas de cookies');
+          logger.debug(LogCategory.API, '[PublicNote] 🍪 Pas de cookies');
         }
       } catch (error) {
         // Ignorer les erreurs d'authentification, on continue sans être connecté
@@ -152,7 +152,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     // ✅ Détecter si [slug] est un UUID (URL permanente) ou un slug (URL SEO)
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
     
-    logger.dev(LogCategory.API, '[PublicNote] 🔍 Type de slug détecté:', {
+    logger.debug(LogCategory.API, '[PublicNote] 🔍 Type de slug détecté:', {
       slug,
       isUUID,
       username
@@ -176,12 +176,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     // Si ce n'est pas le créateur, exclure les notes privées
     if (!isCreator) {
       noteQuery = noteQuery.not('share_settings->>visibility', 'eq', 'private');
-      logger.dev(LogCategory.API, '[PublicNote] 🔒 Non-créateur : filtre notes privées');
+      logger.debug(LogCategory.API, '[PublicNote] 🔒 Non-créateur : filtre notes privées');
     } else {
       logger.info(LogCategory.API, '[PublicNote] ✅ Créateur : accès complet (y compris privées)');
     }
 
-    logger.dev(LogCategory.API, '[PublicNote] 🔄 Exécution query DB...');
+    logger.debug(LogCategory.API, '[PublicNote] 🔄 Exécution query DB...');
     
     let note, noteError;
     try {
@@ -189,7 +189,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       note = result.data;
       noteError = result.error;
       
-      logger.dev(LogCategory.API, '[PublicNote] ✅ Query DB terminée:', {
+      logger.debug(LogCategory.API, '[PublicNote] ✅ Query DB terminée:', {
         hasData: !!note,
         hasError: !!noteError
       });
@@ -201,7 +201,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       throw dbErr; // Re-throw pour le catch global
     }
     
-    logger.dev(LogCategory.API, '[PublicNote] 📥 Résultat query:', {
+    logger.debug(LogCategory.API, '[PublicNote] 📥 Résultat query:', {
       found: !!note,
       visibility: note?.share_settings?.visibility,
       isCreator,
