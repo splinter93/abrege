@@ -4,6 +4,7 @@
  */
 
 import { simpleLogger as logger } from '@/utils/logger';
+import type { LLMContext } from '@/types/llmContext';
 
 export interface AgentSystemConfig {
   system_instructions?: string;
@@ -78,7 +79,7 @@ export class SystemMessageBuilder {
 
       // ✅ Injection contexte UI compact (date, device, page)
       if (context && typeof context === 'object') {
-        const ctx = context as import('@/types/llmContext').UIContext & {
+        const ctx = context as Partial<LLMContext> & {
           attachedNotes?: Array<{
             title: string;
             slug: string;
@@ -88,10 +89,11 @@ export class SystemMessageBuilder {
         const contextParts: string[] = [];
         
         // Format ultra-compact avec emojis (comme AgentOrchestrator)
-        if (ctx.time && ctx.device && ctx.user) {
+        if (ctx.time?.local && ctx.device?.type && ctx.user?.locale) {
           const deviceEmoji = ctx.device.type === 'mobile' ? '📱' : ctx.device.type === 'tablet' ? '📲' : '💻';
           const localeFlag = ctx.user.locale === 'fr' ? '🇫🇷' : '🇬🇧';
-          contextParts.push(`📅 ${ctx.time.local} (${ctx.timezone || ctx.time.timezone}) | ${deviceEmoji} ${ctx.device.type} | ${localeFlag} ${ctx.user.locale.toUpperCase()}`);
+          const timezone = ctx.time.timezone ?? ctx.time.timestamp ?? 'UTC';
+          contextParts.push(`📅 ${ctx.time.local} (${timezone}) | ${deviceEmoji} ${ctx.device.type} | ${localeFlag} ${ctx.user.locale.toUpperCase()}`);
           
           // Page actuelle
           if (ctx.page) {

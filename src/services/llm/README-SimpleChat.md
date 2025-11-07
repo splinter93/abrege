@@ -38,7 +38,7 @@ const response = await simpleChatOrchestrator.processMessage(
     userToken: 'your-token',
     sessionId: 'session-123',
     maxRetries: 3,
-    maxToolCalls: 5
+    maxToolCalls: 20
   }
 );
 
@@ -86,8 +86,8 @@ const results = await simpleToolExecutor.executeWithRetry(
 
 ### Limites par défaut
 - `maxRetries`: 3 tentatives
-- `maxToolCalls`: 10 outils max
-- `maxContextMessages`: 25 messages d'historique
+- `maxToolCalls`: 20 outils max
+- `maxContextMessages`: 50 messages d'historique
 
 ### Types d'erreurs gérées
 - `TIMEOUT` → Relance automatique

@@ -71,7 +71,7 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
         sessionId: params.sessionId,
         agentConfig: normalizedAgentConfig,
         uiContext: uiContextWithNotes,
-        maxToolCalls: 50
+        maxToolCalls: 20
       },
       params.sessionHistory || []
     );

@@ -203,10 +203,10 @@ this.logToolCalls(toolCalls, relances + 1);
 
 ```typescript
 export const DEFAULT_GROQ_LIMITS: GroqLimits = {
-  maxToolCalls: 10,           // Limite de sécurité
+  maxToolCalls: 20,           // Limite de sécurité
   maxRelances: 10,            // 10 relances maximum pour chaînages complexes
-  maxContextMessages: 25,      // Messages de contexte
-  maxHistoryMessages: 50       // Messages d'historique
+  maxContextMessages: 50,     // Messages de contexte
+  maxHistoryMessages: 100     // Messages d'historique
 };
 ```
 

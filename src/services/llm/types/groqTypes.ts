@@ -81,7 +81,7 @@ export interface GroqLimits {
 
 // 🎯 Configuration par défaut
 export const DEFAULT_GROQ_LIMITS: GroqLimits = {
-  maxToolCalls: 10,
+  maxToolCalls: 20,
   maxRelances: 10, // 🔧 NOUVEAU: 10 relances maximum pour chaînages complexes, avec mécanismes robustes
   maxContextMessages: 50, // 🔧 CORRECTION: Augmenté de 25 à 50 pour garder l'historique des tool calls
   maxHistoryMessages: 100 // 🔧 CORRECTION: Augmenté de 50 à 100 pour plus de contexte

@@ -53,7 +53,7 @@ export interface ExecutionResult {
 export class SimpleToolExecutor {
   private toolExecutor: ApiV2ToolExecutor;
   private readonly maxRetries: number = 3;
-  private readonly maxToolCalls: number = 10;
+  private readonly maxToolCalls: number = 20;
 
   constructor() {
     this.toolExecutor = new ApiV2ToolExecutor();

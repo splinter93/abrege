@@ -20,7 +20,7 @@ export class SimpleChatExample {
       userToken: 'user-token-example',
       sessionId: 'session-123',
       maxRetries: 3,
-      maxToolCalls: 5
+      maxToolCalls: 20
     };
 
     const history = [];

@@ -8,7 +8,7 @@
  */
 export const TOOL_CALL_LIMITS = {
   /** Nombre maximum de tool calls par session */
-  MAX_TOOL_CALLS_PER_SESSION: 10,
+  MAX_TOOL_CALLS_PER_SESSION: 20,
   
   /** Nombre maximum de tool calls en parallèle simultanés */
   MAX_PARALLEL_TOOL_CALLS: 5,

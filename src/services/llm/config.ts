@@ -91,7 +91,7 @@ const DEFAULT_CONFIG: LLMConfig = {
   tools: {
     enableFunctionCalls: true,
     enableStreaming: false, // Streaming géré par la route API
-    maxToolCalls: 10
+    maxToolCalls: 20
   },
   
   monitoring: {

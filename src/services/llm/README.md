@@ -67,7 +67,7 @@ if (result.success) {
 ### **3. Configuration Personnalisée**
 ```typescript
 const customLimits = {
-  maxToolCalls: 5,
+  maxToolCalls: 20,
   maxRelances: 1,
   maxContextMessages: 15,
   maxHistoryMessages: 30

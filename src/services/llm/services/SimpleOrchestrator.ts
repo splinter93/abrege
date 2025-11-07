@@ -58,7 +58,7 @@ export interface OrchestratorResponse {
  * Configuration de l'orchestrateur
  */
 const DEFAULT_CONFIG = {
-  maxToolCalls: 50,
+  maxToolCalls: 20,
   maxIterations: 10,
   timeout: 120000, // 2 minutes max
 };

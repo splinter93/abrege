@@ -6,7 +6,7 @@ import { GroqLimits } from '../types/groqTypes';
 export const GROQ_CONFIG = {
   // 🎯 Limites de sécurité
   limits: {
-    maxToolCalls: 10,
+    maxToolCalls: 20,
     maxRelances: 15, // 🚀 AUGMENTÉ À 15 CYCLES !
     maxContextMessages: 25,
     maxHistoryMessages: 40
@@ -49,7 +49,7 @@ export const GROQ_DEV_CONFIG = {
   ...GROQ_CONFIG,
   limits: {
     ...GROQ_CONFIG.limits,
-    maxToolCalls: 5,
+    maxToolCalls: 20,
     maxContextMessages: 15
   },
   logging: {
@@ -70,7 +70,7 @@ export const GROQ_PROD_CONFIG = {
   ...GROQ_CONFIG,
   limits: {
     ...GROQ_CONFIG.limits,
-    maxToolCalls: 15,
+    maxToolCalls: 20,
     maxContextMessages: 30,
     maxRelances: 15 // 🚀 AUGMENTÉ À 15 CYCLES !
   },
