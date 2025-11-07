@@ -38,14 +38,14 @@ export function preprocessEmbeds(markdown: string): string {
       }
     }
 
-    let html = `<div data-type="note-embed" data-note-ref="${noteRef}" data-depth="0" data-display="${display}"`;
+    let html = `<note-embed data-note-ref="${noteRef}" data-depth="0" data-display="${display}"`;
     
     if (resolvedTitle) {
       const escapedTitle = resolvedTitle.replace(/"/g, '&quot;');
       html += ` data-note-title="${escapedTitle}"`;
     }
     
-    html += `></div>`;
+    html += `></note-embed>`;
     
     return html;
   });

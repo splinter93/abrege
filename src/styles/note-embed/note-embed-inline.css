@@ -11,16 +11,17 @@
    ======================================== */
 
 .note-embed-inline-wrapper {
-  display: inline;
-  vertical-align: baseline;
+  display: block;
+  margin: 0.5rem 0;
 }
 
 div[data-type="note-embed"][data-display="inline"],
-div[data-type="note-embed"][data-display="compact"] {
-  display: inline-block;
-  vertical-align: baseline;
-  margin: 0 !important;
-  width: auto !important;
+div[data-type="note-embed"][data-display="compact"],
+note-embed[data-display="inline"],
+note-embed[data-display="compact"] {
+  display: block;
+  margin: 0.5rem 0 !important;
+  width: 100% !important;
 }
 
 /* ========================================
@@ -30,13 +31,16 @@ div[data-type="note-embed"][data-display="compact"] {
 .note-embed-inline {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  background: rgba(156, 163, 175, 0.12); /* ✅ Gris subtil */
-  border-radius: 6px;
+  gap: 6px;
+  padding: 3px 10px;
+  background: var(
+    --chat-gradient-block,
+    linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)
+  );
+  border-radius: 999px;
   font-size: 0.95em; /* ✅ Légèrement plus petit que texte environnant */
   font-family: var(--font-chat-text); /* ✅ Figtree */
-  color: var(--text-2);
+  color: var(--text-1, rgba(228, 228, 228, 0.92));
   cursor: pointer;
   transition: all 0.15s ease;
   text-decoration: none;
@@ -47,8 +51,11 @@ div[data-type="note-embed"][data-display="compact"] {
 }
 
 .note-embed-inline:hover {
-  background: rgba(156, 163, 175, 0.18);
-  color: var(--text-1);
+  background: var(
+    --chat-gradient-user-hover,
+    linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%)
+  );
+  color: var(--text-1, #ffffff);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -63,8 +70,8 @@ div[data-type="note-embed"][data-display="compact"] {
 
 .note-embed-inline-icon {
   flex-shrink: 0;
-  color: rgb(156, 163, 175); /* ✅ Gris élégant */
-  opacity: 0.8;
+  color: var(--text-1, rgba(228, 228, 228, 0.92));
+  opacity: 0.9;
 }
 
 .note-embed-inline:hover .note-embed-inline-icon {

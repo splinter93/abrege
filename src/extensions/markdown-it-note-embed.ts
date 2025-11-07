@@ -62,8 +62,7 @@ export function markdownItNoteEmbed(md: MarkdownIt) {
     }
 
     // Créer le token
-    const token = state.push('note_embed', 'div', 0);
-    token.attrSet('data-type', 'note-embed');
+    const token = state.push('note_embed', 'note-embed', 0);
     token.attrSet('data-note-ref', noteRef);
     if (noteTitle) {
       token.attrSet('data-note-title', noteTitle);
@@ -87,11 +86,11 @@ export function markdownItNoteEmbed(md: MarkdownIt) {
     const depth = token.attrGet('data-depth') || '0';
     const display = token.attrGet('data-display') || 'inline';
 
-    let html = `<div data-type="note-embed" data-note-ref="${noteRef}" data-depth="${depth}" data-display="${display}"`;
+    let html = `<note-embed data-note-ref="${noteRef}" data-depth="${depth}" data-display="${display}"`;
     if (noteTitle) {
       html += ` data-note-title="${noteTitle}"`;
     }
-    html += `></div>`;
+    html += `></note-embed>`;
 
     return html;
   };

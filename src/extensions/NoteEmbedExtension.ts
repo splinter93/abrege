@@ -78,6 +78,8 @@ declare module '@tiptap/core' {
 }
 
 const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
+  priority: 1000,
+
   name: 'noteEmbed',
 
   addOptions() {
@@ -91,13 +93,11 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
     logger.dev('[NoteEmbed] ✅ Extension créée et active !');
   },
 
-  group: 'inline',
+  group: 'block',
 
-  inline: true,
+  content: '',
 
   atom: true,
-
-  marks: '',
 
   draggable: false, // ✅ Drag désactivé - utiliser les handles Notion
 
@@ -140,18 +140,18 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
   parseHTML() {
     return [
       {
-        tag: 'div[data-type="note-embed"]',
+        tag: 'note-embed',
         getAttrs: (element: HTMLElement | string) => {
           if (typeof element === 'string') return false;
-          
+
           const noteRef = element.getAttribute('data-note-ref');
-          const noteTitle = element.getAttribute('data-note-title');
-          const depth = element.getAttribute('data-depth');
-          
+          if (!noteRef) return false;
+
           return {
             noteRef,
-            noteTitle,
-            depth: depth ? parseInt(depth, 10) : 0,
+            noteTitle: element.getAttribute('data-note-title'),
+            depth: parseInt(element.getAttribute('data-depth') || '0', 10),
+            display: element.getAttribute('data-display') || 'inline',
           };
         },
       },
@@ -160,14 +160,8 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
 
   renderHTML({ HTMLAttributes }) {
     return [
-      'div',
-      mergeAttributes(
-        this.options.HTMLAttributes,
-        HTMLAttributes,
-        {
-          'data-type': 'note-embed',
-        }
-      ),
+      'note-embed',
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
     ];
   },
 
@@ -209,27 +203,27 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
       setNoteEmbed:
         (
           noteRef: string,
-          depthOrOptions?: number | {
-            depth?: number;
-            display?: NoteEmbedDisplayStyle;
-            noteTitle?: string | null;
-          }
+          options?: number | Partial<{
+            depth: number;
+            display: NoteEmbedDisplayStyle;
+            noteTitle: string | null;
+          }>
         ) =>
         ({ commands }) => {
           let depth = 0;
           let display: NoteEmbedDisplayStyle = 'inline';
           let noteTitle: string | null = null;
 
-          if (typeof depthOrOptions === 'number') {
-            depth = depthOrOptions;
-          } else if (typeof depthOrOptions === 'object' && depthOrOptions) {
-            depth = depthOrOptions.depth ?? 0;
-            if (depthOrOptions.display && ['card', 'inline', 'compact'].includes(depthOrOptions.display)) {
-              display = depthOrOptions.display;
+          if (typeof options === 'number') {
+            depth = options;
+          } else if (options && typeof options === 'object') {
+            depth = options.depth ?? 0;
+            if (options.display && ['card', 'inline', 'compact'].includes(options.display)) {
+              display = options.display;
             }
-            noteTitle = depthOrOptions.noteTitle ?? null;
+            noteTitle = options.noteTitle ?? null;
           }
-
+ 
           return commands.insertContent({
             type: this.name,
             attrs: {
@@ -257,7 +251,11 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
         return true;
       },
       // ✅ CRITIQUE: Ne jamais re-render sauf si les attrs changent
-      update: (node, decorations) => {
+      update: (node) => {
+        if (!node || !node.type) {
+          return false;
+        }
+
         // Retourner false = ne pas re-render ce NodeView quand l'éditeur update
         // Le contenu React se gère lui-même avec ses propres states
         return node.type.name === 'noteEmbed';

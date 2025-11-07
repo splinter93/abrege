@@ -43,9 +43,9 @@ const NoteEmbedViewComponent: React.FC<NoteEmbedViewProps> = ({ node, getPos }) 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   
   if (normalizedDisplay === 'inline' || normalizedDisplay === 'compact') {
-    return (
+     return (
       <NodeViewWrapper 
-        as="span"
+        as="div"
         className="note-embed-inline-wrapper"
         contentEditable={false}
         draggable={false}

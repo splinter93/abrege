@@ -34,11 +34,13 @@ const NoteEmbedContent: React.FC<NoteEmbedContentProps> = ({
 
   if (normalizedDisplay === 'inline' || normalizedDisplay === 'compact') {
     return (
-      <NoteEmbedInline
-        noteRef={noteRef}
-        noteTitle={noteTitle}
-        standalone={standalone}
-      />
+      <div className="note-embed-inline-wrapper">
+        <NoteEmbedInline
+          noteRef={noteRef}
+          noteTitle={noteTitle}
+          standalone={standalone}
+        />
+      </div>
     );
   }
 

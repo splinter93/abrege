@@ -3,7 +3,7 @@
  * Extrait de Editor.tsx pour respecter la limite de 300 lignes
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { EditorContent as TiptapEditorContent } from '@tiptap/react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import FloatingMenuNotion from './floating-menu-notion';
@@ -53,6 +53,44 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
   classeurName,
   isContentReady = true, // Default true pour compatibilité
 }) => {
+  const [shouldRenderEditorContent, setShouldRenderEditorContent] = useState(false);
+
+  useEffect(() => {
+    if (isReadonly || !editor || !isContentReady) {
+      setShouldRenderEditorContent(false);
+      return;
+    }
+
+    let cancelled = false;
+    let frameId: number | null = null;
+
+    const scheduleRender = () => {
+      const run = () => {
+        Promise.resolve().then(() => {
+          if (!cancelled) {
+            setShouldRenderEditorContent(true);
+          }
+        });
+      };
+
+      if (typeof requestAnimationFrame === 'function') {
+        frameId = requestAnimationFrame(run);
+      } else {
+        run();
+      }
+    };
+
+    scheduleRender();
+
+    return () => {
+      cancelled = true;
+      if (frameId !== null && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(frameId);
+      }
+      setShouldRenderEditorContent(false);
+    };
+  }, [isReadonly, editor, isContentReady]);
+
   // Attacher les event listeners et rendre mermaid en readonly
   useEffect(() => {
     if (!isReadonly || !editorContainerRef.current) return;
@@ -209,8 +247,12 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
             />
             
             {/* Contenu Tiptap */}
-            {/* ✅ TOUJOURS rendu pour que les drag handles fonctionnent */}
-            <TiptapEditorContent editor={editor} />
+            {/* ✅ Rendu différé d'un microtask pour éviter flushSync avec React 18 */}
+            {shouldRenderEditorContent ? (
+              <TiptapEditorContent editor={editor} />
+            ) : (
+              <div className="tiptap-editor-content-placeholder" aria-hidden="true" />
+            )}
             
             {/* ✅ Loading géré par EditorSyncManager - Pas besoin d'overlay visible */}
             

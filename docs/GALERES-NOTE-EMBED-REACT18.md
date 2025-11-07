@@ -287,3 +287,73 @@ Affichage ✅
 
 ✅ OUI → Logs clairs, syntaxe simple `{{embed:xyz}}`, flux explicite
 
+
+---
+
+## 📓 Journal incident — 7 nov 2025
+
+### Situation
+- Plusieurs embeds successifs disparaissaient en édition après refresh, mais restaient visibles en preview.
+- Drop/drag gérait bien un embed par node, mais le parsing initial confondait les nodes avec les callouts.
+- Handles Notion détectaient un seul bloc lorsque les embeds étaient contigus.
+
+### Root causes identifiées
+1. **CalloutExtension** interceptait `div[data-type="note-embed"]` → conversion en callout.
+2. `NoteEmbedExtension` déclarée d’abord comme node inline → ProseMirror regroupait plusieurs embeds dans le même parent block → handle unique.
+3. `ReactNodeViewRenderer.update` ne gardait pas la node en cache → crash `Cannot read properties of undefined (reading 'name')` après reload.
+4. Preview HTML produisait des `<div data-type="note-embed">` empilés inline (pas de retour ligne naturel).
+5. À l’enregistrement, certains placeholders restaient en `<div ...>` (HTML) au lieu du Markdown attendu `{{embed:xyz}}` → regressions futures probables.
+
+### Correctifs appliqués (7 nov 2025)
+| Problème | Fix | Fichier(s) |
+| --- | --- | --- |
+| Callout hijack | Filtrer `data-type="note-embed"` dans `CalloutExtension.parseHTML()` | `src/extensions/CalloutExtension.ts` |
+| Node regroupée | Déclarer `group: 'block'`, `content: ''`, priorité `1000` et custom tag `<note-embed>` | `src/extensions/NoteEmbedExtension.ts` |
+| Crash `node.type.name` | Guard dans `ReactNodeViewRenderer({ update })` | `src/extensions/NoteEmbedExtension.ts` |
+| flushSync React 18 | Rendu différé (animation frame + microtask, après `isContentReady`) + placeholder pour `<TiptapEditorContent>` | `src/components/editor/EditorMainContent.tsx` |
+| Preview inline | Wrapper block `note-embed-inline-wrapper` + `NoteEmbedContent`/`Hydrator` alignés | `NoteEmbedView.tsx`, `NoteEmbedContent.tsx`, `NoteEmbedHydrator.tsx`, `note-embed-inline.css` |
+| Sérialisation fiable | `preprocessEmbeds()` + `markdown-it-note-embed` produisent `<note-embed ...>` (tag unique) puis serializer `{{embed:...}}` | `src/utils/preprocessEmbeds.ts`, `src/extensions/markdown-it-note-embed.ts` |
+
+### Checklist consolidation
+1. **Avant de livrer un nouveau node**
+   - [ ] Déclarer `priority` suffisante pour précéder Callout/Markdown/StarterKit.
+   - [ ] `content: ''`, `atom: true`, `group: 'block'` (si handle indépendant requis).
+   - [ ] `parseHTML()` ↔ `renderHTML()` symétriques, idéalement via un tag custom pour éviter collisions (`<note-embed>`).
+   - [ ] `ReactNodeViewRenderer` : `stopEvent`, guard `update`, `contentEditable={false}`.
+   - [ ] Hook de data (`useNoteEmbedMetadata`) encapsulé dans `startTransition` + cache.
+
+2. **Chargement initial (EditorSyncManager)**
+   - [ ] `storeContent` non vide avant `setContent`.
+   - [ ] `queueMicrotask` (ou `setTimeout`) pour repousser le `setContent` hors du cycle React.
+   - [ ] `preprocessEmbeds()` convertit `{{ }}` → tag custom **avant** `editor.setContent`.
+
+3. **Preview**
+   - [ ] `markdown-it` génère le tag custom (pas de fallback HTML). 
+   - [ ] Hydrator (`NoteEmbedHydrator`) cible explicitement ce tag.
+   - [ ] Si un parent `<p>` ne contient que des embeds → forcer `display:flex; flex-direction:column; gap`.
+
+4. **Sanitizer & sérialisation**
+   - [ ] Sanitizer protège `{{embed:...}}` (placeholder) avant escape.
+   - [ ] Serializer `addStorage().markdown.serialize()` écrit `{{embed:...|display:inline}}` pour l’inline par défaut.
+
+5. **QA rapide**
+   - [ ] Drag depuis sidebar → embed inline.
+   - [ ] Paste URL publique → embed inline.
+   - [ ] Reload édition → nodes toujours visibles, handles indépendants.
+   - [ ] Mode preview (readonly) → placeholders hydratés correctement, navigation `window.location`.
+
+### Lessons learned (suite)
+- Toujours isoler les NodeViews avec une balise dédiée pour éviter qu’un autre module Tiptap les attrape.
+- Priorité haute indispensable lorsqu’on s’appuie sur `Markdown.configure({ html: true })` + autres plugins.
+- Quand React 18 et Tiptap se combinent, assumption “node existe toujours” est fausse → guards systématiques.
+- Rendre `EditorContent` après un `requestAnimationFrame` + microtask (et seulement quand `isContentReady`) évite les `flushSync` et conserve les handles Notion.
+- Malgré l’atténuation, le warning React 18 peut apparaître lors d’un basculement rapide preview → édition : bruit toléré/documenté tant que Tiptap appelle `flushSync` en interne.
+- Documenter les transformations Markdown ↔ HTML ↔ Node : `{{embed}}` ↔ `<note-embed>` ↔ NodeView React.
+- Les handles Notion reposent sur le `group`/`atom` : garder en tête pour tout nouveau node bloc.
+
+### ToDo (si nouvelle variante)
+- [ ] Ajouter `note-embed-compact` : vérifier spacing + sérialisation `display:compact`.
+- [ ] Offrir UI pour basculer `display` (inline ↔ card ↔ compact) via menu contextuel ou slash command.
+- [ ] Tests unitaires : sérialisation Tiptap ↔ Markdown + hydratation preview (Jest DOM).
+- [ ] Monitoring : logguer anomalies `useNoteEmbedMetadata` (erreurs HTTP).
+

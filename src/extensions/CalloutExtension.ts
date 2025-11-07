@@ -2,6 +2,32 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import CalloutNodeView from '@/components/editor/CalloutNodeView';
 
+const CALLOUT_TITLES: Record<string, string> = {
+  info: 'Information',
+  warning: 'Attention',
+  error: 'Erreur',
+  success: 'Succès',
+  note: 'Note',
+  tip: 'Conseil',
+};
+
+const CALLOUT_ICONS: Record<string, string> = {
+  info: 'ℹ️',
+  warning: '⚠️',
+  error: '❌',
+  success: '✅',
+  note: '📝',
+  tip: '💡',
+};
+
+function resolveCalloutTitle(type: string): string {
+  return CALLOUT_TITLES[type] || 'Note';
+}
+
+function resolveCalloutIcon(type: string): string {
+  return CALLOUT_ICONS[type] || '📝';
+}
+
 export interface CalloutOptions {
   HTMLAttributes: Record<string, string | number | boolean>;
   types: string[];
@@ -52,24 +78,33 @@ const CalloutExtension = Node.create<CalloutOptions>({
   },
 
   parseHTML() {
-    return [
-      {
-        tag: 'div[data-type]',
-        getAttrs: (element) => {
-          if (typeof element === 'string') return false;
-          return {
-            type: element.getAttribute('data-type'),
-            title: element.getAttribute('data-title'),
-          };
-        },
-      },
-    ];
-  },
+     return [
+       {
+         tag: 'div[data-type]',
+         getAttrs: (element) => {
+           if (typeof element === 'string') return false;
+           const dataType = element.getAttribute('data-type');
+           if (!dataType || dataType === 'note-embed') {
+             return false;
+           }
+           return {
+             type: dataType,
+             title: element.getAttribute('data-title'),
+           };
+         },
+       },
+     ];
+   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const { type, title } = node.attrs;
-    const defaultTitle = this.options.types.includes(type) 
-      ? this.getDefaultTitle(type)
+    const { title } = node.attrs;
+    const rawType = node.attrs.type;
+    const type = typeof rawType === 'string' && rawType.trim().length > 0
+      ? rawType
+      : 'info';
+
+    const defaultTitle = this.options.types.includes(type)
+      ? resolveCalloutTitle(type)
       : 'Note';
 
     return [
@@ -89,7 +124,7 @@ const CalloutExtension = Node.create<CalloutOptions>({
         [
           'div',
           { class: 'callout-icon' },
-          this.getIcon(type),
+          resolveCalloutIcon(type),
         ],
         [
           'div',
@@ -122,31 +157,6 @@ const CalloutExtension = Node.create<CalloutOptions>({
 
   addNodeView() {
     return ReactNodeViewRenderer(CalloutNodeView);
-  },
-
-  // Méthodes utilitaires
-  getDefaultTitle(type: string): string {
-    const titles: Record<string, string> = {
-      info: 'Information',
-      warning: 'Attention',
-      error: 'Erreur',
-      success: 'Succès',
-      note: 'Note',
-      tip: 'Conseil',
-    };
-    return titles[type] || 'Note';
-  },
-
-  getIcon(type: string): string {
-    const icons: Record<string, string> = {
-      info: 'ℹ️',
-      warning: '⚠️',
-      error: '❌',
-      success: '✅',
-      note: '📝',
-      tip: '💡',
-    };
-    return icons[type] || '📝';
   },
 });
 

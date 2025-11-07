@@ -30,14 +30,21 @@ export const NoteEmbedHydrator: React.FC<NoteEmbedHydratorProps> = ({ containerR
     }
 
     const embedPlaceholders = containerRef.current.querySelectorAll<HTMLElement>(
-      'div[data-type="note-embed"]:not([data-hydrated="true"])'
+      'note-embed'
     );
 
-    if (embedPlaceholders.length > 0) {
-      logger.dev(`[NoteEmbedHydrator] 📦 Found ${embedPlaceholders.length} new embeds to hydrate.`);
+    const newPlaceholders = Array.from(embedPlaceholders).filter((element) => {
+      if (element.getAttribute('data-hydrated') === 'true') {
+        return false;
+      }
+      return true;
+    });
+
+    if (newPlaceholders.length > 0) {
+      logger.dev(`[NoteEmbedHydrator] 📦 Found ${newPlaceholders.length} new embeds to hydrate.`);
     }
 
-    embedPlaceholders.forEach((placeholder, index) => {
+    newPlaceholders.forEach((placeholder, index) => {
       const noteRef = placeholder.getAttribute('data-note-ref');
       if (!noteRef) {
         logger.warn('[NoteEmbedHydrator] Embed placeholder is missing data-note-ref', placeholder);
@@ -46,7 +53,35 @@ export const NoteEmbedHydrator: React.FC<NoteEmbedHydratorProps> = ({ containerR
       const noteTitle = placeholder.getAttribute('data-note-title');
       const displayAttr = placeholder.getAttribute('data-display') as NoteEmbedDisplayStyle | null;
       
-      logger.dev(`[NoteEmbedHydrator] ✨ Hydrating embed ${index + 1}/${embedPlaceholders.length}:`, noteRef);
+      const parentElement = placeholder.parentElement;
+      if (parentElement && parentElement.tagName === 'P') {
+        const meaningfulNodes = Array.from(parentElement.childNodes).filter(node => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent?.trim().length;
+          }
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const el = node as HTMLElement;
+            return el.dataset?.type === 'note-embed';
+          }
+          return false;
+        });
+
+        const onlyEmbeds = meaningfulNodes.every(node => {
+          if (node.nodeType !== Node.ELEMENT_NODE) return false;
+          const el = node as HTMLElement;
+          return el.dataset?.type === 'note-embed';
+        });
+
+        if (onlyEmbeds) {
+          parentElement.style.display = 'flex';
+          parentElement.style.flexDirection = 'column';
+          parentElement.style.alignItems = 'flex-start';
+          parentElement.style.gap = '0.75rem';
+          parentElement.style.margin = '0 0 1rem 0';
+        }
+      }
+
+      logger.dev(`[NoteEmbedHydrator] ✨ Hydrating embed ${index + 1}/${newPlaceholders.length}:`, noteRef);
       
       // Mark as hydrated BEFORE creating root to prevent re-triggering
       placeholder.setAttribute('data-hydrated', 'true');
