@@ -91,9 +91,13 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
     logger.dev('[NoteEmbed] ✅ Extension créée et active !');
   },
 
-  group: 'block',
+  group: 'inline',
+
+  inline: true,
 
   atom: true,
+
+  marks: '',
 
   draggable: false, // ✅ Drag désactivé - utiliser les handles Notion
 

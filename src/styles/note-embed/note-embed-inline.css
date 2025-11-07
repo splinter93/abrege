@@ -19,6 +19,8 @@ div[data-type="note-embed"][data-display="inline"],
 div[data-type="note-embed"][data-display="compact"] {
   display: inline-block;
   vertical-align: baseline;
+  margin: 0 !important;
+  width: auto !important;
 }
 
 /* ========================================
