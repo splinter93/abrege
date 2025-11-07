@@ -33,13 +33,16 @@ const NoteEmbedViewComponent: React.FC<NoteEmbedViewProps> = ({ node, getPos }) 
   const noteRef = node.attrs.noteRef as string;
   const noteTitle = node.attrs.noteTitle as string | null | undefined;
   const embedDepth = (node.attrs.depth as number) || 0;
-  const display = (node.attrs.display as NoteEmbedDisplayStyle) || 'card';
-  
+  const displayAttr = (node.attrs.display as NoteEmbedDisplayStyle) || 'inline';
+  const normalizedDisplay: NoteEmbedDisplayStyle = ['card', 'inline', 'compact'].includes(displayAttr)
+    ? displayAttr
+    : 'inline';
+ 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // ROUTING - Style inline (mention)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   
-  if (display === 'inline') {
+  if (normalizedDisplay === 'inline' || normalizedDisplay === 'compact') {
     return (
       <NodeViewWrapper 
         as="span"

@@ -16,7 +16,8 @@ import type MarkdownIt from 'markdown-it';
 // Groupe 1: noteRef (UUID ou slug)
 // Groupe 2: noteTitle (optionnel)
 // Groupe 3: display style (optionnel)
-const EMBED_REGEX = /^\{\{embed:([a-f0-9-]{36}|[a-z0-9-]+)(?:\|([^|}\s][^|}]*)?)?(?:\|display:([a-z]+))?\}\}$/;
+const EMBED_REGEX = /^\{\{embed:([a-f0-9-]{36}|[a-z0-9-]+)(?:\|(.*))?\}\}$/;
+const DISPLAY_STYLES = new Set(['card', 'inline', 'compact']);
 
 export function markdownItNoteEmbed(md: MarkdownIt) {
   // Règle block pour parser {{embed:noteRef}}
@@ -33,8 +34,32 @@ export function markdownItNoteEmbed(md: MarkdownIt) {
     if (silent) return true;
 
     const noteRef = match[1];
-    const noteTitle = match[2] ? match[2].trim() : null;
-    const display = match[3] || 'card'; // ✅ Default: card
+    const rest = match[2] ?? '';
+
+    let noteTitle: string | null = null;
+    let display: string = 'inline';
+
+    if (rest) {
+      const segments = rest.split('|');
+      for (const segmentRaw of segments) {
+        const segment = segmentRaw.trim();
+        if (!segment) {
+          continue;
+        }
+
+        if (segment.toLowerCase().startsWith('display:')) {
+          const value = segment.slice('display:'.length).trim().toLowerCase();
+          if (DISPLAY_STYLES.has(value)) {
+            display = value;
+          }
+          continue;
+        }
+
+        if (!noteTitle) {
+          noteTitle = segment;
+        }
+      }
+    }
 
     // Créer le token
     const token = state.push('note_embed', 'div', 0);
@@ -44,7 +69,7 @@ export function markdownItNoteEmbed(md: MarkdownIt) {
       token.attrSet('data-note-title', noteTitle);
     }
     token.attrSet('data-depth', '0');
-    token.attrSet('data-display', display); // ✅ Ajouter display
+    token.attrSet('data-display', display);
     token.markup = lineText;
     token.block = true;
     token.map = [startLine, startLine + 1];
@@ -60,7 +85,7 @@ export function markdownItNoteEmbed(md: MarkdownIt) {
     const noteRef = token.attrGet('data-note-ref');
     const noteTitle = token.attrGet('data-note-title');
     const depth = token.attrGet('data-depth') || '0';
-    const display = token.attrGet('data-display') || 'card'; // ✅ Default: card
+    const display = token.attrGet('data-display') || 'inline';
 
     let html = `<div data-type="note-embed" data-note-ref="${noteRef}" data-depth="${depth}" data-display="${display}"`;
     if (noteTitle) {

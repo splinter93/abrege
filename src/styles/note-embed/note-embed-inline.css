@@ -15,6 +15,12 @@
   vertical-align: baseline;
 }
 
+div[data-type="note-embed"][data-display="inline"],
+div[data-type="note-embed"][data-display="compact"] {
+  display: inline-block;
+  vertical-align: baseline;
+}
+
 /* ========================================
    CONTAINER INLINE
    ======================================== */

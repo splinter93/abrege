@@ -20,13 +20,15 @@ interface NoteEmbedInlineProps {
   noteRef: string;
   /** Titre optionnel (override) */
   noteTitle?: string | null;
+  /** Mode standalone (preview) */
+  standalone?: boolean;
 }
 
 /**
  * Composant inline pour mention de note
  * Usage: Dans du texte, tableaux, listes
  */
-export default function NoteEmbedInline({ noteRef, noteTitle }: NoteEmbedInlineProps) {
+export default function NoteEmbedInline({ noteRef, noteTitle, standalone = false }: NoteEmbedInlineProps) {
   
   // Charger les métadonnées de la note
   const { note, loading, error } = useNoteEmbedMetadata({ noteRef });
@@ -43,8 +45,11 @@ export default function NoteEmbedInline({ noteRef, noteTitle }: NoteEmbedInlineP
       return;
     }
     
-    // Ouvrir dans nouvel onglet
-    window.open(note.public_url, '_blank', 'noopener,noreferrer');
+    if (standalone) {
+      window.location.href = note.public_url;
+    } else {
+      window.open(note.public_url, '_blank', 'noopener,noreferrer');
+    }
     
     logger.dev('[NoteEmbedInline] 🔗 Ouverture note:', {
       noteRef,

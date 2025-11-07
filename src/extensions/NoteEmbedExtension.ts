@@ -5,7 +5,7 @@
  * - Node custom `noteEmbed` avec attributs (noteRef, depth)
  * - Détection automatique URLs Scrivia au paste
  * - Conversion URL → embed via PasteRule
- * - Command `setNoteEmbed(noteRef, depth)`
+ * - Command `setNoteEmbed(noteRef, options)`
  * - React NodeView pour rendering
  * 
  * Prévention récursion: MAX_DEPTH = 3 niveaux
@@ -15,7 +15,7 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import NoteEmbedView from '@/components/editor/NoteEmbedView';
-import { MAX_EMBED_DEPTH } from '@/types/noteEmbed';
+import { MAX_EMBED_DEPTH, type NoteEmbedDisplayStyle } from '@/types/noteEmbed';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
@@ -65,7 +65,14 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     noteEmbed: {
       /** Insérer un note embed */
-      setNoteEmbed: (noteRef: string, depth?: number) => ReturnType;
+      setNoteEmbed: (
+        noteRef: string,
+        options?: number | {
+          depth?: number;
+          display?: NoteEmbedDisplayStyle;
+          noteTitle?: string | null;
+        }
+      ) => ReturnType;
     };
   }
 }
@@ -117,8 +124,8 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
         }),
       },
       display: {
-        default: 'card',
-        parseHTML: element => element.getAttribute('data-display') || 'card',
+        default: 'inline',
+        parseHTML: element => element.getAttribute('data-display') || 'inline',
         renderHTML: attributes => ({
           'data-display': attributes.display,
         }),
@@ -167,7 +174,7 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
           // Sérialiser en format {{embed:noteRef|title|display:style}}
           const noteRef = node.attrs.noteRef;
           const noteTitle = node.attrs.noteTitle;
-          const display = node.attrs.display;
+          const display = node.attrs.display as NoteEmbedDisplayStyle | undefined;
           
           let markdown = `{{embed:${noteRef}`;
           
@@ -176,8 +183,8 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
             markdown += `|${noteTitle}`;
           }
           
-          // Ajouter le display si différent de 'card' (valeur par défaut)
-          if (display && display !== 'card') {
+          // Ajouter le display si différent de 'inline' (valeur par défaut)
+          if (display && display !== 'inline') {
             // Si pas de titre mais display custom, ajouter pipe vide
             if (!noteTitle) {
               markdown += `|`;
@@ -196,13 +203,36 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
   addCommands() {
     return {
       setNoteEmbed:
-        (noteRef: string, depth = 0) =>
+        (
+          noteRef: string,
+          depthOrOptions?: number | {
+            depth?: number;
+            display?: NoteEmbedDisplayStyle;
+            noteTitle?: string | null;
+          }
+        ) =>
         ({ commands }) => {
+          let depth = 0;
+          let display: NoteEmbedDisplayStyle = 'inline';
+          let noteTitle: string | null = null;
+
+          if (typeof depthOrOptions === 'number') {
+            depth = depthOrOptions;
+          } else if (typeof depthOrOptions === 'object' && depthOrOptions) {
+            depth = depthOrOptions.depth ?? 0;
+            if (depthOrOptions.display && ['card', 'inline', 'compact'].includes(depthOrOptions.display)) {
+              display = depthOrOptions.display;
+            }
+            noteTitle = depthOrOptions.noteTitle ?? null;
+          }
+
           return commands.insertContent({
             type: this.name,
             attrs: {
               noteRef,
               depth,
+              display,
+              noteTitle,
             },
           });
         },
@@ -258,6 +288,7 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
                 const node = view.state.schema.nodes.noteEmbed.create({
                   noteRef,
                   depth: 0,
+                  display: 'inline',
                 });
                 
                 const tr = view.state.tr.replaceSelectionWith(node);
@@ -306,6 +337,7 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
               const node = view.state.schema.nodes.noteEmbed.create({
                 noteRef: noteId,
                 depth: 0,
+                display: 'inline',
               });
               
               // Insérer à la position du drop

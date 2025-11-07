@@ -6,7 +6,8 @@
 import React, { useCallback } from 'react';
 import { useNoteEmbedMetadata } from '@/hooks/useNoteEmbedMetadata';
 import { useEmbedDepth } from '@/contexts/EmbedDepthContext';
-import { MAX_EMBED_DEPTH } from '@/types/noteEmbed';
+import { MAX_EMBED_DEPTH, type NoteEmbedDisplayStyle } from '@/types/noteEmbed';
+import NoteEmbedInline from './NoteEmbedInline';
 import '@/styles/note-embed.css';
 
 interface NoteEmbedContentProps {
@@ -14,13 +15,33 @@ interface NoteEmbedContentProps {
   embedDepth?: number;
   /** Si true, wrap dans un div simple (pour preview), sinon utilise NodeViewWrapper (pour édition) */
   standalone?: boolean;
+  /** Style d'affichage */
+  display?: NoteEmbedDisplayStyle;
+  /** Titre optionnel */
+  noteTitle?: string | null;
 }
 
 const NoteEmbedContent: React.FC<NoteEmbedContentProps> = ({
   noteRef,
   embedDepth = 0,
   standalone = false,
+  display = 'inline',
+  noteTitle = null,
 }) => {
+  const normalizedDisplay: NoteEmbedDisplayStyle = ['card', 'inline', 'compact'].includes(display)
+    ? display
+    : 'inline';
+
+  if (normalizedDisplay === 'inline' || normalizedDisplay === 'compact') {
+    return (
+      <NoteEmbedInline
+        noteRef={noteRef}
+        noteTitle={noteTitle}
+        standalone={standalone}
+      />
+    );
+  }
+
   const { depth: contextDepth, isMaxDepthReached } = useEmbedDepth();
   
   // Fetch metadata avec cache

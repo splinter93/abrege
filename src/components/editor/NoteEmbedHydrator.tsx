@@ -8,6 +8,7 @@
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import NoteEmbedContent from './NoteEmbedContent';
+import { type NoteEmbedDisplayStyle } from '@/types/noteEmbed';
 import { EmbedDepthProvider } from '@/contexts/EmbedDepthContext';
 import { simpleLogger as logger } from '@/utils/logger';
 
@@ -42,6 +43,8 @@ export const NoteEmbedHydrator: React.FC<NoteEmbedHydratorProps> = ({ containerR
         logger.warn('[NoteEmbedHydrator] Embed placeholder is missing data-note-ref', placeholder);
         return;
       }
+      const noteTitle = placeholder.getAttribute('data-note-title');
+      const displayAttr = placeholder.getAttribute('data-display') as NoteEmbedDisplayStyle | null;
       
       logger.dev(`[NoteEmbedHydrator] ✨ Hydrating embed ${index + 1}/${embedPlaceholders.length}:`, noteRef);
       
@@ -59,6 +62,8 @@ export const NoteEmbedHydrator: React.FC<NoteEmbedHydratorProps> = ({ containerR
             noteRef={noteRef}
             embedDepth={depth}
             standalone={true}
+            display={displayAttr ?? 'inline'}
+            noteTitle={noteTitle}
           />
         </EmbedDepthProvider>
       );
