@@ -13,10 +13,7 @@ import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
-import { Table } from '@tiptap/extension-table';
-import { TableRow } from '@tiptap/extension-table-row';
-import { TableHeader } from '@tiptap/extension-table-header';
-import { TableCell } from '@tiptap/extension-table-cell';
+import ScriviaTableKit from '@/extensions/ScriviaTableKit';
 import { Markdown } from 'tiptap-markdown';
 import LinkExtension from '@tiptap/extension-link';
 import CustomImage from '@/extensions/CustomImage';
@@ -146,10 +143,15 @@ export function createEditorExtensions(
       }),
       
       // ✅ Tables réactivées
-      Table.configure({ resizable: true }),
-      TableRow,
-      TableHeader,
-      TableCell,
+      ScriviaTableKit.configure({
+        resizable: true,
+        handleWidth: 6,
+        cellMinWidth: 80,
+        allowTableNodeSelection: true,
+        HTMLAttributes: {
+          class: 'scrivia-table',
+        },
+      }),
       
       // ✅ Images
       CustomImage.configure({ inline: false }),
@@ -259,10 +261,15 @@ export function createEditorExtensions(
           class: 'task-item-wrapper',
         },
       }),
-      Table.configure({ resizable: true }),
-      TableRow,
-      TableHeader,
-      TableCell,
+      ScriviaTableKit.configure({
+        resizable: true,
+        handleWidth: 6,
+        cellMinWidth: 80,
+        allowTableNodeSelection: true,
+        HTMLAttributes: {
+          class: 'scrivia-table',
+        },
+      }),
       UnifiedCodeBlockExtension.configure({ 
         lowlight: lowlightInstance,
       }),

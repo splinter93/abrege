@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { FiPlus, FiTrash2, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
 import './table-controls.css';
 import type { Editor } from '@tiptap/react';
 import { logger, LogCategory } from '@/utils/logger';
@@ -17,78 +17,85 @@ interface Position {
 const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) => {
   const [pos, setPos] = useState<Position>({ top: 0, left: 0 });
   const [isVisible, setIsVisible] = useState(false);
-  const controlsRef = useRef<HTMLDivElement>(null);
+  const [selectionVersion, setSelectionVersion] = useState(0);
 
-  // Find table element at cursor position
-  const findTableAtCursor = (el: Element | null): Element | null => {
-    if (!el) return null;
-    let node: Element | null = el instanceof HTMLElement ? el : null;
-    if (!node && el) {
-      const elementWithNode = el as Element & { node?: Element };
-      if (elementWithNode.node) {
-        node = elementWithNode.node;
-      }
+  const findTableAtCursor = useCallback((): HTMLTableElement | null => {
+    if (!editor || !containerRef.current) {
+      return null;
     }
-    
-    // Walk up the DOM tree to find a table
-    while (node && node !== containerRef.current) {
-      if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'TABLE') {
-        return node;
-      }
-      node = node.parentElement;
-    }
-    return null;
-  };
-
-  // Update position when selection changes
-  const updatePosition = () => {
-    if (!editor || !containerRef.current) return;
 
     try {
-      const view = editor.view;
-      const { from } = view.state.selection;
-      const coords = view.coordsAtPos(from);
-      
-      if (coords) {
-        const table = findTableAtCursor(view.dom.querySelector('.ProseMirror-selectednode'));
-        if (table) {
-          const rect = table.getBoundingClientRect();
-          const containerRect = containerRef.current.getBoundingClientRect();
-          
-          setPos({
-            top: rect.top - containerRect.top - 40,
-            left: rect.left - containerRect.left + rect.width / 2 - 60
-          });
-          setIsVisible(true);
-        } else {
-          setIsVisible(false);
-        }
+      const { state, view } = editor;
+      const { from } = state.selection;
+      const domAtPos = view.domAtPos(from);
+      let element: HTMLElement | null = null;
+
+      if (domAtPos.node instanceof HTMLElement) {
+        element = domAtPos.node;
+      } else if (domAtPos.node?.parentElement) {
+        element = domAtPos.node.parentElement;
       }
+
+      while (element && element !== containerRef.current) {
+        if (element.tagName === 'TABLE') {
+          return element as HTMLTableElement;
+        }
+        element = element.parentElement;
+      }
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, 'Erreur recherche table courante', error);
+    }
+
+    return null;
+  }, [editor, containerRef]);
+
+  const updatePosition = useCallback(() => {
+    if (!editor || !containerRef.current) {
+      setIsVisible(false);
+      return;
+    }
+
+    try {
+      const table = findTableAtCursor();
+      if (!table) {
+        setIsVisible(false);
+        return;
+      }
+
+      const rect = table.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
+
+      setPos({
+        top: rect.top - containerRect.top - 48,
+        left: rect.left - containerRect.left + rect.width / 2 - 72,
+      });
+      setIsVisible(true);
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Erreur lors de la mise à jour de la position des contrôles de tableau', error);
     }
-  };
+  }, [editor, containerRef, findTableAtCursor]);
 
-  // Subscribe to editor events - Performance optimisée
   useEffect(() => {
-    if (!editor) return;
+    if (!editor) {
+      return;
+    }
 
-    // Utiliser les événements Tiptap au lieu du polling
     const handleSelectionUpdate = () => {
       if (editor.isFocused && editor.state.selection) {
         updatePosition();
+        setSelectionVersion((version) => version + 1);
       }
     };
 
     const handleFocus = () => {
       updatePosition();
+      setSelectionVersion((version) => version + 1);
     };
 
     const handleBlur = () => {
       setIsVisible(false);
     };
 
-    // Écouter les événements spécifiques
     editor.on('selectionUpdate', handleSelectionUpdate);
     editor.on('focus', handleFocus);
     editor.on('blur', handleBlur);
@@ -98,9 +105,8 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
       editor.off('focus', handleFocus);
       editor.off('blur', handleBlur);
     };
-  }, [editor]); // updatePosition est stable (ne change pas)
+  }, [editor, updatePosition]);
 
-  // Mémoriser les calculs coûteux des permissions de tableau
   const tablePermissions = useMemo(() => {
     if (!editor) {
       return {
@@ -111,7 +117,8 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         canDeleteRow: false,
         canDeleteCol: false,
         canMergeCells: false,
-        canSplitCell: false
+        canSplitCell: false,
+        canDeleteTable: false,
       };
     }
 
@@ -124,7 +131,8 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         canDeleteRow: !!editor.can?.().chain().focus().deleteRow().run(),
         canDeleteCol: !!editor.can?.().chain().focus().deleteColumn().run(),
         canMergeCells: !!editor.can?.().chain().focus().mergeCells().run(),
-        canSplitCell: !!editor.can?.().chain().focus().splitCell().run()
+        canSplitCell: !!editor.can?.().chain().focus().splitCell().run(),
+        canDeleteTable: !!editor.can?.().chain().focus().deleteTable().run(),
       };
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Erreur calcul permissions tableau:', error);
@@ -136,12 +144,12 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         canDeleteRow: false,
         canDeleteCol: false,
         canMergeCells: false,
-        canSplitCell: false
+        canSplitCell: false,
+        canDeleteTable: false,
       };
     }
-  }, [editor]);
+  }, [editor, selectionVersion]);
 
-  // Destructurer pour la compatibilité
   const { 
     canAddRowBefore, 
     canAddRowAfter, 
@@ -150,39 +158,65 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
     canDeleteRow,
     canDeleteCol,
     canMergeCells,
-    canSplitCell
+    canSplitCell,
+    canDeleteTable,
   } = tablePermissions;
 
-  // Table operations
   const addRowAbove = () => {
-    if (editor) {
-      editor.chain().focus().addRowBefore().run();
-    }
-  };
-  const addRowBelow = () => {
-    if (editor) {
-      editor.chain().focus().addRowAfter().run();
-    }
-  };
-  const addColLeft = () => {
-    if (editor) {
-      editor.chain().focus().addColumnBefore().run();
-    }
-  };
-  const addColRight = () => {
-    if (editor) {
-      editor.chain().focus().addColumnAfter().run();
-    }
+    editor?.chain().focus().addRowBefore().run();
   };
 
-  if (!isVisible || !editor) return null;
+  const addRowBelow = () => {
+    editor?.chain().focus().addRowAfter().run();
+  };
+
+  const addColLeft = () => {
+    editor?.chain().focus().addColumnBefore().run();
+  };
+
+  const addColRight = () => {
+    editor?.chain().focus().addColumnAfter().run();
+  };
+
+  const deleteRow = () => {
+    editor?.chain().focus().deleteRow().run();
+  };
+
+  const deleteColumn = () => {
+    editor?.chain().focus().deleteColumn().run();
+  };
+
+  const mergeCells = () => {
+    editor?.chain().focus().mergeCells().run();
+  };
+
+  const splitCell = () => {
+    editor?.chain().focus().splitCell().run();
+  };
+
+  const deleteTable = () => {
+    editor?.chain().focus().deleteTable().run();
+  };
+
+  const withEditorFocus = useCallback(
+    (action: () => void) => (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      action();
+    },
+    []
+  );
+
+  if (!isVisible || !editor) {
+    return null;
+  }
 
   return (
     <div className="table-controls" style={{ top: pos.top, left: pos.left }}>
-      <div className="table-controls-row">
+      <div className="table-controls-group">
         <button
           className="table-control-btn"
-          onClick={addRowAbove}
+          onMouseDown={withEditorFocus(addRowAbove)}
           disabled={!canAddRowBefore}
           title="Ajouter une ligne au-dessus"
         >
@@ -190,17 +224,35 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         </button>
         <button
           className="table-control-btn"
-          onClick={addRowBelow}
+          onMouseDown={withEditorFocus(addRowBelow)}
           disabled={!canAddRowAfter}
           title="Ajouter une ligne en-dessous"
         >
           <FiPlus size={14} />
         </button>
       </div>
-      <div className="table-controls-col">
+      <div className="table-controls-group">
         <button
           className="table-control-btn"
-          onClick={addColLeft}
+          onMouseDown={withEditorFocus(deleteRow)}
+          disabled={!canDeleteRow}
+          title="Supprimer la ligne"
+        >
+          <FiTrash2 size={14} />
+        </button>
+        <button
+          className="table-control-btn"
+          onMouseDown={withEditorFocus(deleteColumn)}
+          disabled={!canDeleteCol}
+          title="Supprimer la colonne"
+        >
+          <FiTrash2 size={14} />
+        </button>
+      </div>
+      <div className="table-controls-group">
+        <button
+          className="table-control-btn"
+          onMouseDown={withEditorFocus(addColLeft)}
           disabled={!canAddColBefore}
           title="Ajouter une colonne à gauche"
         >
@@ -208,15 +260,41 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
         </button>
         <button
           className="table-control-btn"
-          onClick={addColRight}
+          onMouseDown={withEditorFocus(addColRight)}
           disabled={!canAddColAfter}
           title="Ajouter une colonne à droite"
         >
           <FiPlus size={14} />
         </button>
       </div>
+      <div className="table-controls-group">
+        <button
+          className="table-control-btn"
+          onMouseDown={withEditorFocus(mergeCells)}
+          disabled={!canMergeCells}
+          title="Fusionner les cellules"
+        >
+          <FiMaximize2 size={14} />
+        </button>
+        <button
+          className="table-control-btn"
+          onMouseDown={withEditorFocus(splitCell)}
+          disabled={!canSplitCell}
+          title="Scinder la cellule"
+        >
+          <FiMinimize2 size={14} />
+        </button>
+        <button
+          className="table-control-btn table-control-danger"
+          onMouseDown={withEditorFocus(deleteTable)}
+          disabled={!canDeleteTable}
+          title="Supprimer le tableau"
+        >
+          <FiTrash2 size={14} />
+        </button>
+      </div>
     </div>
   );
 };
 
-export default TableControls; 
+export default TableControls;

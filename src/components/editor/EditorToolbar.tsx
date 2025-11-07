@@ -23,6 +23,7 @@ import { BsChatQuote } from 'react-icons/bs';
 import { MdFormatListNumbered, MdGridOn } from 'react-icons/md';
 import type { FullEditorInstance } from '@/types/editor';
 import FontSelector from './FontSelector';
+import { insertDefaultTable } from '@/utils/editorTables';
 import './editor-toolbar.css';
 
 interface EditorToolbarProps {
@@ -56,7 +57,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const toggleBulletList = () => editor.chain().focus().toggleBulletList().run();
   const toggleOrderedList = () => editor.chain().focus().toggleOrderedList().run();
   const toggleBlockquote = () => editor.chain().focus().toggleBlockquote().run();
-  const insertTable = () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  const handleInsertTable = () => insertDefaultTable(editor);
 
   const setHeading = (level: 1 | 2 | 3) => {
     editor.chain().focus().toggleHeading({ level }).run();
@@ -205,7 +206,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         <BsChatQuote size={16} />
       </button>
 
-      <button className="tb-btn desktop-only" title="Insérer un tableau" onClick={insertTable}>
+      <button className="tb-btn desktop-only" title="Insérer un tableau" onClick={handleInsertTable}>
         <MdGridOn size={18} />
       </button>
 

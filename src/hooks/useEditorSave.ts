@@ -9,6 +9,7 @@ interface NoteData {
   titleAlign?: 'left' | 'center' | 'right';
 }
 import { simpleLogger as logger } from '@/utils/logger';
+import { sanitizeNoteEmbedHtml } from '@/utils/sanitizeNoteEmbedHtml';
 
 
 export interface UseEditorSaveOptions {
@@ -40,7 +41,8 @@ export default function useEditorSave({ onSave, editor }: UseEditorSaveOptions):
   const handleSave = useCallback(async (newTitle: string, _content: string, align?: 'left' | 'center' | 'right') => {
     if (onSave && editor) {
       setIsSaving(true);
-      const html_content = editor.getHTML();
+      const rawHtmlContent = editor.getHTML();
+      const html_content = sanitizeNoteEmbedHtml(rawHtmlContent);
       let markdown_content = getEditorMarkdown(editor);
       
       // 🔧 FIX: Supprimer l'échappement des titres (ex: \# → #)

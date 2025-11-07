@@ -8,6 +8,7 @@ import type { FullEditorInstance } from '@/types/editor';
 import type { EditorState } from '@/hooks/editor/useEditorState';
 import ContextMenu from '../ContextMenu';
 import { logger, LogCategory } from '@/utils/logger';
+import { insertDefaultTable } from '@/utils/editorTables';
 
 export interface EditorContextMenuContainerProps {
   /** Instance de l'éditeur Tiptap */
@@ -142,7 +143,7 @@ export const EditorContextMenuContainer: React.FC<EditorContextMenuContainerProp
           onOpenImageMenu();
           break;
         case 'turn-into-table':
-          editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+          insertDefaultTable(editor);
           break;
         case 'turn-into-divider':
           editor.chain().focus().setHorizontalRule().run();

@@ -1,3 +1,5 @@
+import { insertDefaultTable } from '../utils/editorTables';
+
 export const SLASH_COMMANDS = [
   {
     id: 'h1',
@@ -107,7 +109,7 @@ export const SLASH_COMMANDS = [
     label: { fr: 'Table', en: 'Table' },
     alias: { fr: ['/tableau', '/table', '/grille'], en: ['/table', '/grid', '/spreadsheet'] },
     description: { fr: 'Créer un tableau de données', en: 'Create a data table' },
-    action: (editor) => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+    action: (editor) => insertDefaultTable(editor),
   },
   {
     id: 'callout',

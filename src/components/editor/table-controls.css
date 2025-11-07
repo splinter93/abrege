@@ -13,12 +13,12 @@
   box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 
-.table-controls-row {
+.table-controls-group {
   display: inline-flex;
   gap: 6px;
 }
 
-.table-controls-btn {
+.table-control-btn {
   appearance: none;
   background: var(--surface-2);
   color: var(--text-2);
@@ -31,14 +31,25 @@
   transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.12s;
 }
 
-.table-controls-btn:hover {
+.table-control-btn:hover {
   background: var(--surface-hover);
   border-color: var(--border-hover);
   color: var(--text-1);
   transform: translateY(-1px);
 }
 
-.table-controls-btn:disabled {
+.table-control-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 } 
+
+.table-control-danger {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.table-control-danger:hover {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}

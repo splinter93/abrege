@@ -4,6 +4,7 @@ import { V2ResourceResolver } from './v2ResourceResolver';
 import { SlugGenerator } from './slugGenerator';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
 import { sanitizeMarkdownContent } from './markdownSanitizer.server';
+import { sanitizeNoteEmbedHtml } from './sanitizeNoteEmbedHtml';
 
 // Types pour les opérations de contenu et les agents
 export interface ContentOperation {
@@ -265,7 +266,9 @@ export class V2DatabaseUtils {
       if (data.markdown_content !== undefined) {
         updateData.markdown_content = sanitizeMarkdownContent(data.markdown_content);
       }
-      if (data.html_content !== undefined) updateData.html_content = data.html_content;
+      if (data.html_content !== undefined) {
+        updateData.html_content = sanitizeNoteEmbedHtml(data.html_content);
+      }
       if (data.header_image !== undefined) updateData.header_image = data.header_image;
       if (data.header_image_offset !== undefined) {
         const roundedOffset = Math.round(data.header_image_offset * 10) / 10;

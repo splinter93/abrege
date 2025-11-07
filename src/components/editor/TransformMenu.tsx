@@ -13,6 +13,7 @@ import {
 import { MdFormatQuote, MdGridOn } from 'react-icons/md';
 import { AiOutlineOrderedList, AiOutlineUnorderedList } from 'react-icons/ai';
 import './transform-menu.css';
+import { insertDefaultTable } from '@/utils/editorTables';
 
 interface TransformMenuProps {
   editor: Editor;
@@ -95,7 +96,7 @@ const TransformMenu: React.FC<TransformMenuProps> = ({ editor, onClose }) => {
       id: 'table',
       label: 'Tableau',
       icon: MdGridOn,
-      action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+      action: () => insertDefaultTable(editor),
       isActive: () => editor.isActive('table'),
     },
   ];

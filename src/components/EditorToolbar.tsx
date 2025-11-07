@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fi';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import Tooltip from '@/components/Tooltip';
+import { insertDefaultTable } from '@/utils/editorTables';
 
 interface EditorToolbarProps {
   editor: TiptapEditor | null;
@@ -149,7 +150,15 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen 
       
       {/* Group 7: Insertions */}
       <div className="toolbar-group">
-        <Tooltip text="Insérer un tableau"><button className={`toolbar-button${editor.isActive('table') ? ' active' : ''}`} onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} aria-label="Insérer un tableau"><FiTable size={16} /></button></Tooltip>
+        <Tooltip text="Insérer un tableau">
+          <button
+            className={`toolbar-button${editor.isActive('table') ? ' active' : ''}`}
+            onClick={() => insertDefaultTable(editor)}
+            aria-label="Insérer un tableau"
+          >
+            <FiTable size={16} />
+          </button>
+        </Tooltip>
         <Tooltip text="Image"><button className={`toolbar-button${editor.isActive('image') ? ' active' : ''}`} onClick={() => setImageMenuOpen(true)} aria-label="Image"><FiImage size={16} /></button></Tooltip>
       </div>
 

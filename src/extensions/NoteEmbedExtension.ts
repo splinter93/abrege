@@ -278,11 +278,14 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
   },
 
   addProseMirrorPlugins() {
-    const pluginKey = new PluginKey('noteEmbedPaste');
+    const pastePluginKey = new PluginKey('noteEmbedPaste');
+    const cleanupPluginKey = new PluginKey('noteEmbedCleanup');
 
-    return [
+    const plugins: Plugin[] = [];
+
+    plugins.push(
       new Plugin({
-        key: pluginKey,
+        key: pastePluginKey,
         props: {
           handlePaste: (view, event) => {
             const clipboardData = (event as ClipboardEvent).clipboardData;
@@ -373,7 +376,47 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
           },
         },
       }),
-    ];
+    );
+
+    plugins.push(
+      new Plugin({
+        key: cleanupPluginKey,
+        appendTransaction(_transactions, _oldState, newState) {
+          if (!newState.docChanged) {
+            return null;
+          }
+
+          let tr: ReturnType<typeof newState.tr> | null = null;
+          const { schema } = newState;
+          const paragraphNode = schema.nodes.paragraph;
+
+          newState.doc.descendants((node, pos) => {
+            if (node.type.name !== 'noteEmbed') {
+              return;
+            }
+
+            const noteRef = typeof node.attrs.noteRef === 'string' ? node.attrs.noteRef.trim() : '';
+            if (noteRef.length > 0) {
+              return;
+            }
+
+            if (!tr) {
+              tr = newState.tr;
+            }
+
+            if (paragraphNode) {
+              tr = tr.replaceWith(pos, pos + node.nodeSize, paragraphNode.create());
+            } else {
+              tr = tr.delete(pos, pos + node.nodeSize);
+            }
+          });
+
+          return tr;
+        },
+      })
+    );
+
+    return plugins;
   },
 
 });
