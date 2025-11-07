@@ -310,7 +310,7 @@ Affichage ✅
 | Callout hijack | Filtrer `data-type="note-embed"` dans `CalloutExtension.parseHTML()` | `src/extensions/CalloutExtension.ts` |
 | Node regroupée | Déclarer `group: 'block'`, `content: ''`, priorité `1000` et custom tag `<note-embed>` | `src/extensions/NoteEmbedExtension.ts` |
 | Crash `node.type.name` | Guard dans `ReactNodeViewRenderer({ update })` | `src/extensions/NoteEmbedExtension.ts` |
-| flushSync React 18 | Rendu différé (animation frame + microtask, après `isContentReady`) + placeholder pour `<TiptapEditorContent>` | `src/components/editor/EditorMainContent.tsx` |
+| flushSync React 18 | Warning console connu (Tiptap appelle `flushSync` lors du switch preview → édition). Documenté comme bruit toléré. | N/A |
 | Preview inline | Wrapper block `note-embed-inline-wrapper` + `NoteEmbedContent`/`Hydrator` alignés | `NoteEmbedView.tsx`, `NoteEmbedContent.tsx`, `NoteEmbedHydrator.tsx`, `note-embed-inline.css` |
 | Sérialisation fiable | `preprocessEmbeds()` + `markdown-it-note-embed` produisent `<note-embed ...>` (tag unique) puis serializer `{{embed:...}}` | `src/utils/preprocessEmbeds.ts`, `src/extensions/markdown-it-note-embed.ts` |
 
@@ -346,8 +346,7 @@ Affichage ✅
 - Toujours isoler les NodeViews avec une balise dédiée pour éviter qu’un autre module Tiptap les attrape.
 - Priorité haute indispensable lorsqu’on s’appuie sur `Markdown.configure({ html: true })` + autres plugins.
 - Quand React 18 et Tiptap se combinent, assumption “node existe toujours” est fausse → guards systématiques.
-- Rendre `EditorContent` après un `requestAnimationFrame` + microtask (et seulement quand `isContentReady`) évite les `flushSync` et conserve les handles Notion.
-- Malgré l’atténuation, le warning React 18 peut apparaître lors d’un basculement rapide preview → édition : bruit toléré/documenté tant que Tiptap appelle `flushSync` en interne.
+- Le warning React 18 `flushSync` est accepté pour l’instant ; se manifeste lors du retour preview → édition et n’impacte ni les handles ni la sauvegarde.
 - Documenter les transformations Markdown ↔ HTML ↔ Node : `{{embed}}` ↔ `<note-embed>` ↔ NodeView React.
 - Les handles Notion reposent sur le `group`/`atom` : garder en tête pour tout nouveau node bloc.
 
