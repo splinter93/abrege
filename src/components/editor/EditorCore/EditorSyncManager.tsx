@@ -78,7 +78,29 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
   React.useEffect(() => {
     // ✅ FIX: Attendre que l'éditeur ET le contenu soient prêts
     // Ne pas charger si le contenu est vide (la note n'est pas encore fetch depuis la DB)
-    if (!editor || hasLoadedInitialContentRef.current || !storeContent) return;
+    if (storeContent === undefined || storeContent === null) return;
+    if (!editor) return;
+
+    const normalizedStoreContent = normalizeMarkdown(storeContent);
+
+    if (hasLoadedInitialContentRef.current) {
+      if (normalizedStoreContent === lastStoreSyncRef.current) {
+        return;
+      }
+
+      const currentEditorContent = normalizeMarkdown(getEditorMarkdown(editor));
+
+      if (normalizedStoreContent === currentEditorContent) {
+        lastStoreSyncRef.current = normalizedStoreContent;
+        return;
+      }
+
+      if (editorState.internal.isUpdatingFromStore) {
+        return;
+      }
+
+      hasLoadedInitialContentRef.current = false;
+    }
     
     editorState.setIsUpdatingFromStore(true);
     
@@ -93,7 +115,7 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
       editor.commands.setContent(processedContent);
       
       hasLoadedInitialContentRef.current = true;
-      lastStoreSyncRef.current = normalizeMarkdown(storeContent);
+      lastStoreSyncRef.current = normalizedStoreContent;
       
       // Appeler onInitialContentLoaded après un court délai pour s'assurer que tout est stable
       setTimeout(() => {

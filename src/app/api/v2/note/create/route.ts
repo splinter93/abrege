@@ -134,6 +134,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         header_image: validatedData.header_image,
         folder_id: validatedData.folder_id,
         classeur_id: classeurId, // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id
+        font_family: 'Figtree',
         user_id: userId,
         slug,
         public_url: publicUrl

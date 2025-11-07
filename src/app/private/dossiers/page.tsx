@@ -527,7 +527,7 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
   }
 
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper dossiers-page">
       <aside className="page-sidebar-fixed">
         <UnifiedSidebar />
       </aside>

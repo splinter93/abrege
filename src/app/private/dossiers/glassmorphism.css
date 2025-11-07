@@ -3,7 +3,7 @@
    ========================================================================== */
 
 /* Variables glassmorphism pour la page dossiers */
-:root {
+.dossiers-page {
   /* Backgrounds glassmorphism */
   --glass-background: rgba(255, 255, 255, 0.1);
   --glass-background-secondary: rgba(255, 255, 255, 0.05);

@@ -33,13 +33,6 @@
 
 :root {
   /* ==========================================================================
-     COULEURS TYPOGRAPHIQUES
-     ========================================================================== */
-  --editor-text-color: var(--color-text-primary); /* Délégation vers variables-unified.css */
-  --editor-text-primary: var(--color-text-primary); /* Délégation vers variables-unified.css */
-  --editor-text-muted: var(--color-text-secondary); /* Délégation vers variables-unified.css */
-
-  /* ==========================================================================
      ARCHITECTURE TYPOGRAPHIE - HIÉRARCHIE CLAIRE
      ========================================================================== */
   
@@ -230,7 +223,7 @@
   font-size: var(--editor-title-size);
   font-weight: var(--editor-title-weight);
   font-family: var(--editor-font-family-headings);
-  color: var(--editor-text-color);
+  color: var(--editor-text-color, var(--color-text-primary, #B5BCC4));
   letter-spacing: var(--editor-title-letter-spacing);
   line-height: var(--editor-title-line-height);
 }
@@ -287,7 +280,7 @@
   font-family: var(--editor-font-family-body);
   font-size: var(--editor-body-size);
   line-height: var(--editor-line-height-base);
-  color: var(--editor-text-color);
+  color: var(--editor-text-color, var(--color-text-primary, #B5BCC4));
 }
 
 /* ==========================================================================
@@ -438,12 +431,12 @@
 
 /* Couleur du container (typographie) */
 .public-note-container {
-  color: var(--editor-text-color);
+  color: var(--editor-text-color, var(--color-text-primary, #B5BCC4));
 }
 
 /* Titre dans la page publique (pas dans l'image) - typographie */
 .public-note-content-wrapper .noteLayout-title h1 {
-  color: var(--editor-text-color);
+  color: var(--editor-text-color, var(--color-text-primary, #B5BCC4));
   font-size: var(--editor-title-size);
   font-weight: var(--editor-h1-weight);
   font-family: var(--editor-font-family-headings);
@@ -452,7 +445,7 @@
 
 /* Couleur du contenu */
 .public-note-content-wrapper .noteLayout-content {
-  color: var(--editor-text-color);
+  color: var(--editor-text-color, var(--color-text-primary, #B5BCC4));
 }
 
 /* Titre dans l'image d'en-tête - typographie */

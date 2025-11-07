@@ -45,7 +45,7 @@ const FONTS: FontOption[] = [
 ];
 
 const FontSelector: React.FC<FontSelectorProps> = ({
-  currentFont = 'Noto Sans',
+  currentFont = 'Figtree',
   onFontChange,
   disabled = false,
 }) => {

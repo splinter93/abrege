@@ -28,6 +28,13 @@ const NoteEmbedContent: React.FC<NoteEmbedContentProps> = ({
   display = 'inline',
   noteTitle = null,
 }) => {
+  const normalizedNoteRef = (noteRef || '').trim();
+  const isNoteRefValid = normalizedNoteRef.length > 0;
+
+  if (!isNoteRefValid) {
+    return null;
+  }
+
   const normalizedDisplay: NoteEmbedDisplayStyle = ['card', 'inline', 'compact'].includes(display)
     ? display
     : 'inline';
@@ -36,7 +43,7 @@ const NoteEmbedContent: React.FC<NoteEmbedContentProps> = ({
     return (
       <div className="note-embed-inline-wrapper">
         <NoteEmbedInline
-          noteRef={noteRef}
+          noteRef={normalizedNoteRef}
           noteTitle={noteTitle}
           standalone={standalone}
         />
@@ -48,7 +55,7 @@ const NoteEmbedContent: React.FC<NoteEmbedContentProps> = ({
   
   // Fetch metadata avec cache
   const { note, loading, error } = useNoteEmbedMetadata({
-    noteRef,
+    noteRef: normalizedNoteRef,
     depth: embedDepth,
     enabled: !isMaxDepthReached()
   });

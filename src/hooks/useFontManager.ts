@@ -17,7 +17,7 @@ export const useFontManager = (currentFont: string | null | undefined) => {
         'Open Sans': "'Open Sans', sans-serif",
         'Lato': "'Lato', sans-serif",
         'Poppins': "'Poppins', sans-serif",
-        'Figtree': "'Figtree', sans-serif",
+        'Figtree': "'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
         'Source Sans Pro': "'Source Sans 3', sans-serif",
         'Work Sans': "'Work Sans', sans-serif",
         'Ubuntu': "'Ubuntu', sans-serif",
@@ -32,7 +32,7 @@ export const useFontManager = (currentFont: string | null | undefined) => {
       };
 
       // Récupérer la famille de police correspondante
-      const fontFamily = fontFamilyMap[fontName] || fontFamilyMap['Noto Sans'];
+      const fontFamily = fontFamilyMap[fontName] || fontFamilyMap['Figtree'];
       
       // Changer les variables CSS selon le scope
       if (scope === 'all' || scope === 'headings') {

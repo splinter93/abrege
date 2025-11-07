@@ -39,7 +39,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   readonly = false,
   onImageClick,
   onFontChange,
-  currentFont = 'Noto Sans'
+  currentFont = 'Figtree'
 }) => {
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);

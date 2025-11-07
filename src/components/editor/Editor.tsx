@@ -296,7 +296,7 @@ const Editor: React.FC<{
             userId={userId}
             isReadonly={isReadonly}
             editorState={editorState}
-              currentFont={note?.font_family || 'Noto Sans'}
+              currentFont={note?.font_family || 'Figtree'}
               kebabBtnRef={kebabBtnRef}
             canEdit={canEdit}
             handlers={handlersWithEditor}

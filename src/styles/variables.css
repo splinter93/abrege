@@ -36,6 +36,15 @@
   --color-bg-content: #1e2022;         /* ✅ Synchronisé avec --chat-bg-input */
   --color-bg-hover: rgba(255, 255, 255, 0.05);
   --color-bg-header: #0e1012;          /* ✅ Synchronisé avec --chat-bg-primary */
+
+  /* ✅ Tokens chat-clés définis très tôt pour éviter flash noir */
+  --chat-bg-primary: #0e1012;
+  --chat-bg-secondary: #121416;
+  --chat-bg-tertiary: #161819;
+  --chat-bg-input: #1e2022;
+  --chat-bg-input-focus: #2a2a2a;
+  --chat-bg-user-message: #232323;
+  --chat-bg-user-message-hover: #252525;
   
   /* Menus et dropdowns */
   --menu-bg-gradient: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%);
@@ -60,6 +69,12 @@
   --color-text-secondary: #A0A0A0;
   --color-text-muted: #6A6A6A;
   --color-text-danger: #FF5C5C;
+
+  --chat-text-primary: #b5bcc4;
+  --chat-text-secondary: #a1a9b1;
+  --editor-text-color: var(--color-text-primary);
+  --editor-text-primary: var(--color-text-primary);
+  --editor-text-muted: var(--color-text-secondary);
   
   /* Alias texte */
   --text-primary: #B5BCC4;

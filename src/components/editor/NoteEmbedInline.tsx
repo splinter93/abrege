@@ -29,9 +29,19 @@ interface NoteEmbedInlineProps {
  * Usage: Dans du texte, tableaux, listes
  */
 export default function NoteEmbedInline({ noteRef, noteTitle, standalone = false }: NoteEmbedInlineProps) {
-  
-  // Charger les métadonnées de la note
-  const { note, loading, error } = useNoteEmbedMetadata({ noteRef });
+  const normalizedNoteRef = (noteRef || '').trim();
+  const isNoteRefValid = normalizedNoteRef.length > 0;
+
+  // Charger les métadonnées de la note uniquement si noteRef valide
+  const { note, loading, error } = useNoteEmbedMetadata({
+    noteRef: normalizedNoteRef,
+    enabled: isNoteRefValid,
+    depth: 0,
+  });
+
+  if (!isNoteRefValid) {
+    return null;
+  }
 
   /**
    * Handler pour ouvrir la note dans un nouvel onglet
@@ -41,7 +51,7 @@ export default function NoteEmbedInline({ noteRef, noteTitle, standalone = false
     e.stopPropagation();
     
     if (!note?.public_url) {
-      logger.warn('[NoteEmbedInline] ⚠️  Pas d\'URL publique', { noteRef });
+      logger.warn('[NoteEmbedInline] ⚠️  Pas d\'URL publique', { noteRef: normalizedNoteRef });
       return;
     }
     
@@ -58,7 +68,7 @@ export default function NoteEmbedInline({ noteRef, noteTitle, standalone = false
   };
 
   // Déterminer le titre à afficher
-  const displayTitle = noteTitle || note?.title || noteRef;
+  const displayTitle = noteTitle || note?.title || normalizedNoteRef;
 
   // Loading state
   if (loading) {
