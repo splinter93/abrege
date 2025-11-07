@@ -1,0 +1,148 @@
+/**
+ * NOTE EMBED - Style Inline (Mention)
+ * 
+ * Affichage compact inline avec icône plume + titre
+ * Usage: Dans paragraphes, tableaux, listes
+ * Style: Comme code inline mais pour notes
+ */
+
+/* ========================================
+   WRAPPER NODEVIEW
+   ======================================== */
+
+.note-embed-inline-wrapper {
+  display: inline;
+  vertical-align: baseline;
+}
+
+/* ========================================
+   CONTAINER INLINE
+   ======================================== */
+
+.note-embed-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(156, 163, 175, 0.12); /* ✅ Gris subtil */
+  border-radius: 6px;
+  font-size: 0.95em; /* ✅ Légèrement plus petit que texte environnant */
+  font-family: var(--font-chat-text); /* ✅ Figtree */
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: middle; /* ✅ Alignement avec texte */
+  line-height: 1.5;
+  user-select: none;
+}
+
+.note-embed-inline:hover {
+  background: rgba(156, 163, 175, 0.18);
+  color: var(--text-1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.note-embed-inline:active {
+  transform: translateY(0);
+}
+
+/* ========================================
+   ICÔNE PLUME
+   ======================================== */
+
+.note-embed-inline-icon {
+  flex-shrink: 0;
+  color: rgb(156, 163, 175); /* ✅ Gris élégant */
+  opacity: 0.8;
+}
+
+.note-embed-inline:hover .note-embed-inline-icon {
+  opacity: 1;
+}
+
+/* ========================================
+   TITRE
+   ======================================== */
+
+.note-embed-inline-title {
+  font-weight: 500;
+  max-width: 200px; /* ✅ Limite largeur pour pas casser le layout */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ========================================
+   ÉTATS SPÉCIAUX
+   ======================================== */
+
+/* Loading state */
+.note-embed-inline-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(156, 163, 175, 0.08);
+  border-radius: 6px;
+  font-size: 0.95em;
+  color: var(--text-3);
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.note-embed-inline-loading .note-embed-inline-icon {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* Error state */
+.note-embed-inline-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.2);
+  border-radius: 6px;
+  font-size: 0.95em;
+  color: #ff3b30;
+  cursor: help;
+}
+
+.note-embed-inline-error-badge {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* ========================================
+   DANS TABLEAUX
+   ======================================== */
+
+/* Optimisations spécifiques pour usage dans tableaux */
+td .note-embed-inline,
+th .note-embed-inline {
+  max-width: 100%;
+}
+
+/* ========================================
+   DANS LISTES
+   ======================================== */
+
+/* Optimisations spécifiques pour usage dans listes */
+li .note-embed-inline {
+  margin: 0 2px;
+}
+
+/* ========================================
+   DARK MODE OPTIMISÉ
+   ======================================== */
+
+/* Déjà optimisé pour dark mode par défaut avec variables CSS */
+

@@ -116,6 +116,13 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
           'data-depth': attributes.depth,
         }),
       },
+      display: {
+        default: 'card',
+        parseHTML: element => element.getAttribute('data-display') || 'card',
+        renderHTML: attributes => ({
+          'data-display': attributes.display,
+        }),
+      },
     };
   },
 
@@ -157,15 +164,29 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
     return {
       markdown: {
         serialize(state: any, node: any) {
-          // Sérialiser en format {{embed:noteRef}} ou {{embed:noteRef|title}}
+          // Sérialiser en format {{embed:noteRef|title|display:style}}
           const noteRef = node.attrs.noteRef;
           const noteTitle = node.attrs.noteTitle;
+          const display = node.attrs.display;
           
+          let markdown = `{{embed:${noteRef}`;
+          
+          // Ajouter le titre si présent
           if (noteTitle) {
-            state.write(`{{embed:${noteRef}|${noteTitle}}}`);
-          } else {
-            state.write(`{{embed:${noteRef}}}`);
+            markdown += `|${noteTitle}`;
           }
+          
+          // Ajouter le display si différent de 'card' (valeur par défaut)
+          if (display && display !== 'card') {
+            // Si pas de titre mais display custom, ajouter pipe vide
+            if (!noteTitle) {
+              markdown += `|`;
+            }
+            markdown += `|display:${display}`;
+          }
+          
+          markdown += '}}';
+          state.write(markdown);
           state.closeBlock(node);
         },
       },

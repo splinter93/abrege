@@ -2,22 +2,24 @@
  * React NodeView pour l'affichage des note embeds
  * 
  * Fonctionnalités:
+ * - Multi-styles (card, inline, compact)
  * - Fetch et affichage contenu complet de la note
  * - Loading skeleton pendant chargement
  * - Error state si note privée/supprimée
  * - Navigation vers note au click
  * - Limite profondeur (affiche link si depth >= 3)
  * 
- * Standard GAFAM: < 200 lignes, TypeScript strict, responsive
+ * Standard GAFAM: TypeScript strict, responsive, composants séparés
  */
 
 import React, { useCallback } from 'react';
 import { NodeViewWrapper, NodeViewProps } from '@tiptap/react';
 import { useNoteEmbedMetadata } from '@/hooks/useNoteEmbedMetadata';
 import { useEmbedDepth } from '@/contexts/EmbedDepthContext';
-import { MAX_EMBED_DEPTH } from '@/types/noteEmbed';
+import { MAX_EMBED_DEPTH, type NoteEmbedDisplayStyle } from '@/types/noteEmbed';
 import { useRouter } from 'next/navigation';
 import { simpleLogger as logger } from '@/utils/logger';
+import NoteEmbedInline from './NoteEmbedInline';
 import '@/styles/note-embed.css';
 
 interface NoteEmbedViewProps extends NodeViewProps {
@@ -29,7 +31,30 @@ const NoteEmbedViewComponent: React.FC<NoteEmbedViewProps> = ({ node, getPos }) 
   const { depth: contextDepth, isMaxDepthReached } = useEmbedDepth();
   
   const noteRef = node.attrs.noteRef as string;
+  const noteTitle = node.attrs.noteTitle as string | null | undefined;
   const embedDepth = (node.attrs.depth as number) || 0;
+  const display = (node.attrs.display as NoteEmbedDisplayStyle) || 'card';
+  
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ROUTING - Style inline (mention)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  
+  if (display === 'inline') {
+    return (
+      <NodeViewWrapper 
+        as="span"
+        className="note-embed-inline-wrapper"
+        contentEditable={false}
+        draggable={false}
+      >
+        <NoteEmbedInline noteRef={noteRef} noteTitle={noteTitle} />
+      </NodeViewWrapper>
+    );
+  }
+  
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // STYLE CARD (Default)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   
   // Fetch metadata avec cache
   const { note, loading, error } = useNoteEmbedMetadata({

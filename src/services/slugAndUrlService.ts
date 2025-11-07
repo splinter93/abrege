@@ -223,7 +223,7 @@ export class SlugAndUrlService {
         }
 
         // URL permanente avec ID (robuste aux changements de titre)
-        const expectedUrl = `${apiBaseUrl}/@${user.username}/id/${note.id}`;
+        const expectedUrl = `${apiBaseUrl}/@${user.username}/${note.id}`;
         
         // Vérifier si l'URL publique est correcte
         if (note.public_url !== expectedUrl) {
@@ -304,7 +304,7 @@ export class SlugAndUrlService {
 
         // Vérifier l'URL publique (format permanent avec ID)
         if (note.public_url) {
-          const expectedUrl = `${apiBaseUrl}/@${username}/id/${note.id}`;
+          const expectedUrl = `${apiBaseUrl}/@${username}/${note.id}`;
           if (note.public_url === expectedUrl) {
             report.validUrls++;
           } else {
@@ -318,7 +318,7 @@ export class SlugAndUrlService {
           report.issues.push({
             noteId: note.id,
             issue: 'URL publique manquante',
-            fix: `Générer: ${apiBaseUrl}/@${username}/id/${note.id}`
+            fix: `Générer: ${apiBaseUrl}/@${username}/${note.id}`
           });
         }
       }

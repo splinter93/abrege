@@ -34,6 +34,7 @@
 /* === AUTRES EXTENSIONS === */
 @import './mermaid.css';
 @import './note-embed.css';
+@import './note-embed/note-embed-inline.css'; /* ✅ Style inline mention */
 
 /* === STYLES MARKDOWN ÉDITEUR === */
 @import './editor-markdown.css';

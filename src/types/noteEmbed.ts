@@ -4,6 +4,11 @@
  */
 
 /**
+ * Styles d'affichage disponibles pour les note embeds
+ */
+export type NoteEmbedDisplayStyle = 'card' | 'inline' | 'compact';
+
+/**
  * Attributs du node Tiptap noteEmbed
  */
 export interface NoteEmbedAttributes {
@@ -11,8 +16,12 @@ export interface NoteEmbedAttributes {
   noteRef: string;
   /** Profondeur actuelle (prévention récursion infinie) */
   depth: number;
+  /** Style d'affichage de l'embed */
+  display: NoteEmbedDisplayStyle;
   /** Username du propriétaire (pour construire l'URL) */
   username?: string;
+  /** Titre de la note (optionnel, pour affichage) */
+  noteTitle?: string;
 }
 
 /**
