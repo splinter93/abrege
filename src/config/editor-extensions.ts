@@ -28,6 +28,8 @@ import CalloutExtension from '@/extensions/CalloutExtension';
 import MarkdownPasteHandler from '@/extensions/MarkdownPasteHandler';
 import NoteEmbedExtension from '@/extensions/NoteEmbedExtension';
 import { markdownItNoteEmbed } from '@/extensions/markdown-it-note-embed';
+import { markdownItYouTubeEmbed } from '@/extensions/markdown-it-youtube-embed';
+import YouTubeEmbedExtension from '@/extensions/YouTubeEmbedExtension';
 
 // ⚠️ EXTENSIONS PROBLÉMATIQUES RETIRÉES (non liées aux drag handles):
 // - BoxSelectionExtension: Causait des problèmes de sélection
@@ -83,6 +85,7 @@ export function createEditorExtensions(
       NoteEmbedExtension.configure({
         maxDepth: 3
       }),
+      YouTubeEmbedExtension.configure({}),
       
       // ✅ Markdown Paste Handler - PRIORITÉ 2
       MarkdownPasteHandler.configure({
@@ -184,8 +187,8 @@ export function createEditorExtensions(
         breaks: true, // ✅ Convertir retours simples en <br>
         transformPastedText: false,   // ✅ SAFE - Ne transforme PAS automatiquement
         transformCopiedText: false,   // ✅ SAFE - Ne transforme PAS automatiquement
-        // ✅ Plugin markdown-it custom pour parser {{embed:noteRef}}
-        extensions: [markdownItNoteEmbed],
+        // ✅ Plugins markdown-it custom pour parser les embeds
+        extensions: [markdownItNoteEmbed, markdownItYouTubeEmbed],
       }),
       
       // ✅ Extensions avancées réactivées
@@ -216,6 +219,7 @@ export function createEditorExtensions(
       NoteEmbedExtension.configure({
         maxDepth: 3
       }),
+      YouTubeEmbedExtension.configure({}),
       
       // ✅ Markdown Paste Handler - PRIORITÉ 2
       MarkdownPasteHandler.configure({
@@ -278,8 +282,8 @@ export function createEditorExtensions(
         // ✅ SAFE - Désactivé définitivement (causait espace → retour ligne)
         transformPastedText: false,
         transformCopiedText: false,
-        // ✅ Plugin markdown-it custom pour parser {{embed:noteRef}}
-        extensions: [markdownItNoteEmbed],
+        // ✅ Plugins markdown-it custom pour parser les embeds
+        extensions: [markdownItNoteEmbed, markdownItYouTubeEmbed],
       }),
       Placeholder.configure({
         placeholder: 'Écrivez quelque chose d\'incroyable...',

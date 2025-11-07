@@ -71,13 +71,18 @@ export function sanitizeMarkdownContent(content: string): string {
     return `${placeholder}${index}___`;
   });
   
-  // ✅ NOUVEAU: Protéger la syntaxe des embeds {{embed:...}}
-  // Cette syntaxe markdown custom ne doit JAMAIS être échappée
-  processed = processed.replace(/(\{\{embed:[^}]+\}\})/g, (match) => {
-    const index = protectedBlocks.length;
-    protectedBlocks.push(match);
-    return `${placeholder}${index}___`;
-  });
+  const customTokenRegexes = [
+    /(\{\{embed:[^}]+\}\})/g,
+    /(\{\{youtube:[^}]+\}\})/g,
+  ];
+
+  for (const regex of customTokenRegexes) {
+    processed = processed.replace(regex, (match) => {
+      const index = protectedBlocks.length;
+      protectedBlocks.push(match);
+      return `${placeholder}${index}___`;
+    });
+  }
   
   // 🔒 ÉTAPE 2: Échapper tous les caractères HTML dans le contenu restant
   processed = processed

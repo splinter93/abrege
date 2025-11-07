@@ -39,7 +39,8 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
           'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
           'hr', 'br',
           'input', 'label', // ✅ Support des checkboxes
-          'button', 'svg', 'path', 'rect', 'polyline', 'circle', 'line', 'g', 'defs' // ✅ Support toolbar + SVG
+          'button', 'svg', 'path', 'rect', 'polyline', 'circle', 'line', 'g', 'defs', // ✅ Support toolbar + SVG
+          'note-embed', 'youtube-embed'
         ],
         ALLOWED_ATTR: [
           'class', 'id', 'href', 'src', 'alt', 'title', 'style', 
@@ -86,7 +87,8 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
           'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
           'hr', 'br',
           'input', 'label', // ✅ Support des checkboxes
-          'button', 'svg', 'path', 'rect', 'polyline', 'circle', 'line', 'g', 'defs' // ✅ Support toolbar + SVG
+          'button', 'svg', 'path', 'rect', 'polyline', 'circle', 'line', 'g', 'defs', // ✅ Support toolbar + SVG
+          'note-embed', 'youtube-embed'
         ],
         ALLOWED_ATTR: [
           'class', 'id', 'href', 'src', 'alt', 'title', 'style', 
@@ -113,7 +115,8 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
       'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
       'hr', 'br',
       'input', 'label', // ✅ Support des checkboxes
-      'button', 'svg', 'path', 'rect', 'polyline', 'circle', 'line', 'g', 'defs' // ✅ Support toolbar + SVG
+      'button', 'svg', 'path', 'rect', 'polyline', 'circle', 'line', 'g', 'defs', // ✅ Support toolbar + SVG
+      'note-embed', 'youtube-embed'
     ],
     ALLOWED_ATTR: [
       'href', 'src', 'alt', 'title', 'class', 'id', 'style',

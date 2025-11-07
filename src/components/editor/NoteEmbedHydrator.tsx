@@ -8,9 +8,11 @@
 import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import NoteEmbedContent from './NoteEmbedContent';
+import YouTubeEmbedContent from './YouTubeEmbedContent';
 import { type NoteEmbedDisplayStyle } from '@/types/noteEmbed';
 import { EmbedDepthProvider } from '@/contexts/EmbedDepthContext';
 import { simpleLogger as logger } from '@/utils/logger';
+import { parseYouTubeTimestamp } from '@/utils/youtube';
 
 interface NoteEmbedHydratorProps {
   containerRef: React.RefObject<HTMLElement>;
@@ -30,7 +32,7 @@ export const NoteEmbedHydrator: React.FC<NoteEmbedHydratorProps> = ({ containerR
     }
 
     const embedPlaceholders = containerRef.current.querySelectorAll<HTMLElement>(
-      'note-embed'
+      'note-embed, youtube-embed'
     );
 
     const newPlaceholders = Array.from(embedPlaceholders).filter((element) => {
@@ -45,23 +47,18 @@ export const NoteEmbedHydrator: React.FC<NoteEmbedHydratorProps> = ({ containerR
     }
 
     newPlaceholders.forEach((placeholder, index) => {
-      const noteRef = placeholder.getAttribute('data-note-ref');
-      if (!noteRef) {
-        logger.warn('[NoteEmbedHydrator] Embed placeholder is missing data-note-ref', placeholder);
-        return;
-      }
-      const noteTitle = placeholder.getAttribute('data-note-title');
-      const displayAttr = placeholder.getAttribute('data-display') as NoteEmbedDisplayStyle | null;
-      
+      const tagName = placeholder.tagName.toLowerCase();
+
       const parentElement = placeholder.parentElement;
       if (parentElement && parentElement.tagName === 'P') {
         const meaningfulNodes = Array.from(parentElement.childNodes).filter(node => {
           if (node.nodeType === Node.TEXT_NODE) {
-            return node.textContent?.trim().length;
+            return Boolean(node.textContent?.trim().length);
           }
           if (node.nodeType === Node.ELEMENT_NODE) {
             const el = node as HTMLElement;
-            return el.dataset?.type === 'note-embed';
+            const name = el.tagName.toLowerCase();
+            return name === 'note-embed' || name === 'youtube-embed';
           }
           return false;
         });
@@ -69,7 +66,8 @@ export const NoteEmbedHydrator: React.FC<NoteEmbedHydratorProps> = ({ containerR
         const onlyEmbeds = meaningfulNodes.every(node => {
           if (node.nodeType !== Node.ELEMENT_NODE) return false;
           const el = node as HTMLElement;
-          return el.dataset?.type === 'note-embed';
+          const name = el.tagName.toLowerCase();
+          return name === 'note-embed' || name === 'youtube-embed';
         });
 
         if (onlyEmbeds) {
@@ -81,27 +79,72 @@ export const NoteEmbedHydrator: React.FC<NoteEmbedHydratorProps> = ({ containerR
         }
       }
 
-      logger.dev(`[NoteEmbedHydrator] ✨ Hydrating embed ${index + 1}/${newPlaceholders.length}:`, noteRef);
-      
-      // Mark as hydrated BEFORE creating root to prevent re-triggering
-      placeholder.setAttribute('data-hydrated', 'true');
-
-      const root = createRoot(placeholder);
-      rootsRef.current.set(placeholder, root);
-
       const depth = parseInt(placeholder.getAttribute('data-depth') || '0', 10);
 
-      root.render(
-        <EmbedDepthProvider>
-          <NoteEmbedContent
-            noteRef={noteRef}
-            embedDepth={depth}
-            standalone={true}
-            display={displayAttr ?? 'inline'}
-            noteTitle={noteTitle}
-          />
-        </EmbedDepthProvider>
-      );
+      if (tagName === 'note-embed') {
+        const noteRef = placeholder.getAttribute('data-note-ref');
+        if (!noteRef) {
+          logger.warn('[NoteEmbedHydrator] Embed placeholder is missing data-note-ref', placeholder);
+          return;
+        }
+
+        const noteTitle = placeholder.getAttribute('data-note-title');
+        const displayAttr = placeholder.getAttribute('data-display') as NoteEmbedDisplayStyle | null;
+
+        logger.dev(`[NoteEmbedHydrator] ✨ Hydrating note embed ${index + 1}/${newPlaceholders.length}`, {
+          noteRef,
+        });
+
+        placeholder.setAttribute('data-hydrated', 'true');
+
+        const root = createRoot(placeholder);
+        rootsRef.current.set(placeholder, root);
+
+        root.render(
+          <EmbedDepthProvider>
+            <NoteEmbedContent
+              noteRef={noteRef}
+              embedDepth={depth}
+              standalone={true}
+              display={displayAttr ?? 'inline'}
+              noteTitle={noteTitle}
+            />
+          </EmbedDepthProvider>
+        );
+        return;
+      }
+
+      if (tagName === 'youtube-embed') {
+        const videoId = placeholder.getAttribute('data-video-id');
+        if (!videoId) {
+          logger.warn('[NoteEmbedHydrator] YouTube placeholder missing data-video-id', placeholder);
+          return;
+        }
+
+        const autoplay = placeholder.getAttribute('data-autoplay') === 'true';
+        const startAttr = placeholder.getAttribute('data-start');
+        const parsedStartSeconds = startAttr != null ? parseYouTubeTimestamp(startAttr) ?? undefined : undefined;
+
+        logger.dev(`[NoteEmbedHydrator] ✨ Hydrating YouTube embed ${index + 1}/${newPlaceholders.length}`, {
+          videoId,
+        });
+
+        placeholder.setAttribute('data-hydrated', 'true');
+
+        const root = createRoot(placeholder);
+        rootsRef.current.set(placeholder, root);
+
+        root.render(
+          <EmbedDepthProvider>
+            <YouTubeEmbedContent
+              videoId={videoId}
+              autoplay={autoplay}
+              startSeconds={parsedStartSeconds}
+              standalone={true}
+            />
+          </EmbedDepthProvider>
+        );
+      }
     });
   }, [containerRef]);
 

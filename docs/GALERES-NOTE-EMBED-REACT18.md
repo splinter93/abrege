@@ -168,13 +168,21 @@ embedDivs.forEach(div => {
 7. `useNoteEmbedMetadata.ts` - Hook pour fetch note avec cache + retry
 8. `noteEmbedCacheService.ts` - Cache in-memory (évite fetch multiples)
 9. `EmbedDepthContext.tsx` - Prévention récursion infinie (max 3 niveaux)
+10. `markdown-it-youtube-embed.ts` - Parser markdown `{{youtube:...}}`
+11. `YouTubeEmbedExtension.ts` - Extension Tiptap pour iframes YouTube
+12. `YouTubeEmbedView.tsx` - NodeView React (édition)
+13. `YouTubeEmbedContent.tsx` - Composant partagé (édition + preview)
+14. `youtube-embed.css` - Styles responsives (ratio 16/9, focus states)
+15. `utils/youtube.ts` - Extraction d’ID et génération URL embed sécurisée
 
 ### **Fichiers modifiés** :
-1. `editor-extensions.ts` - Config Markdown avec plugin custom
+1. `editor-extensions.ts` - Config Markdown (plugins embed) + enregistrement Note/YouTube
 2. `EditorSyncManager.tsx` - Chargement async avec queueMicrotask
 3. `Editor.tsx` - Render conditionnel avec isContentReady
 4. `EditorMainContent.tsx` - Hydrator en mode preview
 5. `markdownSanitizer.server.ts` - Protection de {{embed:...}}
+6. `preprocessEmbeds.ts` - Conversion `{{youtube:...}}` → `<youtube-embed>`
+7. `NoteEmbedHydrator.tsx` - Support hydration `<youtube-embed>`
 
 ---
 
@@ -224,6 +232,59 @@ useNoteEmbedMetadata → Fetch API
 Affichage ✅
 ```
 
+### **MODE ÉDITION (YouTube)**
+```
+DB → {{youtube:https://youtu.be/ID}}
+  ↓
+EditorSyncManager (queueMicrotask)
+  ↓
+preprocessEmbeds() → <youtube-embed data-video-id="ID">
+  ↓
+YouTubeEmbedExtension.parseHTML() → node youtubeEmbed
+  ↓
+ReactNodeViewRenderer → <YouTubeEmbedView>
+  ↓
+YouTubeEmbedContent → iframe 16/9 + styles (startSeconds optionnel)
+  ↓
+SAUVEGARDE → serialize() → {{youtube:ID|start=92 (optionnel)}}
+  ↓
+sanitizeMarkdownContent (protège {{youtube:...}})
+  ↓
+DB → {{youtube:ID|start=92}} ✅
+```
+
+### **MODE PREVIEW (YouTube)**
+```
+DB → {{youtube:ID}}
+  ↓
+markdown-it (markdownItYouTubeEmbed) → <youtube-embed data-video-id="ID">
+  ↓
+dangerouslySetInnerHTML → HTML injecté
+  ↓
+NoteEmbedHydrator → détecte <youtube-embed>
+  ↓
+createRoot() → <YouTubeEmbedContent standalone>
+  ↓
+Iframe responsive (allow autoplay, lazy)
+  ↓
+Lecture vidéo ✅
+```
+
+### **TIMESTAMP YOUTUBE (START)**
+```
+Input utilisateur → https://youtu.be/ID?t=92
+  ↓
+parseYouTubeInput() → { videoId: ID, startSeconds: 92 }
+  ↓
+serialize() → {{youtube:ID|start=92}}
+  ↓
+preprocessEmbeds() → <youtube-embed data-video-id="ID" data-start="92">
+  ↓
+YouTubeEmbedContent → buildYouTubeEmbedUrl(..., start=92)
+  ↓
+Iframe démarre à 92s ✅
+```
+
 ---
 
 ## ⚠️ PIÈGES À ÉVITER
@@ -258,9 +319,20 @@ Affichage ✅
 - [ ] Skeleton → contenu s'affiche
 - [ ] 0 erreur console
 
+### **YouTube Embed**
+- [ ] Insertion via `{{youtube:...}}` ou paste URL → iframe visible
+- [ ] Sauvegarde → DB contient `{{youtube:VIDEO_ID}}`
+- [ ] Preview hydratée → vidéo lisible + responsive
+- [ ] Suppression via handles / backspace fonctionne
+- [ ] Timestamp (`?t=` ou `|start=`) → lecture au bon offset
+
 ### **Sérialisation**
 - [ ] markdown_content : `{{embed:xyz}}` (PAS de HTML)
 - [ ] html_content : `<div data-type="note-embed">` (OK)
+- [ ] markdown_content : `{{youtube:VIDEO_ID}}`
+- [ ] html_content : `<youtube-embed data-video-id="...">`
+- [ ] markdown_content : `{{youtube:VIDEO_ID|start=92}}` si timestamp présent
+- [ ] html_content : `<youtube-embed data-video-id="..." data-start="92">`
 
 ---
 
