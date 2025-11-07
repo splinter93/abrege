@@ -13,6 +13,8 @@
 
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
+import type { MarkdownSerializerState } from 'prosemirror-markdown';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import NoteEmbedView from '@/components/editor/NoteEmbedView';
 import { MAX_EMBED_DEPTH, type NoteEmbedDisplayStyle } from '@/types/noteEmbed';
@@ -168,28 +170,40 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
   addStorage() {
     return {
       markdown: {
-        serialize(state: any, node: any) {
-          // Sérialiser en format {{embed:noteRef|title|display:style}}
-          const noteRef = node.attrs.noteRef;
-          const noteTitle = node.attrs.noteTitle;
-          const display = node.attrs.display as NoteEmbedDisplayStyle | undefined;
-          
-          let markdown = `{{embed:${noteRef}`;
-          
-          // Ajouter le titre si présent
+        serialize(state: MarkdownSerializerState, node: ProseMirrorNode) {
+          if (node.type.name !== 'noteEmbed') {
+            return;
+          }
+
+          const attrs: Record<string, unknown> | null | undefined = node.attrs;
+          if (!attrs) {
+            return;
+          }
+
+          const noteRefRaw = attrs['noteRef'];
+          if (typeof noteRefRaw !== 'string' || noteRefRaw.length === 0) {
+            return;
+          }
+
+          const noteTitleRaw = attrs['noteTitle'];
+          const displayRaw = attrs['display'];
+
+          const noteTitle = typeof noteTitleRaw === 'string' && noteTitleRaw.length > 0 ? noteTitleRaw : null;
+          const display = typeof displayRaw === 'string' ? displayRaw as NoteEmbedDisplayStyle : undefined;
+
+          let markdown = `{{embed:${noteRefRaw}`;
+
           if (noteTitle) {
             markdown += `|${noteTitle}`;
           }
-          
-          // Ajouter le display si différent de 'inline' (valeur par défaut)
+
           if (display && display !== 'inline') {
-            // Si pas de titre mais display custom, ajouter pipe vide
             if (!noteTitle) {
-              markdown += `|`;
+              markdown += '|';
             }
             markdown += `|display:${display}`;
           }
-          
+
           markdown += '}}';
           state.write(markdown);
           state.closeBlock(node);
