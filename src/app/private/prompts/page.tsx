@@ -12,7 +12,6 @@ import { useAgents } from '@/hooks/useAgents';
 import PromptCard from '@/components/prompts/PromptCard';
 import PromptFormModal from '@/components/prompts/PromptFormModal';
 import UnifiedSidebar from '@/components/UnifiedSidebar';
-import UnifiedPageTitle from '@/components/UnifiedPageTitle';
 import AuthGuard from '@/components/AuthGuard';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
@@ -112,9 +111,11 @@ function PromptsPageContent() {
           <UnifiedSidebar />
         </aside>
         <main className="page-content-area">
-          <div className="prompts-loading">
-            <div className="prompts-loading-spinner"></div>
-            <p>Chargement des prompts...</p>
+          <div className="prompts-section">
+            <div className="prompts-loading">
+              <div className="prompts-loading-spinner" />
+              <p>Chargement des prompts...</p>
+            </div>
           </div>
         </main>
       </div>
@@ -128,8 +129,10 @@ function PromptsPageContent() {
           <UnifiedSidebar />
         </aside>
         <main className="page-content-area">
-          <div className="prompts-error">
-            <p>❌ Erreur: {error}</p>
+          <div className="prompts-section">
+            <div className="prompts-error">
+              <p>❌ Erreur: {error}</p>
+            </div>
           </div>
         </main>
       </div>
@@ -143,42 +146,46 @@ function PromptsPageContent() {
       </aside>
       
       <main className="page-content-area">
-        {/* Titre avec icône */}
-        <UnifiedPageTitle
-          icon={Zap}
-          title="Prompts"
-          subtitle="Personnalisez les actions IA de votre éditeur"
-          action={
+        <div className="prompts-section">
+          <div className="prompts-header">
+            <div className="prompts-header-icon">
+              <Zap size={28} />
+            </div>
+            <div className="prompts-meta">
+              <h1 className="prompts-meta-title">Prompts</h1>
+              <p className="prompts-meta-subtitle">
+                Personnalisez les workflows IA utilisés par l’éditeur Abrège.
+              </p>
+            </div>
             <button onClick={handleCreate} className="prompts-create-btn">
               + Nouveau prompt
             </button>
-          }
-        />
+          </div>
 
-        {/* Liste des prompts */}
-        {prompts.length === 0 ? (
-          <div className="prompts-empty">
-            <div className="prompts-empty-icon">✨</div>
-            <h3>Aucun prompt personnalisé</h3>
-            <p>Créez votre premier prompt pour enrichir l'éditeur</p>
-            <button onClick={handleCreate} className="prompts-empty-cta">
-              Créer un prompt
-            </button>
-          </div>
-        ) : (
-          <div className="prompts-grid">
-            {prompts.map((prompt) => (
-              <PromptCard
-                key={prompt.id}
-                prompt={prompt}
-                agents={agents}
-                onEdit={() => handleEdit(prompt)}
-                onDelete={() => handleDelete(prompt.id)}
-                onToggle={() => handleToggle(prompt)}
-              />
-            ))}
-          </div>
-        )}
+          {prompts.length === 0 ? (
+            <div className="prompts-empty">
+              <div className="prompts-empty-icon">✨</div>
+              <h3>Aucun prompt personnalisé</h3>
+              <p>Créez votre premier prompt pour enrichir l&apos;éditeur</p>
+              <button onClick={handleCreate} className="prompts-empty-cta">
+                Créer un prompt
+              </button>
+            </div>
+          ) : (
+            <div className="prompts-grid">
+              {prompts.map((prompt) => (
+                <PromptCard
+                  key={prompt.id}
+                  prompt={prompt}
+                  agents={agents}
+                  onEdit={() => handleEdit(prompt)}
+                  onDelete={() => handleDelete(prompt.id)}
+                  onToggle={() => handleToggle(prompt)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Modal */}
         {isModalOpen && (
