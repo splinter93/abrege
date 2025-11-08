@@ -99,11 +99,12 @@
 }
 
 .prompt-card__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.96);
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.97);
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
 }
 
 .prompt-card__context {
@@ -133,21 +134,27 @@
 .prompt-card__context-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  width: 100%;
+  flex-wrap: nowrap;
 }
 
-.prompt-card__description-text,
-.prompt-card__description-placeholder {
+.prompt-card__template-preview {
   margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.48;
-  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.prompt-card__description-placeholder {
-  opacity: 0.55;
-  font-style: italic;
+.prompt-card__divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04));
+  opacity: 0.65;
 }
 
 /* ========== FOOTER: AGENT + POSITION (ROW 4) ========== */
@@ -214,30 +221,6 @@
   text-overflow: ellipsis;
 }
 
-.prompt-card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.prompt-card__index {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 /* ========== RESPONSIVE ========== */
 @media (max-width: 640px) {
   .prompt-card {
@@ -261,12 +244,6 @@
   }
 
   .prompt-card__context-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.6rem;
-  }
-
-  .prompt-card__footer {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.6rem;

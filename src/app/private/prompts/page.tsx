@@ -12,6 +12,7 @@ import { useAgents } from '@/hooks/useAgents';
 import PromptCard from '@/components/prompts/PromptCard';
 import PromptFormModal from '@/components/prompts/PromptFormModal';
 import UnifiedSidebar from '@/components/UnifiedSidebar';
+import UnifiedPageTitle from '@/components/UnifiedPageTitle';
 import AuthGuard from '@/components/AuthGuard';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
@@ -146,22 +147,24 @@ function PromptsPageContent() {
       </aside>
       
       <main className="page-content-area">
-        <div className="prompts-section">
-          <div className="prompts-header">
-            <div className="prompts-header-icon">
-              <Zap size={28} />
+        <div className="page-content-inner">
+          <div className="prompts-section">
+          <div className="prompts-container">
+            <UnifiedPageTitle
+              icon={Zap}
+              title="Prompts"
+              subtitle="Personnalisez les workflows IA utilisés par l’éditeur Abrège."
+              stats={[
+                { number: prompts.length, label: prompts.length > 1 ? 'prompts' : 'prompt' },
+                { number: prompts.filter(p => p.is_active).length, label: 'actifs' }
+              ]}
+            />
+            <div className="prompts-header-actions">
+              <button onClick={handleCreate} className="prompts-create-btn">
+                + Nouveau prompt
+              </button>
             </div>
-            <div className="prompts-meta">
-              <h1 className="prompts-meta-title">Prompts</h1>
-              <p className="prompts-meta-subtitle">
-                Personnalisez les workflows IA utilisés par l’éditeur Abrège.
-              </p>
-            </div>
-            <button onClick={handleCreate} className="prompts-create-btn">
-              + Nouveau prompt
-            </button>
           </div>
-
           {prompts.length === 0 ? (
             <div className="prompts-empty">
               <div className="prompts-empty-icon">✨</div>
@@ -185,6 +188,7 @@ function PromptsPageContent() {
               ))}
             </div>
           )}
+        </div>
         </div>
 
         {/* Modal */}

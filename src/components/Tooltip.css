@@ -10,14 +10,18 @@
   transform: translateX(-50%);
   background: var(--surface-2);
   color: var(--text-1);
-  padding: 6px 10px;
-  border-radius: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
   font-size: 0.75rem;
-  white-space: nowrap;
+  line-height: 1.4;
+  white-space: pre-line;
+  max-width: 280px;
+  text-align: left;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
   z-index: 999;
+  box-shadow: 0 12px 28px rgba(10, 12, 18, 0.45);
 }
 
 .custom-tooltip-wrapper:hover .custom-tooltip-bubble {

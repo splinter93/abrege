@@ -8,7 +8,8 @@ import type { EditorPrompt, EditorPromptCreateRequest } from '@/types/editorProm
 import type { Agent } from '@/types/chat';
 import IconPicker from './IconPicker';
 import { getIconComponent } from '@/utils/iconMapper';
-import { FiX } from 'react-icons/fi';
+import { FiX, FiInfo } from 'react-icons/fi';
+import Tooltip from '@/components/Tooltip';
 import './PromptFormModal.css';
 
 interface PromptFormModalProps {
@@ -29,9 +30,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
     prompt_template: '',
     icon: 'FiZap',
     context: 'editor',
-    agent_id: undefined,
-    description: '',
-    category: '',
+    agent_id: null,
     insertion_mode: 'replace',
     use_structured_output: false
   });
@@ -47,9 +46,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
         prompt_template: prompt.prompt_template,
         icon: prompt.icon,
         context: prompt.context || 'editor',
-        agent_id: prompt.agent_id || undefined,
-        description: prompt.description || '',
-        category: prompt.category || '',
+        agent_id: prompt.agent_id ?? null,
         insertion_mode: prompt.insertion_mode || 'replace',
         use_structured_output: prompt.use_structured_output || false
       });
@@ -86,7 +83,12 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
       return;
     }
 
-    await onSave(formData);
+    const payload: EditorPromptCreateRequest = {
+      ...formData,
+      agent_id: formData.agent_id ?? null
+    };
+
+    await onSave(payload);
   };
 
   /**
@@ -109,6 +111,13 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
   };
 
   const SelectedIcon = getIconComponent(formData.icon);
+  // Déterminer si une icône a été sélectionnée (pas juste la valeur par défaut)
+  // En mode création, 'FiZap' est la valeur par défaut donc on considère qu'aucune icône n'est sélectionnée
+  // En mode édition, on affiche toujours l'icône si elle existe
+  const isDefaultIcon = !prompt && formData.icon === 'FiZap';
+  const hasSelectedIcon = !isDefaultIcon;
+  const strictModeTooltip =
+    'Active le mode JSON pour supprimer les phrases parasites du LLM.\nExemples : "Voici la correction", "J\'ai reformulé".';
 
   return (
     <div className="prompt-modal-overlay" onClick={onCancel}>
@@ -127,36 +136,109 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="prompt-modal-form">
-          {/* Nom du prompt */}
-          <div className="prompt-form-group">
-            <label className="prompt-form-label" htmlFor="name">
-              Nom du prompt *
-            </label>
-            <input
-              id="name"
-              type="text"
-              className={`prompt-form-input ${errors.name ? 'error' : ''}`}
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="Ex: Améliorer l'écriture"
-              maxLength={100}
-            />
-            {errors.name && <span className="prompt-form-error">{errors.name}</span>}
+          <div className="prompt-form-row">
+            {/* Nom du prompt */}
+            <div className="prompt-form-group prompt-form-group--grow">
+              <label className="prompt-form-label" htmlFor="name">
+                Nom du prompt *
+              </label>
+              <input
+                id="name"
+                type="text"
+                className={`prompt-form-input ${errors.name ? 'error' : ''}`}
+                value={formData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                placeholder="Ex: Améliorer l'écriture"
+                maxLength={100}
+              />
+              {errors.name && <span className="prompt-form-error">{errors.name}</span>}
+            </div>
+
+            {/* Icône */}
+            <div className="prompt-form-group prompt-form-group--icon">
+              <label className="prompt-form-label" htmlFor="icon-selector">
+                Icône
+              </label>
+              <button
+                id="icon-selector"
+                type="button"
+                className={`prompt-icon-selector ${hasSelectedIcon ? 'prompt-icon-selector--icon' : 'prompt-icon-selector--empty'}`}
+                onClick={() => setIsIconPickerOpen(!isIconPickerOpen)}
+              >
+                {hasSelectedIcon ? (
+                  <SelectedIcon size={20} />
+                ) : (
+                  <span className="prompt-icon-selector__placeholder">Choisir</span>
+                )}
+              </button>
+              {isIconPickerOpen && (
+                <IconPicker
+                  selectedIcon={formData.icon}
+                  onSelect={(icon) => {
+                    handleChange('icon', icon);
+                    setIsIconPickerOpen(false);
+                  }}
+                  onClose={() => setIsIconPickerOpen(false)}
+                />
+              )}
+            </div>
           </div>
 
-          {/* Description */}
-          <div className="prompt-form-group">
-            <label className="prompt-form-label" htmlFor="description">
-              Description
-            </label>
-            <input
-              id="description"
-              type="text"
-              className="prompt-form-input"
-              value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="Description optionnelle"
-            />
+          <div className="prompt-form-row prompt-form-row--top">
+            {/* Contexte */}
+            <div className="prompt-form-group prompt-form-group--grow">
+              <label className="prompt-form-label" htmlFor="context">
+                Contexte
+              </label>
+              <select
+                id="context"
+                className="prompt-form-select"
+                value={formData.context}
+                onChange={(e) => handleChange('context', e.target.value)}
+              >
+                <option value="editor">Éditeur</option>
+                <option value="chat">Chat</option>
+                <option value="both">Éditeur & Chat</option>
+              </select>
+            </div>
+
+            {/* Agent */}
+            <div className="prompt-form-group prompt-form-group--agent">
+              <label className="prompt-form-label" htmlFor="agent_id">
+                Agent spécialisé
+              </label>
+              <select
+                id="agent_id"
+                className="prompt-form-select"
+                value={formData.agent_id ?? ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData(prev => ({
+                    ...prev,
+                    agent_id: value ? value : null
+                  }));
+                  if (errors.agent_id) {
+                    setErrors(prevErrors => {
+                      const { agent_id, ...rest } = prevErrors;
+                      return rest;
+                    });
+                  }
+                }}
+              >
+                <option value="">Aucun agent</option>
+                {agents
+                  .filter(a => a.is_active)
+                  .map(agent => {
+                    const model = agent.model || '';
+                    const providerIcon = model.includes('grok') ? '🤖' : '⚡';
+                    return (
+                      <option key={agent.id} value={agent.id}>
+                        {providerIcon} {agent.name}
+                      </option>
+                    );
+                  })}
+              </select>
+            </div>
           </div>
 
           {/* Template du prompt */}
@@ -180,120 +262,6 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
             </small>
           </div>
 
-          {/* Icône */}
-          <div className="prompt-form-group">
-            <label className="prompt-form-label">Icône</label>
-            <button
-              type="button"
-              className="prompt-icon-selector"
-              onClick={() => setIsIconPickerOpen(!isIconPickerOpen)}
-            >
-              <SelectedIcon size={20} />
-              <span>Changer l'icône</span>
-            </button>
-            {isIconPickerOpen && (
-              <IconPicker
-                selectedIcon={formData.icon}
-                onSelect={(icon) => {
-                  handleChange('icon', icon);
-                  setIsIconPickerOpen(false);
-                }}
-                onClose={() => setIsIconPickerOpen(false)}
-              />
-            )}
-          </div>
-
-          {/* Agent */}
-          <div className="prompt-form-group">
-            <label className="prompt-form-label" htmlFor="agent_id">
-              Agent spécialisé *
-            </label>
-            <select
-              id="agent_id"
-              className="prompt-form-select"
-              value={formData.agent_id || ''}
-              onChange={(e) => handleChange('agent_id', e.target.value)}
-            >
-              <option value="">Sélectionnez un agent</option>
-              {agents
-                .filter(a => a.is_active)
-                .map(agent => {
-                  // Déduire le provider depuis le modèle
-                  const model = agent.model || '';
-                  const providerIcon = model.includes('grok') ? '🤖' : '⚡';
-                  return (
-                    <option key={agent.id} value={agent.id}>
-                      {providerIcon} {agent.name}
-                    </option>
-                  );
-                })}
-            </select>
-          </div>
-
-          {/* Catégorie */}
-          <div className="prompt-form-group">
-            <label className="prompt-form-label" htmlFor="category">
-              Catégorie
-            </label>
-            <select
-              id="category"
-              className="prompt-form-select"
-              value={formData.category}
-              onChange={(e) => handleChange('category', e.target.value)}
-            >
-              <option value="">Aucune</option>
-              <option value="writing">Writing</option>
-              <option value="code">Code</option>
-              <option value="translate">Translate</option>
-              <option value="analysis">Analysis</option>
-              <option value="learning">Learning</option>
-              <option value="brainstorm">Brainstorm</option>
-              <option value="custom">Custom</option>
-            </select>
-          </div>
-
-          {/* Contexte d'utilisation */}
-          <div className="prompt-form-group">
-            <label className="prompt-form-label">
-              Contexte d'utilisation
-            </label>
-            <div className="prompt-context-options">
-              <label className="prompt-context-option">
-                <input
-                  type="radio"
-                  name="context"
-                  value="editor"
-                  checked={formData.context === 'editor'}
-                  onChange={(e) => handleChange('context', e.target.value)}
-                />
-                <span>📝 Éditeur uniquement</span>
-              </label>
-              <label className="prompt-context-option">
-                <input
-                  type="radio"
-                  name="context"
-                  value="chat"
-                  checked={formData.context === 'chat'}
-                  onChange={(e) => handleChange('context', e.target.value)}
-                />
-                <span>💬 Chat uniquement</span>
-              </label>
-              <label className="prompt-context-option">
-                <input
-                  type="radio"
-                  name="context"
-                  value="both"
-                  checked={formData.context === 'both'}
-                  onChange={(e) => handleChange('context', e.target.value)}
-                />
-                <span>📝💬 Les deux</span>
-              </label>
-            </div>
-            <small className="prompt-form-hint">
-              Choisissez où ce prompt sera disponible en tant que slash command
-            </small>
-          </div>
-
           {/* Mode d'insertion (uniquement pour editor) */}
           {(formData.context === 'editor' || formData.context === 'both') && (
           <div className="prompt-form-group">
@@ -310,46 +278,48 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               <option value="append">Ajouter après la sélection</option>
               <option value="prepend">Ajouter avant la sélection</option>
             </select>
-            <small className="prompt-form-hint">
-              <strong>Replace:</strong> pour corriger, reformuler, simplifier<br />
-              <strong>Append:</strong> pour expliquer, développer, continuer<br />
-              <strong>Prepend:</strong> pour ajouter une intro
-            </small>
           </div>
           )}
 
           {/* Structured Output */}
           <div className="prompt-form-group">
-            <label className="prompt-form-checkbox-wrapper">
-              <input
-                type="checkbox"
-                checked={formData.use_structured_output}
-                onChange={(e) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    use_structured_output: e.target.checked,
-                    // Générer automatiquement le schéma quand activé
-                    output_schema: e.target.checked ? {
-                      type: 'object',
-                      properties: {
-                        content: {
-                          type: 'string',
-                          description: 'Le contenu demandé, sans introduction ni explication'
-                        }
-                      },
-                      required: ['content']
-                    } : undefined
-                  }));
-                }}
-              />
-              <span className="prompt-form-checkbox-label">
-                Format strict (structured output)
-              </span>
-            </label>
-            <small className="prompt-form-hint">
-              Active le mode JSON pour éliminer les phrases parasites du LLM<br />
-              (ex: "Voici la correction:", "J'ai reformulé...")
-            </small>
+            <div className="prompt-form-checkbox-row">
+              <label className="prompt-form-checkbox-wrapper">
+                <input
+                  type="checkbox"
+                  checked={formData.use_structured_output}
+                  onChange={(e) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      use_structured_output: e.target.checked,
+                      // Générer automatiquement le schéma quand activé
+                      output_schema: e.target.checked ? {
+                        type: 'object',
+                        properties: {
+                          content: {
+                            type: 'string',
+                            description: 'Le contenu demandé, sans introduction ni explication'
+                          }
+                        },
+                        required: ['content']
+                      } : undefined
+                    }));
+                  }}
+                />
+                <span className="prompt-form-checkbox-label">
+                  Strict Mode
+                </span>
+              </label>
+              <Tooltip text={strictModeTooltip}>
+                <button
+                  type="button"
+                  className="prompt-form-info-icon"
+                  aria-label="Informations Strict Mode"
+                >
+                  <FiInfo size={16} />
+                </button>
+              </Tooltip>
+            </div>
           </div>
 
           <div className="prompt-modal-footer">

@@ -47,6 +47,14 @@ const PromptCard: React.FC<PromptCardProps> = ({
   const agentAvatarUrl = agent?.profile_picture;
   const agentInitial = agentDisplayName.charAt(0).toUpperCase();
   const hasAgentAvatar = Boolean(agentAvatarUrl);
+  const templatePreview = (() => {
+    const normalized = (prompt.prompt_template || '').replace(/\s+/g, ' ').trim();
+    if (!normalized) {
+      return 'Template vide.';
+    }
+    const maxLength = 160;
+    return normalized.length > maxLength ? `${normalized.slice(0, maxLength).trim()}...` : normalized;
+  })();
   const contextLabel =
     prompt.context === 'editor'
       ? 'Éditeur'
@@ -91,50 +99,43 @@ const PromptCard: React.FC<PromptCardProps> = ({
       {/* Titre + description */}
       <div className="prompt-card__main">
         <h3 className="prompt-card__title">{prompt.name}</h3>
-        {prompt.description ? (
-          <p className="prompt-card__description-text">{prompt.description}</p>
-        ) : (
-          <p className="prompt-card__description-placeholder">
-            Aucun résumé renseigné pour ce prompt.
-          </p>
-        )}
+        <p className="prompt-card__template-preview">{templatePreview}</p>
       </div>
 
-      {/* Badge de contexte */}
-      {agentDisplayName && (
+      {(agentDisplayName || contextLabel) && <div className="prompt-card__divider" />}
+
+      {(agentDisplayName || contextLabel) && (
         <div className="prompt-card__context-row">
-          <div className={`prompt-card__agent prompt-card__agent--${agentStatus.type}`}>
-            <div
-              className={`prompt-card__agent-avatar ${
-                hasAgentAvatar ? '' : 'prompt-card__agent-avatar--placeholder'
-              }`}
-            >
-              {hasAgentAvatar ? (
-                <img src={agentAvatarUrl} alt={agentDisplayName} />
-              ) : (
-                <span className="prompt-card__agent-initial">
-                  {agentStatus.type === 'neutral' && agentStatus.label === 'Aucun agent' ? (
-                    <FiSlash size={18} />
-                  ) : (
-                    agentInitial || <FiUser size={18} />
-                  )}
-                </span>
-              )}
+          {agentDisplayName && (
+            <div className={`prompt-card__agent prompt-card__agent--${agentStatus.type}`}>
+              <div
+                className={`prompt-card__agent-avatar ${
+                  hasAgentAvatar ? '' : 'prompt-card__agent-avatar--placeholder'
+                }`}
+              >
+                {hasAgentAvatar ? (
+                  <img src={agentAvatarUrl} alt={agentDisplayName} />
+                ) : (
+                  <span className="prompt-card__agent-initial">
+                    {agentStatus.type === 'neutral' && agentStatus.label === 'Aucun agent' ? (
+                      <FiSlash size={18} />
+                    ) : (
+                      agentInitial || <FiUser size={18} />
+                    )}
+                  </span>
+                )}
+              </div>
+              <span className="prompt-card__agent-name">{agentDisplayName}</span>
             </div>
-            <span className="prompt-card__agent-name">{agentDisplayName}</span>
-          </div>
+          )}
+
+          {contextLabel && (
+            <span className={`prompt-card__context prompt-card__context--${prompt.context}`}>
+              {contextLabel}
+            </span>
+          )}
         </div>
       )}
-
-      {/* Footer */}
-      <div className="prompt-card__footer">
-        {contextLabel && (
-          <span className={`prompt-card__context prompt-card__context--${prompt.context}`}>
-            {contextLabel}
-          </span>
-        )}
-        <div className="prompt-card__index">#{prompt.position + 1}</div>
-      </div>
     </div>
   );
 };
