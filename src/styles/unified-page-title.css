@@ -38,11 +38,11 @@
   justify-content: center;
   width: 80px;
   height: 80px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015));
+  border: none;
   border-radius: 20px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
   color: rgba(255, 255, 255, 0.8);
   transition: all 0.3s ease;
   position: relative;
@@ -50,6 +50,7 @@
   flex-shrink: 0;
   margin-top: 0;
   align-self: flex-start;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24);
 }
 
 .unified-page-title-logo::before {
@@ -67,11 +68,10 @@
 }
 
 .unified-page-title-logo:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
   color: rgba(255, 255, 255, 0.95);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 38px rgba(0, 0, 0, 0.26);
 }
 
 /* ========================================
@@ -105,15 +105,16 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015));
+  border: none;
+  border-radius: 14px;
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
   transition: all 0.3s ease;
   min-width: 80px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
 }
 
 .unified-page-title-stat-item::before {
@@ -131,10 +132,9 @@
 }
 
 .unified-page-title-stat-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.025));
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 38px rgba(0, 0, 0, 0.26);
 }
 
 .unified-page-title-stat-number {
