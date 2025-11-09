@@ -16,7 +16,7 @@ import AgentDetailsModal from '@/components/agents/AgentDetailsModal';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { Bot } from 'lucide-react';
 import '@/styles/main.css';
-import '@/app/private/agents/agents.css';
+import '@/app/private/agents_page_backup_legacy/agents.css';
 import '@/app/ai/agents2/agents2.css';
 import AgentConfiguration from '@/components/agents/AgentConfiguration';
 import AgentParameters from '@/components/agents/AgentParameters';
@@ -472,11 +472,7 @@ function AgentsV2Content() {
                   <UnifiedPageTitle
                     icon={Bot}
                     title="Agent Configuration"
-                    subtitle={
-                      selectedAgent
-                        ? selectedAgent.display_name || selectedAgent.name
-                        : 'Créer un nouvel agent spécialisé'
-                    }
+                    subtitle="Configurer mes agents IA"
                     className="agents2-modal-title"
                     initialAnimation={false}
                   />
