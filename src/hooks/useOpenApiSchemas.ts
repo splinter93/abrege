@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 
-interface OpenApiSchema {
+export interface OpenApiSchema {
   id: string;
   name: string;
   description?: string;
@@ -16,7 +16,7 @@ interface OpenApiSchema {
   header?: string;
 }
 
-interface AgentSchemaLink {
+export interface AgentSchemaLink {
   id: string;
   agent_id: string;
   openapi_schema_id: string;

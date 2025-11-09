@@ -144,6 +144,7 @@ export interface SpecializedAgentConfig {
   readonly api_v2_capabilities: readonly string[];
   readonly input_schema?: OpenAPISchema;
   readonly output_schema?: OpenAPISchema;
+  readonly voice?: string;
   readonly created_at: string;
   readonly updated_at: string;
 }
@@ -177,6 +178,7 @@ export interface CreateSpecializedAgentRequest {
   readonly input_schema?: OpenAPISchema;
   readonly output_schema?: OpenAPISchema;
   readonly api_v2_capabilities?: readonly string[];
+  readonly voice?: string;
 }
 
 export interface CreateSpecializedAgentResponse {
