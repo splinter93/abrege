@@ -9,7 +9,7 @@
  * - Intégration avec useChatResponse pour LLM
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   chatMessageSendingService,
   type SendMessageOptions as ServiceSendOptions
@@ -25,6 +25,7 @@ import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { LLMContext } from '@/hooks/useLLMContext';
 import type { Note } from '@/services/chat/ChatContextBuilder';
 import { simpleLogger as logger } from '@/utils/logger';
+import { tokenManager } from '@/utils/tokenManager';
 
   /**
    * Options du hook
@@ -41,11 +42,11 @@ export interface UseChatMessageActionsOptions {
     token?: string
   ) => Promise<void>;
   addInfiniteMessage: (msg: ChatMessage) => void;
-  clearInfiniteMessages: () => void;
-  loadInitialMessages: () => Promise<void>;
   onEditingChange?: (editing: boolean) => void;
   requireAuth: () => boolean;
   onBeforeSend?: () => Promise<void>; // ✅ NOUVEAU: Callback async avant envoi (reload + reset streaming)
+  replaceMessages: (messages: ChatMessage[]) => void;
+  initialLoadLimit: number;
 }
 
 /**
@@ -60,11 +61,12 @@ export interface UseChatMessageActionsReturn {
     prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }> // ✅ NOUVEAU : Prompts metadata
   ) => Promise<void>;
   
-  editMessage: (
-    messageId: string,
-    newContent: string,
-    images?: ImageAttachment[]
-  ) => Promise<void>;
+  editMessage: (options: {
+    messageId: string;
+    newContent: string;
+    images?: ImageAttachment[];
+    messageIndex?: number;
+  }) => Promise<void>;
   
   isLoading: boolean;
   error: string | null;
@@ -89,12 +91,83 @@ export function useChatMessageActions(
     llmContext,
     sendMessageFn,
     addInfiniteMessage,
-    clearInfiniteMessages,
-    loadInitialMessages,
     onEditingChange,
     requireAuth,
-    onBeforeSend
+  onBeforeSend,
+  replaceMessages,
+  initialLoadLimit
   } = options;
+
+  const messagesRef = useRef<ChatMessage[]>(infiniteMessages);
+
+  useEffect(() => {
+    messagesRef.current = infiniteMessages;
+  }, [infiniteMessages]);
+
+  const mergeMessagesByIdentity = useCallback((primary: ChatMessage[], secondary: ChatMessage[]) => {
+    const withKey = new Map<string, ChatMessage>();
+    const withoutKey: ChatMessage[] = [];
+
+    const register = (message: ChatMessage) => {
+      const key =
+        message.id ||
+        (typeof message.sequence_number === 'number' ? `seq-${message.sequence_number}` : null) ||
+        (message.timestamp ? `ts-${message.timestamp}` : null);
+
+      if (!key) {
+        withoutKey.push(message);
+        return;
+      }
+
+      withKey.set(key, message);
+    };
+
+    primary.forEach(register);
+    secondary.forEach(register);
+
+    return [...withKey.values(), ...withoutKey];
+  }, []);
+
+  const sortMessagesChronologically = useCallback((messages: ChatMessage[]) => {
+    return [...messages].sort((a, b) => {
+      const seqA = typeof a.sequence_number === 'number' ? a.sequence_number : Number.POSITIVE_INFINITY;
+      const seqB = typeof b.sequence_number === 'number' ? b.sequence_number : Number.POSITIVE_INFINITY;
+      if (seqA !== seqB) {
+        return seqA - seqB;
+      }
+      const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return timeA - timeB;
+    });
+  }, []);
+
+  const fetchRecentMessages = useCallback(async (sessionId: string, limit: number): Promise<ChatMessage[]> => {
+    const tokenResult = await tokenManager.getValidToken();
+    if (!tokenResult.isValid || !tokenResult.token) {
+      throw new Error(tokenResult.error || 'Token invalide');
+    }
+
+    const response = await fetch(
+      `/api/chat/sessions/${sessionId}/messages/recent?limit=${limit}`,
+      {
+        headers: {
+          Authorization: `Bearer ${tokenResult.token}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.error || `HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur chargement historique');
+    }
+
+    return (result.data?.messages ?? []) as ChatMessage[];
+  }, []);
 
   // 🔥 Lire currentSession depuis le store (toujours à jour)
   const currentSession = useChatStore(state => state.currentSession);
@@ -146,6 +219,8 @@ export function useChatMessageActions(
     }
 
     try {
+      const currentMessagesSnapshot = messagesRef.current;
+
       // ✅ OPTIMISTIC UI : Créer et afficher message user IMMÉDIATEMENT
       const textContent = typeof message === 'string' 
         ? message 
@@ -175,6 +250,7 @@ export function useChatMessageActions(
 
       // Afficher IMMÉDIATEMENT (avant chargement notes)
       addInfiniteMessage(tempMessage);
+      messagesRef.current = [...currentMessagesSnapshot, tempMessage];
       logger.info('[useChatMessageActions] ⚡ Message user affiché instantanément (optimistic UI)');
 
       // 1. Préparer l'envoi via service (charge notes en arrière-plan)
@@ -187,7 +263,7 @@ export function useChatMessageActions(
         sessionId: currentSession.id,
         currentSession,
         selectedAgent,
-        infiniteMessages,
+        infiniteMessages: currentMessagesSnapshot,
         llmContext
       });
 
@@ -219,6 +295,30 @@ export function useChatMessageActions(
             logger.dev('[useChatMessageActions] ✅ Message user sauvegardé:', {
               sequenceNumber: saved.message?.sequence_number
             });
+            
+            if (saved.message) {
+              const {
+                attached_images,
+                attached_notes,
+                ...rest
+              } = saved.message as ChatMessage & {
+                attached_images?: ChatMessage['attachedImages'];
+                attached_notes?: ChatMessage['attachedNotes'];
+              };
+
+              const savedMessage: ChatMessage = {
+                ...rest,
+                ...(attached_images ? { attachedImages: attached_images } : {}),
+                ...(attached_notes ? { attachedNotes: attached_notes } : {})
+              };
+
+              const updatedMessages = messagesRef.current.map(msg => 
+                msg.id === tempMessage.id ? savedMessage : msg
+              );
+
+              messagesRef.current = updatedMessages;
+              replaceMessages(updatedMessages);
+            }
             
             // 🔥 Si 1er message → update optimiste is_empty dans le store
             if (saved.message?.sequence_number === 1) {
@@ -276,12 +376,12 @@ export function useChatMessageActions(
   }, [
     currentSession, // 🔥 Ajouté - sinon closure stale
     selectedAgent,
-    infiniteMessages,
     llmContext,
     sendMessageFn,
     addInfiniteMessage,
     requireAuth,
-    onBeforeSend
+    onBeforeSend,
+    replaceMessages
   ]);
 
   /**
@@ -298,10 +398,14 @@ export function useChatMessageActions(
    * @param images - Images attachées (optionnel)
    */
   const editMessage = useCallback(async (
-    messageId: string,
-    newContent: string,
-    images?: ImageAttachment[]
+    options: {
+      messageId: string;
+      newContent: string;
+      images?: ImageAttachment[];
+      messageIndex?: number;
+    }
   ) => {
+    const { messageId, newContent, images, messageIndex } = options;
     // ✅ Auth guard
     if (!requireAuth()) {
       setError('Authentification requise');
@@ -318,7 +422,10 @@ export function useChatMessageActions(
     setError(null);
     // ❌ NE PAS appeler onEditingChange(true) - déjà fait dans ChatFullscreenV2
 
+    const historySnapshot = messagesRef.current;
+
     try {
+
       // 1. Éditer via service (delete cascade + add nouveau message)
       const editResult = await chatMessageEditService.edit({
         messageId,
@@ -326,28 +433,53 @@ export function useChatMessageActions(
         images,
         sessionId: currentSession.id,
         currentSession,
-        infiniteMessages,
+        infiniteMessages: historySnapshot,
         selectedAgent,
-        llmContext
+        llmContext,
+        messageIndex
       });
 
       if (!editResult.success) {
         throw new Error(editResult.error || 'Erreur édition message');
       }
 
-      const { deletedCount, token } = editResult;
+      if (typeof editResult.editedSequence !== 'number') {
+        throw new Error('Sequence du message édité introuvable');
+      }
+
+      const { deletedCount, editedSequence } = editResult;
 
       logger.dev('[useChatMessageActions] ✅ Messages supprimés (incluant message édité):', {
         deletedCount,
+        editedSequence,
         newContentPreview: newContent.substring(0, 50)
       });
 
       // 2. Annuler le mode édition IMMÉDIATEMENT
       onEditingChange?.(false);
 
-      // 3. Reload messages depuis DB
-      clearInfiniteMessages();
-      await loadInitialMessages();
+      const preservedMessages = historySnapshot.filter(msg => {
+        const sequence = typeof msg.sequence_number === 'number' ? msg.sequence_number : null;
+        if (sequence === null) {
+          return false;
+        }
+        return sequence < editedSequence;
+      });
+
+      // ⚠️ Si rien à préserver, on part d'une base vide (scénario message initial)
+      messagesRef.current = preservedMessages;
+      replaceMessages(preservedMessages);
+
+      // 3. Reload messages depuis DB (avec marge pour récupérer l'intégralité de la branche restante)
+      const reloadLimit = Math.max(initialLoadLimit * 2, preservedMessages.length + initialLoadLimit);
+      const reloadedMessages = await fetchRecentMessages(currentSession.id, reloadLimit);
+
+      const merged = sortMessagesChronologically(
+        mergeMessagesByIdentity(preservedMessages, reloadedMessages)
+      );
+
+      messagesRef.current = merged;
+      replaceMessages(merged);
 
       logger.dev('[useChatMessageActions] ✅ Messages rechargés, relance génération...');
 
@@ -361,6 +493,9 @@ export function useChatMessageActions(
       logger.dev('[useChatMessageActions] ✅ Message édité renvoyé (flow normal)');
 
     } catch (err) {
+      messagesRef.current = historySnapshot;
+      replaceMessages(historySnapshot);
+
       const errorMessage = err instanceof Error ? err.message : 'Erreur édition message';
       setError(errorMessage);
       logger.error('[useChatMessageActions] ❌ Erreur editMessage:', {
@@ -370,7 +505,6 @@ export function useChatMessageActions(
 
       // En cas d'erreur, annuler l'édition et recharger
       onEditingChange?.(false);
-      await loadInitialMessages();
 
     } finally {
       setIsLoading(false);
@@ -378,13 +512,15 @@ export function useChatMessageActions(
   }, [
     currentSession,
     selectedAgent,
-    infiniteMessages,
     llmContext,
-    sendMessageFn,
-    clearInfiniteMessages,
-    loadInitialMessages,
+    mergeMessagesByIdentity,
+    sortMessagesChronologically,
+    fetchRecentMessages,
+    sendMessage,
+    replaceMessages,
     onEditingChange,
-    requireAuth
+    requireAuth,
+    initialLoadLimit
   ]);
 
   /**

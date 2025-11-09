@@ -27,6 +27,7 @@ export interface EditMessageOptions {
   infiniteMessages: ChatMessage[];
   selectedAgent: Agent | null;
   llmContext: LLMContext;
+  messageIndex?: number;
 }
 
 /**
@@ -36,6 +37,7 @@ export interface EditMessageResult {
   success: boolean;
   deletedCount?: number;
   token?: string;
+  editedSequence?: number;
   error?: string;
 }
 
@@ -112,12 +114,13 @@ export class ChatMessageEditService {
       currentSession,
       infiniteMessages,
       selectedAgent,
-      llmContext
+      llmContext,
+      messageIndex
     } = options;
 
     try {
       // 1. Trouver le message édité
-      const editedMessage = this.findEditedMessage(messageId, infiniteMessages);
+      const editedMessage = this.findEditedMessage(messageId, infiniteMessages, messageIndex);
       
       if (!editedMessage || !editedMessage.sequence_number) {
         throw new NotFoundError(`Message ${messageId} non trouvé ou sans sequence_number`);
@@ -155,7 +158,8 @@ export class ChatMessageEditService {
       return {
         success: true,
         deletedCount: deleteResult.deletedCount,
-        token
+        token,
+        editedSequence: editedMessage.sequence_number
       };
 
     } catch (error) {
@@ -185,8 +189,28 @@ export class ChatMessageEditService {
    */
   private findEditedMessage(
     messageId: string,
-    messages: ChatMessage[]
+    messages: ChatMessage[],
+    messageIndex?: number
   ): ChatMessage | null {
+    if (
+      typeof messageIndex === 'number' &&
+      messageIndex >= 0 &&
+      messageIndex < messages.length
+    ) {
+      const candidate = messages[messageIndex];
+      if (candidate) {
+        if (candidate.id === messageId) {
+          return candidate;
+        }
+        if (!candidate.id && candidate.role === 'user' && candidate.content) {
+          logger.dev('[ChatMessageEditService] ℹ️ Message index mismatch, fallback à recherche ID', {
+            expectedMessageId: messageId,
+            candidateContentPreview: candidate.content.substring(0, 50)
+          });
+        }
+      }
+    }
+
     // Chercher par ID exact
     let message = messages.find(m => m.id === messageId);
     
@@ -208,6 +232,17 @@ export class ChatMessageEditService {
           return false;
         });
       }
+    }
+
+    if (!message) {
+      logger.error('[ChatMessageEditService] ❌ Impossible de localiser le message à éditer', {
+        messageId,
+        messageIndex,
+        availableIds: messages
+          .map((m) => m.id)
+          .filter((id): id is string => typeof id === 'string')
+          .slice(-10)
+      });
     }
 
     return message || null;

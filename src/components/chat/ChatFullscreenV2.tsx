@@ -69,6 +69,8 @@ const ChatFullscreenV2: React.FC = () => {
     cancelEditing
   } = useChatStore();
 
+  const INITIAL_MESSAGES_LIMIT = 10;
+
   // 🎯 INFINITE MESSAGES (lazy loading)
   const {
     messages: infiniteMessages,
@@ -78,10 +80,11 @@ const ChatFullscreenV2: React.FC = () => {
     loadInitialMessages,
     loadMoreMessages,
     addMessage: addInfiniteMessage,
+    replaceMessages,
     clearMessages: clearInfiniteMessages
   } = useInfiniteMessages({
     sessionId: currentSession?.id || null,
-    initialLimit: 10,
+    initialLimit: INITIAL_MESSAGES_LIMIT,
     loadMoreLimit: 20,
     enabled: !!currentSession?.id
   });
@@ -188,12 +191,15 @@ const ChatFullscreenV2: React.FC = () => {
     llmContext,
     sendMessageFn: sendMessage,
     addInfiniteMessage,
-    clearInfiniteMessages,
-    loadInitialMessages,
     onEditingChange: (editing: boolean) => {
-      if (!editing) cancelEditing();
+      if (!editing) {
+        cancelEditing();
+        setEditingContent('');
+      }
     },
     requireAuth,
+    replaceMessages,
+    initialLoadLimit: INITIAL_MESSAGES_LIMIT,
     onBeforeSend: async () => {
       // ✅ SOLUTION SIMPLE: Juste reset la timeline
       // Le message assistant est déjà dans infiniteMessages (ajouté par handleComplete)
@@ -369,7 +375,12 @@ const ChatFullscreenV2: React.FC = () => {
         const textPart = message.find(part => part.type === 'text');
         textContent = textPart && 'text' in textPart ? textPart.text : '';
       }
-      await messageActions.editMessage(editingMessage.messageId, textContent, images);
+      await messageActions.editMessage({
+        messageId: editingMessage.messageId,
+        newContent: textContent,
+        images,
+        messageIndex: editingMessage.messageIndex
+      });
       return;
     }
 

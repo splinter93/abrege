@@ -46,12 +46,13 @@ export function useChatState({
   
   // ✏️ Synchroniser le contenu quand on entre en mode édition
   useEffect(() => {
-    if (editingContent) {
+    if (editingContent !== undefined) {
       setMessage(editingContent);
       if (textareaRef.current) {
         textareaRef.current.focus();
-        textareaRef.current.selectionStart = editingContent.length;
-        textareaRef.current.selectionEnd = editingContent.length;
+        const caretPosition = editingContent.length;
+        textareaRef.current.selectionStart = caretPosition;
+        textareaRef.current.selectionEnd = caretPosition;
       }
     }
   }, [editingContent, textareaRef]);
