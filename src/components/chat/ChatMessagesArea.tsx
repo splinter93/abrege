@@ -93,11 +93,12 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
         <AnimatePresence mode="sync">
           {messages.map((message, index) => {
             // ✅ Clé unique garantie
-            const keyParts = [message.role, message.timestamp, index];
+            const fallbackKeyParts = [message.role, message.timestamp, index];
             if (message.role === 'tool' && 'tool_call_id' in message) {
-              keyParts.push(message.tool_call_id || 'unknown');
+              fallbackKeyParts.push(message.tool_call_id || 'unknown');
             }
-            const fallbackKey = keyParts.join('-');
+            const fallbackKey = fallbackKeyParts.join('-');
+            const messageKey = message.clientMessageId || message.id || fallbackKey;
 
             // ✅ Masquer le dernier message assistant si streaming OU timeline active
             // Évite doublon : streaming affiché via timeline, pas besoin du message DB
@@ -111,7 +112,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
 
             return (
               <motion.div
-                key={message.id || fallbackKey}
+                key={messageKey}
                 initial={isNewlyLoaded ? { opacity: 0, y: 8 } : false}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}

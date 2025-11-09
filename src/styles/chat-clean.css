@@ -1048,6 +1048,13 @@ body.chat-theme-anthracite .chatgpt-header {
   display: block;
 }
 
+body.chat-theme-anthracite .chatgpt-messages-container::before,
+body.chat-theme-blue .chatgpt-messages-container::before {
+  display: none;
+  height: 0;
+  background: none;
+}
+
 /* Scrollbar zone messages ultra discrète et raccourcie */
 .chatgpt-messages-container::-webkit-scrollbar {
   width: 8px;

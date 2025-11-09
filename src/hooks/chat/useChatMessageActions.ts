@@ -87,15 +87,15 @@ export function useChatMessageActions(
 ): UseChatMessageActionsReturn {
   const {
     selectedAgent,
-    infiniteMessages,
     llmContext,
     sendMessageFn,
     addInfiniteMessage,
     onEditingChange,
     requireAuth,
-  onBeforeSend,
-  replaceMessages,
-  initialLoadLimit
+    onBeforeSend,
+    replaceMessages,
+    initialLoadLimit,
+    infiniteMessages
   } = options;
 
   const messagesRef = useRef<ChatMessage[]>(infiniteMessages);
@@ -110,6 +110,7 @@ export function useChatMessageActions(
 
     const register = (message: ChatMessage) => {
       const key =
+        message.clientMessageId ||
         message.id ||
         (typeof message.sequence_number === 'number' ? `seq-${message.sequence_number}` : null) ||
         (message.timestamp ? `ts-${message.timestamp}` : null);
@@ -226,8 +227,11 @@ export function useChatMessageActions(
         ? message 
         : (Array.isArray(message) ? message.find(p => p.type === 'text')?.text || '' : '');
       
+      const clientMessageId = `client-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
       const tempMessage: ChatMessage = {
         id: `temp-${Date.now()}`,
+        clientMessageId,
         role: 'user',
         content: textContent,
         timestamp: new Date().toISOString(),
@@ -308,6 +312,7 @@ export function useChatMessageActions(
 
               const savedMessage: ChatMessage = {
                 ...rest,
+                clientMessageId,
                 ...(attached_images ? { attachedImages: attached_images } : {}),
                 ...(attached_notes ? { attachedNotes: attached_notes } : {})
               };

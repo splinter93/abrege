@@ -84,20 +84,32 @@ const TextareaWithMentions: React.FC<TextareaWithMentionsProps> = ({
     // Trouver toutes les occurrences (prompts + mentions)
     const allMatches: Array<{ type: 'mention' | 'prompt'; index: number; length: number; content: string; mentionData?: NoteMention; promptData?: PromptMention }> = [];
     
+    const isBoundaryCharacter = (character: string | undefined): boolean => {
+      if (!character) {
+        return true;
+      }
+      return !/[a-z0-9_-]/i.test(character);
+    };
+    
     // ✅ Détecter UNIQUEMENT les prompts stockés dans usedPrompts[]
     usedPrompts.forEach(prompt => {
-      const searchPattern = `/${prompt.slug}`; // ✅ NOUVEAU : Utilise slug
+      const searchPattern = `/${prompt.slug}`;
       let index = value.indexOf(searchPattern);
       
-      // Chercher toutes les occurrences de ce prompt
       while (index !== -1) {
-        allMatches.push({
-          type: 'prompt',
-          index,
-          length: searchPattern.length,
-          content: searchPattern,
-          promptData: prompt
-        });
+        const beforeChar = index > 0 ? value[index - 1] : undefined;
+        const afterChar = value[index + searchPattern.length];
+        
+        if (isBoundaryCharacter(afterChar) && isBoundaryCharacter(beforeChar)) {
+          allMatches.push({
+            type: 'prompt',
+            index,
+            length: searchPattern.length,
+            content: searchPattern,
+            promptData: prompt
+          });
+        }
+        
         index = value.indexOf(searchPattern, index + 1);
       }
     });
@@ -107,15 +119,20 @@ const TextareaWithMentions: React.FC<TextareaWithMentionsProps> = ({
       const searchPattern = `@${mention.slug}`;
       let index = value.indexOf(searchPattern);
       
-      // Chercher toutes les occurrences de cette mention
       while (index !== -1) {
-        allMatches.push({
-          type: 'mention',
-          index,
-          length: searchPattern.length,
-          content: searchPattern,
-          mentionData: mention
-        });
+        const beforeChar = index > 0 ? value[index - 1] : undefined;
+        const afterChar = value[index + searchPattern.length];
+        
+        if (isBoundaryCharacter(afterChar) && isBoundaryCharacter(beforeChar)) {
+          allMatches.push({
+            type: 'mention',
+            index,
+            length: searchPattern.length,
+            content: searchPattern,
+            mentionData: mention
+          });
+        }
+        
         index = value.indexOf(searchPattern, index + 1);
       }
     });
@@ -138,7 +155,8 @@ const TextareaWithMentions: React.FC<TextareaWithMentionsProps> = ({
       parts.push({
         type: item.type,
         content: item.content,
-        mentionData: item.mentionData
+        mentionData: item.mentionData,
+        promptData: item.promptData
       });
       
       lastIndex = item.index + item.length;

@@ -44,6 +44,11 @@ export interface BaseMessage {
   timestamp?: string | number;
   sequence_number?: number;  // ✅ NOUVEAU: Ordre strict (table chat_messages)
   streamTimeline?: StreamTimeline; // ✅ Timeline capturée du streaming
+  /**
+   * Identifiant client stable pour conserver les clés React
+   * entre l'ajout optimiste et la version persistée.
+   */
+  clientMessageId?: string;
 }
 
 /**
