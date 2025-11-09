@@ -16,16 +16,22 @@ import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 
-export default function AgentsPage() {
+function AgentsPageContainer() {
   const searchParams = useSearchParams();
   const embeddedParam = searchParams?.get('embedded');
   const embedded = embeddedParam === '1' || embeddedParam === 'true';
   const initialAgentId = searchParams?.get('agent') ?? null;
   return (
+    <AgentsPageContent embedded={embedded} initialAgentId={initialAgentId} />
+  );
+}
+
+export default function AgentsPage() {
+  return (
     <ErrorBoundary>
       <AuthGuard>
         <Suspense fallback={<SimpleLoadingState message="Chargement" />}>
-          <AgentsPageContent embedded={embedded} initialAgentId={initialAgentId} />
+          <AgentsPageContainer />
         </Suspense>
       </AuthGuard>
     </ErrorBoundary>
