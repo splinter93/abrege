@@ -12,16 +12,14 @@ import { useAgentEditor } from "@/hooks/useAgentEditor";
 import "@/styles/main.css";
 import "./agents.css";
 import { SimpleLoadingState } from "@/components/DossierLoadingStates";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ChevronDown } from "lucide-react";
 
-/**
- * Page de gestion des agents spécialisés
- */
-export interface AgentsPageProps {
-  embedded?: boolean;
-  initialAgentId?: string | null;
-}
-
-export default function AgentsPage({ embedded = false, initialAgentId }: AgentsPageProps = {}) {
+export default function AgentsPage() {
+  const searchParams = useSearchParams();
+  const embeddedParam = searchParams?.get('embedded');
+  const embedded = embeddedParam === '1' || embeddedParam === 'true';
+  const initialAgentId = searchParams?.get('agent') ?? null;
   return (
     <ErrorBoundary>
       <AuthGuard>
@@ -40,6 +38,7 @@ export interface AgentsPageContentProps {
 }
 
 function AgentsPageContent({ embedded = false, initialAgentId }: AgentsPageContentProps = {}) {
+  const router = useRouter();
   const {
     agents,
     loading,
@@ -88,6 +87,14 @@ function AgentsPageContent({ embedded = false, initialAgentId }: AgentsPageConte
     );
   }
 
+  const handleOpenChat = () => {
+    if (!selectedAgent) {
+      return;
+    }
+    const slug = selectedAgent.slug || selectedAgent.id;
+    router.push(`/chat?agent=${encodeURIComponent(slug)}`);
+  };
+
   const content = (
     <div className={embedded ? 'agents-embedded-wrapper' : 'page-wrapper'}>
       {!embedded && (
@@ -98,11 +105,93 @@ function AgentsPageContent({ embedded = false, initialAgentId }: AgentsPageConte
 
       <main className={`page-content-area ${embedded ? 'agents-embedded-content' : ''}`}>
         {!embedded && (
-        <UnifiedPageTitle
-          icon={Bot}
-          title="Agents Spécialisés"
-          subtitle="Gérez et configurez vos agents IA personnalisés"
-        />
+        <div className="page-title-with-switcher">
+          <UnifiedPageTitle
+            icon={Bot}
+            title="Agents Spécialisés"
+            subtitle="Gérez et configurez vos agents IA personnalisés"
+          />
+          <div className="agent-switcher-inline">
+            <div className="agent-toolbar__select">
+              <button
+                type="button"
+                className="agent-select-trigger-button"
+                onClick={event => {
+                  const menu = document.getElementById('agent-switcher-menu');
+                  if (menu) {
+                    menu.classList.toggle('open');
+                  }
+                  event.currentTarget.classList.toggle('open');
+                }}
+              >
+                {selectedAgent ? (
+                  <span className="agent-select-trigger">
+                    {selectedAgent.profile_picture ? (
+                      <img src={selectedAgent.profile_picture} alt={selectedAgent.display_name || selectedAgent.name}
+                        className="agent-select-trigger__avatar"
+                        onError={event => {
+                          event.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <span className="agent-select-trigger__avatar agent-select-trigger__avatar--fallback">
+                        {(selectedAgent.display_name || selectedAgent.name).slice(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="agent-select-trigger__label">
+                      {selectedAgent.display_name || selectedAgent.name}
+                    </span>
+                    <span className="agent-select-trigger__chevron-wrapper">
+                      <ChevronDown size={16} className="agent-select-trigger__chevron" aria-hidden="true" />
+                    </span>
+                  </span>
+                ) : (
+                  <span className="agent-select-trigger__label">Aucun agent</span>
+                )}
+              </button>
+
+              <div id="agent-switcher-menu" className="agent-select-menu">
+              {agents.map(agent => {
+                const fallback = (agent.display_name || agent.name || 'AG').slice(0, 2).toUpperCase();
+                const isActive = selectedAgent?.id === agent.id;
+                return (
+                  <button
+                    key={agent.id}
+                    type="button"
+                    className={`agent-select-option ${isActive ? 'active' : ''}`}
+                    onClick={() => {
+                      handleSelectAgent(agent);
+                      const menu = document.getElementById('agent-switcher-menu');
+                      if (menu) {
+                        menu.classList.remove('open');
+                      }
+                      const trigger = document.querySelector('.agent-select-trigger-button.open');
+                      trigger?.classList.remove('open');
+                    }}
+                  >
+                    {agent.profile_picture ? (
+                      <img src={agent.profile_picture}
+                        alt={agent.display_name || agent.name}
+                        className="agent-select-option__avatar"
+                        onError={event => {
+                          event.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <span className="agent-select-option__avatar agent-select-option__avatar--fallback">
+                        {fallback}
+                      </span>
+                    )}
+                    <span className="agent-select-option__label">
+                      {agent.display_name || agent.name}
+                    </span>
+                  </button>
+                );
+              })}
+              </div>
+            </div>
+          </div>
+        </div>
         )}
 
         <div className={`main-dashboard ${embedded ? 'main-dashboard--embedded' : ''}`}>
@@ -118,73 +207,6 @@ function AgentsPageContent({ embedded = false, initialAgentId }: AgentsPageConte
           )}
 
           <div className={`agents-layout ${embedded ? 'agents-layout--embedded' : ''}`}>
-          {/* Colonne 1: Liste des agents */}
-          {!embedded && (
-          <motion.div
-            className="agents-list-panel"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="panel-header">
-              <h2 className="panel-title">Agents disponibles</h2>
-              <button 
-                className="btn-icon"
-                onClick={loadAgents}
-                title="Rafraîchir"
-              >
-                🔄
-              </button>
-            </div>
-
-            <div className="agents-list">
-              {agents.length === 0 ? (
-                <div className="empty-state">
-                  <Bot size={48} className="empty-icon" />
-                  <p>Aucun agent disponible</p>
-                </div>
-              ) : (
-                agents.map((agent) => (
-                  <motion.button
-                    key={agent.id}
-                    className={`agent-card ${selectedAgent?.id === agent.id ? 'selected' : ''}`}
-                    onClick={() => handleSelectAgent(agent)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="agent-card-header">
-                      <div className="agent-header-left">
-                        {agent.profile_picture && (
-                          <img 
-                            src={agent.profile_picture} 
-                            alt={agent.display_name || agent.name}
-                            className="agent-avatar-small"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        )}
-                        <h3 className="agent-name">
-                          {agent.display_name || agent.name}
-                        </h3>
-                      </div>
-                      <div className={`agent-status ${agent.is_active ? 'active' : 'inactive'}`}>
-                        {agent.is_active ? '●' : '○'}
-                      </div>
-                    </div>
-                    <p className="agent-description">
-                      {agent.description || 'Aucune description'}
-                    </p>
-                    <div className="agent-meta">
-                      <span className="agent-model">{agent.model}</span>
-                    </div>
-                  </motion.button>
-                ))
-              )}
-            </div>
-          </motion.div>
-          )}
-
           {/* Colonne 2: Configuration de l'agent (milieu) */}
           <motion.div
             className="agent-panel-motion"
@@ -204,6 +226,7 @@ function AgentsPageContent({ embedded = false, initialAgentId }: AgentsPageConte
               onCancel={handleCancelEdit}
               onDelete={() => setShowDeleteConfirm(true)}
               onUpdateField={updateField}
+              onOpenChat={handleOpenChat}
             />
           </motion.div>
 

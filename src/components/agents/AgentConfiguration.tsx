@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, X, Trash2, Star, Image as ImageIcon } from 'lucide-react';
+import { Save, X, Trash2, Star, Image as ImageIcon, MessageCircle } from 'lucide-react';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 
@@ -25,6 +25,7 @@ interface AgentConfigurationProps {
     field: K,
     value: SpecializedAgentConfig[K]
   ) => void;
+  onOpenChat: () => void;
 }
 
 export function AgentConfiguration({
@@ -39,6 +40,7 @@ export function AgentConfiguration({
   onCancel,
   onDelete,
   onUpdateField,
+  onOpenChat,
 }: AgentConfigurationProps) {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
 
@@ -154,6 +156,15 @@ export function AgentConfiguration({
 
           <div className="agent-profile-card__actions">
             <button
+              className="btn-chat"
+              type="button"
+              onClick={onOpenChat}
+              disabled={!selectedAgent}
+              title="Accéder au chat"
+            >
+              <MessageCircle size={16} />
+            </button>
+            <button
               className={`btn-favorite ${isFavorite ? 'active' : ''}`}
               type="button"
               onClick={onToggleFavorite}
@@ -255,13 +266,13 @@ export function AgentConfiguration({
 
           <section className="agent-config-section">
             <div className="agent-config-section__header">
-              <h3>Profil & tonalité</h3>
+              <h3>Voix (TTS)</h3>
             </div>
 
             <div className="agent-config-grid">
               <div className="agent-config-field">
-                <label className="field-label" htmlFor="agent-voice">
-                  Voix (TTS)
+                <label className="visually-hidden" htmlFor="agent-voice">
+                  Voix TTS
                 </label>
                 <select
                   id="agent-voice"

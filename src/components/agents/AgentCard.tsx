@@ -19,8 +19,21 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle
   const modelLabel = agent.model || 'Modèle non défini';
   const avatarUrl = agent.profile_picture;
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onEdit();
+    }
+  };
+
   return (
-    <div className={`agent-card ${!agent.is_active ? 'agent-card--inactive' : ''}`}>
+    <div
+      className={`agent-card ${!agent.is_active ? 'agent-card--inactive' : ''}`}
+      onClick={onEdit}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       <div className="agent-card__top">
         <div className="agent-card__avatar">
           {avatarUrl ? (
@@ -33,17 +46,30 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle
           <button
             className={`agent-card__toggle ${agent.is_active ? 'active' : ''}`}
             title={agent.is_active ? 'Désactiver' : 'Activer'}
-            onClick={onToggle}
+            onClick={event => {
+              event.stopPropagation();
+              onToggle();
+            }}
           >
             {agent.is_active ? <FiToggleRight size={16} /> : <FiToggleLeft size={16} />}
           </button>
-          <button className="agent-card__action-btn" title="Modifier" onClick={onEdit}>
+          <button
+            className="agent-card__action-btn"
+            title="Modifier"
+            onClick={event => {
+              event.stopPropagation();
+              onEdit();
+            }}
+          >
             <FiEdit2 size={14} />
           </button>
           <button
             className="agent-card__action-btn agent-card__action-btn--delete"
             title="Supprimer"
-            onClick={onDelete}
+            onClick={event => {
+              event.stopPropagation();
+              onDelete();
+            }}
           >
             <FiTrash2 size={14} />
           </button>

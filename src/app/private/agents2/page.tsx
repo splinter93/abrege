@@ -18,6 +18,7 @@ import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { Bot } from 'lucide-react';
 import '@/styles/main.css';
 import '@/app/ai/agents2/agents2.css';
+import { useRouter } from 'next/navigation';
 
 export default function AgentsV2Page() {
   return (
@@ -32,6 +33,7 @@ export default function AgentsV2Page() {
 function AgentsV2Content() {
   const { user, loading: authLoading } = useAuth();
   const { agents, loading, error } = useSpecializedAgents();
+  const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -97,10 +99,8 @@ function AgentsV2Content() {
   };
 
   const handleEdit = (agent: SpecializedAgentConfig) => {
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem('agents:lastSelected', agent.id);
-    }
-    setIsModalOpen(true);
+    const identifier = agent.slug || agent.id;
+    router.push(`/private/agents?agent=${encodeURIComponent(identifier)}`);
   };
   
   const handleCloseModal = () => {

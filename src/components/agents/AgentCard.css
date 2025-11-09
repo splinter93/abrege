@@ -12,6 +12,7 @@
   border: none;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
 }
 
 .agent-card:hover {

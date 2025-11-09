@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, Plus, X as CloseIcon } from 'lucide-react';
+import { Plus, X, Info } from 'lucide-react';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { GROQ_MODELS_BY_CATEGORY, getModelInfo } from '@/constants/groqModels';
 import type { McpServer, AgentMcpServerWithDetails } from '@/types/mcp';
@@ -99,8 +99,8 @@ export function AgentParameters({
             <h3>Modèle LLM</h3>
           </div>
           <div className="agent-params-card__body">
-            <label className="field-label" htmlFor="agent-model">
-              Sélection du modèle
+            <label className="visually-hidden" htmlFor="agent-model">
+              Modèle LLM
             </label>
             <div className="agent-params-select">
               <select
@@ -120,18 +120,16 @@ export function AgentParameters({
                   </optgroup>
                 ))}
               </select>
+              {modelInfo && (
+                <button
+                  type="button"
+                  className="agent-select-info"
+                  title={`${modelInfo.description}\nTarifs : ${modelInfo.pricing.input} input / ${modelInfo.pricing.output} output\nVitesses : ${modelInfo.speed} TPS`}
+                >
+                  <Info size={16} />
+                </button>
+              )}
             </div>
-
-            {modelInfo && (
-              <div className="agent-params-model-info">
-                <p className="agent-params-model-info__description">{modelInfo.description}</p>
-                <div className="agent-params-model-info__meta">
-                  <span>{modelInfo.pricing.input} input</span>
-                  <span>{modelInfo.pricing.output} output</span>
-                  <span>{modelInfo.speed} TPS</span>
-                </div>
-              </div>
-            )}
           </div>
         </section>
 
@@ -253,7 +251,7 @@ export function AgentParameters({
                       onClick={() => handleUnlinkSchema(schema.id)}
                       title="Retirer ce schéma"
                     >
-                      <CloseIcon size={14} />
+                      <X size={14} />
                     </button>
                   </div>
                 ))}
@@ -322,7 +320,7 @@ export function AgentParameters({
                       onClick={() => handleUnlinkServer(link.mcp_server_id)}
                       title="Retirer ce serveur"
                     >
-                      <CloseIcon size={14} />
+                      <X size={14} />
                     </button>
                   </div>
                 ))}
