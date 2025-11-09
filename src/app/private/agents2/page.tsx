@@ -112,17 +112,6 @@ function AgentsV2Content() {
     handleCloseModal();
   };
 
-  useEffect(() => {
-    if (!isModalOpen) {
-      return;
-    }
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isModalOpen]);
-
   return (
     <div className="page-wrapper">
       <aside className="page-sidebar-fixed">
