@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { Suspense } from "react";
 import UnifiedSidebar from "@/components/UnifiedSidebar";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -23,7 +24,9 @@ export default function AgentsPage() {
   return (
     <ErrorBoundary>
       <AuthGuard>
-        <AgentsPageContent embedded={embedded} initialAgentId={initialAgentId} />
+        <Suspense fallback={<SimpleLoadingState message="Chargement" />}>
+          <AgentsPageContent embedded={embedded} initialAgentId={initialAgentId} />
+        </Suspense>
       </AuthGuard>
     </ErrorBoundary>
   );
