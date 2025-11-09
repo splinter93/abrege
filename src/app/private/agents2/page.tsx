@@ -4,7 +4,7 @@
  */
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSpecializedAgents } from '@/hooks/useSpecializedAgents';
 import UnifiedSidebar from '@/components/UnifiedSidebar';
@@ -18,6 +18,8 @@ import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { Bot } from 'lucide-react';
 import '@/styles/main.css';
 import '@/app/ai/agents2/agents2.css';
+import AgentConfiguration from '@/components/agents/AgentConfiguration';
+import AgentParameters from '@/components/agents/AgentParameters';
 import { useRouter } from 'next/navigation';
 
 export default function AgentsV2Page() {
@@ -36,6 +38,8 @@ function AgentsV2Content() {
   const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<SpecializedAgentConfig | null>(null);
+  const [editedAgent, setEditedAgent] = useState<Partial<SpecializedAgentConfig> | null>(null);
 
   const sortedAgents = useMemo(
     () =>
@@ -91,24 +95,33 @@ function AgentsV2Content() {
     );
   }
 
-  const handleCreate = () => {
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.removeItem('agents:lastSelected');
-    }
+  const handleOpenModal = (agent: SpecializedAgentConfig | null) => {
+    setSelectedAgent(agent);
+    setEditedAgent(agent ? { ...agent } : null);
     setIsModalOpen(true);
   };
 
-  const handleEdit = (agent: SpecializedAgentConfig) => {
-    const identifier = agent.slug || agent.id;
-    router.push(`/private/agents?agent=${encodeURIComponent(identifier)}`);
-  };
-  
   const handleCloseModal = () => {
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.removeItem('agents:lastSelected');
-    }
     setIsModalOpen(false);
+    setSelectedAgent(null);
+    setEditedAgent(null);
   };
+
+  const handleSaveAgent = () => {
+    // TODO: implémenter la sauvegarde via useAgentEditor-like hook (à connecter)
+    handleCloseModal();
+  };
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      return;
+    }
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isModalOpen]);
 
   return (
     <div className="page-wrapper">
@@ -130,7 +143,7 @@ function AgentsV2Content() {
                 ]}
               />
               <div className="agents2-header-actions">
-                <button onClick={handleCreate} className="agents2-create-btn">
+                <button onClick={() => handleOpenModal(null)} className="agents2-create-btn">
                   + Nouvel agent
                 </button>
               </div>
@@ -151,7 +164,7 @@ function AgentsV2Content() {
                   <AgentCard
                     key={agent.id}
                     agent={agent}
-                    onEdit={() => handleEdit(agent)}
+                    onEdit={() => handleOpenModal(agent)}
                     onToggle={() => {
                       // TODO: hook toggle (reprendre logique prompts)
                     }}
@@ -164,7 +177,75 @@ function AgentsV2Content() {
             )}
           </div>
 
-          {isModalOpen && <AgentDetailsModal onClose={handleCloseModal} />}
+          {isModalOpen ? (
+            <div className="agents2-modal-backdrop" role="dialog" aria-modal="true">
+              <div className="agents2-modal">
+                <header className="agents2-modal__header">
+                  <h2>{selectedAgent ? `Configuration · ${selectedAgent.display_name || selectedAgent.name}` : 'Nouvel agent'}</h2>
+                  <button
+                    type="button"
+                    className="agents2-modal__close"
+                    aria-label="Fermer"
+                    onClick={handleCloseModal}
+                  >
+                    ✕
+                  </button>
+                </header>
+                <div className="agents2-modal__content agents-layout agents-layout--modal">
+                  <div className="agent-panel-motion">
+                    <AgentConfiguration
+                      selectedAgent={selectedAgent}
+                      editedAgent={editedAgent}
+                      hasChanges={false}
+                      isFavorite={Boolean(selectedAgent?.is_favorite)}
+                      togglingFavorite={false}
+                      loadingDetails={false}
+                      onToggleFavorite={() => {}}
+                      onSave={handleSaveAgent}
+                      onCancel={handleCloseModal}
+                      onDelete={handleCloseModal}
+                      onUpdateField={(field, value) => {
+                        setEditedAgent(prev => ({
+                          ...prev,
+                          [field]: value,
+                        }));
+                      }}
+                      onOpenChat={() => {
+                        if (!selectedAgent) return;
+                        const identifier = selectedAgent.slug || selectedAgent.id;
+                        router.push(`/chat?agent=${encodeURIComponent(identifier)}`);
+                      }}
+                    />
+                  </div>
+                  <div className="agent-panel-motion">
+                    <AgentParameters
+                      selectedAgent={selectedAgent}
+                      editedAgent={editedAgent}
+                      loadingDetails={false}
+                      openApiSchemas={[]}
+                      agentOpenApiSchemas={[]}
+                      openApiLoading={false}
+                      mcpServers={[]}
+                      agentMcpServers={[]}
+                      mcpLoading={false}
+                      onLinkSchema={async () => {}}
+                      onUnlinkSchema={async () => {}}
+                      onLinkServer={async () => {}}
+                      onUnlinkServer={async () => {}}
+                      isSchemaLinked={() => false}
+                      isServerLinked={() => false}
+                      onUpdateField={(field, value) => {
+                        setEditedAgent(prev => ({
+                          ...prev,
+                          [field]: value,
+                        }));
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       </main>
     </div>
