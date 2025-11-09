@@ -431,13 +431,24 @@ const ChatFullscreenV2: React.FC = () => {
     
     // ✏️ Si en édition, masquer le message édité et ceux qui suivent
     if (editingMessage) {
-      const editedMsgIndex = filtered.findIndex(msg =>
-        msg.id === editingMessage.messageId ||
-        (msg.timestamp && editingMessage.messageId.includes(new Date(msg.timestamp).getTime().toString()))
-      );
+      let cutIndex = -1;
       
-      if (editedMsgIndex !== -1) {
-        filtered = filtered.slice(0, editedMsgIndex);
+      if (typeof editingMessage.messageIndex === 'number') {
+        cutIndex = Math.min(Math.max(editingMessage.messageIndex, 0), filtered.length);
+      }
+      
+      if (cutIndex === -1) {
+        const fallbackIndex = filtered.findIndex(msg =>
+          msg.id === editingMessage.messageId ||
+          (msg.timestamp && editingMessage.messageId.includes(new Date(msg.timestamp).getTime().toString()))
+        );
+        if (fallbackIndex !== -1) {
+          cutIndex = fallbackIndex;
+        }
+      }
+      
+      if (cutIndex !== -1) {
+        filtered = filtered.slice(0, cutIndex);
       }
     }
     
