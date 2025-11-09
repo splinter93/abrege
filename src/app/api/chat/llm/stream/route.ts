@@ -456,7 +456,7 @@ export async function POST(request: NextRequest) {
           // ✅ Boucle agentic en streaming (max 5 tours)
           let currentMessages = [...messages];
           let roundCount = 0;
-          const maxRounds = 5;
+          const maxRounds = 20;
           
           // ✅ AUDIT : Tracker les tool calls déjà exécutés pour détecter les doublons
           const executedToolCallsSignatures = new Set<string>();
@@ -713,6 +713,59 @@ export async function POST(request: NextRequest) {
                   timestamp: Date.now()
                 });
               }
+            }
+
+            const hasReachedRoundLimit = roundCount >= maxRounds;
+
+            if (hasReachedRoundLimit) {
+              logger.warn(`[Stream Route] ⚠️ Limite de ${maxRounds} rounds atteinte, relance finale forcée sans nouveaux tool calls`);
+              
+              try {
+                const finalResponse = await provider.callWithMessages(currentMessages, []);
+
+                if (finalResponse.tool_calls && finalResponse.tool_calls.length > 0) {
+                  logger.warn('[Stream Route] ⚠️ Réponse finale forcée contient encore des tool calls, ils seront ignorés', {
+                    requestedToolCalls: finalResponse.tool_calls.length
+                  });
+                }
+
+                if (finalResponse.content) {
+                  sendSSE({
+                    type: 'delta',
+                    content: finalResponse.content,
+                    reasoning: finalResponse.reasoning
+                  });
+
+                  sendSSE({
+                    type: 'assistant_round_complete',
+                    content: finalResponse.content,
+                    tool_calls: [],
+                    finishReason: 'stop',
+                    forced: true,
+                    timestamp: Date.now()
+                  });
+
+                  currentMessages.push({
+                    role: 'assistant',
+                    content: finalResponse.content,
+                    timestamp: new Date().toISOString()
+                  });
+                } else {
+                  logger.error('[Stream Route] ❌ Réponse finale forcée vide, envoi d’une erreur au client');
+                  sendSSE({
+                    type: 'error',
+                    error: 'Réponse finale indisponible après la limite de tool calls'
+                  });
+                }
+              } catch (finalError) {
+                logger.error('[Stream Route] ❌ Erreur lors de la relance finale forcée', finalError);
+                sendSSE({
+                  type: 'error',
+                  error: 'Erreur lors de la relance finale forcée'
+                });
+              }
+
+              break;
             }
 
             // Continuer la boucle pour relancer le LLM avec les résultats

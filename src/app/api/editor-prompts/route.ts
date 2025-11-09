@@ -3,6 +3,7 @@
  * @module api/editor-prompts
  */
 
+import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
@@ -18,6 +19,73 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+const SLUG_MAX_LENGTH = 50;
+const SLUG_COLLISION_LIMIT = 100;
+
+/**
+ * Normalise un nom de prompt en slug (ASCII, lowercase, séparateurs "-")
+ */
+function normalizePromptSlug(name: string): string {
+  if (!name || typeof name !== 'string') {
+    return 'prompt';
+  }
+
+  const normalized = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .replace(/-{2,}/g, '-')
+    .slice(0, SLUG_MAX_LENGTH);
+
+  return normalized || 'prompt';
+}
+
+/**
+ * Génère un slug unique pour un prompt utilisateur
+ */
+async function generateUniquePromptSlug(name: string, userId: string): Promise<string> {
+  const baseSlug = normalizePromptSlug(name);
+  let candidate = baseSlug;
+  let suffixCounter = 1;
+
+  // Vérifie l'unicité côté base, borne à SLUG_COLLISION_LIMIT pour éviter boucle infinie
+  while (suffixCounter <= SLUG_COLLISION_LIMIT) {
+    const { data, error } = await supabase
+      .from('editor_prompts')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('slug', candidate)
+      .limit(1);
+
+    if (error) {
+      logger.error('[Editor Prompts API] ❌ Erreur vérification slug', {
+        error,
+        userId,
+        candidate
+      });
+      throw new Error('Erreur lors de la génération du slug du prompt');
+    }
+
+    if (!data || data.length === 0) {
+      return candidate;
+    }
+
+    suffixCounter += 1;
+    const suffix = `-${suffixCounter}`;
+    const availableLength = Math.max(SLUG_MAX_LENGTH - suffix.length, 1);
+    const truncatedBase = baseSlug.slice(0, availableLength);
+    candidate = `${truncatedBase}${suffix}`;
+  }
+
+  // Fallback : slug basé sur UUID pour garantir l'unicité
+  const uniqueSuffix = randomUUID().slice(0, 8);
+  const fallbackBaseLength = Math.max(SLUG_MAX_LENGTH - uniqueSuffix.length - 1, 1);
+  const fallbackBase = baseSlug.slice(0, fallbackBaseLength);
+  return `${fallbackBase}-${uniqueSuffix}`;
+}
 
 /**
  * Schéma de validation pour la création d'un prompt
@@ -127,6 +195,22 @@ export async function POST(request: NextRequest) {
 
     logger.info(`[Editor Prompts API] 📝 POST création prompt: ${data.name} pour user: ${data.user_id}`);
 
+    let promptSlug: string;
+    try {
+      promptSlug = await generateUniquePromptSlug(data.name, data.user_id);
+    } catch (slugError) {
+      logger.error('[Editor Prompts API] ❌ Génération slug impossible', {
+        error: slugError instanceof Error ? slugError.message : slugError,
+        userId: data.user_id,
+        promptName: data.name
+      });
+
+      return NextResponse.json(
+        { error: 'Impossible de générer un identifiant unique pour ce prompt' },
+        { status: 500 }
+      );
+    }
+
     // Si position non fournie, récupérer la position maximale + 1
     let position = data.position;
     if (position === undefined) {
@@ -152,6 +236,7 @@ export async function POST(request: NextRequest) {
         prompt_template: data.prompt_template,
         icon: data.icon,
         position,
+        slug: promptSlug,
         is_active: true,
         is_default: false,
         category: data.category ?? null,
