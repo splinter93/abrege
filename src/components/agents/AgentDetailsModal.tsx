@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import AgentConfiguration from '@/components/agents/AgentConfiguration';
 import AgentParameters from '@/components/agents/AgentParameters';
 import { useAgentEditor } from '@/hooks/useAgentEditor';
+import '@/app/private/agents/agents.css';
 import './AgentDetailsModal.css';
 
 interface AgentDetailsModalProps {

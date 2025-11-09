@@ -12,8 +12,6 @@ export interface AgentSystemConfig {
   personality?: string;
   expertise?: string[];
   capabilities?: string[];
-  // Compatibilité héritage
-  instructions?: string;
 }
 
 export interface SystemMessageContext {
@@ -66,10 +64,9 @@ export class SystemMessageBuilder {
     try {
       // 1. Instructions système personnalisées (priorité haute)
       const primaryInstructions = agentConfig.system_instructions?.trim();
-      const legacyInstructions = agentConfig.instructions?.trim();
-      
-      if (primaryInstructions || legacyInstructions) {
-        content = (primaryInstructions || legacyInstructions)!;
+
+      if (primaryInstructions) {
+        content = primaryInstructions;
         hasCustomInstructions = true;
         logger.dev(`[SystemMessageBuilder] 🎯 Instructions système personnalisées utilisées`);
       } else {
@@ -313,7 +310,6 @@ export class SystemMessageBuilder {
     // Au moins une source d'instructions doit être présente
     const hasInstructions = !!(
       agentConfig.system_instructions?.trim() ||
-      agentConfig.instructions?.trim() ||
       agentConfig.context_template?.trim()
     );
 

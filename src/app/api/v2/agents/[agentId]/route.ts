@@ -278,7 +278,6 @@ export async function GET(
       provider: agent.provider,
       profile_picture: agent.profile_picture,
       system_instructions: agent.system_instructions,
-      instructions: agent.instructions,
       personality: agent.personality,
       expertise: agent.expertise,
       input_schema: agent.input_schema,

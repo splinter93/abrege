@@ -18,7 +18,6 @@ export interface Agent {
   model: string;
   provider?: string;
   system_instructions?: string;
-  instructions?: string;
   context_template?: string;
   personality?: string;
   expertise?: string[];

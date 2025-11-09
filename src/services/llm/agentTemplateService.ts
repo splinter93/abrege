@@ -86,9 +86,8 @@ export class AgentTemplateService {
 
     // 1. Instructions système personnalisées
     const primaryInstructions = agentConfig.system_instructions?.trim();
-    const legacyInstructions = agentConfig.instructions?.trim();
-    if (primaryInstructions || legacyInstructions) {
-      content = (primaryInstructions || legacyInstructions)!;
+    if (primaryInstructions) {
+      content = primaryInstructions;
       hasCustomInstructions = true;
       logger.dev(`[AgentTemplate] 🎯 Template personnalisé utilisé pour l'agent`);
     } else {
@@ -203,9 +202,8 @@ export class AgentTemplateService {
 
     // 1. Instructions système personnalisées
     const primaryInstructions = agentConfig.system_instructions?.trim();
-    const legacyInstructions = agentConfig.instructions?.trim();
-    if (primaryInstructions || legacyInstructions) {
-      content = (primaryInstructions || legacyInstructions)!;
+    if (primaryInstructions) {
+      content = primaryInstructions;
       hasCustomInstructions = true;
       logger.dev(`[AgentTemplate] 🎯 Template personnalisé utilisé pour l'agent`);
     } else {
@@ -313,9 +311,8 @@ export class AgentTemplateService {
     const summary: string[] = [];
 
     const primaryInstructions = agentConfig.system_instructions;
-    const legacyInstructions = agentConfig.instructions;
-    if (primaryInstructions || legacyInstructions) {
-      const length = (primaryInstructions || legacyInstructions)?.length || 0;
+    if (primaryInstructions) {
+      const length = primaryInstructions.length;
       summary.push(`✅ Instructions système: ${length} caractères`);
     }
 

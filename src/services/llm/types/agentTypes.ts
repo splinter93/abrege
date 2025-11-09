@@ -15,7 +15,6 @@ export interface AgentConfig {
   service_tier?: string;
   parallel_tool_calls?: boolean;
   system_instructions?: string;
-  instructions?: string; // Legacy
   context_template?: string;
   personality?: string;
   expertise?: string[];

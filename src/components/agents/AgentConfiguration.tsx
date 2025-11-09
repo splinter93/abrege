@@ -176,11 +176,21 @@ export function AgentConfiguration({
 
             {hasChanges && (
               <>
-                <button className="btn-tertiary" type="button" onClick={onCancel}>
+                <button
+                  className="btn-tertiary"
+                  type="button"
+                  onClick={onCancel}
+                  disabled={loadingDetails}
+                >
                   <X size={16} />
                   <span>Annuler</span>
                 </button>
-                <button className="btn-primary" type="button" onClick={onSave}>
+                <button
+                  className="btn-primary"
+                  type="button"
+                  onClick={onSave}
+                  disabled={loadingDetails}
+                >
                   <span className="btn-primary__icon">
                     <Save size={16} />
                   </span>

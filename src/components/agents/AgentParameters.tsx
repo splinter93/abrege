@@ -248,7 +248,7 @@ export function AgentParameters({
                     <button
                       type="button"
                       className="agent-params-list__remove"
-                      onClick={() => handleUnlinkSchema(schema.id)}
+                      onClick={() => handleUnlinkSchema(schema.openapi_schema_id)}
                       title="Retirer ce schéma"
                     >
                       <X size={14} />
