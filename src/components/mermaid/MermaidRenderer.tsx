@@ -63,10 +63,12 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
   const [isRendered, setIsRendered] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
   
   const renderIdRef = useRef<string>('');
   const abortControllerRef = useRef<AbortController | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const {
     timeout = 10000
@@ -118,6 +120,14 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
       // Importer Mermaid dynamiquement
       const mermaid = await import('mermaid');
 
+      // Valider la syntaxe en amont pour empêcher Mermaid d'injecter son SVG d'erreur
+      try {
+        await mermaid.default.parse(normalizedChart);
+      } catch (parseError) {
+        const errorMessage = parseError instanceof Error ? parseError.message : 'Erreur de syntaxe Mermaid inconnue';
+        throw new Error(errorMessage);
+      }
+
       // Rendre le diagramme avec timeout
       const renderPromise = mermaid.default.render(id, normalizedChart);
       const timeoutPromise = new Promise<never>((_, reject) => {
@@ -130,7 +140,15 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
       if (signal.aborted || renderIdRef.current !== id) return;
 
       if (result && typeof result === 'object' && 'svg' in result) {
-        setSvgContent(result.svg as string);
+        const svgResult = result.svg as string;
+
+        // Vérifier si Mermaid renvoie quand même son SVG d'erreur (aria-roledescription="error")
+        const isErrorSvg = svgResult.includes('aria-roledescription="error"') || svgResult.includes('class="error-text"');
+        if (isErrorSvg) {
+          throw new Error('Mermaid a renvoyé une erreur de rendu.');
+        }
+
+        setSvgContent(svgResult);
         setIsRendered(true);
         setIsLoading(false);
         
@@ -174,6 +192,30 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
       }
     };
   }, [content, renderChart]);
+
+  useEffect(() => {
+    if (copyTimeoutRef.current) {
+      clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = null;
+    }
+    setCopyStatus('idle');
+
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+        copyTimeoutRef.current = null;
+      }
+    };
+  }, [error]);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+        copyTimeoutRef.current = null;
+      }
+    };
+  }, []);
   
   const handleExpand = useCallback(() => {
     openMermaidModal(content);
@@ -252,8 +294,48 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
         )}
         {error && (
           <div className="mermaid-error-content">
-            <span>Erreur de rendu</span>
-            <pre>{error}</pre>
+            <div className="mermaid-error-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            </div>
+            <div className="mermaid-error-title">Erreur de rendu du diagramme</div>
+            <div className="mermaid-error-message">
+              <strong>Cause :</strong>
+              <pre className="mermaid-error-text">{error}</pre>
+            </div>
+            <button
+              className="mermaid-error-copy-btn"
+              type="button"
+              onClick={async () => {
+                if (!error) {
+                  return;
+                }
+                if (copyTimeoutRef.current) {
+                  clearTimeout(copyTimeoutRef.current);
+                }
+                try {
+                  await navigator.clipboard.writeText(error);
+                  setCopyStatus('copied');
+                  copyTimeoutRef.current = setTimeout(() => {
+                    setCopyStatus('idle');
+                    copyTimeoutRef.current = null;
+                  }, 2000);
+                } catch (copyError) {
+                  logger.error('[Mermaid] Erreur lors de la copie', copyError);
+                  setCopyStatus('idle');
+                }
+              }}
+              title="Copier l'erreur"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              <span>{copyStatus === 'copied' ? 'Copié !' : 'Copier l\'erreur'}</span>
+            </button>
           </div>
         )}
         {isRendered && svgContent && (
