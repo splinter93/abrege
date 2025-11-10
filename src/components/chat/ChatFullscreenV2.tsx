@@ -417,7 +417,7 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 MESSAGES AFFICHÉS (calcul optimisé)
   const displayMessages = useMemo(() => {
-    if (animations.displayedSessionId !== currentSession?.id) return [];
+    if (animations.displayedSessionId && animations.displayedSessionId !== currentSession?.id) return [];
     if (infiniteMessages.length === 0) return [];
     
     // ✅ OPTIMISATION: Pas de sort, les messages sont déjà triés par sequence_number depuis DB
@@ -510,9 +510,13 @@ const ChatFullscreenV2: React.FC = () => {
   // Animation + scroll quand session chargée
   useEffect(() => {
     if (
-      animations.displayedSessionId === currentSession?.id &&
+      currentSession?.id &&
+      infiniteMessages.length > 0 &&
       !isLoadingMessages &&
-      !animations.messagesVisible
+      (
+        animations.displayedSessionId !== currentSession.id ||
+        !animations.messagesVisible
+      )
     ) {
       animations.triggerFadeIn(
         currentSession.id,
@@ -521,9 +525,8 @@ const ChatFullscreenV2: React.FC = () => {
       );
     }
   }, [
-    animations.displayedSessionId,
     currentSession?.id,
-    infiniteMessages.length,
+    infiniteMessages,
     animations.messagesVisible,
     isLoadingMessages,
     animations
