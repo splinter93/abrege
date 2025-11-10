@@ -30,6 +30,7 @@ export interface ChatInputContainerProps {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   renderAuthStatus: () => React.ReactNode;
   selectedAgent: { name: string; display_name?: string } | null;
+  keyboardInset?: number;
 }
 
 /**
@@ -46,10 +47,20 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
   onCancelEdit,
   textareaRef,
   renderAuthStatus,
-  selectedAgent
+  selectedAgent,
+  keyboardInset = 0
 }) => {
   return (
-    <div className="chatgpt-input-container">
+    <div
+      className="chatgpt-input-container"
+      style={
+        keyboardInset > 0
+          ? {
+              paddingBottom: Math.max(24, keyboardInset + 16)
+            }
+          : undefined
+      }
+    >
       {renderAuthStatus()}
       <ChatInput
         onSend={onSend}

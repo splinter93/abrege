@@ -34,6 +34,7 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
   
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const prevMessagesRef = useRef(messages);
+  const maxTemporaryPaddingRef = useRef<number | null>(null);
 
   // Trouver le container scrollable
   const getScrollContainer = useCallback(() => {
@@ -55,12 +56,25 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     const container = getScrollContainer();
     if (!container) return;
     
-    // Calculer padding temporaire (75% du viewport)
     const viewportHeight = window.innerHeight;
-    const tempPadding = Math.floor(viewportHeight * 0.75);
+    const visualViewport = typeof window !== 'undefined' && 'visualViewport' in window ? window.visualViewport : null;
+    const effectiveHeight = visualViewport?.height || viewportHeight;
+    const viewportOffset = viewportHeight - effectiveHeight;
+
+    const tempPadding = Math.floor(effectiveHeight * 0.75);
+    const isKeyboardOpen = viewportOffset > 120; // ~ clavier mobile
+    const maxPadding = maxTemporaryPaddingRef.current ?? 420;
+    const appliedPadding = isKeyboardOpen
+      ? Math.min(tempPadding, maxPadding)
+      : tempPadding;
+
+    if (isKeyboardOpen) {
+      maxTemporaryPaddingRef.current = appliedPadding;
+    } else {
+      maxTemporaryPaddingRef.current = null;
+    }
     
-    // Appliquer le padding inline (override le CSS)
-    container.style.paddingBottom = `${tempPadding}px`;
+    container.style.paddingBottom = `${appliedPadding}px`;
     
     // Scroll au maximum avec le nouveau padding
     requestAnimationFrame(() => {

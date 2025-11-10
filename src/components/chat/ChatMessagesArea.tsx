@@ -42,6 +42,7 @@ export interface ChatMessagesAreaProps {
   onEditMessage: (messageId: string, content: string, index: number) => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  keyboardInset?: number;
 }
 
 /**
@@ -66,10 +67,21 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
   agentNotFound,
   onEditMessage,
   containerRef,
-  messagesEndRef
+  messagesEndRef,
+  keyboardInset = 0
 }) => {
   return (
-    <div className="chatgpt-messages-container" ref={containerRef}>
+    <div
+      className="chatgpt-messages-container"
+      ref={containerRef}
+      style={
+        keyboardInset > 0
+          ? {
+              paddingBottom: Math.max(100, keyboardInset + 40)
+            }
+          : undefined
+      }
+    >
       <div
         className={`chatgpt-messages ${shouldAnimateMessages ? 'messages-fade-in' : ''}`}
         style={{

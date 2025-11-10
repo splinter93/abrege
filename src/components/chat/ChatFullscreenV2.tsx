@@ -97,6 +97,30 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 ÉTAT INITIALISATION (éviter race condition au premier chargement)
   const [isInitializing, setIsInitializing] = useState(true);
+  const [keyboardInset, setKeyboardInset] = useState(0);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('visualViewport' in window)) {
+      return;
+    }
+
+    const handleViewportChange = () => {
+      const viewport = window.visualViewport;
+      if (!viewport) return;
+
+      const heightDiff = window.innerHeight - viewport.height;
+      const isKeyboardVisible = heightDiff > 120 && viewport.height < window.innerHeight;
+      setKeyboardInset(isKeyboardVisible ? heightDiff : 0);
+    };
+
+    handleViewportChange();
+    window.visualViewport?.addEventListener('resize', handleViewportChange);
+    window.visualViewport?.addEventListener('scroll', handleViewportChange);
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleViewportChange);
+      window.visualViewport?.removeEventListener('scroll', handleViewportChange);
+    };
+  }, []);
 
   // 🎯 NOUVEAUX HOOKS CUSTOM (logique extraite)
   const streamingState = useStreamingState();
@@ -630,6 +654,7 @@ const ChatFullscreenV2: React.FC = () => {
             onEditMessage={handleEditMessage}
             containerRef={messagesContainerRef}
             messagesEndRef={messagesEndRef}
+            keyboardInset={keyboardInset}
           />
 
           <ChatInputContainer
@@ -643,6 +668,7 @@ const ChatFullscreenV2: React.FC = () => {
             textareaRef={textareaRef}
             renderAuthStatus={renderAuthStatus}
             selectedAgent={selectedAgent}
+            keyboardInset={keyboardInset}
             />
           </div>
         </div>
