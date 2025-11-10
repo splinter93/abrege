@@ -26,6 +26,14 @@
 
 :root {
   /* ========================================
+     SAFE AREAS - iOS/Android PWA
+     ======================================== */
+  --chat-safe-top: env(safe-area-inset-top, 0px);
+  --chat-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --chat-safe-left: env(safe-area-inset-left, 0px);
+  --chat-safe-right: env(safe-area-inset-right, 0px);
+
+  /* ========================================
      BACKGROUNDS - Surfaces principales
      ======================================== */
   --chat-bg-primary: #0e1012;           /* Container, header, messages (teinte slate assombrie -2) */
@@ -987,11 +995,19 @@ body.chat-theme-anthracite .chatgpt-header {
 
 /* En mode responsive, garder la largeur fixe et laisser déborder */
 @media (max-width: 1023px) {
+  .chatgpt-container {
+    padding-top: var(--chat-safe-top);
+    padding-bottom: var(--chat-safe-bottom);
+    padding-left: var(--chat-safe-left);
+    padding-right: var(--chat-safe-right);
+    box-sizing: border-box;
+  }
+
   /* ✅ Forcer la largeur fixe sur TOUS les containers (sidebar ouverte OU fermée) */
   .chatgpt-messages {
     max-width: none;
-    width: 100vw;
-    min-width: 100vw;
+    width: calc(100vw - var(--chat-safe-left) - var(--chat-safe-right));
+    min-width: calc(100vw - var(--chat-safe-left) - var(--chat-safe-right));
   }
   
   .chatgpt-input-container {
@@ -1079,7 +1095,7 @@ body.chat-theme-blue .chatgpt-messages-container::before {
 .chatgpt-messages {
   max-width: var(--chat-container-width); /* ✅ Largeur synchronisée avec input */
   margin: 0 auto;
-  padding: var(--chat-space-xl) var(--chat-padding-horizontal); /* ✅ Padding horizontal synchronisé */
+  padding: var(--chat-space-xl) calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) var(--chat-space-xl) calc(var(--chat-padding-horizontal) + var(--chat-safe-left)); /* ✅ Padding horizontal synchronisé + safe areas */
   position: relative; /* Pour le centrage absolu de l'empty state */
   min-height: 100%; /* S'assure que le conteneur prend toute la hauteur */
   width: 100%;
@@ -1281,12 +1297,12 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0 var(--chat-padding-horizontal) 24px;
+  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-left)) calc(24px + var(--chat-safe-bottom));
   background: transparent; /* Transparent - le footer masque le texte */
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  padding-top: 60px; /* Espace réduit pour fade subtil */
+  padding-top: calc(60px + var(--chat-safe-top)); /* Espace réduit pour fade subtil + safe area */
 }
 
 /* Footer masque sous l'input - cache le texte qui défile (subtil) */
@@ -1296,7 +1312,7 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 100px; /* Hauteur réduite pour input plus proche du bas */
+  height: calc(100px + var(--chat-safe-bottom)); /* Hauteur réduite pour input plus proche du bas + safe area */
   background: linear-gradient(to top, 
     var(--chat-bg-primary) 0%, 
     var(--chat-bg-primary) 30%, 
@@ -1829,8 +1845,8 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   }
   
   .chatgpt-header {
-    padding: var(--chat-space-md);
-    height: 56px;
+    padding: calc(var(--chat-space-md) + var(--chat-safe-top)) calc(var(--chat-space-md) + var(--chat-safe-right)) var(--chat-space-md) calc(var(--chat-space-md) + var(--chat-safe-left));
+    height: calc(56px + var(--chat-safe-top));
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
@@ -1838,7 +1854,8 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   }
   
   .chatgpt-messages-container {
-    padding-bottom: 100px; /* 🎯 Mobile : padding normal */
+    padding-bottom: calc(100px + var(--chat-safe-bottom)); /* 🎯 Mobile : padding normal */
+    padding-top: calc(var(--chat-space-xl) + var(--chat-safe-top));
   }
   
   .chatgpt-message-bubble-assistant {

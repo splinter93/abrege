@@ -95,9 +95,58 @@ export function useChatAnimations(
       messagesCount: messages.length
     });
 
+    let fallbackTimeout: ReturnType<typeof setTimeout> | null = null;
+    let messagesContainerElement: HTMLElement | null = null;
+    let previousMessagesPaddingBottom: string | null = null;
+
+    const clearFallback = () => {
+      if (fallbackTimeout !== null) {
+        clearTimeout(fallbackTimeout);
+        fallbackTimeout = null;
+      }
+    };
+
+    const restorePadding = () => {
+      if (messagesContainerElement) {
+        messagesContainerElement.style.paddingBottom = previousMessagesPaddingBottom ?? '';
+      }
+    };
+
+    const finalizeWithAnimation = () => {
+      if (!animationInProgressRef.current) {
+        restorePadding();
+        return;
+      }
+
+      clearFallback();
+      requestAnimationFrame(() => {
+        setMessagesVisible(true);
+        setShouldAnimateMessages(true);
+
+        setTimeout(() => {
+          setShouldAnimateMessages(false);
+          animationInProgressRef.current = false;
+          restorePadding();
+        }, 400); // Durée transition CSS
+      });
+    };
+
+    const finalizeWithoutAnimation = () => {
+      clearFallback();
+      restorePadding();
+      setMessagesVisible(true);
+      setShouldAnimateMessages(false);
+      animationInProgressRef.current = false;
+    };
+
     if (messages.length > 0) {
       // 🎯 ÉTAPE 1 : Rendre invisible
       setMessagesVisible(false);
+
+      fallbackTimeout = setTimeout(() => {
+        logger.warn('[useChatAnimations] ⚠️ Fallback fade-in déclenché (rAF suspendu)');
+        finalizeWithoutAnimation();
+      }, 1200);
 
       // 🎯 ÉTAPE 2 : Attendre render + scroll instantané
       requestAnimationFrame(() => {
@@ -105,13 +154,14 @@ export function useChatAnimations(
           const container = containerRef.current;
           if (!container) {
             logger.warn('[useChatAnimations] ⚠️ Container ref null');
-            animationInProgressRef.current = false;
+            finalizeWithoutAnimation();
             return;
           }
 
-          // Forcer padding fixe
-          const messagesContainer = container.querySelector('.chatgpt-messages') as HTMLElement;
+          const messagesContainer = container.querySelector('.chatgpt-messages') as HTMLElement | null;
           if (messagesContainer) {
+            messagesContainerElement = messagesContainer;
+            previousMessagesPaddingBottom = messagesContainer.style.paddingBottom;
             messagesContainer.style.paddingBottom = '40px';
           }
 
@@ -136,27 +186,13 @@ export function useChatAnimations(
             });
 
             // 🎯 ÉTAPE 4 : Fade-in maintenant que tout est en place
-            requestAnimationFrame(() => {
-              setMessagesVisible(true);
-              setShouldAnimateMessages(true);
-              
-              // Désactiver animation après transition
-              setTimeout(() => {
-                setShouldAnimateMessages(false);
-                animationInProgressRef.current = false;
-              }, 400); // Durée transition CSS
-            });
+            finalizeWithAnimation();
           }, 300); // Attendre chargement images
         });
       });
     } else {
       // 🎯 Conversation vide : afficher directement empty state
-      setMessagesVisible(true);
-      setShouldAnimateMessages(true);
-      setTimeout(() => {
-        setShouldAnimateMessages(false);
-        animationInProgressRef.current = false;
-      }, 400);
+      finalizeWithAnimation();
     }
 
     setDisplayedSessionId(sessionId);
