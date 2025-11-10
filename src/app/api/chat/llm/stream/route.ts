@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { simpleLogger as logger } from '@/utils/logger';
+import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 import { createClient } from '@supabase/supabase-js';
 import { XAIProvider } from '@/services/llm/providers/implementations/xai';
 import { GroqProvider } from '@/services/llm/providers/implementations/groq';
@@ -313,53 +314,77 @@ export async function POST(request: NextRequest) {
     if (!skipAddingUserMessage && message && typeof message === 'string') {
       // Récupérer prompts depuis le dernier message user de l'historique
       const lastUserMessage = [...history].reverse().find(m => m.role === 'user') as import('@/types/chat').UserMessage | undefined;
-      const prompts = lastUserMessage?.prompts || context.prompts || [];
+      const contextPrompts = context.prompts || [];
+      const historyPrompts = lastUserMessage?.prompts || [];
+      const prompts = contextPrompts.length > 0 ? contextPrompts : historyPrompts;
       
-      if (prompts.length > 0) {
-        try {
-          // Charger templates depuis DB
-          const promptIds = prompts.map(p => p.id);
-          const { data: promptsFromDB } = await supabase
-            .from('editor_prompts')
-            .select('id, slug, prompt_template')
-            .in('id', promptIds);
-          
-          if (promptsFromDB && promptsFromDB.length > 0) {
-            // Créer Map pour lookup rapide
-            const templateMap = new Map<string, string>();
-            promptsFromDB.forEach(p => {
-              templateMap.set(p.slug, p.prompt_template);
-            });
-            
-            // Remplacer chaque /slug par son template
-            let finalContent = processedMessage;
-            for (const prompt of prompts) {
-              const pattern = `/${prompt.slug}`;
-              const template = templateMap.get(prompt.slug);
-              
-              if (template && template.trim() && finalContent.includes(pattern)) {
-                finalContent = finalContent.replace(pattern, template + '\n\n');
-                logger.dev('[Stream Route] ✅ Prompt remplacé:', {
-                  slug: prompt.slug,
-                  name: prompt.name,
-                  templateLength: template.length
-                });
-              }
+    if (prompts.length > 0) {
+      try {
+        const promptIds = prompts.map((promptMeta) => promptMeta.id);
+        const { data: promptsFromDB } = await supabase
+          .from('editor_prompts')
+          .select('id, slug, prompt_template')
+          .in('id', promptIds);
+
+        if (promptsFromDB && promptsFromDB.length > 0) {
+          const templateMap = new Map<string, string>();
+          promptsFromDB.forEach((promptRow) => {
+            templateMap.set(promptRow.slug, promptRow.prompt_template);
+          });
+
+          let finalContent = processedMessage;
+
+          for (const promptMeta of prompts) {
+            const pattern = `/${promptMeta.slug}`;
+            if (!finalContent.includes(pattern)) {
+              continue;
             }
-            
-            processedMessage = finalContent;
-            
-            logger.info('[Stream Route] 📝 Prompts remplacés:', {
-              count: prompts.length,
-              originalLength: message.length,
-              finalLength: processedMessage.length
+
+            const template = templateMap.get(promptMeta.slug);
+            if (!template || !template.trim()) {
+              logger.warn('[Stream Route] ⚠️ Prompt template manquant', {
+                promptId: promptMeta.id,
+                slug: promptMeta.slug
+              });
+              continue;
+            }
+
+            const placeholderValues = promptMeta.placeholderValues || {};
+            let resolvedTemplate = template;
+
+            for (const [key, value] of Object.entries(placeholderValues)) {
+              const safeValue = typeof value === 'string' ? value.trim() : '';
+              resolvedTemplate = resolvedTemplate.split(`{${key}}`).join(safeValue);
+            }
+
+            const remainingPlaceholders = parsePromptPlaceholders(resolvedTemplate);
+            if (remainingPlaceholders.length > 0) {
+              logger.warn('[Stream Route] ⚠️ Placeholders non remplis détectés', {
+                slug: promptMeta.slug,
+                missing: remainingPlaceholders.map((placeholder) => placeholder.name)
+              });
+            }
+
+            finalContent = finalContent.replace(pattern, `${resolvedTemplate}\n\n`);
+            logger.dev('[Stream Route] ✅ Prompt remplacé', {
+              slug: promptMeta.slug,
+              name: promptMeta.name,
+              hasValues: Object.keys(placeholderValues).length > 0
             });
           }
-        } catch (promptError) {
-          logger.error('[Stream Route] ❌ Erreur remplacement prompts:', promptError);
-          // Continue sans remplacement (fallback gracieux)
+
+          processedMessage = finalContent;
+
+          logger.info('[Stream Route] 📝 Prompts remplacés', {
+            count: prompts.length,
+            originalLength: message.length,
+            finalLength: processedMessage.length
+          });
         }
+      } catch (promptError) {
+        logger.error('[Stream Route] ❌ Erreur remplacement prompts:', promptError);
       }
+    }
     }
     
     // ✅ Construire le tableau de messages avec contextes injectés AVANT user message

@@ -7,6 +7,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import type { ImageAttachment, MessageContent } from '@/types/image';
+import type { EditorPrompt } from '@/types/editorPrompts';
 import { useAuth } from '@/hooks/useAuth';
 import { useEditorPrompts } from '@/hooks/useEditorPrompts';
 import { useMenus } from '@/hooks/useMenus';
@@ -27,6 +28,8 @@ import ChatInputContent from './ChatInputContent';
 import ChatInputToolbar from './ChatInputToolbar';
 import SlashMenu from './SlashMenu';
 import MentionMenu from './MentionMenu';
+import PromptArgumentsModal from './PromptArgumentsModal';
+import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 
 interface ChatInputProps {
   onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[], mentions?: import('@/types/noteMention').NoteMention[], usedPrompts?: import('@/types/promptMention').PromptMention[]) => void;
@@ -141,6 +144,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
     mentionSearchQuery,
     setMentionSearchQuery
   } = useChatState({ editingContent, textareaRef });
+
+  const [pendingPrompt, setPendingPrompt] = React.useState<EditorPrompt | null>(null);
+  const [pendingPromptInitialValues, setPendingPromptInitialValues] = React.useState<Record<string, string> | undefined>();
   
   const defaultReasoningLevel = getReasoningLevelFromModel(currentAgentModel);
   
@@ -177,6 +183,34 @@ const ChatInput: React.FC<ChatInputProps> = ({
     usedPrompts,
     setUsedPrompts
   });
+
+  const handlePromptSelection = React.useCallback((prompt: EditorPrompt) => {
+    closeMenu();
+    const placeholders = parsePromptPlaceholders(prompt.prompt_template);
+
+    if (placeholders.length === 0) {
+      handleSelectPrompt(prompt);
+      return;
+    }
+
+    const existing = usedPrompts.find((item) => item.id === prompt.id)?.placeholderValues;
+    setPendingPromptInitialValues(existing);
+    setPendingPrompt(prompt);
+  }, [closeMenu, handleSelectPrompt, usedPrompts]);
+
+  const handlePromptModalCancel = React.useCallback(() => {
+    setPendingPrompt(null);
+    setPendingPromptInitialValues(undefined);
+  }, []);
+
+  const handlePromptModalConfirm = React.useCallback((values: Record<string, string>) => {
+    if (!pendingPrompt) {
+      return;
+    }
+    handleSelectPrompt(pendingPrompt, values);
+    setPendingPrompt(null);
+    setPendingPromptInitialValues(undefined);
+  }, [handleSelectPrompt, pendingPrompt]);
   
   // 🎯 Hook détection commandes
   const { detectCommands } = useInputDetection({
@@ -320,7 +354,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <SlashMenu 
           show={showSlashMenu}
           filteredPrompts={filteredChatPrompts} 
-          onSelectPrompt={handleSelectPrompt}
+          onSelectPrompt={handlePromptSelection}
           onClose={closeMenu}
           position={slashMenuPosition}
         />
@@ -358,6 +392,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
         audioRecorderRef={audioRecorderRef}
         onSend={handleSend} canSend={!!message.trim() || images.length > 0}
         disabled={disabled} loading={loading}
+      />
+
+      <PromptArgumentsModal
+        prompt={pendingPrompt}
+        initialValues={pendingPromptInitialValues}
+        onCancel={handlePromptModalCancel}
+        onConfirm={handlePromptModalConfirm}
       />
     </div>
   );

@@ -11,6 +11,7 @@ import type { ImageAttachment, MessageContent } from '@/types/image';
 import type { SelectedNote, NoteWithContent, NotesLoadStats } from './useNotesLoader';
 import type { NoteMention } from '@/types/noteMention';
 import type { PromptMention } from '@/types/promptMention';
+import { filterPromptsInMessage } from '@/utils/promptPlaceholders';
 
 interface UseChatSendOptions {
   loadNotes: (notes: SelectedNote[], options: { token: string; timeoutMs?: number }) => Promise<{ notes: NoteWithContent[]; stats: NotesLoadStats }>;
@@ -84,15 +85,19 @@ export function useChatSend({
       
       // ✅ Construire contenu (garde /slug tel quel - remplacement au backend)
       const content = buildMessageContent(
-        message || 'Regarde cette image', 
+        message || 'Regarde cette image',
         images
       );
+
+      const promptsToSendRaw = usedPrompts && usedPrompts.length > 0 ? usedPrompts : undefined;
+      const promptsToSend = promptsToSendRaw
+        ? filterPromptsInMessage(message, promptsToSendRaw)
+        : undefined;
       
       // ✅ Envoyer avec mentions légères + prompts metadata + notes épinglées
       // Ne passer mentions/prompts que si vraiment présents (éviter tableau vide)
       const mentionsToSend = mentions && mentions.length > 0 ? mentions : undefined;
-      const promptsToSend = usedPrompts && usedPrompts.length > 0 ? usedPrompts : undefined;
-      
+
       onSend(content, images, notesWithContent, mentionsToSend, promptsToSend);
       
       logger.dev('[useChatSend] ✅ COMPLETE', {

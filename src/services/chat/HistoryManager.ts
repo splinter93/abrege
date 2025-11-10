@@ -1,5 +1,6 @@
 import { createSupabaseClient } from '@/utils/supabaseClient';
 import type { ChatMessage, AssistantMessage } from '@/types/chat';
+import type { PromptMention } from '@/types/promptMention';
 import { hasToolCalls } from '@/types/chat';
 import type { StreamTimeline } from '@/types/streamTimeline';
 import type { ToolCall } from '@/hooks/useChatHandlers';
@@ -72,7 +73,7 @@ export class HistoryManager {
       attachedImages?: Array<{ url: string; fileName?: string }>;
       attachedNotes?: Array<{ id: string; slug: string; title: string; word_count?: number }>;
       mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>;
-      prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>;
+      prompts?: PromptMention[];
     }
   ): Promise<ChatMessage> {
     try {

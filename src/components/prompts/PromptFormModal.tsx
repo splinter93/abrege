@@ -3,13 +3,14 @@
  * @module components/prompts/PromptFormModal
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { EditorPrompt, EditorPromptCreateRequest } from '@/types/editorPrompts';
 import type { Agent } from '@/types/chat';
 import IconPicker from './IconPicker';
 import { getIconComponent } from '@/utils/iconMapper';
 import { FiX, FiInfo } from 'react-icons/fi';
 import Tooltip from '@/components/Tooltip';
+import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 import './PromptFormModal.css';
 
 interface PromptFormModalProps {
@@ -38,6 +39,19 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const placeholders = useMemo(
+    () => parsePromptPlaceholders(formData.prompt_template),
+    [formData.prompt_template]
+  );
+
+  const reservedPlaceholders = useMemo(
+    () =>
+      parsePromptPlaceholders(formData.prompt_template, { includeReserved: true }).filter(
+        (placeholder) => placeholder.isReserved
+      ),
+    [formData.prompt_template]
+  );
+
   // Initialiser le formulaire si on édite un prompt
   useEffect(() => {
     if (prompt) {
@@ -65,8 +79,19 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
       newErrors.name = 'Le nom ne peut pas dépasser 100 caractères';
     }
 
-    if (!formData.prompt_template.trim()) {
+    const trimmedTemplate = formData.prompt_template.trim();
+
+    if (!trimmedTemplate) {
       newErrors.prompt_template = 'Le template est requis';
+    }
+
+    const hasSelectionConflict =
+      reservedPlaceholders.some((placeholder) => placeholder.name === 'selection') &&
+      formData.context !== 'editor';
+
+    if (hasSelectionConflict) {
+      newErrors.prompt_template =
+        'Le placeholder {selection} est réservé à l’éditeur. Adaptez le contexte ou retirez-le.';
     }
 
     setErrors(newErrors);
@@ -260,6 +285,33 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
             <small className="prompt-form-hint">
               Utilisez <code>{'{selection}'}</code> pour insérer le texte sélectionné
             </small>
+
+            <div className="prompt-placeholder-summary">
+              <div className="prompt-placeholder-summary__header">
+                <span className="prompt-placeholder-summary__title">Arguments détectés</span>
+                <span className="prompt-placeholder-summary__count">
+                  {placeholders.length}
+                </span>
+              </div>
+
+              {placeholders.length > 0 ? (
+                <ul className="prompt-placeholder-summary__list">
+                  {placeholders.map((placeholder) => (
+                    <li key={placeholder.name} className="prompt-placeholder-summary__item">
+                      <code>{`{${placeholder.name}}`}</code>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="prompt-placeholder-summary__empty">Aucun argument personnalisé.</p>
+              )}
+
+              {reservedPlaceholders.some((placeholder) => placeholder.name === 'selection') && (
+                <p className="prompt-placeholder-summary__hint">
+                  {`{selection}`} est un placeholder réservé : il n’est disponible que pour les prompts de l’éditeur.
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Mode d'insertion (uniquement pour editor) */}

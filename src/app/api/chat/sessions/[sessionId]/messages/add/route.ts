@@ -59,7 +59,8 @@ const messageSchema = z.object({
     name: z.string(),
     description: z.string().nullable().optional(),
     context: z.enum(['editor', 'chat', 'both']).optional(),
-    agent_id: z.string().nullable().optional()
+    agent_id: z.string().nullable().optional(),
+    placeholderValues: z.record(z.string(), z.string()).optional()
   })).optional()
 });
 

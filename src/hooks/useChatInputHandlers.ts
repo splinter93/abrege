@@ -100,7 +100,10 @@ export function useChatInputHandlers({
   }, [defaultReasoningLevel, closeMenu, setReasoningOverride]);
 
   // Prompt handlers
-  const handleSelectPrompt = useCallback((prompt: EditorPrompt) => {
+  const handleSelectPrompt = useCallback((
+    prompt: EditorPrompt,
+    placeholderValues?: Record<string, string>
+  ) => {
     if (!textareaRef.current) return;
     
     const cursorPosition = textareaRef.current.selectionStart;
@@ -125,14 +128,29 @@ export function useChatInputHandlers({
       name: prompt.name,
       description: prompt.description,
       context: prompt.context,
-      agent_id: prompt.agent_id
+      agent_id: prompt.agent_id,
+      ...(placeholderValues ? { placeholderValues: { ...placeholderValues } } : {})
       // ✅ PAS prompt_template (metadata légère, chargé par backend si besoin)
     };
     
-    // Éviter doublons
-    if (!usedPrompts.find(p => p.id === prompt.id)) {
-      setUsedPrompts(prev => [...prev, newPrompt]);
-    }
+    setUsedPrompts(prev => {
+      const index = prev.findIndex(p => p.id === prompt.id);
+      if (index === -1) {
+        return [...prev, newPrompt];
+      }
+      const updated = [...prev];
+      const previous = updated[index];
+      if (placeholderValues) {
+        updated[index] = {
+          ...previous,
+          placeholderValues: { ...placeholderValues }
+        };
+      } else {
+        const { placeholderValues: _ignored, ...rest } = previous;
+        updated[index] = rest;
+      }
+      return updated;
+    });
     
     // ✅ Calculer nouvelle position curseur (APRÈS /slug + espace)
     const newCursorPosition = lastSlashIndex + promptText.length + 1;
@@ -160,7 +178,7 @@ export function useChatInputHandlers({
         logger.dev('[useChatInputHandlers] ✅ Curseur positionné à', newCursorPosition);
       }
     }, 20);
-  }, [textareaRef, closeMenu, setMessage, setSlashQuery, usedPrompts, setUsedPrompts]);
+  }, [textareaRef, closeMenu, setMessage, setSlashQuery, setUsedPrompts]);
 
   // Browse Computer handler
   const handleBrowseComputer = useCallback(() => {

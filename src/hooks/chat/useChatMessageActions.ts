@@ -26,6 +26,7 @@ import type { LLMContext } from '@/hooks/useLLMContext';
 import type { Note } from '@/services/chat/ChatContextBuilder';
 import { simpleLogger as logger } from '@/utils/logger';
 import { tokenManager } from '@/utils/tokenManager';
+import { filterPromptsInMessage } from '@/utils/promptPlaceholders';
 
   /**
    * Options du hook
@@ -229,7 +230,10 @@ export function useChatMessageActions(
       
       const clientMessageId = `client-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
-      const tempMessage: ChatMessage = {
+    const filteredPrompts =
+      prompts && prompts.length > 0 ? filterPromptsInMessage(textContent, prompts) : [];
+
+    const tempMessage: ChatMessage = {
         id: `temp-${Date.now()}`,
         clientMessageId,
         role: 'user',
@@ -249,7 +253,7 @@ export function useChatMessageActions(
           }))
         }),
         ...(mentions && mentions.length > 0 && { mentions }),
-        ...(prompts && prompts.length > 0 && { prompts }) // ✅ NOUVEAU : Metadata prompts
+      ...(filteredPrompts.length > 0 && { prompts: filteredPrompts })
       };
 
       // Afficher IMMÉDIATEMENT (avant chargement notes)
@@ -263,7 +267,7 @@ export function useChatMessageActions(
         images,
         notes,
         mentions, // ✅ Mentions légères
-        prompts, // ✅ NOUVEAU : Prompts metadata
+        prompts: filteredPrompts,
         sessionId: currentSession.id,
         currentSession,
         selectedAgent,
@@ -290,7 +294,7 @@ export function useChatMessageActions(
         ...(tempMessage.attachedImages && { attachedImages: tempMessage.attachedImages }),
         ...(tempMessage.attachedNotes && { attachedNotes: tempMessage.attachedNotes }),
         ...(mentions && mentions.length > 0 && { mentions }),
-        ...(prompts && prompts.length > 0 && { prompts }) // ✅ NOUVEAU : Metadata prompts
+        ...(filteredPrompts.length > 0 && { prompts: filteredPrompts })
       };
 
       sessionSyncService.addMessageAndSync(currentSession.id, messageToSave)

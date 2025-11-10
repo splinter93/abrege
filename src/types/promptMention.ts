@@ -35,5 +35,8 @@ export interface PromptMention {
   
   /** Template complet (optionnel - chargé par backend si besoin) */
   prompt_template?: string;
+
+  /** Valeurs de placeholders renseignées côté client */
+  placeholderValues?: Record<string, string>;
 }
 

@@ -31,7 +31,7 @@ export interface BuildContextOptions {
   agentId?: string | null;
   notes?: Note[];
   mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>; // ✅ Mentions légères
-  prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>; // ✅ NOUVEAU: Prompts metadata
+  prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null; placeholderValues?: Record<string, string> }>; // ✅ NOUVEAU: Prompts metadata
   llmContext: LLMContext;
 }
 
@@ -49,7 +49,7 @@ export interface LLMContextForOrchestrator {
   };
   attachedNotes?: Note[];
   mentionedNotes?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>; // ✅ Mentions légères
-  prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>; // ✅ NOUVEAU: Prompts metadata
+  prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null; placeholderValues?: Record<string, string> }>; // ✅ NOUVEAU: Prompts metadata
 }
 
 /**
