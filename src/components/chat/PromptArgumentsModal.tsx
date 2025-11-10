@@ -7,6 +7,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { EditorPrompt } from '@/types/editorPrompts';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
+import { getIconComponent } from '@/utils/iconMapper';
 import './PromptArgumentsModal.css';
 
 interface PromptArgumentsModalProps {
@@ -45,6 +46,8 @@ const PromptArgumentsModal: React.FC<PromptArgumentsModalProps> = ({
     return null;
   }
 
+  const PromptIcon = prompt.icon ? getIconComponent(prompt.icon) : null;
+
   const handleChange = (key: string, value: string) => {
     setValues((prev) => ({ ...prev, [key]: value }));
   };
@@ -63,6 +66,9 @@ const PromptArgumentsModal: React.FC<PromptArgumentsModalProps> = ({
     if (!isValid) {
       setTouched(
         placeholders.reduce<Record<string, boolean>>((acc, placeholder) => {
+          if (values[placeholder.name]?.trim()) {
+            return acc;
+          }
           acc[placeholder.name] = true;
           return acc;
         }, {})
@@ -87,11 +93,12 @@ const PromptArgumentsModal: React.FC<PromptArgumentsModalProps> = ({
     >
       <div className="prompt-arguments-modal" onClick={(event) => event.stopPropagation()}>
         <div className="prompt-arguments-header">
-          <h3 className="prompt-arguments-title">Compléter le prompt</h3>
-          <p className="prompt-arguments-subtitle">
-            {prompt.name} — {placeholders.length} argument
-            {placeholders.length > 1 ? 's' : ''}
-          </p>
+          {PromptIcon && (
+            <div className="prompt-arguments-icon">
+              <PromptIcon size={32} aria-hidden="true" />
+            </div>
+          )}
+          <h3 className="prompt-arguments-title">{prompt.name}</h3>
         </div>
 
         <form className="prompt-arguments-form" onSubmit={handleSubmit}>
@@ -102,7 +109,12 @@ const PromptArgumentsModal: React.FC<PromptArgumentsModalProps> = ({
               const hasError = touched[key] && value.trim().length === 0;
               return (
                 <label key={key} className="prompt-arguments-field">
-                  <span className="prompt-arguments-label">{`{${key}}`}</span>
+                      <span className="prompt-arguments-label">
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                        <span className="prompt-arguments-required" aria-hidden="true">
+                          *
+                        </span>
+                      </span>
                   <input
                     type="text"
                     value={value}
