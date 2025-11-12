@@ -104,19 +104,9 @@ const Editor: React.FC<{
   const { html } = useMarkdownRender({ content });
 
   // ✅ OPTIMISÉ: État centralisé avec useEditorState
-  const initialTitle = note?.source_title || '';
-  
-  console.log('[Editor] 🔍 Initializing with note:', {
-    noteId,
-    'note exists': !!note,
-    'note.source_title': note?.source_title,
-    'initialTitle': initialTitle,
-    'note.id': note?.id
-  });
-  
   const editorState = useEditorState({
     noteId,
-    initialTitle,
+    initialTitle: note?.source_title || '',
     initialHeaderImage: note?.header_image || null,
     initialHeaderOffset: note?.header_image_offset,
     initialHeaderBlur: note?.header_image_blur,

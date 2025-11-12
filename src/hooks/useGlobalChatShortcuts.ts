@@ -9,8 +9,13 @@
  * - Esc : Ferme tous les menus ouverts
  * 
  * Guards :
- * - Espace, /, @ : Actifs uniquement si aucun input/textarea n'a le focus
+ * - Espace, /, @ : Actifs uniquement si aucun input/textarea n'a le focus ET pas dans Canva
  * - Cmd+Enter, Esc : Fonctionnent partout
+ * 
+ * ✅ Guard Canva :
+ * - Détecte si focus dans `.chat-canva-pane` (TipTap editor)
+ * - Détecte si élément actif est `contenteditable="true"` (TipTap nodes)
+ * - Évite que ESPACE/SLASH/@ capturent le focus pendant édition Canva
  * 
  * Séparation des responsabilités :
  * - Enter simple pendant recording : Géré par useChatActions (bloque envoi)
@@ -81,15 +86,19 @@ export function useGlobalChatShortcuts({
       const isInInput = activeElement?.tagName === 'INPUT' || 
                         activeElement?.tagName === 'TEXTAREA';
       
-      // ✅ ESPACE : Focus chat input (si pas déjà dans un input)
-      if (e.key === ' ' && !isInInput && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+      // ✅ Guard Canva : Ne pas intercepter si focus dans l'éditeur Canva
+      const isInCanva = activeElement?.closest('.chat-canva-pane') !== null ||
+                        activeElement?.getAttribute('contenteditable') === 'true';
+      
+      // ✅ ESPACE : Focus chat input (si pas déjà dans un input OU dans Canva)
+      if (e.key === ' ' && !isInInput && !isInCanva && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         textareaRef.current?.focus();
         return;
       }
       
       // ✅ / : Focus + insère "/" pour déclencher menu prompts (support AZERTY: Slash = Shift+Period)
-      if (e.key === '/' && !isInInput && !e.metaKey && !e.ctrlKey) {
+      if (e.key === '/' && !isInInput && !isInCanva && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         const textarea = textareaRef.current;
         if (textarea) {
@@ -106,7 +115,7 @@ export function useGlobalChatShortcuts({
       }
       
       // ✅ @ : Focus + ouvre menu notes (positionné au curseur)
-      if (e.key === '@' && !isInInput && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+      if (e.key === '@' && !isInInput && !isInCanva && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         const textarea = textareaRef.current;
         if (textarea) {

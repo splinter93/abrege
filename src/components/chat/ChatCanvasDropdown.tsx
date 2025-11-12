@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Paintbrush, Plus, FileText, Clock, Check, X } from 'lucide-react';
 import type { CanvaSession } from '@/types/canva';
+import { useCanvaRealtime } from '@/hooks/chat/useCanvaRealtime';
 import './ChatCanvasDropdown.css';
 
 interface ChatCanvasDropdownProps {
@@ -36,6 +37,9 @@ export function ChatCanvasDropdown({
   const [canvases, setCanvases] = useState<CanvaSession[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // ✅ Supabase Realtime : Sync automatique des canvases
+  useCanvaRealtime(chatSessionId, true);
 
   // Fonction pour charger canvases (useCallback pour éviter re-renders)
   const loadCanvases = React.useCallback(async () => {
@@ -95,12 +99,13 @@ export function ChatCanvasDropdown({
   }, [chatSessionId]);
 
   // Polling rapide quand dropdown ouvert
+  // ✅ Polling moins agressif grâce à Realtime (10s au lieu de 2s)
   useEffect(() => {
     if (!isOpen || !chatSessionId) return;
 
-    const interval = setInterval(loadCanvases, 2000);
+    const interval = setInterval(loadCanvases, 10000); // 10s au lieu de 2s
     return () => clearInterval(interval);
-  }, [isOpen, chatSessionId]);
+  }, [isOpen, chatSessionId, loadCanvases]);
 
   // Fermer dropdown au clic extérieur
   useEffect(() => {

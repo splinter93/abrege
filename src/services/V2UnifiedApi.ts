@@ -330,9 +330,26 @@ export class V2UnifiedApi {
 
       // ✅ CRITIQUE: Synchroniser le store avec la réponse serveur (source de vérité)
       // Ceci prévient les problèmes de désynchronisation (ex: share_settings qui reviennent à l'ancien état)
+      // 
+      // 🔧 FIX FLICKER: Ne pas sync les champs qui n'ont pas changé côté serveur
+      // pour éviter les re-renders inutiles (notamment header_image pendant CMD+S)
       if (result.note) {
         logger.debug(LogCategory.API, '[V2UnifiedApi] Synchronisation store avec réponse serveur');
-        store.updateNote(cleanNoteId, result.note);
+        
+        // Filtrer les champs qui ont réellement changé
+        const changedFields: Partial<typeof result.note> = {};
+        for (const key in result.note) {
+          // @ts-ignore - iteration dynamique
+          if (result.note[key] !== currentNote[key]) {
+            // @ts-ignore
+            changedFields[key] = result.note[key];
+          }
+        }
+        
+        // Ne sync que si des champs ont changé (évite re-render inutile)
+        if (Object.keys(changedFields).length > 0) {
+          store.updateNote(cleanNoteId, changedFields);
+        }
       }
 
       // 🎯 Le polling ciblé est maintenant géré par le système ciblé

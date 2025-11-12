@@ -197,6 +197,9 @@ export function createEditorExtensions(
       ContextMenuExtension,
       CalloutExtension,
       
+      // ✅ Slash Menu Extension (Notion-like)
+      SlashMenuExtension,
+      
       // ✅ Floating Menu pour la sélection
       FloatingMenu.configure({
         element: typeof window !== 'undefined' ? document.createElement('div') : null,

@@ -8,22 +8,26 @@ import { useFileSystemStore, type Note as FileSystemNote } from './useFileSystem
  * Architecture propre avec table canva_sessions
  * Lien vers chat_sessions + note DB reelle
  */
+/**
+ * Session Canva locale
+ * 
+ * Architecture:
+ * - Note stockée en DB (articles table)
+ * - Session canva (canva_sessions table) lie note + chat session
+ * - État streaming local (streamBuffer) pour écriture LLM temps réel
+ * 
+ * Pas de duplication contenu : la note DB est la source de vérité
+ */
 export interface CanvaSession {
   id: string; // canva_sessions.id (UUID)
-  chatSessionId: string; // Lien vers chat_sessions
-  noteId: string; // Note DB reelle
-  title: string;
+  chatSessionId: string; // FK vers chat_sessions
+  noteId: string; // FK vers articles (note DB réelle)
+  title: string; // Cache local du source_title (synced)
   createdAt: string;
   
-  // État streaming local
+  // État streaming local (pour LLM write temps réel)
   isStreaming: boolean;
-  streamBuffer: string;
-  
-  // Champs legacy (a supprimer progressivement)
-  markdownDraft: string;
-  htmlDraft: string;
-  coverImage?: string | null;
-  lastUpdatedAt: string;
+  streamBuffer: string; // Buffer temporaire pendant streaming
 }
 
 /**
@@ -74,23 +78,18 @@ function createEmptySession(
   })}`;
 
   return {
-    id: canvaId, // canva_sessions.id
-    chatSessionId, // Lien chat_sessions
-    noteId, // Note DB reelle
+    id: canvaId,
+    chatSessionId,
+    noteId,
     title: defaultTitle,
     createdAt: now.toISOString(),
-    
-    // État streaming
     isStreaming: false,
-    streamBuffer: '',
-    
-    // Legacy (a supprimer)
-    markdownDraft: '',
-    htmlDraft: '',
-    coverImage: null,
-    lastUpdatedAt: now.toISOString()
+    streamBuffer: ''
   };
 }
+
+// ✅ Protection race condition : track pending switches
+const pendingSwitches = new Set<string>();
 
 export const useCanvaStore = create<CanvaStore>((set, get) => ({
   sessions: {},
@@ -328,8 +327,14 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
    * 3. Activer le canva
    */
   switchCanva: async (canvaId, noteId) => {
+    // ✅ Protection race condition : ignorer si switch déjà en cours
+    if (pendingSwitches.has(canvaId)) {
+      logger.info(LogCategory.EDITOR, '[CanvaStore] Switch already pending, ignoring', { canvaId });
+      return;
+    }
+
     try {
-      console.log('🔥🔥🔥 [CanvaStore] switchCanva DÉBUT', { canvaId, noteId });
+      pendingSwitches.add(canvaId);
       
       logger.info(LogCategory.EDITOR, '[CanvaStore] Switching to canva', {
         canvaId,
@@ -337,12 +342,9 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
       });
 
       const { sessions } = useCanvaStore.getState();
-      
-      console.log('🔥 [CanvaStore] Sessions actuelles:', Object.keys(sessions));
 
       // Si session locale existe déjà, juste activer
       if (sessions[canvaId]) {
-        console.log('🔥 [CanvaStore] Session existe déjà, activation...');
         set({
           activeCanvaId: canvaId,
           isCanvaOpen: true
@@ -353,8 +355,6 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         });
         return;
       }
-      
-      console.log('🔥 [CanvaStore] Session inexistante, chargement depuis API...');
 
       // Charger la note depuis DB via API V2
       const { createClient } = await import('@supabase/supabase-js');
@@ -365,35 +365,42 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
       const { data: { session: authSession } } = await supabase.auth.getSession();
 
       if (!authSession?.access_token) {
-        console.error('🔥❌ [CanvaStore] No auth session');
         throw new Error('No auth session');
       }
-      
-      console.log('🔥 [CanvaStore] Fetching note from API:', `/api/v2/note/${noteId}`);
 
       const response = await fetch(`/api/v2/note/${noteId}`, {
         headers: {
           'Authorization': `Bearer ${authSession.access_token}`,
           'X-Client-Type': 'canva_switch'
-        }
+        },
+        credentials: 'include' // ✅ Envoyer cookies pour auth cross-origin
       });
-      
-      console.log('🔥 [CanvaStore] API response status:', response.status);
 
       if (!response.ok) {
-        console.error('🔥❌ [CanvaStore] API error:', response.status);
         throw new Error(`API error: ${response.status}`);
       }
 
       const responseData = await response.json();
-      console.log('🔥🔥🔥 [CanvaStore] API response data:', responseData);
-      
       const { note } = responseData;
       if (!note) {
         throw new Error('Note introuvable dans API response');
       }
 
-      // ✅ FIX: L'API V2 retourne "title" au lieu de "source_title"
+      /**
+       * ✅ NORMALISATION API V2 → FileSystemStore
+       * 
+       * Problème : L'API V2 `/api/v2/note/[ref]` retourne `title` au lieu de `source_title`
+       * pour des raisons de cohérence externe (clients tiers, docs API).
+       * 
+       * Raison : Éviter confusion entre `source_title` (nom interne DB Supabase)
+       * et `title` (convention REST standard).
+       * 
+       * Solution : Normaliser côté client avant insertion dans FileSystemStore
+       * qui attend `source_title` (cohérence avec schéma DB direct).
+       * 
+       * TODO (long terme) : Créer type `ApiNoteResponse` distinct de `Note`
+       * pour typage explicite et éviter `as any`.
+       */
       const noteTitle = (note as any).title || note.source_title || '';
       
       logger.info(LogCategory.EDITOR, '[CanvaStore] 🔍 Note loaded from API', {
@@ -403,8 +410,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         hasTitle: !!noteTitle
       });
 
-      // Ajouter note dans FileSystemStore pour que l'éditeur puisse y accéder
-      // ✅ FIX: Normaliser le champ title → source_title pour le store
+      // Normaliser le champ title → source_title pour FileSystemStore
       const normalizedNote = {
         ...note,
         source_title: noteTitle
@@ -418,16 +424,12 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
       // Créer session locale depuis note DB
       const canvaSession: CanvaSession = {
         id: canvaId,
-        chatSessionId: '', // Pas utilisé pour switch
+        chatSessionId: '', // Pas utilisé pour switch, sera populated si besoin
         noteId: note.id,
         title: noteTitle,
         createdAt: note.created_at || new Date().toISOString(),
         isStreaming: false,
-        streamBuffer: '',
-        markdownDraft: note.markdown_content || '',
-        htmlDraft: note.html_content || '',
-        coverImage: note.header_image,
-        lastUpdatedAt: note.updated_at || new Date().toISOString()
+        streamBuffer: ''
       };
 
       logger.info(LogCategory.EDITOR, '[CanvaStore] 🔍 Creating canva session', {
@@ -448,7 +450,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
       logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Canva switched (new session created)', {
         canvaId,
         noteId,
-        title: note.source_title
+        title: noteTitle
       });
 
     } catch (error) {
@@ -459,6 +461,9 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         noteId
       });
       throw error;
+    } finally {
+      // ✅ Toujours cleanup le lock, même en cas d'erreur
+      pendingSwitches.delete(canvaId);
     }
   },
 

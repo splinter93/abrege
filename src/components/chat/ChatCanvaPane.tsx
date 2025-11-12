@@ -11,7 +11,7 @@
  */
 
 'use client';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import Editor from '@/components/editor/Editor';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -238,15 +238,36 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       )}
 
       <div className="chat-canva-pane__editor">
-        <Editor
-          key={`canva-${session.id}-${session.noteId}`}
+        {/* ✅ Mémoïsation : Évite re-renders inutiles quand session.title change */}
+        <EditorMemo
+          sessionId={session.id}
           noteId={session.noteId}
           onClose={handleClose}
-          editorRef={handleEditorRef}
+          onEditorRef={handleEditorRef}
         />
       </div>
     </section>
   );
 };
+
+/**
+ * ✅ Editor mémoïsé pour éviter re-renders multiples
+ * Key change = re-mount, mais props stables = pas de re-render
+ */
+const EditorMemo = React.memo(({ sessionId, noteId, onClose, onEditorRef }: {
+  sessionId: string;
+  noteId: string;
+  onClose: () => void;
+  onEditorRef: (editor: TiptapEditor | null) => void;
+}) => {
+  return (
+    <Editor
+      key={`canva-${sessionId}-${noteId}`}
+      noteId={noteId}
+      onClose={onClose}
+      editorRef={onEditorRef}
+    />
+  );
+});
 
 export default ChatCanvaPane;

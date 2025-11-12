@@ -219,7 +219,7 @@ export class V2DatabaseUtils {
       // 🔧 CORRECTION : Charger d'abord l'état complet de la note pour préserver les valeurs existantes
       const { data: currentNote, error: currentError } = await supabase
         .from('articles')
-        .select('wide_mode, a4_mode, slash_lang, font_family, folder_id, description, source_title')
+        .select('wide_mode, a4_mode, slash_lang, font_family, folder_id, description, source_title, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image')
         .eq('id', noteId)
         .eq('user_id', userId)
         .single();
@@ -235,6 +235,13 @@ export class V2DatabaseUtils {
       updateData.font_family = currentNote.font_family;
       updateData.folder_id = currentNote.folder_id;
       updateData.description = currentNote.description;
+      
+      // ✅ FIX CANVA : Préserver header_image et settings si non fournis explicitement
+      if (data.header_image === undefined) updateData.header_image = currentNote.header_image;
+      if (data.header_image_offset === undefined) updateData.header_image_offset = currentNote.header_image_offset;
+      if (data.header_image_blur === undefined) updateData.header_image_blur = currentNote.header_image_blur;
+      if (data.header_image_overlay === undefined) updateData.header_image_overlay = currentNote.header_image_overlay;
+      if (data.header_title_in_image === undefined) updateData.header_title_in_image = currentNote.header_title_in_image;
       
       if (data.source_title !== undefined) {
         const normalizedTitle = String(data.source_title).trim();

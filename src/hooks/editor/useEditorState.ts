@@ -3,7 +3,7 @@
  * Remplace les 30+ useState dispersés dans Editor.tsx
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ShareSettings } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
 import { DEFAULT_HEADER_IMAGE_CONFIG } from '@/utils/editorConstants';
@@ -162,15 +162,7 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
 
   // ✅ Sync titre quand initialTitle change (ex: switch canva)
   useEffect(() => {
-    console.log('[useEditorState] 🔍 Title sync check:', {
-      'options.initialTitle': options.initialTitle,
-      'current title state': title,
-      'options.noteId': options.noteId,
-      'will update': options.initialTitle !== undefined
-    });
-    
     if (options.initialTitle !== undefined) {
-      console.log('[useEditorState] ✅ Updating title to:', options.initialTitle);
       setTitle(options.initialTitle);
     }
   }, [options.initialTitle]);
@@ -179,6 +171,19 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(
     options.initialHeaderImage || null
   );
+  
+  // ✅ Ref pour tracker la dernière valeur reçue (évite re-set inutiles)
+  const prevHeaderImageRef = useRef<string | null>(options.initialHeaderImage || null);
+  
+  // ✅ Sync headerImageUrl quand initialHeaderImage change (ex: auto-save, switch canva)
+  // IMPORTANT : Compare avec ref pour éviter flicker si valeur identique
+  useEffect(() => {
+    const newValue = options.initialHeaderImage ?? null;
+    if (newValue !== prevHeaderImageRef.current) {
+      prevHeaderImageRef.current = newValue;
+      setHeaderImageUrl(newValue);
+    }
+  }, [options.initialHeaderImage]);
   const [headerOffset, setHeaderOffset] = useState(
     options.initialHeaderOffset ?? DEFAULT_HEADER_IMAGE_CONFIG.offset
   );

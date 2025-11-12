@@ -200,6 +200,7 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
         </div>
       )}
       <img
+        key={headerImageUrl} // ✅ Force React à garder la même instance si URL identique
         src={headerImageUrl}
         alt="Header"
         style={{ 
