@@ -31,6 +31,7 @@ export interface Note {
     allow_edit?: boolean;
     allow_comments?: boolean;
   };
+  is_canva_draft?: boolean;
 }
 
 export interface Folder {

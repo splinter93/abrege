@@ -239,7 +239,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
 
       <div className="chat-canva-pane__editor">
         <Editor
-          key={session.noteId}
+          key={`canva-${session.id}-${session.noteId}`}
           noteId={session.noteId}
           onClose={handleClose}
           editorRef={handleEditorRef}

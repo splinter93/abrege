@@ -76,24 +76,27 @@ const ChatFullscreenV2: React.FC = () => {
 
   const {
     openCanva,
-    isCanvaOpen
+    switchCanva,
+    closeCanva,
+    isCanvaOpen,
+    activeCanvaId
   } = useCanvaStore();
   
   const [canvaWidth, setCanvaWidth] = useState(66); // 66% par défaut
 
   const handleOpenCanva = useCallback(async () => {
-    if (isCanvaOpen || !user?.id) {
+    if (isCanvaOpen || !user?.id || !currentSession?.id) {
       return;
     }
     
     try {
-      await openCanva(user.id);
+      await openCanva(user.id, currentSession.id); // ✅ Passer chatSessionId
       logger.dev('[ChatFullscreenV2] Canva opened');
     } catch (error) {
       logger.error('[ChatFullscreenV2] Failed to open canva', error);
       toast.error('Impossible d\'ouvrir le canva');
     }
-  }, [isCanvaOpen, openCanva, user]);
+  }, [isCanvaOpen, openCanva, user, currentSession]);
 
   // 🎯 INFINITE MESSAGES (lazy loading)
   const {
@@ -610,8 +613,29 @@ const ChatFullscreenV2: React.FC = () => {
         onToggleAgentDropdown={() => setAgentDropdownOpen(!agentDropdownOpen)}
         isAuthenticated={isAuthenticated}
         authLoading={authLoading}
-        onOpenCanva={isDesktop ? handleOpenCanva : undefined}
-        canvaOpen={isCanvaOpen}
+        chatSessionId={currentSession?.id || null}
+        activeCanvaId={activeCanvaId}
+        isCanvaOpen={isCanvaOpen}
+        onOpenNewCanva={isDesktop ? handleOpenCanva : undefined}
+            onSelectCanva={async (canvaId, noteId) => {
+              try {
+                logger.dev('[ChatFullscreenV2] Switching canva', { canvaId, noteId });
+                await switchCanva(canvaId, noteId);
+                toast.success('Canva ouvert');
+              } catch (error) {
+                logger.error('[ChatFullscreenV2] Failed to switch canva', error);
+                toast.error('Erreur ouverture canva');
+              }
+            }}
+        onCloseCanva={async (canvaId) => {
+          try {
+            await closeCanva(canvaId);
+            toast.success('Canva fermé');
+          } catch (error) {
+            logger.error('[ChatFullscreenV2] Failed to close canva', error);
+            toast.error('Erreur fermeture canva');
+          }
+        }}
         canOpenCanva={isDesktop}
       />
 

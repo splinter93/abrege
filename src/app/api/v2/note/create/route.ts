@@ -142,7 +142,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         font_family: 'Figtree',
         user_id: userId,
         slug,
-        public_url: publicUrl
+        public_url: publicUrl,
+        is_canva_draft: validatedData.is_canva_draft || false // ✅ NOUVEAU: Flag canva draft
       })
       .select(`
         id,

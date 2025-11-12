@@ -10,9 +10,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Paintbrush } from 'lucide-react';
 import type { Agent } from '@/types/chat';
 import AgentInfoDropdown from './AgentInfoDropdown';
+import { ChatCanvasDropdown } from './ChatCanvasDropdown';
 
 /**
  * Props du composant
@@ -26,8 +26,12 @@ export interface ChatHeaderProps {
   onToggleAgentDropdown: () => void;
   isAuthenticated: boolean;
   authLoading: boolean;
-  onOpenCanva?: () => void;
-  canvaOpen?: boolean;
+  chatSessionId: string | null;
+  activeCanvaId: string | null;
+  isCanvaOpen: boolean;
+  onOpenNewCanva?: () => void;
+  onSelectCanva?: (canvaId: string, noteId: string) => void;
+  onCloseCanva?: (canvaId: string) => void;
   canOpenCanva?: boolean;
 }
 
@@ -44,8 +48,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   onToggleAgentDropdown,
   isAuthenticated,
   authLoading,
-  onOpenCanva,
-  canvaOpen = false,
+  chatSessionId,
+  activeCanvaId,
+  isCanvaOpen,
+  onOpenNewCanva,
+  onSelectCanva,
+  onCloseCanva,
   canOpenCanva = true
 }) => {
   return (
@@ -112,17 +120,16 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
 
       <div className="chatgpt-header-right">
-        {canOpenCanva && (
-          <button
-            type="button"
-            className={`chatgpt-canva-btn-header ${canvaOpen ? 'active' : ''}`}
-            aria-label={canvaOpen ? "Canva ouvert" : "Ouvrir un canevas"}
-            title={canvaOpen ? "Canva ouvert" : "Ouvrir un canevas"}
-            onClick={onOpenCanva}
-            disabled={!onOpenCanva || !isAuthenticated || authLoading}
-          >
-            <Paintbrush size={18} strokeWidth={1.8} />
-          </button>
+        {canOpenCanva && onOpenNewCanva && onSelectCanva && onCloseCanva && (
+          <ChatCanvasDropdown
+            chatSessionId={chatSessionId}
+            activeCanvaId={activeCanvaId}
+            isCanvaOpen={isCanvaOpen}
+            onOpenNewCanva={onOpenNewCanva}
+            onSelectCanva={onSelectCanva}
+            onCloseCanva={onCloseCanva}
+            disabled={!isAuthenticated || authLoading}
+          />
         )}
         {/* Bouton réduire */}
         <Link

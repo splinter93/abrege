@@ -3,7 +3,7 @@
  * Remplace les 30+ useState dispersés dans Editor.tsx
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { ShareSettings } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
 import { DEFAULT_HEADER_IMAGE_CONFIG } from '@/utils/editorConstants';
@@ -159,6 +159,21 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
   const [title, setTitle] = useState<string>(options.initialTitle || '');
   const [noteLoaded, setNoteLoaded] = useState(false);
   const [forceTOCUpdate, setForceTOCUpdate] = useState(0);
+
+  // ✅ Sync titre quand initialTitle change (ex: switch canva)
+  useEffect(() => {
+    console.log('[useEditorState] 🔍 Title sync check:', {
+      'options.initialTitle': options.initialTitle,
+      'current title state': title,
+      'options.noteId': options.noteId,
+      'will update': options.initialTitle !== undefined
+    });
+    
+    if (options.initialTitle !== undefined) {
+      console.log('[useEditorState] ✅ Updating title to:', options.initialTitle);
+      setTitle(options.initialTitle);
+    }
+  }, [options.initialTitle]);
   
   // État de l'image d'en-tête
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(

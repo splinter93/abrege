@@ -1,258 +1,530 @@
 /**
- * 🎨 CANVA NOTE SERVICE
+ * 🎨 CANVA NOTE SERVICE V2
  * 
- * Gestion des notes "orphelines" pour le système Canva.
- * Une note orpheline existe en DB mais est invisible dans l'UI
- * jusqu'à ce qu'elle soit explicitement attachée à un classeur.
+ * Architecture propre avec table canva_sessions
+ * Lien vers chat_sessions + notes DB reelles (is_canva_draft)
  * 
  * @module CanvaNoteService
  */
 
 import { logger, LogCategory } from '@/utils/logger';
-import { v2UnifiedApi } from '@/services/v2UnifiedApi';
+import { supabase } from '@/supabaseClient';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { CanvaSession } from '@/types/canva';
+import { SlugAndUrlService } from '@/services/slugAndUrlService';
+import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 
 /**
- * Options pour la création d'une note orpheline
+ * Options pour la création d'une note canva
  */
-interface CreateOrphanNoteOptions {
+interface CreateCanvaNoteOptions {
   title?: string;
   initialContent?: string;
 }
 
 /**
- * Service centralisé pour la gestion des notes Canva
+ * Service centralisé pour la gestion des canvases
  */
 export class CanvaNoteService {
+  private static resolveClient(clientOverride?: SupabaseClient): SupabaseClient {
+    return (clientOverride ?? (supabase as SupabaseClient));
+  }
+
   /**
-   * 📝 Créer une note orpheline (invisible dans sidebar)
+   * 📝 Créer un canva avec note DB et session
    * 
-   * Une note orpheline a:
-   * - classeur_id = NULL
-   * - folder_id = NULL
-   * - markdown_content = "" (ou initialContent)
-   * 
-   * Elle existe en DB mais n'apparaît pas dans l'UI jusqu'au "save".
+   * Architecture V2:
+   * 1. Créer note DB (classeur_id = NULL, is_canva_draft = TRUE)
+   * 2. Créer entrée canva_sessions (lien vers chat_sessions)
    * 
    * @param userId - ID utilisateur authentifié
+   * @param chatSessionId - ID session chat (lien)
    * @param options - Options de création (titre, contenu initial)
-   * @returns ID de la note créée
+   * @returns { canvaId, noteId }
    * 
    * @example
    * ```ts
-   * const noteId = await CanvaNoteService.createOrphanNote(user.id, {
-   *   title: "Brouillon article"
-   * });
+   * const { canvaId, noteId } = await CanvaNoteService.createCanvaNote(
+   *   user.id,
+   *   chatSession.id,
+   *   { title: "Article TypeScript" }
+   * );
    * ```
    */
-  static async createOrphanNote(
+  static async createCanvaNote(
     userId: string,
-    options?: CreateOrphanNoteOptions
-  ): Promise<string> {
+    chatSessionId: string,
+    options?: CreateCanvaNoteOptions,
+    supabaseClient?: SupabaseClient
+  ): Promise<{ canvaId: string; noteId: string }> {
     try {
+      const client = this.resolveClient(supabaseClient);
       const noteTitle = options?.title || this.generateDefaultTitle();
       const initialContent = options?.initialContent || '';
 
-      logger.info(LogCategory.EDITOR, '[CanvaNoteService] Creating orphan note', {
+      logger.info(LogCategory.EDITOR, '[CanvaNoteService] Creating canva note', {
         userId,
+        chatSessionId,
         title: noteTitle,
         hasInitialContent: !!options?.initialContent
       });
 
-      // Créer note via API V2 avec notebook_id = null
-      const result = await v2UnifiedApi.createNote(
-        {
-          source_title: noteTitle,
-          markdown_content: initialContent,
-          notebook_id: null, // ← Note orpheline
-          folder_id: null
-        },
-        userId
+      // 1. Générer slug unique (sans noteId car note pas encore créée)
+      const { slug } = await SlugAndUrlService.generateSlugAndUpdateUrl(
+        noteTitle,
+        userId,
+        undefined, // noteId pas encore créé
+        client
       );
 
-      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Orphan note created', {
-        noteId: result.note.id,
-        title: noteTitle
+      // 2. Créer note DB avec flag canva draft (direct Supabase)
+      const { data: note, error: noteError } = await client
+        .from('articles')
+        .insert({
+          source_title: noteTitle,
+          markdown_content: initialContent,
+          html_content: initialContent,
+          classeur_id: null, // Note orpheline
+          folder_id: null,
+          user_id: userId,
+          slug,
+          public_url: null, // Sera généré après avoir le noteId
+          font_family: 'Figtree',
+          is_canva_draft: true // Flag pour exclure notes récentes
+        })
+        .select('id')
+        .single();
+
+      if (noteError || !note) {
+        logger.error(LogCategory.EDITOR, '[CanvaNoteService] Failed to create note', noteError);
+        throw new Error(noteError?.message || 'Failed to create note');
+      }
+
+      const noteId = note.id;
+
+      // 3. Générer URL publique permanente avec noteId
+      const { publicUrl } = await SlugAndUrlService.generateSlugAndUpdateUrl(
+        noteTitle,
+        userId,
+        noteId,
+        client
+      );
+
+      // 4. Mettre à jour la note avec l'URL publique
+      if (publicUrl) {
+        await client
+          .from('articles')
+          .update({ public_url: publicUrl })
+          .eq('id', noteId);
+      }
+
+      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Note created', {
+        noteId,
+        title: noteTitle,
+        publicUrl
       });
 
-      return result.note.id;
+      // 5. Créer session canva (title vient du JOIN avec articles)
+      const { data: canvaSession, error: canvaError } = await client
+        .from('canva_sessions')
+        .insert({
+          chat_session_id: chatSessionId,
+          note_id: noteId,
+          user_id: userId,
+          status: 'open'
+        })
+        .select()
+        .single();
+
+      if (canvaError) {
+        // Rollback: supprimer note créée
+        const { error: rollbackError } = await client
+          .from('articles')
+          .delete()
+          .eq('id', noteId)
+          .eq('user_id', userId);
+
+        if (rollbackError) {
+          logger.warn(LogCategory.EDITOR, '[CanvaNoteService] Failed to rollback note', {
+            noteId,
+            error: {
+              message: rollbackError.message,
+              details: rollbackError.details
+            }
+          });
+        }
+        
+        logger.error(LogCategory.EDITOR, '[CanvaNoteService] Failed to create canva session', canvaError);
+        throw new Error(canvaError.message || 'Failed to create canva session');
+      }
+
+      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Canva session created', {
+        canvaId: canvaSession.id,
+        noteId,
+        chatSessionId
+      });
+
+      return {
+        canvaId: canvaSession.id,
+        noteId
+      };
 
     } catch (error) {
-      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to create orphan note', error);
-      throw new Error(`Failed to create canva note: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to create canva', error);
+      throw new Error(`Failed to create canva: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   /**
-   * 💾 Attacher une note orpheline à un classeur (= "sauvegarder")
+   * 💾 Sauvegarder un canva (attacher à classeur + update status)
    * 
-   * Rend la note visible dans la sidebar en lui assignant un classeur.
+   * Architecture V2:
+   * 1. Update note: is_canva_draft = FALSE + classeur_id
+   * 2. Update canva_session: status = 'saved'
    * 
-   * @param noteId - ID de la note orpheline
+   * @param canvaId - ID canva_session
    * @param classeurId - ID du classeur cible
    * @param folderId - ID du dossier cible (optionnel)
    * @param userId - ID utilisateur authentifié
    * 
    * @example
    * ```ts
-   * await CanvaNoteService.attachToClasseur(
-   *   noteId,
+   * await CanvaNoteService.saveCanva(
+   *   canvaId,
    *   "classeur-123",
    *   "folder-456",
    *   user.id
    * );
    * ```
    */
-  static async attachToClasseur(
-    noteId: string,
+  static async saveCanva(
+    canvaId: string,
     classeurId: string,
-    folderId: string | null,
-    userId: string
+    folderId: string | null | undefined,
+    userId: string,
+    supabaseClient?: SupabaseClient
   ): Promise<void> {
     try {
-      logger.info(LogCategory.EDITOR, '[CanvaNoteService] Attaching note to classeur', {
-        noteId,
+      const client = this.resolveClient(supabaseClient);
+      // 1. Récupérer canva session
+      const { data: canvaSession, error: fetchError } = await client
+        .from('canva_sessions')
+        .select('*')
+        .eq('id', canvaId)
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError || !canvaSession) {
+        throw new Error('Canva session not found');
+      }
+
+      logger.info(LogCategory.EDITOR, '[CanvaNoteService] Saving canva', {
+        canvaId,
+        noteId: canvaSession.note_id,
         classeurId,
         folderId
       });
 
+      // 2. Update note: is_canva_draft = false + classeur_id
       await v2UnifiedApi.updateNote(
-        noteId,
+        canvaSession.note_id,
         {
           classeur_id: classeurId,
-          folder_id: folderId
+          folder_id: folderId ?? null,
+          is_canva_draft: false // Note devient visible
         },
         userId
       );
 
-      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Note attached', {
-        noteId,
+      // 3. Update canva_session: status = saved
+      const { error: updateError } = await client
+        .from('canva_sessions')
+        .update({
+          status: 'saved',
+          saved_at: new Date().toISOString()
+        })
+        .eq('id', canvaId)
+        .eq('user_id', userId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Canva saved', {
+        canvaId,
+        noteId: canvaSession.note_id,
         classeurId
       });
 
     } catch (error) {
-      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to attach note', error);
-      throw new Error(`Failed to save canva note: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to save canva', error);
+      throw new Error(`Failed to save canva: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   /**
-   * 🗑️ Supprimer une note orpheline
+   * 🔄 Récupérer les canvases d'une session chat
    * 
-   * Utilisé quand l'utilisateur ferme le canva sans sauvegarder.
+   * ✅ JOIN avec articles pour titre à jour (source_title)
+   * ✅ Retourne titre synchronisé depuis note DB
    * 
-   * @param noteId - ID de la note à supprimer
+   * @param chatSessionId - ID session chat
    * @param userId - ID utilisateur authentifié
-   * 
-   * @example
-   * ```ts
-   * await CanvaNoteService.deleteOrphanNote(noteId, user.id);
-   * ```
+   * @returns Liste des canva sessions avec titre à jour
    */
-  static async deleteOrphanNote(
-    noteId: string,
-    userId: string
-  ): Promise<void> {
+  static async getCanvasForSession(
+    chatSessionId: string,
+    userId: string,
+    supabaseClient?: SupabaseClient
+  ): Promise<CanvaSession[]> {
     try {
-      logger.info(LogCategory.EDITOR, '[CanvaNoteService] Deleting orphan note', {
-        noteId
+      const client = this.resolveClient(supabaseClient);
+      
+      // JOIN avec articles pour titre à jour
+      const { data, error } = await client
+        .from('canva_sessions')
+        .select(`
+          *,
+          note:articles!inner(
+            source_title,
+            updated_at,
+            header_image,
+            classeur_id
+          )
+        `)
+        .eq('chat_session_id', chatSessionId)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        logger.error(LogCategory.EDITOR, '[CanvaNoteService] Supabase query error', {
+          error: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          chatSessionId,
+          userId
+        });
+        throw error;
+      }
+
+      // Mapper résultat pour synchroniser titre
+      const canvaSessions: CanvaSession[] = (data || []).map((row: any) => ({
+        id: row.id,
+        chat_session_id: row.chat_session_id,
+        note_id: row.note_id,
+        user_id: row.user_id,
+        title: row.note?.source_title || row.title, // ✅ Titre à jour depuis articles
+        status: row.status,
+        created_at: row.created_at,
+        closed_at: row.closed_at,
+        saved_at: row.saved_at,
+        metadata: {
+          ...row.metadata,
+          note_updated_at: row.note?.updated_at,
+          header_image: row.note?.header_image,
+          classeur_id: row.note?.classeur_id
+        }
+      }));
+
+      logger.info(LogCategory.EDITOR, '[CanvaNoteService] Fetched canvases with updated titles', {
+        chatSessionId,
+        count: canvaSessions.length,
+        titles: canvaSessions.map(c => c.title)
       });
 
-      await v2UnifiedApi.deleteNote(noteId, userId);
-
-      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Orphan note deleted', {
-        noteId
-      });
+      return canvaSessions;
 
     } catch (error) {
-      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to delete orphan note', error);
-      // Non-bloquant : si la note n'existe plus, c'est pas grave
-      logger.debug(LogCategory.EDITOR, '[CanvaNoteService] Delete failed but continuing', {
-        noteId,
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  }
-
-  /**
-   * 📋 Récupérer toutes les notes orphelines d'un utilisateur
-   * 
-   * Utilisé pour la récupération de brouillons après crash.
-   * 
-   * @param userId - ID utilisateur authentifié
-   * @returns Liste des notes orphelines avec leurs métadonnées
-   * 
-   * @example
-   * ```ts
-   * const orphans = await CanvaNoteService.listOrphanNotes(user.id);
-   * if (orphans.length > 0) {
-   *   // Proposer de récupérer
-   * }
-   * ```
-   */
-  static async listOrphanNotes(userId: string): Promise<Array<{
-    id: string;
-    title: string;
-    created_at: string;
-    updated_at: string;
-    markdown_content: string;
-  }>> {
-    try {
-      logger.debug(LogCategory.EDITOR, '[CanvaNoteService] Listing orphan notes', {
+      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to get canvases', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        chatSessionId,
         userId
       });
-
-      // Récupérer notes avec classeur_id = NULL
-      const result = await v2UnifiedApi.searchNotes(
-        {
-          userId,
-          classeurId: null // Filtre pour orphelines
-        }
-      );
-
-      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Found orphan notes', {
-        count: result.notes?.length || 0
-      });
-
-      return result.notes || [];
-
-    } catch (error) {
-      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to list orphan notes', error);
-      return []; // Fallback gracieux
+      return [];
     }
   }
 
   /**
-   * 🧹 Nettoyer les notes orphelines anciennes
+   * 📂 Ouvrir une note existante en canva
    * 
-   * Supprimer notes orphelines plus vieilles que X jours (cron job).
+   * Crée une session canva pour une note déjà existante
+   * (sans créer nouvelle note)
+   * 
+   * @param noteId - ID note existante
+   * @param chatSessionId - ID session chat
+   * @param userId - ID utilisateur
+   * @returns { canvaId, noteId }
+   */
+  static async openExistingNoteAsCanva(
+    noteId: string,
+    chatSessionId: string,
+    userId: string,
+    supabaseClient?: SupabaseClient
+  ): Promise<{ canvaId: string; noteId: string }> {
+    try {
+      const client = this.resolveClient(supabaseClient);
+
+      // 1. Récupérer titre de la note
+      const { data: note, error: noteError } = await client
+        .from('articles')
+        .select('source_title, user_id')
+        .eq('id', noteId)
+        .eq('user_id', userId) // Sécurité: vérifier ownership
+        .single();
+
+      if (noteError || !note) {
+        throw new Error('Note introuvable ou accès refusé');
+      }
+
+      // 2. Créer session canva (title vient du JOIN avec articles)
+      const { data: canvaSession, error: canvaError } = await client
+        .from('canva_sessions')
+        .insert({
+          chat_session_id: chatSessionId,
+          note_id: noteId,
+          user_id: userId,
+          status: 'open'
+        })
+        .select()
+        .single();
+
+      if (canvaError) {
+        throw canvaError;
+      }
+
+      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Existing note opened as canva', {
+        canvaId: canvaSession.id,
+        noteId,
+        title: note.source_title
+      });
+
+      return { canvaId: canvaSession.id, noteId };
+
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to open existing note as canva', error);
+      throw new Error(`Failed to open note as canva: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * 🔄 Mettre à jour le statut d'un canva
+   * 
+   * @param canvaId - ID canva_session
+   * @param status - Nouveau statut
+   * @param userId - ID utilisateur authentifié
+   */
+  static async updateCanvaStatus(
+    canvaId: string,
+    status: 'open' | 'closed' | 'saved' | 'deleted',
+    userId: string,
+    supabaseClient?: SupabaseClient
+  ): Promise<void> {
+    try {
+      const client = this.resolveClient(supabaseClient);
+      const updates: Record<string, unknown> = { status };
+
+      // Ajouter timestamp selon statut
+      if (status === 'closed') {
+        updates.closed_at = new Date().toISOString();
+      } else if (status === 'saved') {
+        updates.saved_at = new Date().toISOString();
+      }
+
+      const { error } = await client
+        .from('canva_sessions')
+        .update(updates)
+        .eq('id', canvaId)
+        .eq('user_id', userId);
+
+      if (error) {
+        throw error;
+      }
+
+      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Canva status updated', {
+        canvaId,
+        status
+      });
+
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to update status', error);
+      throw new Error(`Failed to update canva status: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * 🗑️ Supprimer un canva (CASCADE: canva_session + note)
+   * 
+   * @param canvaId - ID canva_session
+   * @param userId - ID utilisateur authentifié
+   */
+  static async deleteCanva(
+    canvaId: string,
+    userId: string,
+    supabaseClient?: SupabaseClient
+  ): Promise<void> {
+    try {
+      const client = this.resolveClient(supabaseClient);
+      logger.info(LogCategory.EDITOR, '[CanvaNoteService] Deleting canva', {
+        canvaId
+      });
+
+      // Supprimer canva_session (CASCADE supprime aussi la note)
+      const { error } = await client
+        .from('canva_sessions')
+        .delete()
+        .eq('id', canvaId)
+        .eq('user_id', userId);
+
+      if (error) {
+        throw error;
+      }
+
+      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Canva deleted', {
+        canvaId
+      });
+
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to delete canva', error);
+      throw new Error(`Failed to delete canva: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * 🧹 Nettoyer les canvases anciens (status closed > X jours)
    * 
    * @param userId - ID utilisateur authentifié
    * @param olderThanDays - Age minimum en jours (défaut: 7)
-   * @returns Nombre de notes supprimées
-   * 
-   * @example
-   * ```ts
-   * // Supprimer notes orphelines > 7 jours
-   * const deleted = await CanvaNoteService.cleanupOldOrphans(user.id, 7);
-   * ```
+   * @returns Nombre de canvases supprimés
    */
-  static async cleanupOldOrphans(
+  static async cleanupOldCanvases(
     userId: string,
-    olderThanDays: number = 7
+    olderThanDays: number = 7,
+    supabaseClient?: SupabaseClient
   ): Promise<number> {
     try {
-      const orphans = await this.listOrphanNotes(userId);
+      const client = this.resolveClient(supabaseClient);
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
 
+      // Récupérer canvases fermés anciens
+      const { data: oldCanvases, error: fetchError } = await client
+        .from('canva_sessions')
+        .select('id, closed_at')
+        .eq('user_id', userId)
+        .eq('status', 'closed')
+        .lt('closed_at', cutoffDate.toISOString());
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
       let deletedCount = 0;
 
-      for (const orphan of orphans) {
-        const createdAt = new Date(orphan.created_at);
-        if (createdAt < cutoffDate) {
-          await this.deleteOrphanNote(orphan.id, userId);
-          deletedCount++;
-        }
+      for (const canva of oldCanvases || []) {
+        await this.deleteCanva(canva.id, userId, client);
+        deletedCount++;
       }
 
       logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Cleanup completed', {
