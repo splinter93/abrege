@@ -1069,8 +1069,8 @@ body.chat-theme-anthracite .chatgpt-header {
 
 .chatgpt-main--with-canva {
   flex-direction: row;
-  gap: 24px;
-  padding-right: 24px;
+  gap: 0; /* ✅ Pas de padding entre chat et éditeur */
+  padding-right: 24px; /* ✅ Padding à droite conservé */
   align-items: stretch;
 }
 
