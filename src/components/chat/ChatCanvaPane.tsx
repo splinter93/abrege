@@ -16,7 +16,7 @@ import Editor from '@/components/editor/Editor';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { useAuth } from '@/hooks/useAuth';
 import { logger, LogCategory } from '@/utils/logger';
-import { v2UnifiedApi } from '@/services/v2UnifiedApi';
+import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 

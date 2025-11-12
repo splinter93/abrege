@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/utils/authUtils';
-import { validatePayload } from '@/utils/apiHelpers';
+import { validatePayload } from '@/utils/v2ValidationSchemas';
 import { CanvaNoteService } from '@/services/canvaNoteService';
 import { logger, LogCategory } from '@/utils/logger';
 import { z } from 'zod';
