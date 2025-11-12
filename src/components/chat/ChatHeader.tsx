@@ -10,6 +10,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { Paintbrush } from 'lucide-react';
 import type { Agent } from '@/types/chat';
 import AgentInfoDropdown from './AgentInfoDropdown';
 
@@ -25,6 +26,9 @@ export interface ChatHeaderProps {
   onToggleAgentDropdown: () => void;
   isAuthenticated: boolean;
   authLoading: boolean;
+  onOpenCanva?: () => void;
+  canvaOpen?: boolean;
+  canOpenCanva?: boolean;
 }
 
 /**
@@ -39,7 +43,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   agentDropdownOpen,
   onToggleAgentDropdown,
   isAuthenticated,
-  authLoading
+  authLoading,
+  onOpenCanva,
+  canvaOpen = false,
+  canOpenCanva = true
 }) => {
   return (
     <div className="chatgpt-header">
@@ -105,6 +112,18 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
 
       <div className="chatgpt-header-right">
+        {canOpenCanva && (
+          <button
+            type="button"
+            className={`chatgpt-canva-btn-header ${canvaOpen ? 'active' : ''}`}
+            aria-label={canvaOpen ? "Canva ouvert" : "Ouvrir un canevas"}
+            title={canvaOpen ? "Canva ouvert" : "Ouvrir un canevas"}
+            onClick={onOpenCanva}
+            disabled={!onOpenCanva || !isAuthenticated || authLoading}
+          >
+            <Paintbrush size={18} strokeWidth={1.8} />
+          </button>
+        )}
         {/* Bouton réduire */}
         <Link
           href="/"

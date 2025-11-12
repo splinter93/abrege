@@ -3,11 +3,11 @@
  * Extrait de Editor.tsx pour respecter la limite de 300 lignes
  */
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { logger, LogCategory } from '@/utils/logger';
-import { getEditorMarkdown } from '@/utils/editorHelpers';
+import { getEditorMarkdown, isTemporaryCanvaNote } from '@/utils/editorHelpers';
 import useEditorSave from '@/hooks/useEditorSave';
 import type { EditorState } from './useEditorState';
 import type { SlashCommand } from '@/types/editor';
@@ -74,6 +74,7 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     rawContent,
     note
   } = options;
+  const isTemporaryNote = isTemporaryCanvaNote(noteId);
   
   // ✅ REFACTO: Déléguer les update functions à un hook dédié
   const updateFunctions = useEditorUpdateFunctions({
@@ -95,8 +96,19 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
       }
     } : undefined,
     onSave: async ({ title: newTitle, markdown_content, html_content }) => {
+      const resolvedTitle = newTitle ?? editorState.document.title ?? 'Untitled';
+      updateNote(noteId, {
+        source_title: resolvedTitle,
+        markdown_content,
+        html_content,
+      });
+
+      if (isTemporaryNote) {
+        return;
+      }
+
       await v2UnifiedApi.updateNote(noteId, {
-        source_title: newTitle ?? editorState.document.title ?? 'Untitled',
+        source_title: resolvedTitle,
         markdown_content,
         html_content,
       }, userId);
@@ -107,6 +119,9 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
   const handleHeaderChange = useCallback(async (url: string | null) => {
     const normalize = (u: string | null): string | null => {
       if (!u) return null;
+      if (u.startsWith('data:')) {
+        return u;
+      }
       try {
         if (u.startsWith('/')) {
           const abs = new URL(u, window.location.origin).toString();
@@ -119,14 +134,27 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
       }
     };
     const normalized = normalize(url);
+    
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug(LogCategory.EDITOR, `[handleHeaderChange] noteId=${noteId}, isTemp=${isTemporaryNote}, urlLength=${normalized?.length || 0}`);
+    }
+    
     editorState.setHeaderImageUrl(normalized);
+    updateNote(noteId, { header_image: normalized || undefined });
+
+    if (isTemporaryNote) {
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, `[handleHeaderChange] Temporary note, skipping API call`);
+      }
+      return;
+    }
+
     try {
-      updateNote(noteId, { header_image: normalized || undefined });
       await v2UnifiedApi.updateNote(noteId, { header_image: normalized }, userId);
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Error updating header image');
     }
-  }, [noteId, updateNote, userId, editorState]);
+  }, [noteId, updateNote, userId, editorState, isTemporaryNote]);
 
   // Handler: Toggle preview
   const handlePreviewClick = useCallback(() => {
@@ -186,7 +214,30 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
   }, [rawContent, noteId, updateNote, editorState.internal.isUpdatingFromStore]);
 
   // Handler: Insertion slash command  
+  const fallbackMarkdownByCommand: Record<string, string> = useMemo(() => ({
+    h1: '# ',
+    heading1: '# ',
+    h2: '## ',
+    heading2: '## ',
+    h3: '### ',
+    heading3: '### ',
+    text: '',
+    paragraph: '',
+    ul: '- ',
+    bulletList: '- ',
+    ol: '1. ',
+    orderedList: '1. ',
+    quote: '> ',
+    code: '```\n\n```',
+    divider: '---\n',
+    separator: '---\n'
+  }), []);
+
   const handleSlashCommandInsert = useCallback((cmd: SlashCommand) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[handleSlashCommandInsert] called with cmd:', cmd.id, 'editor:', !!editor, 'isTemp:', isTemporaryNote);
+    }
+    
     if (!editor) {
       logger.error(LogCategory.EDITOR, 'Editor non disponible pour slash command');
       return;
@@ -214,17 +265,33 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
       logger.error(LogCategory.EDITOR, 'Erreur suppression slash:', error);
     }
     
-    // Execute command action
-    logger.debug(LogCategory.EDITOR, 'Exécution slash command', { cmdId: cmd.id });
+    let executed = false;
     if (typeof cmd.action === 'function') {
       try {
-        cmd.action(editor); // ✅ Type safe (SlashCommand.action accepte TiptapEditor)
-        logger.debug(LogCategory.EDITOR, 'Slash command réussie', { cmdId: cmd.id });
+        const result = cmd.action(editor);
+        executed = result !== false;
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[handleSlashCommandInsert] action executed:', cmd.id, 'result:', executed);
+        }
+        logger.debug(LogCategory.EDITOR, 'Slash command exécutée', { cmdId: cmd.id, executed });
       } catch (error) {
         logger.error(LogCategory.EDITOR, 'Erreur exécution commande:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[handleSlashCommandInsert] error:', error);
+        }
       }
     }
-  }, [editor]);
+
+    if (!executed) {
+      const fallback = fallbackMarkdownByCommand[cmd.id];
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[handleSlashCommandInsert] using fallback for:', cmd.id, 'fallback:', fallback);
+      }
+      if (fallback !== undefined) {
+        editor.chain().focus().insertContent(fallback).run();
+      }
+    }
+  }, [editor, isTemporaryNote]);
 
   // Handler: Insertion d'image (header ou content)
   const handleImageInsert = useCallback((src: string, target: 'header' | 'content') => {

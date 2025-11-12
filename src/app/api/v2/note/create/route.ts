@@ -62,45 +62,50 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const validatedData = validationResult.data;
 
-    // Résoudre le notebook_id (peut être un UUID ou un slug)
-    let classeurId = validatedData.notebook_id;
+    // ✅ NOUVEAU: Supporter notebook_id = null pour notes orphelines (Canva)
+    let classeurId: string | null = validatedData.notebook_id;
     
-    // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
-    if (!classeurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      logApi.info(`🔍 Résolution du slug: ${classeurId}`, context);
-      logApi.info(`🔍 User ID: ${userId}`, context);
-      
-      logApi.info(`🔍 Recherche classeur avec slug: ${classeurId} et user_id: ${userId}`, context);
-      
-      const { data: classeur, error: resolveError } = await supabase
-        .from('classeurs')
-        .select('id, name, slug, user_id')
-        .eq('slug', classeurId)
-        .eq('user_id', userId)
-        .single();
-      
-      logApi.info(`🔍 Résultat recherche:`, { classeur, error: resolveError });
-      
-      if (resolveError || !classeur) {
-        logApi.error(`❌ Classeur non trouvé pour le slug: ${classeurId}`, resolveError);
-        logApi.error(`❌ Erreur détaillée:`, resolveError);
+    // Si notebook_id est fourni, le résoudre (UUID ou slug)
+    if (classeurId !== null) {
+      // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
+      if (!classeurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        logApi.info(`🔍 Résolution du slug: ${classeurId}`, context);
+        logApi.info(`🔍 User ID: ${userId}`, context);
         
-        // 🔧 ANTI-BUG: Essayer de lister tous les classeurs pour debug
-        const { data: allClasseurs, error: listError } = await supabase
+        logApi.info(`🔍 Recherche classeur avec slug: ${classeurId} et user_id: ${userId}`, context);
+        
+        const { data: classeur, error: resolveError } = await supabase
           .from('classeurs')
           .select('id, name, slug, user_id')
-          .eq('user_id', userId);
+          .eq('slug', classeurId)
+          .eq('user_id', userId)
+          .single();
         
-        logApi.info(`🔍 Tous les classeurs de l'utilisateur:`, allClasseurs || []);
+        logApi.info(`🔍 Résultat recherche:`, { classeur, error: resolveError });
         
-        return NextResponse.json(
-          { error: `Classeur non trouvé: ${classeurId}` },
-          { status: 404 }
-        );
+        if (resolveError || !classeur) {
+          logApi.error(`❌ Classeur non trouvé pour le slug: ${classeurId}`, resolveError);
+          logApi.error(`❌ Erreur détaillée:`, resolveError);
+          
+          // 🔧 ANTI-BUG: Essayer de lister tous les classeurs pour debug
+          const { data: allClasseurs, error: listError } = await supabase
+            .from('classeurs')
+            .select('id, name, slug, user_id')
+            .eq('user_id', userId);
+          
+          logApi.info(`🔍 Tous les classeurs de l'utilisateur:`, allClasseurs || []);
+          
+          return NextResponse.json(
+            { error: `Classeur non trouvé: ${classeurId}` },
+            { status: 404 }
+          );
+        }
+        
+        classeurId = classeur.id;
+        logApi.info(`✅ Slug résolu: ${validatedData.notebook_id} -> ${classeurId}`, context);
       }
-      
-      classeurId = classeur.id;
-      logApi.info(`✅ Slug résolu: ${validatedData.notebook_id} -> ${classeurId}`, context);
+    } else {
+      logApi.info(`🎨 Création note orpheline (Canva)`, context);
     }
 
     // Générer le slug et l'URL publique

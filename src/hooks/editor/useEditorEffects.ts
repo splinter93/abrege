@@ -94,7 +94,15 @@ export function useEditorEffects({
 
   // Effect: Sync header image
   useEffect(() => {
-    if (note?.header_image) setHeaderImageUrl(note.header_image);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[useEditorEffects] header_image changed:', note?.header_image?.substring(0, 100));
+    }
+    if (note?.header_image) {
+      setHeaderImageUrl(note.header_image);
+    } else if (note && !note.header_image) {
+      // Explicitly clear if note exists but header_image is null/undefined
+      setHeaderImageUrl(null);
+    }
   }, [note?.header_image, setHeaderImageUrl]);
 
   // Effect: Hydrate appearance fields from note

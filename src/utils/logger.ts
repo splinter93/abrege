@@ -258,7 +258,33 @@ export const simpleLogger = {
   },
   error: (message: string, error?: unknown) => {
     // Convertir l'erreur en objet Error si ce n'est pas déjà le cas
-    const errorObj = error instanceof Error ? error : (error ? new Error(String(error)) : undefined);
+    const errorObj = (() => {
+      if (error instanceof Error) {
+        return error;
+      }
+      if (!error) {
+        return undefined;
+      }
+
+      let message = '';
+      try {
+        if (typeof error === 'string') {
+          message = error;
+        } else if (typeof error === 'number' || typeof error === 'boolean' || typeof error === 'bigint') {
+          message = String(error);
+        } else if (typeof error === 'symbol') {
+          message = error.toString();
+        } else {
+          message = JSON.stringify(error);
+        }
+      } catch {
+        message = '[Unserializable error]';
+      }
+
+      const err = new Error(message);
+      (err as Error & { originalError?: unknown }).originalError = error;
+      return err;
+    })();
     
     // Si l'erreur est un objet complexe, le sérialiser pour éviter [object Object]
     let serializedData: string | undefined = undefined;

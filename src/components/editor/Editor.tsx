@@ -86,7 +86,8 @@ const Editor: React.FC<{
   readonly?: boolean; 
   userId?: string;
   canEdit?: boolean; // Si l'user peut éditer (pour afficher le lien vers l'éditeur sur pages publiques)
-}> = ({ noteId, readonly = false, userId: propUserId, canEdit = true }) => {
+  onClose?: () => void;
+}> = ({ noteId, readonly = false, userId: propUserId, canEdit = true, onClose }) => {
   // 🔧 CORRECTION : Utiliser le vrai ID utilisateur de la session
   const { user } = useAuth();
   const userId = propUserId || user?.id || 'anonymous';
@@ -302,7 +303,7 @@ const Editor: React.FC<{
             handlers={handlersWithEditor}
             handleShareSettingsChange={handleShareSettingsChange}
               publicUrl={note?.public_url || undefined}
-            onClose={() => router.back()}
+            onClose={onClose ?? (() => router.back())}
             />
         )}
         title={editorState.headerImage.titleInImage ? undefined : <EditorTitle value={editorState.document.title} onChange={editorState.setTitle} onBlur={handlersWithEditor.handleTitleBlur} placeholder="Titre de la note..." disabled={isReadonly} />}

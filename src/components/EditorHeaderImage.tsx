@@ -174,6 +174,16 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
     justifyContent: 'center',
   };
 
+  if (process.env.NODE_ENV === 'development') {
+    React.useEffect(() => {
+      console.log('[EditorHeaderImage] headerImageUrl changed:', {
+        length: headerImageUrl?.length,
+        preview: headerImageUrl?.substring(0, 100),
+        isDataUrl: headerImageUrl?.startsWith('data:')
+      });
+    }, [headerImageUrl]);
+  }
+
   if (!headerImageUrl) return null;
 
   return (

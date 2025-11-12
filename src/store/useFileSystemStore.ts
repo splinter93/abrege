@@ -9,7 +9,7 @@ export interface Note {
   markdown_content: string;
   html_content?: string;
   folder_id: string | null;
-  classeur_id: string;
+  classeur_id: string | null;
   position: number;
   created_at: string;
   updated_at: string;

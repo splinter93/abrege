@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiImage, FiUpload, FiLink, FiX, FiFile, FiAlertCircle } from 'react-icons/fi';
 import { uploadImageForNote } from '@/utils/fileUpload';
+import { isTemporaryCanvaNote } from '@/utils/editorHelpers';
 import { FILE_SIZE_LIMITS, ALLOWED_IMAGE_TYPES, ERROR_MESSAGES } from '@/constants/fileUpload';
 import './ImageMenu.css';
 
@@ -129,24 +130,32 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
 
 
 
+  const readFileAsDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+      reader.onerror = () => reject(new Error('Impossible de lire ce fichier'));
+      reader.readAsDataURL(file);
+    });
+
+  const isCanvaNote = isTemporaryCanvaNote(noteId);
+
   const handleUpload = async () => {
     if (!file) return;
-    
-    console.log('🚀 [IMAGE-MENU] Début upload:', { fileName: file.name, fileSize: file.size, noteId });
+
     setLoading(true);
     setError(null);
     
     try {
-      // NOUVELLE APPROCHE: Utiliser la fonction uploadImageForNote corrigée
-      // qui utilise la même logique que FileUploaderLocal
-      const { publicUrl } = await uploadImageForNote(file, noteId);
-      console.log('✅ [IMAGE-MENU] Upload réussi via uploadImageForNote:', publicUrl);
-      
-      onInsertImage(publicUrl);
+      if (isCanvaNote) {
+        const dataUrl = await readFileAsDataUrl(file);
+        onInsertImage(dataUrl);
+      } else {
+        const { publicUrl } = await uploadImageForNote(file, noteId);
+        onInsertImage(publicUrl);
+      }
       onClose();
-      
     } catch (err) {
-      console.error('❌ [IMAGE-MENU] Erreur upload image:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'upload');
     } finally {
       setLoading(false);
@@ -157,22 +166,18 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
     if (!url.trim()) return;
     
     try {
-      // Validation basique d'URL
       new URL(url);
-      
       setLoading(true);
       setError(null);
-      
-      // NOUVELLE APPROCHE: Passer directement l'URL à uploadImageForNote
-      // qui gère maintenant les URLs externes
-      const { publicUrl } = await uploadImageForNote(url.trim(), noteId);
-      console.log('✅ [IMAGE-MENU] URL externe traitée via uploadImageForNote:', publicUrl);
-      
-      onInsertImage(publicUrl);
+
+      if (isCanvaNote) {
+        onInsertImage(url.trim());
+      } else {
+        const { publicUrl } = await uploadImageForNote(url.trim(), noteId);
+        onInsertImage(publicUrl);
+      }
       onClose();
-      
     } catch (err) {
-      console.error('❌ [IMAGE-MENU] Erreur traitement URL externe:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors du traitement de l\'URL');
     } finally {
       setLoading(false);

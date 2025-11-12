@@ -113,8 +113,24 @@ export function useClasseurTree({
    * Charger l'arborescence du classeur
    */
   const loadTree = useCallback(async () => {
-    if (!classeurRef) {
-      setData(null);
+    // ✅ FIX: Skip si pas de classeurRef (note orpheline) ou canva-local (temporary)
+    if (!classeurRef || classeurRef === 'canva-local') {
+      const emptyTree: ClasseurTreeData = {
+        classeur: classeurRef === 'canva-local' 
+          ? { id: 'canva-local', name: 'Canva (local)', emoji: '🎨' }
+          : undefined,
+        tree: [],
+        notes_at_root: []
+      };
+      
+      if (classeurRef) {
+        logger.debug(LogCategory.EDITOR, '[useClasseurTree] ⏭️  Skipping API call', { classeurRef });
+        treeCache.set(classeurRef, emptyTree);
+      }
+      
+      setData(emptyTree);
+      setLoading(false);
+      setError(null);
       return;
     }
 
@@ -187,10 +203,12 @@ export function useClasseurTree({
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      const metadata = (err && typeof err === 'object' && !(err instanceof Error)) ? err : undefined;
       logger.error('[useClasseurTree] ❌ Erreur chargement tree:', {
         error: errorMessage,
-        classeurRef
-      });
+        classeurRef,
+        metadata
+      }, err instanceof Error ? err : undefined);
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -203,6 +221,18 @@ export function useClasseurTree({
    */
   const refresh = useCallback(async () => {
     if (!classeurRef) return;
+    if (classeurRef === 'canva-local') {
+      const emptyTree: ClasseurTreeData = {
+        classeur: { id: 'canva-local', name: 'Canva (local)', emoji: '🎨' },
+        tree: [],
+        notes_at_root: []
+      };
+      treeCache.set(classeurRef, emptyTree);
+      setData(emptyTree);
+      setLoading(false);
+      isFetchingRef.current = false;
+      return;
+    }
     
     // Invalider cache
     treeCache.delete(classeurRef);

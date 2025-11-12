@@ -10,7 +10,7 @@ import { NextResponse } from 'next/server';
  */
 export const createNoteV2Schema = z.object({
   source_title: z.string().min(1, 'source_title requis').max(255, 'source_title trop long'),
-  notebook_id: z.string().min(1, 'notebook_id OBLIGATOIRE'),
+  notebook_id: z.string().min(1, 'notebook_id requis').nullable().optional(), // ✅ NOUVEAU: Accepter null pour notes orphelines (Canva)
   markdown_content: z.string().optional().default(''),
   header_image: z.string().url('header_image doit être une URL valide').optional(),
   folder_id: z.string().uuid('folder_id doit être un UUID valide').nullable().optional(),

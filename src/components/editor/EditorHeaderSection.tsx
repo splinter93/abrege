@@ -133,7 +133,12 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
         onHeaderTitleInImageChange={handlers.updateTitleInImage}
         imageMenuOpen={editorState.menus.imageMenuOpen}
         onImageMenuOpen={() => editorState.setImageMenuOpen(true)}
-        onImageMenuClose={() => editorState.setImageMenuOpen(false)}
+        onImageMenuClose={() => {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[EditorHeaderSection] editorState.headerImage.url:', editorState.headerImage.url?.substring(0, 100));
+          }
+          editorState.setImageMenuOpen(false);
+        }}
         noteId={noteId}
         userId={userId}
         titleElement={

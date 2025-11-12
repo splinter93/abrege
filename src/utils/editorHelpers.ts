@@ -92,6 +92,11 @@ export const cleanEscapedMarkdown = (markdown: string): string => {
 };
 
 /**
+ * Détermine si l'ID de note correspond à un canevas temporaire (non persisté).
+ */
+export const isTemporaryCanvaNote = (noteId: string): boolean => noteId.startsWith('note_canva_');
+
+/**
  * Crée un hash simple d'une chaîne de caractères
  * Utilisé pour optimiser les comparaisons de contenu dans useMemo
  * 

@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { logger, LogCategory } from '@/utils/logger';
+import { isTemporaryCanvaNote } from '@/utils/editorHelpers';
 
 /**
  * Type strict pour les mises à jour de notes
@@ -92,6 +93,7 @@ export function useNoteUpdate<T>({
   updateStore = true,
 }: UseNoteUpdateOptions<T>) {
   const updateNote = useFileSystemStore(s => s.updateNote);
+  const isTemporary = isTemporaryCanvaNote(noteId);
   
   return useCallback(
     async (newValue: T): Promise<void> => {
@@ -108,6 +110,18 @@ export function useNoteUpdate<T>({
         
         // 2. Callback de succès (ex: changer la police en CSS)
         onSuccess?.(newValue);
+
+        // 3. Si note temporaire (Canva), ne pas appeler l'API
+        if (isTemporary) {
+          if (process.env.NODE_ENV === 'development') {
+            logger.debug(
+              LogCategory.EDITOR,
+              `📝 [Canva] ${field} mis à jour localement`,
+              { newValue }
+            );
+          }
+          return;
+        }
         
         // 3. Appeler l'API
         await v2UnifiedApi.updateNote(noteId, payload, userId);
@@ -168,6 +182,7 @@ export function useHeaderImageUpdate({
   errorMessage = `Erreur lors de la sauvegarde de ${field}`,
 }: Omit<UseNoteUpdateOptions<number>, 'updateStore'>) {
   const updateNote = useFileSystemStore(s => s.updateNote);
+  const isTemporary = isTemporaryCanvaNote(noteId);
   
   return useCallback(
     async (newValue: number): Promise<void> => {
@@ -176,6 +191,19 @@ export function useHeaderImageUpdate({
       try {
         // Créer le payload typé strictement
         const payload: NoteUpdatePayload = { [field]: newValue };
+
+        if (isTemporary) {
+          updateNote(noteId, payload);
+          onSuccess?.(newValue);
+          if (process.env.NODE_ENV === 'development') {
+            logger.debug(
+              LogCategory.EDITOR,
+              `📝 [Canva] ${field} mis à jour localement`,
+              { newValue }
+            );
+          }
+          return;
+        }
         
         // 1. Appeler l'API en premier pour valider
         await v2UnifiedApi.updateNote(noteId, payload, userId);
