@@ -1169,7 +1169,7 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   flex-direction: column;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  border-radius: 18px;
   padding: 0;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -1191,10 +1191,6 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   transition: background-color 0.2s ease;
 }
 
-.chat-canva-pane__resize-handle:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
 .chat-canva-pane__resize-handle::before {
   content: '';
   position: absolute;
@@ -1205,11 +1201,6 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   height: 40px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.chat-canva-pane__resize-handle:hover::before {
   opacity: 1;
 }
 
