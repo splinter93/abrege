@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Paintbrush, Plus, FileText, Clock, Check, X } from 'lucide-react';
+import { PenSquare, Plus, X } from 'lucide-react';
 import type { CanvaSession } from '@/types/canva';
 import { useCanvaRealtime } from '@/hooks/chat/useCanvaRealtime';
 import './ChatCanvasDropdown.css';
@@ -156,9 +156,9 @@ export function ChatCanvasDropdown({
         className={`chat-canvas-dropdown__button ${isCanvaOpen ? 'chat-canvas-dropdown__button--active' : ''}`}
         onClick={handleToggle}
         disabled={disabled}
-        title={`Canvases (${canvasCount})`}
+        title={`Drafts (${canvasCount})`}
       >
-        <Paintbrush size={18} />
+        <PenSquare size={18} />
         {showBadge && (
           <span className="chat-canvas-dropdown__badge">{canvasCount}</span>
         )}
@@ -168,21 +168,18 @@ export function ChatCanvasDropdown({
       {isOpen && (
         <div className="chat-canvas-dropdown__menu">
           <div className="chat-canvas-dropdown__header">
-            <FileText size={16} />
-            <span>Canvases ({canvasCount})</span>
+            <PenSquare size={16} />
+            <span>Drafts ({canvasCount})</span>
           </div>
 
-          {/* Action nouvelle canva */}
+          {/* Action nouveau draft */}
           <button
             className="chat-canvas-dropdown__item chat-canvas-dropdown__item--new"
             onClick={handleNewCanva}
           >
             <Plus size={16} />
-            <span>Nouveau canva</span>
+            <span>Nouveau draft</span>
           </button>
-
-          {/* Séparateur si canvases existants */}
-          {canvasCount > 0 && <div className="chat-canvas-dropdown__separator" />}
 
           {/* Liste canvases */}
           {isLoading ? (
@@ -195,14 +192,6 @@ export function ChatCanvasDropdown({
                 .filter(c => c.status !== 'deleted')
                 .map((canva) => {
                   const isActive = canva.id === activeCanvaId;
-                  const statusIcon = canva.status === 'saved' ? <Check size={14} /> : <Clock size={14} />;
-                  const statusLabel = {
-                    open: 'Ouvert',
-                    closed: 'Fermé',
-                    saved: 'Sauvegardé',
-                    deleted: 'Supprimé'
-                  }[canva.status];
-
                   return (
                     <div
                       key={canva.id}
@@ -212,10 +201,6 @@ export function ChatCanvasDropdown({
                       <div className="chat-canvas-dropdown__item-content">
                         <div className="chat-canvas-dropdown__item-title">
                           {canva.title}
-                        </div>
-                        <div className="chat-canvas-dropdown__item-status">
-                          {statusIcon}
-                          <span>{statusLabel}</span>
                         </div>
                       </div>
 
