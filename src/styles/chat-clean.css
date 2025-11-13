@@ -711,10 +711,10 @@ body.chat-theme-anthracite .chatgpt-header {
 
 .sidebar-search-input-clean {
   width: 100%;
-  padding: 10px 12px 10px 40px;
+  padding: 7px 12px 7px 40px;
   background: var(--sidebar-search-overlay);
   border: none;
-  border-radius: var(--chat-radius-md);
+  border-radius: var(--chat-radius-2xl);
   color: var(--chat-text-primary);
   font-size: 14px;
   outline: none;
@@ -1961,6 +1961,15 @@ body.chat-theme-blue .chatgpt-messages-container::before {
 .bubble-button:hover {
   background: var(--chat-overlay-hover);
   color: var(--chat-text-primary);
+}
+
+.bubble-button.copy-button:hover,
+.bubble-button.copy-button:focus,
+.bubble-button.copy-button:focus-visible {
+  background: var(--chat-overlay-hover);
+  color: var(--chat-text-primary);
+  outline: none;
+  box-shadow: none;
 }
 
 .bubble-button:active {
