@@ -5,6 +5,8 @@
 
 import { simpleLogger as logger } from '@/utils/logger';
 import type { LLMContext } from '@/types/llmContext';
+import type { CanvaContextPayload } from '@/types/canvaContext';
+import { buildCanvaContextSection } from './context/CanvaContextProvider';
 
 export interface AgentSystemConfig {
   system_instructions?: string;
@@ -121,6 +123,15 @@ export class SystemMessageBuilder {
           content += `\n\n## Contexte Actuel\n${contextParts.join('\n')}`;
           content += `\n\n⚠️ Date/heure ci-dessus = MAINTENANT (actualisée automatiquement). Ne cherche pas l'heure ailleurs.`;
           logger.dev(`[SystemMessageBuilder] 🌍 Contexte UI injecté (compact)`);
+        }
+
+        const canvaContext = (ctx as any).canva_context as CanvaContextPayload | undefined;
+        if (canvaContext) {
+          const canvaSection = buildCanvaContextSection(canvaContext);
+          if (canvaSection) {
+            content += `\n\n${canvaSection}`;
+            logger.dev('[SystemMessageBuilder] 🧩 Canva context injecté');
+          }
         }
 
         // ✅ ENRICHISSEMENT : User stats, session, notifications

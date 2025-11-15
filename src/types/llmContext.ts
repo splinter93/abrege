@@ -3,6 +3,8 @@
  * Architecture propre : 1 seule interface pour tout le contexte
  */
 
+import type { CanvaContextPayload } from './canvaContext';
+
 /**
  * Contexte LLM complet et optimisé
  * Budget cible : 80-150 tokens max
@@ -69,6 +71,9 @@ export interface LLMContext {
       timestamp: string;  // ISO 8601
     };
   };
+
+  // === CONTEXTE CANVA (optionnel) ===
+  canva_context?: CanvaContextPayload;
 }
 
 /**

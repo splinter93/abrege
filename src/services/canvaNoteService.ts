@@ -296,6 +296,7 @@ export class CanvaNoteService {
           *,
           note:articles!inner(
             source_title,
+            slug,
             updated_at,
             header_image,
             classeur_id
@@ -339,7 +340,8 @@ export class CanvaNoteService {
           ...row.metadata,
           note_updated_at: row.note?.updated_at,
           header_image: row.note?.header_image,
-          classeur_id: row.note?.classeur_id
+          classeur_id: row.note?.classeur_id,
+          note_slug: row.note?.slug
         }
       }));
 

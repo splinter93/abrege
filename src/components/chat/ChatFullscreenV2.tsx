@@ -39,6 +39,7 @@ import SidebarUltraClean from './SidebarUltraClean';
 import ChatCanvaPane from './ChatCanvaPane';
 import dynamic from 'next/dynamic';
 import { useCanvaStore } from '@/store/useCanvaStore';
+import { useCanvaContextPayload } from '@/hooks/chat/useCanvaContextPayload';
 
 import { simpleLogger as logger } from '@/utils/logger';
 import toast from 'react-hot-toast';
@@ -89,6 +90,23 @@ const ChatFullscreenV2: React.FC = () => {
   } = useCanvaStore();
   
   const [canvaWidth, setCanvaWidth] = useState(66); // 66% par défaut
+
+  const {
+    payload: canvaContextPayload,
+    isLoading: isCanvaContextLoading,
+    error: canvaContextError
+  } = useCanvaContextPayload({
+    chatSessionId: currentSession?.id || null,
+    activeCanvaId,
+    isCanvaPaneOpen: isCanvaOpen
+  });
+
+  const llmContextWithCanva = useMemo(() => {
+    return {
+      ...llmContext,
+      canva_context: canvaContextPayload
+    };
+  }, [llmContext, canvaContextPayload]);
 
   const handleOpenCanva = useCallback(async () => {
     if (!user?.id || !currentSession?.id) {
@@ -259,7 +277,7 @@ const ChatFullscreenV2: React.FC = () => {
   const messageActions = useChatMessageActions({
     selectedAgent,
     infiniteMessages,
-    llmContext,
+    llmContext: llmContextWithCanva,
     sendMessageFn: sendMessage,
     addInfiniteMessage,
     onEditingChange: (editing: boolean) => {
@@ -803,7 +821,11 @@ const ChatFullscreenV2: React.FC = () => {
           )}
           </div>
         </div>
-        <CanvaStatusIndicator />
+        <CanvaStatusIndicator
+          payload={canvaContextPayload}
+          isLoading={isCanvaContextLoading}
+          error={canvaContextError}
+        />
       </div>
   );
 };
