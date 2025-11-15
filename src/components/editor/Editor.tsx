@@ -81,13 +81,16 @@ function cleanupMermaidSVGs() {
  * <Editor noteId="note-123" readonly={false} userId="user-456" />
  * ```
  */
-const Editor: React.FC<{ 
+interface EditorProps { 
   noteId: string; 
   readonly?: boolean; 
   userId?: string;
-  canEdit?: boolean; // Si l'user peut éditer (pour afficher le lien vers l'éditeur sur pages publiques)
+  canEdit?: boolean;
   onClose?: () => void;
-}> = ({ noteId, readonly = false, userId: propUserId, canEdit = true, onClose }) => {
+  onEditorRef?: (editor: TiptapEditor | null) => void;
+}
+
+const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propUserId, canEdit = true, onClose, onEditorRef }) => {
   // 🔧 CORRECTION : Utiliser le vrai ID utilisateur de la session
   const { user } = useAuth();
   const userId = propUserId || user?.id || 'anonymous';
@@ -127,6 +130,7 @@ const Editor: React.FC<{
   const kebabBtnRef = React.useRef<HTMLButtonElement>(null) as React.RefObject<HTMLButtonElement>;
   const slashMenuRef = React.useRef<EditorSlashMenuHandle | null>(null);
   const editorContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const autoFocusRef = React.useRef(false);
 
   // ✅ Sidebar Navigation - Pattern chat (hover zone + transform)
   const [sidebarVisible, setSidebarVisible] = React.useState(false);
@@ -137,6 +141,7 @@ const Editor: React.FC<{
   // Reset isContentReady quand noteId change
   React.useEffect(() => {
     setIsContentReady(false);
+    autoFocusRef.current = false;
   }, [noteId]);
 
   // Mode readonly (pages publiques ou preview mode)
@@ -206,6 +211,13 @@ const Editor: React.FC<{
     onUpdate: handlers.handleEditorUpdate,
   }); // ✅ SANS dépendance - EditorSyncManager gère le rechargement si noteId change
 
+  React.useEffect(() => {
+    onEditorRef?.(editor as TiptapEditor | null);
+    return () => {
+      onEditorRef?.(null);
+    };
+  }, [editor, onEditorRef]);
+
   // ✅ REFACTO: Mettre à jour le handler avec l'instance editor réelle
   const handlersWithEditor = useEditorHandlers({
     noteId,
@@ -258,6 +270,47 @@ const Editor: React.FC<{
       cleanupMermaidSVGs();
     };
   }, [noteId]);
+
+  React.useEffect(() => {
+    if (isReadonly) return;
+    if (!editor) return;
+    if (!isContentReady) return;
+    if (autoFocusRef.current) return;
+
+    const sanitizedContent = (rawContent || '').replace(/\s+/g, '');
+    if (sanitizedContent.length > 0) {
+      autoFocusRef.current = true;
+      return;
+    }
+
+    let attempts = 0;
+    let cancelled = false;
+
+    const focusWithRetry = () => {
+      if (!editor || cancelled) {
+        return;
+      }
+
+      const focusApplied = editor.commands.focus('start');
+      const hasFocus = editor.isFocused || editor.view.hasFocus();
+
+      if (focusApplied && hasFocus) {
+        autoFocusRef.current = true;
+        return;
+      }
+
+      attempts += 1;
+      if (attempts < 5) {
+        requestAnimationFrame(focusWithRetry);
+      }
+    };
+
+    requestAnimationFrame(focusWithRetry);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editor, isReadonly, isContentReady, rawContent]);
 
   if (!note) {
     return null;

@@ -11,6 +11,32 @@ interface NoteData {
 import { simpleLogger as logger } from '@/utils/logger';
 import { sanitizeNoteEmbedHtml } from '@/utils/sanitizeNoteEmbedHtml';
 
+const isEmptyProseMirrorHtml = (html: string): boolean => {
+  if (!html) {
+    return true;
+  }
+
+  const normalized = html
+    .replace(/<br\s+class="ProseMirror-trailingBreak"\s*\/?>/gi, '<br/>')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+
+  return /^<p>(?:<br\/?>)*<\/p>$/.test(normalized);
+};
+
+const normalizeHtmlContent = (html: string): string => {
+  if (!html) {
+    return '';
+  }
+
+  const trimmed = html.trim();
+  if (!trimmed || isEmptyProseMirrorHtml(trimmed)) {
+    return '';
+  }
+
+  return trimmed.replace(/<br\s+class="ProseMirror-trailingBreak"\s*\/?>/gi, '<br/>');
+};
+
 
 export interface UseEditorSaveOptions {
   onSave?: (data: NoteData) => void;
@@ -42,7 +68,8 @@ export default function useEditorSave({ onSave, editor }: UseEditorSaveOptions):
     if (onSave && editor) {
       setIsSaving(true);
       const rawHtmlContent = editor.getHTML();
-      const html_content = sanitizeNoteEmbedHtml(rawHtmlContent);
+      const sanitizedHtml = sanitizeNoteEmbedHtml(rawHtmlContent);
+      const html_content = normalizeHtmlContent(sanitizedHtml);
       let markdown_content = getEditorMarkdown(editor);
       
       // 🔧 FIX: Supprimer l'échappement des titres (ex: \# → #)

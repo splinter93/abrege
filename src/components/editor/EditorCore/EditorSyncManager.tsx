@@ -111,7 +111,24 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
       
       // ✅ Preprocesser {{embed:xyz}} → HTML pour que Tiptap puisse créer les nodes
       // Le serializer addStorage() reconvertira en {{embed:xyz}} à la sauvegarde
-      const processedContent = preprocessEmbeds(storeContent);
+      const processedContent = preprocessEmbeds(storeContent || '');
+
+      // 🔄 Si le contenu est vide mais Tiptap garde un paragraphe vide, le nettoyer
+      if (!processedContent.trim()) {
+        editor.commands.clearContent(true);
+        editor.commands.insertContent({
+          type: 'paragraph',
+          attrs: { 'data-placeholder': 'Écrivez quelque chose d\'incroyable...' },
+          content: []
+        });
+        hasLoadedInitialContentRef.current = true;
+        lastStoreSyncRef.current = '';
+        setTimeout(() => {
+          editorState.setIsUpdatingFromStore(false);
+          onInitialContentLoaded?.();
+        }, 50);
+        return;
+      }
       editor.commands.setContent(processedContent);
       
       hasLoadedInitialContentRef.current = true;

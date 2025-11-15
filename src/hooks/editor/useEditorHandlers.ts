@@ -199,15 +199,27 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
       return;
     }
     
+    const normalize = (value: string) =>
+      value.replace(/\r\n/g, '\n').replace(/\s+$/g, '').replace(/^\s+/g, '');
+
     try {
       const nextMarkdown = getEditorMarkdown(e);
-      
-      if (nextMarkdown !== rawContent) {
-        if (process.env.NODE_ENV === 'development') {
-          logger.debug(LogCategory.EDITOR, 'Sauvegarde (utilisateur a tapé)');
-        }
-        updateNote(noteId, { markdown_content: nextMarkdown });
+      const sanitizedNext = normalize(nextMarkdown || '');
+      const sanitizedRaw = normalize(rawContent || '');
+
+      if (!sanitizedNext && !sanitizedRaw) {
+        return;
       }
+
+      if (sanitizedNext === sanitizedRaw) {
+        return;
+      }
+
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(LogCategory.EDITOR, 'Sauvegarde (utilisateur a tapé)');
+      }
+
+      updateNote(noteId, { markdown_content: sanitizedNext || '' });
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', error);
     }

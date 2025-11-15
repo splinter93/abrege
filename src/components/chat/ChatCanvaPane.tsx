@@ -192,6 +192,20 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
    */
   const handleEditorRef = useCallback((editor: TiptapEditor | null) => {
     editorRef.current = editor;
+
+    if (!editor) {
+      return;
+    }
+
+    const hasText = (editor.storage?.markdown?.getMarkdown?.() || '').replace(/\s+/g, '').length > 0;
+    if (hasText) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      if (!editorRef.current) return;
+      editorRef.current.commands.focus('start');
+    });
   }, []);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -302,7 +316,7 @@ const EditorMemo = React.memo(({ sessionId, noteId, onClose, onEditorRef }: {
       key={`canva-${sessionId}-${noteId}`}
       noteId={noteId}
       onClose={onClose}
-      editorRef={onEditorRef}
+      onEditorRef={onEditorRef}
     />
   );
 });
