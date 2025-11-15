@@ -622,7 +622,7 @@ export class CanvaNoteService {
         throw new Error('note_id est obligatoire lorsque create_if_missing est false');
       }
 
-      const session = await this.getCanvaSessionById(created.canvaId, userId, client);
+      const session = await this.getSessionById(created.canvaId, userId, client);
       if (!session) {
         throw new Error('Canva session introuvable après création');
       }

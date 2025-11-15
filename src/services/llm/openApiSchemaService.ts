@@ -263,7 +263,7 @@ export class OpenAPISchemaService {
           }
 
           // Construire les paramètres du tool
-          const parameters = this.buildToolParameters(op, pathName);
+          const parameters = this.buildToolParameters(op, pathName, openApiContent);
 
           // ✅ Construire le nom du tool avec préfixe namespace si disponible
           const toolName = namespace ? `${namespace}__${operationId}` : operationId;
@@ -308,7 +308,8 @@ export class OpenAPISchemaService {
    */
   private buildToolParameters(
     operation: Record<string, unknown>,
-    pathName: string
+    pathName: string,
+    openApiContent: Record<string, unknown>
   ): {
     type: 'object';
     properties: Record<string, unknown>;
@@ -363,16 +364,19 @@ export class OpenAPISchemaService {
     if (requestBody) {
       const content = requestBody.content as Record<string, unknown> | undefined;
       const jsonContent = content?.['application/json'] as Record<string, unknown> | undefined;
-      const bodySchema = jsonContent?.schema as Record<string, unknown> | undefined;
+      let bodySchema = jsonContent?.schema as Record<string, unknown> | undefined;
 
       if (bodySchema) {
-        const bodyProperties = bodySchema.properties as Record<string, unknown> | undefined;
-        const bodyRequired = bodySchema.required as string[] | undefined;
+        bodySchema = this.resolveSchemaRef(bodySchema, openApiContent);
+
+        const bodyProperties = bodySchema?.properties as Record<string, unknown> | undefined;
+        const bodyRequired = bodySchema?.required as string[] | undefined;
 
         if (bodyProperties) {
           // ✅ Nettoyer chaque property
           for (const [key, value] of Object.entries(bodyProperties)) {
-            properties[key] = this.cleanSchemaForXAI(value as Record<string, unknown>);
+            const resolvedProperty = this.resolveSchemaRef(value as Record<string, unknown>, openApiContent);
+            properties[key] = this.cleanSchemaForXAI(resolvedProperty);
           }
         }
 
@@ -393,6 +397,39 @@ export class OpenAPISchemaService {
       properties,
       ...(uniqueRequired.length > 0 && { required: uniqueRequired })
     };
+  }
+
+  /**
+   * ✅ NEW: Resolve $ref schemas (supports #/components/schemas/...)
+   */
+  private resolveSchemaRef(
+    schema: Record<string, unknown> | undefined,
+    openApiContent: Record<string, unknown>
+  ): Record<string, unknown> {
+    if (!schema) {
+      return {};
+    }
+
+    const ref = schema.$ref as string | undefined;
+    if (ref && typeof ref === 'string' && ref.startsWith('#/')) {
+      const pathParts = ref.slice(2).split('/');
+      let current: unknown = openApiContent;
+
+      for (const part of pathParts) {
+        if (current && typeof current === 'object') {
+          current = (current as Record<string, unknown>)[part];
+        } else {
+          current = undefined;
+          break;
+        }
+      }
+
+      if (current && typeof current === 'object') {
+        return current as Record<string, unknown>;
+      }
+    }
+
+    return schema;
   }
 
   /**
