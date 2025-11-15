@@ -1938,76 +1938,41 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   padding: 0;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(8, 10, 12, 0.55);
+  border: none;
+  border-radius: 4px;
+  background: transparent;
   color: var(--chat-text-secondary);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
   outline: none;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 .bubble-button svg {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   stroke-width: 2.2;
 }
 
 .bubble-button:hover {
-  background: rgba(28, 32, 38, 0.85);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--chat-text-primary);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
 .bubble-button:focus,
 .bubble-button:focus-visible {
   outline: none;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.25),
-    0 10px 32px rgba(0, 0, 0, 0.55);
-  border-color: rgba(255, 255, 255, 0.25);
-}
-
-.bubble-button:active {
-  transform: scale(0.92);
-  background: rgba(12, 14, 16, 0.9);
-}
-
-.chatgpt-message-user .bubble-button {
-  color: #f3f7ff;
-}
-
-.bubble-buttons .copy-button {
-  background: rgba(8, 10, 12, 0.55);
-  border-color: rgba(255, 255, 255, 0.08);
-  color: var(--chat-text-secondary);
-}
-
-.bubble-buttons .copy-button:hover {
-  background: rgba(28, 32, 38, 0.85);
-  border-color: rgba(255, 255, 255, 0.12);
   color: var(--chat-text-primary);
 }
 
-.bubble-buttons .copy-button:focus,
-.bubble-buttons .copy-button:focus-visible {
-  outline: none;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.25),
-    0 10px 32px rgba(0, 0, 0, 0.55);
-  border-color: rgba(255, 255, 255, 0.25);
+.bubble-button:active {
+  transform: scale(0.9);
 }
 
-.bubble-buttons .copy-button:active {
-  transform: scale(0.92);
-  background: rgba(12, 14, 16, 0.9);
+.chatgpt-message-user .bubble-button {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .copy-button.copied {

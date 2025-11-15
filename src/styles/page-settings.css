@@ -665,7 +665,7 @@
   line-height: 1.5;
 }
 
-.copy-button {
+.settings-copy-button {
   align-self: flex-start;
   padding: var(--spacing-sm) var(--spacing-md);
   background: var(--page-primary);
@@ -679,7 +679,7 @@
   font-family: var(--font-main);
 }
 
-.copy-button:hover {
+.settings-copy-button:hover {
   background: var(--page-primary-hover);
   transform: translateY(-1px);
   box-shadow: var(--glass-shadow-medium);

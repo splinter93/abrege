@@ -90,7 +90,7 @@ export function ExportActions({ schema }: ExportActionsProps) {
         <button
           onClick={handleCopyToClipboard}
           disabled={isExporting}
-          className="export-button copy-button"
+          className="export-button export-copy-button"
         >
           {isExporting ? '⏳' : '📋'} Copier JSON
         </button>

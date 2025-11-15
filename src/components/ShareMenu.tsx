@@ -159,7 +159,7 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
                 />
                 <button
                   onClick={handleCopyLink}
-                  className="copy-button"
+                  className="share-menu-copy-button"
                   disabled={copySuccess}
                 >
                   {copySuccess ? <FiCheck size={16} /> : <FiCopy size={16} />}

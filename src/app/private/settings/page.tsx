@@ -476,7 +476,7 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
                 <div className="api-key-display">
                   <code className="api-key-code">{newlyCreatedKey}</code>
                   <button
-                    className="copy-button"
+                    className="settings-copy-button"
                     onClick={() => navigator.clipboard.writeText(newlyCreatedKey)}
                   >
                     📋 Copier

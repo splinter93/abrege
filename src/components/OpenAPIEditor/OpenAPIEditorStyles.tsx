@@ -271,7 +271,7 @@ export function OpenAPIEditorStyles() {
         cursor: not-allowed;
       }
 
-      .copy-button:hover:not(:disabled) {
+      .export-copy-button:hover:not(:disabled) {
         background: #1a4d1a;
         border-color: #4ade80;
       }
