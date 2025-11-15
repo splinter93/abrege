@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { logger, LogCategory } from '@/utils/logger';
 // import.*StateCreator.*from 'zustand';
 import type { DiffResult } from '@/services/diffService';
 
@@ -139,12 +140,52 @@ export const useFileSystemStore = create<FileSystemState>()((set) => ({
     return { notes: n }; 
   }),
   
-  updateNote: (id: string, patch: Partial<Note>) => set(state => ({ 
-    notes: { 
-      ...state.notes, 
-      [id]: { ...state.notes[id], ...patch } 
-    } 
-  })),
+  updateNote: (id: string, patch: Partial<Note>) => set(state => {
+    if (process.env.NODE_ENV === 'development') {
+      const headerKeys = [
+        'header_image',
+        'header_image_offset',
+        'header_image_blur',
+        'header_image_overlay',
+        'header_title_in_image'
+      ] as const;
+      const touched = headerKeys.filter(
+        (key) => Object.prototype.hasOwnProperty.call(patch, key)
+      );
+      if (touched.length > 0) {
+        const sanitizedPatch: Partial<Note> = {};
+        for (const key of touched) {
+          const value = patch[key];
+          if (value !== undefined) {
+            sanitizedPatch[key] = value;
+          }
+        }
+
+        if (Object.keys(sanitizedPatch).length === 0) {
+          return state;
+        }
+
+        if (process.env.NODE_ENV === 'development') {
+          logger.debug(LogCategory.EDITOR, '[useFileSystemStore] updateNote header fields', {
+            noteId: id,
+            patch: sanitizedPatch
+          });
+        }
+        return {
+          notes: {
+            ...state.notes,
+            [id]: { ...state.notes[id], ...sanitizedPatch }
+          }
+        };
+      }
+    }
+    return { 
+      notes: { 
+        ...state.notes, 
+        [id]: { ...state.notes[id], ...patch } 
+      } 
+    };
+  }),
   
   renameNote: (id: string, title: string) => set(state => ({ 
     notes: { 

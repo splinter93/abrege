@@ -12,13 +12,14 @@
 
 'use client';
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import Editor from '@/components/editor/Editor';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { useAuth } from '@/hooks/useAuth';
 import { logger, LogCategory } from '@/utils/logger';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { Editor as TiptapEditor } from '@tiptap/react';
+import Editor from '@/components/editor/Editor';
+import { hashString } from '@/utils/editorHelpers';
 
 interface ChatCanvaPaneProps {
   onRequestClose?: () => void;
@@ -39,6 +40,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
   const canvaPaneRef = useRef<HTMLElement>(null);
   const editorRef = useRef<TiptapEditor | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedHashRef = useRef<number | null>(null);
 
   // Resize handle state
   const [isDragging, setIsDragging] = useState(false);
@@ -53,7 +55,14 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
    * Auto-save toutes les 2s (si pas de streaming)
    */
   useEffect(() => {
-    if (!session || !editorRef.current || !user) return;
+    if (!session || !user) {
+      lastSavedHashRef.current = null;
+      return;
+    }
+
+    if (!editorRef.current) {
+      return;
+    }
 
     // ⚠️ Skip auto-save si streaming actif
     if (session.isStreaming) {
@@ -63,26 +72,51 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       return;
     }
 
+    const normalizeMarkdown = (value: string): string => value.replace(/\r\n/g, '\n').trim();
+
+    const initialMarkdown = editorRef.current.storage.markdown?.getMarkdown?.() || '';
+    const initialHash = hashString(normalizeMarkdown(initialMarkdown));
+    if (lastSavedHashRef.current === null) {
+      lastSavedHashRef.current = initialHash;
+    }
+
     const interval = setInterval(async () => {
       if (!editorRef.current) return;
 
       try {
         const markdown = editorRef.current.storage.markdown?.getMarkdown?.() || '';
+        const normalizedMarkdown = normalizeMarkdown(markdown);
         
-        if (!markdown) {
+        if (!normalizedMarkdown) {
           logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] No content to save');
           return;
         }
 
-        await v2UnifiedApi.updateNote(
+        const currentHash = hashString(normalizedMarkdown);
+        if (lastSavedHashRef.current === currentHash) {
+          return;
+        }
+
+        const result = await v2UnifiedApi.updateNote(
           session.noteId,
           { markdown_content: markdown },
           user.id
         );
 
+        if (!result.success) {
+          logger.error(LogCategory.EDITOR, '[ChatCanvaPane] ❌ Auto-save failed', {
+            noteId: session.noteId,
+            error: result.error
+          });
+          return;
+        }
+
+        lastSavedHashRef.current = currentHash;
+
         logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] ✅ Auto-saved', {
           noteId: session.noteId,
-          contentLength: markdown.length
+          contentLength: markdown.length,
+          duration: result.duration
         });
 
       } catch (error) {
@@ -90,8 +124,11 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       }
     }, 2000); // 2s
 
-    return () => clearInterval(interval);
-  }, [session, session?.isStreaming, user]);
+    return () => {
+      clearInterval(interval);
+      lastSavedHashRef.current = null;
+    };
+  }, [session, session?.noteId, session?.isStreaming, user]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // ✅ STREAMING INSERTION

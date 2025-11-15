@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { logger, LogCategory } from '@/utils/logger';
 import type { ShareSettings } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
 import { DEFAULT_HEADER_IMAGE_CONFIG } from '@/utils/editorConstants';
@@ -171,6 +172,16 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
   const [headerImageUrl, setHeaderImageUrl] = useState<string | null>(
     options.initialHeaderImage || null
   );
+  const setHeaderImageUrlTracked = useCallback((value: string | null, meta?: { source?: string }) => {
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug(LogCategory.EDITOR, '[useEditorState] setHeaderImageUrl', {
+        previous: headerImageUrl,
+        next: value,
+        source: meta?.source ?? 'unknown'
+      });
+    }
+    setHeaderImageUrl(value);
+  }, [headerImageUrl]);
   
   // ✅ Ref pour tracker la dernière valeur reçue (évite re-set inutiles)
   const prevHeaderImageRef = useRef<string | null>(options.initialHeaderImage || null);
@@ -181,9 +192,9 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
     const newValue = options.initialHeaderImage ?? null;
     if (newValue !== prevHeaderImageRef.current) {
       prevHeaderImageRef.current = newValue;
-      setHeaderImageUrl(newValue);
+      setHeaderImageUrlTracked(newValue, { source: 'initialHeaderImageEffect' });
     }
-  }, [options.initialHeaderImage]);
+  }, [options.initialHeaderImage, setHeaderImageUrlTracked]);
   const [headerOffset, setHeaderOffset] = useState(
     options.initialHeaderOffset ?? DEFAULT_HEADER_IMAGE_CONFIG.offset
   );
@@ -320,7 +331,7 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
     updateTOC,
     
     // Actions - Header Image
-    setHeaderImageUrl,
+    setHeaderImageUrl: setHeaderImageUrlTracked,
     setHeaderImageOffset: setHeaderOffset,
     setHeaderImageBlur: setHeaderBlur,
     setHeaderImageOverlay: setHeaderOverlay,

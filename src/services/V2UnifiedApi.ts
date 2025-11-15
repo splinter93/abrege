@@ -1,4 +1,4 @@
-import { useFileSystemStore } from '@/store/useFileSystemStore';
+import { useFileSystemStore, type Note } from '@/store/useFileSystemStore';
 
 import { simpleLogger as logger, LogCategory } from '@/utils/logger';
 
@@ -286,10 +286,14 @@ export class V2UnifiedApi {
    */
   async updateNote(noteId: string, updateData: UpdateNoteData, _userId?: string) {
     const startTime = Date.now();
+    const store = useFileSystemStore.getState();
+    let cleanNoteId = noteId;
+    let previousNote: Note | null = null;
+    let optimisticNote: Note | null = null;
     
     try {
       // ✅ 1. Nettoyer et valider l'ID
-      const cleanNoteId = this.cleanAndValidateId(noteId, 'note');
+      cleanNoteId = this.cleanAndValidateId(noteId, 'note');
       
       // Nettoyer les données avant mise à jour (supprimer les champs undefined)
       const cleanData = Object.fromEntries(
@@ -297,9 +301,8 @@ export class V2UnifiedApi {
       );
       
       // 🚀 2. Mise à jour optimiste immédiate
-      const store = useFileSystemStore.getState();
       const currentNote = store.notes[cleanNoteId];
-      const previousNote = { ...currentNote };
+      previousNote = currentNote ? { ...currentNote } : null;
       
       // Nettoyer les données avant mise à jour
       const sanitizedUpdateData = {
@@ -307,8 +310,12 @@ export class V2UnifiedApi {
         header_image: cleanData.header_image === null ? undefined : cleanData.header_image
       };
       
-      const updatedNote = { ...currentNote, ...sanitizedUpdateData, updated_at: new Date().toISOString() };
-      store.updateNote(cleanNoteId, updatedNote);
+      optimisticNote = {
+        ...currentNote,
+        ...sanitizedUpdateData,
+        updated_at: new Date().toISOString()
+      } as Note;
+      store.updateNote(cleanNoteId, optimisticNote);
 
       // 🚀 4. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
@@ -337,12 +344,25 @@ export class V2UnifiedApi {
         logger.debug(LogCategory.API, '[V2UnifiedApi] Synchronisation store avec réponse serveur');
         
         // Filtrer les champs qui ont réellement changé
+        const keysToSync = new Set<string>([
+          ...Object.keys(cleanData),
+          'updated_at'
+        ]);
+
         const changedFields: Partial<typeof result.note> = {};
         for (const key in result.note) {
-          // @ts-ignore - iteration dynamique
-          if (result.note[key] !== currentNote[key]) {
-            // @ts-ignore
-            changedFields[key] = result.note[key];
+          if (!keysToSync.has(key)) {
+            continue;
+          }
+          const nextValue = result.note[key as keyof typeof result.note];
+          const optimisticValue = (optimisticNote as Record<string, unknown> | null)?.[key];
+          const valuesAreEqual =
+            nextValue === optimisticValue ||
+            (nextValue === null && optimisticValue === undefined) ||
+            (nextValue === undefined && optimisticValue === null);
+
+          if (!valuesAreEqual) {
+            changedFields[key as keyof typeof result.note] = nextValue;
           }
         }
         
@@ -363,10 +383,8 @@ export class V2UnifiedApi {
 
     } catch (error) {
       // En cas d'erreur, restaurer l'état précédent
-      const store = useFileSystemStore.getState();
-      const currentNote = store.notes[noteId];
-      if (currentNote) {
-        store.updateNote(noteId, currentNote);
+      if (previousNote) {
+        store.updateNote(cleanNoteId, previousNote);
       }
 
       const duration = Date.now() - startTime;

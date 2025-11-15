@@ -3,7 +3,7 @@
  * Extrait de Editor.tsx pour respecter la limite de 300 lignes
  */
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import type { EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import { logger, LogCategory } from '@/utils/logger';
@@ -67,7 +67,15 @@ export function useEditorEffects({
   const kebabOpen = editorState.menus.kebabOpen;
   const fullWidth = editorState.ui.fullWidth;
   const title = editorState.document.title;
-  
+
+  const logHeaderSync = useMemo(() => {
+    return (stage: string, details: Record<string, unknown>) => {
+      if (process.env.NODE_ENV !== 'development') {
+        return;
+      }
+      logger.debug(LogCategory.EDITOR, `[useEditorEffects][header_image] ${stage}`, details);
+    };
+  }, []);
   // Effect: Forcer la mise à jour de la TOC quand la note arrive
   useEffect(() => {
     if (note && content && !noteLoaded) {
@@ -94,16 +102,46 @@ export function useEditorEffects({
 
   // Effect: Sync header image
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[useEditorEffects] header_image changed:', note?.header_image?.substring(0, 100));
+    if (!note) {
+      logHeaderSync('skip (note missing)', {});
+      return;
     }
-    if (note?.header_image) {
-      setHeaderImageUrl(note.header_image);
-    } else if (note && !note.header_image) {
-      // Explicitly clear if note exists but header_image is null/undefined
-      setHeaderImageUrl(null);
+
+    const nextHeaderImage = note?.header_image;
+
+    if (nextHeaderImage === undefined) {
+      logHeaderSync('skip (header_image undefined)', {
+        noteId,
+        current: editorState.headerImage.url
+      });
+      return;
     }
-  }, [note?.header_image, setHeaderImageUrl]);
+
+    if (nextHeaderImage === null) {
+      if (editorState.headerImage.url !== null) {
+        logHeaderSync('apply null', {
+          noteId,
+          previous: editorState.headerImage.url
+        });
+        setHeaderImageUrl(null);
+      } else {
+        logHeaderSync('noop null', { noteId });
+      }
+      return;
+    }
+
+    if (editorState.headerImage.url !== nextHeaderImage) {
+      logHeaderSync('apply new value', {
+        noteId,
+        previous: editorState.headerImage.url,
+        next: nextHeaderImage?.slice?.(0, 120)
+      });
+      setHeaderImageUrl(nextHeaderImage);
+      return;
+    }
+
+    logHeaderSync('noop identical', { noteId });
+  }, [note, editorState.headerImage.url, setHeaderImageUrl, logHeaderSync, noteId]);
 
   // Effect: Hydrate appearance fields from note
   useEffect(() => {
