@@ -1,5 +1,28 @@
 # 📝 CHANGELOG
 
+## [15 Nov 2025] - Canva Sessions API + LLM Tools
+
+### ✅ API V2 unifiée
+- Ajout `POST /api/v2/canva/session` (ouvre note existante ou crée un draft)
+- Ajout `POST /api/v2/canva/session/{id}/close` + `DELETE /api/v2/canva/session/{id}`
+- Legacy `/canva/create` & `/canva/open-note` redirigent vers la nouvelle route
+
+### 🧠 CanvaNoteService renforcé
+- `openSession/closeSession/deleteSession` avec `runExclusive(chat_session_id)`
+- Validation ownership `chat_sessions`, mapping enrichi (`note_slug`, `classeur_id`)
+- Option `metadata` + `classeurId` supportée lors de la création
+
+### 💬 Stores & Hooks
+- `useCanvaStore` consomme les nouveaux endpoints REST (plus de Supabase direct)
+- Polling `useCanvaContextPayload` compatible (même payload)
+
+### 🤖 Tooling LLM
+- Nouveaux tools `canva.open_session`, `canva.close_session`, `canva.delete_session`
+- `ApiV2HttpClient` + `ApiV2ToolExecutor` + schémas Zod alignés
+- Doc `docs/api/CANVA-SESSIONS-ENDPOINTS.md` + `ENDPOINTS-V2-RESUME.md` mise à jour
+
+**Résultat :** le LLM connaît les canvases ouverts et peut ouvrir/fermer/supprimer via API V2 sécurisée.
+
 ## [Session 10 Oct 2025 PM] - Nettoyage MCP + Corrections
 
 ### 🧹 Nettoyage Système MCP

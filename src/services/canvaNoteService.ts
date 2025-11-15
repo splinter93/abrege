@@ -22,12 +22,28 @@ type CanvaSessionStatus = 'open' | 'closed' | 'saved' | 'deleted';
 interface CreateCanvaNoteOptions {
   title?: string;
   initialContent?: string;
+  classeurId?: string | null;
+  folderId?: string | null;
+  metadata?: Record<string, unknown>;
+}
+
+interface OpenSessionParams {
+  chatSessionId: string;
+  userId: string;
+  noteId?: string;
+  createIfMissing?: boolean;
+  title?: string;
+  classeurId?: string | null;
+  metadata?: Record<string, unknown>;
+  initialContent?: string;
 }
 
 /**
  * Service centralisé pour la gestion des canvases
  */
 export class CanvaNoteService {
+  private static sessionLocks = new Map<string, Promise<void>>();
+
   private static resolveClient(clientOverride?: SupabaseClient): SupabaseClient {
     return (clientOverride ?? (supabase as SupabaseClient));
   }
@@ -61,8 +77,12 @@ export class CanvaNoteService {
   ): Promise<{ canvaId: string; noteId: string }> {
     try {
       const client = this.resolveClient(supabaseClient);
+      await this.ensureChatSessionOwnership(chatSessionId, userId, client);
       const noteTitle = options?.title || this.generateDefaultTitle();
       const initialContent = options?.initialContent || '';
+      const targetClasseurId = options?.classeurId ?? null;
+      const targetFolderId = options?.folderId ?? null;
+      const sessionMetadata = options?.metadata ?? {};
 
       logger.info(LogCategory.EDITOR, '[CanvaNoteService] Creating canva note', {
         userId,
@@ -86,8 +106,8 @@ export class CanvaNoteService {
           source_title: noteTitle,
           markdown_content: initialContent,
           html_content: initialContent,
-          classeur_id: null, // Note orpheline
-          folder_id: null,
+          classeur_id: targetClasseurId,
+          folder_id: targetFolderId,
           user_id: userId,
           slug,
           public_url: null, // Sera généré après avoir le noteId
@@ -133,7 +153,8 @@ export class CanvaNoteService {
           chat_session_id: chatSessionId,
           note_id: noteId,
           user_id: userId,
-          status: 'open'
+          status: 'open',
+          metadata: Object.keys(sessionMetadata).length > 0 ? sessionMetadata : null
         })
         .select()
         .single();
@@ -326,24 +347,9 @@ export class CanvaNoteService {
       }
 
       // Mapper résultat pour synchroniser titre
-      const canvaSessions: CanvaSession[] = (data || []).map((row: any) => ({
-        id: row.id,
-        chat_session_id: row.chat_session_id,
-        note_id: row.note_id,
-        user_id: row.user_id,
-        title: row.note?.source_title || row.title, // ✅ Titre à jour depuis articles
-        status: row.status,
-        created_at: row.created_at,
-        closed_at: row.closed_at,
-        saved_at: row.saved_at,
-        metadata: {
-          ...row.metadata,
-          note_updated_at: row.note?.updated_at,
-          header_image: row.note?.header_image,
-          classeur_id: row.note?.classeur_id,
-          note_slug: row.note?.slug
-        }
-      }));
+      const canvaSessions: CanvaSession[] = (data || []).map((row: any) =>
+        this.mapRowToSession(row)
+      );
 
       logger.info(LogCategory.EDITOR, '[CanvaNoteService] Fetched canvases with updated titles', {
         chatSessionId,
@@ -572,6 +578,233 @@ export class CanvaNoteService {
       hour: '2-digit',
       minute: '2-digit'
     })}`;
+  }
+
+  /**
+   * 🔐 Ouvrir (ou créer) une session canva de façon atomique
+   */
+  static async openSession(
+    params: OpenSessionParams,
+    supabaseClient?: SupabaseClient
+  ): Promise<CanvaSession> {
+    const {
+      chatSessionId,
+      userId,
+      noteId,
+      createIfMissing = false,
+      title,
+      classeurId,
+      metadata
+    } = params;
+
+    const client = this.resolveClient(supabaseClient);
+
+    return this.runExclusive(chatSessionId, async () => {
+      await this.ensureChatSessionOwnership(chatSessionId, userId, client);
+
+      let created: { canvaId: string; noteId: string };
+
+      if (noteId) {
+        created = await this.openExistingNoteAsCanva(noteId, chatSessionId, userId, client);
+      } else if (createIfMissing) {
+        created = await this.createCanvaNote(
+          userId,
+          chatSessionId,
+          {
+            title,
+            classeurId: classeurId ?? null,
+            metadata,
+            initialContent: params.initialContent ?? ''
+          },
+          client
+        );
+      } else {
+        throw new Error('note_id est obligatoire lorsque create_if_missing est false');
+      }
+
+      const session = await this.getCanvaSessionById(created.canvaId, userId, client);
+      if (!session) {
+        throw new Error('Canva session introuvable après création');
+      }
+
+      return session;
+    });
+  }
+
+  /**
+   * 🚪 Fermer une session canva (pane)
+   */
+  static async closeSession(
+    canvaSessionId: string,
+    userId: string,
+    supabaseClient?: SupabaseClient
+  ): Promise<CanvaSession> {
+    const client = this.resolveClient(supabaseClient);
+    await this.updateCanvaStatus(canvaSessionId, 'closed', userId, client);
+    const session = await this.getSessionById(canvaSessionId, userId, client);
+
+    if (!session) {
+      throw new Error('Canva session introuvable après fermeture');
+    }
+
+    return session;
+  }
+
+  /**
+   * 🗑️ Supprimer une session canva (détacher note <-> chat)
+   */
+  static async deleteSession(
+    canvaSessionId: string,
+    userId: string,
+    supabaseClient?: SupabaseClient
+  ): Promise<void> {
+    await this.deleteCanva(canvaSessionId, userId, supabaseClient);
+  }
+
+  /**
+   * 🔍 Récupérer une session canva par ID (public pour API V2)
+   */
+  static async getSessionById(
+    canvaSessionId: string,
+    userId: string,
+    supabaseClient?: SupabaseClient
+  ): Promise<CanvaSession | null> {
+    const client = this.resolveClient(supabaseClient);
+    const { data, error } = await client
+      .from('canva_sessions')
+      .select(`
+        *,
+        note:articles!inner(
+          source_title,
+          slug,
+          updated_at,
+          header_image,
+          classeur_id
+        )
+      `)
+      .eq('id', canvaSessionId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return this.mapRowToSession(data);
+  }
+
+  /**
+   * 📝 Update session canva (status, metadata)
+   * Utilisé par PATCH /api/v2/canva/sessions/:id
+   */
+  static async updateSession(
+    canvaSessionId: string,
+    userId: string,
+    supabaseClient: SupabaseClient,
+    updates: {
+      status?: CanvaSessionStatus;
+      metadata?: Record<string, unknown>;
+    }
+  ): Promise<CanvaSession> {
+    const client = this.resolveClient(supabaseClient);
+
+    // Verify ownership
+    const existing = await this.getSessionById(canvaSessionId, userId, client);
+    if (!existing) {
+      throw new Error('Canva session introuvable ou non autorisée');
+    }
+
+    // Build update object
+    const updateData: Record<string, unknown> = {};
+    if (updates.status) {
+      updateData.status = updates.status;
+      if (updates.status === 'closed') {
+        updateData.closed_at = new Date().toISOString();
+      } else if (updates.status === 'saved') {
+        updateData.saved_at = new Date().toISOString();
+      }
+    }
+    if (updates.metadata) {
+      updateData.metadata = updates.metadata;
+    }
+
+    const { data, error } = await client
+      .from('canva_sessions')
+      .update(updateData)
+      .eq('id', canvaSessionId)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to update canva session: ${error?.message}`);
+    }
+
+    // Re-fetch avec note pour cohérence
+    const updated = await this.getSessionById(canvaSessionId, userId, client);
+    if (!updated) {
+      throw new Error('Failed to fetch updated session');
+    }
+
+    return updated;
+  }
+
+  private static mapRowToSession(row: any): CanvaSession {
+    return {
+      id: row.id,
+      chat_session_id: row.chat_session_id,
+      note_id: row.note_id,
+      user_id: row.user_id,
+      title: row.note?.source_title || row.title || this.generateDefaultTitle(),
+      status: row.status,
+      created_at: row.created_at,
+      closed_at: row.closed_at,
+      saved_at: row.saved_at,
+      metadata: {
+        ...(row.metadata ?? {}),
+        note_slug: row.note?.slug,
+        classeur_id: row.note?.classeur_id,
+        note_updated_at: row.note?.updated_at,
+        header_image: row.note?.header_image
+      }
+    };
+  }
+
+  private static async ensureChatSessionOwnership(
+    chatSessionId: string,
+    userId: string,
+    client: SupabaseClient
+  ): Promise<void> {
+    const { data, error } = await client
+      .from('chat_sessions')
+      .select('id')
+      .eq('id', chatSessionId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !data) {
+      throw new Error('Chat session introuvable ou accès refusé');
+    }
+  }
+
+  private static async runExclusive<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    const previous = this.sessionLocks.get(key) ?? Promise.resolve();
+    let release!: () => void;
+    const current = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const chained = previous.then(() => current);
+    this.sessionLocks.set(key, chained);
+
+    await previous;
+    try {
+      return await fn();
+    } finally {
+      release();
+      if (this.sessionLocks.get(key) === chained) {
+        this.sessionLocks.delete(key);
+      }
+    }
   }
 }
 

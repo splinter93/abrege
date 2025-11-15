@@ -349,6 +349,31 @@ export class ApiV2HttpClient {
     return this.makeRequest(`/delete/${resource}/${ref}`, 'DELETE', null, userToken);
   }
 
+  // Canva sessions (REST V2)
+  async createCanvaSession(params: Record<string, unknown>, userToken: string): Promise<unknown> {
+    return this.makeRequest('/canva/sessions', 'POST', params, userToken);
+  }
+
+  async listCanvaSessions(chatSessionId: string, statuses: string[] | null, userToken: string): Promise<unknown> {
+    const query = new URLSearchParams({ chat_session_id: chatSessionId });
+    if (statuses && statuses.length > 0) {
+      query.set('status', statuses.join(','));
+    }
+    return this.makeRequest(`/canva/sessions?${query.toString()}`, 'GET', null, userToken);
+  }
+
+  async getCanvaSession(sessionId: string, userToken: string): Promise<unknown> {
+    return this.makeRequest(`/canva/sessions/${sessionId}`, 'GET', null, userToken);
+  }
+
+  async updateCanvaSession(sessionId: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
+    return this.makeRequest(`/canva/sessions/${sessionId}`, 'PATCH', params, userToken);
+  }
+
+  async deleteCanvaSession(sessionId: string, userToken: string): Promise<unknown> {
+    return this.makeRequest(`/canva/sessions/${sessionId}`, 'DELETE', null, userToken);
+  }
+
   // Agents
   async listAgents(userToken: string): Promise<unknown> {
     return this.makeRequest('/agents', 'GET', null, userToken);

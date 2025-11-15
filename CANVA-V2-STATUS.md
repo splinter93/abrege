@@ -28,13 +28,12 @@
 
 **Fichier:** `src/services/canvaNoteService.ts`
 
-### 4. API V2 Endpoints (5/6)
-- [x] POST `/api/v2/canva/create` - Creer canva
-- [x] POST `/api/v2/canva/:canvaId/save` - Sauvegarder
-- [x] POST `/api/v2/canva/:canvaId/close` - Fermer
-- [x] DELETE `/api/v2/canva/:canvaId` - Supprimer
-- [x] GET `/api/v2/canva/session/:sessionId` - Lister
-- [ ] POST `/api/v2/canva/:canvaId/open` - Rouvrir (TODO)
+### 4. API V2 Endpoints (Sessions unifiées)
+- [x] POST `/api/v2/canva/session` — Ouvrir/Créer un canva (note existante ou draft)
+- [x] POST `/api/v2/canva/session/{canvaSessionId}/close` — Fermer le panneau (statut closed)
+- [x] DELETE `/api/v2/canva/session/{canvaSessionId}` — Détacher la session (supprime canva_sessions)
+- [x] GET `/api/v2/canva/session/{chatSessionId}` — Liste par session chat
+- [x] Legacy `/api/v2/canva/create` & `/api/v2/canva/open-note` → Proxy vers `POST /canva/session`
 
 ### 5. Store Refactore
 - [x] `useCanvaStore.openCanva(userId, chatSessionId)` - Appelle API

@@ -14,6 +14,7 @@ import { useCanvaStore } from '@/store/useCanvaStore';
  */
 export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
   const updateSession = useCanvaStore(s => s.updateSession);
   const { sessions } = useCanvaStore();
 
@@ -22,10 +23,22 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
       return;
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      logger.error(LogCategory.EDITOR, '[CanvaRealtime] ⚠️ Missing Supabase env variables', {
+        hasUrl: Boolean(supabaseUrl),
+        hasAnonKey: Boolean(supabaseAnonKey)
+      });
+      return;
+    }
+
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient(supabaseUrl, supabaseAnonKey);
+    }
+
+    const supabase = supabaseRef.current;
 
     const channel = supabase
       .channel(`canva_sessions:chat_${chatSessionId}`)
@@ -88,13 +101,34 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
           }
         }
       )
+      .on('system', { event: 'channel_error' }, (payload) => {
+        logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Channel system error', {
+          chatSessionId,
+          error: payload
+        });
+      })
+      .on('system', { event: 'channel_close' }, (payload) => {
+        logger.warn(LogCategory.EDITOR, '[CanvaRealtime] 🔌 Channel closed', {
+          chatSessionId,
+          reason: payload
+        });
+      })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           logger.info(LogCategory.EDITOR, '[CanvaRealtime] ✅ Subscribed to canva_sessions', {
             chatSessionId
           });
         } else if (status === 'CHANNEL_ERROR') {
-          logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Subscription error');
+          logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Subscription error', {
+            chatSessionId,
+            status,
+            channelName: `canva_sessions:chat_${chatSessionId}`
+          });
+        } else {
+          logger.info(LogCategory.EDITOR, '[CanvaRealtime] Channel status update', {
+            status,
+            chatSessionId
+          });
         }
       });
 
@@ -102,8 +136,8 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
 
     // Cleanup on unmount
     return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
+      if (channelRef.current && supabaseRef.current) {
+        supabaseRef.current.removeChannel(channelRef.current);
         logger.info(LogCategory.EDITOR, '[CanvaRealtime] 🔌 Unsubscribed from canva_sessions');
       }
     };

@@ -18,6 +18,13 @@
 - `GET /me` - Profil utilisateur
 - `GET /openapi-schema` - Schéma OpenAPI
 
+### 🎨 **CANVA SESSIONS** (REST V2)
+- `POST /canva/sessions` - Créer ou ouvrir une session canva
+- `GET /canva/sessions?chat_session_id={id}` - Lister les sessions d'un chat
+- `GET /canva/sessions/{id}` - Détails d'une session canva
+- `PATCH /canva/sessions/{id}` - Update status ou metadata
+- `DELETE /canva/sessions/{id}` - Supprimer définitivement une session
+
 ## 🚀 **ENDPOINTS NOUVEAUX IMPORTANTS**
 
 ### 1. **POST /agents/execute** - Agent Universel

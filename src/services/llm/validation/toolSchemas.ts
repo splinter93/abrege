@@ -154,6 +154,54 @@ export const deleteResourceSchema = z.object({
   ref: z.string().min(1, 'ref est requis')
 });
 
+// ==================== CANVA SESSIONS (REST V2) ====================
+
+export const createCanvaSessionSchema = z.object({
+  chat_session_id: z.string().uuid('chat_session_id doit être un UUID valide'),
+  note_id: z.string().min(1, 'note_id est requis pour ouvrir une note existante').optional(),
+  create_if_missing: z.boolean().optional(),
+  title: z.string().min(1).max(200).optional(),
+  classeur_id: z.string().min(1).optional(),
+  initial_content: z.string().max(100000).optional(),
+  metadata: z.record(z.any()).optional()
+}).superRefine((data, ctx) => {
+  if (!data.note_id && !data.create_if_missing) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'note_id est requis lorsque create_if_missing est false'
+    });
+  }
+  if (data.create_if_missing && !data.title) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'title est requis lorsque create_if_missing est true'
+    });
+  }
+});
+
+export const listCanvaSessionsSchema = z.object({
+  chat_session_id: z.string().uuid('chat_session_id doit être un UUID valide'),
+  statuses: z.array(z.enum(['open', 'closed', 'saved', 'deleted'])).optional(),
+  include_note: z.boolean().optional()
+});
+
+export const getCanvaSessionSchema = z.object({
+  session_id: z.string().uuid('session_id doit être un UUID valide')
+});
+
+export const updateCanvaSessionSchema = z.object({
+  session_id: z.string().uuid('session_id doit être un UUID valide'),
+  status: z.enum(['open', 'closed', 'saved', 'deleted']).optional(),
+  metadata: z.record(z.any()).optional(),
+  reason: z.enum(['user_action', 'inactivity', 'llm_tool']).optional()
+}).refine((data) => data.status || data.metadata, {
+  message: 'Au moins status ou metadata doit être fourni'
+});
+
+export const deleteCanvaSessionSchema = z.object({
+  session_id: z.string().uuid('session_id doit être un UUID valide')
+});
+
 // ==================== AGENTS ====================
 
 export const listAgentsSchema = z.object({});
@@ -275,6 +323,13 @@ export const TOOL_SCHEMAS: Record<string, z.ZodType<unknown>> = {
   
   // Delete
   deleteResource: deleteResourceSchema,
+  
+  // Canva sessions (REST V2)
+  'canva.create_session': createCanvaSessionSchema,
+  'canva.list_sessions': listCanvaSessionsSchema,
+  'canva.get_session': getCanvaSessionSchema,
+  'canva.update_session': updateCanvaSessionSchema,
+  'canva.delete_session': deleteCanvaSessionSchema,
   
   // Agents
   listAgents: listAgentsSchema,

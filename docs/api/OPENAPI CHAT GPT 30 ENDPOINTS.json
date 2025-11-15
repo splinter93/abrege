@@ -145,6 +145,273 @@
           }
         }
       },
+      "/canva/sessions": {
+        "post": {
+          "operationId": "canva.create_session",
+          "summary": "Créer ou ouvrir une session canva",
+          "description": "Ouvre une note existante dans le canevas ou crée un nouveau brouillon canva attaché à une session de chat. Architecture REST V2.",
+          "tags": ["Canva"],
+          "security": [{"ApiKeyAuth": []}],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCanvaSessionInput"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Session canva créée avec succès",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Success"},
+                      {
+                        "type": "object",
+                        "properties": {
+                          "canva_session": {"$ref": "#/components/schemas/CanvaSession"}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Payload invalide",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            },
+            "403": {
+              "description": "Accès refusé",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "operationId": "canva.list_sessions",
+          "summary": "Lister les sessions canva d'une session de chat",
+          "description": "Retourne toutes les sessions canva associées à une session de chat donnée. Filtrage par statut via query params.",
+          "tags": ["Canva"],
+          "security": [{"ApiKeyAuth": []}],
+          "parameters": [
+            {
+              "name": "chat_session_id",
+              "in": "query",
+              "required": true,
+              "schema": {"type": "string", "format": "uuid"},
+              "description": "ID de la session de chat"
+            },
+            {
+              "name": "status",
+              "in": "query",
+              "required": false,
+              "schema": {"type": "string"},
+              "description": "Filtrer par statut (format: 'open,closed,saved')"
+            },
+            {
+              "name": "include_note",
+              "in": "query",
+              "required": false,
+              "schema": {"type": "boolean", "default": true},
+              "description": "Inclure les détails de la note"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Liste des canvases récupérée",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Success"},
+                      {
+                        "type": "object",
+                        "properties": {
+                          "canva_sessions": {
+                            "type": "array",
+                            "items": {"$ref": "#/components/schemas/CanvaSession"}
+                          },
+                          "count": {"type": "integer"}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Query params invalides",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            }
+          }
+        }
+      },
+      "/canva/sessions/{sessionId}": {
+        "get": {
+          "operationId": "canva.get_session",
+          "summary": "Récupérer une session canva",
+          "description": "Retourne les détails d'une session canva spécifique avec sa note associée.",
+          "tags": ["Canva"],
+          "security": [{"ApiKeyAuth": []}],
+          "parameters": [
+            {
+              "name": "sessionId",
+              "in": "path",
+              "required": true,
+              "schema": {"type": "string", "format": "uuid"},
+              "description": "ID de la canva_session"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Session canva récupérée",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Success"},
+                      {
+                        "type": "object",
+                        "properties": {
+                          "canva_session": {"$ref": "#/components/schemas/CanvaSession"}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Session canva introuvable",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            }
+          }
+        },
+        "patch": {
+          "operationId": "canva.update_session",
+          "summary": "Mettre à jour une session canva",
+          "description": "Met à jour le statut ou les métadonnées d'une session canva (ex: fermer le pane UI, marquer comme saved).",
+          "tags": ["Canva"],
+          "security": [{"ApiKeyAuth": []}],
+          "parameters": [
+            {
+              "name": "sessionId",
+              "in": "path",
+              "required": true,
+              "schema": {"type": "string", "format": "uuid"},
+              "description": "ID de la canva_session"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/UpdateCanvaSessionInput"}
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Session canva mise à jour",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Success"},
+                      {
+                        "type": "object",
+                        "properties": {
+                          "canva_session": {"$ref": "#/components/schemas/CanvaSession"}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Payload invalide",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            },
+            "404": {
+              "description": "Session canva introuvable",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            }
+          }
+        },
+        "delete": {
+          "operationId": "canva.delete_session",
+          "summary": "Supprimer une session canva",
+          "description": "Détache définitivement le canva de la conversation (supprime l'entrée canva_sessions). Si la note est un brouillon canva, elle sera aussi supprimée.",
+          "tags": ["Canva"],
+          "security": [{"ApiKeyAuth": []}],
+          "parameters": [
+            {
+              "name": "sessionId",
+              "in": "path",
+              "required": true,
+              "schema": {"type": "string", "format": "uuid"},
+              "description": "ID de la canva_session à supprimer"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Session canva supprimée",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Success"},
+                      {
+                        "type": "object",
+                        "properties": {
+                          "deleted_session_id": {"type": "string", "format": "uuid"}
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Session canva introuvable",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            }
+          }
+        }
+      },
       "/note/{ref}/update": {
         "put": {
           "operationId": "updateNote",
@@ -2341,6 +2608,78 @@
             }
           },
           "required": ["name", "slug", "description", "is_active"]
+        },
+        "CanvaSession": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string", "format": "uuid"},
+            "chat_session_id": {"type": "string", "format": "uuid"},
+            "note_id": {"type": "string", "format": "uuid"},
+            "title": {"type": "string"},
+            "status": {"type": "string", "enum": ["open", "closed", "saved", "deleted"]},
+            "created_at": {"type": "string", "format": "date-time"},
+            "closed_at": {"type": "string", "format": "date-time", "nullable": true},
+            "saved_at": {"type": "string", "format": "date-time", "nullable": true},
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true,
+              "nullable": true
+            },
+            "note": {"$ref": "#/components/schemas/Note"}
+          },
+          "required": ["id", "chat_session_id", "note_id", "status", "created_at"]
+        },
+        "CreateCanvaSessionInput": {
+          "type": "object",
+          "properties": {
+            "chat_session_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID de la session de chat cible"
+            },
+            "note_id": {
+              "type": "string",
+              "description": "ID ou slug de la note existante à ouvrir"
+            },
+            "create_if_missing": {
+              "type": "boolean",
+              "description": "Créer un brouillon canva si aucune note n'est fournie"
+            },
+            "title": {
+              "type": "string",
+              "description": "Titre du nouveau canva (requis si create_if_missing=true)"
+            },
+            "classeur_id": {
+              "type": "string",
+              "description": "ID du classeur cible (optionnel)"
+            },
+            "initial_content": {
+              "type": "string",
+              "description": "Contenu initial du brouillon canva"
+            }
+          },
+          "required": ["chat_session_id"]
+        },
+        "UpdateCanvaSessionInput": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["open", "closed", "saved", "deleted"],
+              "description": "Nouveau statut de la session"
+            },
+            "metadata": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Métadonnées personnalisées"
+            },
+            "reason": {
+              "type": "string",
+              "enum": ["user_action", "inactivity", "llm_tool"],
+              "description": "Raison du changement de statut"
+            }
+          },
+          "description": "Au moins status ou metadata doit être fourni"
         }
       }
     },
@@ -2380,6 +2719,10 @@
       {
         "name": "Documentation",
         "description": "Documentation et métadonnées de l'API"
+      },
+      {
+        "name": "Canva",
+        "description": "Gestion des sessions Canva liées au chat"
       }
     ]
   }

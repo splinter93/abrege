@@ -113,6 +113,27 @@ export class ApiV2ToolExecutor {
     handlers.set('purgeTrash', (args: Record<string, unknown>, token: string) => this.httpClient.purgeTrash(token));
     handlers.set('deleteResource', (args: Record<string, unknown>, token: string) => this.httpClient.deleteResource(args.resource as string, args.ref as string, token));
 
+    // Canva sessions (REST V2)
+    handlers.set('canva.create_session', (args: Record<string, unknown>, token: string) =>
+      this.httpClient.createCanvaSession(args, token)
+    );
+    handlers.set('canva.list_sessions', (args: Record<string, unknown>, token: string) =>
+      this.httpClient.listCanvaSessions(
+        args.chat_session_id as string,
+        args.statuses as string[] | null,
+        token
+      )
+    );
+    handlers.set('canva.get_session', (args: Record<string, unknown>, token: string) =>
+      this.httpClient.getCanvaSession(args.session_id as string, token)
+    );
+    handlers.set('canva.update_session', (args: Record<string, unknown>, token: string) =>
+      this.httpClient.updateCanvaSession(args.session_id as string, args, token)
+    );
+    handlers.set('canva.delete_session', (args: Record<string, unknown>, token: string) =>
+      this.httpClient.deleteCanvaSession(args.session_id as string, token)
+    );
+
     // Agents
     handlers.set('listAgents', (args: Record<string, unknown>, token: string) => this.httpClient.listAgents(token));
     handlers.set('createAgent', (args: Record<string, unknown>, token: string) => this.httpClient.createAgent(args, token));

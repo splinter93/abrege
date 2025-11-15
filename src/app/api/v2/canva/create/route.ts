@@ -43,29 +43,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       title: validation.data.title
     });
 
-    // Creer canva (note + session)
+    // Créer canva via nouvelle méthode unifiée
     const supabaseClient = createSupabaseClient();
-
-    const { canvaId, noteId } = await CanvaNoteService.createCanvaNote(
-      userId,
-      validation.data.chat_session_id,
+    const session = await CanvaNoteService.openSession(
       {
+        chatSessionId: validation.data.chat_session_id,
+        userId,
+        createIfMissing: true,
         title: validation.data.title,
-        initialContent: validation.data.initial_content
+        initialContent: validation.data.initial_content ?? ''
       },
       supabaseClient
     );
 
     const apiTime = Date.now() - startTime;
     logger.info(LogCategory.EDITOR, `[API Canva Create] ✅ Canva created in ${apiTime}ms`, {
-      canvaId,
-      noteId
+      canvaId: session.id,
+      noteId: session.note_id
     });
 
     return NextResponse.json({
       success: true,
-      canva_id: canvaId,
-      note_id: noteId,
+      canva_id: session.id,
+      note_id: session.note_id,
+      canva_session: session,
       message: 'Canva created successfully'
     });
 

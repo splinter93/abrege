@@ -122,8 +122,8 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         throw new Error('No auth session available');
       }
 
-      // Appel API V2 avec auth header
-      const response = await fetch('/api/v2/canva/create', {
+      // Appel API V2 avec auth header (REST V2: /sessions pluriel)
+      const response = await fetch('/api/v2/canva/sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,7 +132,9 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         },
         body: JSON.stringify({
           chat_session_id: chatSessionId,
-          title: options?.title
+          create_if_missing: true,
+          title: options?.title,
+          initial_content: ''
         })
       });
 
@@ -141,7 +143,14 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         throw new Error(`API error ${response.status}: ${errorData.error || response.statusText}`);
       }
 
-      const { canva_id, note_id } = await response.json();
+      const payload = await response.json();
+      const canvaSessionPayload = payload.canva_session;
+      const canva_id: string = canvaSessionPayload?.id || payload.canva_id;
+      const note_id: string = canvaSessionPayload?.note_id || payload.note_id;
+
+      if (!canva_id || !note_id) {
+        throw new Error('Réponse API canva/session invalide');
+      }
 
       const store = useFileSystemStore.getState();
 
@@ -241,7 +250,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         canva_id,
         note_id,
         chatSessionId,
-        options?.title
+        canvaSessionPayload?.title || options?.title
       );
 
       set((state) => ({
@@ -288,17 +297,26 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
+      const { data: { session } } = await supabaseClient.auth.getSession();
 
-      const { error: deleteError } = await supabaseClient
-        .from('canva_sessions')
-        .delete()
-        .eq('id', targetId);
+      if (!session?.access_token) {
+        throw new Error('No auth session available');
+      }
 
-      if (deleteError) {
-        throw deleteError;
+      const response = await fetch(`/api/v2/canva/sessions/${targetId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'X-Client-Type': 'canva_store'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(`API error ${response.status}: ${errorData.error || response.statusText}`);
       }
     } catch (error) {
-      logger.error(LogCategory.EDITOR, '[CanvaStore] ❌ Failed to delete canva session from API', {
+      logger.error(LogCategory.EDITOR, '[CanvaStore] ❌ Failed to delete canva session via API', {
         error,
         canvaId: targetId
       });

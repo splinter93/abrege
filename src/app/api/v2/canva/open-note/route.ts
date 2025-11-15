@@ -13,6 +13,7 @@ import { validatePayload } from '@/utils/v2ValidationSchemas';
 import { CanvaNoteService } from '@/services/canvaNoteService';
 import { logger, LogCategory } from '@/utils/logger';
 import { z } from 'zod';
+import { createSupabaseClient } from '@/utils/supabaseClient';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -60,23 +61,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       chatSessionId: validation.data.chat_session_id
     });
 
-    // Ouvrir note en canva
-    const { canvaId, noteId } = await CanvaNoteService.openExistingNoteAsCanva(
-      validation.data.note_id,
-      validation.data.chat_session_id,
-      userId
+    const supabaseClient = createSupabaseClient();
+    const session = await CanvaNoteService.openSession(
+      {
+        chatSessionId: validation.data.chat_session_id,
+        userId,
+        noteId: validation.data.note_id
+      },
+      supabaseClient
     );
 
     const apiTime = Date.now() - startTime;
     logger.info(LogCategory.EDITOR, `[API Canva OpenNote] ✅ Note opened as canva in ${apiTime}ms`, {
-      canvaId,
-      noteId
+      canvaId: session.id,
+      noteId: session.note_id
     });
 
     return NextResponse.json({
       success: true,
-      canva_id: canvaId,
-      note_id: noteId,
+      canva_id: session.id,
+      note_id: session.note_id,
+      canva_session: session,
       message: 'Note opened as canva successfully'
     });
 
