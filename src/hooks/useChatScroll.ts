@@ -60,8 +60,9 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     const visualViewport = typeof window !== 'undefined' && 'visualViewport' in window ? window.visualViewport : null;
     const effectiveHeight = visualViewport?.height || viewportHeight;
     const viewportOffset = viewportHeight - effectiveHeight;
-
-    const tempPadding = Math.floor(effectiveHeight * 0.75);
+    const isCanvaLayout = container.closest('.chatgpt-main--with-canva') !== null;
+    const paddingRatio = isCanvaLayout ? 0.68 : 0.75;
+    const tempPadding = Math.floor(effectiveHeight * paddingRatio);
     const isKeyboardOpen = viewportOffset > 120; // ~ clavier mobile
     const maxPadding = maxTemporaryPaddingRef.current ?? 420;
     const appliedPadding = isKeyboardOpen

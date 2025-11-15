@@ -165,6 +165,20 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
   }, [search, open]);
 
   useEffect(() => {
+    if (!open) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (menuRef.current && event.target instanceof Node) {
+        if (menuRef.current.contains(event.target)) {
+          return;
+        }
+      }
+      anchorRef.current?.closeMenu && anchorRef.current.closeMenu();
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [open, anchorRef]);
+
+  useEffect(() => {
     if (open && inputRef.current) inputRef.current.focus();
   }, [open]);
 

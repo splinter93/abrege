@@ -70,16 +70,6 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
 
     React.useEffect(() => {
       if (!slashOpen) return;
-      // Fermer au clic extérieur
-      const handleClick = () => {
-        setSlashOpen(false);
-      };
-      document.addEventListener('mousedown', handleClick);
-      return () => document.removeEventListener('mousedown', handleClick);
-    }, [slashOpen]);
-
-    React.useEffect(() => {
-      if (!slashOpen) return;
       // Ferme si la recherche ne commence plus par '/'
       if (slashSearch && !slashSearch.startsWith('/')) {
         setSlashOpen(false);
