@@ -37,6 +37,7 @@ import ChatMessagesArea from './ChatMessagesArea';
 import ChatInputContainer from './ChatInputContainer';
 import SidebarUltraClean from './SidebarUltraClean';
 import ChatCanvaPane from './ChatCanvaPane';
+import dynamic from 'next/dynamic';
 import { useCanvaStore } from '@/store/useCanvaStore';
 
 import { simpleLogger as logger } from '@/utils/logger';
@@ -44,6 +45,11 @@ import toast from 'react-hot-toast';
 
 import '@/styles/chat-clean.css';
 import '@/styles/sidebar-collapsible.css';
+
+const CanvaStatusIndicator = dynamic(
+  () => import('./CanvaStatusIndicator'),
+  { ssr: false }
+);
 
 const ChatFullscreenV2: React.FC = () => {
   // 🎯 HOOKS EXISTANTS (groupés pour lisibilité)
@@ -642,7 +648,11 @@ const ChatFullscreenV2: React.FC = () => {
             onSelectCanva={async (canvaId, noteId) => {
               try {
                 logger.dev('[ChatFullscreenV2] Switching canva', { canvaId, noteId });
-                await switchCanva(canvaId, noteId);
+                const result = await switchCanva(canvaId, noteId);
+                if (result === 'not_found') {
+                  toast.error('Canva introuvable (note supprimée ou inaccessible)');
+                  return;
+                }
                 toast.success('Canva ouvert');
               } catch (error) {
                 logger.error('[ChatFullscreenV2] Failed to switch canva', error);
@@ -793,6 +803,7 @@ const ChatFullscreenV2: React.FC = () => {
           )}
           </div>
         </div>
+        <CanvaStatusIndicator />
       </div>
   );
 };

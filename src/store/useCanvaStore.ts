@@ -35,6 +35,8 @@ export interface CanvaSession {
  */
 export type AppendPosition = 'start' | 'end';
 
+type SwitchCanvaResult = 'activated' | 'not_found';
+
 interface CanvaStore {
   sessions: Record<string, CanvaSession>;
   activeCanvaId: string | null;
@@ -42,7 +44,7 @@ interface CanvaStore {
   
   // Actions de base V2
   openCanva: (userId: string, chatSessionId: string, options?: { title?: string }) => Promise<CanvaSession>;
-  switchCanva: (canvaId: string, noteId: string) => Promise<void>;
+  switchCanva: (canvaId: string, noteId: string) => Promise<SwitchCanvaResult>;
   closeCanva: (sessionId?: string, options?: { delete?: boolean }) => Promise<void>;
   setActiveCanva: (sessionId: string | null) => void;
   updateSession: (sessionId: string, updates: Partial<Omit<CanvaSession, 'id' | 'createdAt'>>) => void;
@@ -278,44 +280,50 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
       return;
     }
 
-    const session = sessions[targetId];
-    if (!session) {
-      return;
+    const session = sessions[targetId] || null;
+
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const { error: deleteError } = await supabaseClient
+        .from('canva_sessions')
+        .delete()
+        .eq('id', targetId);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, '[CanvaStore] ❌ Failed to delete canva session from API', {
+        error,
+        canvaId: targetId
+      });
+      throw error;
     }
 
-    // Supprimer note DB si demandé
-    if (options?.delete) {
-      try {
-        // Note: userId devrait être passé en paramètre
-        // Pour l'instant, on laisse le service gérer l'erreur
-        logger.warn(LogCategory.EDITOR, '[CanvaStore] Delete option requires userId, skipping DB delete');
-      } catch (error) {
-        logger.error(LogCategory.EDITOR, '[CanvaStore] Failed to delete note', error);
-        // Continue quand même
-      }
+    if (session) {
+      set((state) => {
+        const nextSessions = { ...state.sessions };
+        delete nextSessions[targetId];
+
+        const nextActiveId = state.activeCanvaId === targetId ? null : state.activeCanvaId;
+        const hasSessionsLeft = Object.keys(nextSessions).length > 0;
+
+        return {
+          sessions: nextSessions,
+          activeCanvaId: nextActiveId,
+          isCanvaOpen: hasSessionsLeft ? state.isCanvaOpen : false
+        };
+      });
     }
 
-    set((state) => {
-      if (!state.sessions[targetId]) {
-        return state;
-      }
-
-      const nextSessions = { ...state.sessions };
-      delete nextSessions[targetId];
-
-      const nextActiveId = state.activeCanvaId === targetId ? null : state.activeCanvaId;
-      const hasSessionsLeft = Object.keys(nextSessions).length > 0;
-
-      return {
-        sessions: nextSessions,
-        activeCanvaId: nextActiveId,
-        isCanvaOpen: hasSessionsLeft ? state.isCanvaOpen : false
-      };
-    });
-
-    logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Canva closed', {
+    logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Canva closed & detached from chat', {
       sessionId: targetId,
-      deleted: options?.delete
+      deleted: true
     });
   },
 
@@ -353,7 +361,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Canva switched (existing session)', {
           canvaId
         });
-        return;
+        return 'activated';
       }
 
       // Charger la note depuis DB via API V2
@@ -375,6 +383,28 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         },
         credentials: 'include' // ✅ Envoyer cookies pour auth cross-origin
       });
+
+      if (response.status === 404) {
+        logger.warn(LogCategory.EDITOR, '[CanvaStore] ⚠️ Canva note not found', {
+          canvaId,
+          noteId,
+          status: response.status
+        });
+
+        set((state) => {
+          const nextSessions = { ...state.sessions };
+          delete nextSessions[canvaId];
+          const wasActive = state.activeCanvaId === canvaId;
+
+          return {
+            sessions: nextSessions,
+            activeCanvaId: wasActive ? null : state.activeCanvaId,
+            isCanvaOpen: wasActive ? false : state.isCanvaOpen
+          };
+        });
+
+        return 'not_found';
+      }
 
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
@@ -452,6 +482,8 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         noteId,
         title: noteTitle
       });
+
+      return 'activated';
 
     } catch (error) {
       logger.error(LogCategory.EDITOR, '[CanvaStore] ❌ Failed to switch canva', {

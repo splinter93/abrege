@@ -17,6 +17,8 @@ import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 /**
  * Options pour la création d'une note canva
  */
+type CanvaSessionStatus = 'open' | 'closed' | 'saved' | 'deleted';
+
 interface CreateCanvaNoteOptions {
   title?: string;
   initialContent?: string;
@@ -275,13 +277,20 @@ export class CanvaNoteService {
   static async getCanvasForSession(
     chatSessionId: string,
     userId: string,
-    supabaseClient?: SupabaseClient
+    supabaseClient?: SupabaseClient,
+    options?: {
+      statuses?: CanvaSessionStatus[];
+    }
   ): Promise<CanvaSession[]> {
     try {
       const client = this.resolveClient(supabaseClient);
+      const allowedStatuses =
+        options?.statuses && options.statuses.length > 0
+          ? options.statuses
+          : (['open'] as CanvaSessionStatus[]);
       
       // JOIN avec articles pour titre à jour
-      const { data, error } = await client
+      let query = client
         .from('canva_sessions')
         .select(`
           *,
@@ -293,8 +302,15 @@ export class CanvaNoteService {
           )
         `)
         .eq('chat_session_id', chatSessionId)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .eq('user_id', userId);
+
+      if (allowedStatuses.length === 1) {
+        query = query.eq('status', allowedStatuses[0]);
+      } else {
+        query = query.in('status', allowedStatuses);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) {
         logger.error(LogCategory.EDITOR, '[CanvaNoteService] Supabase query error', {
@@ -329,6 +345,7 @@ export class CanvaNoteService {
 
       logger.info(LogCategory.EDITOR, '[CanvaNoteService] Fetched canvases with updated titles', {
         chatSessionId,
+        statuses: allowedStatuses,
         count: canvaSessions.length,
         titles: canvaSessions.map(c => c.title)
       });
