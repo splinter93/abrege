@@ -31,7 +31,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const userId = authResult.userId!;
-    const body = await request.json();
+    let body: unknown = {};
+
+    try {
+      const rawBody = await request.text();
+      body = rawBody ? JSON.parse(rawBody) : {};
+    } catch (parseError) {
+      logger.warn(LogCategory.EDITOR, '[API Canva Sessions POST] ❌ Invalid JSON payload', {
+        error: parseError instanceof Error ? parseError.message : String(parseError)
+      });
+
+      return NextResponse.json(
+        { error: 'Payload invalide', details: 'JSON malformé ou vide' },
+        { status: 400 }
+      );
+    }
+
     const validation = createCanvaSessionSchema.safeParse(body);
 
     if (!validation.success) {
