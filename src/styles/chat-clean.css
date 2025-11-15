@@ -612,6 +612,14 @@ body.chat-theme-anthracite .chatgpt-header {
   flex-shrink: 0; /* ✅ Ne pas rétrécir */
 }
 
+.chatgpt-container.canva-active .chatgpt-sidebar-toggle-btn-header {
+  display: flex;
+}
+
+.chatgpt-container.canva-active .chatgpt-header-left {
+  margin-left: -7px;
+}
+
 /* ✅ Pas de hover, style simple */
 .chatgpt-sidebar-toggle-btn-header:focus,
 .chatgpt-sidebar-toggle-btn-header:focus-visible,

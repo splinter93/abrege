@@ -368,15 +368,23 @@ const ChatFullscreenV2: React.FC = () => {
     });
   }, [requireAuth]);
 
+  const allowSidebarHover = isDesktop && !isCanvaOpen;
+
   const handleSidebarMouseEnter = useCallback(() => {
-    if (!isDesktop) return;
+    if (!allowSidebarHover) return;
     setSidebarHovered(true);
-  }, [isDesktop]);
+  }, [allowSidebarHover]);
 
   const handleSidebarMouseLeave = useCallback(() => {
-    if (!isDesktop) return;
+    if (!allowSidebarHover) return;
+    setSidebarHovered(false);
+  }, [allowSidebarHover]);
+
+  useEffect(() => {
+    if (!allowSidebarHover) {
       setSidebarHovered(false);
-  }, [isDesktop]);
+    }
+  }, [allowSidebarHover]);
 
   const handleEditMessage = useCallback((messageId: string, content: string, index: number) => {
     if (!requireAuth()) return;
@@ -603,7 +611,7 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 RENDU (100% déclaratif avec composants extraits)
   return (
-      <div className={`chatgpt-container ${wideMode ? 'wide-mode' : ''}`}>
+      <div className={`chatgpt-container ${wideMode ? 'wide-mode' : ''} ${(isDesktop && isCanvaOpen) ? 'canva-active' : ''}`}>
       <ChatHeader
         sidebarOpen={sidebarOpen}
         onToggleSidebar={handleSidebarToggle}
@@ -640,14 +648,14 @@ const ChatFullscreenV2: React.FC = () => {
       />
 
       {/* Zone hover invisible sidebar */}
-      {isDesktop && (
+      {allowSidebarHover && (
         <div 
           className="sidebar-hover-zone"
           onMouseEnter={handleSidebarMouseEnter}
         />
       )}
 
-      <div className={`chatgpt-content ${(sidebarOpen || (isDesktop && sidebarHovered)) ? 'sidebar-open' : ''}`}>
+      <div className={`chatgpt-content ${ (sidebarOpen || (allowSidebarHover && sidebarHovered)) ? 'sidebar-open' : ''}`}>
         {/* Sidebar */}
         <div 
           {...(isDesktop ? {
@@ -656,7 +664,7 @@ const ChatFullscreenV2: React.FC = () => {
           } : {})}
         >
         <SidebarUltraClean
-            isOpen={isDesktop ? (sidebarOpen || sidebarHovered) : sidebarOpen}
+            isOpen={isDesktop ? (sidebarOpen || (allowSidebarHover && sidebarHovered)) : sidebarOpen}
           isDesktop={isDesktop}
           onClose={() => {
             if (user && !authLoading) {
