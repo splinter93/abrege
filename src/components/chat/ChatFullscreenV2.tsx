@@ -85,18 +85,32 @@ const ChatFullscreenV2: React.FC = () => {
   const [canvaWidth, setCanvaWidth] = useState(66); // 66% par défaut
 
   const handleOpenCanva = useCallback(async () => {
-    if (isCanvaOpen || !user?.id || !currentSession?.id) {
+    if (!user?.id || !currentSession?.id) {
       return;
     }
-    
+    const previousCanvaId = activeCanvaId;
+
     try {
-      await openCanva(user.id, currentSession.id); // ✅ Passer chatSessionId
-      logger.dev('[ChatFullscreenV2] Canva opened');
+      const newSession = await openCanva(user.id, currentSession.id); // ✅ Passer chatSessionId
+      logger.dev('[ChatFullscreenV2] Canva opened', {
+        newCanvaId: newSession.id,
+        noteId: newSession.noteId,
+        previousCanvaId
+      });
+
+      if (previousCanvaId && previousCanvaId !== newSession.id) {
+        try {
+          await closeCanva(previousCanvaId);
+          logger.dev('[ChatFullscreenV2] Previous canva closed', { previousCanvaId });
+        } catch (closeError) {
+          logger.error('[ChatFullscreenV2] Failed to close previous canva', closeError);
+        }
+      }
     } catch (error) {
       logger.error('[ChatFullscreenV2] Failed to open canva', error);
       toast.error('Impossible d\'ouvrir le canva');
     }
-  }, [isCanvaOpen, openCanva, user, currentSession]);
+  }, [openCanva, closeCanva, user, currentSession, activeCanvaId]);
 
   // 🎯 INFINITE MESSAGES (lazy loading)
   const {

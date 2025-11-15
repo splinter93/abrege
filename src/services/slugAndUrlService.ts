@@ -30,9 +30,7 @@ export class SlugAndUrlService {
     try {
       const supabase = clientOverride || this.supabase;
       
-      // 1. Générer le slug unique
       const slug = await SlugGenerator.generateSlug(title, 'note', userId, noteId, supabase);
-      
       // 2. Récupérer le username de l'utilisateur
       const { data: user, error: userError } = await supabase
         .from('users')
@@ -49,24 +47,42 @@ export class SlugAndUrlService {
       // La même route gère aussi @username/[slug] pour le SEO
       const publicUrl = noteId ? `${apiBaseUrl}/@${user.username}/${noteId}` : null;
 
-      // 4. Si on a un noteId, mettre à jour la base de données
       if (noteId) {
-        const { error: updateError } = await supabase
-          .from('articles')
-          .update({ 
-            slug,
-            public_url: publicUrl,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', noteId)
-          .eq('user_id', userId);
+        let attempts = 0;
+        const maxAttempts = 5;
+        let lastError: Error | null = null;
 
-        if (updateError) {
-          logger.error(`Erreur lors de la mise à jour du slug/URL pour la note ${noteId}:`, updateError);
-          throw new Error(`Erreur lors de la mise à jour: ${updateError.message}`);
+        while (attempts < maxAttempts) {
+          attempts++;
+          const candidateSlug = attempts === 1
+            ? slug
+            : await SlugGenerator.generateSlug(`${title}-${attempts}`, 'note', userId, noteId, supabase);
+
+          const { error: updateError } = await supabase
+            .from('articles')
+            .update({ 
+              slug: candidateSlug,
+              public_url: publicUrl,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', noteId)
+            .eq('user_id', userId);
+
+          if (!updateError) {
+            logger.dev(`✅ Slug et URL mis à jour pour la note ${noteId}: ${candidateSlug} -> ${publicUrl}`);
+            return { slug: candidateSlug, publicUrl };
+          }
+
+          if (updateError.code !== '23505') {
+            logger.error(`Erreur lors de la mise à jour du slug/URL pour la note ${noteId}:`, updateError);
+            throw new Error(`Erreur lors de la mise à jour: ${updateError.message}`);
+          }
+
+          lastError = new Error(updateError.message);
+          logger.warn(`Slug collision pour la note ${noteId} (tentative ${attempts}, slug=${candidateSlug}). Nouvel essai...`);
         }
 
-        logger.dev(`✅ Slug et URL mis à jour pour la note ${noteId}: ${slug} -> ${publicUrl}`);
+        throw new Error(`Impossible de générer un slug unique après ${maxAttempts} tentatives: ${lastError?.message}`);
       }
 
       return { slug, publicUrl };
