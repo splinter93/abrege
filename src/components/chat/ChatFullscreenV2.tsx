@@ -87,7 +87,8 @@ const ChatFullscreenV2: React.FC = () => {
     switchCanva,
     closeCanva,
     isCanvaOpen,
-    activeCanvaId
+    activeCanvaId,
+    sessions: canvaSessions
   } = useCanvaStore();
   
   const [canvaWidth, setCanvaWidth] = useState(66); // 66% par défaut
@@ -384,6 +385,35 @@ const ChatFullscreenV2: React.FC = () => {
     };
   }, [user, authLoading, agentsLoading, agents, syncSessions, setCurrentSession, setSelectedAgent]);
 
+  // 🎯 FERMER CANVA SI PAS ASSOCIÉ À SESSION ACTUELLE
+  useEffect(() => {
+    // Ne rien faire si pas encore initialisé ou pas de session
+    if (!currentSession?.id || !user?.id || authLoading) {
+      return;
+    }
+
+    // Si un canva est actif, vérifier qu'il appartient à la session actuelle
+    if (isCanvaOpen && activeCanvaId) {
+      const activeCanva = canvaSessions[activeCanvaId];
+      
+      // ✅ Ignorer si chatSessionId est vide (session locale pas encore hydratée)
+      // ✅ Ne fermer que si chatSessionId est défini ET différent de la session actuelle
+      if (activeCanva && 
+          activeCanva.chatSessionId && 
+          activeCanva.chatSessionId !== currentSession.id) {
+        logger.info('[ChatFullscreenV2] 🔄 Fermeture canva : appartient à une autre session', {
+          activeCanvaId,
+          activeCanvaChatSessionId: activeCanva.chatSessionId,
+          currentSessionId: currentSession.id
+        });
+        
+        closeCanva(activeCanvaId).catch((error) => {
+          logger.error('[ChatFullscreenV2] ❌ Erreur fermeture canva lors changement session', error);
+        });
+      }
+    }
+  }, [currentSession?.id, isCanvaOpen, activeCanvaId, canvaSessions, closeCanva, user?.id, authLoading]);
+
   // 🎯 AUTO-ACTIVATE OPEN CANVA on session load
   useEffect(() => {
     // Ne rien faire si pas encore initialisé ou pas de session
@@ -392,8 +422,13 @@ const ChatFullscreenV2: React.FC = () => {
     }
 
     // Ne rien faire si un canva est déjà actif (évite double activation)
+    // ✅ Vérifier aussi que le canva actif appartient à la session actuelle
     if (isCanvaOpen && activeCanvaId) {
-      return;
+      const activeCanva = canvaSessions[activeCanvaId];
+      // Si le canva actif appartient à la session actuelle, ne rien faire
+      if (activeCanva && activeCanva.chatSessionId === currentSession.id) {
+        return;
+      }
     }
 
     let isMounted = true;
@@ -501,7 +536,7 @@ const ChatFullscreenV2: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [currentSession?.id, user?.id, authLoading, isCanvaOpen, activeCanvaId, switchCanva]);
+  }, [currentSession?.id, user?.id, authLoading, isCanvaOpen, activeCanvaId, canvaSessions, switchCanva]);
 
   // 🎯 UI STATE LOCAL (minimal - sidebar uniquement)
   const [sidebarOpen, setSidebarOpen] = useState(false);

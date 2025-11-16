@@ -510,6 +510,9 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         const { data: { session: authSession } } = await supabase.auth.getSession();
 
         if (authSession?.access_token) {
+          // ✅ Déclarer chatSessionId au niveau du scope pour l'utiliser plus tard
+          let chatSessionId: string | undefined;
+
           // Récupérer le canva_session pour avoir le chatSessionId
           const canvaSessionResponse = await fetch(`/api/v2/canva/sessions/${canvaId}`, {
             headers: {
@@ -520,7 +523,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
 
           if (canvaSessionResponse.ok) {
             const canvaData = await canvaSessionResponse.json() as CanvaSessionResponse;
-            const chatSessionId = canvaData.canva_session?.chat_session_id;
+            chatSessionId = canvaData.canva_session?.chat_session_id;
 
             if (chatSessionId) {
               // ✅ Fermer tous les autres canvas de cette chat session
@@ -576,6 +579,11 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
               canvaId,
               status: statusResponse.status
             });
+          }
+
+          // ✅ Mettre à jour chatSessionId dans la session locale si on l'a récupéré
+          if (chatSessionId && sessions[canvaId]) {
+            get().updateSession(canvaId, { chatSessionId });
           }
         }
 
@@ -735,6 +743,9 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
           const chatSessionId = canvaData.canva_session?.chat_session_id;
 
           if (chatSessionId) {
+            // ✅ Mettre à jour chatSessionId dans la session locale
+            get().updateSession(canvaId, { chatSessionId });
+
             // Lister tous les canvas de cette session
             const listResponse = await fetch(`/api/v2/canva/sessions?chat_session_id=${chatSessionId}`, {
               headers: {

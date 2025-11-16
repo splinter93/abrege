@@ -150,7 +150,9 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
                   }
                 } else if (newStatus === 'closed') {
                   // Le canva a été fermé (LLM ou autre onglet)
-                  if (activeCanvaId === canvaId) {
+                  // ✅ Ne fermer que si le canevas est actif ET ouvert dans le pane UI
+                  const { isCanvaOpen: currentIsCanvaOpen, activeCanvaId: currentActiveCanvaId } = useCanvaStore.getState();
+                  if (currentActiveCanvaId === canvaId && currentIsCanvaOpen) {
                     logger.info(LogCategory.EDITOR, '[CanvaRealtime] 🔄 Auto-closing canva (status changed to closed)', {
                       canvaId
                     });
@@ -161,6 +163,13 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
                         canvaId,
                         error: error instanceof Error ? error.message : String(error)
                       });
+                    });
+                  } else {
+                    // Le canevas est déjà fermé localement, ignorer l'événement
+                    logger.debug(LogCategory.EDITOR, '[CanvaRealtime] Ignoring closed status (canva already closed locally)', {
+                      canvaId,
+                      currentActiveCanvaId,
+                      currentIsCanvaOpen
                     });
                   }
                 }
@@ -198,10 +207,30 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
         }
       )
       .on('system', { event: 'channel_error' }, (payload) => {
-        logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Channel system error', {
-          chatSessionId,
-          error: payload
-        });
+        // ✅ Vérifier si c'est vraiment une erreur ou un message de succès
+        // Supabase envoie parfois "Subscribed to PostgreSQL" avec status: "ok" comme "erreur"
+        const checkStatus = (obj: unknown): boolean => {
+          if (typeof obj !== 'object' || obj === null) return false;
+          if ('status' in obj && obj.status === 'ok') return true;
+          if ('error' in obj && typeof obj.error === 'object' && obj.error !== null) {
+            return 'status' in obj.error && obj.error.status === 'ok';
+          }
+          return false;
+        };
+        
+        if (checkStatus(payload)) {
+          // Message de confirmation de souscription, pas une erreur
+          logger.info(LogCategory.EDITOR, '[CanvaRealtime] ✅ Channel subscribed successfully', {
+            chatSessionId,
+            payload
+          });
+        } else {
+          // Vraie erreur
+          logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Channel system error', {
+            chatSessionId,
+            error: payload
+          });
+        }
       })
       .on('system', { event: 'channel_close' }, (payload) => {
         logger.warn(LogCategory.EDITOR, '[CanvaRealtime] 🔌 Channel closed', {

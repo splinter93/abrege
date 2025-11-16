@@ -164,7 +164,15 @@ export function useCanvaContextPayload({
       entries.set(session.id, mapRemoteSession(session));
     });
 
+    // ✅ Filtrer les sessions locales pour ne garder que celles de la session chat actuelle
     Object.keys(sessions).forEach((sessionId) => {
+      const localSession = sessions[sessionId];
+      
+      // Ne garder que les sessions locales qui appartiennent à la session chat actuelle
+      if (!chatSessionId || localSession.chatSessionId !== chatSessionId) {
+        return;
+      }
+      
       if (entries.has(sessionId)) {
         return;
       }
@@ -175,7 +183,7 @@ export function useCanvaContextPayload({
     });
 
     return Array.from(entries.values());
-  }, [remoteSessions, sessions, mapRemoteSession, mapLocalSession]);
+  }, [remoteSessions, sessions, mapRemoteSession, mapLocalSession, chatSessionId]);
 
   const stats = useMemo(() => {
     return normalizedSessions.reduce(
