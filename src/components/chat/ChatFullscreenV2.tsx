@@ -156,10 +156,12 @@ const ChatFullscreenV2: React.FC = () => {
     enabled: !!currentSession?.id
   });
 
-  // 🎯 SCROLL AUTOMATION
+  // 🎯 SCROLL AUTOMATION (centralisé dans useChatScroll)
   const { messagesEndRef } = useChatScroll({
     autoScroll: true, // ✅ Scroll auto pour messages user uniquement
-    messages: infiniteMessages
+    messages: infiniteMessages,
+    watchLayoutChanges: isDesktop, // ✅ Détecter changements de layout (canva)
+    layoutTrigger: isCanvaOpen // ✅ Trigger quand canva s'ouvre/ferme
   });
 
   // 🎯 ÉTAT INITIALISATION (éviter race condition au premier chargement)
@@ -413,6 +415,7 @@ const ChatFullscreenV2: React.FC = () => {
       }
     }
   }, [currentSession?.id, isCanvaOpen, activeCanvaId, canvaSessions, closeCanva, user?.id, authLoading]);
+
 
   // 🎯 AUTO-ACTIVATE OPEN CANVA on session load
   useEffect(() => {

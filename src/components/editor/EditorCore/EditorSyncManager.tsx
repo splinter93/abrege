@@ -74,35 +74,29 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
     lastNoteIdRef.current = noteId;
   }
   
-  // 🔄 Charger le contenu initial (ou le recharger si noteId a changé)
+  // 🔄 Charger UNIQUEMENT le contenu initial (jamais après)
+  // ⚠️ CRITIQUE: Une fois chargé, on ignore TOUS les changements de storeContent
+  // pour éviter les bugs du curseur (effacement, retours auto, etc.)
   React.useEffect(() => {
     // ✅ FIX: Attendre que l'éditeur ET le contenu soient prêts
     // Ne pas charger si le contenu est vide (la note n'est pas encore fetch depuis la DB)
     if (storeContent === undefined || storeContent === null) return;
     if (!editor) return;
 
-    const normalizedStoreContent = normalizeMarkdown(storeContent);
-
+    // ⚠️ CRITIQUE: Si le chargement initial est déjà fait, on ne fait RIEN
+    // Même si storeContent change, on l'ignore pour éviter les bugs du curseur
     if (hasLoadedInitialContentRef.current) {
-      if (normalizedStoreContent === lastStoreSyncRef.current) {
-        return;
-      }
+      return;
+    }
 
-      const currentEditorContent = normalizeMarkdown(getEditorMarkdown(editor));
-
-      if (normalizedStoreContent === currentEditorContent) {
-        lastStoreSyncRef.current = normalizedStoreContent;
-        return;
-      }
-
-      if (editorState.internal.isUpdatingFromStore) {
-        return;
-      }
-
-      hasLoadedInitialContentRef.current = false;
+    // ⚠️ CRITIQUE: Ne pas charger si déjà en cours de mise à jour
+    if (editorState.internal.isUpdatingFromStore) {
+      return;
     }
     
     editorState.setIsUpdatingFromStore(true);
+    
+    const normalizedStoreContent = normalizeMarkdown(storeContent);
     
     // ✅ FIX React 18: Utiliser setTimeout au lieu de queueMicrotask pour plus de sécurité
     // Garantit que le setContent est complètement hors du cycle de render React

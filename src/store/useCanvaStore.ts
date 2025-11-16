@@ -861,7 +861,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
 
       // ✅ Fermer tous les autres canvas de cette chat session avant d'activer celui-ci
       try {
-        if (chatSessionId) {
+          if (chatSessionId) {
           await closeOtherOpenCanvases(chatSessionId, canvaId, authSession.access_token);
         }
       } catch (closeError) {

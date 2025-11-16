@@ -1089,7 +1089,7 @@ body.chat-theme-anthracite .chatgpt-header {
   min-width: 0;
   min-height: 0;
   position: relative;
-  padding-bottom: 140px;
+  padding-bottom: 0;
 }
 
 .chatgpt-messages-container {
@@ -1493,7 +1493,7 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  padding-top: calc(60px + var(--chat-safe-top)); /* Espace réduit pour fade subtil + safe area */
+  padding-top: var(--chat-safe-top); /* Pas de padding, juste safe area mobile */
 }
 
 .chatgpt-main--with-canva .chatgpt-input-container {

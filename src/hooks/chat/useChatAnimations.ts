@@ -126,7 +126,7 @@ export function useChatAnimations(
         setTimeout(() => {
           setShouldAnimateMessages(false);
           animationInProgressRef.current = false;
-          restorePadding();
+          // ✅ Padding déjà restauré avant fade-in, pas besoin de le refaire ici
         }, 400); // Durée transition CSS
       });
     };
@@ -178,15 +178,31 @@ export function useChatAnimations(
           // 🎯 ÉTAPE 3 : Retry après 300ms pour images/mermaid
           setTimeout(() => {
             const newMaxScrollTop = container.scrollHeight - container.clientHeight;
-            container.scrollTop = Math.max(0, newMaxScrollTop);
+            const finalScrollTop = Math.max(0, newMaxScrollTop);
+            
+            // ✅ Scroll instantané (pas smooth) pour éviter conflit avec fade-in
+            container.scrollTop = finalScrollTop;
 
             logger.dev('[useChatAnimations] 📍 Scroll retry:', {
-              scrollTop: container.scrollTop,
+              scrollTop: finalScrollTop,
               scrollHeight: container.scrollHeight
             });
 
-            // 🎯 ÉTAPE 4 : Fade-in maintenant que tout est en place
-            finalizeWithAnimation();
+            // ✅ RESTAURER LE PADDING AVANT LE FADE-IN pour éviter saccade
+            // Le padding change la hauteur du container, il faut le restaurer avant l'animation
+            restorePadding();
+
+            // 🎯 ÉTAPE 4 : Recaler le scroll après restauration du padding
+            // Le padding restauré peut changer la hauteur, on recalcule
+            requestAnimationFrame(() => {
+              const scrollAfterPaddingRestore = container.scrollHeight - container.clientHeight;
+              container.scrollTop = Math.max(0, scrollAfterPaddingRestore);
+
+              // Petit délai pour stabilisation puis fade-in
+              setTimeout(() => {
+                finalizeWithAnimation();
+              }, 50);
+            });
           }, 300); // Attendre chargement images
         });
       });

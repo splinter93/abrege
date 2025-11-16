@@ -4,6 +4,10 @@ import type { ChatMessage } from '@/types/chat';
 interface UseChatScrollOptions {
   autoScroll?: boolean;
   messages?: ChatMessage[];
+  /** Détecter les changements de layout (ex: ouverture/fermeture canva) */
+  watchLayoutChanges?: boolean;
+  /** Dépendance qui change quand le layout change (ex: isCanvaOpen) */
+  layoutTrigger?: boolean;
 }
 
 interface UseChatScrollReturn {
@@ -12,29 +16,25 @@ interface UseChatScrollReturn {
 }
 
 /**
- * Hook minimaliste pour le scroll auto
+ * Hook pour le scroll auto avec padding temporaire
  * 
  * Fonctionnement :
- * - Scroll au bas UNIQUEMENT quand un nouveau message USER arrive
- * - RIEN pour les messages assistant (évite les saccades pendant le streaming)
+ * - Scroll UNIQUEMENT quand un nouveau message USER arrive
+ * - Ajoute un padding temporaire pour que le message user remonte sous le header
+ * - Padding différent selon le layout : 75% chat normal, 65% mode canva
+ * - Le padding reste en place (pas de timeout) pour éviter que le message redescende
  * 
- * Comportement du padding :
- * - Par défaut : padding CSS normal (120px desktop, 100px mobile)
- * - À l'envoi user : padding temporaire inline (75% viewport) pour remonter le message en haut
- * - Le padding temporaire RESTE en place (pas de retour automatique)
- * - Au refresh page : reset automatique au padding CSS (le style inline disparaît)
- * 
- * Pourquoi garder le padding temporaire ?
- * - Évite que le message redescende après l'animation
- * - L'utilisateur garde la vue sur son message pendant que l'assistant répond
- * - UX fluide sans saccade
+ * Séparation claire :
+ * - Chat normal : 75% viewport (comportement par défaut)
+ * - Mode canva : 65% viewport (layout avec canva ouvert)
+ * - Détection via .chatgpt-main--with-canva (classe sur chatgpt-main)
  */
 export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScrollReturn {
-  const { autoScroll = true, messages = [] } = options;
+  const { autoScroll = true, messages = [], watchLayoutChanges = false, layoutTrigger } = options;
   
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const prevMessagesRef = useRef(messages);
-  const maxTemporaryPaddingRef = useRef<number | null>(null);
+  const prevLayoutTriggerRef = useRef(layoutTrigger);
 
   // Trouver le container scrollable
   const getScrollContainer = useCallback(() => {
@@ -44,38 +44,36 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
   }, []);
 
   /**
-   * Scroll au bas avec padding temporaire
+   * Scroll avec padding temporaire
    * 
-   * Ajoute un padding inline de 75% du viewport pour que le message user
-   * remonte complètement en haut sous le header.
+   * Ajoute un padding inline pour que le message user remonte complètement
+   * en haut sous le header. Le padding reste en place pour éviter que le
+   * message redescende pendant que l'assistant stream sa réponse.
    * 
-   * Le padding reste en place (pas de timeout) pour éviter que le message
-   * redescende pendant que l'assistant stream sa réponse.
+   * Padding selon le layout :
+   * - Chat normal : 75% viewport
+   * - Mode canva : 65% viewport (moins car moins d'espace disponible)
    */
   const scrollToBottom = useCallback(() => {
     const container = getScrollContainer();
     if (!container) return;
     
+    // Détecter mode canva : chercher .chatgpt-main--with-canva
+    // On cherche depuis le container vers le haut de l'arbre DOM
+    const chatMain = container.closest('.chatgpt-main') as HTMLElement;
+    const isCanvaLayout = chatMain?.classList.contains('chatgpt-main--with-canva') ?? false;
+    
+    // Calculer la hauteur effective du viewport (gère le clavier mobile)
     const viewportHeight = window.innerHeight;
     const visualViewport = typeof window !== 'undefined' && 'visualViewport' in window ? window.visualViewport : null;
     const effectiveHeight = visualViewport?.height || viewportHeight;
-    const viewportOffset = viewportHeight - effectiveHeight;
-    const isCanvaLayout = container.closest('.chatgpt-main--with-canva') !== null;
-    const paddingRatio = isCanvaLayout ? 0.68 : 0.75;
-    const tempPadding = Math.floor(effectiveHeight * paddingRatio);
-    const isKeyboardOpen = viewportOffset > 120; // ~ clavier mobile
-    const maxPadding = maxTemporaryPaddingRef.current ?? 420;
-    const appliedPadding = isKeyboardOpen
-      ? Math.min(tempPadding, maxPadding)
-      : tempPadding;
-
-    if (isKeyboardOpen) {
-      maxTemporaryPaddingRef.current = appliedPadding;
-    } else {
-      maxTemporaryPaddingRef.current = null;
-    }
     
-    container.style.paddingBottom = `${appliedPadding}px`;
+    // Ratio de padding selon le layout
+    const paddingRatio = isCanvaLayout ? 0.70 : 0.75;
+    const tempPadding = Math.floor(effectiveHeight * paddingRatio);
+    
+    // Appliquer le padding temporaire
+    container.style.paddingBottom = `${tempPadding}px`;
     
     // Scroll au maximum avec le nouveau padding
     requestAnimationFrame(() => {
@@ -100,9 +98,46 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
 
     // Scroll UNIQUEMENT si c'est un message user
     if (hasNewMessage && currLast?.role === 'user') {
+      // Délai pour laisser le DOM se mettre à jour
       setTimeout(() => scrollToBottom(), 100);
     }
   }, [messages, autoScroll, scrollToBottom]);
+
+  // 🔄 Scroll auto quand le layout change (ouverture/fermeture canva)
+  useEffect(() => {
+    if (!watchLayoutChanges || layoutTrigger === undefined) return;
+
+    const container = getScrollContainer();
+    if (!container) return;
+
+    // Détecter changement de layout (ex: isCanvaOpen change)
+    const layoutChanged = prevLayoutTriggerRef.current !== layoutTrigger;
+    prevLayoutTriggerRef.current = layoutTrigger;
+
+    if (!layoutChanged) return;
+
+    // Fonction de scroll vers le bas avec délai pour layout
+    const scrollToBottomAfterLayout = () => {
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+      const maxScroll = Math.max(0, scrollHeight - clientHeight);
+      
+      container.scrollTop = maxScroll;
+      
+      // Vérification après stabilisation du layout
+      setTimeout(() => {
+        const newScrollHeight = container.scrollHeight;
+        const newClientHeight = container.clientHeight;
+        const newMaxScroll = Math.max(0, newScrollHeight - newClientHeight);
+        container.scrollTop = newMaxScroll;
+      }, 100);
+    };
+
+    // Délai pour laisser le layout se stabiliser (flex-direction change, container resize)
+    setTimeout(() => {
+      scrollToBottomAfterLayout();
+    }, 300);
+  }, [watchLayoutChanges, layoutTrigger, getScrollContainer]);
 
   return {
     messagesEndRef,
