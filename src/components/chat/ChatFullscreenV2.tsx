@@ -383,6 +383,124 @@ const ChatFullscreenV2: React.FC = () => {
     };
   }, [user, authLoading, agentsLoading, agents, syncSessions, setCurrentSession, setSelectedAgent]);
 
+  // 🎯 AUTO-ACTIVATE OPEN CANVA on session load
+  useEffect(() => {
+    // Ne rien faire si pas encore initialisé ou pas de session
+    if (!currentSession?.id || !user?.id || authLoading) {
+      return;
+    }
+
+    // Ne rien faire si un canva est déjà actif (évite double activation)
+    if (isCanvaOpen && activeCanvaId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadAndActivateOpenCanva = async () => {
+      try {
+        // Récupérer token auth
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.access_token || !isMounted) {
+          return;
+        }
+
+        // Charger les canvas de cette session
+        const response = await fetch(`/api/v2/canva/sessions?chat_session_id=${currentSession.id}`, {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'X-Client-Type': 'canva_auto_activate'
+          }
+        });
+
+        if (!response.ok || !isMounted) {
+          return;
+        }
+
+        const data = await response.json();
+        const canvases = data.canva_sessions || [];
+
+        // Trouver tous les canvas avec status='open'
+        const openCanvas = canvases.filter((c: any) => c.status === 'open');
+
+        if (openCanvas.length === 0) {
+          // Pas de canva ouvert → chat normal
+          return;
+        }
+
+        // ✅ FALLBACK : Si plusieurs canvas sont 'open' (cas d'erreur/race condition)
+        // On prend le dernier (updated_at le plus récent, ou created_at si pas de updated_at)
+        let selectedCanva = openCanvas[0];
+        if (openCanvas.length > 1) {
+          logger.warn('[ChatFullscreenV2] ⚠️ Multiple open canvases detected, using fallback (most recent)', {
+            count: openCanvas.length,
+            canvases: openCanvas.map((c: any) => ({ id: c.id, updated_at: c.updated_at, created_at: c.created_at }))
+          });
+
+          // Trier par updated_at DESC (le plus récent en premier), puis created_at DESC si égal
+          selectedCanva = openCanvas.sort((a: any, b: any) => {
+            const aDate = a.updated_at || a.created_at || '';
+            const bDate = b.updated_at || b.created_at || '';
+            return bDate.localeCompare(aDate); // DESC order
+          })[0];
+
+          // ✅ FALLBACK ACTION : Fermer les autres canvas 'open' (cleanup)
+          try {
+            await Promise.all(
+              openCanvas
+                .filter((c: any) => c.id !== selectedCanva.id)
+                .map((otherCanva: any) =>
+                  fetch(`/api/v2/canva/sessions/${otherCanva.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${session.access_token}`,
+                      'X-Client-Type': 'canva_fallback_cleanup'
+                    },
+                    body: JSON.stringify({ status: 'closed' })
+                  })
+                )
+            );
+
+            logger.info('[ChatFullscreenV2] ✅ Fallback cleanup: closed other open canvases', {
+              closedCount: openCanvas.length - 1,
+              keptCanvaId: selectedCanva.id
+            });
+          } catch (cleanupError) {
+            logger.error('[ChatFullscreenV2] ⚠️ Error during fallback cleanup', cleanupError);
+            // Continue quand même, on active le canva sélectionné
+          }
+        }
+
+        if (selectedCanva && selectedCanva.note_id && isMounted) {
+          logger.info('[ChatFullscreenV2] 🔄 Auto-activating open canva on load', {
+            canvaId: selectedCanva.id,
+            noteId: selectedCanva.note_id,
+            chatSessionId: currentSession.id,
+            isFallback: openCanvas.length > 1
+          });
+
+          // Activer automatiquement le canva ouvert (le plus récent si plusieurs)
+          await switchCanva(selectedCanva.id, selectedCanva.note_id);
+        }
+      } catch (error) {
+        logger.error('[ChatFullscreenV2] ❌ Error auto-activating open canva', error);
+      }
+    };
+
+    loadAndActivateOpenCanva();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentSession?.id, user?.id, authLoading, isCanvaOpen, activeCanvaId, switchCanva]);
+
   // 🎯 UI STATE LOCAL (minimal - sidebar uniquement)
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);

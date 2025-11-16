@@ -305,10 +305,13 @@ export class CanvaNoteService {
   ): Promise<CanvaSession[]> {
     try {
       const client = this.resolveClient(supabaseClient);
+      // ✅ Par défaut : afficher TOUS les canevas sauf deleted
+      // Le status ne contrôle PAS la visibilité dans le menu (un canva existe = toujours visible)
+      // Status = état métier uniquement : open/closed (UI), saved (classeur), deleted (supprimé)
       const allowedStatuses =
         options?.statuses && options.statuses.length > 0
           ? options.statuses
-          : (['open'] as CanvaSessionStatus[]);
+          : (['open', 'closed', 'saved'] as CanvaSessionStatus[]);
       
       // JOIN avec articles pour titre à jour
       let query = client

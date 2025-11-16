@@ -12,7 +12,7 @@ interface ChatCanvasDropdownProps {
   isCanvaOpen: boolean;
   onOpenNewCanva: () => void;
   onSelectCanva: (canvaId: string, noteId: string) => void;
-  onCloseCanva: (canvaId: string) => void;
+  onCloseCanva: (canvaId: string, options?: { delete?: boolean }) => void;
   disabled?: boolean;
 }
 
@@ -62,7 +62,8 @@ export function ChatCanvasDropdown({
         throw new Error('No auth session');
       }
 
-      const response = await fetch(`/api/v2/canva/session/${chatSessionId}`, {
+      // ✅ REST V2: GET /canva/sessions?chat_session_id=X
+      const response = await fetch(`/api/v2/canva/sessions?chat_session_id=${chatSessionId}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'X-Client-Type': 'canva_dropdown'
@@ -140,9 +141,10 @@ export function ChatCanvasDropdown({
 
   const handleCloseCanva = (e: React.MouseEvent, canvaId: string) => {
     e.stopPropagation();
+    // ✅ Fermer le pane UI (garde dans menu)
+    // Pour supprimer vraiment, il faudrait appeler onCloseCanva(canvaId, { delete: true })
     onCloseCanva(canvaId);
-    // Recharger liste après fermeture
-    setCanvases(prev => prev.filter(c => c.id !== canvaId));
+    // Ne pas supprimer du menu : le canva reste visible même si pane fermé
   };
 
   // Nombre total de canvases (sauf deleted)

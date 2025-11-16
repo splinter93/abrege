@@ -68,7 +68,8 @@ export function useCanvaContextPayload({
         throw new Error('Session authentifiée introuvable pour charger les canvases.');
       }
 
-      const response = await fetch(`/api/v2/canva/session/${chatSessionId}`, {
+      // ✅ REST V2: GET /canva/sessions?chat_session_id=X
+      const response = await fetch(`/api/v2/canva/sessions?chat_session_id=${chatSessionId}`, {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
           'X-Client-Type': 'canva_context_hook'
@@ -78,7 +79,7 @@ export function useCanvaContextPayload({
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => response.statusText);
-        throw new Error(`API /canva/session/${chatSessionId} a échoué (${response.status}): ${errorText}`);
+        throw new Error(`API /canva/sessions?chat_session_id=${chatSessionId} a échoué (${response.status}): ${errorText}`);
       }
 
       const payload = await response.json();

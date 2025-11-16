@@ -180,12 +180,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
 
     // Récupérer sessions
+    // ✅ Par défaut : retourner TOUS les canva (sauf deleted)
+    // Le status DB ne contrôle PAS la visibilité UI (pane ouvert/fermé)
+    // Status = état métier : draft, saved, deleted
     const supabaseClient = createSupabaseClient();
     const canvaSessions = await CanvaNoteService.getCanvasForSession(
       chatSessionId,
       userId,
       supabaseClient,
-      { statuses: statuses || ['open'] }
+      { statuses: statuses || ['open', 'closed', 'saved'] } // Exclure seulement 'deleted' par défaut
     );
 
     logger.info(LogCategory.EDITOR, '[API Canva Sessions GET] ✅ Sessions retrieved', {

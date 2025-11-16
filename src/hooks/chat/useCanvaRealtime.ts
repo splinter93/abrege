@@ -16,7 +16,7 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
   const updateSession = useCanvaStore(s => s.updateSession);
-  const { sessions } = useCanvaStore();
+  const { sessions, activeCanvaId, switchCanva, closeCanva } = useCanvaStore();
 
   useEffect(() => {
     if (!chatSessionId || !enabled) {
@@ -61,10 +61,29 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
           switch (eventType) {
             case 'INSERT': {
               // Nouveau canva créé (par un autre onglet ou le LLM)
-              // On ne fait rien ici, le dropdown rechargera via polling ou on ajoutera manuellement
+              const canvaId = (newRow as any).id;
+              const newCanva = newRow as any;
+              
               logger.info(LogCategory.EDITOR, '[CanvaRealtime] New canva created', {
-                canvaId: (newRow as any).id
+                canvaId,
+                status: newCanva.status
               });
+
+              // ✅ Si status='open', activer automatiquement le canva
+              if (newCanva.status === 'open' && newCanva.note_id) {
+                logger.info(LogCategory.EDITOR, '[CanvaRealtime] 🔄 Auto-activating canva (status=open)', {
+                  canvaId,
+                  noteId: newCanva.note_id
+                });
+                
+                // Activer le canva (switchCanva charge la note et active le pane)
+                switchCanva(canvaId, newCanva.note_id).catch((error) => {
+                  logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Failed to auto-activate canva', {
+                    canvaId,
+                    error: error instanceof Error ? error.message : String(error)
+                  });
+                });
+              }
               break;
             }
 
@@ -72,17 +91,57 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
               // Mise à jour d'un canva (status, title, etc.)
               const canvaId = (newRow as any).id;
               const updatedCanva = newRow as any;
+              const oldStatus = (oldRow as any)?.status;
+              const newStatus = updatedCanva.status;
 
-              // Si la session est chargée localement, update
+              // Mettre à jour titre si session locale existe
               if (sessions[canvaId]) {
                 updateSession(canvaId, {
                   title: updatedCanva.title || sessions[canvaId].title
                 });
+              }
 
-                logger.info(LogCategory.EDITOR, '[CanvaRealtime] Canva updated', {
-                  canvaId,
-                  status: updatedCanva.status
-                });
+              logger.info(LogCategory.EDITOR, '[CanvaRealtime] Canva updated', {
+                canvaId,
+                oldStatus,
+                newStatus
+              });
+
+              // ✅ Gérer les changements de status
+              if (oldStatus !== newStatus) {
+                if (newStatus === 'open') {
+                  // Le LLM ou un autre onglet a ouvert ce canva
+                  if (activeCanvaId !== canvaId && updatedCanva.note_id) {
+                    logger.info(LogCategory.EDITOR, '[CanvaRealtime] 🔄 Auto-activating canva (status changed to open)', {
+                      canvaId,
+                      noteId: updatedCanva.note_id,
+                      currentActive: activeCanvaId
+                    });
+                    
+                    // Activer ce canva (ferme automatiquement l'autre s'il est actif)
+                    switchCanva(canvaId, updatedCanva.note_id).catch((error) => {
+                      logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Failed to auto-activate canva', {
+                        canvaId,
+                        error: error instanceof Error ? error.message : String(error)
+                      });
+                    });
+                  }
+                } else if (newStatus === 'closed') {
+                  // Le canva a été fermé (LLM ou autre onglet)
+                  if (activeCanvaId === canvaId) {
+                    logger.info(LogCategory.EDITOR, '[CanvaRealtime] 🔄 Auto-closing canva (status changed to closed)', {
+                      canvaId
+                    });
+                    
+                    // Fermer le pane UI (ne supprime pas la session)
+                    closeCanva(canvaId, { delete: false }).catch((error) => {
+                      logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Failed to auto-close canva', {
+                        canvaId,
+                        error: error instanceof Error ? error.message : String(error)
+                      });
+                    });
+                  }
+                }
               }
               break;
             }
@@ -94,6 +153,16 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
               logger.info(LogCategory.EDITOR, '[CanvaRealtime] Canva deleted', {
                 canvaId
               });
+
+              // Si c'est le canva actif, fermer le pane
+              if (activeCanvaId === canvaId) {
+                closeCanva(canvaId, { delete: true }).catch((error) => {
+                  logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Failed to handle deleted canva', {
+                    canvaId,
+                    error: error instanceof Error ? error.message : String(error)
+                  });
+                });
+              }
 
               // Le dropdown se rechargera et filtrera automatiquement
               break;
@@ -141,6 +210,6 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
         logger.info(LogCategory.EDITOR, '[CanvaRealtime] 🔌 Unsubscribed from canva_sessions');
       }
     };
-  }, [chatSessionId, enabled, sessions, updateSession]);
+  }, [chatSessionId, enabled, sessions, updateSession, activeCanvaId, switchCanva, closeCanva]);
 }
 

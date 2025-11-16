@@ -262,6 +262,76 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         isCanvaOpen: true
       }));
 
+      // ✅ Fermer tous les autres canvas de cette chat session avant d'ouvrir ce nouveau
+      // Garantit qu'un seul canva est 'open' à la fois
+      try {
+        const listResponse = await fetch(`/api/v2/canva/sessions?chat_session_id=${chatSessionId}`, {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'X-Client-Type': 'canva_store'
+          }
+        });
+
+        if (listResponse.ok) {
+          const listData = await listResponse.json();
+          const otherCanvas = (listData.canva_sessions || []).filter(
+            (c: any) => c.id !== canva_id && c.status === 'open'
+          );
+
+          // Fermer tous les autres canvas ouverts
+          await Promise.all(
+            otherCanvas.map((otherCanva: any) =>
+              fetch(`/api/v2/canva/sessions/${otherCanva.id}`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.access_token}`,
+                  'X-Client-Type': 'canva_store'
+                },
+                body: JSON.stringify({ status: 'closed' })
+              })
+            )
+          );
+
+          if (otherCanvas.length > 0) {
+            logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Closed other open canvases', {
+              count: otherCanvas.length,
+              otherCanvasIds: otherCanvas.map((c: any) => c.id)
+            });
+          }
+        }
+      } catch (closeError) {
+        logger.warn(LogCategory.EDITOR, '[CanvaStore] ⚠️ Error closing other canvases', closeError);
+        // Continue même si la fermeture des autres échoue
+      }
+
+      // ✅ Synchroniser status DB : openCanva = status='open'
+      try {
+        const statusResponse = await fetch(`/api/v2/canva/sessions/${canva_id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'X-Client-Type': 'canva_store'
+          },
+          body: JSON.stringify({ status: 'open' })
+        });
+
+        if (!statusResponse.ok) {
+          logger.warn(LogCategory.EDITOR, '[CanvaStore] ⚠️ Failed to update status to open', {
+            canvaId: canva_id,
+            status: statusResponse.status
+          });
+        } else {
+          logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Status synced to open', {
+            canvaId: canva_id
+          });
+        }
+      } catch (statusError) {
+        logger.warn(LogCategory.EDITOR, '[CanvaStore] ⚠️ Error updating status', statusError);
+        // Ne pas throw : l'ouverture a réussi, c'est juste la sync status qui a échoué
+      }
+
       logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Canva opened', {
         canvaId: canva_id,
         noteId: note_id,
@@ -277,10 +347,14 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
   },
 
   /**
-   * ✅ Fermer un canva
-   * Options:
-   * - delete: true → Supprimer note DB (annulation)
-   * - delete: false → Garder note DB (sauvegarde ultérieure)
+   * ✅ Fermer le pane UI d'un canva (sans supprimer la session)
+   * 
+   * Comportement:
+   * - Si delete: true → Supprime la session canva (DELETE API)
+   * - Si delete: false ou undefined → Ferme juste le pane UI (garde dans menu)
+   * 
+   * Le status DB ne change PAS (reste 'open' ou autre)
+   * Seule la visibilité UI change (isCanvaOpen = false)
    */
   closeCanva: async (sessionId, options) => {
     const { activeCanvaId, sessions } = get();
@@ -289,8 +363,64 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
       return;
     }
 
-    const session = sessions[targetId] || null;
+    const shouldDelete = options?.delete === true;
 
+    // Si suppression demandée → DELETE via API
+    if (shouldDelete) {
+      try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabaseClient = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+        const { data: { session } } = await supabaseClient.auth.getSession();
+
+        if (!session?.access_token) {
+          throw new Error('No auth session available');
+        }
+
+        const response = await fetch(`/api/v2/canva/sessions/${targetId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'X-Client-Type': 'canva_store'
+          }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(`API error ${response.status}: ${errorData.error || response.statusText}`);
+        }
+
+        // Supprimer de l'état local après DELETE réussi
+        set((state) => {
+          const nextSessions = { ...state.sessions };
+          delete nextSessions[targetId];
+
+          const nextActiveId = state.activeCanvaId === targetId ? null : state.activeCanvaId;
+          const hasSessionsLeft = Object.keys(nextSessions).length > 0;
+
+          return {
+            sessions: nextSessions,
+            activeCanvaId: nextActiveId,
+            isCanvaOpen: hasSessionsLeft ? state.isCanvaOpen : false
+          };
+        });
+
+        logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Canva session deleted', {
+          sessionId: targetId
+        });
+        return;
+      } catch (error) {
+        logger.error(LogCategory.EDITOR, '[CanvaStore] ❌ Failed to delete canva session via API', {
+          error,
+          canvaId: targetId
+        });
+        throw error;
+      }
+    }
+
+    // Sinon → Fermer le pane UI (garde dans menu) + synchroniser status='closed'
     try {
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseClient = createClient(
@@ -299,49 +429,43 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
       );
       const { data: { session } } = await supabaseClient.auth.getSession();
 
-      if (!session?.access_token) {
-        throw new Error('No auth session available');
-      }
+      if (session?.access_token) {
+        const statusResponse = await fetch(`/api/v2/canva/sessions/${targetId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'X-Client-Type': 'canva_store'
+          },
+          body: JSON.stringify({ status: 'closed' })
+        });
 
-      const response = await fetch(`/api/v2/canva/sessions/${targetId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'X-Client-Type': 'canva_store'
+        if (!statusResponse.ok) {
+          logger.warn(LogCategory.EDITOR, '[CanvaStore] ⚠️ Failed to update status to closed', {
+            canvaId: targetId,
+            status: statusResponse.status
+          });
+        } else {
+          logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Status synced to closed', {
+            canvaId: targetId
+          });
         }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(`API error ${response.status}: ${errorData.error || response.statusText}`);
       }
-    } catch (error) {
-      logger.error(LogCategory.EDITOR, '[CanvaStore] ❌ Failed to delete canva session via API', {
-        error,
-        canvaId: targetId
-      });
-      throw error;
+    } catch (statusError) {
+      logger.warn(LogCategory.EDITOR, '[CanvaStore] ⚠️ Error updating status to closed', statusError);
+      // Continue quand même : on ferme le pane UI même si la sync status échoue
     }
 
-    if (session) {
-      set((state) => {
-        const nextSessions = { ...state.sessions };
-        delete nextSessions[targetId];
+    set((state) => {
+      const wasActive = state.activeCanvaId === targetId;
+      return {
+        activeCanvaId: wasActive ? null : state.activeCanvaId,
+        isCanvaOpen: wasActive ? false : state.isCanvaOpen
+      };
+    });
 
-        const nextActiveId = state.activeCanvaId === targetId ? null : state.activeCanvaId;
-        const hasSessionsLeft = Object.keys(nextSessions).length > 0;
-
-        return {
-          sessions: nextSessions,
-          activeCanvaId: nextActiveId,
-          isCanvaOpen: hasSessionsLeft ? state.isCanvaOpen : false
-        };
-      });
-    }
-
-    logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Canva closed & detached from chat', {
-      sessionId: targetId,
-      deleted: true
+    logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Canva pane closed (session kept in menu)', {
+      sessionId: targetId
     });
   },
 
@@ -371,6 +495,83 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
 
       // Si session locale existe déjà, juste activer
       if (sessions[canvaId]) {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+        const { data: { session: authSession } } = await supabase.auth.getSession();
+
+        if (authSession?.access_token) {
+          // Récupérer le canva_session pour avoir le chatSessionId
+          const canvaSessionResponse = await fetch(`/api/v2/canva/sessions/${canvaId}`, {
+            headers: {
+              'Authorization': `Bearer ${authSession.access_token}`,
+              'X-Client-Type': 'canva_store'
+            }
+          });
+
+          if (canvaSessionResponse.ok) {
+            const canvaData = await canvaSessionResponse.json();
+            const chatSessionId = canvaData.canva_session?.chat_session_id;
+
+            if (chatSessionId) {
+              // ✅ Fermer tous les autres canvas de cette chat session
+              const listResponse = await fetch(`/api/v2/canva/sessions?chat_session_id=${chatSessionId}`, {
+                headers: {
+                  'Authorization': `Bearer ${authSession.access_token}`,
+                  'X-Client-Type': 'canva_store'
+                }
+              });
+
+              if (listResponse.ok) {
+                const listData = await listResponse.json();
+                const otherCanvas = (listData.canva_sessions || []).filter(
+                  (c: any) => c.id !== canvaId && c.status === 'open'
+                );
+
+                await Promise.all(
+                  otherCanvas.map((otherCanva: any) =>
+                    fetch(`/api/v2/canva/sessions/${otherCanva.id}`, {
+                      method: 'PATCH',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authSession.access_token}`,
+                        'X-Client-Type': 'canva_store'
+                      },
+                      body: JSON.stringify({ status: 'closed' })
+                    })
+                  )
+                );
+
+                if (otherCanvas.length > 0) {
+                  logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Closed other open canvases', {
+                    count: otherCanvas.length
+                  });
+                }
+              }
+            }
+          }
+
+          // ✅ Synchroniser status DB : switchCanva = status='open'
+          const statusResponse = await fetch(`/api/v2/canva/sessions/${canvaId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authSession.access_token}`,
+              'X-Client-Type': 'canva_store'
+            },
+            body: JSON.stringify({ status: 'open' })
+          });
+
+          if (!statusResponse.ok) {
+            logger.warn(LogCategory.EDITOR, '[CanvaStore] ⚠️ Failed to update status to open', {
+              canvaId,
+              status: statusResponse.status
+            });
+          }
+        }
+
         set({
           activeCanvaId: canvaId,
           isCanvaOpen: true
@@ -494,6 +695,84 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         activeCanvaId: canvaId,
         isCanvaOpen: true
       }));
+
+      // ✅ Fermer tous les autres canvas de cette chat session avant d'activer celui-ci
+      try {
+        // Récupérer le canva_session pour avoir le chatSessionId
+        const canvaSessionResponse = await fetch(`/api/v2/canva/sessions/${canvaId}`, {
+          headers: {
+            'Authorization': `Bearer ${authSession.access_token}`,
+            'X-Client-Type': 'canva_store'
+          }
+        });
+
+        if (canvaSessionResponse.ok) {
+          const canvaData = await canvaSessionResponse.json();
+          const chatSessionId = canvaData.canva_session?.chat_session_id;
+
+          if (chatSessionId) {
+            // Lister tous les canvas de cette session
+            const listResponse = await fetch(`/api/v2/canva/sessions?chat_session_id=${chatSessionId}`, {
+              headers: {
+                'Authorization': `Bearer ${authSession.access_token}`,
+                'X-Client-Type': 'canva_store'
+              }
+            });
+
+            if (listResponse.ok) {
+              const listData = await listResponse.json();
+              const otherCanvas = (listData.canva_sessions || []).filter(
+                (c: any) => c.id !== canvaId && c.status === 'open'
+              );
+
+              // Fermer tous les autres canvas ouverts
+              await Promise.all(
+                otherCanvas.map((otherCanva: any) =>
+                  fetch(`/api/v2/canva/sessions/${otherCanva.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${authSession.access_token}`,
+                      'X-Client-Type': 'canva_store'
+                    },
+                    body: JSON.stringify({ status: 'closed' })
+                  })
+                )
+              );
+
+              if (otherCanvas.length > 0) {
+                logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Closed other open canvases', {
+                  count: otherCanvas.length
+                });
+              }
+            }
+          }
+        }
+      } catch (closeError) {
+        logger.warn(LogCategory.EDITOR, '[CanvaStore] ⚠️ Error closing other canvases', closeError);
+      }
+
+      // ✅ Synchroniser status DB : switchCanva = status='open'
+      try {
+        const statusResponse = await fetch(`/api/v2/canva/sessions/${canvaId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authSession.access_token}`,
+            'X-Client-Type': 'canva_store'
+          },
+          body: JSON.stringify({ status: 'open' })
+        });
+
+        if (!statusResponse.ok) {
+          logger.warn(LogCategory.EDITOR, '[CanvaStore] ⚠️ Failed to update status to open', {
+            canvaId,
+            status: statusResponse.status
+          });
+        }
+      } catch (statusError) {
+        logger.warn(LogCategory.EDITOR, '[CanvaStore] ⚠️ Error updating status', statusError);
+      }
 
       logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Canva switched (new session created)', {
         canvaId,
