@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { logger, LogCategory } from '@/utils/logger';
 import { useFileSystemStore, type Note as FileSystemNote } from './useFileSystemStore';
+import type {
+  CanvaSession as CanvaSessionDB,
+  ListCanvasResponse,
+  CanvaSessionResponse,
+  CreateCanvaSessionResponse,
+  NoteApiResponse
+} from '@/types/canva';
 
 /**
  * 🎨 Session Canva V2
@@ -143,10 +150,10 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         throw new Error(`API error ${response.status}: ${errorData.error || response.statusText}`);
       }
 
-      const payload = await response.json();
+      const payload = await response.json() as CreateCanvaSessionResponse;
       const canvaSessionPayload = payload.canva_session;
-      const canva_id: string = canvaSessionPayload?.id || payload.canva_id;
-      const note_id: string = canvaSessionPayload?.note_id || payload.note_id;
+      const canva_id: string = canvaSessionPayload?.id || payload.canva_id || '';
+      const note_id: string = canvaSessionPayload?.note_id || payload.note_id || '';
 
       if (!canva_id || !note_id) {
         throw new Error('Réponse API canva/session invalide');
@@ -167,33 +174,33 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         });
 
         if (noteResponse.ok) {
-          const notePayload = await noteResponse.json().catch(() => null);
-          const apiNote = notePayload?.note as (Record<string, unknown> | undefined);
+          const notePayload = await noteResponse.json().catch(() => null) as NoteApiResponse | null;
+          const apiNote = notePayload?.note;
 
           if (apiNote) {
-            const createdAt = (apiNote.created_at as string | undefined) || new Date().toISOString();
-            const updatedAt = (apiNote.updated_at as string | undefined) || createdAt;
+            const createdAt = apiNote.created_at || new Date().toISOString();
+            const updatedAt = apiNote.updated_at || createdAt;
             noteForStore = {
-              id: (apiNote.id as string) || note_id,
-              source_title: (apiNote.title as string) || options?.title || 'Canva — Sans titre',
-              markdown_content: (apiNote.markdown_content as string) || '',
-              html_content: (apiNote.markdown_content as string) || '',
-              folder_id: (apiNote.folder_id as string | null | undefined) ?? null,
-              classeur_id: (apiNote.classeur_id as string | null | undefined) ?? null,
-              position: typeof apiNote.position === 'number' ? apiNote.position : 0,
+              id: apiNote.id || note_id,
+              source_title: apiNote.title || apiNote.source_title || options?.title || 'Canva — Sans titre',
+              markdown_content: apiNote.markdown_content || '',
+              html_content: apiNote.html_content || apiNote.markdown_content || '',
+              folder_id: apiNote.folder_id ?? null,
+              classeur_id: apiNote.classeur_id ?? null,
+              position: apiNote.position ?? 0,
               created_at: createdAt,
               updated_at: updatedAt,
-              slug: (apiNote.slug as string) || '',
-              public_url: (apiNote.public_url as string | undefined) ?? undefined,
-              header_image: (apiNote.header_image as string | undefined) ?? undefined,
-              header_image_offset: (apiNote.header_image_offset as number | undefined) ?? undefined,
-              header_image_blur: (apiNote.header_image_blur as number | undefined) ?? undefined,
-              header_image_overlay: (apiNote.header_image_overlay as number | undefined) ?? undefined,
-              header_title_in_image: (apiNote.header_title_in_image as boolean | undefined) ?? undefined,
-              wide_mode: (apiNote.wide_mode as boolean | undefined) ?? false,
-              a4_mode: (apiNote.a4_mode as boolean | undefined) ?? false,
-              slash_lang: (apiNote.slash_lang as 'fr' | 'en' | undefined) ?? 'en',
-              font_family: (apiNote.font_family as string | undefined) ?? 'Figtree',
+              slug: apiNote.slug || '',
+              public_url: apiNote.public_url,
+              header_image: apiNote.header_image,
+              header_image_offset: apiNote.header_image_offset,
+              header_image_blur: apiNote.header_image_blur,
+              header_image_overlay: apiNote.header_image_overlay,
+              header_title_in_image: apiNote.header_title_in_image,
+              wide_mode: apiNote.wide_mode ?? false,
+              a4_mode: apiNote.a4_mode ?? false,
+              slash_lang: apiNote.slash_lang ?? 'en',
+              font_family: apiNote.font_family ?? 'Figtree',
               share_settings: apiNote.share_settings as FileSystemNote['share_settings'],
               is_canva_draft: true
             };
@@ -273,14 +280,14 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         });
 
         if (listResponse.ok) {
-          const listData = await listResponse.json();
+          const listData = await listResponse.json() as ListCanvasResponse;
           const otherCanvas = (listData.canva_sessions || []).filter(
-            (c: any) => c.id !== canva_id && c.status === 'open'
+            (c: CanvaSessionDB) => c.id !== canva_id && c.status === 'open'
           );
 
           // Fermer tous les autres canvas ouverts
           await Promise.all(
-            otherCanvas.map((otherCanva: any) =>
+            otherCanvas.map((otherCanva: CanvaSessionDB) =>
               fetch(`/api/v2/canva/sessions/${otherCanva.id}`, {
                 method: 'PATCH',
                 headers: {
@@ -296,7 +303,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
           if (otherCanvas.length > 0) {
             logger.info(LogCategory.EDITOR, '[CanvaStore] ✅ Closed other open canvases', {
               count: otherCanvas.length,
-              otherCanvasIds: otherCanvas.map((c: any) => c.id)
+              otherCanvasIds: otherCanvas.map((c: CanvaSessionDB) => c.id)
             });
           }
         }
@@ -512,7 +519,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
           });
 
           if (canvaSessionResponse.ok) {
-            const canvaData = await canvaSessionResponse.json();
+            const canvaData = await canvaSessionResponse.json() as CanvaSessionResponse;
             const chatSessionId = canvaData.canva_session?.chat_session_id;
 
             if (chatSessionId) {
@@ -525,13 +532,13 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
               });
 
               if (listResponse.ok) {
-                const listData = await listResponse.json();
+                const listData = await listResponse.json() as ListCanvasResponse;
                 const otherCanvas = (listData.canva_sessions || []).filter(
-                  (c: any) => c.id !== canvaId && c.status === 'open'
+                  (c: CanvaSessionDB) => c.id !== canvaId && c.status === 'open'
                 );
 
                 await Promise.all(
-                  otherCanvas.map((otherCanva: any) =>
+                  otherCanvas.map((otherCanva: CanvaSessionDB) =>
                     fetch(`/api/v2/canva/sessions/${otherCanva.id}`, {
                       method: 'PATCH',
                       headers: {
@@ -629,7 +636,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         throw new Error(`API error: ${response.status}`);
       }
 
-      const responseData = await response.json();
+      const responseData = await response.json() as NoteApiResponse;
       const { note } = responseData;
       if (!note) {
         throw new Error('Note introuvable dans API response');
@@ -646,11 +653,8 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
        * 
        * Solution : Normaliser côté client avant insertion dans FileSystemStore
        * qui attend `source_title` (cohérence avec schéma DB direct).
-       * 
-       * TODO (long terme) : Créer type `ApiNoteResponse` distinct de `Note`
-       * pour typage explicite et éviter `as any`.
        */
-      const noteTitle = (note as any).title || note.source_title || '';
+      const noteTitle = note.title || note.source_title || '';
       
       logger.info(LogCategory.EDITOR, '[CanvaStore] 🔍 Note loaded from API', {
         noteId: note.id,
@@ -660,13 +664,33 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
       });
 
       // Normaliser le champ title → source_title pour FileSystemStore
-      const normalizedNote = {
-        ...note,
-        source_title: noteTitle
+      const normalizedNote: FileSystemNote = {
+        id: note.id,
+        source_title: noteTitle,
+        markdown_content: note.markdown_content || '',
+        html_content: note.html_content || note.markdown_content || '',
+        folder_id: note.folder_id ?? null,
+        classeur_id: note.classeur_id ?? null,
+        position: note.position ?? 0,
+        created_at: note.created_at,
+        updated_at: note.updated_at,
+        slug: note.slug || '',
+        public_url: note.public_url,
+        header_image: note.header_image,
+        header_image_offset: note.header_image_offset,
+        header_image_blur: note.header_image_blur,
+        header_image_overlay: note.header_image_overlay,
+        header_title_in_image: note.header_title_in_image,
+        wide_mode: note.wide_mode ?? false,
+        a4_mode: note.a4_mode ?? false,
+        slash_lang: note.slash_lang ?? 'en',
+        font_family: note.font_family ?? 'Figtree',
+        share_settings: note.share_settings as FileSystemNote['share_settings'],
+        is_canva_draft: true
       };
       
       const fileSystemStore = useFileSystemStore.getState();
-      fileSystemStore.addNote(normalizedNote as any);
+      fileSystemStore.addNote(normalizedNote);
 
       logger.info(LogCategory.EDITOR, '[CanvaStore] 🔍 Note added to FileSystemStore');
 
@@ -707,7 +731,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         });
 
         if (canvaSessionResponse.ok) {
-          const canvaData = await canvaSessionResponse.json();
+          const canvaData = await canvaSessionResponse.json() as CanvaSessionResponse;
           const chatSessionId = canvaData.canva_session?.chat_session_id;
 
           if (chatSessionId) {
@@ -720,14 +744,14 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
             });
 
             if (listResponse.ok) {
-              const listData = await listResponse.json();
+              const listData = await listResponse.json() as ListCanvasResponse;
               const otherCanvas = (listData.canva_sessions || []).filter(
-                (c: any) => c.id !== canvaId && c.status === 'open'
+                (c: CanvaSessionDB) => c.id !== canvaId && c.status === 'open'
               );
 
               // Fermer tous les autres canvas ouverts
               await Promise.all(
-                otherCanvas.map((otherCanva: any) =>
+                otherCanvas.map((otherCanva: CanvaSessionDB) =>
                   fetch(`/api/v2/canva/sessions/${otherCanva.id}`, {
                     method: 'PATCH',
                     headers: {

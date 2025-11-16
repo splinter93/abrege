@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import { createClient, RealtimeChannel } from '@supabase/supabase-js';
 import { logger, LogCategory } from '@/utils/logger';
 import { useCanvaStore } from '@/store/useCanvaStore';
+import type { CanvaSession, RealtimePostgresChangesPayload } from '@/types/canva';
+import { getEventType } from '@/types/canva';
 
 /**
  * ✅ Hook Supabase Realtime pour canva_sessions
@@ -50,19 +52,34 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
           table: 'canva_sessions',
           filter: `chat_session_id=eq.${chatSessionId}`
         },
-        (payload) => {
+        (payload: RealtimePostgresChangesPayload<CanvaSession>) => {
+          const canvaId = payload.new?.id || payload.old?.id || 'unknown';
+          const eventType = getEventType(payload);
+          
+          if (!eventType) {
+            logger.warn(LogCategory.EDITOR, '[CanvaRealtime] Invalid payload: missing eventType', {
+              payload
+            });
+            return;
+          }
+          
           logger.info(LogCategory.EDITOR, '[CanvaRealtime] DB change detected', {
-            event: payload.eventType,
-            canvaId: (payload.new as any)?.id || (payload.old as any)?.id
+            event: eventType,
+            canvaId
           });
 
-          const { eventType, new: newRow, old: oldRow } = payload;
+          const { new: newRow, old: oldRow } = payload;
 
           switch (eventType) {
             case 'INSERT': {
               // Nouveau canva créé (par un autre onglet ou le LLM)
-              const canvaId = (newRow as any).id;
-              const newCanva = newRow as any;
+              if (!newRow) {
+                logger.warn(LogCategory.EDITOR, '[CanvaRealtime] INSERT event without new row');
+                break;
+              }
+              
+              const canvaId = newRow.id;
+              const newCanva: CanvaSession = newRow;
               
               logger.info(LogCategory.EDITOR, '[CanvaRealtime] New canva created', {
                 canvaId,
@@ -89,9 +106,14 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
 
             case 'UPDATE': {
               // Mise à jour d'un canva (status, title, etc.)
-              const canvaId = (newRow as any).id;
-              const updatedCanva = newRow as any;
-              const oldStatus = (oldRow as any)?.status;
+              if (!newRow) {
+                logger.warn(LogCategory.EDITOR, '[CanvaRealtime] UPDATE event without new row');
+                break;
+              }
+              
+              const canvaId = newRow.id;
+              const updatedCanva: CanvaSession = newRow;
+              const oldStatus = oldRow?.status;
               const newStatus = updatedCanva.status;
 
               // Mettre à jour titre si session locale existe
@@ -148,7 +170,12 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
 
             case 'DELETE': {
               // Canva supprimé (fermeture depuis autre onglet)
-              const canvaId = (oldRow as any).id;
+              if (!oldRow) {
+                logger.warn(LogCategory.EDITOR, '[CanvaRealtime] DELETE event without old row');
+                break;
+              }
+              
+              const canvaId = oldRow.id;
               
               logger.info(LogCategory.EDITOR, '[CanvaRealtime] Canva deleted', {
                 canvaId

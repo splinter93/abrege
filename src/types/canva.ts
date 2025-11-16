@@ -74,6 +74,56 @@ export interface ListCanvasResponse {
 }
 
 /**
+ * Reponse API pour un canva session unique
+ */
+export interface CanvaSessionResponse {
+  success: boolean;
+  canva_session: CanvaSession;
+}
+
+/**
+ * Reponse API pour création canva
+ */
+export interface CreateCanvaSessionResponse {
+  success: boolean;
+  canva_id?: string;
+  note_id?: string;
+  canva_session?: CanvaSession;
+  message?: string;
+}
+
+/**
+ * Reponse API pour note (utilisée dans switchCanva)
+ */
+export interface NoteApiResponse {
+  success: boolean;
+  note: {
+    id: string;
+    title?: string;
+    source_title?: string;
+    markdown_content: string;
+    html_content?: string;
+    folder_id: string | null;
+    classeur_id: string | null;
+    position: number;
+    created_at: string;
+    updated_at: string;
+    slug: string;
+    public_url?: string;
+    header_image?: string;
+    header_image_offset?: number;
+    header_image_blur?: number;
+    header_image_overlay?: number;
+    header_title_in_image?: boolean;
+    wide_mode?: boolean;
+    a4_mode?: boolean;
+    slash_lang?: 'fr' | 'en';
+    font_family?: string;
+    share_settings?: unknown;
+  };
+}
+
+/**
  * Reponse generique canva
  */
 export interface CanvaResponse {
@@ -81,5 +131,51 @@ export interface CanvaResponse {
   canva_session?: CanvaSession;
   message?: string;
   error?: string;
+}
+
+/**
+ * Payload Supabase Realtime pour postgres_changes
+ * Structure standard des événements INSERT/UPDATE/DELETE
+ * 
+ * Note: Supabase envoie `event_type` (snake_case), mais on normalise en `eventType` (camelCase)
+ */
+export interface RealtimePostgresChangesPayload<T = unknown> {
+  event_type?: 'INSERT' | 'UPDATE' | 'DELETE';
+  eventType?: 'INSERT' | 'UPDATE' | 'DELETE';
+  schema: string;
+  table: string;
+  new: T | null;
+  old: T | null;
+  errors?: unknown[];
+}
+
+/**
+ * Helper pour extraire eventType (gère event_type et eventType)
+ */
+export function getEventType(payload: RealtimePostgresChangesPayload<unknown>): 'INSERT' | 'UPDATE' | 'DELETE' | null {
+  return (payload.eventType || payload.event_type || null) as 'INSERT' | 'UPDATE' | 'DELETE' | null;
+}
+
+/**
+ * Type guard pour valider un payload Realtime
+ */
+export function isRealtimePostgresPayload<T>(
+  payload: unknown,
+  expectedTable: string
+): payload is RealtimePostgresChangesPayload<T> {
+  if (!payload || typeof payload !== 'object') {
+    return false;
+  }
+  
+  const p = payload as Record<string, unknown>;
+  
+  return (
+    typeof p.eventType === 'string' &&
+    ['INSERT', 'UPDATE', 'DELETE'].includes(p.eventType) &&
+    typeof p.table === 'string' &&
+    p.table === expectedTable &&
+    (p.new === null || typeof p.new === 'object') &&
+    (p.old === null || typeof p.old === 'object')
+  );
 }
 

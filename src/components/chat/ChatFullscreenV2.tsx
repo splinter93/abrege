@@ -40,6 +40,7 @@ import ChatCanvaPane from './ChatCanvaPane';
 import dynamic from 'next/dynamic';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { useCanvaContextPayload } from '@/hooks/chat/useCanvaContextPayload';
+import type { CanvaSession as CanvaSessionDB, ListCanvasResponse } from '@/types/canva';
 
 import { simpleLogger as logger } from '@/utils/logger';
 import toast from 'react-hot-toast';
@@ -423,11 +424,11 @@ const ChatFullscreenV2: React.FC = () => {
           return;
         }
 
-        const data = await response.json();
+        const data = await response.json() as ListCanvasResponse;
         const canvases = data.canva_sessions || [];
 
         // Trouver tous les canvas avec status='open'
-        const openCanvas = canvases.filter((c: any) => c.status === 'open');
+        const openCanvas = canvases.filter((c: CanvaSessionDB) => c.status === 'open');
 
         if (openCanvas.length === 0) {
           // Pas de canva ouvert → chat normal
@@ -440,13 +441,14 @@ const ChatFullscreenV2: React.FC = () => {
         if (openCanvas.length > 1) {
           logger.warn('[ChatFullscreenV2] ⚠️ Multiple open canvases detected, using fallback (most recent)', {
             count: openCanvas.length,
-            canvases: openCanvas.map((c: any) => ({ id: c.id, updated_at: c.updated_at, created_at: c.created_at }))
+            canvases: openCanvas.map((c: CanvaSessionDB) => ({ id: c.id, created_at: c.created_at }))
           });
 
-          // Trier par updated_at DESC (le plus récent en premier), puis created_at DESC si égal
-          selectedCanva = openCanvas.sort((a: any, b: any) => {
-            const aDate = a.updated_at || a.created_at || '';
-            const bDate = b.updated_at || b.created_at || '';
+          // Trier par created_at DESC (le plus récent en premier)
+          // Note: CanvaSession n'a pas updated_at, on utilise created_at
+          selectedCanva = openCanvas.sort((a: CanvaSessionDB, b: CanvaSessionDB) => {
+            const aDate = a.created_at || '';
+            const bDate = b.created_at || '';
             return bDate.localeCompare(aDate); // DESC order
           })[0];
 
@@ -454,8 +456,8 @@ const ChatFullscreenV2: React.FC = () => {
           try {
             await Promise.all(
               openCanvas
-                .filter((c: any) => c.id !== selectedCanva.id)
-                .map((otherCanva: any) =>
+                .filter((c: CanvaSessionDB) => c.id !== selectedCanva.id)
+                .map((otherCanva: CanvaSessionDB) =>
                   fetch(`/api/v2/canva/sessions/${otherCanva.id}`, {
                     method: 'PATCH',
                     headers: {
