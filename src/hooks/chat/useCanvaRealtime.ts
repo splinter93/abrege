@@ -226,10 +226,10 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
           });
         } else {
           // Vraie erreur
-          logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Channel system error', {
-            chatSessionId,
-            error: payload
-          });
+        logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Channel system error', {
+          chatSessionId,
+          error: payload
+        });
         }
       })
       .on('system', { event: 'channel_close' }, (payload) => {

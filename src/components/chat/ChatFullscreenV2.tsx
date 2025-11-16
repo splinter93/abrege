@@ -427,7 +427,7 @@ const ChatFullscreenV2: React.FC = () => {
       const activeCanva = canvaSessions[activeCanvaId];
       // Si le canva actif appartient à la session actuelle, ne rien faire
       if (activeCanva && activeCanva.chatSessionId === currentSession.id) {
-        return;
+      return;
       }
     }
 
