@@ -86,12 +86,12 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
     // ⚠️ CRITIQUE: Si le chargement initial est déjà fait, on ne fait RIEN
     // Même si storeContent change, on l'ignore pour éviter les bugs du curseur
     if (hasLoadedInitialContentRef.current) {
-      return;
-    }
+        return;
+      }
 
     // ⚠️ CRITIQUE: Ne pas charger si déjà en cours de mise à jour
-    if (editorState.internal.isUpdatingFromStore) {
-      return;
+      if (editorState.internal.isUpdatingFromStore) {
+        return;
     }
     
     editorState.setIsUpdatingFromStore(true);

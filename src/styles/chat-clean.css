@@ -1107,21 +1107,50 @@ body.chat-theme-anthracite .chatgpt-header {
     height: 100%;
     flex: 0 0 0;
     width: 0;
-    opacity: 0;
-    pointer-events: none;
     overflow: hidden;
-    transition: flex-basis 0.3s ease, width 0.3s ease, opacity 0.2s ease;
+    transition:
+      flex-basis 0.32s var(--transition-normal),
+      width 0.32s var(--transition-normal);
+    transition-delay: 0s;
+    pointer-events: none;
   }
 
   .chatgpt-canva-pane-wrapper--open {
     flex: 0 0 auto;
-    opacity: 1;
     pointer-events: auto;
+    transition-delay: 0s;
   }
 
   .chatgpt-canva-pane-wrapper--closed {
     flex-basis: 0 !important;
     width: 0 !important;
+    transition-delay: 0.18s; /* Laisser l'animation interne se terminer */
+  }
+  .chatgpt-canva-pane-wrapper__inner {
+    height: 100%;
+    transform: translateX(100%);
+    opacity: 0;
+    transition:
+      transform 0.24s var(--transition-normal),
+      opacity 0.24s var(--transition-fast);
+    will-change: transform, opacity;
+  }
+
+  .chatgpt-canva-pane-wrapper__inner--open {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  .chatgpt-canva-pane-wrapper__inner--closed {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chatgpt-canva-pane-wrapper,
+    .chatgpt-canva-pane-wrapper__inner {
+      transition: none !important;
+    }
   }
 }
 

@@ -813,8 +813,11 @@ const ChatFullscreenV2: React.FC = () => {
   if (isDesktop && isCanvaOpen) {
     mainClassNames.push('chatgpt-main--canva-open');
   }
-  const canvaPaneStyle = isCanvaOpen
-    ? { flexBasis: `${canvaWidth}%`, width: `${canvaWidth}%` }
+  const canvaPaneStyle = isDesktop
+    ? {
+        flexBasis: isCanvaOpen ? `${canvaWidth}%` : '0%',
+        width: isCanvaOpen ? `${canvaWidth}%` : '0%'
+      }
     : undefined;
   const shouldRenderDesktopCanva = isDesktop;
 
@@ -907,43 +910,43 @@ const ChatFullscreenV2: React.FC = () => {
 
         {/* Zone principale */}
         <div className={mainClassNames.join(' ')}>
-          <div className="chatgpt-main-chat">
-            <ChatMessagesArea
-              messages={displayMessages}
-              isLoading={isLoadingMessages}
-              isLoadingMore={isLoadingMore}
-              hasMore={hasMore}
-              isStreaming={streamingState.isStreaming}
-              isFading={streamingState.isFading}
-              streamingTimeline={streamingState.streamingTimeline}
-              streamStartTime={streamingState.streamStartTime}
-              loading={messageActions.isLoading}
-              shouldAnimateMessages={animations.shouldAnimateMessages}
-              messagesVisible={animations.messagesVisible}
-              displayedSessionId={animations.displayedSessionId}
-              currentSessionId={currentSession?.id || null}
-              selectedAgent={selectedAgent}
-              agentNotFound={agentNotFound}
-              onEditMessage={handleEditMessage}
-              containerRef={messagesContainerRef}
-              messagesEndRef={messagesEndRef}
-              keyboardInset={keyboardInset}
-            />
+              <div className="chatgpt-main-chat">
+                <ChatMessagesArea
+                  messages={displayMessages}
+                  isLoading={isLoadingMessages}
+                  isLoadingMore={isLoadingMore}
+                  hasMore={hasMore}
+                  isStreaming={streamingState.isStreaming}
+                  isFading={streamingState.isFading}
+                  streamingTimeline={streamingState.streamingTimeline}
+                  streamStartTime={streamingState.streamStartTime}
+                  loading={messageActions.isLoading}
+                  shouldAnimateMessages={animations.shouldAnimateMessages}
+                  messagesVisible={animations.messagesVisible}
+                  displayedSessionId={animations.displayedSessionId}
+                  currentSessionId={currentSession?.id || null}
+                  selectedAgent={selectedAgent}
+                  agentNotFound={agentNotFound}
+                  onEditMessage={handleEditMessage}
+                  containerRef={messagesContainerRef}
+                  messagesEndRef={messagesEndRef}
+                  keyboardInset={keyboardInset}
+                />
 
-            <ChatInputContainer
-              onSend={handleSendMessage}
-              loading={messageActions.isLoading}
-              sessionId={currentSession?.id || 'temp'}
-              currentAgentModel={selectedAgent?.model}
-              editingMessageId={editingMessage?.messageId || null}
-              editingContent={editingContent}
-              onCancelEdit={handleCancelEdit}
-              textareaRef={textareaRef}
-              renderAuthStatus={renderAuthStatus}
-              selectedAgent={selectedAgent}
-              keyboardInset={keyboardInset}
-            />
-          </div>
+                <ChatInputContainer
+                  onSend={handleSendMessage}
+                  loading={messageActions.isLoading}
+                  sessionId={currentSession?.id || 'temp'}
+                  currentAgentModel={selectedAgent?.model}
+                  editingMessageId={editingMessage?.messageId || null}
+                  editingContent={editingContent}
+                  onCancelEdit={handleCancelEdit}
+                  textareaRef={textareaRef}
+                  renderAuthStatus={renderAuthStatus}
+                  selectedAgent={selectedAgent}
+                  keyboardInset={keyboardInset}
+                />
+              </div>
 
           {shouldRenderDesktopCanva && (
             <div
@@ -951,21 +954,25 @@ const ChatFullscreenV2: React.FC = () => {
               style={canvaPaneStyle}
               aria-hidden={!isCanvaOpen}
             >
-              <ChatCanvaPane 
-                width={canvaWidth}
-                onWidthChange={setCanvaWidth}
-              />
+              <div
+                className={`chatgpt-canva-pane-wrapper__inner ${isCanvaOpen ? 'chatgpt-canva-pane-wrapper__inner--open' : 'chatgpt-canva-pane-wrapper__inner--closed'}`}
+              >
+                <ChatCanvaPane 
+                  width={canvaWidth}
+                  onWidthChange={setCanvaWidth}
+                />
+              </div>
             </div>
           )}
+          </div>
         </div>
-      </div>
 
-      <CanvaStatusIndicator
-        payload={canvaContextPayload}
-        isLoading={isCanvaContextLoading}
-        error={canvaContextError}
-      />
-    </div>
+        <CanvaStatusIndicator
+          payload={canvaContextPayload}
+          isLoading={isCanvaContextLoading}
+          error={canvaContextError}
+        />
+      </div>
   );
 };
 
