@@ -1,9 +1,9 @@
-import type {
-  CreateChatSessionData,
-  UpdateChatSessionData,
+import type { 
+  CreateChatSessionData, 
+  UpdateChatSessionData, 
   ChatMessage,
   ChatSessionResponse,
-  ChatSessionsListResponse
+  ChatSessionsListResponse 
 } from '@/types/chat';
 import { supabase } from '@/supabaseClient';
 import { logger } from '@/utils/logger';
@@ -58,7 +58,7 @@ export class ChatSessionService {
       }
 
       logger.debug('[ChatSessionService] 🔄 Récupération sessions (appel réseau)...');
-
+      
       // Récupérer le token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -83,32 +83,32 @@ export class ChatSessionService {
       }
 
       const fetchPromise = (async () => {
-        const response = await fetch(`${this.baseUrl}?${params.toString()}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        let data;
-        try {
-          data = await response.json();
-        } catch {
-          // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
-          const textResponse = await response.text();
-          logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue', { preview: textResponse.substring(0, 200) });
-          throw new Error(`Erreur serveur (${response.status}): Réponse non-JSON reçue`);
-        }
+      const response = await fetch(`${this.baseUrl}?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
+        const textResponse = await response.text();
+        logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue', { preview: textResponse.substring(0, 200) });
+        throw new Error(`Erreur serveur (${response.status}): Réponse non-JSON reçue`);
+      }
 
-        if (!response.ok) {
-          throw new Error(data.error || `Erreur lors de la récupération des sessions (${response.status})`);
-        }
+      if (!response.ok) {
+        throw new Error(data.error || `Erreur lors de la récupération des sessions (${response.status})`);
+      }
 
         // Mettre en cache uniquement les appels "simples" (sans filtres)
         if (!filters) {
           setSessionsCache(data);
         }
 
-        return data;
+      return data;
       })();
 
       // Si pas de filtres, on stocke la promesse en cours pour dédupliquer

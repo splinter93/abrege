@@ -175,35 +175,54 @@ export function useChatAnimations(
             clientHeight: container.clientHeight
           });
 
-          // 🎯 ÉTAPE 3 : Retry après 300ms pour images/mermaid
-          setTimeout(() => {
-            const newMaxScrollTop = container.scrollHeight - container.clientHeight;
+          // 🎯 ÉTAPE 3 : Attendre stabilisation du layout (images, mermaid, etc.)
+          // Utiliser un système de retry avec détection de stabilité au lieu d'un délai fixe
+          let previousScrollHeight = container.scrollHeight;
+          let retryCount = 0;
+          const maxRetries = 10; // Maximum 2 secondes (10 * 200ms)
+          const retryInterval = 200; // Vérifier toutes les 200ms
+
+          const checkAndScroll = () => {
+            const currentScrollHeight = container.scrollHeight;
+            const newMaxScrollTop = currentScrollHeight - container.clientHeight;
             const finalScrollTop = Math.max(0, newMaxScrollTop);
             
-            // ✅ Scroll instantané (pas smooth) pour éviter conflit avec fade-in
+            // Scroll vers le bas
             container.scrollTop = finalScrollTop;
 
             logger.dev('[useChatAnimations] 📍 Scroll retry:', {
+              retryCount,
               scrollTop: finalScrollTop,
-              scrollHeight: container.scrollHeight
+              scrollHeight: currentScrollHeight,
+              heightChanged: currentScrollHeight !== previousScrollHeight
             });
 
-            // ✅ RESTAURER LE PADDING AVANT LE FADE-IN pour éviter saccade
-            // Le padding change la hauteur du container, il faut le restaurer avant l'animation
-            restorePadding();
+            // Si la hauteur n'a pas changé depuis le dernier retry OU qu'on a atteint le max
+            // On considère que le layout est stable
+            if (currentScrollHeight === previousScrollHeight || retryCount >= maxRetries) {
+              // ✅ RESTAURER LE PADDING AVANT LE FADE-IN pour éviter saccade
+              restorePadding();
 
-            // 🎯 ÉTAPE 4 : Recaler le scroll après restauration du padding
-            // Le padding restauré peut changer la hauteur, on recalcule
-            requestAnimationFrame(() => {
-              const scrollAfterPaddingRestore = container.scrollHeight - container.clientHeight;
-              container.scrollTop = Math.max(0, scrollAfterPaddingRestore);
+              // 🎯 ÉTAPE 4 : Recaler le scroll après restauration du padding
+              requestAnimationFrame(() => {
+                const scrollAfterPaddingRestore = container.scrollHeight - container.clientHeight;
+                container.scrollTop = Math.max(0, scrollAfterPaddingRestore);
 
-              // Petit délai pour stabilisation puis fade-in
-              setTimeout(() => {
-                finalizeWithAnimation();
-              }, 50);
-            });
-          }, 300); // Attendre chargement images
+                // Petit délai pour stabilisation puis fade-in
+                setTimeout(() => {
+                  finalizeWithAnimation();
+                }, 50);
+              });
+            } else {
+              // La hauteur a changé, continuer à vérifier
+              previousScrollHeight = currentScrollHeight;
+              retryCount++;
+              setTimeout(checkAndScroll, retryInterval);
+            }
+          };
+
+          // Démarrer les retries après un court délai initial
+          setTimeout(checkAndScroll, 300);
         });
       });
     } else {

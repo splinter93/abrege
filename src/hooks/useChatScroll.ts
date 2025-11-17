@@ -27,7 +27,7 @@ interface UseChatScrollReturn {
  * Séparation claire :
  * - Chat normal : 75% viewport (comportement par défaut)
  * - Mode canva : 65% viewport (layout avec canva ouvert)
- * - Détection via .chatgpt-main--with-canva (classe sur chatgpt-main)
+ * - Détection via .chatgpt-main--canva-open (classe sur chatgpt-main)
  */
 export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScrollReturn {
   const { autoScroll = true, messages = [], watchLayoutChanges = false, layoutTrigger } = options;
@@ -58,10 +58,10 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     const container = getScrollContainer();
     if (!container) return;
     
-    // Détecter mode canva : chercher .chatgpt-main--with-canva
+    // Détecter mode canva : chercher .chatgpt-main--canva-open
     // On cherche depuis le container vers le haut de l'arbre DOM
     const chatMain = container.closest('.chatgpt-main') as HTMLElement;
-    const isCanvaLayout = chatMain?.classList.contains('chatgpt-main--with-canva') ?? false;
+    const isCanvaLayout = chatMain?.classList.contains('chatgpt-main--canva-open') ?? false;
     
     // Calculer la hauteur effective du viewport (gère le clavier mobile)
     const viewportHeight = window.innerHeight;
@@ -116,27 +116,41 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
 
     if (!layoutChanged) return;
 
-    // Fonction de scroll vers le bas avec délai pour layout
-    const scrollToBottomAfterLayout = () => {
+    let cancelled = false;
+    let retryCount = 0;
+    const maxRetries = 8; // ~800ms
+    const retryInterval = 100;
+    let previousScrollHeight = container.scrollHeight;
+
+    const scrollToBottomInstant = () => {
+      if (cancelled) return previousScrollHeight;
       const scrollHeight = container.scrollHeight;
       const clientHeight = container.clientHeight;
       const maxScroll = Math.max(0, scrollHeight - clientHeight);
-      
       container.scrollTop = maxScroll;
-      
-      // Vérification après stabilisation du layout
-      setTimeout(() => {
-        const newScrollHeight = container.scrollHeight;
-        const newClientHeight = container.clientHeight;
-        const newMaxScroll = Math.max(0, newScrollHeight - newClientHeight);
-        container.scrollTop = newMaxScroll;
-      }, 100);
+      return scrollHeight;
     };
 
-    // Délai pour laisser le layout se stabiliser (flex-direction change, container resize)
-    setTimeout(() => {
-      scrollToBottomAfterLayout();
-    }, 300);
+    const checkStabilityAndScroll = () => {
+      if (cancelled) return;
+      const currentScrollHeight = scrollToBottomInstant();
+      if (currentScrollHeight === previousScrollHeight || retryCount >= maxRetries) {
+        return;
+      }
+      previousScrollHeight = currentScrollHeight;
+      retryCount += 1;
+      setTimeout(checkStabilityAndScroll, retryInterval);
+    };
+
+    // Scroll immédiatement (layout en cours), puis surveiller la stabilisation
+    requestAnimationFrame(() => {
+      scrollToBottomInstant();
+      setTimeout(checkStabilityAndScroll, retryInterval);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [watchLayoutChanges, layoutTrigger, getScrollContainer]);
 
   return {

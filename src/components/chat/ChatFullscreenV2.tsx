@@ -805,6 +805,19 @@ const ChatFullscreenV2: React.FC = () => {
   // ✅ SUPPRIMÉ : Plus d'auto-sélection de session
   // L'utilisateur choisit explicitement (via agent favori ou clic sidebar)
 
+  // 🎯 Classes layout canva
+  const mainClassNames = ['chatgpt-main'];
+  if (isDesktop) {
+    mainClassNames.push('chatgpt-main--desktop');
+  }
+  if (isDesktop && isCanvaOpen) {
+    mainClassNames.push('chatgpt-main--canva-open');
+  }
+  const canvaPaneStyle = isCanvaOpen
+    ? { flexBasis: `${canvaWidth}%`, width: `${canvaWidth}%` }
+    : undefined;
+  const shouldRenderDesktopCanva = isDesktop;
+
   // 🎯 RENDU (100% déclaratif avec composants extraits)
   return (
       <div className={`chatgpt-container ${wideMode ? 'wide-mode' : ''} ${(isDesktop && isCanvaOpen) ? 'canva-active' : ''}`}>
@@ -893,98 +906,66 @@ const ChatFullscreenV2: React.FC = () => {
         )}
 
         {/* Zone principale */}
-          <div className={`chatgpt-main ${isDesktop && isCanvaOpen ? 'chatgpt-main--with-canva' : ''}`}>
-          {isDesktop && isCanvaOpen ? (
-            <>
-              <div className="chatgpt-main-chat">
-                <ChatMessagesArea
-                  messages={displayMessages}
-                  isLoading={isLoadingMessages}
-                  isLoadingMore={isLoadingMore}
-                  hasMore={hasMore}
-                  isStreaming={streamingState.isStreaming}
-                  isFading={streamingState.isFading}
-                  streamingTimeline={streamingState.streamingTimeline}
-                  streamStartTime={streamingState.streamStartTime}
-                  loading={messageActions.isLoading}
-                  shouldAnimateMessages={animations.shouldAnimateMessages}
-                  messagesVisible={animations.messagesVisible}
-                  displayedSessionId={animations.displayedSessionId}
-                  currentSessionId={currentSession?.id || null}
-                  selectedAgent={selectedAgent}
-                  agentNotFound={agentNotFound}
-                  onEditMessage={handleEditMessage}
-                  containerRef={messagesContainerRef}
-                  messagesEndRef={messagesEndRef}
-                  keyboardInset={keyboardInset}
-                />
+        <div className={mainClassNames.join(' ')}>
+          <div className="chatgpt-main-chat">
+            <ChatMessagesArea
+              messages={displayMessages}
+              isLoading={isLoadingMessages}
+              isLoadingMore={isLoadingMore}
+              hasMore={hasMore}
+              isStreaming={streamingState.isStreaming}
+              isFading={streamingState.isFading}
+              streamingTimeline={streamingState.streamingTimeline}
+              streamStartTime={streamingState.streamStartTime}
+              loading={messageActions.isLoading}
+              shouldAnimateMessages={animations.shouldAnimateMessages}
+              messagesVisible={animations.messagesVisible}
+              displayedSessionId={animations.displayedSessionId}
+              currentSessionId={currentSession?.id || null}
+              selectedAgent={selectedAgent}
+              agentNotFound={agentNotFound}
+              onEditMessage={handleEditMessage}
+              containerRef={messagesContainerRef}
+              messagesEndRef={messagesEndRef}
+              keyboardInset={keyboardInset}
+            />
 
-                <ChatInputContainer
-                  onSend={handleSendMessage}
-                  loading={messageActions.isLoading}
-                  sessionId={currentSession?.id || 'temp'}
-                  currentAgentModel={selectedAgent?.model}
-                  editingMessageId={editingMessage?.messageId || null}
-                  editingContent={editingContent}
-                  onCancelEdit={handleCancelEdit}
-                  textareaRef={textareaRef}
-                  renderAuthStatus={renderAuthStatus}
-                  selectedAgent={selectedAgent}
-                  keyboardInset={keyboardInset}
-                />
-              </div>
+            <ChatInputContainer
+              onSend={handleSendMessage}
+              loading={messageActions.isLoading}
+              sessionId={currentSession?.id || 'temp'}
+              currentAgentModel={selectedAgent?.model}
+              editingMessageId={editingMessage?.messageId || null}
+              editingContent={editingContent}
+              onCancelEdit={handleCancelEdit}
+              textareaRef={textareaRef}
+              renderAuthStatus={renderAuthStatus}
+              selectedAgent={selectedAgent}
+              keyboardInset={keyboardInset}
+            />
+          </div>
+
+          {shouldRenderDesktopCanva && (
+            <div
+              className={`chatgpt-canva-pane-wrapper ${isCanvaOpen ? 'chatgpt-canva-pane-wrapper--open' : 'chatgpt-canva-pane-wrapper--closed'}`}
+              style={canvaPaneStyle}
+              aria-hidden={!isCanvaOpen}
+            >
               <ChatCanvaPane 
                 width={canvaWidth}
                 onWidthChange={setCanvaWidth}
               />
-            </>
-          ) : (
-            <>
-              <ChatMessagesArea
-                messages={displayMessages}
-                isLoading={isLoadingMessages}
-                isLoadingMore={isLoadingMore}
-                hasMore={hasMore}
-                isStreaming={streamingState.isStreaming}
-                isFading={streamingState.isFading}
-                streamingTimeline={streamingState.streamingTimeline}
-                streamStartTime={streamingState.streamStartTime}
-                loading={messageActions.isLoading}
-                shouldAnimateMessages={animations.shouldAnimateMessages}
-                messagesVisible={animations.messagesVisible}
-                displayedSessionId={animations.displayedSessionId}
-                currentSessionId={currentSession?.id || null}
-                selectedAgent={selectedAgent}
-                agentNotFound={agentNotFound}
-                onEditMessage={handleEditMessage}
-                containerRef={messagesContainerRef}
-                messagesEndRef={messagesEndRef}
-                keyboardInset={keyboardInset}
-              />
-
-              <ChatInputContainer
-                onSend={handleSendMessage}
-                loading={messageActions.isLoading}
-                sessionId={currentSession?.id || 'temp'}
-                currentAgentModel={selectedAgent?.model}
-                editingMessageId={editingMessage?.messageId || null}
-                editingContent={editingContent}
-                onCancelEdit={handleCancelEdit}
-                textareaRef={textareaRef}
-                renderAuthStatus={renderAuthStatus}
-                selectedAgent={selectedAgent}
-                keyboardInset={keyboardInset}
-              />
-            </>
+            </div>
           )}
-          </div>
         </div>
-        <CanvaStatusIndicator
-          payload={canvaContextPayload}
-          isLoading={isCanvaContextLoading}
-          error={canvaContextError}
-        />
       </div>
+
+      <CanvaStatusIndicator
+        payload={canvaContextPayload}
+        isLoading={isCanvaContextLoading}
+        error={canvaContextError}
+      />
+    </div>
   );
 };
 

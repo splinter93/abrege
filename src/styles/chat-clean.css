@@ -1075,11 +1075,15 @@ body.chat-theme-anthracite .chatgpt-header {
   position: relative;
 }
 
-.chatgpt-main--with-canva {
+.chatgpt-main--desktop {
   flex-direction: row;
   gap: 0; /* ✅ Pas de padding entre chat et éditeur */
   padding-right: 24px; /* ✅ Padding à droite conservé */
   align-items: stretch;
+}
+
+.chatgpt-main--canva-open {
+  /* Hook pour états spécifiques (scroll, padding) */
 }
 
 .chatgpt-main-chat {
@@ -1090,6 +1094,35 @@ body.chat-theme-anthracite .chatgpt-header {
   min-height: 0;
   position: relative;
   padding-bottom: 0;
+}
+
+.chatgpt-canva-pane-wrapper {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .chatgpt-canva-pane-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex: 0 0 0;
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+    transition: flex-basis 0.3s ease, width 0.3s ease, opacity 0.2s ease;
+  }
+
+  .chatgpt-canva-pane-wrapper--open {
+    flex: 0 0 auto;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .chatgpt-canva-pane-wrapper--closed {
+    flex-basis: 0 !important;
+    width: 0 !important;
+  }
 }
 
 .chatgpt-messages-container {
@@ -1496,23 +1529,23 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   padding-top: var(--chat-safe-top); /* Pas de padding, juste safe area mobile */
 }
 
-.chatgpt-main--with-canva .chatgpt-input-container {
+.chatgpt-main--canva-open .chatgpt-input-container {
   justify-content: center;
   padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) calc(24px + var(--chat-safe-bottom)) calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
 }
 
-.chatgpt-main--with-canva .chatgpt-input-area {
+.chatgpt-main--canva-open .chatgpt-input-area {
   max-width: min(var(--chat-container-width), 100%);
 }
 
-.chatgpt-main--with-canva .chatgpt-messages {
+.chatgpt-main--canva-open .chatgpt-messages {
   padding: var(--chat-space-xl) calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) var(--chat-space-xl) calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
   margin: 0 auto;
   width: 100%;
   max-width: min(var(--chat-container-width), 100%);
 }
 
-.chatgpt-main--with-canva .chatgpt-messages-container {
+.chatgpt-main--canva-open .chatgpt-messages-container {
   width: 100%;
 }
 
