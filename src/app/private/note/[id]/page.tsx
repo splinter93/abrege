@@ -22,9 +22,11 @@ export default function NotePage() {
   });
 
   // 🔄 Realtime Service - Initialisation pour les mises à jour en temps réel des articles
+  // ✅ Utiliser l'ID résolu de la note si disponible
+  const resolvedNoteIdForRealtime = note?.id || noteId;
   const realtime = useRealtime({
     userId: user?.id || '',
-    noteId: noteId || undefined,
+    noteId: resolvedNoteIdForRealtime || undefined,
     debug: false
   });
 
@@ -43,10 +45,13 @@ export default function NotePage() {
     return <SimpleLoadingState message="Erreur" />;
   }
 
+  // ✅ Utiliser l'ID résolu de la note si disponible (résout le cas où noteId est un slug)
+  const resolvedNoteId = note?.id || noteId;
+
   // Render only the real Editor (which includes its own header/toolbar/kebab/TOC)
   return (
     <div style={{ width: '100vw', minHeight: '100vh' }}>
-      <Editor noteId={noteId} />
+      <Editor noteId={resolvedNoteId} />
     </div>
   );
 } 

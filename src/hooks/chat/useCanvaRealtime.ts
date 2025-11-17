@@ -86,6 +86,13 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
                 status: newCanva.status
               });
 
+              // ✅ Déclencher un événement personnalisé pour notifier le dropdown
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('canva-session-created', {
+                  detail: { canvaId, chatSessionId }
+                }));
+              }
+
               // ✅ Si status='open', activer automatiquement le canva
               if (newCanva.status === 'open' && newCanva.note_id) {
                 logger.info(LogCategory.EDITOR, '[CanvaRealtime] 🔄 Auto-activating canva (status=open)', {
@@ -115,6 +122,8 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
               const updatedCanva: CanvaSession = newRow;
               const oldStatus = oldRow?.status;
               const newStatus = updatedCanva.status;
+              const oldTitle = oldRow?.title;
+              const newTitle = updatedCanva.title;
 
               // Mettre à jour titre si session locale existe
               if (sessions[canvaId]) {
@@ -128,6 +137,13 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
                 oldStatus,
                 newStatus
               });
+
+              // ✅ Déclencher un événement personnalisé si le titre a changé (pour mettre à jour le dropdown)
+              if (oldTitle !== newTitle && typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('canva-session-updated', {
+                  detail: { canvaId, chatSessionId }
+                }));
+              }
 
               // ✅ Gérer les changements de status
               if (oldStatus !== newStatus) {
@@ -189,6 +205,13 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
               logger.info(LogCategory.EDITOR, '[CanvaRealtime] Canva deleted', {
                 canvaId
               });
+
+              // ✅ Déclencher un événement personnalisé pour notifier le dropdown
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('canva-session-deleted', {
+                  detail: { canvaId, chatSessionId }
+                }));
+              }
 
               // Si c'est le canva actif, fermer le pane
               if (activeCanvaId === canvaId) {

@@ -46,16 +46,54 @@ export const useOptimizedNoteLoader = ({
 }: UseOptimizedNoteLoaderProps): UseOptimizedNoteLoaderReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resolvedNoteId, setResolvedNoteId] = useState<string | null>(null);
+  const resolvedNoteIdRef = useRef<string | null>(null);
   
   const addNote = useFileSystemStore(s => s.addNote);
   const updateNote = useFileSystemStore(s => s.updateNote);
-  const existingNote = useFileSystemStore(s => s.notes[noteRef]);
   
-  // 🔧 Utiliser la note du store Zustand comme source de vérité
-  const note = existingNote;
+  // ✅ Utiliser l'ID résolu si disponible, sinon utiliser noteRef
+  const noteIdToUse = resolvedNoteId || noteRef;
+  const note = useFileSystemStore(s => s.notes[noteIdToUse]);
+  
+  // ✅ Debug: Log pour diagnostiquer la récupération de la note
+  useEffect(() => {
+    if (noteIdToUse && note) {
+      simpleLogger.dev('[useOptimizedNoteLoader] 📋 Note récupérée du store', {
+        noteIdToUse,
+        noteId: note.id,
+        hasContent: !!note.markdown_content,
+        contentLength: note.markdown_content?.length || 0,
+        resolvedNoteId,
+        noteRef,
+        matches: note.id === noteIdToUse
+      });
+    } else if (noteIdToUse && !note) {
+      const store = useFileSystemStore.getState();
+      const availableNotes = Object.keys(store.notes);
+      const noteWithResolvedId = resolvedNoteId ? store.notes[resolvedNoteId] : null;
+      simpleLogger.dev('[useOptimizedNoteLoader] ⚠️ Note non trouvée dans le store', {
+        noteIdToUse,
+        resolvedNoteId,
+        noteRef,
+        availableNotes,
+        noteWithResolvedId: noteWithResolvedId ? {
+          id: noteWithResolvedId.id,
+          hasContent: !!noteWithResolvedId.markdown_content,
+          contentLength: noteWithResolvedId.markdown_content?.length || 0
+        } : null
+      });
+    }
+  }, [noteIdToUse, note, resolvedNoteId, noteRef]);
   
   const loadingRef = useRef(false);
   const cancelledRef = useRef(false);
+
+  // ✅ Réinitialiser l'ID résolu quand noteRef change
+  useEffect(() => {
+    setResolvedNoteId(null);
+    resolvedNoteIdRef.current = null;
+  }, [noteRef]);
 
   // 🔧 Fonction de chargement optimisé en deux phases avec retry
   const loadNote = useCallback(async () => {
@@ -86,13 +124,19 @@ export const useOptimizedNoteLoader = ({
         classeur_id: metadata.classeur_id 
       });
       
+      // ✅ CRITIQUE : Utiliser l'ID résolu comme clé dans le store
+      const resolvedId = metadata.id;
+      setResolvedNoteId(resolvedId); // ✅ Stocker l'ID résolu dans l'état (force re-render)
+      resolvedNoteIdRef.current = resolvedId; // ✅ Stocker aussi dans le ref (accès synchrone)
+      const existingNoteById = useFileSystemStore.getState().notes[resolvedId];
+      
       // Créer la note avec les métadonnées
       const noteData = {
-        id: metadata.id,
+        id: resolvedId,
         source_title: metadata.source_title || 'Untitled',
-        markdown_content: existingNote?.markdown_content || '',
-        content: existingNote?.content || '',
-        html_content: existingNote?.html_content || '',
+        markdown_content: existingNoteById?.markdown_content || '',
+        content: existingNoteById?.content || '',
+        html_content: existingNoteById?.html_content || '',
         header_image: metadata.header_image || null,
         header_image_offset: metadata.header_image_offset ?? 50,
         header_image_blur: metadata.header_image_blur ?? 0,
@@ -109,22 +153,33 @@ export const useOptimizedNoteLoader = ({
         classeur_id: metadata.classeur_id // ✅ AJOUTÉ
       };
 
-      // Ajouter/mettre à jour la note dans le store
-      if (existingNote) {
-        updateNote(noteRef, noteData);
+      // ✅ Ajouter/mettre à jour la note dans le store avec l'ID résolu
+      if (existingNoteById) {
+        updateNote(resolvedId, noteData);
       } else {
         addNote(noteData as NoteData);
       }
+      
+      // ✅ Vérifier que la note est bien dans le store après ajout/mise à jour
+      const storeAfterUpdate = useFileSystemStore.getState();
+      const noteInStore = storeAfterUpdate.notes[resolvedId];
+      simpleLogger.dev('[useOptimizedNoteLoader] ✅ Note stockée dans le store', {
+        resolvedId,
+        noteId: noteInStore?.id,
+        hasContent: !!noteInStore?.markdown_content,
+        contentLength: noteInStore?.markdown_content?.length || 0
+      });
 
       // Phase 2 : Charger le contenu si demandé avec gestion de concurrence
       if (preloadContent && !cancelledRef.current) {
         simpleLogger.dev('[useOptimizedNoteLoader] 📖 Phase 2: Contenu...');
         try {
           // 🔧 Utiliser le gestionnaire de concurrence pour éviter les chargements multiples
+          // ✅ Utiliser l'ID résolu pour récupérer le contenu (évite double résolution)
           const content = await noteConcurrencyManager.getOrCreateLoadingPromise(
-            `note_content_${noteRef}_${userId}`,
+            `note_content_${resolvedId}_${userId}`,
             () => retryWithBackoff(
-              () => optimizedNoteService.getNoteContent(noteRef, userId),
+              () => optimizedNoteService.getNoteContent(resolvedId, userId),
               { maxRetries: 2, baseDelay: 1000 }
             )
           );
@@ -137,14 +192,29 @@ export const useOptimizedNoteLoader = ({
             html_content: content.html_content || ''
           };
 
-          // 🔧 Mise à jour IMMÉDIATE du store Zustand
-          if (existingNote) {
-            updateNote(noteRef, updatedNoteData);
+          // ✅ Mise à jour IMMÉDIATE du store Zustand avec l'ID résolu
+          const store = useFileSystemStore.getState();
+          const wasInStore = !!store.notes[resolvedId];
+          
+          if (wasInStore) {
+            updateNote(resolvedId, updatedNoteData);
           } else {
             addNote(updatedNoteData as NoteData);
           }
           
-          simpleLogger.dev(`[useOptimizedNoteLoader] ✅ Contenu chargé: ${updatedNoteData.markdown_content?.length || 0}B`);
+          // Vérifier après mise à jour (Zustand met à jour synchrone)
+          const storeAfterUpdate = useFileSystemStore.getState();
+          const noteAfterUpdate = storeAfterUpdate.notes[resolvedId];
+          
+          console.log('[useOptimizedNoteLoader] ✅ Contenu mis à jour dans le store', {
+            resolvedId,
+            contentLength: updatedNoteData.markdown_content?.length || 0,
+            wasInStore,
+            noteExistsAfter: !!noteAfterUpdate,
+            noteHasContent: !!noteAfterUpdate?.markdown_content,
+            noteContentLength: noteAfterUpdate?.markdown_content?.length || 0,
+            contentPreview: noteAfterUpdate?.markdown_content?.substring(0, 100)
+          });
           
         } catch (contentError) {
           simpleLogger.error('[useOptimizedNoteLoader] ❌ Erreur Phase 2:', contentError);
@@ -154,11 +224,11 @@ export const useOptimizedNoteLoader = ({
         if (preloadContent) {
           simpleLogger.dev('[useOptimizedNoteLoader] 🚀 Chargement asynchrone...');
           
-          // Charger le contenu en arrière-plan sans bloquer avec retry
+          // ✅ Charger le contenu en arrière-plan sans bloquer avec retry (utiliser ID résolu)
           noteConcurrencyManager.getOrCreateLoadingPromise(
-            `note_content_async_${noteRef}_${userId}`,
+            `note_content_async_${resolvedId}_${userId}`,
             () => retryWithBackoff(
-              () => optimizedNoteService.getNoteContent(noteRef, userId),
+              () => optimizedNoteService.getNoteContent(resolvedId, userId),
               { maxRetries: 2, baseDelay: 1000 }
             )
           )
@@ -171,10 +241,10 @@ export const useOptimizedNoteLoader = ({
                 html_content: content.html_content || ''
               };
               
-              // Utiliser directement le store Zustand
+              // ✅ Utiliser directement le store Zustand avec l'ID résolu
               const store = useFileSystemStore.getState();
-              if (store.notes[noteRef]) {
-                store.updateNote(noteRef, updatedNoteData);
+              if (store.notes[resolvedId]) {
+                store.updateNote(resolvedId, updatedNoteData);
               } else {
                 store.addNote(updatedNoteData as NoteData);
               }
@@ -200,7 +270,7 @@ export const useOptimizedNoteLoader = ({
         simpleLogger.dev('[useOptimizedNoteLoader] 🏁 Terminé');
       }
     }
-  }, [noteRef, preloadContent, addNote, updateNote, existingNote]);
+  }, [noteRef, preloadContent, addNote, updateNote]);
 
   // 🔄 Fonction de rafraîchissement avec retry
   const refreshNote = useCallback(async () => {

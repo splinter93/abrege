@@ -31,7 +31,7 @@ export interface ChatHeaderProps {
   isCanvaOpen: boolean;
   onOpenNewCanva?: () => void;
   onSelectCanva?: (canvaId: string, noteId: string) => void;
-  onCloseCanva?: (canvaId: string) => void;
+  onCloseCanva?: (canvaId: string, options?: { delete?: boolean }) => void | Promise<void>;
   canOpenCanva?: boolean;
 }
 

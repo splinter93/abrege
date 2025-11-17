@@ -76,6 +76,7 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
   
   // 🔄 Charger UNIQUEMENT le contenu initial (jamais après)
   // ⚠️ CRITIQUE: Une fois chargé, on ignore TOUS les changements de storeContent
+  // SAUF si le contenu passe de vide à non-vide (Phase 2 du chargement)
   // pour éviter les bugs du curseur (effacement, retours auto, etc.)
   React.useEffect(() => {
     // ✅ FIX: Attendre que l'éditeur ET le contenu soient prêts
@@ -83,9 +84,38 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
     if (storeContent === undefined || storeContent === null) return;
     if (!editor) return;
 
-    // ⚠️ CRITIQUE: Si le chargement initial est déjà fait, on ne fait RIEN
+    // ✅ EXCEPTION : Si le chargement initial a été fait avec un contenu vide,
+    // et que le contenu arrive maintenant (Phase 2), on doit le charger
+    const wasEmptyContent = !lastStoreSyncRef.current || !lastStoreSyncRef.current.trim();
+    const isNewContent = storeContent && storeContent.trim().length > 0;
+    const shouldReloadFromEmpty = hasLoadedInitialContentRef.current && wasEmptyContent && isNewContent;
+
+    // Log pour debug
+    if (hasLoadedInitialContentRef.current && !shouldReloadFromEmpty) {
+      console.log('[EditorSyncManager] ⏭️ Ignorant changement de contenu (déjà chargé)', {
+        storeContentLength: storeContent?.length || 0,
+        lastSyncLength: lastStoreSyncRef.current?.length || 0,
+        wasEmptyContent,
+        isNewContent,
+        shouldReloadFromEmpty,
+        storeContentPreview: storeContent?.substring(0, 100)
+      });
+    }
+    
+    // Log pour tous les changements de contenu
+    console.log('[EditorSyncManager] 🔍 Changement de contenu détecté', {
+      hasLoadedInitial: hasLoadedInitialContentRef.current,
+      storeContentLength: storeContent?.length || 0,
+      lastSyncLength: lastStoreSyncRef.current?.length || 0,
+      wasEmptyContent,
+      isNewContent,
+      shouldReloadFromEmpty,
+      willLoad: !hasLoadedInitialContentRef.current || shouldReloadFromEmpty
+    });
+
+    // ⚠️ CRITIQUE: Si le chargement initial est déjà fait ET que ce n'est pas le cas d'exception ci-dessus, on ne fait RIEN
     // Même si storeContent change, on l'ignore pour éviter les bugs du curseur
-    if (hasLoadedInitialContentRef.current) {
+    if (hasLoadedInitialContentRef.current && !shouldReloadFromEmpty) {
         return;
       }
 
@@ -124,6 +154,15 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
         return;
       }
       editor.commands.setContent(processedContent);
+      
+      // ✅ Si on recharge depuis un contenu vide, réinitialiser le flag
+      if (shouldReloadFromEmpty) {
+        logger.dev('[EditorSyncManager] 🔄 Rechargement depuis contenu vide (Phase 2)', {
+          previousContentLength: lastStoreSyncRef.current?.length || 0,
+          newContentLength: processedContent?.length || 0,
+          normalizedContentLength: normalizedStoreContent?.length || 0
+        });
+      }
       
       hasLoadedInitialContentRef.current = true;
       lastStoreSyncRef.current = normalizedStoreContent;

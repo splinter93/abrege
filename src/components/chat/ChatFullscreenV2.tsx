@@ -851,13 +851,17 @@ const ChatFullscreenV2: React.FC = () => {
                 toast.error('Erreur ouverture canva');
               }
             }}
-        onCloseCanva={async (canvaId) => {
+        onCloseCanva={async (canvaId, options) => {
           try {
-            await closeCanva(canvaId);
-            toast.success('Canva fermé');
+            await closeCanva(canvaId, options);
+            if (options?.delete) {
+              toast.success('Canva supprimé');
+            } else {
+              toast.success('Canva fermé');
+            }
           } catch (error) {
             logger.error('[ChatFullscreenV2] Failed to close canva', error);
-            toast.error('Erreur fermeture canva');
+            toast.error(options?.delete ? 'Erreur suppression canva' : 'Erreur fermeture canva');
           }
         }}
         canOpenCanva={isDesktop}

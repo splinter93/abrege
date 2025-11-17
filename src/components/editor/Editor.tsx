@@ -104,6 +104,22 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
   const updateNote = useFileSystemStore(s => s.updateNote);
   // ✅ PRÉTRAITER le Markdown pour échapper les ~ dans les tables (fix LLM)
   const rawContent = note?.markdown_content || '';
+  
+  // 🔍 Debug: Log pour diagnostiquer le contenu
+  React.useEffect(() => {
+    if (noteId) {
+      console.log('[Editor] 📋 Note du store', {
+        noteId,
+        noteExists: !!note,
+        noteIdFromNote: note?.id,
+        hasContent: !!note?.markdown_content,
+        contentLength: note?.markdown_content?.length || 0,
+        rawContentLength: rawContent?.length || 0,
+        matches: note?.id === noteId,
+        rawContent: rawContent?.substring(0, 100) // Premiers 100 caractères
+      });
+    }
+  }, [noteId, note, rawContent]);
   const content = React.useMemo(() => preprocessMarkdown(rawContent), [rawContent]);
   const { html } = useMarkdownRender({ content });
 

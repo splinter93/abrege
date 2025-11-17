@@ -141,48 +141,50 @@ export const useFileSystemStore = create<FileSystemState>()((set) => ({
   }),
   
   updateNote: (id: string, patch: Partial<Note>) => set(state => {
-    if (process.env.NODE_ENV === 'development') {
-      const headerKeys = [
-        'header_image',
-        'header_image_offset',
-        'header_image_blur',
-        'header_image_overlay',
-        'header_title_in_image'
-      ] as const;
-      const touched = headerKeys.filter(
-        (key) => Object.prototype.hasOwnProperty.call(patch, key)
-      );
-      if (touched.length > 0) {
-        const sanitizedPatch: Partial<Note> = {};
-        for (const key of touched) {
-          const value = patch[key];
-          if (value !== undefined) {
-            sanitizedPatch[key] = value;
-          }
-        }
-
-        if (Object.keys(sanitizedPatch).length === 0) {
-          return state;
-        }
-
-        if (process.env.NODE_ENV === 'development') {
-          logger.debug(LogCategory.EDITOR, '[useFileSystemStore] updateNote header fields', {
-            noteId: id,
-            patch: sanitizedPatch
-          });
-        }
-        return {
-          notes: {
-            ...state.notes,
-            [id]: { ...state.notes[id], ...sanitizedPatch }
-          }
-        };
-      }
+    // ✅ Validation basique : l'ID doit être une string non vide
+    if (!id || typeof id !== 'string') {
+      logger.error(LogCategory.EDITOR, '[useFileSystemStore] updateNote: Invalid ID', { id, patchKeys: Object.keys(patch) });
+      return state; // Ne rien faire si l'ID est invalide
     }
+    
+    // ✅ S'assurer que la note existe avant de la mettre à jour
+    // Si elle n'existe pas, créer une note minimale avec les valeurs par défaut
+    if (!state.notes[id]) {
+      if (process.env.NODE_ENV === 'development') {
+        logger.warn(LogCategory.EDITOR, '[useFileSystemStore] updateNote: Note not found, creating it', {
+          noteId: id,
+          patchKeys: Object.keys(patch)
+        });
+      }
+      // Créer une note minimale si elle n'existe pas
+      return {
+        notes: {
+          ...state.notes,
+          [id]: {
+            id,
+            source_title: '',
+            markdown_content: '',
+            html_content: '',
+            folder_id: null,
+            classeur_id: null,
+            position: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            slug: '',
+            ...patch // ✅ Appliquer le patch par-dessus les valeurs par défaut
+          } as Note
+        }
+      };
+    }
+    
+    // ✅ Mise à jour normale : fusionner l'existant avec le patch
+    // Le spread operator garantit que TOUS les champs du patch sont appliqués
+    const updatedNote = { ...state.notes[id], ...patch };
+    
     return { 
       notes: { 
         ...state.notes, 
-        [id]: { ...state.notes[id], ...patch } 
+        [id]: updatedNote
       } 
     };
   }),

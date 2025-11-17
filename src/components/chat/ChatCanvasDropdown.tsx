@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PenSquare, Plus, X } from 'lucide-react';
 import type { CanvaSession } from '@/types/canva';
 import { useCanvaRealtime } from '@/hooks/chat/useCanvaRealtime';
+import { useCanvaStore } from '@/store/useCanvaStore';
+import { logger, LogCategory } from '@/utils/logger';
 import './ChatCanvasDropdown.css';
 
 interface ChatCanvasDropdownProps {
@@ -12,7 +14,7 @@ interface ChatCanvasDropdownProps {
   isCanvaOpen: boolean;
   onOpenNewCanva: () => void;
   onSelectCanva: (canvaId: string, noteId: string) => void;
-  onCloseCanva: (canvaId: string, options?: { delete?: boolean }) => void;
+  onCloseCanva: (canvaId: string, options?: { delete?: boolean }) => void | Promise<void>;
   disabled?: boolean;
 }
 
@@ -37,9 +39,14 @@ export function ChatCanvasDropdown({
   const [canvases, setCanvases] = useState<CanvaSession[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const isFirstLoadRef = useRef(true);
 
   // ✅ Supabase Realtime : Sync automatique des canvases
   useCanvaRealtime(chatSessionId, true);
+
+  // ✅ Écouter les changements du store pour recharger la liste
+  const storeSessions = useCanvaStore(s => s.sessions);
+  const storeSessionsCount = Object.keys(storeSessions).length;
 
   // Fonction pour charger canvases (useCallback pour éviter re-renders)
   const loadCanvases = React.useCallback(async () => {
@@ -47,8 +54,9 @@ export function ChatCanvasDropdown({
 
     try {
       // Ne pas afficher loading si refresh polling (éviter clignotement)
-      if (canvases.length === 0) {
+      if (isFirstLoadRef.current) {
         setIsLoading(true);
+        isFirstLoadRef.current = false;
       }
       
       const { createClient } = await import('@supabase/supabase-js');
@@ -77,27 +85,86 @@ export function ChatCanvasDropdown({
       const { canva_sessions } = await response.json();
       setCanvases(canva_sessions || []);
       
-      // Log count pour debug
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[ChatCanvasDropdown] Loaded canvases', {
-          count: canva_sessions?.length || 0,
-          chatSessionId,
-          titles: canva_sessions?.map((c: any) => c.title)
-        });
-      }
+      logger.debug(LogCategory.EDITOR, '[ChatCanvasDropdown] Loaded canvases', {
+        count: canva_sessions?.length || 0,
+        chatSessionId,
+        titles: canva_sessions?.map((c: CanvaSession) => c.title)
+      });
 
     } catch (error) {
-      console.error('[ChatCanvasDropdown] Failed to load canvases', error);
+      logger.error(LogCategory.EDITOR, '[ChatCanvasDropdown] Failed to load canvases', error);
     } finally {
       setIsLoading(false);
     }
-  }, [chatSessionId, canvases.length]);
+  }, [chatSessionId]);
 
   // ✅ Charger canvases au mount (pour badge)
   useEffect(() => {
     if (!chatSessionId) return;
+    isFirstLoadRef.current = true; // Reset pour nouvelle session
     loadCanvases();
-  }, [chatSessionId]);
+  }, [chatSessionId, loadCanvases]);
+
+  // ✅ Recharger la liste quand le store change (Realtime)
+  // Le store est mis à jour par useCanvaRealtime, on recharge depuis l'API
+  const prevStoreSessionsCountRef = useRef(storeSessionsCount);
+  useEffect(() => {
+    if (!chatSessionId) return;
+    
+    // Recharger seulement si le nombre de sessions dans le store a changé
+    if (storeSessionsCount !== prevStoreSessionsCountRef.current) {
+      prevStoreSessionsCountRef.current = storeSessionsCount;
+      // Délai court pour laisser le temps au store de se synchroniser
+      const timeoutId = setTimeout(() => {
+        loadCanvases();
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [storeSessionsCount, chatSessionId, loadCanvases]);
+
+  // ✅ Écouter les événements Realtime pour recharger la liste
+  useEffect(() => {
+    if (!chatSessionId) return;
+
+    const handleCanvaCreated = (event: Event) => {
+      const customEvent = event as CustomEvent<{ canvaId: string; chatSessionId: string }>;
+      // Vérifier que l'événement concerne cette session chat
+      if (customEvent.detail.chatSessionId === chatSessionId) {
+        // Délai court pour laisser le temps à la DB de se synchroniser
+        setTimeout(() => {
+          loadCanvases();
+        }, 500);
+      }
+    };
+
+    const handleCanvaDeleted = (event: Event) => {
+      const customEvent = event as CustomEvent<{ canvaId: string; chatSessionId: string }>;
+      // Vérifier que l'événement concerne cette session chat
+      if (customEvent.detail.chatSessionId === chatSessionId) {
+        // Recharger immédiatement (la suppression est instantanée)
+        loadCanvases();
+      }
+    };
+
+    const handleCanvaUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent<{ canvaId: string; chatSessionId: string }>;
+      // Vérifier que l'événement concerne cette session chat
+      if (customEvent.detail.chatSessionId === chatSessionId) {
+        // Recharger pour mettre à jour le titre
+        loadCanvases();
+      }
+    };
+
+    window.addEventListener('canva-session-created', handleCanvaCreated);
+    window.addEventListener('canva-session-deleted', handleCanvaDeleted);
+    window.addEventListener('canva-session-updated', handleCanvaUpdated);
+
+    return () => {
+      window.removeEventListener('canva-session-created', handleCanvaCreated);
+      window.removeEventListener('canva-session-deleted', handleCanvaDeleted);
+      window.removeEventListener('canva-session-updated', handleCanvaUpdated);
+    };
+  }, [chatSessionId, loadCanvases]);
 
   // Polling rapide quand dropdown ouvert
   // ✅ Polling moins agressif grâce à Realtime (10s au lieu de 2s)
@@ -139,12 +206,18 @@ export function ChatCanvasDropdown({
     onSelectCanva(canvaId, noteId);
   };
 
-  const handleCloseCanva = (e: React.MouseEvent, canvaId: string) => {
+  const handleCloseCanva = async (e: React.MouseEvent, canvaId: string) => {
     e.stopPropagation();
-    // ✅ Fermer le pane UI (garde dans menu)
-    // Pour supprimer vraiment, il faudrait appeler onCloseCanva(canvaId, { delete: true })
-    onCloseCanva(canvaId);
-    // Ne pas supprimer du menu : le canva reste visible même si pane fermé
+    // ✅ Supprimer complètement le canevas (DELETE via API)
+    try {
+      await onCloseCanva(canvaId, { delete: true });
+      // La liste sera automatiquement mise à jour via Realtime
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, '[ChatCanvasDropdown] Failed to delete canva', {
+        canvaId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
   };
 
   // Nombre total de canvases (sauf deleted)
