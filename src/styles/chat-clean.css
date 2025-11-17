@@ -1128,22 +1128,22 @@ body.chat-theme-anthracite .chatgpt-header {
   }
   .chatgpt-canva-pane-wrapper__inner {
     height: 100%;
-    transform: translateX(100%);
     opacity: 0;
+    transform: scale(0.98);
     transition:
-      transform 0.24s var(--transition-normal),
-      opacity 0.24s var(--transition-fast);
-    will-change: transform, opacity;
+      opacity 0.25s var(--transition-fast),
+      transform 0.25s var(--transition-fast);
+    will-change: opacity, transform;
   }
 
   .chatgpt-canva-pane-wrapper__inner--open {
-    transform: translateX(0);
     opacity: 1;
+    transform: scale(1);
   }
 
   .chatgpt-canva-pane-wrapper__inner--closed {
-    transform: translateX(100%);
     opacity: 0;
+    transform: scale(0.98);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1237,7 +1237,7 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   flex: 0 0 66%;
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-bg-primary); /* ✅ Même couleur que l'éditeur */
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   padding: 0;
@@ -1298,6 +1298,58 @@ body.chat-theme-blue .chatgpt-messages-container::before {
 .chat-canva-pane__editor {
   position: relative;
   background: transparent;
+}
+
+.chat-canva-pane__editor-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.chat-canva-pane__editor-content.is-ready {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.chat-canva-pane__loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(13, 16, 23, 0.94), rgba(19, 22, 32, 0.9));
+  color: var(--chat-text-secondary);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  z-index: 5;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+.chat-canva-pane__loader.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chat-canva-pane__loader-spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--accent-primary);
+  animation: chat-canva-spinner 0.8s linear infinite;
+}
+
+@keyframes chat-canva-spinner {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .chat-canva-pane .editor-layout {
@@ -1367,6 +1419,31 @@ body.chat-theme-blue .chatgpt-messages-container::before {
 
 .chat-canva-pane .fixed.bottom-4.left-4 {
   display: none !important;
+}
+
+/* ✅ Scrollbar visible pour le canevas */
+.chat-canva-pane__editor > *::-webkit-scrollbar,
+.chat-canva-pane .editor-content-wrapper::-webkit-scrollbar {
+  width: 12px;
+}
+
+.chat-canva-pane__editor > *::-webkit-scrollbar-track,
+.chat-canva-pane .editor-content-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-canva-pane__editor > *::-webkit-scrollbar-thumb,
+.chat-canva-pane .editor-content-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+
+.chat-canva-pane__editor > *::-webkit-scrollbar-thumb:hover,
+.chat-canva-pane .editor-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+  background-clip: padding-box;
 }
 
 .chatgpt-message {

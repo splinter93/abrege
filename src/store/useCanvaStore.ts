@@ -307,6 +307,10 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         throw new Error('No auth session available');
       }
 
+      const fallbackTitle = options?.title?.trim() && options.title.trim().length > 0
+        ? options.title.trim()
+        : 'Canva — Sans titre';
+
       // Appel API V2 avec auth header (REST V2: /sessions pluriel)
       const response = await fetch('/api/v2/canva/sessions', {
         method: 'POST',
@@ -318,7 +322,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         body: JSON.stringify({
           chat_session_id: chatSessionId,
           create_if_missing: true,
-          title: options?.title,
+          title: fallbackTitle,
           initial_content: ''
         })
       });

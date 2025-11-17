@@ -957,10 +957,10 @@ const ChatFullscreenV2: React.FC = () => {
               <div
                 className={`chatgpt-canva-pane-wrapper__inner ${isCanvaOpen ? 'chatgpt-canva-pane-wrapper__inner--open' : 'chatgpt-canva-pane-wrapper__inner--closed'}`}
               >
-                <ChatCanvaPane 
-                  width={canvaWidth}
-                  onWidthChange={setCanvaWidth}
-                />
+              <ChatCanvaPane 
+                width={canvaWidth}
+                onWidthChange={setCanvaWidth}
+              />
               </div>
             </div>
           )}

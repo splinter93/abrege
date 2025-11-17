@@ -119,10 +119,27 @@ export class SystemMessageBuilder {
           }
         }
 
+        // ✅ CRITIQUE : Injecter sessionId systématiquement (visible par tous les LLM)
+        // Même si les autres parties du contexte ne sont pas présentes
+        if (ctx.sessionId && ctx.sessionId !== 'current') {
+          contextParts.push(`🔑 Session ID: ${ctx.sessionId}`);
+        }
+        
+        // Injecter la section contexte si on a au moins le sessionId ou d'autres infos
         if (contextParts.length > 0) {
           content += `\n\n## Contexte Actuel\n${contextParts.join('\n')}`;
-          content += `\n\n⚠️ Date/heure ci-dessus = MAINTENANT (actualisée automatiquement). Ne cherche pas l'heure ailleurs.`;
-          logger.dev(`[SystemMessageBuilder] 🌍 Contexte UI injecté (compact)`);
+          // Avertissement date/heure uniquement si on a injecté le contexte temporel
+          if (ctx.time?.local && ctx.device?.type && ctx.user?.locale) {
+            content += `\n\n⚠️ Date/heure ci-dessus = MAINTENANT (actualisée automatiquement). Ne cherche pas l'heure ailleurs.`;
+          }
+          logger.dev(`[SystemMessageBuilder] 🌍 Contexte UI injecté (compact)`, {
+            hasSessionId: !!(ctx.sessionId && ctx.sessionId !== 'current'),
+            partsCount: contextParts.length
+          });
+        } else if (ctx.sessionId && ctx.sessionId !== 'current') {
+          // ✅ FALLBACK : Si seul le sessionId est présent, l'injecter quand même
+          content += `\n\n## Contexte Actuel\n🔑 Session ID: ${ctx.sessionId}`;
+          logger.dev(`[SystemMessageBuilder] 🔑 Session ID injecté (contexte minimal)`);
         }
 
         const canvaContext = (ctx as any).canva_context as CanvaContextPayload | undefined;

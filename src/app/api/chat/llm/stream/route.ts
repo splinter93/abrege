@@ -233,6 +233,7 @@ export async function POST(request: NextRequest) {
         type: context.type || 'chat_session',
         name: context.name || 'Chat',
         id: context.id || sessionId,
+        sessionId: sessionId, // ✅ CRITIQUE : Injecter sessionId explicitement pour tous les LLM
         provider: providerType,
         ...uiContext  // Sans attachedNotes
       }

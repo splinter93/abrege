@@ -11,12 +11,11 @@
  */
 
 'use client';
-import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { useAuth } from '@/hooks/useAuth';
 import { logger, LogCategory } from '@/utils/logger';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
-import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import Editor from '@/components/editor/Editor';
 import { hashString } from '@/utils/editorHelpers';
@@ -46,6 +45,10 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const startXRef = useRef(0);
   const startWidthRef = useRef(width);
+  const [isEditorReady, setIsEditorReady] = useState(false);
+  const handleEditorReady = useCallback(() => {
+    setIsEditorReady(true);
+  }, []);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // ✅ AUTO-SAVE (Skip si streaming)
@@ -250,9 +253,13 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
     };
   }, [isDragging, onWidthChange]);
 
+  useEffect(() => {
+    setIsEditorReady(false);
+  }, [session?.id]);
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // ✅ RENDER
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ━━━━━━━━━━━━━━━━━━━━━━━━
 
   if (!session) {
     return null;
@@ -289,13 +296,19 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       )}
 
       <div className="chat-canva-pane__editor">
-        {/* ✅ Mémoïsation : Évite re-renders inutiles quand session.title change */}
-        <EditorMemo
-          sessionId={session.id}
-          noteId={session.noteId}
-          onClose={handleClose}
-          onEditorRef={handleEditorRef}
-        />
+        <div className={`chat-canva-pane__editor-content ${isEditorReady ? 'is-ready' : ''}`}>
+          <EditorMemo
+            sessionId={session.id}
+            noteId={session.noteId}
+            onClose={handleClose}
+            onEditorRef={handleEditorRef}
+            onReady={handleEditorReady}
+          />
+        </div>
+        <div className={`chat-canva-pane__loader ${isEditorReady ? 'is-hidden' : ''}`}>
+          <div className="chat-canva-pane__loader-spinner" />
+          <p>Ouverture du canva…</p>
+        </div>
       </div>
     </section>
   );
@@ -305,11 +318,12 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
  * ✅ Editor mémoïsé pour éviter re-renders multiples
  * Key change = re-mount, mais props stables = pas de re-render
  */
-const EditorMemo = React.memo(({ sessionId, noteId, onClose, onEditorRef }: {
+const EditorMemo = React.memo(({ sessionId, noteId, onClose, onEditorRef, onReady }: {
   sessionId: string;
   noteId: string;
   onClose: () => void;
   onEditorRef: (editor: TiptapEditor | null) => void;
+  onReady?: () => void;
 }) => {
   return (
     <Editor
@@ -317,6 +331,7 @@ const EditorMemo = React.memo(({ sessionId, noteId, onClose, onEditorRef }: {
       noteId={noteId}
       onClose={onClose}
       onEditorRef={onEditorRef}
+      onReady={onReady}
     />
   );
 });

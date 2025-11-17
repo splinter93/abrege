@@ -88,9 +88,10 @@ interface EditorProps {
   canEdit?: boolean;
   onClose?: () => void;
   onEditorRef?: (editor: TiptapEditor | null) => void;
+  onReady?: () => void;
 }
 
-const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propUserId, canEdit = true, onClose, onEditorRef }) => {
+const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propUserId, canEdit = true, onClose, onEditorRef, onReady }) => {
   // 🔧 CORRECTION : Utiliser le vrai ID utilisateur de la session
   const { user } = useAuth();
   const userId = propUserId || user?.id || 'anonymous';
@@ -131,6 +132,7 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
   const slashMenuRef = React.useRef<EditorSlashMenuHandle | null>(null);
   const editorContainerRef = React.useRef<HTMLDivElement | null>(null);
   const autoFocusRef = React.useRef(false);
+  const readyNotifiedRef = React.useRef(false);
 
   // ✅ Sidebar Navigation - Pattern chat (hover zone + transform)
   const [sidebarVisible, setSidebarVisible] = React.useState(false);
@@ -142,7 +144,15 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
   React.useEffect(() => {
     setIsContentReady(false);
     autoFocusRef.current = false;
+    readyNotifiedRef.current = false;
   }, [noteId]);
+
+  React.useEffect(() => {
+    if (isContentReady && !readyNotifiedRef.current) {
+      readyNotifiedRef.current = true;
+      onReady?.();
+    }
+  }, [isContentReady, onReady]);
 
   // Mode readonly (pages publiques ou preview mode)
   const isReadonly = readonly || editorState.ui.previewMode;
