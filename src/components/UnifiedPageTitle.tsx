@@ -17,6 +17,7 @@ interface UnifiedPageTitleProps {
   action?: React.ReactNode; // Action button ou autre élément à droite
   className?: string;
   initialAnimation?: boolean;
+  showIcon?: boolean;
 }
 
 /**
@@ -30,16 +31,18 @@ const UnifiedPageTitle: React.FC<UnifiedPageTitleProps> = ({
   stats = [],
   action,
   className = '',
-  initialAnimation = true
+  initialAnimation = true,
+  showIcon = true
 }) => {
   const containerClass = `unified-page-title-container ${className}`.trim();
   
   const content = (
     <div className="unified-page-title-content">
-      {/* Bloc icône à gauche - style identique au dashboard */}
-      <div className="unified-page-title-logo">
-        <Icon size={40} />
-      </div>
+      {showIcon && (
+        <div className="unified-page-title-logo">
+          <Icon size={40} />
+        </div>
+      )}
       
       {/* Section titre */}
       <div className="unified-page-title-section">

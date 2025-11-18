@@ -26,11 +26,11 @@
 }
 
 .section-title {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
   color: #ffffff;
   margin: 0;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -135,7 +135,7 @@
   font-weight: 600;
   color: #ffffff;
   margin: 0 0 0.5rem 0;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -163,8 +163,8 @@
   max-width: 100%; /* ✅ Empêche l'extension au-delà du parent */
   
   /* Style de carte */
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
+  border: none;
   border-radius: 12px;
   padding: 1.5rem;
   padding-bottom: 1.75rem;
@@ -176,8 +176,7 @@
 
 .recent-files-grid:hover,
 .recent-files-list:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
 }
 
 .recent-files-grid {
@@ -510,8 +509,8 @@
   justify-content: center;
   min-height: 80px;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
+  border: none;
   border-radius: 8px;
   transition: all 0.3s ease;
   cursor: pointer;
@@ -520,13 +519,11 @@
 }
 
 .drop-zone:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
 }
 
 .drop-zone.drag-over {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
 }
 
 .drop-zone-icon {
@@ -726,7 +723,7 @@
   font-weight: 600;
   color: #ffffff;
   margin: 0 0 0.25rem 0;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .action-content p {
@@ -806,7 +803,7 @@
   }
   
   .section-title {
-    font-size: 20px;
+    font-size: 16px;
   }
   
   .section-title-row {
@@ -853,7 +850,7 @@
   }
   
   .section-title {
-    font-size: 18px;
+    font-size: 15px;
   }
   
   .recent-files-grid,

@@ -2,7 +2,6 @@
 
 import { useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserStats } from '@/hooks/useUserStats';
 import { useRouter } from 'next/navigation';
 import UnifiedSidebar from '@/components/UnifiedSidebar';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -46,7 +45,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
   const notesScrollRef = useRef<HTMLDivElement>(null);
   const filesScrollRef = useRef<HTMLDivElement>(null);
 
-  const { stats } = useUserStats();
+  const displayName = user.username || user.email?.split('@')[0] || 'User';
 
   const { handleError } = useSecureErrorHandler({
     context: 'HomePage',
@@ -170,147 +169,140 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
         {/* Titre du dashboard avec statistiques dynamiques */}
         <UnifiedPageTitle
           icon={LayoutDashboard}
-          title="Dashboard"
-          subtitle={`Welcome Home, ${user.username || user.email?.split('@')[0] || 'User'}.`}
-          stats={stats ? [
-            { number: stats.total_notes, label: "Notes" },
-            { number: stats.total_classeurs, label: "Classeurs" },
-            { number: stats.total_folders, label: "Dossiers" }
-          ] : []}
+          title={`Welcome Home, ${displayName}.`}
+          subtitle="Let's craft amazing work today."
+          className="dashboard-title-centered"
+          showIcon={false}
         />
 
-        {/* Dashboard principal avec design moderne */}
+        {/* Dashboard principal avec design centré */}
         <div className="main-dashboard">
-          {/* Ligne recherche + actions rapides */}
-          <motion.div 
-            className="search-actions-row"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          >
-            {/* Barre de recherche */}
-            <SearchBar
-              placeholder="Rechercher des notes..."
-              onSearchResult={handleSearchResult}
-              maxResults={10}
-              searchTypes={['all']}
-            />
-
-            {/* Actions rapides compactes */}
-            <div className="quick-actions">
-              <motion.button 
-                className="quick-action create-note"
-                onClick={handleCreateNote}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                title="Créer une note rapide"
-              >
-                <Plus size={16} />
-              </motion.button>
-
-              <motion.button 
-                className="quick-action import"
-                onClick={handleImport}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                title="Importer"
-              >
-                <Upload size={16} />
-              </motion.button>
-
-              <motion.button 
-                className="quick-action youtube"
-                onClick={handleYoutubeSummary}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                title="Youtube Summary"
-              >
-                <Youtube size={16} />
-              </motion.button>
-              
-              <motion.button 
-                className="quick-action chat"
-                onClick={handleOpenChat}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                title="Chat"
-              >
-                <MessageSquare size={16} />
-              </motion.button>
-            </div>
-          </motion.div>
-
-          {/* Section Notes Récentes */}
-          <motion.section 
-            className="dashboard-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-          >
-            <div className="section-header">
-              <div className="section-title-row">
-                <h2 className="section-title">Notes Récentes</h2>
-                <div className="section-navigation">
-                  <button 
-                    className="nav-btn prev-btn"
-                    onClick={handleNotesPrevious}
-                    aria-label="Notes précédentes"
-                    title="Faire défiler vers la gauche"
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-                  <button 
-                    className="nav-btn next-btn"
-                    onClick={handleNotesNext}
-                    aria-label="Notes suivantes"
-                    title="Faire défiler vers la droite"
-                  >
-                    <ChevronRight size={18} />
-                  </button>
+          <div className="dashboard-center-stack">
+            {/* Espace rapide : recherche + actions */}
+            <motion.section 
+              className="dashboard-section centered quick-workspace-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            >
+              <div className="section-header">
+                <div className="section-title-row">
+                  <h4 className="section-title">Actions Rapides</h4>
                 </div>
               </div>
-            </div>
-            <div className="section-content">
-              <NotesCarouselNotion 
-                ref={notesScrollRef}
-                limit={10}
-                showNavigation={false}
-                autoPlay={false}
-                title=""
-                showViewAll={false}
-              />
-            </div>
-          </motion.section>
+              <div className="quick-workspace">
+                <SearchBar
+                  placeholder="Rechercher des notes..."
+                  onSearchResult={handleSearchResult}
+                  maxResults={10}
+                  searchTypes={['all']}
+                  className="dashboard-search-bar"
+                />
 
-          {/* Section 2 colonnes : Fichiers Récents + Drop Zone */}
-          <motion.section 
-            className="dashboard-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          >
-            <div className="dashboard-two-columns">
-              {/* Colonne gauche : Drop Zone */}
-              <div className="dashboard-column">
-                <div className="dashboard-column-header">
-                  <h3 className="dashboard-column-title">Drop Zone</h3>
-                </div>
-                <div className="dashboard-column-content">
-                  <UnifiedUploadZone />
+                <div className="quick-actions-grid">
+                  <motion.button 
+                    className="quick-action-card create-note"
+                    onClick={handleCreateNote}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    title="Créer une note rapide"
+                  >
+                    <Plus size={20} />
+                    <span className="quick-action-label">Nouvelle note</span>
+                  </motion.button>
+
+                  <motion.button 
+                    className="quick-action-card import"
+                    onClick={handleImport}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    title="Importer"
+                  >
+                    <Upload size={20} />
+                    <span className="quick-action-label">Importer</span>
+                  </motion.button>
+
+                  <motion.button 
+                    className="quick-action-card youtube"
+                    onClick={handleYoutubeSummary}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    title="Youtube Summary"
+                  >
+                    <Youtube size={20} />
+                    <span className="quick-action-label">Résumé YouTube</span>
+                  </motion.button>
+                  
+                  <motion.button 
+                    className="quick-action-card chat"
+                    onClick={handleOpenChat}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    title="Chat"
+                  >
+                    <MessageSquare size={20} />
+                    <span className="quick-action-label">Ouvrir le chat</span>
+                  </motion.button>
                 </div>
               </div>
+            </motion.section>
 
-              {/* Séparateur vertical */}
-              <div className="dashboard-vertical-separator"></div>
+            {/* Section Notes Récentes */}
+            <motion.section 
+              className="dashboard-section centered notes-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            >
+              <div className="section-header">
+                <div className="section-title-row with-navigation">
+                  <h4 className="section-title">Notes Récentes</h4>
+                  <div className="section-navigation">
+                    <button 
+                      className="nav-btn prev-btn"
+                      onClick={handleNotesPrevious}
+                      aria-label="Notes précédentes"
+                      title="Faire défiler vers la gauche"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <button 
+                      className="nav-btn next-btn"
+                      onClick={handleNotesNext}
+                      aria-label="Notes suivantes"
+                      title="Faire défiler vers la droite"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="section-content">
+                <NotesCarouselNotion 
+                  ref={notesScrollRef}
+                  limit={10}
+                  showNavigation={false}
+                  autoPlay={false}
+                  title=""
+                  showViewAll={false}
+                />
+              </div>
+            </motion.section>
 
-              {/* Colonne droite : Fichiers Récents */}
-              <div className="dashboard-column">
-                <div className="dashboard-column-header">
-                  <h3 className="dashboard-column-title">Fichiers Récents</h3>
+            {/* Section Fichiers récents */}
+            <motion.section 
+              className="dashboard-section centered"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.35, ease: "easeOut" }}
+            >
+              <div className="section-header">
+                <div className="section-title-row with-navigation">
+                  <h4 className="section-title">Fichiers Récents</h4>
                   <div className="section-navigation">
                     <button 
                       className="nav-btn prev-btn"
@@ -330,24 +322,43 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
                     </button>
                   </div>
                 </div>
-                <div className="dashboard-column-content">
-                  <RecentFilesList ref={filesScrollRef} limit={10} />
+              </div>
+              <div className="section-content recent-files-centered">
+                <RecentFilesList ref={filesScrollRef} limit={10} />
+              </div>
+            </motion.section>
+
+            {/* Section Drop Zone */}
+            <motion.section 
+              className="dashboard-section centered drop-zone-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            >
+              <div className="section-header">
+                <div className="section-title-row">
+                  <h4 className="section-title">Drop Zone</h4>
                 </div>
               </div>
-            </div>
-          </motion.section>
+              <div className="section-content drop-zone-centered">
+                <div className="drop-zone-card">
+                  <UnifiedUploadZone />
+                </div>
+              </div>
+            </motion.section>
 
-          {/* Input file caché pour l'import */}
-          <input 
-            id="file-input"
-            type="file" 
-            style={{ display: 'none' }}
-            onChange={(e) => {
-              if (e.target.files?.length) {
-                logger.dev('[HomePage] Fichier sélectionné:', e.target.files[0]);
-              }
-            }}
-          />
+            {/* Input file caché pour l'import */}
+            <input 
+              id="file-input"
+              type="file" 
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                if (e.target.files?.length) {
+                  logger.dev('[HomePage] Fichier sélectionné:', e.target.files[0]);
+                }
+              }}
+            />
+          </div>
         </div>
       </main>
       
