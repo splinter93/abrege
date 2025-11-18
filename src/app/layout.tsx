@@ -133,6 +133,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             width: 250px !important;
             height: 100vh !important;
             background: linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%) !important;
+            border: none !important;
             border-right: none !important;
             border-top-right-radius: 20px !important;
             border-bottom-right-radius: 20px !important;

@@ -142,9 +142,9 @@
   border: none;
 }
 
-/* Hover state - subtil sans encadré */
+/* Hover state - similaire au focus mais plus transparent */
 .classeur-tab-glassmorphism:hover {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   color: var(--chat-text-primary, #e8eaed);
 }
 
@@ -515,12 +515,12 @@
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 8px;
-  color: var(--text-primary, rgba(0, 0, 0, 0.8));
+  color: var(--chat-text-primary, #e8eaed);
 }
 
 .classeur-content-glassmorphism .folder-empty-subtitle {
   font-size: 14px;
-  color: var(--text-tertiary, rgba(0, 0, 0, 0.5));
+  color: var(--chat-text-secondary, #a1a9b1);
 }
 
 /* Responsive design */

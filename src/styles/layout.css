@@ -30,7 +30,7 @@
   height: 100vh;
   z-index: var(--z-sidebar);
   background: var(--surface-primary);
-  border-right: 1px solid var(--border-subtle);
+  border-right: none;
 }
 
 /* Zone de contenu principal */

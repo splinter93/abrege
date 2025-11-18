@@ -129,7 +129,7 @@
 .fm-grid-item .fm-item-name {
   font-size: 14px;
   font-weight: 500;
-  color: var(--files-text-primary);
+  color: var(--chat-text-primary, #e8eaed);
   text-align: center;
   line-height: 1.4;
   font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
@@ -239,7 +239,7 @@
   background: transparent;
   border: 1px solid var(--glass-border-hover);
   border-radius: 0;
-  color: var(--files-text-primary);
+  color: var(--chat-text-primary, #e8eaed);
   padding: var(--files-spacing-xs) var(--files-spacing-sm);
   font-size: 14px;
   font-family: 'Figtree', 'Geist', -apple-system, sans-serif;

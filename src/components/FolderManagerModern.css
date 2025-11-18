@@ -257,7 +257,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: var(--spacing-sm);
-  color: var(--text-1, rgba(255, 255, 255, 0.9));
+  color: var(--chat-text-primary, #e8eaed);
 }
 
 .folder-empty-subtitle {
