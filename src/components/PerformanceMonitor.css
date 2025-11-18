@@ -37,7 +37,7 @@
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(20px);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   font-size: 14px;
   z-index: 1000;
   overflow: hidden;
@@ -232,7 +232,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .action-btn:disabled {

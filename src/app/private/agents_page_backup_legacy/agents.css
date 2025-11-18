@@ -140,7 +140,7 @@
   font-weight: 600;
   color: #ffffff;
   margin: 0;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .btn-icon {
@@ -305,7 +305,7 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: 0.25rem;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .mcp-dropdown-url {
@@ -356,7 +356,7 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: 0.25rem;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .mcp-linked-desc {
@@ -1386,7 +1386,7 @@
   cursor: pointer;
   transition: all 0.25s ease;
   border: none;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .btn-primary {
@@ -1834,7 +1834,7 @@
   font-weight: 600;
   color: #ffffff;
   margin: 0 0 0.5rem 0;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .empty-state p {
@@ -1945,7 +1945,7 @@
   font-weight: 600;
   color: #ffffff;
   margin: 0;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .modal-close {

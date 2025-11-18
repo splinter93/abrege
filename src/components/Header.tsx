@@ -120,7 +120,7 @@ const Header: React.FC = () => {
             fontWeight: 500,
             fontSize: 13,
             textDecoration: 'none',
-            fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+            fontFamily: 'Figtree, Geist, -apple-system, sans-serif',
             letterSpacing: '0.01em',
             transition: 'all 0.2s ease',
             display: 'flex',
@@ -146,7 +146,7 @@ const Header: React.FC = () => {
           onClick={() => setIsShareMenuOpen(!isShareMenuOpen)}
           title="Partager cette page"
           style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Figtree, Geist, -apple-system, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
           }}
           onMouseOver={e => {
             e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
@@ -172,7 +172,7 @@ const Header: React.FC = () => {
         <button
           title="Ajouter aux favoris"
           style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: isFavorite ? '#FFD600' : '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: isFavorite ? '#FFD600' : '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Figtree, Geist, -apple-system, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
           }}
           onClick={() => setIsFavorite(fav => !fav)}
           onMouseOver={e => {
@@ -191,7 +191,7 @@ const Header: React.FC = () => {
           onClick={() => setIsKebabMenuOpen(!isKebabMenuOpen)}
           title="Options"
           style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Noto Sans, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', color: '#D4D4D4', width: 36, height: 36, borderRadius: '50%', transition: 'background 0.18s, color 0.18s', boxShadow: 'none', fontFamily: 'Figtree, Geist, -apple-system, sans-serif', outline: 'none', fontSize: 0, cursor: 'pointer',
           }}
           onMouseOver={e => {
             e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
@@ -254,7 +254,7 @@ const Header: React.FC = () => {
                       fontSize: '14px',
                       cursor: 'pointer',
                       transition: 'background-color 0.15s ease',
-                      fontFamily: 'Noto Sans, Inter, Arial, sans-serif',
+                      fontFamily: 'Figtree, Geist, -apple-system, sans-serif',
                       borderRadius: 0
                     }}
                     onMouseEnter={(e) => {

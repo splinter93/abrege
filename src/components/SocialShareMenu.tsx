@@ -125,7 +125,7 @@ export default function SocialShareMenu({
                   fontSize: '14px',
                   cursor: 'pointer',
                   transition: 'background-color 0.15s ease',
-                  fontFamily: 'Noto Sans, Inter, Arial, sans-serif'
+                  fontFamily: 'Figtree, Geist, -apple-system, sans-serif'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#2a2a2c';
@@ -163,7 +163,7 @@ export default function SocialShareMenu({
                   fontSize: '14px',
                   cursor: 'pointer',
                   transition: 'background-color 0.15s ease',
-                  fontFamily: 'Noto Sans, Inter, Arial, sans-serif'
+                  fontFamily: 'Figtree, Geist, -apple-system, sans-serif'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#2a2a2c';

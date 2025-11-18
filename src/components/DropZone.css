@@ -78,7 +78,7 @@
   font-weight: 600;
   color: var(--files-text-primary);
   margin-bottom: var(--files-spacing-md);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -116,7 +116,7 @@
   font-size: 16px;
   color: var(--files-text-secondary);
   font-weight: 500;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 /* ==========================================================================

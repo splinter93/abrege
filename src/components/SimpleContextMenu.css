@@ -12,7 +12,7 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
   padding: 8px 0;
   color: var(--text-primary, #ffffff);
-  font-family: 'Noto Sans', Inter, Arial, sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, Inter, Arial, sans-serif;
   font-size: 13px;
   font-weight: 400;
   user-select: none;

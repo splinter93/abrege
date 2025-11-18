@@ -39,9 +39,9 @@ const UnifiedPageTitle: React.FC<UnifiedPageTitleProps> = ({
   const content = (
     <div className="unified-page-title-content">
       {showIcon && (
-        <div className="unified-page-title-logo">
-          <Icon size={40} />
-        </div>
+      <div className="unified-page-title-logo">
+        <Icon size={40} />
+      </div>
       )}
       
       {/* Section titre */}

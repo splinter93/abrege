@@ -65,7 +65,7 @@
   box-shadow: none;
   transition: color 0.2s;
   filter: none;
-  font-family: 'Noto Sans', sans-serif !important;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif !important;
 }
 .logout-btn:hover {
   color: #fff;

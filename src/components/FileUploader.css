@@ -73,13 +73,13 @@
   font-size: 18px;
   font-weight: 600;
   color: var(--files-text-primary);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .file-uploader-hint {
   font-size: 14px;
   color: var(--files-text-secondary);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   opacity: 0.8;
 }
 
@@ -119,7 +119,7 @@
   background: var(--glass-bg-secondary);
   border: 1px solid var(--border-color);
   transition: all 0.2s ease;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .file-uploader-label:hover {
@@ -154,7 +154,7 @@
   justify-content: center;
   transition: all 0.2s ease;
   z-index: 10;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .file-uploader-toggle:hover {

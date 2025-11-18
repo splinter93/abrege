@@ -1,4 +1,5 @@
 import React from 'react';
+import { Feather } from 'react-feather';
 
 export const FolderIcon: React.FC<{ size?: number; className?: string }> = ({ size = 24, className }) => (
   <svg
@@ -31,56 +32,5 @@ export const FolderIcon: React.FC<{ size?: number; className?: string }> = ({ si
 );
 
 export const FileIcon: React.FC<{ size?: number; className?: string }> = ({ size = 24, className }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-  >
-    {/* Fichier avec design moderne */}
-    <path
-      d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
-      stroke="#3b82f6"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    />
-    {/* Coin plié du fichier */}
-    <path
-      d="M14 2v6h6"
-      stroke="#3b82f6"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    />
-    {/* Lignes de contenu du fichier */}
-    <path
-      d="M16 13H8"
-      stroke="#3b82f6"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    />
-    <path
-      d="M16 17H8"
-      stroke="#3b82f6"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    />
-    <path
-      d="M10 9H8"
-      stroke="#3b82f6"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    />
-  </svg>
+  <Feather size={size} className={className} />
 ); 

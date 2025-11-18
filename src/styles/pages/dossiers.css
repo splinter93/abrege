@@ -91,16 +91,18 @@
 }
 
 /* Espacement spécifique pour les wrappers */
-.folder-item-wrapper .folder-icon,
+.folder-item-wrapper .folder-icon {
+  margin-bottom: 12px !important;
+}
 .file-item-wrapper .file-icon {
-  margin-bottom: 4px ;
+  margin-bottom: 12px !important;
 }
 
 .folder-item-wrapper .fm-item-name,
 .file-item-wrapper .fm-item-name {
   font-size: 14px ;
   font-weight: 500 ;
-  color: var(--unified-text-primary) ;
+  color: var(--chat-text-primary, #e8eaed) ;
   text-align: center ;
   line-height: 1.3 ;
   word-wrap: break-word ;
@@ -164,7 +166,7 @@
    ======================================== */
 
 .fm-grid-item .folder-icon {
-  margin-bottom: 4px ;
+  margin-bottom: 12px !important;
   display: flex ;
   justify-content: center ;
   align-items: center ;
@@ -173,10 +175,14 @@
   -webkit-font-smoothing: antialiased ;
   -moz-osx-font-smoothing: grayscale ;
   font-smooth: never ;
+  background: linear-gradient(135deg, #4a352d 0%, #5a3f35 50%, #4a352d 100%) !important;
+  border: none !important;
+  border-radius: 16px !important;
+  color: var(--chat-text-primary, #e8eaed) !important;
 }
 
 .fm-grid-item .file-icon {
-  margin-bottom: 4px ;
+  margin-bottom: 12px !important;
   display: flex ;
   justify-content: center ;
   align-items: center ;
@@ -185,6 +191,10 @@
   -webkit-font-smoothing: antialiased ;
   -moz-osx-font-smoothing: grayscale ;
   font-smooth: never ;
+  background: linear-gradient(135deg, #353942 0%, #3d4249 50%, #353942 100%) !important;
+  border: none !important;
+  border-radius: 16px !important;
+  color: var(--chat-text-primary, #e8eaed) !important;
 }
 
 .fm-grid-item:hover .folder-icon {
@@ -204,7 +214,7 @@
 .fm-grid-item .fm-item-name {
   font-size: 14px ;
   font-weight: 500 ;
-  color: var(--unified-text-primary) ;
+  color: var(--chat-text-primary, #e8eaed) ;
   text-align: center ;
   line-height: 1.4 ;
   font-family: var(--editor-font-family-headings);
@@ -286,7 +296,7 @@
   background: var(--unified-glass-bg-medium) ;
   border: 1px solid var(--unified-glass-border-light) ;
   border-radius: 8px ;
-  color: var(--unified-text-primary) ;
+  color: var(--chat-text-primary, #e8eaed) ;
   padding: 8px 12px ;
   font-size: 14px ;
   font-family: var(--editor-font-family-headings);
@@ -355,14 +365,14 @@
 .folder-empty-title {
   font-size: 20px ;
   font-weight: 600 ;
-  color: var(--unified-text-primary) ;
+  color: var(--chat-text-primary, #e8eaed) ;
   margin-bottom: 12px ;
 }
 
 .folder-empty-subtitle {
   font-size: 14px ;
   font-weight: 500 ;
-  color: var(--unified-text-secondary) ;
+  color: var(--chat-text-secondary, #a1a9b1) ;
   opacity: 0.8 ;
 }
 

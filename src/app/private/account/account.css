@@ -44,7 +44,7 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: #ffffff;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   order: 1;
 }
 
@@ -89,7 +89,7 @@
 .account-profile-value {
   font-size: 1rem;
   color: #ffffff;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   font-weight: 600;
 }
 
@@ -104,7 +104,7 @@
   color: #22c55e;
   font-size: 0.9rem;
   font-weight: 500;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .account-plan-icon {
@@ -200,7 +200,7 @@
   font-weight: 600;
   color: #ffffff;
   margin: 0;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -314,7 +314,7 @@
   color: #ffffff;
   font-size: 0.8rem;
   margin-right: 0.5rem;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .account-scopes-tags {
@@ -373,7 +373,7 @@
   margin: 0 0 0.5rem 0;
   color: #ffffff;
   font-size: 1.2rem;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .account-empty-state p {
@@ -476,7 +476,7 @@
   color: #ffffff;
   font-weight: 500;
   font-size: 0.9rem;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .account-field-input {

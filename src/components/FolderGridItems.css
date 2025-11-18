@@ -72,24 +72,42 @@
   margin-right: auto;
 }
 
-/* Style encadré orange pour les icônes de dossiers */
-.fm-grid-item .folder-icon {
-  background: rgba(229, 90, 44, 0.1) !important;
-  border: 1px solid rgba(229, 90, 44, 0.3) !important;
-  border-radius: 16px !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+/* Espacement spécifique pour les icônes de fichiers (plume) */
+.fm-grid-item .file-icon {
+  margin-bottom: 12px !important;
 }
 
-/* Style encadré bleu pour les icônes de fichiers */
-.fm-grid-item .file-icon {
-  background: rgba(59, 130, 246, 0.1) !important;
-  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+/* Espacement spécifique pour les icônes de dossiers */
+.fm-grid-item .folder-icon {
+  margin-bottom: 12px !important;
+}
+
+/* Style encadré orange pour les icônes de dossiers */
+.fm-grid-item .folder-icon {
+  background: linear-gradient(135deg, #4a352d 0%, #5a3f35 50%, #4a352d 100%) !important;
+  border: none !important;
   border-radius: 16px !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  color: var(--chat-text-primary, #e8eaed) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Style encadré gris pour les icônes de fichiers (plume) */
+.fm-grid-item .file-icon {
+  background: linear-gradient(135deg, #353942 0%, #3d4249 50%, #353942 100%) !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: var(--chat-text-primary, #e8eaed) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .fm-grid-item:hover .file-icon,
@@ -114,7 +132,7 @@
   color: var(--files-text-primary);
   text-align: center;
   line-height: 1.4;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   word-break: break-word;
   max-width: 100%;
   margin: 0;
@@ -224,7 +242,7 @@
   color: var(--files-text-primary);
   padding: var(--files-spacing-xs) var(--files-spacing-sm);
   font-size: 14px;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   text-align: center;
   width: 100%;
   max-width: 150px;

@@ -24,7 +24,7 @@
     --sm-gap: 4px;
     
     /* Typography */
-    --sm-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    --sm-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Figtree", "Geist", -apple-system, Helvetica, Arial, sans-serif;
     --sm-font-size: 14px;
     --sm-line-height: 1.5;
     

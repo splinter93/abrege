@@ -48,7 +48,7 @@
    MESSAGE DE CHARGEMENT - MINIMALISTE
    ========================================================================== */
 .page-loading-message {
-  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px; /* Plus petit */
   font-weight: 400; /* Plus léger */
   color: rgba(255, 255, 255, 0.8); /* Blanc transparent */

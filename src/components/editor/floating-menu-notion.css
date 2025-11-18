@@ -38,7 +38,7 @@
   --fm-button-bg-hover: rgba(255, 255, 255, 0.08);
   --fm-button-bg-active: var(--fm-accent-bg);
   
-  --fm-font: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --fm-font: 'Figtree', 'Geist', -apple-system, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --fm-font-size: 14px;
   --fm-line-height: 1.4;
   

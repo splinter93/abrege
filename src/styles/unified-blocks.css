@@ -19,7 +19,7 @@
   --blk-pad-x: 16px;
   --blk-toolbar-h: 40px;
   --mono: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --sans: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --sans: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --accent: #ff6b35;
 }
 

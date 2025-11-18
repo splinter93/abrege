@@ -11,7 +11,7 @@ export const useFontManager = (currentFont: string | null | undefined) => {
     try {
       // Mapper les noms de police aux familles CSS
       const fontFamilyMap: Record<string, string> = {
-        'Noto Sans': "'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
+        'Noto Sans': "'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
         'Inter': "'Inter', sans-serif",
         'Roboto': "'Roboto', sans-serif",
         'Open Sans': "'Open Sans', sans-serif",

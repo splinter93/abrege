@@ -24,14 +24,14 @@
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .carousel-count {
   font-size: 14px;
   color: var(--text-secondary);
   margin-left: var(--space-sm);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .carousel-nav {
@@ -150,13 +150,13 @@
 .carousel-loading span {
   font-size: 16px;
   color: var(--text-secondary);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .carousel-error span {
   font-size: 16px;
   color: #ef4444;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .carousel-empty {
@@ -168,14 +168,14 @@
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .carousel-empty p {
   font-size: 14px;
   color: var(--text-secondary);
   margin: 0;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 /* ==========================================================================

@@ -9,12 +9,16 @@
 @import '../styles/glassmorphism-variables.css';
 
 .folder-manager-wrapper {
-  padding: 0 var(--spacing-lg) var(--spacing-lg) var(--spacing-lg);
+  padding: 0;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 200px); /* Hauteur minimale réduite pour occuper plus d'espace */
-  height: 100%; /* Force la hauteur complète */
+  min-height: calc(100vh - 200px);
+  height: 100%;
+  visibility: visible;
+  opacity: 1;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Container */
@@ -128,10 +132,10 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: none;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
+  color: var(--chat-text-primary, #e8eaed);
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(20px);
@@ -157,9 +161,9 @@
 }
 
 .toolbar-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
+  border: none;
+  color: var(--chat-text-primary, #e8eaed);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -169,8 +173,8 @@
 }
 
 .toolbar-icon-btn.active {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: #e55a2c;
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
+  border: none;
   color: #e55a2c;
   box-shadow: 0 4px 16px rgba(229, 90, 44, 0.2);
 }

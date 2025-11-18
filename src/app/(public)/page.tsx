@@ -181,125 +181,125 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
             {/* Espace rapide : recherche + actions */}
             <motion.section 
               className="dashboard-section centered quick-workspace-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-            >
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          >
               <div className="section-header">
                 <div className="section-title-row">
                   <h4 className="section-title">Actions Rapides</h4>
                 </div>
               </div>
               <div className="quick-workspace">
-                <SearchBar
-                  placeholder="Rechercher des notes..."
-                  onSearchResult={handleSearchResult}
-                  maxResults={10}
-                  searchTypes={['all']}
+            <SearchBar
+              placeholder="Rechercher des notes..."
+              onSearchResult={handleSearchResult}
+              maxResults={10}
+              searchTypes={['all']}
                   className="dashboard-search-bar"
-                />
+            />
 
                 <div className="quick-actions-grid">
-                  <motion.button 
+              <motion.button 
                     className="quick-action-card create-note"
-                    onClick={handleCreateNote}
+                onClick={handleCreateNote}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    title="Créer une note rapide"
-                  >
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Créer une note rapide"
+              >
                     <Plus size={20} />
                     <span className="quick-action-label">Nouvelle note</span>
-                  </motion.button>
+              </motion.button>
 
-                  <motion.button 
+              <motion.button 
                     className="quick-action-card import"
-                    onClick={handleImport}
+                onClick={handleImport}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    title="Importer"
-                  >
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Importer"
+              >
                     <Upload size={20} />
                     <span className="quick-action-label">Importer</span>
-                  </motion.button>
+              </motion.button>
 
-                  <motion.button 
+              <motion.button 
                     className="quick-action-card youtube"
-                    onClick={handleYoutubeSummary}
+                onClick={handleYoutubeSummary}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    title="Youtube Summary"
-                  >
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Youtube Summary"
+              >
                     <Youtube size={20} />
                     <span className="quick-action-label">Résumé YouTube</span>
-                  </motion.button>
-                  
-                  <motion.button 
+              </motion.button>
+              
+              <motion.button 
                     className="quick-action-card chat"
-                    onClick={handleOpenChat}
+                onClick={handleOpenChat}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    title="Chat"
-                  >
+                transition={{ type: "spring", stiffness: 300 }}
+                title="Chat"
+              >
                     <MessageSquare size={20} />
                     <span className="quick-action-label">Ouvrir le chat</span>
-                  </motion.button>
-                </div>
+              </motion.button>
+            </div>
               </div>
             </motion.section>
 
-            {/* Section Notes Récentes */}
-            <motion.section 
+          {/* Section Notes Récentes */}
+          <motion.section 
               className="dashboard-section centered notes-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            >
-              <div className="section-header">
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          >
+            <div className="section-header">
                 <div className="section-title-row with-navigation">
                   <h4 className="section-title">Notes Récentes</h4>
-                  <div className="section-navigation">
-                    <button 
-                      className="nav-btn prev-btn"
-                      onClick={handleNotesPrevious}
-                      aria-label="Notes précédentes"
-                      title="Faire défiler vers la gauche"
-                    >
-                      <ChevronLeft size={18} />
-                    </button>
-                    <button 
-                      className="nav-btn next-btn"
-                      onClick={handleNotesNext}
-                      aria-label="Notes suivantes"
-                      title="Faire défiler vers la droite"
-                    >
-                      <ChevronRight size={18} />
-                    </button>
-                  </div>
+                <div className="section-navigation">
+                  <button 
+                    className="nav-btn prev-btn"
+                    onClick={handleNotesPrevious}
+                    aria-label="Notes précédentes"
+                    title="Faire défiler vers la gauche"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button 
+                    className="nav-btn next-btn"
+                    onClick={handleNotesNext}
+                    aria-label="Notes suivantes"
+                    title="Faire défiler vers la droite"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
                 </div>
               </div>
-              <div className="section-content">
-                <NotesCarouselNotion 
-                  ref={notesScrollRef}
-                  limit={10}
-                  showNavigation={false}
-                  autoPlay={false}
-                  title=""
-                  showViewAll={false}
-                />
-              </div>
-            </motion.section>
+            </div>
+            <div className="section-content">
+              <NotesCarouselNotion 
+                ref={notesScrollRef}
+                limit={10}
+                showNavigation={false}
+                autoPlay={false}
+                title=""
+                showViewAll={false}
+              />
+            </div>
+          </motion.section>
 
             {/* Section Fichiers récents */}
-            <motion.section 
+          <motion.section 
               className="dashboard-section centered recent-files-section"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.35, ease: "easeOut" }}
-            >
+          >
               <div className="section-header">
                 <div className="section-title-row with-navigation">
                   <h4 className="section-title">Fichiers Récents</h4>
@@ -324,7 +324,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
                 </div>
               </div>
               <div className="section-content recent-files-centered">
-                <RecentFilesList ref={filesScrollRef} limit={10} />
+                  <RecentFilesList ref={filesScrollRef} limit={10} />
               </div>
             </motion.section>
 
@@ -343,21 +343,21 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
               <div className="section-content drop-zone-centered">
                 <div className="drop-zone-card">
                   <UnifiedUploadZone />
-                </div>
               </div>
-            </motion.section>
+            </div>
+          </motion.section>
 
-            {/* Input file caché pour l'import */}
-            <input 
-              id="file-input"
-              type="file" 
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                if (e.target.files?.length) {
-                  logger.dev('[HomePage] Fichier sélectionné:', e.target.files[0]);
-                }
-              }}
-            />
+          {/* Input file caché pour l'import */}
+          <input 
+            id="file-input"
+            type="file" 
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              if (e.target.files?.length) {
+                logger.dev('[HomePage] Fichier sélectionné:', e.target.files[0]);
+              }
+            }}
+          />
           </div>
         </div>
       </main>

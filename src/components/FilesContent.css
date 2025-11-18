@@ -70,14 +70,14 @@
   font-weight: 600;
   margin-bottom: var(--files-spacing-sm);
   color: var(--files-text-primary);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .files-empty-subtitle {
   font-size: 16px;
   color: var(--files-text-secondary);
   max-width: 300px;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   line-height: 1.5;
 }
 
@@ -371,7 +371,7 @@
   color: var(--files-text-primary);
   padding: var(--files-spacing-xs) var(--files-spacing-sm);
   font-size: 14px;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   text-align: center;
   width: 100%;
   max-width: 150px;

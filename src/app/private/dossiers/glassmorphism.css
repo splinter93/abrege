@@ -43,37 +43,44 @@
   --drag-handle-hover: rgba(255, 255, 255, 0.2);
 }
 
-/* Container principal glassmorphism - même background que les clés API */
+/* Container principal glassmorphism - rendu invisible mais contenu visible */
 .glassmorphism-container {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   padding: 0;
   margin: 0;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
-  transition: all 0.3s ease;
-  height: calc(100vh - 200px);
-  display: flex;
+  transition: none;
+  min-height: auto;
+  height: auto;
+  display: flex !important;
   flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .glassmorphism-container:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
-  transform: translateY(-1px);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transform: none;
 }
 
 /* Onglets des classeurs - style harmonisé avec SearchBar */
 .classeur-tabs-container {
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
+  border: none;
+  border-radius: 12px;
   padding: 0;
   margin: 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .classeur-tabs-glassmorphism {
@@ -115,7 +122,7 @@
   background: transparent;
   border: none;
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--chat-text-secondary, #a1a9b1);
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
@@ -123,7 +130,7 @@
   white-space: nowrap;
   position: relative;
   min-height: 36px;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   overflow: hidden;
 }
 
@@ -138,7 +145,7 @@
 /* Hover state - subtil sans encadré */
 .classeur-tab-glassmorphism:hover {
   background: transparent;
-  color: #ffffff;
+  color: var(--chat-text-primary, #e8eaed);
 }
 
 /* Animation brillante supprimée */
@@ -147,13 +154,13 @@
 .classeur-tab-glassmorphism:focus {
   outline: none;
   background: transparent;
-  color: #ffffff;
+  color: var(--chat-text-primary, #e8eaed);
 }
 
 /* Active state - classeur sélectionné avec background gris */
 .classeur-tab-glassmorphism.active {
   background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  color: var(--chat-text-primary, #e8eaed);
   font-weight: 400;
 }
 
@@ -223,10 +230,10 @@
   background: transparent;
   border: none;
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--chat-text-secondary, #a1a9b1);
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   position: relative;
   overflow: hidden;
   flex-shrink: 0; /* Empêche le bouton de rétrécir */
@@ -252,7 +259,7 @@
 .add-classeur-tab-glassmorphism:hover {
   background: transparent;
   border: none;
-  color: #ffffff;
+  color: var(--chat-text-primary, #e8eaed);
   transform: translateY(-2px) scale(1.05);
   box-shadow: none;
 }
@@ -266,7 +273,7 @@
   outline: none;
   background: transparent;
   border: none;
-  color: #ffffff;
+  color: var(--chat-text-primary, #e8eaed);
   transform: translateY(-1px);
   box-shadow: none;
 }
@@ -302,27 +309,58 @@
   margin: 0;
   background: transparent;
   flex: 1;
-  display: flex;
+  display: flex !important;
   flex-direction: column;
-  height: 100%;
+  min-height: auto;
+  height: auto;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100%;
 }
 
 /* Adaptation du FolderContent dans le container glassmorphism */
 .classeur-content-glassmorphism .folder-content-container {
   background: transparent;
-  padding: 20px;
+  padding: 0;
   margin: 0;
   flex: 1;
-  display: flex;
+  display: flex !important;
   flex-direction: column;
-  height: 100%;
+  min-height: auto;
+  height: auto;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100%;
 }
 
 .classeur-content-glassmorphism .folder-content-header {
   background: transparent;
-  border-bottom: var(--glass-border-secondary, 1px solid rgba(255, 255, 255, 0.1));
+  border-bottom: none;
   margin-bottom: 20px;
-  padding-bottom: 16px;
+  padding: 20px 16px 16px 16px;
+  display: flex;
+  visibility: visible;
+  opacity: 1;
+  width: 100% !important;
+  position: relative;
+}
+
+.classeur-content-glassmorphism .folder-content-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 15%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.08) 85%,
+    transparent 100%
+  );
+  pointer-events: none;
 }
 
 .classeur-content-glassmorphism .folder-content-title {
@@ -334,10 +372,15 @@
 .classeur-content-glassmorphism .classeur-title {
   font-size: 22px;
   font-weight: 600;
-  color: var(--text-primary, rgba(255, 255, 255, 0.95)) !important; /* Force blanc */
+  color: var(--chat-text-primary, #e8eaed) !important;
   margin: 0;
   line-height: 1.2;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  visibility: visible;
+  opacity: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* Breadcrumb dans le container glassmorphism */
@@ -367,28 +410,31 @@
   border: none;
   border-radius: 6px;
   padding: 6px 0;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--chat-text-secondary, #a1a9b1);
   font-size: 20px;
   font-weight: 500;
   transition: all 0.2s ease;
   line-height: 1.2;
+  visibility: visible;
+  opacity: 1;
+  display: inline-block;
 }
 
 .classeur-content-glassmorphism .breadcrumb-item:hover {
   background: transparent;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--chat-text-primary, #e8eaed);
   transform: translateY(-1px);
 }
 
 .classeur-content-glassmorphism .breadcrumb-item.breadcrumb-current {
   background: transparent;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--chat-text-secondary, #a1a9b1);
   box-shadow: none;
   font-weight: 600;
 }
 
 .classeur-content-glassmorphism .breadcrumb-separator {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--chat-text-secondary, #a1a9b1);
   font-size: 24px;
   font-weight: 500;
   margin: 0 8px;
@@ -400,16 +446,32 @@
 /* Grille des items dans le container glassmorphism */
 .classeur-content-glassmorphism .folder-grid-container {
   background: transparent;
-  padding: 0;
+  padding: 0 16px 20px 16px;
   margin: 0;
+  visibility: visible;
+  opacity: 1;
+  display: block;
+}
+
+/* S'assurer que tous les éléments sont visibles */
+.classeur-content-glassmorphism .folder-header-actions,
+.classeur-content-glassmorphism .folder-toolbar-simple,
+.classeur-content-glassmorphism .toolbar-icon-btn,
+.classeur-content-glassmorphism .folder-search-container,
+.classeur-content-glassmorphism .folder-search-bar {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
 }
 
 .classeur-content-glassmorphism .folder-grid {
-  display: grid;
+  display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
   padding: 0;
   margin: 0;
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Items de la grille - style harmonisé avec SearchBar */
@@ -423,6 +485,9 @@
   box-shadow: none;
   transition: all 0.3s ease;
   overflow: hidden;
+  visibility: visible;
+  opacity: 1;
+  display: block;
 }
 
 .classeur-content-glassmorphism .folder-item-wrapper:hover,
@@ -571,7 +636,7 @@
 .classeur-content-glassmorphism .classeur-title,
 h1.classeur-title,
 .folder-content-header .classeur-title {
-  color: #ffffff !important;
+  color: var(--chat-text-primary, #e8eaed) !important;
 }
 
 .classeur-name,

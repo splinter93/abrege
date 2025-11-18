@@ -35,7 +35,7 @@
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--files-text-primary);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   text-align: center;
 }
 
@@ -53,7 +53,7 @@
   background: rgba(255, 255, 255, 0.05);
   color: var(--files-text-primary);
   font-size: var(--font-size-base);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   transition: all var(--transition-normal);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -78,7 +78,7 @@
   border-radius: var(--radius-md);
   font-size: var(--font-size-base);
   font-weight: 500;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   cursor: pointer;
   transition: all var(--transition-normal);
   white-space: nowrap;
@@ -105,7 +105,7 @@
   font-size: var(--font-size-sm);
   color: var(--files-text-secondary);
   text-align: center;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 /* ==========================================================================
@@ -134,7 +134,7 @@
   color: var(--files-text-secondary);
   font-size: var(--font-size-sm);
   font-weight: 500;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   position: relative;
   z-index: 1;
 }
@@ -188,14 +188,14 @@
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--files-text-primary);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .upload-text p {
   margin: var(--spacing-xs) 0 0 0;
   font-size: var(--font-size-sm);
   color: var(--files-text-secondary);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .upload-info {
@@ -234,7 +234,7 @@
   font-size: var(--font-size-base);
   font-weight: 600;
   color: var(--files-text-primary);
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .upload-item {
@@ -275,14 +275,14 @@
   font-weight: 500;
   color: var(--files-text-primary);
   flex: 1;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .upload-item-status {
   font-size: var(--font-size-sm);
   color: var(--files-text-secondary);
   white-space: nowrap;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 /* ==========================================================================
@@ -316,7 +316,7 @@
   color: var(--files-text-secondary);
   min-width: 40px;
   text-align: right;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 /* ==========================================================================
@@ -331,7 +331,7 @@
   color: #ef4444;
   font-size: var(--font-size-sm);
   font-weight: 500;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 /* ==========================================================================

@@ -106,7 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           body { 
             background: var(--color-bg-primary, #121212) !important; 
             color: var(--color-text-primary, #d0d0d0) !important; 
-            font-family: 'Noto Sans', sans-serif !important;
+            font-family: 'Figtree', 'Geist', -apple-system, sans-serif !important;
             margin: 0;
             padding: 0;
             /* PWA Fullscreen - Remplit haut et bas */

@@ -5,7 +5,7 @@
    Les couleurs sont gérées par src/styles/design-system.css
 
    POLICES DISPONIBLES DANS L'ÉDITEUR :
-   - Noto Sans (par défaut) : Sans-serif moderne, très lisible
+   - Figtree (par défaut) : Sans-serif moderne, très lisible
    - Inter : Sans-serif optimisé pour l'écran
    - Open Sans : Sans-serif humaniste, très lisible
    - Roboto : Sans-serif Google, excellent pour l'UI
@@ -22,7 +22,7 @@
 /* ==========================================================================
    IMPORTS GOOGLE FONTS - POLICES OPTIMISÉES POUR LA PRODUCTION
    ========================================================================== */
-/* POLICES PRINCIPALES - Noto Sans + Inter + Monospace */
+/* POLICES PRINCIPALES - Figtree + Inter + Monospace */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap');
@@ -37,7 +37,7 @@
      ========================================================================== */
   
   /* === POLICE UI GLOBALE (Sidebar, Menus, Boutons) === */
-  --font-ui: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  --font-ui: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   --font-base: var(--font-ui); /* Alias pour compatibilité */
 
   /* === POLICES ÉDITEUR === */
@@ -67,8 +67,8 @@
   /* Police monospace optimisée */
   --font-monospace: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', monospace;
 
-  /* FALLBACK GLOBAL FONT - Noto Sans comme police principale */
-  --font-main: var(--font-base, 'Noto Sans', sans-serif);
+  /* FALLBACK GLOBAL FONT - Figtree comme police principale */
+  --font-main: var(--font-base, 'Figtree', 'Geist', -apple-system, sans-serif);
 
   /* POLICES ÉDITEUR - Options utilisateur */
   --font-open-sans: 'Open Sans', sans-serif;

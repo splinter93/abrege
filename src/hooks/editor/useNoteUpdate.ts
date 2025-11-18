@@ -73,7 +73,7 @@ export interface UseNoteUpdateOptions<T> {
  *   noteId,
  *   userId,
  *   field: 'font_family',
- *   currentValue: note?.font_family || 'Noto Sans',
+ *   currentValue: note?.font_family || 'Figtree',
  *   onSuccess: (font) => changeFont(font, 'all'),
  *   errorMessage: 'Erreur lors de la sauvegarde de la police'
  * });

@@ -50,7 +50,7 @@
 /* Type de diagramme à gauche */
 .mermaid-modal-type {
   color: rgba(255, 255, 255, 0.9);
-  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.5px;

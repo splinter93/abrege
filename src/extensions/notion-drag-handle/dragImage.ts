@@ -75,7 +75,7 @@ export function createDragImage(node: Node, slice: Slice): HTMLElement {
     color: ${color};
     border-radius: 6px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-    font-family: 'Noto Sans', sans-serif;
+    font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
     font-size: ${fontSize};
     font-weight: ${fontWeight};
     line-height: 1.4;

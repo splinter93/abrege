@@ -84,7 +84,7 @@
   color: rgba(255, 255, 255, 0.9);
   font-size: 15px;
   font-weight: 400;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   outline: none;
   z-index: 2;
   position: relative;
@@ -207,7 +207,7 @@
   color: rgba(255, 255, 255, 0.9);
   font-size: 16px;
   font-weight: 600;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .clear-filters-btn {
@@ -219,7 +219,7 @@
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .clear-filters-btn:hover {
@@ -244,7 +244,7 @@
   color: rgba(255, 255, 255, 0.8);
   font-size: 13px;
   font-weight: 500;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
 }
 
 .filter-select {
@@ -254,7 +254,7 @@
   color: rgba(255, 255, 255, 0.9);
   padding: 8px 12px;
   font-size: 14px;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   outline: none;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
@@ -289,7 +289,7 @@
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
