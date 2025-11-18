@@ -94,7 +94,7 @@
   
   /* Sidebar */
   --sidebar-width: 280px;
-  --sidebar-width-collapsed: 64px;
+  --sidebar-width-collapsed: 56px;
   
   /* Pages */
   --page-padding: var(--spacing-xl);

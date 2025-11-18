@@ -73,7 +73,7 @@ aside.unified-sidebar {
 
 /* Mode collapsed - largeur réduite */
 .unified-sidebar.collapsed {
-  width: 64px !important;
+  width: 56px !important;
   overflow: hidden !important;
   border: none !important;
   border-right: none !important;
@@ -133,7 +133,7 @@ aside.unified-sidebar {
 .unified-sidebar.collapsed .unified-sidebar-logo {
   padding: 8px !important;
   width: 100% !important;
-  max-width: 64px !important;
+  max-width: 56px !important;
   overflow: hidden !important;
   justify-content: center !important; /* Centré en mode collapsed */
 }
@@ -172,8 +172,8 @@ aside.unified-sidebar {
 
 .unified-sidebar.collapsed .unified-logo-icon {
   opacity: 1 !important;
-  transform: scale(1) translateX(4px) !important;
-  margin: 0 !important;
+  transform: scale(1) !important;
+  margin: 0 auto !important;
   pointer-events: auto !important;
 }
 
@@ -259,8 +259,8 @@ aside.unified-sidebar {
 }
 
 .unified-nav-link:focus {
-  outline: 2px solid rgba(255, 255, 255, 0.3) !important;
-  outline-offset: 2px !important;
+  outline: 1px solid rgba(255, 255, 255, 0.2) !important;
+  outline-offset: 1px !important;
 }
 
 .unified-nav-link.active {
@@ -271,17 +271,28 @@ aside.unified-sidebar {
 
 /* Mode collapsed - centrer les icônes */
 .unified-sidebar.collapsed .unified-nav-link {
-  padding: 12px !important;
+  padding: 10px !important;
   justify-content: center !important;
-  margin: 1px 8px !important;
-  width: calc(100% - 16px) !important;
-  max-width: 48px !important;
-  min-width: 48px !important;
+  align-items: center !important;
+  margin: 2px auto !important;
+  width: 44px !important;
+  max-width: 44px !important;
+  min-width: 44px !important;
   transform: scale(1) !important;
 }
 
 .unified-sidebar.collapsed .unified-nav-link:hover {
-  transform: scale(1.05) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  transform: scale(1) !important;
+}
+
+.unified-sidebar.collapsed .unified-nav-link:focus {
+  outline: 1px solid rgba(255, 255, 255, 0.2) !important;
+  outline-offset: 1px !important;
+}
+
+.unified-sidebar.collapsed .unified-nav-link.active {
+  background: rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Icônes */
@@ -355,8 +366,8 @@ aside.unified-sidebar {
 }
 
 .unified-logout-button:focus {
-  outline: 2px solid rgba(239, 68, 68, 0.3) !important;
-  outline-offset: 2px !important;
+  outline: 1px solid rgba(239, 68, 68, 0.2) !important;
+  outline-offset: 1px !important;
 }
 
 .unified-logout-button svg {
@@ -373,16 +384,18 @@ aside.unified-sidebar {
 
 /* Mode collapsed - centrer le bouton de déconnexion */
 .unified-sidebar.collapsed .unified-logout-button {
-  padding: 12px !important;
+  padding: 10px !important;
   justify-content: center !important;
-  width: calc(100% - 16px) !important;
-  max-width: 48px !important;
-  min-width: 48px !important;
+  align-items: center !important;
+  margin: 2px auto !important;
+  width: 44px !important;
+  max-width: 44px !important;
+  min-width: 44px !important;
   transform: scale(1) !important;
 }
 
 .unified-sidebar.collapsed .unified-logout-button:hover {
-  transform: scale(1.05) !important;
+  transform: scale(1) !important;
 }
 
 .unified-sidebar.collapsed .unified-logout-button span {
@@ -575,13 +588,13 @@ aside.unified-sidebar {
     width: 250px !important;
   }
   to {
-    width: 64px !important;
+    width: 56px !important;
   }
 }
 
 @keyframes sidebarExpand {
   from {
-    width: 64px !important;
+    width: 56px !important;
   }
   to {
     width: 250px !important;

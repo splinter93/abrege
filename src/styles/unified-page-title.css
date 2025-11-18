@@ -38,7 +38,7 @@
   justify-content: center;
   width: 80px;
   height: 80px;
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015));
+  background: linear-gradient(135deg, #1e2026 0%, #252831 50%, #1e2026 100%);
   border: none;
   border-radius: 20px;
   backdrop-filter: blur(22px);
@@ -61,14 +61,14 @@
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.08) 0%, 
+    rgba(255, 255, 255, 0.03) 0%, 
     transparent 50%, 
-    rgba(255, 255, 255, 0.03) 100%);
+    rgba(255, 255, 255, 0.01) 100%);
   pointer-events: none;
 }
 
 .unified-page-title-logo:hover {
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
+  background: linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%);
   color: rgba(255, 255, 255, 0.95);
   transform: translateY(-2px);
   box-shadow: 0 20px 38px rgba(0, 0, 0, 0.26);
@@ -105,7 +105,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.75rem 1rem;
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015));
+  background: linear-gradient(135deg, #1e2026 0%, #252831 50%, #1e2026 100%);
   border: none;
   border-radius: 14px;
   backdrop-filter: blur(22px);
@@ -125,14 +125,14 @@
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.08) 0%, 
+    rgba(255, 255, 255, 0.03) 0%, 
     transparent 50%, 
-    rgba(255, 255, 255, 0.03) 100%);
+    rgba(255, 255, 255, 0.01) 100%);
   pointer-events: none;
 }
 
 .unified-page-title-stat-item:hover {
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.025));
+  background: linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%);
   transform: translateY(-2px);
   box-shadow: 0 20px 38px rgba(0, 0, 0, 0.26);
 }
