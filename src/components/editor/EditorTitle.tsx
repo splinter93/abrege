@@ -15,8 +15,11 @@ interface EditorTitleProps {
  * Champ de titre de l'éditeur, auto-resize, centré.
  */
 const EditorTitle: React.FC<EditorTitleProps> = ({ value, onChange, onBlur, placeholder, wideMode, disabled = false }) => {
+  // ✅ Nettoyer le titre : supprimer les sauts de ligne en fin de chaîne
+  const cleanedValue = value.replace(/\n+$/, '').replace(/\r+$/, '');
+  
   const { textareaRef } = useAutoResize({ 
-    value, 
+    value: cleanedValue, 
     wideMode,
     minHeight: 45,
     maxHeight: 600 // Permet jusqu'à 10-12 lignes sans scroll
@@ -27,8 +30,12 @@ const EditorTitle: React.FC<EditorTitleProps> = ({ value, onChange, onBlur, plac
       <textarea
         ref={textareaRef}
         className="editor-title-field"
-        value={value}
-        onChange={e => onChange(e.target.value)}
+        value={cleanedValue}
+        onChange={e => {
+          // ✅ Nettoyer aussi lors du onChange pour éviter l'accumulation
+          const cleaned = e.target.value.replace(/\n+$/, '').replace(/\r+$/, '');
+          onChange(cleaned);
+        }}
         onBlur={onBlur}
         placeholder={placeholder || 'Titre de la note...'}
         rows={1}

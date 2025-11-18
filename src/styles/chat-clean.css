@@ -1281,13 +1281,17 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   flex-direction: column;
   overflow: hidden;
   padding: 0;
+  /* ✅ Permettre sticky header en canevas */
+  position: relative;
 }
 
 .chat-canva-pane__editor > * {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  /* ✅ Pas d'overflow ici pour permettre sticky header */
+  overflow: visible;
   width: 100%;
+  position: relative;
 }
 
 .chat-canva-pane .editor-sidebar-hover-zone,
@@ -1354,12 +1358,16 @@ body.chat-theme-blue .chatgpt-messages-container::before {
 
 .chat-canva-pane .editor-layout {
   width: 100%;
-  height: auto;
+  height: 100%;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  position: relative;
+  /* ✅ Container de scroll pour permettre sticky header */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .chat-canva-pane .editor-layout.noteLayout {
@@ -1370,6 +1378,9 @@ body.chat-theme-blue .chatgpt-messages-container::before {
 .chat-canva-pane .editor-content-wrapper {
   flex: 1;
   width: 100%;
+  /* ✅ Pas d'overflow ici, le scroll est sur .editor-layout */
+  overflow: visible;
+  position: relative;
 }
 
 .chat-canva-pane .editor-header-image {

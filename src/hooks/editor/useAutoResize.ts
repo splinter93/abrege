@@ -28,6 +28,12 @@ export const useAutoResize = ({
     const textarea = textareaRef.current;
     if (!textarea) return;
 
+    // ✅ Nettoyer la valeur pour éviter les sauts de ligne en fin
+    const cleanedValue = value.replace(/\n+$/, '').replace(/\r+$/, '');
+    if (textarea.value !== cleanedValue) {
+      textarea.value = cleanedValue;
+    }
+
     // Sauvegarder le padding actuel
     const currentPadding = textarea.style.padding;
     
@@ -36,8 +42,15 @@ export const useAutoResize = ({
     textarea.style.padding = '0'; // Supprimer temporairement le padding
     
     // Calculer la nouvelle hauteur
+    // ✅ Si le texte est vide ou ne contient qu'une ligne, utiliser minHeight
+    const hasContent = cleanedValue.trim().length > 0;
+    const lineCount = cleanedValue.split('\n').length;
     const scrollHeight = textarea.scrollHeight;
-    const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
+    
+    // ✅ Si une seule ligne ou vide, forcer minHeight pour éviter ligne supplémentaire
+    const newHeight = hasContent && lineCount === 1 
+      ? Math.max(minHeight, Math.min(scrollHeight, maxHeight))
+      : Math.max(minHeight, Math.min(scrollHeight, maxHeight));
     
     // Restaurer le padding et appliquer la nouvelle hauteur
     textarea.style.padding = currentPadding;
@@ -49,7 +62,7 @@ export const useAutoResize = ({
       // Supprimer la hauteur forcée pour laisser le container s'adapter
       container.style.height = 'auto';
     }
-  }, [minHeight, maxHeight]);
+  }, [minHeight, maxHeight, value]);
 
   // Ajuster la hauteur quand la valeur change
   useEffect(() => {
