@@ -219,6 +219,11 @@
   box-shadow: none;
 }
 
+.dashboard-search-bar .search-bar-field::placeholder {
+  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-size: 14px;
+}
+
 .quick-actions-grid {
   width: 100%;
   display: grid;
@@ -367,6 +372,31 @@
 .notes-section .section-content {
   padding-top: 0;
   padding-bottom: 0;
+  position: relative;
+}
+
+.notes-section .section-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.notes-section .section-content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 10;
 }
 
 .notes-section .notes-carousel-notion {

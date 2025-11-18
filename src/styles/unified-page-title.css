@@ -159,7 +159,7 @@
 .unified-page-title-container .unified-page-title-content .unified-page-title-section h1.unified-page-title-text {
   font-size: 2rem !important; /* Réduit de 2.5rem à 2rem (32px) */
   font-weight: 900 !important;
-  color: #ffffff !important;
+  color: var(--chat-text-primary, #e8eaed) !important;
   margin: 0 !important;
   font-family: var(--editor-font-family-headings) !important;
   letter-spacing: -0.02em !important;
@@ -169,7 +169,7 @@
 /* Sous-titre */
 .unified-page-title-container .unified-page-title-content .unified-page-title-section .unified-page-title-subtitle {
   font-size: 1.1rem !important;
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: var(--chat-text-secondary, #a1a9b1) !important;
   margin: 0 !important;
   font-family: var(--editor-font-family-headings) !important;
   font-weight: 400 !important;
