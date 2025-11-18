@@ -295,7 +295,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
 
             {/* Section Fichiers récents */}
             <motion.section 
-              className="dashboard-section centered"
+              className="dashboard-section centered recent-files-section"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.35, ease: "easeOut" }}

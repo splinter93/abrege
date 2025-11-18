@@ -5,6 +5,15 @@
   Le layout principal est géré par dashboard.css
 */
 
+:root {
+  --dashboard-space-xs: 0.5rem;
+  --dashboard-space-sm: 1rem;
+  --dashboard-space-md: 1.5rem;
+  --dashboard-space-lg: 2rem;
+  --dashboard-space-xl: 2.5rem;
+  --dashboard-space-xxl: 3rem;
+}
+
 /* ========================================
    LAYOUT CENTRÉ
    ======================================== */
@@ -13,7 +22,7 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 0 1.5rem 3rem;
+  padding: 0 var(--dashboard-space-md) var(--dashboard-space-xxl);
   box-sizing: border-box;
 }
 
@@ -23,7 +32,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: var(--dashboard-space-xl);
 }
 
 .dashboard-section.centered {
@@ -87,8 +96,8 @@
    ======================================== */
 
 .dashboard-title-centered {
-  margin-bottom: 0.5rem;
-  padding-top: 2rem;
+  margin-bottom: var(--dashboard-space-xs);
+  padding-top: var(--dashboard-space-xl);
 }
 
 .dashboard-title-centered .unified-page-title-content {
@@ -113,8 +122,8 @@
 .dashboard-title-container {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: var(--dashboard-space-sm);
+  margin-bottom: var(--dashboard-space-lg);
 }
 
 .dashboard-title-container .page-title-simple {
@@ -134,7 +143,7 @@
   border-radius: 20px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--chat-text-primary, #e8eaed);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -161,7 +170,7 @@
 .dashboard-logo:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  color: var(--chat-text-primary, #e8eaed);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
@@ -190,7 +199,7 @@
   box-shadow: none;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--dashboard-space-md);
 }
 
 .dashboard-search-bar {
@@ -214,7 +223,7 @@
   width: 100%;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
+  gap: var(--dashboard-space-sm);
 }
 
 .quick-action-card {
@@ -222,12 +231,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 1.25rem;
+  gap: var(--dashboard-space-xs);
+  padding: var(--dashboard-space-md);
   border-radius: 16px;
   background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
   border: none;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--chat-text-primary, #e8eaed);
   cursor: pointer;
   transition: all 0.3s ease;
   min-height: 120px;
@@ -254,7 +263,7 @@
 .quick-action-label {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--chat-text-primary, #e8eaed);
   letter-spacing: -0.01em;
 }
 
@@ -331,7 +340,7 @@
   max-width: 1200px;
   background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: var(--dashboard-space-md);
   box-shadow: none;
 }
 
@@ -352,25 +361,46 @@
    ======================================== */
 
 .notes-section .section-header {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--dashboard-space-xs, 0.5rem);
 }
 
 .notes-section .section-content {
   padding-top: 0;
+  padding-bottom: 0;
 }
 
 .notes-section .notes-carousel-notion {
   margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Réduction padding titre → bloc pour Actions Rapides, Fichiers Récents, Drop Zone */
+.quick-workspace-section .section-header,
+.recent-files-section .section-header,
+.drop-zone-section .section-header {
+  margin-bottom: 1.25rem;
+}
+
+.quick-workspace-section .section-title-row,
+.recent-files-section .section-title-row,
+.drop-zone-section .section-title-row {
+  margin-bottom: 0;
+}
+
+.quick-workspace-section .section-content,
+.recent-files-section .section-content,
+.drop-zone-section .section-content {
+  padding-top: 0;
 }
 
 @media (max-width: 768px) {
   .dashboard-center-stack {
-    gap: 1.5rem;
+    gap: var(--dashboard-space-md, 1.5rem);
   }
   
   .quick-workspace {
-    padding: 1.25rem 1.5rem;
-    gap: 1.5rem;
+    padding: var(--dashboard-space-sm, 1rem) var(--dashboard-space-md, 1.5rem);
+    gap: var(--dashboard-space-md, 1.5rem);
   }
   
   .quick-actions-grid {
@@ -380,7 +410,7 @@
 
 @media (max-width: 480px) {
   .quick-workspace {
-    padding: 1.25rem;
+    padding: var(--dashboard-space-sm, 1rem);
   }
   
   .quick-actions-grid {

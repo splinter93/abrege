@@ -60,7 +60,7 @@
 
 .notes-carousel-notion {
   width: 100%;
-  margin: var(--notion-space-2xl) 0;
+  margin: 0;
   font-family: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -70,13 +70,13 @@
 
 .notes-horizontal-grid {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   overflow-x: auto; /* ✅ Scroll horizontal natif */
   overflow-y: hidden;
   scroll-behavior: smooth;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
-  padding: var(--notion-space-sm) 0;
+  padding: 0;
   -webkit-overflow-scrolling: touch; /* Smooth scroll sur iOS */
   
   /* ✅ Empêche le flex-wrap et force l'alignement horizontal */
@@ -240,7 +240,7 @@
 
 .carousel-slide {
   flex: 0 0 25%; /* 4 cartes par vue sur desktop - plus compact */
-  padding: var(--notion-space-sm); /* Padding réduit */
+  padding: 0; /* Padding supprimé */
   box-sizing: border-box;
   min-width: 0;
   max-width: 280px; /* Limite la largeur maximale des cartes */
@@ -267,7 +267,7 @@
   border-radius: var(--notion-radius-lg);
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  height: 168px; /* ✅ Hauteur ajustée (120px image + 48px titre) */
+  height: 160px; /* ✅ Hauteur réduite (116px image + 44px titre) */
   display: flex;
   flex-direction: column;
   cursor: pointer;
@@ -306,7 +306,7 @@
 
 .note-image-container {
   position: relative;
-  height: 120px; /* ✅ Augmenté de 110px à 120px */
+  height: 116px; /* ✅ Réduit pour correspondre à la nouvelle hauteur de carte */
   overflow: hidden;
   background: rgba(255, 255, 255, 0.03);
   z-index: 2;
@@ -373,7 +373,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--chat-text-primary, #e8eaed);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(20px) saturate(180%);
@@ -438,7 +438,7 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--chat-text-primary, #e8eaed);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -451,13 +451,13 @@
 }
 
 .note-content {
-  padding: 8px 12px; /* ✅ Padding légèrement augmenté */
+  padding: 6px 10px; /* ✅ Padding réduit */
   display: flex;
   align-items: center; /* ✅ Centrage vertical du contenu */
   justify-content: center;
   position: relative;
   z-index: 2;
-  height: 48px; /* ✅ Hauteur augmentée de 40px à 48px */
+  height: 44px; /* ✅ Hauteur réduite */
   overflow: hidden;
 }
 
@@ -642,6 +642,7 @@
 @media (max-width: 1023px) and (min-width: 768px) {
   .carousel-slide {
     flex: 0 0 50%; /* 2 cartes par vue */
+    padding: 0;
   }
   
   .carousel-header {
@@ -655,11 +656,16 @@
   }
   
   .note-card {
-    height: 160px; /* Plus compact */
+    height: 150px; /* Plus compact */
   }
   
   .note-image-container {
-    height: 114px; /* Réduit de 5% */
+    height: 108px; /* Réduit */
+  }
+  
+  .note-content {
+    height: 42px;
+    padding: 6px 10px;
   }
   
   .note-title {
@@ -681,6 +687,7 @@
 @media (max-width: 767px) {
   .carousel-slide {
     flex: 0 0 100%; /* 1 carte par vue */
+    padding: 0;
   }
   
   .carousel-header {
@@ -694,11 +701,16 @@
   }
   
   .note-card {
-    height: 140px; /* Plus compact */
+    height: 130px; /* Plus compact */
   }
   
   .note-image-container {
-    height: 100px; /* Réduit de 5% */
+    height: 90px; /* Réduit */
+  }
+  
+  .note-content {
+    height: 40px;
+    padding: 5px 8px;
   }
   
   .note-title {
@@ -719,15 +731,20 @@
 /* Mobile Small */
 @media (max-width: 480px) {
   .carousel-slide {
-    padding: var(--notion-space-sm);
+    padding: 0;
   }
   
   .note-card {
-    height: 120px; /* Plus compact */
+    height: 110px; /* Plus compact */
   }
   
   .note-image-container {
-    height: 86px; /* Réduit de 5% */
+    height: 75px; /* Réduit */
+  }
+  
+  .note-content {
+    height: 35px;
+    padding: 4px 6px;
   }
   
   .note-title {
