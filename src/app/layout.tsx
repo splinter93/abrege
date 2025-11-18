@@ -135,8 +135,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             background: linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%) !important;
             border: none !important;
             border-right: none !important;
-            border-top-right-radius: 20px !important;
-            border-bottom-right-radius: 20px !important;
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             z-index: 1000 !important;

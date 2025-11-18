@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
 import { useActiveSidebarLink } from '@/hooks/useActiveSidebarLink';
 import { motion } from 'framer-motion';
+import { Feather } from 'react-feather';
 
 // Icônes SVG optimisées
 const DashboardIcon = () => (
@@ -214,13 +215,10 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
           )}
         {isCollapsed && (
           <div className="unified-logo-icon">
-            <Image
-              src="/simple logo.svg"
-              alt="Scrivia"
-              width={32}
-              height={32}
-              priority
+            <Feather
+              size={32}
               className="unified-logo-icon-image"
+              color="var(--chat-text-primary, #e8eaed)"
             />
           </div>
         )}

@@ -10,6 +10,7 @@ import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import { MessageSquare, Plus, Upload, Youtube, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Feather } from 'react-feather';
 import NotesCarouselNotion from '@/components/NotesCarouselNotion';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
@@ -166,6 +167,15 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
       </aside>
       
       <main className="page-content-area">
+        {/* Logo */}
+        <div className="dashboard-logo-container">
+          <Feather 
+            size={81}
+            className="dashboard-logo"
+            color="var(--chat-text-primary, #e8eaed)"
+          />
+        </div>
+
         {/* Titre du dashboard avec statistiques dynamiques */}
         <UnifiedPageTitle
           icon={LayoutDashboard}

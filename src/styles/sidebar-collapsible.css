@@ -51,8 +51,8 @@
   background: var(--chat-gradient-sidebar, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)) !important;
   border: none !important;
   border-right: none !important;
-  border-top-right-radius: var(--chat-radius-2xl, 20px) !important;
-  border-bottom-right-radius: var(--chat-radius-2xl, 20px) !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
   z-index: 1000 !important;
   display: flex !important;
   flex-direction: column !important;
@@ -131,7 +131,7 @@ aside.unified-sidebar {
 }
 
 .unified-sidebar.collapsed .unified-sidebar-logo {
-  padding: 8px !important;
+  padding: 4px 8px 8px 8px !important;
   width: 100% !important;
   max-width: 56px !important;
   overflow: hidden !important;

@@ -15,6 +15,35 @@
 }
 
 /* ========================================
+   LOGO DASHBOARD
+   ======================================== */
+
+.dashboard-logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: var(--dashboard-space-md) 0 0.1rem 0;
+  margin: 0 auto;
+  background: transparent;
+  border: none;
+}
+
+.dashboard-logo {
+  max-width: 81px;
+  height: auto;
+  display: block;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ========================================
    LAYOUT CENTRÉ
    ======================================== */
 
@@ -97,7 +126,7 @@
 
 .dashboard-title-centered {
   margin-bottom: var(--dashboard-space-xs);
-  padding-top: var(--dashboard-space-xl);
+  padding-top: 0;
 }
 
 .dashboard-title-centered .unified-page-title-content {
@@ -132,52 +161,7 @@
   padding-top: 0.5rem;
 }
 
-.dashboard-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  color: var(--chat-text-primary, #e8eaed);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-  margin-top: 0;
-}
-
-.dashboard-logo::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.08) 0%, 
-    transparent 50%, 
-    rgba(255, 255, 255, 0.03) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.dashboard-logo:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--chat-text-primary, #e8eaed);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-.dashboard-logo:hover::before {
-  opacity: 1;
-}
+/* Styles de bloc supprimés - logo est juste une image */
 
 /* ========================================
    ESPACE RAPIDE : RECHERCHE + ACTIONS
