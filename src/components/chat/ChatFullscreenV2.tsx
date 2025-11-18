@@ -37,7 +37,6 @@ import ChatMessagesArea from './ChatMessagesArea';
 import ChatInputContainer from './ChatInputContainer';
 import SidebarUltraClean from './SidebarUltraClean';
 import ChatCanvaPane from './ChatCanvaPane';
-import dynamic from 'next/dynamic';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { useCanvaContextPayload } from '@/hooks/chat/useCanvaContextPayload';
 import type { CanvaSession as CanvaSessionDB, ListCanvasResponse } from '@/types/canva';
@@ -47,11 +46,6 @@ import toast from 'react-hot-toast';
 
 import '@/styles/chat-clean.css';
 import '@/styles/sidebar-collapsible.css';
-
-const CanvaStatusIndicator = dynamic(
-  () => import('./CanvaStatusIndicator'),
-  { ssr: false }
-);
 
 const ChatFullscreenV2: React.FC = () => {
   // 🎯 HOOKS EXISTANTS (groupés pour lisibilité)
@@ -970,12 +964,6 @@ const ChatFullscreenV2: React.FC = () => {
           )}
           </div>
         </div>
-
-        <CanvaStatusIndicator
-          payload={canvaContextPayload}
-          isLoading={isCanvaContextLoading}
-          error={canvaContextError}
-        />
       </div>
   );
 };

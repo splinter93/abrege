@@ -8,7 +8,7 @@
  * - Validation du contexte
  */
 
-import type { LLMContext } from '@/hooks/useLLMContext';
+import type { LLMContext } from '@/types/llmContext';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
@@ -180,8 +180,23 @@ export class ChatContextBuilder {
     return this.build({
       sessionId,
       llmContext: {
-        device: 'web',
-        timestamp: new Date().toISOString()
+        sessionId: 'current',
+        time: {
+          local: new Date().toLocaleString('fr-FR'),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timestamp: new Date().toISOString()
+        },
+        user: {
+          name: 'Utilisateur',
+          locale: 'fr'
+        },
+        page: {
+          type: 'chat',
+          path: '/chat'
+        },
+        device: {
+          type: 'desktop'
+        }
       }
     });
   }
