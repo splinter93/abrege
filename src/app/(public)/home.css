@@ -385,8 +385,8 @@
   background: linear-gradient(to right, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
   pointer-events: none;
   z-index: 10;
-}
-
+  }
+  
 .notes-section .section-content::after {
   content: '';
   position: absolute;
@@ -397,8 +397,8 @@
   background: linear-gradient(to left, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
   pointer-events: none;
   z-index: 10;
-}
-
+  }
+  
 .notes-section .notes-carousel-notion {
   margin-top: 0;
   margin-bottom: 0;
@@ -409,14 +409,14 @@
 .recent-files-section .section-header,
 .drop-zone-section .section-header {
   margin-bottom: 1.25rem;
-}
-
+  }
+  
 .quick-workspace-section .section-title-row,
 .recent-files-section .section-title-row,
 .drop-zone-section .section-title-row {
   margin-bottom: 0;
-}
-
+  }
+  
 .quick-workspace-section .section-content,
 .recent-files-section .section-content,
 .drop-zone-section .section-content {

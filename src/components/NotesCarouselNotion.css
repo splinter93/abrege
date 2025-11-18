@@ -99,9 +99,9 @@
 
 /* Largeur fixe pour les cartes dans la grille horizontale */
 .notes-horizontal-grid .carousel-slide {
-  min-width: 240px; /* ✅ Réduit de 280px à 240px */
-  max-width: 280px; /* ✅ Réduit de 320px à 280px */
-  width: 260px; /* ✅ Réduit de 300px à 260px */
+  min-width: 220px; /* ✅ Réduit */
+  max-width: 250px; /* ✅ Réduit */
+  width: 240px; /* ✅ Réduit */
   flex-shrink: 0; /* ✅ Empêche les cartes de rétrécir */
 }
 
@@ -116,9 +116,9 @@
 
 @media (min-width: 1400px) {
   .notes-horizontal-grid .carousel-slide {
-    min-width: 260px; /* ✅ Même sur grand écran, plus compact */
-    max-width: 300px;
-    width: 280px;
+    min-width: 240px; /* ✅ Réduit */
+    max-width: 270px;
+    width: 260px;
   }
 }
 
@@ -243,7 +243,7 @@
   padding: 0; /* Padding supprimé */
   box-sizing: border-box;
   min-width: 0;
-  max-width: 280px; /* Limite la largeur maximale des cartes */
+  max-width: 250px; /* Limite la largeur maximale des cartes */
   transition: all 0.3s ease;
   transform: translateZ(0); /* Force l'accélération matérielle */
 }
@@ -626,7 +626,7 @@
 @media (min-width: 1400px) {
   .carousel-slide {
     flex: 0 0 20%; /* 5 cartes par vue */
-    max-width: 280px; /* Limite la largeur maximale */
+    max-width: 270px; /* Limite la largeur maximale */
   }
 }
 
@@ -634,7 +634,7 @@
 @media (max-width: 1399px) and (min-width: 1024px) {
   .carousel-slide {
     flex: 0 0 25%; /* 4 cartes par vue */
-    max-width: 280px; /* Limite la largeur maximale */
+    max-width: 250px; /* Limite la largeur maximale */
   }
 }
 

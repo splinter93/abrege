@@ -235,25 +235,37 @@
    INPUTS DE RENOMMAGE - DESIGN ÉPURÉ
    ========================================================================== */
 
-.fm-grid-item input {
-  background: transparent;
-  border: 1px solid var(--glass-border-hover);
-  border-radius: 0;
+.fm-grid-item input,
+.fm-grid-item textarea,
+.fm-rename-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: none;
+  border-radius: 8px;
   color: var(--chat-text-primary, #e8eaed);
-  padding: var(--files-spacing-xs) var(--files-spacing-sm);
+  padding: 6px 12px;
   font-size: 14px;
   font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
   text-align: center;
   width: 100%;
-  max-width: 150px;
+  min-width: 80px;
+  max-width: 100%;
   outline: none;
-  transition: none;
+  transition: all 0.2s ease;
+  word-wrap: break-word;
+  white-space: normal;
+  resize: none;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+  min-height: 1.4em;
+  overflow: hidden;
 }
 
-.fm-grid-item input:focus {
-  border-color: var(--border-color);
+.fm-grid-item input:focus,
+.fm-grid-item textarea:focus,
+.fm-rename-input:focus {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
   box-shadow: none;
-  background: transparent;
   outline: none;
 }
 

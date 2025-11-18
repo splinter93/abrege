@@ -292,26 +292,38 @@
    INPUTS DE RENOMMAGE
    ======================================== */
 
-.fm-grid-item input {
-  background: var(--unified-glass-bg-medium) ;
-  border: 1px solid var(--unified-glass-border-light) ;
+.fm-grid-item input,
+.fm-grid-item textarea,
+.fm-rename-input {
+  background: rgba(255, 255, 255, 0.03) ;
+  border: none ;
   border-radius: 8px ;
   color: var(--chat-text-primary, #e8eaed) ;
-  padding: 8px 12px ;
+  padding: 6px 12px ;
   font-size: 14px ;
   font-family: var(--editor-font-family-headings);
   text-align: center ;
   width: 100% ;
-  max-width: 150px ;
-  backdrop-filter: blur(10px) ;
-  -webkit-backdrop-filter: blur(10px) ;
+  min-width: 80px ;
+  max-width: 100% ;
+  outline: none ;
+  transition: all 0.2s ease ;
+  word-wrap: break-word ;
+  white-space: normal ;
+  resize: none ;
+  overflow-wrap: break-word ;
+  line-height: 1.4 ;
+  min-height: 1.4em ;
+  overflow: hidden ;
 }
 
-.fm-grid-item input:focus {
+.fm-grid-item input:focus,
+.fm-grid-item textarea:focus,
+.fm-rename-input:focus {
+  background: rgba(255, 255, 255, 0.05) ;
+  border: none ;
+  box-shadow: none ;
   outline: none ;
-  border-color: var(--unified-primary) ;
-  box-shadow: 0 0 0 2px rgba(229, 90, 44, 0.2) ;
-  background: var(--unified-glass-bg-light) ;
 }
 
 /* ========================================

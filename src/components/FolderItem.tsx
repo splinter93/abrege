@@ -18,19 +18,38 @@ interface FolderItemProps {
 
 const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onRename, onCancelRename, onContextMenu, onDropItem, onStartRenameClick }) => {
   const [inputValue, setInputValue] = React.useState(folder.name);
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const inputRef = React.useRef<HTMLTextAreaElement>(null);
   const [isDragOver, setIsDragOver] = React.useState(false);
   const lastWasRightClick = React.useRef(false);
 
   React.useEffect(() => {
     if (isRenaming) {
       setInputValue(folder.name);
-      setTimeout(() => inputRef.current?.focus(), 0);
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          // Positionner le curseur à la fin du texte
+          const length = inputRef.current.value.length;
+          inputRef.current.setSelectionRange(length, length);
+          // Ajuster la hauteur automatiquement
+          inputRef.current.style.height = 'auto';
+          inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+        }
+      }, 0);
     }
   }, [isRenaming, folder.name]);
 
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && onRename) {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputValue(e.target.value);
+    // Ajuster la hauteur automatiquement
+    e.target.style.height = 'auto';
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && onRename) {
+      // Cmd/Ctrl + Enter pour valider
+      e.preventDefault();
       if (inputValue.trim() && inputValue !== folder.name) {
         onRename(inputValue.trim(), 'folder');
       } else if (onCancelRename) {
@@ -119,16 +138,17 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
           <FolderIcon size={36} />
         </div>
         {isRenaming ? (
-          <input
+          <textarea
             ref={inputRef}
             value={inputValue}
-            onChange={e => setInputValue(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleInputKeyDown}
             onBlur={handleInputBlur}
             className="fm-rename-input"
             autoFocus
             spellCheck={false}
             onClick={e => e.stopPropagation()}
+            rows={1}
           />
         ) : (
           <span
