@@ -23,11 +23,12 @@ const FolderIcon = () => (
   </svg>
 );
 
-const ShareIcon = () => (
+const TeamIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-    <polyline points="16,6 12,2 8,6"/>
-    <line x1="12" y1="2" x2="12" y2="15"/>
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
   </svg>
 );
 
@@ -169,17 +170,21 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
     }
   };
 
-  // Navigation items
+  // Navigation items principaux
   const navigationItems = [
     { href: '/', label: 'Dashboard', icon: DashboardIcon, key: 'home' },
     { href: '/private/dossiers', label: 'Mes Classeurs', icon: FolderIcon, key: 'dossiers' },
     { href: '/private/files', label: 'Mes Fichiers', icon: FileIcon, key: 'files' },
     { href: '/private/agents2', label: 'Agents v2', icon: AgentsIcon, key: 'agents2' },
     { href: '/private/prompts', label: 'Prompts', icon: PromptsIcon, key: 'prompts' },
-    { href: '/private/shared', label: 'Notes Partagées', icon: ShareIcon, key: 'shared' },
+    { href: '/private/shared', label: 'TeamMates', icon: TeamIcon, key: 'shared' },
     { href: '/private/documentation', label: 'Documentation', icon: DocumentationIcon, key: 'documentation' },
     { href: '/private/settings', label: 'Paramètres', icon: SettingsIcon, key: 'settings' },
     { href: '/private/trash', label: 'Corbeille', icon: TrashIcon, key: 'trash' },
+  ];
+
+  // Items du bas (Mon Compte et Déconnexion)
+  const bottomItems = [
     { href: '/private/account', label: 'Mon Compte', icon: AccountIcon, key: 'account' },
   ];
 
@@ -224,13 +229,41 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
         
         {/* Navigation principale */}
         <motion.div 
-          className="unified-sidebar-section"
+          className="unified-sidebar-section unified-sidebar-nav-main"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
         >
           <nav className="unified-sidebar-nav">
             {navigationItems.map((item) => (
+              <motion.div
+                key={item.key}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <Link 
+                  href={item.href} 
+                  className={`unified-nav-link ${activeLink === item.key ? 'active' : ''}`}
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <item.icon />
+                  {!isCollapsed && <span>{item.label}</span>}
+                </Link>
+              </motion.div>
+            ))}
+          </nav>
+        </motion.div>
+
+        {/* Section bas : Mon Compte et Déconnexion */}
+        <motion.div 
+          className="unified-sidebar-section unified-sidebar-nav-bottom"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+        >
+          <nav className="unified-sidebar-nav">
+            {bottomItems.map((item) => (
               <motion.div
                 key={item.key}
                 whileHover={{ scale: 1.02 }}

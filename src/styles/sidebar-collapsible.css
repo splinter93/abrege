@@ -198,6 +198,19 @@ aside.unified-sidebar {
   margin-top: auto !important;
 }
 
+/* Section navigation principale - prend l'espace disponible */
+.unified-sidebar-nav-main {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Section navigation bas - positionnée en bas */
+.unified-sidebar-nav-bottom {
+  flex: 0 0 auto !important;
+  margin-top: auto !important;
+}
+
 /* ========================================
    NAVIGATION
    ======================================== */
