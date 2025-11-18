@@ -46,21 +46,21 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
+  border: none;
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   transform: translateZ(0);
-  will-change: transform, background-color, border-color;
+  will-change: transform, background-color;
 }
 
 .nav-btn:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%) !important;
+  border: none !important;
   color: #ffffff !important;
   transform: translateY(-1px);
   box-shadow: none !important;
@@ -77,8 +77,8 @@
 }
 
 .nav-btn:disabled:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)) !important;
+  border: none !important;
   color: rgba(255, 255, 255, 0.7) !important;
   transform: none;
   box-shadow: none !important;
@@ -89,8 +89,8 @@
 .nav-btn:focus-visible {
   outline: none !important;
   box-shadow: none !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%) !important;
+  border: none !important;
 }
 
 .section-separator {
@@ -412,16 +412,16 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 0.5rem;
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
   transition: all 0.2s ease;
+  box-shadow: none;
 }
 
 .url-input-container:focus-within {
-  border-color: rgba(255, 255, 255, 0.2) !important;
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: linear-gradient(135deg, #353942 0%, #3d4249 50%, #353942 100%) !important;
   box-shadow: none !important;
 }
 
@@ -459,11 +459,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #353942 0%, #3d4249 50%, #353942 100%);
+  border: none;
+  border-radius: 10px;
   color: #ffffff;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -472,16 +472,17 @@
 }
 
 .url-upload-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: linear-gradient(135deg, #3d4249 0%, #454a52 50%, #3d4249 100%) !important;
   transform: scale(1.05);
   box-shadow: none !important;
 }
 
 .url-upload-btn:disabled {
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #353942 0%, #3d4249 50%, #353942 100%);
   color: rgba(255, 255, 255, 0.3);
   cursor: not-allowed;
   transform: none;
+  opacity: 0.5;
 }
 
 .loading-spinner {
@@ -509,21 +510,22 @@
   justify-content: center;
   min-height: 80px;
   padding: 1rem;
-  background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  box-shadow: none;
 }
 
 .drop-zone:hover {
-  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
+  background: linear-gradient(135deg, #353942 0%, #3d4249 50%, #353942 100%);
 }
 
 .drop-zone.drag-over {
-  background: rgba(59, 130, 246, 0.15);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(59, 130, 246, 0.3) 50%, rgba(59, 130, 246, 0.25) 100%);
 }
 
 .drop-zone-icon {

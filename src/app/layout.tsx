@@ -130,21 +130,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
-            width: 280px !important;
+            width: 250px !important;
             height: 100vh !important;
-            background: rgba(0, 0, 0, 0.18) !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
-            backdrop-filter: blur(12px) !important;
-            -webkit-backdrop-filter: blur(12px) !important;
+            background: linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%) !important;
+            border-right: none !important;
+            border-top-right-radius: 20px !important;
+            border-bottom-right-radius: 20px !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
             z-index: 1000 !important;
             display: flex !important;
             flex-direction: column !important;
             overflow: hidden !important;
+            padding-top: 16px !important;
+            padding-bottom: 16px !important;
           }
           
           /* CRITICAL PAGE CONTENT CSS - S'assurer que le contenu est bien positionné */
           .page-content-area {
-            margin-left: 280px !important;
+            margin-left: 250px !important;
             flex: 1 !important;
             overflow-y: auto !important;
             height: 100vh !important;

@@ -88,6 +88,7 @@
 
 .dashboard-title-centered {
   margin-bottom: 0.5rem;
+  padding-top: 2rem;
 }
 
 .dashboard-title-centered .unified-page-title-content {
@@ -328,7 +329,7 @@
 .drop-zone-card {
   width: 100%;
   max-width: 1200px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: none;

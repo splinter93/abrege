@@ -21,7 +21,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
   border: none;
   border-radius: 12px;
   padding: 0.75rem 1rem;
@@ -30,7 +30,7 @@
 }
 
 .url-input-container:focus-within {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: linear-gradient(135deg, #353942 0%, #3d4249 50%, #353942 100%) !important;
   box-shadow: none !important;
 }
 
@@ -45,6 +45,7 @@
   background: transparent;
   border: none;
   outline: none;
+  appearance: none;
   color: #ffffff;
   font-size: 14px;
   padding: 0.25rem 0;
@@ -70,7 +71,7 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, #353942 0%, #3d4249 50%, #353942 100%);
   border: none;
   border-radius: 10px;
   color: #ffffff;
@@ -80,7 +81,7 @@
 }
 
 .url-upload-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.14);
+  background: linear-gradient(135deg, #3d4249 0%, #454a52 50%, #3d4249 100%);
   transform: scale(1.08);
 }
 
@@ -114,7 +115,7 @@
   justify-content: center;
   min-height: 80px;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
   border: none;
   border-radius: 12px;
   transition: all 0.3s ease;
@@ -125,11 +126,11 @@
 }
 
 .drop-zone:hover:not(.disabled) {
-  background: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, #353942 0%, #3d4249 50%, #353942 100%);
 }
 
 .drop-zone.drag-over {
-  background: rgba(59, 130, 246, 0.15);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(59, 130, 246, 0.3) 50%, rgba(59, 130, 246, 0.25) 100%);
 }
 
 .drop-zone.disabled {
@@ -145,7 +146,7 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, #353942 0%, #3d4249 50%, #353942 100%);
   color: rgba(255, 255, 255, 0.7);
   margin-bottom: 0.75rem;
 }
