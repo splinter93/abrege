@@ -344,9 +344,23 @@ export class DatabaseRealtimeService {
           return null;
         }
 
+        const newArticle = newRecord as ArticleRecord;
+        
+        // 🔧 FIX CRITIQUE: Vérifier si la note est mise en corbeille
+        // Si trashed_at est défini, envoyer un événement note.deleted au lieu de note.updated
+        if (newArticle.trashed_at || newArticle.is_in_trash) {
+          if (this.config?.debug) {
+            logger.info(LogCategory.EDITOR, '[DatabaseRealtime] Note mise en corbeille détectée:', newArticle.id);
+          }
+          return {
+            type: 'note.deleted',
+            payload: { id: newArticle.id },
+            timestamp: Date.now()
+          };
+        }
+
         // Vérifier si c'est une mise à jour de contenu significative
         if (oldRecord && typeof oldRecord === 'object') {
-          const newArticle = newRecord as ArticleRecord;
           const oldArticle = oldRecord as ArticleRecord;
           
           const contentChanged = newArticle.markdown_content !== oldArticle.markdown_content ||

@@ -13,6 +13,8 @@ import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { STORAGE_CONFIG } from "@/config/storage";
 import { simpleLogger as logger } from "@/utils/logger";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
+import { SimpleLoadingState } from "@/components/DossierLoadingStates";
+import "@/components/DossierLoadingStates.css";
 import { FileText, Upload, Image as ImageIcon, File, FileText as FileTextIcon, Video, Music, Archive, X } from "lucide-react";
 import "@/styles/main.css";
 import "./index.css";

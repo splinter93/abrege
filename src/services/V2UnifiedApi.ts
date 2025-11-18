@@ -502,12 +502,12 @@ export class V2UnifiedApi {
         });
       }
 
-      // 🎯 Déclencher le polling ciblé pour la suppression
-      try {
-        const { triggerPollingAfterNoteAction } = await import('@/services/uiActionPolling');
-        await triggerPollingAfterNoteAction('note_deleted');
-      } catch (error) {
-        console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé:', error);
+      // ⚡ OPTIMISTIC UI: Pas de polling nécessaire après suppression
+      // Le store est déjà à jour, et le polling pourrait réajouter la note
+      // si l'API n'a pas encore propagé la suppression (timing issue)
+      // Le polling sera déclenché automatiquement par le système de temps réel si nécessaire
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev(`[V2UnifiedApi] ⚡ Suppression optimiste: pas de polling (évite réapparition)`);
       }
 
       const duration = Date.now() - startTime;

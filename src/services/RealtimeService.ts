@@ -247,15 +247,26 @@ export class RealtimeService {
       case 'articles':
         // Mapper correctement les types d'événements PostgreSQL vers les types du dispatcher
         if (eventType === 'update') {
-          mappedEventType = 'note.updated';
+          // 🔧 FIX CRITIQUE: Vérifier si la note est mise en corbeille
+          // Si trashed_at est défini, traiter comme une suppression
+          const newRecord = payload.new as Record<string, unknown> | null;
+          if (newRecord && (newRecord.trashed_at || newRecord.is_in_trash)) {
+            mappedEventType = 'note.deleted';
+            mappedPayload = { id: newRecord.id };
+          } else {
+            mappedEventType = 'note.updated';
+            mappedPayload = payload.new || payload.old || {};
+          }
         } else if (eventType === 'insert') {
           mappedEventType = 'note.created';
+          mappedPayload = payload.new || payload.old || {};
         } else if (eventType === 'delete') {
           mappedEventType = 'note.deleted';
+          mappedPayload = payload.new || payload.old || {};
         } else {
           mappedEventType = `note.${eventType}`;
+          mappedPayload = payload.new || payload.old || {};
         }
-        mappedPayload = payload.new || payload.old || {};
         break;
       case 'folders':
         if (eventType === 'insert') {

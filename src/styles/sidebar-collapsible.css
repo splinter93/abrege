@@ -131,11 +131,30 @@ aside.unified-sidebar {
 }
 
 .unified-sidebar.collapsed .unified-sidebar-logo {
-  padding: 4px 8px 8px 8px !important;
+  padding: 2px 8px 8px 8px !important;
   width: 100% !important;
   max-width: 56px !important;
   overflow: hidden !important;
   justify-content: center !important; /* Centré en mode collapsed */
+  position: relative !important;
+}
+
+
+/* Séparateur design sous l'icône plume en mode collapsed */
+.unified-sidebar.collapsed .unified-sidebar-logo::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 32px !important;
+  height: 1px !important;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  ) !important;
 }
 
 .unified-logo-image {
@@ -173,13 +192,13 @@ aside.unified-sidebar {
 .unified-sidebar.collapsed .unified-logo-icon {
   opacity: 1 !important;
   transform: scale(1) !important;
-  margin: 0 auto !important;
+  margin: -4px auto 0 auto !important;
   pointer-events: auto !important;
 }
 
 .unified-logo-icon-image {
-  width: 28px !important;
-  height: 28px !important;
+  width: 24px !important;
+  height: 24px !important;
   object-fit: contain !important;
 }
 

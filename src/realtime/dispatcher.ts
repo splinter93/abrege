@@ -76,6 +76,13 @@ export function handleRealtimeEvent(event: { type: string, payload: unknown, tim
     case 'note.updated':
     case 'note.update': // Support pour les deux formats
 
+      // 🔧 FIX CRITIQUE: Vérifier si la note est mise en corbeille
+      // Si trashed_at est défini, supprimer la note du store au lieu de la mettre à jour
+      if (payload.trashed_at || payload.is_in_trash) {
+        store.removeNote(payload.id);
+        break;
+      }
+
       // Vérifier si c'est une mise à jour de contenu significative
       const currentNote = store.notes[payload.id];
       if (currentNote) {
@@ -98,7 +105,12 @@ export function handleRealtimeEvent(event: { type: string, payload: unknown, tim
           store.updateNote(payload.id, payload);
         }
       } else {
-        store.updateNote(payload.id, payload);
+        // ⚠️ FIX: Ne pas réajouter une note qui n'existe pas si elle est en corbeille
+        // Si la note n'existe pas dans le store, c'est peut-être qu'elle a été supprimée
+        // Ne la réajouter que si elle n'est pas en corbeille
+        if (!payload.trashed_at && !payload.is_in_trash) {
+          store.updateNote(payload.id, payload);
+        }
       }
       break;
       

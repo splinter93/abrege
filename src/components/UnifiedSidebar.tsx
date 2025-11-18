@@ -216,7 +216,7 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
         {isCollapsed && (
           <div className="unified-logo-icon">
             <Feather
-              size={32}
+              size={24}
               className="unified-logo-icon-image"
               color="var(--chat-text-primary, #e8eaed)"
             />
