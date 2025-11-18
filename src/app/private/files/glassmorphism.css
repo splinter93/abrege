@@ -69,28 +69,28 @@
    ========================================================================== */
 
 .files-glass-container {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   padding: 0;
   margin: 0;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  height: calc(100vh - 200px);
-  max-height: calc(100vh - 200px);
+  transition: none;
+  box-shadow: none;
+  height: auto;
+  max-height: none;
   display: flex;
   flex-direction: column;
 }
 
 .files-glass-container:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
-  transform: translateY(-1px);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transform: none;
 }
 
 /* ==========================================================================
@@ -98,7 +98,7 @@
    ========================================================================== */
 
 .files-glass-header {
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md) var(--spacing-xl) var(--spacing-md) var(--spacing-xl);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -131,8 +131,8 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
+  border: none;
   border-radius: 12px;
   color: var(--text-primary);
   padding: var(--spacing-md) var(--spacing-xl);
@@ -150,31 +150,12 @@
   justify-content: center;
 }
 
-.files-upload-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.1) 0%, 
-    rgba(255, 255, 255, 0.05) 50%, 
-    rgba(255, 255, 255, 0.1) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: 12px;
-}
+/* Pseudo-élément ::before retiré car le dégradé est déjà appliqué directement */
 
 .files-upload-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-.files-upload-btn:hover::before {
-  opacity: 1;
 }
 
 .files-upload-btn:active {
@@ -213,7 +194,7 @@
 
 .files-glass-content {
   flex: 1;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md) var(--spacing-xl) var(--spacing-xl) var(--spacing-xl);
   background: transparent;
   display: flex;
   flex-direction: column;

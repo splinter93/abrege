@@ -9,6 +9,8 @@ import { logApi } from "@/utils/logger";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
+import { SimpleLoadingState } from "@/components/DossierLoadingStates";
+import "@/components/DossierLoadingStates.css";
 import { Settings, Edit, Trash2 } from "lucide-react";
 import "@/styles/main.css";
 import "@/styles/account.css";

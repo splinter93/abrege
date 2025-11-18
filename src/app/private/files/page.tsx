@@ -21,6 +21,7 @@ import "./index.css";
 import "./page.css";
 import "./glassmorphism.css";
 import { motion, AnimatePresence } from "framer-motion";
+import { openImageModal } from "@/components/chat/ImageModal";
 
 export default function FilesPage() {
   return (
@@ -93,6 +94,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     x: number;
     y: number;
   } | null>(null);
+  
 
   // Synchroniser la recherche avec le hook
   useEffect(() => {
@@ -290,9 +292,18 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
 
   // Gestion des actions sur les fichiers
   const handleFileOpen = useCallback((file: FileItem) => {
-    // Ouvrir le fichier dans un nouvel onglet
-    if (file.url) {
-      window.open(file.url, '_blank');
+    // Si c'est une image, ouvrir la modale (comme dans le chat/dashboard)
+    if (file.mime_type?.startsWith('image/') && file.url) {
+      openImageModal({
+        src: file.url,
+        fileName: file.filename || 'Image',
+        alt: file.filename || undefined
+      });
+    } else {
+      // Pour les autres types de fichiers, ouvrir dans un nouvel onglet
+      if (file.url) {
+        window.open(file.url, '_blank');
+      }
     }
   }, []);
 

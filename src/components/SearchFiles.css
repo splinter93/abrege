@@ -12,8 +12,8 @@
 .search-files-input-container {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--chat-gradient-input, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
+  border: none;
   border-radius: 12px;
   padding: 12px 16px;
   backdrop-filter: blur(20px);
@@ -24,35 +24,12 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
-.search-files-input-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.1) 0%, 
-    rgba(255, 255, 255, 0.05) 50%, 
-    rgba(255, 255, 255, 0.1) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: 12px;
-}
-
-.search-files-input-container:hover::before {
-  opacity: 1;
-}
+/* Pseudo-élément ::before retiré car le dégradé est déjà appliqué directement */
 
 .search-files-input-container.focused {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
-}
-
-.search-files-input-container.focused::before {
-  opacity: 1;
 }
 
 .search-files-input-container.disabled {
