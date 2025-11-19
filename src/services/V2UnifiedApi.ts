@@ -304,11 +304,20 @@ export class V2UnifiedApi {
       const currentNote = store.notes[cleanNoteId];
       previousNote = currentNote ? { ...currentNote } : null;
       
-      // Nettoyer les données avant mise à jour
-      const sanitizedUpdateData = {
+      // 🔧 FIX FLICKER: Préserver header_image si non présent dans cleanData
+      // pour éviter qu'il devienne undefined temporairement
+      const sanitizedUpdateData: Partial<Note> = {
         ...cleanData,
-        header_image: cleanData.header_image === null ? undefined : cleanData.header_image
       };
+      
+      // Si header_image n'est pas dans cleanData, préserver la valeur actuelle
+      if (!('header_image' in cleanData) && currentNote?.header_image !== undefined) {
+        // Ne pas inclure header_image dans sanitizedUpdateData pour préserver la valeur actuelle
+        delete sanitizedUpdateData.header_image;
+      } else if (cleanData.header_image === null) {
+        // Si explicitement null, convertir en undefined pour la suppression
+        sanitizedUpdateData.header_image = undefined;
+      }
       
       optimisticNote = {
         ...currentNote,
@@ -364,6 +373,13 @@ export class V2UnifiedApi {
           if (!valuesAreEqual) {
             changedFields[key as keyof typeof result.note] = nextValue;
           }
+        }
+        
+        // 🔧 FIX FLICKER: Si header_image n'était pas dans cleanData, préserver la valeur actuelle
+        // pour éviter qu'elle devienne undefined lors de la synchronisation
+        if (!('header_image' in cleanData) && optimisticNote?.header_image !== undefined) {
+          // Ne pas inclure header_image dans changedFields si elle n'a pas été modifiée
+          delete changedFields.header_image;
         }
         
         // Ne sync que si des champs ont changé (évite re-render inutile)

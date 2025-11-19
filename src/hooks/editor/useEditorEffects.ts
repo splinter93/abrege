@@ -3,7 +3,7 @@
  * Extrait de Editor.tsx pour respecter la limite de 300 lignes
  */
 
-import { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import type { EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import { logger, LogCategory } from '@/utils/logger';
@@ -101,6 +101,12 @@ export function useEditorEffects({
   }, [kebabOpen, kebabBtnRef, setKebabPos]);
 
   // Effect: Sync header image
+  // 🔧 FIX FLICKER: Utiliser une ref pour tracker la dernière valeur valide
+  // et éviter les synchronisations inutiles lors des sauvegardes
+  const lastValidHeaderImageRef = React.useRef<string | null | undefined>(
+    editorState.headerImage.url ?? undefined
+  );
+  
   useEffect(() => {
     if (!note) {
       logHeaderSync('skip (note missing)', {});
@@ -109,13 +115,28 @@ export function useEditorEffects({
 
     const nextHeaderImage = note?.header_image;
 
+    // 🔧 FIX FLICKER: Si undefined et qu'on avait une valeur valide, ne pas synchroniser
+    // Cela évite de perdre l'image temporairement lors des sauvegardes
     if (nextHeaderImage === undefined) {
-      logHeaderSync('skip (header_image undefined)', {
+      // Si on a déjà une valeur valide en mémoire, la conserver
+      if (lastValidHeaderImageRef.current !== undefined) {
+        logHeaderSync('skip (header_image undefined, preserve last valid)', {
+          noteId,
+          current: editorState.headerImage.url,
+          lastValid: lastValidHeaderImageRef.current
+        });
+        return;
+      }
+      // Sinon, si on n'a jamais eu de valeur, skip aussi
+      logHeaderSync('skip (header_image undefined, no previous value)', {
         noteId,
         current: editorState.headerImage.url
       });
       return;
     }
+
+    // Mettre à jour la ref avec la nouvelle valeur valide
+    lastValidHeaderImageRef.current = nextHeaderImage;
 
     if (nextHeaderImage === null) {
       if (editorState.headerImage.url !== null) {
