@@ -90,24 +90,30 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         ) : null}
         {/* CAS 3 : Page publique + pas owner → Pas de bouton (null) */}
         
-        <button
-          ref={kebabBtnRef}
-          className="header-action-btn"
-          onClick={onMenuOpen}
-          aria-label="Menu"
-          title="Menu"
-        >
-          <FiMoreHorizontal size={18} />
-        </button>
+        {/* 🔧 FIX: Menu kebab masqué en mode readonly sauf si canEdit (owner) */}
+        {(!readonly || canEdit) && (
+          <button
+            ref={kebabBtnRef}
+            className="header-action-btn"
+            onClick={onMenuOpen}
+            aria-label="Menu"
+            title="Menu"
+          >
+            <FiMoreHorizontal size={18} />
+          </button>
+        )}
         
-        <button
-          className="header-action-btn"
-          onClick={onClose}
-          aria-label="Fermer"
-          title="Fermer"
-        >
-          <FiX size={18} />
-        </button>
+        {/* 🔧 FIX: Bouton fermer masqué en mode readonly (page publique) */}
+        {!readonly && (
+          <button
+            className="header-action-btn"
+            onClick={onClose}
+            aria-label="Fermer"
+            title="Fermer"
+          >
+            <FiX size={18} />
+          </button>
+        )}
       </div>
       
       {/* ✅ Menu kebab rendu dans le header pour suivre le sticky */}

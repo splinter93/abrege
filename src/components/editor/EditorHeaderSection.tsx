@@ -84,7 +84,8 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
       />
       
       {/* Add header image CTA */}
-      {!editorState.headerImage.url && !editorState.ui.previewMode && (
+      {/* 🔧 FIX: Masquer en mode readonly (page publique) - aucun bouton de modification */}
+      {!editorState.headerImage.url && !editorState.ui.previewMode && !isReadonly && (
         <div className="editor-add-header-image-row editor-add-image-center">
           <div
             className="editor-add-header-image"

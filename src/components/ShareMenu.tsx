@@ -89,10 +89,10 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
       };
       
       await onSettingsChange(updatedSettings);
-      toast.success('Paramètres sauvegardés !');
+      // 🔧 FIX: Toast géré par EditorShareManager, pas besoin de dupliquer ici
       onClose();
     } catch (error) {
-      toast.error('Erreur lors de la sauvegarde');
+      // 🔧 FIX: Toast d'erreur géré par EditorShareManager
       console.error('Erreur sauvegarde:', error);
     } finally {
       setIsUpdating(false);
