@@ -26,6 +26,7 @@ interface EditorHeaderProps {
   canEdit?: boolean; // Si l'user peut éditer (pour afficher le lien vers l'éditeur)
   noteId?: string; // ID de la note pour le lien vers l'éditeur
   kebabMenu?: React.ReactNode; // ✅ Menu kebab rendu dans le header
+  onTranscriptionComplete?: (text: string) => void;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -42,7 +43,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   showToolbar = true,
   canEdit = true,
   noteId,
-  kebabMenu
+  kebabMenu,
+  onTranscriptionComplete
 }) => {
   return (
     <div className={`editor-header ${!showToolbar ? 'editor-header--transparent' : ''}`}>
@@ -60,6 +62,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             onImageClick={onImageClick}
             onFontChange={onFontChange}
             currentFont={currentFont}
+            onTranscriptionComplete={onTranscriptionComplete}
           />
         </div>
       )}

@@ -3,7 +3,7 @@
  * Pas de scroll, pas de merde, juste les boutons alignés proprement
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   FiBold,
   FiItalic,
@@ -16,7 +16,6 @@ import {
   FiType,
   FiRotateCcw,
   FiRotateCw,
-  FiMic,
   FiCode,
 } from 'react-icons/fi';
 import { BsChatQuote } from 'react-icons/bs';
@@ -24,6 +23,7 @@ import { MdFormatListNumbered, MdGridOn } from 'react-icons/md';
 import type { FullEditorInstance } from '@/types/editor';
 import FontSelector from './FontSelector';
 import { insertDefaultTable } from '@/utils/editorTables';
+import AudioRecorder from '@/components/chat/AudioRecorder';
 import './editor-toolbar.css';
 
 interface EditorToolbarProps {
@@ -32,6 +32,7 @@ interface EditorToolbarProps {
   onImageClick?: () => void;
   onFontChange?: (fontName: string, scope?: 'all' | 'headings' | 'body') => void;
   currentFont?: string;
+  onTranscriptionComplete?: (text: string) => void;
 }
 
 const EditorToolbar: React.FC<EditorToolbarProps> = ({ 
@@ -39,48 +40,46 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   readonly = false,
   onImageClick,
   onFontChange,
-  currentFont = 'Figtree'
+  currentFont = 'Figtree',
+  onTranscriptionComplete
 }) => {
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-
-  if (!editor || readonly) {
-    return null;
-  }
+  const [audioError, setAudioError] = useState<string | null>(null);
 
   // Actions
-  const undo = () => editor.chain().focus().undo().run();
-  const redo = () => editor.chain().focus().redo().run();
-  const toggleBold = () => editor.chain().focus().toggleBold().run();
-  const toggleItalic = () => editor.chain().focus().toggleItalic().run();
-  const toggleUnderline = () => editor.chain().focus().toggleUnderline().run();
-  const toggleBulletList = () => editor.chain().focus().toggleBulletList().run();
-  const toggleOrderedList = () => editor.chain().focus().toggleOrderedList().run();
-  const toggleBlockquote = () => editor.chain().focus().toggleBlockquote().run();
-  const handleInsertTable = () => insertDefaultTable(editor);
+  const undo = () => editor?.chain().focus().undo().run();
+  const redo = () => editor?.chain().focus().redo().run();
+  const toggleBold = () => editor?.chain().focus().toggleBold().run();
+  const toggleItalic = () => editor?.chain().focus().toggleItalic().run();
+  const toggleUnderline = () => editor?.chain().focus().toggleUnderline().run();
+  const toggleBulletList = () => editor?.chain().focus().toggleBulletList().run();
+  const toggleOrderedList = () => editor?.chain().focus().toggleOrderedList().run();
+  const toggleBlockquote = () => editor?.chain().focus().toggleBlockquote().run();
+  const handleInsertTable = () => editor && insertDefaultTable(editor);
 
   const setHeading = (level: 1 | 2 | 3) => {
-    editor.chain().focus().toggleHeading({ level }).run();
+    editor?.chain().focus().toggleHeading({ level }).run();
     setShowHeadingMenu(false);
   };
 
   const setParagraph = () => {
-    editor.chain().focus().setParagraph().run();
+    editor?.chain().focus().setParagraph().run();
     setShowHeadingMenu(false);
   };
 
   // States
-  const canUndo = editor.can().undo();
-  const canRedo = editor.can().redo();
-  const isBold = editor.isActive('bold');
-  const isItalic = editor.isActive('italic');
-  const isUnderline = editor.isActive('underline');
-  const isBulletList = editor.isActive('bulletList');
-  const isOrderedList = editor.isActive('orderedList');
-  const isBlockquote = editor.isActive('blockquote');
-  const isH1 = editor.isActive('heading', { level: 1 });
-  const isH2 = editor.isActive('heading', { level: 2 });
-  const isH3 = editor.isActive('heading', { level: 3 });
+  const canUndo = editor?.can().undo() ?? false;
+  const canRedo = editor?.can().redo() ?? false;
+  const isBold = editor?.isActive('bold') ?? false;
+  const isItalic = editor?.isActive('italic') ?? false;
+  const isUnderline = editor?.isActive('underline') ?? false;
+  const isBulletList = editor?.isActive('bulletList') ?? false;
+  const isOrderedList = editor?.isActive('orderedList') ?? false;
+  const isBlockquote = editor?.isActive('blockquote') ?? false;
+  const isH1 = editor?.isActive('heading', { level: 1 }) ?? false;
+  const isH2 = editor?.isActive('heading', { level: 2 }) ?? false;
+  const isH3 = editor?.isActive('heading', { level: 3 }) ?? false;
 
   const getCurrentHeading = () => {
     if (isH1) return 'H1';
@@ -88,6 +87,22 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
     if (isH3) return 'H3';
     return 'P';
   };
+
+  const handleAudioTranscription = useCallback(
+    (text: string) => {
+      setAudioError(null);
+      onTranscriptionComplete?.(text);
+    },
+    [onTranscriptionComplete]
+  );
+
+  const handleAudioError = useCallback((error: string) => {
+    setAudioError(error);
+  }, []);
+
+  if (!editor || readonly) {
+    return null;
+  }
 
   return (
     <div className="editor-toolbar">
@@ -214,9 +229,19 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         <FiImage size={16} />
       </button>
 
-      <button className="tb-btn desktop-only" title="Dictaphone">
-        <FiMic size={16} />
-      </button>
+      <div className="tb-audio-wrapper desktop-only">
+        <AudioRecorder
+          onTranscriptionComplete={handleAudioTranscription}
+          onError={handleAudioError}
+          variant="toolbar"
+        />
+      </div>
+
+      {audioError && (
+        <span className="tb-audio-error desktop-only" role="status">
+          {audioError}
+        </span>
+      )}
 
       <div className="tb-divider desktop-only" />
 

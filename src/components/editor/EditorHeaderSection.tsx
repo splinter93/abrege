@@ -44,6 +44,26 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
   publicUrl,
   onClose
 }) => {
+  const handleToolbarTranscription = React.useCallback(
+    (text: string) => {
+      if (!editor) {
+        return;
+      }
+
+      const trimmed = text.trim();
+      if (!trimmed) {
+        return;
+      }
+
+      editor
+        .chain()
+        .focus()
+        .insertContent(`${trimmed} `)
+        .run();
+    },
+    [editor]
+  );
+
   return (
     <>
       <EditorHeader
@@ -58,6 +78,7 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
         readonly={isReadonly}
         previewMode={editorState.ui.previewMode}
         showToolbar={editorState.ui.showToolbar}
+        onTranscriptionComplete={handleToolbarTranscription}
         canEdit={canEdit}
         noteId={noteId}
         kebabMenu={
