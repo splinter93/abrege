@@ -12,14 +12,19 @@
   z-index: 1000;
 }
 
-.share-menu {
+/* 🔧 Dégradé gris moderne - Utilise la même variable que le chat input */
+.share-menu,
+div.share-menu,
+.share-menu[class] {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 90%;
   max-width: 500px;
-  background: var(--surface-1, #1a1a1c);
+  /* Dégradé gris - même variable que chat input */
+  background: var(--chat-gradient-input, var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%))) !important;
+  background-color: transparent !important;
   border-radius: 12px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   z-index: 1001;
@@ -147,22 +152,37 @@
 }
 
 .share-menu-copy-button {
-  padding: 12px 16px;
-  background: var(--accent-primary, #3b82f6);
+  padding: 10px 14px;
+  background: #ff6b35;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s;
+  font-size: 13px;
+  transition: background 0.2s, transform 0.2s;
 }
 
 .share-menu-copy-button:hover:not(:disabled) {
-  background: var(--accent-hover, #2563eb);
+  background: #f35d24;
+  transform: translateY(-1px);
 }
 
 .share-menu-copy-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.share-link-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-2, #9ca3af);
+}
+
+.share-link-info svg {
+  color: var(--text-2, #9ca3af);
 }
 
 .seo-warning {
@@ -184,18 +204,20 @@
 }
 
 .save-button {
-  padding: 12px 24px;
-  background: var(--accent-primary, #3b82f6);
+  padding: 10px 18px;
+  background: #ff6b35;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
-  transition: background 0.2s;
+  font-size: 14px;
+  transition: background 0.2s, transform 0.2s;
 }
 
 .save-button:hover:not(:disabled) {
-  background: var(--accent-hover, #2563eb);
+  background: #f35d24;
+  transform: translateY(-1px);
 }
 
 .save-button:disabled {

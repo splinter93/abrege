@@ -45,17 +45,25 @@
 
 /* Style spécifique pour les composants plus petits */
 .activity-loading-simple {
-  min-height: 200px;
-  padding: 1rem;
+  min-height: auto;
+  padding: 0;
+  background: transparent;
+  border: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
 }
 
 .activity-loading-simple .loading-title-simple {
-  font-size: 1.2rem;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .activity-loading-simple .spinner-ring-simple {
-  width: 30px;
-  height: 30px;
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+  margin-bottom: 0.2rem;
 }
 
 /* ==========================================================================

@@ -58,6 +58,26 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
     setVisibility(newVisibility);
   };
 
+  const getLinkInfo = () => {
+    if (visibility === 'private') {
+      return {
+        icon: <FiLock size={14} />,
+        text: 'Lien inactif tant que la note est privée'
+      };
+    }
+    if (visibility === 'link-public') {
+      return {
+        icon: <FiGlobe size={14} />,
+        text: 'Cette note sera indexée par les moteurs de recherche'
+      };
+    }
+    return {
+      icon: <FiLink size={14} />,
+      text: 'Accessible via le lien, non indexé'
+    };
+  };
+  const linkInfo = getLinkInfo();
+
   const handleCopyLink = useCallback(async () => {
     if (!publicUrl) {
       toast.error('URL publique non disponible');
@@ -107,7 +127,12 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
       {/* Overlay pour fermer en cliquant à l'extérieur */}
       <div className="share-menu-overlay" onClick={onClose} />
       
-      <div className="share-menu">
+      <div 
+        className="share-menu"
+        style={{
+          background: 'var(--chat-gradient-input, var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)))'
+        }}
+      >
         {/* Header */}
         <div className="share-menu-header">
           <h3>Partager cette note</h3>
@@ -118,7 +143,7 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
 
         {/* Options de visibilité */}
         <div className="share-menu-section">
-          <h4>Qui peut voir cette note ?</h4>
+          <h4>Visibilité</h4>
           <div className="visibility-options">
             {visibilityOptions.map((option) => (
               <label key={option.value} className="visibility-option">
@@ -139,42 +164,33 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
           </div>
         </div>
 
-        {/* Section lien public - Afficher TOUJOURS si publicUrl existe */}
-        {publicUrl && (
-          <div className="share-menu-section">
-            <h4>🔗 Lien de partage</h4>
-            {visibility === 'private' && (
-              <div className="seo-warning" style={{ marginBottom: '8px', background: 'rgba(255,107,53,0.1)', borderColor: '#ff6b35' }}>
-                <FiLock size={16} />
-                <span>Lien inactif tant que la note est privée</span>
-              </div>
-            )}
-            <div className="link-section">
-              <div className="link-input-group">
-                <input
-                  type="text"
-                  value={publicUrl}
-                  readOnly
-                  className="link-input"
-                />
-                <button
-                  onClick={handleCopyLink}
-                  className="share-menu-copy-button"
-                  disabled={copySuccess}
-                >
-                  {copySuccess ? <FiCheck size={16} /> : <FiCopy size={16} />}
-                </button>
-              </div>
-              
-              {visibility === 'link-public' && (
-                <div className="seo-warning">
-                  <FiGlobe size={16} />
-                  <span>Cette note sera indexée par les moteurs de recherche</span>
-                </div>
-              )}
+        {/* Section lien public - Afficher TOUJOURS */}
+        <div className="share-menu-section">
+          <h4>🔗 Lien de partage</h4>
+          <div className="link-section">
+            <div className="link-input-group">
+              <input
+                type="text"
+                value={publicUrl || ''}
+                readOnly
+                className="link-input"
+                placeholder={publicUrl ? '' : 'Le lien sera généré après sauvegarde'}
+                disabled={!publicUrl}
+              />
+              <button
+                onClick={handleCopyLink}
+                className="share-menu-copy-button"
+                disabled={copySuccess || !publicUrl}
+              >
+                {copySuccess ? <FiCheck size={16} /> : <FiCopy size={16} />}
+              </button>
+            </div>
+            <div className="share-link-info">
+              {linkInfo.icon}
+              <span>{linkInfo.text}</span>
             </div>
           </div>
-        )}
+        </div>
 
         {/* Actions */}
         <div className="share-menu-actions">

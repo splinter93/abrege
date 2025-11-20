@@ -548,7 +548,41 @@
    ÉTATS DE CHARGEMENT ET D'ERREUR
    ========================================================================== */
 
-.carousel-loading,
+.carousel-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  text-align: left;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.carousel-loading {
+  gap: 10px;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-top: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.carousel-loading span {
+  font-size: 14px;
+  color: var(--notion-text-secondary);
+  font-weight: 500;
+}
+
 .carousel-error,
 .carousel-empty {
   display: flex;
@@ -563,30 +597,6 @@
   backdrop-filter: blur(25px) saturate(180%);
   -webkit-backdrop-filter: blur(25px) saturate(180%);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-.carousel-loading {
-  gap: var(--notion-space-lg);
-}
-
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.carousel-loading span {
-  font-size: 14px;
-  color: var(--notion-text-secondary);
-  font-weight: 500;
 }
 
 .carousel-error span {
