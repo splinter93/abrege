@@ -18,7 +18,7 @@ async function exemple1_ImageURL() {
   console.log('\n=== EXEMPLE 1 : Analyse d\'image via URL ===\n');
   
   const xai = new XAIProvider({
-    model: 'grok-4-fast',
+    model: 'grok-4-1-fast-non-reasoning',
     temperature: 0.7
   });
 
@@ -78,7 +78,7 @@ async function exemple3_MultipleImages() {
   console.log('\n=== EXEMPLE 3 : Analyse de plusieurs images ===\n');
   
   const xai = new XAIProvider({
-    model: 'grok-4-fast',
+    model: 'grok-4-1-fast-non-reasoning',
     temperature: 0.7
   });
 
@@ -168,7 +168,7 @@ async function exemple5_UIAnalysis() {
   console.log('\n=== EXEMPLE 5 : Analyse UX d\'interface ===\n');
   
   const xai = new XAIProvider({
-    model: 'grok-4-fast',
+    model: 'grok-4-1-fast-non-reasoning',
     temperature: 0.7
   });
 
@@ -227,7 +227,7 @@ async function exemple7_TechnicalDiagram() {
   console.log('\n=== EXEMPLE 7 : Analyse de diagramme technique ===\n');
   
   const xai = new XAIProvider({
-    model: 'grok-4-fast-reasoning', // Reasoning pour analyse technique
+    model: 'grok-4-1-fast-reasoning', // Reasoning pour analyse technique
     temperature: 0.7
   });
 
@@ -325,7 +325,7 @@ async function exemple10_InvoiceAnalysis() {
   console.log('\n=== EXEMPLE 10 : Analyse de facture ===\n');
   
   const xai = new XAIProvider({
-    model: 'grok-4-fast',
+    model: 'grok-4-1-fast-non-reasoning',
     temperature: 0.3 // Basse température pour précision
   });
 

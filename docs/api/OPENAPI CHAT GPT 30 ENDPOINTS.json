@@ -149,7 +149,7 @@
         "post": {
           "operationId": "canva.create_session",
           "summary": "Créer ou ouvrir une session canva",
-          "description": "Ouvre une note existante dans le canevas ou crée un nouveau brouillon canva attaché à une session de chat. Architecture REST V2.",
+          "description": "Ouvre une note existante dans le canevas ou crée un nouveau brouillon canva attaché à une session de chat.\n\n📋 DEUX MODES D'UTILISATION :\n1. Ouvrir une note existante : fournir 'note_id' (et optionnellement 'chat_session_id')\n2. Créer un nouveau canvas : fournir 'chat_session_id' + 'create_if_missing=true' + 'title' (OBLIGATOIRE)\n\n🚨 RÈGLE ABSOLUE : Quand create_if_missing=true, le paramètre 'title' est OBLIGATOIRE. Ne JAMAIS oublier 'title' lors de la création d'un nouveau canvas, sinon l'opération échouera avec une erreur 400.",
           "tags": ["Canva"],
           "security": [{"ApiKeyAuth": []}],
           "requestBody": {
@@ -2643,11 +2643,11 @@
             },
             "create_if_missing": {
               "type": "boolean",
-              "description": "Créer un brouillon canva si aucune note n'est fournie"
+              "description": "Si true, crée un nouveau brouillon canva au lieu d'ouvrir une note existante. 🚨 CRITIQUE : Si create_if_missing=true, alors le paramètre 'title' devient OBLIGATOIRE et doit être fourni. Sans 'title', l'appel échouera avec une erreur 400."
             },
             "title": {
               "type": "string",
-              "description": "Titre du nouveau canva (requis si create_if_missing=true)"
+              "description": "🚨 OBLIGATOIRE si create_if_missing=true. Titre du nouveau canvas à créer. Ce paramètre est REQUIS et ne peut pas être omis lors de la création d'un nouveau canvas. Exemple : \"Mon nouveau canvas\", \"Brainstorming du jour\", etc."
             },
             "classeur_id": {
               "type": "string",

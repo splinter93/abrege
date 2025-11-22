@@ -100,29 +100,29 @@ export const GROQ_MODELS: GroqModelInfo[] = [
   
   // xAI Grok Models
   {
-    id: 'grok-4-fast',
-    name: 'Grok 4 Fast 128k',
+    id: 'grok-4-1-fast-non-reasoning',
+    name: 'Grok 4.1 Fast (Instant)',
     category: 'xai',
     provider: 'xai',
     capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
-    contextWindow: 131072,
+    contextWindow: 2000000,
     maxOutput: 8000,
     speed: 800,
     pricing: { input: '$0.20', output: '$0.50' },
-    description: 'Ultra-rapide et économique, parfait pour la production',
+    description: 'Réponses instantanées avec la nouvelle génération Grok 4.1',
     recommended: true
   },
   {
-    id: 'grok-4-fast-reasoning',
-    name: 'Grok 4 Fast Reasoning 128k',
+    id: 'grok-4-1-fast-reasoning',
+    name: 'Grok 4.1 Fast Reasoning',
     category: 'xai',
     provider: 'xai',
     capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning', 'images'],
-    contextWindow: 131072,
+    contextWindow: 2000000,
     maxOutput: 8000,
     speed: 700,
     pricing: { input: '$0.20', output: '$0.50' },
-    description: 'Avec raisonnement avancé et support des images',
+    description: 'Reasoning avancé, 2M tokens et support images',
     recommended: true
   },
   {

@@ -12,7 +12,7 @@ async function test() {
   console.log('🧪 Test xAI avec 3 tools simples\n');
 
   const xai = new XAIProvider({
-    model: 'grok-4-fast-reasoning',
+    model: 'grok-4-1-fast-reasoning',
     temperature: 0.7
   });
 

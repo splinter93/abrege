@@ -79,10 +79,13 @@ const XAI_INFO: ProviderInfo = {
     images: true // ✅ Support natif des images (jpg/jpeg/png, max 20 Mo)
   },
   supportedModels: [
-    'grok-4-fast',           // Production: Ultra-fast inference
-    'grok-4-fast-reasoning', // Production: Advanced reasoning
-    'grok-beta',             // Beta access
-    'grok-vision-beta'       // Vision model (beta)
+    'grok-4-1-fast-reasoning',     // Production: Advanced reasoning (2M context)
+    'grok-4-1-fast-non-reasoning', // Production: Instant responses
+    'grok-4-fast',                 // Legacy (migrated to 4.1)
+    'grok-4-fast-reasoning',       // Legacy reasoning (migrated to 4.1)
+    'grok-4-fast-non-reasoning',   // Legacy fast (migrated to 4.1)
+    'grok-beta',                   // Beta access
+    'grok-vision-beta'             // Vision model (beta)
   ],
   pricing: {
     input: '$0.20/1M tokens',
@@ -100,7 +103,7 @@ const DEFAULT_XAI_CONFIG: XAIConfig = {
   timeout: 30000,
   
   // LLM
-  model: 'grok-4-fast', // Modèle par défaut: ultra-rapide
+  model: 'grok-4-1-fast-reasoning', // Modèle par défaut: nouvelle génération 2M tokens
   temperature: 0.7,
   maxTokens: 8000,
   topP: 0.85, // ✅ Réduit légèrement pour éviter hallucinations sporadiques
@@ -167,7 +170,7 @@ interface XAIChatCompletionResponse {
  * Provider xAI pour les modèles Grok
  * 
  * Compatible OpenAI API avec function calling natif
- * Support du mode reasoning avancé avec grok-4-fast-reasoning
+ * Support du mode reasoning avancé avec grok-4-1-fast-reasoning
  */
 export class XAIProvider extends BaseProvider implements LLMProvider {
   readonly info = XAI_INFO;
@@ -185,6 +188,18 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
   constructor(customConfig?: Partial<XAIConfig>) {
     super();
     this.config = { ...DEFAULT_XAI_CONFIG, ...customConfig };
+
+    const legacyModelMap: Record<string, string> = {
+      'grok-4-fast': 'grok-4-1-fast-reasoning',
+      'grok-4-fast-reasoning': 'grok-4-1-fast-reasoning',
+      'grok-4-fast-non-reasoning': 'grok-4-1-fast-non-reasoning'
+    };
+
+    if (legacyModelMap[this.config.model]) {
+      const upgradedModel = legacyModelMap[this.config.model];
+      logger.info(`[XAIProvider] ♻️ Migration automatique du modèle ${this.config.model} → ${upgradedModel}`);
+      this.config.model = upgradedModel;
+    }
   }
 
   /**
@@ -720,7 +735,7 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
       });
     }
 
-    // Ajouter le reasoning si présent (mode grok-4-fast-reasoning)
+    // Ajouter le reasoning si présent (mode grok-4-1-fast-reasoning)
     if (choice?.message?.reasoning) {
       result.reasoning = choice.message.reasoning;
       logger.dev(`[XAIProvider] 🧠 Reasoning détecté (${result.reasoning.length} chars)`);

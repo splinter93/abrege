@@ -1,5 +1,5 @@
 /**
- * Exemples d'utilisation de xAI Grok 4 Fast
+ * Exemples d'utilisation de xAI Grok 4.1 Fast
  * 
  * Ces exemples montrent comment utiliser le provider xAI
  * dans différents contextes de l'application.
@@ -18,7 +18,7 @@ async function exemple1_BasicUsage() {
   console.log('\n=== EXEMPLE 1 : Utilisation basique ===\n');
   
   const xai = new XAIProvider({
-    model: 'grok-4-fast',
+    model: 'grok-4-1-fast-non-reasoning',
     temperature: 0.7,
     maxTokens: 8000
   });
@@ -50,7 +50,7 @@ async function exemple2_FunctionCalling() {
   console.log('\n=== EXEMPLE 2 : Function Calling ===\n');
   
   const xai = new XAIProvider({
-    model: 'grok-4-fast',
+    model: 'grok-4-1-fast-non-reasoning',
     temperature: 0.7
   });
 
@@ -113,7 +113,7 @@ async function exemple2_FunctionCalling() {
     },
     {
       role: 'user' as const,
-      content: 'Crée une note "Test Grok" avec le contenu "# Hello from Grok 4 Fast" dans le classeur "main-notebook"'
+      content: 'Crée une note "Test Grok" avec le contenu "# Hello from Grok 4.1 Fast" dans le classeur "main-notebook"'
     }
   ];
 
@@ -137,7 +137,7 @@ async function exemple3_ReasoningMode() {
   console.log('\n=== EXEMPLE 3 : Mode Reasoning ===\n');
   
   const xai = new XAIProvider({
-    model: 'grok-4-fast-reasoning', // ← Mode reasoning
+    model: 'grok-4-1-fast-reasoning', // ← Mode reasoning
     temperature: 0.7,
     maxTokens: 8000,
     reasoningMode: 'reasoning'
@@ -184,7 +184,7 @@ async function exemple4_SimpleOrchestrator() {
   
   // Configurer pour utiliser xAI
   process.env.LLM_DEFAULT_PROVIDER = 'xai';
-  process.env.LLM_DEFAULT_MODEL = 'grok-4-fast';
+  process.env.LLM_DEFAULT_MODEL = 'grok-4-1-fast-reasoning';
 
   const result = await simpleOrchestrator.processMessage(
     'Recherche toutes les notes qui parlent de TypeScript et crée une nouvelle note "Summary TypeScript" avec un résumé',
@@ -283,7 +283,7 @@ async function exemple7_DynamicConfiguration() {
   const isDev = process.env.NODE_ENV === 'development';
   
   const xai = new XAIProvider({
-    model: isDev ? 'grok-4-fast' : 'grok-4-fast-reasoning',
+    model: isDev ? 'grok-4-1-fast-non-reasoning' : 'grok-4-1-fast-reasoning',
     temperature: isDev ? 0.9 : 0.7, // Plus créatif en dev
     maxTokens: isDev ? 4000 : 8000,
     enableLogging: isDev, // Logs uniquement en dev
@@ -309,7 +309,7 @@ async function exemple8_ErrorHandling() {
   
   const xai = new XAIProvider({
     apiKey: 'invalid_key', // ← Clé invalide pour tester
-    model: 'grok-4-fast'
+    model: 'grok-4-1-fast-reasoning'
   });
 
   try {
@@ -333,7 +333,7 @@ async function exemple9_ParallelToolCalls() {
   console.log('\n=== EXEMPLE 9 : Parallel Tool Calls ===\n');
   
   const xai = new XAIProvider({
-    model: 'grok-4-fast',
+    model: 'grok-4-1-fast-non-reasoning',
     parallelToolCalls: true // ← Activer l'exécution parallèle
   });
 

@@ -83,7 +83,7 @@ const DEFAULT_CONFIG: LLMConfig = {
     xai: {
       apiKey: process.env.XAI_API_KEY || '',
       baseUrl: 'https://api.x.ai/v1',
-      defaultModel: 'grok-4-fast',
+      defaultModel: 'grok-4-1-fast-reasoning',
       reasoningMode: 'fast'
     }
   },

@@ -4,7 +4,7 @@
  * @module hooks/useChatActions
  */
 
-import { useCallback } from 'react';
+import { useCallback, startTransition } from 'react';
 import type { ImageAttachment } from '@/types/image';
 import type { SelectedNote, NoteWithContent } from './useNotesLoader';
 import type { AudioRecorderRef } from '@/components/chat/AudioRecorder';
@@ -169,26 +169,77 @@ export function useChatActions({
   /**
    * Handler pour la transcription audio complétée
    */
-  const handleTranscriptionComplete = useCallback((text: string) => {
-    setMessage(prev => prev + (prev ? ' ' : '') + text);
-    setAudioError(null);
-    
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    
-    if (!isTouchDevice) {
-      const timeoutId = setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.focus();
-          textareaRef.current.setSelectionRange(
-            textareaRef.current.value.length,
-            textareaRef.current.value.length
-          );
-        }
-      }, 100);
-      
-      return () => clearTimeout(timeoutId);
+  const handleTranscriptionComplete = useCallback((rawText: string) => {
+    const text = rawText.trim();
+    if (!text) {
+      setAudioError(null);
+      return;
     }
-  }, [textareaRef, setMessage, setAudioError]);
+
+    const textarea = textareaRef.current;
+    const isTouchDevice =
+      typeof window !== 'undefined' &&
+      ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+    const insertTextWithSpacing = (before: string, inserted: string, after: string) => {
+      const needsSpaceBefore = before.length > 0 && !/\s$/.test(before);
+      const needsSpaceAfter = after.length > 0 && !/^\s/.test(after);
+      const prefix = needsSpaceBefore ? ' ' : '';
+      const suffix = needsSpaceAfter ? ' ' : '';
+      return `${prefix}${inserted}${suffix}`;
+    };
+
+    const adjustTextareaHeight = (element: HTMLTextAreaElement) => {
+      const previousHeight = element.style.height;
+      element.style.transition = 'none';
+      element.style.height = 'auto';
+      const maxHeight = 200;
+      const minHeight = 18;
+      const nextHeight = Math.max(
+        minHeight,
+        Math.min(element.scrollHeight, maxHeight)
+      );
+      element.style.height = previousHeight;
+      requestAnimationFrame(() => {
+        element.style.transition = 'height 0.3s cubic-bezier(0.22, 1, 0.36, 1)';
+        element.style.height = `${nextHeight}px`;
+      });
+    };
+
+    if (textarea) {
+      const selectionStart = textarea.selectionStart ?? textarea.value.length;
+      const selectionEnd = textarea.selectionEnd ?? textarea.value.length;
+      const currentValue = textarea.value;
+      const before = currentValue.slice(0, selectionStart);
+      const after = currentValue.slice(selectionEnd);
+      const insertion = insertTextWithSpacing(before, text, after);
+      const nextValue = before + insertion + after;
+      const caretPosition = before.length + insertion.length;
+
+      textarea.value = nextValue;
+      textarea.setSelectionRange(caretPosition, caretPosition);
+      if (!isTouchDevice) {
+        textarea.focus({ preventScroll: true });
+      }
+      adjustTextareaHeight(textarea);
+
+      startTransition(() => {
+        setMessage(nextValue);
+        setAudioError(null);
+        detectCommands(nextValue, caretPosition);
+      });
+
+      return;
+    }
+
+    // Fallback : textarea non disponible
+    const nextValue = `${message}${message ? ' ' : ''}${text}`;
+    startTransition(() => {
+      setMessage(nextValue);
+      setAudioError(null);
+      detectCommands(nextValue, nextValue.length);
+    });
+  }, [textareaRef, setMessage, setAudioError, detectCommands, message]);
 
   return {
     handleInputChange,

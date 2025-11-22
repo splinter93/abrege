@@ -48,8 +48,19 @@ interface ChatInputProps {
 const getReasoningLevelFromModel = (model?: string): 'advanced' | 'general' | 'fast' | null => {
   if (!model) return null;
   if (model.includes('grok-4-0709')) return 'advanced';
-  if (model.includes('grok-4-fast-reasoning')) return 'general';
-  if (model.includes('grok-4-fast-non-reasoning')) return 'fast';
+  if (
+    model.includes('grok-4-1-fast-reasoning') ||
+    model.includes('grok-4-fast-reasoning')
+  ) {
+    return 'general';
+  }
+  if (
+    model.includes('grok-4-1-fast-non-reasoning') ||
+    model.includes('grok-4-fast-non-reasoning') ||
+    model === 'grok-4-fast'
+  ) {
+    return 'fast';
+  }
   return null;
 };
 

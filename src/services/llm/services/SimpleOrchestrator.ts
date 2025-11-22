@@ -233,7 +233,7 @@ export class SimpleOrchestrator {
     switch (provider.toLowerCase()) {
       case 'xai':
         return new XAIProvider({
-          model: model || 'grok-4-fast',
+          model: model || 'grok-4-1-fast-reasoning',
           temperature,
           topP,
           maxTokens

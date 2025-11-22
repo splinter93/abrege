@@ -225,7 +225,7 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
             <button 
               className={`chat-reasoning-menu-item ${(reasoningOverride === 'general' || (!reasoningOverride && defaultReasoningLevel === 'general')) ? 'selected' : ''}`}
               onClick={onGeneralReasoning}
-              title="grok-4-fast-reasoning (Équilibré)"
+              title="grok-4-1-fast-reasoning (Équilibré)"
             >
               <Target size={16} />
               <span>General {defaultReasoningLevel === 'general' && '(Default)'}</span>
@@ -234,7 +234,7 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
             <button 
               className={`chat-reasoning-menu-item ${(reasoningOverride === 'fast' || (!reasoningOverride && defaultReasoningLevel === 'fast')) ? 'selected' : ''}`}
               onClick={onFastReasoning}
-              title="grok-4-fast-non-reasoning (Rapide)"
+              title="grok-4-1-fast-non-reasoning (Rapide)"
             >
               <Zap size={16} />
               <span>Fast {defaultReasoningLevel === 'fast' && '(Default)'}</span>

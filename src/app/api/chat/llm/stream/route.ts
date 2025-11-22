@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
 
     // ✅ Sélectionner le provider selon la config agent (Groq ou xAI)
     const providerType = finalAgentConfig?.provider?.toLowerCase() || 'groq';
-    let model = finalAgentConfig?.model || (providerType === 'xai' ? 'grok-4-fast' : 'openai/gpt-oss-20b');
+    let model = finalAgentConfig?.model || (providerType === 'xai' ? 'grok-4-1-fast-reasoning' : 'openai/gpt-oss-20b');
     
     // 🔍 VALIDATION : Détecter incohérence provider/modèle
     const isXaiModel = model.includes('grok');
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     
     if (providerType === 'xai' && isGroqModel) {
       logger.warn(`[Stream Route] ⚠️ INCOHÉRENCE: Provider xAI avec modèle Groq (${model}), correction automatique`);
-      model = 'grok-4-fast'; // Fallback vers un modèle xAI
+      model = 'grok-4-1-fast-reasoning'; // Fallback vers un modèle xAI
     } else if (providerType === 'groq' && isXaiModel) {
       logger.warn(`[Stream Route] ⚠️ INCOHÉRENCE: Provider Groq avec modèle xAI (${model}), correction automatique`);
       model = 'openai/gpt-oss-20b'; // Fallback vers un modèle Groq

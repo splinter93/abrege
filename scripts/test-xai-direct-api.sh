@@ -9,7 +9,7 @@ curl -X POST https://api.x.ai/v1/chat/completions \
   -H "Authorization: Bearer $XAI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "grok-4-fast",
+    "model": "grok-4-1-fast-reasoning",
     "messages": [
       {
         "role": "user",
