@@ -17,8 +17,9 @@ export const dynamic = 'force-dynamic';
  * POST /api/v2/canva/sessions
  * 
  * Créer ou ouvrir une session canva
+ * Logique simple :
  * - Si note_id fourni → ouvre note existante dans canva
- * - Si create_if_missing=true → crée nouveau brouillon canva
+ * - Si note_id absent → crée nouveau brouillon canva (title obligatoire)
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -84,10 +85,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       resolvedNoteId = resolved.id;
     }
 
+    // Logique simple : si note_id absent, on crée un nouveau canvas
+    const createIfMissing = !resolvedNoteId;
+
     logger.info(LogCategory.EDITOR, '[API Canva Sessions POST] Creating session', {
       chatSessionId: payload.chat_session_id,
       resolvedNoteId,
-      createIfMissing: payload.create_if_missing
+      createIfMissing,
+      hasTitle: !!payload.title
     });
 
     // Créer/ouvrir session
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         chatSessionId: payload.chat_session_id,
         userId,
         noteId: resolvedNoteId,
-        createIfMissing: payload.create_if_missing ?? false,
+        createIfMissing,
         title: payload.title,
         classeurId: payload.classeur_id ?? null,
         metadata: payload.metadata,

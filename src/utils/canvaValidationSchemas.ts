@@ -20,26 +20,25 @@ export const canvaStatusSchema = z.enum(['open', 'closed', 'saved', 'deleted'], 
 /**
  * Schema POST /canva/sessions
  * Creer ou ouvrir session canva
+ * 
+ * Logique simple :
+ * - Si note_id est fourni → ouvre cette note existante
+ * - Si note_id est absent → crée un nouveau canvas (title devient obligatoire)
  */
 export const createCanvaSessionSchema = z.object({
   chat_session_id: z.string().uuid('chat_session_id doit être un UUID valide'),
   note_id: z.string().min(1).optional(),
-  create_if_missing: z.boolean().optional(),
-  title: z.string().min(1).max(200).optional(),
+  title: z.string().min(1).max(255).optional(),
   classeur_id: z.string().min(1).optional(),
   initial_content: z.string().max(100_000).optional(),
   metadata: z.record(z.any()).optional()
 }).superRefine((data, ctx) => {
-  if (!data.note_id && !data.create_if_missing) {
+  // Si note_id est absent, title devient obligatoire (création d'un nouveau canvas)
+  if (!data.note_id && !data.title) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'note_id est requis quand create_if_missing est false'
-    });
-  }
-  if (data.create_if_missing && !data.title) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'title est requis lorsque create_if_missing est true'
+      message: 'title est obligatoire quand note_id est absent (création d\'un nouveau canvas)',
+      path: ['title']
     });
   }
 });
