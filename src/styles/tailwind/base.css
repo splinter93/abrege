@@ -15,7 +15,24 @@
     @apply bg-chat-bg-primary text-chat-text-primary font-chat-text;
   }
   
+  /* ✅ Règle globale pour les titres (sauf dans l'éditeur) */
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold text-chat-text-primary;
+  }
+  
+  /* ✅ Annuler font-semibold pour les titres dans l'éditeur (géré par editor-markdown.css) */
+  .ProseMirror h1,
+  .ProseMirror h2,
+  .ProseMirror h3,
+  .ProseMirror h4,
+  .ProseMirror h5,
+  .ProseMirror h6,
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6 {
+    font-weight: unset; /* ✅ Annuler font-semibold de Tailwind, laisser editor-markdown.css gérer */
   }
 }

@@ -47,7 +47,7 @@
 .markdown-body h2 {
   font-family: var(--editor-font-family-body);  /* ✅ Même police que le texte */
   font-size: 1.75rem;  /* 28px - Aligné avec chat */
-  font-weight: 705;  /* ✅ Entre bold standard (700) et l'ancien (725) */
+  font-weight: 750;  /* ✅ Aligné avec chat pour cohérence visuelle */
   margin: var(--md-h2-margin-top) 0 var(--md-h2-margin-bottom) 0;
   line-height: 1.4;
   color: var(--text-primary, #e4e4e7);
@@ -59,7 +59,7 @@
 .markdown-body h3 {
   font-family: var(--editor-font-family-body);  /* ✅ Même police que le texte */
   font-size: 1.5rem;  /* 24px - Aligné avec chat */
-  font-weight: 705;  /* ✅ Entre bold standard (700) et l'ancien (725) */
+  font-weight: 750;  /* ✅ Aligné avec chat pour cohérence visuelle */
   margin: var(--md-h3-margin-top) 0 var(--md-h3-margin-bottom) 0;
   line-height: 1.5;
   color: var(--text-primary, #e4e4e7);
