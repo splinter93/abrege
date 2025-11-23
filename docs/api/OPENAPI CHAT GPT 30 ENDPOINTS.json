@@ -149,7 +149,7 @@
         "post": {
           "operationId": "canva.create_session",
           "summary": "Créer ou ouvrir une session canva",
-          "description": "Ouvre une note existante dans le canevas ou crée un nouveau brouillon canva attaché à une session de chat.\n\n📋 DEUX MODES (oneOf) :\n\n**Mode 1 - Ouvrir une note existante :**\n- Fournir : `chat_session_id` + `note_id`\n- Utiliser le schéma `OpenCanvaSessionInput`\n\n**Mode 2 - Créer un nouveau canvas :**\n- Fournir : `chat_session_id` + `title` (OBLIGATOIRE)\n- Utiliser le schéma `CreateNewCanvaInput`\n- ⚠️ `title` est dans le tableau `required` de ce schéma\n\n🚨 IMPORTANT : Pour créer un nouveau canvas, utiliser `CreateNewCanvaInput` où `title` est explicitement dans `required`.",
+          "description": "Ouvre une note existante dans le canevas ou crée un nouveau brouillon canva attaché à une session de chat.\n\n📋 DEUX MODES (oneOf) - CHOIX BINAIRE :\n\n**Mode 1 - Ouvrir une note existante :**\n- Fournir : `chat_session_id` + `note_id` (OBLIGATOIRE)\n- Utiliser le schéma `OpenCanvaSessionInput`\n- ⚠️ `note_id` ne peut PAS être null/absent dans ce mode\n\n**Mode 2 - Créer un nouveau canvas :**\n- Fournir : `chat_session_id` + `title` (OBLIGATOIRE)\n- NE PAS fournir `note_id` (laisser absent/null)\n- Utiliser le schéma `CreateNewCanvaInput`\n- ⚠️ `title` est dans le tableau `required` de ce schéma\n- ⚠️ `note_id` doit être ABSENT/null pour ce mode\n\n🚨 RÈGLE CRITIQUE : \n- Si `note_id` est fourni → Mode 1 (ouvrir note existante)\n- Si `note_id` est ABSENT/null → Mode 2 (créer nouveau canvas, `title` obligatoire)\n\n💡 Pour créer un nouveau canvas : omettre complètement `note_id` et fournir `title`.",
           "tags": ["Canva"],
           "security": [{"ApiKeyAuth": []}],
           "requestBody": {
@@ -2634,7 +2634,7 @@
         },
         "OpenCanvaSessionInput": {
           "type": "object",
-          "description": "Mode 1 : Ouvrir une note existante dans le canva",
+          "description": "Mode 1 : Ouvrir une note existante dans le canva. ⚠️ `note_id` est OBLIGATOIRE et ne peut PAS être null/absent.",
           "properties": {
             "chat_session_id": {
               "type": "string",
@@ -2643,14 +2643,14 @@
             },
             "note_id": {
               "type": "string",
-              "description": "ID ou slug de la note existante à ouvrir dans le canva"
+              "description": "ID ou slug de la note existante à ouvrir dans le canva. ⚠️ OBLIGATOIRE : ce paramètre doit être fourni et ne peut pas être null/absent."
             }
           },
           "required": ["chat_session_id", "note_id"]
         },
         "CreateNewCanvaInput": {
           "type": "object",
-          "description": "Mode 2 : Créer un nouveau brouillon canva. ⚠️ ATTENTION : title est OBLIGATOIRE et est dans le tableau required.",
+          "description": "Mode 2 : Créer un nouveau brouillon canva. ⚠️ ATTENTION : `note_id` doit être ABSENT/null (ne pas le fournir). `title` est OBLIGATOIRE et est dans le tableau required.",
           "properties": {
             "chat_session_id": {
               "type": "string",
@@ -2661,7 +2661,7 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 255,
-              "description": "🚨 OBLIGATOIRE : Titre du nouveau canvas à créer. Exemples : \"Mon nouveau canvas\", \"Brainstorming du jour\", \"Travail sur le Canevas\", \"Canevas de travail sur Scrivia\". Ce paramètre est REQUIS et ne peut JAMAIS être omis."
+              "description": "🚨 OBLIGATOIRE : Titre du nouveau canvas à créer. Exemples : \"Mon nouveau canvas\", \"Brainstorming du jour\", \"Travail sur le Canevas\", \"Canevas de travail sur Scrivia\". Ce paramètre est REQUIS et ne peut JAMAIS être omis. ⚠️ `note_id` doit être ABSENT/null pour utiliser ce mode."
             },
             "classeur_id": {
               "type": "string",
