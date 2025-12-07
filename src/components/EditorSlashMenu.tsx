@@ -75,13 +75,15 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
         setSlashOpen(false);
         setSlashSearch('');
       }
-      // Si un espace suit '/', on ferme le menu mais on laisse le slash
-      // Le slash sera géré par l'éditeur principal
+      // Si un espace suit '/', on ferme le menu, on refocus l'éditeur et on insère l'espace
       if (/^\/\s/.test(slashSearch)) {
         setSlashOpen(false);
-        // On ne vide pas `slashSearch` ici pour que l'éditeur puisse voir le '/ '
+        setSlashSearch('');
+        if (editor) {
+          editor.chain().focus().insertContent(' ').run();
+        }
       }
-    }, [slashSearch, slashOpen]);
+    }, [slashSearch, slashOpen, editor]);
 
     return (
       <SlashMenu

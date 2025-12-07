@@ -5,6 +5,8 @@
 
 import React, { useEffect, useMemo } from 'react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
+import type { Transaction } from '@tiptap/pm/state';
 import type { EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import { logger, LogCategory } from '@/utils/logger';
 import { debounce, getEditorMarkdown } from '@/utils/editorHelpers';
@@ -67,6 +69,53 @@ export function useEditorEffects({
   const kebabOpen = editorState.menus.kebabOpen;
   const fullWidth = editorState.ui.fullWidth;
   const title = editorState.document.title;
+
+  // Debug: tracer l'insertion de taskItem (checkbox) pour reproduire le bug
+  useEffect(() => {
+    if (!editor) return;
+    const enableDebug =
+      process.env.NEXT_PUBLIC_EDITOR_DEBUG_CHECKBOX === 'true' ||
+      process.env.NODE_ENV !== 'production';
+
+    if (!enableDebug) return;
+
+    const countTaskItems = (doc: ProseMirrorNode): number => {
+      let count = 0;
+      doc.descendants(node => {
+        if (node.type.name === 'taskItem') {
+          count += 1;
+        }
+      });
+      return count;
+    };
+
+    let prevCount = countTaskItems(editor.state.doc);
+
+    const handler = ({ transaction }: { transaction: Transaction }) => {
+      if (!transaction.docChanged) return;
+
+      const nextCount = countTaskItems(transaction.doc);
+      if (nextCount > prevCount) {
+        const sel = transaction.selection;
+        const parentType = sel.$from.parent.type.name;
+        const parentText = sel.$from.parent.textContent || '';
+        const preview = parentText.slice(Math.max(0, parentText.length - 80));
+
+        logger.debug(LogCategory.EDITOR, '[DebugCheckbox] taskItem inserted', {
+          prevCount,
+          nextCount,
+          pos: sel.from,
+          parentType,
+          preview,
+        });
+      }
+
+      prevCount = nextCount;
+    };
+
+    editor.on('transaction', handler);
+    return () => editor.off('transaction', handler);
+  }, [editor]);
 
   const logHeaderSync = useMemo(() => {
     return (stage: string, details: Record<string, unknown>) => {
