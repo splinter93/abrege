@@ -103,7 +103,14 @@ class AuditProgressTracker {
       const errorMatches = tscOutput.match(/error TS\d+:/g);
       metrics.typescriptErrors = errorMatches ? errorMatches.length : 0;
     } catch (error) {
-      const errorOutput = error.stdout?.toString() || '';
+      const err = error as { stdout?: unknown };
+      const stdout =
+        typeof err.stdout === 'string'
+          ? err.stdout
+          : err.stdout && typeof (err.stdout as { toString?: () => string }).toString === 'function'
+            ? (err.stdout as { toString: () => string }).toString()
+            : '';
+      const errorOutput = stdout || (error instanceof Error ? error.message : '');
       const errorMatches = errorOutput.match(/error TS\d+:/g);
       metrics.typescriptErrors = errorMatches ? errorMatches.length : 0;
     }
@@ -116,7 +123,14 @@ class AuditProgressTracker {
       metrics.eslintErrors = errorMatches ? errorMatches.length : 0;
       metrics.eslintWarnings = warningMatches ? warningMatches.length : 0;
     } catch (error) {
-      const errorOutput = error.stdout?.toString() || '';
+      const err = error as { stdout?: unknown };
+      const stdout =
+        typeof err.stdout === 'string'
+          ? err.stdout
+          : err.stdout && typeof (err.stdout as { toString?: () => string }).toString === 'function'
+            ? (err.stdout as { toString: () => string }).toString()
+            : '';
+      const errorOutput = stdout || (error instanceof Error ? error.message : '');
       const errorMatches = errorOutput.match(/\d+:\d+\s+Error:/g);
       const warningMatches = errorOutput.match(/\d+:\d+\s+Warning:/g);
       metrics.eslintErrors = errorMatches ? errorMatches.length : 0;
