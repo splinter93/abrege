@@ -19,6 +19,7 @@ import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import Editor from '@/components/editor/Editor';
 import { hashString } from '@/utils/editorHelpers';
+import { useRealtime } from '@/hooks/useRealtime';
 
 interface ChatCanvaPaneProps {
   onRequestClose?: () => void;
@@ -49,6 +50,14 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
   const handleEditorReady = useCallback(() => {
     setIsEditorReady(true);
   }, []);
+
+  // 🎯 Realtime édition note via RealtimeService (articles)
+  useRealtime({
+    userId: user?.id || '',
+    noteId: session?.noteId,
+    enabled: Boolean(user && session?.noteId),
+    debug: false
+  });
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // ✅ AUTO-SAVE (Skip si streaming)

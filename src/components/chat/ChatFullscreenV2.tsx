@@ -42,6 +42,7 @@ import { useCanvaContextPayload } from '@/hooks/chat/useCanvaContextPayload';
 import type { CanvaSession as CanvaSessionDB, ListCanvasResponse } from '@/types/canva';
 
 import { simpleLogger as logger } from '@/utils/logger';
+import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 import toast from 'react-hot-toast';
 
 import '@/styles/chat-clean.css';
@@ -432,12 +433,8 @@ const ChatFullscreenV2: React.FC = () => {
 
     const loadAndActivateOpenCanva = async () => {
       try {
-        // Récupérer token auth
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
+        // Récupérer token auth via client singleton (évite multiples GoTrueClient)
+        const supabase = getSupabaseClient();
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session?.access_token || !isMounted) {

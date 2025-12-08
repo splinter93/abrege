@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { simpleLogger as logger } from '@/utils/logger';
+import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 import './SearchBar.css';
 
 interface SearchResult {
@@ -46,29 +47,23 @@ const SearchBar: React.FC<SearchBarProps> = ({
   // Fonction pour récupérer les headers d'authentification
   const getAuthHeaders = useCallback(async (): Promise<HeadersInit> => {
     try {
-      const { createClient } = await import('@supabase/supabase-js');
+      if (typeof window === 'undefined') {
+        return { 'Content-Type': 'application/json' };
+      }
+
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (typeof window !== 'undefined') {
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-        
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-          'X-Client-Type': 'search_bar'
-        };
-        
-        if (session?.access_token) {
-          headers['Authorization'] = `Bearer ${session.access_token}`;
-        }
-        
-        return headers;
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'X-Client-Type': 'search_bar'
+      };
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
       }
       
-      return { 'Content-Type': 'application/json' };
+      return headers;
     } catch (error) {
       logger.error('[SearchBar] Erreur récupération headers auth:', error);
       return { 'Content-Type': 'application/json' };

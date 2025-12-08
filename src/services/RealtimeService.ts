@@ -65,6 +65,7 @@ export class RealtimeService {
   private readonly maxReconnectAttempts = 5;
   private readonly reconnectDelay = 2000;
   private readonly heartbeatInterval = 60000; // 1 minute (plus économique)
+  private authUnsubscribe: (() => void) | null = null;
   
   // Throttling des reconnexions par canal
   private channelReconnectTimes: Map<string, number> = new Map();
@@ -100,6 +101,17 @@ export class RealtimeService {
     this.config = { ...config };
     this.reconnectAttempts = 0;
 
+    // Écouter les changements d'auth pour resouscrire automatiquement
+    if (!this.authUnsubscribe) {
+      const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+        if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+          this.reconnect();
+        } else if (event === 'SIGNED_OUT') {
+          this.disconnect();
+        }
+      });
+      this.authUnsubscribe = listener?.subscription.unsubscribe ?? null;
+    }
 
     await this.connect();
   }
@@ -618,6 +630,11 @@ export class RealtimeService {
     // Arrêter le heartbeat
     this.stopHeartbeat();
     
+    if (this.authUnsubscribe) {
+      this.authUnsubscribe();
+      this.authUnsubscribe = null;
+    }
+
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;

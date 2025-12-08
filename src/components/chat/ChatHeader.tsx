@@ -13,6 +13,7 @@ import Link from 'next/link';
 import type { Agent } from '@/types/chat';
 import AgentInfoDropdown from './AgentInfoDropdown';
 import { ChatCanvasDropdown } from './ChatCanvasDropdown';
+import { useCanvaRealtime } from '@/hooks/chat/useCanvaRealtime';
 
 /**
  * Props du composant
@@ -56,6 +57,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   onCloseCanva,
   canOpenCanva = true
 }) => {
+  // ✅ Realtime canva : hook monté ici pour rester actif toute la durée de vie du chat
+  // (ChatHeader reste monté, contrairement au dropdown qui peut se fermer)
+  useCanvaRealtime(chatSessionId, true);
+
   return (
     <div className="chatgpt-header">
       <div className="chatgpt-header-left">

@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PenSquare, Plus, X } from 'lucide-react';
 import type { CanvaSession } from '@/types/canva';
-import { useCanvaRealtime } from '@/hooks/chat/useCanvaRealtime';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { logger, LogCategory } from '@/utils/logger';
+import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 import './ChatCanvasDropdown.css';
 
 interface ChatCanvasDropdownProps {
@@ -25,6 +25,8 @@ interface ChatCanvasDropdownProps {
  * - Badge avec nombre de canvases
  * - Dropdown au clic avec liste
  * - Action rapide "Nouveau canva"
+ * 
+ * ✅ Realtime géré par ChatHeader (parent qui reste monté)
  */
 export function ChatCanvasDropdown({
   chatSessionId,
@@ -41,10 +43,7 @@ export function ChatCanvasDropdown({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const isFirstLoadRef = useRef(true);
 
-  // ✅ Supabase Realtime : Sync automatique des canvases
-  useCanvaRealtime(chatSessionId, true);
-
-  // ✅ Écouter les changements du store pour recharger la liste
+  // ✅ Écouter les changements du store (mis à jour par useCanvaRealtime dans ChatHeader)
   const storeSessions = useCanvaStore(s => s.sessions);
   const storeSessionsCount = Object.keys(storeSessions).length;
 
@@ -59,11 +58,7 @@ export function ChatCanvasDropdown({
         isFirstLoadRef.current = false;
       }
       
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.access_token) {

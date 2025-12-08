@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
+import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 import type { CanvaContextPayload, CanvaContextSession, CanvaSessionStatus } from '@/types/canvaContext';
 
 interface RemoteCanvaSession {
@@ -57,12 +58,12 @@ export function useCanvaContextPayload({
       setIsLoading(true);
       setError(null);
 
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabaseClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-      const { data: { session } } = await supabaseClient.auth.getSession();
+      const supabase = getSupabaseClient();
+      const { data: { session }, error: authError } = await supabase.auth.getSession();
+
+      if (authError) {
+        throw new Error(`Auth error (canva_context_hook): ${authError.message}`);
+      }
 
       if (!session?.access_token) {
         throw new Error('Session authentifiée introuvable pour charger les canvases.');
