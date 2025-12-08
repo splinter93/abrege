@@ -3,12 +3,8 @@ import withPWA from '@ducanh2912/next-pwa';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // Turbopack désactivé pour conserver la config webpack existante
+  turbopack: false,
   trailingSlash: false,
   serverExternalPackages: [
     '@supabase/supabase-js',
