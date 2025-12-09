@@ -6,6 +6,8 @@
     "supabase/functions/**/*",
     ".next/**/*",
     "examples/**/*",
+    "src/**/__tests__/**/*",
+    "src/scripts/**/*",
     "src/services/llm/examples/**/*",
     "scripts/**/*",
     "tests/**/*"
