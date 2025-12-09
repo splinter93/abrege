@@ -323,7 +323,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
             <select
               id="insertion_mode"
               className="prompt-form-select"
-              value={formData.insertion_mode}
+              value={formData.insertion_mode ?? ''}
               onChange={(e) => handleChange('insertion_mode', e.target.value)}
             >
               <option value="replace">Remplacer la sélection</option>

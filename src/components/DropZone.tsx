@@ -8,6 +8,17 @@ import { simpleLogger as logger } from '@/utils/logger';
 
 interface DropZoneProps {
   className?: string;
+  children?: React.ReactNode;
+  onFilesDropped?: (files: any[]) => void;
+  onError?: (error: string) => void;
+  overlayMessage?: string;
+  showOverlay?: boolean;
+  onDragEnter?: (e: React.DragEvent) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  disabled?: boolean;
+  accept?: string | string[];
+  maxFiles?: number;
+  maxFileSize?: number;
 }
 
 /**
@@ -15,7 +26,18 @@ interface DropZoneProps {
  * Design moderne avec animations et interactions
  */
 const DropZone: React.FC<DropZoneProps> = ({
-  className = ''
+  className = '',
+  children,
+  onFilesDropped,
+  onError,
+  overlayMessage,
+  showOverlay = false,
+  onDragEnter,
+  onDragLeave,
+  disabled = false,
+  accept,
+  maxFiles,
+  maxFileSize
 }) => {
   const router = useRouter();
   const [isDragOver, setIsDragOver] = useState(false);
@@ -28,13 +50,15 @@ const DropZone: React.FC<DropZoneProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(true);
-  }, []);
+    onDragEnter?.(e);
+  }, [onDragEnter]);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
-  }, []);
+    onDragLeave?.(e);
+  }, [onDragLeave]);
 
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
@@ -44,12 +68,17 @@ const DropZone: React.FC<DropZoneProps> = ({
     const files = Array.from(e.dataTransfer.files);
     if (files.length === 0) return;
 
+    if (onFilesDropped) {
+      onFilesDropped(files);
+      return;
+    }
+
     logger.dev('[DropZone] Fichiers déposés:', files);
     
     // Pour l'instant, rediriger vers la page d'import
     // TODO: Implémenter l'upload direct
     router.push('/private/dossiers?import=true');
-  }, [router]);
+  }, [router, onFilesDropped]);
 
   // Gestion du clic pour ouvrir le sélecteur de fichiers
   const handleClick = useCallback(() => {
@@ -64,10 +93,14 @@ const DropZone: React.FC<DropZoneProps> = ({
     const files = e.target.files;
     if (files && files.length > 0) {
       logger.dev('[DropZone] Fichiers sélectionnés:', files);
+      if (onFilesDropped) {
+        onFilesDropped(Array.from(files));
+        return;
+      }
       // Rediriger vers la page d'import
       router.push('/private/dossiers?import=true');
     }
-  }, [router]);
+  }, [router, onFilesDropped]);
 
   // Gestion de l'upload par URL
   const handleUrlUpload = useCallback(async (e: React.FormEvent) => {
@@ -82,10 +115,11 @@ const DropZone: React.FC<DropZoneProps> = ({
       router.push(`/private/dossiers?import=true&url=${encodeURIComponent(urlInput)}`);
     } catch (error) {
       logger.error('[DropZone] Erreur upload URL:', error);
+      onError?.('Erreur lors de l\'upload par URL.');
     } finally {
       setIsUrlUploading(false);
     }
-  }, [urlInput, router]);
+  }, [urlInput, router, onError]);
 
   return (
     <>
@@ -127,7 +161,7 @@ const DropZone: React.FC<DropZoneProps> = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={handleClick}
+        onClick={disabled ? undefined : handleClick}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}

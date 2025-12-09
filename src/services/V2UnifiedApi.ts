@@ -1,4 +1,4 @@
-import { useFileSystemStore, type Note } from '@/store/useFileSystemStore';
+import { useFileSystemStore, type Note, type Classeur, type Folder } from '@/store/useFileSystemStore';
 
 import { simpleLogger as logger, LogCategory } from '@/utils/logger';
 
@@ -28,6 +28,8 @@ export interface UpdateNoteData {
   font_family?: string;
   folder_id?: string | null;
   description?: string;
+  classeur_id?: string | null;
+  is_canva_draft?: boolean;
 }
 
 export interface CreateFolderData {
@@ -211,10 +213,10 @@ export class V2UnifiedApi {
       return fallbackHeaders;
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        logger.error(LogCategory.API, `[V2UnifiedApi] Erreur récupération headers`, {
-          error: error instanceof Error ? error.message : 'Erreur inconnue',
-          stack: error instanceof Error ? error.stack : 'Pas de stack trace'
-        });
+        logger.error(
+          `[V2UnifiedApi] Erreur récupération headers`,
+          error
+        );
       }
       
       // En cas d'erreur, retourner les headers de base
@@ -350,7 +352,7 @@ export class V2UnifiedApi {
       // 🔧 FIX FLICKER: Ne pas sync les champs qui n'ont pas changé côté serveur
       // pour éviter les re-renders inutiles (notamment header_image pendant CMD+S)
       if (result.note) {
-        logger.debug(LogCategory.API, '[V2UnifiedApi] Synchronisation store avec réponse serveur');
+        logger.dev('[V2UnifiedApi] Synchronisation store avec réponse serveur');
         
         // Filtrer les champs qui ont réellement changé
         const keysToSync = new Set<string>([
@@ -363,15 +365,19 @@ export class V2UnifiedApi {
           if (!keysToSync.has(key)) {
             continue;
           }
-          const nextValue = result.note[key as keyof typeof result.note];
-          const optimisticValue = (optimisticNote as Record<string, unknown> | null)?.[key];
+          const keyName = key as Extract<keyof typeof result.note, string>;
+          const nextValue = result.note[keyName];
+          const optimisticValue =
+            optimisticNote && typeof optimisticNote === 'object'
+              ? (optimisticNote as unknown as Record<string, unknown>)[key]
+              : undefined;
           const valuesAreEqual =
             nextValue === optimisticValue ||
             (nextValue === null && optimisticValue === undefined) ||
             (nextValue === undefined && optimisticValue === null);
 
           if (!valuesAreEqual) {
-            changedFields[key as keyof typeof result.note] = nextValue;
+            changedFields[keyName] = nextValue;
           }
         }
         
@@ -454,10 +460,11 @@ export class V2UnifiedApi {
       }
       
       if (process.env.NODE_ENV === 'development') {
+        const headersRecord = headers as Record<string, string>;
         logger.dev(`[V2UnifiedApi] 🔐 Headers préparés:`, {
-          hasContentType: !!headers['Content-Type'],
-          hasAuth: !!headers['Authorization'],
-          hasClientType: !!headers['X-Client-Type']
+          hasContentType: !!headersRecord['Content-Type'],
+          hasAuth: !!headersRecord['Authorization'],
+          hasClientType: !!headersRecord['X-Client-Type']
         });
       }
       
@@ -482,13 +489,16 @@ export class V2UnifiedApi {
       if (!response.ok) {
         const errorText = await response.text();
         if (process.env.NODE_ENV === 'development') {
-                  logger.error('API', `[V2UnifiedApi] ❌ Erreur HTTP lors de la suppression de note`, {
-          status: response.status,
-          statusText: response.statusText,
-          errorText,
-          containsFailedToParse: errorText.includes('Failed to parse'),
-          containsURL: errorText.includes('URL')
-        });
+          logger.error(
+            `[V2UnifiedApi] ❌ Erreur HTTP lors de la suppression de note`,
+            {
+              status: response.status,
+              statusText: response.statusText,
+              errorText,
+              containsFailedToParse: errorText.includes('Failed to parse'),
+              containsURL: errorText.includes('URL')
+            }
+          );
         }
         
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -606,7 +616,11 @@ export class V2UnifiedApi {
 
     } catch (error) {
       const duration = Date.now() - startTime;
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur création dossier', { folderData, duration, error: error instanceof Error ? error.message : String(error) });
+      logger.error('[V2UnifiedApi] ❌ Erreur création dossier', {
+        folderData,
+        duration,
+        error: error instanceof Error ? error.message : String(error)
+      });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -685,7 +699,9 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur mise à jour dossier', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur mise à jour dossier', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }
@@ -761,7 +777,9 @@ export class V2UnifiedApi {
       
       return { success: true };
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur suppression dossier', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur suppression dossier', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }
@@ -831,13 +849,14 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       const currentNote = store.notes[cleanNoteId];
       const noteClasseurId = targetClasseurId || currentNote?.classeur_id;
+      const normalizedClasseurId = noteClasseurId ?? undefined;
       
       if (process.env.NODE_ENV === 'development') {
         logger.dev(`[V2UnifiedApi] 📝 Note ${cleanNoteId} - targetClasseurId: ${targetClasseurId}, noteClasseurId: ${noteClasseurId}, targetFolderId: ${targetFolderId}`);
       }
 
       // 🚀 Mise à jour directe de Zustand (instantanée)
-      store.moveNote(cleanNoteId, targetFolderId, noteClasseurId);
+      store.moveNote(cleanNoteId, targetFolderId, normalizedClasseurId);
       
       // 🎯 Déclencher le polling ciblé pour le déplacement
       try {
@@ -854,7 +873,9 @@ export class V2UnifiedApi {
 
       return result;
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur déplacement note', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur déplacement note', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }
@@ -927,7 +948,7 @@ export class V2UnifiedApi {
         // 🎯 Déclencher le polling ciblé pour les notes et dossiers déplacés
         try {
           const { triggerPollingAfterNoteAction } = await import('@/services/uiActionPolling');
-          await triggerPollingAfterNoteAction('folder_moved_with_children');
+          await triggerPollingAfterNoteAction('folder_moved');
         } catch (error) {
           console.warn('[V2UnifiedApi] ⚠️ Erreur déclenchement polling ciblé pour dossiers enfants:', error);
         }
@@ -940,7 +961,9 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur déplacement dossier', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur déplacement dossier', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }
@@ -1074,7 +1097,9 @@ export class V2UnifiedApi {
         duration
       };
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur mise à jour classeur', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur mise à jour classeur', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }
@@ -1152,7 +1177,9 @@ export class V2UnifiedApi {
       
       return { success: true };
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur suppression classeur', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur suppression classeur', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }
@@ -1198,7 +1225,9 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur ajout contenu note', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur ajout contenu note', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }
@@ -1230,7 +1259,9 @@ export class V2UnifiedApi {
       const result = await response.json();
       return result;
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur récupération contenu note', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur récupération contenu note', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }
@@ -1282,7 +1313,9 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur récupération arbre classeur', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur récupération arbre classeur', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }
@@ -1311,7 +1344,9 @@ export class V2UnifiedApi {
       const result = await response.json();
       return result;
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur récupération classeurs', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur récupération classeurs', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }
@@ -1344,7 +1379,7 @@ export class V2UnifiedApi {
       // Vérifier que result.classeurs existe et est un tableau
       if (result && Array.isArray(result.classeurs)) {
         const store = useFileSystemStore.getState();
-        result.classeurs.forEach(classeur => {
+        result.classeurs.forEach((classeur: Classeur) => {
           store.updateClasseur(classeur.id, classeur);
         });
       } else {
@@ -1355,7 +1390,9 @@ export class V2UnifiedApi {
       
       return result;
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur réorganisation classeurs', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur réorganisation classeurs', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }
@@ -1389,8 +1426,13 @@ export class V2UnifiedApi {
       }
       
       // 🚀 Accumuler tous les dossiers et notes de tous les classeurs
-      const allDossiers: unknown[] = [];
-      const allNotes: unknown[] = [];
+      const allDossiers: Folder[] = [];
+      const allNotes: Note[] = [];
+
+      const isFolder = (f: unknown): f is Folder =>
+        !!f && typeof f === 'object' && typeof (f as { id?: unknown }).id === 'string' && typeof (f as { name?: unknown }).name === 'string';
+      const isNote = (n: unknown): n is Note =>
+        !!n && typeof n === 'object' && typeof (n as { id?: unknown }).id === 'string' && typeof (n as { source_title?: unknown }).source_title === 'string';
       
       // 🚀 Pour chaque classeur, récupérer l'arbre complet
       for (const classeur of classeursResult.classeurs) {
@@ -1405,16 +1447,16 @@ export class V2UnifiedApi {
           // 🚀 Accumuler les dossiers et notes de ce classeur
           if (treeResult.success && treeResult.tree) {
             // 🚀 L'endpoint retourne { tree: { classeur, folders, notes } }
-            const dossiers = treeResult.tree.folders || [];
-            const notes = treeResult.tree.notes || [];
+          const dossiers = Array.isArray(treeResult.tree.folders) ? treeResult.tree.folders : [];
+          const notes = Array.isArray(treeResult.tree.notes) ? treeResult.tree.notes : [];
             
             if (process.env.NODE_ENV === 'development') {
               logger.dev(`[V2UnifiedApi] 📁 ${dossiers.length} dossiers et ${notes.length} notes trouvés pour ${classeur.name}`);
             }
             
             // 🚀 Ajouter les dossiers et notes à nos collections accumulées
-            allDossiers.push(...dossiers);
-            allNotes.push(...notes);
+          dossiers.filter(isFolder).forEach((d: Folder) => allDossiers.push(d));
+          notes.filter(isNote).forEach((n: Note) => allNotes.push(n));
           }
         } catch (treeError) {
           logger.warn(`[V2UnifiedApi] ⚠️ Erreur chargement arbre classeur ${classeur.id} (${classeur.name}):`, treeError);
@@ -1436,7 +1478,9 @@ export class V2UnifiedApi {
       
       return { success: true, classeurs: classeursResult.classeurs };
     } catch (error) {
-      logger.error(LogCategory.API, '[V2UnifiedApi] ❌ Erreur chargement classeurs avec contenu', error instanceof Error ? { message: error.message } : undefined, error instanceof Error ? error : undefined);
+      logger.error('[V2UnifiedApi] ❌ Erreur chargement classeurs avec contenu', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       throw error;
     }
   }

@@ -9,10 +9,9 @@
  */
 
 import { tokenManager } from '@/utils/tokenManager';
-import type { ChatSession } from '@/store/useChatStore';
-import type { Agent, ChatMessage } from '@/types/chat';
+import type { Agent, ChatMessage, ChatSession } from '@/types/chat';
 import type { ImageAttachment } from '@/types/image';
-import type { LLMContext } from '@/hooks/useLLMContext';
+import type { LLMContext } from '@/types/llmContext';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**

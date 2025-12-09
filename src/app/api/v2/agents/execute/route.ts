@@ -221,6 +221,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Agent exécuté avec succès en ${apiTime}ms`, context);
 
+    const resultData = executionResult.data as { response?: string; output?: string; result?: string } | undefined;
+    const responseText = resultData?.response ?? resultData?.output ?? resultData?.result ?? 'Réponse générée';
+
     // 📤 Construire la réponse
     const response: AgentExecuteResponse = {
       success: true,
@@ -228,7 +231,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         ref: ref,
         agent_name: agent.display_name || agent.slug,
         agent_id: agent.id,
-        response: executionResult.data?.response || executionResult.data?.output || executionResult.data?.result || 'Réponse générée',
+        response: responseText,
         execution_time: apiTime,
         model_used: agent.model,
         provider: agent.provider || 'unknown'
@@ -238,7 +241,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         agent_slug: agent.slug,
         agent_type: agent.is_chat_agent ? 'chat' : 'endpoint',
         input_length: input.length,
-        response_length: (executionResult.data?.response || executionResult.data?.output || '').length
+        response_length: responseText.length
       }
     };
 
@@ -286,7 +289,7 @@ export async function HEAD(request: NextRequest): Promise<NextResponse> {
       return new NextResponse(null, { 
         status: authResult.status || 401,
         headers: {
-          'X-Error': authResult.error
+          'X-Error': authResult.error ?? 'auth_error'
         }
       });
     }
@@ -326,7 +329,7 @@ export async function HEAD(request: NextRequest): Promise<NextResponse> {
         'X-Agent-Name': agent.display_name || agent.slug,
         'X-Agent-Model': agent.model,
         'X-Agent-Provider': agent.provider || 'unknown',
-        'X-Agent-Active': agent.is_active.toString(),
+        'X-Agent-Active': (agent.is_active ?? false).toString(),
         'X-Agent-Type': agent.is_chat_agent ? 'chat' : 'endpoint',
         'X-Endpoint': `/api/v2/agents/execute`,
         'X-Method': 'POST',

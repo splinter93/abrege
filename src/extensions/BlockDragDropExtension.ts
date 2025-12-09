@@ -1,5 +1,5 @@
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from 'prosemirror-state';
+import { Plugin, PluginKey, Selection } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 
 /**
@@ -32,7 +32,7 @@ const BlockDragDropExtension = Extension.create({
             if (tr.docChanged) {
               return {
                 ...state,
-                selectedBlock: state.selectedBlock ? tr.mapping.map(state.selectedBlock) : null,
+                selectedBlock: null,
                 decorations: state.decorations.map(tr.mapping, tr.doc)
               };
             }
@@ -73,11 +73,11 @@ const BlockDragDropExtension = Extension.create({
               const start = $pos.before();
               const end = $pos.after();
               
-              const selection = view.state.selection.constructor.near(view.state.doc.resolve(start));
+              const selection = Selection.near(view.state.doc.resolve(start));
               const tr = view.state.tr.setSelection(selection);
               
               // Étendre la sélection pour couvrir tout le bloc
-              const extendedSelection = view.state.selection.constructor.near(view.state.doc.resolve(end));
+              const extendedSelection = Selection.near(view.state.doc.resolve(end));
               const finalTr = tr.setSelection(extendedSelection);
               
               view.dispatch(finalTr);

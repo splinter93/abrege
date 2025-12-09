@@ -2,6 +2,7 @@ import { createSupabaseClient } from '@/utils/supabaseClient';
 import { logApi } from '@/utils/logger';
 // import { SlugGenerator } from '@/utils/slugGenerator';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Fonctions directes pour les API v2 (sans passer par HTTP)
@@ -29,7 +30,7 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
   };
 
   const startTime = Date.now();
-  logApi('v2_note_create_direct', '🚀 Création note directe', context);
+  logApi.info('v2_note_create_direct: 🚀 Création note directe', context);
 
   const supabase = createSupabaseClient();
 
@@ -38,7 +39,7 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
   
   // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
   if (!classeurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-    logApi('v2_note_create_direct', `🔍 Résolution du slug: ${classeurId}`, context);
+    logApi.info('v2_note_create_direct: 🔍 Résolution du slug', { ...context, classeurId });
     
     const { data: classeur, error: resolveError } = await supabase
       .from('classeurs')
@@ -48,12 +49,12 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
       .single();
     
     if (resolveError || !classeur) {
-      logApi('v2_note_create_direct', `❌ Classeur non trouvé pour le slug: ${classeurId}`, context);
+      logApi.warn('v2_note_create_direct: ❌ Classeur non trouvé', { ...context, classeurId });
       throw new Error(`Classeur non trouvé: ${classeurId}`);
     }
     
     classeurId = classeur.id;
-    logApi('v2_note_create_direct', `✅ Slug résolu: ${params.notebook_id} -> ${classeurId}`, context);
+    logApi.info('v2_note_create_direct: ✅ Slug résolu', { ...context, from: params.notebook_id, to: classeurId });
   }
 
   // Générer le slug et l'URL publique
@@ -64,14 +65,14 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
       params.source_title,
       userId,
       undefined, // Pas de noteId pour la création
-      supabase
+      supabase as unknown as SupabaseClient<unknown, { PostgrestVersion: string }, never, never, { PostgrestVersion: string }>
     );
     slug = result.slug;
     publicUrl = result.publicUrl;
   } catch {
     // Fallback minimal en cas d'échec
     slug = `${params.source_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`.slice(0, 120);
-    logApi('v2_note_create_direct', `⚠️ Fallback slug utilisé: ${slug}`, context);
+    logApi.warn('v2_note_create_direct: ⚠️ Fallback slug utilisé', { ...context, slug });
   }
 
   // Créer la note avec timeout
@@ -101,12 +102,13 @@ export async function createNoteDirect(params: CreateNoteParams, userId: string)
 
   if (createError) {
     const duration = Date.now() - startTime;
-    logApi('v2_note_create_direct', `❌ Erreur création note après ${duration}ms:`, createError, context);
-    throw new Error(`Erreur création note: ${createError.message}`);
+    logApi.error(`v2_note_create_direct: ❌ Erreur création note après ${duration}ms`, { error: createError, context });
+    const errorMessage = createError instanceof Error ? createError.message : 'Erreur création note';
+    throw new Error(`Erreur création note: ${errorMessage}`);
   }
 
   const duration = Date.now() - startTime;
-  logApi('v2_note_create_direct', `✅ Note créée en ${duration}ms:`, note, context);
+  logApi.info(`v2_note_create_direct: ✅ Note créée en ${duration}ms`, { note, context });
   return { success: true, data: note };
 }
 
@@ -117,7 +119,7 @@ export async function createFolderDirect(params: CreateFolderParams, userId: str
     clientType: 'llm'
   };
 
-  logApi('v2_folder_create_direct', '🚀 Création dossier directe', context);
+  logApi.info('v2_folder_create_direct: 🚀 Création dossier directe', context);
 
   const supabase = createSupabaseClient();
 
@@ -164,7 +166,7 @@ export async function getNotebooksDirect(userId: string) {
     clientType: 'llm'
   };
 
-  logApi('v2_notebooks_get_direct', '🚀 Récupération classeurs directe', context);
+  logApi.info('v2_notebooks_get_direct: 🚀 Récupération classeurs directe', context);
 
   const supabase = createSupabaseClient();
 
@@ -188,7 +190,7 @@ export async function getNotebookTreeDirect(notebookId: string, userId: string) 
     clientType: 'llm'
   };
 
-  logApi('v2_notebook_tree_get_direct', '🚀 Récupération arbre classeur directe', context);
+  logApi.info('v2_notebook_tree_get_direct: 🚀 Récupération arbre classeur directe', context);
 
   const supabase = createSupabaseClient();
 

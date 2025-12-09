@@ -202,19 +202,19 @@ export class S3Service {
    * Gestion centralisée des erreurs S3
    */
   private handleS3Error(error: unknown, operation: string): S3Error {
-    const err = error as { message?: string; code?: string; name?: string };
+    const err = error as { message?: string; code?: string; name?: string; statusCode?: number; requestId?: string; stack?: string };
     const s3Error: S3Error = new Error(`Erreur S3 lors de ${operation}: ${err.message || 'Erreur inconnue'}`);
-    s3Error.code = error.code;
-    s3Error.statusCode = error.statusCode;
-    s3Error.requestId = error.requestId;
+    s3Error.code = err.code;
+    s3Error.statusCode = err.statusCode;
+    s3Error.requestId = err.requestId;
 
     // Log détaillé pour le debugging
     logger.error(`S3 Error [${operation}]:`, {
-      message: error.message,
-      code: error.code,
-      statusCode: error.statusCode,
-      requestId: error.requestId,
-      stack: error.stack,
+      message: err.message,
+      code: err.code,
+      statusCode: err.statusCode,
+      requestId: err.requestId,
+      stack: (error as Error)?.stack ?? err.stack,
     });
 
     return s3Error;

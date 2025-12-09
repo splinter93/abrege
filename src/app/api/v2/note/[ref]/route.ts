@@ -95,7 +95,7 @@ export async function GET(
     }
 
     // Formater la réponse selon le mode
-    const noteData = note as Record<string, unknown>;
+    const noteData = note as unknown as Record<string, unknown>;
     
     // Champs socle toujours présents
     const baseFields = {

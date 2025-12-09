@@ -30,7 +30,7 @@ export function hasRequiredScope(
  */
 export function hasAnyRequiredScope(
   authResult: AuthResult, 
-  requiredScopes: string[], 
+  requiredScopes: readonly string[], 
   context: { operation: string; component: string }
 ): boolean {
   if (!authResult.success || !authResult.scopes) {

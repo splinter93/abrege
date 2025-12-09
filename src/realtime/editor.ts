@@ -10,13 +10,12 @@ import { useFileSystemStore, EditorPatch } from '@/store/useFileSystemStore';
  */
 export function handleEditorEvent(event: { type: string, payload: unknown, timestamp: number }) {
   const { type, payload } = event;
-  const payloadObj = payload as { noteId?: string; selector?: string; content?: string; position?: number } | undefined;
-  const { noteId, selector, content, position } = payloadObj || {};
+  const payloadObj = payload as { noteId?: string; selector?: string; content?: string } | undefined;
+  const { noteId, selector, content } = payloadObj || {};
   if (!noteId || !selector || typeof content !== 'string') return;
   const patch: EditorPatch = {
     selector,
     content,
-    position,
     type: type.split('.')[1] as EditorPatch['type']
   };
   useFileSystemStore.getState().updateNoteContent(noteId, patch);

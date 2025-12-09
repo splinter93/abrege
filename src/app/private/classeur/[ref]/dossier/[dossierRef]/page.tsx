@@ -16,7 +16,7 @@ async function fetchTree(ref: string) {
   if (cached?.etag) headers['If-None-Match'] = cached.etag;
   const res = await fetch(url, { headers });
   const etag = res.headers.get('ETag') || undefined;
-  if (res.status === 304 && cached) return { ...cached.data, etag, etagHit: true };
+  if (res.status === 304 && cached) return { data: cached.data, etag, etagHit: true };
   const json = await res.json();
   if (!res.ok) throw new Error(json?.error || `Tree load failed (${res.status})`);
   if (etag) etagCache.set(url, { etag, data: json });
@@ -60,10 +60,10 @@ export default function FolderDeepLinkPage() {
     function walk(nodes: unknown[]): string | undefined {
       for (const n of nodes) {
         const node = n as { id: string; slug?: string; children?: unknown[] };
-        if ((isUUID && n.id === dossierRef) || (!isUUID && n.slug === dossierRef) || n.id === dossierRef) {
-          targetId = n.id; return;
+        if ((isUUID && node.id === dossierRef) || (!isUUID && node.slug === dossierRef) || node.id === dossierRef) {
+          targetId = node.id; return;
         }
-        if (Array.isArray(n.children) && n.children.length > 0) walk(n.children);
+        if (Array.isArray(node.children) && node.children.length > 0) walk(node.children);
         if (targetId) return;
       }
     }
@@ -78,20 +78,20 @@ export default function FolderDeepLinkPage() {
     const result: Folder[] = [];
     function walk(nodes: unknown[]) {
       for (const n of nodes) {
-        const node = n as { id: string; name: string; parent_id?: string; children?: unknown[] };
+        const node = n as { id: string; name: string; parent_id?: string; children?: unknown[]; created_at?: string; updated_at?: string; position?: number; is_in_trash?: boolean; trashed_at?: string | null };
         result.push({ 
-          id: n.id, 
-          name: n.name, 
-          parent_id: n.parent_id ?? null, 
+          id: node.id, 
+          name: node.name, 
+          parent_id: node.parent_id ?? null, 
           classeur_id: payload?.classeur?.id,
-          user_id: payload?.classeur?.user_id || null,
-          created_at: n.created_at || null,
-          updated_at: n.updated_at || null,
-          position: n.position || null,
-          is_in_trash: n.is_in_trash || false,
-          trashed_at: n.trashed_at || null
+          user_id: ((payload as { classeur?: { user_id?: string } })?.classeur?.user_id) ?? null,
+          created_at: node.created_at || null,
+          updated_at: node.updated_at || null,
+          position: node.position || null,
+          is_in_trash: node.is_in_trash || false,
+          trashed_at: node.trashed_at || null
         } as Folder);
-        if (Array.isArray(n.children) && n.children.length > 0) walk(n.children);
+        if (Array.isArray(node.children) && node.children.length > 0) walk(node.children);
       }
     }
     if (Array.isArray(payload?.tree)) walk(payload.tree);
@@ -118,7 +118,9 @@ export default function FolderDeepLinkPage() {
     setCurrentFolderId(folder.id);
     const dlEnabled = process.env.NEXT_PUBLIC_DEEPLINKS === '1';
     if (dlEnabled) {
-      const classeurRef = payload?.classeur?.slug || payload?.classeur?.id;
+      const classeurRef =
+        (payload as { classeur?: { slug?: string; id?: string } })?.classeur?.slug ||
+        (payload as { classeur?: { id?: string } })?.classeur?.id;
       router.push(`/private/classeur/${classeurRef}/dossier/${folder.id}`);
     }
   }, [router, payload]);
@@ -127,20 +129,22 @@ export default function FolderDeepLinkPage() {
     setCurrentFolderId(undefined);
     const dlEnabled = process.env.NEXT_PUBLIC_DEEPLINKS === '1';
     if (dlEnabled) {
-      const classeurRef = payload?.classeur?.slug || payload?.classeur?.id;
+      const classeurRef =
+        (payload as { classeur?: { slug?: string; id?: string } })?.classeur?.slug ||
+        (payload as { classeur?: { id?: string } })?.classeur?.id;
       router.push(`/private/classeur/${classeurRef}`);
     }
   }, [router, payload]);
 
   if (loading) return <div style={{ padding: 24 }}>Chargement du dossier…</div>;
   if (error) return <div style={{ padding: 24, color: 'salmon' }}>Erreur: {error}</div>;
-  if (!payload?.success) return <div style={{ padding: 24 }}>Données indisponibles.</div>;
+  if (!payload) return <div style={{ padding: 24 }}>Données indisponibles.</div>;
 
   return (
     <main style={{ padding: 12 }}>
       <div style={{ padding: 12 }}>
         <FolderManager
-          classeurId={payload.classeur.id}
+          classeurId={(payload as { classeur?: { id?: string } })?.classeur?.id ?? ''}
           classeurName={classeurName}
           classeurIcon={classeurEmoji}
           parentFolderId={currentFolderId}

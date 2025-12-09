@@ -369,7 +369,7 @@ export async function HEAD(
       headers: {
         'X-Agent-Name': agent.display_name || agent.name,
         'X-Agent-Model': agent.model,
-        'X-Agent-Provider': agent.provider,
+        'X-Agent-Provider': agent.provider ?? 'unknown',
         'X-Agent-Active': agent.is_active ? 'true' : 'false',
         'X-Agent-Chat': agent.is_chat_agent ? 'true' : 'false',
         'X-Agent-Endpoint': agent.is_endpoint_agent ? 'true' : 'false'

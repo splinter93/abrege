@@ -2,13 +2,15 @@
  * Plugin Markdown-it pour le support des tables GitHub (GFM)
  * Version optimisée et fonctionnelle
  */
+import type MarkdownIt from 'markdown-it';
+type RuleBlock = (state: any, startLine: number, endLine: number, silent: boolean) => boolean;
 
-export default function markdownItGithubTables(md: { block: { ruler: { before: (name: string, ruleName: string, fn: unknown) => void } } }) {
+export default function markdownItGithubTables(md: MarkdownIt): void {
   // Regex pour détecter les tables GitHub
   // const tableRegex = /^(\|[^\n]+\|\r?\n)((?:\|[\s\-\:]+\|\r?\n)+)((?:\|[^\n]+\|\r?\n?)*)$/;
 
   // Fonction de parsing des tables
-  function parseTable(state: { bMarks: number[]; tShift: number[]; eMarks: number[]; src: string; [key: string]: unknown }, startLine: number, endLine: number, silent: boolean): boolean {
+  const parseTable: RuleBlock = (state, startLine, endLine, silent) => {
     const start = state.bMarks[startLine] + state.tShift[startLine];
     const end = state.eMarks[startLine];
     const lineText = state.src.slice(start, end);
@@ -77,7 +79,7 @@ export default function markdownItGithubTables(md: { block: { ruler: { before: (
     // Mettre à jour la position
     state.line = pos;
     return true;
-  }
+  };
 
   // Fonction pour parser les lignes de la table
   function parseTableLines(lines: string[]): { rows: string[][] } | null {

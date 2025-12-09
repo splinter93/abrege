@@ -95,7 +95,7 @@ export const useFolderDragAndDrop = ({
         
         // Ne déplacer que si nécessaire
         if (shouldMove) {
-          moveItem(data.id, targetFolderId, data.type);
+          moveItem(data.id, targetFolderId ?? null, data.type);
         }
         
         // Si on déplace le dossier courant, revenir à la racine (navigation gérée par le parent)

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { optimizedNoteService } from '@/services/optimizedNoteService';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
+import type { Note } from '@/store/useFileSystemStore';
 import { supabase } from '@/supabaseClient';
 import { retryWithBackoff } from '@/utils/retryUtils';
 import { noteConcurrencyManager } from '@/utils/concurrencyManager';
@@ -17,13 +18,13 @@ interface NoteData {
   source_title: string;
   markdown_content?: string;
   html_content?: string;
-  header_image?: string;
+  header_image?: string | null;
   slug: string;
   [key: string]: unknown;
 }
 
 interface UseOptimizedNoteLoaderReturn {
-  note: NoteData | null;
+  note: Note | null;
   loading: boolean;
   error: string | null;
   loadNote: () => Promise<void>;
@@ -131,11 +132,10 @@ export const useOptimizedNoteLoader = ({
       const existingNoteById = useFileSystemStore.getState().notes[resolvedId];
       
       // Créer la note avec les métadonnées
-      const noteData = {
+      const noteData: Note = {
         id: resolvedId,
         source_title: metadata.source_title || 'Untitled',
         markdown_content: existingNoteById?.markdown_content || '',
-        content: existingNoteById?.content || '',
         html_content: existingNoteById?.html_content || '',
         header_image: metadata.header_image || null,
         header_image_offset: metadata.header_image_offset ?? 50,
@@ -143,21 +143,21 @@ export const useOptimizedNoteLoader = ({
         header_image_overlay: metadata.header_image_overlay ?? 0,
         header_title_in_image: metadata.header_title_in_image ?? false,
         wide_mode: metadata.wide_mode || false,
-        font_family: metadata.font_family || null,
+        font_family: metadata.font_family || undefined,
         updated_at: metadata.updated_at,
-        created_at: metadata.created_at,
-        slug: metadata.slug,
+        created_at: metadata.created_at || new Date().toISOString(),
+        slug: metadata.slug || resolvedId,
         public_url: '',
-        visibility: 'private',
-        folder_id: metadata.folder_id,
-        classeur_id: metadata.classeur_id // ✅ AJOUTÉ
+        folder_id: metadata.folder_id ?? null,
+        classeur_id: metadata.classeur_id ?? null,
+        position: 0
       };
 
       // ✅ Ajouter/mettre à jour la note dans le store avec l'ID résolu
       if (existingNoteById) {
         updateNote(resolvedId, noteData);
       } else {
-        addNote(noteData as NoteData);
+        addNote(noteData);
       }
       
       // ✅ Vérifier que la note est bien dans le store après ajout/mise à jour
@@ -185,10 +185,9 @@ export const useOptimizedNoteLoader = ({
           );
           
           // 🔧 IMPORTANT : Mettre à jour le store Zustand IMMÉDIATEMENT
-          const updatedNoteData = {
+          const updatedNoteData: Note = {
             ...noteData,
             markdown_content: content.markdown_content,
-            content: content.markdown_content,
             html_content: content.html_content || ''
           };
 
@@ -199,7 +198,7 @@ export const useOptimizedNoteLoader = ({
           if (wasInStore) {
             updateNote(resolvedId, updatedNoteData);
           } else {
-            addNote(updatedNoteData as NoteData);
+            addNote(updatedNoteData);
           }
           
           // Vérifier après mise à jour (Zustand met à jour synchrone)
@@ -234,10 +233,9 @@ export const useOptimizedNoteLoader = ({
           )
             .then(content => {
               // Mettre à jour le store même si le composant n'existe plus
-              const updatedNoteData = {
+              const updatedNoteData: Note = {
                 ...noteData,
                 markdown_content: content.markdown_content,
-                content: content.markdown_content,
                 html_content: content.html_content || ''
               };
               
@@ -246,7 +244,7 @@ export const useOptimizedNoteLoader = ({
               if (store.notes[resolvedId]) {
                 store.updateNote(resolvedId, updatedNoteData);
               } else {
-                store.addNote(updatedNoteData as NoteData);
+                store.addNote(updatedNoteData);
               }
               
               simpleLogger.dev(`[useOptimizedNoteLoader] ✅ Async content: ${content.markdown_content?.length || 0}B`);

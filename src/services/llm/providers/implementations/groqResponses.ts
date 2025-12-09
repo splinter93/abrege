@@ -1,7 +1,6 @@
 import { BaseProvider, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
-import type { LLMProvider, AppContext } from '../../types';
-import type { ChatMessage } from '@/types/chat';
-import { logger } from '@/utils/logger';
+import type { LLMProvider, AppContext, ChatMessage } from '../../types';
+import { logger, LogCategory } from '@/utils/logger';
 import { getSystemMessage } from '../../templates';
 import type {
   GroqMessage,
@@ -10,6 +9,13 @@ import type {
   FunctionTool,
   ToolCall
 } from '../../types/strictTypes';
+
+const logApi = {
+  debug: (...args: [string, ...unknown[]]) => logger.debug(LogCategory.API, ...args),
+  info: (...args: [string, ...unknown[]]) => logger.info(LogCategory.API, ...args),
+  warn: (...args: [string, ...unknown[]]) => logger.warn(LogCategory.API, ...args),
+  error: (...args: [string, ...unknown[]]) => logger.error(LogCategory.API, ...args),
+};
 
 /**
  * Configuration spécifique à Groq Responses API
@@ -131,20 +137,20 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
    */
   validateConfig(): boolean {
     if (!this.validateBaseConfig()) {
-      logger.error('[GroqResponsesProvider] ❌ Configuration de base invalide');
+      logApi.error('[GroqResponsesProvider] ❌ Configuration de base invalide');
       return false;
     }
 
     if (!this.config.model) {
-      logger.error('[GroqResponsesProvider] ❌ Modèle non spécifié');
+      logApi.error('[GroqResponsesProvider] ❌ Modèle non spécifié');
       return false;
     }
 
     if (!this.info.supportedModels.includes(this.config.model)) {
-      logger.warn(`[GroqResponsesProvider] ⚠️ Modèle ${this.config.model} non officiellement supporté`);
+      logApi.warn(`[GroqResponsesProvider] ⚠️ Modèle ${this.config.model} non officiellement supporté`);
     }
 
-    logger.debug('[GroqResponsesProvider] ✅ Configuration validée');
+    logApi.debug('[GroqResponsesProvider] ✅ Configuration validée');
     return true;
   }
 
@@ -156,7 +162,7 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
       throw new Error('Configuration Groq Responses invalide');
     }
 
-    logger.debug(`[GroqResponsesProvider] 🚀 Appel avec modèle: ${this.config.model}`);
+    logApi.debug(`[GroqResponsesProvider] 🚀 Appel avec modèle: ${this.config.model}`);
 
     try {
       // Préparer les messages pour la conversion
@@ -171,11 +177,11 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
       // Extraire et formater la réponse
       const result = this.extractResponsesResponse(response);
       
-      logger.debug('[GroqResponsesProvider] ✅ Appel réussi');
+      logApi.debug('[GroqResponsesProvider] ✅ Appel réussi');
       return result;
 
     } catch (error) {
-      logger.error('[GroqResponsesProvider] ❌ Erreur lors de l\'appel:', error);
+      logApi.error('[GroqResponsesProvider] ❌ Erreur lors de l\'appel:', error);
       throw error;
     }
   }
@@ -249,7 +255,7 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
     if (builtInTools.length > 0) {
       payload.tools = builtInTools;
       payload.tool_choice = 'auto'; // ✅ Laisser le modèle décider
-      logger.debug(`[GroqResponsesProvider] 🔧 ${builtInTools.length} built-in tools ajoutés`);
+      logApi.debug(`[GroqResponsesProvider] 🔧 ${builtInTools.length} built-in tools ajoutés`);
     }
 
     // Ajouter les paramètres spécifiques à Groq
@@ -291,7 +297,7 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
   private validateTools(tools: Tool[]): Tool[] {
     return tools.filter((tool) => {
       if (!tool || typeof tool !== 'object') {
-        logger.warn(`[GroqResponsesProvider] ⚠️ Tool invalide ignoré:`, tool);
+        logApi.warn(`[GroqResponsesProvider] ⚠️ Tool invalide ignoré:`, tool);
         return false;
       }
       
@@ -299,18 +305,18 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
       if (tool.type === 'function') {
         const funcTool = tool as FunctionTool;
         if (!funcTool.function || typeof funcTool.function !== 'object') {
-          logger.warn(`[GroqResponsesProvider] ⚠️ Tool sans fonction ignoré:`, tool);
+          logApi.warn(`[GroqResponsesProvider] ⚠️ Tool sans fonction ignoré:`, tool);
           return false;
         }
         
         if (!funcTool.function.name || typeof funcTool.function.name !== 'string') {
-          logger.warn(`[GroqResponsesProvider] ⚠️ Tool sans nom de fonction ignoré:`, tool);
+          logApi.warn(`[GroqResponsesProvider] ⚠️ Tool sans nom de fonction ignoré:`, tool);
           return false;
         }
         
         const params = funcTool.function.parameters;
         if (!params || params.type !== 'object' || typeof params.properties !== 'object' || !Array.isArray(params.required)) {
-          logger.warn(`[GroqResponsesProvider] ⚠️ Tool avec paramètres invalides ignoré: ${funcTool.function.name}`, params);
+          logApi.warn(`[GroqResponsesProvider] ⚠️ Tool avec paramètres invalides ignoré: ${funcTool.function.name}`, params);
           return false;
         }
       }
@@ -395,7 +401,7 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
     // ✅ Réduire la taille de l'input si trop long
     if (typeof optimized.input === 'string' && optimized.input.length > 1000) {
       optimized.input = optimized.input.substring(0, 1000) + '...';
-      logger.debug(`[GroqResponsesProvider] ⚠️ Input tronqué à 1000 caractères`);
+      logApi.debug(`[GroqResponsesProvider] ⚠️ Input tronqué à 1000 caractères`);
     }
     
     // ✅ DÉSACTIVER Browser Search par défaut (trop cher)
@@ -404,13 +410,13 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
         return typeof tool === 'object' && tool !== null && 
                (tool as Record<string, unknown>).type !== 'browser_search';
       });
-      logger.debug(`[GroqResponsesProvider] ⚠️ Browser Search désactivé (coût élevé)`);
+      logApi.debug(`[GroqResponsesProvider] ⚠️ Browser Search désactivé (coût élevé)`);
     }
     
     // ✅ Limiter les tools pour réduire la complexité
     if (Array.isArray(optimized.tools) && optimized.tools.length > 1) {
       optimized.tools = optimized.tools.slice(0, 1);
-      logger.debug(`[GroqResponsesProvider] ⚠️ Tools limités à 1`);
+      logApi.debug(`[GroqResponsesProvider] ⚠️ Tools limités à 1`);
     }
     
     return optimized;
@@ -423,7 +429,7 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
    */
   private extractResponsesResponse(response: GroqResponsesApiResponse): string {
     // ✅ Debug: Log de la réponse brute
-    logger.debug('[GroqResponsesProvider] 🔍 Réponse brute de l\'API:', JSON.stringify(response, null, 2));
+    logApi.debug('[GroqResponsesProvider] 🔍 Réponse brute de l\'API:', JSON.stringify(response, null, 2));
     
     // ✅ Extraction correcte pour l'API Responses
     let content = '';
@@ -442,9 +448,9 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
     if (response.output) {
       const mcpCalls = response.output.filter(item => item.type === 'mcp_call');
       if (mcpCalls.length > 0) {
-        logger.debug(`[GroqResponsesProvider] 🔧 ${mcpCalls.length} MCP calls détectés`);
+        logApi.debug(`[GroqResponsesProvider] 🔧 ${mcpCalls.length} MCP calls détectés`);
         mcpCalls.forEach((call, index) => {
-          logger.debug(`[GroqResponsesProvider] MCP call ${index + 1}: ${call.name} sur ${call.server_label}`);
+          logApi.debug(`[GroqResponsesProvider] MCP call ${index + 1}: ${call.name} sur ${call.server_label}`);
         });
       }
     }
@@ -475,7 +481,7 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
    */
   async testConnection(): Promise<boolean> {
     try {
-      logger.debug('[GroqResponsesProvider] 🧪 Test de connexion avec Groq Responses API...');
+      logApi.debug('[GroqResponsesProvider] 🧪 Test de connexion avec Groq Responses API...');
 
       const response = await fetch(`${this.config.baseUrl}/models`, {
         method: 'GET',
@@ -497,18 +503,18 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
       }
 
       const models = await response.json() as ModelsResponse;
-      logger.debug(`[GroqResponsesProvider] ✅ Connexion réussie - ${models.data.length} modèles disponibles`);
+      logApi.debug(`[GroqResponsesProvider] ✅ Connexion réussie - ${models.data.length} modèles disponibles`);
 
       // Vérifier les modèles supportés
       const supportedModels = models.data.filter((model) => 
         this.info.supportedModels.includes(model.id)
       );
-      logger.debug(`[GroqResponsesProvider] 🎯 ${supportedModels.length} modèles supportés disponibles`);
+      logApi.debug(`[GroqResponsesProvider] 🎯 ${supportedModels.length} modèles supportés disponibles`);
 
       return true;
 
     } catch (error) {
-      logger.error('[GroqResponsesProvider] ❌ Erreur de connexion:', error);
+      logApi.error('[GroqResponsesProvider] ❌ Erreur de connexion:', error);
       return false;
     }
   }
@@ -518,7 +524,7 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
    */
   async testFunctionCalls(): Promise<boolean> {
     try {
-      logger.debug('[GroqResponsesProvider] 🧪 Test d\'appel avec function calls...');
+      logApi.debug('[GroqResponsesProvider] 🧪 Test d\'appel avec function calls...');
 
       const testPayload = {
         model: this.config.model,
@@ -546,16 +552,17 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
 
       const response = await this.makeResponsesApiCall(testPayload);
       
-      if (response.tool_calls && response.tool_calls.length > 0) {
-        logger.debug(`[GroqResponsesProvider] ✅ Function calls testés avec succès - ${response.tool_calls.length} tool calls`);
+      const toolCalls = (response as { tool_calls?: ToolCall[] }).tool_calls;
+      if (toolCalls && toolCalls.length > 0) {
+        logApi.debug(`[GroqResponsesProvider] ✅ Function calls testés avec succès - ${toolCalls.length} tool calls`);
         return true;
       } else {
-        logger.debug('[GroqResponsesProvider] ⚠️ Aucun tool call détecté dans la réponse');
+        logApi.debug('[GroqResponsesProvider] ⚠️ Aucun tool call détecté dans la réponse');
         return false;
       }
 
     } catch (error) {
-      logger.error('[GroqResponsesProvider] ❌ Erreur lors du test des function calls:', error);
+      logApi.error('[GroqResponsesProvider] ❌ Erreur lors du test des function calls:', error);
       return false;
     }
   }

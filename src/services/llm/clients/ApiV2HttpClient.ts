@@ -87,7 +87,7 @@ export class ApiV2HttpClient {
    */
   private async makeRequest<T>(
     endpoint: string,
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
     params: Record<string, unknown> | null,
     userToken: string
   ): Promise<T> {

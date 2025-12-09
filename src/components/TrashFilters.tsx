@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Filter, SortAsc, SortDesc, Search, X } from 'react-feather';
+import { Filter, ArrowUp, ArrowDown, Search, X } from 'react-feather';
 import type { TrashItem } from '@/types/supabase';
 
 interface TrashFiltersProps {
@@ -182,7 +182,7 @@ export default function TrashFilters({ items, filteredItems, onFilterChange }: T
               >
                 {label}
                 {sortBy === value && (
-                  sortDirection === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />
+                  sortDirection === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />
                 )}
               </button>
             ))}

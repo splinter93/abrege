@@ -404,7 +404,7 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
             noteTitle={note?.source_title}
             noteContent={rawContent}
             noteSlug={note?.slug}
-            classeurId={note?.classeur_id}
+            classeurId={note?.classeur_id ?? undefined}
             isContentReady={isContentReady}
           />
         )}

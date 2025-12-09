@@ -73,8 +73,13 @@ function buildUploadPayload(file: File | string): UploadPayload | ExternalUrlPay
   } else {
     // Pour une URL externe, on n'envoie que l'URL
     // Les autres champs seront gérés côté serveur
+    const url = new URL(file);
+    const filenameFromUrl = url.pathname.split('/').filter(Boolean).pop() || 'external-file';
     return {
       externalUrl: file,
+      fileName: filenameFromUrl,
+      fileType: 'external/url',
+      fileSize: 0
     };
   }
 }
@@ -173,6 +178,9 @@ export async function uploadImageForNote(
   // Pour une URL externe, utiliser directement l'URL de la base
   if (!isFile) {
     const externalUrl = savedFile.url;
+    if (!externalUrl) {
+      throw new Error(ERROR_MESSAGES.INVALID_URL);
+    }
     if (!validateUrl(externalUrl)) {
       throw new Error(ERROR_MESSAGES.INVALID_URL);
     }
@@ -188,6 +196,10 @@ export async function uploadImageForNote(
 
   // Fallback vers l'URL de la base
   const fallbackUrl = savedFile.url;
+
+  if (!fallbackUrl) {
+    throw new Error(ERROR_MESSAGES.INVALID_URL);
+  }
   
   if (!validateUrl(fallbackUrl)) {
     throw new Error(ERROR_MESSAGES.INVALID_URL);

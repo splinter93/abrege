@@ -150,7 +150,7 @@ export class RoundLogger {
       timestamp: new Date().toISOString(),
       level,
       message,
-      data: this.sanitizeData(data)
+      data: this.sanitizeData(data) as Record<string, unknown> | undefined
     };
 
     // Ajouter à l'historique global

@@ -59,35 +59,35 @@ const YouTubeEmbedExtension = Node.create<YouTubeEmbedOptions>({
     return {
       videoId: {
         default: null,
-        parseHTML: (element) => element.getAttribute('data-video-id') ?? null,
-        renderHTML: (attributes) => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-video-id') ?? null,
+        renderHTML: (attributes: { videoId: string | null }) => ({
           'data-video-id': attributes.videoId,
         }),
       },
       depth: {
         default: 0,
-        parseHTML: (element) => {
+        parseHTML: (element: HTMLElement) => {
           const value = element.getAttribute('data-depth');
           return value ? Number.parseInt(value, 10) : 0;
         },
-        renderHTML: (attributes) => ({
+        renderHTML: (attributes: { depth: number }) => ({
           'data-depth': attributes.depth,
         }),
       },
       autoplay: {
         default: false,
-        parseHTML: (element) => element.getAttribute('data-autoplay') === 'true',
-        renderHTML: (attributes) => (
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-autoplay') === 'true',
+        renderHTML: (attributes: { autoplay: boolean }) => (
           attributes.autoplay ? { 'data-autoplay': 'true' } : {}
         ),
       },
       startSeconds: {
         default: null,
-        parseHTML: (element) => {
+        parseHTML: (element: HTMLElement) => {
           const value = element.getAttribute('data-start');
           return parseYouTubeTimestamp(value);
         },
-        renderHTML: (attributes) => (
+        renderHTML: (attributes: { startSeconds: number | null }) => (
           attributes.startSeconds != null
             ? { 'data-start': attributes.startSeconds }
             : {}
@@ -243,15 +243,16 @@ const YouTubeEmbedExtension = Node.create<YouTubeEmbedOptions>({
     return ReactNodeViewRenderer(YouTubeEmbedView, {
       as: 'div',
       stopEvent: (event) => {
-        if (event.type === 'contextmenu') {
+        const ev = (event as any).event ?? (event as any);
+        if (ev?.type === 'contextmenu') {
           return false;
         }
-        if (event.type === 'click') {
+        if (ev?.type === 'click') {
           return false;
         }
         return true;
       },
-      update: (node) => node.type.name === 'youtubeEmbed',
+      update: (node: any) => node?.type?.name === 'youtubeEmbed',
     });
   },
 });

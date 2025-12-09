@@ -114,7 +114,9 @@ export function useEditorEffects({
     };
 
     editor.on('transaction', handler);
-    return () => editor.off('transaction', handler);
+    return () => {
+      editor.off('transaction', handler);
+    };
   }, [editor]);
 
   const logHeaderSync = useMemo(() => {

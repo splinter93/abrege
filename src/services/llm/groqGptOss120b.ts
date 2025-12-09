@@ -3,6 +3,7 @@ import type { GroqRoundParams, GroqRoundResult } from './types/groqTypes';
 import { DEFAULT_GROQ_LIMITS } from './types/groqTypes';
 import { agentOrchestrator } from './services/AgentOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
+import type { UIContext } from './ContextCollector';
 
 /**
  * Point d'entrée pour l'API Groq GPT OSS 120B avec MCP
@@ -49,12 +50,37 @@ export async function handleGroqGptOss120b(params: GroqRoundParams): Promise<Nex
     const orchestratorStart = Date.now();
     
     // ✅ Merger attachedNotes dans uiContext pour qu'elles soient injectées dans le prompt
-    const uiContextWithNotes = params.appContext?.uiContext ? {
-      ...params.appContext.uiContext,
-      ...(params.appContext.attachedNotes && params.appContext.attachedNotes.length > 0 && {
-        attachedNotes: params.appContext.attachedNotes
-      })
-    } : undefined;
+    const uiContextWithNotes: (UIContext & {
+      attachedNotes?: Array<{
+        id: string;
+        slug: string;
+        title: string;
+        markdown_content: string;
+        description?: string;
+        word_count?: number;
+      }>;
+    }) | undefined = params.appContext?.uiContext
+      ? ({
+          ...(params.appContext.uiContext as UIContext),
+          ...(params.appContext.attachedNotes && params.appContext.attachedNotes.length > 0
+            ? {
+                attachedNotes: params.appContext.attachedNotes.map((note) => ({
+                  ...note,
+                  markdown_content: (note as { markdown_content?: string }).markdown_content ?? ''
+                }))
+              }
+            : {})
+        } as UIContext & {
+          attachedNotes?: Array<{
+            id: string;
+            slug: string;
+            title: string;
+            markdown_content: string;
+            description?: string;
+            word_count?: number;
+          }>;
+        })
+      : undefined;
     
     // 📎 LOG: Notes attachées détectées
     if (params.appContext?.attachedNotes && params.appContext.attachedNotes.length > 0) {

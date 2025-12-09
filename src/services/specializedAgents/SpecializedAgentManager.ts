@@ -369,8 +369,8 @@ export class SpecializedAgentManager {
         traceId, 
         resultType: typeof result,
         resultKeys: result && typeof result === 'object' ? Object.keys(result) : 'N/A',
-        resultContent: result && typeof result === 'object' ? (result as Record<string, unknown>).content : 'N/A',
-        resultSuccess: result && typeof result === 'object' ? (result as Record<string, unknown>).success : 'N/A'
+        resultContent: result && typeof result === 'object' && 'content' in result ? (result as { content?: unknown }).content : 'N/A',
+        resultSuccess: result && typeof result === 'object' && 'success' in result ? (result as { success?: unknown }).success : 'N/A'
       });
       
       const formattedResult = this.formatSpecializedOutput(result, agent.output_schema);
@@ -744,12 +744,12 @@ Instructions importantes :
     } catch (error) {
       logger.error(`[SpecializedAgentManager] ❌ Erreur exécution multimodale:`, {
         traceId,
-        error: error.message
+        error: error instanceof Error ? error.message : String(error)
       });
       
       return {
         success: false,
-        error: `Erreur multimodale: ${error.message}`
+        error: `Erreur multimodale: ${error instanceof Error ? error.message : String(error)}`
       };
     }
   }
@@ -783,10 +783,9 @@ Modèle utilisé : ${model}`;
       success: false,
       error: errorMessage,
       metadata: {
-        errorType: 'GROQ_IMAGE_LIMIT',
-        model,
-        traceId,
-        originalError: errorText
+        agentId: 'unknown',
+        executionTime: 0,
+        model
       }
     };
   }
@@ -812,10 +811,9 @@ Modèle utilisé : ${model}`;
       success: false,
       error: errorMessage,
       metadata: {
-        errorType: 'GROQ_BASE64_LIMIT',
-        model,
-        traceId,
-        originalError: errorText
+        agentId: 'unknown',
+        executionTime: 0,
+        model
       }
     };
   }
@@ -1514,8 +1512,9 @@ Modèle utilisé : ${model}`;
     const agentConfigWithTools = {
       ...agent,
       // S'assurer que l'agent a accès aux tools
-      capabilities: agent.capabilities || ['text', 'function_calling'],
-      api_v2_capabilities: agent.api_v2_capabilities || ['get_note', 'update_note', 'search_notes', 'list_notes', 'create_note', 'delete_note']
+      capabilities: Array.isArray(agent.capabilities) ? [...agent.capabilities] : ['text', 'function_calling'],
+      api_v2_capabilities: Array.isArray(agent.api_v2_capabilities) ? [...agent.api_v2_capabilities] : ['get_note', 'update_note', 'search_notes', 'list_notes', 'create_note', 'delete_note'],
+      context_template: agent.context_template ?? undefined
     };
 
     // 🔍 DEBUG: Vérifier l'agent config avant d'appeler l'orchestrateur
@@ -1563,37 +1562,34 @@ Modèle utilisé : ${model}`;
     // Convertir ChatResponse en SpecializedAgentResponse
     logger.info(`[SpecializedAgentManager] 🔍 Résultat orchestrateur brut:`, { 
       traceId, 
-      success: orchestratorResult.success,
       content: orchestratorResult.content,
       contentLength: orchestratorResult.content?.length || 0,
-      hasError: !!orchestratorResult.error,
-      error: orchestratorResult.error,
+      finishReason: orchestratorResult.finishReason,
       orchestratorKeys: Object.keys(orchestratorResult)
     });
     
     // ✅ CORRECTION : Améliorer la gestion des réponses vides
     const responseContent = orchestratorResult.content || '';
+    const hasContent = typeof responseContent === 'string' && responseContent.trim().length > 0;
     
-    if (!responseContent.trim()) {
+    if (!hasContent) {
       logger.warn(`[SpecializedAgentManager] ⚠️ Réponse vide de l'orchestrateur`, { 
         traceId, 
         orchestratorResult: {
-          success: orchestratorResult.success,
           hasContent: !!orchestratorResult.content,
-          hasError: !!orchestratorResult.error,
-          error: orchestratorResult.error
+          finishReason: orchestratorResult.finishReason
         }
       });
     }
     
     return {
-      success: orchestratorResult.success,
+      success: hasContent,
       result: {
-        response: responseContent || (orchestratorResult.error ? `Erreur: ${orchestratorResult.error}` : 'Aucune réponse générée'),
+        response: hasContent ? responseContent : 'Aucune réponse générée',
         model: agent.model,
         provider: 'groq'
       },
-      error: orchestratorResult.error,
+      error: hasContent ? undefined : 'Réponse orchestrateur vide',
       metadata: {
         agentId: agent.id || agent.slug || 'unknown',
         executionTime: 0, // Sera calculé plus tard

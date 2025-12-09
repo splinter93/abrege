@@ -7,6 +7,7 @@
  */
 
 import { useFileSystemStore } from '@/store/useFileSystemStore';
+import type { Note, Folder, Classeur } from '@/store/useFileSystemStore';
 
 // Set pour tracker les opérations en cours (éviter les doublons realtime)
 const pendingOperations = new Set<string>();
@@ -31,7 +32,7 @@ export function markOperationComplete(type: string, id: string): void {
  * @param event { type: string, payload: unknown, timestamp: number }
  * @param debug (optionnel) : loggue chaque event dispatché si true
  */
-export function handleRealtimeEvent(event: { type: string, payload: unknown, timestamp: number }, debug = false) {
+export function handleRealtimeEvent(event: { type: string; payload: Record<string, any>; timestamp: number }, debug = false) {
   const store = useFileSystemStore.getState();
   if (debug) logEventToConsole(event);
   
@@ -45,121 +46,156 @@ export function handleRealtimeEvent(event: { type: string, payload: unknown, tim
   
   switch (type) {
     // Notes
-    case 'note.created':
+    case 'note.created': {
+      const notePayload = payload as Note;
       // Vérifier si la note n'existe pas déjà (éviter les doublons)
-      if (!store.notes[payload.id]) {
-        store.addNote(payload);
+      if (!store.notes[notePayload.id]) {
+        store.addNote(notePayload);
       }
       break;
-    case 'note.deleted':
-      store.removeNote(payload.id);
+    }
+    case 'note.deleted': {
+      const notePayload = payload as { id: string };
+      store.removeNote(notePayload.id);
       break;
-    case 'note.renamed':
-      store.renameNote(payload.id, payload.title || payload.source_title);
+    }
+    case 'note.renamed': {
+      const notePayload = payload as { id: string; title?: string; source_title?: string };
+      store.renameNote(notePayload.id, notePayload.title ?? notePayload.source_title ?? '');
       break;
-    case 'note.moved':
+    }
+    case 'note.moved': {
+      const notePayload = payload as { id: string; folder_id: string | null; classeur_id: string | null };
       // 🔧 FIX: Vérifier si le déplacement est nécessaire pour éviter les boucles infinies
-      const noteToMove = store.notes[payload.id];
+      const noteToMove = store.notes[notePayload.id];
       if (noteToMove) {
         const needsMove = 
-          noteToMove.folder_id !== payload.folder_id ||
-          noteToMove.classeur_id !== payload.classeur_id;
+          noteToMove.folder_id !== notePayload.folder_id ||
+          noteToMove.classeur_id !== notePayload.classeur_id;
         
         if (needsMove) {
-          store.moveNote(payload.id, payload.folder_id, payload.classeur_id);
+          store.moveNote(
+            notePayload.id,
+            notePayload.folder_id ?? null,
+            notePayload.classeur_id ?? undefined
+          );
         }
       } else {
         // Note n'existe pas encore, on la déplace quand même
-        store.moveNote(payload.id, payload.folder_id, payload.classeur_id);
+        store.moveNote(
+          notePayload.id,
+          notePayload.folder_id ?? null,
+          notePayload.classeur_id ?? undefined
+        );
       }
       break;
+    }
     case 'note.updated':
-    case 'note.update': // Support pour les deux formats
+    case 'note.update': { // Support pour les deux formats
+
+      const notePayload = payload as Partial<Note> & { id: string; trashed_at?: unknown; is_in_trash?: unknown };
 
       // 🔧 FIX CRITIQUE: Vérifier si la note est mise en corbeille
       // Si trashed_at est défini, supprimer la note du store au lieu de la mettre à jour
-      if (payload.trashed_at || payload.is_in_trash) {
-        store.removeNote(payload.id);
+      if (notePayload.trashed_at || notePayload.is_in_trash) {
+        store.removeNote(notePayload.id);
         break;
       }
 
       // Vérifier si c'est une mise à jour de contenu significative
-      const currentNote = store.notes[payload.id];
+      const currentNote = store.notes[notePayload.id];
       if (currentNote) {
-        const contentChanged = currentNote.markdown_content !== payload.markdown_content ||
-                              currentNote.html_content !== payload.html_content;
+        const contentChanged = currentNote.markdown_content !== notePayload.markdown_content ||
+                              currentNote.html_content !== notePayload.html_content;
         
         // Vérifier les changements liés aux images et à la présentation
-        const imageChanged = currentNote.header_image !== payload.header_image ||
-                            currentNote.header_image_blur !== payload.header_image_blur ||
-                            currentNote.header_image_overlay !== payload.header_image_overlay ||
-                            currentNote.header_title_in_image !== payload.header_title_in_image ||
-                            currentNote.header_image_offset !== payload.header_image_offset;
+        const imageChanged = currentNote.header_image !== notePayload.header_image ||
+                            currentNote.header_image_blur !== notePayload.header_image_blur ||
+                            currentNote.header_image_overlay !== notePayload.header_image_overlay ||
+                            currentNote.header_title_in_image !== notePayload.header_title_in_image ||
+                            currentNote.header_image_offset !== notePayload.header_image_offset;
         
         // Vérifier les changements de style et de présentation
-        const styleChanged = currentNote.font_family !== payload.font_family ||
-                            currentNote.wide_mode !== payload.wide_mode ||
-                            currentNote.source_title !== payload.source_title;
+        const styleChanged = currentNote.font_family !== notePayload.font_family ||
+                            currentNote.wide_mode !== notePayload.wide_mode ||
+                            currentNote.source_title !== notePayload.source_title;
 
         if (contentChanged || imageChanged || styleChanged) {
-          store.updateNote(payload.id, payload);
+          store.updateNote(notePayload.id, notePayload as Note);
         }
       } else {
         // ⚠️ FIX: Ne pas réajouter une note qui n'existe pas si elle est en corbeille
         // Si la note n'existe pas dans le store, c'est peut-être qu'elle a été supprimée
         // Ne la réajouter que si elle n'est pas en corbeille
-        if (!payload.trashed_at && !payload.is_in_trash) {
-          store.updateNote(payload.id, payload);
+        if (!notePayload.trashed_at && !notePayload.is_in_trash) {
+          store.updateNote(notePayload.id, notePayload as Note);
         }
       }
       break;
+    }
       
     // Dossiers
-    case 'folder.created':
+    case 'folder.created': {
+      const folderPayload = payload as Folder;
       // Vérifier si le dossier n'existe pas déjà (éviter les doublons)
-      if (!store.folders[payload.id] && !pendingOperations.has(`folder:${payload.id}`)) {
-        store.addFolder(payload);
+      if (!store.folders[folderPayload.id] && !pendingOperations.has(`folder:${folderPayload.id}`)) {
+        store.addFolder(folderPayload);
       }
       break;
-    case 'folder.deleted':
-      store.removeFolder(payload.id);
+    }
+    case 'folder.deleted': {
+      const folderPayload = payload as { id: string };
+      store.removeFolder(folderPayload.id);
       break;
-    case 'folder.renamed':
-      store.renameFolder(payload.id, payload.name);
+    }
+    case 'folder.renamed': {
+      const folderPayload = payload as { id: string; name: string };
+      store.renameFolder(folderPayload.id, folderPayload.name);
       break;
-    case 'folder.moved':
+    }
+    case 'folder.moved': {
+      const folderPayload = payload as { id: string; parent_id?: string | null; classeur_id?: string };
       // 🔧 FIX: Vérifier si le déplacement est nécessaire pour éviter les boucles infinies
-      const folderToMove = store.folders[payload.id];
+      const folderToMove = store.folders[folderPayload.id];
       if (folderToMove) {
         const needsMove = 
-          folderToMove.parent_id !== payload.parent_id ||
-          folderToMove.classeur_id !== payload.classeur_id;
+          folderToMove.parent_id !== folderPayload.parent_id ||
+          folderToMove.classeur_id !== folderPayload.classeur_id;
         
         if (needsMove) {
-          store.moveFolder(payload.id, payload.parent_id, payload.classeur_id);
+          store.moveFolder(folderPayload.id, folderPayload.parent_id ?? null, folderPayload.classeur_id);
         }
       } else {
         // Dossier n'existe pas encore, on le déplace quand même
-        store.moveFolder(payload.id, payload.parent_id, payload.classeur_id);
+        store.moveFolder(folderPayload.id, folderPayload.parent_id ?? null, folderPayload.classeur_id);
       }
       break;
-    case 'folder.updated':
-      store.updateFolder(payload.id, payload);
+    }
+    case 'folder.updated': {
+      const folderPayload = payload as Partial<Folder> & { id: string };
+      store.updateFolder(folderPayload.id, folderPayload);
       break;
+    }
       
     // Classeurs
-    case 'classeur.created':
+    case 'classeur.created': {
+      const classeurPayload = payload as Classeur;
       // Vérifier si le classeur n'existe pas déjà (éviter les doublons)
-      if (!store.classeurs[payload.id]) {
-        store.addClasseur(payload);
+      if (!store.classeurs[classeurPayload.id]) {
+        store.addClasseur(classeurPayload);
       }
       break;
-    case 'classeur.deleted':
-      store.removeClasseur(payload.id);
+    }
+    case 'classeur.deleted': {
+      const classeurPayload = payload as { id: string };
+      store.removeClasseur(classeurPayload.id);
       break;
-    case 'classeur.renamed':
-      store.renameClasseur(payload.id, payload.name);
+    }
+    case 'classeur.renamed': {
+      const classeurPayload = payload as { id: string; name: string };
+      store.renameClasseur(classeurPayload.id, classeurPayload.name);
       break;
+    }
     case 'classeur.updated':
       store.updateClasseur(payload.id, payload);
       break;

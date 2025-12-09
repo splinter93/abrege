@@ -15,7 +15,7 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import type { MarkdownSerializerState } from 'prosemirror-markdown';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state';
 import NoteEmbedView from '@/components/editor/NoteEmbedView';
 import { MAX_EMBED_DEPTH, type NoteEmbedDisplayStyle } from '@/types/noteEmbed';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -258,14 +258,15 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
       // ✅ Autoriser contextmenu et click, bloquer le reste
       stopEvent: (event) => {
         // Autoriser le menu contextuel (clic droit)
-        if (event.type === 'contextmenu') return false;
+        const ev = (event as any).event ?? (event as any);
+        if (ev?.type === 'contextmenu') return false;
         // Autoriser le click pour la navigation (géré par React)
-        if (event.type === 'click') return false;
+        if (ev?.type === 'click') return false;
         // Bloquer les autres événements (mousedown, keydown, etc.)
         return true;
       },
       // ✅ CRITIQUE: Ne jamais re-render sauf si les attrs changent
-      update: (node) => {
+      update: (node: any) => {
         if (!node || !node.type) {
           return false;
         }
@@ -381,12 +382,13 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
     plugins.push(
       new Plugin({
         key: cleanupPluginKey,
-        appendTransaction(_transactions, _oldState, newState) {
-          if (!newState.docChanged) {
+        appendTransaction(transactions, _oldState, newState) {
+          const changed = transactions.some(tr => tr.docChanged);
+          if (!changed) {
             return null;
           }
 
-          let tr: ReturnType<typeof newState.tr> | null = null;
+          let tr: Transaction | null = null;
           const { schema } = newState;
           const paragraphNode = schema.nodes.paragraph;
 

@@ -29,6 +29,14 @@ export interface UIContext {
     id: string;
     name: string;
   };
+  attachedNotes?: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    markdown_content: string;
+    description?: string;
+    word_count?: number;
+  }>;
 }
 
 export interface ContextInjectionResult {

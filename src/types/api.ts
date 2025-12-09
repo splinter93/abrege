@@ -28,6 +28,7 @@ export interface SearchNoteAPIResponse {
   type: 'note' | 'classeur' | 'file';
   classeur_id?: string;
   folder_id?: string;
+  created_at?: string;
 }
 
 /**

@@ -233,7 +233,7 @@ function generateAgentEndpoints(agents: Array<{ slug: string; display_name?: str
     
     endpoints[endpointPath] = {
       post: {
-        summary: agent.display_name || agent.name,
+        summary: agent.display_name || agent.slug,
         description: agent.description || `Agent spécialisé: ${agent.slug}`,
         tags: ['Agents Spécialisés'],
         security: [
@@ -267,7 +267,7 @@ function generateAgentEndpoints(agents: Array<{ slug: string; display_name?: str
                     { $ref: '#/components/schemas/Success' },
                     {
                       type: 'object',
-                      properties: agent.output_schema?.properties || {
+                      properties: (agent.output_schema as { properties?: Record<string, unknown> } | undefined)?.properties || {
                         result: { 
                           type: 'string', 
                           description: 'Résultat de l\'agent' 
@@ -336,25 +336,25 @@ function generateAgentEndpoints(agents: Array<{ slug: string; display_name?: str
                         slug: { type: 'string', example: agent.slug },
                         description: { type: 'string', example: agent.description },
                         model: { type: 'string', example: agent.model },
-                        provider: { type: 'string', example: agent.provider },
+                        provider: { type: 'string', example: (agent as { provider?: string }).provider || 'unknown' },
                         input_schema: { type: 'object' },
                         output_schema: { type: 'object' },
-                        is_active: { type: 'boolean', example: agent.is_active },
-                        is_chat_agent: { type: 'boolean', example: agent.is_chat_agent },
-                        is_endpoint_agent: { type: 'boolean', example: agent.is_endpoint_agent },
+                        is_active: { type: 'boolean', example: (agent as { is_active?: boolean }).is_active ?? false },
+                        is_chat_agent: { type: 'boolean', example: (agent as { is_chat_agent?: boolean }).is_chat_agent ?? false },
+                        is_endpoint_agent: { type: 'boolean', example: (agent as { is_endpoint_agent?: boolean }).is_endpoint_agent ?? false },
                         capabilities: { 
                           type: 'array', 
                           items: { type: 'string' },
-                          example: agent.capabilities 
+                          example: (agent as { capabilities?: string[] }).capabilities ?? []
                         },
                         api_v2_capabilities: { 
                           type: 'array', 
                           items: { type: 'string' },
-                          example: agent.api_v2_capabilities 
+                          example: (agent as { api_v2_capabilities?: string[] }).api_v2_capabilities ?? []
                         },
-                        temperature: { type: 'number', example: agent.temperature },
-                        max_tokens: { type: 'number', example: agent.max_tokens },
-                        priority: { type: 'number', example: agent.priority }
+                        temperature: { type: 'number', example: (agent as { temperature?: number }).temperature ?? 1 },
+                        max_tokens: { type: 'number', example: (agent as { max_tokens?: number }).max_tokens ?? 2048 },
+                        priority: { type: 'number', example: (agent as { priority?: number }).priority ?? 0 }
                       }
                     }
                   ]

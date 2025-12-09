@@ -155,10 +155,8 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
             // ✅ Forcer réinitialisation avec htmlLabels: false
             await initializeMermaid({ 
               flowchart: { 
-                htmlLabels: false,
-                wrap: true,
-                wrapPadding: 20
-              } 
+                htmlLabels: false
+              } as any
             });
             const mermaid = await import('mermaid');
             

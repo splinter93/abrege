@@ -73,7 +73,7 @@ interface FolderManagerResult {
 }
 
 // Adaptateur pour convertir les Folder Zustand en Folder UI
-function toUIFolder(f: Folder): Folder {
+function toUIFolder(f: any): Folder {
   return {
     id: f.id,
     name: f.name,
@@ -90,7 +90,7 @@ function toUIFolder(f: Folder): Folder {
 function toUIFile(n: Note): FileArticle {
   return {
     id: n.id,
-    source_title: n.source_title || n.title || 'Sans titre',
+    source_title: n.source_title || 'Sans titre',
     classeur_id: n.classeur_id || '',
     folder_id: n.folder_id || null,
     user_id: 'unknown', // Valeur par défaut car pas dans le type Zustand
@@ -111,7 +111,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   // Correction : filtrage par classeurId et parentFolderId
   const filteredFolders: Folder[] = useMemo(
     () => folders
-      .filter((f: Folder) => f.classeur_id === classeurId && (f.parent_id === parentFolderId || (!f.parent_id && !parentFolderId)))
+      .filter((f: any) => f.classeur_id === classeurId && (f.parent_id === parentFolderId || (!f.parent_id && !parentFolderId)))
       .map(toUIFolder),
     [folders, classeurId, parentFolderId]
   );
@@ -205,7 +205,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       
       return newFolder;
     } catch (err) {
-      logger.error('[UI] ❌ Erreur création dossier', undefined, err instanceof Error ? err : new Error(String(err)));
+      logger.error('[UI] ❌ Erreur création dossier', err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors de la création du dossier.');
       return undefined;
     }
@@ -253,7 +253,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
 
       return result.note;
     } catch (err) {
-      logger.error('[UI] ❌ Erreur création note', undefined, err instanceof Error ? err : new Error(String(err)));
+      logger.error('[UI] ❌ Erreur création note', err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors de la création du fichier.');
       return undefined;
     }
@@ -292,7 +292,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         // Navigation gérée par le parent
       }
     } catch (err) {
-      logger.error('[UI] ❌ Erreur suppression dossier', undefined, err instanceof Error ? err : new Error(String(err)));
+      logger.error('[UI] ❌ Erreur suppression dossier', err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors de la suppression du dossier.');
     }
   }, [folders, parentFolderId, userId]);
@@ -312,7 +312,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] ✅ Note renommée avec succès:', { id, newName: name });
       }
     } catch (error) {
-      logger.error('[UI] ❌ Erreur renommage note', undefined, error instanceof Error ? error : new Error(String(error)));
+      logger.error('[UI] ❌ Erreur renommage note', error instanceof Error ? error : new Error(String(error)));
       
       // 🔧 CORRECTION: Rollback en cas d'erreur
       store.updateNote(id, { source_title: originalNote.source_title });
@@ -339,7 +339,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] ✅ Dossier renommé avec succès:', { id, newName: name });
       }
     } catch (error) {
-      logger.error('[UI] ❌ Erreur renommage dossier', undefined, error instanceof Error ? error : new Error(String(error)));
+      logger.error('[UI] ❌ Erreur renommage dossier', error instanceof Error ? error : new Error(String(error)));
       
       // 🔧 CORRECTION: Rollback en cas d'erreur
       store.updateFolder(id, { name: originalFolder.name });
@@ -383,7 +383,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] ✅ Note supprimée avec V2UnifiedApi uniquement');
       }
     } catch (err) {
-      logger.error('[UI] ❌ Erreur suppression note', undefined, err instanceof Error ? err : new Error(String(err)));
+      logger.error('[UI] ❌ Erreur suppression note', err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors de la suppression du fichier.');
     }
   }, [notes, userId]);
@@ -440,7 +440,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] ✅ Item renommé avec API optimisée');
       }
     } catch (err) {
-      logger.error('[UI] ❌ Erreur renommage', undefined, err instanceof Error ? err : new Error(String(err)));
+      logger.error('[UI] ❌ Erreur renommage', err instanceof Error ? err : new Error(String(err)));
       
       // 🔧 CORRECTION: Rollback en cas d'erreur
       const store = useFileSystemStore.getState();
@@ -524,7 +524,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
         logger.dev('[UI] ✅ Item déplacé avec API + Zustand');
       }
     } catch (err) {
-      logger.error('[UI] ❌ Erreur déplacement item', undefined, err instanceof Error ? err : new Error(String(err)));
+      logger.error('[UI] ❌ Erreur déplacement item', err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors du déplacement de l\'élément.');
     }
   }, [activeClasseurId, folders, notes]);

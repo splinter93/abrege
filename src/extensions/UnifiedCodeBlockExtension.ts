@@ -42,14 +42,14 @@ const UnifiedCodeBlockExtension = CodeBlockLowlight.extend({
   
   addOptions() {
     return {
-      ...this.parent?.(),
+      ...(this as any).parent?.(),
       lowlight: {},
       defaultLanguage: null,
     };
   },
 
   addNodeView() {
-    return ({ node, getPos, editor }) => {
+    return ({ node, getPos, editor }: any) => {
       const language = node.attrs.language;
       if (language === 'mermaid') {
         return createMermaidNodeView(node, getPos, editor);
@@ -109,7 +109,7 @@ function createCodeBlockNodeView(node: Node, getPos: () => number, editor: NodeV
   // Utilisation des nouvelles classes unifiées
   container.className = 'u-block u-block--code';
 
-  const toolbar = createCodeBlockToolbar(node, getPos, editor, container);
+  const toolbar = createCodeBlockToolbar(node, getPos, editor);
   container.appendChild(toolbar);
 
   const body = document.createElement('div');
@@ -138,7 +138,7 @@ function createCodeBlockNodeView(node: Node, getPos: () => number, editor: NodeV
       // La langue a peut-être changé
       if (updatedNode.attrs.language !== node.attrs.language) {
         // Mettre à jour la toolbar si la langue change
-        const newToolbar = createCodeBlockToolbar(updatedNode, getPos, editor, container);
+        const newToolbar = createCodeBlockToolbar(updatedNode, getPos, editor);
         const oldToolbar = container.querySelector('.unified-toolbar');
         if (oldToolbar && newToolbar) {
           container.replaceChild(newToolbar, oldToolbar);
@@ -154,7 +154,7 @@ function createCodeBlockNodeView(node: Node, getPos: () => number, editor: NodeV
         // Re-appliquer la coloration syntaxique
         if (updatedNode.attrs.language && updatedNode.textContent) {
           try {
-            const lowlight = editor.storage.lowlight;
+            const lowlight = (editor as any).storage?.lowlight;
             if (lowlight && lowlight.highlight) {
               const result = lowlight.highlight(updatedNode.textContent, updatedNode.attrs.language);
               code.innerHTML = result.value;
@@ -210,12 +210,14 @@ function createMermaidToolbar(node: Node, getPos: NodeViewProps['getPos'], edito
   let isEditMode = false;
   
   const handleEditClick = () => {
+    const rawPos = typeof getPos === 'function' ? getPos() : 0;
+    const pos = typeof rawPos === 'number' ? rawPos : 0;
     if (isEditMode) {
       // Sortir du mode édition et re-rendre
-      exitEditMode(container, node, getPos());
+      exitEditMode(container, node, pos);
     } else {
       // Entrer en mode édition
-      enterEditMode(container, node, getPos());
+      enterEditMode(container, node);
     }
   };
   

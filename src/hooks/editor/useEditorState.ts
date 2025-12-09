@@ -124,6 +124,7 @@ export interface EditorState {
  * Options d'initialisation du hook
  */
 export interface UseEditorStateOptions {
+  noteId?: string;
   initialTitle?: string;
   initialHeaderImage?: string | null;
   initialHeaderOffset?: number;

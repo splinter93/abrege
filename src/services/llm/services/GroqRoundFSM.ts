@@ -4,7 +4,8 @@ import type {
   FSMConfig, 
   RoundData,
   RoundMetrics,
-  GroqRoundResult
+  GroqRoundResult,
+  ToolExecutionResult
 } from '../types/groqTypes';
 import type { LLMResponse, ToolResult } from '../types/strictTypes';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -376,7 +377,14 @@ export class GroqRoundFSM {
    * Injecte les résultats des tools
    */
   injectToolResults(results: ToolResult[]): void {
-    this.data.toolResults = results;
+    const mapped: ToolExecutionResult[] = results.map((r) => ({
+      tool_call_id: r.tool_call_id,
+      name: r.name,
+      result: r.result ?? r.content,
+      success: r.success,
+      timestamp: r.timestamp || new Date().toISOString()
+    }));
+    this.data.toolResults = mapped;
   }
 
   /**

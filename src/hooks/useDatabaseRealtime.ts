@@ -55,7 +55,7 @@ export function useDatabaseRealtime({
   const initializeService = useCallback(async () => {
     // Validation des paramètres
     if (!userId || typeof userId !== 'string' || userId.trim() === '' || userId === 'anonymous') {
-      logger.warn('[useDatabaseRealtime] UserId manquant, invalide ou anonyme:', userId);
+      logger.warn(LogCategory.EDITOR, '[useDatabaseRealtime] UserId manquant, invalide ou anonyme:', { userId });
       return;
     }
 
@@ -68,7 +68,7 @@ export function useDatabaseRealtime({
     configRef.current = config;
 
     try {
-      logger.info('[useDatabaseRealtime] 🚀 Initialisation du service DatabaseRealtime', {
+      logger.info(LogCategory.EDITOR, '[useDatabaseRealtime] 🚀 Initialisation du service DatabaseRealtime', {
         userId: config.userId,
         debug: config.debug
       });
@@ -83,15 +83,15 @@ export function useDatabaseRealtime({
           try {
             onStateChange(newState);
           } catch (error) {
-            logger.error('[useDatabaseRealtime] Erreur dans callback onStateChange:', error);
+            logger.error(LogCategory.EDITOR, '[useDatabaseRealtime] Erreur dans callback onStateChange:', error);
           }
         }
       });
 
-      logger.info('[useDatabaseRealtime] ✅ Service initialisé avec succès');
+      logger.info(LogCategory.EDITOR, '[useDatabaseRealtime] ✅ Service initialisé avec succès');
 
     } catch (error) {
-      logger.error('[useDatabaseRealtime] ❌ Erreur d\'initialisation:', error);
+      logger.error(LogCategory.EDITOR, '[useDatabaseRealtime] ❌ Erreur d\'initialisation:', error);
       setIsInitialized(false);
     }
   }, [userId, debug, autoReconnect, onStateChange]);
@@ -115,7 +115,7 @@ export function useDatabaseRealtime({
       await initializeService();
     } else {
       // Le service gère sa propre reconnexion
-      logger.info('[useDatabaseRealtime] Reconnexion demandée');
+      logger.info(LogCategory.EDITOR, '[useDatabaseRealtime] Reconnexion demandée');
     }
   }, [isInitialized, initializeService]);
 

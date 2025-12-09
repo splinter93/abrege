@@ -6,9 +6,9 @@ import { simpleLogger as logger } from '@/utils/logger';
 /**
  * Marque des messages pour animation temporaire
  */
-interface ChatMessageWithAnimation extends ChatMessage {
+type ChatMessageWithAnimation = ChatMessage & {
   _isNewlyLoaded?: boolean;
-}
+};
 
 /**
  * 🎯 Hook pour le lazy loading des messages avec infinite scroll
@@ -177,7 +177,7 @@ export function useInfiniteMessages(
       const scrollTopBefore = container?.scrollTop || 0;
       
       // ✅ Marquer les nouveaux messages pour animation
-      const markedMessages = olderMessages.map(msg => ({
+      const markedMessages = olderMessages.map((msg: ChatMessage) => ({
         ...msg,
         _isNewlyLoaded: true
       })) as ChatMessageWithAnimation[];

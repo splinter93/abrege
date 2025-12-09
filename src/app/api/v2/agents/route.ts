@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
+import type { CreateSpecializedAgentRequest } from '@/types/specializedAgents';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -158,9 +159,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const userId = authResult.userId!;
 
     // 📥 Récupérer le body de la requête
-    let createData: Record<string, unknown>;
+    let createDataRaw: Record<string, unknown>;
     try {
-      createData = await request.json();
+      createDataRaw = await request.json();
     } catch (error) {
       logApi.info(`❌ Body JSON invalide`, context);
       return NextResponse.json(
@@ -173,7 +174,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // 🔍 Validation basique
-    if (!createData || typeof createData !== 'object') {
+    if (!createDataRaw || typeof createDataRaw !== 'object') {
       logApi.info(`❌ Données de création invalides`, context);
       return NextResponse.json(
         {
@@ -184,8 +185,41 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
+    const requiredFields: Array<keyof CreateSpecializedAgentRequest> = [
+      'slug',
+      'display_name',
+      'description',
+      'model',
+      'system_instructions'
+    ];
+    const hasAllRequired = requiredFields.every(field => typeof (createDataRaw as Record<string, unknown>)[field] === 'string');
+    if (!hasAllRequired) {
+      logApi.info('❌ Champs requis manquants pour création agent', context);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Champs requis manquants pour créer un agent'
+        },
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const createData: CreateSpecializedAgentRequest = {
+      slug: createDataRaw.slug as string,
+      display_name: createDataRaw.display_name as string,
+      description: createDataRaw.description as string,
+      model: createDataRaw.model as string,
+      system_instructions: createDataRaw.system_instructions as string,
+      input_schema: createDataRaw.input_schema as unknown as CreateSpecializedAgentRequest['input_schema'],
+      output_schema: createDataRaw.output_schema as unknown as CreateSpecializedAgentRequest['output_schema'],
+      is_chat_agent: createDataRaw.is_chat_agent as boolean | undefined,
+      temperature: createDataRaw.temperature as number | undefined,
+      max_tokens: createDataRaw.max_tokens as number | undefined,
+      api_v2_capabilities: createDataRaw.api_v2_capabilities as string[] | undefined
+    };
+
     // 🚀 Créer l'agent
-    const result = await agentManager.createSpecializedAgent(createData as Record<string, unknown>);
+    const result = await agentManager.createSpecializedAgent(createData);
     
     if (!result.success) {
       logApi.info(`❌ Erreur création agent: ${result.error}`, context);
@@ -256,7 +290,7 @@ export async function HEAD(request: NextRequest): Promise<NextResponse> {
       return new NextResponse(null, { 
         status: authResult.status || 401,
         headers: {
-          'X-Error': authResult.error
+          'X-Error': authResult.error ?? 'auth_error'
         }
       });
     }

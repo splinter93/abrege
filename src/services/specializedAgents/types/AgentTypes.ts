@@ -142,6 +142,13 @@ export interface SpecializedAgentConfig {
   readonly top_p: number;
   readonly capabilities: readonly string[];
   readonly api_v2_capabilities: readonly string[];
+  readonly openapi_schema_id?: string | null;
+  readonly version?: string | null;
+  readonly is_default?: boolean | null;
+  readonly context_template?: string | null;
+  readonly api_config?: Record<string, unknown> | null;
+  readonly is_favorite?: boolean | null;
+  readonly category?: string | null;
   readonly input_schema?: OpenAPISchema;
   readonly output_schema?: OpenAPISchema;
   readonly voice?: string;

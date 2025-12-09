@@ -19,11 +19,15 @@ export interface AgentTemplateConfig {
   
   // Paramètres LLM
   model?: string;
+  model_variant?: string;
   temperature?: number;
   max_tokens?: number;
   max_completion_tokens?: number;
   top_p?: number;
+  stream?: boolean;
+  stop_sequences?: string[];
   reasoning_effort?: 'low' | 'medium' | 'high';
+  provider?: string;
   
   // Support MCP natif
   mcp_config?: {
@@ -39,6 +43,7 @@ export interface AgentTemplateConfig {
   // Métadonnées (pour les logs)
   name?: string;
   id?: string;
+  slug?: string;
 }
 
 export interface RenderedTemplate {

@@ -118,13 +118,13 @@ export function useClasseurTree({
       const emptyTree: ClasseurTreeData = {
         classeur: classeurRef === 'canva-local' 
           ? { id: 'canva-local', name: 'Canva (local)', emoji: '🎨' }
-          : undefined,
+          : { id: 'no-classeur', name: 'Sans classeur' },
         tree: [],
         notes_at_root: []
       };
       
       if (classeurRef) {
-        logger.debug(LogCategory.EDITOR, '[useClasseurTree] ⏭️  Skipping API call', { classeurRef });
+        logger.dev('[useClasseurTree] ⏭️  Skipping API call', { classeurRef });
         treeCache.set(classeurRef, emptyTree);
       }
       
@@ -207,8 +207,9 @@ export function useClasseurTree({
       logger.error('[useClasseurTree] ❌ Erreur chargement tree:', {
         error: errorMessage,
         classeurRef,
-        metadata
-      }, err instanceof Error ? err : undefined);
+        metadata,
+        stack: err instanceof Error ? err.stack : undefined
+      });
       setError(errorMessage);
     } finally {
       setLoading(false);

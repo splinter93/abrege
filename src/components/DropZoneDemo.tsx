@@ -82,7 +82,7 @@ const DropZoneDemo: React.FC = () => {
           <p>Cette grille simule l'utilisation dans FilesContent</p>
           
           <DropZone
-            onFilesDropped={handleFilesDropped}
+            onFilesDropped={(files) => handleFilesDropped(files as unknown as FileItem[])}
             onError={handleUploadError}
             className="demo-grid-drop-zone"
             overlayMessage="Déposez vos fichiers ici pour les ajouter à la grille"
@@ -128,7 +128,7 @@ const DropZoneDemo: React.FC = () => {
           <p>Composant d'upload avec options étendues</p>
           
           <FileUploader
-            onFilesDropped={handleFilesDropped}
+            onFilesDropped={(files) => handleFilesDropped(files as unknown as FileItem[])}
             onError={handleUploadError}
             className="demo-file-uploader"
             accept={['image/*', 'application/pdf', 'text/*']}

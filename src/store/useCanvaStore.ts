@@ -604,11 +604,11 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
    * 2. Mettre à jour session locale si existe pas
    * 3. Activer le canva
    */
-  switchCanva: async (canvaId, noteId) => {
+  switchCanva: async (canvaId, noteId): Promise<SwitchCanvaResult> => {
     // ✅ Protection race condition : ignorer si switch déjà en cours
     if (pendingSwitches.has(canvaId)) {
       logger.info(LogCategory.EDITOR, '[CanvaStore] Switch already pending, ignoring', { canvaId });
-      return;
+      return 'activated';
     }
 
     try {
@@ -919,8 +919,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
 
       const merged: CanvaSession = {
         ...session,
-        ...updates,
-        lastUpdatedAt: new Date().toISOString()
+        ...updates
       };
 
       return {

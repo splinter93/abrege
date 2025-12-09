@@ -493,5 +493,4 @@ export class UIApiService {
 // Instance singleton du service
 export const uiApiService = new UIApiService();
 
-// Export des types pour utilisation externe
-export type { UIApiResponse, NoteData, FolderData, ClasseurData, SearchResult };
+// Export des types pour utilisation externe (déjà exportés ci-dessus)

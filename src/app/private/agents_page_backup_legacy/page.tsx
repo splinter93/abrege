@@ -6,7 +6,7 @@ import UnifiedSidebar from "@/components/UnifiedSidebar";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
-import { Bot } from "lucide-react";
+import { Bot, ChevronDown, X } from "lucide-react";
 import AgentConfiguration from "@/components/agents/AgentConfiguration";
 import AgentParameters from "@/components/agents/AgentParameters";
 import { useAgentEditor } from "@/hooks/useAgentEditor";
@@ -14,7 +14,6 @@ import "@/styles/main.css";
 import "./agents.css";
 import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown } from "lucide-react";
 
 function AgentsPageContainer() {
   const searchParams = useSearchParams();

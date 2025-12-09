@@ -1,5 +1,5 @@
 import type { SafeUnknown, SafeRecord, SafeError } from '@/types/quality';
-import { useFileSystemStore } from '@/store/useFileSystemStore';
+import { useFileSystemStore, type Classeur } from '@/store/useFileSystemStore';
 
 import { ErrorHandler } from './errorHandler';
 import { logApi } from '@/utils/logger';
@@ -27,6 +27,8 @@ interface UpdateNoteData {
   wide_mode?: boolean;
   font_family?: string;
   folder_id?: string | null;
+  classeur_id?: string | null;
+  is_canva_draft?: boolean;
 }
 
 interface CreateFolderData {
@@ -114,33 +116,42 @@ export class OptimizedApi {
     return { ok: resp.ok, status: resp.status, data, etag, etagHit: false };
   }
 
-  private normalizeClasseurs(input: unknown[]): unknown[] {
-    return (Array.isArray(input) ? input : []).map(c => ({
-      id: c.id,
-      slug: c.slug ?? undefined,
-      name: c.name,
-      emoji: c.emoji ?? undefined,
-      color: c.color ?? undefined,
-      position: c.position ?? 0,
-      created_at: c.created_at ?? undefined,
-      updated_at: c.updated_at ?? undefined,
-    })).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+  private normalizeClasseurs(input: unknown[]): Classeur[] {
+    const list = Array.isArray(input) ? input : [];
+    return list
+      .map((item) => {
+        const c = (typeof item === 'object' && item !== null ? item : {}) as Record<string, unknown>;
+        return {
+          id: String(c.id ?? ''),
+          slug: (c.slug as string | undefined) ?? undefined,
+          name: String(c.name ?? ''),
+          emoji: (c.emoji as string | undefined) ?? undefined,
+          color: (c.color as string | undefined) ?? undefined,
+          position: typeof c.position === 'number' ? c.position : 0,
+          created_at: typeof c.created_at === 'string' ? c.created_at : undefined,
+          updated_at: typeof c.updated_at === 'string' ? c.updated_at : undefined,
+        };
+      })
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
   }
 
   private normalizeTree(input: unknown): unknown {
-    if (!input || !input.classeur) return input;
-    const stripVolatile = (x: unknown) => ({ ...x, generated_at: undefined });
+    if (!input || typeof input !== 'object') return input;
+    const data = input as Record<string, unknown>;
+    const classeur = data.classeur as Record<string, unknown> | undefined;
+    if (!classeur) return input;
+    const stripVolatile = (x: Record<string, unknown>) => ({ ...x, generated_at: undefined });
     return stripVolatile({
       success: true,
       classeur: {
-        id: input.classeur.id,
-        slug: input.classeur.slug ?? undefined,
-        name: input.classeur.name,
-        emoji: input.classeur.emoji ?? undefined,
+        id: classeur.id,
+        slug: (classeur.slug as string | undefined) ?? undefined,
+        name: classeur.name,
+        emoji: (classeur.emoji as string | undefined) ?? undefined,
       },
-      tree: Array.isArray(input.tree) ? input.tree : [],
-      notes_at_root: Array.isArray(input.notes_at_root) ? input.notes_at_root : [],
-      etag: input.etag ?? undefined,
+      tree: Array.isArray(data.tree) ? data.tree : [],
+      notes_at_root: Array.isArray(data.notes_at_root) ? data.notes_at_root : [],
+      etag: data.etag ?? undefined,
     });
   }
 
@@ -194,18 +205,17 @@ export class OptimizedApi {
       v1_size: v1Res.size,
       diff_count: diff,
     };
-    try { logj(logObj as unknown); } catch {}
 
     if (this.useV1Only && v1Res.ok && v1N !== undefined) return v1Res.data as T;
     return legacyRes.data as T;
   }
 
   // v1 clients
-  private async getClasseursV1(): Promise<unknown[]> {
+  private async getClasseursV1(): Promise<Classeur[]> {
     const headers = await this.getAuthHeaders();
     const { ok, data } = await this.fetchWithEtag('/api/ui/classeurs', headers);
     if (!ok) throw new Error('Classeurs v1 error');
-    return data;
+    return this.normalizeClasseurs(Array.isArray(data) ? data : []);
   }
 
   private async getTreeV1(ref: string, depth: '0'|'1'|'full' = 'full'): Promise<unknown> {
@@ -911,7 +921,7 @@ export class OptimizedApi {
     const startTime = Date.now();
     const context = { operation: 'publish_note', component: 'OptimizedApi' };
     
-    logApi('publish_note', `🚀 Début publication note ${noteId}`, context);
+    logApi.info(`🚀 Début publication note ${noteId}`, context);
     
     try {
       const headers = await this.getAuthHeaders();
@@ -930,11 +940,11 @@ export class OptimizedApi {
 
       const result = await response.json();
       const apiTime = Date.now() - startTime;
-      logApi('publish_note', `✅ Publication terminée en ${apiTime}ms`, context);
+      logApi.info(`✅ Publication terminée en ${apiTime}ms`, context);
 
       return result;
     } catch (error) {
-      logApi('publish_note', `❌ Erreur publication: ${error}`, context);
+      logApi.error(`❌ Erreur publication: ${String(error)}`, context);
       throw error;
     }
   }

@@ -32,10 +32,17 @@ export class SchemaValidator {
         return { valid: false, errors, warnings };
       }
 
+      if (typeof input !== 'object' || input === null) {
+        errors.push('Input doit être un objet');
+        return { valid: false, errors, warnings };
+      }
+
+      const inputRecord = input as Record<string, unknown>;
+
       // Validation des champs requis
       if (schema.required) {
         for (const field of schema.required) {
-          if (!(field in input)) {
+          if (!(field in inputRecord)) {
             errors.push(`Champ requis manquant: ${field}`);
           }
         }
@@ -44,8 +51,8 @@ export class SchemaValidator {
       // Validation des propriétés
       if (schema.properties) {
         for (const [key, propSchema] of Object.entries(schema.properties)) {
-          if (input[key] !== undefined) {
-            const propValidation = this.validateProperty(input[key], propSchema, key);
+          if (inputRecord[key] !== undefined) {
+            const propValidation = this.validateProperty(inputRecord[key], propSchema, key);
             if (!propValidation.valid) {
               errors.push(...propValidation.errors);
             }
@@ -59,7 +66,7 @@ export class SchemaValidator {
       // Validation des propriétés supplémentaires
       if (schema.additionalProperties === false) {
         const allowedKeys = Object.keys(schema.properties || {});
-        const inputKeys = Object.keys(input);
+        const inputKeys = Object.keys(inputRecord);
         const extraKeys = inputKeys.filter(key => !allowedKeys.includes(key));
         
         if (extraKeys.length > 0) {
@@ -100,17 +107,17 @@ export class SchemaValidator {
 
       // Validation des contraintes spécifiques
       if (schema.type === 'string') {
-        this.validateStringConstraints(value, schema, path, errors, warnings);
+        this.validateStringConstraints(value as string, schema, path, errors, warnings);
       } else if (schema.type === 'number') {
-        this.validateNumberConstraints(value, schema, path, errors, warnings);
+        this.validateNumberConstraints(value as number, schema, path, errors, warnings);
       } else if (schema.type === 'array') {
-        this.validateArrayConstraints(value, schema, path, errors, warnings);
+        this.validateArrayConstraints(value as unknown[], schema, path, errors, warnings);
       } else if (schema.type === 'object') {
-        this.validateObjectConstraints(value, schema, path, errors, warnings);
+        this.validateObjectConstraints(value as Record<string, unknown>, schema, path, errors, warnings);
       }
 
       // Validation des énumérations
-      if (schema.enum && !schema.enum.includes(value)) {
+      if (schema.enum && !schema.enum.includes(value as string)) {
         errors.push(`${path}: valeur "${value}" non autorisée. Valeurs autorisées: ${schema.enum.join(', ')}`);
       }
 
@@ -331,8 +338,10 @@ export class SchemaValidator {
         return { valid: false, errors, warnings };
       }
 
+      const schemaObj = schema as Record<string, unknown>;
+
       // Validation du type
-      if (schema.type !== 'object') {
+      if (schemaObj.type !== 'object') {
         errors.push({
           path: 'type',
           message: 'Le type doit être "object"',
@@ -341,31 +350,31 @@ export class SchemaValidator {
       }
 
       // Validation des propriétés
-      if (schema.properties) {
-        if (typeof schema.properties !== 'object') {
+      if (schemaObj.properties) {
+        if (typeof schemaObj.properties !== 'object' || schemaObj.properties === null) {
           errors.push({
             path: 'properties',
             message: 'Les propriétés doivent être un objet',
             code: 'INVALID_PROPERTIES'
           });
         } else {
-          for (const [key, prop] of Object.entries(schema.properties)) {
+          for (const [key, prop] of Object.entries(schemaObj.properties)) {
             this.validatePropertySchema(prop as OpenAPIProperty, `properties.${key}`, errors, warnings);
           }
         }
       }
 
       // Validation des champs requis
-      if (schema.required) {
-        if (!Array.isArray(schema.required)) {
+      if (schemaObj.required) {
+        if (!Array.isArray(schemaObj.required)) {
           errors.push({
             path: 'required',
             message: 'Le champ "required" doit être un tableau',
             code: 'INVALID_REQUIRED'
           });
         } else {
-          const propertyKeys = Object.keys(schema.properties || {});
-          for (const requiredField of schema.required) {
+          const propertyKeys = Object.keys((schemaObj.properties as Record<string, unknown> | undefined) || {});
+          for (const requiredField of schemaObj.required) {
             if (!propertyKeys.includes(requiredField)) {
               errors.push({
                 path: 'required',

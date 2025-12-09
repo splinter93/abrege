@@ -4,11 +4,11 @@
  */
 
 import { distributedCache } from './DistributedCache';
-import { ApiV2Tool } from '../apiV2/types/ApiV2Types';
+import { ToolDefinition } from '../llm/types/apiV2Types';
 import { simpleLogger as logger } from '@/utils/logger';
 
 export interface ToolsCacheEntry {
-  tools: ApiV2Tool[];
+  tools: ToolDefinition[];
   timestamp: number;
   agentId?: string;
   capabilities?: string[];
@@ -31,7 +31,7 @@ export class ToolsCache {
   /**
    * Obtenir les tools pour un agent spécifique
    */
-  async getToolsForAgent(agentId: string, capabilities?: string[]): Promise<ApiV2Tool[] | null> {
+  async getToolsForAgent(agentId: string, capabilities?: string[]): Promise<ToolDefinition[] | null> {
     try {
       const cacheKey = this.buildCacheKey(agentId, capabilities);
       const cached = await distributedCache.get<ToolsCacheEntry>(cacheKey);
@@ -52,7 +52,7 @@ export class ToolsCache {
   /**
    * Mettre en cache les tools pour un agent
    */
-  async setToolsForAgent(agentId: string, tools: ApiV2Tool[], capabilities?: string[]): Promise<boolean> {
+  async setToolsForAgent(agentId: string, tools: ToolDefinition[], capabilities?: string[]): Promise<boolean> {
     try {
       const cacheKey = this.buildCacheKey(agentId, capabilities);
       const entry: ToolsCacheEntry = {
@@ -78,7 +78,7 @@ export class ToolsCache {
   /**
    * Obtenir tous les tools disponibles
    */
-  async getAllTools(): Promise<ApiV2Tool[] | null> {
+  async getAllTools(): Promise<ToolDefinition[] | null> {
     try {
       const cacheKey = this.buildCacheKey('all');
       const cached = await distributedCache.get<ToolsCacheEntry>(cacheKey);
@@ -99,7 +99,7 @@ export class ToolsCache {
   /**
    * Mettre en cache tous les tools
    */
-  async setAllTools(tools: ApiV2Tool[]): Promise<boolean> {
+  async setAllTools(tools: ToolDefinition[]): Promise<boolean> {
     try {
       const cacheKey = this.buildCacheKey('all');
       const entry: ToolsCacheEntry = {

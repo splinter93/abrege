@@ -217,9 +217,10 @@ export class DatabaseRealtimeService {
         });
       }
 
-      // La réponse de subscribe() peut être 'SUBSCRIBED' ou un objet avec state 'joining'
-      if (response === 'SUBSCRIBED' || (response && typeof response === 'object' && response.state === 'joining')) {
-        if (response === 'SUBSCRIBED') {
+      // La réponse de subscribe() est un RealtimeChannel ; on vérifie l'état courant
+      const channelState = this.channel.state;
+      if (channelState === 'joined' || channelState === 'joining') {
+        if (channelState === 'joined') {
           // Connexion immédiate
           this.updateState({
             isConnected: true,

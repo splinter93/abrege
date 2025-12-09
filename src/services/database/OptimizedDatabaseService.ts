@@ -294,7 +294,7 @@ export class OptimizedDatabaseService {
     try {
       // 1. Vérifier le cache
       if (useCache) {
-        const cached = await this.cache.get(cacheKey);
+        const cached = await this.cache.get<NoteDetailed>(cacheKey);
         if (cached) {
           logger.dev(`[OptimizedDatabaseService] 📦 Note cache HIT: ${noteId}`);
           return cached;
@@ -306,7 +306,7 @@ export class OptimizedDatabaseService {
         .from('articles')
         .select(`
           id, source_title, slug, markdown_content, html_content, header_image,
-          visibility, public_url, classeur_id, folder_id, position, created_at, updated_at, etag,
+          visibility, public_url, classeur_id, folder_id, position, created_at, updated_at, etag, content_size,
           classeurs(id, name, slug),
           folders(id, name, slug)
         `)
@@ -319,13 +319,18 @@ export class OptimizedDatabaseService {
         return null;
       }
 
+      const typedNote: NoteDetailed = {
+        ...(note as unknown as NoteDetailed),
+        content_size: (note as any)?.content_size ?? 0,
+      };
+
       // 3. Mettre en cache
       if (useCache) {
-        await this.cache.set(cacheKey, note, cacheTtl);
+        await this.cache.set(cacheKey, typedNote, cacheTtl);
         logger.dev(`[OptimizedDatabaseService] 💾 Note cached: ${noteId}`);
       }
 
-      return note;
+      return typedNote;
     } catch (error) {
       logger.error(`[OptimizedDatabaseService] ❌ Error getting note ${noteId}:`, error);
       return null;
@@ -354,7 +359,12 @@ export class OptimizedDatabaseService {
     try {
       // 1. Vérifier le cache
       if (useCache) {
-        const cached = await this.cache.get(cacheKey);
+        const cached = await this.cache.get<{
+          notes: NoteSummary[];
+          classeurs: ClasseurSummary[];
+          folders: FolderSummary[];
+          total: number;
+        }>(cacheKey);
         if (cached) {
           logger.dev(`[OptimizedDatabaseService] 📦 Search cache HIT: "${query}"`);
           return cached;

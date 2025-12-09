@@ -15,7 +15,8 @@ import {
   CreateSpecializedAgentRequest,
   CreateSpecializedAgentResponse,
   ExecutionContext,
-  AgentError
+  AgentError,
+  OpenAPISchema
 } from './types/AgentTypes';
 import { AgentValidator } from './services/AgentValidator';
 import { AgentCache } from './services/AgentCache';
@@ -258,15 +259,46 @@ export class SpecializedAgentManagerV2 {
       });
     }
 
+    const capabilities = Array.isArray(agent.capabilities) ? [...agent.capabilities] : ['text'];
+    const apiV2Capabilities = Array.isArray(agent.api_v2_capabilities) ? [...agent.api_v2_capabilities] : [];
+
+    const temperature = this.sanitizeNumber(agent.temperature, 0.7, 0, 2);
+    const top_p = this.sanitizeNumber(agent.top_p, 1, 0, 1);
+    const max_tokens = this.sanitizeNumber(agent.max_tokens, 4000, 1, 8192);
+    const max_completion_tokens = this.sanitizeNumber(agent.max_completion_tokens, max_tokens, 1, 8192);
+    const priority = this.sanitizeNumber(agent.priority, 10, 0, 100);
+
     return {
-      ...agent,
-      temperature: this.sanitizeNumber(agent.temperature, 0.7, 0, 2),
-      top_p: this.sanitizeNumber(agent.top_p, 1, 0, 1),
-      max_tokens: this.sanitizeNumber(agent.max_tokens, 4000, 1, 8192),
-      max_completion_tokens: this.sanitizeNumber(agent.max_completion_tokens, agent.max_tokens, 1, 8192),
-      priority: this.sanitizeNumber(agent.priority, 10, 0, 100),
-      capabilities: Array.isArray(agent.capabilities) ? agent.capabilities : ['text'],
-      api_v2_capabilities: Array.isArray(agent.api_v2_capabilities) ? agent.api_v2_capabilities : []
+      id: String(agent.id ?? ''),
+      slug: String(agent.slug ?? ''),
+      name: String(agent.name ?? agent.display_name ?? ''),
+      display_name: String(agent.display_name ?? agent.name ?? ''),
+      description: String(agent.description ?? ''),
+      model: String(agent.model ?? ''),
+      provider: 'groq',
+      system_instructions: String(agent.system_instructions ?? ''),
+      is_endpoint_agent: Boolean(agent.is_endpoint_agent),
+      is_chat_agent: Boolean(agent.is_chat_agent),
+      is_active: Boolean(agent.is_active ?? true),
+      priority,
+      temperature,
+      max_tokens,
+      max_completion_tokens,
+      top_p,
+      capabilities,
+      api_v2_capabilities: apiV2Capabilities,
+      openapi_schema_id: (agent.openapi_schema_id as string | null | undefined) ?? null,
+      version: (agent.version as string | null | undefined) ?? null,
+      is_default: (agent.is_default as boolean | null | undefined) ?? null,
+      context_template: agent.context_template ? String(agent.context_template) : undefined,
+      api_config: (agent.api_config as Record<string, unknown> | null | undefined) ?? null,
+      is_favorite: (agent.is_favorite as boolean | null | undefined) ?? null,
+      category: (agent.category as string | null | undefined) ?? null,
+      input_schema: agent.input_schema as OpenAPISchema | undefined,
+      output_schema: agent.output_schema as OpenAPISchema | undefined,
+      voice: agent.voice ? String(agent.voice) : undefined,
+      created_at: String(agent.created_at ?? new Date().toISOString()),
+      updated_at: String(agent.updated_at ?? new Date().toISOString())
     };
   }
 

@@ -13,6 +13,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CanvaSession } from '@/types/canva';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
+type AnySupabaseClient = ReturnType<typeof import('@supabase/supabase-js').createClient>;
 
 /**
  * Options pour la création d'une note canva
@@ -77,6 +78,7 @@ export class CanvaNoteService {
   ): Promise<{ canvaId: string; noteId: string }> {
     try {
       const client = this.resolveClient(supabaseClient);
+      const slugClient = client as unknown as AnySupabaseClient;
       await this.ensureChatSessionOwnership(chatSessionId, userId, client);
       const noteTitle = options?.title || this.generateDefaultTitle();
       const initialContent = options?.initialContent || '';
@@ -96,7 +98,7 @@ export class CanvaNoteService {
         noteTitle,
         userId,
         undefined, // noteId pas encore créé
-        client
+        slugClient
       );
 
       // 2. Créer note DB avec flag canva draft (direct Supabase)
@@ -129,7 +131,7 @@ export class CanvaNoteService {
         noteTitle,
         userId,
         noteId,
-        client
+        slugClient
       );
 
       // 4. Mettre à jour la note avec l'URL publique

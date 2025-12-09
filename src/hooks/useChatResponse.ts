@@ -5,6 +5,7 @@ import type { ToolCall, ToolResult } from '@/hooks/useChatHandlers';
 import type { ChatMessage } from '@/types/chat';
 import type { MessageContent } from '@/types/image';
 import type { StreamTimeline } from '@/types/streamTimeline';
+import type { LLMContextForOrchestrator } from '@/services/chat/ChatContextBuilder';
 
 interface UseChatResponseOptions {
   onComplete?: (
@@ -29,7 +30,13 @@ interface UseChatResponseOptions {
 
 interface UseChatResponseReturn {
   isProcessing: boolean;
-  sendMessage: (message: string | MessageContent, sessionId: string, context?: Record<string, unknown>, history?: ChatMessage[], token?: string) => Promise<void>;
+  sendMessage: (
+    message: string | MessageContent,
+    sessionId: string,
+    context?: Record<string, unknown> | LLMContextForOrchestrator,
+    history?: ChatMessage[],
+    token?: string
+  ) => Promise<void>;
   reset: () => void;
 }
 
@@ -59,7 +66,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
     onAssistantRoundComplete,
   } = options;
 
-  const sendMessage = useCallback(async (message: string | MessageContent, sessionId: string, context?: Record<string, unknown>, history?: ChatMessage[], token?: string) => {
+  const sendMessage = useCallback(async (message: string | MessageContent, sessionId: string, context?: Record<string, unknown> | LLMContextForOrchestrator, history?: ChatMessage[], token?: string) => {
     try {
       // Extraire un aperçu du message pour le logging
       const messagePreview = typeof message === 'string' 
@@ -88,6 +95,11 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
       // ✅ REFACTORÉ : Mode streaming délégué au StreamOrchestrator
       if (useStreaming) {
         logger.dev('[useChatResponse] 🌊 Mode streaming activé');
+
+        const skipAddingUserMessage =
+          context && typeof context === 'object' && 'skipAddingUserMessage' in context
+            ? Boolean((context as { skipAddingUserMessage?: unknown }).skipAddingUserMessage)
+            : false;
         
         const response = await fetch('/api/chat/llm/stream', {
           method: 'POST',
@@ -97,7 +109,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
             context: context || { sessionId }, 
             history: history || [],
             sessionId,
-            skipAddingUserMessage: context?.skipAddingUserMessage || false
+            skipAddingUserMessage
           })
         });
 

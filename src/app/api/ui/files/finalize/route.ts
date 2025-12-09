@@ -50,7 +50,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const err = error as { message?: string };
       logApi.info(`❌ Validation des données échouée: ${err.message}`);
       return NextResponse.json(
-        { error: `Données invalides: ${error.message}` }, 
+        { error: `Données invalides: ${err.message ?? 'unknown error'}` }, 
         { status: 400 }
       );
     }
@@ -192,7 +192,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       });
     } catch (auditError) {
       // Log l'erreur mais ne pas faire échouer la finalisation
-      logApi.info(`⚠️ Erreur audit trail: ${auditError.message}`, { 
+      const auditErr = auditError as { message?: string };
+      logApi.info(`⚠️ Erreur audit trail: ${auditErr.message}`, { 
         fileId: finalizeData.fileId, 
         userId 
       });
@@ -223,18 +224,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
   } catch (error) {
-    const err = error as { message?: string };
+    const err = error as { message?: string; stack?: string };
     // ========================================
     // 7. GESTION D'ERREURS GLOBALES
     // ========================================
     
     const apiTime = Date.now() - startTime;
-    const errorMessage = error.message || 'Erreur inconnue';
+    const errorMessage = err.message || 'Erreur inconnue';
     
     logApi.info(`❌ Erreur finalisation: ${errorMessage}`, { 
       duration: apiTime,
       error: errorMessage,
-      stack: error.stack
+      stack: err.stack
     });
 
     return NextResponse.json(

@@ -144,11 +144,12 @@ function detectChatGPTRequest(
                               userAgent.toLowerCase().includes('gpt');
   
   // Vérifier le body pour des signatures ChatGPT
-  const hasChatGPTBody = bodyData && (
-    bodyData.tool_calls !== undefined ||
-    bodyData.tools !== undefined ||
-    bodyData.model !== undefined ||
-    bodyData.messages !== undefined
+  const bodyObject = bodyData && typeof bodyData === 'object' ? bodyData as Record<string, unknown> : null;
+  const hasChatGPTBody = !!bodyObject && (
+    'tool_calls' in bodyObject ||
+    'tools' in bodyObject ||
+    'model' in bodyObject ||
+    'messages' in bodyObject
   );
   
   // Vérifier les paramètres de query

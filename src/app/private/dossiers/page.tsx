@@ -623,14 +623,14 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
                   updated_at: new Date().toISOString(),
                   user_id: user.id
                 }))}
-                preloadedFolders={useFileSystemStore.getState().folders as Record<string, unknown>}
+                preloadedFolders={useFileSystemStore.getState().folders as unknown as Record<string, any>}
                 preloadedNotes={useFileSystemStore.getState().notes as unknown as { [key: string]: FileArticle }}
                 skipApiCalls={true}
                 viewMode={viewMode}
                 onToggleView={handleToggleView}
                 onCreateFolder={handleCreateFolder}
                 onCreateFile={handleCreateNote}
-                onSearchResult={handleSearchResult}
+                onSearchResult={handleSearchResult as any}
               />
             </div>
           )}

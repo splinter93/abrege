@@ -70,7 +70,7 @@ export function OpenAPIEditor({
   // Gestion du chargement de schéma
   const handleSchemaLoad = useCallback(async (input: string | File) => {
     onLoading(true);
-    onError(null);
+    onError('');
 
     try {
       let rawText: string;
@@ -109,8 +109,8 @@ export function OpenAPIEditor({
         throw new Error(validation.error || 'Schéma OpenAPI invalide');
       }
 
-      setCurrentSchema(schemaData);
-      onSchemaLoad(schemaData);
+      setCurrentSchema(schemaData as any);
+      onSchemaLoad(schemaData as any);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement du schéma';
       onError(errorMessage);

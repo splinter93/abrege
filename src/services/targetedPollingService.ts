@@ -5,7 +5,7 @@
  * Plus de polling continu inefficace !
  */
 
-import { useFileSystemStore } from '@/store/useFileSystemStore';
+import { useFileSystemStore, type Note, type Folder, type Classeur } from '@/store/useFileSystemStore';
 import { simpleLogger as logger } from '@/utils/logger';
 
 export type EntityType = 'notes' | 'folders' | 'classeurs';
@@ -229,14 +229,16 @@ class TargetedPollingService {
     if (data.notes && Array.isArray(data.notes)) {
       // Merge intelligent : mettre à jour/ajouter les notes
       data.notes.forEach((note: unknown) => {
-        if (this.isValidNote(note)) {
-          if (store.notes[note.id]) {
-            // Mettre à jour une note existante
-            store.updateNote(note.id, note);
-          } else {
-            // Ajouter une nouvelle note
-            store.addNote(note);
-          }
+        if (!this.isValidNote(note)) return;
+        const normalized = this.normalizeNote(note);
+        if (!normalized) return;
+
+        if (store.notes[normalized.id]) {
+          // Mettre à jour une note existante
+          store.updateNote(normalized.id, normalized);
+        } else {
+          // Ajouter une nouvelle note
+          store.addNote(normalized);
         }
       });
     }
@@ -252,6 +254,49 @@ class TargetedPollingService {
       'id' in obj &&
       typeof (obj as { id: unknown }).id === 'string'
     );
+  }
+
+  /**
+   * 🧹 Normalise une note brute vers le type Note requis par le store
+   */
+  private normalizeNote(raw: { id: string; [key: string]: unknown }): Note | null {
+    const slug = typeof raw.slug === 'string' ? raw.slug : raw.id;
+    const source_title = typeof raw.source_title === 'string' ? raw.source_title : '';
+    const markdown_content = typeof raw.markdown_content === 'string' ? raw.markdown_content : '';
+    const created_at = typeof raw.created_at === 'string' ? raw.created_at : new Date().toISOString();
+    const updated_at = typeof raw.updated_at === 'string' ? raw.updated_at : created_at;
+
+    // Champs critiques obligatoires
+    if (!slug || !source_title) {
+      return null;
+    }
+
+    return {
+      id: raw.id,
+      source_title,
+      markdown_content,
+      html_content: typeof raw.html_content === 'string' ? raw.html_content : undefined,
+      folder_id: (raw.folder_id as string | null | undefined) ?? null,
+      classeur_id: (raw.classeur_id as string | null | undefined) ?? null,
+      position: typeof raw.position === 'number' ? raw.position : 0,
+      created_at,
+      updated_at,
+      slug,
+      is_published: raw.is_published as boolean | undefined,
+      public_url: raw.public_url as string | undefined,
+      header_image: raw.header_image as string | undefined,
+      header_image_offset: raw.header_image_offset as number | undefined,
+      header_image_blur: raw.header_image_blur as number | undefined,
+      header_image_overlay: raw.header_image_overlay as number | undefined,
+      header_title_in_image: raw.header_title_in_image as boolean | undefined,
+      wide_mode: raw.wide_mode as boolean | undefined,
+      a4_mode: raw.a4_mode as boolean | undefined,
+      slash_lang: raw.slash_lang as 'fr' | 'en' | undefined,
+      font_family: raw.font_family as string | undefined,
+      share_settings: raw.share_settings as Note['share_settings'] | undefined,
+      is_canva_draft: raw.is_canva_draft as boolean | undefined,
+      title: raw.title as string | undefined
+    };
   }
 
   /**
@@ -278,6 +323,33 @@ class TargetedPollingService {
     );
   }
 
+  private normalizeFolder(raw: { id: string; [key: string]: unknown }): Folder | null {
+    const name = typeof raw.name === 'string' ? raw.name : '';
+    if (!name) return null;
+    return {
+      id: raw.id,
+      name,
+      position: typeof raw.position === 'number' ? raw.position : undefined,
+      parent_id: (raw.parent_id as string | null | undefined) ?? null,
+      classeur_id: raw.classeur_id as string | undefined,
+      created_at: raw.created_at as string | undefined
+    };
+  }
+
+  private normalizeClasseur(raw: { id: string; [key: string]: unknown }): Classeur | null {
+    const name = typeof raw.name === 'string' ? raw.name : '';
+    if (!name) return null;
+    return {
+      id: raw.id,
+      name,
+      description: raw.description as string | undefined,
+      icon: raw.icon as string | undefined,
+      emoji: raw.emoji as string | undefined,
+      position: typeof raw.position === 'number' ? raw.position : undefined,
+      created_at: raw.created_at as string | undefined
+    };
+  }
+
   /**
    * 🔄 Mettre à jour le store des dossiers
    */
@@ -287,14 +359,14 @@ class TargetedPollingService {
     if (data.folders && Array.isArray(data.folders)) {
       // Merge intelligent : mettre à jour/ajouter les dossiers
       data.folders.forEach((folder: unknown) => {
-        if (this.isValidFolder(folder)) {
-          if (store.folders[folder.id]) {
-            // Mettre à jour un dossier existant
-            store.updateFolder(folder.id, folder);
-          } else {
-            // Ajouter un nouveau dossier
-            store.addFolder(folder);
-          }
+        if (!this.isValidFolder(folder)) return;
+        const normalized = this.normalizeFolder(folder);
+        if (!normalized) return;
+
+        if (store.folders[normalized.id]) {
+          store.updateFolder(normalized.id, normalized);
+        } else {
+          store.addFolder(normalized);
         }
       });
     }
@@ -309,14 +381,14 @@ class TargetedPollingService {
     if (data.classeurs && Array.isArray(data.classeurs)) {
       // Merge intelligent : mettre à jour/ajouter les classeurs
       data.classeurs.forEach((classeur: unknown) => {
-        if (this.isValidClasseur(classeur)) {
-          if (store.classeurs[classeur.id]) {
-            // Mettre à jour un classeur existant
-            store.updateClasseur(classeur.id, classeur);
-          } else {
-            // Ajouter un nouveau classeur
-            store.addClasseur(classeur);
-          }
+        if (!this.isValidClasseur(classeur)) return;
+        const normalized = this.normalizeClasseur(classeur);
+        if (!normalized) return;
+
+        if (store.classeurs[normalized.id]) {
+          store.updateClasseur(normalized.id, normalized);
+        } else {
+          store.addClasseur(normalized);
         }
       });
     }

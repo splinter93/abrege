@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
-import type { Editor, EditorState } from '@tiptap/react';
+import type { Editor } from '@tiptap/react';
+import type { EditorState } from '@tiptap/pm/state';
 import { logger, LogCategory } from '@/utils/logger';
 
 /**
@@ -7,6 +8,11 @@ import { logger, LogCategory } from '@/utils/logger';
  * Centralise la logique de communication et évite les re-renders excessifs
  */
 export function useEditorInteractions(editor: Editor | null) {
+  const getMarkdownContent = useCallback((ed: Editor): string => {
+    const storage = ed.storage as { markdown?: { getMarkdown?: () => string } };
+    return storage.markdown?.getMarkdown?.() || '';
+  }, []);
+
   const interactionRef = useRef<{
     lastSelection: EditorState['selection'] | null;
     lastContent: string;
@@ -22,7 +28,7 @@ export function useEditorInteractions(editor: Editor | null) {
     if (!editor) return;
     
     try {
-      const currentContent = editor.storage?.markdown?.getMarkdown?.() || '';
+      const currentContent = getMarkdownContent(editor);
       if (currentContent !== content) {
         interactionRef.current.lastContent = currentContent;
         interactionRef.current.updateCount++;
@@ -88,7 +94,7 @@ export function useEditorInteractions(editor: Editor | null) {
 
     // Écouter les changements de contenu
     editor.on('update', () => {
-      const content = editor.storage?.markdown?.getMarkdown?.() || '';
+      const content = getMarkdownContent(editor);
       handleContentUpdate(content);
     });
 
@@ -112,21 +118,21 @@ export function useEditorInteractions(editor: Editor | null) {
     if (!editor) return null;
     
     return {
-      content: editor.storage?.markdown?.getMarkdown?.() || '',
+      content: getMarkdownContent(editor),
       selection: editor.state.selection,
       isFocused: editor.isFocused,
       updateCount: interactionRef.current.updateCount
     };
-  }, [editor]);
+  }, [editor, getMarkdownContent]);
 
   // Fonction utilitaire pour forcer une mise à jour
   const forceUpdate = useCallback(() => {
     if (!editor) return;
     
-    const content = editor.storage?.markdown?.getMarkdown?.() || '';
+    const content = getMarkdownContent(editor);
     handleContentUpdate(content);
     handleSelectionChange();
-  }, [editor, handleContentUpdate, handleSelectionChange]);
+  }, [editor, handleContentUpdate, handleSelectionChange, getMarkdownContent]);
 
   return {
     getCurrentState,

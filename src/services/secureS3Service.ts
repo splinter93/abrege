@@ -165,10 +165,11 @@ export class SecureS3Service {
 
       return result;
     } catch (error) {
-      logger.error(`❌ Erreur upload sécurisé: ${error.message}`, {
+      const err = error as { message?: string };
+      logger.error(`❌ Erreur upload sécurisé: ${err.message ?? String(error)}`, {
         userId: options.userId,
         requestId: options.requestId,
-        error: error.message
+        error: err.message ?? String(error)
       });
       throw error;
     }
@@ -202,10 +203,11 @@ export class SecureS3Service {
 
       return result;
     } catch (error) {
-      logger.error(`❌ Erreur génération URL téléchargement: ${error.message}`, {
+      const err = error as { message?: string };
+      logger.error(`❌ Erreur génération URL téléchargement: ${err.message ?? String(error)}`, {
         userId,
         key,
-        error: error.message
+        error: err.message ?? String(error)
       });
       throw error;
     }
@@ -227,10 +229,11 @@ export class SecureS3Service {
         key
       });
     } catch (error) {
-      logger.error(`❌ Erreur suppression S3: ${error.message}`, {
+      const err = error as { message?: string };
+      logger.error(`❌ Erreur suppression S3: ${err.message ?? String(error)}`, {
         userId,
         key,
-        error: error.message
+        error: err.message ?? String(error)
       });
       throw error;
     }
@@ -383,7 +386,8 @@ export class SecureS3Service {
       const response = await this.client.send(command);
       return response.ETag;
     } catch (error) {
-      logger.warn(`⚠️ Impossible de récupérer l'ETag pour ${key}: ${error.message}`);
+      const err = error as { message?: string };
+      logger.warn(`⚠️ Impossible de récupérer l'ETag pour ${key}: ${err.message ?? String(error)}`);
       return undefined;
     }
   }

@@ -199,7 +199,7 @@ export class AgentsService {
       this.baseUrl,
       { 
         method: 'POST',
-        body: agentData as Record<string, unknown>
+        body: agentData as unknown as Record<string, unknown>
       }
     );
 
@@ -299,7 +299,7 @@ export class AgentsService {
     );
 
     if (!response.success) {
-      throw new Error(response.error || 'Échec de la suppression de l\'agent');
+      throw new Error('Échec de la suppression de l\'agent');
     }
   }
 

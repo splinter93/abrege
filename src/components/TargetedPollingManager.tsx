@@ -40,11 +40,11 @@ export default function TargetedPollingManager() {
     if (typeof window !== 'undefined') {
       // Exposer les fonctions de polling sur window pour les actions UI
       window.targetedPolling = {
-        pollNotes,
-        pollFolders,
-        pollClasseurs,
+        pollNotes: pollNotes as any,
+        pollFolders: pollFolders as any,
+        pollClasseurs: pollClasseurs as any,
         pollAll,
-      };
+      } as any;
     }
   }, [pollNotes, pollFolders, pollClasseurs, pollAll]);
 

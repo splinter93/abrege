@@ -36,7 +36,7 @@ export class MultimodalHandler {
     text: string,
     imageUrl?: string
   ): MultimodalMessage {
-    const content: Array<{ type: 'text' | 'image_url'; text?: string; image_url?: { url: string; detail?: string } }> = [
+    const content: Array<{ type: 'text' | 'image_url'; text?: string; image_url?: { url: string; detail?: 'low' | 'high' | 'auto' } }> = [
       { type: 'text', text }
     ];
 
@@ -169,8 +169,10 @@ export class MultimodalHandler {
 
       // Si c'est un objet avec des propriétés spécifiques
       if (typeof input === 'object' && input !== null) {
-        const text = input.query || input.question || input.prompt || input.text || input.input || '';
-        const imageUrl = input.imageUrl || input.image_url || input.image || '';
+        const inputRecord = input as Record<string, unknown>;
+        const pickString = (value: unknown): string => (typeof value === 'string' ? value : '');
+        const text = pickString(inputRecord.query ?? inputRecord.question ?? inputRecord.prompt ?? inputRecord.text ?? inputRecord.input);
+        const imageUrl = pickString(inputRecord.imageUrl ?? inputRecord.image_url ?? inputRecord.image);
         
         // ✅ CORRECTION : Gérer le format de l'endpoint execute { input: text, image: imageUrl }
         const inputObj = input as { input?: string; image?: string };
@@ -206,7 +208,8 @@ export class MultimodalHandler {
       return { text: String(input) };
     } catch (error: unknown) {
       logger.error('[MultimodalHandler] Erreur préparation contenu:', error);
-      return { text: '', error: error.message };
+      const err = error as { message?: string };
+      return { text: '', error: err.message ?? 'Erreur inconnue' };
     }
   }
 

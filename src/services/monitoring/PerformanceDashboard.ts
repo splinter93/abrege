@@ -148,14 +148,21 @@ export class PerformanceDashboard {
   /**
    * Calculer les métriques de performance
    */
-  private calculatePerformanceMetrics(globalStats: { totalCalls: number; successRate: number; avgExecutionTime: number; errorRate: number }): {
+  private calculatePerformanceMetrics(globalStats: {
+    totalTools: number;
+    totalCalls: number;
+    globalSuccessRate: number;
+    globalAverageTime: number;
+    topSlowTools: Array<{ toolName: string; avgTime: number }>;
+    topErrorTools: Array<{ toolName: string; errorRate: number }>;
+  }): {
     slowestTools: Array<{ name: string; avgTime: number }>;
     errorProneTools: Array<{ name: string; errorRate: number }>;
     topUsedTools: Array<{ name: string; calls: number }>;
   } {
     return {
-      slowestTools: globalStats.topSlowTools || [],
-      errorProneTools: globalStats.topErrorTools || [],
+      slowestTools: (globalStats.topSlowTools || []).map(tool => ({ name: tool.toolName, avgTime: tool.avgTime })),
+      errorProneTools: (globalStats.topErrorTools || []).map(tool => ({ name: tool.toolName, errorRate: tool.errorRate })),
       topUsedTools: [], // TODO: Implémenter le calcul des tools les plus utilisés
     };
   }

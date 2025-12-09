@@ -86,6 +86,8 @@ export interface UpdateNoteData {
   font_family?: string;
   folder_id?: string | null;
   description?: string;
+  classeur_id?: string | null;
+  is_canva_draft?: boolean;
 }
 
 export interface CreateFolderData {
@@ -219,7 +221,7 @@ export class V2DatabaseUtils {
       // 🔧 CORRECTION : Charger d'abord l'état complet de la note pour préserver les valeurs existantes
       const { data: currentNote, error: currentError } = await supabase
         .from('articles')
-        .select('wide_mode, a4_mode, slash_lang, font_family, folder_id, description, source_title, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image')
+        .select('id, slug, visibility, public_url, wide_mode, a4_mode, slash_lang, font_family, folder_id, description, source_title, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image')
         .eq('id', noteId)
         .eq('user_id', userId)
         .single();
@@ -250,12 +252,20 @@ export class V2DatabaseUtils {
         // Mettre à jour le slug seulement si le titre a réellement changé (comme l'API V1)
         if (normalizedTitle && currentNote && normalizedTitle !== currentNote.source_title) {
           try {
+            const supabaseForSlug = supabase as unknown as Parameters<typeof SlugAndUrlService.updateNoteSlugAndUrl>[3];
+            const currentNoteForSlug = {
+              id: currentNote.id ?? '',
+              source_title: currentNote.source_title ?? '',
+              slug: currentNote.slug ?? '',
+              visibility: currentNote.visibility,
+              public_url: currentNote.public_url ?? null
+            };
             const { slug: newSlug, publicUrl } = await SlugAndUrlService.updateNoteSlugAndUrl(
               noteId,
               normalizedTitle,
               userId,
-              supabase,
-              currentNote // Passer les données actuelles pour éviter une requête supplémentaire
+              supabaseForSlug,
+              currentNoteForSlug // Passer les données actuelles pour éviter une requête supplémentaire
             );
             updateData.slug = newSlug;
             updateData.public_url = publicUrl;
@@ -1612,7 +1622,7 @@ export class V2DatabaseUtils {
       // Calculer les statistiques
       const content = note.markdown_content || '';
       const characters = content.length;
-      const words = content.split(/\s+/).filter(word => word.length > 0).length;
+      const words = content.split(/\s+/).filter((word: string) => word.length > 0).length;
       const lines = content.split('\n').length;
       const sections = content.split(/^#{1,6}\s+/m).length - 1;
 
@@ -2086,19 +2096,19 @@ export class V2DatabaseUtils {
     logApi.info(`🚀 Recherche contenu: "${query}" (type: ${type})`, context);
     
     try {
-      let results = [];
+      const results: Array<Record<string, unknown> & { type: string }> = [];
 
       if (type === 'all' || type === 'notes') {
         const notesResult = await this.searchNotes(query, limit, 0, userId, context);
         if (notesResult.success) {
-          results = results.concat(notesResult.data.map(note => ({ ...note, type: 'note' })));
+          (notesResult.data ?? []).forEach(note => results.push({ ...note, type: 'note' }));
         }
       }
 
       if (type === 'all' || type === 'classeurs') {
         const classeursResult = await this.searchClasseurs(query, limit, 0, userId, context);
         if (classeursResult.success) {
-          results = results.concat(classeursResult.data.map(classeur => ({ ...classeur, type: 'classeur' })));
+          (classeursResult.data ?? []).forEach(classeur => results.push({ ...classeur, type: 'classeur' }));
         }
       }
 

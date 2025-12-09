@@ -17,7 +17,7 @@ export function hasMarkdownStorage(editor: TiptapEditor | null): editor is Edito
   if (!editor) return false;
   
   // Typage strict sans `as any`
-  const storage = editor.storage as Record<string, unknown>;
+  const storage = editor.storage as unknown as Record<string, unknown>;
   const markdown = storage?.markdown;
   
   // Vérifier que markdown existe et est un objet

@@ -380,7 +380,7 @@ export abstract class OpenAiLikeAdapter {
    * 🔧 Validation des résultats de tool
    */
   validateToolExecutionResult(result: unknown): { isValid: boolean; normalized: ToolResult; errors: string[] } {
-    return validateToolResult(result);
+    return validateToolResult(result) as { isValid: boolean; normalized: ToolResult; errors: string[] };
   }
 
   /**

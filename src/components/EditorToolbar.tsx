@@ -3,7 +3,7 @@ import {
   FiBold, FiItalic, FiUnderline, FiList, FiCheckSquare, 
   FiImage, FiMic, FiZap, FiCode, FiChevronDown, FiGrid,
   FiAlignLeft, FiAlignCenter, FiAlignRight, FiAlignJustify,
-  FiList as FiOrderedList, FiQuote, FiTable, FiPalette
+  FiList as FiOrderedList, FiMessageSquare, FiTable, FiDroplet
 } from 'react-icons/fi';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import Tooltip from '@/components/Tooltip';
@@ -101,7 +101,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen 
         <div className="color-menu-selector" ref={colorMenuRef}>
           <Tooltip text="Couleur et surlignage">
             <button className="toolbar-button" onClick={() => setColorMenuOpen(!colorMenuOpen)}>
-              <FiPalette size={16} />
+              <FiDroplet size={16} />
             </button>
           </Tooltip>
           {colorMenuOpen && (
@@ -144,7 +144,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen 
 
       {/* Group 6: Block Elements */}
       <div className="toolbar-group">
-        <Tooltip text="Citation"><button className={`toolbar-button${editor.isActive('blockquote') ? ' active' : ''}`} onClick={() => editor.chain().focus().toggleBlockquote().run()} aria-label="Citation"><FiQuote size={16} /></button></Tooltip>
+        <Tooltip text="Citation"><button className={`toolbar-button${editor.isActive('blockquote') ? ' active' : ''}`} onClick={() => editor.chain().focus().toggleBlockquote().run()} aria-label="Citation"><FiMessageSquare size={16} /></button></Tooltip>
         <Tooltip text="Bloc de code"><button className={`toolbar-button${editor.isActive('codeBlock') ? ' active' : ''}`} onClick={() => editor.chain().focus().toggleCodeBlock().run()} aria-label="Bloc de code"><FiCode size={16} /></button></Tooltip>
       </div>
       

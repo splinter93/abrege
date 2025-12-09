@@ -33,7 +33,7 @@ export function getCacheConfig(): CacheEnvironmentConfig {
   const isProduction = process.env.NODE_ENV === 'production';
   
   // En développement, désactiver Redis par défaut
-  const redisEnabled = isProduction || (process.env.REDIS_HOST && process.env.REDIS_HOST !== 'localhost');
+  const redisEnabled = isProduction || (!!process.env.REDIS_HOST && process.env.REDIS_HOST !== 'localhost');
   
   return {
     redis: {

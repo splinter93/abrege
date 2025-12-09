@@ -36,12 +36,9 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
 
   // Garder une ref du store sessions pour éviter de resouscrire quand il change
   useEffect(() => {
-    const unsubscribe = useCanvaStore.subscribe(
-      state => state.sessions,
-      (nextSessions) => {
-        sessionsRef.current = nextSessions;
-      }
-    );
+    const unsubscribe = useCanvaStore.subscribe((state) => {
+      sessionsRef.current = state.sessions;
+    });
     return unsubscribe;
   }, []);
 
@@ -96,7 +93,7 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
       const channel = supabase
         .channel(`canva_sessions:chat_${chatSessionId}`)
       .on(
-        'postgres_changes',
+        'postgres_changes' as any,
         {
           event: '*', // INSERT, UPDATE, DELETE
           schema: 'public',

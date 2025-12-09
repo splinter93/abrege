@@ -68,7 +68,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }, { status: 200 });
   } catch (error) {
     const err = error as { message?: string };
-    logger.error(LogCategory.API, `❌ Erreur presign: ${error?.message || error}`, { ...context, error });
+    logger.error(LogCategory.API, `❌ Erreur presign: ${err.message ?? String(error)}`, { ...context, error: err.message ?? error });
     return NextResponse.json({ error: 'Erreur presign' }, { status: 500 });
   }
 }

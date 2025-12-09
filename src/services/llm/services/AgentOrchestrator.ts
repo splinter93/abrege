@@ -7,7 +7,7 @@
  * - Retourne la réponse
  */
 
-import { GroqProvider, LLMResponse } from '../providers/implementations/groq';
+import { GroqProvider } from '../providers/implementations/groq';
 import { XAIProvider } from '../providers/implementations/xai';
 import { SimpleToolExecutor, ToolCall, ToolResult } from './SimpleToolExecutor';
 import { OpenApiToolExecutor } from '../executors/OpenApiToolExecutor';
@@ -21,7 +21,7 @@ import { mcpConfigService } from '../mcpConfigService';
 import { openApiSchemaService } from '../openApiSchemaService';
 import { createClient } from '@supabase/supabase-js';
 import { groqCircuitBreaker } from '@/services/circuitBreaker';
-import type { Tool, McpCall } from '../types/strictTypes';
+import type { Tool, McpCall, LLMResponse } from '../types/strictTypes';
 import { isMcpTool } from '../types/strictTypes';
 import { systemMessageBuilder } from '../SystemMessageBuilder';
 
@@ -466,7 +466,7 @@ export class AgentOrchestrator {
             toolCalls: allToolCalls,
             toolResults: allToolResults,
             finishReason: response.finish_reason || 'stop',
-            stopReason: response.x_groq?.usage?.stop_reason
+            stopReason: (response as { x_groq?: { usage?: { stop_reason?: string } } })?.x_groq?.usage?.stop_reason
           };
         }
 
@@ -520,7 +520,7 @@ export class AgentOrchestrator {
         // Add assistant message with tool calls
         messages.push({
           role: 'assistant',
-          content: response.content || null,
+          content: response.content || '',
           tool_calls: toolCalls.map(tc => ({
             id: tc.id,
             type: 'function' as const,
@@ -537,6 +537,7 @@ export class AgentOrchestrator {
         for (const result of toolResults) {
           messages.push({
             role: 'tool',
+              name: result.name || 'tool',
             tool_call_id: result.tool_call_id,
             content: typeof result.content === 'string' ? result.content : JSON.stringify(result.content)
           });

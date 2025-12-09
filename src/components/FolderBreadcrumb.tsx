@@ -38,7 +38,7 @@ const FolderBreadcrumb: React.FC<FolderBreadcrumbProps> = ({
 
         {/* Dossiers - H2, H3, etc. */}
         {folderPath.map((folder, index) => {
-          const HeadingTag = `h${Math.min(index + 2, 6)}` as keyof JSX.IntrinsicElements;
+          const HeadingTag = `h${Math.min(index + 2, 6)}` as any;
           const isLast = index === folderPath.length - 1;
           
           return (

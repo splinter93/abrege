@@ -50,7 +50,9 @@ export async function PUT(
     const validatedData = validationResult.data;
 
     // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.moveFolder(ref, validatedData.target_folder_id, userId, context, validatedData.target_classeur_id || null);
+    const targetClasseurId: string | undefined = validatedData.target_classeur_id ?? undefined;
+    const targetFolderId: string | null = validatedData.target_folder_id ?? null;
+    const result = await V2DatabaseUtils.moveFolder(ref, targetFolderId, userId, context, targetClasseurId);
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Dossier déplacé en ${apiTime}ms`, context);
@@ -58,7 +60,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       message: 'Dossier déplacé avec succès',
-      folder: result.folder
+      folder: result.data
     });
 
   } catch (err: unknown) {

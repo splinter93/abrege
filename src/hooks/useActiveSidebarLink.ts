@@ -9,6 +9,7 @@ export const useActiveSidebarLink = () => {
   const pathname = usePathname();
 
   const activeLink = useMemo(() => {
+    if (!pathname) return null;
     // Correspondance exacte ou par préfixe pour les pages principales
     if (pathname === '/') return 'home';
     if (pathname.startsWith('/private/dossiers')) return 'dossiers';

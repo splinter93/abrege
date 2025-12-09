@@ -4,8 +4,16 @@ import { uploadImageForNote } from '@/utils/fileUpload';
 import { useAuth } from '@/hooks/useAuth';
 import { STORAGE_CONFIG } from '@/config/storage';
 
+type UploadedFile = FileItem | {
+  id: string;
+  filename: string;
+  url?: string;
+  mime_type: string;
+  size: number;
+};
+
 interface UseDropZoneOptions {
-  onFilesDropped?: (files: FileItem[]) => void;
+  onFilesDropped?: (files: UploadedFile[]) => void;
   onError?: (error: string) => void;
   maxFiles?: number;
   maxFileSize?: number;
@@ -36,7 +44,7 @@ export const useDropZone = ({
   onError,
   maxFiles = 10,
   maxFileSize = STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE,
-  accept = STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES,
+  accept = [...STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES],
   disabled = false
 }: UseDropZoneOptions = {}): UseDropZoneReturn => {
   const { getAccessToken } = useAuth();
@@ -165,11 +173,11 @@ export const useDropZone = ({
     }));
 
     try {
-      const uploadedFiles: FileItem[] = [];
+      const uploadedFiles: UploadedFile[] = [];
       
       for (const file of valid) {
         try {
-          const result = await uploadImageForNote(file, getAccessToken);
+          const result = await uploadImageForNote(file, 'drop-zone');
           if (result.saved) {
             uploadedFiles.push(result.saved);
           }

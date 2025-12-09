@@ -6,7 +6,7 @@ import type {
   ChatSessionsListResponse 
 } from '@/types/chat';
 import { supabase } from '@/supabaseClient';
-import { logger } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 import {
   getCachedSessions,
   getInFlightSessionsPromise,
@@ -46,25 +46,25 @@ export class ChatSessionService {
       // 1) Vérifier si on peut utiliser le cache récent
       const cached = shouldUseSessionsCache() ? getCachedSessions() : null;
       if (cached && !filters) {
-        logger.debug('[ChatSessionService] ♻️ Sessions depuis le cache (TTL 5s)');
+        logger.debug(LogCategory.API, '[ChatSessionService] ♻️ Sessions depuis le cache (TTL 5s)');
         return cached;
       }
 
       // 2) Dédupliquer les appels concurrents : si une requête est déjà en cours, on la réutilise
       const inFlight = getInFlightSessionsPromise();
       if (inFlight && !filters) {
-        logger.debug('[ChatSessionService] ⏳ Requête sessions déjà en cours, réutilisation de la promesse');
+        logger.debug(LogCategory.API, '[ChatSessionService] ⏳ Requête sessions déjà en cours, réutilisation de la promesse');
         return inFlight;
       }
 
-      logger.debug('[ChatSessionService] 🔄 Récupération sessions (appel réseau)...');
+      logger.debug(LogCategory.API, '[ChatSessionService] 🔄 Récupération sessions (appel réseau)...');
       
       // Récupérer le token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
       if (!token) {
-        logger.debug('[ChatSessionService] ❌ Pas de token, authentification requise');
+        logger.debug(LogCategory.API, '[ChatSessionService] ❌ Pas de token, authentification requise');
         throw new Error('Authentification requise');
       }
 
@@ -95,7 +95,7 @@ export class ChatSessionService {
       } catch {
         // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
         const textResponse = await response.text();
-        logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue', { preview: textResponse.substring(0, 200) });
+        logger.error(LogCategory.API, '[ChatSessionService] ❌ Réponse non-JSON reçue', { preview: textResponse.substring(0, 200) });
         throw new Error(`Erreur serveur (${response.status}): Réponse non-JSON reçue`);
       }
 
@@ -125,7 +125,7 @@ export class ChatSessionService {
 
       return result;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.getSessions', { error: { error: error instanceof Error ? error.message : 'Erreur inconnue' } });
+      logger.error(LogCategory.API, 'Erreur ChatSessionService.getSessions', { error: { error: error instanceof Error ? error.message : 'Erreur inconnue' } });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -160,7 +160,7 @@ export class ChatSessionService {
 
       return data;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.getSession:', { error: error });
+      logger.error(LogCategory.API, 'Erreur ChatSessionService.getSession:', { error: error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -196,7 +196,7 @@ export class ChatSessionService {
       } catch {
         // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
         const textResponse = await response.text();
-        logger.error('[ChatSessionService] ❌ Réponse non-JSON reçue', { preview: textResponse.substring(0, 200) });
+        logger.error(LogCategory.API, '[ChatSessionService] ❌ Réponse non-JSON reçue', { preview: textResponse.substring(0, 200) });
         throw new Error(`Erreur serveur (${response.status}): Réponse non-JSON reçue`);
       }
 
@@ -206,7 +206,7 @@ export class ChatSessionService {
 
       return responseData;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.createSession:', { error: error });
+      logger.error(LogCategory.API, 'Erreur ChatSessionService.createSession:', { error: error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -244,7 +244,7 @@ export class ChatSessionService {
 
       return responseData;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.updateSession:', { error: error });
+      logger.error(LogCategory.API, 'Erreur ChatSessionService.updateSession:', { error: error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -257,18 +257,18 @@ export class ChatSessionService {
    */
   async deleteSession(sessionId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      logger.debug('[ChatSessionService] 🗑️ deleteSession appelé pour:', { sessionId });
+      logger.debug(LogCategory.API, '[ChatSessionService] 🗑️ deleteSession appelé pour:', { sessionId });
       
       // Récupérer le token d'authentification
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
       if (!token) {
-        logger.error('[ChatSessionService] ❌ Pas de token d\'authentification');
+        logger.error(LogCategory.API, '[ChatSessionService] ❌ Pas de token d\'authentification');
         throw new Error('Authentification requise');
       }
 
-      logger.debug('[ChatSessionService] 🔧 Appel API DELETE:', { url: `${this.baseUrl}/${sessionId}` });
+      logger.debug(LogCategory.API, '[ChatSessionService] 🔧 Appel API DELETE:', { url: `${this.baseUrl}/${sessionId}` });
 
       const response = await fetch(`${this.baseUrl}/${sessionId}`, {
         method: 'DELETE',
@@ -278,11 +278,11 @@ export class ChatSessionService {
         },
       });
 
-      logger.debug(`[ChatSessionService] 📋 Status réponse: ${response.status}`);
+      logger.debug(LogCategory.API, `[ChatSessionService] 📋 Status réponse: ${response.status}`);
 
       // 204 No Content => succès sans corps
       if (response.status === 204) {
-        logger.debug('[ChatSessionService] ✅ Suppression réussie (204)');
+        logger.debug(LogCategory.API, '[ChatSessionService] ✅ Suppression réussie (204)');
         return { success: true };
       }
 
@@ -290,21 +290,21 @@ export class ChatSessionService {
       let data: unknown = null;
       try {
         data = await response.json();
-        logger.debug('[ChatSessionService] 📋 Données réponse:', { data });
+        logger.debug(LogCategory.API, '[ChatSessionService] 📋 Données réponse:', { data });
       } catch {
-        logger.debug('[ChatSessionService] ℹ️ Aucune réponse JSON (peut être vide)');
+        logger.debug(LogCategory.API, '[ChatSessionService] ℹ️ Aucune réponse JSON (peut être vide)');
       }
 
       if (!response.ok) {
-        const message = data?.error || `Erreur lors de la suppression de la session (${response.status})`;
-        logger.error('[ChatSessionService] ❌ Erreur API:', { status: response.status, message });
+        const message = (data as { error?: string })?.error || `Erreur lors de la suppression de la session (${response.status})`;
+        logger.error(LogCategory.API, '[ChatSessionService] ❌ Erreur API:', { status: response.status, message });
         throw new Error(message);
       }
 
-      logger.debug('[ChatSessionService] ✅ Suppression réussie');
+      logger.debug(LogCategory.API, '[ChatSessionService] ✅ Suppression réussie');
       return { success: true };
     } catch (error) {
-      logger.error('[ChatSessionService] ❌ Erreur deleteSession:', { error: error instanceof Error ? error.message : error });
+      logger.error(LogCategory.API, '[ChatSessionService] ❌ Erreur deleteSession:', { error: error instanceof Error ? error.message : error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
@@ -349,7 +349,7 @@ export class ChatSessionService {
         sanitized.content = JSON.stringify(multiModalContent);
         
         const imageCount = multiModalContent.images?.length || 0;
-        logger.debug(`[ChatSessionService] 💾 Content multi-modal sérialisé: texte + ${imageCount} URL(s) S3`);
+        logger.debug(LogCategory.API, `[ChatSessionService] 💾 Content multi-modal sérialisé: texte + ${imageCount} URL(s) S3`);
       }
     }
 
@@ -428,7 +428,7 @@ export class ChatSessionService {
         data.data.messages = data.data.messages.map((msg: ChatMessage) => 
           this.deserializeMessageContent(msg)
         );
-        logger.debug('[ChatSessionService] 📥 Messages désérialisés:', {
+        logger.debug(LogCategory.API, '[ChatSessionService] 📥 Messages désérialisés:', {
           count: data.data.messages.length,
           hasMultiModal: data.data.messages.some((m: ChatMessage) => 
             typeof m.content === 'object' && !Array.isArray(m.content)
@@ -438,12 +438,21 @@ export class ChatSessionService {
 
       return data;
     } catch (error) {
-      logger.error('Erreur ChatSessionService.getMessages:', { error: error });
+      logger.error(LogCategory.API, 'Erreur ChatSessionService.getMessages:', { error: error });
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erreur inconnue'
       };
     }
+  }
+
+  // ✅ Compatibilité legacy : stub pour addMessageWithToken (routes JSONB supprimées)
+  async addMessageWithToken(
+    _sessionId: string,
+    _message: Omit<ChatMessage, 'id'>,
+    _token: string
+  ): Promise<{ success: boolean; error?: string }> {
+    return { success: true };
   }
 }
 

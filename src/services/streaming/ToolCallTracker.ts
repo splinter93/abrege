@@ -46,7 +46,7 @@ export class ToolCallTracker {
   }): void {
     const tc: ToolCall = {
       id: toolCall.id,
-      type: toolCall.type || 'function',
+      type: 'function',
       function: {
         name: toolCall.function?.name || '',
         arguments: toolCall.function?.arguments || ''

@@ -56,7 +56,7 @@ const NotePreloader: React.FC<NotePreloaderProps> = ({
 
           // Mettre à jour le store avec les notes préchargées
           if (successfulNotes.length > 0) {
-            const notesToAdd = successfulNotes.map(metadata => ({
+            const notesToAdd = successfulNotes.map((metadata: any) => ({
               id: metadata.id,
               source_title: metadata.source_title || 'Untitled',
               markdown_content: '',
@@ -74,7 +74,9 @@ const NotePreloader: React.FC<NotePreloaderProps> = ({
               slug: metadata.slug,
               public_url: '',
               visibility: 'private',
-              folder_id: metadata.folder_id
+              folder_id: metadata.folder_id ?? null,
+              classeur_id: metadata.classeur_id ?? null,
+              position: metadata.position ?? 0
             }));
 
             setNotes(notesToAdd);

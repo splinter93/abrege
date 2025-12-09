@@ -27,6 +27,10 @@ interface ClasseurWithContent {
     id: string;
     source_title: string;
     folder_id?: string;
+    markdown_content?: string;
+    html_content?: string;
+    position?: number;
+    visibility?: string;
     created_at: string;
     updated_at: string;
     slug?: string;
@@ -105,7 +109,7 @@ export class OptimizedClasseurService {
 
       // Vérifier chaque dossier s'il y en a
       if (classeur.dossiers.length > 0) {
-        const invalidDossiers = classeur.dossiers.filter(d => !d || typeof d.id !== 'string' || typeof d.name !== 'string');
+        const invalidDossiers = classeur.dossiers.filter((d: { id?: unknown; name?: unknown }) => !d || typeof d.id !== 'string' || typeof d.name !== 'string');
         if (invalidDossiers.length > 0) {
           simpleLogger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${classeur.id} a des dossiers invalides:`, invalidDossiers);
           return false;
@@ -114,7 +118,7 @@ export class OptimizedClasseurService {
 
       // Vérifier chaque note s'il y en a
       if (classeur.notes.length > 0) {
-        const invalidNotes = classeur.notes.filter(n => !n || typeof n.id !== 'string' || typeof n.source_title !== 'string');
+        const invalidNotes = classeur.notes.filter((n: { id?: unknown; source_title?: unknown }) => !n || typeof n.id !== 'string' || typeof n.source_title !== 'string');
         if (invalidNotes.length > 0) {
           simpleLogger.warn(`[OptimizedClasseurService] ⚠️ Classeur ${classeur.id} a des notes invalides:`, invalidNotes);
           return false;
@@ -395,11 +399,15 @@ export class OptimizedClasseurService {
       c.notes.map(n => ({
         id: n.id,
         source_title: n.source_title,
-        folder_id: n.folder_id,
+        markdown_content: n.markdown_content ?? '',
+        html_content: n.html_content ?? undefined,
+        folder_id: n.folder_id ?? null,
         classeur_id: c.id,
-        created_at: n.created_at,
-        updated_at: n.updated_at,
-        slug: n.slug
+        position: n.position ?? 0,
+        created_at: n.created_at ?? new Date().toISOString(),
+        updated_at: n.updated_at ?? new Date().toISOString(),
+        slug: n.slug ?? '',
+        visibility: n.visibility ?? undefined,
       }))
     );
 

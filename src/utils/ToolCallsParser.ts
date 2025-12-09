@@ -245,9 +245,9 @@ export class ToolCallsParser {
         // Initialiser un nouvel appel d'outil
         if (!call) {
           call = {
-            id: toolCallChunk.id ?? `call_${index}_${Date.now()}`,
+            id: tc.id ?? `call_${index}_${Date.now()}`,
             index,
-            name: toolCallChunk.function?.name ?? '',
+            name: tc.function?.name ?? '',
             rawArgs: '',
             completed: false,
           };
@@ -255,13 +255,13 @@ export class ToolCallsParser {
         }
 
         // Mettre à jour le nom si présent
-        if (toolCallChunk.function?.name) {
-          call.name = toolCallChunk.function.name;
+        if (tc.function?.name) {
+          call.name = tc.function.name;
         }
 
         // Accumuler les arguments
-        if (typeof toolCallChunk.function?.arguments === 'string') {
-          call.rawArgs += toolCallChunk.function.arguments;
+        if (typeof tc.function?.arguments === 'string') {
+          call.rawArgs += tc.function.arguments;
         }
       });
     }

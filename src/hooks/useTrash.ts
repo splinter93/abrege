@@ -120,7 +120,6 @@ export function useTrash(): UseTrashReturn {
       const result = await TrashService.purgeOldItems();
       // Recharger la liste après purge
       await loadItems();
-      return result;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la purge';
       setError(errorMessage);

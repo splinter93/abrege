@@ -66,7 +66,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       const hasOldFormat = note.public_url.includes('/id/');
 
       if (hasOldFormat) {
-        logApi.dev(`🔧 Correction note ${note.id}: ${note.public_url} -> ${correctUrl}`, context);
+        logApi.debug(`🔧 Correction note ${note.id}: ${note.public_url} -> ${correctUrl}`, context);
 
         // Corriger
         const { error: updateError } = await supabase

@@ -47,7 +47,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const err = error as { message?: string };
       logApi.info(`❌ Validation des données échouée: ${err.message}`);
       return NextResponse.json(
-        { error: `Données invalides: ${error.message}` }, 
+        { error: `Données invalides: ${err.message ?? 'unknown error'}` }, 
         { status: 400 }
       );
     }
@@ -149,11 +149,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 6. GESTION D'ERREURS GLOBALES
     // ========================================
     
-    const errorMessage = error.message || 'Erreur inconnue';
+    const errorMessage = err.message || 'Erreur inconnue';
     
     logApi.info(`❌ Erreur mise à jour statut: ${errorMessage}`, { 
       error: errorMessage,
-      stack: error.stack
+      stack: (err as { stack?: string }).stack
     });
 
     return NextResponse.json(

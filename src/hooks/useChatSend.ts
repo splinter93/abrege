@@ -16,7 +16,13 @@ import { filterPromptsInMessage } from '@/utils/promptPlaceholders';
 interface UseChatSendOptions {
   loadNotes: (notes: SelectedNote[], options: { token: string; timeoutMs?: number }) => Promise<{ notes: NoteWithContent[]; stats: NotesLoadStats }>;
   getAccessToken: () => Promise<string | null>;
-  onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[], mentions?: NoteMention[]) => void;
+  onSend: (
+    message: string | MessageContent,
+    images?: ImageAttachment[],
+    notes?: NoteWithContent[],
+    mentions?: NoteMention[],
+    prompts?: PromptMention[]
+  ) => void;
   setUploadError: (error: string | null) => void;
 }
 

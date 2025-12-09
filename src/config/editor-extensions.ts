@@ -91,31 +91,7 @@ export function createEditorExtensions(
       
       // StarterKit avec configuration optimale
       StarterKit.configure({
-        // ✅ Essentiel
-        document: true,
-        paragraph: true,
-        text: true,
-        history: true,
-        
-        // ✅ Formats de base
-        bold: true,
-        italic: true,
-        strike: true,
-        code: true,
-        
-        // ✅ Structure
-        heading: true,
-        blockquote: true,
-        bulletList: true,
-        orderedList: true,
-        listItem: true,
-        horizontalRule: true,
-        codeBlock: true,
-        
-        // ✅ Réactivé pour les blockquotes (Shift+Enter pour line break)
-        hardBreak: true,
         dropcursor: false, // ✅ Désactivé - configuré séparément en orange
-        gapcursor: true,
         // ✅ FIX DOUBLONS: Désactiver extensions configurées séparément
         link: false, // Désactiver - on utilise LinkExtension standalone
         underline: false, // Désactiver - on utilise Underline standalone (si inclus)
@@ -144,13 +120,6 @@ export function createEditorExtensions(
       
       // ✅ Tables réactivées
       ScriviaTableKit.configure({
-        resizable: true,
-        handleWidth: 6,
-        cellMinWidth: 80,
-        allowTableNodeSelection: true,
-        HTMLAttributes: {
-          class: 'scrivia-table',
-        },
       }),
       
       // ✅ Images
@@ -189,8 +158,6 @@ export function createEditorExtensions(
         breaks: true, // ✅ Convertir retours simples en <br>
         transformPastedText: false,   // ✅ SAFE - Ne transforme PAS automatiquement
         transformCopiedText: false,   // ✅ SAFE - Ne transforme PAS automatiquement
-        // ✅ Plugins markdown-it custom pour parser les embeds
-        extensions: [markdownItNoteEmbed, markdownItYouTubeEmbed],
       }),
       
       // ✅ Extensions avancées réactivées
@@ -203,9 +170,6 @@ export function createEditorExtensions(
       // ✅ Floating Menu pour la sélection
       FloatingMenu.configure({
         element: typeof window !== 'undefined' ? document.createElement('div') : null,
-        tippyOptions: {
-          duration: 100,
-        },
       }),
       
       // ✅ Drag Handles Notion-style
@@ -234,7 +198,7 @@ export function createEditorExtensions(
       StarterKit.configure({ 
         // Configuration minimale pour éviter les conflits
         codeBlock: false, // Désactiver - on utilise UnifiedCodeBlockExtension
-        hardBreak: true, // ✅ TEST - Réactivé pour blockquotes (Shift+Enter)
+        hardBreak: {}, // ✅ TEST - Réactivé pour blockquotes (Shift+Enter)
         blockquote: false, // Désactiver - on utilise Blockquote standalone
         bulletList: false, // Désactiver - on utilise BulletList standalone
         orderedList: false, // Désactiver - on utilise OrderedList standalone  
@@ -265,13 +229,6 @@ export function createEditorExtensions(
         },
       }),
       ScriviaTableKit.configure({
-        resizable: true,
-        handleWidth: 6,
-        cellMinWidth: 80,
-        allowTableNodeSelection: true,
-        HTMLAttributes: {
-          class: 'scrivia-table',
-        },
       }),
       UnifiedCodeBlockExtension.configure({ 
         lowlight: lowlightInstance,
@@ -292,8 +249,6 @@ export function createEditorExtensions(
         // ✅ SAFE - Désactivé définitivement (causait espace → retour ligne)
         transformPastedText: false,
         transformCopiedText: false,
-        // ✅ Plugins markdown-it custom pour parser les embeds
-        extensions: [markdownItNoteEmbed, markdownItYouTubeEmbed],
       }),
       Placeholder.configure({
         placeholder: 'Écrivez quelque chose d\'incroyable...',
@@ -310,9 +265,6 @@ export function createEditorExtensions(
       }),
       FloatingMenu.configure({
         element: typeof window !== 'undefined' ? document.createElement('div') : null,
-        tippyOptions: {
-          duration: 100,
-        },
       })
     );
   }

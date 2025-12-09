@@ -113,7 +113,7 @@ export interface MermaidThemeVariables {
 export interface MermaidFlowchartConfig {
   useMaxWidth: boolean;
   htmlLabels: boolean;
-  curve: string;
+  curve: 'step' | 'linear' | 'basis' | 'bumpX' | 'bumpY' | 'cardinal' | 'catmullRom' | 'monotoneX' | 'monotoneY' | 'natural' | 'stepAfter' | 'stepBefore';
   padding: number;
   nodeSpacing: number;
   rankSpacing: number;
@@ -198,9 +198,9 @@ export interface MermaidClassConfig {
 
 export interface MermaidConfig {
   startOnLoad?: boolean;
-  theme: string;
+  theme?: 'default' | 'null' | 'dark' | 'base' | 'forest' | 'neutral';
   themeVariables: MermaidThemeVariables;
-  securityLevel: string;
+  securityLevel?: 'loose' | 'strict' | 'antiscript' | 'sandbox';
   fontFamily: string;
   fontSize: number;
   flowchart: MermaidFlowchartConfig;
@@ -428,7 +428,18 @@ export const defaultMermaidConfig: MermaidConfig = {
 export async function initializeMermaid(config: Partial<MermaidConfig> = {}): Promise<void> {
   try {
     const mermaid = await import('mermaid');
-    const finalConfig = { ...defaultMermaidConfig, ...config };
+    const allowedThemes: NonNullable<MermaidConfig['theme']>[] = ['default', 'null', 'dark', 'base', 'forest', 'neutral'];
+    const mergedTheme = (config.theme ?? defaultMermaidConfig.theme) as MermaidConfig['theme'];
+    const safeTheme: MermaidConfig['theme'] = mergedTheme && allowedThemes.includes(mergedTheme) ? mergedTheme : 'neutral';
+    const allowedSecurityLevels: NonNullable<MermaidConfig['securityLevel']>[] = ['loose', 'strict', 'antiscript', 'sandbox'];
+    const mergedSecurity = (config.securityLevel ?? defaultMermaidConfig.securityLevel) as MermaidConfig['securityLevel'];
+    const safeSecurity: MermaidConfig['securityLevel'] = mergedSecurity && allowedSecurityLevels.includes(mergedSecurity) ? mergedSecurity : 'loose';
+    const allowedCurves: MermaidFlowchartConfig['curve'][] = ['step', 'linear', 'basis', 'bumpX', 'bumpY', 'cardinal', 'catmullRom', 'monotoneX', 'monotoneY', 'natural', 'stepAfter', 'stepBefore'];
+    const mergedCurve = (config.flowchart?.curve ?? defaultMermaidConfig.flowchart.curve) as MermaidFlowchartConfig['curve'];
+    const safeCurve: MermaidFlowchartConfig['curve'] = mergedCurve && allowedCurves.includes(mergedCurve) ? mergedCurve : 'basis';
+    const finalFlowchart: MermaidFlowchartConfig = { ...defaultMermaidConfig.flowchart, ...config.flowchart, curve: safeCurve };
+
+    const finalConfig: MermaidConfig = { ...defaultMermaidConfig, ...config, theme: safeTheme, securityLevel: safeSecurity, flowchart: finalFlowchart };
     mermaid.default.initialize(finalConfig);
   } catch (error) {
     logger.error('Erreur lors de l\'initialisation de Mermaid:', error);
@@ -454,7 +465,21 @@ export async function updateMermaidConfig(updates: Partial<MermaidConfig>): Prom
     
     // Fusionner les mises à jour avec la configuration actuelle
     const currentConfig = getMermaidConfig();
-    const newConfig = { ...currentConfig, ...updates };
+    const allowedThemes: NonNullable<MermaidConfig['theme']>[] = ['default', 'null', 'dark', 'base', 'forest', 'neutral'];
+    const allowedSecurityLevels: NonNullable<MermaidConfig['securityLevel']>[] = ['loose', 'strict', 'antiscript', 'sandbox'];
+    const allowedCurves: MermaidFlowchartConfig['curve'][] = ['step', 'linear', 'basis', 'bumpX', 'bumpY', 'cardinal', 'catmullRom', 'monotoneX', 'monotoneY', 'natural', 'stepAfter', 'stepBefore'];
+
+    const mergedTheme = (updates.theme ?? currentConfig.theme) as MermaidConfig['theme'];
+    const safeTheme: MermaidConfig['theme'] = mergedTheme && allowedThemes.includes(mergedTheme) ? mergedTheme : 'neutral';
+
+    const mergedSecurity = (updates.securityLevel ?? currentConfig.securityLevel) as MermaidConfig['securityLevel'];
+    const safeSecurity: MermaidConfig['securityLevel'] = mergedSecurity && allowedSecurityLevels.includes(mergedSecurity) ? mergedSecurity : 'loose';
+
+    const mergedFlowchart: MermaidFlowchartConfig = { ...currentConfig.flowchart, ...updates.flowchart };
+    const safeCurve: MermaidFlowchartConfig['curve'] = mergedFlowchart.curve && allowedCurves.includes(mergedFlowchart.curve) ? mergedFlowchart.curve : 'basis';
+    const finalFlowchart: MermaidFlowchartConfig = { ...mergedFlowchart, curve: safeCurve };
+
+    const newConfig: MermaidConfig = { ...currentConfig, ...updates, theme: safeTheme, securityLevel: safeSecurity, flowchart: finalFlowchart };
     
     // Mettre à jour la configuration
     mermaid.initialize(newConfig);

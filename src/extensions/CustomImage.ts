@@ -1,5 +1,5 @@
 import Image from '@tiptap/extension-image';
-import type { NodeViewRendererProps } from '@tiptap/core';
+import type { NodeViewRendererProps, Editor } from '@tiptap/core';
 import { openImageModal } from '@/components/chat/ImageModal';
 
 const CustomImage = Image.extend({

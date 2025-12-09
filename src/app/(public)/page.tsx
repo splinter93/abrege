@@ -8,6 +8,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import AuthGuard from '@/components/AuthGuard';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
+import type { Classeur } from '@/services/llm/types/apiV2Types';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import { MessageSquare, Plus, Upload, Youtube, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Feather } from 'react-feather';
@@ -91,7 +92,7 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
         throw new Error('Erreur lors de la récupération des classeurs');
       }
 
-      const quicknotesClasseur = classeursResult.classeurs.find((c) => c.name === 'Quicknotes');
+      const quicknotesClasseur = classeursResult.classeurs.find((c: Classeur) => c.name === 'Quicknotes');
 
       if (!quicknotesClasseur) {
         throw new Error('Classeur Quicknotes non trouvé. Veuillez créer un classeur d\'abord.');

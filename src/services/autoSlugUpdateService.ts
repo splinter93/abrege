@@ -230,7 +230,7 @@ export class AutoSlugUpdateService {
         noteId,
         newTitle,
         userId,
-        supabase
+        supabase as unknown as SupabaseClient<unknown, { PostgrestVersion: string }, never, never, { PostgrestVersion: string }>
       );
       
       return {

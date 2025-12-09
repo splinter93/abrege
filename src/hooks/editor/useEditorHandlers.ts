@@ -281,7 +281,7 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     if (typeof cmd.action === 'function') {
       try {
         const result = cmd.action(editor);
-        executed = result !== false;
+        executed = typeof result === 'boolean' ? result : true;
         if (process.env.NODE_ENV === 'development') {
           console.log('[handleSlashCommandInsert] action executed:', cmd.id, 'result:', executed);
         }

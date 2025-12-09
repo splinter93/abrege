@@ -1,4 +1,4 @@
-const NOTE_EMBED_REGEX = /<note-embed\b([^>]*)>(.*?)<\/note-embed>/gis;
+const NOTE_EMBED_REGEX = /<note-embed\b([^>]*)>([\s\S]*?)<\/note-embed>/gi;
 
 function extractNoteRef(attrs: string): string | null {
   const match = attrs.match(/data-note-ref\s*=\s*"([^"]*)"/i) || attrs.match(/data-note-ref\s*=\s*'([^']*)'/i);

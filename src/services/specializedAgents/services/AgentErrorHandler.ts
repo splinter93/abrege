@@ -306,7 +306,7 @@ export class AgentErrorHandler {
       .sort(([, a], [, b]) => b - a)[0]?.[0] as AgentErrorCode | null;
 
     const recentErrors = errors
-      .sort((a, b) => (b.details?.timestamp || 0) - (a.details?.timestamp || 0))
+      .sort((a, b) => Number(b.details?.timestamp ?? 0) - Number(a.details?.timestamp ?? 0))
       .slice(0, 10);
 
     return {

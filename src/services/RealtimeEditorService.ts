@@ -351,8 +351,11 @@ export class RealtimeEditorService {
       });
     }
 
-    // Dispatcher vers le store Zustand
-    handleRealtimeEvent(event, this.config.debug);
+    // Dispatcher vers le store Zustand (payload normalisée)
+    const normalizedPayload = (event.payload && typeof event.payload === 'object')
+      ? event.payload as Record<string, unknown>
+      : {};
+    handleRealtimeEvent({ type: event.type, payload: normalizedPayload as Record<string, any>, timestamp: event.timestamp }, this.config.debug);
 
     // Notifier les callbacks
     this.onEventCallbacks.forEach(callback => {

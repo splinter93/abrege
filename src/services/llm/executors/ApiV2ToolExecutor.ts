@@ -221,24 +221,27 @@ export class ApiV2ToolExecutor {
       const validation = validateToolArgs(toolNameForValidation, cleaned);
       
       if (!validation.success) {
-        // Extraire les erreurs de validation de manière lisible
-        const errors = validation.error.errors.map(e => {
-          const path = e.path.length > 0 ? `${e.path.join('.')}` : 'racine';
-          return `${path}: ${e.message}`;
-        }).join(', ');
-        
-        logger.error(`[ApiV2ToolExecutor] ❌ Validation Zod échouée pour ${toolName}:`, {
-          errors: validation.error.errors,
-          args: cleaned
-        });
-        
-        throw new Error(`Arguments invalides pour ${toolName}: ${errors}`);
+        if ('error' in validation) {
+          // Extraire les erreurs de validation de manière lisible
+          const errors = validation.error.errors.map(e => {
+            const path = e.path.length > 0 ? `${e.path.join('.')}` : 'racine';
+            return `${path}: ${e.message}`;
+          }).join(', ');
+          
+          logger.error(`[ApiV2ToolExecutor] ❌ Validation Zod échouée pour ${toolName}:`, {
+            errors: validation.error.errors,
+            args: cleaned
+          });
+          
+          throw new Error(`Arguments invalides pour ${toolName}: ${errors}`);
+        }
+        throw new Error(`Arguments invalides pour ${toolName}: validation inconnue`);
       }
       
       logger.dev(`[ApiV2ToolExecutor] ✅ Arguments validés pour ${toolName}`);
       
       // 4. Retourner les données validées et typées
-      return validation.data;
+      return validation.data as Record<string, unknown>;
       
     } catch (error) {
       if (error instanceof SyntaxError) {

@@ -1,7 +1,9 @@
+import type { ChatMessage as CoreChatMessage } from '@/types/chat';
+
 export interface LLMProvider {
   name: string;
   id: string;
-  call(message: string, context: AppContext, history: ChatMessage[]): Promise<string>;
+  call(message: string, context: AppContext, history: ChatMessage[]): Promise<unknown>;
   isAvailable(): boolean;
 }
 
@@ -26,30 +28,16 @@ export interface AppContext {
     id: string;
     name: string;
   };
+  attachedNotes?: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    description?: string;
+    word_count?: number;
+  }>;
 }
 
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system' | 'tool';
-  content: string | null;
-  timestamp?: string;
-  isStreaming?: boolean; // Pour indiquer si le message est en cours de streaming
-  // Support pour les tool calls (format OpenAI/Groq)
-  tool_calls?: Array<{
-    id: string;
-    type: 'function';
-    function: {
-      name: string;
-      arguments: string;
-    };
-  }>;
-  tool_call_id?: string; // Pour les messages tool
-  name?: string; // Pour les messages tool (nom de la fonction appelée)
-  // Support pour les tool results (format Groq Responses API)
-  tool_results?: Array<{
-    tool_call_id: string;
-    output: string;
-  }>;
-}
+export type ChatMessage = CoreChatMessage;
 
 export interface LLMResponse {
   content: string;

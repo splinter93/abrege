@@ -1,6 +1,5 @@
 import { ChatSessionService } from './chatSessionService';
-import type { ChatSession } from '@/store/useChatStore';
-import type { ChatMessage } from '@/types/chat';
+import type { ChatMessage, ChatSession } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
 import { batchMessageService } from './batchMessageService';
 
@@ -61,14 +60,18 @@ export class SessionSyncService {
         throw new Error(response.error || 'Erreur récupération sessions');
       }
 
-      // Conversion simple (thread et history_limit supprimés)
-      const convertedSessions = response.data.map(session => ({
+      // Conversion avec valeurs par défaut pour les champs requis
+      const convertedSessions: ChatSession[] = response.data.map((session) => ({
         id: session.id,
-        name: session.name,
-        agent_id: session.agent_id || null,
-        is_empty: session.is_empty ?? true, // 🔥 Mapper is_empty (défaut true si absent)
-        created_at: session.created_at,
-        updated_at: session.updated_at
+        user_id: session.user_id ?? '',
+        name: session.name ?? '',
+        agent_id: session.agent_id ?? null,
+        is_active: session.is_active ?? true,
+        is_empty: session.is_empty ?? true,
+        metadata: session.metadata ?? {},
+        created_at: session.created_at ?? new Date().toISOString(),
+        updated_at: session.updated_at ?? new Date().toISOString(),
+        last_message_at: session.last_message_at ?? null,
       }));
       
       return {
@@ -105,11 +108,15 @@ export class SessionSyncService {
 
       const session: ChatSession = {
         id: response.data.id,
-        name: response.data.name,
+        user_id: response.data.user_id ?? '',
+        name: response.data.name ?? '',
         agent_id: response.data.agent_id || null,
+        is_active: response.data.is_active ?? true,
         is_empty: response.data.is_empty ?? true, // 🔥 Mapper is_empty
-        created_at: response.data.created_at,
-        updated_at: response.data.updated_at
+        metadata: response.data.metadata ?? {},
+        created_at: response.data.created_at ?? new Date().toISOString(),
+        updated_at: response.data.updated_at ?? new Date().toISOString(),
+        last_message_at: response.data.last_message_at ?? null,
       };
 
       return {

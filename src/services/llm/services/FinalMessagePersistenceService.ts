@@ -1,5 +1,5 @@
 import { simpleLogger as logger } from '@/utils/logger';
-import type { ChatMessage } from '@/types/chat';
+import type { ChatMessage, AssistantMessage } from '@/types/chat';
 import type { ToolCall, ToolResult } from '../types/agentTypes';
 
 /**
@@ -40,15 +40,16 @@ export class FinalMessagePersistenceService {
       logger.dev('[FinalMessagePersistence] ✅ Message utilisateur persisté');
 
       // 2. Persister la réponse de l'assistant
-      const assistantMessage: Omit<ChatMessage, 'id'> = {
+      const assistantMessage: AssistantMessage = {
         role: 'assistant',
-        content: assistantResponse.content,
+        content: assistantResponse.content || '',
         reasoning: assistantResponse.reasoning,
         tool_calls: assistantResponse.tool_calls,
         tool_results: assistantResponse.tool_results,
         timestamp: new Date().toISOString(),
+        name: 'assistant'
       };
-      await this.persistMessage(assistantMessage);
+      await this.persistMessage(assistantMessage as Omit<ChatMessage, 'id'>);
       logger.info(`[FinalMessagePersistence] ✅ Réponse assistant persistée (contenu: ${assistantMessage.content?.length || 0} chars)`);
 
     } catch (error) {

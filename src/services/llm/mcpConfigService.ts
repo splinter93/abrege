@@ -8,6 +8,7 @@
  */
 
 import { McpServerConfig, AgentMcpConfig, ExternalMcpServer, externalServerToMcpTool, createMcpTool } from '@/types/mcp';
+import type { Tool } from './types/strictTypes';
 import { simpleLogger as logger } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
 
@@ -135,11 +136,8 @@ export class McpConfigService {
   async buildHybridTools(
     agentId: string,
     userToken: string,
-    openApiTools: Array<{ type: 'function'; function: { name: string; description: string; parameters: Record<string, unknown> } }>
-  ): Promise<Array<
-    | { type: 'function'; function: { name: string; description: string; parameters: Record<string, unknown> } }
-    | McpServerConfig
-  >> {
+    openApiTools: Tool[]
+  ): Promise<Array<Tool | McpServerConfig>> {
     const mcpConfig = await this.getAgentMcpConfig(agentId);
     
     if (!mcpConfig || !mcpConfig.enabled || mcpConfig.servers.length === 0) {

@@ -79,7 +79,7 @@ export async function GET(
       // Requête 3: Notes (simplifié - uniquement classeur_id)
       supabase
         .from('articles')
-        .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id, slug')
+        .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id, slug, position')
         .eq('classeur_id', classeurId)
         .eq('user_id', userId)
         .is('trashed_at', null)
@@ -118,8 +118,13 @@ export async function GET(
 
     logApi.info(`✅ Classeur: ${classeur.name}, Dossiers: ${folders?.length || 0}, Notes: ${notes?.length || 0}`, context);
 
+    const safeNotes: NoteData[] = (notes || []).map(note => ({
+      ...note,
+      position: (note as { position?: number }).position ?? 0
+    }));
+
     // Construire l'arborescence
-    const tree = buildTree(folders || [], notes || []);
+    const tree = buildTree(folders || [], safeNotes);
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Arborescence classeur v2 récupérée en ${apiTime}ms`, context);
@@ -186,16 +191,16 @@ function buildTree(folders: FolderData[], notes: NoteData[]) {
   // Organiser les dossiers en arbre
   folders.forEach(folder => {
     if (folder.parent_id && folderMap.has(folder.parent_id)) {
-      folderMap.get(folder.parent_id).children.push(folderMap.get(folder.id));
+      folderMap.get(folder.parent_id)!.children.push(folderMap.get(folder.id)!);
     } else {
-      rootFolders.push(folderMap.get(folder.id));
+      rootFolders.push(folderMap.get(folder.id)!);
     }
   });
 
   // Organiser les notes
   notes.forEach(note => {
     if (note.folder_id && folderMap.has(note.folder_id)) {
-      folderMap.get(note.folder_id).notes.push(note);
+      folderMap.get(note.folder_id)!.notes.push(note);
     } else {
       rootNotes.push(note);
     }

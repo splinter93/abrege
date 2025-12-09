@@ -86,7 +86,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
 
     const normalizeMarkdown = (value: string): string => value.replace(/\r\n/g, '\n').trim();
 
-    const initialMarkdown = editorRef.current.storage.markdown?.getMarkdown?.() || '';
+    const initialMarkdown = (editorRef.current?.storage as any)?.markdown?.getMarkdown?.() || '';
     const initialHash = hashString(normalizeMarkdown(initialMarkdown));
     if (lastSavedHashRef.current === null) {
       lastSavedHashRef.current = initialHash;
@@ -96,7 +96,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       if (!editorRef.current) return;
 
       try {
-        const markdown = editorRef.current.storage.markdown?.getMarkdown?.() || '';
+        const markdown = (editorRef.current?.storage as any)?.markdown?.getMarkdown?.() || '';
         const normalizedMarkdown = normalizeMarkdown(markdown);
         
         if (!normalizedMarkdown) {
@@ -209,7 +209,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       return;
     }
 
-    const hasText = (editor.storage?.markdown?.getMarkdown?.() || '').replace(/\s+/g, '').length > 0;
+    const hasText = ((editor.storage as any)?.markdown?.getMarkdown?.() || '').replace(/\s+/g, '').length > 0;
     if (hasText) {
       return;
     }

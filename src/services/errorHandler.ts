@@ -40,13 +40,14 @@ export class ErrorHandler {
    * Logger les erreurs de manière structurée
    */
   private logError(error: unknown, context: ErrorContext): void {
+    const safeError = error as { message?: string; stack?: string; status?: number; statusText?: string };
     const errorInfo = {
       timestamp: new Date().toISOString(),
       error: {
-        message: error.message || 'Erreur inconnue',
-        stack: error.stack,
-        status: error.status,
-        statusText: error.statusText,
+        message: safeError?.message || 'Erreur inconnue',
+        stack: safeError?.stack,
+        status: safeError?.status,
+        statusText: safeError?.statusText,
       },
       context,
       environment: process.env.NODE_ENV,
@@ -58,7 +59,7 @@ export class ErrorHandler {
       console.groupEnd();
     } else {
       // En production, on pourrait envoyer à un service de monitoring
-      logger.error(`[ERROR] ${context.operation}:`, error.message);
+      logger.error(`[ERROR] ${context.operation}:`, safeError?.message || 'Erreur inconnue');
     }
   }
 
@@ -66,6 +67,7 @@ export class ErrorHandler {
    * Afficher une notification utilisateur appropriée
    */
   private showUserNotification(error: unknown, context: ErrorContext): void {
+    const safeError = error as { status?: number };
     let message = 'Une erreur est survenue';
 
     // Messages personnalisés selon le type d'opération
@@ -102,11 +104,11 @@ export class ErrorHandler {
     }
 
     // Ajouter des détails selon le code d'erreur
-    if (error.status === 404) {
+    if (safeError?.status === 404) {
       message += ' - Élément non trouvé';
-    } else if (error.status === 403) {
+    } else if (safeError?.status === 403) {
       message += ' - Accès refusé';
-    } else if (error.status === 500) {
+    } else if (safeError?.status === 500) {
       message += ' - Erreur serveur';
     }
 

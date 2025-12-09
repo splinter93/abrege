@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { FiShare2, FiCopy, FiLink, FiLock, FiGlobe, FiX, FiCheck } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
-import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
+import type { ShareSettings, ShareSettingsUpdate, VisibilityLevel } from '@/types/sharing';
 import './ShareMenu.css';
 
 interface ShareMenuProps {
@@ -12,6 +12,9 @@ interface ShareMenuProps {
   onSettingsChange: (settings: ShareSettingsUpdate) => Promise<void>;
   isOpen: boolean;
   onClose: () => void;
+  url?: string;
+  title?: string;
+  description?: string;
 }
 
 const ShareMenu: React.FC<ShareMenuProps> = ({
@@ -33,7 +36,7 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
     }
   }, [currentSettings?.visibility]);
 
-  const visibilityOptions = [
+  const visibilityOptions: { value: VisibilityLevel; label: string; description: string; icon: string }[] = [
     {
       value: 'private',
       label: 'Privé',
@@ -54,7 +57,7 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
     }
   ];
 
-  const handleVisibilityChange = (newVisibility: string) => {
+  const handleVisibilityChange = (newVisibility: VisibilityLevel) => {
     setVisibility(newVisibility);
   };
 

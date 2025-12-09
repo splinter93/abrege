@@ -12,10 +12,9 @@
 
 import { tokenManager } from '@/utils/tokenManager';
 import { chatContextBuilder, type Note } from './ChatContextBuilder';
-import type { ChatSession } from '@/store/useChatStore';
-import type { Agent, ChatMessage } from '@/types/chat';
+import type { Agent, ChatMessage, ChatSession } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
-import type { LLMContext } from '@/hooks/useLLMContext';
+import type { LLMContext } from '@/types/llmContext';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
@@ -200,7 +199,7 @@ export class ChatMessageSendingService {
     images?: ImageAttachment[]
   ): boolean {
     // Vérifier images
-    const hasImages = images && images.length > 0;
+    const hasImages = !!(images && images.length > 0);
 
     // Vérifier texte
     let hasTextContent = false;

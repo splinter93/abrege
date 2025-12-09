@@ -7,7 +7,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { simpleLogger as logger } from '@/utils/logger';
-import type { Tool } from './types/strictTypes';
+import type { Tool, FunctionTool } from './types/strictTypes';
+import { isFunctionTool } from './types/strictTypes';
+import type { OpenApiEndpoint } from './executors/OpenApiToolExecutor';
 
 /**
  * Lazy-load du client Supabase pour éviter les erreurs d'init
@@ -272,7 +274,7 @@ export class OpenAPISchemaService {
           const enrichedDescription = description || summary || `${method.toUpperCase()} ${pathName}`;
 
           // Créer le tool
-          const tool: Tool = {
+          const tool: FunctionTool = {
             type: 'function',
             function: {
               name: toolName,
@@ -289,7 +291,15 @@ export class OpenAPISchemaService {
 
       // ✅ Tri alphabétique des tools (groupement naturel par namespace)
       // Recommandation ChatGPT : déterministe, évite les biais de position
-      tools.sort((a, b) => a.function.name.localeCompare(b.function.name));
+      const getToolName = (tool: Tool) => {
+        if (isFunctionTool(tool)) return tool.function.name;
+        if ('name' in tool && typeof tool.name === 'string') return tool.name;
+        if ('server_label' in tool && typeof (tool as { server_label?: string }).server_label === 'string') {
+          return (tool as { server_label?: string }).server_label || '';
+        }
+        return '';
+      };
+      tools.sort((a, b) => getToolName(a).localeCompare(getToolName(b)));
 
       logger.dev(`[OpenAPISchemaService] ✅ Total: ${tools.length} tools générés${namespace ? ` (namespace: ${namespace})` : ''}`);
 
@@ -312,10 +322,20 @@ export class OpenAPISchemaService {
     openApiContent: Record<string, unknown>
   ): {
     type: 'object';
-    properties: Record<string, unknown>;
+    properties: Record<string, {
+      type: string;
+      description?: string;
+      enum?: string[];
+      [key: string]: unknown;
+    }>;
     required?: string[];
   } {
-    const properties: Record<string, unknown> = {};
+    const properties: Record<string, {
+      type: string;
+      description?: string;
+      enum?: string[];
+      [key: string]: unknown;
+    }> = {};
     const required: string[] = [];
 
     // 1. Paramètres de path (ex: /note/{ref})
@@ -339,18 +359,12 @@ export class OpenAPISchemaService {
 
         if (name && paramSchema) {
           // ✅ Enrichir la description des path params (déjà ajoutés à l'étape 1)
-          if (paramIn === 'path' && properties[name]) {
-            properties[name] = this.cleanSchemaForXAI({
-              ...paramSchema,
-              description: param.description as string | undefined || `Paramètre de path: ${name}`
-            });
-          } else {
-            // Query params ou autres
-            properties[name] = this.cleanSchemaForXAI({
-              ...paramSchema,
-              description: param.description as string | undefined
-            });
-          }
+          const cleanedParam = this.cleanSchemaForXAI({
+            ...paramSchema,
+            description: param.description as string | undefined || (paramIn === 'path' ? `Paramètre de path: ${name}` : undefined)
+          }) as { type: string; description?: string; enum?: string[]; [key: string]: unknown };
+
+          properties[name] = cleanedParam;
 
           if (isRequired) {
             required.push(name);
@@ -376,7 +390,7 @@ export class OpenAPISchemaService {
           // ✅ Nettoyer chaque property
           for (const [key, value] of Object.entries(bodyProperties)) {
             const resolvedProperty = this.resolveSchemaRef(value as Record<string, unknown>, openApiContent);
-            properties[key] = this.cleanSchemaForXAI(resolvedProperty);
+            properties[key] = this.cleanSchemaForXAI(resolvedProperty) as { type: string; description?: string; enum?: string[]; [key: string]: unknown };
           }
         }
 
@@ -493,8 +507,9 @@ export class OpenAPISchemaService {
     apiKey?: string, 
     headerName?: string,
     baseUrl?: string
-  ): Map<string, { method: string; path: string; apiKey?: string; headerName?: string; baseUrl: string; queryParams?: string[] }> {
-    const endpoints = new Map<string, { method: string; path: string; apiKey?: string; headerName?: string; baseUrl: string; queryParams?: string[] }>();
+  ): Map<string, OpenApiEndpoint> {
+    const endpoints = new Map<string, OpenApiEndpoint>();
+    const allowedMethods: OpenApiEndpoint['method'][] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
     
     try {
       const paths = content.paths as Record<string, Record<string, unknown>> | undefined;
@@ -527,6 +542,10 @@ export class OpenAPISchemaService {
           const operationId = op.operationId as string | undefined;
 
           if (operationId && typeof operationId === 'string') {
+            const methodUpper = method.toUpperCase() as OpenApiEndpoint['method'];
+            if (!allowedMethods.includes(methodUpper)) {
+              continue;
+            }
             // ✅ NOUVEAU: Extraire les query parameters
             const queryParams: string[] = [];
             const parameters = op.parameters as Array<Record<string, unknown>> | undefined;
@@ -544,7 +563,7 @@ export class OpenAPISchemaService {
             }
 
             endpoints.set(operationId, {
-              method: method.toUpperCase(),
+              method: methodUpper,
               path: pathName,
               apiKey,
               headerName,
@@ -585,7 +604,7 @@ export class OpenAPISchemaService {
     schemaIds: string[]
   ): Promise<{
     tools: Tool[];
-    endpoints: Map<string, { method: string; path: string; apiKey?: string; headerName?: string; baseUrl: string }>;
+    endpoints: Map<string, OpenApiEndpoint>;
   }> {
     try {
       if (schemaIds.length === 0) {
@@ -608,7 +627,7 @@ export class OpenAPISchemaService {
       }
 
       const allTools: Tool[] = [];
-      const allEndpoints = new Map<string, { method: string; path: string; apiKey?: string; headerName?: string; baseUrl: string }>();
+      const allEndpoints = new Map<string, OpenApiEndpoint>();
 
       // Parser chaque schéma
       for (const schema of schemas) {

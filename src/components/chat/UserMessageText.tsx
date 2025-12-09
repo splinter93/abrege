@@ -66,7 +66,7 @@ const UserMessageText: React.FC<UserMessageTextProps> = ({
           index,
           length: searchPattern.length,
           content: searchPattern,
-          title: mention.title || mention.name
+          title: (mention as { title?: string; name?: string }).title || (mention as { name?: string }).name || ''
         });
         index = content.indexOf(searchPattern, index + 1);
       }

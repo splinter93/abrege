@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { supabase } from '@/supabaseClient';
 import { secureS3Service, generateRequestId, ALLOWED_FILE_TYPES } from '@/services/secureS3Service';
+import type { SecureUploadResult } from '@/services/secureS3Service';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
@@ -129,7 +130,8 @@ async function logFileEvent(params: {
     });
   } catch (error) {
     // Log l'erreur mais ne pas faire échouer l'upload
-    logApi.info(`⚠️ Erreur audit trail: ${error.message}`, {
+    const err = error as { message?: string };
+    logApi.info(`⚠️ Erreur audit trail: ${err.message ?? 'unknown error'}`, {
       fileId: params.fileId,
       userId: params.userId,
       eventType: params.eventType,
@@ -145,7 +147,8 @@ async function updateStorageUsage(userId: string): Promise<void> {
   try {
     await supabase.rpc('update_user_storage_usage', { user_uuid: userId });
   } catch (error) {
-    logApi.info(`⚠️ Erreur mise à jour usage: ${error.message}`, { userId });
+    const err = error as { message?: string };
+    logApi.info(`⚠️ Erreur mise à jour usage: ${err.message ?? 'unknown error'}`, { userId });
   }
 }
 
@@ -183,12 +186,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const body = await request.json();
       uploadData = uploadSchema.parse(body);
     } catch (error) {
-      logApi.info(`❌ Validation des données échouée: ${error.message}`, { 
+    const err = error as { message?: string };
+    logApi.info(`❌ Validation des données échouée: ${err.message}`, { 
         requestId, 
         userId 
       });
       return NextResponse.json(
-        { error: `Données invalides: ${error.message}` }, 
+      { error: `Données invalides: ${err.message ?? 'unknown error'}` }, 
         { status: 400 }
       );
     }
@@ -211,8 +215,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 4. TRAITEMENT SELON LE TYPE
     // ========================================
     
-    let fileRecord: FileRecord;
-    let s3Result: { url: string; key: string } | null = null;
+    let fileRecord: FileRecord | null = null;
+    let s3Result: SecureUploadResult | null = null;
 
     if (isFileUpload) {
       // ========================================
@@ -420,6 +424,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // 5. AUDIT TRAIL
     // ========================================
     
+    if (!fileRecord) {
+      throw new Error('File record not created');
+    }
+
     await logFileEvent({
       fileId: fileRecord.id,
       userId,
@@ -486,13 +494,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const err = error as { message?: string; code?: string };
     
     const apiTime = Date.now() - startTime;
-    const errorMessage = error.message || 'Erreur inconnue';
+    const errorMessage = err.message || 'Erreur inconnue';
     
     logApi.info(`❌ Erreur upload: ${errorMessage}`, { 
       requestId, 
       duration: apiTime,
       error: errorMessage,
-      stack: error.stack
+      stack: (err as { stack?: string }).stack
     });
 
     return NextResponse.json(

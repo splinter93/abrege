@@ -1,4 +1,4 @@
-import { ChatMessage } from '@/types/chat';
+import { ChatMessage, type AssistantMessage } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
 
 export interface BatchMessageRequest {
@@ -73,13 +73,14 @@ export class BatchMessageService {
         }
         
         if (msg.role === 'tool') {
-          if (!msg.tool_call_id) {
-            logger.warn(`[BatchMessageService] ⚠️ Message tool ${i} sans tool_call_id:`, msg);
-          }
-          if (!msg.name) {
-            logger.warn(`[BatchMessageService] ⚠️ Message tool ${i} sans name:`, msg);
-          }
+        const toolMsg = msg as Extract<ChatMessage, { role: 'tool' }>;
+        if (!toolMsg.tool_call_id) {
+          logger.warn(`[BatchMessageService] ⚠️ Message tool ${i} sans tool_call_id:`, msg);
         }
+        if (!toolMsg.name) {
+          logger.warn(`[BatchMessageService] ⚠️ Message tool ${i} sans name:`, msg);
+        }
+      }
       }
 
       // Récupérer le token d'authentification
@@ -148,7 +149,8 @@ export class BatchMessageService {
       const requestBody = {
         messages: sanitizedMessages,
         operation_id: operationId,
-        relance_index: relanceIndex
+        relance_index: relanceIndex,
+        batch_id: request.batchId
       };
       
       const startTime = Date.now();
@@ -157,7 +159,7 @@ export class BatchMessageService {
         method: 'POST',
         sessionId: request.sessionId,
         messageCount: request.messages.length,
-        batchId: requestBody.batchId,
+        batchId: request.batchId,
         requestBody: JSON.stringify(requestBody, null, 2),
         startTime: new Date(startTime).toISOString()
       });
@@ -288,7 +290,7 @@ export class BatchMessageService {
       return {
         success: false,
         error: userErrorMessage,
-        details: error instanceof Error ? [error.stack] : []
+        details: error instanceof Error && error.stack ? [error.stack] : []
       };
     }
   }
@@ -299,14 +301,14 @@ export class BatchMessageService {
    */
   async addToolCallSequence(
     sessionId: string,
-    assistantMessage: Omit<ChatMessage, 'id'>,
+    assistantMessage: Omit<AssistantMessage, 'id'>,
     toolResults: Array<{
       tool_call_id: string;
       name: string;
       content: string;
       success: boolean;
     }>,
-    finalAssistantMessage?: Omit<ChatMessage, 'id'>
+    finalAssistantMessage?: Omit<AssistantMessage, 'id'>
   ): Promise<BatchMessageResponse> {
     try {
       logger.dev('[BatchMessageService] 🔧 Ajout séquence tool call:', {
@@ -331,7 +333,7 @@ export class BatchMessageService {
           name: toolResult.name,
           content: toolResult.content,
           timestamp: new Date().toISOString()
-        });
+        } as Omit<Extract<ChatMessage, { role: 'tool' }>, 'id'>);
       }
 
       // 3. Message assistant final (si relance)
@@ -445,7 +447,9 @@ export class BatchMessageService {
       [key: string]: unknown;
     } = { 
       ...rest,
-      timestamp: rest.timestamp || new Date().toISOString()
+      timestamp: typeof rest.timestamp === 'string'
+        ? rest.timestamp
+        : new Date(typeof rest.timestamp === 'number' ? rest.timestamp : Date.now()).toISOString()
     };
 
     // Ne jamais persister de messages en canal 'analysis' pour user/assistant

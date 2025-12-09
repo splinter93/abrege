@@ -19,7 +19,8 @@ export const updateChildFoldersInStore = (parentFolderId: string, targetClasseur
     
     childFolders.forEach(childFolder => {
       // Mettre à jour le classeur_id du dossier enfant
-      store.moveFolder(childFolder.id, childFolder.parent_id, targetClasseurId);
+      const parentId = childFolder.parent_id ?? null;
+      store.moveFolder(childFolder.id, parentId, targetClasseurId);
       
       // Récursivement mettre à jour les dossiers enfants de ce dossier
       updateRecursive(childFolder.id);

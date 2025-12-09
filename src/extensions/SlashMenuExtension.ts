@@ -29,7 +29,7 @@ const SlashMenuExtension = Extension.create({
     return {
       suggestion: {
         char: '/',
-        command: ({ editor, range, props }) => {
+        command: ({ editor, range, props }: CommandProps) => {
           // Remplacer le texte de la suggestion par le bloc choisi
           editor
             .chain()
@@ -38,7 +38,7 @@ const SlashMenuExtension = Extension.create({
             .insertContent(props.content)
             .run();
         },
-        items: ({ query }) => {
+        items: ({ query }: { query: string }) => {
           // Filtrer les commandes basé sur la query
           return slashCommands.filter(item => 
             item.label.toLowerCase().includes(query.toLowerCase()) ||
@@ -49,7 +49,7 @@ const SlashMenuExtension = Extension.create({
         },
         render: () => {
           let component: ReactRenderer;
-          let popup: TippyInstance[] | undefined;
+          let popup: TippyInstance | undefined;
 
           return {
             onStart: (props: SuggestionProps) => {
@@ -67,8 +67,8 @@ const SlashMenuExtension = Extension.create({
                 return;
               }
 
-              popup = tippy('body', {
-                getReferenceClientRect: props.clientRect,
+              popup = tippy(document.body, {
+                getReferenceClientRect: () => props.clientRect?.() || new DOMRect(0, 0, 0, 0),
                 appendTo: () => document.body,
                 content: component.element,
                 showOnCreate: true,
@@ -93,22 +93,23 @@ const SlashMenuExtension = Extension.create({
                 return;
               }
 
-              popup?.[0]?.setProps({
-                getReferenceClientRect: props.clientRect,
+              popup?.setProps({
+                getReferenceClientRect: () => props.clientRect?.() || new DOMRect(0, 0, 0, 0),
               });
             },
 
             onKeyDown(props: { event: KeyboardEvent }) {
               if (props.event.key === 'Escape') {
-                popup?.[0]?.hide();
+                popup?.hide();
                 return true;
               }
 
-              return component.ref?.onKeyDown?.(props);
+              const handler = (component as any)?.ref?.onKeyDown;
+              return handler ? handler(props) : false;
             },
 
             onExit() {
-              popup?.[0]?.destroy();
+              popup?.destroy();
               component.destroy();
             },
           };

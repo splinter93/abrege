@@ -20,6 +20,11 @@ export interface SpecializedAgentConfig extends Agent {
   version?: string;
   openapi_schema_id?: string | null; // Référence vers un schéma OpenAPI réutilisable
   voice?: string;
+  is_default?: boolean;
+  context_template?: string;
+  api_config?: Record<string, unknown> | null;
+  is_favorite?: boolean;
+  category?: string;
 }
 
 /**

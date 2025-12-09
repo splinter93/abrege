@@ -81,7 +81,7 @@ const SearchFiles: React.FC<SearchFilesProps> = ({
 
   const handleSortChange = useCallback((field: FileSortOptions['field']) => {
     const newOrder = sortOptions.field === field && sortOptions.order === 'desc' ? 'asc' : 'desc';
-    const newSort = { field, order: newOrder };
+    const newSort: FileSortOptions = { field, order: newOrder as 'asc' | 'desc' };
     setSortOptions(newSort);
     onSortChange?.(newSort);
   }, [sortOptions, onSortChange]);

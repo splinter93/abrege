@@ -2,8 +2,11 @@
 import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import './CreateSummaryForm.css';
 import { sendPayloadToSynesia } from '../actions/synesia';
-import { getClasseurs } from '../services/supabase';
 import { toast } from 'react-hot-toast';
+
+async function getClasseurs(): Promise<Array<{ id: string; name: string }>> {
+  return [];
+}
 
 interface Classeur {
   id: string;

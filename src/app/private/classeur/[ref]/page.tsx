@@ -40,31 +40,35 @@ function ClasseurDeepLinkPageContent() {
 
   const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(undefined);
 
-  const classeurName = payload?.classeur?.name || 'Classeur';
-  const classeurEmoji = payload?.classeur?.emoji || '📁';
+  const classeurName = (payload as { classeur?: { name?: string } })?.classeur?.name || 'Classeur';
+  const classeurEmoji = (payload as { classeur?: { emoji?: string } })?.classeur?.emoji || '📁';
 
   const foldersFlat = useMemo<Folder[]>(() => {
     const result: Folder[] = [];
     function walk(nodes: unknown[]) {
       for (const n of nodes) {
+        const node = n as { id: string; name: string; parent_id?: string; created_at?: string; updated_at?: string; position?: number; children?: unknown[] };
+        const classeurInfo = (payload as { classeur?: { id?: string; user_id?: string } })?.classeur;
         result.push({ 
-          id: n.id, 
-          name: n.name, 
-          parent_id: n.parent_id ?? null, 
-          classeur_id: payload?.classeur?.id || '',
-          user_id: payload?.classeur?.user_id || '',
-          created_at: n.created_at || new Date().toISOString(),
-          updated_at: n.updated_at || new Date().toISOString(),
-          position: n.position || 0
+          id: node.id, 
+          name: node.name, 
+          parent_id: node.parent_id ?? null, 
+          classeur_id: classeurInfo?.id || '',
+          user_id: classeurInfo?.user_id || '',
+          created_at: node.created_at || new Date().toISOString(),
+          updated_at: node.updated_at || new Date().toISOString(),
+          position: node.position || 0
         });
-        if (Array.isArray(n.children) && n.children.length > 0) walk(n.children);
+        if (Array.isArray(node.children) && node.children.length > 0) walk(node.children);
       }
     }
-    if (Array.isArray(payload?.tree)) walk(payload.tree);
+    const tree = (payload as { tree?: unknown[] })?.tree;
+    if (Array.isArray(tree)) walk(tree);
     return result;
   }, [payload]);
 
   const filesAtRoot = useMemo(() => {
+    const classeurInfo = (payload as { classeur?: { id?: string; user_id?: string } })?.classeur;
     return Array.isArray(payload?.notes_at_root) ? payload.notes_at_root.map((n: unknown) => {
       const note = n as { 
         id: string; 
@@ -79,8 +83,8 @@ function ClasseurDeepLinkPageContent() {
         id: note.id,
         source_title: note.title || note.source_title || '',
         folder_id: null,
-        classeur_id: payload?.classeur?.id || '',
-        user_id: payload?.classeur?.user_id || '',
+        classeur_id: classeurInfo?.id || '',
+        user_id: classeurInfo?.user_id || '',
         created_at: note.created_at || new Date().toISOString(),
         updated_at: note.updated_at || new Date().toISOString(),
         position: note.position || 0
@@ -95,7 +99,9 @@ function ClasseurDeepLinkPageContent() {
     const dlEnabled = process.env.NEXT_PUBLIC_DEEPLINKS === '1';
     setCurrentFolderId(folder.id);
     if (dlEnabled) {
-      const classeurRef = payload?.classeur?.slug || payload?.classeur?.id;
+      const classeurRef =
+        (payload as { classeur?: { slug?: string; id?: string } })?.classeur?.slug ||
+        (payload as { classeur?: { id?: string } })?.classeur?.id;
       router.prefetch(`/private/classeur/${classeurRef}/dossier/${folder.id}`);
       router.push(`/private/classeur/${classeurRef}/dossier/${folder.id}`);
     }
@@ -105,7 +111,9 @@ function ClasseurDeepLinkPageContent() {
     setCurrentFolderId(undefined);
     const dlEnabled = process.env.NEXT_PUBLIC_DEEPLINKS === '1';
     if (dlEnabled) {
-      const classeurRef = payload?.classeur?.slug || payload?.classeur?.id;
+      const classeurRef =
+        (payload as { classeur?: { slug?: string; id?: string } })?.classeur?.slug ||
+        (payload as { classeur?: { id?: string } })?.classeur?.id;
       router.prefetch(`/private/classeur/${classeurRef}`);
       router.push(`/private/classeur/${classeurRef}`);
     }
@@ -113,13 +121,13 @@ function ClasseurDeepLinkPageContent() {
 
   if (isLoading) return <div style={{ padding: 24 }}>Chargement du classeur…</div>;
   if (error) return <div style={{ padding: 24, color: 'salmon' }}>Erreur: {error instanceof Error ? error.message : String(error)}</div>;
-  if (!payload?.success) return <div style={{ padding: 24 }}>Données indisponibles.</div>;
+  if (!payload) return <div style={{ padding: 24 }}>Données indisponibles.</div>;
 
   return (
     <main style={{ padding: 12 }}>
       <div style={{ padding: 12 }}>
         <FolderManager
-          classeurId={payload.classeur.id}
+          classeurId={(payload as { classeur?: { id?: string } })?.classeur?.id ?? ''}
           classeurName={classeurName}
           classeurIcon={classeurEmoji}
           parentFolderId={currentFolderId}

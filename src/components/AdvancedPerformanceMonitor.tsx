@@ -115,7 +115,10 @@ export const AdvancedPerformanceMonitor: React.FC = () => {
                 <span>{healthStatus.healthy ? 'Service en bonne santé' : 'Problème détecté'}</span>
               </div>
               <div className="text-gray-400 text-xs">
-                Dernière vérification: {new Date(healthStatus.details.timestamp).toLocaleTimeString()}
+                {(() => {
+                  const ts = (healthStatus.details as { timestamp?: string | number })?.timestamp;
+                  return `Dernière vérification: ${new Date(ts ?? 0).toLocaleTimeString()}`;
+                })()}
               </div>
             </div>
           ) : (

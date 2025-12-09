@@ -8,7 +8,7 @@ import { OpenAPISchema, OpenAPIProperty } from '@/types/specializedAgents';
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
-  warnings: string[];
+  warnings?: string[];
 }
 
 export interface SchemaValidationError {
@@ -119,7 +119,9 @@ export class SchemaValidator {
           if (!propValidation.valid) {
             errors.push(...propValidation.errors);
           }
+        if (propValidation.warnings?.length) {
           warnings.push(...propValidation.warnings);
+        }
         }
       }
     }
@@ -281,7 +283,9 @@ export class SchemaValidator {
         if (!itemValidation.valid) {
           errors.push(...itemValidation.errors);
         }
-        warnings.push(...itemValidation.warnings);
+        if (itemValidation.warnings?.length) {
+          warnings.push(...itemValidation.warnings);
+        }
       });
     }
   }
@@ -304,7 +308,9 @@ export class SchemaValidator {
           if (!propValidation.valid) {
             errors.push(...propValidation.errors);
           }
-          warnings.push(...propValidation.warnings);
+          if (propValidation.warnings?.length) {
+            warnings.push(...propValidation.warnings);
+          }
         }
       }
     }

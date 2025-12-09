@@ -17,6 +17,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
@@ -148,10 +149,23 @@ export async function POST(
     }
 
     // 🛡️ Sanitizer le contenu de chaque opération AVANT de les appliquer
-    const sanitizedOps = ops.map(op => ({
-      ...op,
-      content: op.content ? sanitizeMarkdownContent(op.content) : op.content
-    }));
+    const sanitizedOps = ops.map(op => {
+      const heading = op.target.heading
+        ? {
+            ...op.target.heading,
+            path: op.target.heading.path ?? []
+          }
+        : undefined;
+
+      return {
+        ...op,
+        target: {
+          ...op.target,
+          heading
+        },
+        content: op.content ? sanitizeMarkdownContent(op.content) : op.content
+      };
+    });
     
     // 🔧 Appliquer les opérations de contenu (avec contenu sanitizé)
     const applier = new ContentApplier(currentNote.markdown_content);
@@ -185,7 +199,7 @@ export async function POST(
 
     // 📊 Mettre à jour les insights si nécessaire
     try {
-      await updateArticleInsight(noteId, result.content);
+      await updateArticleInsight(noteId);
     } catch (insightError) {
       logApi.warn('⚠️ Erreur lors de la mise à jour des insights', insightError);
     }
@@ -194,8 +208,10 @@ export async function POST(
     logApi.info(`✅ Contenu appliqué avec succès en ${apiTime}ms`, context);
 
     // 📤 Construire la réponse
-    const response: { data: { content?: string; diff?: string; operations_applied: number; dry_run: boolean } } = {
+    const response = {
       data: {
+        diff: undefined as string | undefined,
+        content: undefined as string | undefined,
         note_id: noteId,
         ops_results: result.results,
         etag: calculateETag(result.content)
@@ -281,7 +297,7 @@ export async function POST(
  * Valide l'ETag ou la version de la note
  */
 async function validateETag(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   noteId: string,
   ifMatch?: string | null,
   xNoteVersion?: string | null

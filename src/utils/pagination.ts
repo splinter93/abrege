@@ -68,7 +68,10 @@ export function createPaginatedResponse<T>(
 /**
  * Helper pour les requêtes Supabase avec pagination
  */
-export function addPaginationToQuery(query: { range: (from: number, to: number) => unknown }, params: PaginationParams) {
+export function addPaginationToQuery<T extends { range: (from: number, to: number) => T; order: (column: string, options?: { ascending?: boolean }) => T }>(
+  query: T,
+  params: PaginationParams
+): T {
   return query
     .range(params.offset, params.offset + params.limit - 1)
     .order('created_at', { ascending: false });
@@ -77,8 +80,17 @@ export function addPaginationToQuery(query: { range: (from: number, to: number) 
 /**
  * Compter le total d'éléments pour la pagination
  */
-export async function countTotal(supabase: { from: (table: string) => { select: (columns: string, options: { count: string; head: boolean }) => { eq: (column: string, value: unknown) => Promise<{ count: number | null; error: unknown }> } } }, table: string, filters: Record<string, unknown> = {}) {
-  let query = supabase
+type CountBuilder = {
+  eq: (column: string, value: unknown) => CountBuilder;
+  then?: unknown;
+};
+
+export async function countTotal(
+  supabase: { from: (table: string) => { select: (columns: string, options: { count: string; head: boolean }) => CountBuilder } },
+  table: string,
+  filters: Record<string, unknown> = {}
+) {
+  let query: CountBuilder = supabase
     .from(table)
     .select('*', { count: 'exact', head: true });
 
@@ -89,7 +101,7 @@ export async function countTotal(supabase: { from: (table: string) => { select: 
     }
   });
 
-  const { count, error } = await query;
+  const { count, error } = await (query as unknown as Promise<{ count: number | null; error: any }>);
   
   if (error) {
     throw new Error(`Erreur lors du comptage: ${error.message}`);

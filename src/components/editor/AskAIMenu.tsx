@@ -112,6 +112,7 @@ const AskAIMenu: React.FC<AskAIMenuProps> = ({
           
           // Messages d'erreur selon le statut
           const tooltipMessage = {
+            ok: '',
             'no-agent': 'Aucun agent assigné',
             'agent-deleted': 'Agent supprimé - Réassignez un agent',
             'agent-inactive': 'Agent inactif'

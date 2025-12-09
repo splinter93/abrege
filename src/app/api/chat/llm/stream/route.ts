@@ -5,16 +5,11 @@ import { createClient } from '@supabase/supabase-js';
 import { XAIProvider } from '@/services/llm/providers/implementations/xai';
 import { GroqProvider } from '@/services/llm/providers/implementations/groq';
 import type { ChatMessage } from '@/types/chat';
-import type { Tool } from '@/services/llm/types/strictTypes';
-
-// ✅ Type guard pour différencier MCP vs OpenAPI tools
-interface McpTool extends Tool {
-  server_label: string;
-}
-
-function isMcpTool(tool: Tool): tool is McpTool {
-  return 'server_label' in tool && typeof (tool as McpTool).server_label === 'string';
-}
+import { hasToolCalls } from '@/types/chat';
+import type { OpenApiEndpoint } from '@/services/llm/executors/OpenApiToolExecutor';
+import type { Tool, McpTool } from '@/services/llm/types/strictTypes';
+import type { ToolCall } from '@/services/llm/types/strictTypes';
+import { isMcpTool, isFunctionTool } from '@/services/llm/types/strictTypes';
 
 // Force Node.js runtime for streaming
 export const runtime = 'nodejs';
@@ -273,10 +268,10 @@ export async function POST(request: NextRequest) {
           logger.info('[Stream Route] 📎 Contexte notes épinglées construit (full content):', {
             count: context.attachedNotes.length,
             contentLength: contextContent.length,
-            totalLines: context.attachedNotes.reduce((sum, n) => 
+            totalLines: context.attachedNotes.reduce((sum: number, n: { markdown_content?: string }) => 
               sum + (n.markdown_content?.split('\n').length || 0), 0
             ),
-            titles: context.attachedNotes.map(n => n.title)
+            titles: context.attachedNotes.map((n: { title: string }) => n.title)
           });
         }
       } catch (error) {
@@ -301,7 +296,7 @@ export async function POST(request: NextRequest) {
             count: context.mentionedNotes.length,
             contentLength: mentionsContent.length,
             tokensEstimate: Math.ceil(mentionsContent.length / 4),
-            slugs: context.mentionedNotes.map(m => m.slug)
+            slugs: context.mentionedNotes.map((m: { slug: string }) => m.slug)
           });
         }
       } catch (error) {
@@ -321,7 +316,7 @@ export async function POST(request: NextRequest) {
       
     if (prompts.length > 0) {
       try {
-        const promptIds = prompts.map((promptMeta) => promptMeta.id);
+        const promptIds = prompts.map((promptMeta: { id: string }) => promptMeta.id);
         const { data: promptsFromDB } = await supabase
           .from('editor_prompts')
           .select('id, slug, prompt_template')
@@ -410,7 +405,7 @@ export async function POST(request: NextRequest) {
 
     // ✅ Charger les tools (OpenAPI + MCP) ET les endpoints
     let tools: Tool[] = [];
-    let openApiEndpoints = new Map<string, { method: string; path: string; apiKey?: string; headerName?: string; baseUrl: string }>();
+    let openApiEndpoints = new Map<string, OpenApiEndpoint>();
     
     if (context.agentId) {
       try {
@@ -431,10 +426,12 @@ export async function POST(request: NextRequest) {
           
           // 2. Charger les tools MCP de l'agent
           const { mcpConfigService } = await import('@/services/llm/mcpConfigService');
+          // ⚠️ EXCEPTION TypeScript: buildHybridTools retourne un format mixte (MCP + OpenAPI)
+          // TODO: Unifier les types Tool pour éviter ce cast
           tools = await mcpConfigService.buildHybridTools(
             context.agentId,
             userToken,
-            openApiTools
+            openApiTools as any // eslint-disable-line @typescript-eslint/no-explicit-any
           ) as Tool[];
           
           const mcpCount = tools.filter(isMcpTool).length;
@@ -489,7 +486,7 @@ export async function POST(request: NextRequest) {
           
           // ✅ Séparer les tools MCP (exécutés par Groq nativement) des OpenAPI (exécutés par nous)
           const mcpTools = tools.filter(isMcpTool);
-          const openApiTools = tools.filter(t => !isMcpTool(t));
+          const openApiTools = tools.filter(isFunctionTool);
           
           // ✅ Créer une Map des tool names OpenAPI → pour routing d'exécution
           const openApiToolNames = new Set(openApiTools.map(t => t.function.name));
@@ -524,8 +521,8 @@ export async function POST(request: NextRequest) {
             logger.dev(`[Stream Route] 📋 MESSAGES ENVOYÉS AU LLM - ROUND ${roundCount}:`, {
               messageCount: currentMessages.length,
               roles: currentMessages.map(m => m.role),
-              hasToolCalls: currentMessages.some(m => m.tool_calls && m.tool_calls.length > 0),
-              hasToolResults: currentMessages.some(m => m.tool_results && m.tool_results.length > 0),
+              hasToolCalls: currentMessages.some(m => hasToolCalls(m)),
+              hasToolResults: currentMessages.some(m => m.role === 'assistant' && 'tool_results' in m && Array.isArray(m.tool_results) && m.tool_results.length > 0),
               lastMessageContent: lastContent.substring(0, 100) + (lastContent.length > 100 ? '...' : ''),
               isMultiModal: Array.isArray(lastMessage?.content)
             });
@@ -536,14 +533,15 @@ export async function POST(request: NextRequest) {
               logger.info(`[Stream Route] 🔍 DERNIERS 5 MESSAGES (Round ${roundCount}):`);
               last5.forEach((m, i) => {
                 const toolCallId = m.role === 'tool' ? (m as { tool_call_id?: string }).tool_call_id : undefined;
-                logger.info(`  ${i+1}. ${m.role} - toolCalls:${m.tool_calls?.length||0} - toolCallId:${toolCallId||'none'}`);
+                const toolCallsCount = m.role === 'assistant' && 'tool_calls' in m && Array.isArray(m.tool_calls) ? m.tool_calls.length : 0;
+                logger.info(`  ${i+1}. ${m.role} - toolCalls:${toolCallsCount} - toolCallId:${toolCallId||'none'}`);
               });
             }
 
             // Accumuler tool calls et content du stream
             let accumulatedContent = '';
             let accumulatedReasoning = '';  // ✅ NOUVEAU: Accumuler le reasoning
-            const toolCallsMap = new Map<string, { id: string; type: string; function: { name: string; arguments: string } }>(); // Accumuler par ID pour gérer les chunks
+            const toolCallsMap = new Map<string, ToolCall>(); // Accumuler par ID pour gérer les chunks
             let finishReason: string | null = null;
 
             // ✅ Stream depuis le provider
@@ -567,7 +565,7 @@ export async function POST(request: NextRequest) {
                   if (!toolCallsMap.has(tc.id)) {
                     toolCallsMap.set(tc.id, {
                       id: tc.id,
-                      type: tc.type,
+                      type: 'function' as const,
                       function: {
                         name: tc.function.name || '',
                         arguments: tc.function.arguments || ''
@@ -576,6 +574,10 @@ export async function POST(request: NextRequest) {
                   } else {
                     // Accumuler les arguments progressifs
                     const existing = toolCallsMap.get(tc.id);
+                    if (!existing) {
+                      logger.error(`[Stream Route] ⚠️ Tool call ${tc.id} not found in map`, { toolCallId: tc.id });
+                      continue;
+                    }
                     if (tc.function.name) existing.function.name = tc.function.name;
                     if (tc.function.arguments) existing.function.arguments += tc.function.arguments;
                   }
@@ -658,10 +660,14 @@ export async function POST(request: NextRequest) {
             // Ajouter le message assistant avec tool calls
             currentMessages.push({
               role: 'assistant',
-              content: accumulatedContent || null,
+              content: accumulatedContent || '',
               tool_calls: accumulatedToolCalls,
               timestamp: new Date().toISOString()
             });
+
+            if (!userToken) {
+              throw new Error('[Stream Route] Missing user token for OpenAPI tool execution');
+            }
 
             // ✅ Créer l'executor OpenAPI (les tools MCP sont gérés nativement par Groq)
             const { OpenApiToolExecutor } = await import('@/services/llm/executors/OpenApiToolExecutor');

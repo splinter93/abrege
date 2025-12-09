@@ -3,6 +3,7 @@ import { sessionSyncService } from '@/services/sessionSyncService';
 import { useChatStore } from '@/store/useChatStore';
 import { supabase } from '@/supabaseClient';
 import { simpleLogger as logger } from '@/utils/logger';
+import type { ChatMessage } from '@/types/chat';
 
 /**
  * 🔄 Hook simplifié pour la synchronisation des sessions
@@ -76,7 +77,7 @@ export const useSessionSync = () => {
   /**
    * 💬 Ajouter un message
    */
-  const addMessage = useCallback(async (sessionId: string, message: unknown) => {
+  const addMessage = useCallback(async (sessionId: string, message: Omit<ChatMessage, 'id'>) => {
     try {
       const result = await sessionSyncService.addMessageAndSync(sessionId, message);
       if (!result.success) {

@@ -24,6 +24,8 @@ export interface GroqRoundResult {
   error?: string;
   details?: string;
   status?: number;
+  thinking?: unknown[];
+  progress?: unknown[];
 }
 
 // 🎯 Types pour la construction d'historique - OBSOLÈTE (gardé temporairement pour compatibilité)

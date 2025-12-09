@@ -2,8 +2,6 @@
 export { default as LogoHeader } from './LogoHeader';
 export { default as UnifiedSidebar } from './UnifiedSidebar';
 export { default as AppMainContent } from './AppMainContent';
-export { default as AppRealtimeBridge } from './AppRealtimeBridge';
-
 // Composants de sécurité
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as AuthGuard } from './AuthGuard';
@@ -12,12 +10,9 @@ export { default as FilesContent } from './FilesContent';
 export { default as FilesToolbar } from './FilesToolbar';
 export { default as FolderManager } from './FolderManager';
 export { default as ClasseurBandeau } from './ClasseurBandeau';
-export { default as ClasseurBandeauWithReorder } from './ClasseurBandeauWithReorder';
 export { default as SortableClasseurItem } from './SortableClasseurItem';
 
 // Composants de test de sécurité
-export { default as SecurityTestSuite } from './SecurityTestSuite';
-
 // Hooks et utilitaires
 export { useSecureErrorHandler } from './SecureErrorHandler';
 
@@ -26,8 +21,8 @@ export { default as AgentTemplateManager } from './agents/AgentTemplateManager';
 export { default as AgentTemplateDemo } from './agents/AgentTemplateDemo';
 
 // Composants de test
-export { default as APITester } from './APITester';
-export { default as TestErrorComponent } from './TestErrorComponent'; 
+// export { default as APITester } from './APITester';
+// export { default as TestErrorComponent } from './TestErrorComponent'; 
 
 // ==========================================================================
 // COMPOSANTS DE CHARGEMENT STANDARDISÉS

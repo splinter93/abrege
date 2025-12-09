@@ -277,7 +277,9 @@ export class SimpleToolExecutor {
 
     try {
       const llmResponse = await llmCallback(summaryMessage, [], toolCalls, results);
-      return llmResponse.content || llmResponse.message || "Résumé des résultats généré.";
+      return (llmResponse as { content?: string; message?: string })?.content
+        || (llmResponse as { content?: string; message?: string })?.message
+        || "Résumé des résultats généré.";
     } catch (error) {
       logger.error('[SimpleToolExecutor] Erreur génération réponse finale:', error);
       return "Les outils ont été exécutés avec des résultats mitigés.";

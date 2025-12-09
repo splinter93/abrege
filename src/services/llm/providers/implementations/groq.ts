@@ -289,7 +289,9 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const payload = await this.preparePayload(apiMessages, tools);
       payload.stream = true; // ✅ Activer streaming
       
-      logger.info(`[GroqProvider] 🚀 PAYLOAD → GROQ: ${payload.model} | ${payload.messages?.length} messages | ${payload.tools?.length || 0} tools`);
+      const messageCount = Array.isArray(payload.messages) ? payload.messages.length : 0;
+      const toolsCount = Array.isArray((payload as { tools?: unknown }).tools as unknown[]) ? ((payload as { tools?: unknown[] }).tools?.length ?? 0) : 0;
+      logger.info(`[GroqProvider] 🚀 PAYLOAD → GROQ: ${payload.model} | ${messageCount} messages | ${toolsCount} tools`);
       
       // ✅ DEBUG: Logger les messages tool pour diagnostiquer
       const toolMessages = (payload.messages as GroqMessage[])?.filter(m => m.role === 'tool') || [];
@@ -366,7 +368,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
             }
             
             if (delta.tool_calls && delta.tool_calls.length > 0) {
-              streamChunk.tool_calls = delta.tool_calls.map(tc => ({
+              streamChunk.tool_calls = (delta.tool_calls as ToolCall[]).map((tc: ToolCall) => ({
                 id: tc.id || '',
                 type: 'function' as const,
                 function: {
@@ -557,7 +559,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
             tool_calls: [],
             reasoning: '',
             model: this.config.model,
-            usage: {},
+            usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
             // ✅ Marquer comme erreur réessayable
             validation_error: {
               message: errorMessage,
@@ -1171,10 +1173,10 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       
       // Ajouter le fichier audio
       if (file instanceof Buffer) {
-        const blob = new Blob([file], { type: 'audio/m4a' });
+        const blob = new Blob([new Uint8Array(file)], { type: 'audio/m4a' });
         formData.append('file', blob, 'audio.m4a');
       } else {
-        formData.append('file', file);
+        formData.append('file', file as Blob);
       }
 
       // Ajouter les paramètres
@@ -1247,10 +1249,10 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       
       // Ajouter le fichier audio
       if (file instanceof Buffer) {
-        const blob = new Blob([file], { type: 'audio/m4a' });
+        const blob = new Blob([new Uint8Array(file)], { type: 'audio/m4a' });
         formData.append('file', blob, 'audio.m4a');
       } else {
-        formData.append('file', file);
+        formData.append('file', file as Blob);
       }
 
       // Ajouter les paramètres

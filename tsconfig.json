@@ -43,7 +43,6 @@
     "supabase/functions/**/*",
     ".next/**/*",
     "examples/**/*",
-    "scripts/test-*.ts",
-    "scripts/validate-*.ts"
+    "scripts/**/*"
   ]
 }

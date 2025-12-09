@@ -100,7 +100,8 @@ export function validateOpenAPISchema(data: unknown): { valid: boolean; error?: 
   }
 
   // Vérifier la présence de la propriété openapi ou swagger
-  if (!data.openapi && !data.swagger) {
+  const schema = data as any;
+  if (!schema.openapi && !schema.swagger) {
     return { 
       valid: false, 
       error: 'Ce fichier ne semble pas être un schéma OpenAPI valide (propriété "openapi" ou "swagger" manquante)' 
@@ -108,21 +109,21 @@ export function validateOpenAPISchema(data: unknown): { valid: boolean; error?: 
   }
 
   // Vérifier la présence des propriétés obligatoires
-  if (!data.info || typeof data.info !== 'object') {
+  if (!schema.info || typeof schema.info !== 'object') {
     return { 
       valid: false, 
       error: 'Propriété "info" manquante ou invalide' 
     };
   }
 
-  if (!data.info.title || typeof data.info.title !== 'string') {
+  if (!schema.info.title || typeof schema.info.title !== 'string') {
     return { 
       valid: false, 
       error: 'Propriété "info.title" manquante ou invalide' 
     };
   }
 
-  if (!data.info.version || typeof data.info.version !== 'string') {
+  if (!schema.info.version || typeof schema.info.version !== 'string') {
     return { 
       valid: false, 
       error: 'Propriété "info.version" manquante ou invalide' 

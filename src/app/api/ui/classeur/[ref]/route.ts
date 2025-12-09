@@ -4,6 +4,14 @@ import { z } from 'zod';
 import { simpleLogger as logger } from '@/utils/logger';
 import { SlugGenerator } from '@/utils/slugGenerator';
 
+type ClasseurUpdate = {
+  name?: string;
+  emoji?: string;
+  color?: string;
+  position?: number;
+  slug?: string;
+};
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -113,25 +121,29 @@ export async function PUT(
         { status: 404 }
       );
     }
+    const currentClasseurName = (existingClasseur as { id: string; name: string }).name;
 
     // Préparer les données à mettre à jour
-    const updateData: Record<string, unknown> = {};
+    const updateData: ClasseurUpdate = {};
     if (name) updateData.name = name;
     if (emoji) updateData.emoji = emoji;
     if (color) updateData.color = color;
     if (position !== undefined) updateData.position = position;
 
     // ✅ FIX SLUG : Regénérer le slug si le nom change
-    if (name && name !== existingClasseur.name) {
+    if (name && name !== currentClasseurName) {
       const newSlug = await SlugGenerator.generateSlug(name, 'classeur', userId, classeurId, supabase);
       updateData.slug = newSlug;
-      logger.dev(`[API] 🔄 Slug classeur mis à jour: "${existingClasseur.name}" → "${name}" → "${newSlug}"`);
+      logger.dev(`[API] 🔄 Slug classeur mis à jour: "${currentClasseurName}" → "${name}" → "${newSlug}"`);
     }
+
+    // Supabase types non générés ici ⇒ cast explicite pour l'update
+    const updatePayload = updateData as never;
 
     // Mettre à jour le classeur
     const { data: classeur, error } = await supabase
       .from('classeurs')
-      .update(updateData)
+      .update(updatePayload)
       .eq('id', classeurId)
       .select()
       .single();
@@ -151,7 +163,8 @@ export async function PUT(
       );
     }
 
-    logger.dev('[API] ✅ Classeur mis à jour:', classeur.name);
+    const updatedClasseur = classeur as { name?: string };
+    logger.dev('[API] ✅ Classeur mis à jour:', updatedClasseur.name);
     return NextResponse.json({ classeur });
 
   } catch (err: unknown) {

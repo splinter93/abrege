@@ -71,10 +71,10 @@ async function auditAllTools() {
     }
     
     // Tools supplémentaires
-    const extraTools = llmTools.filter(tool => !expectedTools.includes(tool));
+    const extraTools = llmTools.filter((tool: string) => !expectedTools.includes(tool));
     if (extraTools.length > 0) {
       console.log('⚠️ Tools supplémentaires (non mappés):');
-      extraTools.forEach(tool => console.log(`   - ${tool}`));
+      extraTools.forEach((tool: string) => console.log(`   - ${tool}`));
     }
     
     // 5. Audit détaillé de chaque tool

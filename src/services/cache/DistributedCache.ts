@@ -13,8 +13,12 @@ type RedisClientType = {
   isReady: boolean;
   get: (key: string) => Promise<string | null>;
   set: (key: string, value: string, options?: { EX: number }) => Promise<void>;
+  setEx?: (key: string, ttl: number, value: string) => Promise<void>;
   del: (key: string) => Promise<number>;
   keys: (pattern: string) => Promise<string[]>;
+  on?: (event: 'error' | 'connect' | 'disconnect' | string, listener: (...args: any[]) => void) => void;
+  flushDb?: () => Promise<void>;
+  quit?: () => Promise<void>;
 } | null;
 
 type CreateClientFn = ((options: {
@@ -109,33 +113,37 @@ export class DistributedCache {
       this.redis = createClient({
         socket: {
           host: cacheConfig.redis.host,
-          port: cacheConfig.redis.port,
-          connectTimeout: 5000, // 5 secondes de timeout
-          lazyConnect: true, // Connexion paresseuse
+          port: cacheConfig.redis.port
         },
         password: cacheConfig.redis.password,
         database: cacheConfig.redis.db || 0,
       });
 
-      this.redis.on('error', (error) => {
-        // Ne logger l'erreur qu'une seule fois pour éviter le spam
-        if (!this.isConnected) {
-          logger.warn('[DistributedCache] ⚠️ Redis non accessible, utilisation du cache mémoire uniquement');
+      if (this.redis?.on) {
+        this.redis.on('error', (error) => {
+          // Ne logger l'erreur qu'une seule fois pour éviter le spam
+          if (!this.isConnected) {
+            logger.warn('[DistributedCache] ⚠️ Redis non accessible, utilisation du cache mémoire uniquement');
+            this.isConnected = false;
+          }
+        });
+
+        this.redis.on('connect', () => {
+          logger.info('[DistributedCache] ✅ Redis connected');
+          this.isConnected = true;
+        });
+
+        this.redis.on('disconnect', () => {
+          logger.warn('[DistributedCache] ⚠️ Redis disconnected');
           this.isConnected = false;
-        }
-      });
-
-      this.redis.on('connect', () => {
-        logger.info('[DistributedCache] ✅ Redis connected');
-        this.isConnected = true;
-      });
-
-      this.redis.on('disconnect', () => {
-        logger.warn('[DistributedCache] ⚠️ Redis disconnected');
-        this.isConnected = false;
-      });
+        });
+      }
 
       // Tentative de connexion avec timeout
+      if (!this.redis) {
+        this.isConnected = false;
+        return;
+      }
       try {
         await Promise.race([
           this.redis.connect(),
@@ -210,7 +218,11 @@ export class DistributedCache {
       // 1. Stocker dans Redis
       if (this.isConnected && this.redis) {
         const redisTtl = Math.floor(ttl || this.config.memory.defaultTtl / 1000); // Redis TTL en secondes
-        await this.redis.setEx(key, redisTtl, JSON.stringify(entry));
+        if (this.redis.setEx) {
+          await this.redis.setEx(key, redisTtl, JSON.stringify(entry));
+        } else {
+          await this.redis.set(key, JSON.stringify(entry), { EX: redisTtl });
+        }
       }
 
       // 2. Stocker dans la mémoire (fallback)
@@ -334,7 +346,11 @@ export class DistributedCache {
     try {
       // Vider Redis
       if (this.isConnected && this.redis) {
-        await this.redis.flushDb();
+        if (this.redis.flushDb) {
+          await this.redis.flushDb();
+        } else {
+          await this.redis.del('*');
+        }
       }
 
       // Vider la mémoire
@@ -354,7 +370,11 @@ export class DistributedCache {
   async close(): Promise<void> {
     try {
       if (this.redis) {
-        await this.redis.quit();
+        if (this.redis.quit) {
+          await this.redis.quit();
+        } else {
+          await this.redis.disconnect();
+        }
       }
       this.memory.clear();
       logger.info('[DistributedCache] 🔌 Cache connections closed');

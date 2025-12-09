@@ -26,7 +26,7 @@ export default function LiveNoteList() {
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {noteList.map(note => (
             <li key={note.id} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <span style={{ fontWeight: 500 }}>{note.title}</span>
+              <span style={{ fontWeight: 500 }}>{(note as any).title || (note as any).source_title || 'Sans titre'}</span>
               <span style={{ color: '#888', fontSize: 12, marginLeft: 8 }}>({note.id.slice(0, 6)})</span>
             </li>
           ))}

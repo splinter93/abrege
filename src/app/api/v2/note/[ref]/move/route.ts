@@ -58,7 +58,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       message: 'Note déplacée avec succès',
-      note: result.note
+      note: result.data
     });
 
   } catch (err: unknown) {

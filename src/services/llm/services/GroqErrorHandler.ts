@@ -13,7 +13,10 @@ export class GroqErrorHandler {
     const hasFailedTools = toolResults.some(result => !result.success);
     const errorCodes = toolResults
       .filter(result => !result.success)
-      .map(result => this.detectErrorCode(result.result?.error || 'Unknown error'));
+      .map(result => {
+        const errorMessage = (result as { result?: { error?: string } }).result?.error || 'Unknown error';
+        return this.detectErrorCode(errorMessage);
+      });
 
     const hasAuthErrors = this.hasAuthenticationErrors(toolResults);
     const canRetry = this.canRetryAfterErrors(toolResults);
@@ -48,8 +51,9 @@ export class GroqErrorHandler {
    */
   private hasAuthenticationErrors(toolResults: ToolExecutionResult[]): boolean {
     return toolResults.some(result => {
-      if (!result.success && result.result?.error) {
-        const errorText = result.result.error.toLowerCase();
+      const errorTextRaw = (result as { result?: { error?: string } }).result?.error;
+      if (!result.success && errorTextRaw) {
+        const errorText = errorTextRaw.toLowerCase();
         return errorText.includes('impossible d\'extraire l\'utilisateur') ||
                errorText.includes('token invalide') ||
                errorText.includes('unauthorized') ||
@@ -78,7 +82,8 @@ export class GroqErrorHandler {
 
     // Si tous ont échoué mais pas à cause d'auth, on peut retenter
     return failedResults.every(result => {
-      const errorCode = this.detectErrorCode(result.result?.error || '');
+      const errorMessage = (result as { result?: { error?: string } }).result?.error || '';
+      const errorCode = this.detectErrorCode(errorMessage);
       return !['AUTH_ERROR', 'PERMISSION_ERROR'].includes(errorCode);
     });
   }
@@ -127,8 +132,9 @@ export class GroqErrorHandler {
     logger.warn(`[GroqErrorHandler] ⚠️ ${failedResults.length} tool(s) ont échoué:`);
     
     failedResults.forEach((result, index) => {
-      const errorCode = this.detectErrorCode(result.result?.error || 'Unknown error');
-      logger.warn(`[GroqErrorHandler] Tool ${index + 1}: ${result.name} - ${errorCode} - ${result.result?.error}`);
+      const errorMessage = (result as { result?: { error?: string } }).result?.error || 'Unknown error';
+      const errorCode = this.detectErrorCode(errorMessage);
+      logger.warn(`[GroqErrorHandler] Tool ${index + 1}: ${result.name} - ${errorCode} - ${errorMessage}`);
     });
   }
 

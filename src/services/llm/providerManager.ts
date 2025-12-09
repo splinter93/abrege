@@ -1,7 +1,6 @@
-import type { LLMProvider, AppContext } from './types';
-import type { ChatMessage } from '@/types/chat';
+import type { LLMProvider, AppContext, ChatMessage, LLMResponse } from './types';
 import { SynesiaProvider, GroqProvider, GroqResponsesProvider, XAIProvider } from './providers';
-import { logger } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 
 interface ProviderMetrics {
   calls: number;
@@ -57,19 +56,19 @@ export class LLMProviderManager {
       errors: 0,
       lastUsed: new Date()
     });
-    logger.debug(`[LLM Manager] ✅ Provider enregistré: ${provider.name} (${provider.id})`);
+    logger.debug(LogCategory.API, `[LLM Manager] ✅ Provider enregistré: ${provider.name} (${provider.id})`);
   }
 
   setProvider(providerId: string): boolean {
     if (this.validateProvider(providerId)) {
       this.currentProvider = providerId;
-      logger.debug(`[LLM Manager] 🔄 Provider changé: ${providerId}`);
+      logger.debug(LogCategory.API, `[LLM Manager] 🔄 Provider changé: ${providerId}`);
       return true;
     } else {
-      logger.error(`[LLM Manager] ❌ Provider non trouvé ou indisponible: ${providerId}`);
+      logger.error(LogCategory.API, `[LLM Manager] ❌ Provider non trouvé ou indisponible: ${providerId}`);
       // Fallback vers provider par défaut
       this.currentProvider = this.getDefaultProvider();
-      logger.debug(`[LLM Manager] 🔄 Fallback vers provider par défaut: ${this.currentProvider}`);
+      logger.debug(LogCategory.API, `[LLM Manager] 🔄 Fallback vers provider par défaut: ${this.currentProvider}`);
       return false;
     }
   }
@@ -87,7 +86,7 @@ export class LLMProviderManager {
     return Array.from(this.providers.values()).filter(provider => provider.isAvailable());
   }
 
-  async call(message: string, context: AppContext, history: ChatMessage[]): Promise<string> {
+  async call(message: string, context: AppContext, history: ChatMessage[]): Promise<unknown> {
     const provider = this.providers.get(this.currentProvider);
     if (!provider) {
       throw new Error('Aucun provider LLM disponible');
@@ -99,11 +98,11 @@ export class LLMProviderManager {
 
     // ✅ Vérification du rate limiting
     if (!this.checkRateLimit(this.currentProvider)) {
-      logger.warn(`[LLM Manager] ⚠️ Rate limit atteint pour ${this.currentProvider}`);
+      logger.warn(LogCategory.API, `[LLM Manager] ⚠️ Rate limit atteint pour ${this.currentProvider}`);
       throw new Error(`Rate limit atteint pour ${provider.name}`);
     }
 
-    logger.debug(`[LLM Manager] 🚀 Appel via ${provider.name} (${provider.id})`);
+    logger.debug(LogCategory.API, `[LLM Manager] 🚀 Appel via ${provider.name} (${provider.id})`);
     
     try {
       const startTime = Date.now();
@@ -136,7 +135,7 @@ export class LLMProviderManager {
       try {
         results[id] = await provider.isAvailable();
       } catch (error) {
-        logger.error(`[LLM Manager] ❌ Health check failed for ${id}:`, error);
+        logger.error(LogCategory.API, `[LLM Manager] ❌ Health check failed for ${id}:`, error);
         results[id] = false;
       }
     }
@@ -152,7 +151,7 @@ export class LLMProviderManager {
   }
 
   // ✅ Retry logic avec fallback
-  async callWithFallback(message: string, context: AppContext, history: ChatMessage[]): Promise<string> {
+  async callWithFallback(message: string, context: AppContext, history: ChatMessage[]): Promise<unknown> {
     const providers = this.getAvailableProviders();
     
     for (const provider of providers) {
@@ -166,7 +165,7 @@ export class LLMProviderManager {
         
         return result;
       } catch (error) {
-        logger.error(`[LLM Manager] ❌ Provider ${provider.id} failed:`, error);
+        logger.error(LogCategory.API, `[LLM Manager] ❌ Provider ${provider.id} failed:`, error);
         this.updateMetrics(provider.id, 0, true);
         continue;
       }

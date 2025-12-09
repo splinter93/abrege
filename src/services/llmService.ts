@@ -39,9 +39,13 @@ export class LLMService {
 
       logger.dev('[LLM Service] ✅ Réponse reçue');
 
+      const responseText = typeof response === 'string'
+        ? response
+        : (response as { content?: string })?.content ?? '';
+
       return {
         success: true,
-        response
+        response: responseText
       };
 
     } catch (error) {

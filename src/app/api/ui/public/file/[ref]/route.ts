@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   // Resolve file by id or slug
-  let file: { id: string; url?: string; filename: string } | null = null;
+  let file: { id: string; url?: string; filename: string; deleted_at?: string | null; owner_id?: string; user_id?: string; visibility_mode?: string; status?: string; note_id?: string | null; s3_key?: string; etag?: string | null } | null = null;
   if (isUUID(ref)) {
     const { data } = await supabase.from('files').select('*').eq('id', ref).maybeSingle();
     file = data;
@@ -112,6 +112,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   console.log('🔍 [DEBUG] Access granted, redirecting to S3');
   
   // Short-lived signed GET from S3
+  if (!file.s3_key) {
+    return NextResponse.json({ error: 'Fichier non trouvé' }, { status: 404 });
+  }
+
   const signed = await s3Service.generateGetUrl(file.s3_key, 120);
   const url = new URL(signed);
   if (file.etag) url.searchParams.set('v', file.etag);

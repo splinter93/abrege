@@ -54,7 +54,9 @@ export interface ToolResult {
   name: string;
   content: string;
   success: boolean;
-  timestamp: string;
+  timestamp?: string;
+  result?: unknown;
+  duration_ms?: number;
 }
 
 export interface SessionHistory {
@@ -79,6 +81,13 @@ export interface AppContext {
   name: string;
   id: string;
   content: string;
+  attachedNotes?: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    description?: string;
+    word_count?: number;
+  }>;
 }
 
 export interface SessionIdentity {

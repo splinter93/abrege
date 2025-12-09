@@ -71,7 +71,7 @@ export class GroqHistoryBuilder {
     const cleaned = { ...msg };
     
     // Nettoyer les tool_calls des messages assistant
-    if (cleaned.tool_calls && Array.isArray(cleaned.tool_calls)) {
+    if (cleaned.role === 'assistant' && cleaned.tool_calls && Array.isArray(cleaned.tool_calls)) {
       cleaned.tool_calls = cleaned.tool_calls.map(tc => ({
         ...tc,
         function: {

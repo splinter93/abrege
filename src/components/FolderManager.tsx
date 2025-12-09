@@ -152,11 +152,11 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   // Utiliser la fusion intelligente
   const effectiveFolders = mergeData(
     usePreloadedData ? Object.values(preloadedFolders || {}) : [],
-    storeFolders
+    storeFolders as any
   );
   const effectiveFiles = mergeData(
     usePreloadedData ? Object.values(preloadedNotes || {}) : [],
-    storeNotes
+    storeNotes as any
   );
   
   // Filtrer les données par classeur actif ET par dossier parent
@@ -200,7 +200,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
       const defaultName = 'Nouveau dossier';
       await effectiveCreateFolder(defaultName);
     } catch (error) {
-      logger.error('[FolderManager] Erreur création dossier', undefined, error instanceof Error ? error : new Error(String(error)));
+      logger.error('[FolderManager] Erreur création dossier', error instanceof Error ? error : new Error(String(error)));
     }
   }, [user?.id, effectiveCreateFolder]);
 
@@ -212,7 +212,7 @@ const FolderManager: React.FC<FolderManagerProps> = ({
       const defaultName = 'Nouvelle note';
       await effectiveCreateFile(defaultName, parentFolderId || null);
     } catch (error) {
-      logger.error('[FolderManager] Erreur création note', undefined, error instanceof Error ? error : new Error(String(error)));
+      logger.error('[FolderManager] Erreur création note', error instanceof Error ? error : new Error(String(error)));
     }
   }, [user?.id, effectiveCreateFile, parentFolderId]);
 

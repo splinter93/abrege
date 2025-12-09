@@ -11,12 +11,12 @@ import { simpleLogger as logger } from '@/utils/logger';
  * ✅ STRICT: Types précis pour éviter les erreurs
  * ✅ NOUVEAU: Support des query parameters pour tous les verbes HTTP
  */
-interface OpenApiEndpoint {
+export interface OpenApiEndpoint {
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   path: string;
   apiKey?: string;
   headerName?: string;
-  baseUrl?: string;
+  baseUrl: string;
   queryParams?: string[]; // Liste des noms de paramètres qui doivent aller dans la query string
 }
 
@@ -87,8 +87,7 @@ export class OpenApiToolExecutor {
         tool_call_id: id,
         name: func.name,
         content: JSON.stringify(result),
-        success: true,
-        timestamp: new Date().toISOString()
+        success: true
       };
 
     } catch (error) {
@@ -103,8 +102,7 @@ export class OpenApiToolExecutor {
           error: error instanceof Error ? error.message : 'Erreur inconnue'
         }),
         success: false,
-        error: error instanceof Error ? error.message : 'Erreur inconnue',
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
       };
     }
   }
@@ -129,8 +127,7 @@ export class OpenApiToolExecutor {
             error: error instanceof Error ? error.message : 'Erreur inconnue'
           }),
           success: false,
-          error: error instanceof Error ? error.message : 'Erreur inconnue',
-          timestamp: new Date().toISOString()
+          error: error instanceof Error ? error.message : 'Erreur inconnue'
         });
       }
     }

@@ -38,7 +38,7 @@ export function generateUserJwt(userId: string, expiresIn: string | number = '15
   };
 
   const options: jwt.SignOptions = {
-    expiresIn,
+    expiresIn: expiresIn as jwt.SignOptions['expiresIn'],
     algorithm: 'HS256'
   };
 

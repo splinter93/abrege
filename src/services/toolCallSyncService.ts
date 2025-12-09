@@ -141,7 +141,13 @@ export class ToolCallSyncService {
       const response = await chatSessionService.getMessages(sessionId);
       if (!response?.success || !response?.data) throw new Error(response?.error || 'Erreur récupération messages');
 
-      const messages: DBMessage[] = response.data.messages || [];
+      const rawMessages = Array.isArray(response.data.messages) ? response.data.messages : [];
+      const messages: DBMessage[] = rawMessages
+        .filter((m: unknown): m is DBMessage => typeof m === 'object' && m !== null)
+        .map((m) => ({
+          ...m,
+          timestamp: m.timestamp !== undefined ? String(m.timestamp) : undefined
+        }));
       let newCalls: ToolCall[] = [];
       let newResults: NormalizedToolResult[] = [];
 
@@ -149,10 +155,12 @@ export class ToolCallSyncService {
         // 1) Assistant → tool_calls proposés par le LLM
         if (message?.role === 'assistant' && Array.isArray(message?.tool_calls) && message.tool_calls.length > 0) {
           for (const tc of message.tool_calls) {
+              const fnName = tc?.function?.name ?? '';
+              const fnArgs = tc?.function?.arguments ?? '';
             const call: ToolCall = {
               id: tc?.id,
               type: 'function',
-              function: { name: tc?.function?.name, arguments: tc?.function?.arguments }
+                function: { name: fnName, arguments: fnArgs }
             };
             const key = this.keyForToolCall(call, message);
             if (!state.seen.has(key)) {
@@ -164,7 +172,7 @@ export class ToolCallSyncService {
 
         // 2) Tool → résultats d’outil
         if (message?.role === 'tool' && (message?.tool_call_id || message?.name)) {
-          const parsed = this.safeParseContent(message?.content);
+          const parsed = this.safeParseContent(message?.content) as Record<string, unknown> | null | undefined;
           const result: NormalizedToolResult = {
             tool_call_id: String(message?.tool_call_id || parsed?.tool_call_id || 'unknown'),
             name: String(message?.name || parsed?.name || 'unknown'),

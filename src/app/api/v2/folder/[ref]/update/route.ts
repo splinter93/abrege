@@ -60,7 +60,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       message: 'Dossier mis à jour avec succès',
-      folder: result.folder
+      folder: result.data
     });
 
   } catch (err: unknown) {

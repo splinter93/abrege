@@ -1,3 +1,5 @@
+import { simpleLogger as logger } from '@/utils/logger';
+import { supabase } from '@/supabaseClient';
 import { config } from 'dotenv';
 import { resolve } from 'path';
 // import.*logger.*from '@/utils/logger';

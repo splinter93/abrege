@@ -1,5 +1,4 @@
-import type { AppContext } from '../../types';
-import type { ChatMessage } from '@/types/chat';
+import type { AppContext, ChatMessage } from '../../types';
 
 /**
  * Capacités supportées par un provider
@@ -71,7 +70,7 @@ export interface IBaseProvider {
   // Méthodes obligatoires
   isAvailable(): boolean;
   validateConfig(): boolean;
-  call(message: string, context: AppContext, history: ChatMessage[]): Promise<string>;
+  call(message: string, context: AppContext, history: ChatMessage[]): Promise<unknown>;
   
   // Méthodes optionnelles
   supportsFunctionCalls(): boolean;
@@ -103,7 +102,7 @@ export abstract class BaseProvider implements IBaseProvider {
   /**
    * Effectue un appel au provider
    */
-  abstract call(message: string, context: AppContext, history: ChatMessage[]): Promise<string>;
+  abstract call(message: string, context: AppContext, history: ChatMessage[]): Promise<unknown>;
 
   /**
    * Vérifie si le provider supporte les function calls

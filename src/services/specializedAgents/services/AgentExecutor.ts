@@ -14,6 +14,7 @@ import {
 import { MultimodalHandler } from '../multimodalHandler';
 import { agentOrchestrator } from '@/services/llm/services/AgentOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
+import type { ChatMessage } from '@/types/chat';
 
 export class AgentExecutor {
   private readonly groqApiKey: string;
@@ -181,30 +182,31 @@ export class AgentExecutor {
       // Configurer l'agent avec les capabilities
       const agentConfigWithTools = {
         ...agent,
-        capabilities: agent.capabilities || ['text', 'function_calling'],
-        api_v2_capabilities: agent.api_v2_capabilities || [
+        capabilities: agent.capabilities ? [...agent.capabilities] : ['text', 'function_calling'],
+        api_v2_capabilities: agent.api_v2_capabilities ? [...agent.api_v2_capabilities] : [
           'get_note', 'update_note', 'search_notes', 
           'list_notes', 'create_note', 'delete_note'
-        ]
+        ],
+        context_template: agent.context_template ?? undefined
       };
 
       // ✨ Appel à l'orchestrateur agentique V2
       const orchestratorResult = await agentOrchestrator.processMessage(
         userMessage,
-        [], // Pas d'historique pour les agents spécialisés
         {
           userToken: context.userToken.value,
           sessionId: context.sessionId?.value || `specialized-${agent.slug}-${Date.now()}`,
           agentConfig: agentConfigWithTools
-        }
+        },
+        [] as ChatMessage[] // Pas d'historique pour les agents spécialisés
       );
 
       const executionTime = Date.now() - startTime;
 
-      if (!orchestratorResult.success) {
+      if (!orchestratorResult || !orchestratorResult.content) {
         return {
           success: false,
-          error: orchestratorResult.error || 'Erreur orchestrateur',
+          error: 'Réponse orchestrateur vide',
           isMultimodal: false,
           executionTime
         };

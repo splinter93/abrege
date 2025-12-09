@@ -107,20 +107,24 @@ export async function POST(request: NextRequest) {
       if (grantType === 'authorization_code') {
         // Échanger le code contre un token OAuth
         console.log('🔍 [TOKEN] Début échange code contre token...');
+        // Type guard : on sait que tokenRequest est de type authorizationCodeSchema
+        const authRequest = authorizationCodeSchema.parse(tokenRequest);
         tokenResponse = await oauthService.exchangeCodeForToken(
-          tokenRequest.code,
-          tokenRequest.client_id,
-          tokenRequest.client_secret,
-          tokenRequest.redirect_uri
+          authRequest.code,
+          authRequest.client_id,
+          authRequest.client_secret,
+          authRequest.redirect_uri
         );
         console.log('✅ [TOKEN] Échange code→token réussi');
       } else if (grantType === 'refresh_token') {
         // Rafraîchir le token avec le refresh token
         console.log('🔍 [TOKEN] Début refresh token...');
+        // Type guard : on sait que tokenRequest est de type refreshTokenSchema
+        const refreshRequest = refreshTokenSchema.parse(tokenRequest);
         tokenResponse = await oauthService.refreshAccessToken(
-          tokenRequest.refresh_token,
-          tokenRequest.client_id,
-          tokenRequest.client_secret
+          refreshRequest.refresh_token,
+          refreshRequest.client_id,
+          refreshRequest.client_secret
         );
         console.log('✅ [TOKEN] Refresh token réussi');
       }
@@ -163,9 +167,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('❌ [TOKEN] Erreur générale:', error);
-    console.error('❌ [TOKEN] Type d\'erreur:', error.constructor.name);
+    if (error && typeof error === 'object' && 'constructor' in error) {
+      console.error('❌ [TOKEN] Type d\'erreur:', (error.constructor as { name: string }).name);
+    }
     console.error('❌ [TOKEN] Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
     
     if (error instanceof z.ZodError) {

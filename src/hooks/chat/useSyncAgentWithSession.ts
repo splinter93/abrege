@@ -10,8 +10,7 @@
 
 import { useEffect } from 'react';
 import { supabase } from '@/supabaseClient';
-import type { Agent } from '@/types/chat';
-import type { ChatSession } from '@/store/useChatStore';
+import type { Agent, ChatSession } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**

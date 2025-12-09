@@ -1,5 +1,5 @@
 import { createSupabaseClient } from '@/utils/supabaseClient';
-import type { ChatMessage, AssistantMessage } from '@/types/chat';
+import type { ChatMessage, AssistantMessage, ToolMessage } from '@/types/chat';
 import type { PromptMention } from '@/types/promptMention';
 import { hasToolCalls } from '@/types/chat';
 import type { StreamTimeline } from '@/types/streamTimeline';
@@ -178,7 +178,7 @@ export class HistoryManager {
           logger.dev('[HistoryManager] ✅ JSONB fields sauvegardés:', {
             messageId: data.id,
             streamTimelineEvents: timeline?.items?.length || 0,
-            toolResultsCount: assistantMsg.tool_results?.length || 0
+            toolResultsCount: assistantMsg?.tool_results?.length || 0
           });
         }
         

@@ -111,7 +111,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // Créer le bon client Supabase selon le type d'authentification
-    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
+    const postUserToken = extractTokenFromRequest(request);
+    const supabase = createAuthenticatedSupabaseClient(authResult, postUserToken || undefined);
 
     // Générer un slug à partir du nom
     const slug = name.toLowerCase()

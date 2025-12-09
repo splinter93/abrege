@@ -260,7 +260,7 @@ export class AgentIntentParser {
     let endpoint = action.endpoint;
 
     // Remplacer les paramètres dans l'URL
-    if (data.ref) {
+    if (typeof data.ref === 'string') {
       endpoint = endpoint.replace('{ref}', data.ref);
     }
 

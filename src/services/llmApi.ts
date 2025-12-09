@@ -22,6 +22,8 @@ interface UpdateNoteData {
   header_image?: string;
   folder_id?: string | null;
   description?: string;
+  classeur_id?: string | null;
+  is_canva_draft?: boolean;
 }
 
 interface CreateFolderData {
@@ -228,14 +230,15 @@ export class LLMApi {
       });
       
       const headers = await this.getAuthHeaders();
+      const headersRecord = headers as Record<string, string>;
       
       // ✅ DEBUG: Vérifier les headers d'authentification
       console.log('🔐 [LLM DELETE] Headers préparés:', {
-        hasContentType: !!headers['Content-Type'],
-        hasClientType: !!headers['X-Client-Type'],
-        hasAuth: !!headers['Authorization'],
-        authToken: headers['Authorization'] ? 
-          `${headers['Authorization'].toString().substring(0, 20)}...` : 
+        hasContentType: !!headersRecord['Content-Type'],
+        hasClientType: !!headersRecord['X-Client-Type'],
+        hasAuth: !!headersRecord['Authorization'],
+        authToken: headersRecord['Authorization'] ? 
+          `${headersRecord['Authorization'].toString().substring(0, 20)}...` : 
           'ABSENT'
       });
       

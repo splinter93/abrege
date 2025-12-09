@@ -62,7 +62,7 @@ export class XmlToolCallParser {
       }
 
       // Convertir au format natif ToolCall
-      const toolCalls: ToolCall[] = toolCallsArray.map((tc: unknown, index: number) => {
+      const toolCalls = toolCallsArray.map((tc: unknown, index: number): ToolCall | null => {
         const t = tc as {
           type?: string;
           function?: {
@@ -91,7 +91,7 @@ export class XmlToolCallParser {
 
         return {
           id: `call_${Date.now()}_${index}_${Math.random().toString(36).substring(7)}`,
-          type: (t.type || 'function') as 'function',
+          type: 'function',
           function: {
             name: t.function.name,
             arguments: argumentsStr

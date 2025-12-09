@@ -74,7 +74,6 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
           id: note.id,
           source_title: publicNote.source_title || 'Sans titre',
           markdown_content: publicNote.markdown_content || '',
-          content: publicNote.markdown_content || '',
           html_content: publicNote.html_content || '',
           header_image: publicNote.header_image || null,
           header_image_offset: publicNote.header_image_offset ?? 50,
@@ -89,8 +88,9 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
           created_at: publicNote.created_at,
           slug: slug,
           public_url: `/@${username}/${slug}`,
-          visibility: publicNote.share_settings?.visibility || 'link-public',
           folder_id: null,
+          classeur_id: publicNote.classeur_id ?? null,
+          position: publicNote.position ?? 0,
           share_settings: publicNote.share_settings
         });
         

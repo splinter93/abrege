@@ -8,7 +8,7 @@
  */
 
 const YOUTUBE_VIDEO_ID_REGEX = /^[A-Za-z0-9_-]{11}$/;
-const TIMESTAMP_REGEX = /^(?:(?<hours>\d+)h)?(?:(?<minutes>\d+)m)?(?:(?<seconds>\d+)s)?$/i;
+const TIMESTAMP_REGEX = /^(?:([0-9]+)h)?(?:([0-9]+)m)?(?:([0-9]+)s)?$/i;
 
 export interface ParsedYouTubeInput {
   videoId: string | null;
@@ -30,13 +30,13 @@ function parseTimestampValue(value: string | null | undefined): number | null {
   }
 
   const match = trimmed.match(TIMESTAMP_REGEX);
-  if (!match || !match.groups) {
+  if (!match) {
     return null;
   }
 
-  const hours = match.groups.hours ? Number.parseInt(match.groups.hours, 10) : 0;
-  const minutes = match.groups.minutes ? Number.parseInt(match.groups.minutes, 10) : 0;
-  const seconds = match.groups.seconds ? Number.parseInt(match.groups.seconds, 10) : 0;
+  const hours = match[1] ? Number.parseInt(match[1], 10) : 0;
+  const minutes = match[2] ? Number.parseInt(match[2], 10) : 0;
+  const seconds = match[3] ? Number.parseInt(match[3], 10) : 0;
 
   return hours * 3600 + minutes * 60 + seconds;
 }
@@ -81,13 +81,13 @@ export function parseYouTubeInput(input: string | null | undefined): ParsedYouTu
     }
 
     if (!videoId && hostname.endsWith('youtube.com')) {
+      const pathSegments = url.pathname.split('/').filter(Boolean);
       const fromQuery = url.searchParams.get('v');
       if (fromQuery && YOUTUBE_VIDEO_ID_REGEX.test(fromQuery)) {
         videoId = fromQuery;
       }
 
       if (!videoId) {
-        const pathSegments = url.pathname.split('/').filter(Boolean);
         const embedIndex = pathSegments.indexOf('embed');
         if (embedIndex !== -1 && pathSegments[embedIndex + 1]) {
           const candidate = pathSegments[embedIndex + 1];

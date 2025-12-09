@@ -137,7 +137,7 @@ export class SlugAndUrlService {
         logger.dev(`Titre inchangé pour la note ${noteId}, pas de mise à jour du slug`);
         return { 
           slug: note.slug!, 
-          publicUrl: note.public_url || await this.buildPublicUrl(userId, noteId, supabase)
+          publicUrl: note.public_url || await this.buildPublicUrl(userId, noteId, supabase as ReturnType<typeof createClient>)
         };
       }
 
@@ -146,7 +146,7 @@ export class SlugAndUrlService {
         newTitle,
         userId,
         noteId,
-        supabase
+        supabase as ReturnType<typeof createClient>
       );
 
       // 4. Mettre à jour le titre également
@@ -232,7 +232,7 @@ export class SlugAndUrlService {
             note.source_title,
             userId,
             note.id,
-            this.supabase
+            this.supabase as ReturnType<typeof createClient>
           );
           correctedCount++;
           continue;

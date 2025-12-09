@@ -89,7 +89,7 @@ export async function POST(
     const { content: rawContent, target_section, position } = validationResult.data;
     
     // 🛡️ Sanitizer le contenu à insérer AVANT utilisation
-    const content = sanitizeMarkdownContent(rawContent);
+    const content = sanitizeMarkdownContent(rawContent ?? '');
 
     // 🔒 Vérifier que l'utilisateur est propriétaire de la note
     const { data: currentNote, error: checkError } = await supabase

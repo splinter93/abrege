@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({
       success: true,
       message: 'Classeurs réordonnancés avec succès',
-      classeurs: result.classeurs
+      classeurs: result.data
     });
 
   } catch (err: unknown) {

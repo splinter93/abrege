@@ -7,6 +7,7 @@ import type { DiffResult } from '@/services/diffService';
 export interface Note {
   id: string;
   source_title: string;
+  title?: string;
   markdown_content: string;
   html_content?: string;
   folder_id: string | null;
@@ -17,7 +18,7 @@ export interface Note {
   slug: string;
   is_published?: boolean;
   public_url?: string;
-  header_image?: string;
+  header_image?: string | null;
   header_image_offset?: number;
   header_image_blur?: number;
   header_image_overlay?: number;
@@ -327,8 +328,8 @@ export const useFileSystemStore = create<FileSystemState>()((set) => ({
   
   setClasseurs: (classeurs: Classeur[]) => set((state) => {
     // ✅ CORRECTION: Remplacer complètement pour gérer les suppressions
-    const newClasseurs = {};
-    classeurs.forEach(c => {
+    const newClasseurs: Record<string, Classeur> = {};
+    classeurs.forEach((c: Classeur) => {
       newClasseurs[c.id] = c;
     });
     return { classeurs: newClasseurs };

@@ -43,7 +43,7 @@ export function getCachedQuery<T>(key: string, queryFn: () => Promise<T>): Promi
     if (process.env.NODE_ENV === 'development') {
       logger.dev(`📦 Cache hit pour: ${key}`);
     }
-    return Promise.resolve(cached.data);
+    return Promise.resolve(cached.data as T);
   }
 
   return queryFn().then(data => {

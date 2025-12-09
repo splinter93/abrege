@@ -407,10 +407,12 @@ export class ToolCallMetrics {
   exportMetrics(timeWindow: number = 24 * 60 * 60 * 1000): {
     timestamp: number;
     globalStats: {
+      totalTools: number;
       totalCalls: number;
-      successRate: number;
-      avgExecutionTime: number;
-      errorRate: number;
+      globalSuccessRate: number;
+      globalAverageTime: number;
+      topSlowTools: Array<{ toolName: string; avgTime: number }>;
+      topErrorTools: Array<{ toolName: string; errorRate: number }>;
     };
     toolStats: Record<string, ToolCallStats>;
     alerts: PerformanceAlert[];
@@ -436,7 +438,14 @@ export class ToolCallMetrics {
       logger.error(`[ToolCallMetrics] ❌ Error exporting metrics:`, error);
       return {
         timestamp: Date.now(),
-        globalStats: {},
+        globalStats: {
+          totalTools: 0,
+          totalCalls: 0,
+          globalSuccessRate: 0,
+          globalAverageTime: 0,
+          topSlowTools: [],
+          topErrorTools: [],
+        },
         toolStats: {},
         alerts: [],
       };

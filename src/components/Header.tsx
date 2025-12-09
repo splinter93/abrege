@@ -162,6 +162,9 @@ const Header: React.FC = () => {
         
         {/* Menu de partage */}
         <ShareMenu
+          noteId=""
+          currentSettings={{ visibility: 'private', invited_users: [], allow_edit: false }}
+          onSettingsChange={async () => {}}
           url={typeof window !== 'undefined' ? window.location.href : ''}
           title="Note Scrivia"
           description="Découvrez cette note créée avec Scrivia"

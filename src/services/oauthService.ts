@@ -159,7 +159,7 @@ export class OAuthService {
 
       console.log('🔍 [OAuthService] URIs autorisées:', client.redirect_uris);
       
-      const isValid = client.redirect_uris.some(uri => {
+      const isValid = client.redirect_uris.some((uri: string) => {
         // Support des wildcards
         if (uri.includes('*')) {
           const pattern = uri.replace(/\*/g, '.*');

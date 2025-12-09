@@ -40,6 +40,54 @@ export interface AgentMcpServerWithDetails extends AgentMcpServer {
 }
 
 /**
+ * Configuration MCP pour l'appel d'outils (format Groq MCP)
+ */
+export interface McpServerConfig {
+  type: 'mcp';
+  server_label: string;
+  server_url: string;
+  headers?: Record<string, string>;
+  require_approval?: 'never' | 'always' | 'auto';
+  allowed_tools?: string[];
+}
+
+export interface AgentMcpConfig {
+  enabled: boolean;
+  servers: McpServerConfig[];
+  hybrid_mode?: boolean;
+}
+
+/**
+ * Serveur MCP externe (catalogue)
+ */
+export interface ExternalMcpServer {
+  name: string;
+  url: string;
+  description?: string;
+  header?: string;
+  api_key?: string;
+  require_approval?: 'never' | 'always' | 'auto';
+  allowed_tools?: string[];
+}
+
+// Helpers pour convertir un serveur externe en config MCP Groq
+export function externalServerToMcpTool(server: ExternalMcpServer): McpServerConfig {
+  return {
+    type: 'mcp',
+    server_label: server.name.toLowerCase().replace(/\s+/g, '-'),
+    server_url: server.url,
+    headers: server.header && server.api_key ? { [server.header]: server.api_key } : undefined,
+    require_approval: server.require_approval,
+    allowed_tools: server.allowed_tools
+  };
+}
+
+// Factory minimale (placeholder)
+export function createMcpTool(config: McpServerConfig): McpServerConfig {
+  return config;
+}
+
+/**
  * Configuration MCP pour une requête Groq (selon la spec)
  */
 export interface GroqMcpToolConfig {

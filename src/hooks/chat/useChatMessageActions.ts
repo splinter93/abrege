@@ -20,10 +20,10 @@ import {
 } from '@/services/chat/ChatMessageEditService';
 import { sessionSyncService } from '@/services/sessionSyncService';
 import { useChatStore } from '@/store/useChatStore';
-import type { Agent, ChatMessage } from '@/types/chat';
+import type { Agent, ChatMessage, UserMessage } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
-import type { LLMContext } from '@/hooks/useLLMContext';
-import type { Note } from '@/services/chat/ChatContextBuilder';
+import type { LLMContext } from '@/types/llmContext';
+import type { Note, LLMContextForOrchestrator } from '@/services/chat/ChatContextBuilder';
 import { simpleLogger as logger } from '@/utils/logger';
 import { tokenManager } from '@/utils/tokenManager';
 import { filterPromptsInMessage } from '@/utils/promptPlaceholders';
@@ -38,7 +38,7 @@ export interface UseChatMessageActionsOptions {
   sendMessageFn: (
     message: string | MessageContent,
     sessionId: string,
-    context?: Record<string, unknown>,
+    context?: LLMContextForOrchestrator | Record<string, unknown>,
     history?: ChatMessage[],
     token?: string
   ) => Promise<void>;
@@ -310,8 +310,8 @@ export function useChatMessageActions(
                 attached_notes,
                 ...rest
               } = saved.message as ChatMessage & {
-                attached_images?: ChatMessage['attachedImages'];
-                attached_notes?: ChatMessage['attachedNotes'];
+                attached_images?: UserMessage['attachedImages'];
+                attached_notes?: UserMessage['attachedNotes'];
               };
 
               const savedMessage: ChatMessage = {

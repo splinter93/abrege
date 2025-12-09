@@ -60,7 +60,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       message: 'Note mise à jour avec succès',
-      note: result.note
+      note: result.data
     });
 
   } catch (err: unknown) {

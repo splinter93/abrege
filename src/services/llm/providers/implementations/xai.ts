@@ -420,7 +420,7 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
                 
                 chunk.content = cleanContent;
                 if (toolCalls.length > 0) {
-                  chunk.tool_calls = toolCalls;
+                  chunk.tool_calls = toolCalls as ToolCall[];
                   logger.warn(`[XAIProvider] XML tool calls convertis (${toolCalls.length})`);
                 }
               }

@@ -2,8 +2,14 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 
+type CookieStore = {
+  get: (name: string) => { value: string } | undefined;
+  set: (options: { name: string; value: string } & CookieOptions) => void;
+  delete: (options: { name: string } & CookieOptions) => void;
+};
+
 export function createSupabaseServerClient(request?: NextRequest) {
-  const cookieStore = cookies();
+  const cookieStore = cookies() as unknown as CookieStore;
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

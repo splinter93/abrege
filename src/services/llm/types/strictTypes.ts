@@ -21,6 +21,9 @@ export interface ToolResult {
   name: string;
   content: string;
   success: boolean;
+  result?: unknown;
+  duration_ms?: number;
+  timestamp?: string;
 }
 
 export interface Usage {
@@ -105,6 +108,7 @@ export interface LLMResponse {
   model?: string;
   usage?: Usage;
   reasoning?: string;
+  finish_reason?: string;
   x_groq?: {
     mcp_calls?: McpCall[];
     [key: string]: unknown;

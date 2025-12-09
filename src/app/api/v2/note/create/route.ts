@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logApi } from '@/utils/logger';
 import { createNoteV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { createSupabaseClient } from '@/utils/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
 import { canPerformAction } from '@/utils/scopeValidation';
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const validatedData = validationResult.data;
 
     // ✅ NOUVEAU: Supporter notebook_id = null pour notes orphelines (Canva)
-    let classeurId: string | null = validatedData.notebook_id;
+    let classeurId: string | null = validatedData.notebook_id ?? null;
     
     // Si notebook_id est fourni, le résoudre (UUID ou slug)
     if (classeurId !== null) {
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         validatedData.source_title,
         userId,
         undefined, // Pas de noteId pour la création
-        supabase
+        supabase as unknown as ReturnType<typeof createClient>
       );
       slug = result.slug;
       publicUrl = result.publicUrl;
@@ -171,7 +172,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // 🔧 Maintenant qu'on a l'ID, générer l'URL publique permanente (avec ID, robuste aux changements de titre)
     try {
-      const finalPublicUrl = await SlugAndUrlService.buildPublicUrl(userId, note.id, supabase);
+      const finalPublicUrl = await SlugAndUrlService.buildPublicUrl(userId, note.id, supabase as unknown as ReturnType<typeof createClient>);
       
       // Mettre à jour la note avec l'URL publique
       const { error: updateUrlError } = await supabase

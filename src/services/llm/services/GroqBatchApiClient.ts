@@ -228,7 +228,7 @@ export class GroqBatchApiClient {
     const filteredMessages = originalPayload.messages.filter(msg => {
       // Pour les messages tool, vérifier s'ils existent déjà
       if (msg.role === 'tool') {
-        return !existingMessageIds.has(msg.tool_call_id);
+        return msg.tool_call_id ? !existingMessageIds.has(msg.tool_call_id) : true;
       }
       return true;
     });

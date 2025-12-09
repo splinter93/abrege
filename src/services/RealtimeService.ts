@@ -22,6 +22,8 @@ export interface RealtimeState {
   readonly isConnecting: boolean;
   readonly error: string | null;
   readonly channels: readonly string[];
+  readonly connectionStatus?: 'disconnected' | 'connecting' | 'connected' | 'error';
+  readonly lastError?: string | null;
 }
 
 export interface RealtimeEvent<T = unknown> {
@@ -48,7 +50,9 @@ export class RealtimeService {
     isConnected: false,
     isConnecting: false,
     error: null,
-    channels: []
+    channels: [],
+    connectionStatus: 'disconnected',
+    lastError: null
   };
   
   // Connexions
@@ -250,6 +254,9 @@ export class RealtimeService {
     // Supabase envoie event_type (avec underscore), pas eventType
     const eventType = String(payload.event_type || payload.eventType || 'unknown').toLowerCase();
     const tableName = channelName.split(':')[0]; // articles, folders, classeurs
+    const toRecord = (val: unknown): Record<string, unknown> => (val && typeof val === 'object') ? val as Record<string, unknown> : {};
+    const newRecord = toRecord(payload.new);
+    const oldRecord = toRecord(payload.old);
     
     // Mapper les événements PostgreSQL vers les événements du dispatcher
     let mappedEventType: string;
@@ -261,23 +268,22 @@ export class RealtimeService {
         if (eventType === 'update') {
           // 🔧 FIX CRITIQUE: Vérifier si la note est mise en corbeille
           // Si trashed_at est défini, traiter comme une suppression
-          const newRecord = payload.new as Record<string, unknown> | null;
           if (newRecord && (newRecord.trashed_at || newRecord.is_in_trash)) {
             mappedEventType = 'note.deleted';
             mappedPayload = { id: newRecord.id };
           } else {
             mappedEventType = 'note.updated';
-            mappedPayload = payload.new || payload.old || {};
+            mappedPayload = Object.keys(newRecord).length ? newRecord : oldRecord;
           }
         } else if (eventType === 'insert') {
           mappedEventType = 'note.created';
-          mappedPayload = payload.new || payload.old || {};
+          mappedPayload = Object.keys(newRecord).length ? newRecord : oldRecord;
         } else if (eventType === 'delete') {
           mappedEventType = 'note.deleted';
-          mappedPayload = payload.new || payload.old || {};
+          mappedPayload = Object.keys(newRecord).length ? newRecord : oldRecord;
         } else {
           mappedEventType = `note.${eventType}`;
-          mappedPayload = payload.new || payload.old || {};
+          mappedPayload = Object.keys(newRecord).length ? newRecord : oldRecord;
         }
         break;
       case 'folders':
@@ -290,7 +296,7 @@ export class RealtimeService {
         } else {
           mappedEventType = `folder.${eventType}`;
         }
-        mappedPayload = payload.new || payload.old || {};
+        mappedPayload = Object.keys(newRecord).length ? newRecord : oldRecord;
         break;
       case 'classeurs':
         if (eventType === 'insert') {
@@ -302,11 +308,11 @@ export class RealtimeService {
         } else {
           mappedEventType = `classeur.${eventType}`;
         }
-        mappedPayload = payload.new || payload.old || {};
+        mappedPayload = Object.keys(newRecord).length ? newRecord : oldRecord;
         break;
       default:
         mappedEventType = `database.${eventType}`;
-        mappedPayload = payload;
+        mappedPayload = Object.keys(newRecord).length ? newRecord : (Object.keys(oldRecord).length ? oldRecord : toRecord(payload));
     }
 
     const event: RealtimeEvent<Record<string, unknown>> = {
@@ -339,9 +345,12 @@ export class RealtimeService {
   private handleEditorEvent(payload: { event: string; payload: unknown }, channelName: string): void {
     if (!this.config) return;
 
-    const event: RealtimeEvent<unknown> = {
+    const normalizedPayload = (payload.payload && typeof payload.payload === 'object')
+      ? payload.payload as Record<string, unknown>
+      : {};
+    const event: RealtimeEvent<Record<string, unknown>> = {
       type: `editor.${payload.event}`,
-      payload: payload.payload,
+      payload: normalizedPayload,
       timestamp: Date.now(),
       source: 'editor',
       channel: channelName
@@ -407,18 +416,20 @@ export class RealtimeService {
           table: 'articles',
           filter: `user_id=eq.${this.config.userId}`
         },
-        (payload) => {
+        (payload: { new?: Record<string, unknown>; old?: Record<string, unknown>; event_type?: string }) => {
           // Événement articles reçu
           
           // Vérifier si l'événement concerne l'utilisateur connecté
           const targetUserId = this.config?.userId;
-          const eventUserId = payload.new?.user_id || payload.old?.user_id;
+          const newRecord = payload.new ?? {};
+          const oldRecord = payload.old ?? {};
+          const eventUserId = (newRecord as { user_id?: string }).user_id || (oldRecord as { user_id?: string }).user_id;
           
           if (eventUserId && targetUserId && eventUserId !== targetUserId) {
             return; // Événement pour un autre utilisateur
           }
           
-          this.handleDatabaseEvent(payload, articlesChannelName);
+          this.handleDatabaseEvent({ ...payload, new: newRecord, old: oldRecord }, articlesChannelName);
         }
       );
 

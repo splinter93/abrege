@@ -7,6 +7,8 @@ import { handleGroqGptOss120b } from '@/services/llm/groqGptOss120b';
 import { simpleLogger as logger } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
 import { chatRateLimiter, toolCallsRateLimiter } from '@/services/rateLimiter';
+import type { AgentConfig } from '@/services/llm/types/agentTypes';
+import type { ChatMessage as AgentChatMessage } from '@/services/llm/types/agentTypes';
 
 // Client Supabase admin pour accéder aux agents
 const supabase = createClient(
@@ -28,10 +30,17 @@ export async function POST(request: NextRequest) {
   // Extraire les variables en dehors du try pour qu'elles soient accessibles dans le catch
   let sessionId: string | undefined;
   let userToken: string | undefined;
+  let message: string | undefined;
+  let context: unknown;
+  let history: AgentChatMessage[] | undefined;
   
   try {
     const body = await request.json();
-    const { message, context, history, provider } = body;
+    const bodyData = body as { message?: string; context?: unknown; history?: AgentChatMessage[]; provider?: string };
+    message = bodyData.message;
+    context = bodyData.context;
+    history = bodyData.history;
+    const provider = bodyData.provider;
 
     // Validation des paramètres requis
     if (!message || !context || !history) {
@@ -118,7 +127,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Extraire les valeurs nécessaires depuis le contexte
-    const { sessionId: extractedSessionId, agentId, uiContext } = context;
+    const contextData = context as { sessionId?: string; agentId?: string; uiContext?: unknown };
+    const { sessionId: extractedSessionId, agentId, uiContext } = contextData;
     sessionId = extractedSessionId;
 
     if (!sessionId) {
@@ -131,7 +141,7 @@ export async function POST(request: NextRequest) {
     logger.info(`[LLM Route] 🚀 Démarrage pour session ${sessionId} avec provider ${provider}`);
 
     // 🎯 Récupérer l'agentConfig depuis la base de données
-    let agentConfig: { id: string; name: string; config: Record<string, unknown> } | null = null;
+    let agentConfig: Partial<AgentConfig> | null = null;
 
     try {
       // 1) Priorité à l'agent explicitement sélectionné
@@ -219,22 +229,37 @@ export async function POST(request: NextRequest) {
     }
 
     // Configuration par défaut si aucun agent n'est trouvé
-    const finalAgentConfig = agentConfig || {
+    const finalAgentConfig: AgentConfig = agentConfig ? {
+      ...agentConfig,
+      id: agentConfig.id!,
+      name: agentConfig.name!,
+      model: agentConfig.model || 'openai/gpt-oss-20b',
+      temperature: agentConfig.temperature ?? 0.7,
+      max_tokens: agentConfig.max_tokens ?? 4000,
+      system_instructions: agentConfig.system_instructions || 'Tu es un assistant IA utile et compétent.',
+      api_v2_capabilities: agentConfig.api_v2_capabilities || DEFAULT_AGENT_SCOPES,
+      is_active: agentConfig.is_active ?? true,
+      priority: agentConfig.priority ?? 0,
+      created_at: agentConfig.created_at || new Date().toISOString(),
+      updated_at: agentConfig.updated_at || new Date().toISOString(),
+    } : {
       id: 'default-agent',
       name: 'Agent par défaut',
       model: 'openai/gpt-oss-20b',
-      provider: 'groq',
       temperature: 0.7,
       max_tokens: 4000,
       system_instructions: 'Tu es un assistant IA utile et compétent.',
-      api_v2_capabilities: DEFAULT_AGENT_SCOPES
+      api_v2_capabilities: DEFAULT_AGENT_SCOPES,
+      is_active: true,
+      priority: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
     
     // 🔍 DEBUG: Log de l'agent config envoyé à l'orchestrateur
     logger.info(`[LLM Route] 📤 Envoi à l'orchestrateur:`, {
       agentId: finalAgentConfig.id,
       agentName: finalAgentConfig.name,
-      provider: finalAgentConfig.provider,
       model: finalAgentConfig.model,
       temperature: finalAgentConfig.temperature,
       max_tokens: finalAgentConfig.max_tokens,
@@ -244,10 +269,15 @@ export async function POST(request: NextRequest) {
     const result = await handleGroqGptOss120b({
       message,
       appContext: {
-        ...context,
-        uiContext // ✅ Inclure le contexte UI
+        type: 'chat_session' as const,
+        name: `Chat Session ${sessionId}`,
+        id: sessionId,
+        content: JSON.stringify({ uiContext }) // Inclure le contexte UI
       },
-      sessionHistory: history,
+      // ⚠️ EXCEPTION TypeScript: Conflit entre deux définitions de ChatMessage
+      // src/types/chat.ts (union type) vs src/services/llm/types/agentTypes.ts (simple interface)
+      // TODO: Unifier les types ChatMessage dans une seule définition
+      sessionHistory: (history || []) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       agentConfig: finalAgentConfig,
       userToken: userToken!,
       sessionId
