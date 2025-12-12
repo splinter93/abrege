@@ -61,14 +61,35 @@ export class ToolCallTracker {
       // Accumuler arguments progressifs (streaming)
       const existing = this.currentRoundToolCalls.get(tc.id)!;
       if (tc.function.name) existing.function.name = tc.function.name;
-      if (tc.function.arguments) existing.function.arguments += tc.function.arguments;
+      if (tc.function.arguments) {
+        const combined = `${existing.function.arguments || ''}${tc.function.arguments}`;
+        const normalized = this.normalizeArguments(combined);
+        existing.function.arguments = normalized;
+      }
       
       // Mettre à jour aussi dans le Map global
       const globalExisting = this.allToolCalls.get(tc.id);
       if (globalExisting) {
         if (tc.function.name) globalExisting.function.name = tc.function.name;
-        if (tc.function.arguments) globalExisting.function.arguments += tc.function.arguments;
+        if (tc.function.arguments) {
+          globalExisting.function.arguments = existing.function.arguments;
+        }
       }
+    }
+  }
+
+  /**
+   * Normalise les arguments JSON partiels concaténés
+   */
+  private normalizeArguments(raw: string): string {
+    const trimmed = raw.trim();
+    try {
+      // Si la concaténation forme un JSON valide, le re-serialize pour éviter les doublons
+      const parsed = JSON.parse(trimmed);
+      return JSON.stringify(parsed);
+    } catch {
+      // Sinon, retourner la concaténation brute
+      return trimmed;
     }
   }
 

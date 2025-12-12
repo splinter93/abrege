@@ -4,13 +4,13 @@
  * @module hooks/__tests__/useChatState
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useChatState } from '../useChatState';
 import { createRef } from 'react';
 
 describe('useChatState', () => {
-  let textareaRef: React.RefObject<HTMLTextAreaElement>;
+  let textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 
   beforeEach(() => {
     textareaRef = createRef();

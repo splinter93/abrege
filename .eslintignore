@@ -1,6 +1,0 @@
-
-# Fichiers temporairement ignorés pour les vacances
-src/app/api/chat/llm/route.ts
-src/utils/v2DatabaseUtils.ts
-src/services/agentApiV2Tools.ts
-src/components/EditorToolbar.tsx

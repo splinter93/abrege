@@ -2,14 +2,25 @@ import { NextRequest } from 'next/server';
 import { simpleLogger as logger } from '@/utils/logger';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { XAIProvider } from '@/services/llm/providers/implementations/xai';
 import { GroqProvider } from '@/services/llm/providers/implementations/groq';
 import type { ChatMessage } from '@/types/chat';
 import { hasToolCalls } from '@/types/chat';
+import { SERVER_ENV } from '@/config/env.server';
 import type { OpenApiEndpoint } from '@/services/llm/executors/OpenApiToolExecutor';
 import type { Tool, McpTool } from '@/services/llm/types/strictTypes';
 import type { ToolCall } from '@/services/llm/types/strictTypes';
 import { isMcpTool, isFunctionTool } from '@/services/llm/types/strictTypes';
+import { llmStreamRequestSchema } from '../validation';
+import { chatRateLimiter } from '@/services/rateLimiter';
+import {
+  validateAndExtractUserId,
+  resolveAgent,
+  validateAndNormalizeModel,
+  normalizeLLMParams,
+  extractTextFromContent
+} from './helpers';
 
 // Force Node.js runtime for streaming
 export const runtime = 'nodejs';
@@ -17,8 +28,8 @@ export const dynamic = 'force-dynamic';
 
 // Client Supabase admin
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  SERVER_ENV.supabase.url,
+  SERVER_ENV.supabase.serviceRoleKey
 );
 
 /**
@@ -32,23 +43,22 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { message, context, history, agentConfig, skipAddingUserMessage = false } = body;
-
-    // Validation des paramètres requis
-    if (!context || !history) {
+    
+    // ✅ Validation Zod stricte
+    const validation = llmStreamRequestSchema.safeParse(body);
+    
+    if (!validation.success) {
+      logger.warn('[Stream Route] ❌ Validation failed:', validation.error.format());
       return new Response(
-        JSON.stringify({ error: 'Paramètres manquants', required: ['context', 'history'] }),
+        JSON.stringify({ 
+          error: 'Validation failed', 
+          details: validation.error.flatten().fieldErrors 
+        }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
     
-    // Si skipAddingUserMessage est false, message est requis
-    if (!skipAddingUserMessage && !message) {
-      return new Response(
-        JSON.stringify({ error: 'Paramètre message requis quand skipAddingUserMessage est false' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+    const { message, context, history, agentConfig, skipAddingUserMessage } = validation.data;
 
     // Extraire le token d'authentification
     const authHeader = request.headers.get('authorization');
@@ -66,122 +76,68 @@ export async function POST(request: NextRequest) {
     logger.info(`[Stream Route] 🌊 Démarrage streaming pour session ${sessionId}`);
 
     // ✅ Valider le JWT et extraire userId
-    let userId: string;
+    const userIdResult = await validateAndExtractUserId(
+      userToken,
+      supabase as unknown as SupabaseClient<unknown, { PostgrestVersion: string }, never, never, { PostgrestVersion: string }>
+    );
     
-    try {
-      if (userToken.includes('.')) {
-        // C'est un JWT
-        const { data: { user }, error } = await supabase.auth.getUser(userToken);
-        
-        if (error || !user) {
-          logger.error('[Stream Route] ❌ JWT invalide:', error);
-          return new Response(
-            JSON.stringify({ error: 'JWT invalide ou expiré' }),
-            { status: 401, headers: { 'Content-Type': 'application/json' } }
-          );
-        }
-        
-        userId = user.id;
-      } else {
-        // C'est déjà un userId
-        userId = userToken;
-      }
-    } catch (verifyError) {
-      logger.error('[Stream Route] ❌ Erreur validation token:', verifyError);
+    if (!userIdResult.success) {
       return new Response(
-        JSON.stringify({ error: 'Token invalide' }),
+        JSON.stringify({ error: userIdResult.error }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const userId = userIdResult.userId;
+
+    // ✅ SÉCURITÉ: Rate limiting par utilisateur
+    const chatLimit = await chatRateLimiter.check(userId);
+    
+    if (!chatLimit.allowed) {
+      const resetDate = new Date(chatLimit.resetTime);
+      logger.warn(`[Stream Route] ⛔ Rate limit dépassé pour userId ${userId.substring(0, 8)}...`);
+      
+      return new Response(
+        JSON.stringify({
+          error: 'Rate limit dépassé',
+          message: `Vous avez atteint la limite de ${chatLimit.limit} messages par minute. Veuillez réessayer dans quelques instants.`,
+          remaining: chatLimit.remaining,
+          resetTime: chatLimit.resetTime,
+          resetDate: resetDate.toISOString()
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-RateLimit-Limit': chatLimit.limit.toString(),
+            'X-RateLimit-Remaining': chatLimit.remaining.toString(),
+            'X-RateLimit-Reset': chatLimit.resetTime.toString(),
+            'Retry-After': Math.ceil((chatLimit.resetTime - Date.now()) / 1000).toString()
+          }
+        }
       );
     }
 
     // ✅ Récupérer l'agent comme la route classique (table 'agents')
     const agentId = context.agentId;
     const providerName = context.provider || 'xai';
-    let finalAgentConfig = agentConfig;
     
-    try {
-      // 1) Priorité à l'agent explicitement sélectionné
-      if (agentId) {
-        logger.dev(`[Stream Route] 🔍 Récupération de l'agent par ID: ${agentId}`);
-        const { data: agentById, error: agentByIdError } = await supabase
-          .from('agents')
-          .select('*')
-          .eq('id', agentId)
-          .eq('is_active', true)
-          .single();
-
-        if (!agentByIdError && agentById) {
-          finalAgentConfig = agentById;
-          logger.dev(`[Stream Route] ✅ Agent trouvé: ${agentById.name}`);
-        }
-      }
-
-      // 2) Sinon fallback par provider
-      if (!finalAgentConfig && providerName) {
-        logger.dev(`[Stream Route] 🔍 Récupération de l'agent pour le provider: ${providerName}`);
-        const { data: agent, error } = await supabase
-          .from('agents')
-          .select('*')
-          .eq('provider', providerName)
-          .eq('is_active', true)
-          .order('priority', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (!error && agent) {
-          finalAgentConfig = agent;
-          logger.dev(`[Stream Route] ✅ Agent trouvé par provider: ${agent.name}`);
-        }
-      }
-
-      // 3) Fallback final : premier agent actif
-      if (!finalAgentConfig) {
-        logger.dev(`[Stream Route] 🔍 Récupération du premier agent actif`);
-        const { data: defaultAgent, error } = await supabase
-          .from('agents')
-          .select('*')
-          .eq('is_active', true)
-          .order('priority', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (!error && defaultAgent) {
-          finalAgentConfig = defaultAgent;
-          logger.dev(`[Stream Route] ✅ Agent par défaut: ${defaultAgent.name}`);
-        }
-      }
-    } catch (error) {
-      logger.error(`[Stream Route] ❌ Erreur récupération agent:`, error);
-    }
+    const finalAgentConfig = await resolveAgent(
+      agentId,
+      providerName,
+      agentConfig,
+      supabase as unknown as SupabaseClient<unknown, { PostgrestVersion: string }, never, never, { PostgrestVersion: string }>
+    );
 
     // ✅ Sélectionner le provider selon la config agent (Groq ou xAI)
     const providerType = finalAgentConfig?.provider?.toLowerCase() || 'groq';
     let model = finalAgentConfig?.model || (providerType === 'xai' ? 'grok-4-1-fast-reasoning' : 'openai/gpt-oss-20b');
     
-    // 🔍 VALIDATION : Détecter incohérence provider/modèle
-    const isXaiModel = model.includes('grok');
-    const isGroqModel = model.includes('openai/') || model.includes('llama') || model.includes('deepseek');
-    
-    if (providerType === 'xai' && isGroqModel) {
-      logger.warn(`[Stream Route] ⚠️ INCOHÉRENCE: Provider xAI avec modèle Groq (${model}), correction automatique`);
-      model = 'grok-4-1-fast-reasoning'; // Fallback vers un modèle xAI
-    } else if (providerType === 'groq' && isXaiModel) {
-      logger.warn(`[Stream Route] ⚠️ INCOHÉRENCE: Provider Groq avec modèle xAI (${model}), correction automatique`);
-      model = 'openai/gpt-oss-20b'; // Fallback vers un modèle Groq
-    }
+    // 🔍 Validation et normalisation du modèle
+    model = validateAndNormalizeModel(providerType, model);
     
     // Validation et normalisation des paramètres LLM
-    const temperature = typeof finalAgentConfig?.temperature === 'number'
-      ? Math.max(0, Math.min(2, finalAgentConfig.temperature))
-      : 0.7;
-    
-    const topP = typeof finalAgentConfig?.top_p === 'number'
-      ? Math.max(0, Math.min(1, finalAgentConfig.top_p))
-      : 0.9;
-    
-    const maxTokens = typeof finalAgentConfig?.max_tokens === 'number'
-      ? Math.max(1, Math.min(100000, finalAgentConfig.max_tokens))
-      : 8000;
+    const { temperature, topP, maxTokens } = normalizeLLMParams(finalAgentConfig);
 
     // 🔍 DEBUG: Log détaillé de la sélection
     logger.info(`[Stream Route] 🔄 Configuration LLM:`, {
@@ -227,8 +183,8 @@ export async function POST(request: NextRequest) {
       {
         type: context.type || 'chat_session',
         name: context.name || 'Chat',
-        id: context.id || sessionId,
-        sessionId: sessionId, // ✅ CRITIQUE : Injecter sessionId explicitement pour tous les LLM
+        id: context.id ?? sessionId ?? 'unknown',
+        sessionId: sessionId ?? '', // ✅ CRITIQUE : Injecter sessionId explicitement pour tous les LLM
         provider: providerType,
         ...uiContext  // Sans attachedNotes
       }
@@ -306,8 +262,8 @@ export async function POST(request: NextRequest) {
     }
     
     // ✅ NOUVEAU : Remplacer prompts /slug par templates avant LLM
-    let processedMessage = message;
-    if (!skipAddingUserMessage && message && typeof message === 'string') {
+    let processedMessage: string = typeof message === 'string' ? message : '';
+    if (!skipAddingUserMessage && processedMessage) {
       // Récupérer prompts depuis le dernier message user de l'historique
       const lastUserMessage = [...history].reverse().find(m => m.role === 'user') as import('@/types/chat').UserMessage | undefined;
       const contextPrompts = context.prompts || [];
@@ -328,7 +284,7 @@ export async function POST(request: NextRequest) {
             templateMap.set(promptRow.slug, promptRow.prompt_template);
           });
 
-          let finalContent = processedMessage;
+          let finalContent = processedMessage ?? '';
 
           for (const promptMeta of prompts) {
             const pattern = `/${promptMeta.slug}`;
@@ -373,7 +329,7 @@ export async function POST(request: NextRequest) {
 
           logger.info('[Stream Route] 📝 Prompts remplacés', {
             count: prompts.length,
-            originalLength: message.length,
+            originalLength: processedMessage.length,
             finalLength: processedMessage.length
           });
         }
@@ -384,13 +340,21 @@ export async function POST(request: NextRequest) {
     }
     
     // ✅ Construire le tableau de messages avec contextes injectés AVANT user message
-    const messages: ChatMessage[] = [
+    // Conversion type-safe via mapper
+    const sanitizedHistory = history.map((msg, index) => ({
+      ...msg,
+      id: msg.id ?? `history-${index}`,
+      content: msg.content ?? '',
+      timestamp: msg.timestamp ?? new Date().toISOString()
+    })) as ChatMessage[];
+
+    const messages: ChatMessage[] = ([
       {
         role: 'system',
         content: systemMessage,
         timestamp: new Date().toISOString()
       },
-      ...history,
+      ...sanitizedHistory,
       // Injecter contexte notes épinglées (full content)
       ...(contextMessage ? [contextMessage] : []),
       // Injecter contexte mentions légères (metadata only)
@@ -401,7 +365,7 @@ export async function POST(request: NextRequest) {
         content: processedMessage,
         timestamp: new Date().toISOString()
       }])
-    ];
+    ]) as ChatMessage[];
 
     // ✅ Charger les tools (OpenAPI + MCP) ET les endpoints
     let tools: Tool[] = [];
@@ -426,13 +390,14 @@ export async function POST(request: NextRequest) {
           
           // 2. Charger les tools MCP de l'agent
           const { mcpConfigService } = await import('@/services/llm/mcpConfigService');
-          // ⚠️ EXCEPTION TypeScript: buildHybridTools retourne un format mixte (MCP + OpenAPI)
-          // TODO: Unifier les types Tool pour éviter ce cast
-          tools = await mcpConfigService.buildHybridTools(
+          // ✅ Type-safe: buildHybridTools retourne Tool[] | McpServerConfig[]
+          const hybridTools = await mcpConfigService.buildHybridTools(
             context.agentId,
             userToken,
-            openApiTools as any // eslint-disable-line @typescript-eslint/no-explicit-any
-          ) as Tool[];
+            openApiTools
+          );
+          
+          tools = hybridTools as Tool[];
           
           const mcpCount = tools.filter(isMcpTool).length;
           const openApiCount = tools.length - mcpCount;
@@ -477,7 +442,7 @@ export async function POST(request: NextRequest) {
           });
 
           // ✅ Boucle agentic en streaming (max 5 tours)
-          let currentMessages = [...messages];
+          const currentMessages = [...messages];
           let roundCount = 0;
           const maxRounds = 20;
           
@@ -500,15 +465,7 @@ export async function POST(request: NextRequest) {
           });
 
           // ✅ Helper: Extraire le texte d'un MessageContent (string ou array multi-modal)
-          const extractTextFromContent = (content: string | null | Array<{ type: string; text?: string }>): string => {
-            if (!content) return '';
-            if (typeof content === 'string') return content;
-            // Si array, trouver la partie texte
-            const textPart = content.find((part): part is { type: 'text'; text: string } => 
-              typeof part === 'object' && part.type === 'text'
-            );
-            return textPart?.text || '[Multi-modal content]';
-          };
+          // Extrait dans helpers.ts
 
           while (roundCount < maxRounds) {
             roundCount++;
@@ -540,7 +497,6 @@ export async function POST(request: NextRequest) {
 
             // Accumuler tool calls et content du stream
             let accumulatedContent = '';
-            let accumulatedReasoning = '';  // ✅ NOUVEAU: Accumuler le reasoning
             const toolCallsMap = new Map<string, ToolCall>(); // Accumuler par ID pour gérer les chunks
             let finishReason: string | null = null;
 
@@ -552,11 +508,6 @@ export async function POST(request: NextRequest) {
               // Accumuler content
               if (chunk.content) {
                 accumulatedContent += chunk.content;
-              }
-              
-              // ✅ NOUVEAU: Accumuler reasoning
-              if (chunk.reasoning) {
-                accumulatedReasoning += chunk.reasoning;
               }
               
               // ✅ Accumuler tool calls (peuvent venir en plusieurs chunks)
@@ -614,54 +565,70 @@ export async function POST(request: NextRequest) {
 
             const accumulatedToolCalls = Array.from(toolCallsMap.values());
 
-            // ✅ NOUVEAU : Persister le message de ce round
-            if (accumulatedContent || accumulatedToolCalls.length > 0) {
+            // ✅ Déduplication forte : ne pas exécuter deux fois le même tool (nom + args)
+            const uniqueToolCalls: ToolCall[] = [];
+            accumulatedToolCalls.forEach((tc, index) => {
+              const signature = `${tc.function.name}:${tc.function.arguments}`;
+              const isDuplicate = executedToolCallsSignatures.has(signature);
+
+              logger.info(`[Stream Route] 🔧 TOOL CALL ${index + 1}:`, {
+                id: tc.id,
+                functionName: tc.function.name,
+                args: tc.function.arguments.substring(0, 100),
+                isDuplicate
+              });
+
+              if (isDuplicate) {
+                logger.warn(`[Stream Route] ⚠️ DOUBLON DÉTECTÉ - SKIP ${tc.function.name}`);
+                return;
+              }
+
+              executedToolCallsSignatures.add(signature);
+              uniqueToolCalls.push(tc);
+            });
+
+            const dedupedCount = accumulatedToolCalls.length - uniqueToolCalls.length;
+
+            // ✅ NOUVEAU : Persister le message de ce round (outil dédupliqué)
+            if (accumulatedContent || uniqueToolCalls.length > 0) {
               sendSSE({
                 type: 'assistant_round_complete',
                 content: accumulatedContent,
-                tool_calls: accumulatedToolCalls,
+                tool_calls: uniqueToolCalls,
                 finishReason: finishReason,
                 timestamp: Date.now()
               });
             }
 
-            // ✅ Exécuter les tool calls
-            logger.dev(`[Stream Route] 🔧 Exécution de ${accumulatedToolCalls.length} tool calls`);
-            
-            // ✅ AUDIT DÉTAILLÉ : Logger les tool calls à exécuter ET détecter les doublons
-            logger.info(`[Stream Route] 🔧 Exécution de ${accumulatedToolCalls.length} tool calls au Round ${roundCount}`);
-            
-            accumulatedToolCalls.forEach((tc, index) => {
-              const signature = `${tc.function.name}:${tc.function.arguments}`;
-              const isDoublon = executedToolCallsSignatures.has(signature);
-              
-              logger.info(`[Stream Route] 🔧 TOOL CALL ${index + 1}:`, {
-                id: tc.id,
-                functionName: tc.function.name,
-                args: tc.function.arguments.substring(0, 100),
-                isDuplicate: isDoublon
+            if (dedupedCount > 0) {
+              sendSSE({
+                type: 'tool_dedup',
+                skipped: dedupedCount,
+                timestamp: Date.now()
               });
-              
-              if (isDoublon) {
-                logger.warn(`[Stream Route] ⚠️⚠️⚠️ DOUBLON DÉTECTÉ ! ${tc.function.name}`);
-              }
-              
-              // Ajouter la signature pour tracking
-              executedToolCallsSignatures.add(signature);
-            });
+            }
+
+            // Si tous les tool calls sont des doublons, on arrête pour éviter la boucle infinie
+            if (uniqueToolCalls.length === 0 && accumulatedToolCalls.length > 0) {
+              logger.warn('[Stream Route] ⚠️ Tous les tool calls de ce round étaient des doublons - arrêt de l’exécution');
+              break;
+            }
+
+            // ✅ Exécuter les tool calls (uniques uniquement)
+            logger.dev(`[Stream Route] 🔧 Exécution de ${uniqueToolCalls.length} tool calls (après déduplication)`);
             
             // Envoyer un événement d'exécution de tools
             sendSSE({
               type: 'tool_execution',
-              toolCount: accumulatedToolCalls.length,
+              toolCount: uniqueToolCalls.length,
               timestamp: Date.now()
             });
 
-            // Ajouter le message assistant avec tool calls
+            // Ajouter le message assistant avec tool calls dédupliqués
             currentMessages.push({
               role: 'assistant',
               content: accumulatedContent || '',
-              tool_calls: accumulatedToolCalls,
+              tool_calls: uniqueToolCalls,
               timestamp: new Date().toISOString()
             });
 
@@ -674,7 +641,7 @@ export async function POST(request: NextRequest) {
             const openApiExecutor = new OpenApiToolExecutor('', openApiEndpoints);
             
             // ✅ Exécuter chaque tool call
-            for (const toolCall of accumulatedToolCalls) {
+            for (const toolCall of uniqueToolCalls) {
               checkTimeout(); // Vérifier timeout avant chaque tool
               try {
                 logger.dev(`[Stream Route] 🔧 Exécution tool: ${toolCall.function.name}`);

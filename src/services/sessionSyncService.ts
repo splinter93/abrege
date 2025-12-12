@@ -136,6 +136,7 @@ export class SessionSyncService {
   /**
    * 💬 Ajouter un message en DB puis synchroniser
    * ✅ NOUVEAU: Appelle route API /messages/add (atomique via HistoryManager)
+   * ✅ Déduplication via operation_id (idempotence)
    */
   async addMessageAndSync(sessionId: string, message: Omit<ChatMessage, 'id'>): Promise<{
     success: boolean;
@@ -145,7 +146,8 @@ export class SessionSyncService {
     try {
       logger.dev('[SessionSync] 🚀 Début addMessageAndSync:', {
         sessionId,
-        messageRole: message.role
+        messageRole: message.role,
+        hasOperationId: !!message.operation_id
       });
       
       return await this.runExclusive(sessionId, async () => {
@@ -158,6 +160,30 @@ export class SessionSyncService {
         
         if (!token) {
           throw new Error('Authentification requise');
+        }
+        
+        // ✅ NOUVEAU: Si operation_id présent, vérifier déduplication
+        if (message.operation_id) {
+          const dedupeResponse = await fetch(
+            `/api/chat/messages/check-operation?operation_id=${message.operation_id}`,
+            {
+              headers: { 'Authorization': `Bearer ${token}` }
+            }
+          );
+          
+          if (dedupeResponse.ok) {
+            const dedupeData = await dedupeResponse.json();
+            if (dedupeData.exists && dedupeData.message) {
+              logger.info('[SessionSync] ♻️ Message déjà existant (déduplication)', {
+                operationId: message.operation_id,
+                existingMessageId: dedupeData.message.id
+              });
+              return {
+                success: true,
+                message: dedupeData.message
+              };
+            }
+          }
         }
         
         // ✅ Appel route API (serveur) qui utilise HistoryManager avec SERVICE_ROLE

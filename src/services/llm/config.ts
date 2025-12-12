@@ -1,8 +1,9 @@
+import { SERVER_ENV } from '@/config/env.server';
+
 /**
  * Configuration centralisée pour les LLM
  * Gère les variables d'environnement et les paramètres par défaut
  */
-
 export interface LLMConfig {
   // Configuration générale
   defaultProvider: string;
@@ -70,7 +71,7 @@ const DEFAULT_CONFIG: LLMConfig = {
   
   providers: {
     groq: {
-      apiKey: process.env.GROQ_API_KEY || '',
+      apiKey: SERVER_ENV.llm.groqApiKey,
       baseUrl: 'https://api.groq.com/openai/v1',
       defaultModel: 'openai/gpt-oss-20b',
       serviceTier: 'on_demand'
@@ -81,7 +82,7 @@ const DEFAULT_CONFIG: LLMConfig = {
       defaultModel: 'gpt-4'
     },
     xai: {
-      apiKey: process.env.XAI_API_KEY || '',
+      apiKey: SERVER_ENV.llm.xaiApiKey,
       baseUrl: 'https://api.x.ai/v1',
       defaultModel: 'grok-4-1-fast-reasoning',
       reasoningMode: 'fast'

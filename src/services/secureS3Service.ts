@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { createHash } from 'crypto';
 import { supabase } from '@/supabaseClient';
 import { simpleLogger as logger } from '@/utils/logger';
+import { SERVER_ENV } from '@/config/env.server';
 
 // ========================================
 // TYPES ET INTERFACES
@@ -314,7 +315,6 @@ export class SecureS3Service {
   private generateSecureKey(options: SecureUploadOptions): string {
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const extension = options.fileName.split('.').pop() || '';
     const safeFileName = options.fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     
     return `${options.userId}/${timestamp}_${randomSuffix}_${safeFileName}`;
@@ -435,10 +435,10 @@ export class SecureS3Service {
  */
 function validateS3Config() {
   const config = {
-    region: process.env.AWS_REGION,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    bucket: process.env.AWS_S3_BUCKET,
+    region: SERVER_ENV.aws.s3Region,
+    accessKeyId: SERVER_ENV.aws.accessKeyId,
+    secretAccessKey: SERVER_ENV.aws.secretAccessKey,
+    bucket: SERVER_ENV.aws.s3BucketName,
   };
 
   const result = s3ConfigSchema.safeParse(config);

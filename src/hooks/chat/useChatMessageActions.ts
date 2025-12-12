@@ -27,6 +27,7 @@ import type { Note, LLMContextForOrchestrator } from '@/services/chat/ChatContex
 import { simpleLogger as logger } from '@/utils/logger';
 import { tokenManager } from '@/utils/tokenManager';
 import { filterPromptsInMessage } from '@/utils/promptPlaceholders';
+import { chatOperationLock } from '@/services/chat/ChatOperationLock';
 
   /**
    * Options du hook
@@ -207,59 +208,69 @@ export function useChatMessageActions(
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-
     // ✅ Session doit exister (créée lors du clic sur agent)
     if (!currentSession) {
       throw new Error('Aucune session active');
     }
     
-    // ✅ Reset le streaming précédent
-    if (onBeforeSend) {
-      await onBeforeSend();
-    }
+    // ✅ NOUVEAU: Wrapper avec lock exclusif pour éviter double-envoi
+    return chatOperationLock.runExclusive(
+      currentSession.id,
+      async () => {
+        setIsLoading(true);
+        setError(null);
 
-    try {
-      const currentMessagesSnapshot = messagesRef.current;
+        // ✅ Reset le streaming précédent
+        if (onBeforeSend) {
+          await onBeforeSend();
+        }
 
-      // ✅ OPTIMISTIC UI : Créer et afficher message user IMMÉDIATEMENT
-      const textContent = typeof message === 'string' 
-        ? message 
-        : (Array.isArray(message) ? message.find(p => p.type === 'text')?.text || '' : '');
-      
-      const clientMessageId = `client-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        try {
+          const currentMessagesSnapshot = messagesRef.current;
 
-    const filteredPrompts =
-      prompts && prompts.length > 0 ? filterPromptsInMessage(textContent, prompts) : [];
+          // ✅ OPTIMISTIC UI : Créer et afficher message user IMMÉDIATEMENT
+          const textContent = typeof message === 'string' 
+            ? message 
+            : (Array.isArray(message) ? message.find(p => p.type === 'text')?.text || '' : '');
+          
+          const clientMessageId = `client-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+          
+          // ✅ NOUVEAU: Générer operation_id unique pour idempotence
+          const operationId = `${crypto.randomUUID()}`;
 
-    const tempMessage: ChatMessage = {
-        id: `temp-${Date.now()}`,
-        clientMessageId,
-        role: 'user',
-        content: textContent,
-        timestamp: new Date().toISOString(),
-        ...(images && images.length > 0 && { 
-          attachedImages: images.map(img => ({
-            url: img.base64,
-            fileName: img.fileName
-          }))
-        }),
-        ...(notes && notes.length > 0 && { 
-          attachedNotes: notes.map(n => ({
-            id: n.id,
-            slug: n.slug,
-            title: n.title
-          }))
-        }),
-        ...(mentions && mentions.length > 0 && { mentions }),
-      ...(filteredPrompts.length > 0 && { prompts: filteredPrompts })
-      };
+          const filteredPrompts =
+            prompts && prompts.length > 0 ? filterPromptsInMessage(textContent, prompts) : [];
 
-      // Afficher IMMÉDIATEMENT (avant chargement notes)
-      addInfiniteMessage(tempMessage);
-      messagesRef.current = [...currentMessagesSnapshot, tempMessage];
-      logger.info('[useChatMessageActions] ⚡ Message user affiché instantanément (optimistic UI)');
+          const tempMessage: ChatMessage = {
+            id: `temp-${Date.now()}`,
+            clientMessageId,
+            operation_id: operationId, // ✅ NOUVEAU
+            role: 'user',
+            content: textContent,
+            timestamp: new Date().toISOString(),
+            ...(images && images.length > 0 && { 
+              attachedImages: images.map(img => ({
+                url: img.base64,
+                fileName: img.fileName
+              }))
+            }),
+            ...(notes && notes.length > 0 && { 
+              attachedNotes: notes.map(n => ({
+                id: n.id,
+                slug: n.slug,
+                title: n.title
+              }))
+            }),
+            ...(mentions && mentions.length > 0 && { mentions }),
+            ...(filteredPrompts.length > 0 && { prompts: filteredPrompts })
+          };
+
+          // Afficher IMMÉDIATEMENT (avant chargement notes)
+          addInfiniteMessage(tempMessage);
+          messagesRef.current = [...currentMessagesSnapshot, tempMessage];
+          logger.info('[useChatMessageActions] ⚡ Message user affiché instantanément (optimistic UI)', {
+            operationId
+          });
 
       // 1. Préparer l'envoi via service (charge notes en arrière-plan)
       const prepareResult = await chatMessageSendingService.prepare({
@@ -291,6 +302,7 @@ export function useChatMessageActions(
         role: 'user' as const,
         content: tempMessage.content,
         timestamp: tempMessage.timestamp,
+        operation_id: operationId, // ✅ NOUVEAU: Inclure pour déduplication
         ...(tempMessage.attachedImages && { attachedImages: tempMessage.attachedImages }),
         ...(tempMessage.attachedNotes && { attachedNotes: tempMessage.attachedNotes }),
         ...(mentions && mentions.length > 0 && { mentions }),
@@ -382,6 +394,12 @@ export function useChatMessageActions(
     } finally {
       setIsLoading(false);
     }
+      },
+      { 
+        timeout: 60000, // 60s timeout
+        operationName: 'sendMessage'
+      }
+    );
   }, [
     currentSession, // 🔥 Ajouté - sinon closure stale
     selectedAgent,

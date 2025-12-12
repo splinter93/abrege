@@ -1,6 +1,7 @@
 import { createSupabaseClient } from '@/utils/supabaseClient';
 import { randomBytes, createHash } from 'crypto';
 import bcrypt from 'bcryptjs';
+import { logger, LogCategory } from '@/utils/logger';
 
 export interface OAuthClient {
   id: string;
@@ -99,7 +100,7 @@ export class OAuthService {
 
       return client;
     } catch (error) {
-      console.error('Erreur validation credentials client:', error);
+      logger.error(LogCategory.API, 'Erreur validation credentials client', { error });
       return null;
     }
   }
@@ -109,7 +110,7 @@ export class OAuthService {
    */
   async getClientById(clientId: string): Promise<OAuthClient | null> {
     try {
-      console.log('🔍 [OAuthService] Récupération client par ID:', clientId);
+      logger.info(LogCategory.API, '[OAuthService] Récupération client par ID', { clientId });
       
       const { data: client, error } = await this.supabase
         .from('oauth_clients')
@@ -119,11 +120,11 @@ export class OAuthService {
         .single();
 
       if (error || !client) {
-        console.error('❌ [OAuthService] Client non trouvé ou inactif:', { error, client });
+        logger.error(LogCategory.API, '[OAuthService] Client non trouvé ou inactif', { error, client });
         return null;
       }
 
-      console.log('🔍 [OAuthService] Client trouvé:', { 
+      logger.info(LogCategory.API, '[OAuthService] Client trouvé', { 
         id: client.id, 
         name: client.name, 
         is_active: client.is_active,
@@ -133,7 +134,7 @@ export class OAuthService {
 
       return client;
     } catch (error) {
-      console.error('❌ [OAuthService] Erreur récupération client:', error);
+      logger.error(LogCategory.API, '[OAuthService] Erreur récupération client', { error });
       return null;
     }
   }
@@ -143,7 +144,7 @@ export class OAuthService {
    */
   async validateRedirectUri(clientId: string, redirectUri: string): Promise<boolean> {
     try {
-      console.log('🔍 [OAuthService] Validation redirect_uri:', { clientId, redirectUri });
+      logger.info(LogCategory.API, '[OAuthService] Validation redirect_uri', { clientId, redirectUri });
       
       const { data: client, error } = await this.supabase
         .from('oauth_clients')
@@ -153,11 +154,11 @@ export class OAuthService {
         .single();
 
       if (error || !client) {
-        console.error('❌ [OAuthService] Client non trouvé pour validation redirect_uri:', { error, client });
+        logger.error(LogCategory.API, '[OAuthService] Client non trouvé pour validation redirect_uri', { error, client });
         return false;
       }
 
-      console.log('🔍 [OAuthService] URIs autorisées:', client.redirect_uris);
+      logger.info(LogCategory.API, '[OAuthService] URIs autorisées', { redirectUris: client.redirect_uris });
       
       const isValid = client.redirect_uris.some((uri: string) => {
         // Support des wildcards
@@ -165,19 +166,19 @@ export class OAuthService {
           const pattern = uri.replace(/\*/g, '.*');
           const regex = new RegExp(`^${pattern}$`);
           const matches = regex.test(redirectUri);
-          console.log(`🔍 [OAuthService] Pattern ${uri} -> ${pattern}: ${matches ? '✅' : '❌'}`);
+          logger.debug(LogCategory.API, '[OAuthService] Validation pattern redirect_uri', { uri, pattern, matches });
           return matches;
         }
         // Sinon, validation exacte ou startsWith
         const matches = redirectUri.startsWith(uri);
-        console.log(`🔍 [OAuthService] URI ${uri}: ${matches ? '✅' : '❌'}`);
+        logger.debug(LogCategory.API, '[OAuthService] URI validation', { uri, matches });
         return matches;
       });
 
-      console.log('🔍 [OAuthService] Résultat validation redirect_uri:', isValid);
+      logger.info(LogCategory.API, '[OAuthService] Résultat validation redirect_uri', { isValid });
       return isValid;
     } catch (error) {
-      console.error('❌ [OAuthService] Erreur validation redirect_uri:', error);
+      logger.error(LogCategory.API, '[OAuthService] Erreur validation redirect_uri', { error });
       return false;
     }
   }
@@ -187,7 +188,7 @@ export class OAuthService {
    */
   async validateScopes(clientId: string, requestedScopes: string[]): Promise<boolean> {
     try {
-      console.log('🔍 [OAuthService] Validation des scopes:', { clientId, requestedScopes });
+      logger.info(LogCategory.API, '[OAuthService] Validation des scopes', { clientId, requestedScopes });
       
       const { data: client, error } = await this.supabase
         .from('oauth_clients')
@@ -197,22 +198,22 @@ export class OAuthService {
         .single();
 
       if (error || !client) {
-        console.error('❌ [OAuthService] Client non trouvé ou inactif:', { error, client });
+        logger.error(LogCategory.API, '[OAuthService] Client non trouvé ou inactif', { error, client });
         return false;
       }
 
-      console.log('🔍 [OAuthService] Client trouvé avec scopes:', client.scopes);
+      logger.info(LogCategory.API, '[OAuthService] Client trouvé avec scopes', { scopes: client.scopes });
       
       const allScopesValid = requestedScopes.every(scope => {
         const isValid = client.scopes.includes(scope);
-        console.log(`🔍 [OAuthService] Scope ${scope}: ${isValid ? '✅' : '❌'}`);
+        logger.debug(LogCategory.API, '[OAuthService] Scope validation', { scope, isValid });
         return isValid;
       });
 
-      console.log('🔍 [OAuthService] Résultat validation scopes:', allScopesValid);
+      logger.info(LogCategory.API, '[OAuthService] Résultat validation scopes', { allScopesValid });
       return allScopesValid;
     } catch (error) {
-      console.error('❌ [OAuthService] Erreur validation scopes:', error);
+      logger.error(LogCategory.API, '[OAuthService] Erreur validation scopes', { error });
       return false;
     }
   }
@@ -249,7 +250,7 @@ export class OAuthService {
 
       return code;
     } catch (error) {
-      console.error('Erreur création code d\'autorisation:', error);
+      logger.error(LogCategory.API, 'Erreur création code d\'autorisation', { error });
       throw error;
     }
   }
@@ -339,7 +340,7 @@ export class OAuthService {
         refresh_token: refreshToken
       };
     } catch (error) {
-      console.error('Erreur échange code contre token:', error);
+      logger.error(LogCategory.API, 'Erreur échange code contre token', { error });
       throw error;
     }
   }
@@ -369,7 +370,7 @@ export class OAuthService {
         client_id: tokenData.client_id
       };
     } catch (error) {
-      console.error('Erreur validation access token:', error);
+      logger.error(LogCategory.API, 'Erreur validation access token', { error });
       return null;
     }
   }
@@ -392,7 +393,7 @@ export class OAuthService {
 
       return true;
     } catch (error) {
-      console.error('Erreur révocation access token:', error);
+      logger.error(LogCategory.API, 'Erreur révocation access token', { error });
       return false;
     }
   }
@@ -481,7 +482,7 @@ export class OAuthService {
         refresh_token: newRefreshToken
       };
     } catch (error) {
-      console.error('Erreur rafraîchissement access token:', error);
+      logger.error(LogCategory.API, 'Erreur rafraîchissement access token', { error });
       throw error;
     }
   }
@@ -493,7 +494,7 @@ export class OAuthService {
     try {
       await this.supabase.rpc('cleanup_expired_oauth_data');
     } catch (error) {
-      console.error('Erreur nettoyage données OAuth:', error);
+      logger.error(LogCategory.API, 'Erreur nettoyage données OAuth', { error });
     }
   }
 }

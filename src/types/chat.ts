@@ -42,13 +42,18 @@ export interface BaseMessage {
   role: 'user' | 'assistant' | 'system' | 'tool';
   content: string;
   timestamp?: string | number;
-  sequence_number?: number;  // ✅ NOUVEAU: Ordre strict (table chat_messages)
+  sequence_number?: number;  // ✅ Ordre strict (table chat_messages)
   streamTimeline?: StreamTimeline; // ✅ Timeline capturée du streaming
   /**
    * Identifiant client stable pour conserver les clés React
    * entre l'ajout optimiste et la version persistée.
    */
   clientMessageId?: string;
+  /**
+   * UUID unique pour idempotence (déduplication)
+   * Permet d'éviter les doublons en cas de retry/double-clic
+   */
+  operation_id?: string;
 }
 
 /**

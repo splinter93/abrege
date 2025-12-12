@@ -16,6 +16,8 @@ describe('useChatActions', () => {
   const mockSetSelectedNotes = vi.fn();
   const mockSetAudioError = vi.fn();
   const mockClearImages = vi.fn();
+  const mockSetMentions = vi.fn();
+  const mockSetUsedPrompts = vi.fn();
 
   const defaultProps = {
     message: '',
@@ -29,7 +31,11 @@ describe('useChatActions', () => {
     setAudioError: mockSetAudioError,
     detectCommands: mockDetectCommands,
     send: mockSend,
-    clearImages: mockClearImages
+    clearImages: mockClearImages,
+    mentions: [],
+    usedPrompts: [],
+    setMentions: mockSetMentions,
+    setUsedPrompts: mockSetUsedPrompts
   };
 
   beforeEach(() => {
@@ -70,12 +76,12 @@ describe('useChatActions', () => {
         await result.current.handleSend();
       });
 
-      expect(mockSend).toHaveBeenCalledWith('Hello world', [], []);
+      expect(mockSend).toHaveBeenCalledWith('Hello world', [], [], [], []);
     });
 
     it('should send message with images', async () => {
       const mockImages = [
-        { id: 'img-1', previewUrl: 'test.png', base64: 'data:image/png;base64,test', detail: 'auto' as const, fileName: 'test.png', mimeType: 'image/png' as const, size: 100, addedAt: Date.now() }
+        { id: 'img-1', previewUrl: 'test.png', base64: 'data:image/png;base64,test', detail: 'auto' as const, fileName: 'test.png', mimeType: 'image/png' as const, size: 100, addedAt: Date.now(), file: new File([''], 'test.png', { type: 'image/png' }) }
       ];
 
       const props = {
@@ -90,7 +96,7 @@ describe('useChatActions', () => {
         await result.current.handleSend();
       });
 
-      expect(mockSend).toHaveBeenCalledWith('Look at this', mockImages, []);
+      expect(mockSend).toHaveBeenCalledWith('Look at this', mockImages, [], [], []);
     });
 
     it('should not send if message empty and no images', async () => {
@@ -254,8 +260,9 @@ describe('useChatActions', () => {
       // Devrait ajouter avec un espace
       expect(mockSetMessage).toHaveBeenCalled();
       const setMessageCall = mockSetMessage.mock.calls[0][0];
-      // C'est une fonction qui prend prev
-      expect(typeof setMessageCall).toBe('function');
+      expect(typeof setMessageCall).toBe('string');
+      expect(setMessageCall).toContain('Hello');
+      expect(setMessageCall).toContain('world');
     });
 
     it('should clear audio error', () => {

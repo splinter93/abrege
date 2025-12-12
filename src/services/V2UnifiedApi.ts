@@ -1,8 +1,6 @@
 import { useFileSystemStore, type Note, type Classeur, type Folder } from '@/store/useFileSystemStore';
 
-import { simpleLogger as logger, LogCategory } from '@/utils/logger';
-
-
+import { simpleLogger as logger } from '@/utils/logger';
 // Types pour les données d'API (compatibles avec V1)
 export interface CreateNoteData {
   source_title: string;
@@ -286,7 +284,7 @@ export class V2UnifiedApi {
   /**
    * Mettre à jour une note avec mise à jour optimiste
    */
-  async updateNote(noteId: string, updateData: UpdateNoteData, _userId?: string) {
+  async updateNote(noteId: string, updateData: UpdateNoteData) {
     const startTime = Date.now();
     const store = useFileSystemStore.getState();
     let cleanNoteId = noteId;
@@ -299,7 +297,7 @@ export class V2UnifiedApi {
       
       // Nettoyer les données avant mise à jour (supprimer les champs undefined)
       const cleanData = Object.fromEntries(
-        Object.entries(updateData).filter(([_, value]) => value !== undefined)
+        Object.entries(updateData).filter(([, value]) => value !== undefined)
       );
       
       // 🚀 2. Mise à jour optimiste immédiate
@@ -519,7 +517,8 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       
       // Retirer la note du store
-      const { [cleanNoteId]: deletedNote, ...remainingNotes } = store.notes;
+      const remainingNotes = { ...store.notes };
+      delete remainingNotes[cleanNoteId];
       store.setNotes(Object.values(remainingNotes));
       
       if (process.env.NODE_ENV === 'development') {
@@ -570,7 +569,7 @@ export class V2UnifiedApi {
     const startTime = Date.now();
     
     try {
-      console.log(`[V2UnifiedApi] 🚀 Création dossier directe (pas d'optimistic UI):`, {
+      logger.info('[V2UnifiedApi] 🚀 Création dossier (pas d\'optimistic UI)', {
         name: folderData.name,
         classeurId: folderData.classeur_id
       });
@@ -728,12 +727,13 @@ export class V2UnifiedApi {
       const originalNotes = { ...store.notes };
       
       // Retirer le dossier du store IMMÉDIATEMENT (optimistic)
-      const { [cleanFolderId]: deletedFolder, ...remainingFolders } = store.folders;
+      const remainingFolders = { ...store.folders };
+      delete remainingFolders[cleanFolderId];
       store.setFolders(Object.values(remainingFolders));
       
       // Retirer toutes les notes de ce dossier du store IMMÉDIATEMENT
       const remainingNotes = Object.fromEntries(
-        Object.entries(store.notes).filter(([_, note]) => note.folder_id !== cleanFolderId)
+        Object.entries(store.notes).filter(([, note]) => note.folder_id !== cleanFolderId)
       );
       store.setNotes(Object.values(remainingNotes));
       
@@ -1140,17 +1140,18 @@ export class V2UnifiedApi {
       const store = useFileSystemStore.getState();
       
       // Retirer le classeur du store
-      const { [cleanClasseurId]: deletedClasseur, ...remainingClasseurs } = store.classeurs;
+      const remainingClasseurs = { ...store.classeurs };
+      delete remainingClasseurs[cleanClasseurId];
       store.setClasseurs(Object.values(remainingClasseurs));
       
       // Retirer tous les dossiers et notes de ce classeur du store
       const remainingFolders = Object.fromEntries(
-        Object.entries(store.folders).filter(([_, folder]) => folder.classeur_id !== cleanClasseurId)
+        Object.entries(store.folders).filter(([, folder]) => folder.classeur_id !== cleanClasseurId)
       );
       store.setFolders(Object.values(remainingFolders));
       
       const remainingNotes = Object.fromEntries(
-        Object.entries(store.notes).filter(([_, note]) => note.classeur_id !== cleanClasseurId)
+        Object.entries(store.notes).filter(([, note]) => note.classeur_id !== cleanClasseurId)
       );
       store.setNotes(Object.values(remainingNotes));
       

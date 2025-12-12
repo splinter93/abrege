@@ -3,10 +3,13 @@
  * Remplace les 'any' par des types précis
  */
 
+import type { MessageContent } from '@/types/image';
+
 export interface AgentConfig {
   id: string;
   name: string;
   model: string;
+  provider?: string;
   temperature?: number;
   max_tokens?: number;
   max_completion_tokens?: number;
@@ -60,15 +63,15 @@ export interface ToolResult {
 }
 
 export interface SessionHistory {
-  messages: ChatMessage[];
+  messages: LLMChatMessage[];
   toolCalls: ToolCall[];
   toolResults: ToolResult[];
 }
 
-export interface ChatMessage {
+export interface LLMChatMessage {
   id: string;
   role: 'system' | 'user' | 'assistant' | 'tool';
-  content: string | null;
+  content: MessageContent | null;
   tool_calls?: ToolCall[];
   tool_call_id?: string;
   name?: string;

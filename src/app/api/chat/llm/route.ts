@@ -6,14 +6,17 @@ export const dynamic = 'force-dynamic';
 import { handleGroqGptOss120b } from '@/services/llm/groqGptOss120b';
 import { simpleLogger as logger } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
-import { chatRateLimiter, toolCallsRateLimiter } from '@/services/rateLimiter';
+import { chatRateLimiter } from '@/services/rateLimiter';
+import type { ChatMessage } from '@/types/chat';
 import type { AgentConfig } from '@/services/llm/types/agentTypes';
-import type { ChatMessage as AgentChatMessage } from '@/services/llm/types/agentTypes';
+import { llmRequestSchema } from './validation';
+import type { LLMRequest } from './validation';
+import { SERVER_ENV } from '@/config/env.server';
 
 // Client Supabase admin pour accéder aux agents
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  SERVER_ENV.supabase.url,
+  SERVER_ENV.supabase.serviceRoleKey
 );
 
 // 🔧 SCOPES PAR DÉFAUT POUR LES AGENTS SPÉCIALISÉS
@@ -30,25 +33,40 @@ export async function POST(request: NextRequest) {
   // Extraire les variables en dehors du try pour qu'elles soient accessibles dans le catch
   let sessionId: string | undefined;
   let userToken: string | undefined;
-  let message: string | undefined;
-  let context: unknown;
-  let history: AgentChatMessage[] | undefined;
+  let message: string | null = null;
+  let context: LLMRequest['context'] | null = null;
+  let history: ChatMessage[] = [];
+  const agentConfig: AgentConfig | null = null;
+  let provider: string | undefined;
   
   try {
     const body = await request.json();
-    const bodyData = body as { message?: string; context?: unknown; history?: AgentChatMessage[]; provider?: string };
-    message = bodyData.message;
-    context = bodyData.context;
-    history = bodyData.history;
-    const provider = bodyData.provider;
-
-    // Validation des paramètres requis
-    if (!message || !context || !history) {
+    
+    // ✅ Validation Zod stricte
+    const validation = llmRequestSchema.safeParse(body);
+    
+    if (!validation.success) {
+      logger.warn('[LLM Route] ❌ Validation failed:', validation.error.format());
       return NextResponse.json(
-        { error: 'Paramètres manquants', required: ['message', 'context', 'history'] },
+        { 
+          error: 'Validation failed', 
+          details: validation.error.flatten().fieldErrors 
+        },
         { status: 400 }
       );
     }
+    
+    const {
+      message: requestMessage,
+      context: requestContext,
+      history: requestHistory,
+      provider: requestProvider
+    } = validation.data;
+
+    message = requestMessage;
+    context = requestContext;
+    history = requestHistory as unknown as ChatMessage[];
+    provider = requestProvider;
 
     // Extraire le token d'authentification depuis le header Authorization
     const authHeader = request.headers.get('authorization');
@@ -70,27 +88,28 @@ export async function POST(request: NextRequest) {
     let userId: string;
     
     try {
-      // Vérifier si c'est un userId (UUID) ou un JWT
-      const isUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userToken);
-      
-      if (isUserId) {
-        // UUID direct : impersonation d'agent (backend uniquement)
-        userId = userToken;
-      } else {
-        // JWT : valider et EXTRAIRE le userId
-        const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
-        
-        if (authError || !user) {
-          logger.error(`[LLM Route] ❌ Token invalide ou expiré:`, authError);
-          return NextResponse.json(
-            { error: 'Token invalide ou expiré' },
-            { status: 401 }
-          );
-        }
-        
-        // Extraire le userId du JWT
-        userId = user.id;
+      // ✅ JWT OBLIGATOIRE : rejet des UUID nus (impersonation)
+      if (!userToken.includes('.')) {
+        logger.error('[LLM Route] ❌ Token non signé reçu (UUID nu rejeté)');
+        return NextResponse.json(
+          { error: 'Token JWT requis' },
+          { status: 401 }
+        );
       }
+
+      // JWT : valider et EXTRAIRE le userId
+      const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
+      
+      if (authError || !user) {
+        logger.error(`[LLM Route] ❌ Token invalide ou expiré:`, authError);
+        return NextResponse.json(
+          { error: 'Token invalide ou expiré' },
+          { status: 401 }
+        );
+      }
+      
+      // Extraire le userId du JWT
+      userId = user.id;
     } catch (validationError) {
       logger.error(`[LLM Route] ❌ Erreur validation token:`, validationError);
       return NextResponse.json(
@@ -127,8 +146,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Extraire les valeurs nécessaires depuis le contexte
-    const contextData = context as { sessionId?: string; agentId?: string; uiContext?: unknown };
-    const { sessionId: extractedSessionId, agentId, uiContext } = contextData;
+    const { sessionId: extractedSessionId, agentId, uiContext } = context;
     sessionId = extractedSessionId;
 
     if (!sessionId) {
@@ -138,10 +156,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.info(`[LLM Route] 🚀 Démarrage pour session ${sessionId} avec provider ${provider}`);
+    logger.info(`[LLM Route] 🚀 Démarrage pour session ${sessionId} avec provider ${provider || 'default'}`);
 
     // 🎯 Récupérer l'agentConfig depuis la base de données
-    let agentConfig: Partial<AgentConfig> | null = null;
+    let resolvedAgentConfig: Partial<AgentConfig> | null = agentConfig;
 
     try {
       // 1) Priorité à l'agent explicitement sélectionné
@@ -156,12 +174,12 @@ export async function POST(request: NextRequest) {
         if (agentByIdError) {
           logger.warn(`[LLM Route] ⚠️ Erreur récupération agent par ID: ${agentByIdError.message}`);
         } else if (agentById) {
-          agentConfig = agentById;
+          resolvedAgentConfig = agentById;
         }
       }
 
       // 2) Sinon fallback par provider
-      if (!agentConfig && provider) {
+      if (!resolvedAgentConfig && provider) {
         const { data: agent, error: agentError } = await supabase
           .from('agents')
           .select('*')
@@ -174,14 +192,14 @@ export async function POST(request: NextRequest) {
         if (agentError) {
           logger.warn(`[LLM Route] ⚠️ Erreur récupération agent ${provider}: ${agentError.message}`);
         } else if (agent) {
-          agentConfig = agent;
+          resolvedAgentConfig = agent;
         } else {
           logger.warn(`[LLM Route] ⚠️ Aucun agent trouvé pour le provider: ${provider}`);
         }
       }
 
       // 3) Fallback final : premier agent actif disponible
-      if (!agentConfig) {
+      if (!resolvedAgentConfig) {
         const { data: defaultAgent, error: defaultAgentError} = await supabase
           .from('agents')
           .select('*')
@@ -193,19 +211,19 @@ export async function POST(request: NextRequest) {
         if (defaultAgentError) {
           logger.warn(`[LLM Route] ⚠️ Erreur récupération agent par défaut: ${defaultAgentError.message}`);
         } else if (defaultAgent) {
-          agentConfig = defaultAgent;
+          resolvedAgentConfig = defaultAgent;
         } else {
           logger.warn(`[LLM Route] ⚠️ Aucun agent actif trouvé dans la base de données`);
         }
       }
 
       // 🔧 CORRECTION : Ajouter les scopes par défaut si l'agent n'en a pas
-      if (agentConfig) {
+      if (resolvedAgentConfig) {
         // Vérifier si l'agent a des scopes configurés
-        const hasScopes = agentConfig.api_v2_capabilities && agentConfig.api_v2_capabilities.length > 0;
+        const hasScopes = resolvedAgentConfig.api_v2_capabilities && resolvedAgentConfig.api_v2_capabilities.length > 0;
         
         if (!hasScopes) {
-          logger.warn(`[LLM Route] ⚠️ Agent ${agentConfig.name} n'a pas de scopes configurés, ajout des scopes par défaut`);
+          logger.warn(`[LLM Route] ⚠️ Agent ${resolvedAgentConfig.name} n'a pas de scopes configurés, ajout des scopes par défaut`);
           
           // Mettre à jour l'agent avec les scopes par défaut
           const { error: updateError } = await supabase
@@ -213,13 +231,13 @@ export async function POST(request: NextRequest) {
             .update({ 
               api_v2_capabilities: DEFAULT_AGENT_SCOPES 
             })
-            .eq('id', agentConfig.id);
+            .eq('id', resolvedAgentConfig.id);
 
           if (updateError) {
             logger.error(`[LLM Route] ❌ Erreur mise à jour scopes agent: ${updateError.message}`);
           } else {
             // Mettre à jour la config locale
-            agentConfig.api_v2_capabilities = DEFAULT_AGENT_SCOPES;
+            resolvedAgentConfig.api_v2_capabilities = DEFAULT_AGENT_SCOPES;
           }
         }
       }
@@ -229,19 +247,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Configuration par défaut si aucun agent n'est trouvé
-    const finalAgentConfig: AgentConfig = agentConfig ? {
-      ...agentConfig,
-      id: agentConfig.id!,
-      name: agentConfig.name!,
-      model: agentConfig.model || 'openai/gpt-oss-20b',
-      temperature: agentConfig.temperature ?? 0.7,
-      max_tokens: agentConfig.max_tokens ?? 4000,
-      system_instructions: agentConfig.system_instructions || 'Tu es un assistant IA utile et compétent.',
-      api_v2_capabilities: agentConfig.api_v2_capabilities || DEFAULT_AGENT_SCOPES,
-      is_active: agentConfig.is_active ?? true,
-      priority: agentConfig.priority ?? 0,
-      created_at: agentConfig.created_at || new Date().toISOString(),
-      updated_at: agentConfig.updated_at || new Date().toISOString(),
+    const finalAgentConfig: AgentConfig = resolvedAgentConfig ? {
+      ...resolvedAgentConfig,
+      id: resolvedAgentConfig.id!,
+      name: resolvedAgentConfig.name!,
+      model: resolvedAgentConfig.model || 'openai/gpt-oss-20b',
+      temperature: resolvedAgentConfig.temperature ?? 0.7,
+      max_tokens: resolvedAgentConfig.max_tokens ?? 4000,
+      system_instructions: resolvedAgentConfig.system_instructions || 'Tu es un assistant IA utile et compétent.',
+      api_v2_capabilities: resolvedAgentConfig.api_v2_capabilities || DEFAULT_AGENT_SCOPES,
+      is_active: resolvedAgentConfig.is_active ?? true,
+      priority: resolvedAgentConfig.priority ?? 0,
+      created_at: resolvedAgentConfig.created_at || new Date().toISOString(),
+      updated_at: resolvedAgentConfig.updated_at || new Date().toISOString(),
     } : {
       id: 'default-agent',
       name: 'Agent par défaut',
@@ -263,21 +281,27 @@ export async function POST(request: NextRequest) {
       model: finalAgentConfig.model,
       temperature: finalAgentConfig.temperature,
       max_tokens: finalAgentConfig.max_tokens,
-      isDefault: !agentConfig
+      isDefault: !resolvedAgentConfig
     });
     
+    const sanitizedHistory: ChatMessage[] = history.map((msg, index) => ({
+      ...msg,
+      id: msg.id ?? `history-${index}`,
+      content: msg.content ?? '',
+      timestamp: msg.timestamp ?? new Date().toISOString()
+    }));
+
+    const normalizedMessage = message ?? '';
+
     const result = await handleGroqGptOss120b({
-      message,
+      message: normalizedMessage,
       appContext: {
         type: 'chat_session' as const,
         name: `Chat Session ${sessionId}`,
         id: sessionId,
         content: JSON.stringify({ uiContext }) // Inclure le contexte UI
       },
-      // ⚠️ EXCEPTION TypeScript: Conflit entre deux définitions de ChatMessage
-      // src/types/chat.ts (union type) vs src/services/llm/types/agentTypes.ts (simple interface)
-      // TODO: Unifier les types ChatMessage dans une seule définition
-      sessionHistory: (history || []) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      sessionHistory: sanitizedHistory,
       agentConfig: finalAgentConfig,
       userToken: userToken!,
       sessionId

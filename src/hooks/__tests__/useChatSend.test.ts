@@ -17,6 +17,9 @@ describe('useChatSend', () => {
   const mockOnSend = vi.fn();
   const mockSetUploadError = vi.fn();
 
+  const emptyMentions: [] = [];
+  const emptyPrompts: [] = [];
+
   const defaultProps = {
     loadNotes: mockLoadNotes,
     getAccessToken: mockGetAccessToken,
@@ -42,15 +45,15 @@ describe('useChatSend', () => {
       const notes: SelectedNote[] = [];
 
       // Envoyer 3 fois simultanément le même message
-      const promise1 = result.current.send(message, images, notes);
-      const promise2 = result.current.send(message, images, notes);
-      const promise3 = result.current.send(message, images, notes);
+      const promise1 = result.current.send(message, images, notes, emptyMentions, emptyPrompts);
+      const promise2 = result.current.send(message, images, notes, emptyMentions, emptyPrompts);
+      const promise3 = result.current.send(message, images, notes, emptyMentions, emptyPrompts);
 
       await Promise.all([promise1, promise2, promise3]);
 
       // Vérifier qu'un seul appel onSend a été fait
       expect(mockOnSend).toHaveBeenCalledTimes(1);
-      expect(mockOnSend).toHaveBeenCalledWith('Test message', [], undefined);
+      expect(mockOnSend).toHaveBeenCalledWith('Test message', [], undefined, undefined, undefined);
     });
 
     it('should NOT deduplicate different messages', async () => {
@@ -60,9 +63,9 @@ describe('useChatSend', () => {
       const notes: SelectedNote[] = [];
 
       // Envoyer 3 messages différents
-      await result.current.send('Message 1', images, notes);
-      await result.current.send('Message 2', images, notes);
-      await result.current.send('Message 3', images, notes);
+      await result.current.send('Message 1', images, notes, emptyMentions, emptyPrompts);
+      await result.current.send('Message 2', images, notes, emptyMentions, emptyPrompts);
+      await result.current.send('Message 3', images, notes, emptyMentions, emptyPrompts);
 
       // Vérifier que 3 appels onSend ont été faits
       expect(mockOnSend).toHaveBeenCalledTimes(3);
@@ -80,7 +83,8 @@ describe('useChatSend', () => {
         fileName: 'test.png',
         mimeType: 'image/png',
         size: 1000,
-        addedAt: Date.now()
+        addedAt: Date.now(),
+        file: new File([''], 'test.png', { type: 'image/png' })
       }];
       const notes: SelectedNote[] = [{ id: 'note-1', slug: 'test', title: 'Test' }];
 
@@ -91,8 +95,8 @@ describe('useChatSend', () => {
       });
 
       // Envoyer 2 fois avec mêmes images + notes
-      const promise1 = result.current.send(message, images, notes);
-      const promise2 = result.current.send(message, images, notes);
+      const promise1 = result.current.send(message, images, notes, emptyMentions, emptyPrompts);
+      const promise2 = result.current.send(message, images, notes, emptyMentions, emptyPrompts);
 
       await Promise.all([promise1, promise2]);
 
@@ -121,19 +125,21 @@ describe('useChatSend', () => {
         stats: { requested: 2, loaded: 2, failed: 0, timedOut: false }
       });
 
-      await result.current.send('Test message', [], notes);
+      await result.current.send('Test message', [], notes, emptyMentions, emptyPrompts);
 
       // Vérifier que loadNotes a été appelé avec les bonnes options
       expect(mockLoadNotes).toHaveBeenCalledWith(notes, {
         token: 'mock-token',
-        timeoutMs: 5000
+        timeoutMs: 3000
       });
 
       // Vérifier que onSend a reçu les notes chargées
       expect(mockOnSend).toHaveBeenCalledWith(
         'Test message',
         [],
-        mockNotesWithContent
+        mockNotesWithContent,
+        undefined,
+        undefined
       );
     });
 
@@ -144,7 +150,7 @@ describe('useChatSend', () => {
 
       mockLoadNotes.mockRejectedValue(new Error('Network error'));
 
-      const success = await result.current.send('Test', [], notes);
+      const success = await result.current.send('Test', [], notes, emptyMentions, emptyPrompts);
 
       expect(success).toBe(false);
       expect(mockSetUploadError).toHaveBeenCalledWith('Erreur lors de l\'envoi du message');
@@ -158,7 +164,7 @@ describe('useChatSend', () => {
 
       mockGetAccessToken.mockResolvedValue(null);
 
-      const success = await result.current.send('Test', [], notes);
+      const success = await result.current.send('Test', [], notes, emptyMentions, emptyPrompts);
 
       expect(success).toBe(false);
       expect(mockSetUploadError).toHaveBeenCalled();
@@ -178,10 +184,11 @@ describe('useChatSend', () => {
         fileName: 'test.png',
         mimeType: 'image/png',
         size: 1000,
-        addedAt: Date.now()
+        addedAt: Date.now(),
+        file: new File([''], 'test.png', { type: 'image/png' })
       }];
 
-      await result.current.send('Test message', images, []);
+      await result.current.send('Test message', images, [], emptyMentions, emptyPrompts);
 
       expect(mockOnSend).toHaveBeenCalledTimes(1);
       
@@ -202,9 +209,9 @@ describe('useChatSend', () => {
     it('should send without images when empty', async () => {
       const { result } = renderHook(() => useChatSend(defaultProps));
 
-      await result.current.send('Simple message', [], []);
+      await result.current.send('Simple message', [], [], emptyMentions, emptyPrompts);
 
-      expect(mockOnSend).toHaveBeenCalledWith('Simple message', [], undefined);
+      expect(mockOnSend).toHaveBeenCalledWith('Simple message', [], undefined, undefined, undefined);
     });
   });
 
@@ -212,7 +219,7 @@ describe('useChatSend', () => {
     it('should return true on success', async () => {
       const { result } = renderHook(() => useChatSend(defaultProps));
 
-      const success = await result.current.send('Test', [], []);
+      const success = await result.current.send('Test', [], [], emptyMentions, emptyPrompts);
 
       expect(success).toBe(true);
     });
@@ -224,7 +231,7 @@ describe('useChatSend', () => {
         throw new Error('Send error');
       });
 
-      const success = await result.current.send('Test', [], []);
+      const success = await result.current.send('Test', [], [], emptyMentions, emptyPrompts);
 
       expect(success).toBe(false);
       expect(mockSetUploadError).toHaveBeenCalled();

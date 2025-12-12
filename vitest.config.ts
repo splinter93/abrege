@@ -50,7 +50,7 @@ export default defineConfig({
     hookTimeout: 10000,
     
     // Reporter
-    reporter: ['verbose'],
+    reporters: ['verbose'],
     
     // Mock
     mockReset: true,

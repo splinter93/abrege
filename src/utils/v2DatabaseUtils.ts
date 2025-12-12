@@ -221,7 +221,7 @@ export class V2DatabaseUtils {
       // 🔧 CORRECTION : Charger d'abord l'état complet de la note pour préserver les valeurs existantes
       const { data: currentNote, error: currentError } = await supabase
         .from('articles')
-        .select('id, slug, visibility, public_url, wide_mode, a4_mode, slash_lang, font_family, folder_id, description, source_title, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image')
+        .select('id, slug, public_url, wide_mode, a4_mode, slash_lang, font_family, folder_id, description, source_title, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image')
         .eq('id', noteId)
         .eq('user_id', userId)
         .single();
@@ -257,7 +257,6 @@ export class V2DatabaseUtils {
               id: currentNote.id ?? '',
               source_title: currentNote.source_title ?? '',
               slug: currentNote.slug ?? '',
-              visibility: currentNote.visibility,
               public_url: currentNote.public_url ?? null
             };
             const { slug: newSlug, publicUrl } = await SlugAndUrlService.updateNoteSlugAndUrl(
