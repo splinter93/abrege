@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
-import { StreamOrchestrator } from '@/services/streaming/StreamOrchestrator';
+import { StreamOrchestrator, type StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
 import type { ToolCall, ToolResult } from '@/hooks/useChatHandlers';
 import type { ChatMessage } from '@/types/chat';
 import type { MessageContent } from '@/types/image';
@@ -15,7 +15,7 @@ interface UseChatResponseOptions {
     toolResults?: ToolResult[],
     streamTimeline?: StreamTimeline
   ) => void;
-  onError?: (error: string) => void;
+  onError?: (error: string | StreamErrorDetails) => void;
   onToolCalls?: (toolCalls: ToolCall[], toolName: string) => void;
   onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
   onToolExecutionComplete?: (toolResults: ToolResult[]) => void;
