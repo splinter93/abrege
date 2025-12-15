@@ -547,13 +547,46 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
   }
 
   /**
+   * Construit le content d'un message en gérant les images attachées
+   */
+  private buildMessageContent(msg: ChatMessage): string | null | XAIMessageContent[] {
+    // ✅ CRITICAL: Gérer les images attachées (multi-modal)
+    if (msg.role === 'user' && msg.attachedImages && msg.attachedImages.length > 0) {
+      const contentParts: XAIMessageContent[] = [];
+      
+      // ✅ ALWAYS add text part first (required by xAI even if empty)
+      const textContent = typeof msg.content === 'string' ? msg.content : '';
+      contentParts.push({
+        type: 'text',
+        text: textContent || '' // ✅ Ensure at least empty string
+      });
+      
+      // Ajouter les images
+      for (const image of msg.attachedImages) {
+        contentParts.push({
+          type: 'image_url',
+          image_url: {
+            url: image.url,
+            detail: 'auto'
+          }
+        });
+      }
+      
+      return contentParts;
+    }
+    
+    // Pas d'images, utiliser la normalisation standard
+    return this.normalizeMessageContent(msg.content);
+  }
+
+  /**
    * Convertit les ChatMessage vers le format API xAI
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): XAIMessage[] {
     return messages.map(msg => {
       const messageObj: XAIMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
-        content: this.normalizeMessageContent(msg.content)
+        content: this.buildMessageContent(msg) // ✅ Utilise la nouvelle méthode
       };
 
       // Gérer les tool calls pour les messages assistant
@@ -596,7 +629,7 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
     for (const msg of history) {
       const messageObj: XAIMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
-        content: this.normalizeMessageContent(msg.content) // ✅ Utilise la normalisation
+        content: this.buildMessageContent(msg) // ✅ Gère les images attachées
       };
 
       // Gérer les tool calls pour les messages assistant
@@ -954,7 +987,7 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
       for (const msg of history) {
         messages.push({
           role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
-          content: this.normalizeMessageContent(msg.content) // ✅ Utilise la normalisation
+          content: this.buildMessageContent(msg) // ✅ Gère les images attachées
         });
       }
 
