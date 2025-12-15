@@ -191,7 +191,7 @@ const ChatFullscreenV2: React.FC = () => {
   
   // 🎯 GESTION ERREURS STREAMING
   const [streamError, setStreamError] = useState<import('@/services/streaming/StreamOrchestrator').StreamErrorDetails | null>(null);
-  const [lastUserMessage, setLastUserMessage] = useState<{ content: string; images?: string[] } | null>(null);
+  const [lastUserMessage, setLastUserMessage] = useState<{ content: string | MessageContent; images?: ImageAttachment[] } | null>(null);
   
   const animations = useChatAnimations({
     currentSessionId: currentSession?.id || null,
