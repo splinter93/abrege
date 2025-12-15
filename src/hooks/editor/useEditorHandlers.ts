@@ -111,7 +111,7 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
         source_title: resolvedTitle,
         markdown_content,
         html_content,
-      }, userId);
+      });
     }
   });
 
@@ -150,7 +150,7 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     }
 
     try {
-      await v2UnifiedApi.updateNote(noteId, { header_image: normalized }, userId);
+      await v2UnifiedApi.updateNote(noteId, { header_image: normalized });
     } catch (error) {
       logger.error(LogCategory.EDITOR, 'Error updating header image');
     }

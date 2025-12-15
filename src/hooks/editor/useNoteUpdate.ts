@@ -124,7 +124,7 @@ export function useNoteUpdate<T>({
         }
         
         // 3. Appeler l'API
-        await v2UnifiedApi.updateNote(noteId, payload, userId);
+        await v2UnifiedApi.updateNote(noteId, payload);
         
         if (process.env.NODE_ENV === 'development') {
           logger.debug(
@@ -206,7 +206,7 @@ export function useHeaderImageUpdate({
         }
         
         // 1. Appeler l'API en premier pour valider
-        await v2UnifiedApi.updateNote(noteId, payload, userId);
+        await v2UnifiedApi.updateNote(noteId, payload);
         
         // 2. Si succès, mettre à jour l'état local
         updateNote(noteId, payload);

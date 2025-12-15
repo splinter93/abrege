@@ -257,8 +257,7 @@ export class CanvaNoteService {
           classeur_id: classeurId,
           folder_id: folderId ?? null,
           is_canva_draft: false // Note devient visible
-        },
-        userId
+        }
       );
 
       // 3. Update canva_session: status = saved
