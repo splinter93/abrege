@@ -14,11 +14,13 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ChatMessage as ChatMessageType, Agent } from '@/types/chat';
 import type { StreamTimelineItem } from '@/types/streamTimeline';
+import type { StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
 import ChatMessage from './ChatMessage';
 import ChatEmptyState from './ChatEmptyState';
 import MessageLoader from './MessageLoader';
 import StreamTimelineRenderer from './StreamTimelineRenderer';
 import AgentDeletedMessage from './AgentDeletedMessage';
+import { StreamErrorDisplay } from './StreamErrorDisplay';
 
 /**
  * Props du composant
@@ -39,6 +41,9 @@ export interface ChatMessagesAreaProps {
   currentSessionId: string | null;
   selectedAgent: Agent | null;
   agentNotFound: boolean; // ✅ Indicateur agent supprimé
+  streamError?: StreamErrorDetails | null; // ✅ NOUVEAU: Erreur de streaming
+  onRetryMessage?: () => void; // ✅ NOUVEAU: Callback retry
+  onDismissError?: () => void; // ✅ NOUVEAU: Callback dismiss erreur
   onEditMessage: (messageId: string, content: string, index: number) => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -65,6 +70,9 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
   currentSessionId,
   selectedAgent,
   agentNotFound,
+  streamError, // ✅ NOUVEAU
+  onRetryMessage, // ✅ NOUVEAU
+  onDismissError, // ✅ NOUVEAU
   onEditMessage,
   containerRef,
   messagesEndRef,
@@ -156,6 +164,19 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
                   <div className="chat-typing-dot"></div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ ERREUR DE STREAMING */}
+        {streamError && (
+          <div className="chatgpt-message chatgpt-message-assistant">
+            <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant" style={{ background: 'transparent', border: 'none', padding: 0 }}>
+              <StreamErrorDisplay
+                error={streamError}
+                onRetry={onRetryMessage}
+                onDismiss={onDismissError}
+              />
             </div>
           </div>
         )}

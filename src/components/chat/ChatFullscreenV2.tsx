@@ -189,6 +189,10 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 NOUVEAUX HOOKS CUSTOM (logique extraite)
   const streamingState = useStreamingState();
   
+  // 🎯 GESTION ERREURS STREAMING
+  const [streamError, setStreamError] = useState<import('@/services/streaming/StreamOrchestrator').StreamErrorDetails | null>(null);
+  const [lastUserMessage, setLastUserMessage] = useState<{ content: string; images?: string[] } | null>(null);
+  
   const animations = useChatAnimations({
     currentSessionId: currentSession?.id || null,
     isLoadingMessages
@@ -210,6 +214,9 @@ const ChatFullscreenV2: React.FC = () => {
       
       addInfiniteMessage(assistantMessage);
       streamingState.endStreaming();
+      
+      // ✅ Clear l'erreur si succès
+      setStreamError(null);
       
       // ✅ Reset padding UNIQUEMENT si le message assistant dépasse (évite saccade si court)
       requestAnimationFrame(() => {
@@ -233,6 +240,23 @@ const ChatFullscreenV2: React.FC = () => {
             logger.dev('[ChatFullscreenV2] ✅ Message court → padding gardé');
           }
         }
+      });
+    },
+    onError: (error) => {
+      // ✅ Stocker l'erreur structurée pour affichage
+      const errorDetails = typeof error === 'string' 
+        ? { error, timestamp: Date.now() }
+        : error;
+      
+      setStreamError(errorDetails);
+      streamingState.endStreaming();
+      
+      logger.error('[ChatFullscreenV2] ❌ Erreur streaming reçue:', errorDetails);
+      
+      // ✅ Toast pour notification immédiate
+      toast.error('Erreur de streaming LLM', {
+        duration: 3000,
+        position: 'top-center'
       });
     }
   });
@@ -293,9 +317,40 @@ const ChatFullscreenV2: React.FC = () => {
       // Le message assistant est déjà dans infiniteMessages (ajouté par handleComplete)
       // Donc pas besoin de reload !
       streamingState.reset();
+      
+      // ✅ Clear l'erreur quand un nouveau message est envoyé
+      setStreamError(null);
+      
       logger.dev('[ChatFullscreenV2] ✅ Timeline reset, historique complet dans infiniteMessages');
     }
   });
+  
+  // 🎯 HANDLERS ERREURS STREAMING
+  const handleRetryMessage = useCallback(async () => {
+    if (!lastUserMessage || !currentSession) {
+      logger.warn('[ChatFullscreenV2] ⚠️ Pas de dernier message à relancer');
+      return;
+    }
+    
+    logger.info('[ChatFullscreenV2] 🔄 Relance du dernier message:', {
+      content: lastUserMessage.content.substring(0, 100),
+      hasImages: !!lastUserMessage.images && lastUserMessage.images.length > 0
+    });
+    
+    // Clear l'erreur avant de relancer
+    setStreamError(null);
+    
+    // Relancer avec le même contenu
+    await messageActions.sendUserMessage(
+      lastUserMessage.content, 
+      lastUserMessage.images || []
+    );
+  }, [lastUserMessage, currentSession, messageActions]);
+  
+  const handleDismissError = useCallback(() => {
+    setStreamError(null);
+    logger.dev('[ChatFullscreenV2] ✅ Erreur dismissée');
+  }, []);
 
   // 🎯 SYNC AGENT avec session
   useSyncAgentWithSession({
@@ -630,6 +685,20 @@ const ChatFullscreenV2: React.FC = () => {
       return;
     }
 
+    // ✅ Capturer le message pour retry en cas d'erreur
+    const messageText = typeof message === 'string' 
+      ? message 
+      : Array.isArray(message)
+        ? (message.find(part => part.type === 'text' && 'text' in part) as { text: string } | undefined)?.text || ''
+        : '';
+    
+    const imageUrls = images?.map(img => 'base64' in img ? img.base64 : img.url) || [];
+    
+    setLastUserMessage({
+      content: messageText,
+      images: imageUrls.length > 0 ? imageUrls : undefined
+    });
+
     // Mode normal (avec mentions légères + prompts metadata)
     await messageActions.sendMessage(message, images, notes, mentions, usedPrompts);
   }, [editingMessage, messageActions]);
@@ -922,6 +991,9 @@ const ChatFullscreenV2: React.FC = () => {
                   currentSessionId={currentSession?.id || null}
                   selectedAgent={selectedAgent}
                   agentNotFound={agentNotFound}
+                  streamError={streamError}
+                  onRetryMessage={handleRetryMessage}
+                  onDismissError={handleDismissError}
                   onEditMessage={handleEditMessage}
                   containerRef={messagesContainerRef}
                   messagesEndRef={messagesEndRef}

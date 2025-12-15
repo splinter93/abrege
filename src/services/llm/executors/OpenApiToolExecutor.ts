@@ -202,7 +202,10 @@ export class OpenApiToolExecutor {
       if (!response.ok) {
         const errorText = await response.text().catch(() => response.statusText);
         logger.error(`[OpenApiToolExecutor] ❌ Erreur HTTP ${response.status}:`, errorText);
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        
+        // ✅ CRITICAL: Inclure errorText complet pour que le LLM comprenne l'erreur
+        // Sinon le LLM reçoit juste "HTTP 400: Bad Request" sans les détails de l'API
+        throw new Error(`HTTP ${response.status}: ${response.statusText}\n\nDétails de l'API:\n${errorText}`);
       }
 
       // ✅ STRICT: Vérifier le content-type et gérer les erreurs de parsing

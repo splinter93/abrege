@@ -14,6 +14,8 @@ export { default as ToolCallMessage } from './ToolCallMessage';
 
 // Composants d'interface
 export { default as BubbleButtons } from './BubbleButtons';
+export { StreamErrorDisplay } from './StreamErrorDisplay';
+export type { StreamError } from './StreamErrorDisplay';
 
 // Types et interfaces
 export type { ChatMessage, ChatSession } from '../../types/chat';

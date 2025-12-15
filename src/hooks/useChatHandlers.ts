@@ -8,6 +8,7 @@ import { useChatStore } from '@/store/useChatStore';
 import { useAuthGuard } from './useAuthGuard';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { StreamTimeline } from '@/types/streamTimeline';
+import type { StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
 
 /**
  * Représente un appel de fonction/outil par le LLM
@@ -34,7 +35,7 @@ export interface ToolResult {
 
 interface ChatHandlersOptions {
   onComplete?: (fullContent: string, fullReasoning: string, toolCalls?: ToolCall[], toolResults?: ToolResult[], streamTimeline?: StreamTimeline) => void;
-  onError?: (errorMessage: string) => void;
+  onError?: (error: string | StreamErrorDetails) => void;
   onToolCalls?: (toolCalls: ToolCall[], toolName: string) => void;
   onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
   onToolExecutionComplete?: (toolResults: ToolResult[]) => void;
@@ -42,7 +43,7 @@ interface ChatHandlersOptions {
 
 interface ChatHandlersReturn {
   handleComplete: (fullContent: string, fullReasoning: string, toolCalls?: ToolCall[], toolResults?: ToolResult[], streamTimeline?: StreamTimeline) => Promise<void>;
-  handleError: (errorMessage: string) => void;
+  handleError: (error: string | StreamErrorDetails) => void;
   handleToolCalls: (toolCalls: ToolCall[], toolName: string, roundContent?: string) => Promise<void>;
   handleToolResult: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => Promise<void>;
   handleToolExecutionComplete: (toolResults: ToolResult[]) => Promise<void>;
@@ -176,17 +177,19 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
     options.onComplete?.(fullContent, fullReasoning, toolCalls, toolResults, cleanedTimeline);
   }, [requireAuth, addMessage, options]);
 
-  const handleError = useCallback((errorMessage: string) => {
+  const handleError = useCallback((error: string | StreamErrorDetails) => {
     if (!requireAuth()) return;
 
-    addMessage({
-      role: 'assistant',
-      content: `Erreur: ${errorMessage}`,
-      timestamp: new Date().toISOString()
-    });
+    // ✅ Extraire le message d'erreur (string ou object)
+    const errorMessage = typeof error === 'string' ? error : error.error;
 
-    options.onError?.(errorMessage);
-  }, [requireAuth, addMessage, options.onError]);
+    // ✅ Ne PAS ajouter de message automatiquement
+    // L'erreur sera affichée par StreamErrorDisplay dans l'UI
+    logger.error('[useChatHandlers] ❌ Erreur stream reçue:', error);
+
+    // ✅ Passer l'erreur complète au callback parent
+    options.onError?.(error);
+  }, [requireAuth, options.onError]);
 
   const handleToolCalls = useCallback(async (toolCalls: ToolCall[], toolName: string, roundContent?: string) => {
     if (!requireAuth()) {

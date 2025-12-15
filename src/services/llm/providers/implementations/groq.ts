@@ -85,7 +85,7 @@ const DEFAULT_GROQ_CONFIG: GroqConfig = {
   // Base
   apiKey: process.env.GROQ_API_KEY || '',
   baseUrl: 'https://api.groq.com/openai/v1',
-  timeout: 30000,
+  timeout: 120000, // 120s (2 minutes) - permet tool calls longs
   
   // LLM
   model: 'openai/gpt-oss-20b', // ✅ Modèle 20B plus stable et disponible
@@ -320,7 +320,37 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Groq API Error: ${response.status} - ${errorText}`);
+        
+        // ✅ Parser le body JSON si possible pour extraire plus de détails
+        let errorDetails: { error?: { message?: string; type?: string; code?: string } } = {};
+        try {
+          errorDetails = JSON.parse(errorText);
+        } catch {
+          // Si le parsing échoue, on garde errorText brut
+        }
+        
+        const errorMessage = errorDetails.error?.message || errorText;
+        const errorCode = errorDetails.error?.code || errorDetails.error?.type || 'unknown';
+        
+        // ✅ Logger l'erreur complète avec contexte
+        logger.error(`[GroqProvider] ❌ Erreur API Groq Streaming:`, {
+          statusCode: response.status,
+          statusText: response.statusText,
+          errorMessage,
+          errorCode,
+          errorType: errorDetails.error?.type,
+          model: this.config.model,
+          messagesCount: messages.length,
+          toolsCount: tools.length,
+          fullErrorBody: errorText.substring(0, 500) // Limiter à 500 chars
+        });
+        
+        // ✅ Throw avec structure enrichie
+        const error = new Error(`Groq API error: ${response.status} - ${errorMessage}`);
+        (error as Error & { statusCode?: number; provider?: string; errorCode?: string }).statusCode = response.status;
+        (error as Error & { statusCode?: number; provider?: string; errorCode?: string }).provider = 'groq';
+        (error as Error & { statusCode?: number; provider?: string; errorCode?: string }).errorCode = errorCode;
+        throw error;
       }
 
       if (!response.body) {

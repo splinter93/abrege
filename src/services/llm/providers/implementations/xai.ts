@@ -100,7 +100,7 @@ const DEFAULT_XAI_CONFIG: XAIConfig = {
   // Base
   apiKey: process.env.XAI_API_KEY || '',
   baseUrl: 'https://api.x.ai/v1',
-  timeout: 30000,
+  timeout: 120000, // 120s (2 minutes) - permet tool calls longs
   
   // LLM
   model: 'grok-4-1-fast-reasoning', // Modèle par défaut: nouvelle génération 2M tokens
@@ -347,7 +347,37 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`xAI API Error: ${response.status} - ${errorText}`);
+        
+        // ✅ Parser le body JSON si possible pour extraire plus de détails
+        let errorDetails: { error?: { message?: string; type?: string; code?: string } } = {};
+        try {
+          errorDetails = JSON.parse(errorText);
+        } catch {
+          // Si le parsing échoue, on garde errorText brut
+        }
+        
+        const errorMessage = errorDetails.error?.message || errorText;
+        const errorCode = errorDetails.error?.code || errorDetails.error?.type || 'unknown';
+        
+        // ✅ Logger l'erreur complète avec contexte
+        logger.error(`[XAIProvider] ❌ Erreur API xAI Streaming:`, {
+          statusCode: response.status,
+          statusText: response.statusText,
+          errorMessage,
+          errorCode,
+          errorType: errorDetails.error?.type,
+          model: this.config.model,
+          messagesCount: messages.length,
+          toolsCount: tools.length,
+          fullErrorBody: errorText.substring(0, 500) // Limiter à 500 chars
+        });
+        
+        // ✅ Throw avec structure enrichie
+        const error = new Error(`xAI API error: ${response.status} - ${errorMessage}`);
+        (error as Error & { statusCode?: number; provider?: string; errorCode?: string }).statusCode = response.status;
+        (error as Error & { statusCode?: number; provider?: string; errorCode?: string }).provider = 'xai';
+        (error as Error & { statusCode?: number; provider?: string; errorCode?: string }).errorCode = errorCode;
+        throw error;
       }
 
       if (!response.body) {

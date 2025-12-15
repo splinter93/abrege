@@ -15,6 +15,20 @@ import type { ToolCall, ToolResult } from '@/hooks/useChatHandlers';
 import type { StreamTimeline } from '@/types/streamTimeline';
 
 /**
+ * Erreur de streaming enrichie
+ */
+export interface StreamErrorDetails {
+  error: string;
+  provider?: string;
+  model?: string;
+  statusCode?: number;
+  roundCount?: number;
+  recoverable?: boolean;
+  timestamp?: number;
+  errorCode?: string;
+}
+
+/**
  * Callbacks pour les événements streaming
  */
 export interface StreamCallbacks {
@@ -31,7 +45,7 @@ export interface StreamCallbacks {
     toolResults?: ToolResult[],
     streamTimeline?: StreamTimeline
   ) => void;
-  onError?: (error: string) => void;
+  onError?: (error: string | StreamErrorDetails) => void;
 }
 
 /**
@@ -124,7 +138,17 @@ export class StreamOrchestrator {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       logger.error('[StreamOrchestrator] ❌ Erreur streaming:', error);
-      callbacks.onError?.(errorMessage);
+      
+      // ✅ Si l'erreur vient du stream (déjà appelé dans processChunk), ne pas rappeler onError
+      // Sinon, c'est une erreur réseau/autre → créer un objet d'erreur basique
+      const isStreamError = error instanceof Error && error.message.includes('Erreur stream');
+      
+      if (!isStreamError) {
+        callbacks.onError?.({
+          error: errorMessage,
+          timestamp: Date.now()
+        });
+      }
 
       return {
         success: false,
@@ -178,6 +202,24 @@ export class StreamOrchestrator {
         break;
 
       case 'error':
+        // ✅ Construire objet d'erreur enrichi depuis le chunk SSE
+        const errorDetails: StreamErrorDetails = {
+          error: chunk.error || 'Erreur stream inconnue',
+          provider: (chunk as { provider?: string }).provider,
+          model: (chunk as { model?: string }).model,
+          statusCode: (chunk as { statusCode?: number }).statusCode,
+          roundCount: (chunk as { roundCount?: number }).roundCount,
+          recoverable: (chunk as { recoverable?: boolean }).recoverable,
+          timestamp: (chunk as { timestamp?: number }).timestamp,
+          errorCode: (chunk as { errorCode?: string }).errorCode
+        };
+        
+        logger.error('[StreamOrchestrator] ❌ Erreur streaming enrichie:', errorDetails);
+        
+        // ✅ Passer l'objet complet au callback
+        callbacks.onError?.(errorDetails);
+        
+        // Throw pour interrompre le stream
         throw new Error(chunk.error || 'Erreur stream');
     }
   }

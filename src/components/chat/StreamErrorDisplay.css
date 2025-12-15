@@ -1,0 +1,318 @@
+/**
+ * StreamErrorDisplay - Styles pour l'affichage des erreurs de streaming
+ * Design moderne avec gradient rouge et actions
+ */
+
+.stream-error-container {
+  padding: 4px 0;
+  margin: 8px 0;
+}
+
+.stream-error {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  max-width: 600px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header */
+.stream-error-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.stream-error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(239, 68, 68, 0.15);
+  border-radius: 50%;
+  color: #dc2626;
+  flex-shrink: 0;
+}
+
+.stream-error-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.stream-error-title-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #991b1b;
+  font-family: var(--font-chat-text);
+}
+
+.stream-error-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: #b91c1c;
+  font-family: var(--font-chat-text);
+}
+
+.stream-error-expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(239, 68, 68, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.stream-error-expand:hover {
+  background: rgba(239, 68, 68, 0.2);
+  transform: scale(1.05);
+}
+
+/* Message */
+.stream-error-message {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #7f1d1d;
+  font-family: var(--font-chat-text);
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  border-left: 3px solid #dc2626;
+}
+
+/* Détails déroulants */
+.stream-error-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  animation: expandIn 0.2s ease-out;
+}
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+.stream-error-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.stream-error-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stream-error-detail-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #991b1b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--font-chat-text);
+}
+
+.stream-error-detail-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: #7f1d1d;
+  font-family: var(--font-monospace, 'JetBrains Mono', monospace);
+}
+
+.stream-error-description {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #991b1b;
+  padding: 8px 10px;
+  background: rgba(254, 202, 202, 0.4);
+  border-radius: 6px;
+  font-family: var(--font-chat-text);
+}
+
+/* Actions */
+.stream-error-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stream-error-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: var(--font-chat-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stream-error-button:hover {
+  transform: translateY(-1px);
+}
+
+.stream-error-button:active {
+  transform: translateY(0);
+}
+
+.stream-error-button.retry {
+  background: #dc2626;
+  color: white;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
+.stream-error-button.retry:hover {
+  background: #b91c1c;
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
+.stream-error-button.copy {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.stream-error-button.copy:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.stream-error-button.dismiss {
+  background: rgba(0, 0, 0, 0.05);
+  color: #991b1b;
+}
+
+.stream-error-button.dismiss:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode support */
+.chat-theme-dark .stream-error {
+  background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.chat-theme-dark .stream-error-icon {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+}
+
+.chat-theme-dark .stream-error-title-text {
+  color: #fca5a5;
+}
+
+.chat-theme-dark .stream-error-subtitle {
+  color: #f87171;
+}
+
+.chat-theme-dark .stream-error-expand {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.chat-theme-dark .stream-error-expand:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.chat-theme-dark .stream-error-message {
+  color: #fca5a5;
+  background: rgba(0, 0, 0, 0.3);
+  border-left-color: #f87171;
+}
+
+.chat-theme-dark .stream-error-details {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.chat-theme-dark .stream-error-detail-label {
+  color: #fca5a5;
+}
+
+.chat-theme-dark .stream-error-detail-value {
+  color: #fecaca;
+}
+
+.chat-theme-dark .stream-error-description {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.chat-theme-dark .stream-error-button.copy {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.chat-theme-dark .stream-error-button.copy:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.chat-theme-dark .stream-error-button.dismiss {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fca5a5;
+}
+
+.chat-theme-dark .stream-error-button.dismiss:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stream-error {
+    padding: 12px 14px;
+  }
+
+  .stream-error-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stream-error-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .stream-error-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+

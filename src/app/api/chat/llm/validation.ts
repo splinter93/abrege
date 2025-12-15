@@ -97,9 +97,9 @@ const chatMessageSchema = z.object({
       name: z.string(),
       arguments: z.string()
     })
-  })).optional(),
-  tool_call_id: z.string().optional(),
-  name: z.string().optional(),
+  })).nullable().optional(), // ✅ Accepte null ET undefined (DB peut retourner null)
+  tool_call_id: z.string().nullable().optional(), // ✅ Accepte null ET undefined
+  name: z.string().nullable().optional(), // ✅ Accepte null ET undefined
   timestamp: z.string().optional(),
   channel: z.string().optional()
 });
@@ -144,6 +144,8 @@ export type LLMRequest = z.infer<typeof llmRequestSchema>;
 export type LLMStreamRequest = z.infer<typeof llmStreamRequestSchema>;
 export type UIContext = z.infer<typeof uiContextSchema>;
 export type ChatMessageValidated = z.infer<typeof chatMessageSchema>;
+
+
 
 
 

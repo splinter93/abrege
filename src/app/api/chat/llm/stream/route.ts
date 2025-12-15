@@ -415,12 +415,12 @@ export async function POST(request: NextRequest) {
       async start(controller) {
         const encoder = new TextEncoder();
         const startTime = Date.now();
-        const TIMEOUT_MS = 60000; // 60s timeout
+        const TIMEOUT_MS = 180000; // 180s (3 minutes) - permet plusieurs rounds avec tool calls
         
         // ✅ Vérifier timeout
         const checkTimeout = () => {
           if (Date.now() - startTime > TIMEOUT_MS) {
-            throw new Error('Stream timeout (60s)');
+            throw new Error('Stream timeout (180s)');
           }
         };
         
@@ -448,6 +448,9 @@ export async function POST(request: NextRequest) {
           
           // ✅ AUDIT : Tracker les tool calls déjà exécutés pour détecter les doublons
           const executedToolCallsSignatures = new Set<string>();
+          
+          // ✅ RECOVERY: Flag pour indiquer qu'on est dans un round final de recovery (sans tools)
+          let forcedFinalRound = false;
           
           // ✅ Séparer les tools MCP (exécutés par Groq nativement) des OpenAPI (exécutés par nous)
           const mcpTools = tools.filter(isMcpTool);
@@ -500,45 +503,87 @@ export async function POST(request: NextRequest) {
             const toolCallsMap = new Map<string, ToolCall>(); // Accumuler par ID pour gérer les chunks
             let finishReason: string | null = null;
 
-            // ✅ Stream depuis le provider
-            for await (const chunk of provider.callWithMessagesStream(currentMessages, tools)) {
-              // ✅ Le chunk contient déjà type: 'delta' (ajouté par le provider)
-              sendSSE(chunk);
+            // ✅ Stream depuis le provider avec gestion d'erreur
+            try {
+              for await (const chunk of provider.callWithMessagesStream(currentMessages, tools)) {
+                // ✅ Le chunk contient déjà type: 'delta' (ajouté par le provider)
+                sendSSE(chunk);
 
-              // Accumuler content
-              if (chunk.content) {
-                accumulatedContent += chunk.content;
-              }
-              
-              // ✅ Accumuler tool calls (peuvent venir en plusieurs chunks)
-              if (chunk.tool_calls && chunk.tool_calls.length > 0) {
-                for (const tc of chunk.tool_calls) {
-                  if (!toolCallsMap.has(tc.id)) {
-                    toolCallsMap.set(tc.id, {
-                      id: tc.id,
-                      type: 'function' as const,
-                      function: {
-                        name: tc.function.name || '',
-                        arguments: tc.function.arguments || ''
+                // Accumuler content
+                if (chunk.content) {
+                  accumulatedContent += chunk.content;
+                }
+                
+                // ✅ Accumuler tool calls (peuvent venir en plusieurs chunks)
+                if (chunk.tool_calls && chunk.tool_calls.length > 0) {
+                  for (const tc of chunk.tool_calls) {
+                    if (!toolCallsMap.has(tc.id)) {
+                      toolCallsMap.set(tc.id, {
+                        id: tc.id,
+                        type: 'function' as const,
+                        function: {
+                          name: tc.function.name || '',
+                          arguments: tc.function.arguments || ''
+                        }
+                      });
+                    } else {
+                      // Accumuler les arguments progressifs
+                      const existing = toolCallsMap.get(tc.id);
+                      if (!existing) {
+                        logger.error(`[Stream Route] ⚠️ Tool call ${tc.id} not found in map`, { toolCallId: tc.id });
+                        continue;
                       }
-                    });
-                  } else {
-                    // Accumuler les arguments progressifs
-                    const existing = toolCallsMap.get(tc.id);
-                    if (!existing) {
-                      logger.error(`[Stream Route] ⚠️ Tool call ${tc.id} not found in map`, { toolCallId: tc.id });
-                      continue;
+                      if (tc.function.name) existing.function.name = tc.function.name;
+                      if (tc.function.arguments) existing.function.arguments += tc.function.arguments;
                     }
-                    if (tc.function.name) existing.function.name = tc.function.name;
-                    if (tc.function.arguments) existing.function.arguments += tc.function.arguments;
                   }
                 }
-              }
 
-              // ✅ Capturer finish_reason
-              if (chunk.finishReason) {
-                finishReason = chunk.finishReason;
+                // ✅ Capturer finish_reason
+                if (chunk.finishReason) {
+                  finishReason = chunk.finishReason;
+                }
               }
+            } catch (streamError) {
+              // ✅ ERREUR CRITIQUE : Le stream du provider a échoué
+              const errorMessage = streamError instanceof Error ? streamError.message : String(streamError);
+              const errorStack = streamError instanceof Error ? streamError.stack : undefined;
+              
+              // Parser pour extraire les détails (status code, etc.)
+              let statusCode: number | undefined;
+              let errorDetails = errorMessage;
+              
+              // Pattern pour détecter les erreurs HTTP (ex: "API error: 400 - {...}")
+              const httpErrorMatch = errorMessage.match(/(?:error|status):\s*(\d{3})/i);
+              if (httpErrorMatch) {
+                statusCode = parseInt(httpErrorMatch[1], 10);
+              }
+              
+              logger.error(`[Stream Route] ❌ ERREUR STREAMING PROVIDER (Round ${roundCount}):`, {
+                provider: providerType,
+                model,
+                statusCode,
+                errorMessage,
+                errorStack,
+                roundCount,
+                sessionId,
+                messagesCount: currentMessages.length
+              });
+              
+              // ✅ Envoyer un événement SSE d'erreur détaillé au client
+              sendSSE({
+                type: 'error',
+                error: errorDetails,
+                provider: providerType,
+                model,
+                statusCode,
+                roundCount,
+                timestamp: Date.now(),
+                recoverable: statusCode === 400 || statusCode === 429 // Erreurs potentiellement récupérables
+              });
+              
+              // Arrêter la boucle des rounds
+              break;
             }
 
             // ✅ AUDIT DÉTAILLÉ : Logger la décision de fin de round
@@ -548,6 +593,12 @@ export async function POST(request: NextRequest) {
               accumulatedContentLength: accumulatedContent.length,
               willContinue: finishReason === 'tool_calls' && toolCallsMap.size > 0
             });
+
+            // ✅ RECOVERY: Si on est dans un round final forcé, sortir immédiatement après la réponse
+            if (forcedFinalRound) {
+              logger.info('[Stream Route] ✅ Round final de recovery terminé - sortie de la boucle');
+              break;
+            }
 
             // ✅ Décision basée sur finish_reason
             if (finishReason === 'tool_calls' && toolCallsMap.size > 0) {
@@ -608,10 +659,37 @@ export async function POST(request: NextRequest) {
               });
             }
 
-            // Si tous les tool calls sont des doublons, on arrête pour éviter la boucle infinie
+            // ✅ CRITICAL FIX: Si tous les tool calls sont des doublons, forcer un dernier round SANS tools
+            // pour que le LLM explique la situation à l'utilisateur au lieu d'un arrêt silencieux
             if (uniqueToolCalls.length === 0 && accumulatedToolCalls.length > 0) {
-              logger.warn('[Stream Route] ⚠️ Tous les tool calls de ce round étaient des doublons - arrêt de l’exécution');
-              break;
+              logger.warn('[Stream Route] ⚠️ Tous les tool calls étaient des doublons - forçage dernier round SANS tools');
+              
+              // Ajouter un message système expliquant la situation
+              currentMessages.push({
+                role: 'system',
+                content: `⚠️ ATTENTION: Tous vos tool calls précédents étaient des doublons d'appels déjà effectués. Pour éviter une boucle infinie, les tools ont été désactivés pour ce round. 
+
+Vous DEVEZ maintenant répondre directement à l'utilisateur pour :
+1. Expliquer ce qui s'est passé (quelles erreurs ont été rencontrées)
+2. Dire pourquoi vous n'avez pas pu compléter la tâche
+3. Proposer des alternatives ou demander des clarifications
+
+NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
+                timestamp: new Date().toISOString()
+              });
+              
+              // Envoyer un événement SSE pour informer l'utilisateur
+              sendSSE({
+                type: 'system_notice',
+                message: 'Détection de doublons : relance du LLM sans tools pour explication',
+                timestamp: Date.now()
+              });
+              
+              // ✅ Forcer tools = [] et activer le flag de recovery
+              tools = [];
+              forcedFinalRound = true;
+              // On continue la boucle pour que le LLM réponde
+              continue;
             }
 
             // ✅ Exécuter les tool calls (uniques uniquement)
