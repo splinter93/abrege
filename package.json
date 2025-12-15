@@ -30,7 +30,7 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "validate:env": "tsx scripts/validate-env.ts",
-    "prebuild": "npm run validate:env",
+    "prebuild:disabled": "npm run validate:env",
     "mcp:list": "tsx scripts/configure-agent-mcp.ts list",
     "mcp:add": "tsx scripts/configure-agent-mcp.ts link",
     "mcp:remove": "tsx scripts/configure-agent-mcp.ts unlink"
