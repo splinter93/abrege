@@ -72,7 +72,7 @@ export class AuthError extends Error {
  */
 export class ChatMessageSendingService {
   private static instance: ChatMessageSendingService;
-  private readonly DEFAULT_MAX_HISTORY = 30;
+  private readonly DEFAULT_MAX_HISTORY = 50; // ✅ Augmenté de 30 à 50 pour conversations avec tools
 
   private constructor() {}
 
