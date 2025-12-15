@@ -111,8 +111,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
 
         const result = await v2UnifiedApi.updateNote(
           session.noteId,
-          { markdown_content: markdown },
-          user.id
+          { markdown_content: markdown }
         );
 
         if (!result.success) {
