@@ -262,8 +262,17 @@ export async function POST(request: NextRequest) {
     }
     
     // ✅ NOUVEAU : Remplacer prompts /slug par templates avant LLM
-    let processedMessage: string = typeof message === 'string' ? message : '';
-    if (!skipAddingUserMessage && processedMessage) {
+    // ⚠️ IMPORTANT: Garder le format original (string OU array multi-modal avec images)
+    let processedMessage: string | Array<{ type: 'text' | 'image_url'; text?: string; image_url?: { url: string; detail?: string } }> = message || '';
+    
+    // Si message est multi-modal (array), extraire le texte pour traitement prompts
+    const textForPrompts = typeof message === 'string' 
+      ? message 
+      : Array.isArray(message) 
+        ? message.find((part): part is { type: 'text'; text: string } => part.type === 'text')?.text || ''
+        : '';
+    
+    if (!skipAddingUserMessage && textForPrompts) {
       // Récupérer prompts depuis le dernier message user de l'historique
       const lastUserMessage = [...history].reverse().find(m => m.role === 'user') as import('@/types/chat').UserMessage | undefined;
       const contextPrompts = context.prompts || [];
@@ -284,7 +293,7 @@ export async function POST(request: NextRequest) {
             templateMap.set(promptRow.slug, promptRow.prompt_template);
           });
 
-          let finalContent = processedMessage ?? '';
+          let finalContent = textForPrompts;
 
           for (const promptMeta of prompts) {
             const pattern = `/${promptMeta.slug}`;
@@ -325,7 +334,14 @@ export async function POST(request: NextRequest) {
             });
           }
 
-          processedMessage = finalContent;
+          // ✅ Si message était multi-modal (array), reconstruire avec texte modifié
+          if (Array.isArray(message)) {
+            processedMessage = message.map(part => 
+              part.type === 'text' ? { ...part, text: finalContent } : part
+            );
+          } else {
+            processedMessage = finalContent;
+          }
 
           logger.info('[Stream Route] 📝 Prompts remplacés', {
             count: prompts.length,
