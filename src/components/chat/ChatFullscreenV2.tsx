@@ -334,7 +334,9 @@ const ChatFullscreenV2: React.FC = () => {
     }
     
     logger.info('[ChatFullscreenV2] 🔄 Relance du dernier message:', {
-      content: lastUserMessage.content.substring(0, 100),
+      content: typeof lastUserMessage.content === 'string' 
+        ? lastUserMessage.content.substring(0, 100) 
+        : '[rich content]',
       hasImages: !!lastUserMessage.images && lastUserMessage.images.length > 0
     });
     
