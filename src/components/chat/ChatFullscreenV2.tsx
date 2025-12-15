@@ -341,7 +341,7 @@ const ChatFullscreenV2: React.FC = () => {
     setStreamError(null);
     
     // Relancer avec le même contenu
-    await messageActions.sendUserMessage(
+    await messageActions.sendMessage(
       lastUserMessage.content, 
       lastUserMessage.images || []
     );
