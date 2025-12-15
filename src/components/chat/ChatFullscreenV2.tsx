@@ -22,6 +22,7 @@ import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { useInfiniteMessages } from '@/hooks/useInfiniteMessages';
 import { isEmptyAnalysisMessage } from '@/types/chat';
 import type { Agent } from '@/types/chat';
+import type { MessageContent, ImageAttachment } from '@/types/image';
 import { supabase } from '@/supabaseClient';
 
 // 🎯 NOUVEAUX HOOKS (Phase 2)
