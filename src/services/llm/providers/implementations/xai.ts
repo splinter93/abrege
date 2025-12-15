@@ -595,7 +595,15 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
     }
     
     // Pas d'images, utiliser la normalisation standard
-    return this.normalizeMessageContent(msg.content);
+    const normalized = this.normalizeMessageContent(msg.content);
+    
+    // ✅ CRITICAL FIX: xAI refuse null pour les messages user
+    // Convertir null → "" pour éviter 422 errors
+    if (msg.role === 'user' && normalized === null) {
+      return '';
+    }
+    
+    return normalized;
   }
 
   /**
