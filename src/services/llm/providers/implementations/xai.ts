@@ -332,6 +332,25 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
 
     try {
       const apiMessages = this.convertChatMessagesToApiFormat(messages);
+      
+      // ✅ DEBUG: Logger les messages pour debug 422 errors
+      logger.error('[XAIProvider] 🔍 DEBUG MESSAGES ENVOYÉS À XAI:', {
+        totalMessages: apiMessages.length,
+        messages: apiMessages.map((msg, i) => ({
+          index: i,
+          role: msg.role,
+          contentType: typeof msg.content,
+          contentIsArray: Array.isArray(msg.content),
+          contentLength: typeof msg.content === 'string' ? msg.content.length : 
+                         Array.isArray(msg.content) ? msg.content.length : 0,
+          hasToolCalls: !!msg.tool_calls,
+          toolCallsCount: msg.tool_calls?.length || 0,
+          hasToolCallId: !!msg.tool_call_id,
+          // ✅ Afficher le content pour les 3 premiers messages
+          ...(i < 3 && { content: msg.content })
+        }))
+      });
+      
       const payload = await this.preparePayload(apiMessages, tools);
       payload.stream = true;
       
