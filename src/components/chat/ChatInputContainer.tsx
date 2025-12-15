@@ -67,11 +67,7 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
         loading={loading}
         textareaRef={textareaRef}
         disabled={false}
-        placeholder={
-          selectedAgent
-            ? `Discuter avec ${selectedAgent.display_name || selectedAgent.name}`
-            : "Commencez à discuter..."
-        }
+        placeholder='Type / for prompts • @ to mention notes.'
         sessionId={sessionId}
         currentAgentModel={currentAgentModel}
         editingMessageId={editingMessageId}
