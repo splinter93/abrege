@@ -695,11 +695,9 @@ const ChatFullscreenV2: React.FC = () => {
         ? (message.find(part => part.type === 'text' && 'text' in part) as { text: string } | undefined)?.text || ''
         : '';
     
-    const imageUrls = images?.map(img => 'base64' in img ? img.base64 : img.url) || [];
-    
     setLastUserMessage({
       content: messageText,
-      images: imageUrls.length > 0 ? imageUrls : undefined
+      images: images && images.length > 0 ? images : undefined
     });
 
     // Mode normal (avec mentions légères + prompts metadata)
