@@ -55,6 +55,7 @@ interface GroqChatCompletionResponse {
     message: {
       content: string;
       role: string;
+      reasoning?: string; // ✅ Champ optionnel pour modèles avec reasoning
     };
     finish_reason: string;
   }>;
