@@ -88,10 +88,10 @@ export class LiminalityToolsAdapter {
       serverLabel = tool.name;
     }
     
-    return {
+    return     {
       type: 'mcp',
       server_label: serverLabel,
-      server_url: tool.server_url,
+      server_url: (tool.server_url as string) || '',
       allowed_tools: tool.allowed_tools as string[] | undefined,
       require_approval: 'auto', // Mode auto par défaut pour éviter les interruptions
       headers: (tool.headers || {}) as Record<string, string>
