@@ -10,10 +10,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { agentId: string } }
+  { params }: { params: Promise<{ agentId: string }> }
 ): Promise<NextResponse> {
   try {
-    const { agentId } = params;
+    const { agentId } = await params;
 
     if (!agentId) {
       return NextResponse.json(

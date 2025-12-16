@@ -258,21 +258,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       // Préparer le payload
       const payload = this.preparePayload(apiMessages, liminalityTools);
       
-      logger.info(`[LiminalityProvider] 🚀 PAYLOAD STREAM → LIMINALITY: ${payload.model} | ${apiMessages.length} messages | ${liminalityTools.length} tools`);
-      
-      // 🔍 DEBUG: Vérifier les rôles des messages AVANT envoi
-      logger.info('=== VÉRIFICATION DES RÔLES ===');
-      payload.messages.forEach((msg: any, idx: number) => {
-        const toolCallsInfo = msg.tool_calls ? `${msg.tool_calls.length} tool_calls` : 'pas de tool_calls';
-        logger.info(`Message ${idx}: role="${msg.role}" | ${toolCallsInfo} | content=${msg.content ? msg.content.substring(0, 50) + '...' : 'vide'}`);
-      });
-      logger.info('=== FIN VÉRIFICATION ===');
-      
-      // 🔍 DEBUG: Logger le payload complet (IMPORTANT pour debug)
-      logger.info('[LiminalityProvider] 📦 PAYLOAD COMPLET ENVOYÉ À LIMINALITY:');
-      console.log('=== DÉBUT PAYLOAD LIMINALITY ===');
-      console.log(JSON.stringify(payload, null, 2));
-      console.log('=== FIN PAYLOAD LIMINALITY ===');
+      logger.info(`[LiminalityProvider] 🚀 Stream call: ${payload.model} | ${apiMessages.length} messages | ${liminalityTools.length} tools`);
       
       // Appel API avec streaming
       const response = await fetch(`${this.config.baseUrl}/llm-exec/round/stream`, {
@@ -350,23 +336,15 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
 
             try {
               const event = JSON.parse(data) as LiminalityStreamEvent;
-              
-              // 🔍 DEBUG: Logger chaque événement reçu
-              console.log('📥 EVENT SSE REÇU:', JSON.stringify(event, null, 2));
-              
-              // Convertir l'event Liminality vers le format StreamChunk attendu
               const chunk = this.convertStreamEvent(event);
               
               if (chunk) {
-                console.log('📤 CHUNK ENVOYÉ:', JSON.stringify(chunk, null, 2));
                 yield chunk;
-              } else {
-                console.log('⏭️  EVENT IGNORÉ (chunk null)');
               }
 
             } catch (parseError) {
-              logger.warn('[LiminalityProvider] ⚠️ Erreur parsing chunk SSE:', parseError);
-              console.log('❌ RAW DATA:', data);
+              logger.warn('[LiminalityProvider] ⚠️ Erreur parsing SSE:', parseError);
+              logger.dev('[LiminalityProvider] RAW DATA:', data);
               continue;
             }
           }
@@ -407,11 +385,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
    * Convertit les ChatMessage vers le format API Liminality
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): LiminalityMessage[] {
-    logger.info(`[LiminalityProvider] 🔄 Conversion de ${messages.length} messages vers format Liminality`);
-    
-    return messages.map((msg, index) => {
-      logger.dev(`[LiminalityProvider] Message ${index}: role=${msg.role}, hasContent=${!!msg.content}`);
-      
+    return messages.map((msg) => {
       const limMsg: LiminalityMessage = {
         role: this.mapRole(msg.role),
         content: msg.content || ''
@@ -428,7 +402,6 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
               ? JSON.parse(tc.function.arguments)
               : tc.function?.arguments || {}
           }));
-          logger.dev(`[LiminalityProvider] 🔧 Assistant message avec ${assistantMsg.tool_calls.length} tool_calls`);
         }
 
         // Ajouter reasoning si présent
@@ -437,30 +410,20 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
         }
       }
 
-      // ✅ Formatter correctement les tool_response messages selon le format Synesia
+      // Formatter correctement les tool_response messages selon le format Synesia
       if (msg.role === 'tool') {
         const toolMsg = msg as import('@/types/chat').ToolMessage;
-        logger.info(`[LiminalityProvider] 🔍 OUTIL MESSAGE DÉTECTÉ:`, {
-          hasTool_call_id: !!toolMsg.tool_call_id,
-          tool_call_id: toolMsg.tool_call_id,
-          name: toolMsg.name,
-          keys: Object.keys(toolMsg)
-        });
         
         if (toolMsg.tool_call_id) {
-          // ✅ FORMAT CORRECT SYNESIA : tool_calls en array
+          // Format Synesia : tool_calls en array
           limMsg.tool_calls = [{
             tool_call_id: toolMsg.tool_call_id,
-            content: limMsg.content,  // Le contenu va DANS l'objet tool_calls
+            content: limMsg.content,
             tool_name: toolMsg.name
           }];
-          
-          // ✅ SUPPRIMER le content à la racine (il est dans tool_calls maintenant)
           delete limMsg.content;
-          
-          logger.info(`[LiminalityProvider] ✅ Tool response formaté: tool_call_id=${toolMsg.tool_call_id}, tool_name=${toolMsg.name}`);
         } else {
-          logger.error(`[LiminalityProvider] ❌ Tool message SANS tool_call_id ! Message complet:`, JSON.stringify(toolMsg, null, 2));
+          logger.error(`[LiminalityProvider] ❌ Tool message sans tool_call_id`);
         }
       }
 

@@ -69,7 +69,7 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     const effectiveHeight = visualViewport?.height || viewportHeight;
     
     // Ratio de padding selon le layout
-    const paddingRatio = isCanvaLayout ? 0.76 : 0.79;
+    const paddingRatio = isCanvaLayout ? 0.76 : 0.81;
     const tempPadding = Math.floor(effectiveHeight * paddingRatio);
     
     // Appliquer le padding temporaire
