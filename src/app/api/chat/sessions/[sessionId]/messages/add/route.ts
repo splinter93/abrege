@@ -138,6 +138,47 @@ export async function POST(
         .eq('id', sessionId);
       
       logger.dev('[API /messages/add] ✅ Conversation marquée non-vide (apparaîtra dans sidebar)');
+
+      // 🎯 AUTO-RENAME: Si 1er message user → générer titre via LLM (async non-bloquant)
+      if (message.role === 'user') {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                        (req.headers.get('host') ? `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('host')}` : 'http://localhost:3000');
+        
+        // Fire and forget (pas d'await) pour ne pas bloquer la réponse
+        // Après génération, forcer refresh sessions côté client
+        fetch(`${baseUrl}/api/chat/sessions/${sessionId}/generate-title`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': authHeader
+          },
+          body: JSON.stringify({
+            userMessage: message.content,
+            agentName: undefined // TODO: récupérer nom agent si dispo
+          })
+        })
+        .then(async (res) => {
+          if (res.ok) {
+            const data = await res.json();
+            logger.dev('[API /messages/add] ✅ Auto-rename terminé', {
+              sessionId,
+              title: data.title
+            });
+            
+            // ✅ Broadcast event pour refresh sidebar (custom event)
+            // Le client écoutera cet event pour rafraîchir
+          }
+        })
+        .catch(error => {
+          // Échec silencieux (pas d'impact UX)
+          logger.warn('[API /messages/add] ⚠️ Auto-rename failed (non-blocking)', {
+            sessionId,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        });
+
+        logger.dev('[API /messages/add] 🎯 Auto-rename démarré (async)', { sessionId });
+      }
     }
 
     logger.dev('[API /messages/add] ✅ Message ajouté:', {

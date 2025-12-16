@@ -15,6 +15,7 @@ interface ChatStore {
   loading: boolean;
   error: string | null;
   editingMessage: EditingState | null;
+  deletingSessions: Set<string>; // ✅ Sessions en cours de suppression (optimiste)
   
   // 🔄 Actions de base
   setSessions: (sessions: ChatSession[]) => void;
@@ -53,6 +54,7 @@ export const useChatStore = create<ChatStore>()(
       loading: false,
       error: null,
       editingMessage: null,
+      deletingSessions: new Set<string>(), // ✅ Sessions en cours de suppression
 
       // 🔄 Actions de base
       setSessions: (sessions: ChatSession[]) => set({ sessions }),
@@ -100,7 +102,11 @@ export const useChatStore = create<ChatStore>()(
         try {
           const result = await sessionSyncService.syncSessionsFromDB();
           if (result.success && result.sessions) {
-            get().setSessions(result.sessions);
+            // ✅ FILTRER les sessions en cours de suppression (optimiste)
+            const deletingIds = get().deletingSessions;
+            const filteredSessions = result.sessions.filter(s => !deletingIds.has(s.id));
+            
+            get().setSessions(filteredSessions);
             // ✅ AUTO-SELECT géré dans ChatFullscreenV2 (pas ici, séparation responsabilités)
           }
         } catch (error) {
@@ -172,10 +178,90 @@ export const useChatStore = create<ChatStore>()(
 
       deleteSession: async (sessionId: string) => {
         try {
-          await sessionSyncService.deleteSessionAndSync(sessionId);
-          get().syncSessions();
+          const currentSessions = get().sessions;
+          const currentSession = get().currentSession;
+          const isCurrentSession = currentSession?.id === sessionId;
+          
+          logger.dev('[ChatStore] 🗑️ Suppression session (optimiste)', {
+            sessionId,
+            isCurrentSession,
+            totalSessions: currentSessions.length
+          });
+
+          // ✅ 0. Marquer comme "en cours de suppression" (empêche réapparition par polling)
+          const deletingIds = new Set(get().deletingSessions);
+          deletingIds.add(sessionId);
+          set({ deletingSessions: deletingIds });
+
+          // ✅ 1. OPTIMISTE : Retirer immédiatement de la liste (UX instantanée)
+          const remainingSessions = currentSessions.filter(s => s.id !== sessionId);
+          
+          // ✅ 2. Si session active supprimée → basculer automatiquement
+          let nextSession: ChatSession | null = null;
+          
+          if (isCurrentSession && remainingSessions.length > 0) {
+            // Trouver la session suivante dans l'ordre chronologique
+            // Les sessions sont triées par updated_at DESC, donc prendre la première
+            nextSession = remainingSessions[0];
+            
+            logger.dev('[ChatStore] 🔄 Basculement automatique vers session suivante', {
+              fromSessionId: sessionId,
+              toSessionId: nextSession.id,
+              toSessionName: nextSession.name
+            });
+          } else if (isCurrentSession) {
+            // Plus de sessions → null (état vide)
+            logger.dev('[ChatStore] ⚠️ Dernière session supprimée, état vide');
+          }
+          
+          // ✅ 3. Mettre à jour l'état immédiatement (pas d'attente)
+          set({
+            sessions: remainingSessions,
+            currentSession: isCurrentSession ? nextSession : currentSession
+          });
+
+          // ✅ 4. API en arrière-plan (non-bloquant pour l'UX)
+          sessionSyncService.deleteSessionAndSync(sessionId)
+            .then((result) => {
+              if (result.success) {
+                logger.info('[ChatStore] ✅ Session supprimée en DB', { sessionId });
+                
+                // ✅ Retirer du Set "en cours de suppression"
+                const updatedDeletingIds = new Set(get().deletingSessions);
+                updatedDeletingIds.delete(sessionId);
+                set({ deletingSessions: updatedDeletingIds });
+              } else {
+                // ❌ ROLLBACK : Remettre la session si échec API
+                logger.error('[ChatStore] ❌ Échec suppression DB, rollback', {
+                  sessionId,
+                  error: result.error
+                });
+                
+                // Retirer du Set avant rollback
+                const updatedDeletingIds = new Set(get().deletingSessions);
+                updatedDeletingIds.delete(sessionId);
+                set({ deletingSessions: updatedDeletingIds });
+                
+                // Recharger depuis DB pour être sûr de l'état
+                get().syncSessions();
+              }
+            })
+            .catch((error) => {
+              logger.error('[ChatStore] ❌ Erreur deleteSession:', error);
+              
+              // Retirer du Set avant rollback
+              const updatedDeletingIds = new Set(get().deletingSessions);
+              updatedDeletingIds.delete(sessionId);
+              set({ deletingSessions: updatedDeletingIds });
+              
+              // ROLLBACK: Recharger état depuis DB
+              get().syncSessions();
+            });
+
         } catch (error) {
-          logger.error('[ChatStore] Erreur deleteSession:', error);
+          logger.error('[ChatStore] ❌ Erreur critique deleteSession:', error);
+          // En cas d'erreur critique, recharger l'état
+          get().syncSessions();
         }
       },
 

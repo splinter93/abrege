@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, X, User, Settings } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
+import { useChatSessionsPolling } from '@/hooks/chat/useChatSessionsPolling'; // ✅ Simple et fiable
+// import { useChatSessionsRealtime } from '@/hooks/chat/useChatSessionsRealtime'; // ❌ Re-renders infinis
 import SettingsModal from './SettingsModal';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { Agent, ChatSession } from '@/types/chat';
@@ -30,6 +32,9 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const [editingName, setEditingName] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false); // ✅ Bloquer clics pendant création
+
+  // 🔄 Polling léger (simple et fiable, détecte auto-rename + nouvelles sessions)
+  useChatSessionsPolling({ enabled: true, intervalMs: 3000 }); // ✅ 3s = bon compromis
 
   // Fonctions de gestion
   const handleSelectSession = (session: ChatSession) => {
