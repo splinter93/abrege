@@ -67,7 +67,7 @@ const DEFAULT_CONFIG = {
  * Orchestrateur simple pour gérer les conversations avec tool calls MCP
  */
 export class AgentOrchestrator {
-  private llmProvider: GroqProvider | XAIProvider;
+  private llmProvider: GroqProvider | XAIProvider | import('../providers/implementations/liminality').LiminalityProvider;
   private toolExecutor: SimpleToolExecutor;
   private openApiToolExecutor: OpenApiToolExecutor;
   private historyBuilder: GroqHistoryBuilder;
@@ -213,12 +213,29 @@ export class AgentOrchestrator {
    * ✅ Déduire le provider depuis le modèle (source unique de vérité)
    * ✅ NOUVEAU DESIGN : Le modèle détermine le provider, pas l'inverse
    */
-  private getProviderFromModel(model: string): 'groq' | 'xai' {
-    // xAI models
-    if (model.includes('grok')) return 'xai';
+  private getProviderFromModel(model: string): 'groq' | 'xai' | 'liminality' {
+    // Utiliser groqModels pour déterminer le provider correct
+    const { getModelInfo } = require('@/constants/groqModels');
+    const modelInfo = getModelInfo(model);
     
-    // Groq models
-    if (model.includes('openai/') || model.includes('llama') || model.includes('deepseek') || model.includes('mixtral')) {
+    if (modelInfo?.provider) {
+      return modelInfo.provider as 'groq' | 'xai' | 'liminality';
+    }
+    
+    // Fallback: détection par pattern (ordre important!)
+    // Liminality models (vérifier EN PREMIER avant les patterns génériques)
+    if (model.includes('deepseek/') || model.includes('fireworks/') || 
+        model.includes('xai/') || model.startsWith('openai/gpt-5') || 
+        model === 'openai/gpt-4o-mini') {
+      return 'liminality';
+    }
+    
+    // xAI models (direct)
+    if (model.includes('grok-') && !model.includes('/')) return 'xai';
+    
+    // Groq models (patterns spécifiques pour éviter faux positifs)
+    if (model.startsWith('openai/gpt-oss-') || model.includes('llama') || 
+        model.includes('mixtral') || model.includes('moonshotai/')) {
       return 'groq';
     }
     
@@ -230,7 +247,7 @@ export class AgentOrchestrator {
    * ✅ Sélectionner le provider en fonction du MODÈLE (pas du champ provider)
    * ✅ PRODUCTION READY : Le modèle est la source de vérité
    */
-  private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider {
+  private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider | import('../providers/implementations/liminality').LiminalityProvider {
     const configuredModel = agentConfig?.model || 'openai/gpt-oss-20b';
     const configuredProvider = agentConfig?.provider;
     
@@ -275,6 +292,15 @@ export class AgentOrchestrator {
     if (deducedProvider === 'xai') {
       logger.info(`[AgentOrchestrator] ✅ Provider XAI sélectionné (modèle: ${configuredModel})`);
       return new XAIProvider({
+        model: configuredModel,
+        temperature,
+        topP,
+        maxTokens
+      });
+    } else if (deducedProvider === 'liminality') {
+      logger.info(`[AgentOrchestrator] ✅ Provider LIMINALITY sélectionné (modèle: ${configuredModel})`);
+      const { LiminalityProvider } = require('../providers/implementations/liminality');
+      return new LiminalityProvider({
         model: configuredModel,
         temperature,
         topP,

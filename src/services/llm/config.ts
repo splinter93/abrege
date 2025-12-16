@@ -37,6 +37,12 @@ export interface LLMConfig {
       defaultModel: string;
       reasoningMode: 'fast' | 'reasoning';
     };
+    liminality: {
+      apiKey: string;
+      baseUrl: string;
+      defaultModel: string;
+      maxLoops: number;
+    };
   };
   
   // Configuration des outils
@@ -86,6 +92,12 @@ const DEFAULT_CONFIG: LLMConfig = {
       baseUrl: 'https://api.x.ai/v1',
       defaultModel: 'grok-4-1-fast-reasoning',
       reasoningMode: 'fast'
+    },
+    liminality: {
+      apiKey: SERVER_ENV.llm.liminalityApiKey || process.env.LIMINALITY_API_KEY || '',
+      baseUrl: process.env.LIMINALITY_BASE_URL || 'https://origins-server.up.railway.app',
+      defaultModel: process.env.LIMINALITY_MODEL || 'gpt-4o-mini',
+      maxLoops: parseInt(process.env.LIMINALITY_MAX_LOOPS || '10', 10)
     }
   },
   

@@ -1,5 +1,5 @@
 import type { LLMProvider, AppContext, ChatMessage, LLMResponse } from './types';
-import { SynesiaProvider, GroqProvider, GroqResponsesProvider, XAIProvider } from './providers';
+import { GroqProvider, GroqResponsesProvider, XAIProvider, LiminalityProvider } from './providers';
 import { logger, LogCategory } from '@/utils/logger';
 
 interface ProviderMetrics {
@@ -17,10 +17,10 @@ export class LLMProviderManager {
 
   constructor() {
     // Enregistrer les providers par défaut
-    this.registerProvider(new SynesiaProvider());
     this.registerProvider(new GroqProvider());
     this.registerProvider(new GroqResponsesProvider());
     this.registerProvider(new XAIProvider());
+    this.registerProvider(new LiminalityProvider());
     
     // Initialiser les métriques
     this.initializeMetrics();
@@ -29,11 +29,11 @@ export class LLMProviderManager {
   private getDefaultProvider(): string {
     switch (process.env.NODE_ENV) {
       case 'production':
-        return 'synesia';
+        return 'groq'; // Changed from 'synesia' (deprecated)
       case 'development':
         return 'groq';
       default:
-        return 'synesia';
+        return 'groq';
     }
   }
 

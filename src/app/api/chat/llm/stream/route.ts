@@ -130,8 +130,16 @@ export async function POST(request: NextRequest) {
     );
 
     // ✅ Sélectionner le provider selon la config agent (Groq ou xAI)
-    const providerType = finalAgentConfig?.provider?.toLowerCase() || 'groq';
+    let providerType = finalAgentConfig?.provider?.toLowerCase() || 'groq';
     let model = finalAgentConfig?.model || (providerType === 'xai' ? 'grok-4-1-fast-reasoning' : 'openai/gpt-oss-20b');
+    
+    // 🔍 Auto-détection du provider depuis le modèle (pour éviter incohérences)
+    const { getModelInfo } = await import('@/constants/groqModels');
+    const modelInfo = getModelInfo(model);
+    if (modelInfo?.provider && modelInfo.provider !== providerType) {
+      logger.warn(`[Stream Route] ⚠️ Correction automatique provider: ${providerType} → ${modelInfo.provider} (modèle: ${model})`);
+      providerType = modelInfo.provider;
+    }
     
     // 🔍 Validation et normalisation du modèle
     model = validateAndNormalizeModel(providerType, model);
@@ -153,9 +161,15 @@ export async function POST(request: NextRequest) {
     });
 
     // Créer le provider approprié
-    const provider = providerType === 'xai'
-      ? new XAIProvider({ model, temperature, topP, maxTokens })
-      : new GroqProvider({ model, temperature, topP, maxTokens });
+    let provider;
+    if (providerType === 'xai') {
+      provider = new XAIProvider({ model, temperature, topP, maxTokens });
+    } else if (providerType === 'liminality') {
+      const { LiminalityProvider } = await import('@/services/llm/providers/implementations/liminality');
+      provider = new LiminalityProvider({ model, temperature, topP, maxTokens });
+    } else {
+      provider = new GroqProvider({ model, temperature, topP, maxTokens });
+    }
     
     logger.info(`[Stream Route] ✅ Provider ${providerType.toUpperCase()} créé avec modèle: ${model}`);
 

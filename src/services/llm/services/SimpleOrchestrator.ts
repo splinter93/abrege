@@ -9,6 +9,7 @@
 
 import { GroqProvider } from '../providers/implementations/groq';
 import { XAIProvider } from '../providers/implementations/xai';
+import { LiminalityProvider } from '../providers/implementations/liminality';
 import { SimpleToolExecutor, ToolCall, ToolResult } from './SimpleToolExecutor';
 import { OpenApiToolExecutor } from '../executors/OpenApiToolExecutor';
 import { GroqHistoryBuilder } from './GroqHistoryBuilder';
@@ -68,7 +69,7 @@ const DEFAULT_CONFIG = {
  * Orchestrateur simple pour gérer les conversations avec tool calls MCP
  */
 export class SimpleOrchestrator {
-  private llmProvider: GroqProvider | XAIProvider;
+  private llmProvider: GroqProvider | XAIProvider | LiminalityProvider;
   private toolExecutor: SimpleToolExecutor;
   private openApiToolExecutor: OpenApiToolExecutor;
   private historyBuilder: GroqHistoryBuilder;
@@ -214,7 +215,7 @@ export class SimpleOrchestrator {
    * ✅ Sélectionner le provider en fonction de l'agent config
    * ✅ PRODUCTION READY : Validation stricte des paramètres LLM
    */
-  private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider {
+  private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider | LiminalityProvider {
     const provider = agentConfig?.provider || 'groq';
     const model = agentConfig?.model;
 
@@ -232,6 +233,14 @@ export class SimpleOrchestrator {
       : 8000;
 
     switch (provider.toLowerCase()) {
+      case 'liminality':
+        return new LiminalityProvider({
+          model: model || 'gpt-4o-mini',
+          temperature,
+          topP,
+          maxTokens
+        });
+      
       case 'xai':
         return new XAIProvider({
           model: model || 'grok-4-1-fast-reasoning',

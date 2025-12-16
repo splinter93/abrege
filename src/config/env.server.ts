@@ -54,7 +54,8 @@ export const SERVER_ENV = {
   llm: {
     groqApiKey: process.env.GROQ_API_KEY || optionalServerEnvVars.GROQ_API_KEY,
     openaiApiKey: process.env.OPENAI_API_KEY || optionalServerEnvVars.OPENAI_API_KEY,
-    xaiApiKey: process.env.XAI_API_KEY || optionalServerEnvVars.XAI_API_KEY
+    xaiApiKey: process.env.XAI_API_KEY || optionalServerEnvVars.XAI_API_KEY,
+    liminalityApiKey: process.env.LIMINALITY_API_KEY || ''
   },
   services: {
     whisperApiUrl: process.env.WHISPER_API_URL || optionalServerEnvVars.WHISPER_API_URL,
@@ -66,6 +67,8 @@ export const SERVER_ENV = {
 } as const;
 
 export type ServerEnvConfig = typeof SERVER_ENV;
+
+
 
 
 

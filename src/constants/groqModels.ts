@@ -6,8 +6,8 @@
 export interface GroqModelInfo {
   id: string;
   name: string;
-  category: 'gpt-oss' | 'llama' | 'qwen' | 'xai' | 'whisper' | 'tts' | 'other';
-  provider?: 'groq' | 'xai'; // Provider du modèle
+  category: 'gpt-oss' | 'llama' | 'qwen' | 'xai' | 'whisper' | 'tts' | 'liminality' | 'other';
+  provider?: 'groq' | 'xai' | 'liminality'; // Provider du modèle
   capabilities: string[];
   contextWindow: number;
   maxOutput: number;
@@ -149,6 +149,91 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     pricing: { input: '$0.20', output: '$0.50' },
     description: 'Multimodal avec analyse avancée d\'images (beta)'
   },
+  
+  // Liminality Models (Synesia LLM Exec API)
+  // DeepSeek Models - Recommandés pour reasoning et économie
+  {
+    id: 'deepseek/deepseek-chat',
+    name: 'DeepSeek Chat V3.2',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
+    contextWindow: 64000,
+    maxOutput: 8000,
+    speed: 800,
+    pricing: { input: '$0.14', output: '$0.21' },
+    description: 'DeepSeek V3.2 rapide et économique, excellent rapport qualité/prix',
+    recommended: true
+  },
+  {
+    id: 'deepseek/deepseek-reasoner',
+    name: 'DeepSeek Reasoner V3.2',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning'],
+    contextWindow: 64000,
+    maxOutput: 8000,
+    speed: 700,
+    pricing: { input: '$0.14', output: '$0.21' },
+    description: 'DeepSeek V3.2 avec reasoning avancé, idéal pour tâches complexes',
+    recommended: true
+  },
+  
+  // OpenAI Models via Liminality
+  {
+    id: 'openai/gpt-4o-mini',
+    name: 'GPT-4o Mini',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
+    contextWindow: 128000,
+    maxOutput: 16384,
+    speed: 900,
+    pricing: { input: '$0.15', output: '$0.60' },
+    description: 'Rapide et économique pour tâches ciblées',
+    recommended: true
+  },
+  {
+    id: 'openai/gpt-5',
+    name: 'GPT-5',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'images', 'function_calling', 'streaming', 'structured_output', 'reasoning', 'mcp'],
+    contextWindow: 400000,
+    maxOutput: 128000,
+    speed: 600,
+    pricing: { input: '$1.25', output: '$10.00' },
+    description: 'Le meilleur pour coding et tâches agentiques avancées'
+  },
+  
+  // Fireworks AI Models
+  {
+    id: 'fireworks/kimi-k2-thinking',
+    name: 'Kimi K2 Thinking',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'streaming', 'reasoning'],
+    contextWindow: 256000,
+    maxOutput: 4000,
+    speed: 500,
+    pricing: { input: '$1.00', output: '$3.00' },
+    description: 'Contexte ultra-long (256k) avec reasoning avancé',
+    recommended: true
+  },
+  
+  // xAI Models via Liminality (pour orchestration avancée)
+  {
+    id: 'xai/grok-4-1-fast-reasoning',
+    name: 'Grok 4.1 Fast Reasoning',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'images', 'function_calling', 'streaming', 'structured_output', 'reasoning', 'mcp'],
+    contextWindow: 2000000,
+    maxOutput: 8000,
+    speed: 700,
+    pricing: { input: '$0.20', output: '$0.50' },
+    description: 'Grok 4.1 via Liminality avec orchestration automatique des tools'
+  },
 ];
 
 /**
@@ -160,6 +245,7 @@ export const LLM_MODELS = GROQ_MODELS;
  * Grouper les modèles par catégorie pour le menu déroulant
  */
 export const GROQ_MODELS_BY_CATEGORY = {
+  'Liminality (Synesia) ⭐': GROQ_MODELS.filter(m => m.category === 'liminality'),
   'xAI Grok (Recommandé)': GROQ_MODELS.filter(m => m.category === 'xai'),
   'GPT-OSS': GROQ_MODELS.filter(m => m.category === 'gpt-oss'),
   'Llama 4 (Multimodal)': GROQ_MODELS.filter(m => m.category === 'llama'),

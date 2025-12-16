@@ -124,8 +124,13 @@ export function validateAndNormalizeModel(
   providerType: string,
   model: string
 ): string {
-  const isXaiModel = model.includes('grok');
-  const isGroqModel = model.includes('openai/') || model.includes('llama') || model.includes('deepseek');
+  // Liminality gère tous types de modèles via son orchestrateur
+  if (providerType === 'liminality') {
+    return model;
+  }
+  
+  const isXaiModel = model.includes('grok') && !model.includes('/');
+  const isGroqModel = model.startsWith('openai/gpt-oss-') || model.includes('llama') || model.includes('moonshotai/');
   
   // Détecter incohérence provider/modèle
   if (providerType === 'xai' && isGroqModel) {

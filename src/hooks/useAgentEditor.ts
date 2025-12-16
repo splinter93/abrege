@@ -219,7 +219,25 @@ export function useAgentEditor(options: UseAgentEditorOptions = {}): UseAgentEdi
 
   const updateField = useCallback(
     <K extends keyof SpecializedAgentConfig>(field: K, value: SpecializedAgentConfig[K]) => {
-      setEditedAgent(prev => (prev ? { ...prev, [field]: value } : null));
+      setEditedAgent(prev => {
+        if (!prev) return null;
+        
+        // Si le champ modifié est 'model', mettre à jour automatiquement le 'provider'
+        if (field === 'model' && typeof value === 'string') {
+          const { getModelInfo } = require('@/constants/groqModels');
+          const modelInfo = getModelInfo(value);
+          const newProvider = modelInfo?.provider || 'groq'; // Fallback vers 'groq'
+          
+          logger.dev('[useAgentEditor] 🔄 Mise à jour automatique du provider:', {
+            model: value,
+            provider: newProvider
+          });
+          
+          return { ...prev, [field]: value, provider: newProvider };
+        }
+        
+        return { ...prev, [field]: value };
+      });
       setHasChanges(true);
     },
     []
