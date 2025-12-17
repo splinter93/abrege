@@ -539,14 +539,18 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
     const toolCalls: ToolCall[] = [];
     if (message.tool_calls && message.tool_calls.length > 0) {
       for (const tc of message.tool_calls) {
-        toolCalls.push({
-          id: tc.id,
-          type: 'function',
-          function: {
-            name: tc.name,
-            arguments: JSON.stringify(tc.arguments)
-          }
-        });
+        // Ne traiter que les tool_request (avec id, name, arguments)
+        // Les tool_response (avec tool_call_id, content) sont ignorés ici
+        if (tc.id && tc.name) {
+          toolCalls.push({
+            id: tc.id,
+            type: 'function',
+            function: {
+              name: tc.name,
+              arguments: JSON.stringify(tc.arguments)
+            }
+          });
+        }
       }
     }
 
