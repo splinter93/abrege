@@ -29,7 +29,15 @@ export interface StreamChunk {
   result?: unknown;
   success?: boolean;
   finishReason?: string;
+  // ✅ Champs pour les erreurs enrichies
   error?: string;
+  errorCode?: string; // Code d'erreur spécifique (ex: "tool_use_failed")
+  provider?: string; // Provider qui a émis l'erreur
+  model?: string; // Modèle utilisé
+  statusCode?: number; // HTTP status code
+  roundCount?: number; // Round où l'erreur s'est produite
+  recoverable?: boolean; // Si l'erreur peut être récupérée avec retry
+  timestamp?: number; // Timestamp de l'erreur
 }
 
 /**

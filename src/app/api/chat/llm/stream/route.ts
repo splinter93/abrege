@@ -475,6 +475,8 @@ export async function POST(request: NextRequest) {
           const currentMessages = [...messages];
           let roundCount = 0;
           const maxRounds = 20;
+          let toolValidationRetryCount = 0; // ✅ NOUVEAU: Compteur pour retry tool_use_failed
+          const maxToolValidationRetries = 1; // ✅ Max 1 retry automatique
           
           // ✅ AUDIT : Tracker les tool calls déjà exécutés pour détecter les doublons
           const executedToolCallsSignatures = new Set<string>();
@@ -579,20 +581,39 @@ export async function POST(request: NextRequest) {
               const errorMessage = streamError instanceof Error ? streamError.message : String(streamError);
               const errorStack = streamError instanceof Error ? streamError.stack : undefined;
               
-              // Parser pour extraire les détails (status code, etc.)
-              let statusCode: number | undefined;
+              // ✅ Extraire les métadonnées enrichies attachées par le provider (si présentes)
+              const enrichedError = streamError as Error & { 
+                statusCode?: number; 
+                provider?: string; 
+                errorCode?: string; 
+              };
+              
+              let statusCode = enrichedError.statusCode;
+              let errorCode = enrichedError.errorCode;
+              let providerFromError = enrichedError.provider;
               let errorDetails = errorMessage;
               
-              // Pattern pour détecter les erreurs HTTP (ex: "API error: 400 - {...}")
-              const httpErrorMatch = errorMessage.match(/(?:error|status):\s*(\d{3})/i);
-              if (httpErrorMatch) {
-                statusCode = parseInt(httpErrorMatch[1], 10);
+              // ✅ Fallback: Parser le message pour extraire statusCode si non présent
+              if (!statusCode) {
+                const httpErrorMatch = errorMessage.match(/(?:error|status):\s*(\d{3})/i);
+                if (httpErrorMatch) {
+                  statusCode = parseInt(httpErrorMatch[1], 10);
+                }
+              }
+              
+              // ✅ Fallback: Parser le message pour extraire errorCode si non présent
+              if (!errorCode) {
+                const errorCodeMatch = errorMessage.match(/code[:\s]+["']?([a-z_]+)["']?/i);
+                if (errorCodeMatch) {
+                  errorCode = errorCodeMatch[1];
+                }
               }
               
               logger.error(`[Stream Route] ❌ ERREUR STREAMING PROVIDER (Round ${roundCount}):`, {
-                provider: providerType,
+                provider: providerFromError || providerType,
                 model,
                 statusCode,
+                errorCode,
                 errorMessage,
                 errorStack,
                 roundCount,
@@ -600,16 +621,40 @@ export async function POST(request: NextRequest) {
                 messagesCount: currentMessages.length
               });
               
-              // ✅ Envoyer un événement SSE d'erreur détaillé au client
+              // ✅ RETRY AUTOMATIQUE pour tool_use_failed (1 fois max)
+              if (errorCode === 'tool_use_failed' && toolValidationRetryCount < maxToolValidationRetries) {
+                toolValidationRetryCount++;
+                
+                logger.warn(`[Stream Route] 🔄 Retry automatique pour tool_use_failed (${toolValidationRetryCount}/${maxToolValidationRetries})`);
+                
+                // Envoyer un SSE pour informer le client du retry
+                sendSSE({
+                  type: 'assistant_round_complete',
+                  finishReason: 'error_retry',
+                  content: `⚠️ Erreur de validation tool call détectée. Retry automatique en cours...`
+                });
+                
+                // Ajouter un message système pour que le LLM corrige
+                currentMessages.push({
+                  role: 'system',
+                  content: `❌ Tool call validation error: ${errorDetails}\n\nThe tool you tried to call is not available or the parameters are invalid. Please:\n1. Check the available tools list\n2. Use only the tools that are actually provided\n3. Ensure all parameters match the expected schema\n\nIf you cannot complete the task with available tools, inform the user clearly.`
+                });
+                
+                // Continuer la boucle pour réessayer
+                continue;
+              }
+              
+              // ✅ Si retry épuisé ou erreur non-recoverable → Envoyer erreur au client
               sendSSE({
                 type: 'error',
                 error: errorDetails,
-                provider: providerType,
+                errorCode, // ✅ NOUVEAU: Code d'erreur spécifique (ex: "tool_use_failed")
+                provider: providerFromError || providerType,
                 model,
                 statusCode,
                 roundCount,
                 timestamp: Date.now(),
-                recoverable: statusCode === 400 || statusCode === 429 // Erreurs potentiellement récupérables
+                recoverable: (statusCode === 400 || statusCode === 429 || errorCode === 'tool_use_failed') && toolValidationRetryCount >= maxToolValidationRetries // ✅ Recoverable si retry disponible
               });
               
               // Arrêter la boucle des rounds

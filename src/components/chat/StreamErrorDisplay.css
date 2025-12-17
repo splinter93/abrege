@@ -103,6 +103,19 @@
   border-left: 3px solid #dc2626;
 }
 
+/* Suggestion */
+.stream-error-suggestion {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #92400e;
+  font-family: var(--font-chat-text);
+  padding: 10px 12px;
+  background: rgba(254, 243, 199, 0.7);
+  border-radius: 8px;
+  border-left: 3px solid #f59e0b;
+  font-style: italic;
+}
+
 /* Détails déroulants */
 .stream-error-details {
   display: flex;
@@ -256,6 +269,12 @@
   color: #fca5a5;
   background: rgba(0, 0, 0, 0.3);
   border-left-color: #f87171;
+}
+
+.chat-theme-dark .stream-error-suggestion {
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.15);
+  border-left-color: #fbbf24;
 }
 
 .chat-theme-dark .stream-error-details {
