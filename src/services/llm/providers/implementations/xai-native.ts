@@ -1,0 +1,972 @@
+import { BaseProvider, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
+import type { LLMProvider, AppContext } from '../../types';
+import type { ChatMessage } from '@/types/chat';
+import { simpleLogger as logger } from '@/utils/logger';
+import { getSystemMessage } from '../../templates';
+import type {
+  LLMResponse,
+  ToolCall,
+  Tool,
+  FunctionTool,
+  Usage
+} from '../../types/strictTypes';
+import { isFunctionTool } from '../../types/strictTypes';
+import type { McpServerConfig } from '@/types/mcp';
+
+/**
+ * Configuration spécifique à xAI Native API
+ */
+interface XAINativeConfig extends ProviderConfig {
+  // Spécifique à xAI
+  reasoningMode?: 'fast' | 'reasoning';
+  parallelToolCalls?: boolean;
+  streamingMode?: 'sse' | 'json'; // Format de streaming
+}
+
+/**
+ * ✅ Types pour streaming SSE
+ */
+export interface StreamChunk {
+  type: 'delta' | 'done' | 'error';
+  content?: string;
+  tool_calls?: ToolCall[];
+  reasoning?: string;
+  usage?: Usage;
+  error?: string;
+  finishReason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
+}
+
+/**
+ * Format natif xAI pour les messages (input array)
+ */
+interface XAINativeInputMessage {
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string | null | XAINativeContentPart[];
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
+  name?: string;
+}
+
+/**
+ * Content multi-part pour images
+ */
+interface XAINativeContentPart {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: {
+    url: string;
+    detail?: 'auto' | 'low' | 'high';
+  };
+}
+
+/**
+ * Réponse de l'API xAI /v1/responses
+ */
+interface XAINativeResponse {
+  id: string;
+  object: 'response';
+  created: number;
+  model: string;
+  output: Array<{
+    role: 'assistant';
+    content: string | null;
+    tool_calls?: ToolCall[];
+    reasoning?: string;
+  }>;
+  usage: Usage;
+}
+
+/**
+ * Chunk SSE de l'API xAI /v1/responses
+ */
+interface XAINativeStreamChunk {
+  id: string;
+  object: 'response.chunk';
+  created: number;
+  model: string;
+  output: Array<{
+    index: number;
+    delta: {
+      role?: 'assistant';
+      content?: string;
+      tool_calls?: Array<{
+        index?: number;
+        id?: string;
+        type?: 'function';
+        function?: {
+          name?: string;
+          arguments?: string;
+        };
+      }>;
+      reasoning?: string;
+    };
+    finish_reason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
+  }>;
+  usage?: Usage;
+}
+
+/**
+ * Informations sur xAI Native API
+ */
+const XAI_NATIVE_INFO: ProviderInfo = {
+  id: 'xai-native',
+  name: 'xAI Native (Grok with MCP)',
+  version: '1.0.0',
+  description: 'xAI Grok models with Native API endpoint and MCP Remote Tools support',
+  capabilities: {
+    functionCalls: true,
+    streaming: true,
+    reasoning: true,
+    codeExecution: false,
+    webSearch: false,
+    structuredOutput: true,
+    images: true,
+    mcpTools: true // ✅ Support MCP Remote Tools
+  },
+  supportedModels: [
+    'grok-4-1-fast-reasoning',
+    'grok-4-1-fast-non-reasoning',
+    'grok-4-1-fast',
+    'grok-beta',
+    'grok-vision-beta'
+  ],
+  pricing: {
+    input: '$0.20/1M tokens',
+    output: '$0.50/1M tokens'
+  }
+};
+
+/**
+ * Configuration par défaut
+ */
+const DEFAULT_XAI_NATIVE_CONFIG: XAINativeConfig = {
+  apiKey: process.env.XAI_API_KEY || '',
+  baseUrl: 'https://api.x.ai/v1',
+  timeout: 120000,
+  model: 'grok-4-1-fast-reasoning',
+  temperature: 0.7,
+  maxTokens: 8000,
+  topP: 0.85,
+  supportsFunctionCalls: true,
+  supportsStreaming: true,
+  supportsReasoning: true,
+  enableLogging: true,
+  enableMetrics: true,
+  reasoningMode: 'fast',
+  parallelToolCalls: true,
+  streamingMode: 'sse'
+};
+
+/**
+ * Provider xAI Native API avec support MCP Remote Tools
+ * 
+ * Utilise l'endpoint /v1/responses (format natif x.ai)
+ * Support complet des MCP Remote Tools
+ */
+export class XAINativeProvider extends BaseProvider implements LLMProvider {
+  readonly info = XAI_NATIVE_INFO;
+  readonly config: XAINativeConfig;
+
+  get name(): string {
+    return this.info.name;
+  }
+
+  get id(): string {
+    return this.info.id;
+  }
+
+  constructor(customConfig?: Partial<XAINativeConfig>) {
+    super();
+    this.config = { ...DEFAULT_XAI_NATIVE_CONFIG, ...customConfig };
+  }
+
+  /**
+   * Vérifie si xAI Native est disponible
+   */
+  isAvailable(): boolean {
+    return this.validateConfig();
+  }
+
+  /**
+   * Valide la configuration
+   */
+  validateConfig(): boolean {
+    if (!this.validateBaseConfig()) {
+      logger.error('[XAINativeProvider] ❌ Configuration de base invalide');
+      return false;
+    }
+
+    if (!this.config.model) {
+      logger.error('[XAINativeProvider] ❌ Modèle non spécifié');
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Appel simple (non-streaming)
+   */
+  async call(message: string, context: AppContext, history: ChatMessage[]): Promise<string> {
+    if (!this.isAvailable()) {
+      throw new Error('xAI Native provider non configuré');
+    }
+
+    try {
+      const input = this.prepareInput(message, context, history);
+      const payload = await this.preparePayload(input, []);
+      payload.stream = false;
+
+      const response = await this.makeApiCall(payload);
+      const result = this.extractResponse(response);
+
+      return result.content || '';
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('[XAINativeProvider] ❌ Erreur:', { message: errorMessage });
+      throw error;
+    }
+  }
+
+  /**
+   * Appel avec messages préparés + tools (OpenAPI + MCP)
+   * 
+   * ✅ Support hybride:
+   * - OpenAPI tools (type: 'function')
+   * - MCP Remote Tools (type: 'mcp', server_url, ...)
+   */
+  async callWithMessages(
+    messages: ChatMessage[],
+    tools: Tool[] | Array<Tool | McpServerConfig>
+  ): Promise<LLMResponse> {
+    if (!this.isAvailable()) {
+      throw new Error('xAI Native provider non configuré');
+    }
+
+    try {
+      const input = this.convertChatMessagesToInput(messages);
+      const payload = await this.preparePayload(input, tools);
+      payload.stream = false;
+
+      const response = await this.makeApiCall(payload);
+      const result = this.extractResponse(response);
+
+      return {
+        content: result.content || '',
+        tool_calls: result.tool_calls || [],
+        model: result.model,
+        usage: result.usage,
+        reasoning: result.reasoning
+      };
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('[XAINativeProvider] ❌ Erreur:', { message: errorMessage });
+      throw error;
+    }
+  }
+
+  /**
+   * ✅ Streaming avec Server-Sent Events (SSE)
+   * 
+   * ROUTING AUTOMATIQUE:
+   * - MCP tools → /v1/responses (MCP Remote Tools)
+   * - OpenAPI tools → /v1/chat/completions (format standard)
+   */
+  async *callWithMessagesStream(
+    messages: ChatMessage[],
+    tools: Tool[] | Array<Tool | McpServerConfig>
+  ): AsyncGenerator<StreamChunk, void, unknown> {
+    if (!this.isAvailable()) {
+      throw new Error('xAI Native provider non configuré');
+    }
+
+    try {
+      // ✅ Détecter le type de tools
+      const hasMcpTools = Array.isArray(tools) && tools.some(t => this.isMcpTool(t));
+      const hasOpenApiTools = Array.isArray(tools) && tools.some(t => isFunctionTool(t));
+
+      // ⚠️ ROUTING: /v1/responses SEULEMENT si MCP tools
+      if (hasMcpTools) {
+        logger.dev('[XAINativeProvider] 🔀 Route: /v1/responses (MCP Remote Tools)');
+        yield* this.streamWithResponsesApi(messages, tools);
+      } else if (hasOpenApiTools) {
+        logger.dev('[XAINativeProvider] 🔀 Route: /v1/chat/completions (OpenAPI tools)');
+        yield* this.streamWithChatCompletions(messages, tools);
+      } else {
+        // Pas de tools, utiliser chat/completions par défaut
+        logger.dev('[XAINativeProvider] 🔀 Route: /v1/chat/completions (no tools)');
+        yield* this.streamWithChatCompletions(messages, []);
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('[XAINativeProvider] ❌ Erreur streaming:', { message: errorMessage });
+      throw error;
+    }
+  }
+
+  /**
+   * Convertit les ChatMessage en format OpenAI standard (pour /chat/completions)
+   */
+  private convertChatMessagesToApiFormat(messages: ChatMessage[]): XAINativeMessage[] {
+    return messages.map(msg => {
+      const apiMsg: XAINativeMessage = {
+        role: msg.role as 'system' | 'user' | 'assistant' | 'tool',
+        content: msg.content || ''
+      };
+
+      if (msg.tool_calls && msg.tool_calls.length > 0) {
+        apiMsg.tool_calls = msg.tool_calls;
+      }
+
+      if (msg.tool_call_id) {
+        apiMsg.tool_call_id = msg.tool_call_id;
+        apiMsg.name = msg.name;
+      }
+
+      return apiMsg;
+    });
+  }
+
+  /**
+   * Stream avec /v1/chat/completions (OpenAPI tools standard)
+   */
+  private async *streamWithChatCompletions(
+    messages: ChatMessage[],
+    tools: Tool[] | Array<Tool | McpServerConfig>
+  ): AsyncGenerator<StreamChunk, void, unknown> {
+    // Convertir au format OpenAI standard (messages, pas input)
+    const apiMessages = this.convertChatMessagesToApiFormat(messages);
+    
+    // Payload pour /chat/completions (format OpenAI)
+    const payload: Record<string, unknown> = {
+      model: this.config.model,
+      messages: apiMessages,
+      temperature: this.config.temperature,
+      max_tokens: this.config.maxTokens,
+      top_p: this.config.topP,
+      stream: true
+    };
+
+    // ✅ Tools OpenAPI au format standard (pas plat)
+    if (Array.isArray(tools) && tools.length > 0) {
+      payload.tools = tools; // Format standard OpenAI
+      payload.tool_choice = 'auto';
+    }
+
+    logger.dev('[XAINativeProvider] 📤 Payload (chat/completions):', {
+      model: payload.model,
+      messages: apiMessages.length,
+      tools: Array.isArray(payload.tools) ? (payload.tools as unknown[]).length : 0
+    });
+
+    // Appel API
+    const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.config.apiKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorDetails: { error?: { message?: string; type?: string; code?: string } } = {};
+      try {
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        // Ignore
+      }
+
+      const errorMessage = errorDetails.error?.message || errorText;
+      const errorCode = errorDetails.error?.code || errorDetails.error?.type || 'unknown';
+
+      logger.error(`[XAINativeProvider] ❌ Erreur API (/chat/completions):`, {
+        statusCode: response.status,
+        statusText: response.statusText,
+        errorMessage,
+        errorCode
+      });
+
+      const error = new Error(`xAI Native API error: ${response.status} - ${errorMessage}`);
+      (error as Error & { statusCode?: number }).statusCode = response.status;
+      throw error;
+    }
+
+    if (!response.body) {
+      throw new Error('Response body is null');
+    }
+
+    // Lire le stream SSE (format OpenAI)
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith(':')) continue;
+
+        if (trimmed.startsWith('data: ')) {
+          const data = trimmed.slice(6);
+          if (data === '[DONE]') break;
+
+          try {
+            const parsed = JSON.parse(data);
+            const choice = parsed.choices?.[0];
+            if (!choice) continue;
+
+            const delta = choice.delta;
+            const chunk: StreamChunk = { type: 'delta' };
+
+            if (delta.content) {
+              chunk.content = delta.content;
+            }
+
+            if (delta.tool_calls && delta.tool_calls.length > 0) {
+              chunk.tool_calls = delta.tool_calls.map((tc: { id?: string; type?: string; function?: { name?: string; arguments?: string } }) => ({
+                id: tc.id || '',
+                type: 'function' as const,
+                function: {
+                  name: tc.function?.name || '',
+                  arguments: tc.function?.arguments || ''
+                }
+              }));
+            }
+
+            if (choice.finish_reason) {
+              chunk.finishReason = choice.finish_reason === 'tool_calls' ? 'tool_calls' : 'stop';
+            }
+
+            yield chunk;
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Stream avec /v1/responses (MCP Remote Tools uniquement)
+   */
+  private async *streamWithResponsesApi(
+    messages: ChatMessage[],
+    tools: Tool[] | Array<Tool | McpServerConfig>
+  ): AsyncGenerator<StreamChunk, void, unknown> {
+    try {
+      const input = this.convertChatMessagesToInput(messages);
+      const payload = await this.preparePayload(input, tools);
+      payload.stream = true;
+
+    // ✅ Logger le payload envoyé (avec détails tools pour debug)
+    logger.dev('[XAINativeProvider] 📤 Payload:', {
+      model: payload.model,
+      messages: input.length,
+      tools: Array.isArray(payload.tools) ? (payload.tools as unknown[]).length : 0
+    });
+    
+    // ✅ Logger les tools en détail pour debug format
+    if (Array.isArray(payload.tools) && (payload.tools as unknown[]).length > 0) {
+      logger.dev('[XAINativeProvider] 🔧 Tools détails:', {
+        toolsCount: (payload.tools as unknown[]).length,
+        firstTool: payload.tools[0],
+        allToolTypes: (payload.tools as Array<{ type: string; name?: string }>).map(t => ({ type: t.type, name: t.name }))
+      });
+    }
+
+    // Appel API avec streaming
+    const response = await fetch(`${this.config.baseUrl}/responses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.config.apiKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorDetails: { error?: { message?: string; type?: string; code?: string } } = {};
+      try {
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        // Ignore parse errors
+      }
+
+      const errorMessage = errorDetails.error?.message || errorText;
+      const errorCode = errorDetails.error?.code || errorDetails.error?.type || 'unknown';
+
+      logger.error(`[XAINativeProvider] ❌ Erreur API (/responses):`, {
+        statusCode: response.status,
+        statusText: response.statusText,
+        errorMessage,
+        errorCode,
+        model: this.config.model,
+        toolsCount: Array.isArray(tools) ? tools.length : 0
+      });
+
+      const error = new Error(`xAI Native API error: ${response.status} - ${errorMessage}`);
+      (error as Error & { statusCode?: number; provider?: string; errorCode?: string }).statusCode = response.status;
+      (error as Error & { statusCode?: number; provider?: string; errorCode?: string }).provider = 'xai-native';
+      (error as Error & { statusCode?: number; provider?: string; errorCode?: string }).errorCode = errorCode;
+      throw error;
+    }
+
+    if (!response.body) {
+      throw new Error('Response body is null');
+    }
+
+    // Lire le stream SSE
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    
+    // ✅ Accumulateurs pour les MCP tool calls
+    const mcpCallsInProgress = new Map<string, {
+      id: string;
+      name: string;
+      arguments: string;
+      server_label?: string;
+    }>();
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+
+          if (!trimmed || trimmed.startsWith(':')) {
+            continue;
+          }
+
+          if (trimmed.startsWith('data: ')) {
+            const data = trimmed.slice(6);
+
+            if (data === '[DONE]') break;
+
+            try {
+              const parsed = JSON.parse(data) as Record<string, unknown>;
+              const eventType = parsed.type as string;
+              
+              if (eventType === 'response.output_text.delta') {
+                // Chunk de contenu
+                const deltaText = parsed.delta as string;
+                if (deltaText) {
+                  yield {
+                    type: 'delta',
+                    content: deltaText
+                  };
+                }
+              } else if (eventType === 'response.output_item.added') {
+                // ✅ MCP call ajouté
+                const item = parsed.item as Record<string, unknown>;
+                if (item?.type === 'mcp_call') {
+                  const itemId = item.id as string;
+                  const name = item.name as string;
+                  const serverLabel = item.server_label as string | undefined;
+                  
+                  mcpCallsInProgress.set(itemId, {
+                    id: itemId,
+                    name,
+                    arguments: '',
+                    server_label: serverLabel
+                  });
+                  
+                  logger.dev('[XAINativeProvider] 🔧 MCP call:', { name, serverLabel });
+                }
+              } else if (eventType === 'response.mcp_call_arguments.done') {
+                // ✅ Arguments du MCP call terminés
+                const itemId = parsed.item_id as string;
+                const args = parsed.arguments as string;
+                
+                const mcpCall = mcpCallsInProgress.get(itemId);
+                if (mcpCall) {
+                  mcpCall.arguments = args;
+                }
+              } else if (eventType === 'response.output_item.done') {
+                // ✅ Fin d'un output item - peut être un MCP call ou message
+                const item = parsed.item as Record<string, unknown>;
+                
+                if (item?.type === 'mcp_call') {
+                  // ✅ MCP tool call terminé - x.ai l'a DÉJÀ exécuté côté serveur
+                  const itemId = item.id as string;
+                  const output = item.output as string | undefined;
+                  const mcpCall = mcpCallsInProgress.get(itemId);
+                  
+                  if (mcpCall) {
+                    logger.dev('[XAINativeProvider] ✅ MCP result:', { 
+                      name: mcpCall.name,
+                      hasOutput: !!output
+                    });
+                    
+                    // ✅ Yield avec finishReason pour afficher dans l'UI + flag alreadyExecuted
+                    yield {
+                      type: 'delta',
+                      tool_calls: [{
+                        id: mcpCall.id,
+                        type: 'function' as const,
+                        function: {
+                          name: mcpCall.name,
+                          arguments: mcpCall.arguments || '{}'
+                        },
+                        // @ts-expect-error - Extension custom pour MCP tools exécutés par x.ai
+                        alreadyExecuted: true,
+                        result: output || 'Executed by x.ai (MCP)'
+                      }],
+                      finishReason: 'tool_calls' // ✅ Pour afficher dans timeline UI
+                    };
+                    
+                    mcpCallsInProgress.delete(itemId);
+                  }
+                }
+              } else if (eventType === 'response.completed') {
+                // Fin du stream
+                const response = parsed.response as Record<string, unknown>;
+                const usage = response?.usage as Usage | undefined;
+                if (usage) {
+                  yield {
+                    type: 'delta',
+                    usage
+                  };
+                }
+                
+                yield {
+                  type: 'done'
+                };
+              }
+              // Ignorer les autres événements (response.created, response.in_progress, etc.)
+
+            } catch (parseError) {
+              logger.warn('[XAINativeProvider] ⚠️ Erreur parsing chunk SSE:', parseError);
+              continue;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('[XAINativeProvider] ❌ Erreur streaming (responses):', { message: errorMessage });
+      throw error;
+    }
+  }
+
+  /**
+   * Prépare l'input array (format natif x.ai)
+   */
+  private prepareInput(message: string, context: AppContext, history: ChatMessage[]): XAINativeInputMessage[] {
+    const input: XAINativeInputMessage[] = [];
+
+    // Message système
+    const systemContent = this.formatSystemMessage(context);
+    input.push({
+      role: 'system',
+      content: systemContent
+    });
+
+    // Historique
+    for (const msg of history) {
+      const inputMsg: XAINativeInputMessage = {
+        role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
+        content: this.buildMessageContent(msg)
+      };
+
+      if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
+        if (!msg.tool_results || msg.tool_results.length === 0) {
+          inputMsg.tool_calls = msg.tool_calls as ToolCall[];
+        }
+      }
+
+      if (msg.role === 'tool' && msg.tool_call_id) {
+        inputMsg.tool_call_id = msg.tool_call_id;
+        if (msg.name) {
+          inputMsg.name = msg.name;
+        }
+      }
+
+      input.push(inputMsg);
+
+      // Tool results
+      if (msg.role === 'assistant' && msg.tool_results && msg.tool_results.length > 0) {
+        for (const result of msg.tool_results) {
+          input.push({
+            role: 'tool',
+            tool_call_id: result.tool_call_id,
+            name: result.name,
+            content: typeof result.content === 'string' ? result.content : JSON.stringify(result.content ?? null)
+          });
+        }
+      }
+    }
+
+    // Message user actuel
+    input.push({
+      role: 'user',
+      content: message
+    });
+
+    return input;
+  }
+
+  /**
+   * Convertit ChatMessage[] vers format natif x.ai
+   */
+  private convertChatMessagesToInput(messages: ChatMessage[]): XAINativeInputMessage[] {
+    return messages.map(msg => {
+      const inputMsg: XAINativeInputMessage = {
+        role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
+        content: this.buildMessageContent(msg)
+      };
+
+      if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
+        if (!msg.tool_results || msg.tool_results.length === 0) {
+          inputMsg.tool_calls = msg.tool_calls as ToolCall[];
+        }
+      }
+
+      if (msg.role === 'tool' && msg.tool_call_id) {
+        inputMsg.tool_call_id = msg.tool_call_id;
+        if (msg.name) {
+          inputMsg.name = msg.name;
+        }
+      }
+
+      return inputMsg;
+    });
+  }
+
+  /**
+   * Construit le content (gère les images)
+   */
+  private buildMessageContent(msg: ChatMessage): string | null | XAINativeContentPart[] {
+    if (msg.role === 'user' && msg.attachedImages && msg.attachedImages.length > 0) {
+      const contentParts: XAINativeContentPart[] = [];
+
+      const textContent = typeof msg.content === 'string' ? msg.content : '';
+      contentParts.push({
+        type: 'text',
+        text: textContent || ''
+      });
+
+      for (const image of msg.attachedImages) {
+        contentParts.push({
+          type: 'image_url',
+          image_url: {
+            url: image.url,
+            detail: 'auto'
+          }
+        });
+      }
+
+      return contentParts;
+    }
+
+    const content = typeof msg.content === 'string' ? msg.content : null;
+    if (msg.role === 'user' && content === null) {
+      return '';
+    }
+
+    return content;
+  }
+
+  /**
+   * Prépare le payload pour /v1/responses
+   * 
+   * ✅ Support hybride: OpenAPI tools + MCP Remote Tools
+   */
+  private async preparePayload(
+    input: XAINativeInputMessage[],
+    tools: Tool[] | Array<Tool | McpServerConfig>
+  ): Promise<Record<string, unknown>> {
+    const payload: Record<string, unknown> = {
+      model: this.config.model,
+      input: input,
+      temperature: this.config.temperature,
+      max_tokens: this.config.maxTokens,
+      top_p: this.config.topP,
+      stream: false
+    };
+
+    // ✅ Gérer les tools (OpenAPI + MCP)
+    // xAI API demande un format PLAT (name, description, parameters à la racine)
+    if (tools && tools.length > 0) {
+      const formattedTools = tools.map(tool => {
+        if (this.isMcpTool(tool)) {
+          // MCP tool: Format standard
+          return {
+            ...tool,
+            type: 'mcp',
+            name: tool.name || tool.server_label
+          };
+        } else if (isFunctionTool(tool)) {
+          // ✅ OpenAPI tool: APLATIR la structure function vers la racine
+          return {
+            type: 'function',
+            name: tool.function.name,
+            description: tool.function.description,
+            parameters: tool.function.parameters,
+            // Préserver strict si présent
+            ...(tool.function.strict !== undefined && { strict: tool.function.strict })
+          };
+        }
+        return tool;
+      });
+      
+      payload.tools = formattedTools;
+    }
+
+    if (this.config.parallelToolCalls !== undefined) {
+      payload.parallel_tool_calls = this.config.parallelToolCalls;
+    }
+
+    return payload;
+  }
+
+  /**
+   * Helper: Vérifier si un tool est MCP
+   */
+  private isMcpTool(tool: Tool | McpServerConfig): tool is McpServerConfig {
+    return 'type' in tool && tool.type === 'mcp' && 'server_url' in tool;
+  }
+
+  /**
+   * Effectue l'appel API
+   */
+  private async makeApiCall(payload: Record<string, unknown>): Promise<XAINativeResponse> {
+    const response = await fetch(`${this.config.baseUrl}/responses`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.config.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(this.config.timeout)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorDetails: { error?: { message?: string; type?: string; code?: string } } = {};
+      try {
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        errorDetails = { error: { message: errorText } };
+      }
+
+      logger.error('[XAINativeProvider] ❌ Erreur API:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorDetails
+      });
+
+      throw new Error(`xAI Native API error: ${response.status} - ${errorDetails.error?.message || errorText}`);
+    }
+
+    return await response.json() as XAINativeResponse;
+  }
+
+  /**
+   * Extrait la réponse
+   */
+  private extractResponse(response: XAINativeResponse): LLMResponse {
+    if (!response.output || response.output.length === 0) {
+      throw new Error('Réponse invalide de xAI Native API');
+    }
+
+    const output = response.output[0];
+    const result: LLMResponse = {
+      content: output?.content ?? '',
+      model: response.model,
+      usage: response.usage
+    };
+
+    if (output?.tool_calls && output.tool_calls.length > 0) {
+      result.tool_calls = output.tool_calls;
+    }
+
+    if (output?.reasoning) {
+      result.reasoning = output.reasoning;
+    }
+
+    return result;
+  }
+
+  /**
+   * Formate le message système
+   */
+  private formatSystemMessage(context: AppContext): string {
+    if (context.content && context.content.trim().length > 0) {
+      return context.content;
+    }
+
+    const message = getSystemMessage('assistant-contextual', { context });
+    if (!message) {
+      return 'Tu es un assistant IA utile et bienveillant.';
+    }
+
+    return message;
+  }
+
+  /**
+   * Retourne les tools disponibles
+   */
+  getFunctionCallTools(): Tool[] {
+    return [];
+  }
+
+  /**
+   * Test de connexion
+   */
+  async testConnection(): Promise<boolean> {
+    try {
+      const testPayload = {
+        model: this.config.model,
+        input: [
+          {
+            role: 'user',
+            content: 'Hello'
+          }
+        ],
+        max_tokens: 10,
+        temperature: 0
+      };
+
+      const response = await fetch(`${this.config.baseUrl}/responses`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(testPayload),
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur ${response.status}: ${response.statusText}`);
+      }
+
+      return true;
+
+    } catch (error) {
+      logger.error('[XAINativeProvider] ❌ Erreur de connexion:', error);
+      return false;
+    }
+  }
+}
+
+

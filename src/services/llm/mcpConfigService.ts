@@ -25,6 +25,9 @@ interface McpServerLink {
     url: string;
     header: string;
     api_key: string;
+    server_description: string | null;  // ✅ NOUVEAU
+    require_approval: 'never' | 'always' | null;  // ✅ NOUVEAU
+    allowed_tools: string[] | null;  // ✅ NOUVEAU
   } | null;
 }
 
@@ -54,6 +57,8 @@ export class McpConfigService {
    */
   async getAgentMcpConfig(agentId: string): Promise<AgentMcpConfig | null> {
     try {
+      logger.info(`[McpConfigService] 🔍 Recherche serveurs MCP pour agent: ${agentId}`);
+      
       // Récupérer les serveurs MCP via la jointure
       const { data: links, error } = await this.supabase
         .from('agent_mcp_servers')
@@ -67,7 +72,10 @@ export class McpConfigService {
             url,
             header,
             api_key,
-            is_active
+            is_active,
+            server_description,
+            require_approval,
+            allowed_tools
           )
         `)
         .eq('agent_id', agentId)
@@ -75,12 +83,14 @@ export class McpConfigService {
         .order('priority');
 
       if (error) {
-        logger.error('[McpConfigService] Erreur récupération serveurs MCP:', error);
+        logger.error('[McpConfigService] ❌ Erreur récupération serveurs MCP:', error);
         return null;
       }
 
+      logger.info(`[McpConfigService] 🔍 Résultat requête: ${links?.length || 0} liens trouvés`);
+
       if (!links || links.length === 0) {
-        logger.dev('[McpConfigService] Aucun serveur MCP configuré pour cet agent');
+        logger.info(`[McpConfigService] ⚠️ Aucun serveur MCP configuré pour agent: ${agentId}`);
         return null;
       }
 
@@ -92,14 +102,21 @@ export class McpConfigService {
         )
         .map(link => {
           const server = link.mcp_servers!; // Non-null après le filter
-          return {
+          
+          const mcpServer: McpServerConfig = {
             type: 'mcp' as const,
             server_label: server.name?.toLowerCase().replace(/\s+/g, '-') || 'unnamed',
             server_url: server.url,
             headers: server.header && server.api_key 
               ? { [server.header]: server.api_key }
-              : undefined
+              : undefined,
+            // ✅ NOUVEAUX CHAMPS GROQ
+            server_description: server.server_description || undefined,
+            require_approval: server.require_approval || 'never',
+            allowed_tools: server.allowed_tools || null
           };
+          
+          return mcpServer;
         });
 
       if (servers.length === 0) {

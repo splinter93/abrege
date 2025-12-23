@@ -20,6 +20,8 @@ import type { Editor as TiptapEditor } from '@tiptap/react';
 import Editor from '@/components/editor/Editor';
 import { hashString } from '@/utils/editorHelpers';
 import { useRealtime } from '@/hooks/useRealtime';
+import { useNoteStreamListener } from '@/hooks/useNoteStreamListener';
+import { useCanvasStreamOps } from '@/hooks/useCanvasStreamOps';
 
 interface ChatCanvaPaneProps {
   onRequestClose?: () => void;
@@ -58,6 +60,40 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
     enabled: Boolean(user && session?.noteId),
     debug: false
   });
+
+  // 🌊 Stream listener pour écouter les écritures LLM externes
+  useNoteStreamListener(session?.noteId, {
+    enabled: Boolean(session?.noteId),
+    debug: false
+  });
+
+  // 🔄 Canvas streaming ops (local-first)
+  const { sendOp, isConnected: isOpsConnected, lastServerVersion } = useCanvasStreamOps(
+    session?.noteId,
+    {
+      enabled: Boolean(session?.noteId),
+      debug: false,
+      onAck: (result) => {
+        logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Op ACK', {
+          op_id: result.op_id,
+          server_version: result.server_version
+        });
+      },
+      onConflict: (result) => {
+        logger.warn('[ChatCanvaPane] Op CONFLICT', {
+          op_id: result.op_id,
+          reason: result.reason,
+          expected_version: result.expected_version
+        });
+        // TODO: Gérer les conflits (rechargement, merge, etc.)
+      },
+      onError: (error) => {
+        logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Op ERROR', {
+          error: error.message
+        });
+      }
+    }
+  );
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // ✅ AUTO-SAVE (Skip si streaming)

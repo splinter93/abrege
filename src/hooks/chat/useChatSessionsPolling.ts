@@ -24,15 +24,22 @@ interface UseChatSessionsPollingOptions {
 }
 
 const DEFAULT_INTERVAL_MS = 5000; // 5 secondes
+const MAX_BACKOFF_MS = 30000; // 30 secondes max
+const BACKOFF_MULTIPLIER = 1.5;
 
 export function useChatSessionsPolling(options: UseChatSessionsPollingOptions = {}) {
   const { enabled = true, intervalMs = DEFAULT_INTERVAL_MS } = options;
   const syncSessions = useChatStore((state) => state.syncSessions);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+  const consecutiveErrorsRef = useRef(0);
+  const currentIntervalRef = useRef(intervalMs);
+  const lastErrorTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
+    consecutiveErrorsRef.current = 0;
+    currentIntervalRef.current = intervalMs;
 
     if (!enabled) {
       logger.dev('[useChatSessionsPolling] Polling désactivé');
@@ -41,32 +48,70 @@ export function useChatSessionsPolling(options: UseChatSessionsPollingOptions = 
 
     logger.dev('[useChatSessionsPolling] Polling démarré', { intervalMs });
 
-    // Sync initial au mount
-    syncSessions().catch((error) => {
-      logger.warn('[useChatSessionsPolling] Erreur sync initial', {
-        error: error instanceof Error ? error.message : String(error)
-      });
-    });
+    const scheduleNextSync = (delay: number) => {
+      if (intervalRef.current) {
+        clearTimeout(intervalRef.current);
+      }
+      intervalRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          performSync();
+        }
+      }, delay);
+    };
 
-    // Polling périodique
-    intervalRef.current = setInterval(() => {
+    const performSync = async () => {
       if (!isMountedRef.current) {
         return;
       }
 
-      syncSessions().catch((error) => {
-        logger.warn('[useChatSessionsPolling] Erreur sync périodique', {
-          error: error instanceof Error ? error.message : String(error)
-        });
-      });
-    }, intervalMs);
+      try {
+        await syncSessions();
+        // Succès : reset le compteur d'erreurs et l'intervalle
+        if (consecutiveErrorsRef.current > 0) {
+          logger.info('[useChatSessionsPolling] ✅ Sync réussie après erreurs', {
+            previousErrors: consecutiveErrorsRef.current
+          });
+        }
+        consecutiveErrorsRef.current = 0;
+        currentIntervalRef.current = intervalMs;
+        lastErrorTimeRef.current = null;
+        
+        // Planifier la prochaine sync avec l'intervalle normal
+        scheduleNextSync(currentIntervalRef.current);
+      } catch (error) {
+        consecutiveErrorsRef.current += 1;
+        lastErrorTimeRef.current = Date.now();
+
+        // Backoff exponentiel
+        const newInterval = Math.min(
+          intervalMs * Math.pow(BACKOFF_MULTIPLIER, consecutiveErrorsRef.current - 1),
+          MAX_BACKOFF_MS
+        );
+        currentIntervalRef.current = newInterval;
+
+        // Log seulement toutes les 5 erreurs ou si c'est la première
+        if (consecutiveErrorsRef.current === 1 || consecutiveErrorsRef.current % 5 === 0) {
+          logger.warn('[useChatSessionsPolling] ⚠️ Erreur sync', {
+            error: error instanceof Error ? error.message : String(error),
+            consecutiveErrors: consecutiveErrorsRef.current,
+            nextInterval: newInterval
+          });
+        }
+
+        // Réplanifier avec le nouvel intervalle (backoff)
+        scheduleNextSync(newInterval);
+      }
+    };
+
+    // Sync initial au mount
+    performSync();
 
     // Cleanup
     return () => {
       isMountedRef.current = false;
 
       if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+        clearTimeout(intervalRef.current);
         intervalRef.current = null;
       }
 

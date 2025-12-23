@@ -9,6 +9,7 @@
 
 import { GroqProvider } from '../providers/implementations/groq';
 import { XAIProvider } from '../providers/implementations/xai';
+import { XAINativeProvider } from '../providers/implementations/xai-native';
 import { LiminalityProvider } from '../providers/implementations/liminality';
 import { SimpleToolExecutor, ToolCall, ToolResult } from './SimpleToolExecutor';
 import { OpenApiToolExecutor } from '../executors/OpenApiToolExecutor';
@@ -26,6 +27,7 @@ import { groqCircuitBreaker } from '@/services/circuitBreaker';
 import type { Tool, McpCall } from '../types/strictTypes';
 import { isMcpTool } from '../types/strictTypes';
 import { systemMessageBuilder } from '../SystemMessageBuilder';
+import type { McpServerConfig } from '@/types/mcp';
 
 /**
  * Contexte d'exécution
@@ -242,7 +244,7 @@ export class SimpleOrchestrator {
         });
       
       case 'xai':
-        return new XAIProvider({
+        return new XAINativeProvider({
           model: model || 'grok-4-1-fast-reasoning',
           temperature,
           topP,
@@ -307,18 +309,31 @@ export class SimpleOrchestrator {
         }
         
         if (selectedProvider.toLowerCase() === 'xai') {
-          // xAI : Utiliser uniquement les tools OpenAPI (pas de limite artificielle)
-          tools = openApiTools;
+          // ✅ x.ai : Mode hybride (OpenAPI + MCP Remote Tools)
+          // Utilise XAINativeProvider avec endpoint /v1/responses
           
-          // ✅ Générer l'index de diagnostic (recommandation ChatGPT)
-          const toolsIndex = this.buildToolsIndex(tools);
+          const mcpTools = await mcpConfigService.buildHybridTools(
+            agentConfig?.id || 'default',
+            context.userToken,
+            openApiTools
+          ) as Array<Tool | McpServerConfig>;
           
-          // 🎯 LOG FOCUS TOOLS : xAI
-          logger.info(`[TOOLS] Agent: ${agentConfig?.name || 'default'} (xAI)`, {
-            provider: 'xai',
+          tools = mcpTools;
+          
+          const mcpCount = tools.filter((t) => isMcpTool(t)).length;
+          const openApiCount = tools.filter((t) => !isMcpTool(t)).length;
+          
+          const filteredOpenApiTools = tools.filter((t) => !isMcpTool(t)) as Tool[];
+          const toolsIndex = this.buildToolsIndex(filteredOpenApiTools);
+          
+          logger.info(`[TOOLS] Agent: ${agentConfig?.name || 'default'} (xAI Native Hybrid)`, {
+            provider: 'xai-native',
             total: tools.length,
+            mcp: mcpCount,
+            openapi: openApiCount,
             index: toolsIndex,
-            sample: tools.map(t => (t as any).function?.name).slice(0, 10)
+            sample: filteredOpenApiTools.map(t => (t as any).function?.name).slice(0, 10),
+            mcpServers: tools.filter(isMcpTool).map(t => (t as McpServerConfig).server_label)
           });
         } else {
           // Groq/OpenAI : Combiner les tools OpenAPI avec les MCP tools
@@ -352,7 +367,21 @@ export class SimpleOrchestrator {
         logger.warn(`[SimpleOrchestrator] ⚠️ Agent "${agentConfig?.name || 'default'}" (${selectedProvider}) sans schémas OpenAPI → 0 tools disponibles (comportement attendu, pas de tools hardcodés)`);
         
         if (selectedProvider.toLowerCase() === 'xai') {
-          // xAI sans schémas = pas de tools (comportement explicite)
+          // xAI sans schémas = MCP tools uniquement
+          tools = await mcpConfigService.buildHybridTools(
+            agentConfig?.id || 'default',
+            context.userToken,
+            []
+          ) as Array<Tool | McpServerConfig>;
+          
+          const mcpCount = tools.filter((t) => isMcpTool(t)).length;
+          
+          logger.info(`[TOOLS] Agent: ${agentConfig?.name || 'default'} (xAI Native MCP only)`, {
+            provider: 'xai-native',
+            total: tools.length,
+            mcp: mcpCount,
+            mcpServers: tools.filter(isMcpTool).map(t => (t as McpServerConfig).server_label)
+          });
         } else {
           // Groq/OpenAI : MCP tools uniquement
           tools = await mcpConfigService.buildHybridTools(

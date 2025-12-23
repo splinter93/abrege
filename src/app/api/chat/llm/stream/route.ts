@@ -3,7 +3,6 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { XAIProvider } from '@/services/llm/providers/implementations/xai';
 import { GroqProvider } from '@/services/llm/providers/implementations/groq';
 import type { ChatMessage } from '@/types/chat';
 import { hasToolCalls } from '@/types/chat';
@@ -21,6 +20,7 @@ import {
   normalizeLLMParams,
   extractTextFromContent
 } from './helpers';
+import { streamBroadcastService } from '@/services/streamBroadcastService';
 
 // Force Node.js runtime for streaming
 export const runtime = 'nodejs';
@@ -60,6 +60,11 @@ export async function POST(request: NextRequest) {
     
     const { message, context, history, agentConfig, skipAddingUserMessage } = validation.data;
 
+    // 🎨 Extraire le noteId du contexte canva (si présent)
+    const noteId = context.canva_context && typeof context.canva_context === 'object' && 'activeNote' in context.canva_context 
+      ? (context.canva_context as { activeNote?: { note?: { id?: string } } }).activeNote?.note?.id 
+      : null;
+
     // Extraire le token d'authentification
     const authHeader = request.headers.get('authorization');
     
@@ -72,8 +77,6 @@ export async function POST(request: NextRequest) {
     
     userToken = authHeader.replace('Bearer ', '');
     sessionId = context.sessionId;
-    
-    logger.info(`[Stream Route] 🌊 Démarrage streaming pour session ${sessionId}`);
 
     // ✅ Valider le JWT et extraire userId
     const userIdResult = await validateAndExtractUserId(
@@ -147,31 +150,18 @@ export async function POST(request: NextRequest) {
     // Validation et normalisation des paramètres LLM
     const { temperature, topP, maxTokens } = normalizeLLMParams(finalAgentConfig);
 
-    // 🔍 DEBUG: Log détaillé de la sélection
-    logger.info(`[Stream Route] 🔄 Configuration LLM:`, {
-      agentId: finalAgentConfig?.id,
-      agentName: finalAgentConfig?.name,
-      provider: providerType,
-      model: model,
-      temperature,
-      topP,
-      maxTokens,
-      originalModel: finalAgentConfig?.model,
-      corrected: finalAgentConfig?.model !== model
-    });
-
     // Créer le provider approprié
     let provider;
     if (providerType === 'xai') {
-      provider = new XAIProvider({ model, temperature, topP, maxTokens });
+      // ✅ Utiliser XAINativeProvider pour support MCP complet
+      const { XAINativeProvider } = await import('@/services/llm/providers/implementations/xai-native');
+      provider = new XAINativeProvider({ model, temperature, topP, maxTokens });
     } else if (providerType === 'liminality') {
       const { LiminalityProvider } = await import('@/services/llm/providers/implementations/liminality');
       provider = new LiminalityProvider({ model, temperature, topP, maxTokens });
     } else {
       provider = new GroqProvider({ model, temperature, topP, maxTokens });
     }
-    
-    logger.info(`[Stream Route] ✅ Provider ${providerType.toUpperCase()} créé avec modèle: ${model}`);
 
     // ✅ Construire le contexte UI (SANS attachedNotes - gérées séparément)
     const uiContext = {
@@ -401,6 +391,9 @@ export async function POST(request: NextRequest) {
     let tools: Tool[] = [];
     let openApiEndpoints = new Map<string, OpenApiEndpoint>();
     
+    // 🔥 LOG CRITIQUE : Vérifier si context.agentId existe
+    logger.info(`[Stream Route] 🔥 MCP - Context: agentId=${context.agentId || 'none'}`);
+    
     if (context.agentId) {
       try {
         // 1. Charger les schémas OpenAPI de l'agent
@@ -409,35 +402,50 @@ export async function POST(request: NextRequest) {
           .select('openapi_schema_id')
           .eq('agent_id', context.agentId);
 
+        logger.info(`[Stream Route] 🔥 MCP - Schémas OpenAPI: ${agentSchemas?.length || 0}`);
+
+        let openApiTools: Tool[] = [];
+
         if (agentSchemas && agentSchemas.length > 0) {
           const { openApiSchemaService } = await import('@/services/llm/openApiSchemaService');
           
           const schemaIds = agentSchemas.map(s => s.openapi_schema_id);
-          const { tools: openApiTools, endpoints } = await openApiSchemaService.getToolsAndEndpointsFromSchemas(schemaIds);
+          const { tools, endpoints } = await openApiSchemaService.getToolsAndEndpointsFromSchemas(schemaIds);
           
-          // ✅ Garder les endpoints pour OpenApiToolExecutor
+          openApiTools = tools;
           openApiEndpoints = endpoints;
           
-          // 2. Charger les tools MCP de l'agent
-          const { mcpConfigService } = await import('@/services/llm/mcpConfigService');
-          // ✅ Type-safe: buildHybridTools retourne Tool[] | McpServerConfig[]
-          const hybridTools = await mcpConfigService.buildHybridTools(
-            context.agentId,
-            userToken,
-            openApiTools
-          );
-          
-          tools = hybridTools as Tool[];
-          
-          const mcpCount = tools.filter(isMcpTool).length;
-          const openApiCount = tools.length - mcpCount;
-          
-          logger.dev(`[Stream Route] ✅ ${tools.length} tools chargés (${mcpCount} MCP + ${openApiCount} OpenAPI), ${openApiEndpoints.size} endpoints`);
+          logger.info(`[Stream Route] 🔥 MCP - OpenAPI tools: ${openApiTools.length}`);
+        } else {
+          logger.warn(`[Stream Route] ⚠️ Aucun schéma OpenAPI pour agent ${context.agentId}, mais on charge quand même les MCP tools`);
         }
+        
+        // 2. Charger les tools MCP de l'agent (TOUJOURS, même sans schémas OpenAPI)
+        const { mcpConfigService } = await import('@/services/llm/mcpConfigService');
+        
+        logger.info(`[Stream Route] 🔥 MCP - Appel buildHybridTools (${openApiTools.length} OpenAPI tools)`);
+        
+        // ✅ Type-safe: buildHybridTools retourne Tool[] | McpServerConfig[]
+        const hybridTools = await mcpConfigService.buildHybridTools(
+          context.agentId,
+          userToken,
+          openApiTools
+        );
+        
+        tools = hybridTools as Tool[];
+        
+        const mcpCount = tools.filter(isMcpTool).length;
+        const openApiCount = tools.length - mcpCount;
+        
+        logger.info(`[Stream Route] ✅ MCP - Tools chargés: ${tools.length} total (${mcpCount} MCP + ${openApiCount} OpenAPI)`);
+        
+        logger.dev(`[Stream Route] ✅ ${tools.length} tools chargés (${mcpCount} MCP + ${openApiCount} OpenAPI), ${openApiEndpoints.size} endpoints`);
       } catch (toolsError) {
-        logger.warn('[Stream Route] ⚠️ Erreur chargement tools:', toolsError);
+        logger.error('[Stream Route] ❌ Erreur chargement tools:', toolsError);
         // Continue sans tools
       }
+    } else {
+      logger.warn(`[Stream Route] ⚠️ PAS de context.agentId → 0 tools chargés`);
     }
 
     // ✅ Créer le ReadableStream pour SSE avec gestion tool calls
@@ -534,6 +542,9 @@ export async function POST(request: NextRequest) {
             let accumulatedContent = '';
             const toolCallsMap = new Map<string, ToolCall>(); // Accumuler par ID pour gérer les chunks
             let finishReason: string | null = null;
+            
+            // ✅ NOUVEAU : Stocker les mcp_calls pour les afficher dans la timeline
+            let currentRoundMcpCalls: Array<{ server_label: string; name: string; arguments: Record<string, unknown>; output?: unknown }> = [];
 
             // ✅ Stream depuis le provider avec gestion d'erreur
             try {
@@ -541,23 +552,61 @@ export async function POST(request: NextRequest) {
                 // ✅ Le chunk contient déjà type: 'delta' (ajouté par le provider)
                 sendSSE(chunk);
 
+                // 🎨 Broadcaster vers le canevas si actif
+                if (noteId && chunk.content) {
+                  streamBroadcastService.broadcast(noteId, {
+                    type: 'chunk',
+                    data: chunk.content,
+                    position: 'end', // Ajouter à la fin
+                    metadata: {
+                      timestamp: Date.now()
+                    }
+                  });
+                }
+
                 // Accumuler content
                 if (chunk.content) {
                   accumulatedContent += chunk.content;
                 }
                 
+                // ✅ NOUVEAU : Extraire les mcp_calls si présents dans le chunk
+                if ('x_groq' in chunk && chunk.x_groq && typeof chunk.x_groq === 'object' && 'mcp_calls' in chunk.x_groq) {
+                  const mcpCalls = (chunk.x_groq as { mcp_calls?: Array<{ server_label: string; name: string; arguments: Record<string, unknown>; output?: unknown }> }).mcp_calls;
+                  if (mcpCalls && Array.isArray(mcpCalls)) {
+                    currentRoundMcpCalls = mcpCalls;
+                    logger.dev(`[Stream Route] 🔧 MCP calls détectés dans chunk: ${mcpCalls.length}`);
+                  }
+                }
+                
                 // ✅ Accumuler tool calls (peuvent venir en plusieurs chunks)
                 if (chunk.tool_calls && chunk.tool_calls.length > 0) {
                   for (const tc of chunk.tool_calls) {
+                    // @ts-expect-error - Extension custom pour MCP tools
+                    const hasCustomProps = tc.alreadyExecuted !== undefined || tc.result !== undefined;
+                    if (hasCustomProps) {
+                      // @ts-expect-error - Extension custom
+                      logger.dev(`[Stream Route] 🔧 Tool call avec props MCP:`, { 
+                        id: tc.id, 
+                        name: tc.function.name,
+                        alreadyExecuted: tc.alreadyExecuted,
+                        hasResult: !!tc.result
+                      });
+                    }
+                    
                     if (!toolCallsMap.has(tc.id)) {
-                      toolCallsMap.set(tc.id, {
+                      // ✅ Créer l'objet de base
+                      const baseToolCall: ToolCall = {
                         id: tc.id,
                         type: 'function' as const,
                         function: {
                           name: tc.function.name || '',
                           arguments: tc.function.arguments || ''
                         }
-                      });
+                      };
+                      
+                      // ✅ Copier TOUTES les propriétés custom (alreadyExecuted, result, etc.)
+                      const fullToolCall = Object.assign(baseToolCall, tc);
+                      toolCallsMap.set(tc.id, fullToolCall);
                     } else {
                       // Accumuler les arguments progressifs
                       const existing = toolCallsMap.get(tc.id);
@@ -691,9 +740,24 @@ export async function POST(request: NextRequest) {
 
             const accumulatedToolCalls = Array.from(toolCallsMap.values());
 
+            // ✅ Séparer les tool calls : MCP x.ai (déjà exécutés) vs autres (à exécuter)
+            const alreadyExecutedTools: ToolCall[] = [];
+            const toolsToExecute: ToolCall[] = [];
+            
+            accumulatedToolCalls.forEach((tc) => {
+              // @ts-expect-error - Extension custom pour MCP tools exécutés par x.ai
+              if (tc.alreadyExecuted === true) {
+                alreadyExecutedTools.push(tc);
+              } else {
+                toolsToExecute.push(tc);
+              }
+            });
+
+            logger.dev(`[Stream Route] 🔧 Tool calls: ${alreadyExecutedTools.length} déjà exécutés (MCP x.ai), ${toolsToExecute.length} à exécuter`);
+
             // ✅ Déduplication forte : ne pas exécuter deux fois le même tool (nom + args)
             const uniqueToolCalls: ToolCall[] = [];
-            accumulatedToolCalls.forEach((tc, index) => {
+            toolsToExecute.forEach((tc, index) => {
               const signature = `${tc.function.name}:${tc.function.arguments}`;
               const isDuplicate = executedToolCallsSignatures.has(signature);
 
@@ -709,18 +773,28 @@ export async function POST(request: NextRequest) {
                 return;
               }
 
-              executedToolCallsSignatures.add(signature);
+              // ✅ N'ajoute PAS la signature ici - sera fait après le message assistant
               uniqueToolCalls.push(tc);
             });
 
-            const dedupedCount = accumulatedToolCalls.length - uniqueToolCalls.length;
+            const dedupedCount = toolsToExecute.length - uniqueToolCalls.length;
 
             // ✅ NOUVEAU : Persister le message de ce round (outil dédupliqué)
-            if (accumulatedContent || uniqueToolCalls.length > 0) {
+            // Combiner MCP tools (déjà exécutés) + tools à exécuter pour la timeline
+            const allToolsForTimeline = [...alreadyExecutedTools, ...uniqueToolCalls];
+            
+            if (accumulatedContent || allToolsForTimeline.length > 0) {
+              logger.dev(`[Stream Route] 📤 Envoi assistant_round_complete:`, {
+                toolCallsCount: allToolsForTimeline.length,
+                mcpCount: alreadyExecutedTools.length,
+                openApiCount: uniqueToolCalls.length,
+                toolNames: allToolsForTimeline.map(tc => tc.function.name)
+              });
+              
               sendSSE({
                 type: 'assistant_round_complete',
                 content: accumulatedContent,
-                tool_calls: uniqueToolCalls,
+                tool_calls: allToolsForTimeline,
                 finishReason: finishReason,
                 timestamp: Date.now()
               });
@@ -736,7 +810,8 @@ export async function POST(request: NextRequest) {
 
             // ✅ CRITICAL FIX: Si tous les tool calls sont des doublons, forcer un dernier round SANS tools
             // pour que le LLM explique la situation à l'utilisateur au lieu d'un arrêt silencieux
-            if (uniqueToolCalls.length === 0 && accumulatedToolCalls.length > 0) {
+            // ⚠️ MAIS: Si on a des MCP tools déjà exécutés, PAS besoin de forcer un round
+            if (uniqueToolCalls.length === 0 && toolsToExecute.length > 0 && alreadyExecutedTools.length === 0) {
               logger.warn('[Stream Route] ⚠️ Tous les tool calls étaient des doublons - forçage dernier round SANS tools');
               
               // Ajouter un message système expliquant la situation
@@ -767,23 +842,69 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
               continue;
             }
 
-            // ✅ Exécuter les tool calls (uniques uniquement)
-            logger.dev(`[Stream Route] 🔧 Exécution de ${uniqueToolCalls.length} tool calls (après déduplication)`);
-            
-            // Envoyer un événement d'exécution de tools
-            sendSSE({
-              type: 'tool_execution',
-              toolCount: uniqueToolCalls.length,
-              timestamp: Date.now()
-            });
+            // ✅ Ajouter le message assistant avec TOUS les tool calls (MCP + OpenAPI)
+            // Les MCP tools doivent aussi être dans l'historique pour éviter d'être traités comme doublons
+            if (allToolsForTimeline.length > 0) {
+              currentMessages.push({
+                role: 'assistant',
+                content: accumulatedContent || '',
+                tool_calls: allToolsForTimeline, // ✅ MCP + OpenAPI
+                timestamp: new Date().toISOString()
+              });
+            }
 
-            // Ajouter le message assistant avec tool calls dédupliqués
-            currentMessages.push({
-              role: 'assistant',
-              content: accumulatedContent || '',
-              tool_calls: uniqueToolCalls,
-              timestamp: new Date().toISOString()
-            });
+            // ✅ Exécuter les tool calls (uniques uniquement)
+            // ⚠️ Les MCP tools x.ai sont déjà exécutés côté serveur, on ajoute juste leur résultat
+            if (alreadyExecutedTools.length > 0) {
+              logger.info(`[Stream Route] ✅ ${alreadyExecutedTools.length} MCP tool(s) déjà exécuté(s) par x.ai - ajout résultats`);
+              
+              // Ajouter les signatures MCP pour éviter de les re-exécuter
+              for (const mcpTool of alreadyExecutedTools) {
+                const signature = `${mcpTool.function.name}:${mcpTool.function.arguments}`;
+                executedToolCallsSignatures.add(signature);
+              }
+              
+              // Ajouter les résultats MCP dans l'historique pour le prochain round
+              for (const mcpTool of alreadyExecutedTools) {
+                // @ts-expect-error - Extension custom pour MCP tools
+                const result = mcpTool.result || 'Executed by x.ai (MCP)';
+                
+                currentMessages.push({
+                  role: 'tool',
+                  tool_call_id: mcpTool.id,
+                  content: typeof result === 'string' ? result : JSON.stringify(result),
+                  timestamp: new Date().toISOString()
+                });
+                
+                // Envoyer dans la timeline UI
+                sendSSE({
+                  type: 'tool_result',
+                  toolCallId: mcpTool.id,
+                  toolName: mcpTool.function.name,
+                  success: true,
+                  result: result,
+                  timestamp: Date.now(),
+                  isMcp: true // ✅ Flag pour différencier dans l'UI
+                });
+              }
+            }
+            
+            logger.dev(`[Stream Route] 🔧 Exécution de ${uniqueToolCalls.length} tool calls OpenAPI (après déduplication)`);
+            
+            // Envoyer un événement d'exécution de tools (seulement pour ceux à exécuter)
+            if (uniqueToolCalls.length > 0) {
+              sendSSE({
+                type: 'tool_execution',
+                toolCount: uniqueToolCalls.length,
+                timestamp: Date.now()
+              });
+            }
+
+            // ✅ Ajouter les signatures des OpenAPI tools AVANT exécution (pour éviter doublons)
+            for (const tc of uniqueToolCalls) {
+              const signature = `${tc.function.name}:${tc.function.arguments}`;
+              executedToolCallsSignatures.add(signature);
+            }
 
             if (!userToken) {
               throw new Error('[Stream Route] Missing user token for OpenAPI tool execution');
@@ -804,8 +925,33 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                 const isOpenApiTool = openApiToolNames.has(toolCall.function.name);
                 
                 if (!isOpenApiTool) {
-                  // Tool MCP : déjà exécuté par Groq, on skip
-                  logger.dev(`[Stream Route] ⏭️ Tool MCP skip (géré par Groq): ${toolCall.function.name}`);
+                  // ✅ Tool MCP : Groq l'a déjà exécuté, afficher dans la timeline
+                  logger.dev(`[Stream Route] 🔧 MCP tool détecté (géré par Groq): ${toolCall.function.name}`);
+                  
+                  // ✅ Chercher le résultat MCP correspondant
+                  let mcpOutput: string | unknown = 'MCP tool executed by Groq';
+                  
+                  if (currentRoundMcpCalls.length > 0) {
+                    const mcpCall = currentRoundMcpCalls.find(call => 
+                      toolCall.function.name.includes(call.name) || toolCall.function.name.includes(call.server_label)
+                    );
+                    if (mcpCall?.output) {
+                      mcpOutput = mcpCall.output;
+                    }
+                  }
+                  
+                  // ✅ Envoyer l'événement timeline pour affichage
+                  sendSSE({
+                    type: 'tool_result',
+                    toolCallId: toolCall.id,
+                    toolName: toolCall.function.name,
+                    success: true,
+                    result: typeof mcpOutput === 'string' ? mcpOutput : JSON.stringify(mcpOutput),
+                    timestamp: Date.now(),
+                    isMcp: true // ✅ Flag pour différencier les MCP tools dans l'UI
+                  });
+                  
+                  logger.dev(`[Stream Route] ✅ MCP tool ${toolCall.function.name} affiché dans timeline`);
                   continue;
                 }
                 
@@ -930,6 +1076,13 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             rounds: roundCount,
             timestamp: Date.now()
           });
+
+          // 🎨 Signaler la fin du streaming au canevas
+          if (noteId) {
+            streamBroadcastService.broadcast(noteId, {
+              type: 'end'
+            });
+          }
 
           logger.info('[Stream Route] ✅ Stream terminé avec succès');
           controller.close();

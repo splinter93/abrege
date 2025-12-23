@@ -189,7 +189,7 @@ export class StreamOrchestrator {
         break;
 
       case 'assistant_round_complete':
-        logger.dev(`[StreamOrchestrator] 🔵 Round terminé: ${chunk.finishReason}`);
+        this.processAssistantRoundComplete(chunk, callbacks);
         break;
 
       case 'done':
@@ -364,6 +364,55 @@ export class StreamOrchestrator {
       chunk.success || false,
       chunk.toolCallId
     );
+  }
+
+  /**
+   * Traite un événement assistant_round_complete
+   * Cet événement contient les tool_calls qui doivent être affichés dans la timeline
+   * ⚠️ IMPORTANT : Pour les MCP tools x.ai, ils sont déjà exécutés côté serveur
+   * On doit SEULEMENT les afficher dans la timeline, PAS les exécuter
+   */
+  private processAssistantRoundComplete(
+    chunk: { 
+      finishReason?: string; 
+      content?: string;
+      tool_calls?: Array<{ 
+        id: string; 
+        type?: string; 
+        function?: { name?: string; arguments?: string } 
+      }> 
+    },
+    callbacks: StreamCallbacks
+  ): void {
+    logger.dev(`[StreamOrchestrator] 🔵 Round terminé:`, { 
+      finishReason: chunk.finishReason,
+      toolCallsCount: chunk.tool_calls?.length || 0
+    });
+
+    // ✅ Si le round contient des tool_calls, les ajouter SEULEMENT à la timeline
+    // ⚠️ NE PAS appeler onToolExecution car ces tools sont déjà exécutés (MCP x.ai)
+    if (chunk.tool_calls && chunk.tool_calls.length > 0) {
+      logger.dev(`[StreamOrchestrator] 🔧 ${chunk.tool_calls.length} tool call(s) dans round complete - ajout timeline uniquement`);
+      
+      // Ajouter les tool calls au tracker (pour historique complet)
+      for (const tc of chunk.tool_calls) {
+        this.toolTracker.addToolCall(tc);
+      }
+
+      // ✅ Ajouter DIRECTEMENT à la timeline SANS déclencher l'exécution
+      const toolCallsForTimeline = this.toolTracker.getNewToolCallsForNotification();
+      if (toolCallsForTimeline.length > 0) {
+        this.timeline.addToolExecutionEvent(toolCallsForTimeline, chunk.tool_calls.length);
+        this.toolTracker.markNotified(toolCallsForTimeline);
+        
+        logger.dev(`[StreamOrchestrator] ✅ ${toolCallsForTimeline.length} tool call(s) ajouté(s) à la timeline (pas d'exécution)`);
+      }
+
+      // Passer au prochain round
+      this.timeline.incrementRound();
+      this.toolTracker.clearCurrentRound();
+      this.currentRoundContent = '';
+    }
   }
 
   /**

@@ -47,8 +47,9 @@ export interface McpServerConfig {
   server_label: string;
   server_url: string;
   headers?: Record<string, string>;
+  server_description?: string;  // ✅ NOUVEAU: Description pour aider le modèle
   require_approval?: 'never' | 'always' | 'auto';
-  allowed_tools?: string[];
+  allowed_tools?: string[] | null;  // null = tous les tools
 }
 
 export interface AgentMcpConfig {
@@ -64,10 +65,11 @@ export interface ExternalMcpServer {
   name: string;
   url: string;
   description?: string;
+  server_description?: string;  // ✅ NOUVEAU: Description pour le modèle
   header?: string;
   api_key?: string;
   require_approval?: 'never' | 'always' | 'auto';
-  allowed_tools?: string[];
+  allowed_tools?: string[] | null;
 }
 
 // Helpers pour convertir un serveur externe en config MCP Groq
@@ -77,6 +79,7 @@ export function externalServerToMcpTool(server: ExternalMcpServer): McpServerCon
     server_label: server.name.toLowerCase().replace(/\s+/g, '-'),
     server_url: server.url,
     headers: server.header && server.api_key ? { [server.header]: server.api_key } : undefined,
+    server_description: server.server_description,
     require_approval: server.require_approval,
     allowed_tools: server.allowed_tools
   };
@@ -95,8 +98,9 @@ export interface GroqMcpToolConfig {
   server_label: string;
   server_url: string;
   headers?: Record<string, string>;
+  server_description?: string;
   require_approval?: 'never' | 'always' | 'auto';
-  allowed_tools?: string[];
+  allowed_tools?: string[] | null;
 }
 
 /**

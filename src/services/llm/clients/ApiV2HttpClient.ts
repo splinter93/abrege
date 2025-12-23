@@ -55,6 +55,7 @@ export class ApiV2HttpClient {
       VERCEL: process.env.VERCEL,
       VERCEL_URL: process.env.VERCEL_URL,
       NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+      NODE_ENV: process.env.NODE_ENV,
     });
     
     // 🔧 SERVER-SIDE (Vercel Production)
@@ -73,8 +74,15 @@ export class ApiV2HttpClient {
     }
     
     // 🔧 SERVER-SIDE (Local ou autre)
-    const fallbackUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    logger.info(`[ApiV2HttpClient] 🔧 Fallback URL: ${fallbackUrl}`);
+    // En développement local, utiliser localhost:3000 par défaut
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const fallbackUrl = process.env.NEXT_PUBLIC_SITE_URL || (isDevelopment ? 'http://localhost:3000' : 'http://localhost:3000');
+    
+    logger.info(`[ApiV2HttpClient] 🔧 Fallback URL: ${fallbackUrl}`, {
+      isDevelopment,
+      hasNextPublicSiteUrl: !!process.env.NEXT_PUBLIC_SITE_URL
+    });
+    
     return fallbackUrl;
   }
 
@@ -149,9 +157,47 @@ export class ApiV2HttpClient {
     }
 
     try {
-      logger.dev(`[ApiV2HttpClient] ${method} ${url}`);
+      logger.dev(`[ApiV2HttpClient] ${method} ${url}`, {
+        baseUrl: this.baseUrl,
+        endpoint,
+        isServerSide,
+        timeout: this.timeout
+      });
 
-      const response = await fetch(url, requestOptions);
+      let response: Response;
+      try {
+        response = await fetch(url, requestOptions);
+      } catch (fetchError) {
+        // Erreur réseau (fetch failed, timeout, etc.)
+        const errorMessage = fetchError instanceof Error ? fetchError.message : String(fetchError);
+        logger.error(`[ApiV2HttpClient] ❌ Fetch failed: ${errorMessage}`, {
+          url,
+          method,
+          baseUrl: this.baseUrl,
+          endpoint,
+          isServerSide,
+          error: fetchError instanceof Error ? {
+            name: fetchError.name,
+            message: fetchError.message,
+            stack: fetchError.stack
+          } : fetchError,
+          requestOptions: {
+            method: requestOptions.method,
+            hasBody: !!requestOptions.body,
+            headers: Object.keys(headers),
+            timeout: this.timeout
+          }
+        });
+        
+        // Message d'erreur plus explicite
+        if (errorMessage.includes('timeout') || errorMessage.includes('aborted')) {
+          throw new Error(`Timeout: La requête a pris plus de ${this.timeout}ms`);
+        } else if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ECONNREFUSED')) {
+          throw new Error(`Connexion refusée: Impossible d'atteindre ${url}. Vérifiez que le serveur est démarré et accessible.`);
+        } else {
+          throw new Error(`Erreur réseau: ${errorMessage}`);
+        }
+      }
       
       if (!response.ok) {
         // 🔍 DIAGNOSTIC DÉTAILLÉ EN CAS D'ERREUR

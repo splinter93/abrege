@@ -284,8 +284,14 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue un appel à l'API xAI avec une liste de messages déjà préparée
    * Optimisé pour l'orchestrateur avec tool calls
+   * 
+   * ⚠️ LIMITATION: x.ai REST API ne supporte que les tools OpenAPI (type: 'function')
+   * Les MCP tools nécessitent le SDK Python x.ai (pas supporté en REST direct)
    */
-  async callWithMessages(messages: ChatMessage[], tools: Tool[]): Promise<LLMResponse> {
+  async callWithMessages(
+    messages: ChatMessage[], 
+    tools: Tool[]
+  ): Promise<LLMResponse> {
     if (!this.isAvailable()) {
       throw new Error('xAI provider non configuré');
     }
@@ -321,6 +327,8 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
   /**
    * ✅ NOUVEAU : Streaming avec Server-Sent Events (SSE)
    * Compatible avec xAI API (format OpenAI)
+   * 
+   * ⚠️ LIMITATION: x.ai REST API ne supporte que les tools OpenAPI (type: 'function')
    */
   async *callWithMessagesStream(
     messages: ChatMessage[], 
@@ -704,6 +712,11 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
 
   /**
    * Prépare le payload pour l'API xAI avec support des tools
+   * 
+   * ⚠️ LIMITATION x.ai REST API:
+   * - Supporte uniquement les tools OpenAPI (type: 'function')
+   * - Les MCP Remote Tools nécessitent le SDK Python x.ai
+   * - Erreur 422 si on envoie type: 'mcp'
    */
   private async preparePayload(messages: XAIMessage[], tools: Tool[]): Promise<Record<string, unknown>> {
     // Nettoyer les messages (supprimer id et timestamp)
@@ -956,7 +969,7 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
    * @param images - URLs ou base64 des images
    * @param options - Options (detail, temperature, etc.)
    * @param history - Historique des messages
-   * @param tools - Tools disponibles
+   * @param tools - Tools disponibles (OpenAPI uniquement)
    */
   async callWithImages(
     text: string,

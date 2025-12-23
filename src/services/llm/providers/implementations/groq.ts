@@ -14,7 +14,7 @@ import type {
   GroqResponsesApiResponse,
   McpCall
 } from '../../types/strictTypes';
-import { isMcpTool } from '../../types/strictTypes';
+import { isMcpTool, isFunctionTool } from '../../types/strictTypes';
 
 /**
  * ✅ Type pour les chunks de streaming SSE
@@ -26,6 +26,7 @@ interface StreamChunk {
   finishReason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
   reasoning?: string;  // ✅ Ajouté pour support futur
   usage?: unknown;  // ✅ Ajouté pour support futur
+  x_groq?: { mcp_calls?: McpCall[] };  // ✅ NOUVEAU : Support MCP calls metadata
 }
 
 /**
@@ -236,18 +237,24 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       // ✅ DÉTECTION MCP: Router vers l'API appropriée
       const hasMcpTools = tools && tools.some((t) => isMcpTool(t));
       
+      // ✅ LOG SIMPLIFIÉ: Compte des tools avant appel
+      logger.info(`[GroqProvider] Tools → Groq: ${tools.length} total (${tools.filter((t) => isMcpTool(t)).length} MCP + ${tools.filter((t) => isFunctionTool(t)).length} function)`);
+      
       if (hasMcpTools) {
-        logger.dev(`[GroqProvider] 🔀 Détection de ${tools.filter((t) => isMcpTool(t)).length} tools MCP → API Responses`);
+        logger.info(`[GroqProvider] 🔀 Détection de ${tools.filter((t) => isMcpTool(t)).length} tools MCP → API Responses`);
         return await this.callWithResponsesApi(messages, tools);
       }
       
       // ✅ CHAT COMPLETIONS: Pour les tools classiques (function)
-      logger.dev(`[GroqProvider] 🚀 Appel Chat Completions avec ${messages.length} messages`);
+      logger.info(`[GroqProvider] 🚀 Appel Chat Completions avec ${messages.length} messages`);
       
       // ✅ OPTIMISATION: Conversion directe des ChatMessage vers le format API
       const apiMessages = this.convertChatMessagesToApiFormat(messages);
       const payload = await this.preparePayload(apiMessages, tools);
       payload.stream = false;
+      
+      // Payload prêt
+      logger.info(`[GroqProvider] → Chat Completions: ${payload.model} | ${(payload.messages as any[])?.length} msgs | ${(payload.tools as any[])?.length || 0} tools`);
       
       const response = await this.makeApiCall(payload);
       const result = this.extractResponse(response);
@@ -282,6 +289,64 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
     }
 
     try {
+      // ✅ DÉTECTION MCP: Router vers Responses API (non-streaming) si nécessaire
+      const hasMcpTools = tools && tools.some((t) => isMcpTool(t));
+      
+      if (hasMcpTools) {
+        logger.info(`[GroqProvider] 🔀 MCP tools détectés → Responses API (simulated streaming)`);
+        
+        // ✅ Appeler Responses API (non-streaming)
+        const response = await this.callWithResponsesApi(messages, tools);
+        
+        // ✅ Simuler le streaming en yieldant par chunks
+        if (response.content) {
+          // Découper en chunks de 5 mots pour un meilleur compromis vitesse/fluidité
+          const words = response.content.split(' ');
+          const chunkSize = 5;
+          for (let i = 0; i < words.length; i += chunkSize) {
+            const chunk = words.slice(i, i + chunkSize).join(' ') + (i + chunkSize < words.length ? ' ' : '');
+            yield {
+              type: 'delta',
+              content: chunk,
+            };
+            // Petit délai pour simuler le streaming sans ralentir trop
+            await new Promise(resolve => setTimeout(resolve, 20));
+          }
+        }
+        
+        // ✅ Pour MCP: Les tool calls sont DÉJÀ EXÉCUTÉS par Groq
+        // On ne doit PAS retourner finishReason: 'tool_calls' sinon le Stream Route va réessayer
+        // Il faut marquer les tools comme "alreadyExecuted" comme fait xAI
+        if (response.tool_calls && response.tool_calls.length > 0) {
+          // Marquer tous les tool calls comme déjà exécutés
+          const executedToolCalls = response.tool_calls.map(tc => ({
+            ...tc,
+            // @ts-expect-error - Extension custom pour MCP tools exécutés par Groq
+            alreadyExecuted: true,
+            // @ts-expect-error - Ajouter le résultat depuis mcp_calls
+            result: response.x_groq?.mcp_calls?.find(mc => 
+              tc.function.name.includes(mc.name) || tc.function.name.includes(mc.server_label)
+            )?.output || 'Executed by Groq (MCP)'
+          }));
+          
+          yield {
+            type: 'delta',
+            tool_calls: executedToolCalls,
+            finishReason: 'tool_calls',  // Pour afficher dans timeline
+            x_groq: response.x_groq  // Propager les mcp_calls
+          };
+        }
+        
+        // ✅ Yield final avec stop pour terminer le stream
+        yield {
+          type: 'delta',
+          finishReason: 'stop'
+        };
+        
+        return;
+      }
+      
+      // ✅ CHAT COMPLETIONS: Streaming normal pour tools classiques
       logger.dev(`[GroqProvider] 🌊 Streaming Chat Completions avec ${messages.length} messages`);
       
       // Conversion des ChatMessage vers le format API
@@ -519,22 +584,67 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       const input = this.convertMessagesToInput(messages);
       
       // ✅ Préparer le payload pour Responses API
-      const payload = {
+      const payload: Record<string, unknown> = {
         model: this.config.model,
         input, // 'input' au lieu de 'messages'
-        tools, // Serveurs MCP passés tels quels
         temperature: this.config.temperature,
         top_p: this.config.topP,
         // Note: max_tokens n'est pas supporté par Responses API
       };
+
+      // ✅ Gestion des tools (Hybride: OpenAPI + MCP)
+      // L'API Responses attend tous les tools dans le tableau 'tools'
+      // Le champ 'mcp_servers' n'est PAS supporté (erreur 400 "unknown field")
+      if (tools && tools.length > 0) {
+        // ✅ Transformation de TOUS les tools pour s'assurer qu'ils ont un 'name' à la racine
+        // Workaround pour l'erreur "tools[0]: name is required" qui survient 
+        // quand un objet tool n'a pas de propriété 'name' à la racine
+        const formattedTools = tools.map(tool => {
+          if (isMcpTool(tool)) {
+            // ✅ MCP tool: Ajouter 'name' identique au server_label
+            return {
+              ...tool,
+              type: 'mcp',
+              name: tool.name || tool.server_label
+            };
+          } else if (isFunctionTool(tool)) {
+            // ✅ OpenAPI tool: Nettoyer et valider les parameters pour Groq Responses API
+            const cleanedParameters = {
+              type: 'object',
+              properties: tool.function.parameters?.properties || {},
+              ...(tool.function.parameters?.required && tool.function.parameters.required.length > 0 
+                ? { required: tool.function.parameters.required } 
+                : {}),
+              // ✅ CRITIQUE: Ajouter additionalProperties: false pour JSON Schema strict
+              additionalProperties: false
+            };
+            
+            return {
+              ...tool,
+              name: tool.function.name,
+              function: {
+                ...tool.function,
+                parameters: cleanedParameters
+              }
+            };
+          }
+          return tool;
+        });
+        
+        payload.tools = formattedTools;
+        // payload.tool_choice = 'auto'; // Optionnel, par défaut auto
+      }
       
       logger.dev('[GroqProvider] 📤 Payload Responses API:', {
         model: payload.model,
         inputType: typeof input,
         inputLength: typeof input === 'string' ? input.length : Array.isArray(input) ? input.length : 0,
-        toolsCount: tools.length,
+        toolsCount: (payload.tools as any[])?.length || 0,
         mcpServers: tools.filter((t) => isMcpTool(t)).map((t) => (t as McpTool).server_label)
       });
+      
+      // Payload Responses API prêt
+      logger.info(`[GroqProvider] → Responses API: ${payload.model} | ${(payload.tools as any[])?.length} tools`);
       
       // ✅ DEBUG: Logger le payload complet pour identifier le problème
       logger.dev('[GroqProvider] 🔍 Payload complet:', JSON.stringify(payload, null, 2));
@@ -705,19 +815,8 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
             reasoning = reasoningTexts.join('\n');
             logger.dev(`[GroqProvider] 🧠 Reasoning: ${reasoning.substring(0, 200)}...`);
             
-            // ✅ NOUVEAU: Extraire aussi les reasonings comme "commentary" pour l'UI
-            // Pour afficher le raisonnement entre les tool calls
-            if (!mcpCalls.find(c => c.type === 'commentary')) {
-              mcpCalls.push({
-                server_label: '',
-                name: '',
-                arguments: {},
-                output: undefined,
-                type: 'commentary',
-                content: reasoning,
-                timestamp: new Date().toISOString()
-              });
-            }
+            // ✅ Le reasoning est déjà retourné via response.reasoning
+            // Pas besoin de l'ajouter dans mcpCalls (causait un comptage incorrect)
           }
           break;
           

@@ -97,9 +97,6 @@ export interface McpCall {
   name: string;
   arguments: Record<string, unknown>;
   output: unknown;
-  type?: 'commentary';
-  content?: string;
-  timestamp?: string;
 }
 
 export interface LLMResponse {

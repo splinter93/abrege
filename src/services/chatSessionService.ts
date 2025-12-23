@@ -83,12 +83,24 @@ export class ChatSessionService {
       }
 
       const fetchPromise = (async () => {
-      const response = await fetch(`${this.baseUrl}?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      let response: Response;
+      try {
+        response = await fetch(`${this.baseUrl}?${params.toString()}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+      } catch (fetchError) {
+        // Erreur réseau (serveur inaccessible, CORS, etc.)
+        const errorMessage = fetchError instanceof Error ? fetchError.message : 'Erreur réseau inconnue';
+        logger.warn(LogCategory.API, '[ChatSessionService] ⚠️ Erreur réseau (serveur inaccessible?)', { 
+          error: errorMessage,
+          url: this.baseUrl 
+        });
+        throw new Error(`Erreur réseau: ${errorMessage}`);
+      }
+
       let data;
       try {
         data = await response.json();
