@@ -24,6 +24,8 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
   const healthcheckTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastEventAtRef = useRef<number>(Date.now());
   const resubInProgressRef = useRef(false);
+  const maxReconnectAttempts = 10; // ✅ Limiter les tentatives pour éviter les boucles infinies
+  const circuitBreakerRef = useRef(false); // ✅ Circuit breaker pour éviter les reconnexions en boucle
 
   // ✅ DEBUG: Log immédiat pour vérifier que le hook est bien appelé
   useEffect(() => {
@@ -90,20 +92,42 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
 
       if (isCancelled) return;
 
+      // ✅ FIX: Utiliser un nom de canal plus simple et unique
+      const channelName = `canva_sessions:chat_${chatSessionId}`;
       const channel = supabase
-        .channel(`canva_sessions:chat_${chatSessionId}`)
+        .channel(channelName, {
+          config: {
+            broadcast: { self: false },
+            presence: { key: session.user.id }
+          }
+        })
       .on(
         'postgres_changes' as any,
         {
           event: '*', // INSERT, UPDATE, DELETE
           schema: 'public',
           table: 'canva_sessions',
-          filter: `chat_session_id=eq.${chatSessionId}`
+          // ✅ FIX: Filtrer par user_id ET chat_session_id pour respecter RLS
+          // RLS peut bloquer les événements si on filtre seulement par chat_session_id
+          filter: `user_id=eq.${session.user.id}`
         },
         (payload: RealtimePostgresChangesPayload<CanvaSession>) => {
           const canvaId = payload.new?.id || payload.old?.id;
           const eventType = getEventType(payload);
           const payloadChatSessionId = payload.new?.chat_session_id || payload.old?.chat_session_id;
+          const payloadUserId = payload.new?.user_id || payload.old?.user_id;
+          
+          // ✅ Log TOUS les événements reçus pour debug (même ceux qu'on ignore)
+          logger.info(LogCategory.EDITOR, '[CanvaRealtime] 📨 ÉVÉNEMENT REÇU (raw)', {
+            eventType,
+            canvaId,
+            payloadChatSessionId,
+            chatSessionId,
+            payloadUserId,
+            userId: session.user.id,
+            matchesChatSession: payloadChatSessionId === chatSessionId,
+            matchesUser: payloadUserId === session.user.id
+          });
           
           if (!eventType) {
             logger.warn(LogCategory.EDITOR, '[CanvaRealtime] Invalid payload: missing eventType', {
@@ -119,8 +143,9 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
             return;
           }
 
+          // ✅ Filtrer par chat_session_id côté client (car le filtre DB est maintenant sur user_id)
           if (payloadChatSessionId && payloadChatSessionId !== chatSessionId) {
-            logger.debug(LogCategory.EDITOR, '[CanvaRealtime] Ignoring event for different chat_session_id', {
+            logger.info(LogCategory.EDITOR, '[CanvaRealtime] Ignoring event for different chat_session_id', {
               payloadChatSessionId,
               chatSessionId,
               canvaId
@@ -128,13 +153,25 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
             return;
           }
           
-          logger.info(LogCategory.EDITOR, '[CanvaRealtime] DB change detected', {
+          // ✅ Vérifier aussi que c'est bien notre utilisateur (sécurité)
+          if (payloadUserId && payloadUserId !== session.user.id) {
+            logger.warn(LogCategory.EDITOR, '[CanvaRealtime] Ignoring event for different user_id', {
+              payloadUserId,
+              userId: session.user.id,
+              canvaId
+            });
+            return;
+          }
+          
+          logger.info(LogCategory.EDITOR, '[CanvaRealtime] ✅✅✅ DB change detected - ÉVÉNEMENT REÇU', {
             event: eventType,
             canvaId,
             newStatus: payload.new?.status,
             oldStatus: payload.old?.status,
             newTitle: payload.new?.title,
-            oldTitle: payload.old?.title
+            oldTitle: payload.old?.title,
+            chatSessionId,
+            payloadChatSessionId
           });
 
           lastEventAtRef.current = Date.now();
@@ -257,7 +294,7 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
                     });
                   } else {
                     // Le canevas est déjà fermé localement, ignorer l'événement
-                    logger.debug(LogCategory.EDITOR, '[CanvaRealtime] Ignoring closed status (canva already closed locally)', {
+                    logger.info(LogCategory.EDITOR, '[CanvaRealtime] Ignoring closed status (canva already closed locally)', {
                       canvaId,
                       currentActiveCanvaId,
                       currentIsCanvaOpen
@@ -324,11 +361,15 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
             payload
           });
         } else {
-          // Vraie erreur
-        logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Channel system error', {
-          chatSessionId,
-          error: payload
-        });
+          // Vraie erreur - logger seulement si pas trop fréquent
+          const errorCount = (resubscribeAttemptRef.current % 10);
+          if (errorCount === 0) {
+            logger.warn(LogCategory.EDITOR, '[CanvaRealtime] ⚠️ Channel system error (silencing spam)', {
+              chatSessionId,
+              error: payload,
+              note: 'Erreurs suivantes silencieuses pendant 10 tentatives'
+            });
+          }
         }
       })
       .on('system', { event: 'channel_close' }, (payload) => {
@@ -349,22 +390,103 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           resubscribeAttemptRef.current = 0;
+          circuitBreakerRef.current = false; // ✅ Réinitialiser le circuit breaker en cas de succès
           clearResubTimer();
+          lastEventAtRef.current = Date.now(); // ✅ Réinitialiser le timer d'événements
           logger.info(LogCategory.EDITOR, '[CanvaRealtime] ✅ Subscribed to canva_sessions', {
-            chatSessionId
+            chatSessionId,
+            channelState: channel.state,
+            filter: `chat_session_id=eq.${chatSessionId}`
           });
         } else if (status === 'CHANNEL_ERROR') {
-          logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Subscription error', {
-            chatSessionId,
-            status,
-            channelName: `canva_sessions:chat_${chatSessionId}`
-          });
-        } else if ((status === 'CLOSED' || status === 'TIMED_OUT') && !isCancelled) {
+          // ✅ FIX: Ne logger qu'une fois toutes les 10 erreurs pour éviter le spam
+          const errorCount = (resubscribeAttemptRef.current % 10);
+          if (errorCount === 0) {
+            logger.warn(LogCategory.EDITOR, '[CanvaRealtime] ⚠️ Subscription error (silencing spam)', {
+              chatSessionId,
+              status,
+              channelName: `canva_sessions:chat_${chatSessionId}`,
+              attempt: resubscribeAttemptRef.current + 1,
+              note: 'Erreurs suivantes silencieuses pendant 10 tentatives'
+            });
+          }
+          
+          // ✅ FIX: Gérer CHANNEL_ERROR comme CLOSED/TIMED_OUT avec reconnexion automatique
+          if (!isCancelled && !resubInProgressRef.current && !circuitBreakerRef.current) {
+            const nextAttempt = resubscribeAttemptRef.current + 1;
+            
+            // ✅ Circuit breaker : arrêter après maxReconnectAttempts
+            if (nextAttempt > maxReconnectAttempts) {
+              circuitBreakerRef.current = true;
+              logger.error(LogCategory.EDITOR, '[CanvaRealtime] 🛑 Circuit breaker activé - trop de tentatives', {
+                chatSessionId,
+                attempts: nextAttempt - 1,
+                maxAttempts: maxReconnectAttempts,
+                note: 'Realtime désactivé pour cette session. Redémarrer la page pour réessayer.'
+              });
+              return;
+            }
+            
+            // ✅ Logger seulement toutes les 5 tentatives pour éviter le spam
+            if (nextAttempt % 5 === 0) {
+              logger.warn(LogCategory.EDITOR, '[CanvaRealtime] 🔄 Channel error, attempting resubscribe', {
+                chatSessionId,
+                status,
+                attempt: nextAttempt,
+                maxAttempts: maxReconnectAttempts
+              });
+            }
+
+            resubscribeAttemptRef.current = nextAttempt;
+            resubInProgressRef.current = true;
+
+            // Nettoyer canal actuel puis réessayer avec backoff (cap à 10s pour les erreurs)
+            const delayMs = Math.min(10000, 500 * Math.pow(2, nextAttempt - 1));
+            clearResubTimer();
+            resubscribeTimerRef.current = setTimeout(() => {
+              if (!isCancelled && !circuitBreakerRef.current) {
+                Promise.resolve()
+                  .then(() => {
+                    if (channelRef.current) {
+                      supabase.removeChannel(channelRef.current);
+                    }
+                  })
+                  .catch(() => {/* ignore */})
+                  .then(() => {
+                    channelRef.current = null;
+                    return subscribe();
+                  })
+                  .catch((error) => {
+                    logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Resubscribe failed', {
+                      chatSessionId,
+                      error: error instanceof Error ? error.message : String(error)
+                    });
+                  })
+                  .finally(() => {
+                    resubInProgressRef.current = false;
+                  });
+              }
+            }, delayMs);
+          }
+        } else if ((status === 'CLOSED' || status === 'TIMED_OUT') && !isCancelled && !circuitBreakerRef.current) {
           const nextAttempt = resubscribeAttemptRef.current + 1;
+          
+          // ✅ Circuit breaker : arrêter après maxReconnectAttempts
+          if (nextAttempt > maxReconnectAttempts) {
+            circuitBreakerRef.current = true;
+            logger.error(LogCategory.EDITOR, '[CanvaRealtime] 🛑 Circuit breaker activé - trop de tentatives', {
+              chatSessionId,
+              attempts: nextAttempt - 1,
+              maxAttempts: maxReconnectAttempts
+            });
+            return;
+          }
+          
           logger.warn(LogCategory.EDITOR, '[CanvaRealtime] 🔄 Channel closed, attempting resubscribe', {
             chatSessionId,
             status,
-            attempt: nextAttempt
+            attempt: nextAttempt,
+            maxAttempts: maxReconnectAttempts
           });
 
           resubscribeAttemptRef.current = nextAttempt;
@@ -377,13 +499,23 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
           const delayMs = Math.min(5000, 300 * Math.pow(2, nextAttempt - 1));
           clearResubTimer();
           resubscribeTimerRef.current = setTimeout(() => {
-            if (!isCancelled) {
+            if (!isCancelled && !circuitBreakerRef.current) {
               Promise.resolve()
-                .then(() => supabase.removeChannel(channel))
+                .then(() => {
+                  if (channelRef.current) {
+                    supabase.removeChannel(channelRef.current);
+                  }
+                })
                 .catch(() => {/* ignore */})
                 .then(() => {
                   channelRef.current = null;
                   return subscribe();
+                })
+                .catch((error) => {
+                  logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Resubscribe failed', {
+                    chatSessionId,
+                    error: error instanceof Error ? error.message : String(error)
+                  });
                 })
                 .finally(() => {
                   resubInProgressRef.current = false;
@@ -409,25 +541,44 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
 
     subscribe();
 
-    // 🩺 Healthcheck périodique : resubscribe si silence ou canal manquant
+    // 🩺 Healthcheck périodique : resubscribe UNIQUEMENT si canal manquant ou état invalide
+    // ❌ FIX: Ne pas se baser sur le silence (pas d'événements = normal si rien ne change)
+    // ✅ Vérifier uniquement l'état du canal (SUBSCRIBED = OK, même sans événements)
     healthcheckTimerRef.current = setInterval(() => {
-      if (isCancelled) return;
-      const now = Date.now();
-      const silenceMs = now - lastEventAtRef.current;
-      const channelMissing = !channelRef.current;
-      if (channelMissing || silenceMs > 3 * 60 * 1000) {
+      if (isCancelled || circuitBreakerRef.current) return;
+      
+      const channel = channelRef.current;
+      const channelMissing = !channel;
+      
+      // ✅ Vérifier l'état réel du canal au lieu du silence
+      // Un canal peut être actif sans recevoir d'événements (normal si pas de changements DB)
+      const channelState = channel?.state;
+      // Les états valides pour Supabase Realtime sont : 'joined', 'joining', 'closed', 'errored'
+      // 'joined' = canal actif et connecté
+      const isChannelHealthy = channel && channelState === 'joined';
+      
+      if (channelMissing || !isChannelHealthy) {
         logger.warn(LogCategory.EDITOR, '[CanvaRealtime] 🩺 Healthcheck resubscribe', {
           chatSessionId,
           channelMissing,
-          silenceMs
+          channelState,
+          isChannelHealthy
         });
         clearResubTimer();
-        resubscribeAttemptRef.current = 0;
+        resubscribeAttemptRef.current = 0; // ✅ Réinitialiser les tentatives pour le healthcheck
+        circuitBreakerRef.current = false; // ✅ Réinitialiser le circuit breaker
         if (channelRef.current) {
           supabase.removeChannel(channelRef.current);
           channelRef.current = null;
         }
         subscribe();
+      } else {
+        // ✅ Canal sain (joined), pas besoin de reconnexion même sans événements
+        // Le silence est normal si rien ne change dans la DB
+        if (channelState === 'joined') {
+          // Mettre à jour lastEventAt pour éviter les faux positifs futurs
+          lastEventAtRef.current = Date.now();
+        }
       }
     }, 60 * 1000);
 
@@ -441,6 +592,7 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
         });
         clearResubTimer();
         resubscribeAttemptRef.current = 0;
+        circuitBreakerRef.current = false; // ✅ Réinitialiser le circuit breaker sur changement d'auth
         if (channelRef.current) {
           supabase.removeChannel(channelRef.current);
           channelRef.current = null;

@@ -1142,6 +1142,194 @@ function getExistingEndpoints(): Record<string, unknown> {
           }
         }
       }
+    },
+    '/api/v2/note/{ref}/stream:write': {
+      post: {
+        summary: 'Stream write content to note',
+        description: 'Write content chunks to a note in real-time. Clients listening via stream:listen will receive updates immediately. Designed for LLM agents to stream content generation.',
+        tags: ['Notes', 'Streaming'],
+        security: [
+          { BearerAuth: [] },
+          { ApiKeyAuth: [] }
+        ],
+        parameters: [
+          {
+            name: 'ref',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+            description: 'Note UUID or slug'
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  chunk: {
+                    type: 'string',
+                    description: 'Content chunk to append (markdown format)'
+                  },
+                  position: {
+                    type: 'string',
+                    enum: ['end', 'start', 'cursor'],
+                    default: 'end',
+                    description: 'Position where to insert the chunk'
+                  },
+                  end: {
+                    type: 'boolean',
+                    description: 'Signal end of stream (no chunk required)'
+                  },
+                  metadata: {
+                    type: 'object',
+                    properties: {
+                      tool_call_id: { 
+                        type: 'string',
+                        description: 'Tool call ID for tracking'
+                      },
+                      agent_id: { 
+                        type: 'string',
+                        description: 'Agent ID for analytics'
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Chunk broadcasted successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    note_id: { type: 'string', format: 'uuid' },
+                    listeners_reached: { type: 'integer' },
+                    chunk_length: { type: 'integer' }
+                  }
+                }
+              }
+            }
+          },
+          '400': {
+            description: 'Validation error'
+          },
+          '401': {
+            description: 'Unauthorized'
+          },
+          '404': {
+            description: 'Note not found'
+          },
+          '429': {
+            description: 'Rate limit exceeded (max 100 chunks/min)'
+          },
+          '500': {
+            description: 'Internal server error'
+          }
+        }
+      }
+    },
+    '/api/v2/canva/{canva_id}/stream:write': {
+      post: {
+        summary: 'Stream write content to canva',
+        description: 'Write content chunks to a canva in real-time. Alias for note stream:write using canva_id. Clients listening to the underlying note will receive updates.',
+        tags: ['Canva', 'Streaming'],
+        security: [
+          { BearerAuth: [] },
+          { ApiKeyAuth: [] }
+        ],
+        parameters: [
+          {
+            name: 'canva_id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+            description: 'Canva session UUID'
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  chunk: {
+                    type: 'string',
+                    description: 'Content chunk to append (markdown format)'
+                  },
+                  position: {
+                    type: 'string',
+                    enum: ['end', 'start', 'cursor'],
+                    default: 'end',
+                    description: 'Position where to insert the chunk'
+                  },
+                  end: {
+                    type: 'boolean',
+                    description: 'Signal end of stream (no chunk required)'
+                  },
+                  metadata: {
+                    type: 'object',
+                    properties: {
+                      tool_call_id: { 
+                        type: 'string',
+                        description: 'Tool call ID for tracking'
+                      },
+                      agent_id: { 
+                        type: 'string',
+                        description: 'Agent ID for analytics'
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Chunk broadcasted successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean' },
+                    canva_id: { type: 'string', format: 'uuid' },
+                    note_id: { type: 'string', format: 'uuid' },
+                    listeners_reached: { type: 'integer' },
+                    chunk_length: { type: 'integer' }
+                  }
+                }
+              }
+            }
+          },
+          '400': {
+            description: 'Validation error'
+          },
+          '401': {
+            description: 'Unauthorized'
+          },
+          '403': {
+            description: 'Not authorized to access this canva'
+          },
+          '404': {
+            description: 'Canva not found'
+          },
+          '429': {
+            description: 'Rate limit exceeded (max 100 chunks/min)'
+          },
+          '500': {
+            description: 'Internal server error'
+          }
+        }
+      }
     }
     // Ajouter d'autres endpoints existants ici...
   };

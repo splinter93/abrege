@@ -135,8 +135,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    // ✅ DEBUG: Log de la requête
+    logger.debug(LogCategory.EDITOR, '[API Canva Sessions GET] Request received', {
+      url: request.url,
+      hasAuthHeader: !!request.headers.get('Authorization'),
+      hasCookie: !!request.headers.get('cookie')
+    });
+
     const authResult = await getAuthenticatedUser(request);
     if (!authResult.success) {
+      logger.warn(LogCategory.EDITOR, '[API Canva Sessions GET] Auth failed', {
+        error: authResult.error,
+        status: authResult.status,
+        url: request.url
+      });
       return NextResponse.json(
         { error: authResult.error },
         { status: authResult.status || 401 }

@@ -3,7 +3,8 @@
  * Remplace les 30+ useState dispersés dans Editor.tsx
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
+import React from 'react';
 import { logger, LogCategory } from '@/utils/logger';
 import type { ShareSettings } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
@@ -135,6 +136,8 @@ export interface UseEditorStateOptions {
   initialFullWidth?: boolean;
   initialSlashLang?: 'fr' | 'en';
   initialShareSettings?: ShareSettings;
+  toolbarContext?: 'editor' | 'canvas'; // ✅ Contexte pour séparer localStorage
+  forceShowToolbar?: boolean; // ✅ Force la toolbar visible (ignore localStorage)
 }
 
 /**
@@ -220,14 +223,92 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
   const [a4Mode, setA4Mode] = useState(options.initialA4Mode || false);
   const [fullWidth, setFullWidth] = useState(options.initialFullWidth || false);
   const [slashLang, setSlashLang] = useState<'fr' | 'en'>(options.initialSlashLang || 'en');
+  // ✅ FIX: Séparer localStorage par contexte (editor vs canvas)
+  const toolbarContext = options.toolbarContext || 'editor';
+  
+  // ✅ FIX: Toujours prioriser forceShowToolbar, même si localStorage dit autre chose
   const [showToolbar, setShowToolbar] = useState(() => {
-    // LocalStorage temporaire - sera remplacé par user_preferences
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('editor-show-toolbar');
-      return stored !== null ? stored === 'true' : true; // true par défaut
+    // Si forceShowToolbar est défini, l'utiliser directement (priorité absolue)
+    if (options.forceShowToolbar !== undefined) {
+      logger.debug(LogCategory.EDITOR, '[useEditorState] Initial showToolbar depuis forceShowToolbar', {
+        forceShowToolbar: options.forceShowToolbar,
+        toolbarContext
+      });
+      return options.forceShowToolbar;
     }
+    // LocalStorage temporaire - sera remplacé par user_preferences
+    // ✅ Clé différente selon le contexte pour éviter les conflits
+    if (typeof window !== 'undefined') {
+      const storageKey = `editor-show-toolbar-${toolbarContext}`;
+      const stored = localStorage.getItem(storageKey);
+      const value = stored !== null ? stored === 'true' : true; // true par défaut
+      logger.debug(LogCategory.EDITOR, '[useEditorState] Initial showToolbar depuis localStorage', {
+        storageKey,
+        stored,
+        value,
+        toolbarContext
+      });
+      return value;
+    }
+    logger.debug(LogCategory.EDITOR, '[useEditorState] Initial showToolbar par défaut (SSR)', {
+      toolbarContext
+    });
     return true;
   });
+  
+  // ✅ FIX: Synchroniser showToolbar si forceShowToolbar change (avec priorité absolue)
+  // IMPORTANT: Utiliser useLayoutEffect pour garantir la synchronisation AVANT le render
+  // Cela évite le flash de toolbar manquante lors du refresh
+  useLayoutEffect(() => {
+    // Si forceShowToolbar est défini, il a toujours la priorité absolue
+    if (options.forceShowToolbar !== undefined) {
+      // ✅ FIX: TOUJOURS forcer la valeur, même si identique
+      // Cela garantit la cohérence et évite les problèmes de timing
+      const targetValue = options.forceShowToolbar;
+      setShowToolbar(prev => {
+        if (prev !== targetValue) {
+          logger.info(LogCategory.EDITOR, '[useEditorState] 🔧 Force showToolbar update (useLayoutEffect)', {
+            prev,
+            targetValue,
+            toolbarContext,
+            timestamp: Date.now()
+          });
+        } else {
+          // Même si identique, on force quand même pour garantir la cohérence
+          logger.debug(LogCategory.EDITOR, '[useEditorState] Force showToolbar (identique mais forcé)', {
+            prev,
+            targetValue,
+            toolbarContext,
+            timestamp: Date.now()
+          });
+        }
+        // ✅ TOUJOURS retourner targetValue, même si identique
+        return targetValue;
+      });
+    } else {
+      logger.debug(LogCategory.EDITOR, '[useEditorState] forceShowToolbar undefined, pas de synchronisation', {
+        toolbarContext
+      });
+    }
+  }, [options.forceShowToolbar, toolbarContext]);
+  
+  // ✅ FIX: Utiliser useMemo pour garantir que showToolbar est toujours true si forceShowToolbar === true
+  // Cela évite les problèmes de timing où useLayoutEffect ne se déclenche pas assez tôt
+  const finalShowToolbar = React.useMemo(() => {
+    if (options.forceShowToolbar !== undefined) {
+      logger.debug(LogCategory.EDITOR, '[useEditorState] finalShowToolbar depuis forceShowToolbar', {
+        forceShowToolbar: options.forceShowToolbar,
+        toolbarContext,
+        timestamp: Date.now()
+      });
+      return options.forceShowToolbar;
+    }
+    logger.debug(LogCategory.EDITOR, '[useEditorState] finalShowToolbar depuis showToolbar state', {
+      showToolbar,
+      toolbarContext
+    });
+    return showToolbar;
+  }, [options.forceShowToolbar, showToolbar, toolbarContext]);
   
   // État du menu contextuel
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -262,15 +343,20 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
   }, []);
   
   const toggleToolbar = useCallback(() => {
+    // ✅ Si forceShowToolbar est défini, ne pas permettre le toggle
+    if (options.forceShowToolbar !== undefined) {
+      return; // Toolbar forcée, pas de toggle possible
+    }
     setShowToolbar(prev => {
       const newValue = !prev;
-      // Persister dans localStorage (temporaire avant user_preferences)
+      // ✅ Persister dans localStorage avec clé contextuelle
       if (typeof window !== 'undefined') {
-        localStorage.setItem('editor-show-toolbar', String(newValue));
+        const storageKey = `editor-show-toolbar-${toolbarContext}`;
+        localStorage.setItem(storageKey, String(newValue));
       }
       return newValue;
     });
-  }, []);
+  }, [toolbarContext, options.forceShowToolbar]);
   
   // Actions - Context Menu
   const openContextMenu = useCallback((
@@ -318,7 +404,7 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
       a4Mode,
       fullWidth,
       slashLang,
-      showToolbar,
+      showToolbar: finalShowToolbar, // ✅ Utiliser finalShowToolbar qui priorise forceShowToolbar
     },
     contextMenu,
     shareSettings,

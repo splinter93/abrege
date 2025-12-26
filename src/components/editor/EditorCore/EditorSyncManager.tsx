@@ -7,8 +7,8 @@ import React from 'react';
 import type { FullEditorInstance } from '@/types/editor';
 import type { EditorState } from '@/hooks/editor/useEditorState';
 import { TIMEOUTS } from '@/utils/editorConstants';
-import { simpleLogger as logger } from '@/utils/logger';
-import { hashString, getEditorMarkdown } from '@/utils/editorHelpers';
+import { simpleLogger, LogCategory } from '@/utils/logger';
+import { getEditorMarkdown } from '@/utils/editorHelpers';
 import { preprocessEmbeds } from '@/utils/preprocessEmbeds';
 
 export interface EditorSyncManagerProps {
@@ -71,6 +71,7 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
   // ✅ CRITIQUE: Reset au premier mount si noteId change
   if (lastNoteIdRef.current !== noteId) {
     hasLoadedInitialContentRef.current = false;
+    lastStoreSyncRef.current = '';
     lastNoteIdRef.current = noteId;
   }
   
@@ -84,39 +85,50 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
     if (storeContent === undefined || storeContent === null) return;
     if (!editor) return;
 
-    // ✅ EXCEPTION : Si le chargement initial a été fait avec un contenu vide,
+    // ✅ Normaliser le contenu une seule fois au début
+    const normalizedStoreContent = normalizeMarkdown(storeContent || '');
+    const contentChanged = normalizedStoreContent !== lastStoreSyncRef.current;
+    
+    // ✅ LOG pour diagnostiquer
+    simpleLogger.dev(LogCategory.EDITOR, '[EditorSyncManager] 🔍 useEffect déclenché', {
+      hasLoadedInitial: hasLoadedInitialContentRef.current,
+      storeContentLength: normalizedStoreContent.length,
+      lastSyncLength: lastStoreSyncRef.current.length,
+      contentChanged,
+      editorFocused: editor.isFocused
+    });
+
+    // ✅ EXCEPTION UNIQUE : Si le chargement initial a été fait avec un contenu vide,
     // et que le contenu arrive maintenant (Phase 2), on doit le charger
     const wasEmptyContent = !lastStoreSyncRef.current || !lastStoreSyncRef.current.trim();
     const isNewContent = storeContent && storeContent.trim().length > 0;
     const shouldReloadFromEmpty = hasLoadedInitialContentRef.current && wasEmptyContent && isNewContent;
 
-    // Log pour debug
+    // ⚠️ CRITIQUE: Si le chargement initial est déjà fait ET que ce n'est pas le cas d'exception ci-dessus
+    // On peut recharger MAIS UNIQUEMENT si l'utilisateur n'est PAS en train de taper
+    // Cela permet d'afficher les mises à jour LLM (applyContentOperations) sans perturber la frappe
     if (hasLoadedInitialContentRef.current && !shouldReloadFromEmpty) {
-      console.log('[EditorSyncManager] ⏭️ Ignorant changement de contenu (déjà chargé)', {
-        storeContentLength: storeContent?.length || 0,
-        lastSyncLength: lastStoreSyncRef.current?.length || 0,
-        wasEmptyContent,
-        isNewContent,
-        shouldReloadFromEmpty,
-        storeContentPreview: storeContent?.substring(0, 100)
-      });
-    }
-    
-    // Log pour tous les changements de contenu
-    console.log('[EditorSyncManager] 🔍 Changement de contenu détecté', {
-      hasLoadedInitial: hasLoadedInitialContentRef.current,
-      storeContentLength: storeContent?.length || 0,
-      lastSyncLength: lastStoreSyncRef.current?.length || 0,
-      wasEmptyContent,
-      isNewContent,
-      shouldReloadFromEmpty,
-      willLoad: !hasLoadedInitialContentRef.current || shouldReloadFromEmpty
-    });
-
-    // ⚠️ CRITIQUE: Si le chargement initial est déjà fait ET que ce n'est pas le cas d'exception ci-dessus, on ne fait RIEN
-    // Même si storeContent change, on l'ignore pour éviter les bugs du curseur
-    if (hasLoadedInitialContentRef.current && !shouldReloadFromEmpty) {
-        return;
+        // ✅ SOLUTION SIMPLE : Recharger seulement si l'utilisateur n'est pas en train de taper
+        
+        if (!contentChanged) {
+          // Contenu identique, pas besoin de recharger
+          return;
+        }
+        
+        if (editor.isFocused) {
+          // L'utilisateur est en train de taper, on ignore pour éviter le saut de curseur
+          simpleLogger.dev(LogCategory.EDITOR, '[EditorSyncManager] ⏭️ Contenu changé mais utilisateur en train de taper, skip', {
+            storeContentLength: normalizedStoreContent.length,
+            lastSyncLength: lastStoreSyncRef.current.length
+          });
+          return;
+        }
+        
+        // L'utilisateur n'est pas en train de taper, on peut recharger (mise à jour LLM)
+        simpleLogger.info(LogCategory.EDITOR, '[EditorSyncManager] 🔄 Rechargement depuis store (mise à jour LLM)', {
+          storeContentLength: normalizedStoreContent.length,
+          lastSyncLength: lastStoreSyncRef.current.length
+        });
       }
 
     // ⚠️ CRITIQUE: Ne pas charger si déjà en cours de mise à jour
@@ -126,9 +138,8 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
     
     editorState.setIsUpdatingFromStore(true);
     
-    const normalizedStoreContent = normalizeMarkdown(storeContent);
-    
     // ✅ FIX React 18: Utiliser setTimeout au lieu de queueMicrotask pour plus de sécurité
+    // normalizedStoreContent est déjà déclaré au début du useEffect
     // Garantit que le setContent est complètement hors du cycle de render React
     setTimeout(() => {
       if (!editor) return;
@@ -157,7 +168,7 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
       
       // ✅ Si on recharge depuis un contenu vide, réinitialiser le flag
       if (shouldReloadFromEmpty) {
-        logger.dev('[EditorSyncManager] 🔄 Rechargement depuis contenu vide (Phase 2)', {
+        simpleLogger.dev(LogCategory.EDITOR, '[EditorSyncManager] 🔄 Rechargement depuis contenu vide (Phase 2)', {
           previousContentLength: lastStoreSyncRef.current?.length || 0,
           newContentLength: processedContent?.length || 0,
           normalizedContentLength: normalizedStoreContent?.length || 0
@@ -190,7 +201,7 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
         normalizedStoreContent !== currentEditorContent) {
       
       if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, '🔄 Mise à jour realtime détectée, sync store → éditeur');
+        simpleLogger.dev('🔄 Mise à jour realtime détectée, sync store → éditeur');
       }
       
       editorState.setIsUpdatingFromStore(true);

@@ -1299,6 +1299,41 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   display: none !important;
 }
 
+/* ✅ FIX: S'assurer que le header reste visible dans le canvas et AU-DESSUS de l'image */
+.chat-canva-pane .editor-header {
+  position: sticky !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 1002 !important; /* Z-index plus élevé que l'image header */
+  background: var(--color-bg-header) !important;
+  /* ✅ Empêcher la disparition lors du scroll */
+  /* ✅ S'assurer que le header est toujours visible au-dessus de l'image */
+  /* ✅ FIX: Forcer le header à rester au top du conteneur scrollable */
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* ✅ FIX: S'assurer que l'image header ne masque pas le header */
+.chat-canva-pane .editor-header-image {
+  position: relative !important;
+  z-index: 1 !important; /* En dessous du header (1002) */
+}
+
+/* ✅ FIX: S'assurer que la toolbar est visible dans le canvas */
+.chat-canva-pane .editor-header__center {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.chat-canva-pane .editor-toolbar {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 .chat-canva-pane__editor {
   position: relative;
   background: transparent;
@@ -1368,6 +1403,10 @@ body.chat-theme-blue .chatgpt-messages-container::before {
   /* ✅ Container de scroll pour permettre sticky header */
   overflow-y: auto;
   overflow-x: hidden;
+  /* ✅ FIX: S'assurer que le scroll commence au top */
+  scroll-behavior: smooth;
+  /* ✅ FIX: Forcer le scroll initial à 0 */
+  scroll-padding-top: 0;
 }
 
 .chat-canva-pane .editor-layout.noteLayout {

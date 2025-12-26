@@ -5,4 +5,5 @@ export { BaseProvider, type IBaseProvider, type ProviderInfo, type ProviderConfi
 export { GroqProvider } from './implementations/groq';
 export { GroqResponsesProvider } from './implementations/groqResponses';
 export { XAIProvider } from './implementations/xai';
+export { XAINativeProvider } from './implementations/xai-native';
 export { LiminalityProvider } from './implementations/liminality'; 

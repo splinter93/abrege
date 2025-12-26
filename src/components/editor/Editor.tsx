@@ -23,6 +23,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { simpleLogger as logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance } from '@/types/editor';
 import { useRealtime } from '@/hooks/useRealtime';
+import { useEditorStreamListener } from '@/hooks/useEditorStreamListener';
 import RealtimeStatus from '@/components/RealtimeStatus';
 import { preprocessMarkdown } from '@/utils/markdownPreprocessor';
 import { useEditorState } from '@/hooks/editor/useEditorState';
@@ -89,9 +90,21 @@ interface EditorProps {
   onClose?: () => void;
   onEditorRef?: (editor: TiptapEditor | null) => void;
   onReady?: () => void;
+  forceShowToolbar?: boolean; // ✅ Force la toolbar visible (pour canvas)
+  toolbarContext?: 'editor' | 'canvas'; // ✅ Contexte pour séparer localStorage
 }
 
-const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propUserId, canEdit = true, onClose, onEditorRef, onReady }) => {
+const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propUserId, canEdit = true, onClose, onEditorRef, onReady, forceShowToolbar, toolbarContext = 'editor' }) => {
+  // ✅ DEBUG: Log pour diagnostiquer
+  React.useEffect(() => {
+    logger.info(LogCategory.EDITOR, '[Editor] Props reçues', {
+      noteId,
+      forceShowToolbar,
+      toolbarContext,
+      readonly
+    });
+  }, [noteId, forceShowToolbar, toolbarContext, readonly]);
+
   // 🔧 CORRECTION : Utiliser le vrai ID utilisateur de la session
   const { user } = useAuth();
   const userId = propUserId || user?.id || 'anonymous';
@@ -141,7 +154,21 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
       allow_edit: note.share_settings.allow_edit || false,
       allow_comments: note.share_settings.allow_comments || false,
     } : getDefaultShareSettings(),
+    toolbarContext, // ✅ Contexte pour séparer localStorage
+    forceShowToolbar, // ✅ Force la toolbar visible si défini
   });
+
+  // ✅ DEBUG: Log pour vérifier l'état final
+  React.useEffect(() => {
+    logger.info(LogCategory.EDITOR, '[Editor] État toolbar après useEditorState', {
+      noteId,
+      showToolbar: editorState.ui.showToolbar,
+      previewMode: editorState.ui.previewMode,
+      forceShowToolbar,
+      toolbarContext,
+      timestamp: Date.now()
+    });
+  }, [noteId, editorState.ui.showToolbar, editorState.ui.previewMode, forceShowToolbar, toolbarContext]);
 
   // Refs
   const kebabBtnRef = React.useRef<HTMLButtonElement>(null) as React.RefObject<HTMLButtonElement>;
@@ -185,7 +212,6 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
     onStateChange: (state) => {
     }
   });
-
 
   // ✅ OPTIMISÉ: Utilisation du hook useShareManager
   const { handleShareSettingsChange } = useShareManager({
@@ -236,6 +262,25 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
     content: '', // ✅ Vide au départ, EditorSyncManager chargera le contenu
     onUpdate: handlers.handleEditorUpdate,
   }); // ✅ SANS dépendance - EditorSyncManager gère le rechargement si noteId change
+
+  // ✅ DEBUG: Log pour vérifier si editor est créé
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      logger.info(LogCategory.EDITOR, '[Editor] Editor instance status', {
+        noteId,
+        hasEditor: !!editor,
+        editorReady: editor ? 'ready' : 'not-ready',
+        timestamp: Date.now()
+      });
+    }
+  }, [editor, noteId]);
+
+  // 🌊 Stream listener pour écouter les écritures LLM externes
+  // Met à jour directement l'éditeur sans passer par le store (évite les saccades)
+  useEditorStreamListener(noteId, editor, {
+    enabled: !isReadonly && !!editor,
+    debug: false // Désactiver les logs en prod
+  });
 
   React.useEffect(() => {
     onEditorRef?.(editor as TiptapEditor | null);

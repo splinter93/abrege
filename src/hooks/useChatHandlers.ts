@@ -267,6 +267,95 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
 
     await addMessage(toolResultMessage, { persist: true });
     
+    // ✅ SOLUTION SIMPLE : Mettre à jour le store Zustand après applyContentOperations
+    if (toolName === 'scrivia__applyContentOperations' && success && result) {
+      try {
+        // Parser le résultat pour extraire le noteId
+        let parsedResult: any;
+        if (typeof result === 'string') {
+          parsedResult = JSON.parse(result);
+        } else {
+          parsedResult = result;
+        }
+        
+        // Extraire le noteId depuis les args du tool call ou le résultat
+        const noteId = parsedResult?.data?.note_id || parsedResult?.note_id;
+        if (noteId) {
+          // ✅ Récupérer directement la note mise à jour au lieu du polling
+          // Le polling récupère toutes les notes récentes et peut écraser avec des données incomplètes
+          try {
+            // Récupérer le token depuis localStorage (même méthode que useEditorStreamListener)
+            let token: string | null = null;
+            try {
+              const supabaseAuth = localStorage.getItem('sb-localhost-auth-token');
+              if (supabaseAuth) {
+                const parsed = JSON.parse(supabaseAuth);
+                if (parsed.access_token) {
+                  token = parsed.access_token;
+                }
+              }
+              if (!token) {
+                const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+                for (const key of keys) {
+                  const data = JSON.parse(localStorage.getItem(key) || '{}');
+                  if (data.access_token) {
+                    token = data.access_token;
+                    break;
+                  }
+                }
+              }
+            } catch (tokenError) {
+              logger.warn('[useChatHandlers] ⚠️ Erreur récupération token', { noteId, error: tokenError });
+            }
+            
+            if (!token) {
+              logger.warn('[useChatHandlers] ⚠️ Pas de token pour récupérer la note', { noteId });
+              return;
+            }
+            
+            // Attendre un peu pour que la DB soit mise à jour (100ms)
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Récupérer la note mise à jour directement
+            const response = await fetch(`/api/v2/note/${noteId}?fields=content`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.note) {
+                // Mettre à jour le store directement
+                const { useFileSystemStore } = await import('@/store/useFileSystemStore');
+                const store = useFileSystemStore.getState();
+                store.updateNote(noteId, {
+                  markdown_content: data.note.markdown_content || data.note.content || ''
+                });
+                
+                logger.info('[useChatHandlers] ✅ Store mis à jour directement après applyContentOperations', { 
+                  noteId,
+                  contentLength: data.note.markdown_content?.length || 0
+                });
+              }
+            } else {
+              logger.warn('[useChatHandlers] ⚠️ Erreur récupération note après applyContentOperations', {
+                noteId,
+                status: response.status
+              });
+            }
+          } catch (fetchError) {
+            logger.warn('[useChatHandlers] ⚠️ Erreur fetch note après applyContentOperations', {
+              noteId,
+              error: fetchError instanceof Error ? fetchError.message : 'Unknown error'
+            });
+          }
+        }
+      } catch (error) {
+        logger.warn('[useChatHandlers] ⚠️ Erreur mise à jour store après applyContentOperations', error);
+      }
+    }
+    
     options.onToolResult?.(toolName, result, success, toolCallId);
   }, [requireAuth, addMessage, options.onToolResult]);
 

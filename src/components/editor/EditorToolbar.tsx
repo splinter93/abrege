@@ -43,9 +43,60 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   currentFont = 'Figtree',
   onTranscriptionComplete
 }) => {
+  // ✅ DEBUG: Log synchrone pour vérifier si EditorToolbar est rendu
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[EditorToolbar] Component render (SYNC)', {
+      hasEditor: !!editor,
+      readonly,
+      currentFont,
+      willRender: !!(editor && !readonly),
+      timestamp: Date.now()
+    });
+  }
+  
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
+  
+  // ✅ DEBUG: Log asynchrone pour vérifier si EditorToolbar est rendu
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[EditorToolbar] Component rendered (ASYNC)', {
+        hasEditor: !!editor,
+        readonly,
+        currentFont,
+        willRender: !!(editor && !readonly)
+      });
+    }
+  }, [editor, readonly, currentFont]);
+  
+  // ✅ DEBUG: Vérifier le DOM après le render (AVANT le return conditionnel pour respecter Rules of Hooks)
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      // Ne vérifier le DOM que si on devrait rendre (pas de return null)
+      if (editor && !readonly) {
+        const toolbarElement = document.querySelector('.editor-toolbar[data-debug-toolbar-content="visible"]');
+        if (toolbarElement) {
+          const computedStyle = window.getComputedStyle(toolbarElement);
+          console.log('[EditorToolbar] ✅ DOM element found', {
+            display: computedStyle.display,
+            visibility: computedStyle.visibility,
+            opacity: computedStyle.opacity,
+            width: computedStyle.width,
+            height: computedStyle.height,
+            parentDisplay: window.getComputedStyle(toolbarElement.parentElement!).display,
+            parentVisibility: window.getComputedStyle(toolbarElement.parentElement!).visibility,
+            parentOpacity: window.getComputedStyle(toolbarElement.parentElement!).opacity,
+            timestamp: Date.now()
+          });
+        } else {
+          console.warn('[EditorToolbar] ❌ DOM element NOT found', {
+            timestamp: Date.now()
+          });
+        }
+      }
+    }
+  }, [editor, readonly]);
 
   // Actions
   const undo = () => editor?.chain().focus().undo().run();
@@ -101,11 +152,29 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   }, []);
 
   if (!editor || readonly) {
+    // ✅ DEBUG: Log si EditorToolbar retourne null
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[EditorToolbar] ❌ Returning null', {
+        hasEditor: !!editor,
+        readonly,
+        reason: !editor ? 'no editor' : 'readonly',
+        timestamp: Date.now()
+      });
+    }
     return null;
   }
 
+  // ✅ DEBUG: Log avant le return pour confirmer qu'on retourne le JSX
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[EditorToolbar] ✅ Returning JSX', {
+      hasEditor: !!editor,
+      readonly,
+      timestamp: Date.now()
+    });
+  }
+
   return (
-    <div className="editor-toolbar">
+    <div className="editor-toolbar" data-debug-toolbar-content="visible">
       {/* Undo/Redo */}
       <button
         className="tb-btn desktop-only"

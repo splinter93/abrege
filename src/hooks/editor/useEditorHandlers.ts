@@ -202,10 +202,21 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     const normalize = (value: string) =>
       value.replace(/\r\n/g, '\n').replace(/\s+$/g, '').replace(/^\s+/g, '');
 
+    // ✅ FIX: Déclarer les variables avant le try pour qu'elles soient accessibles dans le catch
+    let nextMarkdown: string | null = null;
+    let sanitizedNext: string = '';
+    let sanitizedRaw: string = '';
+
     try {
-      const nextMarkdown = getEditorMarkdown(e);
-      const sanitizedNext = normalize(nextMarkdown || '');
-      const sanitizedRaw = normalize(rawContent || '');
+      // ✅ FIX: Vérifier que l'éditeur est dans un état valide avant d'extraire le markdown
+      if (!e || e.isDestroyed) {
+        logger.warn(LogCategory.EDITOR, 'Éditeur invalide ou détruit, skip update');
+        return;
+      }
+
+      nextMarkdown = getEditorMarkdown(e);
+      sanitizedNext = normalize(nextMarkdown || '');
+      sanitizedRaw = normalize(rawContent || '');
 
       if (!sanitizedNext && !sanitizedRaw) {
         return;
@@ -221,7 +232,16 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
 
       updateNote(noteId, { markdown_content: sanitizedNext || '' });
     } catch (error) {
-      logger.error(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', error);
+      // ✅ FIX: Logger l'erreur avec plus de détails pour diagnostiquer
+      logger.error(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        noteId,
+        hasNextMarkdown: !!nextMarkdown,
+        nextMarkdownLength: nextMarkdown?.length || 0,
+        sanitizedNextLength: sanitizedNext?.length || 0,
+        sanitizedRawLength: sanitizedRaw?.length || 0
+      });
     }
   }, [rawContent, noteId, updateNote, editorState.internal.isUpdatingFromStore]);
 

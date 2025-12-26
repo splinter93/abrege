@@ -51,6 +51,19 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
   const [isEditorReady, setIsEditorReady] = useState(false);
   const handleEditorReady = useCallback(() => {
     setIsEditorReady(true);
+    
+    // ✅ FIX: Scroll automatique vers le top pour s'assurer que le header est visible
+    // Le header sticky nécessite que le conteneur scrollable soit au top
+    setTimeout(() => {
+      const editorLayout = document.querySelector('.chat-canva-pane .editor-layout') as HTMLElement | null;
+      if (editorLayout) {
+        editorLayout.scrollTop = 0;
+        logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] ✅ Scroll vers top après chargement', {
+          scrollTop: editorLayout.scrollTop,
+          timestamp: Date.now()
+        });
+      }
+    }, 100); // Petit délai pour laisser le DOM se stabiliser
   }, []);
 
   // 🎯 Realtime édition note via RealtimeService (articles)
@@ -361,6 +374,10 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
 /**
  * ✅ Editor mémoïsé pour éviter re-renders multiples
  * Key change = re-mount, mais props stables = pas de re-render
+ * 
+ * ⚠️ ATTENTION: React.memo peut cacher les props si elles ne changent pas
+ * On utilise une fonction de comparaison personnalisée pour forcer le re-render
+ * si forceShowToolbar ou toolbarContext changent
  */
 const EditorMemo = React.memo(({ sessionId, noteId, onClose, onEditorRef, onReady }: {
   sessionId: string;
@@ -369,6 +386,17 @@ const EditorMemo = React.memo(({ sessionId, noteId, onClose, onEditorRef, onRead
   onEditorRef: (editor: TiptapEditor | null) => void;
   onReady?: () => void;
 }) => {
+  // ✅ DEBUG: Log pour diagnostiquer
+  React.useEffect(() => {
+    logger.info(LogCategory.EDITOR, '[EditorMemo] Canvas Editor monté', {
+      sessionId,
+      noteId,
+      forceShowToolbar: true,
+      toolbarContext: 'canvas',
+      timestamp: Date.now()
+    });
+  }, [sessionId, noteId]);
+
   return (
     <Editor
       key={`canva-${sessionId}-${noteId}`}
@@ -376,8 +404,15 @@ const EditorMemo = React.memo(({ sessionId, noteId, onClose, onEditorRef, onRead
       onClose={onClose}
       onEditorRef={onEditorRef}
       onReady={onReady}
+      forceShowToolbar={true} // ✅ Force la toolbar toujours visible dans le canvas
+      toolbarContext="canvas" // ✅ Contexte séparé pour localStorage
     />
   );
+}, (prevProps, nextProps) => {
+  // ✅ Comparaison personnalisée : toujours re-render si sessionId ou noteId change
+  // Cela garantit que forceShowToolbar est toujours appliqué
+  return prevProps.sessionId === nextProps.sessionId && 
+         prevProps.noteId === nextProps.noteId;
 });
 
 export default ChatCanvaPane;

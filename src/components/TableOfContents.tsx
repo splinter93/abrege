@@ -116,20 +116,24 @@ export default function TableOfContents({ headings = [], currentId, containerRef
           </div>
         ) : isCollapsed ? (
           headings.map((h, idx) => {
+            // ✅ FIX: Clé unique en combinant ID et index pour éviter les doublons
+            const uniqueKey = h.id ? `toc-bar-${h.id}-${idx}` : `toc-bar-${idx}`;
             if (h.level === 2) {
-              return <div key={h.id || `toc-bar-${idx}`} className="toc-bar toc-bar-h2" />;
+              return <div key={uniqueKey} className="toc-bar toc-bar-h2" />;
             }
             if (h.level === 3) {
-              return <div key={h.id || `toc-bar-${idx}`} className="toc-bar toc-bar-h3" />;
+              return <div key={uniqueKey} className="toc-bar toc-bar-h3" />;
             }
-            return <div key={h.id || `toc-bar-${idx}`} className="toc-bar-spacer" />;
+            return <div key={uniqueKey} className="toc-bar-spacer" />;
           })
         ) : (
           headings.map((h, idx) => {
             const isH2 = h.level === 2;
             const prevWasH2 = idx > 0 && headings[idx - 1].level === 2;
+            // ✅ FIX: Clé unique en combinant ID et index pour éviter les doublons
+            const uniqueKey = h.id ? `toc-item-${h.id}-${idx}` : `toc-item-${idx}`;
             return (
-              <React.Fragment key={h.id || `toc-item-${idx}`}>
+              <React.Fragment key={uniqueKey}>
                 {/* Séparateur avant chaque h2 (sauf le premier) */}
                 {isH2 && idx > 0 && (
                   <hr className="toc-separator" />

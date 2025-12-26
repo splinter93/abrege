@@ -114,7 +114,7 @@ export function useNoteUpdate<T>({
         // 3. Si note temporaire (Canva), ne pas appeler l'API
         if (isTemporary) {
           if (process.env.NODE_ENV === 'development') {
-            logger.debug(
+            logger.dev(
               LogCategory.EDITOR,
               `📝 [Canva] ${field} mis à jour localement`,
               { newValue }
@@ -127,7 +127,7 @@ export function useNoteUpdate<T>({
         await v2UnifiedApi.updateNote(noteId, payload);
         
         if (process.env.NODE_ENV === 'development') {
-          logger.debug(
+          logger.dev(
             LogCategory.EDITOR,
             `✅ ${field} mis à jour:`,
             { oldValue, newValue }
@@ -196,7 +196,7 @@ export function useHeaderImageUpdate({
           updateNote(noteId, payload);
           onSuccess?.(newValue);
           if (process.env.NODE_ENV === 'development') {
-            logger.debug(
+            logger.dev(
               LogCategory.EDITOR,
               `📝 [Canva] ${field} mis à jour localement`,
               { newValue }

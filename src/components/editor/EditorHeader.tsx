@@ -46,6 +46,33 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   kebabMenu,
   onTranscriptionComplete
 }) => {
+  // ✅ DEBUG: Log synchrone pour capturer le problème (pas dans useEffect)
+  const shouldRenderToolbar = !previewMode && showToolbar;
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[EditorHeader] Render state (SYNC)', {
+      showToolbar,
+      previewMode,
+      readonly,
+      shouldRenderToolbar,
+      noteId,
+      timestamp: Date.now(),
+      willRender: shouldRenderToolbar
+    });
+  }
+
+  // ✅ DEBUG: Log pour diagnostiquer (asynchrone)
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[EditorHeader] Render state (ASYNC)', {
+        showToolbar,
+        previewMode,
+        readonly,
+        shouldRenderToolbar: !previewMode && showToolbar,
+        noteId
+      });
+    }
+  }, [showToolbar, previewMode, readonly, noteId]);
+
   return (
     <div className={`editor-header ${!showToolbar ? 'editor-header--transparent' : ''}`}>
       {/* Logo à gauche */}
@@ -54,8 +81,188 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
       </div>
 
       {/* Toolbar au centre - cachée en mode preview ET si showToolbar = false */}
-      {!previewMode && showToolbar && (
-        <div className="editor-header__center">
+      {/* ✅ FIX: Ne rendre EditorToolbar que si editor existe (évite race condition) */}
+      {shouldRenderToolbar && editor ? (
+        <div className="editor-header__center" data-debug-toolbar="visible" ref={(el) => {
+          // ✅ DEBUG: Vérifier le DOM après le render avec détails complets
+          if (process.env.NODE_ENV === 'development' && el) {
+            setTimeout(() => {
+              const computedStyle = window.getComputedStyle(el);
+              const toolbarElement = el.querySelector('.editor-toolbar') as HTMLElement | null;
+              const parentHeader = el.closest('.editor-header') as HTMLElement | null;
+              
+              const debugInfo: any = {
+                // Container center
+                containerDisplay: computedStyle.display,
+                containerVisibility: computedStyle.visibility,
+                containerOpacity: computedStyle.opacity,
+                containerWidth: computedStyle.width,
+                containerHeight: computedStyle.height,
+                containerZIndex: computedStyle.zIndex,
+                containerPosition: computedStyle.position,
+                containerTop: computedStyle.top,
+                
+                // Toolbar element
+                hasToolbar: !!toolbarElement,
+                toolbarDisplay: toolbarElement ? window.getComputedStyle(toolbarElement).display : 'N/A',
+                toolbarVisibility: toolbarElement ? window.getComputedStyle(toolbarElement).visibility : 'N/A',
+                toolbarOpacity: toolbarElement ? window.getComputedStyle(toolbarElement).opacity : 'N/A',
+                toolbarWidth: toolbarElement ? window.getComputedStyle(toolbarElement).width : 'N/A',
+                toolbarHeight: toolbarElement ? window.getComputedStyle(toolbarElement).height : 'N/A',
+                toolbarZIndex: toolbarElement ? window.getComputedStyle(toolbarElement).zIndex : 'N/A',
+                
+                // Parent header
+                hasParentHeader: !!parentHeader,
+                parentHeaderDisplay: parentHeader ? window.getComputedStyle(parentHeader).display : 'N/A',
+                parentHeaderVisibility: parentHeader ? window.getComputedStyle(parentHeader).visibility : 'N/A',
+                parentHeaderOpacity: parentHeader ? window.getComputedStyle(parentHeader).opacity : 'N/A',
+                parentHeaderZIndex: parentHeader ? window.getComputedStyle(parentHeader).zIndex : 'N/A',
+                parentHeaderPosition: parentHeader ? window.getComputedStyle(parentHeader).position : 'N/A',
+                parentHeaderTop: parentHeader ? window.getComputedStyle(parentHeader).top : 'N/A',
+                
+                // Canvas context
+                isInCanvas: el.closest('.chat-canva-pane') !== null,
+                canvasPaneDisplay: el.closest('.chat-canva-pane') ? window.getComputedStyle(el.closest('.chat-canva-pane') as HTMLElement).display : 'N/A',
+                
+                // Editor state
+                hasEditor: !!editor,
+                shouldRenderToolbar,
+                timestamp: Date.now()
+              };
+              
+              // ✅ Afficher les valeurs critiques directement dans le message
+              const toolbarComputed = toolbarElement ? window.getComputedStyle(toolbarElement) : null;
+              
+              // ✅ Vérifier si la toolbar est réellement visible à l'écran (viewport)
+              let isToolbarInViewport = false;
+              let toolbarRect = null;
+              if (toolbarElement) {
+                toolbarRect = toolbarElement.getBoundingClientRect();
+                isToolbarInViewport = (
+                  toolbarRect.top >= 0 &&
+                  toolbarRect.left >= 0 &&
+                  toolbarRect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                  toolbarRect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                );
+              }
+              
+              // ✅ Vérifier si la toolbar est masquée par un parent (overflow hidden, etc.)
+              let isToolbarClipped = false;
+              if (toolbarElement && parentHeader) {
+                const headerRect = parentHeader.getBoundingClientRect();
+                const toolbarRect2 = toolbarElement.getBoundingClientRect();
+                isToolbarClipped = (
+                  toolbarRect2.top < headerRect.top ||
+                  toolbarRect2.bottom > headerRect.bottom ||
+                  toolbarRect2.left < headerRect.left ||
+                  toolbarRect2.right > headerRect.right
+                );
+              }
+              
+              const criticalValues = {
+                hasToolbar: !!toolbarElement,
+                toolbarDisplay: toolbarComputed?.display || 'N/A',
+                toolbarVisibility: toolbarComputed?.visibility || 'N/A',
+                toolbarOpacity: toolbarComputed?.opacity || 'N/A',
+                toolbarWidth: toolbarComputed?.width || 'N/A',
+                toolbarHeight: toolbarComputed?.height || 'N/A',
+                toolbarZIndex: toolbarComputed?.zIndex || 'N/A',
+                toolbarPosition: toolbarComputed?.position || 'N/A',
+                toolbarTop: toolbarComputed?.top || 'N/A',
+                containerDisplay: computedStyle.display,
+                containerVisibility: computedStyle.visibility,
+                containerOpacity: computedStyle.opacity,
+                containerWidth: computedStyle.width,
+                containerHeight: computedStyle.height,
+                parentHeaderZIndex: parentHeader ? window.getComputedStyle(parentHeader).zIndex : 'N/A',
+                parentHeaderPosition: parentHeader ? window.getComputedStyle(parentHeader).position : 'N/A',
+                parentHeaderTop: parentHeader ? window.getComputedStyle(parentHeader).top : 'N/A',
+                isInCanvas: debugInfo.isInCanvas,
+                hasEditor: !!editor,
+                shouldRenderToolbar,
+                // ✅ Nouvelles vérifications critiques
+                isToolbarInViewport,
+                isToolbarClipped,
+                toolbarRect: toolbarRect ? {
+                  top: toolbarRect.top,
+                  left: toolbarRect.left,
+                  bottom: toolbarRect.bottom,
+                  right: toolbarRect.right,
+                  width: toolbarRect.width,
+                  height: toolbarRect.height
+                } : null,
+                viewportHeight: window.innerHeight,
+                viewportWidth: window.innerWidth
+              };
+              
+              console.log('[EditorHeader] ✅ Center container DOM (DETAILED)', {
+                ...debugInfo,
+                // ✅ Valeurs critiques en premier pour faciliter la lecture
+                CRITICAL: criticalValues
+              });
+              
+              // ✅ Alerte si toolbar est dans le DOM mais invisible
+              if (toolbarElement && toolbarComputed) {
+                if (toolbarComputed.display === 'none' || toolbarComputed.visibility === 'hidden' || toolbarComputed.opacity === '0') {
+                  console.error('[EditorHeader] ❌ Toolbar INVISIBLE dans le DOM (CSS)', {
+                    display: toolbarComputed.display,
+                    visibility: toolbarComputed.visibility,
+                    opacity: toolbarComputed.opacity,
+                    width: toolbarComputed.width,
+                    height: toolbarComputed.height,
+                    containerDisplay: computedStyle.display,
+                    containerVisibility: computedStyle.visibility,
+                    containerOpacity: computedStyle.opacity,
+                    timestamp: Date.now()
+                  });
+                } else if (isToolbarClipped) {
+                  console.error('[EditorHeader] ❌ Toolbar CLIPPED par parent (overflow/position)', {
+                    display: toolbarComputed.display,
+                    visibility: toolbarComputed.visibility,
+                    opacity: toolbarComputed.opacity,
+                    toolbarRect,
+                    parentHeaderRect: parentHeader ? parentHeader.getBoundingClientRect() : null,
+                    timestamp: Date.now()
+                  });
+                } else if (!isToolbarInViewport && toolbarRect) {
+                  console.warn('[EditorHeader] ⚠️ Toolbar HORS VIEWPORT (scroll?)', {
+                    display: toolbarComputed.display,
+                    visibility: toolbarComputed.visibility,
+                    opacity: toolbarComputed.opacity,
+                    toolbarRect,
+                    viewportHeight: window.innerHeight,
+                    viewportWidth: window.innerWidth,
+                    timestamp: Date.now()
+                  });
+                } else {
+                  // ✅ Log de succès si toolbar est visible ET dans le viewport
+                  console.log('[EditorHeader] ✅ Toolbar VISIBLE et dans le viewport', {
+                    display: toolbarComputed.display,
+                    visibility: toolbarComputed.visibility,
+                    opacity: toolbarComputed.opacity,
+                    width: toolbarComputed.width,
+                    height: toolbarComputed.height,
+                    toolbarRect,
+                    isInViewport: isToolbarInViewport,
+                    isClipped: isToolbarClipped,
+                    timestamp: Date.now()
+                  });
+                }
+              } else if (shouldRenderToolbar && editor) {
+                console.error('[EditorHeader] ❌ Toolbar NOT FOUND dans le DOM alors que devrait être rendue', {
+                  shouldRenderToolbar,
+                  hasEditor: !!editor,
+                  containerDisplay: computedStyle.display,
+                  containerVisibility: computedStyle.visibility,
+                  containerOpacity: computedStyle.opacity,
+                  timestamp: Date.now()
+                });
+              }
+            }, 0);
+          }
+        }}>
+          {/* ✅ DEBUG: Log synchrone pour vérifier le rendu */}
+          {process.env.NODE_ENV === 'development' && console.log('[EditorHeader] ✅ Rendering EditorToolbar', { hasEditor: !!editor, readonly, noteId, timestamp: Date.now() })}
           <EditorToolbar 
             editor={editor} 
             readonly={readonly} 
@@ -64,6 +271,16 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             currentFont={currentFont}
             onTranscriptionComplete={onTranscriptionComplete}
           />
+        </div>
+      ) : shouldRenderToolbar && !editor ? (
+        // ✅ DEBUG: Log si editor n'existe pas encore
+        <div className="editor-header__center" data-debug-toolbar="waiting-editor">
+          {process.env.NODE_ENV === 'development' && console.warn('[EditorHeader] ⏳ Waiting for editor', { noteId, timestamp: Date.now() })}
+        </div>
+      ) : (
+        <div className="editor-header__center" data-debug-toolbar="hidden" style={{ display: 'none' }}>
+          {/* ✅ DEBUG: Toolbar cachée */}
+          {process.env.NODE_ENV === 'development' && console.warn('[EditorHeader] ❌ Toolbar NOT rendered', { showToolbar, previewMode, shouldRenderToolbar, noteId, timestamp: Date.now() })}
         </div>
       )}
 

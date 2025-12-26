@@ -64,6 +64,31 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
     [editor]
   );
 
+  // ✅ DEBUG: Log synchrone pour capturer le problème (pas dans useEffect)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[EditorHeaderSection] Toolbar state (SYNC)', {
+      showToolbar: editorState.ui.showToolbar,
+      previewMode: editorState.ui.previewMode,
+      isReadonly,
+      shouldRender: !editorState.ui.previewMode && editorState.ui.showToolbar && !isReadonly,
+      noteId,
+      timestamp: Date.now()
+    });
+  }
+
+  // ✅ DEBUG: Log pour diagnostiquer (asynchrone)
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[EditorHeaderSection] Toolbar state (ASYNC)', {
+        showToolbar: editorState.ui.showToolbar,
+        previewMode: editorState.ui.previewMode,
+        isReadonly,
+        shouldRender: !editorState.ui.previewMode && editorState.ui.showToolbar && !isReadonly,
+        noteId
+      });
+    }
+  }, [editorState.ui.showToolbar, editorState.ui.previewMode, isReadonly, noteId]);
+
   return (
     <>
       <EditorHeader

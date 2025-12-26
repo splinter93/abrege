@@ -101,13 +101,30 @@ export class ChatSessionService {
         throw new Error(`Erreur réseau: ${errorMessage}`);
       }
 
+      // ✅ FIX: Lire le body une seule fois (cloner la réponse si nécessaire)
       let data;
-      try {
-        data = await response.json();
-      } catch {
-        // Si la réponse n'est pas du JSON, c'est probablement une erreur HTML
+      const contentType = response.headers.get('content-type') || '';
+      const isJson = contentType.includes('application/json');
+      
+      if (isJson) {
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          logger.error(LogCategory.API, '[ChatSessionService] ❌ Erreur parsing JSON', { 
+            status: response.status,
+            contentType,
+            error: parseError instanceof Error ? parseError.message : String(parseError)
+          });
+          throw new Error(`Erreur parsing JSON (${response.status})`);
+        }
+      } else {
+        // Réponse non-JSON (HTML, texte, etc.)
         const textResponse = await response.text();
-        logger.error(LogCategory.API, '[ChatSessionService] ❌ Réponse non-JSON reçue', { preview: textResponse.substring(0, 200) });
+        logger.error(LogCategory.API, '[ChatSessionService] ❌ Réponse non-JSON reçue', { 
+          status: response.status,
+          contentType,
+          preview: textResponse.substring(0, 200) 
+        });
         throw new Error(`Erreur serveur (${response.status}): Réponse non-JSON reçue`);
       }
 

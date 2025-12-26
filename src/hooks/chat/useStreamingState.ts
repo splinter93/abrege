@@ -77,6 +77,7 @@ export function useStreamingState(): UseStreamingStateReturn {
   const [currentToolName, setCurrentToolName] = useState('');
   const [streamingTimeline, setStreamingTimeline] = useState<StreamTimelineItem[]>([]);
   const [streamStartTime, setStreamStartTime] = useState(0);
+  const streamStartTimeRef = useRef(0); // ✅ FIX: Ref pour éviter dépendances dans updateContent
   const [currentToolCalls, setCurrentToolCalls] = useState<ToolCall[]>([]);
   
   // ✅ FIX: useRef pour currentRound (éviter stale closure)
@@ -88,6 +89,7 @@ export function useStreamingState(): UseStreamingStateReturn {
    * Réinitialise tous les états
    */
   const startStreaming = useCallback(() => {
+    const startTime = Date.now();
     setIsStreaming(true);
     setIsFading(false); // ✅ Reset fading
     setStreamingContent('');
@@ -95,7 +97,8 @@ export function useStreamingState(): UseStreamingStateReturn {
     currentRoundRef.current = 0; // ✅ Réinitialiser le ref aussi
     setStreamingStateInternal('thinking');
     setStreamingTimeline([]);
-    setStreamStartTime(Date.now());
+    setStreamStartTime(startTime);
+    streamStartTimeRef.current = startTime; // ✅ Mettre à jour le ref aussi
     setCurrentToolCalls([]);
     setExecutingToolCount(0);
     setCurrentToolName('');
@@ -115,6 +118,7 @@ export function useStreamingState(): UseStreamingStateReturn {
     setStreamingTimeline(prev => {
       const lastItem = prev[prev.length - 1];
       const currentRoundValue = currentRoundRef.current; // ✅ Utiliser ref (valeur à jour)
+      const startTime = streamStartTimeRef.current; // ✅ Utiliser ref au lieu de state
       
       // Si le dernier élément est un texte du même round, fusionner
       if (lastItem && lastItem.type === 'text' && lastItem.roundNumber === currentRoundValue) {
@@ -134,11 +138,11 @@ export function useStreamingState(): UseStreamingStateReturn {
           type: 'text' as const,
           content: chunk,
           roundNumber: currentRoundValue,
-          timestamp: Date.now() - streamStartTime
+          timestamp: Date.now() - startTime
         }
       ];
     });
-  }, [streamStartTime]);
+  }, []); // ✅ FIX: Plus de dépendances - utilise uniquement des refs
 
   /**
    * Change l'état du streaming

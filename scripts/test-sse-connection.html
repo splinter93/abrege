@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test SSE Connection</title>
+</head>
+<body>
+  <h1>Test SSE Connection</h1>
+  <div>
+    <label>Note ID: <input type="text" id="noteId" value="d1f3f3d5-c308-49ed-838d-7e00939dfb85" /></label>
+    <button onclick="connect()">Connecter</button>
+    <button onclick="disconnect()">Déconnecter</button>
+  </div>
+  <div>
+    <h2>Logs:</h2>
+    <pre id="logs" style="background: #f0f0f0; padding: 10px; max-height: 400px; overflow-y: auto;"></pre>
+  </div>
+
+  <script>
+    let eventSource = null;
+    const logsEl = document.getElementById('logs');
+
+    function log(msg) {
+      const time = new Date().toLocaleTimeString();
+      logsEl.textContent += `[${time}] ${msg}\n`;
+      logsEl.scrollTop = logsEl.scrollHeight;
+    }
+
+    function connect() {
+      const noteId = document.getElementById('noteId').value;
+      if (!noteId) {
+        alert('Note ID requis');
+        return;
+      }
+
+      // Récupérer le token depuis localStorage
+      let token = null;
+      try {
+        const auth = localStorage.getItem('sb-localhost-auth-token');
+        if (auth) {
+          token = JSON.parse(auth).access_token;
+        }
+      } catch (e) {
+        log('❌ Erreur récupération token: ' + e.message);
+      }
+
+      if (!token) {
+        alert('Token non trouvé. Connecte-toi d\'abord dans l\'app.');
+        return;
+      }
+
+      log('🔌 Connexion à /api/v2/note/' + noteId + '/stream:listen');
+      const url = `/api/v2/note/${noteId}/stream:listen?token=${encodeURIComponent(token)}`;
+      eventSource = new EventSource(url);
+
+      eventSource.onopen = () => {
+        log('✅ Connexion SSE ouverte');
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          log('📨 Message reçu: ' + JSON.stringify(data, null, 2));
+        } catch (e) {
+          log('📨 Message brut: ' + event.data);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        log('❌ Erreur SSE: ' + JSON.stringify(error));
+        log('État: ' + eventSource.readyState + ' (0=CONNECTING, 1=OPEN, 2=CLOSED)');
+      };
+    }
+
+    function disconnect() {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+        log('🔌 Déconnecté');
+      }
+    }
+  </script>
+</body>
+</html>
+

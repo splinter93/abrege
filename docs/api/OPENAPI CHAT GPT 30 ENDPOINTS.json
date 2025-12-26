@@ -415,6 +415,333 @@
           }
         }
       },
+      "/canvas/{ref}/ops:stream": {
+        "post": {
+          "operationId": "canvasStreamOps",
+          "summary": "Envoi d'opérations streaming canvas",
+          "description": "Envoie 1-3 opérations atomiques pour l'édition collaborative du canvas en temps réel. Le serveur valide, applique en mémoire et retourne un accusé technique (202 Accepted). Les résultats métier (ACK/CONFLICT) sont émis via SSE pour tous les clients.\n\n⚠️ IMPORTANT : Le POST retourne uniquement un accusé technique. Les résultats métier arrivent via SSE (endpoint `/canvas/{ref}/ops:listen`).\n\nUtilisé par :\n- Humains (éditeur canvas UI)\n- LLM (agents d'écriture, aucun privilège spécial)",
+          "tags": ["Canva"],
+          "security": [{"ApiKeyAuth": []}],
+          "parameters": [
+            {
+              "name": "ref",
+              "in": "path",
+              "required": true,
+              "schema": {"type": "string"},
+              "description": "Référence de la note (UUID ou slug)"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ops": {
+                      "type": "array",
+                      "minItems": 1,
+                      "maxItems": 3,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "op_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "ID unique de l'opération (pour idempotence)"
+                          },
+                          "client_version": {
+                            "type": "string",
+                            "description": "ETag connu du client (ex: W/\"etag123\")"
+                          },
+                          "timestamp": {
+                            "type": "integer",
+                            "description": "Timestamp de création de l'opération (millisecondes)"
+                          },
+                          "id": {
+                            "type": "string",
+                            "description": "ID de l'opération (référence interne)"
+                          },
+                          "action": {
+                            "type": "string",
+                            "enum": ["insert", "replace", "delete", "upsert_section"],
+                            "description": "Type d'opération à effectuer"
+                          },
+                          "target": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": ["heading", "regex", "position", "anchor"],
+                                "description": "Type de cible"
+                              },
+                              "heading": {
+                                "type": "object",
+                                "properties": {
+                                  "path": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                    "description": "Chemin du heading (ex: [\"API\", \"Endpoints\"])"
+                                  },
+                                  "level": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 6,
+                                    "description": "Niveau du heading (1-6)"
+                                  },
+                                  "heading_id": {
+                                    "type": "string",
+                                    "description": "ID du heading (slug)"
+                                  }
+                                }
+                              },
+                              "regex": {
+                                "type": "object",
+                                "properties": {
+                                  "pattern": {
+                                    "type": "string",
+                                    "maxLength": 1000,
+                                    "description": "Pattern regex"
+                                  },
+                                  "flags": {
+                                    "type": "string",
+                                    "maxLength": 10,
+                                    "description": "Flags regex (g, i, m, etc.)"
+                                  },
+                                  "nth": {
+                                    "type": "integer",
+                                    "description": "Nième correspondance à cibler"
+                                  }
+                                },
+                                "required": ["pattern"]
+                              },
+                              "position": {
+                                "type": "object",
+                                "properties": {
+                                  "mode": {
+                                    "type": "string",
+                                    "enum": ["offset", "start", "end"],
+                                    "description": "Mode de position"
+                                  },
+                                  "offset": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "description": "Offset en caractères"
+                                  }
+                                },
+                                "required": ["mode"]
+                              },
+                              "anchor": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "enum": ["doc_start", "doc_end", "after_toc", "before_first_heading"],
+                                    "description": "Nom de l'ancre sémantique"
+                                  }
+                                },
+                                "required": ["name"]
+                              }
+                            },
+                            "required": ["type"]
+                          },
+                          "where": {
+                            "type": "string",
+                            "enum": ["before", "after", "inside_start", "inside_end", "at", "replace_match"],
+                            "description": "Position relative à la cible"
+                          },
+                          "content": {
+                            "type": "string",
+                            "maxLength": 100000,
+                            "description": "Contenu à insérer/remplacer (requis pour insert/replace/upsert_section)"
+                          },
+                          "options": {
+                            "type": "object",
+                            "properties": {
+                              "ensure_heading": {"type": "boolean"},
+                              "surround_with_blank_lines": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 3
+                              },
+                              "dedent": {"type": "boolean"}
+                            }
+                          }
+                        },
+                        "required": ["op_id", "client_version", "timestamp", "id", "action", "target", "where"]
+                      },
+                      "description": "Liste de 1 à 3 opérations à appliquer"
+                    },
+                    "canvas_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "ID de la session canvas (optionnel, si fourni utilise ce canvas au lieu de ref)"
+                    }
+                  },
+                  "required": ["ops"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "202": {
+              "description": "Opérations acceptées (accusé technique). Les résultats métier (ACK/CONFLICT) arrivent via SSE.",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "accepted": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "ops_count": {
+                        "type": "integer",
+                        "description": "Nombre d'opérations acceptées"
+                      },
+                      "duration": {
+                        "type": "integer",
+                        "description": "Durée de traitement en millisecondes"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation échouée",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Error"},
+                      {
+                        "type": "object",
+                        "properties": {
+                          "details": {
+                            "type": "array",
+                            "items": {"type": "object"}
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Non authentifié",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            },
+            "404": {
+              "description": "Note ou canvas non trouvé",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            },
+            "500": {
+              "description": "Erreur serveur",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            }
+          }
+        }
+      },
+      "/canvas/{ref}/ops:listen": {
+        "get": {
+          "operationId": "canvasListenOps",
+          "summary": "Écouter les événements streaming canvas (SSE)",
+          "description": "Endpoint Server-Sent Events (SSE) pour écouter les événements de streaming canvas en temps réel.\n\n⚠️ IMPORTANT : Ce canal SSE est la source de vérité fonctionnelle unique. Tous les résultats métier (ACK/CONFLICT) sont émis via ce canal.\n\nÉvénements émis :\n- `start` : Connexion établie\n- `ack` : Opération acceptée (appliquée)\n- `conflict` : Conflit de version détecté (ETag mismatch)\n- `error` : Erreur serveur\n\nUtilisé par le frontend pour synchroniser l'état local avec le serveur.",
+          "tags": ["Canva"],
+          "security": [{"ApiKeyAuth": []}],
+          "parameters": [
+            {
+              "name": "ref",
+              "in": "path",
+              "required": true,
+              "schema": {"type": "string"},
+              "description": "Référence de la note (UUID ou slug)"
+            },
+            {
+              "name": "token",
+              "in": "query",
+              "required": false,
+              "schema": {"type": "string"},
+              "description": "JWT token (requis pour EventSource qui ne supporte pas les headers)"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Stream SSE actif",
+              "content": {
+                "text/event-stream": {
+                  "schema": {
+                    "type": "string",
+                    "description": "Stream Server-Sent Events",
+                    "example": "event: ack\ndata: {\"event\":\"ack\",\"op_id\":\"uuid\",\"status\":\"applied\",\"server_version\":\"W/\\\"etag\\\"\"}\n\n"
+                  }
+                }
+              },
+              "headers": {
+                "Content-Type": {
+                  "schema": {
+                    "type": "string",
+                    "example": "text/event-stream"
+                  },
+                  "description": "Type de contenu SSE"
+                },
+                "Cache-Control": {
+                  "schema": {
+                    "type": "string",
+                    "example": "no-cache, no-transform"
+                  },
+                  "description": "Pas de cache pour le stream"
+                },
+                "Connection": {
+                  "schema": {
+                    "type": "string",
+                    "example": "keep-alive"
+                  },
+                  "description": "Connexion persistante"
+                }
+              }
+            },
+            "401": {
+              "description": "Non authentifié",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            },
+            "404": {
+              "description": "Note non trouvée",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            },
+            "500": {
+              "description": "Erreur serveur",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            }
+          }
+        }
+      },
       "/note/{ref}/update": {
         "put": {
           "operationId": "updateNote",
