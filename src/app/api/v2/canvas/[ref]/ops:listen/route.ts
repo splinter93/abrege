@@ -129,7 +129,7 @@ export async function GET(
 
             controller.enqueue(encoder.encode(eventData));
           } catch (error) {
-            logApi.error(LogCategory.API, `[ops:listen] Failed to send SSE`, {
+            logApi.error(`[ops:listen] Failed to send SSE`, {
               noteId,
               error: error instanceof Error ? error.message : 'Unknown error'
             });
