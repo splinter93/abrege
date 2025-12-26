@@ -200,7 +200,7 @@ export async function GET(
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logApi.error(LogCategory.API, `❌ Canvas ops:listen error: ${errorMessage}`, {
+    logApi.error(`❌ Canvas ops:listen error: ${errorMessage}`, {
       ...context,
       error: error instanceof Error ? error.stack : undefined
     });
