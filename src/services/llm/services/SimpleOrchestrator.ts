@@ -71,7 +71,7 @@ const DEFAULT_CONFIG = {
  * Orchestrateur simple pour gérer les conversations avec tool calls MCP
  */
 export class SimpleOrchestrator {
-  private llmProvider: GroqProvider | XAIProvider | LiminalityProvider;
+  private llmProvider: GroqProvider | XAIProvider | XAINativeProvider | LiminalityProvider;
   private toolExecutor: SimpleToolExecutor;
   private openApiToolExecutor: OpenApiToolExecutor;
   private historyBuilder: GroqHistoryBuilder;
@@ -217,7 +217,7 @@ export class SimpleOrchestrator {
    * ✅ Sélectionner le provider en fonction de l'agent config
    * ✅ PRODUCTION READY : Validation stricte des paramètres LLM
    */
-  private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider | LiminalityProvider {
+  private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider | XAINativeProvider | LiminalityProvider {
     const provider = agentConfig?.provider || 'groq';
     const model = agentConfig?.model;
 
@@ -316,9 +316,9 @@ export class SimpleOrchestrator {
             agentConfig?.id || 'default',
             context.userToken,
             openApiTools
-          ) as Array<Tool | McpServerConfig>;
+          ) as Tool[];
           
-          tools = mcpTools;
+          tools = mcpTools as Tool[];
           
           const mcpCount = tools.filter((t) => isMcpTool(t)).length;
           const openApiCount = tools.filter((t) => !isMcpTool(t)).length;
@@ -333,7 +333,7 @@ export class SimpleOrchestrator {
             openapi: openApiCount,
             index: toolsIndex,
             sample: filteredOpenApiTools.map(t => (t as any).function?.name).slice(0, 10),
-            mcpServers: tools.filter(isMcpTool).map(t => (t as McpServerConfig).server_label)
+            mcpServers: tools.filter(isMcpTool).map(t => (t as any).server_label || (t as any).name || 'unknown')
           });
         } else {
           // Groq/OpenAI : Combiner les tools OpenAPI avec les MCP tools
@@ -372,7 +372,7 @@ export class SimpleOrchestrator {
             agentConfig?.id || 'default',
             context.userToken,
             []
-          ) as Array<Tool | McpServerConfig>;
+          ) as Tool[];
           
           const mcpCount = tools.filter((t) => isMcpTool(t)).length;
           
@@ -380,7 +380,7 @@ export class SimpleOrchestrator {
             provider: 'xai-native',
             total: tools.length,
             mcp: mcpCount,
-            mcpServers: tools.filter(isMcpTool).map(t => (t as McpServerConfig).server_label)
+            mcpServers: tools.filter(isMcpTool).map(t => (t as any).server_label || (t as any).name || 'unknown')
           });
         } else {
           // Groq/OpenAI : MCP tools uniquement
