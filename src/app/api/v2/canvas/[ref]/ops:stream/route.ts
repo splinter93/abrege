@@ -286,7 +286,7 @@ export async function POST(
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logApi.error(LogCategory.API, `❌ Canvas ops:stream error: ${errorMessage}`, {
+    logApi.error(`❌ Canvas ops:stream error: ${errorMessage}`, {
       ...context,
       error: error instanceof Error ? error.stack : undefined
     });
