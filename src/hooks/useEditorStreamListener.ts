@@ -344,7 +344,7 @@ export function useEditorStreamListener(
                       const currentSelection = editor.state.selection;
                       const wasFocused = editor.isFocused;
                       
-                      editor.commands.setContent(newContent, false);
+                      editor.commands.setContent(newContent, { emitUpdate: false });
                       
                       // Essayer de restaurer la position du curseur si possible
                       try {

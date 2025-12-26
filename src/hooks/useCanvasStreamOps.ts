@@ -11,7 +11,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { simpleLogger as logger, LogCategory } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 
 // ============================================================================
 // TYPES
@@ -134,7 +134,7 @@ export function useCanvasStreamOps(
         }
       }
     } catch (e) {
-      logger.error('[useCanvasStreamOps] Failed to get auth token', e);
+      logger.error(LogCategory.EDITOR, '[useCanvasStreamOps] Failed to get auth token', e);
     }
     return null;
   }, []);
@@ -279,7 +279,7 @@ export function useCanvasStreamOps(
     const initializeConnection = async () => {
       const token = await getAuthToken();
       if (!token) {
-        logger.warn('[useCanvasStreamOps] No auth token found', { canvasRef });
+        logger.warn(LogCategory.EDITOR, '[useCanvasStreamOps] No auth token found', { canvasRef });
         return null;
       }
 
@@ -336,7 +336,7 @@ export function useCanvasStreamOps(
               break;
           }
         } catch (parseError) {
-          logger.error('[useCanvasStreamOps] Failed to parse event', {
+          logger.error(LogCategory.EDITOR, '[useCanvasStreamOps] Failed to parse event', {
             canvasRef,
             error: parseError instanceof Error ? parseError.message : 'Unknown error',
             rawData: event.data
@@ -348,7 +348,7 @@ export function useCanvasStreamOps(
        * Handler pour les erreurs de connexion
        */
       eventSource.onerror = (error) => {
-        logger.error('[useCanvasStreamOps] Connection error', {
+        logger.error(LogCategory.EDITOR, '[useCanvasStreamOps] Connection error', {
           canvasRef,
           readyState: eventSource.readyState,
           reconnectAttempts: reconnectAttemptsRef.current

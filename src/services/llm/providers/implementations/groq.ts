@@ -319,15 +319,17 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         // Il faut marquer les tools comme "alreadyExecuted" comme fait xAI
         if (response.tool_calls && response.tool_calls.length > 0) {
           // Marquer tous les tool calls comme déjà exécutés
-          const executedToolCalls = response.tool_calls.map(tc => ({
-            ...tc,
-            // @ts-expect-error - Extension custom pour MCP tools exécutés par Groq
-            alreadyExecuted: true,
-            // @ts-expect-error - Ajouter le résultat depuis mcp_calls
-            result: response.x_groq?.mcp_calls?.find(mc => 
-              tc.function.name.includes(mc.name) || tc.function.name.includes(mc.server_label)
-            )?.output || 'Executed by Groq (MCP)'
-          }));
+          const executedToolCalls = response.tool_calls.map(tc => {
+            // Extension custom pour MCP tools exécutés par Groq
+            const mcpToolCall = tc as ToolCall & { alreadyExecuted?: boolean; result?: unknown };
+            return {
+              ...tc,
+              alreadyExecuted: true,
+              result: response.x_groq?.mcp_calls?.find(mc => 
+                tc.function.name.includes(mc.name) || tc.function.name.includes(mc.server_label)
+              )?.output || 'Executed by Groq (MCP)'
+            } as ToolCall & { alreadyExecuted: boolean; result: string };
+          });
           
           yield {
             type: 'delta',

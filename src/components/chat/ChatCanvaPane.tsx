@@ -82,7 +82,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
 
   // 🔄 Canvas streaming ops (local-first)
   const { sendOp, isConnected: isOpsConnected, lastServerVersion } = useCanvasStreamOps(
-    session?.noteId,
+    session?.noteId || null,
     {
       enabled: Boolean(session?.noteId),
       debug: false,
@@ -93,7 +93,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
         });
       },
       onConflict: (result) => {
-        logger.warn('[ChatCanvaPane] Op CONFLICT', {
+        logger.warn(LogCategory.EDITOR, '[ChatCanvaPane] Op CONFLICT', {
           op_id: result.op_id,
           reason: result.reason,
           expected_version: result.expected_version

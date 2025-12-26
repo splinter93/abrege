@@ -31,7 +31,7 @@ export async function applyOperationsToContent(
 ): Promise<ApplyOperationsResult> {
   const startTime = Date.now();
   
-  logApi.debug(LogCategory.API, '[contentOperations] Début application opérations', {
+  logApi.debug('[contentOperations] Début application opérations', {
     contentLength: content.length,
     operationsCount: operations.length
   });
@@ -44,7 +44,7 @@ export async function applyOperationsToContent(
   const success = failedOps === 0;
 
   const duration = Date.now() - startTime;
-  logApi.debug(LogCategory.API, '[contentOperations] Opérations appliquées', {
+  logApi.debug('[contentOperations] Opérations appliquées', {
     duration,
     success,
     appliedOps: result.results.filter(r => r.status === 'applied').length,

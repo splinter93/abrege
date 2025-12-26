@@ -92,7 +92,7 @@ export function useNoteStreamListener(
     // Skip si pas de noteId ou désactivé
     if (!noteId || !enabled) {
       if (debug) {
-        logger.dev('[useNoteStreamListener] Skipped', { noteId, enabled });
+        logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] Skipped', { noteId, enabled });
       }
       // Cleanup si désactivé
       if (eventSourceRef.current) {
@@ -106,7 +106,7 @@ export function useNoteStreamListener(
     // EventSource.OPEN = 1 (valeur numérique pour éviter les problèmes SSR)
     if (eventSourceRef.current && eventSourceRef.current.readyState === 1) {
       if (debug) {
-        logger.dev('[useNoteStreamListener] Connection already open, skipping', {
+        logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] Connection already open, skipping', {
           noteId
         });
       }
@@ -120,7 +120,7 @@ export function useNoteStreamListener(
     }
 
     if (debug) {
-      logger.dev('[useNoteStreamListener] Connecting...', { noteId });
+      logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] Connecting...', { noteId });
     }
 
     // Fonction async pour initialiser la connexion
@@ -141,7 +141,7 @@ export function useNoteStreamListener(
             if (data.access_token) return data.access_token;
           }
         } catch (error) {
-          logger.error('[useNoteStreamListener] Failed to get token', error);
+          logger.error(LogCategory.EDITOR, '[useNoteStreamListener] Failed to get token', error);
         }
         return null;
       };
@@ -149,7 +149,7 @@ export function useNoteStreamListener(
       // Créer la connexion EventSource avec le token
       const token = getToken();
       if (!token) {
-        logger.error('[useNoteStreamListener] No auth token available', { noteId });
+        logger.error(LogCategory.EDITOR, '[useNoteStreamListener] No auth token available', { noteId });
         return null;
       }
 
@@ -171,7 +171,7 @@ export function useNoteStreamListener(
           const data: StreamEvent = JSON.parse(event.data);
 
           if (debug) {
-            logger.dev('[useNoteStreamListener] Event received', {
+            logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] Event received', {
               noteId,
               type: data.type,
               dataLength: data.data?.length || 0
@@ -203,7 +203,7 @@ export function useNoteStreamListener(
                 onChunkRef.current?.(data.data);
 
                 if (debug) {
-                  logger.dev('[useNoteStreamListener] Chunk added', {
+                  logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] Chunk added', {
                     noteId,
                     chunkLength: data.data.length
                   });
@@ -238,7 +238,7 @@ export function useNoteStreamListener(
               break;
 
             default:
-              logger.warn('[useNoteStreamListener] Unknown event type', {
+              logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] Unknown event type', {
                 noteId,
                 type: data.type
               });
@@ -284,7 +284,7 @@ export function useNoteStreamListener(
        */
       eventSource.onopen = () => {
         if (debug) {
-          logger.dev('[useNoteStreamListener] Connection opened', { noteId });
+          logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] Connection opened', { noteId });
         }
         reconnectAttemptsRef.current = 0;
       };
@@ -295,7 +295,7 @@ export function useNoteStreamListener(
     // Cleanup à l'unmount ou au changement de noteId
     return () => {
       if (debug) {
-        logger.dev('[useNoteStreamListener] Cleanup', { noteId });
+        logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] Cleanup', { noteId });
       }
 
       if (eventSourceRef.current) {

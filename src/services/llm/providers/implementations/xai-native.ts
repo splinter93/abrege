@@ -120,8 +120,7 @@ const XAI_NATIVE_INFO: ProviderInfo = {
     codeExecution: false,
     webSearch: false,
     structuredOutput: true,
-    images: true,
-    mcpTools: true // ✅ Support MCP Remote Tools
+    images: true
   },
   supportedModels: [
     'grok-4-1-fast-reasoning',
@@ -285,7 +284,7 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
     try {
       // ✅ Détecter le type de tools
       const hasMcpTools = Array.isArray(tools) && tools.some(t => this.isMcpTool(t));
-      const hasOpenApiTools = Array.isArray(tools) && tools.some(t => isFunctionTool(t));
+      const hasOpenApiTools = Array.isArray(tools) && tools.some(t => isFunctionTool(t as Tool));
 
       // ⚠️ ROUTING: /v1/responses SEULEMENT si MCP tools
       if (hasMcpTools) {

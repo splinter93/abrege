@@ -11,7 +11,7 @@
 import { ContentOperation } from '@/utils/contentApplyUtils';
 import { calculateETag } from '@/utils/contentApplyUtils';
 import { applyOperationsToContent, validateOperation } from '@/services/contentOperations';
-import { simpleLogger as logger, LogCategory } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
 
 // ============================================================================
@@ -69,7 +69,7 @@ class CanvasStateManager {
 
   constructor() {
     this.startCleanup();
-    logger.info('[CanvasStateManager] Service initialized');
+    logger.info(LogCategory.API, '[CanvasStateManager] Service initialized');
   }
 
   /**
@@ -105,7 +105,7 @@ class CanvasStateManager {
 
     this.states.set(canvasId, state);
 
-    logger.info('[CanvasStateManager] État initialisé', {
+    logger.info(LogCategory.API, '[CanvasStateManager] État initialisé', {
       canvasId,
       noteId,
       userId,
@@ -147,7 +147,7 @@ class CanvasStateManager {
 
     // 2. Vérifier la version (ETag)
     if (op.client_version !== state.etag) {
-      logger.warn('[CanvasStateManager] Conflit de version', {
+      logger.warn(LogCategory.API, '[CanvasStateManager] Conflit de version', {
         canvasId,
         op_id: op.op_id,
         client_version: op.client_version,
@@ -165,7 +165,7 @@ class CanvasStateManager {
     // 3. Valider l'opération
     const validation = validateOperation(op);
     if (!validation.valid) {
-      logger.warn('[CanvasStateManager] Validation échouée', {
+      logger.warn(LogCategory.API, '[CanvasStateManager] Validation échouée', {
         canvasId,
         op_id: op.op_id,
         error: validation.error
@@ -205,7 +205,7 @@ class CanvasStateManager {
       state.lastActivity = Date.now();
       state.isDirty = true;
 
-      logger.info('[CanvasStateManager] Opération appliquée', {
+      logger.info(LogCategory.API, '[CanvasStateManager] Opération appliquée', {
         canvasId,
         op_id: op.op_id,
         action: op.action,
@@ -215,7 +215,7 @@ class CanvasStateManager {
 
       // 7. Trigger checkpoint si seuil atteint
       if (state.pendingOps.length >= CONFIG.CHECKPOINT_OPS_THRESHOLD) {
-        logger.info('[CanvasStateManager] Seuil atteint, checkpoint immédiat', {
+        logger.info(LogCategory.API, '[CanvasStateManager] Seuil atteint, checkpoint immédiat', {
           canvasId,
           pendingOps: state.pendingOps.length
         });
@@ -268,7 +268,7 @@ class CanvasStateManager {
     const startTime = Date.now();
     const opsToSave = [...state.pendingOps]; // Copie pour éviter les races
 
-    logger.info('[CanvasStateManager] Checkpoint démarré', {
+    logger.info(LogCategory.API, '[CanvasStateManager] Checkpoint démarré', {
       canvasId,
       opsCount: opsToSave.length,
       noteId: state.noteId
@@ -313,7 +313,7 @@ class CanvasStateManager {
       state.isDirty = false;
 
       const duration = Date.now() - startTime;
-      logger.info('[CanvasStateManager] Checkpoint réussi', {
+      logger.info(LogCategory.API, '[CanvasStateManager] Checkpoint réussi', {
         canvasId,
         opsCount: opsToSave.length,
         duration,
@@ -335,7 +335,7 @@ class CanvasStateManager {
    * Force un checkpoint immédiat (appelé à la fermeture du canvas)
    */
   async forceCheckpoint(canvasId: string): Promise<void> {
-    logger.info('[CanvasStateManager] Force checkpoint', { canvasId });
+    logger.info(LogCategory.API, '[CanvasStateManager] Force checkpoint', { canvasId });
     await this.checkpoint(canvasId);
   }
 
@@ -356,7 +356,7 @@ class CanvasStateManager {
       return;
     }
 
-    logger.info('[CanvasStateManager] Cleanup', {
+    logger.info(LogCategory.API, '[CanvasStateManager] Cleanup', {
       canvasId,
       pendingOps: state.pendingOps.length
     });
@@ -383,7 +383,7 @@ class CanvasStateManager {
     // Supprimer l'état
     this.states.delete(canvasId);
 
-    logger.info('[CanvasStateManager] Cleanup terminé', { canvasId });
+    logger.info(LogCategory.API, '[CanvasStateManager] Cleanup terminé', { canvasId });
   }
 
   /**
@@ -434,7 +434,7 @@ class CanvasStateManager {
         const inactiveDuration = now - state.lastActivity;
 
         if (inactiveDuration > CONFIG.STATE_TTL_MS) {
-          logger.info('[CanvasStateManager] Cleanup état inactif', {
+          logger.info(LogCategory.API, '[CanvasStateManager] Cleanup état inactif', {
             canvasId,
             inactiveDuration,
             pendingOps: state.pendingOps.length
@@ -453,7 +453,7 @@ class CanvasStateManager {
       });
 
       if (cleanedCount > 0) {
-        logger.info('[CanvasStateManager] Cleanup cycle terminé', {
+        logger.info(LogCategory.API, '[CanvasStateManager] Cleanup cycle terminé', {
           cleanedCount,
           remainingStates: this.states.size
         });

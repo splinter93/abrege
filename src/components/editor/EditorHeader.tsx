@@ -261,8 +261,6 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             }, 0);
           }
         }}>
-          {/* ✅ DEBUG: Log synchrone pour vérifier le rendu */}
-          {process.env.NODE_ENV === 'development' && console.log('[EditorHeader] ✅ Rendering EditorToolbar', { hasEditor: !!editor, readonly, noteId, timestamp: Date.now() })}
           <EditorToolbar 
             editor={editor} 
             readonly={readonly} 
@@ -275,12 +273,9 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
       ) : shouldRenderToolbar && !editor ? (
         // ✅ DEBUG: Log si editor n'existe pas encore
         <div className="editor-header__center" data-debug-toolbar="waiting-editor">
-          {process.env.NODE_ENV === 'development' && console.warn('[EditorHeader] ⏳ Waiting for editor', { noteId, timestamp: Date.now() })}
         </div>
       ) : (
         <div className="editor-header__center" data-debug-toolbar="hidden" style={{ display: 'none' }}>
-          {/* ✅ DEBUG: Toolbar cachée */}
-          {process.env.NODE_ENV === 'development' && console.warn('[EditorHeader] ❌ Toolbar NOT rendered', { showToolbar, previewMode, shouldRenderToolbar, noteId, timestamp: Date.now() })}
         </div>
       )}
 
