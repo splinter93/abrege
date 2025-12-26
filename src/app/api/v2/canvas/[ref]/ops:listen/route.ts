@@ -156,7 +156,7 @@ export async function GET(
 
         // 🧹 Cleanup quand la connexion se ferme
         request.signal.addEventListener('abort', () => {
-          logApi.info(LogCategory.API, `[ops:listen] Connection closed by client`, {
+          logApi.info(`[ops:listen] Connection closed by client`, {
             noteId,
             userId
           });
