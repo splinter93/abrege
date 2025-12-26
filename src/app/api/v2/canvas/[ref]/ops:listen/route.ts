@@ -42,7 +42,8 @@ export async function GET(
 
     if (tokenParam) {
       // Pour EventSource, token passé en query param
-      const modifiedRequest = new Request(request.url, {
+      // Créer un NextRequest avec le token dans les headers
+      const modifiedRequest = new NextRequest(request.url, {
         headers: new Headers({
           ...Object.fromEntries(request.headers.entries()),
           'Authorization': `Bearer ${tokenParam}`
