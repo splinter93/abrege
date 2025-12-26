@@ -581,14 +581,15 @@ export async function POST(request: NextRequest) {
                 // ✅ Accumuler tool calls (peuvent venir en plusieurs chunks)
                 if (chunk.tool_calls && chunk.tool_calls.length > 0) {
                   for (const tc of chunk.tool_calls) {
-                    // @ts-expect-error - Extension custom pour MCP tools
-                    const hasCustomProps = tc.alreadyExecuted !== undefined || tc.result !== undefined;
+                    // Extension custom pour MCP tools (alreadyExecuted, result)
+                    const mcpToolCall = tc as ToolCall & { alreadyExecuted?: boolean; result?: unknown };
+                    const hasCustomProps = mcpToolCall.alreadyExecuted !== undefined || mcpToolCall.result !== undefined;
                     if (hasCustomProps) {
                       logger.dev(`[Stream Route] 🔧 Tool call avec props MCP:`, { 
                         id: tc.id, 
                         name: tc.function.name,
-                        alreadyExecuted: tc.alreadyExecuted,
-                        hasResult: !!tc.result
+                        alreadyExecuted: mcpToolCall.alreadyExecuted,
+                        hasResult: !!mcpToolCall.result
                       });
                     }
                     
