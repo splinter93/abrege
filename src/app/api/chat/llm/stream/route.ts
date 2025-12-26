@@ -866,12 +866,14 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
               
               // Ajouter les résultats MCP dans l'historique pour le prochain round
               for (const mcpTool of alreadyExecutedTools) {
-                // @ts-expect-error - Extension custom pour MCP tools
-                const result = mcpTool.result || 'Executed by x.ai (MCP)';
+                // Extension custom pour MCP tools (result)
+                const mcpToolWithResult = mcpTool as ToolCall & { result?: unknown };
+                const result = mcpToolWithResult.result || 'Executed by x.ai (MCP)';
                 
                 currentMessages.push({
                   role: 'tool',
                   tool_call_id: mcpTool.id,
+                  name: mcpTool.function.name, // ✅ Required by ToolMessage
                   content: typeof result === 'string' ? result : JSON.stringify(result),
                   timestamp: new Date().toISOString()
                 });
