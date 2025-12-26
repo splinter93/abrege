@@ -179,6 +179,38 @@ export function useImageUpload({ sessionId }: UseImageUploadOptions) {
     cameraInputRef.current?.click();
   }, []);
 
+  /**
+   * Ajouter une image depuis une URL (pour les fichiers Scrivia)
+   */
+  const addImageFromUrl = useCallback(async (url: string, fileName: string): Promise<boolean> => {
+    try {
+      const tempId = `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Pour les images depuis Scrivia Files, on utilise directement l'URL S3
+      // On crée un ImageAttachment minimal avec l'URL comme previewUrl et base64
+      const tempImage: ImageAttachment = {
+        id: tempId,
+        // Créer un File minimal pour satisfaire le type (ne sera pas utilisé)
+        file: new File([], fileName, { type: 'image/jpeg' }),
+        previewUrl: url,
+        base64: url, // URL S3 directement, pas de base64 nécessaire
+        detail: 'auto',
+        fileName: fileName,
+        mimeType: 'image/jpeg', // Par défaut, peut être amélioré si nécessaire
+        size: 0, // Taille inconnue pour les fichiers existants
+        addedAt: Date.now()
+      };
+      
+      setImages(prev => [...prev, tempImage]);
+      logger.dev('[useImageUpload] ✅ Image ajoutée depuis URL:', { url, fileName });
+      return true;
+    } catch (error) {
+      logger.error('[useImageUpload] ❌ Erreur ajout image depuis URL:', error);
+      setUploadError(`Erreur avec ${fileName}`);
+      return false;
+    }
+  }, [setImages, setUploadError]);
+
   // Cleanup des images au démontage
   useEffect(() => {
     return () => {
@@ -196,6 +228,7 @@ export function useImageUpload({ sessionId }: UseImageUploadOptions) {
     isDragging,
     cameraInputRef,
     processAndUploadImage,
+    addImageFromUrl,
     removeImage,
     clearImages,
     handleDragEnter,

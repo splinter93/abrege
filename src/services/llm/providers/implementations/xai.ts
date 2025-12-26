@@ -575,21 +575,24 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
 
   /**
    * Construit le content d'un message en gérant les images attachées
+   * Format xAI: images en premier, puis texte (selon doc officielle)
    */
   private buildMessageContent(msg: ChatMessage): string | null | XAIMessageContent[] {
     // ✅ CRITICAL: Gérer les images attachées (multi-modal)
     if (msg.role === 'user' && msg.attachedImages && msg.attachedImages.length > 0) {
       const contentParts: XAIMessageContent[] = [];
       
-      // ✅ ALWAYS add text part first (required by xAI even if empty)
-      const textContent = typeof msg.content === 'string' ? msg.content : '';
-      contentParts.push({
-        type: 'text',
-        text: textContent || '' // ✅ Ensure at least empty string
-      });
-      
-      // Ajouter les images
+      // ✅ Format xAI: Images en premier, puis texte (selon doc officielle)
       for (const image of msg.attachedImages) {
+        // ✅ DEBUG: Logger les images pour vérifier qu'elles sont bien là
+        logger.dev('[XAIProvider] 🖼️ Ajout image au content:', {
+          urlLength: image.url.length,
+          urlPrefix: image.url.substring(0, 50),
+          isDataUri: image.url.startsWith('data:'),
+          isHttpUrl: image.url.startsWith('http'),
+          fileName: image.fileName
+        });
+        
         contentParts.push({
           type: 'image_url',
           image_url: {
@@ -598,6 +601,20 @@ export class XAIProvider extends BaseProvider implements LLMProvider {
           }
         });
       }
+      
+      // Texte en dernier (comme dans la doc xAI)
+      const textContent = typeof msg.content === 'string' ? msg.content : '';
+      contentParts.push({
+        type: 'text',
+        text: textContent || '' // ✅ Ensure at least empty string
+      });
+      
+      logger.dev('[XAIProvider] 📦 Content multi-modal construit:', {
+        textLength: textContent.length,
+        imageCount: msg.attachedImages.length,
+        totalParts: contentParts.length,
+        order: 'images first, then text' // Format exact xAI
+      });
       
       return contentParts;
     }

@@ -313,8 +313,12 @@ export async function processImageFiles(
 export function revokeImageAttachments(attachments: ImageAttachment[]): void {
   for (const attachment of attachments) {
     try {
-      URL.revokeObjectURL(attachment.previewUrl);
-      logger.debug(LogCategory.EDITOR, `🧹 URL révoquée: ${attachment.id}`);
+      // Ne révoquer que les URLs object (créées avec URL.createObjectURL)
+      // Ne pas révoquer les URLs HTTP/S (S3, etc.)
+      if (attachment.previewUrl && !attachment.previewUrl.startsWith('http') && !attachment.previewUrl.startsWith('data:')) {
+        URL.revokeObjectURL(attachment.previewUrl);
+        logger.debug(LogCategory.EDITOR, `🧹 URL révoquée: ${attachment.id}`);
+      }
     } catch (error) {
       logger.warn(LogCategory.EDITOR, `⚠️ Impossible de révoquer URL: ${attachment.id}`, error);
     }

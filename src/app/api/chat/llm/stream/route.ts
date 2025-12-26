@@ -368,6 +368,45 @@ export async function POST(request: NextRequest) {
       timestamp: msg.timestamp ?? new Date().toISOString()
     })) as ChatMessage[];
 
+    // ✅ Extraire les images du format multi-modal si présent
+    let userMessageImages: Array<{ url: string; fileName?: string }> | undefined;
+    let userMessageText: string = '';
+    
+    if (!skipAddingUserMessage) {
+      if (Array.isArray(processedMessage)) {
+        // Format multi-modal : extraire texte et images
+        const textPart = processedMessage.find((part): part is { type: 'text'; text: string } => part.type === 'text');
+        userMessageText = textPart?.text || '';
+        
+        const imageParts = processedMessage.filter((part): part is { type: 'image_url'; image_url: { url: string; detail?: string } } => 
+          part.type === 'image_url' && part.image_url?.url
+        );
+        
+        if (imageParts.length > 0) {
+          userMessageImages = imageParts.map(part => ({
+            url: part.image_url.url,
+            fileName: undefined // Pas de fileName dans le format multi-modal
+          }));
+          
+          logger.dev('[Stream Route] 🖼️ Images extraites du format multi-modal:', {
+            count: userMessageImages.length,
+            urlPrefixes: userMessageImages.map(img => {
+              const url = img.url;
+              if (url.startsWith('data:')) {
+                return `data:${url.substring(5, 20)}...`; // Afficher juste le type MIME
+              } else if (url.startsWith('http')) {
+                return url.substring(0, 50) + '...';
+              }
+              return url.substring(0, 30) + '...';
+            })
+          });
+        }
+      } else {
+        // Format texte simple
+        userMessageText = typeof processedMessage === 'string' ? processedMessage : '';
+      }
+    }
+
     const messages: ChatMessage[] = ([
       {
         role: 'system',
@@ -379,11 +418,12 @@ export async function POST(request: NextRequest) {
       ...(contextMessage ? [contextMessage] : []),
       // Injecter contexte mentions légères (metadata only)
       ...(mentionsMessage ? [mentionsMessage] : []),
-      // N'ajouter le message user que si pas en mode skip (avec prompts remplacés)
+      // N'ajouter le message user que si pas en mode skip (avec images extraites)
       ...(skipAddingUserMessage ? [] : [{
         role: 'user' as const,
-        content: processedMessage,
-        timestamp: new Date().toISOString()
+        content: userMessageText,
+        timestamp: new Date().toISOString(),
+        ...(userMessageImages && userMessageImages.length > 0 && { attachedImages: userMessageImages })
       }])
     ]) as ChatMessage[];
 

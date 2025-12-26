@@ -1,0 +1,432 @@
+/* Overlay */
+.scrivia-file-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  animation: scriviaPickerOverlayFadeIn 0.2s ease-out;
+}
+
+@keyframes scriviaPickerOverlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* File Picker Container */
+.scrivia-file-picker {
+  background: linear-gradient(135deg, 
+    #1a1c23 0%, 
+    #252831 50%, 
+    #1a1c23 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: scriviaPickerSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+@keyframes scriviaPickerSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Header */
+.scrivia-file-picker-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.scrivia-file-picker-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.scrivia-file-picker-folder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--chat-text-primary, #e5e5e5);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.scrivia-file-picker-folder svg {
+  color: var(--chat-text-secondary, #a0a0a0);
+}
+
+/* View Controls */
+.scrivia-file-picker-view-controls {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.scrivia-file-picker-view-btn {
+  background: transparent;
+  border: none;
+  color: var(--chat-text-secondary, #a0a0a0);
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.scrivia-file-picker-view-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--chat-text-primary, #e5e5e5);
+}
+
+.scrivia-file-picker-view-btn.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--chat-text-primary, #e5e5e5);
+}
+
+/* Search */
+.scrivia-file-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 200px;
+  transition: all 0.2s ease;
+}
+
+.scrivia-file-picker-search:focus-within {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.scrivia-file-picker-search svg {
+  color: var(--chat-text-secondary, #a0a0a0);
+  flex-shrink: 0;
+}
+
+.scrivia-file-picker-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--chat-text-primary, #e5e5e5);
+  font-size: 14px;
+  width: 100%;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.scrivia-file-picker-search-input::placeholder {
+  color: var(--chat-text-secondary, #a0a0a0);
+}
+
+/* Content */
+.scrivia-file-picker-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  min-height: 400px;
+  max-height: calc(85vh - 180px);
+}
+
+.scrivia-file-picker-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrivia-file-picker-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.scrivia-file-picker-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.scrivia-file-picker-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Grid */
+.scrivia-file-picker-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.scrivia-file-picker-grid.grid {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.scrivia-file-picker-grid.list {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+/* File Item */
+.scrivia-file-picker-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.scrivia-file-picker-grid.grid .scrivia-file-picker-item {
+  aspect-ratio: 1;
+}
+
+.scrivia-file-picker-grid.list .scrivia-file-picker-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 12px;
+  gap: 16px;
+}
+
+.scrivia-file-picker-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.scrivia-file-picker-item.selected {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.scrivia-file-picker-item.selected:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.7);
+}
+
+/* Preview */
+.scrivia-file-picker-item-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scrivia-file-picker-grid.grid .scrivia-file-picker-item-preview {
+  height: 140px;
+}
+
+.scrivia-file-picker-grid.list .scrivia-file-picker-item-preview {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.scrivia-file-picker-item-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scrivia-file-picker-item-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(59, 130, 246, 0.9);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Item Info */
+.scrivia-file-picker-item-info {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.scrivia-file-picker-grid.list .scrivia-file-picker-item-info {
+  flex: 1;
+  padding: 0;
+}
+
+.scrivia-file-picker-item-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--chat-text-primary, #e5e5e5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.scrivia-file-picker-item-meta {
+  font-size: 11px;
+  color: var(--chat-text-secondary, #a0a0a0);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Loading */
+.scrivia-file-picker-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px 20px;
+  color: var(--chat-text-secondary, #a0a0a0);
+}
+
+.scrivia-file-picker-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--chat-text-primary, #e5e5e5);
+  border-radius: 50%;
+  animation: scriviaPickerSpinner 0.8s linear infinite;
+}
+
+@keyframes scriviaPickerSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Empty State */
+.scrivia-file-picker-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.scrivia-file-picker-empty-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.scrivia-file-picker-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--chat-text-primary, #e5e5e5);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.scrivia-file-picker-empty-subtitle {
+  font-size: 13px;
+  color: var(--chat-text-secondary, #a0a0a0);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Footer */
+.scrivia-file-picker-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.scrivia-file-picker-btn-secondary,
+.scrivia-file-picker-btn-primary {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: system-ui, -apple-system, sans-serif;
+  border: none;
+}
+
+.scrivia-file-picker-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--chat-text-primary, #e5e5e5);
+}
+
+.scrivia-file-picker-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.scrivia-file-picker-btn-primary {
+  background: rgba(59, 130, 246, 0.9);
+  color: white;
+}
+
+.scrivia-file-picker-btn-primary:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.scrivia-file-picker-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .scrivia-file-picker {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .scrivia-file-picker-grid.grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .scrivia-file-picker-header {
+    flex-wrap: wrap;
+  }
+
+  .scrivia-file-picker-search {
+    min-width: 100%;
+    order: 3;
+  }
+}
+

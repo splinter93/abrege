@@ -270,8 +270,9 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
    * ✅ Streaming avec Server-Sent Events (SSE)
    * 
    * ROUTING AUTOMATIQUE:
-   * - MCP tools → /v1/responses (MCP Remote Tools)
+   * - MCP tools → /v1/responses (MCP Remote Tools + support images)
    * - OpenAPI tools → /v1/chat/completions (format standard)
+   * - Pas de tools → /v1/chat/completions
    */
   async *callWithMessagesStream(
     messages: ChatMessage[],
@@ -286,9 +287,9 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
       const hasMcpTools = Array.isArray(tools) && tools.some(t => this.isMcpTool(t));
       const hasOpenApiTools = Array.isArray(tools) && tools.some(t => isFunctionTool(t as Tool));
 
-      // ⚠️ ROUTING: /v1/responses SEULEMENT si MCP tools
+      // ✅ ROUTING: /v1/responses si MCP tools (supporte les images)
       if (hasMcpTools) {
-        logger.dev('[XAINativeProvider] 🔀 Route: /v1/responses (MCP Remote Tools)');
+        logger.dev('[XAINativeProvider] 🔀 Route: /v1/responses (MCP Remote Tools + support images)');
         yield* this.streamWithResponsesApi(messages, tools);
       } else if (hasOpenApiTools) {
         logger.dev('[XAINativeProvider] 🔀 Route: /v1/chat/completions (OpenAPI tools)');
@@ -308,12 +309,19 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
 
   /**
    * Convertit les ChatMessage en format OpenAI standard (pour /chat/completions)
+   * ✅ Gère les images via buildMessageContent
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): XAINativeInputMessage[] {
     return messages.map(msg => {
-        const apiMsg: XAINativeInputMessage = {
+      // ✅ Utiliser buildMessageContent pour gérer les images correctement
+      const content = this.buildMessageContent(msg);
+      
+      // ✅ Convertir null → "" pour éviter erreurs
+      const apiContent: string | XAINativeContentPart[] = content === null ? '' : content;
+      
+      const apiMsg: XAINativeInputMessage = {
         role: msg.role as 'system' | 'user' | 'assistant' | 'tool',
-        content: msg.content || ''
+        content: apiContent
       };
 
       if ('tool_calls' in msg && msg.tool_calls && msg.tool_calls.length > 0) {
@@ -333,6 +341,7 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
 
   /**
    * Stream avec /v1/chat/completions (OpenAPI tools standard)
+   * ⚠️ IMPORTANT: /v1/chat/completions NE SUPPORTE PAS les MCP tools (seulement function/live_search)
    */
   private async *streamWithChatCompletions(
     messages: ChatMessage[],
@@ -351,10 +360,27 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
       stream: true
     };
 
-    // ✅ Tools OpenAPI au format standard (pas plat)
+    // ✅ CRITIQUE: Filtrer les MCP tools (non supportés par /v1/chat/completions)
+    // /v1/chat/completions supporte seulement: 'function' ou 'live_search'
     if (Array.isArray(tools) && tools.length > 0) {
-      payload.tools = tools; // Format standard OpenAI
-      payload.tool_choice = 'auto';
+      const filteredTools = tools.filter(t => {
+        if (this.isMcpTool(t)) {
+          logger.warn('[XAINativeProvider] ⚠️ MCP tool filtré (non supporté par /v1/chat/completions):', {
+            name: 'server_label' in t ? t.server_label : (t as any).name
+          });
+          return false;
+        }
+        return true;
+      }) as Tool[];
+      
+      if (filteredTools.length > 0) {
+        payload.tools = filteredTools; // Format standard OpenAI (function tools uniquement)
+        payload.tool_choice = 'auto';
+        
+        if (filteredTools.length < tools.length) {
+          logger.warn(`[XAINativeProvider] ⚠️ ${tools.length - filteredTools.length} MCP tools filtrés (${filteredTools.length} function tools conservés)`);
+        }
+      }
     }
 
     logger.dev('[XAINativeProvider] 📤 Payload (chat/completions):', {
@@ -476,6 +502,54 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
       messages: input.length,
       tools: Array.isArray(payload.tools) ? (payload.tools as unknown[]).length : 0
     });
+    
+    // ✅ Logger le payload complet pour vérifier le format exact (surtout avec images)
+    if (Array.isArray(payload.input)) {
+      logger.dev('[XAINativeProvider] 🔍 Payload input preview:', {
+        model: payload.model,
+        inputLength: payload.input.length,
+        messages: payload.input.map((msg: unknown, i: number) => {
+          const m = msg as { role?: string; content?: unknown };
+          const content = m.content;
+          const contentType = typeof content;
+          const contentIsArray = Array.isArray(content);
+          const preview: Record<string, unknown> = {
+            index: i,
+            role: m.role,
+            contentType,
+            contentIsArray
+          };
+          
+          if (contentType === 'string') {
+            preview.contentLength = (content as string).length;
+            preview.contentPreview = (content as string).substring(0, 100);
+          } else if (contentIsArray) {
+            const arr = content as unknown[];
+            preview.arrayLength = arr.length;
+            preview.arrayTypes = arr.map((part: unknown) => {
+              const p = part as { type?: string; text?: string; image_url?: { url?: string } };
+              if (p.type === 'text') return { type: 'text', textLength: p.text?.length || 0 };
+              if (p.type === 'image_url') return { type: 'image_url', urlLength: p.image_url?.url?.length || 0 };
+              return { type: 'unknown' };
+            });
+          }
+          
+          return preview;
+        }),
+        toolsCount: Array.isArray(payload.tools) ? (payload.tools as unknown[]).length : 0
+      });
+    }
+    
+    // ✅ LOG COMPLET du payload pour debug (JSON stringifié)
+    try {
+      const payloadStr = JSON.stringify(payload);
+      logger.dev('[XAINativeProvider] 🔍 Payload JSON (preview first 2000 chars):', {
+        payloadPreview: payloadStr.substring(0, 2000),
+        totalLength: payloadStr.length
+      });
+    } catch (e) {
+      logger.warn('[XAINativeProvider] ⚠️ Impossible de stringifier le payload pour debug:', e);
+    }
     
     // ✅ Logger les tools en détail pour debug format
     if (Array.isArray(payload.tools) && (payload.tools as unknown[]).length > 0) {
@@ -694,11 +768,17 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
         }
       }
 
+      // ✅ CRITIQUE: /v1/responses - `name` can only be specified for `user` messages
+      // Ne pas inclure `name` pour les messages `tool` dans /v1/responses
       if (msg.role === 'tool' && msg.tool_call_id) {
         inputMsg.tool_call_id = msg.tool_call_id;
-        if (msg.name) {
-          inputMsg.name = msg.name;
-        }
+        // ❌ NE PAS inclure `name` pour les messages tool dans /v1/responses
+        // L'API xAI ne permet `name` que pour les messages `user`
+      }
+      
+      // ✅ `name` est uniquement autorisé pour les messages `user`
+      if (msg.role === 'user' && 'name' in msg && msg.name) {
+        inputMsg.name = msg.name;
       }
 
       input.push(inputMsg);
@@ -706,10 +786,12 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
       // Tool results
       if (msg.role === 'assistant' && msg.tool_results && msg.tool_results.length > 0) {
         for (const result of msg.tool_results) {
+          // ✅ CRITIQUE: /v1/responses - `name` can only be specified for `user` messages
+          // Ne pas inclure `name` pour les messages `tool`
           input.push({
             role: 'tool',
             tool_call_id: result.tool_call_id,
-            name: result.name,
+            // ❌ NE PAS inclure `name` - /v1/responses ne permet `name` que pour `user`
             content: typeof result.content === 'string' ? result.content : JSON.stringify(result.content ?? null)
           });
         }
@@ -727,12 +809,24 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
 
   /**
    * Convertit ChatMessage[] vers format natif x.ai
+   * ⚠️ IMPORTANT: Pour /v1/responses, le content doit être string OU array (pas null pour user)
    */
   private convertChatMessagesToInput(messages: ChatMessage[]): XAINativeInputMessage[] {
     return messages.map(msg => {
+      const builtContent = this.buildMessageContent(msg);
+      
+      // ✅ SÉCURITÉ: /v1/responses ne supporte pas null pour content (même pour user)
+      // Convertir null → "" pour éviter erreurs 422
+      let content: string | XAINativeContentPart[];
+      if (builtContent === null) {
+        content = '';
+      } else {
+        content = builtContent;
+      }
+      
       const inputMsg: XAINativeInputMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
-        content: this.buildMessageContent(msg)
+        content
       };
 
       if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
@@ -741,11 +835,20 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
         }
       }
 
+      // ✅ CRITIQUE: /v1/responses - `name` can only be specified for `user` messages
+      // Ne pas inclure `name` pour les messages `tool` dans /v1/responses
       if (msg.role === 'tool' && msg.tool_call_id) {
         inputMsg.tool_call_id = msg.tool_call_id;
-        if (msg.name) {
-          inputMsg.name = msg.name;
-        }
+        // ❌ NE PAS inclure `name` pour les messages tool dans /v1/responses
+        // L'API xAI ne permet `name` que pour les messages `user`
+        // if (msg.name) {
+        //   inputMsg.name = msg.name;
+        // }
+      }
+      
+      // ✅ `name` est uniquement autorisé pour les messages `user`
+      if (msg.role === 'user' && 'name' in msg && msg.name) {
+        inputMsg.name = msg.name;
       }
 
       return inputMsg;
@@ -754,18 +857,23 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
 
   /**
    * Construit le content (gère les images)
+   * Format exact xAI /v1/responses : images en premier, puis texte
    */
   private buildMessageContent(msg: ChatMessage): string | null | XAINativeContentPart[] {
     if (msg.role === 'user' && msg.attachedImages && msg.attachedImages.length > 0) {
       const contentParts: XAINativeContentPart[] = [];
 
-      const textContent = typeof msg.content === 'string' ? msg.content : '';
-      contentParts.push({
-        type: 'text',
-        text: textContent || ''
-      });
-
+      // ✅ Format xAI: Images en premier, puis texte (comme dans l'exemple curl)
       for (const image of msg.attachedImages) {
+        // ✅ DEBUG: Logger les images pour vérifier qu'elles sont bien là
+        logger.dev('[XAINativeProvider] 🖼️ Ajout image au content:', {
+          urlLength: image.url.length,
+          urlPrefix: image.url.substring(0, 50),
+          isDataUri: image.url.startsWith('data:'),
+          isHttpUrl: image.url.startsWith('http'),
+          fileName: image.fileName
+        });
+        
         contentParts.push({
           type: 'image_url',
           image_url: {
@@ -774,6 +882,20 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
           }
         });
       }
+
+      // Texte en dernier (comme dans l'exemple curl)
+      const textContent = typeof msg.content === 'string' ? msg.content : '';
+      contentParts.push({
+        type: 'text',
+        text: textContent || ''
+      });
+      
+      logger.dev('[XAINativeProvider] 📦 Content multi-modal construit:', {
+        textLength: textContent.length,
+        imageCount: msg.attachedImages.length,
+        totalParts: contentParts.length,
+        order: 'images first, then text' // Format exact xAI
+      });
 
       return contentParts;
     }

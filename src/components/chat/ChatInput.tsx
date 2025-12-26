@@ -29,6 +29,7 @@ import ChatInputToolbar from './ChatInputToolbar';
 import SlashMenu from './SlashMenu';
 import MentionMenu from './MentionMenu';
 import PromptArgumentsModal from './PromptArgumentsModal';
+import ScriviaFilePicker from './ScriviaFilePicker';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 
 interface ChatInputProps {
@@ -118,6 +119,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     isDragging,
     cameraInputRef,
     processAndUploadImage,
+    addImageFromUrl,
     removeImage,
     clearImages,
     handleDragEnter,
@@ -159,6 +161,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [pendingPrompt, setPendingPrompt] = React.useState<EditorPrompt | null>(null);
   const [pendingPromptInitialValues, setPendingPromptInitialValues] = React.useState<Record<string, string> | undefined>();
   
+  // 🎯 État pour le file picker Scrivia
+  const [showScriviaFilePicker, setShowScriviaFilePicker] = React.useState(false);
+  
   const defaultReasoningLevel = getReasoningLevelFromModel(currentAgentModel);
   
   // 🎯 Hook prompts
@@ -172,7 +177,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     handleLoadImageClick,
     handleLoadFile,
     handleTakePhoto,
-    handleBrowseFiles,
+    handleBrowseFiles: handleBrowseFilesFromHook,
     handleBrowseComputer,
     handleNewsSearch,
     handleBasicSearch,
@@ -194,6 +199,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
     usedPrompts,
     setUsedPrompts
   });
+
+  // Handler pour ouvrir le file picker Scrivia
+  const handleBrowseFiles = React.useCallback(() => {
+    handleBrowseFilesFromHook();
+    setShowImageSourceModal(false);
+    setShowScriviaFilePicker(true);
+  }, [handleBrowseFilesFromHook, setShowImageSourceModal]);
+
+  // Handler pour sélectionner des images depuis Scrivia Files
+  const handleSelectScriviaImages = React.useCallback(async (selectedImages: Array<{ url: string; fileName?: string }>) => {
+    for (const image of selectedImages) {
+      await addImageFromUrl(image.url, image.fileName || 'image');
+    }
+    setShowScriviaFilePicker(false);
+  }, [addImageFromUrl]);
 
   const handlePromptSelection = React.useCallback((prompt: EditorPrompt) => {
     closeMenu();
@@ -410,6 +430,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
         initialValues={pendingPromptInitialValues}
         onCancel={handlePromptModalCancel}
         onConfirm={handlePromptModalConfirm}
+      />
+
+      <ScriviaFilePicker
+        isOpen={showScriviaFilePicker}
+        onClose={() => setShowScriviaFilePicker(false)}
+        onSelectImages={handleSelectScriviaImages}
+        multiple={true}
       />
     </div>
   );
