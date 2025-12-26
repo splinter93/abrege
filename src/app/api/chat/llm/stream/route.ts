@@ -584,7 +584,6 @@ export async function POST(request: NextRequest) {
                     // @ts-expect-error - Extension custom pour MCP tools
                     const hasCustomProps = tc.alreadyExecuted !== undefined || tc.result !== undefined;
                     if (hasCustomProps) {
-                      // @ts-expect-error - Extension custom
                       logger.dev(`[Stream Route] 🔧 Tool call avec props MCP:`, { 
                         id: tc.id, 
                         name: tc.function.name,
