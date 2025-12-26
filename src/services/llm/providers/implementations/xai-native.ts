@@ -309,20 +309,22 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
   /**
    * Convertit les ChatMessage en format OpenAI standard (pour /chat/completions)
    */
-  private convertChatMessagesToApiFormat(messages: ChatMessage[]): XAINativeMessage[] {
+  private convertChatMessagesToApiFormat(messages: ChatMessage[]): XAINativeInputMessage[] {
     return messages.map(msg => {
-      const apiMsg: XAINativeMessage = {
+        const apiMsg: XAINativeInputMessage = {
         role: msg.role as 'system' | 'user' | 'assistant' | 'tool',
         content: msg.content || ''
       };
 
-      if (msg.tool_calls && msg.tool_calls.length > 0) {
-        apiMsg.tool_calls = msg.tool_calls;
+      if ('tool_calls' in msg && msg.tool_calls && msg.tool_calls.length > 0) {
+        apiMsg.tool_calls = msg.tool_calls as ToolCall[];
       }
 
-      if (msg.tool_call_id) {
+      if ('tool_call_id' in msg && msg.tool_call_id) {
         apiMsg.tool_call_id = msg.tool_call_id;
-        apiMsg.name = msg.name;
+        if ('name' in msg && msg.name) {
+          apiMsg.name = msg.name;
+        }
       }
 
       return apiMsg;
@@ -811,7 +813,7 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
           return {
             ...tool,
             type: 'mcp',
-            name: tool.name || tool.server_label
+            name: 'server_label' in tool ? tool.server_label : (tool as any).name
           };
         } else if (isFunctionTool(tool)) {
           // ✅ OpenAPI tool: APLATIR la structure function vers la racine
@@ -819,9 +821,7 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
             type: 'function',
             name: tool.function.name,
             description: tool.function.description,
-            parameters: tool.function.parameters,
-            // Préserver strict si présent
-            ...(tool.function.strict !== undefined && { strict: tool.function.strict })
+            parameters: tool.function.parameters
           };
         }
         return tool;

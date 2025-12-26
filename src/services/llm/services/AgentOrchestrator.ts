@@ -69,7 +69,7 @@ const DEFAULT_CONFIG = {
  * Orchestrateur simple pour gérer les conversations avec tool calls MCP
  */
 export class AgentOrchestrator {
-  private llmProvider: GroqProvider | XAIProvider | import('../providers/implementations/liminality').LiminalityProvider;
+  private llmProvider: GroqProvider | XAIProvider | XAINativeProvider | import('../providers/implementations/liminality').LiminalityProvider;
   private toolExecutor: SimpleToolExecutor;
   private openApiToolExecutor: OpenApiToolExecutor;
   private historyBuilder: GroqHistoryBuilder;
@@ -249,7 +249,7 @@ export class AgentOrchestrator {
    * ✅ Sélectionner le provider en fonction du MODÈLE (pas du champ provider)
    * ✅ PRODUCTION READY : Le modèle est la source de vérité
    */
-  private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider | import('../providers/implementations/liminality').LiminalityProvider {
+  private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider | XAINativeProvider | import('../providers/implementations/liminality').LiminalityProvider {
     const configuredModel = agentConfig?.model || 'openai/gpt-oss-20b';
     const configuredProvider = agentConfig?.provider;
     
@@ -406,7 +406,7 @@ export class AgentOrchestrator {
             openApiTools
           ) as Array<Tool | McpServerConfig>;
           
-          tools = mcpTools;
+          tools = mcpTools as Tool[];
           
           const mcpCount = tools.filter((t) => isMcpTool(t)).length;
           const openApiCount = tools.filter((t) => !isMcpTool(t)).length;
@@ -423,7 +423,7 @@ export class AgentOrchestrator {
             openapi: openApiCount,
             index: toolsIndex,
             sample: filteredOpenApiTools.map(t => (t as any).function?.name).slice(0, 10),
-            mcpServers: tools.filter(isMcpTool).map(t => (t as McpServerConfig).server_label)
+            mcpServers: tools.filter(isMcpTool).map(t => (t as any).server_label || (t as any).name || 'unknown')
           });
         } else {
           // Groq/OpenAI : Combiner les tools OpenAPI avec les MCP tools
