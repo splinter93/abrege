@@ -222,7 +222,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const themeIcons: Record<ChatTheme, React.ReactNode> = {
     dark: <Moon size={16} />,
     light: <Sun size={16} />,
-    blue: <Sparkles size={16} />,
+    grey: <Circle size={16} />,
     anthracite: <Circle size={16} />,
   };
 

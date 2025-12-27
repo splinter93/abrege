@@ -29,12 +29,12 @@ export default function ThemeColor() {
         body.style.setProperty('background', '#000000', 'important');
       }
       // Détecter le thème actif (browser uniquement)
-      else if (html.classList.contains('theme-blue') || 
-          html.classList.contains('chat-theme-blue')) {
-        color = '#0f1419'; // Blue theme
+      else if (html.classList.contains('theme-grey') || 
+          html.classList.contains('chat-theme-grey')) {
+        color = '#1f2328'; // Grey theme
       } else if (html.classList.contains('theme-light') || 
-                 html.classList.contains('light')) {
-        color = '#ffffff'; // Light theme
+                 html.classList.contains('chat-theme-light')) {
+        color = '#e2d9ca'; // Light theme - Beige chaud légèrement plus sombre
       } else {
         color = '#121212'; // Dark theme
       }

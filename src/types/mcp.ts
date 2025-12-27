@@ -91,6 +91,51 @@ export function createMcpTool(config: McpServerConfig): McpServerConfig {
 }
 
 /**
+ * Convertit McpServerConfig (format Groq/interne) vers XaiMcpServerConfig (format xAI conforme)
+ * 
+ * Règles de conversion :
+ * - allowed_tools → allowed_tool_names
+ * - headers avec "Authorization" → authorization (token direct)
+ * - headers autres → extra_headers
+ */
+export function convertToXaiMcpConfig(config: McpServerConfig): XaiMcpServerConfig {
+  const xaiConfig: XaiMcpServerConfig = {
+    type: 'mcp',
+    server_url: config.server_url,
+    server_label: config.server_label,
+    server_description: config.server_description
+  };
+
+  // Convertir allowed_tools → allowed_tool_names
+  if (config.allowed_tools !== undefined && config.allowed_tools !== null) {
+    xaiConfig.allowed_tool_names = config.allowed_tools;
+  }
+
+  // Séparer headers en authorization + extra_headers
+  if (config.headers) {
+    const authHeader = config.headers['Authorization'] || config.headers['authorization'];
+    if (authHeader) {
+      // Token Authorization → champ authorization direct
+      xaiConfig.authorization = authHeader.startsWith('Bearer ') ? authHeader : `Bearer ${authHeader}`;
+    }
+
+    // Autres headers → extra_headers
+    const extraHeaders: Record<string, string> = {};
+    for (const [key, value] of Object.entries(config.headers)) {
+      const lowerKey = key.toLowerCase();
+      if (lowerKey !== 'authorization') {
+        extraHeaders[key] = value;
+      }
+    }
+    if (Object.keys(extraHeaders).length > 0) {
+      xaiConfig.extra_headers = extraHeaders;
+    }
+  }
+
+  return xaiConfig;
+}
+
+/**
  * Configuration MCP pour une requête Groq (selon la spec)
  */
 export interface GroqMcpToolConfig {
@@ -101,6 +146,25 @@ export interface GroqMcpToolConfig {
   server_description?: string;
   require_approval?: 'never' | 'always' | 'auto';
   allowed_tools?: string[] | null;
+}
+
+/**
+ * Configuration MCP pour xAI (selon la doc officielle)
+ * https://docs.x.ai/docs/guides/tools/remote-mcp-tools
+ * 
+ * Différences avec GroqMcpToolConfig :
+ * - allowed_tool_names (au lieu de allowed_tools)
+ * - authorization (token direct, au lieu de headers)
+ * - extra_headers (headers custom, séparés de authorization)
+ */
+export interface XaiMcpServerConfig {
+  type: 'mcp';
+  server_url: string;
+  server_label?: string;
+  server_description?: string;
+  allowed_tool_names?: string[] | null;  // null = tous les tools
+  authorization?: string;  // Token d'authentification (ex: "Bearer TOKEN")
+  extra_headers?: Record<string, string>;  // Headers supplémentaires (hors authorization)
 }
 
 /**

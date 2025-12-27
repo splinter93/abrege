@@ -11,7 +11,7 @@ import { logger, LogCategory } from '@/utils/logger';
 /**
  * Thèmes disponibles pour le chat
  */
-export type ChatTheme = 'dark' | 'light' | 'blue' | 'anthracite';
+export type ChatTheme = 'dark' | 'light' | 'grey' | 'anthracite';
 
 /**
  * Configuration des thèmes avec labels et classes CSS
@@ -29,11 +29,11 @@ export const CHAT_THEMES = {
     icon: '☀️',
     className: 'chat-theme-light',
   },
-  blue: {
-    value: 'blue' as const,
-    label: 'Mode blue',
-    icon: '💙',
-    className: 'chat-theme-blue',
+  grey: {
+    value: 'grey' as const,
+    label: 'Mode gris',
+    icon: '⚪',
+    className: 'chat-theme-grey',
   },
   anthracite: {
     value: 'anthracite' as const,
@@ -60,7 +60,7 @@ export function useTheme() {
     if (typeof window === 'undefined') return;
 
     // Retirer toutes les classes de thème
-    document.body.classList.remove('chat-theme-light', 'chat-theme-blue', 'chat-theme-anthracite');
+    document.body.classList.remove('chat-theme-light', 'chat-theme-grey', 'chat-theme-anthracite');
 
     // Appliquer la nouvelle classe si nécessaire
     const themeConfig = CHAT_THEMES[newTheme];
@@ -110,7 +110,7 @@ export function useTheme() {
     try {
       const savedTheme = localStorage.getItem(STORAGE_KEY) as ChatTheme | null;
       
-      if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light' || savedTheme === 'blue' || savedTheme === 'anthracite')) {
+      if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light' || savedTheme === 'grey' || savedTheme === 'anthracite')) {
         logger.debug(LogCategory.EDITOR, `📂 Thème restauré: ${savedTheme}`);
         setThemeState(savedTheme);
         applyTheme(savedTheme);

@@ -11,7 +11,8 @@ import type {
   Usage
 } from '../../types/strictTypes';
 import { isFunctionTool } from '../../types/strictTypes';
-import type { McpServerConfig } from '@/types/mcp';
+import type { McpServerConfig, XaiMcpServerConfig } from '@/types/mcp';
+import { convertToXaiMcpConfig } from '@/types/mcp';
 
 /**
  * Configuration spécifique à xAI Native API
@@ -931,12 +932,37 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
     if (tools && tools.length > 0) {
       const formattedTools = tools.map(tool => {
         if (this.isMcpTool(tool)) {
-          // MCP tool: Format standard
-          return {
-            ...tool,
+          // ✅ MCP tool: Convertir au format exact xAI (conforme à la doc)
+          const mcpConfig = tool as McpServerConfig;
+          const xaiConfig = convertToXaiMcpConfig(mcpConfig);
+          
+          // Construire le payload exact selon la doc xAI
+          const xaiPayload: XaiMcpServerConfig = {
             type: 'mcp',
-            name: 'server_label' in tool ? tool.server_label : (tool as any).name
+            server_url: xaiConfig.server_url
           };
+          
+          if (xaiConfig.server_label) {
+            xaiPayload.server_label = xaiConfig.server_label;
+          }
+          
+          if (xaiConfig.server_description) {
+            xaiPayload.server_description = xaiConfig.server_description;
+          }
+          
+          if (xaiConfig.allowed_tool_names !== undefined && xaiConfig.allowed_tool_names !== null) {
+            xaiPayload.allowed_tool_names = xaiConfig.allowed_tool_names;
+          }
+          
+          if (xaiConfig.authorization) {
+            xaiPayload.authorization = xaiConfig.authorization;
+          }
+          
+          if (xaiConfig.extra_headers && Object.keys(xaiConfig.extra_headers).length > 0) {
+            xaiPayload.extra_headers = xaiConfig.extra_headers;
+          }
+          
+          return xaiPayload;
         } else if (isFunctionTool(tool)) {
           // ✅ OpenAPI tool: APLATIR la structure function vers la racine
           return {
