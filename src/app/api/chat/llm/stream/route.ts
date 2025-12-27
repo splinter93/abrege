@@ -379,7 +379,7 @@ export async function POST(request: NextRequest) {
         userMessageText = textPart?.text || '';
         
         const imageParts = processedMessage.filter((part): part is { type: 'image_url'; image_url: { url: string; detail?: string } } => 
-          part.type === 'image_url' && part.image_url?.url
+          part.type === 'image_url' && !!part.image_url?.url
         );
         
         if (imageParts.length > 0) {
