@@ -21,7 +21,7 @@ POST   /api/v2/note/{ref}/insert-content │ Insérer du contenu
 POST   /api/v2/note/{ref}/content:apply │ 🆕 Appliquer des opérations de contenu
 GET    /api/v2/note/{ref}/table-of-contents │ Table des matières
 POST   /api/v2/note/{ref}/share        │ Partager une note
-POST   /api/v2/note/{ref}/move         │ Déplacer une note
+PUT    /api/v2/note/{ref}/move         │ Déplacer une note
 ```
 
 ### 📁 **Gestion des Dossiers**

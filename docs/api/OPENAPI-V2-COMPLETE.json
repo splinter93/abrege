@@ -2002,7 +2002,7 @@
       }
     },
     "/note/{ref}/move": {
-      "post": {
+      "put": {
         "operationId": "moveNote",
         "summary": "Déplacer une note",
         "description": "Déplace une note vers un autre classeur ou dossier",
@@ -2024,11 +2024,9 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "classeur_id": {"type": "string", "format": "uuid"},
-                  "folder_id": {"type": "string", "format": "uuid"},
-                  "position": {"type": "integer", "description": "Nouvelle position"}
-                },
-                "required": ["classeur_id"]
+                  "target_folder_id": {"type": "string", "format": "uuid", "nullable": true},
+                  "target_notebook_id": {"type": "string", "format": "uuid"}
+                }
               }
             }
           }
