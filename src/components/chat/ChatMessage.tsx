@@ -59,6 +59,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const hasStreamTimeline = role === 'assistant' && timeline && timeline.items && timeline.items.length > 0;
   const reasoning = assistantMessage?.reasoning;
   
+  // ✅ FIX DUPLICATION: Si une timeline existe, ignorer tool_calls pour éviter duplication
+  // Les tool calls sont déjà dans la timeline et seront affichés via StreamTimelineRenderer
+  const hasToolCalls = assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0;
+  const shouldIgnoreToolCalls = hasStreamTimeline && hasToolCalls;
+  
   // ✅ DEBUG: Logger la timeline ET le content pour comprendre le problème
   if (role === 'assistant') {
     logger.dev('[ChatMessage] 📊 Message assistant:', {
@@ -66,6 +71,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       hasTimeline: !!timeline,
       timelineItemsCount: timeline?.items?.length || 0,
       timelineItemTypes: timeline?.items?.map(i => i.type) || [],
+      hasToolCalls,
+      shouldIgnoreToolCalls,
       contentPreview: content?.substring(0, 200) || 'NO CONTENT',
       contentIncludes_Function: content?.includes('Function:') || false,
       contentIncludes_tool_result: content?.includes('tool_result') || false
