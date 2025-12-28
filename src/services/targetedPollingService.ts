@@ -222,6 +222,7 @@ class TargetedPollingService {
 
   /**
    * 🔄 Mettre à jour le store des notes
+   * ✅ FIX: Merge partiel pour éviter d'écraser les champs non présents (comme folder_id après move optimiste)
    */
   private updateNotesStore(data: ApiResponse): void {
     const store = useFileSystemStore.getState();
@@ -230,14 +231,40 @@ class TargetedPollingService {
       // Merge intelligent : mettre à jour/ajouter les notes
       data.notes.forEach((note: unknown) => {
         if (!this.isValidNote(note)) return;
-        const normalized = this.normalizeNote(note);
+        const rawNote = note as { id: string; [key: string]: unknown };
+        const normalized = this.normalizeNote(rawNote);
         if (!normalized) return;
 
         if (store.notes[normalized.id]) {
-          // Mettre à jour une note existante
-          store.updateNote(normalized.id, normalized);
+          // ✅ FIX: Créer un patch partiel avec uniquement les champs présents dans la réponse
+          // Cela évite d'écraser les champs comme folder_id qui ne sont pas toujours dans la réponse
+          const partialPatch: Partial<Note> = {
+            id: normalized.id,
+            source_title: normalized.source_title,
+            slug: normalized.slug,
+            updated_at: normalized.updated_at,
+            created_at: normalized.created_at,
+          };
+          
+          // Ajouter uniquement les champs présents dans la réponse brute (pas normalisée)
+          // Cela évite d'écraser avec null les champs qui ne sont pas dans la réponse API
+          if ('classeur_id' in rawNote && rawNote.classeur_id !== undefined) {
+            partialPatch.classeur_id = normalized.classeur_id;
+          }
+          if ('folder_id' in rawNote && rawNote.folder_id !== undefined) {
+            partialPatch.folder_id = normalized.folder_id;
+          }
+          if ('header_image' in rawNote && rawNote.header_image !== undefined) {
+            partialPatch.header_image = normalized.header_image;
+          }
+          if ('share_settings' in rawNote && rawNote.share_settings !== undefined) {
+            partialPatch.share_settings = normalized.share_settings;
+          }
+          
+          // Mettre à jour avec le patch partiel
+          store.updateNote(normalized.id, partialPatch);
         } else {
-          // Ajouter une nouvelle note
+          // Ajouter une nouvelle note (on utilise l'objet complet normalisé)
           store.addNote(normalized);
         }
       });

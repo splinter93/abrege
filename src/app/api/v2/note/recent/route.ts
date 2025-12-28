@@ -38,9 +38,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const limitNum = parseInt(limit, 10);
 
     // ✅ OPTIMISATION : Select uniquement les colonnes nécessaires (pas de markdown_content !)
+    // ✅ FIX: Ajouter folder_id pour éviter d'écraser les mises à jour optimistes lors du polling
     const { data: notes, error } = await supabase
       .from('articles')
-      .select('id, source_title, slug, updated_at, created_at, classeur_id, header_image, share_settings')
+      .select('id, source_title, slug, updated_at, created_at, classeur_id, folder_id, header_image, share_settings')
       .eq('user_id', userId)
       .is('trashed_at', null) // ✅ Exclure les notes supprimées
       .order('updated_at', { ascending: false })
@@ -55,6 +56,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     // ✅ Format optimisé (seulement les données nécessaires)
+    // ✅ FIX: Inclure folder_id pour éviter d'écraser les mises à jour optimistes lors du polling
     const formattedNotes = notes?.map(note => ({
       id: note.id,
       source_title: note.source_title || 'Sans titre',
@@ -62,6 +64,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       updated_at: note.updated_at,
       created_at: note.created_at,
       classeur_id: note.classeur_id,
+      folder_id: note.folder_id,
       header_image: note.header_image,
       share_settings: note.share_settings
     })) || [];
