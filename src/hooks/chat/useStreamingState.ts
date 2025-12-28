@@ -174,23 +174,12 @@ export function useStreamingState(): UseStreamingStateReturn {
       success: undefined
     })));
     
-    // Ajouter à la timeline avec le BON roundNumber
-    setStreamingTimeline(prevTimeline => [
-      ...prevTimeline,
-      {
-        type: 'tool_execution' as const,
-        toolCalls: toolCalls.map(tc => ({
-          ...tc,
-          success: undefined,
-          result: undefined
-        })),
-        toolCount,
-        roundNumber: newRound,
-        timestamp: Date.now() - streamStartTime
-      }
-    ]);
+    // ✅ FIX DUPLICATION: Ne PAS ajouter à la timeline ici
+    // StreamOrchestrator gère déjà sa propre timeline qui sera passée à onComplete
+    // Ajouter ici créerait une duplication dans l'UI
+    // La timeline de StreamOrchestrator est la source de vérité
     
-    logger.dev('[useStreamingState] 🔧 Tool execution ajoutée:', {
+    logger.dev('[useStreamingState] 🔧 Tool execution (état uniquement, pas de timeline):', {
       toolCount,
       round: newRound,
       toolNames: toolCalls.map(tc => tc.function.name)
