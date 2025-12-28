@@ -80,17 +80,20 @@
   justify-content: center;
   height: 32px;
   width: 32px;
-  border: none;
+  border: none !important; /* ✅ Pas d'encadré */
   border-radius: 6px;
-  background: transparent;
+  background: transparent !important; /* ✅ Pas de background particulier */
   color: #9ca3af;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-shadow: none !important; /* ✅ Pas d'ombre/encadré */
 }
 
 .editor-toolbar .toolbar-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
+  border: none !important; /* ✅ Pas d'encadré au hover */
+  box-shadow: none !important; /* ✅ Pas d'ombre au hover */
 }
 
 .editor-toolbar .toolbar-btn:disabled {
@@ -113,6 +116,20 @@
 .tb-audio-wrapper {
   display: flex;
   align-items: center;
+}
+
+/* ✅ FIX: Retirer encadré et background particulier du bouton micro */
+.tb-audio-wrapper .toolbar-btn {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.tb-audio-wrapper .toolbar-btn:hover {
+  border: none !important;
+  box-shadow: none !important;
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .tb-audio-error {

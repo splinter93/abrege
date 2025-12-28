@@ -84,8 +84,8 @@
      TAILLES HARMONISÉES - PREMIUM EDITOR
      ========================================================================== */
   --editor-title-size: 2.375rem;      /* 38px - Taille augmentée pour meilleure visibilité */
-  --editor-body-size: 0.96875rem;      /* 15.5px - taille de base de l'éditeur */
-  --editor-body-size-mobile: 0.96875rem; /* 15.5px - taille mobile cohérente */
+  --editor-body-size: 1rem;      /* 16px - taille de base de l'éditeur */
+  --editor-body-size-mobile: 1rem; /* 16px - taille mobile cohérente */
   --editor-h1-size: 2.25rem;         /* 36px - Aligné avec chat */
 
   /* ==========================================================================
