@@ -271,9 +271,13 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
    * ✅ Streaming avec Server-Sent Events (SSE)
    * 
    * ROUTING AUTOMATIQUE:
-   * - MCP tools → /v1/responses (MCP Remote Tools + support images)
+   * - MCP tools + images → /v1/chat/completions (images non supportées par /v1/responses)
+   * - MCP tools sans images → /v1/responses (MCP Remote Tools)
    * - OpenAPI tools → /v1/chat/completions (format standard)
    * - Pas de tools → /v1/chat/completions
+   * 
+   * ⚠️ CRITICAL: /v1/responses ne supporte PAS les images (content array)
+   * Solution: Fallback vers /v1/chat/completions si images présentes
    */
   async *callWithMessagesStream(
     messages: ChatMessage[],
@@ -287,11 +291,29 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
       // ✅ Détecter le type de tools
       const hasMcpTools = Array.isArray(tools) && tools.some(t => this.isMcpTool(t));
       const hasOpenApiTools = Array.isArray(tools) && tools.some(t => isFunctionTool(t as Tool));
+      
+      // ✅ CRITICAL FIX: Détecter si on a des images dans les messages
+      const hasImages = messages.some(msg => 
+        msg.role === 'user' && 
+        'attachedImages' in msg && 
+        Array.isArray((msg as { attachedImages?: unknown[] }).attachedImages) &&
+        (msg as { attachedImages?: unknown[] }).attachedImages!.length > 0
+      );
 
-      // ✅ ROUTING: /v1/responses si MCP tools (supporte les images)
-      if (hasMcpTools) {
-        logger.dev('[XAINativeProvider] 🔀 Route: /v1/responses (MCP Remote Tools + support images)');
+      // ✅ ROUTING: /v1/responses si MCP tools SANS images
+      // ⚠️ FALLBACK: /v1/chat/completions si MCP tools AVEC images (images non supportées par /v1/responses)
+      if (hasMcpTools && !hasImages) {
+        logger.dev('[XAINativeProvider] 🔀 Route: /v1/responses (MCP Remote Tools, pas d\'images)');
         yield* this.streamWithResponsesApi(messages, tools);
+      } else if (hasMcpTools && hasImages) {
+        logger.warn('[XAINativeProvider] ⚠️ MCP tools + images détectés → Fallback /v1/chat/completions (images non supportées par /v1/responses)');
+        // ⚠️ FALLBACK: Filtrer les MCP tools (non supportés par /v1/chat/completions)
+        // On ne peut pas utiliser MCP tools avec images, donc on les désactive temporairement
+        const filteredTools = Array.isArray(tools) ? tools.filter(t => !this.isMcpTool(t)) : [];
+        if (filteredTools.length === 0) {
+          logger.warn('[XAINativeProvider] ⚠️ Aucun tool disponible après filtrage MCP → Pas de tools');
+        }
+        yield* this.streamWithChatCompletions(messages, filteredTools);
       } else if (hasOpenApiTools) {
         logger.dev('[XAINativeProvider] 🔀 Route: /v1/chat/completions (OpenAPI tools)');
         yield* this.streamWithChatCompletions(messages, tools);
@@ -544,9 +566,18 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
     // ✅ LOG COMPLET du payload pour debug (JSON stringifié)
     try {
       const payloadStr = JSON.stringify(payload);
-      logger.dev('[XAINativeProvider] 🔍 Payload JSON (preview first 2000 chars):', {
+      const errorColumn = 1085; // Colonne de l'erreur typique
+      const previewStart = Math.max(0, errorColumn - 200);
+      const previewEnd = Math.min(payloadStr.length, errorColumn + 200);
+      
+      logger.dev('[XAINativeProvider] 🔍 Payload JSON (preview around error column 1085):', {
         payloadPreview: payloadStr.substring(0, 2000),
-        totalLength: payloadStr.length
+        totalLength: payloadStr.length,
+        errorColumnPreview: payloadStr.substring(previewStart, previewEnd),
+        errorColumn: errorColumn,
+        charAtErrorColumn: payloadStr.charAt(errorColumn - 1),
+        contextBefore: payloadStr.substring(Math.max(0, errorColumn - 50), errorColumn),
+        contextAfter: payloadStr.substring(errorColumn, Math.min(payloadStr.length, errorColumn + 50))
       });
     } catch (e) {
       logger.warn('[XAINativeProvider] ⚠️ Impossible de stringifier le payload pour debug:', e);
@@ -713,7 +744,7 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
                   }
                 }
               } else if (eventType === 'response.completed') {
-                // Fin du stream
+                // ✅ Fin du stream - xAI a terminé (MCP call exécuté + réponse finale)
                 const response = parsed.response as Record<string, unknown>;
                 const usage = response?.usage as Usage | undefined;
                 if (usage) {
@@ -722,6 +753,13 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
                     usage
                   };
                 }
+                
+                // ✅ CRITICAL FIX: Yield finishReason: 'stop' pour indiquer la fin
+                // Sinon route.ts continue la boucle et relance le LLM (double réponse)
+                yield {
+                  type: 'delta',
+                  finishReason: 'stop' // ✅ Indique que c'est la réponse finale
+                };
                 
                 yield {
                   type: 'done'
@@ -789,11 +827,18 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
         for (const result of msg.tool_results) {
           // ✅ CRITIQUE: /v1/responses - `name` can only be specified for `user` messages
           // Ne pas inclure `name` pour les messages `tool`
+          // ✅ CRITICAL FIX: Le content DOIT être une string (pas array, pas null)
+          const toolContent = typeof result.content === 'string' 
+            ? result.content 
+            : (result.content === null || result.content === undefined 
+              ? '' 
+              : JSON.stringify(result.content));
+          
           input.push({
             role: 'tool',
             tool_call_id: result.tool_call_id,
             // ❌ NE PAS inclure `name` - /v1/responses ne permet `name` que pour `user`
-            content: typeof result.content === 'string' ? result.content : JSON.stringify(result.content ?? null)
+            content: toolContent // ✅ String uniquement pour tool
           });
         }
       }
@@ -813,10 +858,43 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
    * ⚠️ IMPORTANT: Pour /v1/responses, le content doit être string OU array (pas null pour user)
    */
   private convertChatMessagesToInput(messages: ChatMessage[]): XAINativeInputMessage[] {
-    return messages.map(msg => {
+    return messages.map((msg, index) => {
       const builtContent = this.buildMessageContent(msg);
       
-      // ✅ SÉCURITÉ: /v1/responses ne supporte pas null pour content (même pour user)
+      // ✅ DEBUG: Logger chaque message pour identifier le problème
+      logger.dev(`[XAINativeProvider] 🔍 Message ${index} (${msg.role}):`, {
+        role: msg.role,
+        contentType: typeof builtContent,
+        isArray: Array.isArray(builtContent),
+        isNull: builtContent === null,
+        hasAttachedImages: msg.role === 'user' && 'attachedImages' in msg && (msg as { attachedImages?: unknown[] }).attachedImages?.length > 0,
+        contentPreview: typeof builtContent === 'string' 
+          ? builtContent.substring(0, 100) 
+          : Array.isArray(builtContent) 
+            ? `Array[${builtContent.length}]` 
+            : 'null'
+      });
+      
+      // ✅ CRITICAL FIX: Pour les messages tool, le content DOIT être une string (pas array, pas null)
+      // L'API xAI /v1/responses rejette les messages tool avec content array ou null
+      if (msg.role === 'tool') {
+        const toolContent = typeof builtContent === 'string' ? builtContent : (builtContent === null ? '' : JSON.stringify(builtContent));
+        const inputMsg: XAINativeInputMessage = {
+          role: 'tool',
+          content: toolContent, // ✅ String uniquement pour tool
+          tool_call_id: msg.tool_call_id
+        };
+        logger.dev(`[XAINativeProvider] ✅ Tool message ${index} formaté:`, {
+          role: inputMsg.role,
+          contentType: typeof inputMsg.content,
+          contentLength: typeof inputMsg.content === 'string' ? inputMsg.content.length : 0,
+          hasToolCallId: !!inputMsg.tool_call_id
+        });
+        return inputMsg;
+      }
+      
+      // ✅ Pour les autres roles (user, assistant, system)
+      // SÉCURITÉ: /v1/responses ne supporte pas null pour content (même pour user)
       // Convertir null → "" pour éviter erreurs 422
       let content: string | XAINativeContentPart[];
       if (builtContent === null) {
@@ -825,10 +903,34 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
         content = builtContent;
       }
       
+      // ✅ CRITICAL FIX: Pour les messages system, le content DOIT être une string (pas array, pas null)
+      // L'API xAI /v1/responses rejette les messages system avec content array ou null
+      if (msg.role === 'system') {
+        const systemContent = typeof content === 'string' ? content : (content === null || content === undefined ? '' : JSON.stringify(content));
+        const inputMsg: XAINativeInputMessage = {
+          role: 'system',
+          content: systemContent // ✅ String uniquement pour system
+        };
+        logger.dev(`[XAINativeProvider] ✅ System message ${index} formaté:`, {
+          role: inputMsg.role,
+          contentType: typeof inputMsg.content,
+          contentLength: typeof inputMsg.content === 'string' ? inputMsg.content.length : 0
+        });
+        return inputMsg;
+      }
+      
       const inputMsg: XAINativeInputMessage = {
-        role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
+        role: msg.role as 'user' | 'assistant',
         content
       };
+      
+      // ✅ DEBUG: Logger le message formaté
+      logger.dev(`[XAINativeProvider] ✅ Message ${index} (${msg.role}) formaté:`, {
+        role: inputMsg.role,
+        contentType: typeof inputMsg.content,
+        isArray: Array.isArray(inputMsg.content),
+        contentLength: typeof inputMsg.content === 'string' ? inputMsg.content.length : Array.isArray(inputMsg.content) ? inputMsg.content.length : 0
+      });
 
       if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
         if (!msg.tool_results || msg.tool_results.length === 0) {

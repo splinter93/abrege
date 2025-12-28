@@ -765,11 +765,18 @@ export async function POST(request: NextRequest) {
             }
 
             // ✅ Décision basée sur finish_reason
+            // ⚠️ CRITICAL: Si finishReason === 'stop' MAIS on a des tool calls MCP, on doit les afficher AVANT de sortir
             if (finishReason === 'tool_calls' && toolCallsMap.size > 0) {
               logger.dev(`[Stream Route] 🔧 Tool calls détectés (${toolCallsMap.size}), exécution...`);
             } else if (finishReason === 'stop') {
-              logger.dev('[Stream Route] ✅ Réponse finale (stop), fin du stream');
-              break;
+              // ✅ CRITICAL FIX: Si on a des tool calls MCP (déjà exécutés), on doit les afficher AVANT de sortir
+              if (toolCallsMap.size > 0) {
+                logger.dev(`[Stream Route] 🔧 finishReason='stop' mais ${toolCallsMap.size} tool call(s) MCP à afficher - traitement avant sortie`);
+                // On continue pour traiter les tool calls MCP (lignes suivantes)
+              } else {
+                logger.dev('[Stream Route] ✅ Réponse finale (stop), fin du stream');
+                break;
+              }
             } else if (finishReason === 'length') {
               logger.warn('[Stream Route] ⚠️ Token limit atteint');
               break;
@@ -846,6 +853,16 @@ export async function POST(request: NextRequest) {
                 skipped: dedupedCount,
                 timestamp: Date.now()
               });
+            }
+
+            // ✅ CRITICAL FIX: Si on a seulement des MCP tools déjà exécutés ET du contenu, c'est la fin
+            // xAI a déjà généré la réponse finale après avoir exécuté le MCP call
+            // ⚠️ MAIS: On doit envoyer assistant_round_complete et tool_result AVANT de sortir
+            // On continue pour traiter les tool calls MCP (lignes suivantes)
+            // Le break sera après l'envoi des tool_result (voir ligne ~950)
+            if (uniqueToolCalls.length === 0 && alreadyExecutedTools.length > 0 && accumulatedContent.length > 0) {
+              logger.info('[Stream Route] ✅ MCP tools déjà exécutés + contenu reçu - réponse finale de xAI, traitement puis fin du round');
+              // On continue pour envoyer assistant_round_complete et tool_result
             }
 
             // ✅ CRITICAL FIX: Si tous les tool calls sont des doublons, forcer un dernier round SANS tools
@@ -928,6 +945,12 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                   timestamp: Date.now(),
                   isMcp: true // ✅ Flag pour différencier dans l'UI
                 });
+              }
+              
+              // ✅ CRITICAL FIX: Si c'était la fin (finishReason === 'stop'), sortir APRÈS avoir envoyé les tool_result
+              if (finishReason === 'stop' && uniqueToolCalls.length === 0) {
+                logger.info('[Stream Route] ✅ Tool_result MCP envoyés, fin du stream (finishReason=stop)');
+                break;
               }
             }
             

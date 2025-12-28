@@ -389,23 +389,30 @@ export class StreamOrchestrator {
       toolCallsCount: chunk.tool_calls?.length || 0
     });
 
-    // ✅ Si le round contient des tool_calls, les ajouter SEULEMENT à la timeline
-    // ⚠️ NE PAS appeler onToolExecution car ces tools sont déjà exécutés (MCP x.ai)
+    // ✅ Si le round contient des tool_calls, les ajouter à la timeline ET notifier le hook
+    // ⚠️ IMPORTANT : Pour les MCP tools x.ai, ils sont déjà exécutés côté serveur
+    // On doit les afficher dans la timeline MAIS aussi notifier le hook pour qu'il les ajoute
     if (chunk.tool_calls && chunk.tool_calls.length > 0) {
-      logger.dev(`[StreamOrchestrator] 🔧 ${chunk.tool_calls.length} tool call(s) dans round complete - ajout timeline uniquement`);
+      logger.dev(`[StreamOrchestrator] 🔧 ${chunk.tool_calls.length} tool call(s) dans round complete (MCP déjà exécutés)`);
       
       // Ajouter les tool calls au tracker (pour historique complet)
       for (const tc of chunk.tool_calls) {
         this.toolTracker.addToolCall(tc);
       }
 
-      // ✅ Ajouter DIRECTEMENT à la timeline SANS déclencher l'exécution
+      // ✅ CRITICAL FIX: Notifier le hook pour qu'il ajoute les tool calls à sa timeline
+      // Même si les tools sont déjà exécutés (MCP), ils doivent être affichés dans l'UI
       const toolCallsForTimeline = this.toolTracker.getNewToolCallsForNotification();
       if (toolCallsForTimeline.length > 0) {
+        // ✅ Ajouter à la timeline interne
         this.timeline.addToolExecutionEvent(toolCallsForTimeline, chunk.tool_calls.length);
         this.toolTracker.markNotified(toolCallsForTimeline);
         
-        logger.dev(`[StreamOrchestrator] ✅ ${toolCallsForTimeline.length} tool call(s) ajouté(s) à la timeline (pas d'exécution)`);
+        // ✅ CRITICAL FIX: Notifier le hook pour qu'il ajoute aussi à sa timeline
+        // Le hook utilisera ces tool calls pour l'affichage dans l'UI
+        callbacks.onToolExecution?.(chunk.tool_calls.length, toolCallsForTimeline);
+        
+        logger.dev(`[StreamOrchestrator] ✅ ${toolCallsForTimeline.length} tool call(s) ajouté(s) à la timeline ET notifié au hook`);
       }
 
       // Passer au prochain round

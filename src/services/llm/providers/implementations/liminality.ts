@@ -71,7 +71,14 @@ const LIMINALITY_INFO: ProviderInfo = {
     'claude-3-sonnet',
     'claude-3-5-sonnet',
     'groq-llama-3-70b',
-    'deepseek-chat'
+    'deepseek-chat',
+    'fireworks/z-ai-glm-4-7',
+    'openrouter/mimo-v2-flash:free',
+    'openrouter/kimi-k2-thinking',
+    'openrouter/glm-4.7',
+    'openrouter/gemini-3-flash-preview',
+    'openrouter/minimax-m2.1',
+    'openrouter/qwen3-vl-30b-a3b-instruct'
   ],
   pricing: {
     input: 'Variable (depends on underlying model)',

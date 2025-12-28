@@ -227,8 +227,8 @@ export class AgentOrchestrator {
     // Fallback: détection par pattern (ordre important!)
     // Liminality models (vérifier EN PREMIER avant les patterns génériques)
     if (model.includes('deepseek/') || model.includes('fireworks/') || 
-        model.includes('xai/') || model.startsWith('openai/gpt-5') || 
-        model === 'openai/gpt-4o-mini') {
+        model.includes('openrouter/') || model.includes('xai/') || 
+        model.startsWith('openai/gpt-5') || model === 'openai/gpt-4o-mini') {
       return 'liminality';
     }
     
