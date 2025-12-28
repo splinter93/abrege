@@ -867,7 +867,7 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
         contentType: typeof builtContent,
         isArray: Array.isArray(builtContent),
         isNull: builtContent === null,
-        hasAttachedImages: msg.role === 'user' && 'attachedImages' in msg && (msg as { attachedImages?: unknown[] }).attachedImages?.length > 0,
+        hasAttachedImages: msg.role === 'user' && 'attachedImages' in msg && Array.isArray((msg as { attachedImages?: unknown[] }).attachedImages) && (msg as { attachedImages: unknown[] }).attachedImages.length > 0,
         contentPreview: typeof builtContent === 'string' 
           ? builtContent.substring(0, 100) 
           : Array.isArray(builtContent) 
@@ -937,19 +937,9 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
           inputMsg.tool_calls = msg.tool_calls as ToolCall[];
         }
       }
-
-      // ✅ CRITIQUE: /v1/responses - `name` can only be specified for `user` messages
-      // Ne pas inclure `name` pour les messages `tool` dans /v1/responses
-      if (msg.role === 'tool' && msg.tool_call_id) {
-        inputMsg.tool_call_id = msg.tool_call_id;
-        // ❌ NE PAS inclure `name` pour les messages tool dans /v1/responses
-        // L'API xAI ne permet `name` que pour les messages `user`
-        // if (msg.name) {
-        //   inputMsg.name = msg.name;
-        // }
-      }
       
       // ✅ `name` est uniquement autorisé pour les messages `user`
+      // Note: Les messages 'tool' sont déjà gérés et retournés plus haut (ligne 880)
       if (msg.role === 'user' && 'name' in msg && msg.name) {
         inputMsg.name = msg.name;
       }
