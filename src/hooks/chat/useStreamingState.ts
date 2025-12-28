@@ -174,12 +174,43 @@ export function useStreamingState(): UseStreamingStateReturn {
       success: undefined
     })));
     
-    // ✅ FIX DUPLICATION: Ne PAS ajouter à la timeline ici
-    // StreamOrchestrator gère déjà sa propre timeline qui sera passée à onComplete
-    // Ajouter ici créerait une duplication dans l'UI
-    // La timeline de StreamOrchestrator est la source de vérité
+    // ✅ RESTAURÉ: Ajouter à la timeline pour affichage en temps réel
+    // ✅ DÉDUPLICATION: Vérifier que les tool calls ne sont pas déjà dans la timeline
+    setStreamingTimeline(prevTimeline => {
+      // Extraire les IDs des tool calls existants dans la timeline
+      const existingToolCallIds = new Set(
+        prevTimeline
+          .filter(item => item.type === 'tool_execution')
+          .flatMap(item => item.toolCalls.map(tc => tc.id))
+      );
+      
+      // Filtrer les tool calls qui ne sont pas déjà présents
+      const newToolCalls = toolCalls.filter(tc => !existingToolCallIds.has(tc.id));
+      
+      // Si tous les tool calls sont déjà présents, ne pas ajouter de doublon
+      if (newToolCalls.length === 0) {
+        logger.dev('[useStreamingState] 🔧 Tool calls déjà présents dans timeline, skip duplication');
+        return prevTimeline;
+      }
+      
+      // Ajouter seulement les nouveaux tool calls
+      return [
+        ...prevTimeline,
+        {
+          type: 'tool_execution' as const,
+          toolCalls: newToolCalls.map(tc => ({
+            ...tc,
+            success: undefined,
+            result: undefined
+          })),
+          toolCount: newToolCalls.length,
+          roundNumber: newRound,
+          timestamp: Date.now() - streamStartTime
+        }
+      ];
+    });
     
-    logger.dev('[useStreamingState] 🔧 Tool execution (état uniquement, pas de timeline):', {
+    logger.dev('[useStreamingState] 🔧 Tool execution ajoutée (avec déduplication):', {
       toolCount,
       round: newRound,
       toolNames: toolCalls.map(tc => tc.function.name)
