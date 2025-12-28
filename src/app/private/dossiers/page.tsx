@@ -499,13 +499,27 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
   }, [handleCrossClasseurDragLeave]);
 
   /**
-   * Gère les résultats de recherche (navigation par défaut du composant SearchBar)
+   * Gère les résultats de recherche - Navigation vers la note/dossier/classeur
    * @param result - Résultat de recherche sélectionné
    */
   const handleSearchResult = useCallback((result: SearchResult) => {
-    // Navigation par défaut du composant SearchBar
-    // Le composant gère déjà la navigation
-  }, []);
+    if (result.type === 'note') {
+      // Navigation vers la note par slug ou id
+      router.push(`/private/note/${result.slug || result.id}`);
+    } else if (result.type === 'folder') {
+      // Navigation vers le dossier
+      if (result.classeur_id) {
+        setActiveClasseurId(result.classeur_id);
+        // Le dossier sera ouvert automatiquement par le FolderManager
+        // via le store Zustand qui sera mis à jour
+      }
+    } else if (result.type === 'classeur') {
+      // Navigation vers le classeur
+      if (result.id) {
+        setActiveClasseurId(result.id);
+      }
+    }
+  }, [router, setActiveClasseurId]);
 
   // Afficher l'état de chargement initial
   if (loading && classeurs.length === 0) {

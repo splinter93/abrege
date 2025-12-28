@@ -85,18 +85,33 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         notesQuery = notesQuery.eq('classeur_id', classeurId);
       }
 
-      const { data: notes, error: notesError } = await notesQuery.limit(limit);
+      const { data: notes, error: notesError } = await notesQuery.limit(limit * 2); // Récupérer plus pour filtrer
 
       if (!notesError && notes) {
         notes.forEach(note => {
+          const title = note.source_title || 'Sans titre';
+          const titleLower = title.toLowerCase();
+          const queryLower = searchQuery?.toLowerCase() || '';
+          
+          // ✅ FIX: Vérifier si le match est dans le titre (priorité absolue)
+          const matchInTitle = queryLower && titleLower.includes(queryLower);
+          
+          // ✅ FIX: Si le match n'est PAS dans le titre, score très bas (sera filtré)
+          // On garde quand même ces résultats mais avec un score très faible
+          const score = searchQuery 
+            ? calculateScoreFromTitle(searchQuery, title)
+            : 1.0;
+          
+          // ✅ FIX: Si match seulement dans contenu (pas dans titre), diviser le score par 10
+          const finalScore = matchInTitle ? score : score / 10;
+          
           results.push({
             type: 'note',
             id: note.id,
-            title: note.source_title || 'Sans titre',
+            title: title,
             slug: note.slug,
             classeur_id: note.classeur_id,
-            // ✅ Score basé sur titre uniquement (pas de fetch markdown_content)
-            score: searchQuery ? calculateScoreFromTitle(searchQuery, note.source_title || '') : 1.0,
+            score: finalScore,
             excerpt: '', // Pas d'excerpt pour économiser de la bande passante
             updated_at: note.updated_at
           });
@@ -125,17 +140,31 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         foldersQuery = foldersQuery.eq('classeur_id', classeurId);
       }
 
-      const { data: folders, error: foldersError } = await foldersQuery.limit(limit);
+      const { data: folders, error: foldersError } = await foldersQuery.limit(limit * 2); // Récupérer plus pour filtrer
 
       if (!foldersError && folders) {
         folders.forEach(folder => {
+          const name = folder.name || 'Sans nom';
+          const nameLower = name.toLowerCase();
+          const queryLower = searchQuery?.toLowerCase() || '';
+          
+          // ✅ FIX: Vérifier si le match est dans le nom (priorité absolue)
+          const matchInName = queryLower && nameLower.includes(queryLower);
+          
+          const score = searchQuery 
+            ? calculateScoreFromTitle(searchQuery, name)
+            : 1.0;
+          
+          // ✅ FIX: Si match seulement ailleurs, diviser le score par 10
+          const finalScore = matchInName ? score : score / 10;
+          
           results.push({
             type: 'folder',
             id: folder.id,
-            title: folder.name || 'Sans nom',
+            title: name,
             slug: folder.slug,
             classeur_id: folder.classeur_id,
-            score: searchQuery ? calculateScoreFromTitle(searchQuery, folder.name || '') : 1.0,
+            score: finalScore,
             excerpt: '', // Pas d'excerpt pour dossiers
             updated_at: folder.updated_at
           });
@@ -174,33 +203,75 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
 /**
  * Calcul optimisé du score de pertinence (titre uniquement)
+ * ✅ AMÉLIORATION: Priorise fortement les matches dans le titre
  * Évite le fetch du markdown_content pour la performance
  */
 function calculateScoreFromTitle(query: string, title: string): number {
-  const queryLower = query.toLowerCase();
+  const queryLower = query.toLowerCase().trim();
   const titleLower = title.toLowerCase();
+  
+  // Si pas de query, score neutre
+  if (!queryLower) {
+    return 1.0;
+  }
   
   let score = 0;
   
-  // Match exact (insensible à la casse)
+  // ✅ PRIORITÉ 1: Match exact du titre (insensible à la casse)
   if (titleLower === queryLower) {
-    return 200;
+    return 1000; // Score maximum pour match exact
   }
   
-  // Match au début du titre (très pertinent)
+  // ✅ PRIORITÉ 2: Match au début du titre (très pertinent)
   if (titleLower.startsWith(queryLower)) {
-    score += 150;
-  } else if (titleLower.includes(queryLower)) {
-    // Match quelque part dans le titre
-    score += 100;
+    score += 500; // Score très élevé pour début de titre
+  } 
+  // ✅ PRIORITÉ 3: Match au début d'un mot dans le titre
+  else if (new RegExp(`\\b${queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(titleLower)) {
+    score += 400; // Score élevé pour début de mot
+  }
+  // ✅ PRIORITÉ 4: Match quelque part dans le titre
+  else if (titleLower.includes(queryLower)) {
+    score += 300; // Score bon pour présence dans titre
+  }
+  // Si pas de match dans le titre, score très bas (sera filtré si match dans contenu)
+  else {
+    return 1; // Score minimal si pas dans le titre
   }
   
-  // Bonus pour titre court (plus précis)
-  score += Math.max(0, 50 - title.length);
+  // ✅ BONUS: Match de mots complets (plus pertinent que partie de mot)
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 0);
+  const titleWords = titleLower.split(/\s+/);
+  let completeWordMatches = 0;
   
-  // Pénalité si beaucoup de mots (titre trop long = moins pertinent)
-  const wordCount = title.split(/\s+/).length;
-  score -= Math.min(wordCount * 2, 30);
+  for (const queryWord of queryWords) {
+    if (titleWords.some(titleWord => titleWord === queryWord || titleWord.startsWith(queryWord))) {
+      completeWordMatches++;
+    }
+  }
+  
+  // Bonus pour match de mots complets
+  if (completeWordMatches > 0) {
+    score += completeWordMatches * 50;
+  }
+  
+  // ✅ BONUS: Titre court (plus précis) - mais moins important que le match
+  const titleLength = title.length;
+  if (titleLength < 20) {
+    score += 20;
+  } else if (titleLength < 40) {
+    score += 10;
+  }
+  
+  // ✅ LÉGÈRE pénalité pour titre très long (mais pas trop pour ne pas pénaliser les bons matches)
+  if (titleLength > 60) {
+    score -= 10;
+  }
+  
+  // ✅ BONUS: Si le query est un mot complet qui matche un mot complet du titre
+  if (queryWords.length === 1 && titleWords.includes(queryWords[0])) {
+    score += 100; // Bonus supplémentaire pour match de mot complet
+  }
   
   return Math.max(score, 1);
 }

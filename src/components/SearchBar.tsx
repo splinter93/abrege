@@ -70,10 +70,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
   }, []);
 
-  // Fonction de recherche
-  const handleSearch = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
+  // Fonction de recherche (appelée par le debounce ou le submit)
+  const performSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
 
     setIsSearching(true);
     setShowSearchResults(false);
@@ -84,7 +87,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       
       // Construire les paramètres de recherche
       const searchParams = new URLSearchParams({
-        q: searchQuery.trim(),
+        q: query.trim(),
         limit: maxResults.toString()
       });
       
@@ -120,7 +123,29 @@ const SearchBar: React.FC<SearchBarProps> = ({
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, getAuthHeaders, maxResults, searchTypes]);
+  }, [getAuthHeaders, maxResults, searchTypes]);
+
+  // Fonction de recherche (submit)
+  const handleSearch = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performSearch(searchQuery);
+  }, [searchQuery, performSearch]);
+
+  // ✅ Recherche en temps réel avec debounce (300ms)
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    // Délai de 300ms avant de lancer la recherche
+    const timeoutId = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, performSearch]);
 
   // Navigation vers un résultat
   const handleSearchResultClick = useCallback((result: SearchResult) => {

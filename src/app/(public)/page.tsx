@@ -66,11 +66,21 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
     router.push('/youtube-summary');
   }, [router]);
 
-  // Callback pour gérer les résultats de recherche
-  const handleSearchResult = useCallback((_result: SearchResult) => {
-    // Navigation par défaut du composant SearchBar
-    // Le composant gère déjà la navigation
-  }, []);
+  // Callback pour gérer les résultats de recherche - Navigation vers la note/dossier/classeur
+  const handleSearchResult = useCallback((result: SearchResult) => {
+    if (result.type === 'note') {
+      // Navigation vers la note par slug ou id
+      router.push(`/private/note/${result.slug || result.id}`);
+    } else if (result.type === 'folder') {
+      // Navigation vers le dossier (rediriger vers la page dossiers avec le dossier ouvert)
+      router.push(`/private/dossiers`);
+      // Le dossier sera ouvert automatiquement par le store Zustand
+    } else if (result.type === 'classeur') {
+      // Navigation vers le classeur
+      router.push(`/private/dossiers`);
+      // Le classeur sera activé automatiquement par le store Zustand
+    }
+  }, [router]);
 
   const handleCreateNote = useCallback(async () => {
     if (!user) {
