@@ -22,10 +22,11 @@
 /* ==========================================================================
    IMPORTS GOOGLE FONTS - POLICES OPTIMISÉES POUR LA PRODUCTION
    ========================================================================== */
-/* POLICES PRINCIPALES - Figtree + Inter + Monospace */
+/* POLICES PRINCIPALES - Figtree + Inter + Geist + Manrope + Monospace */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 
@@ -82,7 +83,7 @@
   /* ==========================================================================
      TAILLES HARMONISÉES - PREMIUM EDITOR
      ========================================================================== */
-  --editor-title-size: 2.25rem;      /* 36px - Aligné avec chat (sweet spot) */
+  --editor-title-size: 2.375rem;      /* 38px - Taille augmentée pour meilleure visibilité */
   --editor-body-size: 0.96875rem;      /* 15.5px - taille de base de l'éditeur */
   --editor-body-size-mobile: 0.96875rem; /* 15.5px - taille mobile cohérente */
   --editor-h1-size: 2.25rem;         /* 36px - Aligné avec chat */
@@ -96,13 +97,13 @@
   /* ==========================================================================
      FONT-WEIGHTS CENTRALISÉS - PREMIUM EDITOR
      ========================================================================== */
-  --editor-title-weight: 775;         /* Poids pour les titres principaux - Aligné avec H1 */
-  --editor-h1-weight: 775;            /* Poids pour H1 - Aligné */
-  --editor-h2-weight: 725;            /* Poids pour H2 - Aligné */
-  --editor-h3-weight: 725;            /* Poids pour H3 - Aligné */
-  --editor-h4-weight: 800;            /* Poids pour H4 - TRÈS GRAS */
-  --editor-h5-weight: 800;            /* Poids pour H5 - TRÈS GRAS */
-  --editor-h6-weight: 800;            /* Poids pour H6 - TRÈS GRAS */
+  --editor-title-weight: 800;         /* Poids pour les titres principaux - Le plus important */
+  --editor-h1-weight: 775;            /* Poids pour H1 - Égal au title area */
+  --editor-h2-weight: 700;            /* Poids pour H2 - Moins gras que title/H1 pour hiérarchie claire */
+  --editor-h3-weight: 650;            /* Poids pour H3 - Hiérarchie décroissante */
+  --editor-h4-weight: 600;            /* Poids pour H4 - Hiérarchie décroissante */
+  --editor-h5-weight: 550;            /* Poids pour H5 - Hiérarchie décroissante */
+  --editor-h6-weight: 500;            /* Poids pour H6 - Hiérarchie décroissante */
   --editor-body-weight: 400;          /* Poids pour le contenu principal */
   --editor-strong-weight: 700;        /* Poids pour le texte en gras */
   --editor-table-header-weight: 900;  /* Poids pour les en-têtes de tableau */
@@ -140,9 +141,9 @@
   /* ==========================================================================
      PADDINGS ET ESPACEMENTS TYPOGRAPHIQUES - PREMIUM
      ========================================================================== */
-  --editor-title-padding: 0 0 12px 0;    /* 12px - reduced from 20px for tighter spacing */
+  --editor-title-padding: 0 0 12px 0;    /* 12px - Équivalent à --md-h1-margin-bottom pour cohérence avec H1 dans body */
   --editor-title-padding-wide: 0 0 6px 0; /* 6px - reduced from 12px for wide mode */
-  --editor-content-padding: 6px 0 100px 0; /* 6px - reduced from 10px for tighter spacing */
+  --editor-content-padding: 0 0 100px 0; /* 0px top - Le premier élément (H2, p, etc.) applique sa propre marge-top pour espacement cohérent */
   --editor-title-line-height: 1.2;        /* 1.2 - refined from 1.15 for better title spacing */
   --editor-title-letter-spacing: -0.025em; /* -0.025em - refined from -0.02em */
   --editor-title-min-height: 40px;        /* 40px - refined from 45px */

@@ -22,6 +22,8 @@ const FONTS: FontOption[] = [
   // Sans-serif modernes
   { name: 'Noto Sans', label: 'Noto Sans', category: 'sans-serif' },
   { name: 'Inter', label: 'Inter', category: 'sans-serif' },
+  { name: 'Geist', label: 'Geist', category: 'sans-serif' },
+  { name: 'Manrope', label: 'Manrope', category: 'sans-serif' },
   { name: 'Roboto', label: 'Roboto', category: 'sans-serif' },
   { name: 'Open Sans', label: 'Open Sans', category: 'sans-serif' },
   { name: 'Lato', label: 'Lato', category: 'sans-serif' },

@@ -13,6 +13,8 @@ export const useFontManager = (currentFont: string | null | undefined) => {
       const fontFamilyMap: Record<string, string> = {
         'Noto Sans': "'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
         'Inter': "'Inter', sans-serif",
+        'Geist': "'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
+        'Manrope': "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
         'Roboto': "'Roboto', sans-serif",
         'Open Sans': "'Open Sans', sans-serif",
         'Lato': "'Lato', sans-serif",
