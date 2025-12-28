@@ -493,12 +493,12 @@ export async function POST(request: NextRequest) {
       async start(controller) {
         const encoder = new TextEncoder();
         const startTime = Date.now();
-        const TIMEOUT_MS = 180000; // 180s (3 minutes) - permet plusieurs rounds avec tool calls
+        const TIMEOUT_MS = 600000; // 600s (10 minutes) - permet enchaînements longs comme Cursor avec dizaines de tool calls
         
         // ✅ Vérifier timeout
         const checkTimeout = () => {
           if (Date.now() - startTime > TIMEOUT_MS) {
-            throw new Error('Stream timeout (180s)');
+            throw new Error('Stream timeout (600s / 10 minutes)');
           }
         };
         

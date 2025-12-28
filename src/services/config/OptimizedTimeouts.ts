@@ -68,9 +68,9 @@ export class OptimizedTimeouts {
   private getDefaultConfig(): AdaptiveTimeoutConfig {
     return {
       toolCalls: {
-        single: 30000,     // 30s pour un tool call
-        batch: 120000,     // 2min pour un batch
-        parallel: 60000,   // 1min pour l'exécution parallèle
+        single: 120000,    // 120s (2 min) pour un tool call - permet enchaînements longs comme Cursor
+        batch: 300000,     // 5min pour un batch (augmenté pour cohérence)
+        parallel: 180000,  // 3min pour l'exécution parallèle
         retry: 5000,       // 5s entre les tentatives
       },
       api: {

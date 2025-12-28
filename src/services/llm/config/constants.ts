@@ -14,7 +14,7 @@ export const TOOL_CALL_LIMITS = {
   MAX_PARALLEL_TOOL_CALLS: 5,
   
   /** Timeout par défaut pour un tool call (ms) */
-  DEFAULT_TOOL_TIMEOUT_MS: 30000,
+  DEFAULT_TOOL_TIMEOUT_MS: 120000, // 120s (2 minutes) - permet enchaînements longs comme Cursor
   
   /** Timeouts spécifiques par catégorie */
   TIMEOUT_BY_CATEGORY: {
@@ -22,9 +22,9 @@ export const TOOL_CALL_LIMITS = {
     SEARCH: 10000,   // 10s pour recherche
     WRITE: 10000,    // 10s pour écriture
     DATABASE: 15000, // 15s pour base de données
-    AGENT: 30000,    // 30s pour agents (peuvent être longs)
+    AGENT: 120000,   // 120s (2 min) pour agents - enchaînements longs comme Cursor
     MCP: 10000,      // 10s pour MCP
-    UNKNOWN: 30000   // 30s par sécurité
+    UNKNOWN: 120000  // 120s (2 min) par sécurité - permet exploration autonome
   }
 } as const;
 
