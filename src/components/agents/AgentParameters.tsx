@@ -285,8 +285,7 @@ export function AgentParameters({
               </div>
             )}
           </div>
-          </section>
-        )}
+        </section>
 
         <section className="agent-params-card">
           <div className="agent-params-card__header">
@@ -449,7 +448,8 @@ export function AgentParameters({
               </div>
             )}
           </div>
-        </section>
+          </section>
+        )}
 
         <section className="agent-params-card">
           <div className="agent-params-card__header">
