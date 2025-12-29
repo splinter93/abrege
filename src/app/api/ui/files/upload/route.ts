@@ -267,11 +267,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         s3Result.key
       );
       
-      console.log('🔗 [UPLOAD] URL S3 construite:', {
+      // Utiliser logger au lieu de console.log (peut exposer des infos sensibles)
+      logApi.debug('🔗 [UPLOAD] URL S3 construite', {
         bucket: process.env.AWS_S3_BUCKET,
         region: process.env.AWS_REGION,
         key: s3Result.key,
-        publicUrl
+        // Ne pas logger l'URL complète (peut contenir des infos sensibles)
+        hasPublicUrl: !!publicUrl
       });
 
       // Créer un client Supabase avec le contexte d'authentification de l'utilisateur

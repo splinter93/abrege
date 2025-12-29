@@ -1,22 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/utils/authUtils';
+import { logApi } from '@/utils/logger';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
-    console.log('🔍 Debug Auth - Variables d\'environnement:');
-    console.log(`   SCRIVIA_API_KEYS: ${process.env.SCRIVIA_API_KEYS}`);
-    console.log(`   SCRIVIA_DEFAULT_USER_ID: ${process.env.SCRIVIA_DEFAULT_USER_ID}`);
+    logApi.debug('🔍 Debug Auth - Variables d\'environnement', {
+      hasScriviaApiKeys: !!process.env.SCRIVIA_API_KEYS,
+      hasDefaultUserId: !!process.env.SCRIVIA_DEFAULT_USER_ID,
+    });
     
     // Test avec clé d'API
     const apiKey = request.headers.get('X-API-Key');
-    console.log(`   X-API-Key: ${apiKey}`);
+    logApi.debug('🔍 Debug Auth - X-API-Key header', {
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey?.length || 0,
+    });
     
     if (apiKey) {
-      console.log('🔍 Test de getAuthenticatedUser avec clé d\'API...');
+      logApi.debug('🔍 Test de getAuthenticatedUser avec clé d\'API');
       const result = await getAuthenticatedUser(request);
       
-      console.log('📊 Résultat getAuthenticatedUser:');
-      console.log(JSON.stringify(result, null, 2));
+      logApi.debug('📊 Résultat getAuthenticatedUser', {
+        success: result.success,
+        hasUserId: !!result.userId,
+        hasScopes: !!result.scopes,
+      });
       
       return NextResponse.json({
         success: true,
@@ -42,7 +50,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
     
   } catch (error) {
-    console.error('❌ Erreur debug auth:', error);
+    logApi.error('❌ Erreur debug auth', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logApi } from '@/utils/logger';
 
 /**
  * 🔥 ENDPOINT DE FORCE LOG - Ultra simple
@@ -7,11 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET() {
   const timestamp = new Date().toISOString();
   
-  // Force les logs partout
-  console.log('🔥 [FORCE-LOG] GET appelé à', timestamp);
-  console.error('🔥 [FORCE-LOG] GET appelé à', timestamp);
-  process.stdout.write(`🔥 [FORCE-LOG] GET appelé à ${timestamp}\n`);
-  process.stderr.write(`🔥 [FORCE-LOG] GET appelé à ${timestamp}\n`);
+  // Utiliser logger structuré
+  logApi.info('🔥 [FORCE-LOG] GET appelé', { timestamp });
   
   return NextResponse.json({
     success: true,
@@ -29,18 +27,21 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const timestamp = new Date().toISOString();
   
-  // Force les logs partout
-  console.log('🔥 [FORCE-LOG] POST appelé à', timestamp);
-  console.error('🔥 [FORCE-LOG] POST appelé à', timestamp);
-  process.stdout.write(`🔥 [FORCE-LOG] POST appelé à ${timestamp}\n`);
-  process.stderr.write(`🔥 [FORCE-LOG] POST appelé à ${timestamp}\n`);
+  // Utiliser logger structuré
+  logApi.info('🔥 [FORCE-LOG] POST appelé', { timestamp });
   
   try {
     const body = await request.json().catch(() => ({}));
     const headers = Object.fromEntries(request.headers.entries());
     
-    console.log('🔥 [FORCE-LOG] Headers:', headers);
-    console.log('🔥 [FORCE-LOG] Body:', body);
+    logApi.debug('🔥 [FORCE-LOG] Headers reçus', { 
+      headerKeys: Object.keys(headers),
+      timestamp 
+    });
+    logApi.debug('🔥 [FORCE-LOG] Body reçu', { 
+      bodyKeys: Object.keys(body as Record<string, unknown>),
+      timestamp 
+    });
     
     return NextResponse.json({
       success: true,
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('🔥 [FORCE-LOG] Erreur:', error);
+    logApi.error('🔥 [FORCE-LOG] Erreur', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : String(error),

@@ -184,19 +184,46 @@ export interface LiminalityResponse {
 }
 
 /**
- * Events de streaming SSE
+ * Events de streaming SSE (format réel de l'API Liminality)
+ * 
+ * Types d'events observés :
+ * - 'start' : Démarrage du stream
+ * - 'text.delta' : Chunk de texte avec delta
+ * - 'chunk' : Chunk de contenu (ancien format)
+ * - 'text.done' : Fin du texte
+ * - 'tool_block.start' : Début d'un tool call
+ * - 'tool_block.done' : Fin d'un tool call
+ * - 'done' : Fin du stream avec messages complets
+ * - 'tool_call' : Tool call en cours (ancien format)
+ * - 'tool_result' : Résultat de tool (ancien format)
+ * - 'end' : Fin du stream (ancien format)
+ * - 'error' : Erreur
  */
 export interface LiminalityStreamEvent {
-  type: 'start' | 'chunk' | 'tool_call' | 'tool_result' | 'end' | 'error';
-  content?: string;
-  tool_name?: string;
-  args?: Record<string, unknown>;
-  result?: unknown;
+  type: 'start' | 'text.delta' | 'chunk' | 'text.done' | 'tool_block.start' | 'tool_block.done' | 'done' | 'tool_call' | 'tool_result' | 'end' | 'error';
+  delta?: string; // Pour 'text.delta'
+  content?: string; // Pour 'chunk' ou contenu général
+  block_id?: string; // Pour 'tool_block.start' et 'tool_block.done'
+  tool_name?: string; // Pour 'tool_call' et 'tool_result' (ancien format)
+  messages?: Array<{
+    role: string;
+    tool_calls?: Array<LiminalityToolCallInMessage>;
+  }>;
+  complete?: boolean; // Pour 'done'
   usage?: LiminalityResponse['usage'];
   error?: {
     message: string;
     code?: string;
   };
+}
+
+/**
+ * Tool call dans un message Liminality (format API)
+ */
+export interface LiminalityToolCallInMessage {
+  id: string;
+  name: string;
+  arguments: string | Record<string, unknown>;
 }
 
 /**

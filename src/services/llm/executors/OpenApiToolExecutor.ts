@@ -5,6 +5,7 @@
 
 import { ToolCall, ToolResult } from '../types/apiV2Types';
 import { simpleLogger as logger } from '@/utils/logger';
+import { TOOL_CALL_LIMITS } from '../config/constants';
 
 /**
  * Type pour les endpoints OpenAPI
@@ -184,7 +185,7 @@ export class OpenApiToolExecutor {
 
     // Faire l'appel HTTP avec timeout
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    const timeout = setTimeout(() => controller.abort(), TOOL_CALL_LIMITS.DEFAULT_TOOL_TIMEOUT_MS); // 120s (2 min) - permet enchaînements longs
 
     try {
       // ✅ FIXED: Construire le body correctement (exclure les path params)
@@ -225,7 +226,7 @@ export class OpenApiToolExecutor {
     } catch (error) {
       clearTimeout(timeout);
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Timeout: La requête a dépassé 30 secondes');
+        throw new Error(`Timeout: La requête a dépassé ${TOOL_CALL_LIMITS.DEFAULT_TOOL_TIMEOUT_MS / 1000} secondes`);
       }
       throw error;
     }

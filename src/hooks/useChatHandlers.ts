@@ -270,16 +270,44 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
     // ✅ SOLUTION SIMPLE : Mettre à jour le store Zustand après applyContentOperations
     if (toolName === 'scrivia__applyContentOperations' && success && result) {
       try {
-        // Parser le résultat pour extraire le noteId
-        let parsedResult: any;
-        if (typeof result === 'string') {
-          parsedResult = JSON.parse(result);
-        } else {
-          parsedResult = result;
+        // ✅ INTERFACE EXPLICITE : Type strict pour le résultat du tool
+        interface ApplyContentOperationsResult {
+          data?: {
+            note_id?: string;
+          };
+          note_id?: string;
         }
         
-        // Extraire le noteId depuis les args du tool call ou le résultat
-        const noteId = parsedResult?.data?.note_id || parsedResult?.note_id;
+        // ✅ VALIDATION STRICTE : Parser avec type guard
+        let parsedResult: ApplyContentOperationsResult | null = null;
+        
+        if (typeof result === 'string') {
+          try {
+            const parsed = JSON.parse(result);
+            // Type guard : vérifier structure minimale
+            if (parsed && typeof parsed === 'object') {
+              parsedResult = parsed as ApplyContentOperationsResult;
+            }
+          } catch (parseError) {
+            logger.warn('[useChatHandlers] ⚠️ Erreur parsing JSON tool result', {
+              error: parseError instanceof Error ? parseError.message : String(parseError),
+              resultPreview: result.substring(0, 100)
+            });
+            return; // Sortir si JSON invalide
+          }
+        } else if (result && typeof result === 'object') {
+          parsedResult = result as ApplyContentOperationsResult;
+        }
+        
+        if (!parsedResult) {
+          logger.warn('[useChatHandlers] ⚠️ Tool result invalide (pas un objet)', {
+            resultType: typeof result
+          });
+          return;
+        }
+        
+        // ✅ ACCÈS SÉCURISÉ : Type safety garantie
+        const noteId = parsedResult.data?.note_id || parsedResult.note_id;
         if (noteId) {
           // ✅ Récupérer directement la note mise à jour au lieu du polling
           // Le polling récupère toutes les notes récentes et peut écraser avec des données incomplètes

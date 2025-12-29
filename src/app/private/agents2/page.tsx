@@ -24,6 +24,8 @@ import UnifiedPageTitle from '@/components/UnifiedPageTitle';
 import { useRouter } from 'next/navigation';
 import { agentsService } from '@/services/agents/agentsService';
 import type { OpenApiSchema, AgentSchemaLink } from '@/hooks/useOpenApiSchemas';
+import { useCallables } from '@/hooks/useCallables';
+import type { CallableListItem, AgentCallableLink } from '@/hooks/useCallables';
 import { mcpService } from '@/services/agents/mcpService';
 import type { McpServer, AgentMcpServerWithDetails } from '@/types/mcp';
 import { simpleLogger } from '@/utils/logger';
@@ -55,6 +57,17 @@ function AgentsV2Content() {
   const [availableMcpServers, setAvailableMcpServers] = useState<McpServer[]>([]);
   const [linkedMcpServers, setLinkedMcpServers] = useState<AgentMcpServerWithDetails[]>([]);
   const [toolsLoading, setToolsLoading] = useState(false);
+
+  // Hook pour les callables
+  const {
+    availableCallables,
+    agentCallables,
+    loading: callablesLoading,
+    loadAvailableCallables,
+    loadAgentCallables,
+    linkCallable,
+    unlinkCallable,
+  } = useCallables(selectedAgent?.id);
 
   const panelLoading = modalLoading || toolsLoading || savingAgent;
 
@@ -103,13 +116,16 @@ function AgentsV2Content() {
         setLinkedOpenApiSchemas(linkedSchemas);
         setAvailableMcpServers(allServers);
         setLinkedMcpServers(linkedServers);
+
+        // Charger les callables de l'agent
+        await loadAgentCallables(agentId);
       } catch (error) {
         simpleLogger.error('[AgentsV2] Failed to load agent tools', error);
       } finally {
         setToolsLoading(false);
       }
     },
-    [clearToolsState, fetchAllOpenApiSchemas, fetchLinkedOpenApiSchemas]
+    [clearToolsState, fetchAllOpenApiSchemas, fetchLinkedOpenApiSchemas, loadAgentCallables]
   );
 
   useEffect(() => {
@@ -368,6 +384,55 @@ function AgentsV2Content() {
     [linkedMcpServers]
   );
 
+  const handleLinkCallable = useCallback(
+    async (agentId: string, callableId: string): Promise<boolean> => {
+      if (!agentId) {
+        return false;
+      }
+      try {
+        setToolsLoading(true);
+        const success = await linkCallable(agentId, callableId);
+        if (success) {
+          await loadAgentCallables(agentId);
+        }
+        return success;
+      } catch (error) {
+        simpleLogger.error('[AgentsV2] Failed to link callable', error);
+        return false;
+      } finally {
+        setToolsLoading(false);
+      }
+    },
+    [linkCallable, loadAgentCallables]
+  );
+
+  const handleUnlinkCallable = useCallback(
+    async (agentId: string, callableId: string): Promise<boolean> => {
+      if (!agentId) {
+        return false;
+      }
+      try {
+        setToolsLoading(true);
+        const success = await unlinkCallable(agentId, callableId);
+        if (success) {
+          await loadAgentCallables(agentId);
+        }
+        return success;
+      } catch (error) {
+        simpleLogger.error('[AgentsV2] Failed to unlink callable', error);
+        return false;
+      } finally {
+        setToolsLoading(false);
+      }
+    },
+    [unlinkCallable, loadAgentCallables]
+  );
+
+  const isCallableLinked = useCallback(
+    (callableId: string) => agentCallables.some(link => link.callable_id === callableId),
+    [agentCallables]
+  );
+
   if (authLoading || !user?.id) {
     return (
       <div className="page-wrapper">
@@ -523,12 +588,18 @@ function AgentsV2Content() {
                           mcpServers={availableMcpServers}
                           agentMcpServers={linkedMcpServers}
                           mcpLoading={toolsLoading}
+                          availableCallables={availableCallables}
+                          agentCallables={agentCallables}
+                          callablesLoading={callablesLoading || toolsLoading}
                           onLinkSchema={handleLinkSchema}
                           onUnlinkSchema={handleUnlinkSchema}
                           onLinkServer={handleLinkServer}
                           onUnlinkServer={handleUnlinkServer}
+                          onLinkCallable={handleLinkCallable}
+                          onUnlinkCallable={handleUnlinkCallable}
                           isSchemaLinked={isSchemaLinked}
                           isServerLinked={isServerLinked}
+                          isCallableLinked={isCallableLinked}
                           onUpdateField={handleFieldUpdate}
                         />
                       </div>

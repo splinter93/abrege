@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logApi } from '@/utils/logger';
 
 /**
  * 🔍 ENDPOINT DE DEBUG BRUTAL - Force les logs
@@ -7,8 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   const logs: string[] = [];
   const log = (msg: string) => {
-    console.log(msg);
-    console.error(msg); // Force aussi en stderr
+    // Utiliser logger structuré au lieu de console.log
+    logApi.debug(msg);
     logs.push(msg);
   };
 

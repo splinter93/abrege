@@ -48,3 +48,6 @@ next-env.d.ts
 
 # Authentication tokens
 .npmrc
+
+# Sentry Config File
+.env.sentry-build-plugin

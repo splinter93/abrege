@@ -26,7 +26,8 @@ import type {
   LiminalityMessage,
   LiminalityResponse,
   LiminalityStreamEvent,
-  LiminalityRequestPayload
+  LiminalityRequestPayload,
+  LiminalityToolCallInMessage
 } from '../../types/liminalityTypes';
 
 /**
@@ -34,6 +35,15 @@ import type {
  */
 interface LiminalityProviderConfig extends ProviderConfig {
   maxLoops?: number;
+}
+
+/**
+ * Usage tokens d'un appel LLM
+ */
+interface TokenUsage {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
 }
 
 /**
@@ -45,7 +55,7 @@ interface StreamChunk {
   tool_calls?: ToolCall[];
   finishReason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
   reasoning?: string;
-  usage?: unknown;
+  usage?: TokenUsage; // ✅ TYPÉ au lieu de unknown
 }
 
 /**
@@ -200,7 +210,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
   /**
    * Effectue un appel à l'API Liminality avec une liste de messages déjà préparée
    */
-  async callWithMessages(messages: ChatMessage[], tools: Tool[]): Promise<LLMResponse> {
+  async callWithMessages(messages: ChatMessage[], tools: Tool[], synesiaCallables?: string[]): Promise<LLMResponse> {
     if (!this.isAvailable()) {
       throw new Error('Liminality provider non configuré');
     }
@@ -212,7 +222,15 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       const apiMessages = this.convertChatMessagesToApiFormat(messages);
       
       // Conversion des tools via l'adapter
-      const liminalityTools = LiminalityToolsAdapter.convert(tools);
+      let liminalityTools = LiminalityToolsAdapter.convert(tools);
+      
+      // Ajouter les callables Synesia si fournis
+      if (synesiaCallables && synesiaCallables.length > 0) {
+        liminalityTools = LiminalityToolsAdapter.addSynesiaTools(liminalityTools, {
+          callables: synesiaCallables,
+        });
+        logger.info(`[LiminalityProvider] 🔗 ${synesiaCallables.length} callables ajoutés aux tools`);
+      }
       
       // Préparer le payload
       const payload = this.preparePayload(apiMessages, liminalityTools);
@@ -247,7 +265,8 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
    */
   async *callWithMessagesStream(
     messages: ChatMessage[], 
-    tools: Tool[]
+    tools: Tool[],
+    synesiaCallables?: string[]
   ): AsyncGenerator<StreamChunk, void, unknown> {
     if (!this.isAvailable()) {
       throw new Error('Liminality provider non configuré');
@@ -260,7 +279,15 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       const apiMessages = this.convertChatMessagesToApiFormat(messages);
       
       // Conversion des tools via l'adapter
-      const liminalityTools = LiminalityToolsAdapter.convert(tools);
+      let liminalityTools = LiminalityToolsAdapter.convert(tools);
+      
+      // Ajouter les callables Synesia si fournis
+      if (synesiaCallables && synesiaCallables.length > 0) {
+        liminalityTools = LiminalityToolsAdapter.addSynesiaTools(liminalityTools, {
+          callables: synesiaCallables,
+        });
+        logger.info(`[LiminalityProvider] 🔗 ${synesiaCallables.length} callables ajoutés aux tools`);
+      }
       
       // Préparer le payload
       const payload = this.preparePayload(apiMessages, liminalityTools);
@@ -342,6 +369,16 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
             if (data === '[DONE]') break;
 
             try {
+              // ✅ VALIDATION : Vérifier taille avant parsing (sécurité)
+              const MAX_EVENT_SIZE = 10 * 1024 * 1024; // 10MB max
+              if (data.length > MAX_EVENT_SIZE) {
+                logger.error('[LiminalityProvider] ❌ Event trop volumineux', {
+                  size: data.length,
+                  maxSize: MAX_EVENT_SIZE
+                });
+                continue;
+              }
+              
               const event = JSON.parse(data) as LiminalityStreamEvent;
               const chunk = this.convertStreamEvent(event);
               
@@ -350,9 +387,13 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
               }
 
             } catch (parseError) {
-              logger.warn('[LiminalityProvider] ⚠️ Erreur parsing SSE:', parseError);
-              logger.dev('[LiminalityProvider] RAW DATA:', data);
-              continue;
+              // ✅ ERROR HANDLING : Logger avec contexte complet
+              logger.error('[LiminalityProvider] ❌ Erreur parsing SSE event', {
+                error: parseError instanceof Error ? parseError.message : String(parseError),
+                dataPreview: data.substring(0, 200), // Premiers 200 caractères
+                dataLength: data.length
+              });
+              continue; // Ignorer l'event invalide et continuer le stream
             }
           }
         }
@@ -402,13 +443,32 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       if (msg.role === 'assistant') {
         const assistantMsg = msg as import('@/types/chat').AssistantMessage;
         if (assistantMsg.tool_calls && assistantMsg.tool_calls.length > 0) {
-          limMsg.tool_calls = assistantMsg.tool_calls.map(tc => ({
-            id: tc.id,
-            name: tc.function?.name || '',
-            arguments: typeof tc.function?.arguments === 'string' 
-              ? JSON.parse(tc.function.arguments)
-              : tc.function?.arguments || {}
-          }));
+          // ✅ ERROR HANDLING : Parser avec try/catch pour chaque tool call
+          limMsg.tool_calls = assistantMsg.tool_calls.map(tc => {
+            let parsedArguments: Record<string, unknown> = {};
+            
+            if (typeof tc.function?.arguments === 'string') {
+              try {
+                parsedArguments = JSON.parse(tc.function.arguments);
+              } catch (parseError) {
+                logger.warn('[LiminalityProvider] ⚠️ Erreur parsing tool call arguments', {
+                  toolCallId: tc.id,
+                  toolName: tc.function?.name,
+                  error: parseError instanceof Error ? parseError.message : String(parseError),
+                  argumentsPreview: tc.function.arguments.substring(0, 100)
+                });
+                parsedArguments = {}; // Fallback : arguments vides
+              }
+            } else if (tc.function?.arguments && typeof tc.function.arguments === 'object') {
+              parsedArguments = tc.function.arguments as Record<string, unknown>;
+            }
+            
+            return {
+              id: tc.id,
+              name: tc.function?.name || '',
+              arguments: parsedArguments
+            };
+          });
         }
 
         // Ajouter reasoning si présent
@@ -570,9 +630,49 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
   }
 
   /**
-   * Convertit un event de stream Liminality vers le format StreamChunk
+   * Type guard pour valider un LiminalityStreamEvent
    */
-  private convertStreamEvent(event: any): StreamChunk | null {
+  private isValidLiminalityStreamEvent(event: unknown): event is LiminalityStreamEvent {
+    if (!event || typeof event !== 'object') {
+      return false;
+    }
+    const e = event as Record<string, unknown>;
+    const validTypes = ['start', 'text.delta', 'chunk', 'text.done', 'tool_block.start', 'tool_block.done', 'done', 'tool_call', 'tool_result', 'end', 'error'];
+    return typeof e.type === 'string' && validTypes.includes(e.type);
+  }
+
+  /**
+   * Type guard pour valider un LiminalityToolCallInMessage
+   */
+  private isValidLiminalityToolCall(tc: unknown): tc is LiminalityToolCallInMessage {
+    if (!tc || typeof tc !== 'object') {
+      return false;
+    }
+    const toolCall = tc as Record<string, unknown>;
+    const hasValidId = typeof toolCall.id === 'string';
+    const hasValidName = typeof toolCall.name === 'string';
+    const hasValidArguments = typeof toolCall.arguments === 'string' || 
+                              (toolCall.arguments !== null && 
+                               toolCall.arguments !== undefined && 
+                               typeof toolCall.arguments === 'object');
+    return hasValidId && hasValidName && hasValidArguments;
+  }
+
+  /**
+   * Convertit un event de stream Liminality vers le format StreamChunk
+   * 
+   * @param event - Event Liminality validé
+   * @returns StreamChunk ou null si event ignoré
+   * @throws {Error} Si event invalide
+   */
+  private convertStreamEvent(event: unknown): StreamChunk | null {
+    // ✅ VALIDATION STRICTE : Type guard
+    if (!this.isValidLiminalityStreamEvent(event)) {
+      logger.error('[LiminalityProvider] ❌ Event invalide reçu', { 
+        event: typeof event === 'object' ? JSON.stringify(event) : String(event)
+      });
+      throw new Error('Invalid Liminality stream event: missing or invalid type');
+    }
     switch (event.type) {
       case 'start':
         // Event de démarrage, on ne yield rien
@@ -614,20 +714,52 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
         if (lastMessage?.role === 'tool_request' && Array.isArray(lastMessage?.tool_calls) && lastMessage.tool_calls.length > 0) {
           logger.info(`[LiminalityProvider] 🔧 Tool calls détectés: ${lastMessage.tool_calls.length}`);
           
-          // Convertir les tool calls au format attendu
-          const toolCalls = lastMessage.tool_calls.map((tc: any) => ({
-            id: tc.id,
-            type: 'function' as const,
-            function: {
-              name: tc.name,
-              arguments: typeof tc.arguments === 'string' ? tc.arguments : JSON.stringify(tc.arguments)
+          // ✅ VALIDATION STRICTE : Filtrer et valider chaque tool call
+          const validToolCalls = lastMessage.tool_calls
+            .filter((tc): tc is LiminalityToolCallInMessage => this.isValidLiminalityToolCall(tc));
+          
+          if (validToolCalls.length !== lastMessage.tool_calls.length) {
+            const invalidCount = lastMessage.tool_calls.length - validToolCalls.length;
+            logger.warn(`[LiminalityProvider] ⚠️ ${invalidCount} tool call(s) invalide(s) filtré(s)`, {
+              total: lastMessage.tool_calls.length,
+              valid: validToolCalls.length
+            });
+          }
+          
+          // ✅ CONVERSION SÉCURISÉE : Type safety garantie
+          const toolCalls: ToolCall[] = validToolCalls.map((tc) => {
+            let argumentsString: string;
+            try {
+              argumentsString = typeof tc.arguments === 'string' 
+                ? tc.arguments 
+                : JSON.stringify(tc.arguments);
+            } catch (stringifyError) {
+              logger.error('[LiminalityProvider] ❌ Erreur sérialisation arguments tool call', {
+                toolCallId: tc.id,
+                toolName: tc.name,
+                error: stringifyError instanceof Error ? stringifyError.message : String(stringifyError)
+              });
+              // Fallback : arguments vides plutôt que crash
+              argumentsString = '{}';
             }
-          }));
+            
+            return {
+              id: tc.id,
+              type: 'function' as const,
+              function: {
+                name: tc.name,
+                arguments: argumentsString
+              }
+            };
+          });
+          
+          // ✅ VALIDATION STRICTE : event.complete peut être undefined
+          const isComplete = event.complete === true;
           
           return {
             type: 'delta',
             tool_calls: toolCalls,
-            finishReason: event.complete ? 'stop' : 'tool_calls',
+            finishReason: isComplete ? 'stop' : 'tool_calls',
             usage: event.usage
           };
         }

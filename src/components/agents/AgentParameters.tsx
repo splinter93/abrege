@@ -4,6 +4,7 @@ import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { GROQ_MODELS_BY_CATEGORY, getModelInfo } from '@/constants/groqModels';
 import type { McpServer, AgentMcpServerWithDetails } from '@/types/mcp';
 import type { AgentSchemaLink, OpenApiSchema } from '@/hooks/useOpenApiSchemas';
+import type { AgentCallableLink, CallableListItem } from '@/hooks/useCallables';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 
 interface AgentParametersProps {
@@ -16,12 +17,18 @@ interface AgentParametersProps {
   mcpServers: McpServer[];
   agentMcpServers: AgentMcpServerWithDetails[];
   mcpLoading: boolean;
+  availableCallables: CallableListItem[];
+  agentCallables: AgentCallableLink[];
+  callablesLoading: boolean;
   onLinkSchema: (agentId: string, schemaId: string) => Promise<void>;
   onUnlinkSchema: (agentId: string, schemaId: string) => Promise<void>;
   onLinkServer: (agentId: string, serverId: string) => Promise<boolean>;
   onUnlinkServer: (agentId: string, serverId: string) => Promise<boolean>;
+  onLinkCallable: (agentId: string, callableId: string) => Promise<boolean>;
+  onUnlinkCallable: (agentId: string, callableId: string) => Promise<boolean>;
   isSchemaLinked: (schemaId: string) => boolean;
   isServerLinked: (serverId: string) => boolean;
+  isCallableLinked: (callableId: string) => boolean;
   onUpdateField: <K extends keyof SpecializedAgentConfig>(
     field: K,
     value: SpecializedAgentConfig[K]
@@ -38,16 +45,23 @@ export function AgentParameters({
   mcpServers,
   agentMcpServers,
   mcpLoading,
+  availableCallables,
+  agentCallables,
+  callablesLoading,
   onLinkSchema,
   onUnlinkSchema,
   onLinkServer,
   onUnlinkServer,
+  onLinkCallable,
+  onUnlinkCallable,
   isSchemaLinked,
   isServerLinked,
+  isCallableLinked,
   onUpdateField,
 }: AgentParametersProps) {
   const [showOpenApiDropdown, setShowOpenApiDropdown] = useState(false);
   const [showMcpDropdown, setShowMcpDropdown] = useState(false);
+  const [showCallablesDropdown, setShowCallablesDropdown] = useState(false);
 
   if (loadingDetails) {
     return (
@@ -87,6 +101,17 @@ export function AgentParameters({
 
   const handleUnlinkServer = async (serverId: string) => {
     await onUnlinkServer(selectedAgent.id, serverId);
+  };
+
+  const handleLinkCallable = async (callableId: string) => {
+    const linked = await onLinkCallable(selectedAgent.id, callableId);
+    if (linked) {
+      setShowCallablesDropdown(false);
+    }
+  };
+
+  const handleUnlinkCallable = async (callableId: string) => {
+    await onUnlinkCallable(selectedAgent.id, callableId);
   };
 
   const modelInfo = editedAgent.model ? getModelInfo(editedAgent.model) : null;
@@ -319,6 +344,99 @@ export function AgentParameters({
                       type="button"
                       onClick={() => handleUnlinkServer(link.mcp_server_id)}
                       title="Retirer ce serveur"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="agent-params-card">
+          <div className="agent-params-card__header">
+            <h3>Callables Synesia</h3>
+            <div className="agent-params-card__actions">
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => setShowCallablesDropdown(value => !value)}
+              >
+                <Plus size={16} />
+                Ajouter
+              </button>
+            </div>
+          </div>
+
+          <div className="agent-params-card__body">
+            {showCallablesDropdown && availableCallables.length > 0 && (
+              <div className="agent-params-dropdown">
+                {availableCallables
+                  .filter(callable => !isCallableLinked(callable.id))
+                  .map(callable => (
+                    <button
+                      key={callable.id}
+                      type="button"
+                      className="agent-params-dropdown__item agent-params-dropdown__item--compact"
+                      onClick={() => handleLinkCallable(callable.id)}
+                    >
+                      <div className="agent-params-dropdown__name">
+                        {callable.name}
+                        {callable.type && (
+                          <span className="agent-params-dropdown__badge">
+                            {callable.type}
+                          </span>
+                        )}
+                      </div>
+                      {callable.description && (
+                        <div className="agent-params-dropdown__description">
+                          {callable.description}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                {availableCallables.filter(callable => !isCallableLinked(callable.id)).length === 0 && (
+                  <div className="agent-params-dropdown__empty">
+                    Tous les callables disponibles sont déjà liés
+                  </div>
+                )}
+              </div>
+            )}
+
+            {callablesLoading ? (
+              <div className="agent-params-state">
+                <div className="loading-spinner" />
+                <p>Chargement des callables…</p>
+              </div>
+            ) : agentCallables.length === 0 ? (
+              <div className="agent-params-empty">
+                <p>Aucun callable n&apos;est actuellement lié.</p>
+              </div>
+            ) : (
+              <div className="agent-params-list">
+                {agentCallables.map(link => (
+                  <div key={link.id} className="agent-params-list__item">
+                    <div className="agent-params-list__content">
+                      <div className="agent-params-list__title">
+                        {link.synesia_callable.name}
+                        {link.synesia_callable.type && (
+                          <span className="agent-params-list__badge">
+                            {link.synesia_callable.type}
+                          </span>
+                        )}
+                      </div>
+                      {link.synesia_callable.description && (
+                        <div className="agent-params-list__description">
+                          {link.synesia_callable.description}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      className="agent-params-list__remove"
+                      type="button"
+                      onClick={() => handleUnlinkCallable(link.callable_id)}
+                      title="Retirer ce callable"
                     >
                       <X size={14} />
                     </button>

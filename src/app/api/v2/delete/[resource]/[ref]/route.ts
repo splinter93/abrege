@@ -163,7 +163,7 @@ export async function DELETE(
 
   } catch (error) {
     // Dans le catch, on ne peut pas accéder aux params directement
-    console.error(`[UNIFIED-DELETE] Error deleting resource:`, error);
+    logApi.error('[UNIFIED-DELETE] Error deleting resource', error);
     return NextResponse.json(
       { 
         success: false, 

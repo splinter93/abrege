@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { oauthService } from '@/services/oauthService';
+import { logApi } from '@/utils/logger';
 
 // Schema de validation pour l'échange initial code → token
 const authorizationCodeSchema = z.object({
@@ -32,15 +33,18 @@ const tokenResponseSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  console.log('🔍 [TOKEN] Début traitement requête token OAuth');
+  logApi.info('🔍 [TOKEN] Début traitement requête token OAuth');
   
   try {
     // Vérifier que la requête est en form-encoded
     const contentType = request.headers.get('content-type');
-    console.log('🔍 [TOKEN] Content-Type reçu:', contentType);
+    logApi.debug('🔍 [TOKEN] Content-Type reçu', { contentType });
     
     if (!contentType || !contentType.includes('application/x-www-form-urlencoded')) {
-      console.log('❌ [TOKEN] Content-Type invalide, attendu: application/x-www-form-urlencoded');
+      logApi.warn('❌ [TOKEN] Content-Type invalide', { 
+        received: contentType,
+        expected: 'application/x-www-form-urlencoded'
+      });
       return NextResponse.json(
         { error: 'invalid_request', error_description: 'Content-Type must be application/x-www-form-urlencoded' },
         { status: 400 }
@@ -49,18 +53,19 @@ export async function POST(request: NextRequest) {
 
     // Parser le body form-encoded
     const body = await request.text();
-    console.log('🔍 [TOKEN] Body reçu:', body);
+    // ⚠️ Ne pas logger le body complet (peut contenir des secrets)
+    logApi.debug('🔍 [TOKEN] Body reçu', { bodyLength: body.length });
     
     const params = new URLSearchParams(body);
     const grantType = params.get('grant_type');
     
-    console.log('🔍 [TOKEN] Paramètres parsés:', {
+    logApi.debug('🔍 [TOKEN] Paramètres parsés', {
       grant_type: grantType,
-      code: params.get('code') ? 'PRÉSENT' : 'MANQUANT',
-      refresh_token: params.get('refresh_token') ? 'PRÉSENT' : 'MANQUANT',
-      redirect_uri: params.get('redirect_uri'),
-      client_id: params.get('client_id'),
-      client_secret: params.get('client_secret') ? 'PRÉSENT' : 'MANQUANT'
+      hasCode: !!params.get('code'),
+      hasRefreshToken: !!params.get('refresh_token'),
+      hasRedirectUri: !!params.get('redirect_uri'),
+      hasClientId: !!params.get('client_id'),
+      hasClientSecret: !!params.get('client_secret')
     });
     
     // Valider les paramètres OAuth selon le grant_type
@@ -87,26 +92,28 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log('✅ [TOKEN] Paramètres validés avec succès');
+    logApi.debug('✅ [TOKEN] Paramètres validés avec succès');
 
     // Vérifier les credentials client
-    console.log('🔍 [TOKEN] Vérification des credentials client...');
+    logApi.debug('🔍 [TOKEN] Vérification des credentials client');
     const client = await oauthService.validateClientCredentials(tokenRequest.client_id, tokenRequest.client_secret);
     if (!client) {
-      console.log('❌ [TOKEN] Credentials client invalides');
+      logApi.warn('❌ [TOKEN] Credentials client invalides', {
+        clientId: tokenRequest.client_id
+      });
       return NextResponse.json(
         { error: 'invalid_client', error_description: 'Invalid client credentials' },
         { status: 401 }
       );
     }
-    console.log('✅ [TOKEN] Credentials client validés');
+    logApi.debug('✅ [TOKEN] Credentials client validés');
 
     try {
       let tokenResponse;
 
       if (grantType === 'authorization_code') {
         // Échanger le code contre un token OAuth
-        console.log('🔍 [TOKEN] Début échange code contre token...');
+        logApi.debug('🔍 [TOKEN] Début échange code contre token');
         // Type guard : on sait que tokenRequest est de type authorizationCodeSchema
         const authRequest = authorizationCodeSchema.parse(tokenRequest);
         tokenResponse = await oauthService.exchangeCodeForToken(
@@ -115,10 +122,10 @@ export async function POST(request: NextRequest) {
           authRequest.client_secret,
           authRequest.redirect_uri
         );
-        console.log('✅ [TOKEN] Échange code→token réussi');
+        logApi.info('✅ [TOKEN] Échange code→token réussi');
       } else if (grantType === 'refresh_token') {
         // Rafraîchir le token avec le refresh token
-        console.log('🔍 [TOKEN] Début refresh token...');
+        logApi.debug('🔍 [TOKEN] Début refresh token');
         // Type guard : on sait que tokenRequest est de type refreshTokenSchema
         const refreshRequest = refreshTokenSchema.parse(tokenRequest);
         tokenResponse = await oauthService.refreshAccessToken(
@@ -126,12 +133,12 @@ export async function POST(request: NextRequest) {
           refreshRequest.client_id,
           refreshRequest.client_secret
         );
-        console.log('✅ [TOKEN] Refresh token réussi');
+        logApi.info('✅ [TOKEN] Refresh token réussi');
       }
 
       // Valider la réponse avec le schema
       const validatedResponse = tokenResponseSchema.parse(tokenResponse);
-      console.log('✅ [TOKEN] Réponse validée, envoi du token...');
+      logApi.debug('✅ [TOKEN] Réponse validée, envoi du token');
 
       // Retourner le token avec les headers appropriés
       return NextResponse.json(validatedResponse, {
@@ -142,8 +149,7 @@ export async function POST(request: NextRequest) {
       });
 
     } catch (exchangeError) {
-      console.error('❌ [TOKEN] Erreur lors de l\'échange/refresh:', exchangeError);
-      console.error('❌ [TOKEN] Stack trace:', exchangeError instanceof Error ? exchangeError.stack : 'Pas de stack trace');
+      logApi.error('❌ [TOKEN] Erreur lors de l\'échange/refresh', exchangeError);
       
       // Gérer les erreurs spécifiques OAuth
       if (exchangeError instanceof Error) {
@@ -168,14 +174,12 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error: unknown) {
-    console.error('❌ [TOKEN] Erreur générale:', error);
-    if (error && typeof error === 'object' && 'constructor' in error) {
-      console.error('❌ [TOKEN] Type d\'erreur:', (error.constructor as { name: string }).name);
-    }
-    console.error('❌ [TOKEN] Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
+    logApi.error('❌ [TOKEN] Erreur générale', error);
     
     if (error instanceof z.ZodError) {
-      console.log('❌ [TOKEN] Erreur de validation Zod:', error.errors);
+      logApi.warn('❌ [TOKEN] Erreur de validation Zod', {
+        errors: error.errors.map(e => ({ path: e.path, message: e.message }))
+      });
       return NextResponse.json(
         { error: 'invalid_request', error_description: 'Invalid request parameters' },
         { status: 400 }

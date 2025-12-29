@@ -3,6 +3,8 @@
  * Configurable par environnement et niveau de log
  */
 
+import * as Sentry from '@sentry/nextjs';
+
 export enum LogLevel {
   ERROR = 0,
   WARN = 1,
@@ -151,8 +153,52 @@ class Logger {
   }
 
   private sendToMonitoring(entry: LogEntry): void {
-    // TODO: Implémenter l'envoi vers un service de monitoring (Sentry, LogRocket, etc.)
-    // Pour l'instant, on ne fait rien en production
+    // Ne pas envoyer en développement
+    if (this.isDevelopment) {
+      return;
+    }
+    
+    // Ne pas envoyer si Sentry n'est pas configuré
+    if (!process.env.SENTRY_DSN && !process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      return;
+    }
+    
+    try {
+      // Capturer l'erreur dans Sentry
+      if (entry.error) {
+        Sentry.captureException(entry.error, {
+          level: 'error',
+          tags: {
+            category: entry.category,
+            component: typeof window === 'undefined' ? 'server' : 'client',
+          },
+          extra: {
+            message: entry.message,
+            data: entry.data,
+            timestamp: entry.timestamp,
+          },
+        });
+      } else {
+        // Capturer un message d'erreur sans exception
+        Sentry.captureMessage(entry.message, {
+          level: 'error',
+          tags: {
+            category: entry.category,
+            component: typeof window === 'undefined' ? 'server' : 'client',
+          },
+          extra: {
+            data: entry.data,
+            timestamp: entry.timestamp,
+          },
+        });
+      }
+    } catch (monitoringError) {
+      // Ne pas planter si Sentry échoue
+      // Log silencieux (on ne veut pas de boucle infinie)
+      if (this.isDevelopment) {
+        console.error('[Logger] Failed to send to Sentry:', monitoringError);
+      }
+    }
   }
 
   // Méthodes publiques

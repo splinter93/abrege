@@ -474,12 +474,23 @@ export async function POST(request: NextRequest) {
         
         tools = hybridTools as Tool[];
         
+        // ✅ Charger les callables liés à l'agent
+        const { callableService } = await import('@/services/llm/callableService');
+        const agentCallables = await callableService.getCallablesForAgent(context.agentId);
+        const synesiaCallableIds = agentCallables.length > 0 ? agentCallables.map(c => c.id) : undefined;
+        
+        if (synesiaCallableIds && synesiaCallableIds.length > 0) {
+          logger.info(`[Stream Route] 🔗 ${synesiaCallableIds.length} callables trouvés pour l'agent`);
+          // Stocker pour utilisation avec LiminalityProvider
+          (tools as Tool[] & { _synesiaCallables?: string[] })._synesiaCallables = synesiaCallableIds;
+        }
+        
         const mcpCount = tools.filter(isMcpTool).length;
         const openApiCount = tools.length - mcpCount;
         
-        logger.info(`[Stream Route] ✅ MCP - Tools chargés: ${tools.length} total (${mcpCount} MCP + ${openApiCount} OpenAPI)`);
+        logger.info(`[Stream Route] ✅ MCP - Tools chargés: ${tools.length} total (${mcpCount} MCP + ${openApiCount} OpenAPI) + ${agentCallables.length} callables`);
         
-        logger.dev(`[Stream Route] ✅ ${tools.length} tools chargés (${mcpCount} MCP + ${openApiCount} OpenAPI), ${openApiEndpoints.size} endpoints`);
+        logger.dev(`[Stream Route] ✅ ${tools.length} tools chargés (${mcpCount} MCP + ${openApiCount} OpenAPI), ${openApiEndpoints.size} endpoints, ${agentCallables.length} callables`);
       } catch (toolsError) {
         logger.error('[Stream Route] ❌ Erreur chargement tools:', toolsError);
         // Continue sans tools
@@ -588,12 +599,21 @@ export async function POST(request: NextRequest) {
 
             // ✅ Stream depuis le provider avec gestion d'erreur
             try {
-              for await (const chunk of provider.callWithMessagesStream(currentMessages, tools)) {
+              // Extraire les callables si disponibles (pour Liminality uniquement)
+              const synesiaCallables = (tools as Tool[] & { _synesiaCallables?: string[] })._synesiaCallables;
+              
+              // Appeler le provider (avec callables pour Liminality)
+              const streamCall = providerType === 'liminality' && synesiaCallables
+                ? (provider as { callWithMessagesStream: (messages: ChatMessage[], tools: Tool[], callables?: string[]) => AsyncGenerator<unknown> })
+                    .callWithMessagesStream(currentMessages, tools, synesiaCallables)
+                : provider.callWithMessagesStream(currentMessages, tools);
+              
+              for await (const chunk of streamCall) {
                 // ✅ Le chunk contient déjà type: 'delta' (ajouté par le provider)
                 sendSSE(chunk);
 
                 // 🎨 Broadcaster vers le canevas si actif
-                if (noteId && chunk.content) {
+                if (noteId && chunk && typeof chunk === 'object' && 'content' in chunk && chunk.content) {
                   streamBroadcastService.broadcast(noteId, {
                     type: 'chunk',
                     data: chunk.content,
@@ -605,8 +625,8 @@ export async function POST(request: NextRequest) {
                 }
 
                 // Accumuler content
-                if (chunk.content) {
-                  accumulatedContent += chunk.content;
+                if (chunk && typeof chunk === 'object' && 'content' in chunk && chunk.content) {
+                  accumulatedContent += chunk.content as string;
                 }
                 
                 // ✅ NOUVEAU : Extraire les mcp_calls si présents dans le chunk
@@ -1084,7 +1104,11 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
               logger.warn(`[Stream Route] ⚠️ Limite de ${maxRounds} rounds atteinte, relance finale forcée sans nouveaux tool calls`);
               
               try {
-                const finalResponse = await provider.callWithMessages(currentMessages, []);
+                // Pas de callables dans le round final (forcer réponse)
+                const finalResponse = providerType === 'liminality'
+                  ? await (provider as { callWithMessages: (messages: ChatMessage[], tools: Tool[], callables?: string[]) => Promise<unknown> })
+                      .callWithMessages(currentMessages, [], undefined)
+                  : await provider.callWithMessages(currentMessages, []);
 
                 if (finalResponse.tool_calls && finalResponse.tool_calls.length > 0) {
                   logger.warn('[Stream Route] ⚠️ Réponse finale forcée contient encore des tool calls, ils seront ignorés', {
