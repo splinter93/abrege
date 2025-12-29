@@ -6,11 +6,11 @@
   "devCommand": "npm run dev",
   "regions": ["cdg1"],
   "functions": {
-    "src/app/api/**/*.ts": {
-      "maxDuration": 30
-    },
     "src/app/api/chat/llm/stream/route.ts": {
       "maxDuration": 300
+    },
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
     }
   },
   "headers": [
