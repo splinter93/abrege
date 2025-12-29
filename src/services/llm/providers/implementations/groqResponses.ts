@@ -69,7 +69,7 @@ const DEFAULT_GROQ_RESPONSES_CONFIG: GroqResponsesConfig = {
   // Base
   apiKey: process.env.GROQ_API_KEY || '',
   baseUrl: 'https://api.groq.com/openai/v1',
-  timeout: 30000,
+  timeout: 120000, // ✅ 2 minutes (cohérent avec AbortSignal.timeout dans le code)
   
   // LLM
   model: 'openai/gpt-oss-20b', // ✅ Modèle avec Browser Search + Code Execution
