@@ -630,7 +630,7 @@ export async function POST(request: NextRequest) {
                 }
                 
                 // ✅ NOUVEAU : Extraire les mcp_calls si présents dans le chunk
-                if ('x_groq' in chunk && chunk.x_groq && typeof chunk.x_groq === 'object' && 'mcp_calls' in chunk.x_groq) {
+                if (chunk && typeof chunk === 'object' && 'x_groq' in chunk && chunk.x_groq && typeof chunk.x_groq === 'object' && 'mcp_calls' in chunk.x_groq) {
                   const mcpCalls = (chunk.x_groq as { mcp_calls?: Array<{ server_label: string; name: string; arguments: Record<string, unknown>; output?: unknown }> }).mcp_calls;
                   if (mcpCalls && Array.isArray(mcpCalls)) {
                     currentRoundMcpCalls = mcpCalls;
@@ -639,7 +639,7 @@ export async function POST(request: NextRequest) {
                 }
                 
                 // ✅ Accumuler tool calls (peuvent venir en plusieurs chunks)
-                if (chunk.tool_calls && chunk.tool_calls.length > 0) {
+                if (chunk && typeof chunk === 'object' && 'tool_calls' in chunk && chunk.tool_calls && Array.isArray(chunk.tool_calls) && chunk.tool_calls.length > 0) {
                   for (const tc of chunk.tool_calls) {
                     // Extension custom pour MCP tools (alreadyExecuted, result)
                     const mcpToolCall = tc as ToolCall & { alreadyExecuted?: boolean; result?: unknown };
@@ -681,8 +681,8 @@ export async function POST(request: NextRequest) {
                 }
 
                 // ✅ Capturer finish_reason
-                if (chunk.finishReason) {
-                  finishReason = chunk.finishReason;
+                if (chunk && typeof chunk === 'object' && 'finishReason' in chunk && chunk.finishReason) {
+                  finishReason = chunk.finishReason as string;
                 }
               }
             } catch (streamError) {
