@@ -10,7 +10,7 @@
       "maxDuration": 30
     },
     "src/app/api/chat/llm/stream/route.ts": {
-      "maxDuration": 600
+      "maxDuration": 300
     }
   },
   "headers": [
