@@ -526,6 +526,9 @@ export async function POST(request: NextRequest) {
           }
         };
         
+        // ✅ Déclarer roundCount avant le try pour qu'il soit accessible dans le catch
+        let roundCount = 0;
+        
         try {
           logger.dev('[Stream Route] 📡 Démarrage du stream SSE');
           
@@ -545,7 +548,6 @@ export async function POST(request: NextRequest) {
 
           // ✅ Boucle agentic en streaming (max 5 tours)
           const currentMessages = [...messages];
-          let roundCount = 0;
           const maxRounds = 20;
           let toolValidationRetryCount = 0; // ✅ NOUVEAU: Compteur pour retry tool_use_failed
           const maxToolValidationRetries = 1; // ✅ Max 1 retry automatique
