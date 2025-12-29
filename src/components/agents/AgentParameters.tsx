@@ -17,18 +17,18 @@ interface AgentParametersProps {
   mcpServers: McpServer[];
   agentMcpServers: AgentMcpServerWithDetails[];
   mcpLoading: boolean;
-  availableCallables: CallableListItem[];
-  agentCallables: AgentCallableLink[];
-  callablesLoading: boolean;
+  availableCallables?: CallableListItem[];
+  agentCallables?: AgentCallableLink[];
+  callablesLoading?: boolean;
   onLinkSchema: (agentId: string, schemaId: string) => Promise<void>;
   onUnlinkSchema: (agentId: string, schemaId: string) => Promise<void>;
   onLinkServer: (agentId: string, serverId: string) => Promise<boolean>;
   onUnlinkServer: (agentId: string, serverId: string) => Promise<boolean>;
-  onLinkCallable: (agentId: string, callableId: string) => Promise<boolean>;
-  onUnlinkCallable: (agentId: string, callableId: string) => Promise<boolean>;
+  onLinkCallable?: (agentId: string, callableId: string) => Promise<boolean>;
+  onUnlinkCallable?: (agentId: string, callableId: string) => Promise<boolean>;
   isSchemaLinked: (schemaId: string) => boolean;
   isServerLinked: (serverId: string) => boolean;
-  isCallableLinked: (callableId: string) => boolean;
+  isCallableLinked?: (callableId: string) => boolean;
   onUpdateField: <K extends keyof SpecializedAgentConfig>(
     field: K,
     value: SpecializedAgentConfig[K]
@@ -45,9 +45,9 @@ export function AgentParameters({
   mcpServers,
   agentMcpServers,
   mcpLoading,
-  availableCallables,
-  agentCallables,
-  callablesLoading,
+  availableCallables = [],
+  agentCallables = [],
+  callablesLoading = false,
   onLinkSchema,
   onUnlinkSchema,
   onLinkServer,
@@ -56,7 +56,7 @@ export function AgentParameters({
   onUnlinkCallable,
   isSchemaLinked,
   isServerLinked,
-  isCallableLinked,
+  isCallableLinked = () => false,
   onUpdateField,
 }: AgentParametersProps) {
   const [showOpenApiDropdown, setShowOpenApiDropdown] = useState(false);
@@ -104,6 +104,7 @@ export function AgentParameters({
   };
 
   const handleLinkCallable = async (callableId: string) => {
+    if (!onLinkCallable || !selectedAgent) return;
     const linked = await onLinkCallable(selectedAgent.id, callableId);
     if (linked) {
       setShowCallablesDropdown(false);
@@ -111,6 +112,7 @@ export function AgentParameters({
   };
 
   const handleUnlinkCallable = async (callableId: string) => {
+    if (!onUnlinkCallable || !selectedAgent) return;
     await onUnlinkCallable(selectedAgent.id, callableId);
   };
 
@@ -283,7 +285,8 @@ export function AgentParameters({
               </div>
             )}
           </div>
-        </section>
+          </section>
+        )}
 
         <section className="agent-params-card">
           <div className="agent-params-card__header">
@@ -354,20 +357,21 @@ export function AgentParameters({
           </div>
         </section>
 
-        <section className="agent-params-card">
-          <div className="agent-params-card__header">
-            <h3>Callables Synesia</h3>
-            <div className="agent-params-card__actions">
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => setShowCallablesDropdown(value => !value)}
-              >
-                <Plus size={16} />
-                Ajouter
-              </button>
+        {onLinkCallable && onUnlinkCallable && (
+          <section className="agent-params-card">
+            <div className="agent-params-card__header">
+              <h3>Callables Synesia</h3>
+              <div className="agent-params-card__actions">
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => setShowCallablesDropdown(value => !value)}
+                >
+                  <Plus size={16} />
+                  Ajouter
+                </button>
+              </div>
             </div>
-          </div>
 
           <div className="agent-params-card__body">
             {showCallablesDropdown && availableCallables.length > 0 && (
