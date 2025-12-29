@@ -174,7 +174,7 @@ export class BatchMessageService {
         },
         body: JSON.stringify(requestBody),
         // Ajouter un timeout pour éviter les blocages
-        signal: AbortSignal.timeout(30000) // 30 secondes
+        signal: AbortSignal.timeout(120000) // 120s (2 minutes) - cohérent avec les autres timeouts du système
       });
 
       const endTime = Date.now();
