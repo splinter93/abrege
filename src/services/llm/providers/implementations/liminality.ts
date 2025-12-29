@@ -50,12 +50,16 @@ interface TokenUsage {
  * Type pour les chunks de streaming SSE
  */
 interface StreamChunk {
-  type?: 'delta';
+  type?: 'delta' | 'error';
   content?: string;
   tool_calls?: ToolCall[];
   finishReason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
   reasoning?: string;
   usage?: TokenUsage; // ✅ TYPÉ au lieu de unknown
+  error?: string; // Message d'erreur
+  errorCode?: string; // Code d'erreur spécifique
+  provider?: string; // Provider qui a émis l'erreur
+  model?: string; // Modèle utilisé
 }
 
 /**
@@ -795,9 +799,20 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
         };
 
       case 'error':
-        // Erreur pendant le stream
+        // ✅ Erreur pendant le stream - retourner un chunk d'erreur au lieu de thrower
+        const errorMessage = event.error?.message || 'Stream error';
+        const errorCode = event.error?.code || 'stream_error';
+        
         logger.error(`[LiminalityProvider] ❌ Stream error:`, event.error);
-        throw new Error(event.error?.message || 'Stream error');
+        
+        // Retourner un chunk d'erreur que le stream route pourra envoyer au client
+        return {
+          type: 'error',
+          error: errorMessage,
+          errorCode,
+          provider: 'liminality',
+          model: this.config.model
+        };
 
       default:
         return null;

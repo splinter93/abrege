@@ -609,6 +609,22 @@ export async function POST(request: NextRequest) {
                 : provider.callWithMessagesStream(currentMessages, tools);
               
               for await (const chunk of streamCall) {
+                // ✅ Vérifier si c'est un chunk d'erreur du provider
+                if (chunk && typeof chunk === 'object' && 'type' in chunk && chunk.type === 'error') {
+                  const errorChunk = chunk as { error?: string; errorCode?: string; provider?: string; model?: string };
+                  sendSSE({
+                    type: 'error',
+                    error: errorChunk.error || 'Erreur inconnue du provider',
+                    errorCode: errorChunk.errorCode,
+                    provider: errorChunk.provider || providerType,
+                    model: errorChunk.model || model,
+                    roundCount,
+                    timestamp: Date.now()
+                  });
+                  // Arrêter le stream en cas d'erreur
+                  break;
+                }
+                
                 // ✅ Le chunk contient déjà type: 'delta' (ajouté par le provider)
                 sendSSE(chunk);
 
