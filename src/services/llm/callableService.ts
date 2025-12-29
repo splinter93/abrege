@@ -100,26 +100,28 @@ export class CallableService {
       // Upsert dans la DB
       const now = new Date().toISOString();
       const upsertPromises = callables.map(async (callable) => {
-        const { error } = await this.supabase
-          .from('synesia_callables')
-          .upsert({
-            id: callable.id,
-            name: callable.name,
-            type: callable.type,
-            description: callable.description || null,
-            slug: callable.slug || null,
-            icon: callable.icon || null,
-            group_name: callable.group_name || null,
-            input_schema: callable.input_schema || null,
-            output_schema: callable.output_schema || null,
-            is_owner: callable.is_owner,
-            auth: callable.auth,
-            oauth_system_id: callable.oauth_system_id || null,
-            last_synced_at: now,
-            updated_at: now,
-          }, {
-            onConflict: 'id',
-          });
+        const upsertData = {
+          id: callable.id,
+          name: callable.name,
+          type: callable.type,
+          description: callable.description || null,
+          slug: callable.slug || null,
+          icon: callable.icon || null,
+          group_name: callable.group_name || null,
+          input_schema: callable.input_schema || null,
+          output_schema: callable.output_schema || null,
+          is_owner: callable.is_owner,
+          auth: callable.auth,
+          oauth_system_id: callable.oauth_system_id || null,
+          last_synced_at: now,
+          updated_at: now,
+        };
+        
+        // Type assertion nécessaire car Supabase ne peut pas inférer le type de la table dynamiquement
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (this.supabase.from('synesia_callables') as any).upsert(upsertData, {
+          onConflict: 'id',
+        });
 
         if (error) {
           logger.error(`[CallableService] ❌ Erreur upsert callable ${callable.id}:`, error);
@@ -240,12 +242,12 @@ export class CallableService {
       }
 
       // Créer le lien
-      const { error: linkError } = await this.supabase
-        .from('agent_callables')
-        .insert({
-          agent_id: agentId,
-          callable_id: callableId,
-        });
+      // Type assertion nécessaire car Supabase ne peut pas inférer le type de la table dynamiquement
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: linkError } = await (this.supabase.from('agent_callables') as any).insert({
+        agent_id: agentId,
+        callable_id: callableId,
+      });
 
       if (linkError) {
         // Si c'est une erreur de contrainte unique, c'est OK
