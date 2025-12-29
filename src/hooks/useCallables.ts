@@ -7,6 +7,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { SynesiaCallable, AgentCallableLink } from '@/types/callables';
 
+// Réexporter les types pour cohérence avec useOpenApiSchemas
+export type { AgentCallableLink } from '@/types/callables';
+
 export interface CallableListItem {
   id: string;
   name: string;
