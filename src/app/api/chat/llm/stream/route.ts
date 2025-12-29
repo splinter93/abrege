@@ -507,9 +507,22 @@ export async function POST(request: NextRequest) {
         const TIMEOUT_MS = 600000; // 600s (10 minutes) - permet enchaînements longs comme Cursor avec dizaines de tool calls
         
         // ✅ Vérifier timeout
-        const checkTimeout = () => {
-          if (Date.now() - startTime > TIMEOUT_MS) {
-            throw new Error('Stream timeout (600s / 10 minutes)');
+        const checkTimeout = (context?: string) => {
+          const elapsed = Date.now() - startTime;
+          if (elapsed > TIMEOUT_MS) {
+            const timeoutError = new Error(`Stream timeout après ${Math.round(elapsed / 1000)}s (limite: ${TIMEOUT_MS / 1000}s)`);
+            (timeoutError as Error & { 
+              isTimeout: boolean; 
+              elapsed: number; 
+              limit: number;
+              context?: string;
+            }).isTimeout = true;
+            (timeoutError as Error & { elapsed: number }).elapsed = elapsed;
+            (timeoutError as Error & { limit: number }).limit = TIMEOUT_MS;
+            if (context) {
+              (timeoutError as Error & { context: string }).context = context;
+            }
+            throw timeoutError;
           }
         };
         
@@ -518,7 +531,7 @@ export async function POST(request: NextRequest) {
           
           // Helper pour envoyer un chunk SSE
           const sendSSE = (data: unknown) => {
-            checkTimeout(); // Vérifier avant chaque envoi
+            checkTimeout('sendSSE'); // Vérifier avant chaque envoi
             const chunk = `data: ${JSON.stringify(data)}\n\n`;
             controller.enqueue(encoder.encode(chunk));
           };
@@ -1017,7 +1030,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             
             // ✅ Exécuter chaque tool call
             for (const toolCall of uniqueToolCalls) {
-              checkTimeout(); // Vérifier timeout avant chaque tool
+              checkTimeout(`tool_execution:${toolCall.function.name}`); // Vérifier timeout avant chaque tool
               try {
                 logger.dev(`[Stream Route] 🔧 Exécution tool: ${toolCall.function.name}`);
                 
@@ -1204,12 +1217,45 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
           controller.close();
 
         } catch (error) {
-          logger.error('[Stream Route] ❌ Erreur stream:', error);
+          // ✅ Détecter si c'est un timeout
+          const isTimeout = error instanceof Error && 'isTimeout' in error && (error as Error & { isTimeout: boolean }).isTimeout;
+          const elapsed = error instanceof Error && 'elapsed' in error ? (error as Error & { elapsed: number }).elapsed : undefined;
+          const limit = error instanceof Error && 'limit' in error ? (error as Error & { limit: number }).limit : TIMEOUT_MS;
+          const context = error instanceof Error && 'context' in error ? (error as Error & { context?: string }).context : undefined;
           
-          // Envoyer l'erreur au client
           const errorMessage = error instanceof Error ? error.message : String(error);
-          const errorChunk = `data: ${JSON.stringify({ type: 'error', error: errorMessage })}\n\n`;
-          controller.enqueue(encoder.encode(errorChunk));
+          
+          logger.error('[Stream Route] ❌ Erreur stream:', {
+            error: errorMessage,
+            isTimeout,
+            elapsed: elapsed ? `${Math.round(elapsed / 1000)}s` : undefined,
+            limit: `${limit / 1000}s`,
+            context,
+            roundCount,
+            sessionId,
+            provider: providerType,
+            model
+          });
+          
+          // ✅ Envoyer l'erreur au client avec métadonnées enrichies
+          const errorChunk = {
+            type: 'error',
+            error: errorMessage,
+            errorCode: isTimeout ? 'timeout' : 'stream_error',
+            provider: providerType,
+            model,
+            roundCount,
+            timestamp: Date.now(),
+            ...(isTimeout && {
+              timeout: {
+                elapsed: elapsed ? Math.round(elapsed / 1000) : undefined,
+                limit: Math.round(limit / 1000),
+                context
+              }
+            })
+          };
+          
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorChunk)}\n\n`));
           
           controller.close();
         }
