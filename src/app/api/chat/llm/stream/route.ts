@@ -1110,38 +1110,49 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                       .callWithMessages(currentMessages, [], undefined)
                   : await provider.callWithMessages(currentMessages, []);
 
-                if (finalResponse.tool_calls && finalResponse.tool_calls.length > 0) {
-                  logger.warn('[Stream Route] ⚠️ Réponse finale forcée contient encore des tool calls, ils seront ignorés', {
-                    requestedToolCalls: finalResponse.tool_calls.length
-                  });
-                }
+                // Type guard pour finalResponse
+                if (finalResponse && typeof finalResponse === 'object') {
+                  const response = finalResponse as { tool_calls?: unknown[]; content?: string; reasoning?: string };
+                  
+                  if ('tool_calls' in response && response.tool_calls && Array.isArray(response.tool_calls) && response.tool_calls.length > 0) {
+                    logger.warn('[Stream Route] ⚠️ Réponse finale forcée contient encore des tool calls, ils seront ignorés', {
+                      requestedToolCalls: response.tool_calls.length
+                    });
+                  }
 
-                if (finalResponse.content) {
-                  sendSSE({
-                    type: 'delta',
-                    content: finalResponse.content,
-                    reasoning: finalResponse.reasoning
-                  });
+                  if (response.content) {
+                    sendSSE({
+                      type: 'delta',
+                      content: response.content,
+                      reasoning: response.reasoning
+                    });
 
-                  sendSSE({
-                    type: 'assistant_round_complete',
-                    content: finalResponse.content,
-                    tool_calls: [],
-                    finishReason: 'stop',
-                    forced: true,
-                    timestamp: Date.now()
-                  });
+                    sendSSE({
+                      type: 'assistant_round_complete',
+                      content: response.content,
+                      tool_calls: [],
+                      finishReason: 'stop',
+                      forced: true,
+                      timestamp: Date.now()
+                    });
 
-                  currentMessages.push({
-                    role: 'assistant',
-                    content: finalResponse.content,
-                    timestamp: new Date().toISOString()
-                  });
+                    currentMessages.push({
+                      role: 'assistant',
+                      content: response.content,
+                      timestamp: new Date().toISOString()
+                    });
+                  } else {
+                    logger.error('[Stream Route] ❌ Réponse finale forcée vide, envoi d'une erreur au client');
+                    sendSSE({
+                      type: 'error',
+                      error: 'Réponse finale indisponible après la limite de tool calls'
+                    });
+                  }
                 } else {
-                  logger.error('[Stream Route] ❌ Réponse finale forcée vide, envoi d’une erreur au client');
+                  logger.error('[Stream Route] ❌ Réponse finale invalide, envoi d'une erreur au client');
                   sendSSE({
                     type: 'error',
-                    error: 'Réponse finale indisponible après la limite de tool calls'
+                    error: 'Réponse finale invalide après la limite de tool calls'
                   });
                 }
               } catch (finalError) {
