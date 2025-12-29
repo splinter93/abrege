@@ -616,7 +616,7 @@ export async function POST(request: NextRequest) {
                 if (noteId && chunk && typeof chunk === 'object' && 'content' in chunk && chunk.content) {
                   streamBroadcastService.broadcast(noteId, {
                     type: 'chunk',
-                    data: chunk.content,
+                    data: chunk.content as string,
                     position: 'end', // Ajouter à la fin
                     metadata: {
                       timestamp: Date.now()

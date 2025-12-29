@@ -8,10 +8,6 @@ const nextConfig = {
   typescript: {
     tsconfigPath: './tsconfig.build.json'
   },
-  // ✅ Activer l'instrumentation pour Sentry
-  experimental: {
-    instrumentationHook: true,
-  },
   serverExternalPackages: [
     '@supabase/supabase-js',
     'markdown-it',
