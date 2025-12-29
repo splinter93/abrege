@@ -1142,14 +1142,14 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                       timestamp: new Date().toISOString()
                     });
                   } else {
-                    logger.error('[Stream Route] ❌ Réponse finale forcée vide, envoi d'une erreur au client');
+                    logger.error('[Stream Route] ❌ Réponse finale forcée vide, envoi d\'une erreur au client');
                     sendSSE({
                       type: 'error',
                       error: 'Réponse finale indisponible après la limite de tool calls'
                     });
                   }
                 } else {
-                  logger.error('[Stream Route] ❌ Réponse finale invalide, envoi d'une erreur au client');
+                  logger.error('[Stream Route] ❌ Réponse finale invalide, envoi d\'une erreur au client');
                   sendSSE({
                     type: 'error',
                     error: 'Réponse finale invalide après la limite de tool calls'
