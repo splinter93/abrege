@@ -5,7 +5,6 @@
 
 import React, { useState } from 'react';
 import { FiZap, FiType, FiChevronDown } from 'react-icons/fi';
-import { useAuth } from '@/hooks/useAuth';
 import type { EditorPrompt } from '@/types/editorPrompts';
 import './floating-menu-notion.css';
 import TransformMenu from '../TransformMenu';
@@ -19,7 +18,6 @@ import { MenuButtons } from './components/MenuButtons';
 
 const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = (props) => {
   const { editor, noteId, noteTitle, noteContent, noteSlug, classeurId, classeurName } = props;
-  const { user } = useAuth();
 
   // Hooks de logique métier
   const { position, updatePosition, setPosition } = useMenuPosition(editor);
@@ -30,8 +28,7 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = (props) => {
     noteContent,
     noteSlug,
     classeurId,
-    classeurName,
-    userId: user?.id
+    classeurName
   });
   const formatCommands = useFormatCommands(editor);
   const { menuRef, selectedText } = useMenuVisibility({

@@ -44,7 +44,19 @@ export function AgentConfiguration({
 }: AgentConfigurationProps) {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
 
-  if (!selectedAgent) {
+  // Mode création : selectedAgent est null mais editedAgent existe
+  const isCreating = !selectedAgent && editedAgent !== null;
+
+  if (loadingDetails || (!editedAgent && !isCreating)) {
+    return (
+      <div className="agent-details-panel">
+        <SimpleLoadingState message="Chargement de la configuration" />
+      </div>
+    );
+  }
+
+  // Si on n'est pas en mode création et qu'il n'y a pas d'agent sélectionné, afficher le message
+  if (!selectedAgent && !isCreating) {
     return (
       <div className="agent-details-panel">
         <div className="empty-state">
@@ -58,22 +70,13 @@ export function AgentConfiguration({
     );
   }
 
-  if (loadingDetails || !editedAgent) {
-    return (
-      <div className="agent-details-panel">
-        <SimpleLoadingState message="Chargement de la configuration" />
-      </div>
-    );
-  }
-
   const displayAvatarPreview =
     typeof editedAgent.profile_picture === 'string' && editedAgent.profile_picture.trim().length > 0;
 
   const agentDisplayName =
     editedAgent.display_name ||
-    selectedAgent.display_name ||
-    selectedAgent.name ||
-    'Agent sans nom';
+    (selectedAgent ? (selectedAgent.display_name || selectedAgent.name) : null) ||
+    'Nouvel agent';
 
   const agentTypeValue = (() => {
     if (editedAgent.is_chat_agent && editedAgent.is_endpoint_agent) return 'both';
@@ -155,24 +158,27 @@ export function AgentConfiguration({
           </div>
 
           <div className="agent-profile-card__actions">
-            <button
-              className="btn-chat"
-              type="button"
-              onClick={onOpenChat}
-              disabled={!selectedAgent}
-              title="Accéder au chat"
-            >
-              <MessageCircle size={16} />
-            </button>
-            <button
-              className={`btn-favorite ${isFavorite ? 'active' : ''}`}
-              type="button"
-              onClick={onToggleFavorite}
-              disabled={togglingFavorite}
-              title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
-            >
-              <Star size={18} fill={isFavorite ? 'currentColor' : 'none'} />
-            </button>
+            {selectedAgent && (
+              <button
+                className="btn-chat"
+                type="button"
+                onClick={onOpenChat}
+                title="Accéder au chat"
+              >
+                <MessageCircle size={16} />
+              </button>
+            )}
+            {selectedAgent && (
+              <button
+                className={`btn-favorite ${isFavorite ? 'active' : ''}`}
+                type="button"
+                onClick={onToggleFavorite}
+                disabled={togglingFavorite}
+                title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
+              >
+                <Star size={18} fill={isFavorite ? 'currentColor' : 'none'} />
+              </button>
+            )}
 
             {hasChanges && (
               <>
@@ -199,9 +205,11 @@ export function AgentConfiguration({
               </>
             )}
 
-            <button className="btn-danger" type="button" onClick={onDelete} title="Supprimer l'agent">
-              <Trash2 size={16} />
-            </button>
+            {selectedAgent && (
+              <button className="btn-danger" type="button" onClick={onDelete} title="Supprimer l'agent">
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
         </div>
 

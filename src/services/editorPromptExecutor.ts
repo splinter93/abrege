@@ -111,8 +111,8 @@ export class EditorPromptExecutor {
 
       logger.dev('[EditorPromptExecutor] 📝 Prompt final:', finalPrompt);
 
-      // 3. Générer un sessionId temporaire pour cette exécution
-      const tempSessionId = `prompt_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      // 3. Générer un sessionId temporaire pour cette exécution (UUID valide requis par validation)
+      const tempSessionId = crypto.randomUUID();
 
       // 4. Préparer le payload de la requête
       const requestPayload: any = {
@@ -260,8 +260,8 @@ export class EditorPromptExecutor {
         finalPrompt = `${prompt.prompt_template}\n\nTexte à traiter :\n${selectedText}`;
       }
 
-      // Générer un sessionId temporaire pour cette exécution
-      const tempSessionId = `prompt_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      // Générer un sessionId temporaire pour cette exécution (UUID valide requis par validation)
+      const tempSessionId = crypto.randomUUID();
 
       // ✅ NOUVEAU : Construire attachedNotes si contexte fourni (comme dans le chat)
       const attachedNotes = noteContext ? [{

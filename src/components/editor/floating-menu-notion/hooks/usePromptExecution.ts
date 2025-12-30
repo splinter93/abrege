@@ -9,6 +9,7 @@ import { EditorPromptExecutor } from '@/services/editorPromptExecutor';
 import type { EditorPrompt } from '@/types/editorPrompts';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { NoteContext, InsertionMode, PromptExecutionResult } from '../types';
+import { supabase } from '@/supabaseClient';
 
 interface UsePromptExecutionParams {
   editor: Editor | null;
@@ -18,7 +19,6 @@ interface UsePromptExecutionParams {
   noteSlug?: string;
   classeurId?: string;
   classeurName?: string;
-  userId?: string;
 }
 
 export function usePromptExecution({
@@ -28,8 +28,7 @@ export function usePromptExecution({
   noteContent,
   noteSlug,
   classeurId,
-  classeurName,
-  userId
+  classeurName
 }: UsePromptExecutionParams) {
   const [isExecuting, setIsExecuting] = useState(false);
 
@@ -100,15 +99,25 @@ export function usePromptExecution({
     prompt: EditorPrompt,
     selectedText: string
   ): Promise<PromptExecutionResult> => {
-    if (!editor || !userId) {
-      logger.error('[PromptExecution] Editor ou userId manquant');
-      return { success: false, error: 'Éditeur ou utilisateur non disponible' };
+    if (!editor) {
+      logger.error('[PromptExecution] Editor manquant');
+      return { success: false, error: 'Éditeur non disponible' };
     }
 
     setIsExecuting(true);
     logger.info('[PromptExecution] Exécution prompt (streaming):', prompt.name);
 
     try {
+      // ✅ FIX: Obtenir le JWT au lieu d'utiliser userId directement
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session?.access_token) {
+        logger.error('[PromptExecution] Token JWT manquant ou invalide:', sessionError);
+        return { success: false, error: 'Authentification requise' };
+      }
+
+      const userToken = session.access_token;
+
       // 🎯 Préparer la position d'insertion
       const insertionMode = (prompt.insertion_mode as InsertionMode) || 'replace';
       const startPos = prepareInsertionPosition(insertionMode);
@@ -127,7 +136,7 @@ export function usePromptExecution({
       const result = await EditorPromptExecutor.executePromptStream(
         prompt,
         selectedText,
-        userId,
+        userToken,
         (chunk: string) => {
           // ✅ Accumuler le contenu complet
           accumulatedContent += chunk;

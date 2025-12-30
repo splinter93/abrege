@@ -13,7 +13,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import AgentCard from '@/components/agents/AgentCard';
 import AgentDetailsModal from '@/components/agents/AgentDetailsModal';
-import type { SpecializedAgentConfig } from '@/types/specializedAgents';
+import type { SpecializedAgentConfig, CreateSpecializedAgentRequest } from '@/types/specializedAgents';
 import { Bot } from 'lucide-react';
 import '@/styles/main.css';
 import '@/app/private/agents_page_backup_legacy/agents.css';
@@ -182,7 +182,20 @@ function AgentsV2Content() {
 
     if (!agent) {
       setSelectedAgent(null);
-      setEditedAgent({});
+      // Initialiser avec des valeurs par défaut pour un nouvel agent
+      setEditedAgent({
+        display_name: '',
+        description: '',
+        system_instructions: '',
+        model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
+        is_chat_agent: true,
+        is_endpoint_agent: false,
+        is_active: true,
+        temperature: 0.7,
+        max_tokens: 4000,
+        personality: '',
+        voice: '',
+      });
       clearToolsState();
       return;
     }
@@ -237,23 +250,71 @@ function AgentsV2Content() {
   }, [isModalOpen, handleCloseModal]);
 
   const handleSaveAgent = useCallback(async () => {
-    if (!selectedAgent || !editedAgent) {
+    if (!editedAgent) {
       return;
     }
 
     try {
       setSavingAgent(true);
-      const identifier = selectedAgent.slug || selectedAgent.id;
-      await agentsService.patchAgent(identifier, editedAgent);
-      await loadAgents();
-      const updatedAgent = await agentsService.getAgent(identifier);
-      setSelectedAgent(updatedAgent);
-      setEditedAgent({ ...updatedAgent });
-      setHasLocalChanges(false);
-      await loadAgentTools(updatedAgent.id);
-      simpleLogger.dev('[AgentsV2] Agent saved', { agentId: identifier });
+
+      // Mode création : selectedAgent est null
+      if (!selectedAgent) {
+        // Validation des champs requis pour la création
+        if (!editedAgent.display_name || !editedAgent.description || !editedAgent.system_instructions || !editedAgent.model) {
+          simpleLogger.error('[AgentsV2] Missing required fields for agent creation', {
+            hasDisplayName: !!editedAgent.display_name,
+            hasDescription: !!editedAgent.description,
+            hasSystemInstructions: !!editedAgent.system_instructions,
+            hasModel: !!editedAgent.model,
+          });
+          // TODO: Afficher un message d'erreur à l'utilisateur
+          return;
+        }
+
+        // Générer un slug à partir du display_name
+        const slug = (editedAgent.display_name || '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+
+        // Créer l'agent
+        const createData: CreateSpecializedAgentRequest = {
+          slug,
+          display_name: editedAgent.display_name,
+          description: editedAgent.description,
+          model: editedAgent.model,
+          system_instructions: editedAgent.system_instructions,
+          is_chat_agent: editedAgent.is_chat_agent ?? true,
+          temperature: editedAgent.temperature ?? 0.7,
+          max_tokens: editedAgent.max_tokens ?? 4000,
+          personality: editedAgent.personality,
+          voice: editedAgent.voice,
+        };
+
+        const newAgent = await agentsService.createAgent(createData);
+        await loadAgents();
+        setSelectedAgent(newAgent);
+        setEditedAgent({ ...newAgent });
+        setHasLocalChanges(false);
+        await loadAgentTools(newAgent.id);
+        simpleLogger.dev('[AgentsV2] Agent created', { agentId: newAgent.id, slug: newAgent.slug });
+      } else {
+        // Mode édition : mettre à jour l'agent existant
+        const identifier = selectedAgent.slug || selectedAgent.id;
+        await agentsService.patchAgent(identifier, editedAgent);
+        await loadAgents();
+        const updatedAgent = await agentsService.getAgent(identifier);
+        setSelectedAgent(updatedAgent);
+        setEditedAgent({ ...updatedAgent });
+        setHasLocalChanges(false);
+        await loadAgentTools(updatedAgent.id);
+        simpleLogger.dev('[AgentsV2] Agent saved', { agentId: identifier });
+      }
     } catch (error) {
       simpleLogger.error('[AgentsV2] Failed to save agent', error);
+      // TODO: Afficher un message d'erreur à l'utilisateur
     } finally {
       setSavingAgent(false);
     }

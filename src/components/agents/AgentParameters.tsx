@@ -63,6 +63,9 @@ export function AgentParameters({
   const [showMcpDropdown, setShowMcpDropdown] = useState(false);
   const [showCallablesDropdown, setShowCallablesDropdown] = useState(false);
 
+  // Mode création : selectedAgent est null mais editedAgent existe
+  const isCreating = !selectedAgent && editedAgent !== null;
+
   if (loadingDetails) {
     return (
       <div className="agent-settings-panel agent-params-panel">
@@ -71,7 +74,7 @@ export function AgentParameters({
     );
   }
 
-  if (!selectedAgent || !editedAgent) {
+  if (!editedAgent) {
     return (
       <div className="agent-settings-panel agent-params-panel">
         <div className="agent-modal-state agent-modal-state--empty">
@@ -84,15 +87,18 @@ export function AgentParameters({
   }
 
   const handleLinkSchema = async (schemaId: string) => {
+    if (!selectedAgent) return;
     await onLinkSchema(selectedAgent.id, schemaId);
     setShowOpenApiDropdown(false);
   };
 
   const handleUnlinkSchema = async (schemaId: string) => {
+    if (!selectedAgent) return;
     await onUnlinkSchema(selectedAgent.id, schemaId);
   };
 
   const handleLinkServer = async (serverId: string) => {
+    if (!selectedAgent) return;
     const linked = await onLinkServer(selectedAgent.id, serverId);
     if (linked) {
       setShowMcpDropdown(false);
@@ -100,6 +106,7 @@ export function AgentParameters({
   };
 
   const handleUnlinkServer = async (serverId: string) => {
+    if (!selectedAgent) return;
     await onUnlinkServer(selectedAgent.id, serverId);
   };
 
@@ -221,16 +228,18 @@ export function AgentParameters({
         <section className="agent-params-card">
           <div className="agent-params-card__header">
             <h3>OpenAPI Tools</h3>
-            <div className="agent-params-card__actions">
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => setShowOpenApiDropdown(value => !value)}
-              >
-                <Plus size={16} />
-                Ajouter
-              </button>
-            </div>
+            {!isCreating && (
+              <div className="agent-params-card__actions">
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => setShowOpenApiDropdown(value => !value)}
+                >
+                  <Plus size={16} />
+                  Ajouter
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="agent-params-card__body">
@@ -256,7 +265,11 @@ export function AgentParameters({
               </div>
             )}
 
-            {openApiLoading ? (
+            {isCreating ? (
+              <div className="agent-params-empty">
+                <p>Les outils OpenAPI peuvent être configurés après la création de l&apos;agent.</p>
+              </div>
+            ) : openApiLoading ? (
               <div className="agent-params-state">
                 <div className="loading-spinner" />
                 <p>Chargement des schémas disponibles…</p>
@@ -290,16 +303,18 @@ export function AgentParameters({
         <section className="agent-params-card">
           <div className="agent-params-card__header">
             <h3>MCP Tools</h3>
-            <div className="agent-params-card__actions">
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => setShowMcpDropdown(value => !value)}
-              >
-                <Plus size={16} />
-                Ajouter
-              </button>
-            </div>
+            {!isCreating && (
+              <div className="agent-params-card__actions">
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => setShowMcpDropdown(value => !value)}
+                >
+                  <Plus size={16} />
+                  Ajouter
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="agent-params-card__body">
@@ -325,7 +340,11 @@ export function AgentParameters({
               </div>
             )}
 
-            {mcpLoading ? (
+            {isCreating ? (
+              <div className="agent-params-empty">
+                <p>Les outils MCP peuvent être configurés après la création de l&apos;agent.</p>
+              </div>
+            ) : mcpLoading ? (
               <div className="agent-params-state">
                 <div className="loading-spinner" />
                 <p>Chargement des serveurs MCP…</p>
@@ -360,16 +379,18 @@ export function AgentParameters({
           <section className="agent-params-card">
             <div className="agent-params-card__header">
               <h3>Callables Synesia</h3>
-              <div className="agent-params-card__actions">
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => setShowCallablesDropdown(value => !value)}
-                >
-                  <Plus size={16} />
-                  Ajouter
-                </button>
-              </div>
+              {!isCreating && (
+                <div className="agent-params-card__actions">
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => setShowCallablesDropdown(value => !value)}
+                  >
+                    <Plus size={16} />
+                    Ajouter
+                  </button>
+                </div>
+              )}
             </div>
 
           <div className="agent-params-card__body">
@@ -407,7 +428,11 @@ export function AgentParameters({
               </div>
             )}
 
-            {callablesLoading ? (
+            {isCreating ? (
+              <div className="agent-params-empty">
+                <p>Les callables peuvent être configurés après la création de l&apos;agent.</p>
+              </div>
+            ) : callablesLoading ? (
               <div className="agent-params-state">
                 <div className="loading-spinner" />
                 <p>Chargement des callables…</p>
@@ -474,7 +499,7 @@ export function AgentParameters({
                 Version
               </label>
               <p className="field-value field-readonly" id="agent-version">
-                {selectedAgent.version || '1.0.0'}
+                {selectedAgent?.version || '1.0.0'}
               </p>
             </div>
           </div>
