@@ -263,11 +263,14 @@ const ChatFullscreenV2: React.FC = () => {
   });
 
   // 🎯 CHAT RESPONSE (streaming)
+  // ✅ FIX: Extraire les callbacks pour éviter les re-renders
+  const { updateContent, startStreaming, endStreaming } = streamingState;
+  
   const { sendMessage } = useChatResponse({
     useStreaming: true,
-    onStreamChunk: streamingState.updateContent,
-    onStreamStart: streamingState.startStreaming,
-    onStreamEnd: streamingState.endStreaming,
+    onStreamChunk: updateContent,
+    onStreamStart: startStreaming,
+    onStreamEnd: endStreaming,
     onToolExecution: (toolCount, toolCalls) => {
       // ✅ FIX TypeScript : Garantir type: 'function'
       const typedToolCalls = toolCalls.map(tc => ({

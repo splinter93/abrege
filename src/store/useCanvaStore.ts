@@ -969,7 +969,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
 
   /**
    * Ajouter un chunk de stream
-   * Sera inséré dans TipTap par useEffect
+   * Sera inséré dans TipTap par useEffect (insertion incrémentale)
    */
   appendStreamChunk: (sessionId, chunk) => {
     set((state) => {
@@ -991,6 +991,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
   /**
    * Terminer le streaming
    * Réactive l'auto-save
+   * Reset le streamBuffer après insertion finale
    */
   endStreaming: (sessionId) => {
     set((state) => {
@@ -1007,8 +1008,8 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
           ...state.sessions,
           [sessionId]: {
             ...session,
-            isStreaming: false
-            // streamBuffer gardé pour insertion finale
+            isStreaming: false,
+            streamBuffer: '' // Reset buffer après fin du stream
           }
         }
       };

@@ -16,8 +16,8 @@
   },
   "servers": [
     {
-      "url": "https://scrivia.app/api/v2",
-      "description": "Production"
+      "url": "http://localhost:3000/api/v2",
+      "description": "Local development"
     }
   ],
   "security": [
@@ -483,176 +483,6 @@
         }
       }
     },
-    "/note/{ref}/stream:write": {
-      "post": {
-        "operationId": "noteStreamWrite",
-        "summary": "Écrire chunk streaming note",
-        "description": "Envoie un chunk de texte pour affichage progressif dans l'éditeur. Diffusé via SSE /stream:listen.",
-        "tags": ["Notes", "Streaming"],
-        "security": [{"ApiKeyAuth": []}],
-        "parameters": [
-          {
-            "name": "ref",
-            "in": "path",
-            "required": true,
-            "schema": {"type": "string"},
-            "description": "Référence de la note (UUID ou slug)"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "chunk": {
-                    "type": "string",
-                    "description": "Chunk de texte à afficher"
-                  },
-                  "position": {
-                    "type": "string",
-                    "enum": ["end", "start", "cursor"],
-                    "default": "end",
-                    "description": "Position d'insertion"
-                  },
-                  "end": {
-                    "type": "boolean",
-                    "description": "Signal de fin de stream"
-                  },
-                  "metadata": {
-                    "type": "object",
-                    "properties": {
-                      "tool_call_id": {"type": "string"},
-                      "agent_id": {"type": "string"}
-                    }
-                  }
-                }
-              },
-              "examples": {
-                "chunk": {
-                  "summary": "Chunk simple",
-                  "value": {
-                    "chunk": "Hello world",
-                    "position": "end"
-                  }
-                },
-                "end": {
-                  "summary": "Fin de stream",
-                  "value": {
-                    "end": true,
-                    "metadata": {"tool_call_id": "uuid"}
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Chunk accepté",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {"type": "boolean"},
-                    "note_id": {"type": "string", "format": "uuid"},
-                    "listener_count": {"type": "integer"}
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation échouée",
-            "content": {
-              "application/json": {
-                "schema": {"$ref": "#/components/schemas/Error"}
-              }
-            }
-          },
-          "401": {
-            "description": "Non authentifié",
-            "content": {
-              "application/json": {
-                "schema": {"$ref": "#/components/schemas/Error"}
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit dépassé",
-            "content": {
-              "application/json": {
-                "schema": {"$ref": "#/components/schemas/Error"}
-              }
-            }
-          }
-        }
-      }
-    },
-    "/note/{ref}/stream:listen": {
-      "get": {
-        "operationId": "noteStreamListen",
-        "summary": "Écouter chunks streaming note (SSE)",
-        "description": "Stream SSE pour recevoir chunks en temps réel depuis /stream:write. Utilisé pour affichage progressif.",
-        "tags": ["Notes", "Streaming"],
-        "security": [{"ApiKeyAuth": []}],
-        "parameters": [
-          {
-            "name": "ref",
-            "in": "path",
-            "required": true,
-            "schema": {"type": "string"},
-            "description": "Référence de la note (UUID ou slug)"
-          },
-          {
-            "name": "token",
-            "in": "query",
-            "required": false,
-            "schema": {"type": "string"},
-            "description": "JWT token (pour EventSource)"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Stream SSE actif",
-            "content": {
-              "text/event-stream": {
-                "schema": {
-                  "type": "string",
-                  "example": "data: Hello world\n\n"
-                }
-              }
-            },
-            "headers": {
-              "Content-Type": {
-                "schema": {"type": "string", "example": "text/event-stream"}
-              },
-              "Cache-Control": {
-                "schema": {"type": "string", "example": "no-cache"}
-              }
-            }
-          },
-          "401": {
-            "description": "Non authentifié",
-            "content": {
-              "application/json": {
-                "schema": {"$ref": "#/components/schemas/Error"}
-              }
-            }
-          },
-          "404": {
-            "description": "Note non trouvée",
-            "content": {
-              "application/json": {
-                "schema": {"$ref": "#/components/schemas/Error"}
-              }
-            }
-          }
-        }
-      }
-    },
     "/note/{ref}/content:apply": {
       "post": {
         "operationId": "applyContentOperations",
@@ -953,6 +783,306 @@
           },
           "422": {
             "description": "Erreur de validation des paramètres",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/Error"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/note/{ref}/editNoteContent": {
+      "post": {
+        "operationId": "editNoteContent",
+        "summary": "Appliquer opérations avec streaming automatique",
+        "description": "Applique des opérations de contenu avec streaming automatique si canva/éditeur ouvert. Identique à content:apply mais stream le résultat progressivement si un canva avec status='open' existe pour cette note.",
+        "tags": ["Notes"],
+        "security": [{"ApiKeyAuth": []}],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"},
+            "description": "Référence de la note (UUID ou slug)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ops": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {"type": "string", "description": "ID unique de l'opération"},
+                        "action": {
+                          "type": "string",
+                          "enum": ["insert", "replace", "delete", "upsert_section"],
+                          "description": "Type d'opération à effectuer"
+                        },
+                        "target": {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "enum": ["heading", "regex", "position", "anchor"],
+                              "description": "Type de cible"
+                            },
+                            "heading": {
+                              "type": "object",
+                              "properties": {
+                                "path": {
+                                  "type": "array",
+                                  "items": {"type": "string"},
+                                  "description": "Chemin du heading"
+                                },
+                                "level": {"type": "integer", "minimum": 1, "maximum": 6},
+                                "heading_id": {"type": "string"}
+                              }
+                            },
+                            "regex": {
+                              "type": "object",
+                              "properties": {
+                                "pattern": {"type": "string", "maxLength": 1000},
+                                "flags": {"type": "string", "maxLength": 10},
+                                "nth": {"type": "integer"}
+                              }
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "mode": {"type": "string", "enum": ["offset", "start", "end"]},
+                                "offset": {"type": "integer", "minimum": 0}
+                              }
+                            },
+                            "anchor": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string",
+                                  "enum": ["doc_start", "doc_end", "after_toc", "before_first_heading"]
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "where": {
+                          "type": "string",
+                          "enum": ["before", "after", "inside_start", "inside_end", "at", "replace_match"]
+                        },
+                        "content": {"type": "string", "maxLength": 100000},
+                        "options": {
+                          "type": "object",
+                          "properties": {
+                            "ensure_heading": {"type": "boolean"},
+                            "surround_with_blank_lines": {"type": "integer", "minimum": 0, "maximum": 3},
+                            "dedent": {"type": "boolean"}
+                          }
+                        }
+                      },
+                      "required": ["id", "action", "target", "where"]
+                    },
+                    "minItems": 1,
+                    "maxItems": 50
+                  },
+                  "transaction": {
+                    "type": "string",
+                    "enum": ["all_or_nothing", "best_effort"],
+                    "default": "all_or_nothing"
+                  },
+                  "conflict_strategy": {
+                    "type": "string",
+                    "enum": ["fail", "skip"],
+                    "default": "fail"
+                  },
+                  "return": {
+                    "type": "string",
+                    "enum": ["content", "diff", "none"],
+                    "default": "diff"
+                  },
+                  "idempotency_key": {"type": "string", "format": "uuid"}
+                },
+                "required": ["ops"]
+              },
+              "examples": {
+                "insert_end": {
+                  "summary": "Insertion à la fin avec streaming",
+                  "value": {
+                    "ops": [{
+                      "id": "op-1",
+                      "action": "insert",
+                      "target": {"type": "position", "position": {"mode": "end"}},
+                      "where": "at",
+                      "content": "Nouveau contenu à insérer avec streaming automatique si canva ouvert"
+                    }]
+                  }
+                },
+                "replace_section": {
+                  "summary": "Remplacement de section",
+                  "value": {
+                    "ops": [{
+                      "id": "op-2",
+                      "action": "replace",
+                      "target": {"type": "heading", "heading": {"path": ["Section 1"], "level": 2}},
+                      "where": "replace_match",
+                      "content": "Contenu remplacé"
+                    }],
+                    "transaction": "all_or_nothing",
+                    "return": "diff"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Opérations appliquées avec succès (streaming activé si canva ouvert)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/Success"},
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "note_id": {"type": "string", "format": "uuid"},
+                            "ops_results": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {"type": "string"},
+                                  "status": {"type": "string", "enum": ["applied", "skipped", "failed"]},
+                                  "matches": {"type": "integer"},
+                                  "range_before": {
+                                    "type": "object",
+                                    "properties": {
+                                      "start": {"type": "integer"},
+                                      "end": {"type": "integer"}
+                                    }
+                                  },
+                                  "range_after": {
+                                    "type": "object",
+                                    "properties": {
+                                      "start": {"type": "integer"},
+                                      "end": {"type": "integer"}
+                                    }
+                                  },
+                                  "preview": {"type": "string"},
+                                  "error": {"type": "string"}
+                                }
+                              }
+                            },
+                            "etag": {"type": "string"},
+                            "diff": {"type": "string"},
+                            "content": {"type": "string"},
+                            "streaming_enabled": {
+                              "type": "boolean",
+                              "description": "Indique si le streaming a été activé (canva ouvert)"
+                            }
+                          }
+                        },
+                        "meta": {
+                          "type": "object",
+                          "properties": {
+                            "char_diff": {
+                              "type": "object",
+                              "properties": {
+                                "added": {"type": "integer"},
+                                "removed": {"type": "integer"}
+                              }
+                            },
+                            "execution_time": {"type": "integer"}
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "note_id": "7a60e6f5-1cd8-4a7b-b58c-57e066125286",
+                    "ops_results": [{
+                      "id": "op-1",
+                      "status": "applied",
+                      "matches": 1,
+                      "range_before": {"start": 0, "end": 0},
+                      "range_after": {"start": 0, "end": 65}
+                    }],
+                    "etag": "W/\"abc123\"",
+                    "streaming_enabled": true
+                  },
+                  "meta": {
+                    "char_diff": {"added": 65, "removed": 0},
+                    "execution_time": 42
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erreur de validation ou regex",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/Error"},
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": ["REGEX_COMPILE_ERROR", "REGEX_TIMEOUT", "INVALID_OPERATION"]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/Error"},
+                    {"type": "object", "properties": {"code": {"type": "string", "enum": ["TARGET_NOT_FOUND"]}}}
+                  ]
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Version obsolète (ETag)",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/Error"}
+              }
+            }
+          },
+          "422": {
+            "description": "Erreur de validation des paramètres",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/Error"}
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur interne du serveur",
             "content": {
               "application/json": {
                 "schema": {"$ref": "#/components/schemas/Error"}

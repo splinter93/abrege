@@ -23,7 +23,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { simpleLogger as logger, LogCategory } from '@/utils/logger';
 import type { FullEditorInstance } from '@/types/editor';
 import { useRealtime } from '@/hooks/useRealtime';
-import { useEditorStreamListener } from '@/hooks/useEditorStreamListener';
+// ❌ SUPPRIMÉ : useEditorStreamListener (endpoints stream:write/stream:listen supprimés)
+// import { useEditorStreamListener } from '@/hooks/useEditorStreamListener';
 import RealtimeStatus from '@/components/RealtimeStatus';
 import { preprocessMarkdown } from '@/utils/markdownPreprocessor';
 import { useEditorState } from '@/hooks/editor/useEditorState';
@@ -275,12 +276,12 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
     }
   }, [editor, noteId]);
 
-  // 🌊 Stream listener pour écouter les écritures LLM externes
-  // Met à jour directement l'éditeur sans passer par le store (évite les saccades)
-  useEditorStreamListener(noteId, editor, {
-    enabled: !isReadonly && !!editor,
-    debug: false // Désactiver les logs en prod
-  });
+  // ❌ DÉSACTIVÉ : useEditorStreamListener supprimé (endpoints stream:write/stream:listen supprimés)
+  // Remplacé par editNoteContent avec streaming automatique
+  // useEditorStreamListener(noteId, editor, {
+  //   enabled: !isReadonly && !!editor,
+  //   debug: false
+  // });
 
   React.useEffect(() => {
     onEditorRef?.(editor as TiptapEditor | null);

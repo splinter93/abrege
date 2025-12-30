@@ -1,14 +1,8 @@
 /**
- * GET /api/v2/canvas/{ref}/ops:listen
+ * GET /api/v2/canvas/{ref}/ops-listen
  * 
  * Endpoint SSE pour écouter les événements de streaming canvas
- * 
- * Événements émis :
- * - ACK : opération acceptée par un autre client
- * - CONFLICT : conflit de version détecté
- * - PATCH : correction serveur (rare)
- * 
- * Utilisé par le frontend pour synchroniser l'état local
+ * ALTERNATIVE à ops:listen (sans : pour éviter problèmes de routing Next.js)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -28,14 +22,14 @@ export async function GET(
   const { ref } = await params;
   
   // ✅ LOG FORCÉ au début pour diagnostiquer
-  console.error('🔍🔍🔍 [ops:listen] GET HANDLER CALLED', { 
+  console.error('🔍🔍🔍 [ops-listen] GET HANDLER CALLED', { 
     ref, 
     url: request.url, 
     method: request.method,
     timestamp: Date.now(),
     hasToken: !!request.nextUrl.searchParams.get('token')
   });
-  logApi.info(`🎧 Canvas ops:listen pour ${ref}`, {
+  logApi.info(`🎧 Canvas ops-listen pour ${ref}`, {
     operation: 'v2_canvas_ops_listen',
     component: 'API_V2_STREAM',
     ref
@@ -67,7 +61,7 @@ export async function GET(
     }
 
     if (!authResult.success) {
-      console.error('❌ [ops:listen] Auth failed', {
+      console.error('❌ [ops-listen] Auth failed', {
         ref,
         error: authResult.error,
         status: authResult.status,
@@ -94,6 +88,12 @@ export async function GET(
     );
 
     if (!resolveResult.success) {
+      console.error('❌ [ops-listen] Note resolution failed', {
+        ref,
+        error: resolveResult.error,
+        status: resolveResult.status,
+        timestamp: Date.now()
+      });
       logApi.warn(`❌ Note resolution failed: ${resolveResult.error}`, context);
       return new Response(
         JSON.stringify({ error: resolveResult.error }),
@@ -106,7 +106,7 @@ export async function GET(
 
     const noteId = resolveResult.id;
 
-    logApi.info(`✅ Canvas ops:listen initialisé`, {
+    logApi.info(`✅ Canvas ops-listen initialisé`, {
       ...context,
       noteId,
       userId,
@@ -116,81 +116,129 @@ export async function GET(
     // 🌊 Créer le stream SSE
     const encoder = new TextEncoder();
     
-    // ✅ FORCER le démarrage immédiat en envoyant un événement initial
-    // Cela garantit que le stream démarre et que le callback start est appelé
+    // ✅ CRITIQUE: Queue pour stocker les événements avant que le stream démarre
+    const eventQueue: StreamEvent[] = [];
+    let controller: ReadableStreamDefaultController<Uint8Array> | null = null;
+    let isControllerReady = false;
+    let isControllerClosed = false;
+    
+    // ✅ Fonction pour envoyer un événement SSE
+    const sendSSE = (event: StreamEvent) => {
+      if (isControllerClosed) return;
+
+      // Si le controller n'est pas prêt, mettre en queue
+      if (!isControllerReady || !controller) {
+        eventQueue.push(event);
+        return;
+      }
+
+      try {
+        // Format SSE pour les événements canvas
+        let eventData: string;
+
+        if (event.type === 'chunk' && typeof event.data === 'string') {
+          // Pour les chunks de editNoteContent, data est déjà une string (texte brut)
+          eventData = `event: chunk\ndata: ${JSON.stringify({
+            type: 'chunk',
+            data: event.data, // String brute
+            position: event.position,
+            metadata: event.metadata
+          })}\n\n`;
+        } else {
+          // Autres types d'événements (start, end, error, etc.) ou data non-string
+          eventData = `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`;
+        }
+
+        controller.enqueue(encoder.encode(eventData));
+      } catch (error) {
+        logApi.error(`[ops-listen] Failed to send SSE`, {
+          noteId,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+        isControllerClosed = true;
+      }
+    };
+    
+    // ✅ ENREGISTRER LE LISTENER MAINTENANT (AVANT le stream)
+    console.error('🔍🔍🔍 [ops-listen] REGISTERING LISTENER BEFORE STREAM', { 
+      noteId, 
+      userId, 
+      timestamp: Date.now() 
+    });
+    
+    try {
+      await streamBroadcastService.registerListener(noteId, sendSSE, userId);
+      console.error('✅✅✅ [ops-listen] LISTENER REGISTERED BEFORE STREAM', { 
+        noteId, 
+        userId, 
+        timestamp: Date.now() 
+      });
+      logApi.info(`[ops-listen] ✅ Listener registered BEFORE stream`, { noteId, userId });
+    } catch (error) {
+      console.error('❌ [ops-listen] Failed to register listener BEFORE stream', {
+        noteId,
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: Date.now()
+      });
+      logApi.error(`[ops-listen] ❌ Failed to register listener BEFORE stream`, {
+        noteId,
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+    
     const stream = new ReadableStream({
-      async start(controller) {
+      async start(streamController) {
         // ✅ LOG FORCÉ au début du stream
-        console.error('🔍🔍🔍 [ops:listen] STREAM START CALLBACK EXECUTED', { 
+        console.error('🔍🔍🔍 [ops-listen] STREAM START CALLBACK EXECUTED', { 
           noteId, 
           userId, 
           timestamp: Date.now() 
         });
-        console.log('🔍 [ops:listen] Stream started', { noteId, userId, timestamp: Date.now() });
-        logApi.info(`[ops:listen] Stream started`, { noteId, userId });
+        console.log('🔍 [ops-listen] Stream started', { noteId, userId, timestamp: Date.now() });
+        logApi.info(`[ops-listen] Stream started`, { noteId, userId });
 
+        // ✅ STOCKER LE CONTROLLER
+        controller = streamController;
+        isControllerReady = true;
+        
         // ✅ ENVOYER IMMÉDIATEMENT un événement initial pour forcer le démarrage
         try {
-          controller.enqueue(encoder.encode(`event: start\ndata: ${JSON.stringify({ type: 'start', timestamp: Date.now() })}\n\n`));
+          streamController.enqueue(encoder.encode(`event: start\ndata: ${JSON.stringify({ type: 'start', timestamp: Date.now() })}\n\n`));
         } catch (error) {
-          console.error('❌ [ops:listen] Failed to send initial event', error);
+          console.error('❌ [ops-listen] Failed to send initial event', error);
+        }
+        
+        // ✅ ENVOYER LES ÉVÉNEMENTS EN QUEUE
+        while (eventQueue.length > 0) {
+          const queuedEvent = eventQueue.shift();
+          if (queuedEvent) {
+            sendSSE(queuedEvent);
+          }
         }
 
         let heartbeatInterval: NodeJS.Timeout | null = null;
-        let isControllerClosed = false;
-
-        /**
-         * Envoyer un événement SSE
-         */
-        const sendSSE = (event: StreamEvent) => {
-          if (isControllerClosed) return;
-
-          try {
-            // Format SSE pour les événements canvas
-            let eventData: string;
-
-            if (event.type === 'chunk' && typeof event.data === 'string') {
-              // Pour les chunks de editNoteContent, data est déjà une string (texte brut)
-              eventData = `event: chunk\ndata: ${JSON.stringify({
-                type: 'chunk',
-                data: event.data, // String brute
-                position: event.position,
-                metadata: event.metadata
-              })}\n\n`;
-            } else {
-              // Autres types d'événements (start, end, error, etc.) ou data non-string
-              eventData = `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`;
-            }
-
-            controller.enqueue(encoder.encode(eventData));
-          } catch (error) {
-            logApi.error(`[ops:listen] Failed to send SSE`, {
-              noteId,
-              error: error instanceof Error ? error.message : 'Unknown error'
-            });
-            isControllerClosed = true;
-          }
-        };
 
         // ✅ CRITIQUE: Enregistrer le listener AVANT tout (await pour garantir l'enregistrement)
         try {
-          console.log('🔍 [ops:listen] Registering listener', { noteId, userId, timestamp: Date.now() });
+          console.log('🔍 [ops-listen] Registering listener', { noteId, userId, timestamp: Date.now() });
           await streamBroadcastService.registerListener(noteId, sendSSE, userId);
-          console.log('✅ [ops:listen] Listener registered successfully', { noteId, userId, timestamp: Date.now() });
-          logApi.info(`[ops:listen] ✅ Listener registered`, { noteId, userId });
+          console.log('✅ [ops-listen] Listener registered successfully', { noteId, userId, timestamp: Date.now() });
+          logApi.info(`[ops-listen] ✅ Listener registered`, { noteId, userId });
           
           sendSSE({
             type: 'start',
             metadata: { timestamp: Date.now() }
           });
         } catch (error) {
-          console.error('❌ [ops:listen] Failed to register listener', {
+          console.error('❌ [ops-listen] Failed to register listener', {
             noteId,
             userId,
             error: error instanceof Error ? error.message : 'Unknown error',
             timestamp: Date.now()
           });
-          logApi.error(`[ops:listen] ❌ Failed to register listener`, {
+          logApi.error(`[ops-listen] ❌ Failed to register listener`, {
             noteId,
             userId,
             error: error instanceof Error ? error.message : 'Unknown error'
@@ -220,12 +268,12 @@ export async function GET(
 
         // 🧹 Cleanup quand la connexion se ferme
         request.signal.addEventListener('abort', () => {
-          console.error('🔍🔍🔍 [ops:listen] Connection ABORTED by client', {
+          console.error('🔍🔍🔍 [ops-listen] Connection ABORTED by client', {
             noteId,
             userId,
             timestamp: Date.now()
           });
-          logApi.info(`[ops:listen] Connection closed by client`, {
+          logApi.info(`[ops-listen] Connection closed by client`, {
             noteId,
             userId
           });
@@ -237,7 +285,7 @@ export async function GET(
             heartbeatInterval = null;
           }
 
-          console.log('🔍 [ops:listen] Unregistering listener on abort', { noteId, userId, timestamp: Date.now() });
+          console.log('🔍 [ops-listen] Unregistering listener on abort', { noteId, userId, timestamp: Date.now() });
           streamBroadcastService.unregisterListener(noteId, sendSSE);
 
           try {
@@ -262,7 +310,7 @@ export async function GET(
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logApi.error(`❌ Canvas ops:listen error: ${errorMessage}`, {
+    logApi.error(`❌ Canvas ops-listen error: ${errorMessage}`, {
       ...context,
       error: error instanceof Error ? error.stack : undefined
     });

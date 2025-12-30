@@ -90,6 +90,7 @@ class StreamBroadcastService {
     userId?: string
   ): Promise<void> {
     return this.runExclusive(`register-${noteId}`, () => {
+      console.log('🔍 [StreamBroadcast] registerListener called', { noteId, userId, timestamp: Date.now() });
       if (!this.listeners.has(noteId)) {
         this.listeners.set(noteId, new Set());
       }
@@ -103,10 +104,12 @@ class StreamBroadcastService {
 
       this.listeners.get(noteId)!.add(metadata);
 
+      const totalListeners = this.listeners.get(noteId)!.size;
+      console.log('✅ [StreamBroadcast] Listener registered', { noteId, userId, totalListeners, timestamp: Date.now() });
       logApi.info(`[StreamBroadcast] Listener registered`, {
         noteId,
         userId,
-        totalListeners: this.listeners.get(noteId)!.size
+        totalListeners
       });
     });
   }
@@ -119,8 +122,14 @@ class StreamBroadcastService {
     listener: SSEListener
   ): Promise<void> {
     return this.runExclusive(`unregister-${noteId}`, () => {
+      console.log('🔍 [StreamBroadcast] unregisterListener called', { noteId, timestamp: Date.now() });
       const noteListeners = this.listeners.get(noteId);
-      if (!noteListeners) return;
+      if (!noteListeners) {
+        console.warn('⚠️ [StreamBroadcast] No listeners to unregister', { noteId, timestamp: Date.now() });
+        return;
+      }
+
+      const beforeCount = noteListeners.size;
 
       // Trouver et supprimer le listener
       for (const metadata of noteListeners) {
@@ -133,8 +142,17 @@ class StreamBroadcastService {
       // Cleanup si plus de listeners
       if (noteListeners.size === 0) {
         this.listeners.delete(noteId);
+        console.log('🗑️ [StreamBroadcast] All listeners removed, noteId deleted', { noteId, timestamp: Date.now() });
       }
 
+      const afterCount = noteListeners.size;
+      console.log('✅ [StreamBroadcast] Listener unregistered', { 
+        noteId, 
+        beforeCount, 
+        afterCount, 
+        remainingListeners: noteListeners.size,
+        timestamp: Date.now() 
+      });
       logApi.info(`[StreamBroadcast] Listener unregistered`, {
         noteId,
         remainingListeners: noteListeners.size
@@ -147,14 +165,18 @@ class StreamBroadcastService {
    */
   async broadcast(noteId: string, event: StreamEvent): Promise<number> {
     return this.runExclusive(`broadcast-${noteId}`, () => {
+      console.log('🔍 [StreamBroadcast] broadcast called', { noteId, eventType: event.type, timestamp: Date.now() });
       const noteListeners = this.listeners.get(noteId);
       if (!noteListeners || noteListeners.size === 0) {
+        console.warn('⚠️ [StreamBroadcast] No listeners', { noteId, eventType: event.type, timestamp: Date.now() });
         logApi.warn(`[StreamBroadcast] ⚠️ No listeners for note ${noteId} - event will not be delivered`, {
           noteId,
           eventType: event.type
         });
         return 0;
       }
+      
+      console.log('✅ [StreamBroadcast] Listeners found', { noteId, count: noteListeners.size, timestamp: Date.now() });
 
       let successCount = 0;
       const failedListeners: ListenerMetadata[] = [];

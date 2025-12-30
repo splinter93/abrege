@@ -20,6 +20,7 @@ import type { Editor as TiptapEditor } from '@tiptap/react';
 import Editor from '@/components/editor/Editor';
 import { hashString } from '@/utils/editorHelpers';
 import { useRealtime } from '@/hooks/useRealtime';
+// ✅ Réactivé : écoute les chunks de editNoteContent via ops:listen
 import { useNoteStreamListener } from '@/hooks/useNoteStreamListener';
 import { useCanvasStreamOps } from '@/hooks/useCanvasStreamOps';
 
@@ -43,12 +44,14 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
   const editorRef = useRef<TiptapEditor | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedHashRef = useRef<number | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null); // ✅ Ref pour EventSource
 
   // Resize handle state
   const [isDragging, setIsDragging] = useState(false);
   const startXRef = useRef(0);
   const startWidthRef = useRef(width);
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const [isEventSourceConnected, setIsEventSourceConnected] = useState(false);
   const handleEditorReady = useCallback(() => {
     setIsEditorReady(true);
     
@@ -74,11 +77,263 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
     debug: false
   });
 
-  // 🌊 Stream listener pour écouter les écritures LLM externes
-  useNoteStreamListener(session?.noteId, {
-    enabled: Boolean(session?.noteId),
-    debug: false
-  });
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ✅ STREAMING INSERTION (comme Ask AI)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /**
+   * ✅ FIX: Insertion directe dans le callback (comme Ask AI)
+   * Au lieu de passer par streamBuffer + useEffect, on insère directement
+   * dans le callback onChunk de useNoteStreamListener
+   */
+  const accumulatedContentRef = useRef<string>('');
+  const insertionStartPosRef = useRef<number | null>(null);
+  
+  // ✅ Callback pour insertion directe (comme Ask AI)
+  const handleStreamChunk = useCallback((chunk: string) => {
+    console.log('🔍 [ChatCanvaPane] handleStreamChunk CALLED', {
+      hasEditor: !!editorRef.current,
+      hasSession: !!session,
+      sessionId: session?.id,
+      chunkLength: chunk.length,
+      chunkPreview: chunk.substring(0, 50)
+    });
+
+    if (!editorRef.current || !session?.id) {
+      console.warn('⚠️ [ChatCanvaPane] handleStreamChunk SKIPPED', {
+        hasEditor: !!editorRef.current,
+        hasSession: !!session,
+        sessionId: session?.id
+      });
+      return;
+    }
+
+    // ✅ Initialiser la position d'insertion au premier chunk
+    if (insertionStartPosRef.current === null) {
+      const docSize = editorRef.current.state.doc.content.size;
+      insertionStartPosRef.current = docSize;
+      accumulatedContentRef.current = '';
+      console.log('🔍 [ChatCanvaPane] Initialized insertion position', {
+        docSize,
+        sessionId: session.id
+      });
+    }
+
+    // ✅ Accumuler le contenu (comme Ask AI)
+    accumulatedContentRef.current += chunk;
+
+    // ✅ Insérer le contenu accumulé (comme Ask AI)
+    // Utiliser la même logique que usePromptExecution
+    const startPos = insertionStartPosRef.current;
+    const currentLength = editorRef.current.state.doc.textBetween(
+      startPos,
+      editorRef.current.state.doc.content.size
+    ).length;
+    const endPos = startPos + Math.min(
+      accumulatedContentRef.current.length,
+      currentLength + chunk.length
+    );
+
+    try {
+      editorRef.current.chain()
+        .focus()
+        .setTextSelection({ 
+          from: startPos, 
+          to: Math.min(endPos, editorRef.current.state.doc.content.size) 
+        })
+        .deleteSelection()
+        .focus(startPos)
+        .insertContent({ type: 'text', text: accumulatedContentRef.current })
+        .run();
+    } catch (error) {
+      logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Failed to insert chunk', error);
+    }
+  }, [session?.id]);
+
+  const handleStreamEnd = useCallback(() => {
+    if (!editorRef.current || !session?.id) {
+      return;
+    }
+
+    if (accumulatedContentRef.current && insertionStartPosRef.current !== null) {
+      const startPos = insertionStartPosRef.current;
+      const endPos = startPos + accumulatedContentRef.current.length;
+
+      try {
+        editorRef.current.chain()
+          .focus()
+          .setTextSelection({ 
+            from: startPos, 
+            to: Math.min(endPos, editorRef.current.state.doc.content.size) 
+          })
+          .deleteSelection()
+          .focus(startPos)
+          .insertContent(accumulatedContentRef.current)
+          .run();
+
+        logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Markdown converted at stream end', {
+          sessionId: session.id,
+          contentLength: accumulatedContentRef.current.length
+        });
+      } catch (error) {
+        logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Failed to convert markdown', error);
+      }
+    }
+
+    accumulatedContentRef.current = '';
+    insertionStartPosRef.current = null;
+  }, [session?.id]);
+
+  // ✅ STREAMING SSE : EventSource directement dans ChatCanvaPane
+  useEffect(() => {
+    // ✅ FIX: Attendre que l'éditeur soit prêt ET que la session soit disponible
+    if (!session || !session.noteId || !isEditorReady) {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+      return;
+    }
+
+    const noteId = session.noteId;
+
+    // ✅ FIX: Ne pas recréer si déjà connecté
+    if (eventSourceRef.current && eventSourceRef.current.readyState === EventSource.OPEN) {
+      return;
+    }
+
+    // Cleanup de la connexion précédente si elle existe
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
+    // Récupérer le token
+    const getToken = () => {
+      try {
+        const supabaseAuth = localStorage.getItem('sb-localhost-auth-token');
+        if (supabaseAuth) {
+          const parsed = JSON.parse(supabaseAuth);
+          return parsed.access_token;
+        }
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+        for (const key of keys) {
+          const data = JSON.parse(localStorage.getItem(key) || '{}');
+          if (data.access_token) return data.access_token;
+        }
+      } catch (error) {
+        logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Failed to get token', error);
+      }
+      return null;
+    };
+
+    const token = getToken();
+    if (!token) {
+      logger.error(LogCategory.EDITOR, '[ChatCanvaPane] No auth token available', { noteId });
+      return;
+    }
+
+    // ✅ TEST: Utiliser ops-listen au lieu de ops:listen (problème de routing Next.js avec :)
+    const url = `/api/v2/canvas/${noteId}/ops-listen?token=${encodeURIComponent(token)}`;
+    console.log('🔍 [ChatCanvaPane] Creating EventSource', { 
+      noteId, 
+      url: url.replace(/token=[^&]+/, 'token=***'),
+      isEditorReady,
+      hasSession: !!session,
+      timestamp: Date.now()
+    });
+    logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Creating EventSource', { noteId, url: url.replace(/token=[^&]+/, 'token=***') });
+    const eventSource = new EventSource(url);
+    eventSourceRef.current = eventSource;
+    console.log('✅ [ChatCanvaPane] EventSource created', { 
+      noteId, 
+      readyState: eventSource.readyState,
+      url: eventSource.url.replace(/token=[^&]+/, 'token=***'),
+      timestamp: Date.now()
+    });
+
+    eventSource.onopen = () => {
+      setIsEventSourceConnected(true);
+      console.log('✅ [ChatCanvaPane] EventSource opened', {
+        noteId,
+        readyState: eventSource.readyState,
+        url: eventSource.url.replace(/token=[^&]+/, 'token=***'),
+        timestamp: Date.now()
+      });
+      logger.info(LogCategory.EDITOR, '[ChatCanvaPane] ✅ EventSource opened', { noteId, readyState: eventSource.readyState });
+    };
+
+    // ✅ Écouter l'événement 'start' pour confirmer que le stream démarre
+    eventSource.addEventListener('start', (event: MessageEvent) => {
+      console.log('✅ [ChatCanvaPane] Stream START event received', {
+        noteId,
+        data: event.data,
+        timestamp: Date.now()
+      });
+      logger.info(LogCategory.EDITOR, '[ChatCanvaPane] ✅ Stream START event received', { noteId });
+    });
+
+    eventSource.addEventListener('chunk', (event: MessageEvent) => {
+      try {
+        const parsed = JSON.parse(event.data);
+        if (parsed.type === 'chunk' && typeof parsed.data === 'string') {
+          console.log('✅ [ChatCanvaPane] Chunk received', {
+            noteId,
+            chunkLength: parsed.data.length,
+            chunkPreview: parsed.data.substring(0, 50),
+            timestamp: Date.now()
+          });
+          handleStreamChunk(parsed.data);
+        }
+      } catch (error) {
+        logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Failed to parse chunk', error);
+      }
+    });
+
+    eventSource.addEventListener('end', () => {
+      console.log('✅ [ChatCanvaPane] Stream END event received', { noteId, timestamp: Date.now() });
+      handleStreamEnd();
+    });
+
+    eventSource.onerror = (error) => {
+      setIsEventSourceConnected(false);
+      const readyStateText = eventSource.readyState === 0 ? 'CONNECTING' : eventSource.readyState === 1 ? 'OPEN' : 'CLOSED';
+      console.error('❌ [ChatCanvaPane] EventSource error', {
+        noteId,
+        readyState: eventSource.readyState,
+        readyStateText,
+        url: eventSource.url.replace(/token=[^&]+/, 'token=***'),
+        error,
+        timestamp: Date.now()
+      });
+      logger.error(LogCategory.EDITOR, '[ChatCanvaPane] EventSource error', {
+        noteId,
+        readyState: eventSource.readyState,
+        readyStateText,
+        url: eventSource.url.replace(/token=[^&]+/, 'token=***')
+      });
+      
+      // Si CLOSED, l'EventSource a échoué complètement
+      if (eventSource.readyState === EventSource.CLOSED) {
+        console.error('❌ [ChatCanvaPane] EventSource CLOSED - connection failed', {
+          noteId,
+          url: eventSource.url.replace(/token=[^&]+/, 'token=***'),
+          timestamp: Date.now()
+        });
+        logger.warn(LogCategory.EDITOR, '[ChatCanvaPane] EventSource closed, will recreate', { noteId });
+        eventSourceRef.current = null;
+      }
+    };
+
+    return () => {
+      setIsEventSourceConnected(false);
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, [session?.noteId, activeCanvaId, isEditorReady]); // ✅ Attendre que l'éditeur soit prêt
 
   // 🔄 Canvas streaming ops (local-first)
   const { sendOp, isConnected: isOpsConnected, lastServerVersion } = useCanvasStreamOps(
@@ -189,30 +444,6 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       lastSavedHashRef.current = null;
     };
   }, [session, session?.noteId, session?.isStreaming, user]);
-
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // ✅ STREAMING INSERTION
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  /**
-   * Insérer le streamBuffer dans TipTap en temps réel
-   */
-  useEffect(() => {
-    if (!session?.streamBuffer || !editorRef.current) return;
-
-    // Insérer le chunk dans TipTap
-    editorRef.current.commands.insertContent(session.streamBuffer);
-    
-    logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Stream chunk inserted', {
-      sessionId: session.id,
-      chunkLength: session.streamBuffer.length
-    });
-
-    // Reset buffer après insertion
-    // (On ne peut pas appeler updateSession directement ici car ça causerait une boucle)
-    // Le buffer sera reset au prochain chunk ou à la fin du stream
-
-  }, [session?.streamBuffer]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // ✅ HANDLERS
@@ -327,7 +558,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       ref={canvaPaneRef}
       className="chat-canva-pane" 
       aria-label="Canva TipTap"
-      style={{ flexBasis: `${width}%` }}
+      style={{ flexBasis: `${width}%`, position: 'relative' }}
     >
       <div 
         className="chat-canva-pane__resize-handle"
@@ -351,6 +582,43 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
           ✨ L'IA rédige...
         </div>
       )}
+
+      {/* Indicateur EventSource (bas à droite) */}
+      <div 
+        className="canva-eventsource-indicator"
+        style={{
+          position: 'absolute',
+          bottom: '16px',
+          right: '16px',
+          padding: '8px 12px',
+          borderRadius: '8px',
+          fontSize: '12px',
+          fontWeight: '500',
+          backgroundColor: isEventSourceConnected ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+          color: isEventSourceConnected ? '#22c55e' : '#ef4444',
+          border: `1px solid ${isEventSourceConnected ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        <div
+          style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            backgroundColor: isEventSourceConnected ? '#22c55e' : '#ef4444',
+            boxShadow: isEventSourceConnected 
+              ? '0 0 8px rgba(34, 197, 94, 0.5)' 
+              : '0 0 8px rgba(239, 68, 68, 0.5)'
+          }}
+        />
+        <span>
+          {isEventSourceConnected ? 'Listener actif' : 'Listener inactif'}
+        </span>
+      </div>
 
       <div className="chat-canva-pane__editor">
         <div className={`chat-canva-pane__editor-content ${isEditorReady ? 'is-ready' : ''}`}>

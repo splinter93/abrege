@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useOAuth } from '@/hooks/useOAuth';
 import { authProviders } from '@/config/authProviders';
 import { useLanguageContext } from '@/contexts/LanguageContext';
-import LogoHeader from '@/components/LogoHeader';
+import { FiFeather } from 'react-icons/fi';
+import { FcGoogle } from 'react-icons/fc';
+import { FaGithub, FaApple } from 'react-icons/fa';
 import { supabase } from '@/supabaseClient';
 import './auth.css';
 
@@ -158,19 +160,21 @@ function AuthPageContent() {
   return (
     <div className="auth-page">
       <div className="auth-container">
-        <LogoHeader />
+        <div className="auth-logo">
+          <FiFeather size={52} />
+        </div>
 
         <div className="auth-content">
           <div className="auth-form-container">
-          <div className="auth-header">
-            <h1 className="auth-title">
-              {isExternalOAuth ? `Autoriser l'accès à ${clientId}` : (isSignUp ? 'Créer un compte' : 'Se connecter')}
-            </h1>
-            <p className="auth-subtitle">
-              {isExternalOAuth
-                ? `Autoriser l'accès à ${clientId}`
-                : (isSignUp ? 'Rejoignez Scrivia pour organiser vos connaissances' : 'Accédez à votre espace personnel')}
-            </p>
+            <div className="auth-header">
+              <h1 className="auth-title">
+                {isExternalOAuth ? `Autoriser l'accès à ${clientId}` : (isSignUp ? 'Créer un compte' : 'Connexion')}
+              </h1>
+              <p className="auth-subtitle">
+                {isExternalOAuth
+                  ? `Autoriser l'accès à ${clientId}`
+                  : (isSignUp ? 'Rejoignez Scrivia pour organiser vos connaissances' : 'Accédez à votre Espace Scrivia')}
+              </p>
 
             {/* Debug masqué pour un design plus propre */}
             {process.env.NODE_ENV === 'development' && false && (
@@ -192,13 +196,51 @@ function AuthPageContent() {
               </div>
             )}
 
-            <div className="auth-session-status">{sessionStatus}</div>
-            {error && <div className="error-message" role="alert">{error}</div>}
-          </div>
+              {/* Afficher le statut uniquement si c'est utile (pas "Aucune session" ni "Session trouvée") */}
+              {sessionStatus && 
+               sessionStatus !== 'Aucune session' && 
+               sessionStatus !== 'Session trouvée' && 
+               sessionStatus !== 'Vérification...' && (
+                <div className="auth-session-status">{sessionStatus}</div>
+              )}
+              {error && <div className="error-message" role="alert">{error}</div>}
+            </div>
 
           {/* Formulaire classique (hors flux externe) */}
           {!isExternalOAuth && (
             <>
+              <div className="oauth-buttons">
+                {authProviders.map((provider) => {
+                  const getIcon = () => {
+                    switch (provider.provider) {
+                      case 'google':
+                        return <FcGoogle size={20} />;
+                      case 'apple':
+                        return <FaApple size={20} />;
+                      case 'github':
+                        return <FaGithub size={20} />;
+                      default:
+                        return null;
+                    }
+                  };
+                  
+                  return (
+                    <button
+                      key={provider.provider}
+                      onClick={() => handleOAuthSignIn(provider.provider as 'google' | 'apple' | 'github')}
+                      disabled={oauthLoading}
+                      className={`oauth-button ${provider.provider}`}
+                    >
+                      {getIcon()}
+                      {oauthLoading ? 'Chargement...' : `Continuer avec ${provider.label}`}
+                    </button>
+                  );
+                })}
+                {oauthError && <div className="error-message">{oauthError}</div>}
+              </div>
+
+              <div className="auth-divider"><span>ou</span></div>
+
               <form onSubmit={handleEmailAuth} className="auth-form">
                 <div className="form-group">
                   <input
@@ -221,29 +263,13 @@ function AuthPageContent() {
                   />
                 </div>
                 <button type="submit" disabled={loading} className="auth-button primary">
-                  {loading ? 'Chargement...' : (isSignUp ? 'Créer un compte' : 'Se connecter')}
+                  {loading ? 'Chargement...' : (isSignUp ? 'Créer un compte' : 'Connexion')}
                 </button>
               </form>
 
-              <div className="auth-divider"><span>ou</span></div>
-
-              <div className="oauth-buttons">
-                {authProviders.map((provider) => (
-                  <button
-                    key={provider.provider}
-                    onClick={() => handleOAuthSignIn(provider.provider as 'google' | 'apple' | 'github')}
-                    disabled={oauthLoading}
-                    className={`oauth-button ${provider.provider}`}
-                  >
-                    {oauthLoading ? 'Chargement...' : `Continuer avec ${provider.label}`}
-                  </button>
-                ))}
-                {oauthError && <div className="error-message">{oauthError}</div>}
-              </div>
-
               <div className="auth-switch">
                 <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="switch-button">
-                  {isSignUp ? 'Déjà un compte ? Se connecter' : 'Pas de compte ? Créer un compte'}
+                  {isSignUp ? 'Déjà un compte ? Connexion' : 'Pas de compte ? Créer un compte'}
                 </button>
               </div>
             </>
@@ -274,14 +300,16 @@ function AuthPageContent() {
                     disabled={oauthLoading}
                     className="oauth-button google"
                   >
-                    {oauthLoading ? 'Chargement...' : 'Se connecter avec Google'}
+                    <FcGoogle size={20} />
+                    {oauthLoading ? 'Chargement...' : 'Connexion avec Google'}
                   </button>
                   <button
                     onClick={() => handleOAuthSignIn('github')}
                     disabled={oauthLoading}
                     className="oauth-button github"
                   >
-                    {oauthLoading ? 'Chargement...' : 'Se connecter avec GitHub'}
+                    <FaGithub size={20} />
+                    {oauthLoading ? 'Chargement...' : 'Connexion avec GitHub'}
                   </button>
                   {oauthError && <div className="error-message">{oauthError}</div>}
                 </>

@@ -1143,11 +1143,11 @@ function getExistingEndpoints(): Record<string, unknown> {
         }
       }
     },
-    '/api/v2/note/{ref}/stream:write': {
+    '/api/v2/note/{ref}/editNoteContent': {
       post: {
-        summary: 'Stream write content to note',
-        description: 'Write content chunks to a note in real-time. Clients listening via stream:listen will receive updates immediately. Designed for LLM agents to stream content generation.',
-        tags: ['Notes', 'Streaming'],
+        summary: 'Appliquer des opérations de contenu avec streaming automatique',
+        description: 'Applique des opérations de contenu sur une note (insert, replace, delete, upsert_section) avec streaming automatique si canva/éditeur ouvert. Identique à content:apply mais stream le résultat progressivement si un canva avec status=\'open\' existe pour cette note.',
+        tags: ['Notes'],
         security: [
           { BearerAuth: [] },
           { ApiKeyAuth: [] }
@@ -1158,7 +1158,7 @@ function getExistingEndpoints(): Record<string, unknown> {
             in: 'path',
             required: true,
             schema: { type: 'string' },
-            description: 'Note UUID or slug'
+            description: 'Référence de la note (UUID ou slug)'
           }
         ],
         requestBody: {
@@ -1168,169 +1168,354 @@ function getExistingEndpoints(): Record<string, unknown> {
               schema: {
                 type: 'object',
                 properties: {
-                  chunk: {
-                    type: 'string',
-                    description: 'Content chunk to append (markdown format)'
-                  },
-                  position: {
-                    type: 'string',
-                    enum: ['end', 'start', 'cursor'],
-                    default: 'end',
-                    description: 'Position where to insert the chunk'
-                  },
-                  end: {
-                    type: 'boolean',
-                    description: 'Signal end of stream (no chunk required)'
-                  },
-                  metadata: {
-                    type: 'object',
-                    properties: {
-                      tool_call_id: { 
-                        type: 'string',
-                        description: 'Tool call ID for tracking'
+                  ops: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string', description: 'ID unique de l\'opération' },
+                        action: { 
+                          type: 'string', 
+                          enum: ['insert', 'replace', 'delete', 'upsert_section'],
+                          description: 'Type d\'opération à effectuer'
+                        },
+                        target: {
+                          type: 'object',
+                          properties: {
+                            type: { 
+                              type: 'string', 
+                              enum: ['heading', 'regex', 'position', 'anchor'],
+                              description: 'Type de cible'
+                            },
+                            heading: {
+                              type: 'object',
+                              properties: {
+                                path: { 
+                                  type: 'array', 
+                                  items: { type: 'string' },
+                                  description: 'Chemin du heading (ex: ["API", "Endpoints"])'
+                                },
+                                level: { 
+                                  type: 'integer', 
+                                  minimum: 1, 
+                                  maximum: 6,
+                                  description: 'Niveau du heading (1-6)'
+                                },
+                                heading_id: { 
+                                  type: 'string',
+                                  description: 'ID du heading (slug)'
+                                }
+                              }
+                            },
+                            regex: {
+                              type: 'object',
+                              properties: {
+                                pattern: { 
+                                  type: 'string', 
+                                  maxLength: 1000,
+                                  description: 'Pattern regex'
+                                },
+                                flags: { 
+                                  type: 'string', 
+                                  maxLength: 10,
+                                  description: 'Flags regex (g, i, m, etc.)'
+                                },
+                                nth: { 
+                                  type: 'integer',
+                                  description: 'Nième correspondance à cibler'
+                                }
+                              }
+                            },
+                            position: {
+                              type: 'object',
+                              properties: {
+                                mode: { 
+                                  type: 'string', 
+                                  enum: ['offset', 'start', 'end'],
+                                  description: 'Mode de position'
+                                },
+                                offset: { 
+                                  type: 'integer', 
+                                  minimum: 0,
+                                  description: 'Offset en caractères'
+                                }
+                              }
+                            },
+                            anchor: {
+                              type: 'object',
+                              properties: {
+                                name: { 
+                                  type: 'string', 
+                                  enum: ['doc_start', 'doc_end', 'after_toc', 'before_first_heading'],
+                                  description: 'Nom de l\'ancre sémantique'
+                                }
+                              }
+                            }
+                          }
+                        },
+                        where: { 
+                          type: 'string', 
+                          enum: ['before', 'after', 'inside_start', 'inside_end', 'at', 'replace_match'],
+                          description: 'Position relative à la cible'
+                        },
+                        content: { 
+                          type: 'string', 
+                          maxLength: 100000,
+                          description: 'Contenu à insérer/remplacer'
+                        },
+                        options: {
+                          type: 'object',
+                          properties: {
+                            ensure_heading: { type: 'boolean' },
+                            surround_with_blank_lines: { 
+                              type: 'integer', 
+                              minimum: 0, 
+                              maximum: 3 
+                            },
+                            dedent: { type: 'boolean' }
+                          }
+                        }
                       },
-                      agent_id: { 
-                        type: 'string',
-                        description: 'Agent ID for analytics'
-                      }
-                    }
+                      required: ['id', 'action', 'target', 'where']
+                    },
+                    minItems: 1,
+                    maxItems: 50
+                  },
+                  transaction: { 
+                    type: 'string', 
+                    enum: ['all_or_nothing', 'best_effort'],
+                    default: 'all_or_nothing',
+                    description: 'Mode de transaction'
+                  },
+                  conflict_strategy: { 
+                    type: 'string', 
+                    enum: ['fail', 'skip'],
+                    default: 'fail',
+                    description: 'Stratégie en cas de conflit'
+                  },
+                  return: { 
+                    type: 'string', 
+                    enum: ['content', 'diff', 'none'],
+                    default: 'diff',
+                    description: 'Type de retour'
+                  },
+                  idempotency_key: { 
+                    type: 'string', 
+                    format: 'uuid',
+                    description: 'Clé d\'idempotence'
                   }
-                }
+                },
+                required: ['ops']
               }
             }
           }
         },
         responses: {
           '200': {
-            description: 'Chunk broadcasted successfully',
+            description: 'Opérations appliquées avec succès (streaming activé si canva ouvert)',
             content: {
               'application/json': {
                 schema: {
-                  type: 'object',
-                  properties: {
-                    success: { type: 'boolean' },
-                    note_id: { type: 'string', format: 'uuid' },
-                    listeners_reached: { type: 'integer' },
-                    chunk_length: { type: 'integer' }
-                  }
-                }
-              }
-            }
-          },
-          '400': {
-            description: 'Validation error'
-          },
-          '401': {
-            description: 'Unauthorized'
-          },
-          '404': {
-            description: 'Note not found'
-          },
-          '429': {
-            description: 'Rate limit exceeded (max 100 chunks/min)'
-          },
-          '500': {
-            description: 'Internal server error'
-          }
-        }
-      }
-    },
-    '/api/v2/canva/{canva_id}/stream:write': {
-      post: {
-        summary: 'Stream write content to canva',
-        description: 'Write content chunks to a canva in real-time. Alias for note stream:write using canva_id. Clients listening to the underlying note will receive updates.',
-        tags: ['Canva', 'Streaming'],
-        security: [
-          { BearerAuth: [] },
-          { ApiKeyAuth: [] }
-        ],
-        parameters: [
-          {
-            name: 'canva_id',
-            in: 'path',
-            required: true,
-            schema: { type: 'string', format: 'uuid' },
-            description: 'Canva session UUID'
-          }
-        ],
-        requestBody: {
-          required: true,
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  chunk: {
-                    type: 'string',
-                    description: 'Content chunk to append (markdown format)'
-                  },
-                  position: {
-                    type: 'string',
-                    enum: ['end', 'start', 'cursor'],
-                    default: 'end',
-                    description: 'Position where to insert the chunk'
-                  },
-                  end: {
-                    type: 'boolean',
-                    description: 'Signal end of stream (no chunk required)'
-                  },
-                  metadata: {
-                    type: 'object',
-                    properties: {
-                      tool_call_id: { 
-                        type: 'string',
-                        description: 'Tool call ID for tracking'
-                      },
-                      agent_id: { 
-                        type: 'string',
-                        description: 'Agent ID for analytics'
+                  allOf: [
+                    { $ref: '#/components/schemas/Success' },
+                    {
+                      type: 'object',
+                      properties: {
+                        data: {
+                          type: 'object',
+                          properties: {
+                            note_id: { type: 'string', format: 'uuid' },
+                            ops_results: {
+                              type: 'array',
+                              items: {
+                                type: 'object',
+                                properties: {
+                                  id: { type: 'string' },
+                                  status: { 
+                                    type: 'string', 
+                                    enum: ['applied', 'skipped', 'failed'] 
+                                  },
+                                  matches: { type: 'integer' },
+                                  range_before: {
+                                    type: 'object',
+                                    properties: {
+                                      start: { type: 'integer' },
+                                      end: { type: 'integer' }
+                                    }
+                                  },
+                                  range_after: {
+                                    type: 'object',
+                                    properties: {
+                                      start: { type: 'integer' },
+                                      end: { type: 'integer' }
+                                    }
+                                  },
+                                  preview: { type: 'string' },
+                                  error: { type: 'string' }
+                                }
+                              }
+                            },
+                            etag: { type: 'string' },
+                            diff: { type: 'string' },
+                            content: { type: 'string' },
+                            streaming_enabled: { 
+                              type: 'boolean',
+                              description: 'Indique si le streaming a été activé (canva ouvert)'
+                            }
+                          }
+                        },
+                        meta: {
+                          type: 'object',
+                          properties: {
+                            char_diff: {
+                              type: 'object',
+                              properties: {
+                                added: { type: 'integer' },
+                                removed: { type: 'integer' }
+                              }
+                            },
+                            execution_time: { type: 'integer' }
+                          }
+                        }
                       }
                     }
-                  }
-                }
-              }
-            }
-          }
-        },
-        responses: {
-          '200': {
-            description: 'Chunk broadcasted successfully',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    success: { type: 'boolean' },
-                    canva_id: { type: 'string', format: 'uuid' },
-                    note_id: { type: 'string', format: 'uuid' },
-                    listeners_reached: { type: 'integer' },
-                    chunk_length: { type: 'integer' }
-                  }
+                  ]
                 }
               }
             }
           },
           '400': {
-            description: 'Validation error'
-          },
-          '401': {
-            description: 'Unauthorized'
-          },
-          '403': {
-            description: 'Not authorized to access this canva'
+            description: 'Erreur de validation ou regex',
+            content: {
+              'application/json': {
+                schema: {
+                  allOf: [
+                    { $ref: '#/components/schemas/Error' },
+                    {
+                      type: 'object',
+                      properties: {
+                        code: { 
+                          type: 'string',
+                          enum: ['REGEX_COMPILE_ERROR', 'REGEX_TIMEOUT', 'INVALID_OPERATION']
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           },
           '404': {
-            description: 'Canva not found'
+            description: 'Note non trouvée',
+            content: {
+              'application/json': {
+                schema: {
+                  allOf: [
+                    { $ref: '#/components/schemas/Error' },
+                    {
+                      type: 'object',
+                      properties: {
+                        code: { type: 'string', enum: ['TARGET_NOT_FOUND'] }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           },
-          '429': {
-            description: 'Rate limit exceeded (max 100 chunks/min)'
+          '408': {
+            description: 'Timeout regex',
+            content: {
+              'application/json': {
+                schema: {
+                  allOf: [
+                    { $ref: '#/components/schemas/Error' },
+                    {
+                      type: 'object',
+                      properties: {
+                        code: { type: 'string', enum: ['REGEX_TIMEOUT'] }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          '409': {
+            description: 'Correspondance ambiguë',
+            content: {
+              'application/json': {
+                schema: {
+                  allOf: [
+                    { $ref: '#/components/schemas/Error' },
+                    {
+                      type: 'object',
+                      properties: {
+                        code: { type: 'string', enum: ['AMBIGUOUS_MATCH'] }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          '412': {
+            description: 'Version obsolète (ETag)',
+            content: {
+              'application/json': {
+                schema: {
+                  allOf: [
+                    { $ref: '#/components/schemas/Error' },
+                    {
+                      type: 'object',
+                      properties: {
+                        code: { type: 'string', enum: ['PRECONDITION_FAILED'] }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          '413': {
+            description: 'Contenu trop volumineux',
+            content: {
+              'application/json': {
+                schema: {
+                  allOf: [
+                    { $ref: '#/components/schemas/Error' },
+                    {
+                      type: 'object',
+                      properties: {
+                        code: { type: 'string', enum: ['CONTENT_TOO_LARGE'] }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          '422': {
+            description: 'Erreur de validation des paramètres',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' }
+              }
+            }
           },
           '500': {
-            description: 'Internal server error'
+            description: 'Erreur interne du serveur',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' }
+              }
+            }
           }
         }
       }
     }
+    // ❌ SUPPRIMÉ : /api/v2/note/{ref}/stream:write et /api/v2/canva/{canva_id}/stream:write
+    // Remplacés par editNoteContent avec streaming automatique
     // Ajouter d'autres endpoints existants ici...
   };
 }

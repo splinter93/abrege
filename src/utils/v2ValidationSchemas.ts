@@ -246,6 +246,12 @@ export const contentApplyV2Schema = z.object({
   idempotency_key: z.string().uuid('Clé d\'idempotence doit être un UUID valide').optional()
 });
 
+/**
+ * Schéma pour editNoteContent (identique à contentApplyV2Schema)
+ * Réutilise le même schéma pour compatibilité
+ */
+export const editNoteContentSchema = contentApplyV2Schema;
+
 // ============================================================================
 // FOLDER MANAGEMENT SCHEMAS
 // ============================================================================

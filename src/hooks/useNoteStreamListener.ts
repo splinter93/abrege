@@ -17,7 +17,7 @@
  * - Intégration avec streamBuffer du store
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { logger, LogCategory } from '@/utils/logger';
 import type { StreamEvent } from '@/services/streamBroadcastService';
@@ -86,14 +86,95 @@ export function useNoteStreamListener(
     onErrorRef.current = onError;
   }, [onChunk, onEnd, onError]);
 
-  const { startStreaming, appendStreamChunk, endStreaming } = useCanvaStore();
+  // ✅ FIX: Ne pas extraire les fonctions pour éviter les dépendances instables
+  // On utilisera useCanvaStore.getState() directement dans le useEffect
+  
+  /**
+   * Trouver le sessionId (canva session ID) à partir du noteId
+   * Utilise useCanvaStore.getState() pour obtenir la dernière valeur sans dépendances
+   */
+  const findSessionIdByNoteId = (noteId: string): string | null => {
+    const currentSessions = useCanvaStore.getState().sessions;
+    const session = Object.values(currentSessions).find(s => s.noteId === noteId);
+    if (!session) {
+      console.warn('⚠️ [useNoteStreamListener] Session not found', {
+        noteId,
+        availableSessions: Object.keys(currentSessions).map(id => ({
+          id,
+          noteId: currentSessions[id].noteId
+        }))
+      });
+      logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] Session not found', {
+        noteId,
+        availableSessions: Object.keys(currentSessions).map(id => ({
+          id,
+          noteId: currentSessions[id].noteId
+        }))
+      });
+    }
+    return session?.id || null;
+  };
 
+  // ✅ LOG AVANT useEffect pour confirmer que le hook s'exécute
+  console.log('🔍 [useNoteStreamListener] Hook function called (BEFORE useEffect)', {
+    noteId,
+    enabled,
+    debug,
+    hasOnChunk: typeof onChunk === 'function',
+    hasOnEnd: typeof onEnd === 'function',
+    hasOnError: typeof onError === 'function',
+    timestamp: Date.now()
+  });
+
+  // ✅ FORCER un log juste avant useEffect pour confirmer qu'on arrive ici
+  console.log('🔍 [useNoteStreamListener] About to call useEffect', {
+    noteId,
+    enabled,
+    debug,
+    timestamp: Date.now()
+  });
+
+  // ✅ TEST: Utiliser useEffect (pas useLayoutEffect car il ne s'exécute pas)
   useEffect(() => {
+    // ✅ FORCER un log SYNCHRONE au tout début (pas de await, pas de condition)
+    console.log('🔍 [useNoteStreamListener] ⚡⚡⚡ useEffect STARTED ⚡⚡⚡', {
+      noteId,
+      enabled,
+      debug,
+      timestamp: Date.now()
+    });
+    
+    // ✅ LOG IMMÉDIAT pour vérifier que le hook s'exécute
+    const currentSessions = useCanvaStore.getState().sessions;
+    console.log('🔍 [useNoteStreamListener] Hook executed', {
+      noteId,
+      enabled,
+      sessionsCount: Object.keys(currentSessions).length,
+      availableNoteIds: Object.values(currentSessions).map(s => s.noteId),
+      sessions: Object.keys(currentSessions).map(id => ({
+        id,
+        noteId: currentSessions[id].noteId
+      }))
+    });
+    logger.info(LogCategory.EDITOR, '[useNoteStreamListener] Hook executed', {
+      noteId,
+      enabled,
+      sessionsCount: Object.keys(currentSessions).length,
+      availableNoteIds: Object.values(currentSessions).map(s => s.noteId)
+    });
+
     // Skip si pas de noteId ou désactivé
     if (!noteId || !enabled) {
-      if (debug) {
-        logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] Skipped', { noteId, enabled });
-      }
+      console.warn('⚠️ [useNoteStreamListener] Skipped', { 
+        noteId, 
+        enabled,
+        reason: !noteId ? 'no noteId' : 'disabled'
+      });
+      logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] ⚠️ Skipped', { 
+        noteId, 
+        enabled,
+        reason: !noteId ? 'no noteId' : 'disabled'
+      });
       // Cleanup si désactivé
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
@@ -153,96 +234,289 @@ export function useNoteStreamListener(
         return null;
       }
 
-      const eventSource = new EventSource(`/api/v2/note/${noteId}/stream:listen?token=${encodeURIComponent(token)}`);
+      // ✅ Utiliser ops:listen qui écoute streamBroadcastService (utilisé par editNoteContent)
+      const url = `/api/v2/canvas/${noteId}/ops:listen?token=${encodeURIComponent(token)}`;
+      console.log('🔍 [useNoteStreamListener] Creating EventSource', {
+        noteId,
+        url: url.replace(/token=[^&]+/, 'token=***'),
+        hasToken: Boolean(token)
+      });
+      logger.info(LogCategory.EDITOR, '[useNoteStreamListener] Creating EventSource', {
+        noteId,
+        url: url.replace(/token=[^&]+/, 'token=***') // Masquer le token dans les logs
+      });
+      const eventSource = new EventSource(url);
+      
+      // Log quand la connexion est ouverte
+      eventSource.onopen = () => {
+        console.log('✅ [useNoteStreamListener] EventSource opened', {
+          noteId,
+                  readyState: eventSource.readyState,
+                  url: eventSource.url.replace(/token=[^&]+/, 'token=***')
+                });
+                logger.info(LogCategory.EDITOR, '[useNoteStreamListener] ✅ EventSource opened', {
+                  noteId,
+                  readyState: eventSource.readyState
+                });
+              };
+      
+      // Log les erreurs de connexion
+      eventSource.onerror = (error) => {
+        logger.error(LogCategory.EDITOR, '[useNoteStreamListener] ❌ EventSource error', {
+          noteId,
+          readyState: eventSource.readyState,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      };
+      
       return eventSource;
     };
 
-    // Initialiser la connexion
-    initializeConnection().then(eventSource => {
-      if (!eventSource) return;
-      
-      eventSourceRef.current = eventSource;
+      // Initialiser la connexion
+      initializeConnection().then(eventSource => {
+        if (!eventSource) {
+          logger.error(LogCategory.EDITOR, '[useNoteStreamListener] Failed to create EventSource', { noteId });
+          return;
+        }
+        
+        eventSourceRef.current = eventSource;
+
+        logger.info(LogCategory.EDITOR, '[useNoteStreamListener] ✅ EventSource created', {
+          noteId,
+          readyState: eventSource.readyState,
+          url: eventSource.url
+        });
+
+        /**
+         * Handler pour traiter un événement StreamEvent
+         */
+        const handleStreamEvent = (data: StreamEvent) => {
+        if (debug) {
+          logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] Event received', {
+            noteId,
+            type: data.type,
+            dataLength: data.data?.length || 0
+          });
+        }
+
+        switch (data.type) {
+          case 'start':
+            // Stream initialisé
+            logger.info(LogCategory.EDITOR, '[useNoteStreamListener] Stream started', {
+              noteId
+            });
+            reconnectAttemptsRef.current = 0; // Reset reconnect counter
+            break;
+
+          case 'chunk':
+            // Réception d'un chunk de contenu
+            if (data.data) {
+              // Trouver le sessionId (canva session) à partir du noteId
+              const sessionId = findSessionIdByNoteId(noteId);
+              
+              if (!sessionId) {
+                const currentSessions = useCanvaStore.getState().sessions;
+                logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] ⚠️ No canva session found for noteId', {
+                  noteId,
+                  availableSessions: Object.keys(currentSessions).length
+                });
+                break;
+              }
+
+              // Démarrer le streaming si pas déjà fait
+              if (!isStreamingRef.current) {
+                logger.info(LogCategory.EDITOR, '[useNoteStreamListener] 🌊 Starting stream', {
+                  noteId,
+                  sessionId
+                });
+                useCanvaStore.getState().startStreaming(sessionId);
+                isStreamingRef.current = true;
+              }
+
+              // Ajouter le chunk au buffer (utiliser sessionId, pas noteId)
+              useCanvaStore.getState().appendStreamChunk(sessionId, data.data);
+
+              // ✅ Callback optionnel (insertion directe)
+              console.log('🔍 [useNoteStreamListener] Calling onChunk callback', {
+                noteId,
+                sessionId,
+                chunkLength: data.data.length,
+                hasCallback: typeof onChunkRef.current === 'function'
+              });
+              
+              if (onChunkRef.current) {
+                try {
+                  onChunkRef.current(data.data);
+                  console.log('✅ [useNoteStreamListener] onChunk callback executed successfully');
+                } catch (error) {
+                  console.error('❌ [useNoteStreamListener] onChunk callback failed', {
+                    error: error instanceof Error ? error.message : 'Unknown error'
+                  });
+                  logger.error(LogCategory.EDITOR, '[useNoteStreamListener] onChunk callback failed', error);
+                }
+              } else {
+                console.warn('⚠️ [useNoteStreamListener] No onChunk callback provided');
+              }
+
+              // ✅ Toujours logger les chunks pour debug (même sans debug mode)
+              logger.info(LogCategory.EDITOR, '[useNoteStreamListener] 📝 Chunk received', {
+                noteId,
+                sessionId,
+                chunkLength: data.data.length,
+                chunkPreview: data.data.substring(0, 50) + (data.data.length > 50 ? '...' : '')
+              });
+            }
+            break;
+
+          case 'end':
+            // Fin du stream
+            if (isStreamingRef.current) {
+              const sessionId = findSessionIdByNoteId(noteId);
+              if (sessionId) {
+                useCanvaStore.getState().endStreaming(sessionId);
+              }
+              isStreamingRef.current = false;
+            }
+
+            logger.info(LogCategory.EDITOR, '[useNoteStreamListener] Stream ended', {
+              noteId
+            });
+
+            // ✅ Callback optionnel (conversion markdown)
+            console.log('🔍 [useNoteStreamListener] Calling onEnd callback', {
+              noteId,
+              hasCallback: typeof onEndRef.current === 'function'
+            });
+            
+            if (onEndRef.current) {
+              try {
+                onEndRef.current();
+                console.log('✅ [useNoteStreamListener] onEnd callback executed successfully');
+              } catch (error) {
+                console.error('❌ [useNoteStreamListener] onEnd callback failed', {
+                  error: error instanceof Error ? error.message : 'Unknown error'
+                });
+                logger.error(LogCategory.EDITOR, '[useNoteStreamListener] onEnd callback failed', error);
+              }
+            } else {
+              console.warn('⚠️ [useNoteStreamListener] No onEnd callback provided');
+            }
+            break;
+
+          case 'error':
+            // Erreur serveur
+            const errorMsg = data.data || 'Unknown error';
+            logger.error(LogCategory.EDITOR, '[useNoteStreamListener] Server error', {
+              noteId,
+              error: errorMsg
+            });
+
+            const error = new Error(`Stream error: ${errorMsg}`);
+            onErrorRef.current?.(error);
+            break;
+
+          default:
+            logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] Unknown event type', {
+              noteId,
+              type: data.type
+            });
+        }
+      };
 
       /**
-       * Handler pour les messages SSE
+       * Handler pour les événements nommés (event: chunk, event: start, etc.)
+       * Utilisé par ops:listen qui envoie des événements nommés
+       */
+      eventSource.addEventListener('chunk', (event: MessageEvent) => {
+        try {
+          // Parser le JSON de l'événement SSE
+          const parsed: StreamEvent = JSON.parse(event.data);
+          
+          // Si c'est un chunk, traiter directement (pas via handleStreamEvent qui attend un format différent)
+          if (parsed.type === 'chunk' && parsed.data && typeof parsed.data === 'string') {
+            const chunkData = parsed.data;
+            
+            // Trouver le sessionId (canva session) à partir du noteId
+            const sessionId = findSessionIdByNoteId(noteId);
+            
+            if (!sessionId) {
+              const currentSessions = useCanvaStore.getState().sessions;
+              logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] ⚠️ No canva session found for noteId', {
+                noteId,
+                availableSessions: Object.keys(currentSessions).length
+              });
+              return;
+            }
+
+            // Démarrer le streaming si pas déjà fait
+            if (!isStreamingRef.current) {
+              logger.info(LogCategory.EDITOR, '[useNoteStreamListener] 🌊 Starting stream', {
+                noteId,
+                sessionId
+              });
+              useCanvaStore.getState().startStreaming(sessionId);
+              isStreamingRef.current = true;
+            }
+
+            // Ajouter le chunk au buffer (utiliser sessionId, pas noteId)
+            useCanvaStore.getState().appendStreamChunk(sessionId, chunkData);
+
+            // Callback optionnel
+            onChunkRef.current?.(chunkData);
+
+            // ✅ Toujours logger les chunks pour debug
+            logger.info(LogCategory.EDITOR, '[useNoteStreamListener] 📝 Chunk received', {
+              noteId,
+              sessionId,
+              chunkLength: chunkData.length,
+              chunkPreview: chunkData.substring(0, 50) + (chunkData.length > 50 ? '...' : '')
+            });
+          } else {
+            // Autres types d'événements, utiliser handleStreamEvent
+            handleStreamEvent(parsed);
+          }
+        } catch (parseError) {
+          logger.error(LogCategory.EDITOR, '[useNoteStreamListener] Failed to parse chunk event', {
+            noteId,
+            error: parseError instanceof Error ? parseError.message : 'Unknown error',
+            rawData: event.data
+          });
+        }
+      });
+
+      eventSource.addEventListener('start', (event: MessageEvent) => {
+        try {
+          const data: StreamEvent = JSON.parse(event.data);
+          handleStreamEvent(data);
+        } catch (parseError) {
+          logger.error(LogCategory.EDITOR, '[useNoteStreamListener] Failed to parse start event', {
+            noteId,
+            error: parseError instanceof Error ? parseError.message : 'Unknown error',
+            rawData: event.data
+          });
+        }
+      });
+
+      eventSource.addEventListener('end', (event: MessageEvent) => {
+        try {
+          const data: StreamEvent = JSON.parse(event.data);
+          handleStreamEvent(data);
+        } catch (parseError) {
+          logger.error(LogCategory.EDITOR, '[useNoteStreamListener] Failed to parse end event', {
+            noteId,
+            error: parseError instanceof Error ? parseError.message : 'Unknown error',
+            rawData: event.data
+          });
+        }
+      });
+
+      /**
+       * Handler pour les messages SSE (événements sans nom - fallback)
        */
       eventSource.onmessage = (event: MessageEvent) => {
         try {
           const data: StreamEvent = JSON.parse(event.data);
-
-          if (debug) {
-            logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] Event received', {
-              noteId,
-              type: data.type,
-              dataLength: data.data?.length || 0
-            });
-          }
-
-          switch (data.type) {
-            case 'start':
-              // Stream initialisé
-              logger.info(LogCategory.EDITOR, '[useNoteStreamListener] Stream started', {
-                noteId
-              });
-              reconnectAttemptsRef.current = 0; // Reset reconnect counter
-              break;
-
-            case 'chunk':
-              // Réception d'un chunk de contenu
-              if (data.data) {
-                // Démarrer le streaming si pas déjà fait
-                if (!isStreamingRef.current) {
-                  startStreaming(noteId);
-                  isStreamingRef.current = true;
-                }
-
-                // Ajouter le chunk au buffer
-                appendStreamChunk(noteId, data.data);
-
-                // Callback optionnel
-                onChunkRef.current?.(data.data);
-
-                if (debug) {
-                  logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] Chunk added', {
-                    noteId,
-                    chunkLength: data.data.length
-                  });
-                }
-              }
-              break;
-
-            case 'end':
-              // Fin du stream
-              if (isStreamingRef.current) {
-                endStreaming(noteId);
-                isStreamingRef.current = false;
-              }
-
-              logger.info(LogCategory.EDITOR, '[useNoteStreamListener] Stream ended', {
-                noteId
-              });
-
-              onEndRef.current?.();
-              break;
-
-            case 'error':
-              // Erreur serveur
-              const errorMsg = data.data || 'Unknown error';
-              logger.error(LogCategory.EDITOR, '[useNoteStreamListener] Server error', {
-                noteId,
-                error: errorMsg
-              });
-
-              const error = new Error(`Stream error: ${errorMsg}`);
-              onErrorRef.current?.(error);
-              break;
-
-            default:
-              logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] Unknown event type', {
-                noteId,
-                type: data.type
-              });
-          }
+          handleStreamEvent(data);
         } catch (parseError) {
           logger.error(LogCategory.EDITOR, '[useNoteStreamListener] Failed to parse event', {
             noteId,
@@ -267,7 +541,10 @@ export function useNoteStreamListener(
 
         // Fin du streaming en cours si erreur
         if (isStreamingRef.current) {
-          endStreaming(noteId);
+          const sessionId = findSessionIdByNoteId(noteId);
+          if (sessionId) {
+            useCanvaStore.getState().endStreaming(sessionId);
+          }
           isStreamingRef.current = false;
         }
 
@@ -309,13 +586,16 @@ export function useNoteStreamListener(
 
       // Fin du streaming si en cours
       if (isStreamingRef.current && noteId) {
-        endStreaming(noteId);
+        const sessionId = findSessionIdByNoteId(noteId);
+        if (sessionId) {
+          useCanvaStore.getState().endStreaming(sessionId);
+        }
         isStreamingRef.current = false;
       }
 
       eventSourceRef.current = null;
     };
-  }, [noteId, enabled, debug, startStreaming, appendStreamChunk, endStreaming]); // ✅ FIX: Callbacks retirés des dépendances (utilisés via refs)
+  }, [noteId, enabled, debug]); // ✅ Dépendances minimales : seulement noteId, enabled, debug
 
   // Retourner l'état de la connexion (optionnel, pour debugging)
   return {
