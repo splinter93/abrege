@@ -289,17 +289,32 @@ function AgentsV2Content() {
           is_chat_agent: editedAgent.is_chat_agent ?? true,
           temperature: editedAgent.temperature ?? 0.7,
           max_tokens: editedAgent.max_tokens ?? 4000,
-          personality: editedAgent.personality,
-          voice: editedAgent.voice,
         };
 
         const newAgent = await agentsService.createAgent(createData);
+        
+        // Mettre à jour les champs additionnels (personality, voice) si présents
+        const additionalFields: Partial<SpecializedAgentConfig> = {};
+        if (editedAgent.personality !== undefined) {
+          additionalFields.personality = editedAgent.personality;
+        }
+        if (editedAgent.voice !== undefined) {
+          additionalFields.voice = editedAgent.voice;
+        }
+        
+        let finalAgent = newAgent;
+        if (Object.keys(additionalFields).length > 0) {
+          const identifier = newAgent.slug || newAgent.id;
+          await agentsService.patchAgent(identifier, additionalFields);
+          finalAgent = await agentsService.getAgent(identifier);
+        }
+        
         await loadAgents();
-        setSelectedAgent(newAgent);
-        setEditedAgent({ ...newAgent });
+        setSelectedAgent(finalAgent);
+        setEditedAgent({ ...finalAgent });
         setHasLocalChanges(false);
-        await loadAgentTools(newAgent.id);
-        simpleLogger.dev('[AgentsV2] Agent created', { agentId: newAgent.id, slug: newAgent.slug });
+        await loadAgentTools(finalAgent.id);
+        simpleLogger.dev('[AgentsV2] Agent created', { agentId: finalAgent.id, slug: finalAgent.slug });
       } else {
         // Mode édition : mettre à jour l'agent existant
         const identifier = selectedAgent.slug || selectedAgent.id;
