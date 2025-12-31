@@ -79,35 +79,39 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
           <div className="streaming-indicator executing">
             {toolCalls.length > 0 ? (
               <div className="tool-list-compact">
-                {toolCalls.map((tool, index) => (
-                  <div 
-                    key={tool.id || index} 
-                    className="tool-item-compact"
-                    onClick={onToggle}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <span className="tool-item-name">
-                      {tool.name}
-                    </span>
+                {toolCalls.map((tool, index) => {
+                  // Extraire le nom de la fonction sans préfixe "local__"
+                  const functionName = tool.name.replace(/^local__/, '');
+                  return (
+                    <div 
+                      key={tool.id || index} 
+                      className="tool-item-compact"
+                      onClick={onToggle}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <span className="tool-item-name">
+                        Calling {functionName}
+                      </span>
                     <span className="tool-item-status">
                       {tool.success === true ? (
                         <Check className="status-icon success" size={16} strokeWidth={2.5} />
                       ) : tool.success === false ? (
                         <X className="status-icon error" size={16} strokeWidth={2.5} />
                       ) : (
-                        <Loader2 className="status-icon pending spinner" size={14} strokeWidth={2.5} />
+                        <Loader2 className="status-icon pending spinner" size={16} strokeWidth={2.5} />
                       )}
                     </span>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="tool-item-compact">
                 <span className="tool-item-name">
-                  Exécution en cours...
+                  Calling tools...
                 </span>
                 <span className="tool-item-status">
-                  <Loader2 className="status-icon pending spinner" size={14} strokeWidth={2.5} />
+                  <Loader2 className="status-icon pending spinner" size={20} strokeWidth={2.5} />
                 </span>
               </div>
             )}
@@ -133,25 +137,29 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
         return (
           <div className="streaming-indicator completed">
             <div className="tool-list-compact">
-              {toolCalls.map((tool, index) => (
-                <div 
-                  key={tool.id || index} 
-                  className="tool-item-compact"
-                  onClick={onToggle}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <span className="tool-item-name">
-                    {tool.name}
-                  </span>
-                  <span className="tool-item-status">
-                    {tool.success ? (
-                      <Check className="status-icon success" size={16} strokeWidth={2.5} />
-                    ) : (
-                      <X className="status-icon error" size={16} strokeWidth={2.5} />
-                    )}
-                  </span>
-                </div>
-              ))}
+              {toolCalls.map((tool, index) => {
+                // Extraire le nom de la fonction sans préfixe "local__"
+                const functionName = tool.name.replace(/^local__/, '');
+                return (
+                  <div 
+                    key={tool.id || index} 
+                    className="tool-item-compact"
+                    onClick={onToggle}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <span className="tool-item-name">
+                      Calling {functionName}
+                    </span>
+                    <span className="tool-item-status">
+                      {tool.success ? (
+                        <Check className="status-icon success" size={16} strokeWidth={2.5} />
+                      ) : (
+                        <X className="status-icon error" size={16} strokeWidth={2.5} />
+                      )}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
             
             {/* Détails déroulants */}

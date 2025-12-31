@@ -3,6 +3,10 @@
  * Design moderne avec animations fluides
  */
 
+:root {
+  --tool-call-font-size: calc(var(--chat-font-size-base, 16px) * 0.95);
+}
+
 .streaming-indicator-container {
   padding: 4px 0;
   margin: 4px 0;
@@ -25,17 +29,17 @@
 }
 
 .streaming-indicator.executing {
-  background: var(--chat-gradient-input);
+  background: none;
   border: none;
   padding: 0;
-  border-radius: 16px;
+  border-radius: 0;
 }
 
 /* Tool list compact - Design minimaliste */
 .tool-list-compact {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 4px;
   width: 100%;
 }
 
@@ -43,41 +47,57 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  transition: background 0.2s ease;
+  padding: 0;
+  border: none;
+  background: none;
+  transition: none;
 }
 
 .tool-item-compact:first-child {
-  border-radius: 16px 16px 0 0;
+  border-radius: 0;
 }
 
 .tool-item-compact:last-child {
   border-bottom: none;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0;
 }
 
 .tool-item-compact:only-child {
-  border-radius: 16px;
+  border-radius: 0;
 }
 
 .tool-item-compact:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: none;
 }
 
 .tool-item-name {
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--chat-text-primary);
+  font-size: var(--tool-call-font-size);
+  font-weight: 400;
+  background: linear-gradient(90deg, var(--chat-text-primary) 0%, rgba(255, 255, 255, 0.8) 50%, var(--chat-text-primary) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+  filter: brightness(0.91);
   flex: 1;
   font-family: var(--font-chat-text);
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
 }
 
 .tool-item-status {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 12px;
+  margin-left: 8px;
 }
 
 /* Status icons */
@@ -88,6 +108,8 @@
   flex-shrink: 0;
   border-radius: 50%;
   padding: 3px;
+  width: 18px;
+  height: 18px;
 }
 
 .status-icon.success {
@@ -104,9 +126,11 @@
   color: #71717a;
 }
 
-/* Spinner animation pour Lucide React */
+/* Spinner animation pour Lucide React - Roue qui tourne */
 .spinner {
   animation: spin 1s linear infinite;
+  width: 16px;
+  height: 16px;
 }
 
 @keyframes spin {
@@ -161,21 +185,29 @@
 }
 
 .streaming-indicator.completed {
-  background: var(--chat-gradient-input);
+  background: none;
   border: none;
   padding: 0;
   flex-direction: column;
   align-items: flex-start;
-  transition: all 0.3s ease;
-  border-radius: 16px;
+  transition: none;
+  border-radius: 0;
 }
 
 .streaming-indicator.completed:hover {
-  background: var(--chat-gradient-user-hover);
+  background: none;
 }
 
 .streaming-indicator.completed .tool-item-name {
-  color: var(--chat-text-primary);
+  font-size: var(--tool-call-font-size);
+  font-weight: 400;
+  background: linear-gradient(90deg, var(--chat-text-primary) 0%, rgba(255, 255, 255, 0.6) 50%, var(--chat-text-primary) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+  filter: brightness(0.91);
   font-family: var(--font-chat-text);
 }
 
