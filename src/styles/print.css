@@ -1,0 +1,167 @@
+/**
+ * Styles pour l'export PDF des notes Scrivia
+ * Utilisés par html2pdf.js pour le formatage
+ */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+
+  /* Masquer tous les éléments UI */
+  .editor-header,
+  .editor-sidebar,
+  .editor-toolbar,
+  .crafted-button,
+  .toc-sidebar,
+  .notion-drag-handle,
+  .slash-menu,
+  .context-menu,
+  .floating-menu,
+  button:not(.print-keep),
+  .editor-kebab-menu,
+  .editor-header-kebab-menu {
+    display: none !important;
+  }
+
+  /* Optimiser le contenu */
+  body {
+    background: white !important;
+    color: #000 !important;
+  }
+
+  .markdown-body,
+  .editor-content-wrapper {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #000 !important;
+  }
+
+  /* Typographie */
+  h1 {
+    font-size: 24pt;
+    margin-top: 0;
+    margin-bottom: 0.5em;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 18pt;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 14pt;
+    margin-top: 0.8em;
+    margin-bottom: 0.4em;
+    page-break-after: avoid;
+  }
+
+  h4, h5, h6 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Paragraphes */
+  p {
+    margin: 0.5em 0;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Code */
+  pre, code {
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 9pt;
+    background: #f5f5f5;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+  }
+
+  pre {
+    padding: 1em;
+    overflow-x: auto;
+    page-break-inside: avoid;
+  }
+
+  /* Citations */
+  blockquote {
+    border-left: 3px solid #ddd;
+    padding-left: 1em;
+    margin: 1em 0;
+    page-break-inside: avoid;
+  }
+
+  /* Tableaux */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    page-break-inside: avoid;
+  }
+
+  table th, table td {
+    border: 1px solid #ddd;
+    padding: 0.5em;
+    text-align: left;
+  }
+
+  table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
+
+  /* Images */
+  img {
+    max-width: 100%;
+    height: auto;
+    page-break-inside: avoid;
+  }
+
+  /* Listes */
+  ul, ol {
+    margin: 0.5em 0;
+    padding-left: 2em;
+  }
+
+  li {
+    margin: 0.3em 0;
+  }
+
+  /* Embeds */
+  .note-embed,
+  .youtube-embed,
+  .audio-embed {
+    page-break-inside: avoid;
+    border: 1px solid #ddd;
+    padding: 1em;
+    margin: 1em 0;
+  }
+
+  /* YouTube: Afficher URL au lieu de iframe */
+  .youtube-embed iframe {
+    display: none;
+  }
+
+  .youtube-embed::after {
+    content: "🎥 Vidéo YouTube: " attr(data-video-url);
+    display: block;
+    padding: 1em;
+    background: #f5f5f5;
+  }
+
+  /* Note embeds */
+  .note-embed-link {
+    padding: 0.5em;
+    background-color: #f9f9f9;
+    border-left: 3px solid #007bff;
+    margin: 0.5em 0;
+  }
+}
+

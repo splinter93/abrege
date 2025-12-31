@@ -433,6 +433,97 @@ body.chat-theme-anthracite .chatgpt-header {
 }
 
 /* ========================================
+   THÈME GLASS MODE - GLASSMORPHISM MODERNE
+   ========================================
+   Usage : Ajouter .chat-theme-glass sur body
+   Style : Background avec radial gradients (comme page auth) + effet glassmorphism sur les blocs
+   ======================================== */
+body.chat-theme-glass,
+.chat-theme-glass {
+  /* Background principal - Identique à la page auth */
+  --chat-bg-primary: #0e1012;
+  --chat-bg-secondary: #121416;
+  --chat-bg-tertiary: #161819;
+  --chat-bg-input: #1e2022;
+  --chat-bg-input-focus: #2a2a2a;
+  --chat-bg-user-message: #232323;
+  --chat-bg-user-message-hover: #252525;
+  
+  /* Textes */
+  --chat-text-primary: #f8fafc;
+  --chat-text-secondary: #94a3b8;
+  --chat-text-tertiary: #64748b;
+  
+  /* Sidebar - Progression naturelle */
+  --sidebar-search-overlay: rgba(255, 255, 255, 0.03);
+  --sidebar-search-overlay-focus: rgba(255, 255, 255, 0.05);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.07);
+  --sidebar-item-active: rgba(255, 255, 255, 0.09);
+  
+  /* Bordures - Subtiles pour glassmorphism */
+  --chat-border-subtle: rgba(255, 255, 255, 0.1);
+  --chat-border-soft: rgba(255, 255, 255, 0.08);
+  
+  /* Accents */
+  --chat-accent-primary: #e55a2c;
+  --chat-accent-hover: #ff6b3d;
+  
+  /* Glassmorphism au lieu de gradients - Effet identique à auth-container */
+  --chat-glass-bg: rgba(255, 255, 255, 0.06);
+  --chat-glass-bg-hover: rgba(255, 255, 255, 0.08);
+  --chat-glass-border: rgba(255, 255, 255, 0.1);
+  --chat-glass-blur: blur(16px) saturate(180%); /* Réduit de moitié : 32px → 16px */
+  
+  /* Variables pour les blocs - Glassmorphism */
+  --chat-gradient-block: var(--chat-glass-bg);
+  --chat-gradient-input: var(--chat-glass-bg);
+  --chat-gradient-sidebar: var(--chat-glass-bg);
+  --chat-gradient-user: var(--chat-glass-bg);
+  --chat-gradient-user-hover: var(--chat-glass-bg-hover);
+  --chat-gradient-kebab: var(--chat-glass-bg);
+  
+  /* Code blocks - Glassmorphism */
+  --blk-bg: var(--chat-glass-bg);
+  --blk-fg: var(--chat-text-secondary);
+}
+
+/* Sidebar Glass Mode - Glassmorphism - Même forme que les autres thèmes */
+body.chat-theme-glass .sidebar-ultra-clean,
+body.chat-theme-glass .unified-sidebar {
+  background: var(--chat-glass-bg);
+  backdrop-filter: var(--chat-glass-blur);
+  -webkit-backdrop-filter: var(--chat-glass-blur);
+  border: 1px solid var(--chat-glass-border);
+  border-top-right-radius: var(--chat-radius-2xl);
+  border-bottom-right-radius: var(--chat-radius-2xl);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Chat input Glass Mode - Glassmorphism - Même forme que les autres thèmes */
+body.chat-theme-glass .chatgpt-input-area {
+  background: var(--chat-glass-bg);
+  backdrop-filter: var(--chat-glass-blur);
+  -webkit-backdrop-filter: var(--chat-glass-blur);
+  border: 1px solid var(--chat-glass-border);
+  border-top: 1px solid var(--chat-glass-border);
+  border-radius: var(--chat-radius-xl); /* Même border-radius que les autres thèmes */
+}
+
+/* Messages user Glass Mode - Glassmorphism */
+body.chat-theme-glass .chatgpt-message-bubble-user {
+  background: var(--chat-glass-bg);
+  backdrop-filter: var(--chat-glass-blur);
+  -webkit-backdrop-filter: var(--chat-glass-blur);
+  border: 1px solid var(--chat-glass-border);
+}
+
+body.chat-theme-glass .chatgpt-message-bubble-user:hover {
+  background: var(--chat-glass-bg-hover);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* ========================================
    CONTAINER PRINCIPAL
    ======================================== */
 
@@ -448,6 +539,42 @@ body.chat-theme-anthracite .chatgpt-header {
   overflow: hidden;
   font-family: var(--font-chat-text);
   color: var(--chat-text-primary);
+}
+
+/* Glass Mode - Container avec background pattern (comme page auth) - Spécificité élevée */
+body.chat-theme-glass .chatgpt-container {
+  background: var(--surface-background, #0e1012);
+  position: fixed; /* Garder fixed pour le container */
+  overflow: hidden;
+}
+
+body.chat-theme-glass .chatgpt-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(229, 90, 44, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(155, 89, 182, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body.chat-theme-glass .chatgpt-content,
+body.chat-theme-glass .chatgpt-main {
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header transparent */
+body.chat-theme-glass .chatgpt-header {
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 /* ========================================
@@ -1164,6 +1291,11 @@ body.chat-theme-anthracite .chatgpt-header {
   scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
 
+/* Glass Mode - Messages container transparent */
+body.chat-theme-glass .chatgpt-messages-container {
+  background: transparent;
+}
+
 /* ✅ Effet fade en haut (sous le header) - uniquement sur la zone chat */
 .chatgpt-messages-container::before {
   content: '';
@@ -1180,7 +1312,8 @@ body.chat-theme-anthracite .chatgpt-header {
 
 body.chat-theme-anthracite .chatgpt-messages-container::before,
 body.chat-theme-grey .chatgpt-messages-container::before,
-body.chat-theme-light .chatgpt-messages-container::before {
+body.chat-theme-light .chatgpt-messages-container::before,
+body.chat-theme-glass .chatgpt-messages-container::before {
   display: none;
   height: 0;
   background: none;
@@ -1313,6 +1446,10 @@ body.chat-theme-light .chatgpt-messages-container::before {
   /* ✅ FIX: Forcer le header à rester au top du conteneur scrollable */
   margin-top: 0 !important;
   margin-bottom: 0 !important;
+  /* ✅ FIX: S'assurer que le header est toujours au début du conteneur scrollable */
+  flex-shrink: 0 !important;
+  /* ✅ FIX: Empêcher le header d'être scrollé hors du viewport */
+  will-change: transform !important;
 }
 
 /* ✅ FIX: S'assurer que l'image header ne masque pas le header */
@@ -1407,6 +1544,9 @@ body.chat-theme-light .chatgpt-messages-container::before {
   scroll-behavior: smooth;
   /* ✅ FIX: Forcer le scroll initial à 0 */
   scroll-padding-top: 0;
+  /* ✅ FIX: S'assurer que le header sticky fonctionne correctement */
+  /* Le header doit être le premier enfant pour que sticky fonctionne */
+  align-items: stretch;
 }
 
 .chat-canva-pane .editor-layout.noteLayout {
@@ -1515,6 +1655,30 @@ body.chat-theme-light .chatgpt-messages-container::before {
   margin-bottom: 6px; /* ✅ Resserré pour interface compacte */
   /* animation: fadeIn 0.2s ease-out; */ /* ✅ DÉSACTIVÉ: Cause clignotement à la fin du stream */
   width: 100%;
+}
+
+/* Divs vides dans les messages - transparents ou cachés */
+.chatgpt-messages > div:empty {
+  background: transparent !important;
+  display: none;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* Divs avec style opacity/transform - s'assurer qu'ils sont transparents */
+.chatgpt-messages > div[style*="opacity"] {
+  background: transparent !important;
+}
+
+/* Glass Mode - Messages container transparent */
+body.chat-theme-glass .chatgpt-messages-container {
+  background: transparent;
+}
+
+/* Glass Mode - Tous les divs dans messages transparents par défaut */
+body.chat-theme-glass .chatgpt-messages > div {
+  background: transparent !important;
 }
 
 /* Texte brut pour messages user */
@@ -2304,8 +2468,8 @@ body.chat-theme-light .chatgpt-messages-container::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 24px; /* Réduit de 26px → 24px */
+  height: 24px; /* Réduit de 26px → 24px */
   padding: 0;
   border: none;
   border-radius: 4px;
@@ -2317,8 +2481,8 @@ body.chat-theme-light .chatgpt-messages-container::before {
 }
 
 .bubble-button svg {
-  width: 15px;
-  height: 15px;
+  width: 14px; /* Réduit de 15px → 14px */
+  height: 14px; /* Réduit de 15px → 14px */
   stroke-width: 2.2;
 }
 
@@ -2338,7 +2502,7 @@ body.chat-theme-light .chatgpt-messages-container::before {
 }
 
 .chatgpt-message-user .bubble-button {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--chat-text-secondary); /* Même couleur que les boutons assistant */
 }
 
 .copy-button.copied {

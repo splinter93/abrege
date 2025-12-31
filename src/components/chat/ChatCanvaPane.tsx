@@ -52,6 +52,9 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
   const startWidthRef = useRef(width);
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [isEventSourceConnected, setIsEventSourceConnected] = useState(false);
+  const editorLayoutRef = useRef<HTMLElement | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
+  
   const handleEditorReady = useCallback(() => {
     setIsEditorReady(true);
     
@@ -59,15 +62,80 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
     // Le header sticky nécessite que le conteneur scrollable soit au top
     setTimeout(() => {
       const editorLayout = document.querySelector('.chat-canva-pane .editor-layout') as HTMLElement | null;
+      const editorHeader = document.querySelector('.chat-canva-pane .editor-header') as HTMLElement | null;
+      
       if (editorLayout) {
+        editorLayoutRef.current = editorLayout;
         editorLayout.scrollTop = 0;
         logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] ✅ Scroll vers top après chargement', {
           scrollTop: editorLayout.scrollTop,
           timestamp: Date.now()
         });
       }
+      
+      if (editorHeader) {
+        headerRef.current = editorHeader;
+      }
     }, 100); // Petit délai pour laisser le DOM se stabiliser
   }, []);
+
+  // ✅ FIX: Intersection Observer pour garantir que le header reste toujours visible
+  // Si le header sort du viewport du conteneur scrollable, on remet le scroll à 0
+  useEffect(() => {
+    if (!isEditorReady) return;
+
+    const editorLayout = editorLayoutRef.current || 
+      (document.querySelector('.chat-canva-pane .editor-layout') as HTMLElement | null);
+    const editorHeader = headerRef.current || 
+      (document.querySelector('.chat-canva-pane .editor-header') as HTMLElement | null);
+
+    if (!editorLayout || !editorHeader) {
+      // Réessayer après un court délai si les éléments ne sont pas encore disponibles
+      const timeoutId = setTimeout(() => {
+        const retryLayout = document.querySelector('.chat-canva-pane .editor-layout') as HTMLElement | null;
+        const retryHeader = document.querySelector('.chat-canva-pane .editor-header') as HTMLElement | null;
+        if (retryLayout && retryHeader) {
+          editorLayoutRef.current = retryLayout;
+          headerRef.current = retryHeader;
+        }
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
+
+    editorLayoutRef.current = editorLayout;
+    headerRef.current = editorHeader;
+
+    // Utiliser Intersection Observer pour détecter si le header est visible
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          // Si le header n'est pas visible (intersectionRatio < 1) et scrollTop > 0
+          // Cela signifie que le header a été scrollé hors du viewport
+          if (!entry.isIntersecting && editorLayout.scrollTop > 0) {
+            // Remettre le scroll à 0 pour garder le header visible
+            editorLayout.scrollTop = 0;
+            logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] ✅ Header restauré via Intersection Observer', {
+              scrollTop: editorLayout.scrollTop,
+              isIntersecting: entry.isIntersecting,
+              intersectionRatio: entry.intersectionRatio,
+              timestamp: Date.now()
+            });
+          }
+        }
+      },
+      {
+        root: editorLayout, // Conteneur scrollable
+        rootMargin: '0px',
+        threshold: [0, 0.1, 0.5, 1] // Détecter à différents niveaux de visibilité
+      }
+    );
+
+    observer.observe(editorHeader);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isEditorReady]);
 
   // 🎯 Realtime édition note via RealtimeService (articles)
   useRealtime({

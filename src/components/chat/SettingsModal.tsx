@@ -224,6 +224,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     light: <Sun size={16} />,
     grey: <Circle size={16} />,
     anthracite: <Circle size={16} />,
+    glass: <Sparkles size={16} />,
   };
 
   if (!isOpen) return null;

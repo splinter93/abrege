@@ -1,0 +1,1987 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Factoria Playwright API",
+    "version": "1.0.0",
+    "description": "API complète Playwright : navigation, interactions, fichiers, dialogs, network mocking, sessions. 100% couverture Playwright natif.",
+    "contact": {
+      "name": "Factoria Support",
+      "email": "support@factoria.app"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://factoria-playwright.up.railway.app",
+      "description": "Production server (Railway)"
+    }
+  ],
+  "security": [],
+  "components": {
+    "schemas": {
+      "PlaywrightSuccess": {
+        "type": "object",
+        "required": [
+          "success",
+          "url",
+          "duration",
+          "timestamp"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "description": "Données retournées (variable)"
+          },
+          "url": {
+            "type": "string",
+            "example": "https://example.com"
+          },
+          "duration": {
+            "type": "number",
+            "example": 1234
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlaywrightError": {
+        "type": "object",
+        "required": [
+          "success",
+          "error"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "number"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "securitySchemes": {}
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["Info"],
+        "summary": "Service information",
+        "description": "Retourne les informations du service et la liste des endpoints disponibles",
+        "operationId": "getServiceInfo",
+        "responses": {
+          "200": {
+            "description": "Informations du service",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "service": { "type": "string" },
+                    "version": { "type": "string" },
+                    "description": { "type": "string" },
+                    "endpoints": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "status": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/navigate": {
+      "post": {
+        "tags": [
+          "Navigation"
+        ],
+        "summary": "Navigation du navigateur",
+        "description": "Navigation : goto, goBack, goForward, reload. Options waitUntil et timeout personnalisables.",
+        "operationId": "navigate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "goto",
+                      "goBack",
+                      "goForward",
+                      "reload"
+                    ]
+                  },
+                  "url": {
+                    "type": "string",
+                    "description": "URL (requis pour goto)"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "waitUntil": {
+                        "type": "string",
+                        "enum": [
+                          "load",
+                          "domcontentloaded",
+                          "networkidle"
+                        ]
+                      },
+                      "timeout": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              },
+              "examples": {
+                "goto": {
+                  "summary": "Aller à URL",
+                  "value": {
+                    "action": "goto",
+                    "url": "https://example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Navigation réussie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interact": {
+      "post": {
+        "tags": [
+          "Interactions"
+        ],
+        "summary": "Interactions avec éléments",
+        "description": "Interagit avec éléments : click, fill, select, check, uncheck, hover. Options force, position, modifiers.",
+        "operationId": "interact",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action",
+                  "url",
+                  "selector"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "click",
+                      "fill",
+                      "select",
+                      "check",
+                      "uncheck",
+                      "hover"
+                    ]
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "selector": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string",
+                    "description": "Requis pour fill, select"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              },
+              "examples": {
+                "click": {
+                  "summary": "Cliquer bouton",
+                  "value": {
+                    "action": "click",
+                    "url": "https://example.com",
+                    "selector": "button#submit"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Interaction réussie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wait": {
+      "post": {
+        "tags": [
+          "Attentes"
+        ],
+        "summary": "Attentes et conditions",
+        "description": "Attend conditions : selector, navigation, loadState, function. Synchronise actions avec chargement page.",
+        "operationId": "wait",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action",
+                  "url"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "selector",
+                      "navigation",
+                      "loadState",
+                      "function"
+                    ]
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "selector": {
+                    "type": "string"
+                  },
+                  "condition": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Attente terminée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scrape": {
+      "post": {
+        "tags": [
+          "Extraction"
+        ],
+        "summary": "Scraping de données",
+        "description": "Extrait données : contenu complet, sélecteur, ou JS custom. Formats : text, html, json.",
+        "operationId": "scrape",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "selector": {
+                        "type": "string"
+                      },
+                      "extract": {
+                        "type": "string",
+                        "enum": [
+                          "text",
+                          "html",
+                          "json"
+                        ]
+                      },
+                      "evaluate": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scraping réussi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/screenshot": {
+      "post": {
+        "tags": [
+          "Captures"
+        ],
+        "summary": "Capture d'écran",
+        "description": "Capture d'écran PNG/JPEG. Options : page complète, zone spécifique, qualité.",
+        "operationId": "screenshot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "fullPage": {
+                        "type": "boolean"
+                      },
+                      "format": {
+                        "type": "string",
+                        "enum": [
+                          "png",
+                          "jpeg"
+                        ]
+                      },
+                      "quality": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Screenshot capturé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pdf": {
+      "post": {
+        "tags": [
+          "Captures"
+        ],
+        "summary": "Génération PDF",
+        "description": "Génère PDF d'une page. Formats A4/Letter, landscape, marges personnalisées.",
+        "operationId": "generatePDF",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "format": {
+                        "type": "string",
+                        "enum": [
+                          "A4",
+                          "A3",
+                          "Letter"
+                        ]
+                      },
+                      "landscape": {
+                        "type": "boolean"
+                      },
+                      "printBackground": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PDF généré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/info": {
+      "post": {
+        "tags": [
+          "Informations"
+        ],
+        "summary": "Informations de page",
+        "description": "Récupère title, URL, viewport, userAgent, cookies, localStorage, sessionStorage.",
+        "operationId": "getPageInfo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Informations récupérées",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/test": {
+      "get": {
+        "tags": [
+          "Test"
+        ],
+        "summary": "Test service",
+        "description": "Vérifie que le service Playwright est opérationnel.",
+        "operationId": "testService",
+        "responses": {
+          "200": {
+            "description": "Service OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/keyboard": {
+      "post": {
+        "tags": [
+          "Interactions"
+        ],
+        "summary": "Actions clavier",
+        "description": "Actions clavier : press (touche), type (frappe avec délai), keyPress (raccourcis). Simule comportement humain.",
+        "operationId": "keyboardAction",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "action"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "press",
+                      "type",
+                      "keyPress"
+                    ]
+                  },
+                  "key": {
+                    "type": "string",
+                    "description": "Touche (pour press/keyPress)"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Texte (pour type)"
+                  },
+                  "selector": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "delay": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              },
+              "examples": {
+                "press": {
+                  "summary": "Appuyer Entrée",
+                  "value": {
+                    "url": "https://google.com",
+                    "action": "press",
+                    "key": "Enter",
+                    "selector": "textarea"
+                  }
+                },
+                "type": {
+                  "summary": "Taper texte",
+                  "value": {
+                    "url": "https://google.com",
+                    "action": "type",
+                    "text": "Hello",
+                    "selector": "textarea",
+                    "options": {
+                      "delay": 100
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Action réussie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/upload": {
+      "post": {
+        "tags": [
+          "Fichiers"
+        ],
+        "summary": "Upload fichiers",
+        "description": "Upload un ou plusieurs fichiers via input[type='file']. Chemins absolus requis.",
+        "operationId": "uploadFiles",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "selector",
+                  "files"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "selector": {
+                    "type": "string",
+                    "example": "input[type='file']"
+                  },
+                  "files": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "description": "Chemin(s) fichier(s)"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              },
+              "examples": {
+                "single": {
+                  "summary": "Un fichier",
+                  "value": {
+                    "url": "https://example.com",
+                    "selector": "input[type='file']",
+                    "files": "/path/file.pdf"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upload réussi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/download": {
+      "post": {
+        "tags": [
+          "Fichiers"
+        ],
+        "summary": "Téléchargement fichiers",
+        "description": "Télécharge fichier en cliquant sur élément. Retourne path, nom suggéré et URL.",
+        "operationId": "downloadFile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "triggerSelector"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "triggerSelector": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Téléchargement réussi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dialog": {
+      "post": {
+        "tags": [
+          "Dialogs & Popups"
+        ],
+        "summary": "Gestion dialogs",
+        "description": "Gère dialogs navigateur : alert, confirm, prompt. Accepte ou refuse avec texte optionnel.",
+        "operationId": "handleDialog",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "triggerSelector",
+                  "dialogOptions"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "triggerSelector": {
+                    "type": "string"
+                  },
+                  "dialogOptions": {
+                    "type": "object",
+                    "required": [
+                      "action"
+                    ],
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "enum": [
+                          "accept",
+                          "dismiss"
+                        ]
+                      },
+                      "acceptText": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dialog géré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/elements": {
+      "post": {
+        "tags": [
+          "Extraction"
+        ],
+        "summary": "Extraction multi-éléments",
+        "description": "Extrait plusieurs éléments ($$) : text, html, attribut. Retourne array.",
+        "operationId": "extractElements",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "selector"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "selector": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "extract": {
+                        "type": "string",
+                        "enum": [
+                          "text",
+                          "html",
+                          "attribute"
+                        ]
+                      },
+                      "attribute": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Éléments extraits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/session": {
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "Liste sessions",
+        "description": "Alias GET pour lister toutes les sessions actives",
+        "operationId": "listSessionsGet",
+        "responses": {
+          "200": {
+            "description": "Liste sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Gestion sessions",
+        "description": "Sauvegarde, restaure, liste, supprime, nettoie sessions (cookies, localStorage, sessionStorage).",
+        "operationId": "manageSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "action"
+                ],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "save",
+                      "restore",
+                      "list",
+                      "delete",
+                      "cleanup"
+                    ]
+                  },
+                  "url": {
+                    "type": "string",
+                    "description": "URL (pour save/restore)"
+                  },
+                  "sessionId": {
+                    "type": "string"
+                  },
+                  "maxAge": {
+                    "type": "number"
+                  }
+                }
+              },
+              "examples": {
+                "save": {
+                  "summary": "Sauvegarder",
+                  "value": {
+                    "action": "save",
+                    "url": "https://example.com",
+                    "sessionId": "user_123"
+                  }
+                },
+                "list": {
+                  "summary": "Lister",
+                  "value": {
+                    "action": "list"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Opération réussie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Session management désactivé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/session/list-active": {
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "Lister sessions actives",
+        "description": "Liste toutes les sessions actives avec leur état",
+        "operationId": "listActiveSessions",
+        "responses": {
+          "200": {
+            "description": "Liste sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Session management désactivé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/session/close": {
+      "post": {
+        "tags": ["Sessions"],
+        "summary": "Fermer session",
+        "description": "Ferme une session spécifique",
+        "operationId": "closeSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sessionId": {
+                    "type": "string",
+                    "description": "ID de la session à fermer",
+                    "default": "default"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session fermée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/network": {
+      "post": {
+        "tags": [
+          "Network"
+        ],
+        "summary": "Network mocking",
+        "description": "Mock APIs, bloque ressources, intercepte requêtes. Actions : fulfill (mock), abort (block), continue.",
+        "operationId": "networkRoute",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "routes"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "routes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "pattern",
+                        "action"
+                      ],
+                      "properties": {
+                        "pattern": {
+                          "type": "string"
+                        },
+                        "action": {
+                          "type": "string",
+                          "enum": [
+                            "fulfill",
+                            "abort",
+                            "continue"
+                          ]
+                        },
+                        "response": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "number"
+                            },
+                            "body": {}
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {}
+                  }
+                }
+              },
+              "examples": {
+                "mock": {
+                  "summary": "Mock API",
+                  "value": {
+                    "url": "https://example.com",
+                    "routes": [
+                      {
+                        "pattern": "**/api/users",
+                        "action": "fulfill",
+                        "response": {
+                          "status": 200,
+                          "body": [
+                            {
+                              "id": 1
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                "block": {
+                  "summary": "Bloquer images",
+                  "value": {
+                    "url": "https://example.com",
+                    "routes": [
+                      {
+                        "pattern": "**/*.png",
+                        "action": "abort"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Routes appliquées",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/popup": {
+      "post": {
+        "tags": [
+          "Dialogs & Popups"
+        ],
+        "summary": "Gestion popups",
+        "description": "Gère popups et nouvelles fenêtres. Extrait données ou interagit avec contenu.",
+        "operationId": "handlePopup",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "triggerSelector"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "triggerSelector": {
+                    "type": "string"
+                  },
+                  "popupOptions": {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "enum": [
+                          "extract",
+                          "interact"
+                        ]
+                      },
+                      "extract": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "title",
+                              "url",
+                              "content"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Popup géré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/events": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Capture events",
+        "description": "Capture events navigateur : console, pageerror, request, response. Filtrable par type et pattern URL.",
+        "operationId": "captureEvents",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "eventsOptions"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "eventsOptions": {
+                    "type": "object",
+                    "required": [
+                      "listen",
+                      "duration"
+                    ],
+                    "properties": {
+                      "listen": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "console",
+                            "pageerror",
+                            "request",
+                            "response"
+                          ]
+                        }
+                      },
+                      "duration": {
+                        "type": "number",
+                        "description": "Durée écoute (ms)"
+                      },
+                      "filters": {
+                        "type": "object",
+                        "properties": {}
+                      }
+                    }
+                  }
+                }
+              },
+              "examples": {
+                "console": {
+                  "summary": "Capturer console",
+                  "value": {
+                    "url": "https://example.com",
+                    "eventsOptions": {
+                      "listen": [
+                        "console",
+                        "pageerror"
+                      ],
+                      "duration": 3000
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Events capturés",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cookies": {
+      "post": {
+        "tags": [
+          "Cookies"
+        ],
+        "summary": "Gestion cookies",
+        "description": "Ajoute, récupère ou nettoie cookies. Support complet expires, httpOnly, secure, sameSite.",
+        "operationId": "manageCookies",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "action"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "add",
+                      "clear",
+                      "get"
+                    ]
+                  },
+                  "cookies": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "name",
+                        "value"
+                      ],
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "domain": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "examples": {
+                "add": {
+                  "summary": "Ajouter cookie",
+                  "value": {
+                    "url": "https://example.com",
+                    "action": "add",
+                    "cookies": [
+                      {
+                        "name": "session",
+                        "value": "abc123"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cookies gérés",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device": {
+      "post": {
+        "tags": [
+          "Device Emulation"
+        ],
+        "summary": "Émulation devices",
+        "description": "Émule devices mobiles (iPhone, iPad) ou custom. Viewport, userAgent, touch events.",
+        "operationId": "emulateDevice",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "deviceOptions"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "deviceOptions": {
+                    "type": "object",
+                    "properties": {
+                      "preset": {
+                        "type": "string",
+                        "example": "iPhone 13"
+                      },
+                      "custom": {
+                        "type": "object",
+                        "properties": {
+                          "viewport": {
+                            "type": "object",
+                            "required": [
+                              "width",
+                              "height"
+                            ],
+                            "properties": {
+                              "width": {
+                                "type": "number"
+                              },
+                              "height": {
+                                "type": "number"
+                              }
+                            }
+                          },
+                          "isMobile": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "examples": {
+                "preset": {
+                  "summary": "iPhone 13",
+                  "value": {
+                    "url": "https://example.com",
+                    "deviceOptions": {
+                      "preset": "iPhone 13"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device émulé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "description": "Vérifie que le service est opérationnel",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "Service healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "healthy" },
+                    "service": { "type": "string", "example": "playwright" },
+                    "version": { "type": "string", "example": "1.0.0" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/iframe": {
+      "post": {
+        "tags": [
+          "iFrames"
+        ],
+        "summary": "Interaction iframes",
+        "description": "Interagit avec éléments dans iframes : click, fill, extract. Frame locators et nesting.",
+        "operationId": "interactWithFrame",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "iframeOptions"
+                ],
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "iframeOptions": {
+                    "type": "object",
+                    "required": [
+                      "frameSelector",
+                      "action"
+                    ],
+                    "properties": {
+                      "frameSelector": {
+                        "type": "string"
+                      },
+                      "action": {
+                        "type": "string",
+                        "enum": [
+                          "click",
+                          "fill",
+                          "extract"
+                        ]
+                      },
+                      "selector": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Interaction réussie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightSuccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erreur serveur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaywrightError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

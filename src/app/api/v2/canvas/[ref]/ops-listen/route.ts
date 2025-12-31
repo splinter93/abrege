@@ -21,18 +21,13 @@ export async function GET(
   const startTime = Date.now();
   const { ref } = await params;
   
-  // ✅ LOG FORCÉ au début pour diagnostiquer
-  console.error('🔍🔍🔍 [ops-listen] GET HANDLER CALLED', { 
-    ref, 
-    url: request.url, 
-    method: request.method,
-    timestamp: Date.now(),
-    hasToken: !!request.nextUrl.searchParams.get('token')
-  });
   logApi.info(`🎧 Canvas ops-listen pour ${ref}`, {
     operation: 'v2_canvas_ops_listen',
     component: 'API_V2_STREAM',
-    ref
+    ref,
+    url: request.url,
+    method: request.method,
+    hasToken: !!request.nextUrl.searchParams.get('token')
   });
   
   const context = {
@@ -61,13 +56,11 @@ export async function GET(
     }
 
     if (!authResult.success) {
-      console.error('❌ [ops-listen] Auth failed', {
-        ref,
+      logApi.warn(`❌ Auth failed: ${authResult.error}`, {
+        ...context,
         error: authResult.error,
-        status: authResult.status,
-        timestamp: Date.now()
+        status: authResult.status
       });
-      logApi.warn(`❌ Auth failed: ${authResult.error}`, context);
       return new Response(
         JSON.stringify({ error: authResult.error }),
         {
@@ -88,13 +81,11 @@ export async function GET(
     );
 
     if (!resolveResult.success) {
-      console.error('❌ [ops-listen] Note resolution failed', {
-        ref,
+      logApi.warn(`❌ Note resolution failed: ${resolveResult.error}`, {
+        ...context,
         error: resolveResult.error,
-        status: resolveResult.status,
-        timestamp: Date.now()
+        status: resolveResult.status
       });
-      logApi.warn(`❌ Note resolution failed: ${resolveResult.error}`, context);
       return new Response(
         JSON.stringify({ error: resolveResult.error }),
         {
@@ -159,58 +150,58 @@ export async function GET(
       }
     };
     
-    // ✅ ENREGISTRER LE LISTENER MAINTENANT (AVANT le stream)
-    console.error('🔍🔍🔍 [ops-listen] REGISTERING LISTENER BEFORE STREAM', { 
-      noteId, 
-      userId, 
-      timestamp: Date.now() 
-    });
-    
-    try {
-      await streamBroadcastService.registerListener(noteId, sendSSE, userId);
-      console.error('✅✅✅ [ops-listen] LISTENER REGISTERED BEFORE STREAM', { 
-        noteId, 
-        userId, 
-        timestamp: Date.now() 
-      });
-      logApi.info(`[ops-listen] ✅ Listener registered BEFORE stream`, { noteId, userId });
-    } catch (error) {
-      console.error('❌ [ops-listen] Failed to register listener BEFORE stream', {
-        noteId,
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: Date.now()
-      });
-      logApi.error(`[ops-listen] ❌ Failed to register listener BEFORE stream`, {
-        noteId,
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
+    // ✅ FIX: Ne PAS enregistrer le listener avant le stream
+    // Le listener doit être enregistré DANS le callback start() après que controller soit défini
+    // Sinon sendSSE ne peut pas fonctionner car controller = null
     
     const stream = new ReadableStream({
       async start(streamController) {
-        // ✅ LOG FORCÉ au début du stream
-        console.error('🔍🔍🔍 [ops-listen] STREAM START CALLBACK EXECUTED', { 
-          noteId, 
-          userId, 
-          timestamp: Date.now() 
-        });
-        console.log('🔍 [ops-listen] Stream started', { noteId, userId, timestamp: Date.now() });
         logApi.info(`[ops-listen] Stream started`, { noteId, userId });
 
         // ✅ STOCKER LE CONTROLLER
         controller = streamController;
         isControllerReady = true;
         
+        // ✅ CRITIQUE: Enregistrer le listener IMMÉDIATEMENT après que controller soit défini
+        // AVANT d'envoyer les événements en queue pour éviter de perdre des événements
+        try {
+          await streamBroadcastService.registerListener(noteId, sendSSE, userId);
+          
+          // ✅ VÉRIFIER que le listener est bien enregistré
+          const listenerCount = streamBroadcastService.getListenerCount(noteId);
+          logApi.info(`[ops-listen] ✅ Listener registered`, { noteId, userId, listenerCount });
+        } catch (error) {
+          logApi.error(`[ops-listen] ❌ Failed to register listener`, {
+            noteId,
+            userId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined
+          });
+          isControllerClosed = true;
+          try {
+            controller.close();
+          } catch (closeError) {
+            logApi.warn(`[ops-listen] Error closing controller after registration failure`, {
+              noteId,
+              userId,
+              error: closeError instanceof Error ? closeError.message : 'Unknown error'
+            });
+          }
+          return;
+        }
+        
         // ✅ ENVOYER IMMÉDIATEMENT un événement initial pour forcer le démarrage
         try {
           streamController.enqueue(encoder.encode(`event: start\ndata: ${JSON.stringify({ type: 'start', timestamp: Date.now() })}\n\n`));
         } catch (error) {
-          console.error('❌ [ops-listen] Failed to send initial event', error);
+          logApi.warn(`[ops-listen] Failed to send initial event`, {
+            noteId,
+            userId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
         }
         
-        // ✅ ENVOYER LES ÉVÉNEMENTS EN QUEUE
+        // ✅ ENVOYER LES ÉVÉNEMENTS EN QUEUE (après l'enregistrement du listener)
         while (eventQueue.length > 0) {
           const queuedEvent = eventQueue.shift();
           if (queuedEvent) {
@@ -220,59 +211,27 @@ export async function GET(
 
         let heartbeatInterval: NodeJS.Timeout | null = null;
 
-        // ✅ CRITIQUE: Enregistrer le listener AVANT tout (await pour garantir l'enregistrement)
-        try {
-          console.log('🔍 [ops-listen] Registering listener', { noteId, userId, timestamp: Date.now() });
-          await streamBroadcastService.registerListener(noteId, sendSSE, userId);
-          console.log('✅ [ops-listen] Listener registered successfully', { noteId, userId, timestamp: Date.now() });
-          logApi.info(`[ops-listen] ✅ Listener registered`, { noteId, userId });
-          
-          sendSSE({
-            type: 'start',
-            metadata: { timestamp: Date.now() }
-          });
-        } catch (error) {
-          console.error('❌ [ops-listen] Failed to register listener', {
-            noteId,
-            userId,
-            error: error instanceof Error ? error.message : 'Unknown error',
-            timestamp: Date.now()
-          });
-          logApi.error(`[ops-listen] ❌ Failed to register listener`, {
-            noteId,
-            userId,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          });
-          isControllerClosed = true;
-          try {
-            controller.close();
-          } catch {
-            // Controller déjà fermé
-          }
-          return;
-        }
-
         // 💓 Heartbeat pour garder la connexion vivante (toutes les 30s)
         heartbeatInterval = setInterval(() => {
-          if (!isControllerClosed) {
+          if (!isControllerClosed && controller) {
             try {
               controller.enqueue(encoder.encode(': ping\n\n'));
-            } catch {
+            } catch (error) {
               isControllerClosed = true;
               if (heartbeatInterval) {
                 clearInterval(heartbeatInterval);
               }
+              logApi.warn(`[ops-listen] Heartbeat failed, closing connection`, {
+                noteId,
+                userId,
+                error: error instanceof Error ? error.message : 'Unknown error'
+              });
             }
           }
         }, 30000);
 
         // 🧹 Cleanup quand la connexion se ferme
         request.signal.addEventListener('abort', () => {
-          console.error('🔍🔍🔍 [ops-listen] Connection ABORTED by client', {
-            noteId,
-            userId,
-            timestamp: Date.now()
-          });
           logApi.info(`[ops-listen] Connection closed by client`, {
             noteId,
             userId
@@ -285,13 +244,18 @@ export async function GET(
             heartbeatInterval = null;
           }
 
-          console.log('🔍 [ops-listen] Unregistering listener on abort', { noteId, userId, timestamp: Date.now() });
           streamBroadcastService.unregisterListener(noteId, sendSSE);
 
           try {
-            controller.close();
-          } catch {
-            // Controller déjà fermé
+            if (controller) {
+              controller.close();
+            }
+          } catch (error) {
+            logApi.warn(`[ops-listen] Error closing controller on abort`, {
+              noteId,
+              userId,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
           }
         });
       }
