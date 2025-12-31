@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import { StreamOrchestrator, type StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
+import { networkRetryService, type NetworkError } from '@/services/network/NetworkRetryService';
 import type { ToolCall, ToolResult } from '@/hooks/useChatHandlers';
 import type { ChatMessage } from '@/types/chat';
 import type { MessageContent } from '@/types/image';
@@ -101,22 +102,37 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
             ? Boolean((context as { skipAddingUserMessage?: unknown }).skipAddingUserMessage)
             : false;
         
-        const response = await fetch('/api/chat/llm/stream', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            message,
-            context: context || { sessionId }, 
-            history: history || [],
-            sessionId,
-            skipAddingUserMessage
-          })
-        });
+        // ✅ RETRY AUTOMATIQUE : Exécuter le fetch avec retry pour erreurs réseau récupérables
+        const response = await networkRetryService.executeWithRetry(
+          async () => {
+            const fetchResponse = await fetch('/api/chat/llm/stream', {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                message,
+                context: context || { sessionId }, 
+                history: history || [],
+                sessionId,
+                skipAddingUserMessage
+              })
+            });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
+            if (!fetchResponse.ok) {
+              // Créer une NetworkError typée pour le retry service
+              const error = networkRetryService.createNetworkError(fetchResponse);
+              throw error;
+            }
+
+            return fetchResponse;
+          },
+          {
+            maxRetries: 3,
+            initialDelay: 1000,
+            backoffMultiplier: 2,
+            maxDelay: 10000,
+            operationName: 'stream-llm-request'
+          }
+        );
 
         // ✅ Déléguer au StreamOrchestrator
         const orchestrator = orchestratorRef.current!;
@@ -139,16 +155,36 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
       // ✅ MODE CLASSIQUE (sans streaming)
       logger.dev('[useChatResponse] 🚀 Envoi de la requête à l\'API LLM (mode classique)');
       
-      const response = await fetch('/api/chat/llm', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          message,
-          context: context || { sessionId }, 
-          history: history || [],
-          sessionId
-        })
-      });
+      // ✅ RETRY AUTOMATIQUE : Exécuter le fetch avec retry pour erreurs réseau récupérables
+      const response = await networkRetryService.executeWithRetry(
+        async () => {
+          const fetchResponse = await fetch('/api/chat/llm', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              message,
+              context: context || { sessionId }, 
+              history: history || [],
+              sessionId
+            })
+          });
+
+          if (!fetchResponse.ok) {
+            // Créer une NetworkError typée pour le retry service
+            const error = networkRetryService.createNetworkError(fetchResponse);
+            throw error;
+          }
+
+          return fetchResponse;
+        },
+        {
+          maxRetries: 3,
+          initialDelay: 1000,
+          backoffMultiplier: 2,
+          maxDelay: 10000,
+          operationName: 'llm-request'
+        }
+      );
 
       logger.dev('[useChatResponse] ✅ Fetch terminé, traitement de la réponse...');
 
@@ -328,25 +364,53 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         }
       }
     } catch (error) {
-      // Gestion d'erreur
+      // ✅ Gestion d'erreur avec détection NetworkError
       let errorMessage: string;
+      let errorDetails: string | StreamErrorDetails | undefined;
       
       if (error instanceof Error) {
-        errorMessage = error.message;
-        logger.dev('[useChatResponse] ❌ Erreur:', {
-          message: error.message,
-          stack: error.stack
+        const networkError = error as NetworkError;
+        
+        // Si c'est une NetworkError après retry, enrichir le message
+        if (networkError.isRecoverable !== undefined) {
+          errorMessage = networkError.isRecoverable
+            ? `Erreur réseau après plusieurs tentatives : ${networkError.message}`
+            : networkError.message;
+          
+          // Créer StreamErrorDetails si c'est une erreur de streaming
+          if (networkError.statusCode) {
+            errorDetails = {
+              error: errorMessage,
+              statusCode: networkError.statusCode,
+              errorCode: networkError.errorType, // StreamErrorDetails utilise errorCode, pas errorType
+              timestamp: Date.now(),
+              recoverable: networkError.isRecoverable
+            };
+          }
+        } else {
+          errorMessage = error.message;
+        }
+        
+        logger.error('[useChatResponse] ❌ Erreur:', {
+          message: errorMessage,
+          stack: error instanceof Error ? error.stack : undefined,
+          isNetworkError: networkError.isRecoverable !== undefined,
+          recoverable: networkError.isRecoverable
         });
       } else if (typeof error === 'string') {
         errorMessage = error;
-        logger.dev('[useChatResponse] ❌ Erreur:', { error });
+        logger.error('[useChatResponse] ❌ Erreur:', { error });
       } else {
         errorMessage = 'Erreur inconnue';
-        logger.dev('[useChatResponse] ❌ Erreur:', { error: String(error) });
+        logger.error('[useChatResponse] ❌ Erreur:', { error: String(error) });
       }
       
-      // Appeler le callback d'erreur si disponible
-      onError?.(errorMessage);
+      // Appeler le callback d'erreur si disponible (avec détails si disponibles)
+      if (errorDetails) {
+        onError?.(errorDetails);
+      } else {
+        onError?.(errorMessage);
+      }
     } finally {
       setIsProcessing(false);
     }

@@ -6,6 +6,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { ImageAttachment } from '@/types/image';
+import { IMAGE_VALIDATION_LIMITS } from '@/types/image';
 import { convertFileToBase64, revokeImageAttachments } from '@/utils/imageUtils';
 import { chatImageUploadService } from '@/services/chatImageUploadService';
 
@@ -13,8 +14,8 @@ interface UseImageUploadOptions {
   sessionId: string;
 }
 
-// Constantes de validation
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+// Constantes de validation (utilise les limites centralisées)
+const MAX_FILE_SIZE = IMAGE_VALIDATION_LIMITS.MAX_SIZE_BYTES; // 20 MB (cohérent avec types/image.ts)
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
 /**
@@ -34,7 +35,8 @@ export function useImageUpload({ sessionId }: UseImageUploadOptions) {
     try {
       // ✅ Validation 1: Type de fichier
       if (!ALLOWED_TYPES.includes(file.type)) {
-        const message = `Format non supporté (${file.type}). Formats acceptés : JPEG, PNG, GIF, WebP`;
+        const supportedFormats = ALLOWED_TYPES.map(t => t.split('/')[1].toUpperCase()).join(', ');
+        const message = `Format non supporté : ${file.type}\n\nFormats acceptés : ${supportedFormats}\n\nVeuillez convertir votre image dans un de ces formats.`;
         setUploadError(message);
         logger.warn('[useImageUpload] Format invalide:', { type: file.type, name: file.name });
         return false;
@@ -44,7 +46,7 @@ export function useImageUpload({ sessionId }: UseImageUploadOptions) {
       if (file.size > MAX_FILE_SIZE) {
         const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
         const maxMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
-        const message = `Image trop grande (${sizeMB} MB). Taille max : ${maxMB} MB`;
+        const message = `Image trop volumineuse : ${sizeMB} Mo\n\nTaille maximale autorisée : ${maxMB} Mo\n\n💡 Conseil : Réduisez la résolution ou compressez l'image avant de l'envoyer.`;
         setUploadError(message);
         logger.warn('[useImageUpload] Fichier trop grand:', { size: file.size, max: MAX_FILE_SIZE, name: file.name });
         return false;

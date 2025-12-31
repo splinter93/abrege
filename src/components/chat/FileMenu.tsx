@@ -8,6 +8,7 @@
 import React from 'react';
 import { Folder, Image as ImageIcon } from 'react-feather';
 import ImageSourceModal from './ImageSourceModal';
+import { IMAGE_VALIDATION_LIMITS } from '@/types/image';
 
 interface FileMenuProps {
   // État
@@ -64,7 +65,11 @@ const FileMenu: React.FC<FileMenuProps> = ({
       {/* Menu contextuel Fichier */}
       {showFileMenu && (
         <div className="chat-file-menu">
-          <button className="chat-file-menu-item" onClick={onLoadImageClick}>
+          <button 
+            className="chat-file-menu-item" 
+            onClick={onLoadImageClick}
+            title={`Formats acceptés : JPEG, PNG, GIF, WebP\nTaille maximale : ${(IMAGE_VALIDATION_LIMITS.MAX_SIZE_BYTES / (1024 * 1024)).toFixed(0)} Mo`}
+          >
             <ImageIcon size={16} />
             <span>Charger une image</span>
           </button>

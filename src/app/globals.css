@@ -37,6 +37,9 @@
 /* Import des utilitaires chat */
 @import '../styles/toolbar-consolidated.css';
 
+/* Import des styles toast améliorés */
+@import '../styles/toast-enhanced.css';
+
 :root {
   /* FALLBACKS - Éviter le flash blanc */
   --background: var(--color-bg-primary, #121212);

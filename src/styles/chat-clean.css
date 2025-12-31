@@ -3916,6 +3916,38 @@ body.chat-theme-glass .chatgpt-messages > div {
    TEXTAREA WRAPPER - Pour positionnement menus
    ======================================== */
 
+/* Compteur de caractères et limites */
+.chat-input-character-counter {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--chat-text-secondary);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.chat-input-character-counter > span {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  transition: all 0.2s;
+}
+
+.chat-input-character-counter > span.warning {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.15);
+}
+
+.chat-input-limit-badge {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
 .chatgpt-input-textarea-wrapper {
   position: relative;
   flex: 1; /* Prendre l'espace disponible */

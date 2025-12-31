@@ -30,10 +30,22 @@ jobs:
       - name: Run type check
         run: npx tsc --noEmit
       
-      - name: Run tests
+      - name: Run unit tests
         run: npm test
         env:
           CI: true
+      
+      - name: Install Playwright browsers (for E2E)
+        run: npx playwright install --with-deps chromium
+      
+      - name: Run E2E tests
+        run: npx playwright test
+        env:
+          CI: true
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          E2E_TEST_USER_EMAIL: ${{ secrets.E2E_TEST_USER_EMAIL }}
+          E2E_TEST_USER_PASSWORD: ${{ secrets.E2E_TEST_USER_PASSWORD }}
+        continue-on-error: true # Ne pas bloquer le build si E2E échoue (peut nécessiter config)
       
       - name: Upload test results
         if: always()

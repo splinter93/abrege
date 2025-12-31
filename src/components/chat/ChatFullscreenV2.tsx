@@ -44,7 +44,7 @@ import type { CanvaSession as CanvaSessionDB, ListCanvasResponse } from '@/types
 
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
-import toast from 'react-hot-toast';
+import { chatError, chatSuccess } from '@/utils/chatToast';
 
 import '@/styles/chat-clean.css';
 import '@/styles/sidebar-collapsible.css';
@@ -130,7 +130,10 @@ const ChatFullscreenV2: React.FC = () => {
       }
     } catch (error) {
       logger.error('[ChatFullscreenV2] Failed to open canva', error);
-      toast.error('Impossible d\'ouvrir le canva');
+      chatError('Impossible d\'ouvrir le canva', {
+        suggestion: 'Vérifiez que la note existe et que vous y avez accès.',
+        duration: 4000
+      });
     }
   }, [openCanva, closeCanva, user, currentSession, activeCanvaId]);
 
@@ -255,8 +258,9 @@ const ChatFullscreenV2: React.FC = () => {
       logger.error('[ChatFullscreenV2] ❌ Erreur streaming reçue:', errorDetails);
       
       // ✅ Toast pour notification immédiate
-      toast.error('Erreur de streaming LLM', {
-        duration: 3000,
+      chatError('Erreur de streaming LLM', {
+        suggestion: 'Vous pouvez relancer le message en cliquant sur "Relancer" ci-dessous.',
+        duration: 5000,
         position: 'top-center'
       });
     }
@@ -906,26 +910,41 @@ const ChatFullscreenV2: React.FC = () => {
                 logger.dev('[ChatFullscreenV2] Switching canva', { canvaId, noteId });
                 const result = await switchCanva(canvaId, noteId);
                 if (result === 'not_found') {
-                  toast.error('Canva introuvable (note supprimée ou inaccessible)');
+                  chatError('Canva introuvable', {
+                    suggestion: 'La note associée a peut-être été supprimée ou vous n\'y avez plus accès.',
+                    duration: 4000
+                  });
                   return;
                 }
-                toast.success('Canva ouvert');
+                chatSuccess('Canva ouvert', {
+                  suggestion: 'Le panneau d\'édition est maintenant visible à droite.'
+                });
               } catch (error) {
                 logger.error('[ChatFullscreenV2] Failed to switch canva', error);
-                toast.error('Erreur ouverture canva');
+                chatError('Erreur lors de l\'ouverture du canva', {
+                  suggestion: 'Vérifiez votre connexion et réessayez.',
+                  duration: 4000
+                });
               }
             }}
         onCloseCanva={async (canvaId, options) => {
           try {
             await closeCanva(canvaId, options);
             if (options?.delete) {
-              toast.success('Canva supprimé');
+              chatSuccess('Canva supprimé', {
+                suggestion: 'Le panneau d\'édition a été fermé et supprimé.'
+              });
             } else {
-              toast.success('Canva fermé');
+              chatSuccess('Canva fermé', {
+                suggestion: 'Le panneau d\'édition a été fermé. Vous pouvez le rouvrir à tout moment.'
+              });
             }
           } catch (error) {
             logger.error('[ChatFullscreenV2] Failed to close canva', error);
-            toast.error(options?.delete ? 'Erreur suppression canva' : 'Erreur fermeture canva');
+            chatError(options?.delete ? 'Erreur lors de la suppression' : 'Erreur lors de la fermeture', {
+              suggestion: 'Vérifiez votre connexion et réessayez.',
+              duration: 4000
+            });
           }
         }}
         canOpenCanva={isDesktop}

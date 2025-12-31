@@ -11,6 +11,8 @@ import type { AudioRecorderRef } from '@/components/chat/AudioRecorder';
 import type { NoteMention } from '@/types/noteMention';
 import type { PromptMention } from '@/types/promptMention';
 import { useMentionDeletion } from './useMentionDeletion';
+import { validateMessage } from '@/utils/chatValidation';
+import { chatError } from '@/utils/chatToast';
 
 interface UseChatActionsOptions {
   // État
@@ -92,11 +94,29 @@ export function useChatActions({
    * Handler pour l'envoi de message
    * ✅ REFACTO : Envoie mentions[] directement
    * ✅ SÉCURITÉ : Bloque l'envoi si enregistrement audio en cours
+   * ✅ VALIDATION : Valide le message avant envoi
    */
   const handleSend = useCallback(async () => {
     // ✅ BLOQUER si enregistrement audio en cours
     if (audioRecorderRef?.current?.isRecording()) {
       return;
+    }
+    
+    // ✅ VALIDATION : Vérifier le message avant envoi
+    const validation = validateMessage(message, images.length, selectedNotes.length);
+    
+    if (!validation.valid) {
+      // Afficher l'erreur de validation
+      chatError(validation.error || 'Erreur de validation', {
+        duration: 5000
+      });
+      return;
+    }
+    
+    // ✅ Avertissement si message très long (mais valide)
+    if (validation.warning) {
+      // On peut afficher un toast info, mais on continue l'envoi
+      // (optionnel, pour ne pas spammer l'utilisateur)
     }
     
     const hasContent = message.trim() || images.length > 0;

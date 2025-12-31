@@ -161,7 +161,37 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeColor />
         <ScrollPerformance />
         <LanguageProvider>
-          <Toaster position="top-right" />
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'var(--surface-elevated, #1f2937)',
+                color: 'var(--text-primary, #f3f4f6)',
+                border: '1px solid var(--border-subtle, #374151)',
+                borderRadius: '12px',
+                padding: '14px 16px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+                maxWidth: '420px',
+                fontSize: '14px',
+                lineHeight: '1.5'
+              },
+              success: {
+                iconTheme: {
+                  primary: 'var(--success, #10b981)',
+                  secondary: 'var(--surface-elevated, #1f2937)'
+                },
+                duration: 3000
+              },
+              error: {
+                iconTheme: {
+                  primary: 'var(--error, #ef4444)',
+                  secondary: 'var(--surface-elevated, #1f2937)'
+                },
+                duration: 5000
+              }
+            }}
+          />
           {children}
         </LanguageProvider>
       </body>
