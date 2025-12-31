@@ -114,10 +114,55 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
     // ✅ NETTOYER + ENRICHIR la timeline
     const cleanedTimeline = streamTimeline ? {
       ...streamTimeline,
-      items: streamTimeline.items
-        .filter(item => item.type !== 'tool_result') // Virer tool_result individuels
-        .map(item => {
-          // ✅ ENRICHIR tool_execution avec les résultats
+      items: (() => {
+        // ✅ DÉDUPLICATION: Supprimer les tool_execution en double (basé sur les IDs des tool calls)
+        const seenToolCallIds = new Set<string>();
+        const deduplicatedItems: typeof streamTimeline.items = [];
+        
+        for (const item of streamTimeline.items) {
+          if (item.type === 'tool_result') {
+            // Virer tool_result individuels (déjà géré par le filter)
+            continue;
+          }
+          
+          if (item.type === 'tool_execution') {
+            // Vérifier si les tool calls de cet item sont déjà présents
+            const itemToolCallIds = item.toolCalls.map(tc => tc.id);
+            const hasDuplicates = itemToolCallIds.some(id => seenToolCallIds.has(id));
+            
+            if (hasDuplicates) {
+              // Filtrer les tool calls déjà vus
+              const newToolCalls = item.toolCalls.filter(tc => !seenToolCallIds.has(tc.id));
+              
+              if (newToolCalls.length === 0) {
+                // Tous les tool calls sont déjà présents, skip cet item
+                logger.dev('[useChatHandlers] 🔧 Tool execution en double détecté et supprimé:', {
+                  toolCallIds: itemToolCallIds,
+                  roundNumber: item.roundNumber
+                });
+                continue;
+              }
+              
+              // Ajouter seulement les nouveaux tool calls
+              itemToolCallIds.forEach(id => seenToolCallIds.add(id));
+              deduplicatedItems.push({
+                ...item,
+                toolCalls: newToolCalls,
+                toolCount: newToolCalls.length
+              });
+            } else {
+              // Aucun doublon, ajouter l'item complet
+              itemToolCallIds.forEach(id => seenToolCallIds.add(id));
+              deduplicatedItems.push(item);
+            }
+          } else {
+            // Items non tool_execution (text, etc.) - pas de déduplication nécessaire
+            deduplicatedItems.push(item);
+          }
+        }
+        
+        // ✅ ENRICHIR tool_execution avec les résultats
+        return deduplicatedItems.map(item => {
           if (item.type === 'tool_execution' && toolResults && toolResults.length > 0) {
             return {
               ...item,
@@ -136,7 +181,8 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
             };
           }
           return item;
-        })
+        });
+      })()
     } : undefined;
     
     // ✅ FIX BUG RÉPÉTITION: Ne PAS persister tool_calls sur message final

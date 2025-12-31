@@ -43,6 +43,72 @@ export interface PaginatedMessages {
   totalCount?: number;
 }
 
+/**
+ * Helper pour dédupliquer les tool_execution dans une timeline
+ * Utilisé lors du chargement des messages depuis la DB
+ */
+function deduplicateTimelineItems(
+  timeline: StreamTimeline,
+  messageId?: string
+): StreamTimeline {
+  const seenToolCallIds = new Set<string>();
+  const deduplicatedItems: typeof timeline.items = [];
+  
+  for (const item of timeline.items) {
+    if (item.type === 'tool_execution') {
+      // Vérifier si les tool calls de cet item sont déjà présents
+      const itemToolCallIds = item.toolCalls.map(tc => tc.id);
+      const hasDuplicates = itemToolCallIds.some(id => seenToolCallIds.has(id));
+      
+      if (hasDuplicates) {
+        // Filtrer les tool calls déjà vus
+        const newToolCalls = item.toolCalls.filter(tc => !seenToolCallIds.has(tc.id));
+        
+        if (newToolCalls.length === 0) {
+          // Tous les tool calls sont déjà présents, skip cet item
+          logger.dev('[HistoryManager] 🔧 Tool execution en double détecté et supprimé:', {
+            messageId: messageId || 'unknown',
+            toolCallIds: itemToolCallIds,
+            roundNumber: item.roundNumber
+          });
+          continue;
+        }
+        
+        // Ajouter seulement les nouveaux tool calls
+        itemToolCallIds.forEach(id => seenToolCallIds.add(id));
+        deduplicatedItems.push({
+          ...item,
+          toolCalls: newToolCalls,
+          toolCount: newToolCalls.length
+        });
+      } else {
+        // Aucun doublon, ajouter l'item complet
+        itemToolCallIds.forEach(id => seenToolCallIds.add(id));
+        deduplicatedItems.push(item);
+      }
+    } else {
+      // Items non tool_execution (text, tool_result, etc.) - pas de déduplication nécessaire
+      deduplicatedItems.push(item);
+    }
+  }
+  
+  // Retourner la timeline dédupliquée si nécessaire
+  if (deduplicatedItems.length !== timeline.items.length) {
+    logger.dev('[HistoryManager] ✅ Timeline dédupliquée:', {
+      messageId: messageId || 'unknown',
+      originalItems: timeline.items.length,
+      deduplicatedItems: deduplicatedItems.length,
+      removed: timeline.items.length - deduplicatedItems.length
+    });
+    return {
+      ...timeline,
+      items: deduplicatedItems
+    };
+  }
+  
+  return timeline;
+}
+
 export class HistoryManager {
   private static instance: HistoryManager;
 
@@ -238,12 +304,21 @@ export class HistoryManager {
       }
 
       // Reverse pour ordre chronologique et mapper snake_case → camelCase
-      const sortedMessages = ((messages || []).reverse().map(msg => ({
-        ...msg,
-        // ✅ Mapper snake_case DB → camelCase frontend
-        ...(msg.attached_images && { attachedImages: msg.attached_images }),
-        ...(msg.attached_notes && { attachedNotes: msg.attached_notes })
-      }))) as ChatMessage[];
+      const sortedMessages = ((messages || []).reverse().map(msg => {
+        const mappedMsg = {
+          ...msg,
+          // ✅ Mapper snake_case DB → camelCase frontend
+          ...(msg.attached_images && { attachedImages: msg.attached_images }),
+          ...(msg.attached_notes && { attachedNotes: msg.attached_notes })
+        } as ChatMessage;
+        
+        // ✅ DÉDUPLICATION: Nettoyer les tool_execution en double dans stream_timeline
+        if (mappedMsg.role === 'assistant' && mappedMsg.stream_timeline?.items) {
+          mappedMsg.stream_timeline = deduplicateTimelineItems(mappedMsg.stream_timeline, mappedMsg.id);
+        }
+        
+        return mappedMsg;
+      })) as ChatMessage[];
 
       // Vérifier s'il reste des messages plus anciens
       const { count } = await supabase
@@ -299,12 +374,21 @@ export class HistoryManager {
       }
 
       // Reverse pour ordre chronologique et mapper snake_case → camelCase
-      const sortedMessages = ((messages || []).reverse().map(msg => ({
-        ...msg,
-        // ✅ Mapper snake_case DB → camelCase frontend
-        ...(msg.attached_images && { attachedImages: msg.attached_images }),
-        ...(msg.attached_notes && { attachedNotes: msg.attached_notes })
-      }))) as ChatMessage[];
+      const sortedMessages = ((messages || []).reverse().map(msg => {
+        const mappedMsg = {
+          ...msg,
+          // ✅ Mapper snake_case DB → camelCase frontend
+          ...(msg.attached_images && { attachedImages: msg.attached_images }),
+          ...(msg.attached_notes && { attachedNotes: msg.attached_notes })
+        } as ChatMessage;
+        
+        // ✅ DÉDUPLICATION: Nettoyer les tool_execution en double dans stream_timeline
+        if (mappedMsg.role === 'assistant' && mappedMsg.stream_timeline?.items) {
+          mappedMsg.stream_timeline = deduplicateTimelineItems(mappedMsg.stream_timeline, mappedMsg.id);
+        }
+        
+        return mappedMsg;
+      })) as ChatMessage[];
 
       // Vérifier s'il reste des messages encore plus anciens
       const { count } = await supabase

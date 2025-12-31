@@ -52,7 +52,26 @@ export class TimelineCapture {
    * @param toolCount - Nombre de tools
    */
   addToolExecutionEvent(toolCalls: ToolCall[], toolCount: number): void {
-    const toolCallsSnapshot = toolCalls.map(tc => ({
+    // ✅ DÉDUPLICATION: Extraire les IDs des tool calls déjà présents dans la timeline
+    const existingToolCallIds = new Set(
+      this.items
+        .filter(item => item.type === 'tool_execution')
+        .flatMap(item => item.toolCalls.map(tc => tc.id))
+    );
+    
+    // Filtrer les tool calls qui ne sont pas déjà présents
+    const newToolCalls = toolCalls.filter(tc => !existingToolCallIds.has(tc.id));
+    
+    // Si tous les tool calls sont déjà présents, ne pas ajouter de doublon
+    if (newToolCalls.length === 0) {
+      logger.dev('[TimelineCapture] 🔧 Tool calls déjà présents dans timeline, skip duplication', {
+        totalToolCalls: toolCalls.length,
+        existingIds: Array.from(existingToolCallIds)
+      });
+      return;
+    }
+    
+    const toolCallsSnapshot = newToolCalls.map(tc => ({
       id: tc.id,
       type: tc.type as 'function',
       function: {
@@ -62,7 +81,9 @@ export class TimelineCapture {
     }));
 
     logger.dev(`[TimelineCapture] 📋 Tool execution capturé pour timeline:`, {
-      toolCount: toolCallsSnapshot.length,
+      totalToolCalls: toolCalls.length,
+      newToolCalls: toolCallsSnapshot.length,
+      skippedDuplicates: toolCalls.length - toolCallsSnapshot.length,
       toolNames: toolCallsSnapshot.map(tc => tc.function.name)
     });
 
