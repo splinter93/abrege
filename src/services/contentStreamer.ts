@@ -201,9 +201,7 @@ class ContentStreamer {
           position,
           metadata: {
             timestamp: Date.now(),
-            source: 'editNoteContent',
-            chunkIndex: i,
-            totalChunks: chunks.length
+            source: 'editNoteContent'
           }
         });
 
@@ -218,8 +216,7 @@ class ContentStreamer {
         type: 'end',
         metadata: {
           timestamp: Date.now(),
-          source: 'editNoteContent',
-          totalChunks: chunks.length
+          source: 'editNoteContent'
         }
       });
 
