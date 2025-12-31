@@ -35,11 +35,18 @@ export function useChatSessionsRealtime(userId: string | null | undefined) {
   const deletingSessions = useChatStore((state) => state.deletingSessions);
 
   // 🔍 DEBUG CRITIQUE: Log TOUJOURS au démarrage du hook (pour voir s'il se monte)
-  console.log('[🔍 REALTIME DEBUG] Hook appelé, userId:', userId, 'type:', typeof userId);
+  logger.dev('[useChatSessionsRealtime] Hook called', {
+    userId: userId || 'undefined',
+    userIdType: typeof userId,
+    hasUserId: !!userId
+  });
 
   // 🔍 DEBUG: Log chaque fois que le hook se monte/update
   useEffect(() => {
-    console.log('[🔍 REALTIME DEBUG] useEffect déclenché, userId:', userId, 'hasUserId:', !!userId);
+    logger.dev('[useChatSessionsRealtime] useEffect triggered', {
+      userId: userId || 'undefined',
+      hasUserId: !!userId
+    });
     logger.info('[Realtime] 🔄 Hook useChatSessionsRealtime monté/update', { 
       userId: userId || 'undefined',
       hasUserId: !!userId,

@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { AlertTriangle, RefreshCw, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { simpleLogger as logger } from '@/utils/logger';
 import './StreamErrorDisplay.css';
 
 export interface StreamError {
@@ -53,7 +54,10 @@ ${error.error}
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      logger.error('[StreamErrorDisplay] Failed to copy error details', {
+        error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined
+      });
     }
   };
 

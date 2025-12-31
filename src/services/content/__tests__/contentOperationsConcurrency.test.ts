@@ -93,9 +93,9 @@ describe('[Concurrency] Content Operations', () => {
       applier2.applyOperations([operation2])
     ]);
 
-    // Assert: Les deux opérations réussissent
-    expect(result1.success !== false).toBe(true);
-    expect(result2.success !== false).toBe(true);
+    // Assert: Les deux opérations réussissent (result n'a pas de propriété success, vérifier le contenu)
+    expect(result1.content).toBeDefined();
+    expect(result2.content).toBeDefined();
 
     // Assert: Les deux résultats contiennent le contenu initial + leur ajout
     expect(result1.content).toContain(initialContent);

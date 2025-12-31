@@ -3,6 +3,7 @@
  * Messages contextuels avec actions suggérées et design moderne
  */
 
+import React from 'react';
 import toast, { type ToastOptions } from 'react-hot-toast';
 
 /**
@@ -22,47 +23,47 @@ interface ChatToastOptions extends ToastOptions {
 export function chatError(message: string, options?: ChatToastOptions) {
   return toast.error(
     (t) => (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '300px', maxWidth: '400px' }}>
-        <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--error, #ef4444)' }}>
-          {message}
-        </div>
-        {options?.suggestion && (
-          <div style={{ fontSize: '13px', color: 'var(--text-secondary, #9ca3af)', lineHeight: '1.5' }}>
-            💡 {options.suggestion}
-          </div>
-        )}
-        {options?.action && (
-          <button
-            onClick={() => {
-              options.action!.onClick();
-              toast.dismiss(t.id);
-            }}
-            style={{
-              marginTop: '4px',
-              padding: '6px 12px',
-              fontSize: '13px',
-              fontWeight: 500,
-              color: 'var(--error, #ef4444)',
-              background: 'transparent',
-              border: '1px solid var(--error, #ef4444)',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              alignSelf: 'flex-start'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--error, #ef4444)';
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'var(--error, #ef4444)';
-            }}
-          >
-            {options.action.label}
-          </button>
-        )}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '300px', maxWidth: '400px' }}>
+      <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--error, #ef4444)' }}>
+        {message}
       </div>
+      {options?.suggestion && (
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary, #9ca3af)', lineHeight: '1.5' }}>
+          💡 {options.suggestion}
+        </div>
+      )}
+      {options?.action && (
+        <button
+          onClick={() => {
+            options.action!.onClick();
+            toast.dismiss(t.id);
+          }}
+          style={{
+            marginTop: '4px',
+            padding: '6px 12px',
+            fontSize: '13px',
+            fontWeight: 500,
+            color: 'var(--error, #ef4444)',
+            background: 'transparent',
+            border: '1px solid var(--error, #ef4444)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            alignSelf: 'flex-start'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--error, #ef4444)';
+            e.currentTarget.style.color = 'white';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--error, #ef4444)';
+          }}
+        >
+          {options.action.label}
+        </button>
+      )}
+    </div>
     ),
     {
       duration: options?.duration || 5000,

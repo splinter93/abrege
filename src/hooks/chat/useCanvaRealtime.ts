@@ -101,8 +101,8 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
             presence: { key: session.user.id }
           }
         })
-      .on(
-        'postgres_changes' as any,
+      .on<CanvaSession>(
+        'postgres_changes',
         {
           event: '*', // INSERT, UPDATE, DELETE
           schema: 'public',
@@ -111,11 +111,12 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
           // RLS peut bloquer les événements si on filtre seulement par chat_session_id
           filter: `user_id=eq.${session.user.id}`
         },
-        (payload: RealtimePostgresChangesPayload<CanvaSession>) => {
-          const canvaId = payload.new?.id || payload.old?.id;
-          const eventType = getEventType(payload);
-          const payloadChatSessionId = payload.new?.chat_session_id || payload.old?.chat_session_id;
-          const payloadUserId = payload.new?.user_id || payload.old?.user_id;
+        (payload) => {
+          const typedPayload = payload as unknown as RealtimePostgresChangesPayload<CanvaSession>;
+          const canvaId = typedPayload.new?.id || typedPayload.old?.id;
+          const eventType = getEventType(typedPayload);
+          const payloadChatSessionId = typedPayload.new?.chat_session_id || typedPayload.old?.chat_session_id;
+          const payloadUserId = typedPayload.new?.user_id || typedPayload.old?.user_id;
           
           // ✅ Log TOUS les événements reçus pour debug (même ceux qu'on ignore)
           logger.info(LogCategory.EDITOR, '[CanvaRealtime] 📨 ÉVÉNEMENT REÇU (raw)', {
@@ -131,14 +132,14 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
           
           if (!eventType) {
             logger.warn(LogCategory.EDITOR, '[CanvaRealtime] Invalid payload: missing eventType', {
-              payload
+              payload: typedPayload
             });
             return;
           }
 
           if (!canvaId) {
             logger.warn(LogCategory.EDITOR, '[CanvaRealtime] Invalid payload: missing canvaId', {
-              payload
+              payload: typedPayload
             });
             return;
           }
@@ -166,17 +167,17 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
           logger.info(LogCategory.EDITOR, '[CanvaRealtime] ✅✅✅ DB change detected - ÉVÉNEMENT REÇU', {
             event: eventType,
             canvaId,
-            newStatus: payload.new?.status,
-            oldStatus: payload.old?.status,
-            newTitle: payload.new?.title,
-            oldTitle: payload.old?.title,
+            newStatus: typedPayload.new?.status,
+            oldStatus: typedPayload.old?.status,
+            newTitle: typedPayload.new?.title,
+            oldTitle: typedPayload.old?.title,
             chatSessionId,
             payloadChatSessionId
           });
 
           lastEventAtRef.current = Date.now();
 
-          const { new: newRow, old: oldRow } = payload;
+          const { new: newRow, old: oldRow } = typedPayload;
 
           switch (eventType) {
             case 'INSERT': {

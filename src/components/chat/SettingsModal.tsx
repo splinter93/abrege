@@ -130,6 +130,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         '--chat-text-secondary': '#7d7a76',
         '--chat-text-muted': '#adaaa6'
       }
+    },
+    { 
+      value: 'white-translucent', 
+      label: 'Blanc Translucide', 
+      icon: <Circle size={16} />,
+      colors: {
+        '--chat-text-primary': '#FFFFFF99',
+        '--chat-text-secondary': '#FFFFFF88',
+        '--chat-text-muted': '#FFFFFF66'
+      }
     }
   ];
 
@@ -152,7 +162,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   // Load preferences
   useEffect(() => {
     const savedFont = localStorage.getItem('chat-font-preference');
-    if (savedFont) setSelectedFont(savedFont);
+    if (savedFont) {
+      setSelectedFont(savedFont);
+      // Appliquer la classe Manrope si nécessaire au chargement
+      if (savedFont === 'manrope') {
+        document.body.classList.add('chat-font-manrope-active');
+      } else {
+        document.body.classList.remove('chat-font-manrope-active');
+      }
+    }
     
     const savedColors = localStorage.getItem('chat-color-preference');
     if (savedColors) {
@@ -190,6 +208,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     };
     
     document.documentElement.style.setProperty('--font-chat-base', fontMap[fontValue]);
+    
+    // Ajouter/enlever classe pour Manrope (pour ajuster font-weight)
+    if (fontValue === 'manrope') {
+      document.body.classList.add('chat-font-manrope-active');
+    } else {
+      document.body.classList.remove('chat-font-manrope-active');
+    }
   };
 
   const handleColorPaletteChange = (paletteValue: string) => {

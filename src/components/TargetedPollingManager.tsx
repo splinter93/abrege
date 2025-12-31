@@ -16,24 +16,21 @@ export default function TargetedPollingManager() {
   const { user } = useAuth();
   const { pollAll, pollNotes, pollFolders, pollClasseurs, isPolling } = useTargetedPolling();
 
-  console.log('[TargetedPollingManager] 🔍 Composant rendu, user:', user?.id, 'isPolling:', isPolling);
-
   // Initialiser le système de polling ciblé
   useEffect(() => {
-    console.log('[TargetedPollingManager] 🔍 useEffect initialisation, user:', user?.id);
-    
     if (user?.id) {
-      console.log('[TargetedPollingManager] ✅ Gestionnaire de polling ciblé initialisé');
-      logger.dev('[TargetedPollingManager] ✅ Gestionnaire de polling ciblé initialisé');
+      logger.dev('[TargetedPollingManager] ✅ Gestionnaire de polling ciblé initialisé', {
+        userId: user.id,
+        isPolling
+      });
       
       // 🚫 Pas de polling initial automatique pour éviter les erreurs 401
       // Le polling sera déclenché par les actions UI
-      console.log('[TargetedPollingManager] 🎯 Prêt pour le polling ciblé par actions UI');
       logger.dev('[TargetedPollingManager] 🎯 Prêt pour le polling ciblé par actions UI');
     } else {
-      console.log('[TargetedPollingManager] ⚠️ Pas d\'utilisateur connecté');
+      logger.dev('[TargetedPollingManager] ⚠️ Pas d\'utilisateur connecté');
     }
-  }, [user?.id]);
+  }, [user?.id, isPolling]);
 
   // Exposer les fonctions de polling globalement pour les actions UI
   useEffect(() => {

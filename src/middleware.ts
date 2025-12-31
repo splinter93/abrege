@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { simpleLogger as logger } from '@/utils/logger';
 
 export function middleware(req: NextRequest) {
   const url = req.nextUrl;
@@ -9,8 +10,7 @@ export function middleware(req: NextRequest) {
   
   // ✅ SÉCURITÉ : Traitement spécial pour les pages publiques avec logging
   if (url.pathname.startsWith('/@')) {
-    // Log des tentatives d'accès aux pages publiques pour monitoring
-    console.log(`🔍 [MIDDLEWARE] Tentative d'accès à la page publique: ${url.pathname}`);
+    logger.dev(`[MIDDLEWARE] Accès page publique: ${url.pathname}`);
     
     const res = NextResponse.next();
     res.headers.set('x-request-id', resRid);

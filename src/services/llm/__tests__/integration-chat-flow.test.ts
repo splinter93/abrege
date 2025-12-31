@@ -60,13 +60,10 @@ describe('[Integration] Chat Flow', () => {
     const history: ChatMessage[] = [
       {
         id: 'msg-1',
-        session_id: mockSessionId,
         sequence_number: 1,
         role: 'user',
         content: userMessage,
-        timestamp: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        timestamp: new Date().toISOString()
       }
     ];
 
@@ -95,13 +92,10 @@ describe('[Integration] Chat Flow', () => {
     // Simuler la réponse finale
     const finalResponse: ChatMessage = {
       id: 'msg-2',
-      session_id: mockSessionId,
       sequence_number: 2,
       role: 'assistant',
       content: 'Note créée avec succès',
-      timestamp: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      timestamp: new Date().toISOString()
     };
 
     // Assert: Flow complet sans erreur

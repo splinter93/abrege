@@ -20,7 +20,7 @@
   /* Tailles de police */
   --chat-text-xs: 0.75rem;
   --chat-text-sm: 0.875rem;
-  --chat-text-base: 0.96875rem; /* 15.5px - ✅ Synchronisé avec --chat-font-size-base */
+  --chat-text-base: 1rem; /* 16px - ✅ Synchronisé avec --chat-font-size-base */
   --chat-text-lg: 1.0625rem;
   --chat-text-xl: 1.1875rem;
   --chat-text-2xl: 1.4375rem;
@@ -81,6 +81,41 @@
   
   margin: 0;
   padding: 0;
+}
+
+/* =============================================================================
+   AJUSTEMENT FONT-WEIGHT POUR MANROPE
+   ============================================================================= */
+/* Augmente légèrement le font-weight de Manrope pour meilleure lisibilité */
+
+body.chat-font-manrope-active .chat-markdown {
+  font-weight: 525; /* Légèrement plus gras que 425 */
+}
+
+body.chat-font-manrope-active .chat-markdown p {
+  font-weight: 525; /* Légèrement plus gras que 425 */
+}
+
+body.chat-font-manrope-active .chat-markdown strong {
+  font-weight: 775; /* Légèrement plus gras que 750 */
+}
+
+body.chat-font-manrope-active .chat-markdown h1 {
+  font-weight: 825; /* Légèrement plus gras que 800 */
+}
+
+body.chat-font-manrope-active .chat-markdown h2 {
+  font-weight: 775; /* Légèrement plus gras que 750 */
+}
+
+body.chat-font-manrope-active .chat-markdown h3 {
+  font-weight: 775; /* Légèrement plus gras que 750 */
+}
+
+body.chat-font-manrope-active .chat-markdown h4,
+body.chat-font-manrope-active .chat-markdown h5,
+body.chat-font-manrope-active .chat-markdown h6 {
+  font-weight: 725; /* Légèrement plus gras que 700 */
 }
 
 /* =============================================================================

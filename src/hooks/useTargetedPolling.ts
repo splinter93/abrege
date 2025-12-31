@@ -25,38 +25,30 @@ export function useTargetedPolling(): UseTargetedPollingReturn {
 
   // Initialiser le service avec le token utilisateur
   useEffect(() => {
-    console.log('[useTargetedPolling] 🔍 Hook initialisé, user:', user?.id);
-    
     if (user?.id) {
-      console.log('[useTargetedPolling] 🚀 Début initialisation service...');
+      logger.dev('[useTargetedPolling] 🚀 Début initialisation service', { userId: user.id });
       
       // Récupérer le token d'authentification
       const initializeService = async () => {
         try {
-          console.log('[useTargetedPolling] 🔍 Récupération session...');
           const { data: { session } } = await import('@/supabaseClient').then(m => m.supabase.auth.getSession());
-          console.log('[useTargetedPolling] 🔍 Session récupérée:', !!session);
           
           const token = session?.access_token;
-          console.log('[useTargetedPolling] 🔍 Token disponible:', !!token);
           
           if (token) {
             targetedPollingService.initialize(token);
-            console.log('[useTargetedPolling] ✅ Service initialisé avec token');
             logger.dev('[useTargetedPolling] ✅ Service initialisé avec token');
           } else {
-            console.log('[useTargetedPolling] ⚠️ Pas de token disponible');
             logger.warn('[useTargetedPolling] ⚠️ Pas de token disponible');
           }
         } catch (error) {
-          console.error('[useTargetedPolling] ❌ Erreur initialisation:', error);
           logger.error('[useTargetedPolling] ❌ Erreur initialisation:', error);
         }
       };
 
       initializeService();
     } else {
-      console.log('[useTargetedPolling] ⚠️ Pas d\'utilisateur connecté');
+      logger.dev('[useTargetedPolling] ⚠️ Pas d\'utilisateur connecté');
     }
   }, [user?.id]);
 

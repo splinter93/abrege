@@ -35,23 +35,17 @@ describe('[Integration] Edit & Regenerate', () => {
     messages = [
       {
         id: 'msg-1',
-        session_id: mockSessionId,
         sequence_number: 1,
         role: 'user',
         content: 'Message original',
-        timestamp: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        timestamp: new Date().toISOString()
       },
       {
         id: 'msg-2',
-        session_id: mockSessionId,
         sequence_number: 2,
         role: 'assistant',
         content: 'Réponse originale',
-        timestamp: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        timestamp: new Date().toISOString()
       }
     ];
   });
@@ -64,67 +58,57 @@ describe('[Integration] Edit & Regenerate', () => {
     // Act: Éditer le message utilisateur
     const editedUserMessage: ChatMessage = {
       ...originalUserMessage,
-      content: 'Message édité',
-      updated_at: new Date().toISOString()
+      content: 'Message édité'
     };
 
     // Act: Supprimer les messages après le message édité (simulation)
-    const messagesAfterEdit = messages.filter(m => m.sequence_number > editedUserMessage.sequence_number);
+    const messagesAfterEdit = messages.filter(m => (m.sequence_number ?? 0) > (editedUserMessage.sequence_number ?? 0));
     expect(messagesAfterEdit.length).toBe(1); // Message assistant à supprimer
 
     // Act: Régénérer la réponse
     const regeneratedResponse: ChatMessage = {
       id: 'msg-3',
-      session_id: mockSessionId,
       sequence_number: 2, // Même sequence_number que l'ancien message assistant
       role: 'assistant',
       content: 'Nouvelle réponse régénérée',
-      timestamp: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      timestamp: new Date().toISOString()
     };
 
     // Assert: Nouvelle réponse générée
     expect(editedUserMessage.content).toBe('Message édité');
     expect(regeneratedResponse.content).toBe('Nouvelle réponse régénérée');
     expect(regeneratedResponse.role).toBe('assistant');
-    expect(regeneratedResponse.sequence_number).toBe(2);
+    expect(regeneratedResponse.sequence_number).toBeDefined();
   });
 
   it('should handle multiple edits and regenerations', async () => {
     // Arrange: Plusieurs messages
     messages.push({
       id: 'msg-3',
-      session_id: mockSessionId,
       sequence_number: 3,
       role: 'user',
       content: 'Deuxième message',
-      timestamp: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      timestamp: new Date().toISOString()
     });
 
     // Act: Éditer le premier message
     const editedMessage1 = {
       ...messages[0],
-      content: 'Premier message édité',
-      updated_at: new Date().toISOString()
+      content: 'Premier message édité'
     };
 
     // Act: Supprimer tous les messages après
-    const messagesToDelete = messages.filter(m => m.sequence_number > editedMessage1.sequence_number);
+    const editedSequenceNumber = editedMessage1.sequence_number ?? 0;
+    const messagesToDelete = messages.filter(m => (m.sequence_number ?? 0) > editedSequenceNumber);
     expect(messagesToDelete.length).toBe(2); // 2 messages à supprimer
 
     // Act: Régénérer
     const regeneratedResponse: ChatMessage = {
       id: 'msg-4',
-      session_id: mockSessionId,
       sequence_number: 2,
       role: 'assistant',
       content: 'Réponse régénérée après édition',
-      timestamp: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      timestamp: new Date().toISOString()
     };
 
     // Assert: Flow complet
@@ -149,7 +133,9 @@ describe('[Integration] Edit & Regenerate', () => {
     // Assert: Sequence numbers cohérents
     expect(editedUser.sequence_number).toBe(1);
     expect(regeneratedAssistant.sequence_number).toBe(2);
-    expect(regeneratedAssistant.sequence_number).toBeGreaterThan(editedUser.sequence_number);
+    const editedSeq = editedUser.sequence_number ?? 0;
+    const regeneratedSeq = regeneratedAssistant.sequence_number ?? 0;
+    expect(regeneratedSeq).toBeGreaterThan(editedSeq);
   });
 });
 

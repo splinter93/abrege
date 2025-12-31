@@ -20,16 +20,17 @@ import { useChatScroll } from '@/hooks/useChatScroll';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { useInfiniteMessages } from '@/hooks/useInfiniteMessages';
-import { isEmptyAnalysisMessage } from '@/types/chat';
 import type { Agent } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
-import { supabase } from '@/supabaseClient';
 
 // 🎯 NOUVEAUX HOOKS (Phase 2)
 import { useStreamingState } from '@/hooks/chat/useStreamingState';
 import { useChatAnimations } from '@/hooks/chat/useChatAnimations';
 import { useChatMessageActions } from '@/hooks/chat/useChatMessageActions';
 import { useSyncAgentWithSession } from '@/hooks/chat/useSyncAgentWithSession';
+import { useChatFullscreenUIState } from '@/hooks/chat/useChatFullscreenUIState';
+import { useChatFullscreenUIActions } from '@/hooks/chat/useChatFullscreenUIActions';
+import { useChatFullscreenEffects } from '@/hooks/chat/useChatFullscreenEffects';
 import { useAgents } from '@/hooks/useAgents';
 
 // 🎯 NOUVEAUX COMPOSANTS (Phase 3)
@@ -87,7 +88,11 @@ const ChatFullscreenV2: React.FC = () => {
     sessions: canvaSessions
   } = useCanvaStore();
   
-  const [canvaWidth, setCanvaWidth] = useState(66); // 66% par défaut
+  // 🎯 UI STATE (extrait dans hook)
+  const uiState = useChatFullscreenUIState({
+    isDesktop,
+    isCanvaOpen
+  });
 
   const {
     payload: canvaContextPayload,
@@ -105,37 +110,6 @@ const ChatFullscreenV2: React.FC = () => {
       canva_context: canvaContextPayload
     };
   }, [llmContext, canvaContextPayload]);
-
-  const handleOpenCanva = useCallback(async () => {
-    if (!user?.id || !currentSession?.id) {
-      return;
-    }
-    const previousCanvaId = activeCanvaId;
-
-    try {
-      const newSession = await openCanva(user.id, currentSession.id); // ✅ Passer chatSessionId
-      logger.dev('[ChatFullscreenV2] Canva opened', {
-        newCanvaId: newSession.id,
-        noteId: newSession.noteId,
-        previousCanvaId
-      });
-
-      if (previousCanvaId && previousCanvaId !== newSession.id) {
-        try {
-          await closeCanva(previousCanvaId);
-          logger.dev('[ChatFullscreenV2] Previous canva closed', { previousCanvaId });
-        } catch (closeError) {
-          logger.error('[ChatFullscreenV2] Failed to close previous canva', closeError);
-        }
-      }
-    } catch (error) {
-      logger.error('[ChatFullscreenV2] Failed to open canva', error);
-      chatError('Impossible d\'ouvrir le canva', {
-        suggestion: 'Vérifiez que la note existe et que vous y avez accès.',
-        duration: 4000
-      });
-    }
-  }, [openCanva, closeCanva, user, currentSession, activeCanvaId]);
 
   // 🎯 INFINITE MESSAGES (lazy loading)
   const {
@@ -163,39 +137,12 @@ const ChatFullscreenV2: React.FC = () => {
     layoutTrigger: isCanvaOpen // ✅ Trigger quand canva s'ouvre/ferme
   });
 
-  // 🎯 ÉTAT INITIALISATION (éviter race condition au premier chargement)
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [keyboardInset, setKeyboardInset] = useState(0);
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('visualViewport' in window)) {
-      return;
-    }
-
-    const handleViewportChange = () => {
-      const viewport = window.visualViewport;
-      if (!viewport) return;
-
-      const heightDiff = window.innerHeight - viewport.height;
-      const isKeyboardVisible = heightDiff > 120 && viewport.height < window.innerHeight;
-      setKeyboardInset(isKeyboardVisible ? heightDiff : 0);
-    };
-
-    handleViewportChange();
-    window.visualViewport?.addEventListener('resize', handleViewportChange);
-    window.visualViewport?.addEventListener('scroll', handleViewportChange);
-
-    return () => {
-      window.visualViewport?.removeEventListener('resize', handleViewportChange);
-      window.visualViewport?.removeEventListener('scroll', handleViewportChange);
-    };
-  }, []);
+  // 🎯 EFFECTS (extrait dans useChatFullscreenEffects)
 
   // 🎯 NOUVEAUX HOOKS CUSTOM (logique extraite)
   const streamingState = useStreamingState();
   
-  // 🎯 GESTION ERREURS STREAMING
-  const [streamError, setStreamError] = useState<import('@/services/streaming/StreamOrchestrator').StreamErrorDetails | null>(null);
-  const [lastUserMessage, setLastUserMessage] = useState<{ content: string | MessageContent; images?: ImageAttachment[] } | null>(null);
+  // 🎯 GESTION ERREURS STREAMING (utilise uiState)
   
   const animations = useChatAnimations({
     currentSessionId: currentSession?.id || null,
@@ -220,11 +167,11 @@ const ChatFullscreenV2: React.FC = () => {
       streamingState.endStreaming();
       
       // ✅ Clear l'erreur si succès
-      setStreamError(null);
+      uiState.setStreamError(null);
       
       // ✅ Reset padding UNIQUEMENT si le message assistant dépasse (évite saccade si court)
       requestAnimationFrame(() => {
-        const container = messagesContainerRef.current;
+        const container = uiState.messagesContainerRef.current;
         if (!container) return;
         
         // Trouver le dernier message assistant dans le DOM
@@ -252,7 +199,7 @@ const ChatFullscreenV2: React.FC = () => {
         ? { error, timestamp: Date.now() }
         : error;
       
-      setStreamError(errorDetails);
+      uiState.setStreamError(errorDetails);
       streamingState.endStreaming();
       
       logger.error('[ChatFullscreenV2] ❌ Erreur streaming reçue:', errorDetails);
@@ -314,7 +261,7 @@ const ChatFullscreenV2: React.FC = () => {
     onEditingChange: (editing: boolean) => {
       if (!editing) {
         cancelEditing();
-        setEditingContent('');
+        uiState.setEditingContent('');
       }
     },
     requireAuth,
@@ -327,40 +274,34 @@ const ChatFullscreenV2: React.FC = () => {
       streamingState.reset();
       
       // ✅ Clear l'erreur quand un nouveau message est envoyé
-      setStreamError(null);
+      uiState.setStreamError(null);
       
       logger.dev('[ChatFullscreenV2] ✅ Timeline reset, historique complet dans infiniteMessages');
     }
   });
   
-  // 🎯 HANDLERS ERREURS STREAMING
-  const handleRetryMessage = useCallback(async () => {
-    if (!lastUserMessage || !currentSession) {
-      logger.warn('[ChatFullscreenV2] ⚠️ Pas de dernier message à relancer');
-      return;
-    }
-    
-    logger.info('[ChatFullscreenV2] 🔄 Relance du dernier message:', {
-      content: typeof lastUserMessage.content === 'string' 
-        ? lastUserMessage.content.substring(0, 100) 
-        : '[rich content]',
-      hasImages: !!lastUserMessage.images && lastUserMessage.images.length > 0
-    });
-    
-    // Clear l'erreur avant de relancer
-    setStreamError(null);
-    
-    // Relancer avec le même contenu
-    await messageActions.sendMessage(
-      lastUserMessage.content, 
-      lastUserMessage.images || []
-    );
-  }, [lastUserMessage, currentSession, messageActions]);
+  // 🎯 UI ACTIONS (extrait dans hook)
+  const allowSidebarHover = isDesktop && !isCanvaOpen;
   
-  const handleDismissError = useCallback(() => {
-    setStreamError(null);
-    logger.dev('[ChatFullscreenV2] ✅ Erreur dismissée');
-  }, []);
+  const uiActions = useChatFullscreenUIActions({
+    requireAuth,
+    user,
+    authLoading,
+    isDesktop,
+    isCanvaOpen,
+    allowSidebarHover,
+    editingMessage,
+    currentSession,
+    infiniteMessages,
+    messageActions,
+    uiState,
+    openCanva,
+    closeCanva,
+    switchCanva,
+    startEditingMessage,
+    cancelEditing,
+    activeCanvaId
+  });
 
   // 🎯 SYNC AGENT avec session
   useSyncAgentWithSession({
@@ -372,581 +313,68 @@ const ChatFullscreenV2: React.FC = () => {
     onAgentNotFound: () => setAgentNotFound(true) // ✅ Marquer agent comme introuvable
   });
 
-  // 🎯 SYNC SESSIONS + AUTO-SELECT DERNIÈRE CONVERSATION + AGENT (flow séquentiel optimal)
-  useEffect(() => {
-    // ✅ Attendre auth uniquement (pas isInitializing, car on gère l'init ici)
-    if (!user || authLoading || agentsLoading) {
-      return;
-    }
+  // 🎯 EFFECTS (extrait dans useChatFullscreenEffects)
+  const effects = useChatFullscreenEffects({
+    isDesktop,
+    user,
+    authLoading,
+    agentsLoading,
+    agents,
+    currentSession,
+    sidebarOpen: uiState.sidebarOpen,
+    isCanvaOpen,
+    activeCanvaId,
+    canvaSessions,
+    infiniteMessages,
+    isLoadingMessages,
+    hasMore,
+    isLoadingMore,
+    editingMessage,
+    animations,
+    streamingState,
+    uiState,
+    syncSessions,
+    setCurrentSession,
+    setSelectedAgent,
+    setAgentNotFound,
+    clearInfiniteMessages,
+    loadMoreMessages,
+    switchCanva,
+    closeCanva
+  });
 
-    // ✅ FIX RACE CONDITION : Tout séquentiel (sessions → session → agent)
-    let isMounted = true;
+  // 🎯 UI STATE (déjà extrait dans useChatFullscreenUIState)
 
-    const initializeChat = async () => {
-      try {
-        // 1️⃣ Sync sessions depuis DB
-        await syncSessions();
-        
-        if (!isMounted) return;
-        
-        // 2️⃣ Lire l'état actuel du store (mis à jour par syncSessions)
-        const storeState = useChatStore.getState();
-        
-        // 3️⃣ Auto-select dernière conversation si aucune session active
-        if (!storeState.currentSession && storeState.sessions.length > 0) {
-          // Sessions déjà triées par updated_at DESC (plus récente en premier)
-          const lastSession = storeState.sessions[0];
-          setCurrentSession(lastSession);
-          logger.dev('[ChatFullscreenV2] 🎯 Auto-select dernière conversation:', {
-            id: lastSession.id,
-            name: lastSession.name,
-            agentId: lastSession.agent_id
-          });
-
-          // 4️⃣ Charger l'agent de la session (si agent_id existe)
-          if (lastSession.agent_id && agents.length > 0) {
-            const sessionAgent = agents.find(a => a.id === lastSession.agent_id);
-            if (sessionAgent) {
-              setSelectedAgent(sessionAgent);
-              logger.dev('[ChatFullscreenV2] ✅ Agent de la session chargé:', sessionAgent.name);
-            }
-          }
-        } else if (storeState.sessions.length === 0 && agents.length > 0) {
-          // 5️⃣ FALLBACK : Aucune session → charger agent favori
-          const { data: userData } = await supabase
-            .from('users')
-            .select('favorite_agent_id')
-            .eq('id', user.id)
-            .single();
-
-          const favoriteAgentId = userData?.favorite_agent_id;
-          const favoriteAgent = favoriteAgentId 
-            ? agents.find(a => a.id === favoriteAgentId) 
-            : agents[0];
-
-          if (favoriteAgent) {
-            setSelectedAgent(favoriteAgent);
-            logger.dev('[ChatFullscreenV2] 🌟 Agent favori chargé (aucune session):', favoriteAgent.name);
-          }
-        }
-
-        // 6️⃣ Marquer initialisation terminée
-        setIsInitializing(false);
-        logger.dev('[ChatFullscreenV2] ✅ Initialisation chat terminée');
-
-      } catch (error) {
-        logger.error('[ChatFullscreenV2] ❌ Erreur initialisation chat:', error);
-        setIsInitializing(false);
-      }
-    };
-
-    initializeChat();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user, authLoading, agentsLoading, agents, syncSessions, setCurrentSession, setSelectedAgent]);
-
-  // 🎯 FERMER CANVA SI PAS ASSOCIÉ À SESSION ACTUELLE
-  useEffect(() => {
-    // Ne rien faire si pas encore initialisé ou pas de session
-    if (!currentSession?.id || !user?.id || authLoading) {
-      return;
-    }
-
-    // Si un canva est actif, vérifier qu'il appartient à la session actuelle
-    if (isCanvaOpen && activeCanvaId) {
-      const activeCanva = canvaSessions[activeCanvaId];
-      
-      // ✅ Ignorer si chatSessionId est vide (session locale pas encore hydratée)
-      // ✅ Ne fermer que si chatSessionId est défini ET différent de la session actuelle
-      if (activeCanva && 
-          activeCanva.chatSessionId && 
-          activeCanva.chatSessionId !== currentSession.id) {
-        logger.info('[ChatFullscreenV2] 🔄 Fermeture canva : appartient à une autre session', {
-          activeCanvaId,
-          activeCanvaChatSessionId: activeCanva.chatSessionId,
-          currentSessionId: currentSession.id
-        });
-        
-        closeCanva(activeCanvaId).catch((error) => {
-          logger.error('[ChatFullscreenV2] ❌ Erreur fermeture canva lors changement session', error);
-        });
-      }
-    }
-  }, [currentSession?.id, isCanvaOpen, activeCanvaId, canvaSessions, closeCanva, user?.id, authLoading]);
-
-
-  // 🎯 AUTO-ACTIVATE OPEN CANVA on session load
-  useEffect(() => {
-    // Ne rien faire si pas encore initialisé ou pas de session
-    if (!currentSession?.id || !user?.id || authLoading) {
-      return;
-    }
-
-    // Ne rien faire si un canva est déjà actif (évite double activation)
-    // ✅ Vérifier aussi que le canva actif appartient à la session actuelle
-    if (isCanvaOpen && activeCanvaId) {
-      const activeCanva = canvaSessions[activeCanvaId];
-      // Si le canva actif appartient à la session actuelle, ne rien faire
-      if (activeCanva && activeCanva.chatSessionId === currentSession.id) {
-      return;
-      }
-    }
-
-    let isMounted = true;
-
-    const loadAndActivateOpenCanva = async () => {
-      try {
-        // Récupérer token auth via client singleton (évite multiples GoTrueClient)
-        const supabase = getSupabaseClient();
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!session?.access_token || !isMounted) {
-          return;
-        }
-
-        // Charger les canvas de cette session
-        const response = await fetch(`/api/v2/canva/sessions?chat_session_id=${currentSession.id}`, {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'X-Client-Type': 'canva_auto_activate'
-          }
-        });
-
-        if (!response.ok || !isMounted) {
-          return;
-        }
-
-        const data = await response.json() as ListCanvasResponse;
-        const canvases = data.canva_sessions || [];
-
-        // Trouver tous les canvas avec status='open'
-        const openCanvas = canvases.filter((c: CanvaSessionDB) => c.status === 'open');
-
-        if (openCanvas.length === 0) {
-          // Pas de canva ouvert → chat normal
-          return;
-        }
-
-        // ✅ FALLBACK : Si plusieurs canvas sont 'open' (cas d'erreur/race condition)
-        // On prend le dernier (updated_at le plus récent, ou created_at si pas de updated_at)
-        let selectedCanva = openCanvas[0];
-        if (openCanvas.length > 1) {
-          logger.warn('[ChatFullscreenV2] ⚠️ Multiple open canvases detected, using fallback (most recent)', {
-            count: openCanvas.length,
-            canvases: openCanvas.map((c: CanvaSessionDB) => ({ id: c.id, created_at: c.created_at }))
-          });
-
-          // Trier par created_at DESC (le plus récent en premier)
-          // Note: CanvaSession n'a pas updated_at, on utilise created_at
-          selectedCanva = openCanvas.sort((a: CanvaSessionDB, b: CanvaSessionDB) => {
-            const aDate = a.created_at || '';
-            const bDate = b.created_at || '';
-            return bDate.localeCompare(aDate); // DESC order
-          })[0];
-
-          // ✅ FALLBACK ACTION : Fermer les autres canvas 'open' (cleanup)
-          try {
-            await Promise.all(
-              openCanvas
-                .filter((c: CanvaSessionDB) => c.id !== selectedCanva.id)
-                .map((otherCanva: CanvaSessionDB) =>
-                  fetch(`/api/v2/canva/sessions/${otherCanva.id}`, {
-                    method: 'PATCH',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${session.access_token}`,
-                      'X-Client-Type': 'canva_fallback_cleanup'
-                    },
-                    body: JSON.stringify({ status: 'closed' })
-                  })
-                )
-            );
-
-            logger.info('[ChatFullscreenV2] ✅ Fallback cleanup: closed other open canvases', {
-              closedCount: openCanvas.length - 1,
-              keptCanvaId: selectedCanva.id
-            });
-          } catch (cleanupError) {
-            logger.error('[ChatFullscreenV2] ⚠️ Error during fallback cleanup', cleanupError);
-            // Continue quand même, on active le canva sélectionné
-          }
-        }
-
-        if (selectedCanva && selectedCanva.note_id && isMounted) {
-          logger.info('[ChatFullscreenV2] 🔄 Auto-activating open canva on load', {
-            canvaId: selectedCanva.id,
-            noteId: selectedCanva.note_id,
-            chatSessionId: currentSession.id,
-            isFallback: openCanvas.length > 1
-          });
-
-          // Activer automatiquement le canva ouvert (le plus récent si plusieurs)
-          await switchCanva(selectedCanva.id, selectedCanva.note_id);
-        }
-      } catch (error) {
-        logger.error('[ChatFullscreenV2] ❌ Error auto-activating open canva', error);
-      }
-    };
-
-    loadAndActivateOpenCanva();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [currentSession?.id, user?.id, authLoading, isCanvaOpen, activeCanvaId, canvaSessions, switchCanva]);
-
-  // 🎯 UI STATE LOCAL (minimal - sidebar uniquement)
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarHovered, setSidebarHovered] = useState(false);
-  const [wideMode] = useState(false);
-  const [agentDropdownOpen, setAgentDropdownOpen] = useState(false);
-  const [editingContent, setEditingContent] = useState('');
-
-  // 🎯 REFS
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const previousSessionIdRef = useRef<string | null>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-
-  // 🎯 HANDLERS UI (simples, pas de logique métier)
-  const handleSidebarToggle = useCallback(() => {
-    if (!requireAuth()) return;
-    setSidebarOpen(prev => {
-      const newState = !prev;
-      localStorage.setItem('sidebar-interacted', 'true');
-      localStorage.setItem('sidebar-preference', newState ? 'open' : 'closed');
-      return newState;
-    });
-  }, [requireAuth]);
-
-  const allowSidebarHover = isDesktop && !isCanvaOpen;
-
-  const handleSidebarMouseEnter = useCallback(() => {
-    if (!allowSidebarHover) return;
-    setSidebarHovered(true);
-  }, [allowSidebarHover]);
-
-  const handleSidebarMouseLeave = useCallback(() => {
-    if (!allowSidebarHover) return;
-    setSidebarHovered(false);
-  }, [allowSidebarHover]);
-
+  // 🎯 HANDLERS UI (extrait dans useChatFullscreenUIActions)
   useEffect(() => {
     if (!allowSidebarHover) {
-      setSidebarHovered(false);
+      uiState.setSidebarHovered(false);
     }
-  }, [allowSidebarHover]);
-
-  const handleEditMessage = useCallback((messageId: string, content: string, index: number) => {
-    if (!requireAuth()) return;
-    
-    const realIndex = infiniteMessages.findIndex(msg => {
-      if (msg.id === messageId) return true;
-      if (msg.timestamp && messageId.match(/^msg-(\d+)-/)) {
-        const timestampMatch = messageId.match(/^msg-(\d+)-/);
-        if (timestampMatch) {
-          const targetTimestamp = parseInt(timestampMatch[1]);
-          const msgTimestamp = new Date(msg.timestamp).getTime();
-          return Math.abs(msgTimestamp - targetTimestamp) < 1000 && msg.role === 'user';
-        }
-      }
-      return false;
-    });
-
-    if (realIndex === -1) {
-      logger.error('[ChatFullscreenV2] ❌ Message non trouvé:', { messageId });
-      return;
-    }
-
-    startEditingMessage(messageId, content, realIndex);
-    setEditingContent(content);
-  }, [startEditingMessage, requireAuth, infiniteMessages]);
-
-  const handleCancelEdit = useCallback(() => {
-    cancelEditing();
-    setEditingContent('');
-  }, [cancelEditing]);
-
-  // 🎯 WRAPPER send/edit avec routing édition
-  // ✅ NOUVEAU : Support mentions légères + prompts
-  const handleSendMessage = useCallback(async (
-    message: string | import('@/types/image').MessageContent,
-    images?: import('@/types/image').ImageAttachment[],
-    notes?: Array<{ id: string; slug: string; title: string; markdown_content: string }>,
-    mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>,
-    usedPrompts?: import('@/types/promptMention').PromptMention[] // ✅ NOUVEAU : Prompts metadata (slug au lieu de name)
-  ) => {
-    // ✏️ Si en mode édition, router vers editMessage
-    if (editingMessage) {
-      let textContent = '';
-      if (typeof message === 'string') {
-        textContent = message;
-      } else if (Array.isArray(message)) {
-        const textPart = message.find(part => part.type === 'text');
-        textContent = textPart && 'text' in textPart ? textPart.text : '';
-      }
-      await messageActions.editMessage({
-        messageId: editingMessage.messageId,
-        newContent: textContent,
-        images,
-        messageIndex: editingMessage.messageIndex
-      });
-      return;
-    }
-
-    // ✅ Capturer le message pour retry en cas d'erreur
-    const messageText = typeof message === 'string' 
-      ? message 
-      : Array.isArray(message)
-        ? (message.find(part => part.type === 'text' && 'text' in part) as { text: string } | undefined)?.text || ''
-        : '';
-    
-    setLastUserMessage({
-      content: messageText,
-      images: images && images.length > 0 ? images : undefined
-    });
-
-    // Mode normal (avec mentions légères + prompts metadata)
-    await messageActions.sendMessage(message, images, notes, mentions, usedPrompts);
-  }, [editingMessage, messageActions]);
-
-  // 🎯 RENDER AUTH STATUS
-  const renderAuthStatus = useCallback(() => {
-    if (authLoading) return null;
-    
-    if (!user) {
-      return (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mx-4 mb-4">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">Authentification requise</h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <p>Vous devez être connecté pour utiliser le chat et les outils.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    
-    return null;
-  }, [authLoading, user]);
-
-  // 🎯 MESSAGES AFFICHÉS (calcul optimisé)
-  const displayMessages = useMemo(() => {
-    if (animations.displayedSessionId && animations.displayedSessionId !== currentSession?.id) return [];
-    if (infiniteMessages.length === 0) return [];
-    
-    // ✅ OPTIMISATION: Pas de sort, les messages sont déjà triés par sequence_number depuis DB
-    let filtered = infiniteMessages.filter(msg => {
-      if (msg.role === 'user') return true;
-      if (msg.role === 'assistant' && msg.content) return true;
-      if (msg.role === 'tool') return true;
-      if (isEmptyAnalysisMessage(msg)) return false;
-      return true;
-    });
-    
-    // ✏️ Si en édition, masquer le message édité et ceux qui suivent
-    if (editingMessage) {
-      let cutIndex = -1;
-      
-      if (typeof editingMessage.messageIndex === 'number') {
-        cutIndex = Math.min(Math.max(editingMessage.messageIndex, 0), filtered.length);
-      }
-      
-      if (cutIndex === -1) {
-        const fallbackIndex = filtered.findIndex(msg =>
-          msg.id === editingMessage.messageId ||
-          (msg.timestamp && editingMessage.messageId.includes(new Date(msg.timestamp).getTime().toString()))
-        );
-        if (fallbackIndex !== -1) {
-          cutIndex = fallbackIndex;
-        }
-      }
-      
-      if (cutIndex !== -1) {
-        filtered = filtered.slice(0, cutIndex);
-      }
-    }
-    
-    return filtered;
-  }, [infiniteMessages, animations.displayedSessionId, currentSession?.id, editingMessage]);
-
-  // 🎯 EFFECTS (minimalistes)
-
-  // Sidebar fermée par défaut
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, []);
-
-  // Fermer sidebar en passant mobile
-  useEffect(() => {
-    if (!isDesktop) {
-      setSidebarOpen(false);
-      setSidebarHovered(false);
-    }
-  }, [isDesktop]);
-
-  // Fermer sidebar mobile après changement session
-  useEffect(() => {
-    if (!isDesktop && sidebarOpen && currentSession) {
-      const currentId = currentSession.id;
-
-      if (previousSessionIdRef.current !== null && previousSessionIdRef.current !== currentId) {
-        const timer = setTimeout(() => setSidebarOpen(false), 300);
-        previousSessionIdRef.current = currentId;
-        return () => clearTimeout(timer);
-      }
-
-      previousSessionIdRef.current = currentId;
-    }
-  }, [currentSession?.id, isDesktop, sidebarOpen]);
-
-  // ✅ REMOVED: Sync sessions déplacé dans useEffect optimisé ci-dessus (évite duplication)
-
-  // Détecter changement session et vider immédiatement
-  useEffect(() => {
-    if (currentSession?.id && currentSession.id !== previousSessionIdRef.current) {
-      animations.setDisplayedSessionId(null);
-      animations.resetAnimation();
-      clearInfiniteMessages();
-      streamingState.reset(); // ✅ Reset le streaming précédent aussi
-      // ✅ Reset padding inline éventuel appliqué par useChatScroll (scroll padding temporaire)
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.style.paddingBottom = '';
-      }
-      previousSessionIdRef.current = currentSession.id;
-    }
-
-    if (!isLoadingMessages && !animations.displayedSessionId && currentSession?.id) {
-      animations.setDisplayedSessionId(currentSession.id);
-    }
-  }, [currentSession?.id, animations, isLoadingMessages, infiniteMessages.length, clearInfiniteMessages, streamingState]);
-
-
-  // Animation + scroll quand session chargée
-  useEffect(() => {
-    if (
-      currentSession?.id &&
-      infiniteMessages.length > 0 &&
-      !isLoadingMessages &&
-      (
-        animations.displayedSessionId !== currentSession.id ||
-        !animations.messagesVisible
-      )
-    ) {
-      animations.triggerFadeIn(
-        currentSession.id,
-        infiniteMessages,
-        messagesContainerRef
-      );
-    }
-  }, [
-    currentSession?.id,
-    infiniteMessages,
-    animations.messagesVisible,
-    isLoadingMessages,
-    animations
-  ]);
-
-  // Infinite scroll detection
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (!container || !hasMore || isLoadingMore) return;
-
-    const handleScroll = () => {
-      if (container.scrollTop < 50) {
-        loadMoreMessages();
-      }
-    };
-
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [hasMore, isLoadingMore, loadMoreMessages]);
+  }, [allowSidebarHover, uiState.setSidebarHovered]);
 
   // ✅ SUPPRIMÉ : Plus d'auto-sélection de session
   // L'utilisateur choisit explicitement (via agent favori ou clic sidebar)
 
-  // 🎯 Classes layout canva
-  const mainClassNames = ['chatgpt-main'];
-  if (isDesktop) {
-    mainClassNames.push('chatgpt-main--desktop');
-  }
-  if (isDesktop && isCanvaOpen) {
-    mainClassNames.push('chatgpt-main--canva-open');
-  }
-  const canvaPaneStyle = isDesktop
-    ? {
-        flexBasis: isCanvaOpen ? `${canvaWidth}%` : '0%',
-        width: isCanvaOpen ? `${canvaWidth}%` : '0%'
-      }
-    : undefined;
-  const shouldRenderDesktopCanva = isDesktop;
+  // 🎯 Layout (utilise uiState)
 
   // 🎯 RENDU (100% déclaratif avec composants extraits)
   return (
-      <div className={`chatgpt-container ${wideMode ? 'wide-mode' : ''} ${(isDesktop && isCanvaOpen) ? 'canva-active' : ''}`}>
+      <div className={`chatgpt-container ${(isDesktop && isCanvaOpen) ? 'canva-active' : ''}`}>
       <ChatHeader
-        sidebarOpen={sidebarOpen}
-        onToggleSidebar={handleSidebarToggle}
+        sidebarOpen={uiState.sidebarOpen}
+        onToggleSidebar={uiActions.handleSidebarToggle}
         selectedAgent={selectedAgent}
         agentNotFound={agentNotFound}
-        agentDropdownOpen={agentDropdownOpen}
-        onToggleAgentDropdown={() => setAgentDropdownOpen(!agentDropdownOpen)}
+        agentDropdownOpen={uiState.agentDropdownOpen}
+        onToggleAgentDropdown={() => uiState.setAgentDropdownOpen(!uiState.agentDropdownOpen)}
         isAuthenticated={isAuthenticated}
         authLoading={authLoading}
         chatSessionId={currentSession?.id || null}
         activeCanvaId={activeCanvaId}
         isCanvaOpen={isCanvaOpen}
-        onOpenNewCanva={isDesktop ? handleOpenCanva : undefined}
-            onSelectCanva={async (canvaId, noteId) => {
-              try {
-                logger.dev('[ChatFullscreenV2] Switching canva', { canvaId, noteId });
-                const result = await switchCanva(canvaId, noteId);
-                if (result === 'not_found') {
-                  chatError('Canva introuvable', {
-                    suggestion: 'La note associée a peut-être été supprimée ou vous n\'y avez plus accès.',
-                    duration: 4000
-                  });
-                  return;
-                }
-                chatSuccess('Canva ouvert', {
-                  suggestion: 'Le panneau d\'édition est maintenant visible à droite.'
-                });
-              } catch (error) {
-                logger.error('[ChatFullscreenV2] Failed to switch canva', error);
-                chatError('Erreur lors de l\'ouverture du canva', {
-                  suggestion: 'Vérifiez votre connexion et réessayez.',
-                  duration: 4000
-                });
-              }
-            }}
-        onCloseCanva={async (canvaId, options) => {
-          try {
-            await closeCanva(canvaId, options);
-            if (options?.delete) {
-              chatSuccess('Canva supprimé', {
-                suggestion: 'Le panneau d\'édition a été fermé et supprimé.'
-              });
-            } else {
-              chatSuccess('Canva fermé', {
-                suggestion: 'Le panneau d\'édition a été fermé. Vous pouvez le rouvrir à tout moment.'
-              });
-            }
-          } catch (error) {
-            logger.error('[ChatFullscreenV2] Failed to close canva', error);
-            chatError(options?.delete ? 'Erreur lors de la suppression' : 'Erreur lors de la fermeture', {
-              suggestion: 'Vérifiez votre connexion et réessayez.',
-              duration: 4000
-            });
-          }
-        }}
+        onOpenNewCanva={isDesktop ? uiActions.handleOpenCanva : undefined}
+        onSelectCanva={uiActions.handleSelectCanva}
+        onCloseCanva={uiActions.handleCloseCanva}
         canOpenCanva={isDesktop}
       />
 
@@ -954,52 +382,52 @@ const ChatFullscreenV2: React.FC = () => {
       {allowSidebarHover && (
         <div 
           className="sidebar-hover-zone"
-          onMouseEnter={handleSidebarMouseEnter}
+          onMouseEnter={uiActions.handleSidebarMouseEnter}
         />
       )}
 
-      <div className={`chatgpt-content ${ (sidebarOpen || (allowSidebarHover && sidebarHovered)) ? 'sidebar-open' : ''}`}>
+      <div className={`chatgpt-content ${ (uiState.sidebarOpen || (allowSidebarHover && uiState.sidebarHovered)) ? 'sidebar-open' : ''}`}>
         {/* Sidebar */}
         <div 
           {...(isDesktop ? {
-            onMouseEnter: handleSidebarMouseEnter,
-            onMouseLeave: handleSidebarMouseLeave
+            onMouseEnter: uiActions.handleSidebarMouseEnter,
+            onMouseLeave: uiActions.handleSidebarMouseLeave
           } : {})}
         >
         <SidebarUltraClean
-            isOpen={isDesktop ? (sidebarOpen || (allowSidebarHover && sidebarHovered)) : sidebarOpen}
+            isOpen={isDesktop ? (uiState.sidebarOpen || (allowSidebarHover && uiState.sidebarHovered)) : uiState.sidebarOpen}
           isDesktop={isDesktop}
           onClose={() => {
             if (user && !authLoading) {
-              setSidebarOpen(false);
+              uiState.setSidebarOpen(false);
             }
           }}
           onForceClose={() => {
             if (user && !authLoading) {
-              setSidebarOpen(false);
-              setSidebarHovered(false);
+              uiState.setSidebarOpen(false);
+              uiState.setSidebarHovered(false);
             }
           }}
         />
         </div>
 
         {/* Overlay mobile */}
-        {!isDesktop && sidebarOpen && (
+        {!isDesktop && uiState.sidebarOpen && (
           <div 
             className="chatgpt-sidebar-overlay visible" 
             onClick={() => {
               if (user && !authLoading) {
-                setSidebarOpen(false);
+                uiState.setSidebarOpen(false);
               }
             }} 
           />
         )}
 
         {/* Zone principale */}
-        <div className={mainClassNames.join(' ')}>
+        <div className={uiState.mainClassNames.join(' ')}>
               <div className="chatgpt-main-chat">
                 <ChatMessagesArea
-                  messages={displayMessages}
+                  messages={effects.displayMessages}
                   isLoading={isLoadingMessages}
                   isLoadingMore={isLoadingMore}
                   hasMore={hasMore}
@@ -1014,42 +442,42 @@ const ChatFullscreenV2: React.FC = () => {
                   currentSessionId={currentSession?.id || null}
                   selectedAgent={selectedAgent}
                   agentNotFound={agentNotFound}
-                  streamError={streamError}
-                  onRetryMessage={handleRetryMessage}
-                  onDismissError={handleDismissError}
-                  onEditMessage={handleEditMessage}
-                  containerRef={messagesContainerRef}
+                  streamError={uiState.streamError}
+                  onRetryMessage={uiActions.handleRetryMessage}
+                  onDismissError={uiActions.handleDismissError}
+                  onEditMessage={uiActions.handleEditMessage}
+                  containerRef={uiState.messagesContainerRef}
                   messagesEndRef={messagesEndRef}
-                  keyboardInset={keyboardInset}
+                  keyboardInset={uiState.keyboardInset}
                 />
 
                 <ChatInputContainer
-                  onSend={handleSendMessage}
+                  onSend={uiActions.handleSendMessage}
                   loading={messageActions.isLoading}
                   sessionId={currentSession?.id || 'temp'}
                   currentAgentModel={selectedAgent?.model}
                   editingMessageId={editingMessage?.messageId || null}
-                  editingContent={editingContent}
-                  onCancelEdit={handleCancelEdit}
-                  textareaRef={textareaRef}
-                  renderAuthStatus={renderAuthStatus}
+                  editingContent={uiState.editingContent}
+                  onCancelEdit={uiActions.handleCancelEdit}
+                  textareaRef={uiState.textareaRef}
+                  renderAuthStatus={uiActions.renderAuthStatus}
                   selectedAgent={selectedAgent}
-                  keyboardInset={keyboardInset}
+                  keyboardInset={uiState.keyboardInset}
                 />
               </div>
 
-          {shouldRenderDesktopCanva && (
+          {uiState.shouldRenderDesktopCanva && (
             <div
               className={`chatgpt-canva-pane-wrapper ${isCanvaOpen ? 'chatgpt-canva-pane-wrapper--open' : 'chatgpt-canva-pane-wrapper--closed'}`}
-              style={canvaPaneStyle}
+              style={uiState.canvaPaneStyle}
               aria-hidden={!isCanvaOpen}
             >
               <div
                 className={`chatgpt-canva-pane-wrapper__inner ${isCanvaOpen ? 'chatgpt-canva-pane-wrapper__inner--open' : 'chatgpt-canva-pane-wrapper__inner--closed'}`}
               >
               <ChatCanvaPane 
-                width={canvaWidth}
-                onWidthChange={setCanvaWidth}
+                width={uiState.canvaWidth}
+                onWidthChange={uiState.setCanvaWidth}
               />
               </div>
             </div>
