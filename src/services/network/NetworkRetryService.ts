@@ -333,7 +333,7 @@ export class NetworkRetryService {
 
       } catch (error) {
         // Créer une NetworkError typée
-        const networkError = this.createNetworkErrorFromException(error);
+        const networkError: NetworkError = this.createNetworkErrorFromException(error);
         
         // Vérifier si récupérable
         if (!this.isRecoverableError(networkError)) {
