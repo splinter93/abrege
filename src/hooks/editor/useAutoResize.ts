@@ -55,24 +55,6 @@ export const useAutoResize = ({
       textarea.value = cleanedValue;
     }
 
-    // 🔧 ROBUSTESSE: Calculer le nombre de lignes de manière fiable
-    // Compte les \n réels, ignore les espaces en fin de ligne
-    const trimmedLines = cleanedValue.split('\n').filter(line => line.trim().length > 0);
-    const lineCount = cleanedValue.split('\n').length;
-    const isSingleLine = lineCount === 1 || (lineCount === 2 && cleanedValue.endsWith('\n') && trimmedLines.length === 1);
-    
-    // 🔧 FIX FLICKER: Si une seule ligne, forcer minHeight directement
-    // sans calculer scrollHeight (évite les calculs incorrects au chargement)
-    if (isSingleLine) {
-      textarea.style.height = `${minHeight}px`;
-      const container = textarea.closest('.editor-title-wrapper') as HTMLElement;
-      if (container) {
-        container.style.height = 'auto';
-      }
-      return;
-    }
-
-    // Pour plusieurs lignes, calculer la hauteur réelle
     // Sauvegarder les styles actuels
     const currentPadding = textarea.style.padding || window.getComputedStyle(textarea).padding;
     const currentBoxSizing = textarea.style.boxSizing || window.getComputedStyle(textarea).boxSizing;
@@ -82,14 +64,14 @@ export const useAutoResize = ({
       textarea.style.boxSizing = 'border-box';
     }
     
-    // Reset à auto pour calculer la hauteur naturelle
+    // Reset à auto pour calculer la hauteur naturelle (prend en compte le word-wrap)
     textarea.style.height = 'auto';
     textarea.style.padding = '0'; // Supprimer temporairement le padding
     
     // 🔧 ROBUSTESSE: Forcer un reflow pour s'assurer que scrollHeight est calculé correctement
     void textarea.offsetHeight;
     
-    // Calculer la nouvelle hauteur
+    // Calculer la nouvelle hauteur basée sur scrollHeight (prend en compte le word-wrap automatique)
     const scrollHeight = textarea.scrollHeight;
     const newHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
     
