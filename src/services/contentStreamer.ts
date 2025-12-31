@@ -238,8 +238,7 @@ class ContentStreamer {
           type: 'error',
           metadata: {
             timestamp: Date.now(),
-            source: 'editNoteContent',
-            error: errorMessage
+            source: 'editNoteContent'
           }
         });
       } catch (broadcastError) {
