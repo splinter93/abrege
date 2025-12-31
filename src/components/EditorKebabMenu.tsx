@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useRef, useState, useEffect } from 'react';
 import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiGlobe, FiCheck, FiEye, FiEyeOff } from 'react-icons/fi';
 import './editor-kebab-menu.css';
@@ -5,6 +7,11 @@ import ShareMenu from './ShareMenu';
 import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
 import { simpleLogger as logger } from '@/utils/logger';
+import { exportNoteToPdf } from '@/services/pdfExportService';
+import { useFileSystemStore } from '@/store/useFileSystemStore';
+import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
+import { preprocessMarkdown } from '@/utils/markdownPreprocessor';
+import toast from 'react-hot-toast';
 
 interface EditorKebabMenuProps {
   open: boolean;
@@ -44,6 +51,13 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const [copyConfirmed, setCopyConfirmed] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Récupérer la note depuis le store
+  const note = useFileSystemStore((state) => state.notes[noteId]);
+  const rawContent = note?.markdown_content || '';
+  const content = React.useMemo(() => preprocessMarkdown(rawContent), [rawContent]);
+  const { html } = useMarkdownRender({ content });
 
   useEffect(() => {
     if (!open) return;
@@ -101,6 +115,73 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     }
   };
 
+  const handleExportPdf = async () => {
+    if (isExporting) return;
+
+    try {
+      setIsExporting(true);
+      onClose(); // Fermer le menu
+
+      const title = note?.source_title || 'Note';
+      
+      // ✅ Debug: Vérifier le contenu avant export
+      if (process.env.NODE_ENV === 'development') {
+        logger.dev('[EditorKebabMenu] Export PDF', {
+          noteId,
+          title,
+          htmlLength: html.length,
+          htmlPreview: html.substring(0, 200),
+          hasNote: !!note,
+          hasContent: !!html && html.length > 0
+        });
+      }
+
+      if (!html || html.trim().length === 0) {
+        toast.error(
+          slashLang === 'fr' 
+            ? 'Erreur: Le contenu de la note est vide' 
+            : 'Error: Note content is empty'
+        );
+        return;
+      }
+
+      const result = await exportNoteToPdf({
+        title,
+        htmlContent: html,
+        filename: `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`,
+        headerImage: note?.header_image || null
+      });
+
+      if (result.success) {
+        toast.success(slashLang === 'fr' ? 'PDF exporté avec succès' : 'PDF exported successfully');
+      } else {
+        toast.error(
+          slashLang === 'fr' 
+            ? `Erreur lors de l'export: ${result.error || 'Erreur inconnue'}` 
+            : `Export error: ${result.error || 'Unknown error'}`
+        );
+        logger.error('[EditorKebabMenu] Erreur export PDF', {
+          noteId,
+          error: result.error
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast.error(
+        slashLang === 'fr' 
+          ? `Erreur lors de l'export: ${errorMessage}` 
+          : `Export error: ${errorMessage}`
+      );
+      logger.error('[EditorKebabMenu] Exception export PDF', {
+        noteId,
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Icône feuille SVG pour A4 Mode
   const A4Icon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -115,7 +196,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   const translations = {
     fr: {
       share: 'Partager',
-      export: 'Exporter',
+      export: 'Exporter en PDF',
+      exporting: 'Export en cours...',
       wideMode: 'Mode Large',
       a4Mode: 'Mode A4',
       toolbar: 'Toolbar',
@@ -125,7 +207,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     },
     en: {
       share: 'Share',
-      export: 'Export',
+      export: 'Export to PDF',
+      exporting: 'Exporting...',
       wideMode: 'Wide Mode',
       a4Mode: 'A4 Mode',
       toolbar: 'Toolbar',
@@ -137,7 +220,16 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
 
   const t = translations[slashLang];
 
-  const menuOptions = [
+  const menuOptions: Array<{
+    id: string;
+    label: string;
+    icon: React.ReactNode;
+    onClick: () => void;
+    color: string;
+    showCopyButton: boolean;
+    disabled?: boolean;
+    type?: 'coming-soon';
+  }> = [
     {
       id: 'share',
       label: t.share,
@@ -147,15 +239,16 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         // Ne pas fermer le menu kebab, le ShareMenu se superposera
       },
       color: currentShareSettings?.visibility === 'private' ? '#D4D4D4' : '#ff6b35',
-      showCopyButton: currentShareSettings?.visibility !== 'private' && publicUrl,
+      showCopyButton: !!(currentShareSettings?.visibility !== 'private' && publicUrl),
     },
     {
       id: 'export',
-      label: t.export,
+      label: isExporting ? t.exporting : t.export,
       icon: <FiDownload size={18} />,
-      onClick: () => { onClose(); },
-      color: '#D4D4D4',
+      onClick: handleExportPdf,
+      color: isExporting ? '#10b981' : '#D4D4D4',
       showCopyButton: false,
+      disabled: isExporting,
     },
     {
       id: 'toolbar',
@@ -215,17 +308,22 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
           <div
             key={opt.id}
             className="editor-header-kebab-menu-item"
-            onClick={opt.onClick}
+            onClick={opt.disabled ? undefined : opt.onClick}
             role="button"
-            tabIndex={0}
+            tabIndex={opt.disabled ? -1 : 0}
             onKeyDown={(e) => {
+              if (opt.disabled) return;
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 opt.onClick();
               }
             }}
             aria-label={opt.label}
-            style={{ cursor: 'pointer' }}
+            aria-disabled={opt.disabled}
+            style={{ 
+              cursor: opt.disabled ? 'not-allowed' : 'pointer',
+              opacity: opt.disabled ? 0.6 : 1
+            }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               {opt.icon}
