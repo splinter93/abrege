@@ -38,6 +38,12 @@ interface TextareaWithMentionsProps {
   
   /** Disabled state */
   disabled?: boolean;
+  
+  /** Longueur maximale du texte */
+  maxLength?: number;
+  
+  /** Attribut title pour tooltip */
+  title?: string;
 }
 
 /**
@@ -63,7 +69,9 @@ const TextareaWithMentions: React.FC<TextareaWithMentionsProps> = ({
   mentions,
   usedPrompts,
   className = '',
-  disabled = false
+  disabled = false,
+  maxLength,
+  title
 }) => {
   const highlightRef = useRef<HTMLDivElement>(null);
   
@@ -248,6 +256,8 @@ const TextareaWithMentions: React.FC<TextareaWithMentionsProps> = ({
         rows={1}
         disabled={disabled}
         spellCheck={false}
+        maxLength={maxLength}
+        title={title}
       />
     </div>
   );
