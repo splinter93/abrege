@@ -196,7 +196,7 @@ export async function getNoteStatistics(ref: string, userId: string, context: Ap
 
     // Calculer les statistiques
     const content = note.markdown_content || '';
-    const wordCount = content.split(/\s+/).filter(w => w.length > 0).length;
+    const wordCount = content.split(/\s+/).filter((w: string) => w.length > 0).length;
     const charCount = content.length;
     const lineCount = content.split('\n').length;
 

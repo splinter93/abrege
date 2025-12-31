@@ -133,44 +133,38 @@ export class NetworkRetryService {
    * - 404 Not Found
    * - 413 Payload Too Large
    * 
-   * @param error - Erreur à vérifier
+   * @param error - NetworkError à vérifier
    * @returns true si récupérable, false sinon
    */
-  isRecoverableError(error: unknown): error is NetworkError {
-    if (!(error instanceof Error)) {
-      return false;
-    }
-
-    const networkError = error as NetworkError;
-    
+  isRecoverableError(error: NetworkError): boolean {
     // ✅ PRIORITÉ 1 : Si isRecoverable est explicitement défini, l'utiliser
-    if (networkError.isRecoverable !== undefined) {
-      return networkError.isRecoverable;
+    if (error.isRecoverable !== undefined) {
+      return error.isRecoverable;
     }
     
     // ✅ PRIORITÉ 2 : Vérifier le status code HTTP
-    if (networkError.statusCode !== undefined) {
+    if (error.statusCode !== undefined) {
       const recoverableStatusCodes = [502, 503, 429];
-      if (recoverableStatusCodes.includes(networkError.statusCode)) {
+      if (recoverableStatusCodes.includes(error.statusCode)) {
         return true;
       }
       
       // Status codes non récupérables
       const nonRecoverableStatusCodes = [400, 401, 403, 404, 413];
-      if (nonRecoverableStatusCodes.includes(networkError.statusCode)) {
+      if (nonRecoverableStatusCodes.includes(error.statusCode)) {
         return false;
       }
     }
 
     // ✅ PRIORITÉ 3 : Vérifier le type d'erreur
-    if (networkError.errorType) {
+    if (error.errorType) {
       return [
         RecoverableNetworkError.TIMEOUT,
         RecoverableNetworkError.BAD_GATEWAY,
         RecoverableNetworkError.SERVICE_UNAVAILABLE,
         RecoverableNetworkError.RATE_LIMIT,
         RecoverableNetworkError.NETWORK_ERROR
-      ].includes(networkError.errorType);
+      ].includes(error.errorType);
     }
 
     // ✅ PRIORITÉ 4 : Vérifier le message d'erreur pour détecter timeout/network
