@@ -10,9 +10,9 @@ import { logger, LogCategory } from '@/utils/logger';
 import { getEditorMarkdown, isTemporaryCanvaNote } from '@/utils/editorHelpers';
 import useEditorSave from '@/hooks/useEditorSave';
 import type { EditorState } from './useEditorState';
-import type { SlashCommand } from '@/types/editor';
 import { useEditorUpdateFunctions, type UseEditorUpdateFunctionsReturn } from './useEditorUpdateFunctions';
 import { useSlashCommandHandler } from './useSlashCommandHandler';
+import type { EditorSlashCommand } from '@/components/EditorSlashMenu';
 
 interface NoteUpdate {
   a4_mode?: boolean;
@@ -56,7 +56,7 @@ export interface UseEditorHandlersReturn extends UseEditorUpdateFunctionsReturn 
   handleTranscriptionComplete: (text: string) => void;
   handleEditorUpdate: ({ editor }: { editor: TiptapEditor }) => void;
   handleSave: (title: string, content: string) => Promise<void>;
-  handleSlashCommandInsert: (cmd: SlashCommand) => void;
+  handleSlashCommandInsert: (cmd: EditorSlashCommand) => void;
   handleImageInsert: (src: string, target: 'header' | 'content') => void;
 }
 

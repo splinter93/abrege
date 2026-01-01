@@ -74,7 +74,13 @@ export function useMermaidRenderer({ container, noteId }: UseMermaidRendererOpti
         // Forcer réinitialisation avec htmlLabels: false
         await initializeMermaid({ 
           flowchart: { 
-            htmlLabels: false
+            htmlLabels: false,
+            useMaxWidth: true,
+            curve: 'basis',
+            padding: 8,
+            nodeSpacing: 50,
+            rankSpacing: 50,
+            diagramPadding: 8
           }
         });
         const mermaid = await import('mermaid');

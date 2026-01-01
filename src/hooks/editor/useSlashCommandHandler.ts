@@ -9,7 +9,7 @@
 import { useCallback, useMemo } from 'react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import { logger, LogCategory } from '@/utils/logger';
-import type { SlashCommand } from '@/types/editor';
+import type { EditorSlashCommand } from '@/components/EditorSlashMenu';
 
 interface UseSlashCommandHandlerOptions {
   editor: TiptapEditor | null;
@@ -42,7 +42,7 @@ export function useSlashCommandHandler({
     separator: '---\n'
   }), []);
 
-  const handleSlashCommandInsert = useCallback((cmd: SlashCommand) => {
+  const handleSlashCommandInsert = useCallback((cmd: EditorSlashCommand) => {
     if (process.env.NODE_ENV === 'development') {
       logger.debug(LogCategory.EDITOR, '[handleSlashCommandInsert] called', {
         cmdId: cmd.id,
@@ -54,12 +54,6 @@ export function useSlashCommandHandler({
     
     if (!editor) {
       logger.error(LogCategory.EDITOR, 'Editor non disponible pour slash command');
-      return;
-    }
-    
-    // Vérifier que l'action existe
-    if (!cmd.action) {
-      logger.error(LogCategory.EDITOR, 'Action non définie pour la commande:', cmd.id);
       return;
     }
     
@@ -80,7 +74,8 @@ export function useSlashCommandHandler({
     }
     
     let executed = false;
-    if (typeof cmd.action === 'function') {
+    // EditorSlashCommand a action optionnel, donc on vérifie s'il existe
+    if (cmd.action && typeof cmd.action === 'function') {
       try {
         const result = cmd.action(editor);
         executed = typeof result === 'boolean' ? result : true;

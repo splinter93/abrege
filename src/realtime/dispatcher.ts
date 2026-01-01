@@ -48,7 +48,7 @@ export function handleRealtimeEvent(event: { type: string; payload: Record<strin
   switch (type) {
     // Notes
     case 'note.created': {
-      const notePayload = payload as Note;
+      const notePayload = payload as unknown as Note;
       // Vérifier si la note n'existe pas déjà (éviter les doublons)
       if (!store.notes[notePayload.id]) {
         store.addNote(notePayload);
@@ -146,7 +146,7 @@ export function handleRealtimeEvent(event: { type: string; payload: Record<strin
       
     // Dossiers
     case 'folder.created': {
-      const folderPayload = payload as Folder;
+      const folderPayload = payload as unknown as Folder;
       // Vérifier si le dossier n'existe pas déjà (éviter les doublons)
       if (!store.folders[folderPayload.id] && !pendingOperations.has(`folder:${folderPayload.id}`)) {
         store.addFolder(folderPayload);
@@ -189,7 +189,7 @@ export function handleRealtimeEvent(event: { type: string; payload: Record<strin
       
     // Classeurs
     case 'classeur.created': {
-      const classeurPayload = payload as Classeur;
+      const classeurPayload = payload as unknown as Classeur;
       // Vérifier si le classeur n'existe pas déjà (éviter les doublons)
       if (!store.classeurs[classeurPayload.id]) {
         store.addClasseur(classeurPayload);
@@ -206,9 +206,11 @@ export function handleRealtimeEvent(event: { type: string; payload: Record<strin
       store.renameClasseur(classeurPayload.id, classeurPayload.name);
       break;
     }
-    case 'classeur.updated':
-      store.updateClasseur(payload.id, payload);
+    case 'classeur.updated': {
+      const classeurPayload = payload as unknown as Classeur;
+      store.updateClasseur(classeurPayload.id, classeurPayload);
       break;
+    }
       
     default:
       if (debug) {

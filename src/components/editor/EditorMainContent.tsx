@@ -11,7 +11,7 @@ import type { Editor as TiptapEditor } from '@tiptap/react';
 import EditorEditableContent from './EditorEditableContent';
 import EditorPreview from './EditorPreview';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
-import type { SlashCommand } from '@/types/editor';
+import type { EditorSlashCommand } from '@/components/EditorSlashMenu';
 
 interface EditorMainContentProps {
   isReadonly: boolean;
@@ -21,7 +21,7 @@ interface EditorMainContentProps {
   slashMenuRef: React.RefObject<EditorSlashMenuHandle | null>;
   slashLang: 'fr' | 'en';
   onOpenImageMenu: () => void;
-  onSlashInsert: (cmd: SlashCommand) => void;
+  onSlashInsert: (cmd: EditorSlashCommand) => void;
   // Props pour contexte enrichi Ask AI
   noteId?: string;
   noteTitle?: string;

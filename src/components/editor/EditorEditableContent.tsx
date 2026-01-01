@@ -13,8 +13,7 @@ import { EditorContent as TiptapEditorContent } from '@tiptap/react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import FloatingMenuNotion from './floating-menu-notion';
 import TableControls from './TableControls';
-import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
-import type { SlashCommand } from '@/types/editor';
+import EditorSlashMenu, { type EditorSlashMenuHandle, type EditorSlashCommand } from '@/components/EditorSlashMenu';
 import EditorContentWrapper from './EditorContentWrapper';
 
 interface EditorEditableContentProps {
@@ -23,7 +22,7 @@ interface EditorEditableContentProps {
   slashMenuRef: React.RefObject<EditorSlashMenuHandle | null>;
   slashLang: 'fr' | 'en';
   onOpenImageMenu: () => void;
-  onSlashInsert: (cmd: SlashCommand) => void;
+  onSlashInsert: (cmd: EditorSlashCommand) => void;
   // Props pour contexte enrichi Ask AI
   noteId?: string;
   noteTitle?: string;

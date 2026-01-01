@@ -279,9 +279,7 @@ class ContentStreamer {
           position,
           metadata: {
             timestamp: Date.now(),
-            source: 'editNoteContent',
-            chunkIndex: i,
-            totalChunks: chunks.length
+            source: 'editNoteContent'
           }
         });
 
@@ -305,11 +303,10 @@ class ContentStreamer {
       const endListenerCount = streamBroadcastService.getListenerCount(noteId);
       const endDeliveredCount = await streamBroadcastService.broadcast(noteId, {
         type: 'end',
-        metadata: {
-          timestamp: Date.now(),
-          source: 'editNoteContent',
-          totalChunks: chunks.length
-        }
+          metadata: {
+            timestamp: Date.now(),
+            source: 'editNoteContent'
+          }
       });
 
       logApi.info('[ContentStreamer] Stream completed', {

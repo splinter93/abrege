@@ -14,7 +14,7 @@ import { SUCCESS_MESSAGES, ERROR_MESSAGES } from '@/utils/editorConstants';
 export interface UseShareManagerOptions {
   noteId: string;
   editorState: EditorState;
-  onUpdate: (noteId: string, update: { share_settings: ShareSettings }) => void;
+  onUpdate: (noteId: string, update: { share_settings?: ShareSettings; public_url?: string; [key: string]: unknown }) => void;
 }
 
 export interface UseShareManagerReturn {
@@ -160,7 +160,7 @@ export function useShareManager({
             logger.info(LogCategory.EDITOR, 'Mise à jour public_url dans le store:', responseData.public_url);
             onUpdate(noteId, { 
               public_url: responseData.public_url 
-            } as Record<string, unknown>);
+            } as { public_url?: string });
           }
           
           // ✅ CRITIQUE: Mettre à jour share_settings avec la réponse serveur (source de vérité)

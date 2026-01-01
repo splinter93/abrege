@@ -2,7 +2,12 @@ import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react'
 import SlashMenu from './SlashMenu';
 import './editor/editor-slash-menu.css';
 import type { Editor } from '@tiptap/react';
-type SlashCommand = {
+
+/**
+ * Type pour une commande slash dans EditorSlashMenu
+ * Différent du type dans @/types/slashCommands (multilingue avec Record)
+ */
+export type EditorSlashCommand = {
   id: string;
   alias: Record<string, string | string[]>;
   label: Record<string, string>;
@@ -14,7 +19,7 @@ type SlashCommand = {
 
 export interface EditorSlashMenuProps {
   editor: Editor | null;
-  onInsert: (cmd: SlashCommand) => void;
+  onInsert: (cmd: EditorSlashCommand) => void;
   lang?: string;
   onOpenImageMenu?: () => void;
 }
@@ -56,7 +61,7 @@ const EditorSlashMenu = forwardRef<EditorSlashMenuHandle, EditorSlashMenuProps>(
     useImperativeHandle(ref, () => ({ openMenu, closeMenu }), [openMenu]);
 
     // Fonction pour insérer un bloc
-    const handleSelect = (cmd: SlashCommand) => {
+    const handleSelect = (cmd: EditorSlashCommand) => {
       // Gestion spéciale pour la commande image
       if (cmd.id === 'image' && onOpenImageMenu) {
         onOpenImageMenu();

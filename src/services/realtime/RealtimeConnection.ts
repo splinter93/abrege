@@ -11,7 +11,7 @@
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/supabaseClient';
 import { logger, LogCategory } from '@/utils/logger';
-import type { RealtimeEditorConfig } from '../RealtimeEditorService';
+import type { RealtimeEditorConfig } from './RealtimeEditorService';
 import type { RealtimeState } from './RealtimeState';
 
 /**

@@ -90,7 +90,7 @@ export default function EditorNavigationTree({
   // Handlers pour le menu contextuel
   const handleFolderOpen = useCallback((folder: FolderType) => {
     // Pour l'instant, on ne fait rien (les dossiers sont juste collapsibles)
-    logger.debug('[EditorNavigationTree] Ouvrir dossier:', { folderId: folder.id });
+    logger.dev('[EditorNavigationTree] Ouvrir dossier:', { folderId: folder.id });
   }, []);
   
   const handleFileOpen = useCallback((file: FileArticle) => {
@@ -99,7 +99,7 @@ export default function EditorNavigationTree({
   
   const handleStartRename = useCallback((id: string, type: 'folder' | 'file') => {
     // TODO: Implémenter le renommage inline (comme dans FolderManager)
-    logger.debug('[EditorNavigationTree] Renommer:', { id, type });
+    logger.dev('[EditorNavigationTree] Renommer:', { id, type });
     // Pour l'instant, on utilise un prompt simple
     const currentName = type === 'folder'
       ? tree.find(f => f.id === id)?.name || notesAtRoot.find(n => n.id === id)?.source_title || ''
@@ -358,7 +358,8 @@ const NoteTreeItem = React.memo(function NoteTreeItem({
   level,
   currentNoteId,
   onNoteClick,
-  onContextMenu
+  onContextMenu,
+  treeNoteToFileArticle
 }: NoteTreeItemProps) {
   
   const isActive = note.id === currentNoteId;
@@ -394,7 +395,7 @@ const NoteTreeItem = React.memo(function NoteTreeItem({
     <div
       className={`editor-sidebar-note ${isActive ? 'active' : ''}`}
       onDoubleClick={() => onNoteClick(note.id)}
-      onContextMenu={onContextMenu}
+      onContextMenu={onContextMenu && treeNoteToFileArticle ? (e) => onContextMenu(e, treeNoteToFileArticle(note)) : undefined}
       draggable={true}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
