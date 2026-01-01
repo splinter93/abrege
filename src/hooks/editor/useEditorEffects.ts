@@ -207,26 +207,21 @@ export function useEditorEffects({
             view.dispatch(tr);
           }
           
-          // Insérer le contenu (markdown d'image ou lien)
-          // Tiptap/MarkdownPasteHandler va automatiquement parser le markdown
-          if (imageUrl && textPlain && textPlain.startsWith('![')) {
-            // C'est une image avec markdown
-            editor.chain().focus().insertContent(textPlain).run();
-            logger.info(LogCategory.EDITOR, '[useEditorEffects] ✅ Image insérée via markdown:', { imageUrl, markdown: textPlain });
+          // Insérer le contenu (image directement ou lien markdown)
+          if (imageUrl) {
+            // ✅ FIX: Insérer directement l'image, pas le markdown (évite le texte ![filename](url))
+            editor.chain().focus().setImage({ src: imageUrl }).run();
+            logger.info(LogCategory.EDITOR, '[useEditorEffects] ✅ Image insérée directement:', { imageUrl });
           } else if (fileUrl && textPlain && textPlain.startsWith('[')) {
             // C'est un fichier avec lien markdown
             editor.chain().focus().insertContent(textPlain).run();
             logger.info(LogCategory.EDITOR, '[useEditorEffects] ✅ Lien fichier inséré:', { fileUrl, markdown: textPlain });
-          } else if (imageUrl) {
-            // Fallback: insérer directement l'image
-            editor.chain().focus().setImage({ src: imageUrl }).run();
-            logger.info(LogCategory.EDITOR, '[useEditorEffects] ✅ Image insérée directement:', { imageUrl });
           }
           
           return;
         }
         
-        // ✅ 2. Vérifier si c'est un fichier local (upload)
+        // ✅ 3. Vérifier si c'est un fichier local (upload)
         const files = Array.from(e.dataTransfer.files || []);
         if (files.length) {
           const image = files.find(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));

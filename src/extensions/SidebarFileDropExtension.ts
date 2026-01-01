@@ -78,31 +78,21 @@ const SidebarFileDropExtension = Extension.create({
                   
                   view.dispatch(tr);
                 } else {
-                  // ✅ SOLUTION ALTERNATIVE: Si l'insertion ProseMirror échoue, utiliser le markdown
-                  // Vérifier si on a du markdown d'image dans text/plain
-                  if (imageMarkdown && imageMarkdown.startsWith('![') && imageMarkdown.includes('](')) {
-                    logger.debug(LogCategory.EDITOR, '[SidebarFileDrop] 📝 Utilisation du markdown d\'image:', { imageMarkdown });
-                    // Insérer le markdown d'image comme texte (sera parsé par MarkdownPasteHandler)
-                    const tr = state.tr.insertText(imageMarkdown, coordinates.pos);
+                  // ✅ FIX: Insérer directement l'image via ProseMirror, JAMAIS le markdown
+                  try {
+                    const imageNode = state.schema.nodes.image.create({ src: imageUrl });
+                    const tr = state.tr.insert(coordinates.pos, imageNode);
                     view.dispatch(tr);
-                  } else {
-                    // Tentative d'insertion directe via ProseMirror
-                    try {
-                      const imageNode = state.schema.nodes.image.create({ src: imageUrl });
-                      const tr = state.tr.insert(coordinates.pos, imageNode);
-                      view.dispatch(tr);
-                    } catch (proseError) {
-                      logger.warn(LogCategory.EDITOR, '[SidebarFileDrop] ⚠️ Échec insertion ProseMirror, fallback markdown:', proseError);
-                      // Fallback: insérer le markdown
-                      const fallbackMarkdown = `![Image](${imageUrl})`;
-                      const tr = state.tr.insertText(fallbackMarkdown, coordinates.pos);
-                      view.dispatch(tr);
-                    }
+                    logger.info(LogCategory.EDITOR, '[SidebarFileDrop] ✅ Image insérée via ProseMirror:', { imageUrl });
+                  } catch (proseError) {
+                    logger.error(LogCategory.EDITOR, '[SidebarFileDrop] ❌ Échec insertion ProseMirror:', proseError);
+                    // Ne pas insérer de markdown en fallback, laisser le handler DOM gérer
+                    return false;
                   }
                 }
                 
-                logger.info(LogCategory.EDITOR, '[SidebarFileDrop] ✅ Image insérée:', { imageUrl, method: imageMarkdown ? 'markdown' : 'prosemirror' });
-                return true;
+                logger.info(LogCategory.EDITOR, '[SidebarFileDrop] ✅ Image insérée via ProseMirror (sans markdown):', { imageUrl });
+                return true; // ✅ Empêcher les autres handlers (DOM, MarkdownPasteHandler) de traiter le drop
               } catch (error) {
                 logger.error(LogCategory.EDITOR, '[SidebarFileDrop] ❌ Erreur insertion image:', error);
                 return false;
