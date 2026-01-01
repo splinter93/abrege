@@ -37,6 +37,12 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
   onToggle,
   isExpanded = false
 }) => {
+  // Fonction pour retirer les préfixes de service (scrivia__, local__, etc.)
+  const cleanFunctionName = (name: string): string => {
+    // Retire tout préfixe suivi de "__" (scrivia__, local__, etc.)
+    return name.replace(/^[a-zA-Z0-9_]+__/, '');
+  };
+
   // ✅ Logger les toolCalls reçus (dev only)
   React.useEffect(() => {
     logger.dev('[StreamingIndicator] 📥 Props reçues:', {
@@ -80,8 +86,8 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
             {toolCalls.length > 0 ? (
               <div className="tool-list-compact">
                 {toolCalls.map((tool, index) => {
-                  // Extraire le nom de la fonction sans préfixe "local__"
-                  const functionName = tool.name.replace(/^local__/, '');
+                  // Extraire le nom de la fonction sans préfixe de service
+                  const functionName = cleanFunctionName(tool.name);
                   return (
                     <div 
                       key={tool.id || index} 
@@ -90,7 +96,7 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
                       style={{ cursor: 'pointer' }}
                     >
                       <span className="tool-item-name">
-                        Calling {functionName}
+                        {functionName}
                       </span>
                     <span className="tool-item-status">
                       {tool.success === true ? (
@@ -108,7 +114,7 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
             ) : (
               <div className="tool-item-compact">
                 <span className="tool-item-name">
-                  Calling tools...
+                  Exécution en cours...
                 </span>
                 <span className="tool-item-status">
                   <Loader2 className="status-icon pending spinner" size={20} strokeWidth={2.5} />
@@ -138,8 +144,8 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
           <div className="streaming-indicator completed">
             <div className="tool-list-compact">
               {toolCalls.map((tool, index) => {
-                // Extraire le nom de la fonction sans préfixe "local__"
-                const functionName = tool.name.replace(/^local__/, '');
+                // Extraire le nom de la fonction sans préfixe de service
+                const functionName = cleanFunctionName(tool.name);
                 return (
                   <div 
                     key={tool.id || index} 

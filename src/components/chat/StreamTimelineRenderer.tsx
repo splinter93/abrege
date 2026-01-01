@@ -73,7 +73,7 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
               <div 
                 key={`exec-${index}`} 
                 className="stream-timeline-execution"
-                style={{ marginTop: '12px', marginBottom: '12px' }}
+                style={{ marginTop: '12px', marginBottom: '12px', paddingLeft: 0, marginLeft: 0 }}
               >
                 <StreamingIndicator
                   state={isExecuting ? "executing" : "completed"}

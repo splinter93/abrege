@@ -10,6 +10,10 @@
 .streaming-indicator-container {
   padding: 4px 0;
   margin: 4px 0;
+  padding-left: 0;
+  margin-left: 0;
+  width: 100%;
+  text-align: left;
 }
 
 .streaming-indicator {
@@ -35,35 +39,27 @@
   border-radius: 0;
 }
 
-/* Tool list compact - Design minimaliste */
+/* Tool list compact - Design minimaliste, texte uniquement */
 .tool-list-compact {
   display: flex;
   flex-direction: column;
   gap: 4px;
   width: 100%;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .tool-item-compact {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 0;
   border: none;
   background: none;
   transition: none;
-}
-
-.tool-item-compact:first-child {
-  border-radius: 0;
-}
-
-.tool-item-compact:last-child {
-  border-bottom: none;
-  border-radius: 0;
-}
-
-.tool-item-compact:only-child {
-  border-radius: 0;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
 }
 
 .tool-item-compact:hover {
@@ -71,45 +67,40 @@
 }
 
 .tool-item-name {
-  font-size: var(--tool-call-font-size);
+  font-size: 13px;
   font-weight: 400;
-  background: linear-gradient(90deg, var(--chat-text-primary) 0%, rgba(255, 255, 255, 0.8) 50%, var(--chat-text-primary) 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 3s linear infinite;
-  filter: brightness(0.91);
-  flex: 1;
+  color: var(--chat-text-primary);
+  flex: 0 1 auto;
   font-family: var(--font-chat-text);
+  opacity: 0.8;
+  padding-left: 0;
+  margin-left: 0;
+  animation: none;
+  transition: none;
+  background: none;
+  background-clip: unset;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: 0% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-}
 
 .tool-item-status {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 8px;
+  flex-shrink: 0;
 }
 
-/* Status icons */
+/* Status icons - Avec fond arrondi */
 .status-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  padding: 4px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  padding: 3px;
-  width: 18px;
-  height: 18px;
 }
 
 .status-icon.success {
@@ -123,7 +114,8 @@
 }
 
 .status-icon.pending {
-  color: #71717a;
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.15);
 }
 
 /* Spinner animation pour Lucide React - Roue qui tourne */
@@ -138,13 +130,16 @@
   to { transform: rotate(360deg); }
 }
 
-/* Détails déroulants */
+/* Détails déroulants - Minimaliste */
 .tool-details-expanded {
-  padding: 8px 12px;
+  margin-top: 8px;
+  padding: 0;
+  background: none;
+  border: none;
 }
 
 .tool-detail-expanded {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .tool-detail-expanded:last-child {
@@ -152,7 +147,7 @@
 }
 
 .tool-detail-section {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .tool-detail-section:last-child {
@@ -161,23 +156,26 @@
 
 .tool-detail-label {
   font-size: 11px;
-  font-weight: 600;
-  color: var(--chat-text-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-weight: 500;
+  color: var(--chat-text-secondary);
   margin-bottom: 4px;
   font-family: var(--font-chat-text);
+  opacity: 0.6;
 }
 
 .tool-detail-content {
   font-size: 12px;
   font-family: var(--font-monospace, 'JetBrains Mono', monospace);
   color: var(--chat-text-secondary);
-  padding: 6px 0;
+  padding: 0;
+  background: none;
   overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-word;
   margin: 0;
+  border: none;
+  line-height: 1.5;
+  opacity: 0.7;
 }
 
 .streaming-indicator.responding {
@@ -188,10 +186,12 @@
   background: none;
   border: none;
   padding: 0;
+  margin: 0;
   flex-direction: column;
   align-items: flex-start;
   transition: none;
   border-radius: 0;
+  width: 100%;
 }
 
 .streaming-indicator.completed:hover {
@@ -199,16 +199,17 @@
 }
 
 .streaming-indicator.completed .tool-item-name {
-  font-size: var(--tool-call-font-size);
+  font-size: 13px;
   font-weight: 400;
-  background: linear-gradient(90deg, var(--chat-text-primary) 0%, rgba(255, 255, 255, 0.6) 50%, var(--chat-text-primary) 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 3s linear infinite;
-  filter: brightness(0.91);
+  color: var(--chat-text-primary);
   font-family: var(--font-chat-text);
+  opacity: 0.8;
+  animation: none;
+  transition: none;
+  background: none;
+  background-clip: unset;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
 }
 
 .streaming-indicator.completed .tool-detail-label {
