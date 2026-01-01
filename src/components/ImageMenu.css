@@ -78,7 +78,7 @@
   line-height: var(--im-line-height);
   color: var(--im-text-primary);
   
-  background: var(--surface-1);
+  background: var(--color-bg-secondary);
   border: 1.5px solid var(--border-subtle);
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
