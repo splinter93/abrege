@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import type { Editor as TiptapEditor } from '@tiptap/react';
+import type { FullEditorInstance } from '@/types/editor';
 import { FiImage } from 'react-icons/fi';
 import EditorHeader from './EditorHeader';
 import EditorHeaderImage from '@/components/EditorHeaderImage';
@@ -17,7 +17,7 @@ import type { UseEditorHandlersReturn } from '@/hooks/editor/useEditorHandlers';
 import { logger, LogCategory } from '@/utils/logger';
 
 interface EditorHeaderSectionProps {
-  editor: TiptapEditor | null;
+  editor: FullEditorInstance | null;
   noteId: string;
   userId: string;
   isReadonly: boolean;
@@ -140,11 +140,23 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
             className="editor-add-header-image"
             onDragOver={(e) => {
               const items = Array.from(e.dataTransfer?.items || []);
-              if (items.some(it => it.kind === 'file')) e.preventDefault();
+              const hasLocalFile = items.some(it => it.kind === 'file');
+              const hasSidebarImage = e.dataTransfer?.types.includes('application/x-scrivia-image-url');
+              if (hasLocalFile || hasSidebarImage) e.preventDefault();
             }}
             onDrop={async (e) => {
               try {
                 if (!e.dataTransfer) return;
+                
+                // ✅ 1. Vérifier si c'est une image depuis la sidebar
+                const imageUrl = e.dataTransfer.getData('application/x-scrivia-image-url');
+                if (imageUrl) {
+                  e.preventDefault();
+                  handlers.handleHeaderChange(imageUrl);
+                  return;
+                }
+                
+                // ✅ 2. Vérifier si c'est un fichier local (upload)
                 const files = Array.from(e.dataTransfer.files || []);
                 if (!files.length) return;
                 const image = files.find(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));

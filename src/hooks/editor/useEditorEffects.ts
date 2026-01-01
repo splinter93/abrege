@@ -177,7 +177,9 @@ export function useEditorEffects({
     return () => el.removeEventListener('keydown', onKeyDown);
   }, [editor, isReadonly, slashMenuRef]);
 
-  // Effect: Drag & drop d'images
+  // Effect: Drag & drop d'images et fichiers
+  // ✅ NOTE: Le drop des fichiers depuis la sidebar est maintenant géré par SidebarFileDropExtension
+  // Ce handler ne gère que les fichiers locaux (upload)
   useEffect(() => {
     if (!editor || isReadonly) return;
     const el = editor.view.dom as HTMLElement;
@@ -185,44 +187,90 @@ export function useEditorEffects({
     const onDrop = async (e: DragEvent) => {
       try {
         if (!e.dataTransfer) return;
-        const files = Array.from(e.dataTransfer.files || []);
-        if (!files.length) return;
-        const image = files.find(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));
-        if (!image) return;
-        e.preventDefault();
-        const { publicUrl } = await uploadImageForNote(image, noteId);
         
-        const view = editor.view;
-        const coords = { left: e.clientX, top: e.clientY };
-        const posAt = view.posAtCoords(coords);
-        if (posAt && typeof posAt.pos === 'number') {
-          const { state } = view;
-          const $pos = state.doc.resolve(posAt.pos);
-          const nodeHere = ($pos.nodeAfter && $pos.nodeAfter.type.name === 'image')
-            ? $pos.nodeAfter
-            : ($pos.nodeBefore && $pos.nodeBefore.type.name === 'image')
-              ? $pos.nodeBefore
-              : null;
-          if (nodeHere) {
-            const { NodeSelection } = require('prosemirror-state');
-            const imagePos = $pos.nodeAfter && $pos.nodeAfter.type.name === 'image' ? posAt.pos : (posAt.pos - (nodeHere?.nodeSize || 1));
-            const tr = state.tr.setSelection(NodeSelection.create(state.doc, imagePos));
+        // ✅ 1. Vérifier si c'est un fichier depuis la sidebar (type personnalisé)
+        const imageUrl = e.dataTransfer.getData('application/x-scrivia-image-url');
+        const fileUrl = e.dataTransfer.getData('application/x-scrivia-file-link');
+        const textPlain = e.dataTransfer.getData('text/plain');
+        
+        if (imageUrl || (fileUrl && textPlain)) {
+          e.preventDefault();
+          
+          // Positionner le curseur à la position du drop
+          const view = editor.view;
+          const coords = { left: e.clientX, top: e.clientY };
+          const posAt = view.posAtCoords(coords);
+          
+          if (posAt && typeof posAt.pos === 'number') {
+            const { TextSelection } = require('prosemirror-state');
+            const tr = view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(posAt.pos)));
             view.dispatch(tr);
-            editor.commands.updateAttributes('image', { src: publicUrl });
-            return;
           }
-          const { TextSelection } = require('prosemirror-state');
-          const tr = state.tr.setSelection(TextSelection.near(state.doc.resolve(posAt.pos)));
-          view.dispatch(tr);
+          
+          // Insérer le contenu (markdown d'image ou lien)
+          // Tiptap/MarkdownPasteHandler va automatiquement parser le markdown
+          if (imageUrl && textPlain && textPlain.startsWith('![')) {
+            // C'est une image avec markdown
+            editor.chain().focus().insertContent(textPlain).run();
+            logger.info(LogCategory.EDITOR, '[useEditorEffects] ✅ Image insérée via markdown:', { imageUrl, markdown: textPlain });
+          } else if (fileUrl && textPlain && textPlain.startsWith('[')) {
+            // C'est un fichier avec lien markdown
+            editor.chain().focus().insertContent(textPlain).run();
+            logger.info(LogCategory.EDITOR, '[useEditorEffects] ✅ Lien fichier inséré:', { fileUrl, markdown: textPlain });
+          } else if (imageUrl) {
+            // Fallback: insérer directement l'image
+            editor.chain().focus().setImage({ src: imageUrl }).run();
+            logger.info(LogCategory.EDITOR, '[useEditorEffects] ✅ Image insérée directement:', { imageUrl });
+          }
+          
+          return;
         }
-        editor.chain().focus().setImage({ src: publicUrl }).run();
+        
+        // ✅ 2. Vérifier si c'est un fichier local (upload)
+        const files = Array.from(e.dataTransfer.files || []);
+        if (files.length) {
+          const image = files.find(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));
+          if (image) {
+            e.preventDefault();
+            const { publicUrl } = await uploadImageForNote(image, noteId);
+            
+            const view = editor.view;
+            const coords = { left: e.clientX, top: e.clientY };
+            const posAt = view.posAtCoords(coords);
+            if (posAt && typeof posAt.pos === 'number') {
+              const { state } = view;
+              const $pos = state.doc.resolve(posAt.pos);
+              const nodeHere = ($pos.nodeAfter && $pos.nodeAfter.type.name === 'image')
+                ? $pos.nodeAfter
+                : ($pos.nodeBefore && $pos.nodeBefore.type.name === 'image')
+                  ? $pos.nodeBefore
+                  : null;
+              if (nodeHere) {
+                const { NodeSelection } = require('prosemirror-state');
+                const imagePos = $pos.nodeAfter && $pos.nodeAfter.type.name === 'image' ? posAt.pos : (posAt.pos - (nodeHere?.nodeSize || 1));
+                const tr = state.tr.setSelection(NodeSelection.create(state.doc, imagePos));
+                view.dispatch(tr);
+                editor.commands.updateAttributes('image', { src: publicUrl });
+                return;
+              }
+              const { TextSelection } = require('prosemirror-state');
+              const tr = state.tr.setSelection(TextSelection.near(state.doc.resolve(posAt.pos)));
+              view.dispatch(tr);
+            }
+            editor.chain().focus().setImage({ src: publicUrl }).run();
+          }
+        }
       } catch {}
     };
 
     const onDragOver = (e: DragEvent) => {
       if (!e.dataTransfer) return;
-      const hasImage = Array.from(e.dataTransfer.items || []).some(it => it.kind === 'file');
-      if (hasImage) e.preventDefault();
+      // Autoriser le drop si c'est un fichier, une URL, ou un type personnalisé
+      const hasFile = Array.from(e.dataTransfer.items || []).some(it => it.kind === 'file');
+      const hasUrl = e.dataTransfer.types.includes('text/uri-list') || e.dataTransfer.types.includes('text/plain');
+      const hasCustomType = e.dataTransfer.types.includes('application/x-scrivia-image-url') || 
+                           e.dataTransfer.types.includes('application/x-scrivia-file-link');
+      if (hasFile || hasUrl || hasCustomType) e.preventDefault();
     };
 
     el.addEventListener('drop', onDrop);

@@ -3,6 +3,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Folder, Feather } from 'lucide-react';
 import type { TreeFolder, TreeNote } from '@/hooks/editor/useClasseurTree';
+import { useContextMenuManager } from '@/hooks/useContextMenuManager';
+import SimpleContextMenu from '@/components/SimpleContextMenu';
+import type { Folder as FolderType, FileArticle } from '@/components/types';
+import { V2UnifiedApi } from '@/services/V2UnifiedApi';
+import { simpleLogger as logger } from '@/utils/logger';
 
 /**
  * EditorNavigationTree - Arborescence récursive d'un classeur
@@ -33,17 +38,129 @@ interface EditorNavigationTreeProps {
   currentNoteId: string;
   /** Callback pour sélectionner une note */
   onNoteSelect: (noteId: string) => void;
+  /** ID du classeur (pour rafraîchir après modifications) */
+  classeurId?: string | null;
+  /** Fonction pour rafraîchir l'arborescence */
+  onRefresh?: () => Promise<void>;
 }
 
 export default function EditorNavigationTree({
   tree,
   notesAtRoot,
   currentNoteId,
-  onNoteSelect
+  onNoteSelect,
+  classeurId,
+  onRefresh
 }: EditorNavigationTreeProps) {
   
   // État collapsible pour dossiers (Map pour O(1))
   const [collapsedFolders, setCollapsedFolders] = useState<Map<string, boolean>>(new Map());
+  
+  // API unifiée
+  const v2Api = V2UnifiedApi.getInstance();
+  
+  // Convertir TreeFolder en Folder pour le menu contextuel
+  const treeFolderToFolder = useCallback((treeFolder: TreeFolder): FolderType => {
+    return {
+      id: treeFolder.id,
+      name: treeFolder.name,
+      parent_id: treeFolder.parent_id || null,
+      classeur_id: '', // Pas disponible dans TreeFolder, mais pas utilisé pour le menu
+      user_id: '', // Pas disponible dans TreeFolder, mais pas utilisé pour le menu
+      created_at: '',
+      updated_at: '',
+      position: 0
+    };
+  }, []);
+  
+  // Convertir TreeNote en FileArticle pour le menu contextuel
+  const treeNoteToFileArticle = useCallback((treeNote: TreeNote): FileArticle => {
+    return {
+      id: treeNote.id,
+      source_title: treeNote.source_title || 'Sans titre',
+      folder_id: null, // Pas disponible dans TreeNote, mais pas utilisé pour le menu
+      classeur_id: '', // Pas disponible dans TreeNote, mais pas utilisé pour le menu
+      user_id: '', // Pas disponible dans TreeNote, mais pas utilisé pour le menu
+      created_at: treeNote.created_at || '',
+      updated_at: treeNote.updated_at || '',
+      position: 0
+    };
+  }, []);
+  
+  // Handlers pour le menu contextuel
+  const handleFolderOpen = useCallback((folder: FolderType) => {
+    // Pour l'instant, on ne fait rien (les dossiers sont juste collapsibles)
+    logger.debug('[EditorNavigationTree] Ouvrir dossier:', { folderId: folder.id });
+  }, []);
+  
+  const handleFileOpen = useCallback((file: FileArticle) => {
+    onNoteSelect(file.id);
+  }, [onNoteSelect]);
+  
+  const handleStartRename = useCallback((id: string, type: 'folder' | 'file') => {
+    // TODO: Implémenter le renommage inline (comme dans FolderManager)
+    logger.debug('[EditorNavigationTree] Renommer:', { id, type });
+    // Pour l'instant, on utilise un prompt simple
+    const currentName = type === 'folder'
+      ? tree.find(f => f.id === id)?.name || notesAtRoot.find(n => n.id === id)?.source_title || ''
+      : notesAtRoot.find(n => n.id === id)?.source_title || tree.flatMap(f => f.notes || []).find(n => n.id === id)?.source_title || '';
+    
+    const newName = window.prompt(`Renommer ${type === 'folder' ? 'le dossier' : 'la note'}:`, currentName);
+    if (newName && newName.trim() && newName !== currentName) {
+      if (type === 'folder') {
+        v2Api.updateFolder(id, { name: newName.trim() }).then(() => {
+          onRefresh?.();
+        }).catch(err => {
+          logger.error('[EditorNavigationTree] Erreur renommage dossier:', err);
+          alert('Erreur lors du renommage du dossier');
+        });
+      } else {
+        v2Api.updateNote(id, { source_title: newName.trim() }).then(() => {
+          onRefresh?.();
+        }).catch(err => {
+          logger.error('[EditorNavigationTree] Erreur renommage note:', err);
+          alert('Erreur lors du renommage de la note');
+        });
+      }
+    }
+  }, [tree, notesAtRoot, v2Api, onRefresh]);
+  
+  const handleDeleteFolder = useCallback(async (id: string): Promise<void> => {
+    try {
+      await v2Api.deleteFolder(id);
+      onRefresh?.();
+    } catch (err) {
+      logger.error('[EditorNavigationTree] Erreur suppression dossier:', err);
+      throw err;
+    }
+  }, [v2Api, onRefresh]);
+  
+  const handleDeleteFile = useCallback(async (id: string): Promise<void> => {
+    try {
+      await v2Api.deleteNote(id);
+      onRefresh?.();
+    } catch (err) {
+      logger.error('[EditorNavigationTree] Erreur suppression note:', err);
+      throw err;
+    }
+  }, [v2Api, onRefresh]);
+  
+  // Menu contextuel
+  const {
+    contextMenuState,
+    handleContextMenuItem,
+    handleOpen,
+    handleRename,
+    handleDelete,
+    handleCopyId,
+    closeContextMenu
+  } = useContextMenuManager({
+    onFolderOpen: handleFolderOpen,
+    onFileOpen: handleFileOpen,
+    startRename: handleStartRename,
+    deleteFolder: handleDeleteFolder,
+    deleteFile: handleDeleteFile
+  });
 
   // ✅ Réinitialiser tous les dossiers comme collapsed quand tree change
   useEffect(() => {
@@ -96,6 +213,9 @@ export default function EditorNavigationTree({
           collapsedFolders={collapsedFolders}
           onToggleFolder={toggleFolder}
           onNoteClick={handleNoteClick}
+          onContextMenu={handleContextMenuItem}
+          treeFolderToFolder={treeFolderToFolder}
+          treeNoteToFileArticle={treeNoteToFileArticle}
         />
       ))}
 
@@ -107,8 +227,26 @@ export default function EditorNavigationTree({
           level={0}
           currentNoteId={currentNoteId}
           onNoteClick={handleNoteClick}
+          onContextMenu={(e) => handleContextMenuItem(e, treeNoteToFileArticle(note))}
         />
       ))}
+      
+      {/* Menu contextuel */}
+      {contextMenuState.visible && contextMenuState.item && (
+        <SimpleContextMenu
+          x={contextMenuState.x}
+          y={contextMenuState.y}
+          visible={contextMenuState.visible}
+          options={[
+            { label: 'Ouvrir', onClick: handleOpen },
+            { label: 'Renommer', onClick: handleRename },
+            // Ajouter "Copier l'ID" seulement pour les fichiers (notes)
+            ...(!('name' in contextMenuState.item) ? [{ label: 'Copier l\'ID', onClick: handleCopyId }] : []),
+            { label: 'Supprimer', onClick: handleDelete }
+          ]}
+          onClose={closeContextMenu}
+        />
+      )}
     </div>
   );
 }
@@ -123,6 +261,9 @@ interface FolderTreeItemProps {
   collapsedFolders: Map<string, boolean>;
   onToggleFolder: (folderId: string) => void;
   onNoteClick: (noteId: string) => void;
+  onContextMenu?: (e: React.MouseEvent, item: FolderType | FileArticle) => void;
+  treeFolderToFolder?: (folder: TreeFolder) => FolderType;
+  treeNoteToFileArticle?: (note: TreeNote) => FileArticle;
 }
 
 const FolderTreeItem = React.memo(function FolderTreeItem({
@@ -131,7 +272,10 @@ const FolderTreeItem = React.memo(function FolderTreeItem({
   currentNoteId,
   collapsedFolders,
   onToggleFolder,
-  onNoteClick
+  onNoteClick,
+  onContextMenu,
+  treeFolderToFolder,
+  treeNoteToFileArticle
 }: FolderTreeItemProps) {
   
   const isCollapsed = collapsedFolders.get(folder.id);
@@ -147,6 +291,7 @@ const FolderTreeItem = React.memo(function FolderTreeItem({
       <div
         className={`editor-sidebar-folder ${hasChildren ? 'has-children' : ''} ${!isCollapsed ? 'expanded' : ''}`}
         onClick={() => onToggleFolder(folder.id)}
+        onContextMenu={onContextMenu && treeFolderToFolder ? (e) => onContextMenu(e, treeFolderToFolder(folder)) : undefined}
         style={{ paddingLeft: `${paddingLeft}px` }}
       >
       {/* Icône */}
@@ -173,6 +318,9 @@ const FolderTreeItem = React.memo(function FolderTreeItem({
               collapsedFolders={collapsedFolders}
               onToggleFolder={onToggleFolder}
               onNoteClick={onNoteClick}
+              onContextMenu={onContextMenu}
+              treeFolderToFolder={treeFolderToFolder}
+              treeNoteToFileArticle={treeNoteToFileArticle}
             />
           ))}
 
@@ -184,6 +332,7 @@ const FolderTreeItem = React.memo(function FolderTreeItem({
               level={level + 1}
               currentNoteId={currentNoteId}
               onNoteClick={onNoteClick}
+              onContextMenu={onContextMenu && treeNoteToFileArticle ? (e) => onContextMenu(e, treeNoteToFileArticle(note)) : undefined}
             />
           ))}
         </>
@@ -200,13 +349,16 @@ interface NoteTreeItemProps {
   level: number;
   currentNoteId: string;
   onNoteClick: (noteId: string) => void;
+  onContextMenu?: (e: React.MouseEvent, item: FileArticle) => void;
+  treeNoteToFileArticle?: (note: TreeNote) => FileArticle;
 }
 
 const NoteTreeItem = React.memo(function NoteTreeItem({
   note,
   level,
   currentNoteId,
-  onNoteClick
+  onNoteClick,
+  onContextMenu
 }: NoteTreeItemProps) {
   
   const isActive = note.id === currentNoteId;
@@ -242,6 +394,7 @@ const NoteTreeItem = React.memo(function NoteTreeItem({
     <div
       className={`editor-sidebar-note ${isActive ? 'active' : ''}`}
       onDoubleClick={() => onNoteClick(note.id)}
+      onContextMenu={onContextMenu}
       draggable={true}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}

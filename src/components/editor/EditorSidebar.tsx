@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Search, Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Folder, FileText } from 'lucide-react';
 import ClasseurSelector from './ClasseurSelector';
 import EditorNavigationTree from './EditorNavigationTree';
+import EditorSidebarSearchBar from './EditorSidebarSearchBar';
+import EditorSidebarFilesList from './EditorSidebarFilesList';
 import { useClasseurTree } from '@/hooks/editor/useClasseurTree';
 import { useCreateNote } from '@/hooks/editor/useCreateNote';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -55,14 +57,14 @@ export default function EditorSidebar({
     }
   }, [currentClasseurId]); // ✅ Sans selectedClasseurId dans les deps
   
-  // Search query local
-  const [searchQuery, setSearchQuery] = useState('');
-  
   // ✅ État interne pour gérer hover sidebar
   const [isHovered, setIsHovered] = useState(false);
+  
+  // ✅ Onglet actif : "classeurs" ou "fichiers"
+  const [activeTab, setActiveTab] = useState<'classeurs' | 'fichiers'>('classeurs');
 
   // Charger l'arborescence du classeur actif
-  const { data, loading, error } = useClasseurTree({
+  const { data, loading, error, refresh } = useClasseurTree({
     classeurRef: selectedClasseurId,
     depth: 2
   });
@@ -87,78 +89,91 @@ export default function EditorSidebar({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Search Bar - Style chat exact */}
-      <div className="editor-sidebar-search-clean">
+      {/* Onglets - Tout en haut */}
+      <div className="editor-sidebar-tabs">
+        <button
+          className={`editor-sidebar-tab ${activeTab === 'classeurs' ? 'active' : ''}`}
+          onClick={() => setActiveTab('classeurs')}
+        >
+          <Folder size={16} />
+          <span>Mes Notes</span>
+        </button>
+        <button
+          className={`editor-sidebar-tab ${activeTab === 'fichiers' ? 'active' : ''}`}
+          onClick={() => setActiveTab('fichiers')}
+        >
+          <FileText size={16} />
+          <span>Mes fichiers</span>
+        </button>
+      </div>
+
+      {/* Search Bar avec recherche de notes + bouton créer note */}
+      <div className="editor-sidebar-search-clean" style={{ position: 'relative' }}>
         <div style={{ position: 'relative', flex: 1 }}>
-          <Search className="editor-sidebar-search-icon-clean" size={16} />
-          <input
-            type="text"
-            placeholder="Rechercher"
-            className="editor-sidebar-search-input-clean"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <EditorSidebarSearchBar onNoteSelect={onNoteSelect} />
         </div>
+        {activeTab === 'classeurs' && selectedClasseurId && (
+          <button
+            className="editor-sidebar-create-note-btn"
+            onClick={createNote}
+            disabled={isCreating || !selectedClasseurId}
+            title="Créer une nouvelle note"
+            aria-label="Créer une nouvelle note"
+          >
+            {isCreating ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Plus size={16} />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Contenu scrollable */}
       <div className="editor-sidebar-content">
-        {/* Classeur Selector */}
-        <div className="editor-sidebar-classeur-section">
-          <ClasseurSelector
-            selectedClasseurId={selectedClasseurId}
-            onClasseurChange={handleClasseurChange}
-          />
-        </div>
+        {activeTab === 'classeurs' ? (
+          <>
+            {/* Classeur Selector */}
+            <div className="editor-sidebar-classeur-section">
+              <ClasseurSelector
+                selectedClasseurId={selectedClasseurId}
+                onClasseurChange={handleClasseurChange}
+              />
+            </div>
 
-        {/* Bouton Nouvelle Note */}
-        {selectedClasseurId && (
-          <button
-            className="editor-sidebar-new-note-btn"
-            onClick={createNote}
-            disabled={isCreating || !selectedClasseurId}
-          >
-            {isCreating ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                <span>Création...</span>
-              </>
-            ) : (
-              <>
-                <Plus size={16} />
-                <span>Nouvelle note</span>
-              </>
+            {/* Navigation Tree */}
+            {loading && (
+              <div className="editor-sidebar-loading">
+                <Loader2 size={20} className="animate-spin" />
+                <span>Chargement...</span>
+              </div>
             )}
-          </button>
-        )}
 
-        {/* Navigation Tree */}
-        {loading && (
-          <div className="editor-sidebar-loading">
-            <Loader2 size={20} className="animate-spin" />
-            <span>Chargement...</span>
-          </div>
-        )}
+            {error && !loading && (
+              <div className="editor-sidebar-error">
+                Erreur: {error}
+              </div>
+            )}
 
-        {error && !loading && (
-          <div className="editor-sidebar-error">
-            Erreur: {error}
-          </div>
-        )}
+            {!loading && !error && data && (
+              <EditorNavigationTree
+                tree={data.tree}
+                notesAtRoot={data.notes_at_root}
+                currentNoteId={currentNoteId}
+                onNoteSelect={onNoteSelect}
+                classeurId={selectedClasseurId}
+                onRefresh={refresh}
+              />
+            )}
 
-        {!loading && !error && data && (
-          <EditorNavigationTree
-            tree={data.tree}
-            notesAtRoot={data.notes_at_root}
-            currentNoteId={currentNoteId}
-            onNoteSelect={onNoteSelect}
-          />
-        )}
-
-        {!loading && !error && !data && (
-          <div className="editor-sidebar-search-empty">
-            Sélectionnez un classeur
-          </div>
+            {!loading && !error && !data && (
+              <div className="editor-sidebar-search-empty">
+                Sélectionnez un classeur
+              </div>
+            )}
+          </>
+        ) : (
+          <EditorSidebarFilesList onNoteSelect={onNoteSelect} />
         )}
       </div>
     </aside>

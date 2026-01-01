@@ -130,8 +130,14 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
 
   // DnD handlers for replacing header image
   const hasImageData = (e: React.DragEvent | DragEvent) => {
+    // ✅ Vérifier les fichiers locaux
     const items = Array.from(e.dataTransfer?.items || []);
-    return items.some(it => it.kind === 'file');
+    const hasLocalFile = items.some(it => it.kind === 'file' && it.type.startsWith('image/'));
+    
+    // ✅ Vérifier les images depuis la sidebar
+    const hasSidebarImage = e.dataTransfer?.types.includes('application/x-scrivia-image-url');
+    
+    return hasLocalFile || hasSidebarImage;
   };
   const onDragOver = (e: React.DragEvent) => {
     if (!hasImageData(e)) return;
@@ -150,6 +156,16 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
     try {
       setIsDragActive(false);
       if (!e.dataTransfer) return;
+      
+      // ✅ 1. Vérifier si c'est une image depuis la sidebar
+      const imageUrl = e.dataTransfer.getData('application/x-scrivia-image-url');
+      if (imageUrl) {
+        e.preventDefault();
+        onHeaderChange(imageUrl);
+        return;
+      }
+      
+      // ✅ 2. Vérifier si c'est un fichier local (upload)
       const files = Array.from(e.dataTransfer.files || []);
       if (!files.length) return;
       const image = files.find(f => /^image\/(jpeg|png|webp|gif)$/.test(f.type));

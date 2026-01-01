@@ -27,6 +27,7 @@ import NoteEmbedExtension from '@/extensions/NoteEmbedExtension';
 import { markdownItNoteEmbed } from '@/extensions/markdown-it-note-embed';
 import { markdownItYouTubeEmbed } from '@/extensions/markdown-it-youtube-embed';
 import YouTubeEmbedExtension from '@/extensions/YouTubeEmbedExtension';
+import SidebarFileDropExtension from '@/extensions/SidebarFileDropExtension';
 
 // ⚠️ EXTENSIONS PROBLÉMATIQUES RETIRÉES (non liées aux drag handles):
 // - BoxSelectionExtension: Causait des problèmes de sélection
@@ -78,6 +79,8 @@ export function createEditorExtensions(
   if (!config.core && !config.advanced && !config.experimental) {
     logger.dev('[EditorExtensions] 🔧 Mode PROGRESSIF - Réactivation extensions essentielles');
     extensions.push(
+      // ✅ Sidebar File Drop - PRIORITÉ 0 (doit intercepter avant tout)
+      SidebarFileDropExtension,
       // ✅ Note Embed - PRIORITÉ 1 (doit intercepter URLs Scrivia avant MarkdownPasteHandler)
       NoteEmbedExtension.configure({
         maxDepth: 3
@@ -184,6 +187,8 @@ export function createEditorExtensions(
   // Extensions de base (toujours activées)
   if (config.core) {
     extensions.push(
+      // ✅ Sidebar File Drop - PRIORITÉ 0 (doit intercepter avant tout)
+      SidebarFileDropExtension,
       // ✅ Note Embed - PRIORITÉ 1 (intercepter URLs Scrivia en premier)
       NoteEmbedExtension.configure({
         maxDepth: 3
