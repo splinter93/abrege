@@ -8,11 +8,11 @@ import type { Editor as TiptapEditor } from '@tiptap/react';
  * Type pour un éditeur avec extension Markdown
  */
 export interface EditorWithMarkdown extends TiptapEditor {
-  storage: {
-    markdown: {
-      getMarkdown: () => string;
+  storage: TiptapEditor['storage'] & {
+    markdown?: {
+      getMarkdown?: () => string;
+    };
   };
-};
 }
 
 /**
@@ -21,8 +21,8 @@ export interface EditorWithMarkdown extends TiptapEditor {
 export function hasMarkdownStorage(editor: TiptapEditor | null): editor is EditorWithMarkdown {
   if (!editor) return false;
   
-  // Typage strict sans `as any`
-  const storage = editor.storage as Record<string, unknown>;
+  // Typage strict : convertir via unknown pour éviter l'erreur de conversion
+  const storage = editor.storage as unknown as Record<string, unknown>;
   const markdown = storage?.markdown;
   
   // Vérifier que markdown existe et est un objet
