@@ -121,16 +121,13 @@ const AskAIMenu: React.FC<AskAIMenuProps> = ({
           return (
             <button
               key={prompt.id}
-              className={`ask-ai-item ${isDisabled ? 'disabled' : ''} ${prompt.is_default ? 'system' : ''}`}
+              className={`ask-ai-item ${isDisabled ? 'disabled' : ''}`}
               onClick={() => handleExecutePrompt(prompt)}
               disabled={isDisabled}
               title={isDisabled ? tooltipMessage : prompt.description || prompt.name}
             >
               <Icon size={16} className="ask-ai-item-icon" />
               <span className="ask-ai-item-label">{prompt.name}</span>
-              {isDisabled && (
-                <span className="ask-ai-item-warning">⚠️</span>
-              )}
             </button>
           );
         })}

@@ -11,8 +11,8 @@ export interface EditorWithMarkdown extends TiptapEditor {
   storage: {
     markdown: {
       getMarkdown: () => string;
-    };
   };
+};
 }
 
 /**

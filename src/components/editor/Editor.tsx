@@ -474,13 +474,16 @@ const Editor: React.FC<EditorProps> = ({
       />
       
       {/* Global ImageMenu for both header and content insertions */}
-      <ImageMenu
-        open={editorState.menus.imageMenuOpen}
-        onClose={() => editorState.setImageMenuOpen(false)}
-        onInsertImage={(src: string) => handlersWithEditor.handleImageInsert(src, editorState.menus.imageMenuTarget)}
-        noteId={note.id}
-        userId={userId}
-      />
+      {/* ✅ Masquer le menu d'image quand la toolbar est cachée */}
+      {editorState.ui.showToolbar && (
+        <ImageMenu
+          open={editorState.menus.imageMenuOpen}
+          onClose={() => editorState.setImageMenuOpen(false)}
+          onInsertImage={(src: string) => handlersWithEditor.handleImageInsert(src, editorState.menus.imageMenuTarget)}
+          noteId={note.id}
+          userId={userId}
+        />
+      )}
       
       {/* Menu contextuel Notion-like */}
       <EditorContextMenuContainer

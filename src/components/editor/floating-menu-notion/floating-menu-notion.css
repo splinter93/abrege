@@ -55,12 +55,12 @@
   line-height: var(--fm-line-height);
   color: var(--fm-text-primary);
   
-  background: var(--menu-bg-gradient);
-  backdrop-filter: var(--menu-backdrop-blur);
-  -webkit-backdrop-filter: var(--menu-backdrop-blur);
-  border: var(--menu-border);
-  border-radius: var(--menu-border-radius);
-  box-shadow: var(--menu-shadow);
+  background: var(--surface-1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   
   /* Animation d'entrée */
   animation: floating-menu-enter var(--fm-duration) var(--fm-ease);
@@ -70,7 +70,8 @@
 }
 
 .floating-menu-notion:hover {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border-color: var(--border-subtle);
 }
 
 /* =========================
@@ -201,7 +202,7 @@
 .ask-ai-menu-container {
   position: absolute;
   top: calc(100% - 1px); /* ✅ Descendu de 2px */
-  left: 120px; /* Position à droite du bouton Ask AI */
+  left: 0; /* Position à gauche car Ask AI est maintenant le premier bouton */
   z-index: 10;
 }
 

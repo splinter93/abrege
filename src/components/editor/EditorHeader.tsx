@@ -5,8 +5,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { FiEye, FiMoreHorizontal, FiX, FiEdit2 } from 'react-icons/fi';
-import LogoHeader from '@/components/LogoHeader';
+import { FiEye, FiMoreHorizontal, FiX, FiEdit2, FiFeather } from 'react-icons/fi';
 import EditorToolbar from './EditorToolbar';
 import type { FullEditorInstance } from '@/types/editor';
 import type { ToolbarDebugInfo } from '@/types/editor';
@@ -78,10 +77,10 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   }, [showToolbar, previewMode, readonly, noteId]);
 
   return (
-    <div className={`editor-header ${!showToolbar ? 'editor-header--transparent' : ''}`}>
-      {/* Logo à gauche */}
+    <div className="editor-header">
+      {/* Logo à gauche - Plume avec dégradé gris */}
       <div className="editor-header__logo">
-        <LogoHeader />
+        <FiFeather className="editor-header__logo-icon" />
       </div>
 
       {/* Toolbar au centre - cachée en mode preview ET si showToolbar = false */}

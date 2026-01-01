@@ -685,35 +685,35 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
         zIndex: 1000
       }}>
         {/* Indicateur EventSource (Streaming) */}
-        <div 
-          className="canva-eventsource-indicator"
-          style={{
-            padding: '8px 12px',
-            borderRadius: '8px',
-            fontSize: '12px',
-            fontWeight: '500',
-            backgroundColor: isEventSourceConnected ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-            color: isEventSourceConnected ? '#22c55e' : '#ef4444',
-            border: `1px solid ${isEventSourceConnected ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
+      <div 
+        className="canva-eventsource-indicator"
+        style={{
+          padding: '8px 12px',
+          borderRadius: '8px',
+          fontSize: '12px',
+          fontWeight: '500',
+          backgroundColor: isEventSourceConnected ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+          color: isEventSourceConnected ? '#22c55e' : '#ef4444',
+          border: `1px solid ${isEventSourceConnected ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
             backdropFilter: 'blur(8px)'
+        }}
+      >
+        <div
+          style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            backgroundColor: isEventSourceConnected ? '#22c55e' : '#ef4444',
+            boxShadow: isEventSourceConnected 
+              ? '0 0 8px rgba(34, 197, 94, 0.5)' 
+              : '0 0 8px rgba(239, 68, 68, 0.5)'
           }}
-        >
-          <div
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: isEventSourceConnected ? '#22c55e' : '#ef4444',
-              boxShadow: isEventSourceConnected 
-                ? '0 0 8px rgba(34, 197, 94, 0.5)' 
-                : '0 0 8px rgba(239, 68, 68, 0.5)'
-            }}
-          />
-          <span>
+        />
+        <span>
             {isEventSourceConnected ? 'Stream actif' : 'Stream inactif'}
           </span>
         </div>
@@ -776,7 +776,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
                 : realtimeState.error 
                   ? `Realtime: ${realtimeState.error.substring(0, 20)}...` 
                   : 'Realtime inactif'}
-          </span>
+        </span>
         </div>
       </div>
 

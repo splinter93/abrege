@@ -67,19 +67,6 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = (props) => {
     >
       <div className="floating-menu-content">
         <button
-          className="floating-menu-button transform-button"
-          onClick={() => {
-            setTransformMenuOpen(!isTransformMenuOpen);
-            setAskAIMenuOpen(false);
-          }}
-          aria-expanded={isTransformMenuOpen}
-        >
-          <FiType size={16} />
-          <span>Transformer</span>
-          <FiChevronDown size={14} className="chevron-icon" />
-        </button>
-
-        <button
           className="floating-menu-button ask-ai-dropdown-button"
           onClick={() => {
             setAskAIMenuOpen(!isAskAIMenuOpen);
@@ -89,6 +76,19 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = (props) => {
         >
           <FiZap size={16} />
           <span>Ask AI</span>
+          <FiChevronDown size={14} className="chevron-icon" />
+        </button>
+
+        <button
+          className="floating-menu-button transform-button"
+          onClick={() => {
+            setTransformMenuOpen(!isTransformMenuOpen);
+            setAskAIMenuOpen(false);
+          }}
+          aria-expanded={isTransformMenuOpen}
+        >
+          <FiType size={16} />
+          <span>Transformer</span>
           <FiChevronDown size={14} className="chevron-icon" />
         </button>
 

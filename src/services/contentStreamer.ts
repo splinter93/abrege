@@ -152,30 +152,30 @@ class ContentStreamer {
     }
     
     // ✅ FALLBACK: Si pas de ranges, utiliser un diff simple mais amélioré
-    // Cas simple : ajout à la fin
-    if (newContent.startsWith(oldContent)) {
-      return newContent.slice(oldContent.length);
-    }
-    
+      // Cas simple : ajout à la fin
+      if (newContent.startsWith(oldContent)) {
+        return newContent.slice(oldContent.length);
+      }
+
     // Cas : ajout au début
     if (newContent.endsWith(oldContent)) {
       return newContent.slice(0, newContent.length - oldContent.length);
     }
     
     // Cas complexe : trouver le préfixe et suffixe communs
-    let commonPrefix = 0;
+      let commonPrefix = 0;
     let commonSuffix = 0;
-    const minLength = Math.min(oldContent.length, newContent.length);
+      const minLength = Math.min(oldContent.length, newContent.length);
     
     // Préfixe commun
-    for (let i = 0; i < minLength; i++) {
-      if (oldContent[i] === newContent[i]) {
-        commonPrefix++;
-      } else {
-        break;
+      for (let i = 0; i < minLength; i++) {
+        if (oldContent[i] === newContent[i]) {
+          commonPrefix++;
+        } else {
+          break;
+        }
       }
-    }
-    
+
     // Suffixe commun
     for (let i = 0; i < minLength - commonPrefix; i++) {
       const oldIdx = oldContent.length - 1 - i;
@@ -194,7 +194,7 @@ class ContentStreamer {
     if (addedEnd > addedStart) {
       return newContent.slice(addedStart, addedEnd);
     }
-    
+
     return '';
   }
 
@@ -253,7 +253,7 @@ class ContentStreamer {
         logApi.warn('[ContentStreamer] ⚠️ NO LISTENERS REGISTERED - chunks will not be delivered', {
           noteId,
           chunksCount: chunks.length
-        });
+      });
       }
 
       // Stream chaque chunk avec délai

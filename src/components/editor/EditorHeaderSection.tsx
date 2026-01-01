@@ -205,6 +205,7 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
         }
         previewMode={editorState.ui.previewMode}
         readonly={isReadonly}
+        showToolbar={editorState.ui.showToolbar}
       />
     </>
   );

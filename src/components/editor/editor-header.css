@@ -45,7 +45,7 @@
 }
 
 /* =============================================================================
-   LOGO (gauche, position absolute)
+   LOGO (gauche, position absolute) - Plume avec dégradé gris
    ========================================================================== */
 
 .editor-header__logo {
@@ -58,6 +58,27 @@
   -webkit-backdrop-filter: blur(10px);
   padding: 4px 8px;
   border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-header__logo-icon {
+  width: 24px;
+  height: 24px;
+  /* Dégradé gris : couleur de base gris clair avec effet dégradé via ombre */
+  color: #9ca3af; /* Gris clair (slate-400) - éclairci */
+  transition: all 0.2s ease;
+  /* Effet dégradé via multiple drop-shadows pour créer une profondeur grise plus claire */
+  filter: drop-shadow(0 1px 1px rgba(156, 163, 175, 0.4)) 
+          drop-shadow(0 0 2px rgba(107, 114, 128, 0.3));
+}
+
+.editor-header__logo-icon:hover {
+  color: #d1d5db; /* Gris très clair au hover (slate-300) */
+  filter: drop-shadow(0 2px 3px rgba(209, 213, 219, 0.5)) 
+          drop-shadow(0 0 4px rgba(156, 163, 175, 0.4));
+  transform: scale(1.05);
 }
 
 /* =============================================================================

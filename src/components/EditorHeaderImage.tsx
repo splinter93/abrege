@@ -25,6 +25,7 @@ interface EditorHeaderImageProps {
   titleElement?: React.ReactNode;
   previewMode?: boolean;
   readonly?: boolean;
+  showToolbar?: boolean; // ✅ Masquer le menu d'image quand la toolbar est cachée
 }
 
 const HEADER_IMAGES = [
@@ -64,8 +65,10 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
   userId,
   titleElement,
   previewMode = false,
+  showToolbar = true, // ✅ Par défaut visible
 }) => {
   const [imageOffsetY, setImageOffsetY] = useState(headerImageOffset);
+  const [isHovering, setIsHovering] = useState(false); // ✅ État pour gérer le hover en mode sans toolbar
   const dragging = useRef(false);
   const isUpdatingFromDrag = useRef(false);
   const startY = useRef(0);
@@ -193,6 +196,8 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
       onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
+      onMouseEnter={() => !showToolbar && !previewMode && !readonly && setIsHovering(true)}
+      onMouseLeave={() => !showToolbar && setIsHovering(false)}
     >
       {isDragActive && (
         <div className="editor-header-image-drop-hint">
@@ -226,7 +231,8 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
       )}
       
       {/* Boutons de contrôle - masqués en mode preview ou readonly */}
-      {!previewMode && !readonly && (
+      {/* En mode sans toolbar, afficher seulement au hover */}
+      {!previewMode && !readonly && (showToolbar || isHovering) && (
         <div className="editor-header-image-btns" style={{
         position: 'absolute',
         top: '50%',
@@ -313,8 +319,8 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
       </div>
       )}
       
-      {/* Menu contextuel pour l'image - masqué en preview */}
-      {!previewMode && (
+      {/* Menu contextuel pour l'image - masqué en preview ET si toolbar cachée */}
+      {!previewMode && showToolbar && (
         <ImageMenu open={imageMenuOpen} onClose={onImageMenuClose} onInsertImage={onHeaderChange} noteId={noteId} userId={userId} />
       )}
       {/* Modal ou menu pour les réglages */}

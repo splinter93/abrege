@@ -198,9 +198,9 @@ export function useEditorStreamListener(
       
       if (debug) {
         logger.debug(LogCategory.EDITOR, '[useEditorStreamListener] 🔗 Creating EventSource', { 
-          noteId, 
-          url: url.replace(/token=[^&]+/, 'token=***') 
-        });
+        noteId, 
+        url: url.replace(/token=[^&]+/, 'token=***') 
+      });
       }
       
       const eventSource = new EventSource(url);
@@ -220,16 +220,16 @@ export function useEditorStreamListener(
        * Handler pour traiter un événement StreamEvent
        */
       const handleStreamEvent = (data: StreamEvent) => {
-        // ✅ TOUJOURS logger les événements pour debug (même en prod)
-        logger.info(LogCategory.EDITOR, '[useEditorStreamListener] 📨 Event received', {
-          noteId,
-          type: data.type,
-          dataLength: data.data?.length || 0,
-          hasMetadata: !!data.metadata,
-          source: data.metadata?.source
-        });
+          // ✅ TOUJOURS logger les événements pour debug (même en prod)
+          logger.info(LogCategory.EDITOR, '[useEditorStreamListener] 📨 Event received', {
+            noteId,
+            type: data.type,
+            dataLength: data.data?.length || 0,
+            hasMetadata: !!data.metadata,
+            source: data.metadata?.source
+          });
 
-        switch (data.type) {
+          switch (data.type) {
                     case 'start':
                       // Stream initialisé
                       logger.info(LogCategory.EDITOR, '[useEditorStreamListener] Stream started', {
@@ -257,21 +257,21 @@ export function useEditorStreamListener(
                 // ✅ FIX: Utiliser insertContent qui peut parser le markdown automatiquement
                 // ou insertContentAt avec un objet texte si besoin
                 try {
-                  if (position === 'end') {
-                    // Insérer à la fin du document
-                    editor.commands.insertContentAt(
-                      editor.state.doc.content.size,
+                if (position === 'end') {
+                  // Insérer à la fin du document
+                  editor.commands.insertContentAt(
+                    editor.state.doc.content.size,
                       data.data // Tiptap peut parser le markdown automatiquement
-                    );
-                  } else if (position === 'start') {
-                    // Insérer au début du document
-                    editor.commands.insertContentAt(0, data.data);
-                  } else if (position === 'cursor') {
-                    // Insérer à la position du curseur/stream
-                    editor.commands.insertContentAt(insertPosition, data.data);
+                  );
+                } else if (position === 'start') {
+                  // Insérer au début du document
+                  editor.commands.insertContentAt(0, data.data);
+                } else if (position === 'cursor') {
+                  // Insérer à la position du curseur/stream
+                  editor.commands.insertContentAt(insertPosition, data.data);
                     // ✅ FIX: Mettre à jour la position en comptant les caractères insérés
                     // (approximation, car le parsing markdown peut changer la taille)
-                    insertPosition += data.data.length;
+                  insertPosition += data.data.length;
                   }
                 } catch (insertError) {
                   // ✅ FALLBACK: Si insertContentAt échoue, essayer avec insertContent
@@ -415,12 +415,12 @@ export function useEditorStreamListener(
               onErrorRef.current?.(error);
               break;
 
-          default:
-            logger.warn(LogCategory.EDITOR, '[useEditorStreamListener] Unknown event type', {
-              noteId,
-              type: data.type
-            });
-        }
+            default:
+              logger.warn(LogCategory.EDITOR, '[useEditorStreamListener] Unknown event type', {
+                noteId,
+                type: data.type
+              });
+          }
       };
 
       /**
@@ -562,11 +562,11 @@ export function useEditorStreamListener(
         } else {
           // Après 3 tentatives, logger en error et arrêter
           logger.error(LogCategory.EDITOR, '[useEditorStreamListener] Connection failed after multiple attempts', {
-            noteId,
-            readyState: eventSource.readyState,
-            reconnectAttempts: reconnectAttemptsRef.current
-          });
-          eventSource.close();
+          noteId,
+          readyState: eventSource.readyState,
+          reconnectAttempts: reconnectAttemptsRef.current
+        });
+        eventSource.close();
           
           // Fin du streaming en cours si erreur
           const wasStreaming = isStreamingRef.current;
