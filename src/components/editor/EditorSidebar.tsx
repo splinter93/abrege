@@ -107,34 +107,42 @@ export default function EditorSidebar({
         </button>
       </div>
 
-      {/* Search Bar avec recherche de notes + bouton créer note */}
-      <div className="editor-sidebar-search-clean" style={{ position: 'relative' }}>
-        <div style={{ position: 'relative', flex: 1 }}>
-          <EditorSidebarSearchBar onNoteSelect={onNoteSelect} />
-        </div>
-        {activeTab === 'classeurs' && selectedClasseurId && (
-          <button
-            className="editor-sidebar-create-note-btn"
-            onClick={createNote}
-            disabled={isCreating || !selectedClasseurId}
-            title="Créer une nouvelle note"
-            aria-label="Créer une nouvelle note"
-          >
-            {isCreating ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Plus size={16} />
-            )}
-          </button>
-        )}
-      </div>
-
       {/* Contenu scrollable */}
       <div className="editor-sidebar-content">
         {activeTab === 'classeurs' ? (
           <>
+            {/* Search Bar avec recherche de notes + bouton créer note */}
+            <div className="editor-sidebar-search-clean" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                <EditorSidebarSearchBar onNoteSelect={onNoteSelect} activeTab={activeTab} />
+              </div>
+              {selectedClasseurId && (
+                <button
+                  className="editor-sidebar-create-note-btn"
+                  onClick={createNote}
+                  disabled={isCreating || !selectedClasseurId}
+                  title="Créer une nouvelle note"
+                  aria-label="Créer une nouvelle note"
+                  style={{ flexShrink: 0 }}
+                >
+                  {isCreating ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Plus size={16} />
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Séparateur */}
+            <div style={{
+              height: '1px',
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 20%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.1) 80%, transparent 100%)',
+              margin: '8px 14px'
+            }} />
+
             {/* Classeur Selector */}
-            <div className="editor-sidebar-classeur-section">
+            <div className="editor-sidebar-classeur-section" style={{ marginTop: '0', paddingTop: '8px' }}>
               <ClasseurSelector
                 selectedClasseurId={selectedClasseurId}
                 onClasseurChange={handleClasseurChange}
@@ -173,7 +181,16 @@ export default function EditorSidebar({
             )}
           </>
         ) : (
-          <EditorSidebarFilesList onNoteSelect={onNoteSelect} />
+          <>
+            {/* Search Bar avec recherche de fichiers pour l'onglet fichiers */}
+            <div className="editor-sidebar-search-clean" style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', width: '100%' }}>
+                <EditorSidebarSearchBar onNoteSelect={onNoteSelect} activeTab={activeTab} />
+              </div>
+            </div>
+
+            <EditorSidebarFilesList onNoteSelect={onNoteSelect} />
+          </>
         )}
       </div>
     </aside>
