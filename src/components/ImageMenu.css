@@ -78,10 +78,12 @@
   line-height: var(--im-line-height);
   color: var(--im-text-primary);
   
-  background: var(--im-bg);
-  border: 1px solid var(--im-border);
-  border-radius: var(--im-radius);
-  box-shadow: var(--im-shadow);
+  background: var(--surface-1);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   
   /* Animation d'entrée plus subtile */
   animation: imageMenuModalEnter var(--im-duration) var(--im-ease);
@@ -91,8 +93,8 @@
 }
 
 .image-menu-modal:hover {
-  box-shadow: var(--im-shadow-hover);
-  border-color: rgba(107, 114, 128, 0.12);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border-color: var(--border-subtle);
 }
 
 @keyframes imageMenuModalEnter {
@@ -252,7 +254,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--im-border);
+  background: rgba(255, 255, 255, 0.05);
   margin: 0 12px;
 }
 
@@ -279,8 +281,8 @@
 
 /* Zone de drag & drop */
 .image-menu-upload-zone {
-  border: 2px dashed var(--im-border);
-  border-radius: var(--im-item-radius);
+  border: 2px dashed rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
   padding: 24px 16px;
   text-align: center;
   background: rgba(255, 255, 255, 0.02);
@@ -290,12 +292,12 @@
 }
 
 .image-menu-upload-zone:hover {
-  border-color: var(--im-accent);
+  border-color: rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);
 }
 
 .image-menu-upload-zone.dragover {
-  border-color: var(--im-accent);
+  border-color: rgba(255, 255, 255, 0.1);
   background: rgba(107, 114, 128, 0.1);
   transform: scale(1.01);
 }
@@ -330,8 +332,8 @@
 /* Fichier sélectionné */
 .image-menu-file-selected {
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--im-border);
-  border-radius: var(--im-item-radius);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
   padding: 12px;
   display: flex;
   align-items: center;
@@ -394,8 +396,8 @@
 .image-menu-btn {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid var(--im-border);
-  border-radius: var(--im-item-radius);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
   color: var(--im-text-primary);
   cursor: pointer;
@@ -406,8 +408,8 @@
 }
 
 .image-menu-btn:hover {
-  background: var(--im-hover-bg);
-  border-color: rgba(107, 114, 128, 0.2);
+  background: rgba(107, 114, 128, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .image-menu-btn.primary {

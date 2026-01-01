@@ -474,8 +474,8 @@ const Editor: React.FC<EditorProps> = ({
       />
       
       {/* Global ImageMenu for both header and content insertions */}
-      {/* ✅ Masquer le menu d'image quand la toolbar est cachée */}
-      {editorState.ui.showToolbar && (
+      {/* ✅ Afficher le menu d'image si ouvert ET (toolbar visible OU target = header) */}
+      {(editorState.ui.showToolbar || editorState.menus.imageMenuTarget === 'header') && (
         <ImageMenu
           open={editorState.menus.imageMenuOpen}
           onClose={() => editorState.setImageMenuOpen(false)}
