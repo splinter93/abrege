@@ -211,7 +211,7 @@
   flex: 1;
   padding: 10px 12px;
   border: 1px solid var(--im-border);
-  border-radius: var(--im-item-radius);
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
   color: var(--im-text-primary);
   font-family: var(--im-font);
@@ -434,7 +434,7 @@
 .image-menu-error {
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: var(--im-item-radius);
+  border-radius: 8px;
   padding: 10px 12px;
   color: #fca5a5;
   font-size: 12px;
