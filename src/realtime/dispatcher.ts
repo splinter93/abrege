@@ -8,6 +8,7 @@
 
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { Note, Folder, Classeur } from '@/store/useFileSystemStore';
+import { logger, LogCategory } from '@/utils/logger';
 
 // Set pour tracker les opérations en cours (éviter les doublons realtime)
 const pendingOperations = new Set<string>();
@@ -32,7 +33,7 @@ export function markOperationComplete(type: string, id: string): void {
  * @param event { type: string, payload: unknown, timestamp: number }
  * @param debug (optionnel) : loggue chaque event dispatché si true
  */
-export function handleRealtimeEvent(event: { type: string; payload: Record<string, any>; timestamp: number }, debug = false) {
+export function handleRealtimeEvent(event: { type: string; payload: Record<string, unknown>; timestamp: number }, debug = false) {
   const store = useFileSystemStore.getState();
   if (debug) logEventToConsole(event);
   
@@ -121,6 +122,15 @@ export function handleRealtimeEvent(event: { type: string; payload: Record<strin
                             currentNote.source_title !== notePayload.source_title;
 
         if (contentChanged || imageChanged || styleChanged) {
+          // ✅ LOG: Diagnostiquer les mises à jour realtime
+          logger.info(LogCategory.EDITOR, '[Realtime] 📝 note.updated → store.updateNote', {
+            noteId: notePayload.id,
+            contentChanged,
+            imageChanged,
+            styleChanged,
+            oldContentLength: currentNote.markdown_content?.length || 0,
+            newContentLength: notePayload.markdown_content?.length || 0
+          });
           store.updateNote(notePayload.id, notePayload as Note);
         }
       } else {

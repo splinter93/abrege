@@ -89,7 +89,7 @@ const TransformMenu: React.FC<TransformMenuProps> = ({ editor, onClose }) => {
       id: 'callout',
       label: 'Callout',
       icon: FiAlertCircle,
-      action: () => editor.chain().focus().setCallout({} as any).run(),
+      action: () => editor.chain().focus().setCallout({ type: 'note' }).run(),
       isActive: () => editor.isActive('callout'),
     },
     {

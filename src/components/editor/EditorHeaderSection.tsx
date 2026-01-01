@@ -14,6 +14,7 @@ import { uploadImageForNote } from '@/utils/fileUpload';
 import type { ShareSettings } from '@/types/sharing';
 import type { EditorState } from '@/hooks/editor/useEditorState';
 import type { UseEditorHandlersReturn } from '@/hooks/editor/useEditorHandlers';
+import { logger, LogCategory } from '@/utils/logger';
 
 interface EditorHeaderSectionProps {
   editor: TiptapEditor | null;
@@ -66,25 +67,27 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
 
   // ✅ DEBUG: Log synchrone pour capturer le problème (pas dans useEffect)
   if (process.env.NODE_ENV === 'development') {
-    console.log('[EditorHeaderSection] Toolbar state (SYNC)', {
+    logger.debug(LogCategory.EDITOR, '[EditorHeaderSection] Toolbar state (SYNC)', {
       showToolbar: editorState.ui.showToolbar,
       previewMode: editorState.ui.previewMode,
       isReadonly,
       shouldRender: !editorState.ui.previewMode && editorState.ui.showToolbar && !isReadonly,
       noteId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      context: { operation: 'headerSectionRender' }
     });
   }
 
   // ✅ DEBUG: Log pour diagnostiquer (asynchrone)
   React.useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[EditorHeaderSection] Toolbar state (ASYNC)', {
+      logger.debug(LogCategory.EDITOR, '[EditorHeaderSection] Toolbar state (ASYNC)', {
         showToolbar: editorState.ui.showToolbar,
         previewMode: editorState.ui.previewMode,
         isReadonly,
         shouldRender: !editorState.ui.previewMode && editorState.ui.showToolbar && !isReadonly,
-        noteId
+        noteId,
+        context: { operation: 'headerSectionRenderAsync' }
       });
     }
   }, [editorState.ui.showToolbar, editorState.ui.previewMode, isReadonly, noteId]);
@@ -182,7 +185,10 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
         onImageMenuOpen={() => editorState.setImageMenuOpen(true)}
         onImageMenuClose={() => {
           if (process.env.NODE_ENV === 'development') {
-            console.log('[EditorHeaderSection] editorState.headerImage.url:', editorState.headerImage.url?.substring(0, 100));
+            logger.debug(LogCategory.EDITOR, '[EditorHeaderSection] editorState.headerImage.url', {
+              url: editorState.headerImage.url?.substring(0, 100),
+              context: { noteId, operation: 'headerImageClose' }
+            });
           }
           editorState.setImageMenuOpen(false);
         }}

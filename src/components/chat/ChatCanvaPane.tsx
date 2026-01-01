@@ -140,12 +140,26 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
   }, [isEditorReady]);
 
   // 🎯 Realtime édition note via RealtimeService (articles)
-  useRealtime({
+  const realtimeState = useRealtime({
     userId: user?.id || '',
     noteId: session?.noteId,
     enabled: Boolean(user && session?.noteId),
-    debug: false
+    debug: true // ✅ DEBUG: Activer pour diagnostiquer
   });
+
+  // ✅ DEBUG: Log l'état realtime pour diagnostiquer
+  React.useEffect(() => {
+    if (session?.noteId) {
+      logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Realtime state', {
+        isConnected: realtimeState.isConnected,
+        isConnecting: realtimeState.isConnecting,
+        channels: realtimeState.channels.length,
+        error: realtimeState.error,
+        noteId: session.noteId,
+        userId: user?.id
+      });
+    }
+  }, [realtimeState.isConnected, realtimeState.isConnecting, realtimeState.channels.length, realtimeState.error, session?.noteId, user?.id]);
 
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -660,41 +674,110 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
         </div>
       )}
 
-      {/* Indicateur EventSource (bas à droite) */}
-      <div 
-        className="canva-eventsource-indicator"
-        style={{
-          position: 'absolute',
-          bottom: '16px',
-          right: '16px',
-          padding: '8px 12px',
-          borderRadius: '8px',
-          fontSize: '12px',
-          fontWeight: '500',
-          backgroundColor: isEventSourceConnected ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-          color: isEventSourceConnected ? '#22c55e' : '#ef4444',
-          border: `1px solid ${isEventSourceConnected ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-        }}
-      >
-        <div
+      {/* Indicateurs de statut (bas à droite) */}
+      <div style={{
+        position: 'absolute',
+        bottom: '16px',
+        right: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        zIndex: 1000
+      }}>
+        {/* Indicateur EventSource (Streaming) */}
+        <div 
+          className="canva-eventsource-indicator"
           style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            backgroundColor: isEventSourceConnected ? '#22c55e' : '#ef4444',
-            boxShadow: isEventSourceConnected 
-              ? '0 0 8px rgba(34, 197, 94, 0.5)' 
-              : '0 0 8px rgba(239, 68, 68, 0.5)'
+            padding: '8px 12px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: '500',
+            backgroundColor: isEventSourceConnected ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+            color: isEventSourceConnected ? '#22c55e' : '#ef4444',
+            border: `1px solid ${isEventSourceConnected ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            backdropFilter: 'blur(8px)'
           }}
-        />
-        <span>
-          {isEventSourceConnected ? 'Listener actif' : 'Listener inactif'}
-        </span>
+        >
+          <div
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: isEventSourceConnected ? '#22c55e' : '#ef4444',
+              boxShadow: isEventSourceConnected 
+                ? '0 0 8px rgba(34, 197, 94, 0.5)' 
+                : '0 0 8px rgba(239, 68, 68, 0.5)'
+            }}
+          />
+          <span>
+            {isEventSourceConnected ? 'Stream actif' : 'Stream inactif'}
+          </span>
+        </div>
+
+        {/* Indicateur Realtime */}
+        <div 
+          className="canva-realtime-indicator"
+          style={{
+            padding: '8px 12px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: '500',
+            backgroundColor: realtimeState.isConnected 
+              ? 'rgba(59, 130, 246, 0.15)' 
+              : realtimeState.isConnecting 
+                ? 'rgba(251, 191, 36, 0.15)' 
+                : 'rgba(239, 68, 68, 0.15)',
+            color: realtimeState.isConnected 
+              ? '#3b82f6' 
+              : realtimeState.isConnecting 
+                ? '#fbbf24' 
+                : '#ef4444',
+            border: `1px solid ${
+              realtimeState.isConnected 
+                ? 'rgba(59, 130, 246, 0.3)' 
+                : realtimeState.isConnecting 
+                  ? 'rgba(251, 191, 36, 0.3)' 
+                  : 'rgba(239, 68, 68, 0.3)'
+            }`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+            backdropFilter: 'blur(8px)'
+          }}
+        >
+          <div
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: realtimeState.isConnected 
+                ? '#3b82f6' 
+                : realtimeState.isConnecting 
+                  ? '#fbbf24' 
+                  : '#ef4444',
+              boxShadow: realtimeState.isConnected 
+                ? '0 0 8px rgba(59, 130, 246, 0.5)' 
+                : realtimeState.isConnecting 
+                  ? '0 0 8px rgba(251, 191, 36, 0.5)' 
+                  : '0 0 8px rgba(239, 68, 68, 0.5)',
+              animation: realtimeState.isConnecting ? 'pulse 2s infinite' : 'none'
+            }}
+          />
+          <span>
+            {realtimeState.isConnected 
+              ? `Realtime (${realtimeState.channels.length})` 
+              : realtimeState.isConnecting 
+                ? 'Realtime...' 
+                : realtimeState.error 
+                  ? `Realtime: ${realtimeState.error.substring(0, 20)}...` 
+                  : 'Realtime inactif'}
+          </span>
+        </div>
       </div>
 
       <div className="chat-canva-pane__editor">

@@ -24,6 +24,7 @@ import type { FullEditorInstance } from '@/types/editor';
 import FontSelector from './FontSelector';
 import { insertDefaultTable } from '@/utils/editorTables';
 import AudioRecorder from '@/components/chat/AudioRecorder';
+import { logger, LogCategory } from '@/utils/logger';
 import './editor-toolbar.css';
 
 interface EditorToolbarProps {
@@ -45,12 +46,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
 }) => {
   // ✅ DEBUG: Log synchrone pour vérifier si EditorToolbar est rendu
   if (process.env.NODE_ENV === 'development') {
-    console.log('[EditorToolbar] Component render (SYNC)', {
+    logger.debug(LogCategory.EDITOR, '[EditorToolbar] Component render (SYNC)', {
       hasEditor: !!editor,
       readonly,
       currentFont,
       willRender: !!(editor && !readonly),
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      context: { operation: 'toolbarRender' }
     });
   }
   
@@ -61,11 +63,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   // ✅ DEBUG: Log asynchrone pour vérifier si EditorToolbar est rendu
   React.useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[EditorToolbar] Component rendered (ASYNC)', {
+      logger.debug(LogCategory.EDITOR, '[EditorToolbar] Component rendered (ASYNC)', {
         hasEditor: !!editor,
         readonly,
         currentFont,
-        willRender: !!(editor && !readonly)
+        willRender: !!(editor && !readonly),
+        context: { operation: 'toolbarRenderAsync' }
       });
     }
   }, [editor, readonly, currentFont]);
@@ -78,7 +81,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         const toolbarElement = document.querySelector('.editor-toolbar[data-debug-toolbar-content="visible"]');
         if (toolbarElement) {
           const computedStyle = window.getComputedStyle(toolbarElement);
-          console.log('[EditorToolbar] ✅ DOM element found', {
+          logger.debug(LogCategory.EDITOR, '[EditorToolbar] ✅ DOM element found', {
             display: computedStyle.display,
             visibility: computedStyle.visibility,
             opacity: computedStyle.opacity,
@@ -87,11 +90,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
             parentDisplay: window.getComputedStyle(toolbarElement.parentElement!).display,
             parentVisibility: window.getComputedStyle(toolbarElement.parentElement!).visibility,
             parentOpacity: window.getComputedStyle(toolbarElement.parentElement!).opacity,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            context: { operation: 'toolbarDOMCheck' }
           });
         } else {
-          console.warn('[EditorToolbar] ❌ DOM element NOT found', {
-            timestamp: Date.now()
+          logger.warn(LogCategory.EDITOR, '[EditorToolbar] ❌ DOM element NOT found', {
+            timestamp: Date.now(),
+            context: { operation: 'toolbarDOMNotFound' }
           });
         }
       }
@@ -154,11 +159,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   if (!editor || readonly) {
     // ✅ DEBUG: Log si EditorToolbar retourne null
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[EditorToolbar] ❌ Returning null', {
+      logger.warn(LogCategory.EDITOR, '[EditorToolbar] ❌ Returning null', {
         hasEditor: !!editor,
         readonly,
         reason: !editor ? 'no editor' : 'readonly',
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        context: { operation: 'toolbarReturnNull' }
       });
     }
     return null;
@@ -166,10 +172,11 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
   // ✅ DEBUG: Log avant le return pour confirmer qu'on retourne le JSX
   if (process.env.NODE_ENV === 'development') {
-    console.log('[EditorToolbar] ✅ Returning JSX', {
+    logger.debug(LogCategory.EDITOR, '[EditorToolbar] ✅ Returning JSX', {
       hasEditor: !!editor,
       readonly,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      context: { operation: 'toolbarReturnJSX' }
     });
   }
 

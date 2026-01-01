@@ -3,7 +3,7 @@
  * Extrait de Editor.tsx pour respecter la limite de 300 lignes
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { logger, LogCategory } from '@/utils/logger';
@@ -12,6 +12,7 @@ import useEditorSave from '@/hooks/useEditorSave';
 import type { EditorState } from './useEditorState';
 import type { SlashCommand } from '@/types/editor';
 import { useEditorUpdateFunctions, type UseEditorUpdateFunctionsReturn } from './useEditorUpdateFunctions';
+import { useSlashCommandHandler } from './useSlashCommandHandler';
 
 interface NoteUpdate {
   a4_mode?: boolean;
@@ -245,85 +246,11 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     }
   }, [rawContent, noteId, updateNote, editorState.internal.isUpdatingFromStore]);
 
-  // Handler: Insertion slash command  
-  const fallbackMarkdownByCommand: Record<string, string> = useMemo(() => ({
-    h1: '# ',
-    heading1: '# ',
-    h2: '## ',
-    heading2: '## ',
-    h3: '### ',
-    heading3: '### ',
-    text: '',
-    paragraph: '',
-    ul: '- ',
-    bulletList: '- ',
-    ol: '1. ',
-    orderedList: '1. ',
-    quote: '> ',
-    code: '```\n\n```',
-    divider: '---\n',
-    separator: '---\n'
-  }), []);
-
-  const handleSlashCommandInsert = useCallback((cmd: SlashCommand) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[handleSlashCommandInsert] called with cmd:', cmd.id, 'editor:', !!editor, 'isTemp:', isTemporaryNote);
-    }
-    
-    if (!editor) {
-      logger.error(LogCategory.EDITOR, 'Editor non disponible pour slash command');
-      return;
-    }
-    
-    // Vérifier que l'action existe
-    if (!cmd.action) {
-      logger.error(LogCategory.EDITOR, 'Action non définie pour la commande:', cmd.id);
-      return;
-    }
-    
-    try {
-      // Remove any preceding slash token if present
-      const { state, dispatch } = editor.view;
-      const from = state.selection.from;
-      const $pos = state.doc.resolve(from);
-      const start = $pos.start();
-      const textBefore = $pos.parent.textBetween(0, $pos.parentOffset, undefined, '\uFFFC');
-      const match = textBefore.match(/\/?[\w-]*$/);
-      if (match) {
-        const deleteFrom = start + $pos.parentOffset - match[0].length;
-        dispatch(state.tr.delete(deleteFrom, from));
-      }
-    } catch (error) {
-      logger.error(LogCategory.EDITOR, 'Erreur suppression slash:', error);
-    }
-    
-    let executed = false;
-    if (typeof cmd.action === 'function') {
-      try {
-        const result = cmd.action(editor);
-        executed = typeof result === 'boolean' ? result : true;
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[handleSlashCommandInsert] action executed:', cmd.id, 'result:', executed);
-        }
-        logger.debug(LogCategory.EDITOR, 'Slash command exécutée', { cmdId: cmd.id, executed });
-      } catch (error) {
-        logger.error(LogCategory.EDITOR, 'Erreur exécution commande:', error);
-        if (process.env.NODE_ENV === 'development') {
-          console.error('[handleSlashCommandInsert] error:', error);
-        }
-      }
-    }
-
-    if (!executed) {
-      const fallback = fallbackMarkdownByCommand[cmd.id];
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[handleSlashCommandInsert] using fallback for:', cmd.id, 'fallback:', fallback);
-      }
-      if (fallback !== undefined) {
-        editor.chain().focus().insertContent(fallback).run();
-      }
-    }
-  }, [editor, isTemporaryNote]);
+  // Handler: Insertion slash command (délégué à un hook spécialisé)
+  const { handleSlashCommandInsert } = useSlashCommandHandler({
+    editor,
+    isTemporaryNote
+  });
 
   // Handler: Insertion d'image (header ou content)
   const handleImageInsert = useCallback((src: string, target: 'header' | 'content') => {

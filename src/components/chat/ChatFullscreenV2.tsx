@@ -181,7 +181,7 @@ const ChatFullscreenV2: React.FC = () => {
         if (lastAssistant) {
           const messageHeight = lastAssistant.offsetHeight;
           const viewportHeight = window.innerHeight;
-          const threshold = viewportHeight * 0.5; // Si dépasse 50% du viewport
+          const threshold = viewportHeight * 0.6; // Si dépasse 50% du viewport
           
           // Reset padding seulement si le message est long
           if (messageHeight > threshold) {

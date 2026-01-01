@@ -1,23 +1,28 @@
-import type { Editor as TiptapEditor, ChainedCommands, CanCommands } from '@tiptap/react';
+/**
+ * Types pour l'éditeur
+ */
 
-// Type pour le storage markdown de Tiptap
-export interface MarkdownStorage {
-  getMarkdown?: () => string;
+import type { Editor as TiptapEditor } from '@tiptap/react';
+
+/**
+ * Type pour un éditeur avec extension Markdown
+ */
+export interface EditorWithMarkdown extends TiptapEditor {
+  storage: {
+    markdown: {
+      getMarkdown: () => string;
+    };
+  };
 }
 
-// Type utilitaire qui étend Editor avec le storage markdown typé
-export type EditorWithMarkdown = TiptapEditor & {
-  storage: TiptapEditor['storage'] & {
-    markdown?: MarkdownStorage;
-  };
-};
-
-// Garde de type pour vérifier si l'éditeur a le storage markdown
+/**
+ * Type guard pour vérifier si l'éditeur a l'extension Markdown
+ */
 export function hasMarkdownStorage(editor: TiptapEditor | null): editor is EditorWithMarkdown {
   if (!editor) return false;
   
   // Typage strict sans `as any`
-  const storage = editor.storage as unknown as Record<string, unknown>;
+  const storage = editor.storage as Record<string, unknown>;
   const markdown = storage?.markdown;
   
   // Vérifier que markdown existe et est un objet
@@ -28,50 +33,66 @@ export function hasMarkdownStorage(editor: TiptapEditor | null): editor is Edito
          typeof (markdown as { getMarkdown?: unknown }).getMarkdown === 'function';
 }
 
-// Export de FullEditorInstance pour compatibilité (deprecated)
-/** @deprecated Use EditorWithMarkdown or Editor directly */
-export type FullEditorInstance = EditorWithMarkdown;
-
-// Types pour les props des composants
-export interface EditorProps {
-  noteId: string;
-  readonly?: boolean;
-  userId?: string;
+/**
+ * Type pour les informations de debug de la toolbar
+ */
+export interface ToolbarDebugInfo {
+  // Container center
+  containerDisplay: string;
+  containerVisibility: string;
+  containerOpacity: string;
+  containerWidth: string;
+  containerHeight: string;
+  containerZIndex: string;
+  containerPosition: string;
+  containerTop: string;
+  
+  // Toolbar element
+  hasToolbar: boolean;
+  toolbarDisplay: string;
+  toolbarVisibility: string;
+  toolbarOpacity: string;
+  toolbarWidth: string;
+  toolbarHeight: string;
+  toolbarZIndex: string;
+  
+  // Parent header
+  hasParentHeader: boolean;
+  parentHeaderDisplay: string;
+  parentHeaderVisibility: string;
+  parentHeaderOpacity: string;
+  parentHeaderZIndex: string;
+  parentHeaderPosition: string;
+  parentHeaderTop: string;
+  
+  // Canvas context
+  isInCanvas: boolean;
+  canvasPaneDisplay: string;
+  
+  // Editor state
+  hasEditor: boolean;
+  shouldRenderToolbar: boolean;
+  timestamp: number;
 }
 
-export interface EditorToolbarProps {
-  editor: FullEditorInstance | null;
-  setImageMenuOpen: (open: boolean) => void;
-  onFontChange?: (fontName: string) => void;
-  currentFont?: string;
-  onTranscriptionComplete?: (text: string) => void;
-}
-
-export interface SlashCommand {
-  id: string;
-  alias: Record<string, string | string[]>;
-  label: Record<string, string>;
-  description: Record<string, string>;
-  preview?: string;
-  action?: (editor: TiptapEditor) => void; // ✅ Type générique Tiptap (pas FullEditorInstance)
+/**
+ * Type pour la configuration Callout
+ */
+export interface CalloutConfig {
+  type?: string;
+  title?: string;
+  icon?: string;
   [key: string]: unknown;
 }
 
-// Types pour les extensions personnalisées
-export interface CustomImageExtension {
-  configure?: (options: { inline: boolean }) => CustomImageExtension;
-}
+/**
+ * Type pour une instance complète de l'éditeur (alias de EditorWithMarkdown)
+ * Utilisé pour la compatibilité avec le code existant
+ */
+export type FullEditorInstance = EditorWithMarkdown;
 
-export interface CodeBlockWithCopyExtension {
-  configure?: (options: { lowlight: unknown }) => CodeBlockWithCopyExtension;
-}
-
-// Type pour les hooks d'éditeur
-export interface EditorHookInstance {
-  getHTML: () => string;
-  storage: {
-    markdown: {
-      getMarkdown: () => string;
-    };
-  };
-} 
+/**
+ * Type pour une commande slash
+ * Réexport depuis slashCommands pour compatibilité
+ */
+export type { SlashCommand } from '@/types/slashCommands';

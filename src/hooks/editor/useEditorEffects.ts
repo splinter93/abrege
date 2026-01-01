@@ -1,19 +1,19 @@
 /**
  * useEditorEffects - Hook centralisé pour tous les useEffect de l'éditeur
- * Extrait de Editor.tsx pour respecter la limite de 300 lignes
+ * Orchestrateur combinant useEditorSyncEffects et useEditorSaveEffects
  */
 
-import React, { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import type { Transaction } from '@tiptap/pm/state';
 import type { EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import { logger, LogCategory } from '@/utils/logger';
-import { debounce, getEditorMarkdown } from '@/utils/editorHelpers';
-import { DEBOUNCE_DELAYS, CONTEXT_MENU_CONFIG } from '@/utils/editorConstants';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import type { EditorState } from './useEditorState';
 import type { UseEditorHandlersReturn } from './useEditorHandlers';
+import { useEditorSyncEffects } from './useEditorSyncEffects';
+import { useEditorSaveEffects } from './useEditorSaveEffects';
 
 interface UseEditorEffectsOptions {
   editor: TiptapEditor | null;
@@ -50,25 +50,27 @@ export function useEditorEffects({
   handlers
 }: UseEditorEffectsOptions): void {
   
-  // ✅ EXTRACTION: Extraire les fonctions pour éviter les dépendances circulaires
+  // Utiliser les hooks spécialisés
+  useEditorSyncEffects({
+    editor,
+    note,
+    noteId,
+    content,
+    editorState
+  });
+
+  useEditorSaveEffects({
+    editorState,
+    content,
+    handlers
+  });
+
   const { 
-    setNoteLoaded, 
-    updateTOC, 
-    setTitle, 
     setKebabPos,
-    setHeaderImageUrl,
-    setHeaderImageOffset,
-    setHeaderImageBlur,
-    setHeaderImageOverlay,
-    setHeaderTitleInImage,
-    setFullWidth,
     openContextMenu
   } = editorState;
   
-  const noteLoaded = editorState.document.noteLoaded;
   const kebabOpen = editorState.menus.kebabOpen;
-  const fullWidth = editorState.ui.fullWidth;
-  const title = editorState.document.title;
 
   // Debug: tracer l'insertion de taskItem (checkbox) pour reproduire le bug
   useEffect(() => {
@@ -119,125 +121,16 @@ export function useEditorEffects({
     };
   }, [editor]);
 
-  const logHeaderSync = useMemo(() => {
-    return (stage: string, details: Record<string, unknown>) => {
-      if (process.env.NODE_ENV !== 'development') {
-        return;
-      }
-      logger.debug(LogCategory.EDITOR, `[useEditorEffects][header_image] ${stage}`, details);
-    };
-  }, []);
-  // Effect: Forcer la mise à jour de la TOC quand la note arrive
-  useEffect(() => {
-    if (note && content && !noteLoaded) {
-      setNoteLoaded(true);
-      updateTOC();
-    }
-  }, [note, content, noteId, noteLoaded, setNoteLoaded, updateTOC]);
-
-  // Effect: Synchroniser le titre avec la note
-  useEffect(() => { 
-    setTitle(note?.source_title || ''); 
-  }, [note?.source_title, setTitle]);
-
   // Effect: Position menu kebab (plus besoin de scroll listener car absolute dans header sticky)
   useEffect(() => {
     if (kebabOpen && kebabBtnRef.current) {
       const rect = kebabBtnRef.current.getBoundingClientRect();
       setKebabPos({ 
-        top: rect.bottom + CONTEXT_MENU_CONFIG.kebabMenuOffsetTop, 
+        top: rect.bottom + 8, // CONTEXT_MENU_CONFIG.kebabMenuOffsetTop
         left: rect.right - 200
       });
     }
   }, [kebabOpen, kebabBtnRef, setKebabPos]);
-
-  // Effect: Sync header image
-  // 🔧 FIX FLICKER: Utiliser une ref pour tracker la dernière valeur valide
-  // et éviter les synchronisations inutiles lors des sauvegardes
-  const lastValidHeaderImageRef = React.useRef<string | null | undefined>(
-    editorState.headerImage.url ?? undefined
-  );
-  
-  useEffect(() => {
-    if (!note) {
-      logHeaderSync('skip (note missing)', {});
-      return;
-    }
-
-    const nextHeaderImage = note?.header_image;
-
-    // 🔧 FIX FLICKER: Si undefined et qu'on avait une valeur valide, ne pas synchroniser
-    // Cela évite de perdre l'image temporairement lors des sauvegardes
-    if (nextHeaderImage === undefined) {
-      // Si on a déjà une valeur valide en mémoire, la conserver
-      if (lastValidHeaderImageRef.current !== undefined) {
-        logHeaderSync('skip (header_image undefined, preserve last valid)', {
-          noteId,
-          current: editorState.headerImage.url,
-          lastValid: lastValidHeaderImageRef.current
-        });
-        return;
-      }
-      // Sinon, si on n'a jamais eu de valeur, skip aussi
-      logHeaderSync('skip (header_image undefined, no previous value)', {
-        noteId,
-        current: editorState.headerImage.url
-      });
-      return;
-    }
-
-    // Mettre à jour la ref avec la nouvelle valeur valide
-    lastValidHeaderImageRef.current = nextHeaderImage;
-
-    if (nextHeaderImage === null) {
-      if (editorState.headerImage.url !== null) {
-        logHeaderSync('apply null', {
-          noteId,
-          previous: editorState.headerImage.url
-        });
-        setHeaderImageUrl(null);
-      } else {
-        logHeaderSync('noop null', { noteId });
-      }
-      return;
-    }
-
-    if (editorState.headerImage.url !== nextHeaderImage) {
-      logHeaderSync('apply new value', {
-        noteId,
-        previous: editorState.headerImage.url,
-        next: nextHeaderImage?.slice?.(0, 120)
-      });
-      setHeaderImageUrl(nextHeaderImage);
-      return;
-    }
-
-    logHeaderSync('noop identical', { noteId });
-  }, [note, editorState.headerImage.url, setHeaderImageUrl, logHeaderSync, noteId]);
-
-  // Effect: Hydrate appearance fields from note
-  useEffect(() => {
-    if (typeof note?.header_image_offset === 'number') setHeaderImageOffset(note.header_image_offset);
-  }, [note?.header_image_offset, setHeaderImageOffset]);
-  
-  useEffect(() => {
-    if (typeof note?.header_image_blur === 'number') setHeaderImageBlur(note.header_image_blur);
-  }, [note?.header_image_blur, setHeaderImageBlur]);
-  
-  useEffect(() => {
-    if (typeof note?.header_image_overlay === 'number') setHeaderImageOverlay(note.header_image_overlay);
-  }, [note?.header_image_overlay, setHeaderImageOverlay]);
-  
-  useEffect(() => {
-    if (typeof note?.header_title_in_image === 'boolean') setHeaderTitleInImage(note.header_title_in_image);
-  }, [note?.header_title_in_image, setHeaderTitleInImage]);
-
-  // Effect: Initialisation du wide mode depuis la note
-  useEffect(() => {
-    if (typeof note?.wide_mode === 'boolean' && !fullWidth) {
-      setFullWidth(note.wide_mode);
-    }
-  }, [note?.wide_mode, fullWidth, setFullWidth]);
 
   // Effect: Gestion du menu contextuel
   useEffect(() => {
@@ -253,18 +146,6 @@ export function useEditorEffects({
     document.addEventListener('tiptap-context-menu', handleContextMenu as EventListener);
     return () => document.removeEventListener('tiptap-context-menu', handleContextMenu as EventListener);
   }, [isReadonly, openContextMenu]);
-
-  // Effect: Mettre à jour la TOC quand l'éditeur change
-  useEffect(() => {
-    if (!editor) return;
-    
-    const debouncedUpdateTOC = debounce(updateTOC, DEBOUNCE_DELAYS.TOC_UPDATE);
-    editor.on('update', debouncedUpdateTOC);
-    
-    return () => {
-      editor.off('update', debouncedUpdateTOC);
-    };
-  }, [editor, updateTOC]);
 
   // Effect: Slash menu
   useEffect(() => {
@@ -295,18 +176,6 @@ export function useEditorEffects({
     el.addEventListener('keydown', onKeyDown);
     return () => el.removeEventListener('keydown', onKeyDown);
   }, [editor, isReadonly, slashMenuRef]);
-
-  // Effect: Ctrl/Cmd+S
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { 
-        e.preventDefault(); 
-        handlers.handleSave(title || 'Untitled', content); 
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [handlers, title, content]);
 
   // Effect: Drag & drop d'images
   useEffect(() => {
@@ -364,4 +233,3 @@ export function useEditorEffects({
     };
   }, [editor, isReadonly, noteId]);
 }
-

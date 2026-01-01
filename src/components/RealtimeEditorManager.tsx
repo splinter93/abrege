@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { realtimeEditorService, RealtimeEditorConfig, RealtimeEditorState } from '@/services/RealtimeEditorService';
+import { realtimeEditorService, RealtimeEditorConfig, RealtimeEditorState } from '@/services/realtime/RealtimeEditorService';
 import { simpleLogger as logger } from '@/utils/logger';
 
 interface RealtimeEditorManagerProps {

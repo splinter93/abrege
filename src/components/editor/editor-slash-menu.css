@@ -2,43 +2,47 @@
    SLASH MENU - DARK NOTION STYLE
    ========================= */
    .slash-menu {
-  /* Couleurs mode sombre Notion - Plus sombres */
-  --sm-bg: #141414;
-  --sm-border: rgba(255, 255, 255, 0.09);
-  --sm-text-primary: #ededed;
-  --sm-text-secondary: #a0a0a0;
-  --sm-text-tertiary: #6b6b6b;
-  --sm-hover-bg: rgba(107, 114, 128, 0.1);
-  --sm-selected-bg: rgba(107, 114, 128, 0.15);
-  --sm-selected-border: rgba(107, 114, 128, 0.3);
+  /* Couleurs mode sombre Notion - Plus sombres et raffinées */
+  --sm-bg: #1a1a1a;
+  --sm-bg-hover: rgba(255, 255, 255, 0.03);
+  --sm-border: rgba(255, 255, 255, 0.12);
+  --sm-border-hover: rgba(255, 255, 255, 0.2);
+  --sm-text-primary: #f5f5f5;
+  --sm-text-secondary: #b0b0b0;
+  --sm-text-tertiary: #707070;
+  --sm-hover-bg: rgba(255, 255, 255, 0.08);
+  --sm-selected-bg: rgba(251, 146, 60, 0.15);
+  --sm-selected-border: rgba(251, 146, 60, 0.4);
     
-    /* Accent Gray (Notion-like) */
-    --sm-accent: #6b7280;
-    --sm-accent-hover: #9ca3af;
+    /* Accent moderne (orange) */
+    --sm-accent: #fb923c;
+    --sm-accent-hover: #fdba74;
     
-    /* Spacing & Sizing - Plus proche de Notion */
-    --sm-radius: 6px;
-    --sm-item-radius: 4px;
-    --sm-padding: 12px;
-    --sm-item-padding: 8px 12px;
-    --sm-gap: 4px;
+    /* Spacing & Sizing - Plus généreux */
+    --sm-radius: 14px;
+    --sm-item-radius: 8px;
+    --sm-padding: 16px;
+    --sm-item-padding: 10px 14px;
+    --sm-gap: 6px;
     
     /* Typography */
     --sm-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Figtree", "Geist", -apple-system, Helvetica, Arial, sans-serif;
     --sm-font-size: 14px;
     --sm-line-height: 1.5;
     
-    /* Shadows & Effects - Style Notion */
+    /* Shadows & Effects - Plus modernes et subtils */
     --sm-shadow: 
-      0 4px 16px rgba(0, 0, 0, 0.4),
-      0 2px 4px rgba(0, 0, 0, 0.2);
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      0 4px 12px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
     --sm-shadow-hover: 
-      0 6px 20px rgba(0, 0, 0, 0.5),
-      0 3px 6px rgba(0, 0, 0, 0.3);
+      0 12px 40px rgba(0, 0, 0, 0.6),
+      0 6px 16px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
     
-    /* Animations */
-    --sm-ease: cubic-bezier(0.16, 1, 0.3, 1);
-    --sm-duration: 200ms;
+    /* Animations - Plus fluides */
+    --sm-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --sm-duration: 150ms;
   }
   
   /* =========================
@@ -47,10 +51,12 @@
   .slash-menu {
     position: fixed;
     z-index: 9999;
-    min-width: 240px;
-    max-width: 300px;
+    min-width: 280px;
+    max-width: 320px;
     max-height: 70vh;
     overflow: hidden;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     
     font-family: var(--sm-font);
     font-size: var(--sm-font-size);
@@ -62,20 +68,23 @@
     border-radius: var(--sm-radius);
     box-shadow: var(--sm-shadow);
     
-    /* Animation d'entrée plus subtile */
-    animation: slash-menu-enter var(--sm-duration) var(--sm-ease);
+    /* Animation d'entrée fluide */
+    animation: slash-menu-enter 200ms var(--sm-ease);
     transition: 
-      box-shadow var(--sm-duration) var(--sm-ease),
-      border-color var(--sm-duration) var(--sm-ease);
+      box-shadow 200ms var(--sm-ease),
+      border-color 200ms var(--sm-ease),
+      transform 200ms var(--sm-ease),
+      opacity 200ms var(--sm-ease);
   }
   
   .slash-menu:hover {
     box-shadow: var(--sm-shadow-hover);
-    border-color: rgba(107, 114, 128, 0.12);
+    border-color: var(--sm-border-hover);
+    transform: translateY(-1px);
   }
   
   /* =========================
-     SEARCH INPUT - STYLE NOTION DARK
+     SEARCH INPUT - STYLE MODERNE
      ========================= */
   .slash-menu .slash-search-input {
     width: 100%;
@@ -86,55 +95,64 @@
     color: var(--sm-text-primary);
     font-family: var(--sm-font);
     font-size: 15px;
-    font-weight: 400;
-    line-height: 1.4;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
     
     padding: var(--sm-padding);
-    padding-bottom: 12px;
-    margin-bottom: 4px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 14px;
+    margin-bottom: 8px;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.08);
     
     caret-color: var(--sm-accent);
-    transition: border-color var(--sm-duration) var(--sm-ease);
+    transition: 
+      border-color 200ms var(--sm-ease),
+      background-color 200ms var(--sm-ease);
   }
   
   .slash-menu .slash-search-input::placeholder {
     color: var(--sm-text-secondary);
     font-weight: 400;
+    opacity: 0.7;
   }
   
   .slash-menu .slash-search-input:focus {
-    border-bottom-color: rgba(255, 255, 255, 0.1);
+    border-bottom-color: var(--sm-accent);
+    background: var(--sm-bg-hover);
+    border-radius: 6px 6px 0 0;
   }
   
   /* =========================
-     LIST CONTAINER
+     LIST CONTAINER - STYLE MODERNE
      ========================= */
   .slash-menu .slash-menu-list {
-    max-height: 360px;
+    max-height: 380px;
     overflow-y: auto;
     padding: var(--sm-gap);
+    padding-top: 8px;
     
-    /* Scrollbar style Notion */
+    /* Scrollbar style moderne */
     scrollbar-width: thin;
-    scrollbar-color: var(--sm-text-tertiary) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
   }
   
   .slash-menu .slash-menu-list::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
   }
   
   .slash-menu .slash-menu-list::-webkit-scrollbar-track {
     background: transparent;
+    margin: 4px 0;
   }
   
   .slash-menu .slash-menu-list::-webkit-scrollbar-thumb {
-    background: var(--sm-text-tertiary);
-    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+    transition: background 200ms var(--sm-ease);
   }
   
   .slash-menu .slash-menu-list::-webkit-scrollbar-thumb:hover {
-    background: var(--sm-text-secondary);
+    background: rgba(255, 255, 255, 0.25);
   }
   
   /* =========================
@@ -149,43 +167,48 @@
   }
   
   /* =========================
-     MENU ITEMS - STYLE NOTION DARK
+     MENU ITEMS - STYLE MODERNE
      ========================= */
   .slash-menu .slash-menu-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     
-    padding: 8px 12px;
-    margin: 1px 0;
+    padding: var(--sm-item-padding);
+    margin: 2px 0;
     border-radius: var(--sm-item-radius);
     border: 1px solid transparent;
     
     color: var(--sm-text-primary);
     background: transparent;
     cursor: pointer;
+    position: relative;
     
     transition: 
-      background-color var(--sm-duration) var(--sm-ease),
-      border-color var(--sm-duration) var(--sm-ease);
+      background-color 150ms var(--sm-ease),
+      border-color 150ms var(--sm-ease),
+      transform 150ms var(--sm-ease),
+      box-shadow 150ms var(--sm-ease);
   }
   
   .slash-menu .slash-menu-item:hover {
     background: var(--sm-hover-bg);
+    transform: translateX(2px);
   }
   
   .slash-menu .slash-menu-item.selected {
     background: var(--sm-selected-bg);
     border-color: var(--sm-selected-border);
+    box-shadow: 0 2px 8px rgba(251, 146, 60, 0.2);
   }
   
   .slash-menu .slash-menu-item:focus-visible {
     outline: none;
-    box-shadow: none;
+    box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.3);
   }
   
   /* =========================
-     COMMAND ICONS - STYLE NOTION
+     COMMAND ICONS - STYLE MODERNE
      ========================= */
   .slash-menu .slash-menu-icon {
     flex-shrink: 0;
@@ -193,22 +216,29 @@
     align-items: center;
     justify-content: center;
     
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     
-    /* Retrait du fond pour un style plus épuré */
-    background: transparent;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
     color: var(--sm-text-secondary);
     
-    transition: color 0.15s ease;
+    transition: 
+      color 150ms var(--sm-ease),
+      background-color 150ms var(--sm-ease),
+      transform 150ms var(--sm-ease);
   }
   
   .slash-menu .slash-menu-item:hover .slash-menu-icon {
     color: var(--sm-text-primary);
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
   }
   
   .slash-menu .slash-menu-item.selected .slash-menu-icon {
-    color: var(--sm-text-primary);
+    color: var(--sm-accent);
+    background: rgba(251, 146, 60, 0.15);
+    transform: scale(1.08);
   }
   
   /* =========================
@@ -225,23 +255,37 @@
   .slash-menu .slash-menu-label {
     font-weight: 500;
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
     color: var(--sm-text-primary);
     
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: color 150ms var(--sm-ease);
+  }
+  
+  .slash-menu .slash-menu-item.selected .slash-menu-label {
+    color: var(--sm-text-primary);
+    font-weight: 600;
   }
   
   .slash-menu .slash-menu-desc {
     font-weight: 400;
     font-size: 12px;
-    line-height: 1.3;
+    line-height: 1.4;
+    letter-spacing: 0;
     color: var(--sm-text-secondary);
+    opacity: 0.85;
     
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: color 150ms var(--sm-ease), opacity 150ms var(--sm-ease);
+  }
+  
+  .slash-menu .slash-menu-item:hover .slash-menu-desc {
+    opacity: 1;
   }
   
   .slash-menu .slash-menu-category {
@@ -252,44 +296,49 @@
   }
   
   /* =========================
-     SELECTION INDICATOR
+     SELECTION INDICATOR - DÉSACTIVÉ
      ========================= */
   .slash-menu .slash-menu-selection-indicator {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    width: 16px;
-    height: 16px;
-    color: var(--sm-accent);
-    
-    opacity: 0;
-    transition: opacity var(--sm-duration) var(--sm-ease);
-  }
-  
-  .slash-menu .slash-menu-item.selected .slash-menu-selection-indicator {
-    opacity: 1;
-  }
-  
-  .slash-menu .slash-menu-selection-indicator svg {
-    width: 12px;
-    height: 12px;
+    display: none;
   }
   
   /* =========================
-     ANIMATIONS
+     ANIMATIONS - PLUS FLUIDES
      ========================= */
   @keyframes slash-menu-enter {
     from {
       opacity: 0;
-      transform: translateY(4px);
+      transform: translateY(8px) scale(0.96);
+      filter: blur(4px);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
+      filter: blur(0);
     }
   }
+  
+  @keyframes slash-menu-item-enter {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .slash-menu .slash-menu-item {
+    animation: slash-menu-item-enter 200ms var(--sm-ease) backwards;
+  }
+  
+  .slash-menu .slash-menu-item:nth-child(1) { animation-delay: 0ms; }
+  .slash-menu .slash-menu-item:nth-child(2) { animation-delay: 20ms; }
+  .slash-menu .slash-menu-item:nth-child(3) { animation-delay: 40ms; }
+  .slash-menu .slash-menu-item:nth-child(4) { animation-delay: 60ms; }
+  .slash-menu .slash-menu-item:nth-child(5) { animation-delay: 80ms; }
+  .slash-menu .slash-menu-item:nth-child(n+6) { animation-delay: 100ms; }
   
   /* =========================
      RESPONSIVE DESIGN

@@ -160,7 +160,7 @@ export function useShareManager({
             logger.info(LogCategory.EDITOR, 'Mise à jour public_url dans le store:', responseData.public_url);
             onUpdate(noteId, { 
               public_url: responseData.public_url 
-            } as any);
+            } as Record<string, unknown>);
           }
           
           // ✅ CRITIQUE: Mettre à jour share_settings avec la réponse serveur (source de vérité)

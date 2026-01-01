@@ -139,7 +139,7 @@ export function useEditorStreamListener(
 
   useEffect(() => {
     // ✅ LOG IMMÉDIAT pour vérifier que le useEffect s'exécute
-    console.log('[useEditorStreamListener] 🔄 useEffect exécuté', {
+    logger.info(LogCategory.EDITOR, '[useEditorStreamListener] 🔄 useEffect exécuté', {
       noteId,
       hasEditor: !!editor,
       enabled,
@@ -192,11 +192,17 @@ export function useEditorStreamListener(
         return null;
       }
 
-      const url = `/api/v2/note/${noteId}/stream:listen?token=${encodeURIComponent(token)}`;
-      logger.info(LogCategory.EDITOR, '[useEditorStreamListener] 🔗 Creating EventSource', { 
-        noteId, 
-        url: url.replace(/token=[^&]+/, 'token=***') 
-      });
+      // ✅ FIX: Utiliser ops:listen qui existe et fonctionne (même endpoint que useNoteStreamListener)
+      // L'endpoint /api/v2/note/{id}/stream:listen n'existe pas, utiliser /api/v2/canvas/{noteId}/ops:listen
+      const url = `/api/v2/canvas/${noteId}/ops:listen?token=${encodeURIComponent(token)}`;
+      
+      if (debug) {
+        logger.debug(LogCategory.EDITOR, '[useEditorStreamListener] 🔗 Creating EventSource', { 
+          noteId, 
+          url: url.replace(/token=[^&]+/, 'token=***') 
+        });
+      }
+      
       const eventSource = new EventSource(url);
       return eventSource;
     };
@@ -208,25 +214,22 @@ export function useEditorStreamListener(
       eventSourceRef.current = eventSource;
 
       // Position initiale d'insertion (sera mise à jour si le stream spécifie une position)
-      let insertPosition = editor.state.selection.to;
+      let insertPosition = editor ? editor.state.selection.to : 0;
 
       /**
-       * Handler pour les messages SSE
+       * Handler pour traiter un événement StreamEvent
        */
-      eventSource.onmessage = (event: MessageEvent) => {
-        try {
-          const data: StreamEvent = JSON.parse(event.data);
+      const handleStreamEvent = (data: StreamEvent) => {
+        // ✅ TOUJOURS logger les événements pour debug (même en prod)
+        logger.info(LogCategory.EDITOR, '[useEditorStreamListener] 📨 Event received', {
+          noteId,
+          type: data.type,
+          dataLength: data.data?.length || 0,
+          hasMetadata: !!data.metadata,
+          source: data.metadata?.source
+        });
 
-          // ✅ TOUJOURS logger les événements pour debug (même en prod)
-          logger.info(LogCategory.EDITOR, '[useEditorStreamListener] 📨 Event received', {
-            noteId,
-            type: data.type,
-            dataLength: data.data?.length || 0,
-            hasMetadata: !!data.metadata,
-            source: data.metadata?.source
-          });
-
-          switch (data.type) {
+        switch (data.type) {
                     case 'start':
                       // Stream initialisé
                       logger.info(LogCategory.EDITOR, '[useEditorStreamListener] Stream started', {
@@ -251,19 +254,35 @@ export function useEditorStreamListener(
                 const position = data.position || defaultPosition;
                 
                 // Insérer le chunk dans TipTap
-                if (position === 'end') {
-                  // Insérer à la fin du document
-                  editor.commands.insertContentAt(
-                    editor.state.doc.content.size,
-                    data.data
-                  );
-                } else if (position === 'start') {
-                  // Insérer au début du document
-                  editor.commands.insertContentAt(0, data.data);
-                } else if (position === 'cursor') {
-                  // Insérer à la position du curseur/stream
-                  editor.commands.insertContentAt(insertPosition, data.data);
-                  insertPosition += data.data.length;
+                // ✅ FIX: Utiliser insertContent qui peut parser le markdown automatiquement
+                // ou insertContentAt avec un objet texte si besoin
+                try {
+                  if (position === 'end') {
+                    // Insérer à la fin du document
+                    editor.commands.insertContentAt(
+                      editor.state.doc.content.size,
+                      data.data // Tiptap peut parser le markdown automatiquement
+                    );
+                  } else if (position === 'start') {
+                    // Insérer au début du document
+                    editor.commands.insertContentAt(0, data.data);
+                  } else if (position === 'cursor') {
+                    // Insérer à la position du curseur/stream
+                    editor.commands.insertContentAt(insertPosition, data.data);
+                    // ✅ FIX: Mettre à jour la position en comptant les caractères insérés
+                    // (approximation, car le parsing markdown peut changer la taille)
+                    insertPosition += data.data.length;
+                  }
+                } catch (insertError) {
+                  // ✅ FALLBACK: Si insertContentAt échoue, essayer avec insertContent
+                  logger.warn(LogCategory.EDITOR, '[useEditorStreamListener] insertContentAt failed, trying insertContent', {
+                    noteId,
+                    error: insertError instanceof Error ? insertError.message : 'Unknown error',
+                    chunkLength: data.data.length
+                  });
+                  
+                  // Essayer avec insertContent (parse markdown automatiquement)
+                  editor.commands.insertContent(data.data);
                 }
 
                         // Callback optionnel
@@ -396,12 +415,111 @@ export function useEditorStreamListener(
               onErrorRef.current?.(error);
               break;
 
-            default:
-              logger.warn(LogCategory.EDITOR, '[useEditorStreamListener] Unknown event type', {
-                noteId,
-                type: data.type
-              });
-          }
+          default:
+            logger.warn(LogCategory.EDITOR, '[useEditorStreamListener] Unknown event type', {
+              noteId,
+              type: data.type
+            });
+        }
+      };
+
+      /**
+       * Handler pour les événements nommés (event: chunk, event: start, etc.)
+       * Utilisé par ops:listen qui envoie des événements nommés
+       */
+      eventSource.addEventListener('chunk', (event: MessageEvent) => {
+        // ✅ TOUJOURS logger (même si debug=false) pour diagnostiquer
+        logger.info(LogCategory.EDITOR, '[useEditorStreamListener] 📨 Chunk event received', {
+          noteId,
+          dataLength: event.data?.length || 0,
+          hasEditor: !!editor,
+          readyState: eventSource.readyState
+        });
+        try {
+          const parsed = JSON.parse(event.data);
+          const data: StreamEvent = {
+            type: 'chunk',
+            data: parsed.data,
+            position: parsed.position,
+            metadata: parsed.metadata
+          };
+          logger.debug(LogCategory.EDITOR, '[useEditorStreamListener] ✅ Chunk parsed successfully', {
+            noteId,
+            chunkLength: data.data?.length || 0,
+            position: data.position
+          });
+          handleStreamEvent(data);
+        } catch (error) {
+          logger.error(LogCategory.EDITOR, '[useEditorStreamListener] Failed to parse chunk event', {
+            noteId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            rawData: event.data?.substring(0, 200)
+          });
+        }
+      });
+
+      eventSource.addEventListener('start', (event: MessageEvent) => {
+        logger.info(LogCategory.EDITOR, '[useEditorStreamListener] 🚀 start event received', {
+          noteId
+        });
+        try {
+          const parsed = JSON.parse(event.data);
+          const data: StreamEvent = {
+            type: 'start',
+            metadata: parsed.metadata
+          };
+          handleStreamEvent(data);
+        } catch (error) {
+          logger.error(LogCategory.EDITOR, '[useEditorStreamListener] Failed to parse start event', {
+            noteId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            rawData: event.data
+          });
+        }
+      });
+
+      eventSource.addEventListener('end', (event: MessageEvent) => {
+        try {
+          const parsed = JSON.parse(event.data);
+          const data: StreamEvent = {
+            type: 'end',
+            metadata: parsed.metadata
+          };
+          handleStreamEvent(data);
+        } catch (error) {
+          logger.error(LogCategory.EDITOR, '[useEditorStreamListener] Failed to parse end event', {
+            noteId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            rawData: event.data
+          });
+        }
+      });
+
+      eventSource.addEventListener('error', (event: MessageEvent) => {
+        try {
+          const parsed = JSON.parse(event.data);
+          const data: StreamEvent = {
+            type: 'error',
+            data: parsed.error || parsed.data,
+            metadata: parsed.metadata
+          };
+          handleStreamEvent(data);
+        } catch (error) {
+          logger.error(LogCategory.EDITOR, '[useEditorStreamListener] Failed to parse error event', {
+            noteId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+            rawData: event.data
+          });
+        }
+      });
+
+      /**
+       * Handler pour les messages SSE (fallback pour événements sans nom)
+       */
+      eventSource.onmessage = (event: MessageEvent) => {
+        try {
+          const data: StreamEvent = JSON.parse(event.data);
+          handleStreamEvent(data);
         } catch (parseError) {
           logger.error(LogCategory.EDITOR, '[useEditorStreamListener] Failed to parse event', {
             noteId,
@@ -415,17 +533,56 @@ export function useEditorStreamListener(
        * Handler pour les erreurs de connexion
        */
       eventSource.onerror = (error) => {
-        logger.error(LogCategory.EDITOR, '[useEditorStreamListener] Connection error', {
-          noteId,
-          readyState: eventSource.readyState,
-          reconnectAttempts: reconnectAttemptsRef.current
-        });
-
-        // Fermer la connexion actuelle
-        eventSource.close();
+        // readyState: 0=CONNECTING, 1=OPEN, 2=CLOSED
+        const isClosed = eventSource.readyState === 2;
+        const isConnecting = eventSource.readyState === 0;
+        
+        // Si la connexion est fermée (endpoint n'existe probablement pas), logger en debug seulement
+        if (isClosed && reconnectAttemptsRef.current === 0) {
+          // Première fermeture : probablement endpoint inexistant, logger en debug
+          if (debug) {
+            logger.debug(LogCategory.EDITOR, '[useEditorStreamListener] Connection closed (endpoint may not exist)', {
+              noteId,
+              readyState: eventSource.readyState,
+              url: eventSource.url.replace(/token=[^&]+/, 'token=***')
+            });
+          }
+          // Ne pas reconnecter si l'endpoint n'existe pas
+          eventSource.close();
+          return;
+        }
+        
+        // Pour les autres erreurs, logger en warn (pas error) car EventSource reconnecte automatiquement
+        if (reconnectAttemptsRef.current < 3) {
+          logger.warn(LogCategory.EDITOR, '[useEditorStreamListener] Connection error (will retry)', {
+            noteId,
+            readyState: eventSource.readyState,
+            reconnectAttempts: reconnectAttemptsRef.current
+          });
+        } else {
+          // Après 3 tentatives, logger en error et arrêter
+          logger.error(LogCategory.EDITOR, '[useEditorStreamListener] Connection failed after multiple attempts', {
+            noteId,
+            readyState: eventSource.readyState,
+            reconnectAttempts: reconnectAttemptsRef.current
+          });
+          eventSource.close();
+          
+          // Fin du streaming en cours si erreur
+          const wasStreaming = isStreamingRef.current;
+          if (wasStreaming) {
+            setIsStreaming(false);
+            isStreamingRef.current = false;
+            streamBufferRef.current = '';
+          }
+          
+          // Callback optionnel
+          const connectionError = new Error('SSE connection failed after multiple attempts');
+          onErrorRef.current?.(connectionError);
+          return;
+        }
 
         // Fin du streaming en cours si erreur
-        // ✅ FIX: Utiliser isStreamingRef pour éviter les dépendances
         const wasStreaming = isStreamingRef.current;
         if (wasStreaming) {
           setIsStreaming(false);
@@ -433,22 +590,24 @@ export function useEditorStreamListener(
           streamBufferRef.current = '';
         }
 
-        // EventSource reconnecte automatiquement
+        // EventSource reconnecte automatiquement (sauf si on a fermé manuellement)
         reconnectAttemptsRef.current += 1;
-
-        // Callback optionnel
-        const connectionError = new Error('SSE connection error');
-        onErrorRef.current?.(connectionError);
       };
 
       /**
        * Handler pour l'ouverture de la connexion
        */
       eventSource.onopen = () => {
+        logger.info(LogCategory.EDITOR, '[useEditorStreamListener] ✅ Connection OPENED', {
+          noteId,
+          readyState: eventSource.readyState,
+          url: eventSource.url.replace(/token=[^&]+/, 'token=***'),
+          timestamp: Date.now()
+        });
         logger.info(LogCategory.EDITOR, '[useEditorStreamListener] ✅ Connection opened', { 
           noteId,
           readyState: eventSource.readyState,
-          url: eventSource.url
+          url: eventSource.url.replace(/token=[^&]+/, 'token=***')
         });
         reconnectAttemptsRef.current = 0;
       };

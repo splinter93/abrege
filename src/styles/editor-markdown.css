@@ -401,7 +401,7 @@ div.markdown-body ul[data-type="taskList"],
 .markdown-body img {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: 12px !important; /* ✅ Augmenté à 12px pour un radius plus visible */
   margin-top: var(--md-img-margin-top); /* 16px par défaut lecture/chat */
   margin-bottom: var(--md-img-margin-bottom); /* 12px par défaut lecture/chat */
   display: block;
@@ -411,6 +411,7 @@ div.markdown-body ul[data-type="taskList"],
 .ProseMirror img {
   margin-top: var(--md-img-margin-top-edit); /* 4px en édition */
   margin-bottom: -9px; /* -9px en édition (négatif pour compenser padding) */
+  border-radius: 12px !important; /* ✅ Augmenté à 12px pour un radius plus visible */
 }
 
 /* ✅ SUPPRIMÉ : L'espacement est maintenant géré directement par margin-bottom de l'image

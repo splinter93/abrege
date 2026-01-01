@@ -400,19 +400,22 @@ export class StreamOrchestrator {
         this.toolTracker.addToolCall(tc);
       }
 
-      // ✅ CRITICAL FIX: Notifier le hook pour qu'il ajoute les tool calls à sa timeline
-      // Même si les tools sont déjà exécutés (MCP), ils doivent être affichés dans l'UI
-      const toolCallsForTimeline = this.toolTracker.getNewToolCallsForNotification();
+      // ✅ CRITICAL FIX: Vérifier si les tool calls ont déjà été notifiés pour exécution
+      // Si oui, ne pas les notifier à nouveau pour éviter la duplication
+      const toolCallsForTimeline = this.toolTracker.getNewToolCallsForExecution();
       if (toolCallsForTimeline.length > 0) {
-        // ✅ Ajouter à la timeline interne
-        this.timeline.addToolExecutionEvent(toolCallsForTimeline, chunk.tool_calls.length);
-        this.toolTracker.markNotified(toolCallsForTimeline);
+        // ✅ FIX: Seulement notifier si pas déjà notifiés
+        // Les tool calls déjà notifiés dans processToolExecutionChunk ne doivent pas être notifiés à nouveau
+        callbacks.onToolExecution?.(toolCallsForTimeline.length, toolCallsForTimeline);
+        this.toolTracker.markExecutionNotified(toolCallsForTimeline);
         
-        // ✅ CRITICAL FIX: Notifier le hook pour qu'il ajoute aussi à sa timeline
-        // Le hook utilisera ces tool calls pour l'affichage dans l'UI
-        callbacks.onToolExecution?.(chunk.tool_calls.length, toolCallsForTimeline);
+        // Ajouter à la timeline
+        this.timeline.addToolExecutionEvent(toolCallsForTimeline, toolCallsForTimeline.length);
         
         logger.dev(`[StreamOrchestrator] ✅ ${toolCallsForTimeline.length} tool call(s) ajouté(s) à la timeline ET notifié au hook`);
+      } else {
+        // ✅ FIX: Si tous les tool calls ont déjà été notifiés, ne pas les notifier à nouveau
+        logger.dev(`[StreamOrchestrator] ⏭️ Tool calls déjà notifiés, skip duplication`);
       }
 
       // Passer au prochain round

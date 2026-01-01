@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logApi } from '@/utils/logger';
 // TODO: Réactiver quand le service sera créé
 // import { getOpenAPIV2Tools } from '@/services/openApiToolsGenerator';
 
@@ -13,13 +14,13 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    console.log('[OpenAPI Tools API] 🔧 Demande des tools OpenAPI V2');
+    logApi.info('[OpenAPI Tools API] 🔧 Demande des tools OpenAPI V2');
     
     // TODO: Réactiver quand le service sera créé
     // Générer les tools depuis le schéma OpenAPI V2
     const tools: unknown[] = []; // getOpenAPIV2Tools();
     
-    console.log(`[OpenAPI Tools API] ✅ ${tools.length} tools générés`);
+    logApi.info(`[OpenAPI Tools API] ✅ ${tools.length} tools générés`);
     
     // Retourner les tools avec les bons headers
     return NextResponse.json({
@@ -39,7 +40,9 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('[OpenAPI Tools API] ❌ Erreur:', error);
+    logApi.error('[OpenAPI Tools API] ❌ Erreur:', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     
     return NextResponse.json(
       {

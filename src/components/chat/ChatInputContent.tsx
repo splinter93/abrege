@@ -14,7 +14,7 @@ import type { SelectedNote } from '@/hooks/useNotesLoader';
 import type { NoteMention } from '@/types/noteMention';
 import type { PromptMention } from '@/types/promptMention';
 import TextareaWithMentions from './TextareaWithMentions';
-import { CHAT_LIMITS, formatCharacterCount, calculateUsagePercent } from '@/utils/chatValidation';
+import { CHAT_LIMITS, formatCharacterCount } from '@/utils/chatValidation';
 
 interface ChatInputContentProps {
   // Textarea
@@ -203,34 +203,6 @@ const ChatInputContent: React.FC<ChatInputContentProps> = ({
           maxLength={CHAT_LIMITS.MAX_MESSAGE_LENGTH}
           title={`Limite : ${formatCharacterCount(CHAT_LIMITS.MAX_MESSAGE_LENGTH)} caractères`}
         />
-        
-        {/* Compteur de caractères et limites */}
-        {message.length > 0 && (
-          <div className="chat-input-character-counter">
-            <span 
-              className={message.length > CHAT_LIMITS.MAX_MESSAGE_LENGTH * 0.8 ? 'warning' : ''}
-              title={`${formatCharacterCount(message.length)} / ${formatCharacterCount(CHAT_LIMITS.MAX_MESSAGE_LENGTH)} caractères`}
-            >
-              {formatCharacterCount(message.length)} / {formatCharacterCount(CHAT_LIMITS.MAX_MESSAGE_LENGTH)}
-            </span>
-            {images.length > 0 && (
-              <span 
-                className="chat-input-limit-badge"
-                title={`${images.length} / ${CHAT_LIMITS.MAX_IMAGES} images maximum`}
-              >
-                🖼️ {images.length}/{CHAT_LIMITS.MAX_IMAGES}
-              </span>
-            )}
-            {selectedNotes.length > 0 && (
-              <span 
-                className="chat-input-limit-badge"
-                title={`${selectedNotes.length} / ${CHAT_LIMITS.MAX_NOTES} notes maximum`}
-              >
-                📄 {selectedNotes.length}/{CHAT_LIMITS.MAX_NOTES}
-              </span>
-            )}
-          </div>
-        )}
         
         {/* Menus overlay (SlashMenu + MentionMenu) - position relative au wrapper */}
         {children}

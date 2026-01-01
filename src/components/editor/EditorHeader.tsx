@@ -9,6 +9,8 @@ import { FiEye, FiMoreHorizontal, FiX, FiEdit2 } from 'react-icons/fi';
 import LogoHeader from '@/components/LogoHeader';
 import EditorToolbar from './EditorToolbar';
 import type { FullEditorInstance } from '@/types/editor';
+import type { ToolbarDebugInfo } from '@/types/editor';
+import { logger, LogCategory } from '@/utils/logger';
 import './editor-header.css';
 
 interface EditorHeaderProps {
@@ -49,26 +51,28 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   // ✅ DEBUG: Log synchrone pour capturer le problème (pas dans useEffect)
   const shouldRenderToolbar = !previewMode && showToolbar;
   if (process.env.NODE_ENV === 'development') {
-    console.log('[EditorHeader] Render state (SYNC)', {
+    logger.debug(LogCategory.EDITOR, '[EditorHeader] Render state (SYNC)', {
       showToolbar,
       previewMode,
       readonly,
       shouldRenderToolbar,
       noteId,
       timestamp: Date.now(),
-      willRender: shouldRenderToolbar
+      willRender: shouldRenderToolbar,
+      context: { operation: 'headerRender' }
     });
   }
 
   // ✅ DEBUG: Log pour diagnostiquer (asynchrone)
   React.useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[EditorHeader] Render state (ASYNC)', {
+      logger.debug(LogCategory.EDITOR, '[EditorHeader] Render state (ASYNC)', {
         showToolbar,
         previewMode,
         readonly,
         shouldRenderToolbar: !previewMode && showToolbar,
-        noteId
+        noteId,
+        context: { operation: 'headerRenderAsync' }
       });
     }
   }, [showToolbar, previewMode, readonly, noteId]);
@@ -91,7 +95,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
               const toolbarElement = el.querySelector('.editor-toolbar') as HTMLElement | null;
               const parentHeader = el.closest('.editor-header') as HTMLElement | null;
               
-              const debugInfo: any = {
+              const debugInfo: ToolbarDebugInfo = {
                 // Container center
                 containerDisplay: computedStyle.display,
                 containerVisibility: computedStyle.visibility,
@@ -195,16 +199,17 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
                 viewportWidth: window.innerWidth
               };
               
-              console.log('[EditorHeader] ✅ Center container DOM (DETAILED)', {
+              logger.debug(LogCategory.EDITOR, '[EditorHeader] ✅ Center container DOM (DETAILED)', {
                 ...debugInfo,
                 // ✅ Valeurs critiques en premier pour faciliter la lecture
-                CRITICAL: criticalValues
+                CRITICAL: criticalValues,
+                context: { noteId, operation: 'toolbarDebug' }
               });
               
               // ✅ Alerte si toolbar est dans le DOM mais invisible
               if (toolbarElement && toolbarComputed) {
                 if (toolbarComputed.display === 'none' || toolbarComputed.visibility === 'hidden' || toolbarComputed.opacity === '0') {
-                  console.error('[EditorHeader] ❌ Toolbar INVISIBLE dans le DOM (CSS)', {
+                  logger.error(LogCategory.EDITOR, '[EditorHeader] ❌ Toolbar INVISIBLE dans le DOM (CSS)', {
                     display: toolbarComputed.display,
                     visibility: toolbarComputed.visibility,
                     opacity: toolbarComputed.opacity,
@@ -213,30 +218,25 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
                     containerDisplay: computedStyle.display,
                     containerVisibility: computedStyle.visibility,
                     containerOpacity: computedStyle.opacity,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    context: { noteId, operation: 'toolbarInvisible' }
                   });
                 } else if (isToolbarClipped) {
-                  console.error('[EditorHeader] ❌ Toolbar CLIPPED par parent (overflow/position)', {
-                    display: toolbarComputed.display,
-                    visibility: toolbarComputed.visibility,
-                    opacity: toolbarComputed.opacity,
-                    toolbarRect,
-                    parentHeaderRect: parentHeader ? parentHeader.getBoundingClientRect() : null,
-                    timestamp: Date.now()
-                  });
+                  // ✅ Log supprimé - trop verbeux
                 } else if (!isToolbarInViewport && toolbarRect) {
-                  console.warn('[EditorHeader] ⚠️ Toolbar HORS VIEWPORT (scroll?)', {
+                  logger.warn(LogCategory.EDITOR, '[EditorHeader] ⚠️ Toolbar HORS VIEWPORT (scroll?)', {
                     display: toolbarComputed.display,
                     visibility: toolbarComputed.visibility,
                     opacity: toolbarComputed.opacity,
                     toolbarRect,
                     viewportHeight: window.innerHeight,
                     viewportWidth: window.innerWidth,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    context: { noteId, operation: 'toolbarOutOfViewport' }
                   });
                 } else {
                   // ✅ Log de succès si toolbar est visible ET dans le viewport
-                  console.log('[EditorHeader] ✅ Toolbar VISIBLE et dans le viewport', {
+                  logger.debug(LogCategory.EDITOR, '[EditorHeader] ✅ Toolbar VISIBLE et dans le viewport', {
                     display: toolbarComputed.display,
                     visibility: toolbarComputed.visibility,
                     opacity: toolbarComputed.opacity,
@@ -245,17 +245,19 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
                     toolbarRect,
                     isInViewport: isToolbarInViewport,
                     isClipped: isToolbarClipped,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    context: { noteId, operation: 'toolbarVisible' }
                   });
                 }
               } else if (shouldRenderToolbar && editor) {
-                console.error('[EditorHeader] ❌ Toolbar NOT FOUND dans le DOM alors que devrait être rendue', {
+                logger.error(LogCategory.EDITOR, '[EditorHeader] ❌ Toolbar NOT FOUND dans le DOM alors que devrait être rendue', {
                   shouldRenderToolbar,
                   hasEditor: !!editor,
                   containerDisplay: computedStyle.display,
                   containerVisibility: computedStyle.visibility,
                   containerOpacity: computedStyle.opacity,
-                  timestamp: Date.now()
+                  timestamp: Date.now(),
+                  context: { noteId, operation: 'toolbarNotFound' }
                 });
               }
             }, 0);

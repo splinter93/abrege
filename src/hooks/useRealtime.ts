@@ -94,32 +94,41 @@ export function useRealtime({
   const initializeService = useCallback(async () => {
     // Si désactivé (readonly/public page), ne rien faire
     if (!enabled) {
+      logger.debug(LogCategory.EDITOR, '[useRealtime] initializeService skipped (disabled)', { userId, noteId });
       return;
     }
     
     if (!userId) {
+      logger.debug(LogCategory.EDITOR, '[useRealtime] initializeService skipped (no userId)', { userId, noteId });
       return;
     }
 
     // Protection contre les initialisations multiples
     if (isInitialized) {
+      logger.debug(LogCategory.EDITOR, '[useRealtime] initializeService skipped (already initialized)', { userId, noteId });
       return;
     }
 
     // Si on est en cours d'initialisation, ne pas réessayer
     if (isInitializingRef.current) {
+      logger.debug(LogCategory.EDITOR, '[useRealtime] initializeService skipped (already initializing)', { userId, noteId });
       return;
     }
 
     // Marquer comme en cours d'initialisation
     isInitializingRef.current = true;
+    logger.info(LogCategory.EDITOR, '[useRealtime] 🚀 Démarrage initialisation...', { userId, noteId, timestamp: Date.now() });
 
     // Validation des paramètres
     if (typeof userId !== 'string' || userId.trim() === '') {
+      logger.warn(LogCategory.EDITOR, '[useRealtime] userId invalide', { userId, noteId });
+      isInitializingRef.current = false;
       return;
     }
 
     if (userId === 'anonymous') {
+      logger.debug(LogCategory.EDITOR, '[useRealtime] userId est anonymous, skip', { userId, noteId });
+      isInitializingRef.current = false;
       return;
     }
 
@@ -132,29 +141,54 @@ export function useRealtime({
     configRef.current = config;
 
     try {
+      logger.info(LogCategory.EDITOR, '[useRealtime] 📞 Appel realtimeService.initialize...', {
+        userId: config.userId,
+        noteId: config.noteId,
+        timestamp: Date.now()
+      });
+      
       await realtimeService.initialize(config);
+      
+      logger.info(LogCategory.EDITOR, '[useRealtime] ✅ Service initialisé avec succès', {
+        userId: config.userId,
+        noteId: config.noteId,
+        timestamp: Date.now()
+      });
+      
       setIsInitialized(true);
       isInitializingRef.current = false;
 
       // S'abonner aux changements d'état
       unsubscribeStateRef.current = realtimeService.onStateChange((newState) => {
+        logger.debug(LogCategory.EDITOR, '[useRealtime] État changé', {
+          isConnected: newState.isConnected,
+          isConnecting: newState.isConnecting,
+          error: newState.error,
+          channels: newState.channels
+        });
         setState(newState);
         onStateChangeRef.current?.(newState);
       });
 
       // S'abonner aux événements
       unsubscribeEventRef.current = realtimeService.onEvent((event) => {
+        logger.debug(LogCategory.EDITOR, '[useRealtime] Événement reçu', {
+          type: event.type,
+          channel: event.channel,
+          source: event.source
+        });
         onEventRef.current?.(event);
       });
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       
-      logger.error(LogCategory.EDITOR, '[useRealtime] Erreur d\'initialisation:', {
+      logger.error(LogCategory.EDITOR, '[useRealtime] ❌ Erreur d\'initialisation:', {
         error: errorMessage,
         userId,
         noteId,
-        debug
+        debug,
+        stack: error instanceof Error ? error.stack : undefined
       });
       setIsInitialized(false);
       isInitializingRef.current = false;
@@ -173,24 +207,41 @@ export function useRealtime({
   useEffect(() => {
     // Si désactivé (readonly/public page), ne rien faire
     if (!enabled) {
+      logger.debug(LogCategory.EDITOR, '[useRealtime] ⏭️ Skipped (disabled)', { userId, noteId });
       return;
     }
     
     // Ignorer les userId invalides
     if (!userId || userId === 'anonymous') {
+      logger.debug(LogCategory.EDITOR, '[useRealtime] ⏭️ Skipped (invalid userId)', { userId, noteId });
       return;
     }
     
+    // ✅ FIX: Logger pour diagnostiquer
+    logger.info(LogCategory.EDITOR, '[useRealtime] 🔄 Initialisation...', {
+      userId,
+      noteId,
+      isInitialized,
+      enabled
+    });
+    
     // Ne s'exécuter que si on a un userId valide et qu'on n'est pas déjà initialisé
     if (!isInitialized) {
-      // Debounce pour éviter les initialisations multiples rapides
+      // ✅ FIX: Réduire le debounce à 100ms pour initialisation plus rapide
       if (initTimeoutRef.current) {
         clearTimeout(initTimeoutRef.current);
       }
       
       initTimeoutRef.current = setTimeout(() => {
+        logger.info(LogCategory.EDITOR, '[useRealtime] 🚀 Appel initializeService', {
+          userId,
+          noteId,
+          timestamp: Date.now()
+        });
         initializeService();
-      }, 500);
+      }, 100); // ✅ Réduit de 500ms à 100ms
+    } else {
+      logger.debug(LogCategory.EDITOR, '[useRealtime] ✅ Déjà initialisé', { userId, noteId });
     }
 
     // Cleanup
@@ -210,7 +261,7 @@ export function useRealtime({
         unsubscribeEventRef.current = null;
       }
     };
-  }, [userId, isInitialized, initializeService]);
+  }, [userId, noteId, isInitialized, enabled, initializeService]);
 
   // Gestion des changements de configuration - seulement pour les changements critiques
   useEffect(() => {

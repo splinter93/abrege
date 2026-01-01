@@ -1,6 +1,12 @@
+/**
+ * Composant principal de l'éditeur de notes
+ * 
+ * @description Éditeur de texte riche basé sur Tiptap avec support Markdown.
+ * Le Markdown est la source de vérité, le HTML est utilisé uniquement pour l'affichage.
+ * Optimisé pour les performances avec extensions réduites et gestion d'état intelligente.
+ */
+
 import React from 'react';
-// ✅ OPTIMISÉ: Bundle CSS consolidé (17 imports → 1)
-// Ordre critique conservé dans editor-bundle.css
 import '@/styles/editor-bundle.css';
 import EditorLayout from './EditorLayout';
 import EditorMainContent from './EditorMainContent';
@@ -8,81 +14,34 @@ import EditorHeaderSection from './EditorHeaderSection';
 import CraftedButton from '@/components/CraftedButton';
 import EditorTitle from './EditorTitle';
 import PublicTableOfContents from '@/components/TableOfContents';
-import { useFileSystemStore } from '@/store/useFileSystemStore';
-import type { FileSystemState } from '@/store/useFileSystemStore';
 import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
-import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
+import type { ShareSettings } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
-import { useEditor, EditorContent as TiptapEditorContent } from '@tiptap/react';
-import lowlight from '@/utils/lowlightInstance';
-import { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
-// DragHandle géré par NotionDragHandleExtension (voir editor-extensions.ts)
 import { useRouter } from 'next/navigation';
 import ImageMenu from '@/components/ImageMenu';
 import { useAuth } from '@/hooks/useAuth';
-import { simpleLogger as logger, LogCategory } from '@/utils/logger';
-import type { FullEditorInstance } from '@/types/editor';
+import { logger, LogCategory } from '@/utils/logger';
 import { useRealtime } from '@/hooks/useRealtime';
-// ❌ SUPPRIMÉ : useEditorStreamListener (endpoints stream:write/stream:listen supprimés)
-// import { useEditorStreamListener } from '@/hooks/useEditorStreamListener';
 import RealtimeStatus from '@/components/RealtimeStatus';
-import { preprocessMarkdown } from '@/utils/markdownPreprocessor';
 import { useEditorState } from '@/hooks/editor/useEditorState';
 import { useEditorHandlers } from '@/hooks/editor/useEditorHandlers';
 import { useEditorEffects } from '@/hooks/editor/useEditorEffects';
 import { useEditorHeadings } from '@/hooks/editor/useEditorHeadings';
-import EditorSyncManager from './EditorCore/EditorSyncManager';
+import { useEditorInitialization } from '@/hooks/editor/useEditorInitialization';
+import { useEditorData } from '@/hooks/editor/useEditorData';
+// import EditorSyncManager from './EditorCore/EditorSyncManager'; // ✅ DÉSACTIVÉ pour test
 import EditorContextMenuContainer from './EditorMenus/EditorContextMenuContainer';
 import { useShareManager } from './EditorMenus/EditorShareManager';
-// Types pour les mises à jour de note
-interface NoteUpdate {
-  a4_mode?: boolean;
-  slash_lang?: 'fr' | 'en';
-  wide_mode?: boolean;
-  font_family?: string;
-  markdown_content?: string;
-  [key: string]: unknown;
-}
-import { createEditorExtensions, PRODUCTION_EXTENSIONS_CONFIG } from '@/config/editor-extensions';
-import ContextMenu from './ContextMenu';
-import type { Editor as TiptapEditor } from '@tiptap/react';
-// ✅ NOUVEAUX IMPORTS - Sidebar Navigation
-import EditorSidebar from './EditorSidebar';
 import { useEditorNavigation } from '@/hooks/useEditorNavigation';
 import { EmbedDepthProvider } from '@/contexts/EmbedDepthContext';
+import EditorSidebar from './EditorSidebar';
+import type { Editor as TiptapEditor } from '@tiptap/react';
+import { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
+import { cleanupMermaidSVGs } from '@/utils/mermaidCleanup';
+import { preprocessEmbeds } from '@/utils/preprocessEmbeds';
+import { useEditorStreamListener } from '@/hooks/useEditorStreamListener';
+import { getEditorMarkdown } from '@/utils/editorHelpers';
 
-/**
- * Nettoie les SVG Mermaid orphelins du DOM
- */
-function cleanupMermaidSVGs() {
-  try {
-    const orphanedSVGs = document.querySelectorAll('body > svg[id^="mermaid-"]');
-    orphanedSVGs.forEach(svg => svg.remove());
-    const orphanedDivs = document.querySelectorAll('body > div[id^="dmermaid-"]');
-    orphanedDivs.forEach(div => div.remove());
-  } catch (error) {
-    logger.error('[Editor] Erreur cleanup Mermaid:', error);
-  }
-}
-
-/**
- * Composant principal de l'éditeur de notes
- * 
- * @description Éditeur de texte riche basé sur Tiptap avec support Markdown.
- * Le Markdown est la source de vérité, le HTML est utilisé uniquement pour l'affichage.
- * Optimisé pour les performances avec extensions réduites et gestion d'état intelligente.
- * 
- * @param noteId - ID unique de la note à éditer
- * @param readonly - Mode lecture seule (désactive l'édition)
- * @param userId - ID de l'utilisateur (par défaut: 'me')
- * 
- * @returns Composant React de l'éditeur complet
- * 
- * @example
- * ```tsx
- * <Editor noteId="note-123" readonly={false} userId="user-456" />
- * ```
- */
 interface EditorProps { 
   noteId: string; 
   readonly?: boolean; 
@@ -91,53 +50,41 @@ interface EditorProps {
   onClose?: () => void;
   onEditorRef?: (editor: TiptapEditor | null) => void;
   onReady?: () => void;
-  forceShowToolbar?: boolean; // ✅ Force la toolbar visible (pour canvas)
-  toolbarContext?: 'editor' | 'canvas'; // ✅ Contexte pour séparer localStorage
+  forceShowToolbar?: boolean; // Force la toolbar visible (pour canvas)
+  toolbarContext?: 'editor' | 'canvas'; // Contexte pour séparer localStorage
 }
 
-const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propUserId, canEdit = true, onClose, onEditorRef, onReady, forceShowToolbar, toolbarContext = 'editor' }) => {
-  // ✅ DEBUG: Log pour diagnostiquer
+const Editor: React.FC<EditorProps> = ({ 
+  noteId, 
+  readonly = false, 
+  userId: propUserId, 
+  canEdit = true, 
+  onClose, 
+  onEditorRef, 
+  onReady, 
+  forceShowToolbar, 
+  toolbarContext = 'editor' 
+}) => {
+  // DEBUG: Log pour diagnostiquer
   React.useEffect(() => {
     logger.info(LogCategory.EDITOR, '[Editor] Props reçues', {
       noteId,
       forceShowToolbar,
       toolbarContext,
-      readonly
+      readonly,
+      context: { operation: 'editorInit' }
     });
   }, [noteId, forceShowToolbar, toolbarContext, readonly]);
 
-  // 🔧 CORRECTION : Utiliser le vrai ID utilisateur de la session
+  // CORRECTION : Utiliser le vrai ID utilisateur de la session
   const { user } = useAuth();
   const userId = propUserId || user?.id || 'anonymous';
-  
   const router = useRouter();
   
-  const selectNote = React.useCallback((s: FileSystemState) => s.notes[noteId], [noteId]);
-  const note = useFileSystemStore(selectNote);
-  
-  const updateNote = useFileSystemStore(s => s.updateNote);
-  // ✅ PRÉTRAITER le Markdown pour échapper les ~ dans les tables (fix LLM)
-  const rawContent = note?.markdown_content || '';
-  
-  // 🔍 Debug: Log pour diagnostiquer le contenu
-  React.useEffect(() => {
-    if (noteId) {
-      console.log('[Editor] 📋 Note du store', {
-        noteId,
-        noteExists: !!note,
-        noteIdFromNote: note?.id,
-        hasContent: !!note?.markdown_content,
-        contentLength: note?.markdown_content?.length || 0,
-        rawContentLength: rawContent?.length || 0,
-        matches: note?.id === noteId,
-        rawContent: rawContent?.substring(0, 100) // Premiers 100 caractères
-      });
-    }
-  }, [noteId, note, rawContent]);
-  const content = React.useMemo(() => preprocessMarkdown(rawContent), [rawContent]);
-  const { html } = useMarkdownRender({ content });
+  // Récupérer les données de la note
+  const { note, rawContent, content, html, updateNote } = useEditorData({ noteId });
 
-  // ✅ OPTIMISÉ: État centralisé avec useEditorState
+  // OPTIMISÉ: État centralisé avec useEditorState
   const editorState = useEditorState({
     noteId,
     initialTitle: note?.source_title || '',
@@ -155,66 +102,263 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
       allow_edit: note.share_settings.allow_edit || false,
       allow_comments: note.share_settings.allow_comments || false,
     } : getDefaultShareSettings(),
-    toolbarContext, // ✅ Contexte pour séparer localStorage
-    forceShowToolbar, // ✅ Force la toolbar visible si défini
+    toolbarContext,
+    forceShowToolbar,
   });
-
-  // ✅ DEBUG: Log pour vérifier l'état final
-  React.useEffect(() => {
-    logger.info(LogCategory.EDITOR, '[Editor] État toolbar après useEditorState', {
-      noteId,
-      showToolbar: editorState.ui.showToolbar,
-      previewMode: editorState.ui.previewMode,
-      forceShowToolbar,
-      toolbarContext,
-      timestamp: Date.now()
-    });
-  }, [noteId, editorState.ui.showToolbar, editorState.ui.previewMode, forceShowToolbar, toolbarContext]);
 
   // Refs
   const kebabBtnRef = React.useRef<HTMLButtonElement>(null) as React.RefObject<HTMLButtonElement>;
   const slashMenuRef = React.useRef<EditorSlashMenuHandle | null>(null);
   const editorContainerRef = React.useRef<HTMLDivElement | null>(null);
-  const autoFocusRef = React.useRef(false);
-  const readyNotifiedRef = React.useRef(false);
 
-  // ✅ Sidebar Navigation - Pattern chat (hover zone + transform)
+  // Sidebar Navigation - Pattern chat (hover zone + transform)
   const [sidebarVisible, setSidebarVisible] = React.useState(false);
-  
-  // ✅ FIX React 18: Ne render l'éditeur que quand le contenu initial est chargé
-  const [isContentReady, setIsContentReady] = React.useState(false);
-  
-  // Reset isContentReady quand noteId change
-  React.useEffect(() => {
-    setIsContentReady(false);
-    autoFocusRef.current = false;
-    readyNotifiedRef.current = false;
-  }, [noteId]);
-
-  React.useEffect(() => {
-    if (isContentReady && !readyNotifiedRef.current) {
-      readyNotifiedRef.current = true;
-      onReady?.();
-    }
-  }, [isContentReady, onReady]);
 
   // Mode readonly (pages publiques ou preview mode)
   const isReadonly = readonly || editorState.ui.previewMode;
 
-  // 🔄 Realtime Integration - Désactivé en mode readonly (pages publiques)
-  const realtime = useRealtime({
-    userId,
+  // REFACTO: Tous les handlers extraits dans useEditorHandlers
+  const handlers = useEditorHandlers({
     noteId,
-    debug: false,
-    enabled: !isReadonly,
-    onEvent: (event) => {
-      // Les événements sont déjà traités par le dispatcher
-    },
-    onStateChange: (state) => {
+    userId,
+    isReadonly,
+    editor: null, // Sera passé après création de l'instance Tiptap
+    editorState,
+    updateNote,
+    content,
+    rawContent,
+    note
+  });
+
+  // Initialisation de l'éditeur Tiptap
+  const { editor, isContentReady, setIsContentReady } = useEditorInitialization({
+    noteId,
+    isReadonly,
+    onEditorUpdate: handlers.handleEditorUpdate,
+    onEditorRef,
+    onReady
+  });
+
+  // ✅ DÉSACTIVÉ EditorSyncManager : Chargement manuel du contenu initial
+  const hasLoadedInitialContentRef = React.useRef(false);
+  const lastNoteIdRef = React.useRef<string>('');
+  const contentLoadTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  
+  React.useEffect(() => {
+    // Reset si noteId change
+    if (lastNoteIdRef.current !== noteId) {
+      hasLoadedInitialContentRef.current = false;
+      lastNoteIdRef.current = noteId;
+      setIsContentReady(false); // ✅ FIX: Reset isContentReady quand noteId change
+      
+      // Cleanup timeout précédent
+      if (contentLoadTimeoutRef.current) {
+        clearTimeout(contentLoadTimeoutRef.current);
+        contentLoadTimeoutRef.current = null;
+      }
+    }
+    
+    // ✅ FIX: Ne pas attendre rawContent si l'éditeur est prêt
+    // Si rawContent est null/undefined, on charge quand même un éditeur vide
+    if (!editor || hasLoadedInitialContentRef.current || isReadonly) {
+      return;
+    }
+    
+    // ✅ FIX: Si rawContent n'est pas encore chargé, attendre un peu puis charger vide
+    // Cela évite que le canvas reste bloqué en chargement
+    if (rawContent === undefined) {
+      // Attendre un peu pour voir si rawContent arrive
+      contentLoadTimeoutRef.current = setTimeout(() => {
+        if (!editor || hasLoadedInitialContentRef.current) return;
+        
+        // Si rawContent n'est toujours pas là après 500ms, charger un éditeur vide
+        hasLoadedInitialContentRef.current = true;
+        editor.commands.clearContent(true);
+        editor.commands.insertContent({
+          type: 'paragraph',
+          attrs: { 'data-placeholder': 'Écrivez quelque chose d\'incroyable...' },
+          content: []
+        });
+        setIsContentReady(true);
+        logger.info(LogCategory.EDITOR, '[Editor] Contenu initial chargé (vide - rawContent undefined)', {
+          noteId,
+          timestamp: Date.now()
+        });
+      }, 500);
+      
+      return () => {
+        if (contentLoadTimeoutRef.current) {
+          clearTimeout(contentLoadTimeoutRef.current);
+          contentLoadTimeoutRef.current = null;
+        }
+      };
+    }
+    
+    // rawContent est défini (même si null ou vide)
+    hasLoadedInitialContentRef.current = true;
+    
+    // Cleanup timeout si rawContent arrive avant
+    if (contentLoadTimeoutRef.current) {
+      clearTimeout(contentLoadTimeoutRef.current);
+      contentLoadTimeoutRef.current = null;
+    }
+    
+    // Charger le contenu dans l'éditeur
+    setTimeout(() => {
+      if (!editor) return;
+      
+      // ✅ Preprocesser {{embed:xyz}} → HTML pour que Tiptap puisse créer les nodes
+      const processedContent = preprocessEmbeds(rawContent || '');
+      
+      if (!processedContent.trim()) {
+        editor.commands.clearContent(true);
+        editor.commands.insertContent({
+          type: 'paragraph',
+          attrs: { 'data-placeholder': 'Écrivez quelque chose d\'incroyable...' },
+          content: []
+        });
+      } else {
+        editor.commands.setContent(processedContent);
+      }
+      
+      setIsContentReady(true);
+      logger.info(LogCategory.EDITOR, '[Editor] Contenu initial chargé', {
+        noteId,
+        contentLength: processedContent.length,
+        timestamp: Date.now()
+      });
+    }, 0);
+  }, [editor, rawContent, noteId, isReadonly, setIsContentReady]);
+
+  // ✅ FIX: Synchroniser les mises à jour realtime du store vers l'éditeur
+  // (remplace la partie désactivée de EditorSyncManager)
+  const lastStoreContentRef = React.useRef<string>('');
+  React.useEffect(() => {
+    // Ne synchroniser que si :
+    // 1. L'éditeur existe et le contenu initial est chargé
+    // 2. On n'est pas en mode readonly
+    // 3. Le contenu du store a vraiment changé
+    if (!editor || !hasLoadedInitialContentRef.current || isReadonly) {
+      return;
+    }
+
+    // Normaliser le contenu pour la comparaison (éviter les différences d'espaces)
+    const normalizeContent = (content: string): string => {
+      return content.trim().replace(/\s+/g, ' ');
+    };
+
+    const normalizedStoreContent = normalizeContent(rawContent || '');
+    const normalizedLastContent = normalizeContent(lastStoreContentRef.current);
+    const normalizedEditorContent = normalizeContent(getEditorMarkdown(editor));
+
+    // Si le store a changé ET est différent de l'éditeur
+    if (normalizedStoreContent !== normalizedLastContent && 
+        normalizedStoreContent !== normalizedEditorContent) {
+      
+      // Ne pas mettre à jour si l'utilisateur est en train de taper (éviter conflits)
+      if (editor.isFocused) {
+        logger.debug(LogCategory.EDITOR, '[Editor] ⏭️ Store mis à jour mais utilisateur en train de taper, skip', {
+          storeLength: normalizedStoreContent.length,
+          editorLength: normalizedEditorContent.length
+        });
+        return;
+      }
+
+      // Mettre à jour l'éditeur avec le contenu du store
+      logger.info(LogCategory.EDITOR, '[Editor] 🔄 Mise à jour realtime: store → éditeur', {
+        storeLength: normalizedStoreContent.length,
+        editorLength: normalizedEditorContent.length,
+        noteId
+      });
+
+      editorState.setIsUpdatingFromStore(true);
+      
+      // Preprocesser les embeds avant de charger
+      const processedContent = preprocessEmbeds(rawContent || '');
+      editor.commands.setContent(processedContent);
+      
+      lastStoreContentRef.current = rawContent || '';
+      
+      // Réinitialiser le flag après un court délai
+      setTimeout(() => {
+        editorState.setIsUpdatingFromStore(false);
+      }, 100);
+    } else {
+      // Mettre à jour la référence même si pas de changement visible
+      lastStoreContentRef.current = rawContent || '';
+    }
+  }, [rawContent, editor, isReadonly, noteId, editorState]);
+
+  // REFACTO: Mettre à jour le handler avec l'instance editor réelle
+  const handlersWithEditor = useEditorHandlers({
+    noteId,
+    userId,
+    isReadonly,
+    editor,
+    editorState,
+    updateNote,
+    content,
+    rawContent,
+    note
+  });
+
+  // Navigation entre notes (sans popup confirmation car autosave actif)
+  const { switchNote } = useEditorNavigation({
+    currentNoteId: noteId,
+    onBeforeNavigate: () => {
+      logger.debug(LogCategory.EDITOR, '[Editor] Navigation vers une autre note...', {
+        noteId,
+        context: { operation: 'noteNavigation' }
+      });
     }
   });
 
-  // ✅ OPTIMISÉ: Utilisation du hook useShareManager
+  // REFACTO: Tous les effects extraits dans useEditorEffects
+  useEditorEffects({
+    editor,
+    note,
+    noteId,
+    content,
+    isReadonly,
+    editorState,
+    kebabBtnRef,
+    slashMenuRef,
+    handlers: handlersWithEditor
+  });
+
+  // REFACTO: Extraction des headings dans useEditorHeadings
+  const headings = useEditorHeadings({
+    editor,
+    content,
+    forceTOCUpdate: editorState.document.forceTOCUpdate
+  });
+
+  // ✅ Streaming LLM - Écoute les streams SSE pour les mises à jour LLM
+  // ✅ FIX: Réactivé avec le bon endpoint (/api/v2/canvas/{noteId}/ops:listen)
+  // Remplace EditorSyncManager pour les mises à jour en temps réel
+  // ✅ FIX: Activer dès que l'éditeur existe (même si contenu pas encore chargé)
+  useEditorStreamListener(noteId, editor, {
+    enabled: !isReadonly && !!editor, // ✅ FIX: Activer dès que l'éditeur existe (pas besoin d'attendre isContentReady)
+    debug: true, // ✅ DEBUG: Activer pour diagnostiquer le streaming
+    defaultPosition: 'cursor' // Insérer au niveau du curseur
+  });
+
+  // Realtime Integration - Désactivé en mode readonly (pages publiques)
+  // ✅ FIX: Activer même sans éditeur - le realtime peut fonctionner indépendamment
+  useRealtime({
+    userId,
+    noteId,
+    debug: false,
+    enabled: !isReadonly && !!userId && userId !== 'anonymous', // ✅ Activer dès qu'on a un userId valide
+    onEvent: () => {
+      // Les événements sont déjà traités par le dispatcher
+    },
+    onStateChange: () => {
+      // Gestion de l'état realtime
+    }
+  });
+
+  // OPTIMISÉ: Utilisation du hook useShareManager
   const { handleShareSettingsChange } = useShareManager({
     noteId,
     editorState,
@@ -238,151 +382,15 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
         allow_comments: shareSettings.allow_comments || false
       });
     }
-  }, [note?.share_settings, editorState.setShareSettings]); // Utiliser setShareSettings au lieu de editorState complet
+  }, [note?.share_settings, editorState.setShareSettings]);
 
-  // ✅ REFACTO: Tous les handlers extraits dans useEditorHandlers
-  const handlers = useEditorHandlers({
-    noteId,
-    userId,
-    isReadonly,
-    editor: null, // Sera passé après création de l'instance Tiptap
-    editorState,
-    updateNote,
-    content,
-    rawContent,
-    note
-  });
-
-  // Real Tiptap editor instance
-  // ✅ FIX React 18: Ne pas passer le contenu initial pour éviter création synchrone des NodeViews
-  // Le contenu sera chargé par EditorSyncManager dans queueMicrotask
-  const editor = useEditor({
-    editable: !isReadonly,
-    immediatelyRender: false,
-    extensions: createEditorExtensions(PRODUCTION_EXTENSIONS_CONFIG, lowlight),
-    content: '', // ✅ Vide au départ, EditorSyncManager chargera le contenu
-    onUpdate: handlers.handleEditorUpdate,
-  }); // ✅ SANS dépendance - EditorSyncManager gère le rechargement si noteId change
-
-  // ✅ DEBUG: Log pour vérifier si editor est créé
+  // CLEANUP: Nettoyer SVG Mermaid orphelins au unmount et à chaque changement de page
   React.useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      logger.info(LogCategory.EDITOR, '[Editor] Editor instance status', {
-        noteId,
-        hasEditor: !!editor,
-        editorReady: editor ? 'ready' : 'not-ready',
-        timestamp: Date.now()
-      });
-    }
-  }, [editor, noteId]);
-
-  // ❌ DÉSACTIVÉ : useEditorStreamListener supprimé (endpoints stream:write/stream:listen supprimés)
-  // Remplacé par editNoteContent avec streaming automatique
-  // useEditorStreamListener(noteId, editor, {
-  //   enabled: !isReadonly && !!editor,
-  //   debug: false
-  // });
-
-  React.useEffect(() => {
-    onEditorRef?.(editor as TiptapEditor | null);
-    return () => {
-      onEditorRef?.(null);
-    };
-  }, [editor, onEditorRef]);
-
-  // ✅ REFACTO: Mettre à jour le handler avec l'instance editor réelle
-  const handlersWithEditor = useEditorHandlers({
-    noteId,
-    userId,
-    isReadonly,
-    editor,
-    editorState,
-    updateNote,
-    content,
-    rawContent,
-    note
-  });
-
-  // ✅ Navigation entre notes (sans popup confirmation car autosave actif)
-  const { switchNote } = useEditorNavigation({
-    currentNoteId: noteId,
-    onBeforeNavigate: () => {
-      // Cleanup avant navigation (optionnel)
-      logger.dev('[Editor] Navigation vers une autre note...');
-    }
-  });
-
-  // ✅ REFACTO: Tous les effects extraits dans useEditorEffects
-  useEditorEffects({
-    editor,
-    note,
-    noteId,
-    content,
-    isReadonly,
-    editorState,
-    kebabBtnRef,
-    slashMenuRef,
-    handlers: handlersWithEditor
-  });
-
-  // ✅ REFACTO: Extraction des headings dans useEditorHeadings
-  const headings = useEditorHeadings({
-    editor,
-    content,
-    forceTOCUpdate: editorState.document.forceTOCUpdate
-  });
-
-  // ✅ CLEANUP: Nettoyer SVG Mermaid orphelins au unmount et à chaque changement de page
-  React.useEffect(() => {
-    // Cleanup au changement de note (noteId change)
     cleanupMermaidSVGs();
-    
-    // Cleanup au unmount du composant
     return () => {
       cleanupMermaidSVGs();
     };
   }, [noteId]);
-
-  React.useEffect(() => {
-    if (isReadonly) return;
-    if (!editor) return;
-    if (!isContentReady) return;
-    if (autoFocusRef.current) return;
-
-    const sanitizedContent = (rawContent || '').replace(/\s+/g, '');
-    if (sanitizedContent.length > 0) {
-      autoFocusRef.current = true;
-      return;
-    }
-
-    let attempts = 0;
-    let cancelled = false;
-
-    const focusWithRetry = () => {
-      if (!editor || cancelled) {
-        return;
-      }
-
-      const focusApplied = editor.commands.focus('start');
-      const hasFocus = editor.isFocused || editor.view.hasFocus();
-
-      if (focusApplied && hasFocus) {
-        autoFocusRef.current = true;
-        return;
-      }
-
-      attempts += 1;
-      if (attempts < 5) {
-        requestAnimationFrame(focusWithRetry);
-      }
-    };
-
-    requestAnimationFrame(focusWithRetry);
-
-    return () => {
-      cancelled = true;
-    };
-  }, [editor, isReadonly, isContentReady, rawContent]);
 
   if (!note) {
     return null;
@@ -390,7 +398,7 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
 
   return (
     <EmbedDepthProvider>
-      {/* ✅ Sidebar Navigation - Pattern chat exact */}
+      {/* Sidebar Navigation - Pattern chat exact */}
       {!isReadonly && (
         <>
           {/* Hover zone 100px à gauche */}
@@ -410,10 +418,11 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
         </>
       )}
 
-      {/* 🔄 Realtime System - Service simple et robuste */}
-        <div className="editor-toc-fixed">
-          <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
-        </div>
+      {/* Table des matières fixe */}
+      <div className="editor-toc-fixed">
+        <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
+      </div>
+      
       <EditorLayout
         layoutClassName={editorState.headerImage.url ? (editorState.headerImage.titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout imageOnly noImage'}
         header={(
@@ -423,28 +432,36 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
             userId={userId}
             isReadonly={isReadonly}
             editorState={editorState}
-              currentFont={note?.font_family || 'Figtree'}
-              kebabBtnRef={kebabBtnRef}
+            currentFont={note?.font_family || 'Figtree'}
+            kebabBtnRef={kebabBtnRef}
             canEdit={canEdit}
             handlers={handlersWithEditor}
             handleShareSettingsChange={handleShareSettingsChange}
-              publicUrl={note?.public_url || undefined}
+            publicUrl={note?.public_url || undefined}
             onClose={onClose ?? (() => router.back())}
-            />
+          />
         )}
-        title={editorState.headerImage.titleInImage ? undefined : <EditorTitle value={editorState.document.title} onChange={editorState.setTitle} onBlur={handlersWithEditor.handleTitleBlur} placeholder="Titre de la note..." disabled={isReadonly} />}
+        title={editorState.headerImage.titleInImage ? undefined : (
+          <EditorTitle 
+            value={editorState.document.title} 
+            onChange={editorState.setTitle} 
+            onBlur={handlersWithEditor.handleTitleBlur} 
+            placeholder="Titre de la note..." 
+            disabled={isReadonly} 
+          />
+        )}
         content={(
           <EditorMainContent
             isReadonly={isReadonly}
-                editor={editor} 
+            editor={editor} 
             html={html}
             editorContainerRef={editorContainerRef}
             slashMenuRef={slashMenuRef}
             slashLang={editorState.ui.slashLang}
-                  onOpenImageMenu={() => { 
-                    editorState.setImageMenuTarget('content'); 
-                    editorState.setImageMenuOpen(true); 
-                  }}
+            onOpenImageMenu={() => { 
+              editorState.setImageMenuTarget('content'); 
+              editorState.setImageMenuOpen(true); 
+            }}
             onSlashInsert={(cmd) => handlersWithEditor.handleSlashCommandInsert(cmd)}
             noteId={note?.id}
             noteTitle={note?.source_title}
@@ -455,6 +472,7 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
           />
         )}
       />
+      
       {/* Global ImageMenu for both header and content insertions */}
       <ImageMenu
         open={editorState.menus.imageMenuOpen}
@@ -474,25 +492,24 @@ const Editor: React.FC<EditorProps> = ({ noteId, readonly = false, userId: propU
         }}
       />
       
-      {/* ✅ EditorSyncManager OPTIMISÉ - Recharge automatiquement quand noteId change */}
-      <EditorSyncManager
+      {/* ✅ DÉSACTIVÉ : EditorSyncManager - Test pour diagnostiquer un bug */}
+      {/* <EditorSyncManager
         editor={editor}
         storeContent={rawContent}
         editorState={editorState}
         noteId={noteId}
         onInitialContentLoaded={() => setIsContentReady(true)}
-      />
+      /> */}
       
-      {/* 🔍 Realtime Status (dev only) */}
+      {/* Realtime Status (dev only) */}
       {process.env.NODE_ENV === 'development' && userId && (
         <RealtimeStatus userId={userId} noteId={noteId} />
       )}
       
       {/* Bouton "Crafted with Scrivia" - visible en mode preview */}
       {editorState.ui.previewMode && <CraftedButton />}
-      
     </EmbedDepthProvider>
   );
 };
 
-export default Editor; 
+export default Editor;
