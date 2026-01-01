@@ -285,7 +285,12 @@ aside.unified-sidebar {
 .unified-nav-link.active {
   background: var(--sidebar-item-active) !important;
   color: var(--chat-text-primary) !important; /* ✅ Variable unifiée */
-  font-weight: 500 !important;
+  font-weight: 425 !important;
+}
+
+/* ✅ Ajustement font-weight pour Manrope uniquement */
+body.chat-font-manrope-active .unified-nav-link.active {
+  font-weight: 525 !important;
 }
 
 /* Mode collapsed - centrer les icônes */
@@ -440,7 +445,7 @@ aside.unified-sidebar {
   background: rgba(0, 0, 0, 0.9) !important;
   color: #ffffff !important;
   font-size: 12px !important;
-  font-weight: 500 !important;
+  font-weight: 425 !important;
   border-radius: 6px !important;
   white-space: nowrap !important;
   z-index: 1000 !important;

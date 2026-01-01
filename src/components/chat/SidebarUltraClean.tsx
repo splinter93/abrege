@@ -219,7 +219,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                       onClick={(e) => e.stopPropagation()}
                     />
                   ) : (
-                    <div style={{ fontSize: '13px', fontWeight: 500 }}>{session.name}</div>
+                    <div className="sidebar-session-name" style={{ fontSize: '13px' }}>{session.name}</div>
                   )}
                 </div>
               </button>

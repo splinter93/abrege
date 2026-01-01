@@ -90,6 +90,7 @@
 
 body.chat-font-manrope-active .chat-markdown {
   font-weight: 525; /* Légèrement plus gras que 425 */
+  font-size: 15.5px; /* ✅ Taille spécifique pour Manrope */
 }
 
 body.chat-font-manrope-active .chat-markdown p {
@@ -101,21 +102,21 @@ body.chat-font-manrope-active .chat-markdown strong {
 }
 
 body.chat-font-manrope-active .chat-markdown h1 {
-  font-weight: 825; /* Légèrement plus gras que 800 */
+  font-weight: 850; /* ✅ Augmenté pour Manrope (était 825) */
 }
 
 body.chat-font-manrope-active .chat-markdown h2 {
-  font-weight: 775; /* Légèrement plus gras que 750 */
+  font-weight: 800; /* ✅ Augmenté pour Manrope (était 775) */
 }
 
 body.chat-font-manrope-active .chat-markdown h3 {
-  font-weight: 775; /* Légèrement plus gras que 750 */
+  font-weight: 800; /* ✅ Augmenté pour Manrope (était 775) */
 }
 
 body.chat-font-manrope-active .chat-markdown h4,
 body.chat-font-manrope-active .chat-markdown h5,
 body.chat-font-manrope-active .chat-markdown h6 {
-  font-weight: 725; /* Légèrement plus gras que 700 */
+  font-weight: 750; /* ✅ Augmenté pour Manrope (était 725) */
 }
 
 /* =============================================================================
