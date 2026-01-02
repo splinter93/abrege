@@ -398,8 +398,9 @@ const Editor: React.FC<EditorProps> = ({
   }
 
   return (
-    <EmbedDepthProvider>
-      {/* Sidebar Navigation - Pattern chat exact */}
+    <EditorErrorBoundary>
+      <EmbedDepthProvider>
+        {/* Sidebar Navigation - Pattern chat exact */}
       {!isReadonly && (
         <>
           {/* Hover zone 100px à gauche */}
@@ -419,92 +420,92 @@ const Editor: React.FC<EditorProps> = ({
         </>
       )}
 
-      {/* Table des matières fixe */}
-      <div className="editor-toc-fixed">
-        <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
-      </div>
-      
-      <EditorLayout
-        layoutClassName={editorState.headerImage.url ? (editorState.headerImage.titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout imageOnly noImage'}
-        header={(
-          <EditorHeaderSection
-            editor={editor}
-            noteId={noteId}
-            userId={userId}
-            isReadonly={isReadonly}
-            editorState={editorState}
-            currentFont={note?.font_family || 'Figtree'}
-            kebabBtnRef={kebabBtnRef}
-            canEdit={canEdit}
-            handlers={handlersWithEditor}
-            handleShareSettingsChange={handleShareSettingsChange}
-            publicUrl={note?.public_url || undefined}
-            onClose={onClose ?? (() => router.back())}
-          />
-        )}
-        title={editorState.headerImage.titleInImage ? undefined : (
-          <EditorTitle 
-            value={editorState.document.title} 
-            onChange={editorState.setTitle} 
-            onBlur={handlersWithEditor.handleTitleBlur} 
-            placeholder="Titre de la note..." 
-            disabled={isReadonly} 
-          />
-        )}
-        content={(
-          <EditorMainContent
-            isReadonly={isReadonly}
-            editor={editor} 
-            html={html}
-            editorContainerRef={editorContainerRef}
-            slashMenuRef={slashMenuRef}
-            slashLang={editorState.ui.slashLang}
-            onOpenImageMenu={() => { 
-              editorState.setImageMenuTarget('content'); 
-              editorState.setImageMenuOpen(true); 
-            }}
-            onSlashInsert={(cmd) => handlersWithEditor.handleSlashCommandInsert(cmd)}
-            noteId={note?.id}
-            noteTitle={note?.source_title}
-            noteContent={rawContent}
-            noteSlug={note?.slug}
-            classeurId={note?.classeur_id ?? undefined}
-            isContentReady={isContentReady}
-          />
-        )}
-      />
-      
-      {/* Global ImageMenu for both header and content insertions */}
-      {/* ✅ Afficher le menu d'image si ouvert ET (toolbar visible OU target = header) */}
-      {(editorState.ui.showToolbar || editorState.menus.imageMenuTarget === 'header') && (
-        <ImageMenu
-          open={editorState.menus.imageMenuOpen}
-          onClose={() => editorState.setImageMenuOpen(false)}
-          onInsertImage={(src: string) => handlersWithEditor.handleImageInsert(src, editorState.menus.imageMenuTarget)}
-          noteId={note.id}
-          userId={userId}
+        {/* Table des matières fixe */}
+        <div className="editor-toc-fixed">
+          <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
+        </div>
+        
+        <EditorLayout
+          layoutClassName={editorState.headerImage.url ? (editorState.headerImage.titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout imageOnly noImage'}
+          header={(
+            <EditorHeaderSection
+              editor={editor}
+              noteId={noteId}
+              userId={userId}
+              isReadonly={isReadonly}
+              editorState={editorState}
+              currentFont={note?.font_family || 'Figtree'}
+              kebabBtnRef={kebabBtnRef}
+              canEdit={canEdit}
+              handlers={handlersWithEditor}
+              handleShareSettingsChange={handleShareSettingsChange}
+              publicUrl={note?.public_url || undefined}
+              onClose={onClose ?? (() => router.back())}
+            />
+          )}
+          title={editorState.headerImage.titleInImage ? undefined : (
+            <EditorTitle 
+              value={editorState.document.title} 
+              onChange={editorState.setTitle} 
+              onBlur={handlersWithEditor.handleTitleBlur} 
+              placeholder="Titre de la note..." 
+              disabled={isReadonly} 
+            />
+          )}
+          content={(
+            <EditorMainContent
+              isReadonly={isReadonly}
+              editor={editor} 
+              html={html}
+              editorContainerRef={editorContainerRef}
+              slashMenuRef={slashMenuRef}
+              slashLang={editorState.ui.slashLang}
+              onOpenImageMenu={() => { 
+                editorState.setImageMenuTarget('content'); 
+                editorState.setImageMenuOpen(true); 
+              }}
+              onSlashInsert={(cmd) => handlersWithEditor.handleSlashCommandInsert(cmd)}
+              noteId={note?.id}
+              noteTitle={note?.source_title}
+              noteContent={rawContent}
+              noteSlug={note?.slug}
+              classeurId={note?.classeur_id ?? undefined}
+              isContentReady={isContentReady}
+            />
+          )}
         />
-      )}
-      
-      {/* Menu contextuel Notion-like */}
-      <EditorContextMenuContainer
-        editor={editor}
-        editorState={editorState}
-        onOpenImageMenu={() => {
-          editorState.setImageMenuTarget('content');
-          editorState.setImageMenuOpen(true);
-        }}
-      />
-      
-      {/* ✅ DÉSACTIVÉ : EditorSyncManager - Test pour diagnostiquer un bug */}
-      {/* <EditorSyncManager
-        editor={editor}
-        storeContent={rawContent}
-        editorState={editorState}
-        noteId={noteId}
-        onInitialContentLoaded={() => setIsContentReady(true)}
-      /> */}
-      
+        
+        {/* Global ImageMenu for both header and content insertions */}
+        {/* ✅ Afficher le menu d'image si ouvert ET (toolbar visible OU target = header) */}
+        {(editorState.ui.showToolbar || editorState.menus.imageMenuTarget === 'header') && (
+          <ImageMenu
+            open={editorState.menus.imageMenuOpen}
+            onClose={() => editorState.setImageMenuOpen(false)}
+            onInsertImage={(src: string) => handlersWithEditor.handleImageInsert(src, editorState.menus.imageMenuTarget)}
+            noteId={note.id}
+            userId={userId}
+          />
+        )}
+        
+        {/* Menu contextuel Notion-like */}
+        <EditorContextMenuContainer
+          editor={editor}
+          editorState={editorState}
+          onOpenImageMenu={() => {
+            editorState.setImageMenuTarget('content');
+            editorState.setImageMenuOpen(true);
+          }}
+        />
+        
+        {/* ✅ DÉSACTIVÉ : EditorSyncManager - Test pour diagnostiquer un bug */}
+        {/* <EditorSyncManager
+          editor={editor}
+          storeContent={rawContent}
+          editorState={editorState}
+          noteId={noteId}
+          onInitialContentLoaded={() => setIsContentReady(true)}
+        /> */}
+        
         {/* Realtime Status (dev only) */}
         {process.env.NODE_ENV === 'development' && userId && (
           <RealtimeStatus userId={userId} noteId={noteId} />

@@ -133,7 +133,7 @@ class EditorSaveService {
       
       const waitTime = Date.now() - startTime;
       if (waitTime > 1000) {
-        logger.dev(LogCategory.EDITOR, '[EditorSaveService] ⏱️ Save operation waited', {
+        logger.debug(LogCategory.EDITOR, '[EditorSaveService] ⏱️ Save operation waited', {
           noteId: noteId.substring(0, 8),
           waitTime: `${waitTime}ms`
         });
@@ -151,7 +151,7 @@ class EditorSaveService {
       ]);
       
       const totalTime = Date.now() - startTime;
-      logger.dev(LogCategory.EDITOR, '[EditorSaveService] ✅ Save operation completed', {
+      logger.debug(LogCategory.EDITOR, '[EditorSaveService] ✅ Save operation completed', {
         noteId: noteId.substring(0, 8),
         totalTime: `${totalTime}ms`
       });
@@ -318,7 +318,7 @@ class EditorSaveService {
       if (options.updateNote) {
         options.updateNote(noteId, payload);
       }
-      logger.dev(LogCategory.EDITOR, '[EditorSaveService] Temporary note, skipping API', {
+      logger.debug(LogCategory.EDITOR, '[EditorSaveService] Temporary note, skipping API', {
         noteId: noteId.substring(0, 8),
         operationId
       });
@@ -344,7 +344,7 @@ class EditorSaveService {
 
       // Si note temporaire, ne pas appeler l'API
       if (isTemporary) {
-        logger.dev(LogCategory.EDITOR, '[EditorSaveService] Temporary note, skipping API', {
+        logger.debug(LogCategory.EDITOR, '[EditorSaveService] Temporary note, skipping API', {
           noteId: noteId.substring(0, 8),
           operationId
         });
