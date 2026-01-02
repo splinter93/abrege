@@ -3,7 +3,8 @@
  * Utilisé à la fois en mode édition (avec NodeViewWrapper) et en preview (standalone)
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { useNoteEmbedMetadata } from '@/hooks/useNoteEmbedMetadata';
 import { useEmbedDepth } from '@/contexts/EmbedDepthContext';
 import { MAX_EMBED_DEPTH, type NoteEmbedDisplayStyle } from '@/types/noteEmbed';
@@ -163,6 +164,38 @@ const NoteEmbedContent: React.FC<NoteEmbedContentProps> = ({
   // RENDER - Success (contenu complet de la note)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+  // ✅ SÉCURITÉ: Sanitizer le HTML avant injection (conformité GUIDE-EXCELLENCE-CODE.md)
+  const sanitizedHtml = useMemo(() => {
+    if (!note.html_content) return '';
+    if (typeof window === 'undefined') {
+      return note.html_content; // SSR: pas de sanitization nécessaire
+    }
+    return DOMPurify.sanitize(note.html_content, {
+      ALLOWED_TAGS: [
+        'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+        'blockquote', 'q', 'cite',
+        'code', 'pre', 'kbd', 'samp', 'var',
+        'a', 'img', 'figure', 'figcaption',
+        'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
+        'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
+        'hr', 'br',
+        'input', 'label',
+        'note-embed', 'youtube-embed'
+      ],
+      ALLOWED_ATTR: [
+        'href', 'src', 'alt', 'title', 'class', 'id', 'style',
+        'data-language', 'data-content', 'data-index', 'data-mermaid', 'data-mermaid-content',
+        'colspan', 'rowspan', 'scope', 'headers',
+        'width', 'height', 'align', 'valign',
+        'type', 'checked', 'disabled'
+      ],
+      ALLOW_DATA_ATTR: true,
+      ALLOW_UNKNOWN_PROTOCOLS: false
+    });
+  }, [note.html_content]);
+
   return (
     <Wrapper {...wrapperProps}>
       <div className="note-embed note-embed--success">
@@ -207,7 +240,7 @@ const NoteEmbedContent: React.FC<NoteEmbedContentProps> = ({
             {/* Contenu markdown rendu */}
             <div 
               className="note-embed__body markdown-body"
-              dangerouslySetInnerHTML={{ __html: note.html_content || '' }}
+              dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
             />
           </div>
         </div>

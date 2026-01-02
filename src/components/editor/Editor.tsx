@@ -41,6 +41,7 @@ import { cleanupMermaidSVGs } from '@/utils/mermaidCleanup';
 import { preprocessEmbeds } from '@/utils/preprocessEmbeds';
 import { useEditorStreamListener } from '@/hooks/useEditorStreamListener';
 import { getEditorMarkdown } from '@/utils/editorHelpers';
+import { EditorErrorBoundary } from './EditorErrorBoundary';
 
 interface EditorProps { 
   noteId: string; 
@@ -504,14 +505,15 @@ const Editor: React.FC<EditorProps> = ({
         onInitialContentLoaded={() => setIsContentReady(true)}
       /> */}
       
-      {/* Realtime Status (dev only) */}
-      {process.env.NODE_ENV === 'development' && userId && (
-        <RealtimeStatus userId={userId} noteId={noteId} />
-      )}
-      
-      {/* Bouton "Crafted with Scrivia" - visible en mode preview */}
-      {editorState.ui.previewMode && <CraftedButton />}
-    </EmbedDepthProvider>
+        {/* Realtime Status (dev only) */}
+        {process.env.NODE_ENV === 'development' && userId && (
+          <RealtimeStatus userId={userId} noteId={noteId} />
+        )}
+        
+        {/* Bouton "Crafted with Scrivia" - visible en mode preview */}
+        {editorState.ui.previewMode && <CraftedButton />}
+      </EmbedDepthProvider>
+    </EditorErrorBoundary>
   );
 };
 

@@ -9,6 +9,7 @@
  */
 
 import React, { useEffect, useRef, useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { NoteEmbedHydrator } from './NoteEmbedHydrator';
 import { logger, LogCategory } from '@/utils/logger';
 import { useMermaidRenderer } from '@/hooks/editor/useMermaidRenderer';
@@ -194,13 +195,44 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({
     
   }, [html, containerRef, noteId, htmlHash, renderMermaidBlocks, checkAndRenderMermaid, setupEventListeners]);
 
+  // ✅ SÉCURITÉ: Sanitizer le HTML avant injection (conformité GUIDE-EXCELLENCE-CODE.md)
+  const sanitizedHtml = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return html; // SSR: pas de sanitization nécessaire
+    }
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: [
+        'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+        'blockquote', 'q', 'cite',
+        'code', 'pre', 'kbd', 'samp', 'var',
+        'a', 'img', 'figure', 'figcaption',
+        'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
+        'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
+        'hr', 'br',
+        'input', 'label',
+        'note-embed', 'youtube-embed'
+      ],
+      ALLOWED_ATTR: [
+        'href', 'src', 'alt', 'title', 'class', 'id', 'style',
+        'data-language', 'data-content', 'data-index', 'data-mermaid', 'data-mermaid-content',
+        'colspan', 'rowspan', 'scope', 'headers',
+        'width', 'height', 'align', 'valign',
+        'type', 'checked', 'disabled'
+      ],
+      ALLOW_DATA_ATTR: true,
+      ALLOW_UNKNOWN_PROTOCOLS: false
+    });
+  }, [html]);
+
   return (
     <>
       <div 
         ref={containerRef as React.RefObject<HTMLDivElement>}
         className="markdown-body editor-content-wrapper" 
         key={`html-${htmlHash}`} // Clé basée sur le hash pour éviter réinjections inutiles
-        dangerouslySetInnerHTML={{ __html: html }} 
+        dangerouslySetInnerHTML={{ __html: sanitizedHtml }} 
       />
       {/* Hydrater les note embeds en mode preview */}
       <NoteEmbedHydrator

@@ -13,6 +13,9 @@ import type { EditorState } from './useEditorState';
 import { useEditorUpdateFunctions, type UseEditorUpdateFunctionsReturn } from './useEditorUpdateFunctions';
 import { useSlashCommandHandler } from './useSlashCommandHandler';
 import type { EditorSlashCommand } from '@/components/EditorSlashMenu';
+import { editorSaveService } from '@/services/editor/EditorSaveService';
+import { validateEditorData } from '@/validators/editor';
+import toast from 'react-hot-toast';
 
 interface NoteUpdate {
   a4_mode?: boolean;
@@ -86,8 +89,8 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     note
   });
 
-  // Save hook
-  const { handleSave } = useEditorSave({
+  // Save hook - utilise editorSaveService pour runExclusive et retry logic
+  const { handleSave: handleSaveInternal } = useEditorSave({
     editor: editor ? {
       getHTML: () => editor.getHTML(),
       storage: { 
@@ -98,23 +101,29 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     } : undefined,
     onSave: async ({ title: newTitle, markdown_content, html_content }) => {
       const resolvedTitle = newTitle ?? editorState.document.title ?? 'Untitled';
-      updateNote(noteId, {
-        source_title: resolvedTitle,
-        markdown_content,
-        html_content,
-      });
-
-      if (isTemporaryNote) {
-        return;
-      }
-
-      await v2UnifiedApi.updateNote(noteId, {
-        source_title: resolvedTitle,
-        markdown_content,
-        html_content,
-      });
+      
+      // ✅ Utiliser editorSaveService pour runExclusive et retry logic
+      await editorSaveService.saveNote(
+        noteId,
+        {
+          source_title: resolvedTitle,
+          markdown_content,
+          html_content,
+        },
+        {
+          updateNote: (id, payload) => {
+            updateNote(id, payload);
+          },
+          skipApi: isTemporaryNote,
+        }
+      );
     }
   });
+
+  // Wrapper pour compatibilité avec l'interface existante
+  const handleSave = useCallback(async (title: string, content: string) => {
+    await handleSaveInternal(title, content);
+  }, [handleSaveInternal]);
 
   // Handler: Changement d'image d'en-tête
   const handleHeaderChange = useCallback(async (url: string | null) => {
@@ -162,9 +171,25 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     editorState.togglePreviewMode();
   }, [editorState]);
 
-  // Handler: Blur du titre (sauvegarde)
+  // Handler: Blur du titre (sauvegarde avec validation Zod)
   const handleTitleBlur = useCallback(() => {
-    handleSave(editorState.document.title || 'Untitled', content);
+    const title = editorState.document.title || 'Untitled';
+    
+    // ✅ Validation Zod côté client (conformité GUIDE-EXCELLENCE-CODE.md)
+    const validation = validateEditorData(title, content);
+    if (!validation.success) {
+      const errors = validation.errors;
+      if (errors?.title) {
+        toast.error(errors.title.errors[0]?.message || 'Erreur de validation du titre');
+        return;
+      }
+      if (errors?.content) {
+        toast.error(errors.content.errors[0]?.message || 'Erreur de validation du contenu');
+        return;
+      }
+    }
+    
+    handleSave(title, content);
   }, [handleSave, editorState.document.title, content]);
 
   // Handler: Transcription audio complétée
