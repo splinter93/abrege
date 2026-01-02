@@ -342,9 +342,9 @@ body.chat-theme-grey .chatgpt-main {
 /* Sidebar et unified-sidebar - consolidé en un seul sélecteur */
 body.chat-theme-grey .sidebar-ultra-clean,
 body.chat-theme-grey .unified-sidebar {
-  background: var(--chat-gradient-sidebar);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: #141618 !important; /* ✅ Légèrement plus clair que sidebar éditeur */
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* ========================================
@@ -411,9 +411,9 @@ body.chat-theme-anthracite,
 /* Sidebar anthracite - Gradient unifié */
 body.chat-theme-anthracite .sidebar-ultra-clean,
 body.chat-theme-anthracite .unified-sidebar {
-  background: var(--chat-gradient-sidebar);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: #141618 !important; /* ✅ Légèrement plus clair que sidebar éditeur */
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Container anthracite - Background principal */

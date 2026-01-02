@@ -48,35 +48,50 @@
   left: 0 !important;
   width: 250px !important;
   height: 100vh !important;
-  background: var(--chat-gradient-sidebar, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)) !important;
-  border: none !important;
-  border-right: none !important;
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
+  /* ✅ Même background que sidebar éditeur - légèrement plus clair */
+  background: #141618 !important; /* Légèrement plus clair que #121416 */
+  /* ✅ Même bordure que sidebar éditeur */
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-left: none !important;
+  border-top-right-radius: 16px !important;
+  border-bottom-right-radius: 16px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
   z-index: 1000 !important;
   display: flex !important;
   flex-direction: column !important;
   font-family: var(--editor-font-family-headings) !important;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
   overflow: hidden !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
   padding-top: var(--chat-space-lg, 16px) !important;
   padding-bottom: var(--chat-space-lg, 16px) !important;
 }
 
-/* Force la bordure avec une spécificité encore plus élevée */
+/* Force la bordure avec une spécificité encore plus élevée - Même style que sidebar éditeur */
 aside.unified-sidebar {
-  border: none !important;
-  border-right: none !important;
+  background: #141618 !important; /* ✅ Légèrement plus clair que sidebar éditeur */
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-left: none !important;
+  border-top-right-radius: 16px !important;
+  border-bottom-right-radius: 16px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
 }
 
 /* Mode collapsed - largeur réduite */
 .unified-sidebar.collapsed {
   width: 56px !important;
   overflow: hidden !important;
-  border: none !important;
-  border-right: none !important;
+  /* ✅ Même bordure que sidebar normale */
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-left: none !important;
+  border-top-right-radius: 16px !important;
+  border-bottom-right-radius: 16px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
   transform: translateX(0) !important;
 }
 
