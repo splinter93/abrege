@@ -36,9 +36,22 @@ export interface Usage {
 // TYPES GROQ API
 // ============================================================================
 
+/**
+ * Partie de contenu multi-modal pour Groq (vision models)
+ * Format conforme à la documentation Groq: https://console.groq.com/docs/images-and-vision
+ */
+export interface GroqContentPart {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: {
+    url: string;
+    detail?: 'auto' | 'low' | 'high';
+  };
+}
+
 export interface GroqMessage {
   role: 'user' | 'assistant' | 'system' | 'tool' | 'developer';
-  content: string | null;
+  content: string | null | GroqContentPart[];
   tool_calls?: ToolCall[];
   tool_call_id?: string;
   name?: string;

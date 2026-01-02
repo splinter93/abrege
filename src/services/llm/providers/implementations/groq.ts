@@ -10,6 +10,7 @@ import type {
   FunctionTool,
   McpTool,
   GroqMessage,
+  GroqContentPart,
   GroqChatCompletionResponse,
   GroqResponsesApiResponse,
   McpCall
@@ -501,12 +502,70 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
 
   /**
    * ✅ NOUVELLE MÉTHODE: Convertit les ChatMessage vers le format API Groq
+   * ✅ Support multi-modal: Construit le contenu avec images pour les modèles vision
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): GroqMessage[] {
     return messages.map((msg, index) => {
+      // ✅ CRITICAL: Gérer les images attachées pour les modèles vision (Llama Scout/Maverick)
+      let content: string | null | GroqContentPart[];
+      
+      if (msg.role === 'user' && 'attachedImages' in msg && msg.attachedImages && msg.attachedImages.length > 0) {
+        // ✅ Construire le contenu multi-modal selon la doc Groq
+        // Format: texte en premier, puis images (comme dans la doc Groq)
+        const contentParts: GroqContentPart[] = [];
+        
+        // Texte en premier (toujours ajouter, même si vide, pour conformité doc Groq)
+        const textContent = typeof msg.content === 'string' ? msg.content : '';
+        contentParts.push({
+          type: 'text',
+          text: textContent || '' // ✅ Toujours inclure une partie texte (même vide)
+        });
+        
+        // Images ensuite
+        for (const image of msg.attachedImages) {
+          // ✅ Validation: s'assurer que l'URL existe et n'est pas vide
+          if (!image.url || typeof image.url !== 'string' || image.url.trim().length === 0) {
+            logger.warn('[GroqProvider] ⚠️ Image ignorée (URL invalide):', {
+              fileName: image.fileName,
+              hasUrl: !!image.url,
+              urlType: typeof image.url
+            });
+            continue;
+          }
+          
+          logger.dev('[GroqProvider] 🖼️ Ajout image au content:', {
+            urlLength: image.url.length,
+            urlPrefix: image.url.substring(0, 50),
+            isDataUri: image.url.startsWith('data:'),
+            isHttpUrl: image.url.startsWith('http'),
+            fileName: image.fileName
+          });
+          
+          contentParts.push({
+            type: 'image_url',
+            image_url: {
+              url: image.url,
+              detail: 'auto'
+            }
+          });
+        }
+        
+        logger.dev('[GroqProvider] 📦 Content multi-modal construit:', {
+          textLength: textContent.length,
+          imageCount: msg.attachedImages.length,
+          totalParts: contentParts.length,
+          order: 'text first, then images' // Format conforme doc Groq
+        });
+        
+        content = contentParts;
+      } else {
+        // Pas d'images, utiliser le contenu tel quel
+        content = typeof msg.content === 'string' ? msg.content : null;
+      }
+      
       const messageObj: GroqMessage = {
         role: msg.role as 'user' | 'assistant' | 'system' | 'tool' | 'developer',
-        content: msg.content
+        content
       };
 
       // Gérer les tool calls pour les messages assistant
