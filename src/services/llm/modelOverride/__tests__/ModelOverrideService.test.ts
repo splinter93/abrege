@@ -6,12 +6,30 @@
  * - Résolution séquentielle
  * - Fusion des paramètres
  * - Gestion d'erreurs gracieuse
+ * - Re-détection provider après override
  */
 
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ModelOverrideService } from '../ModelOverrideService';
 import { ImageSupportRule } from '../rules/ImageSupportRule';
 import { ReasoningOverrideRule } from '../rules/ReasoningOverrideRule';
 import type { ModelOverrideContext } from '../types';
+
+// Mock getModelInfo
+vi.mock('@/constants/groqModels', () => ({
+  getModelInfo: vi.fn((modelId: string) => {
+    const models: Record<string, { provider?: string }> = {
+      'openai/gpt-oss-20b': { provider: 'groq' },
+      'openai/gpt-oss-120b': { provider: 'groq' },
+      'meta-llama/llama-4-scout-17b-16e-instruct': { provider: 'groq' },
+      'meta-llama/llama-4-maverick-17b-128e-instruct': { provider: 'groq' },
+      'grok-4-1-fast-non-reasoning': { provider: 'xai' },
+      'grok-beta': { provider: 'xai' },
+      'liminality-model': { provider: 'liminality' }
+    };
+    return models[modelId] || undefined;
+  })
+}));
 
 describe('ModelOverrideService', () => {
   let service: ModelOverrideService;
@@ -145,7 +163,78 @@ describe('ModelOverrideService', () => {
       
       const result = service.resolveModelAndParams(context);
       // ImageSupportRule devrait quand même s'appliquer
-      expect(result.model).toBe('meta-llama/llama-4-maverick-17b-128e-instruct');
+      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
+    });
+
+    it('devrait retourner finalProvider si modèle override change de provider', () => {
+      service.registerRule(new ImageSupportRule());
+
+      const context: ModelOverrideContext = {
+        originalModel: 'liminality-model',
+        provider: 'liminality',
+        hasImages: true,
+        reasoningOverride: null,
+        originalParams: {}
+      };
+
+      const result = service.resolveModelAndParams(context);
+
+      // Modèle override vers Llama Scout (Groq)
+      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
+      // Provider devrait être détecté comme 'groq'
+      expect(result.finalProvider).toBe('groq');
+    });
+
+    it('devrait retourner finalProvider identique si provider ne change pas', () => {
+      service.registerRule(new ImageSupportRule());
+
+      const context: ModelOverrideContext = {
+        originalModel: 'openai/gpt-oss-20b',
+        provider: 'groq',
+        hasImages: true,
+        reasoningOverride: null,
+        originalParams: {}
+      };
+
+      const result = service.resolveModelAndParams(context);
+
+      // Modèle override mais provider reste 'groq'
+      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
+      expect(result.finalProvider).toBe('groq');
+    });
+
+    it('devrait retourner undefined pour finalProvider si modèle non trouvé', () => {
+      service.registerRule(new ImageSupportRule());
+
+      const context: ModelOverrideContext = {
+        originalModel: 'unknown-model',
+        provider: 'groq',
+        hasImages: true,
+        reasoningOverride: null,
+        originalParams: {}
+      };
+
+      const result = service.resolveModelAndParams(context);
+
+      // Modèle override mais provider non détectable (modèle inconnu)
+      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
+      expect(result.finalProvider).toBe('groq'); // Détecté depuis le modèle override
+    });
+
+    it('devrait retourner undefined pour finalProvider si pas d\'override', () => {
+      const context: ModelOverrideContext = {
+        originalModel: 'openai/gpt-oss-20b',
+        provider: 'groq',
+        hasImages: false,
+        reasoningOverride: null,
+        originalParams: {}
+      };
+
+      const result = service.resolveModelAndParams(context);
+
+      // Pas d'override, donc finalProvider devrait être défini depuis le modèle original
+      expect(result.model).toBe('openai/gpt-oss-20b');
+      expect(result.finalProvider).toBe('groq');
     });
   });
 });

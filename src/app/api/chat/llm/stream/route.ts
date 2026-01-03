@@ -420,12 +420,11 @@ export async function POST(request: NextRequest) {
     finalTopP = overrideResult.params.topP ?? topP;
     finalMaxTokens = overrideResult.params.maxTokens ?? maxTokens;
 
-    // ✅ CRITIQUE : Re-détecter le provider depuis le modèle final (après override)
+    // ✅ CRITIQUE : Utiliser le provider final du résultat override (si détecté)
     // Si le modèle a changé, le provider peut aussi avoir changé (ex: liminality → groq)
-    const finalModelInfo = getModelInfo(model);
-    if (finalModelInfo?.provider && finalModelInfo.provider !== providerType) {
-      logger.info(`[Stream Route] 🔄 Provider auto-corrigé après override: ${providerType} → ${finalModelInfo.provider} (modèle: ${model})`);
-      providerType = finalModelInfo.provider;
+    if (overrideResult.finalProvider && overrideResult.finalProvider !== providerType) {
+      logger.info(`[Stream Route] 🔄 Provider auto-corrigé après override: ${providerType} → ${overrideResult.finalProvider} (modèle: ${model})`);
+      providerType = overrideResult.finalProvider;
     }
 
     if (overrideResult.reasons.length > 0) {
@@ -442,61 +441,13 @@ export async function POST(request: NextRequest) {
 
     // ✅ CRITIQUE : Convertir les URLs S3 canoniques en presigned URLs pour les providers qui en ont besoin
     // Groq et xAI doivent pouvoir télécharger les images, donc on génère des presigned URLs avec expiration longue
-    logger.dev('[Stream Route] 🔍 Vérification conversion URLs S3:', {
-      hasImages: !!(userMessageImages && userMessageImages.length > 0),
-      imageCount: userMessageImages?.length || 0,
-      providerType: providerType,
-      shouldConvert: !!(userMessageImages && userMessageImages.length > 0 && (providerType === 'groq' || providerType === 'xai'))
-    });
-    
     if (userMessageImages && userMessageImages.length > 0 && (providerType === 'groq' || providerType === 'xai')) {
-      const { s3Service } = await import('@/services/s3Service');
-      
-      for (const image of userMessageImages) {
-        logger.dev('[Stream Route] 🔍 Analyse URL image:', {
-          url: image.url.substring(0, 100) + (image.url.length > 100 ? '...' : ''),
-          urlLength: image.url.length
-        });
-        
-        // Détecter si c'est une URL S3 canonique (format: https://{bucket}.s3.{region}.amazonaws.com/{key})
-        const s3CanonicalPattern = /^https:\/\/([^/]+)\.s3\.([^.]+)\.amazonaws\.com\/(.+)$/;
-        const match = image.url.match(s3CanonicalPattern);
-        
-        logger.dev('[Stream Route] 🔍 Pattern match résultat:', {
-          matched: !!match,
-          groups: match ? [match[1], match[2], match[3]?.substring(0, 50)] : null
-        });
-        
-        if (match) {
-          const [, bucket, region, key] = match;
-          const decodedKey = decodeURIComponent(key);
-          
-          try {
-            // Générer une presigned URL avec expiration longue (24 heures = 86400 secondes)
-            // Cela permet au provider de télécharger l'image même si le bucket n'est pas public
-            const presignedUrl = await s3Service.generateGetUrl(decodedKey, 86400);
-            image.url = presignedUrl;
-            
-            logger.info('[Stream Route] 🔑 URL S3 convertie en presigned URL:', {
-              provider: providerType,
-              originalUrl: `https://${bucket}.s3.${region}.amazonaws.com/${key.substring(0, 50)}...`,
-              key: decodedKey.substring(0, 50) + '...',
-              expiresIn: '24h',
-              presignedUrlLength: presignedUrl.length
-            });
-          } catch (s3Error) {
-            logger.warn('[Stream Route] ⚠️ Erreur génération presigned URL, utilisation URL originale:', {
-              error: s3Error instanceof Error ? s3Error.message : String(s3Error),
-              originalUrl: image.url.substring(0, 100)
-            });
-            // Continuer avec l'URL originale (peut-être que le bucket est public)
-          }
-        } else {
-          logger.dev('[Stream Route] ⚠️ URL ne correspond pas au pattern S3 canonique, utilisation telle quelle:', {
-            url: image.url.substring(0, 100)
-          });
-        }
-      }
+      const { convertS3UrlsToPresigned } = await import('@/services/s3/s3ImageUrlService');
+      await convertS3UrlsToPresigned({
+        images: userMessageImages,
+        provider: providerType,
+        expiresIn: 86400 // 24 heures
+      });
     }
 
     // ✅ CRITIQUE : Créer le provider APRÈS l'override (pour utiliser les bons paramètres)

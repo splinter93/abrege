@@ -11,6 +11,7 @@
  */
 
 import { simpleLogger as logger } from '@/utils/logger';
+import { getModelInfo } from '@/constants/groqModels';
 import type {
   ModelOverrideContext,
   ModelOverrideResult,
@@ -26,6 +27,7 @@ export interface ModelResolutionResult {
   params: LLMParams;
   originalModel: string;
   reasons: string[];
+  finalProvider?: string; // Provider après override (si différent de l'original)
 }
 
 /**
@@ -130,17 +132,25 @@ export class ModelOverrideService {
       }
     }
 
+    // ✅ Détecter le provider final depuis le modèle (après override)
+    // Si le modèle a changé, le provider peut aussi avoir changé (ex: liminality → groq)
+    const finalModelInfo = getModelInfo(currentModel);
+    const finalProvider = finalModelInfo?.provider;
+
     const finalResult: ModelResolutionResult = {
       model: currentModel,
       params: currentParams,
       originalModel: context.originalModel,
-      reasons
+      reasons,
+      finalProvider
     };
 
     if (reasons.length > 0) {
       logger.info(`[ModelOverrideService] ✅ Résolution terminée:`, {
         originalModel: context.originalModel,
         finalModel: currentModel,
+        originalProvider: context.provider,
+        finalProvider: finalProvider || context.provider,
         reasonsCount: reasons.length,
         reasons
       });
