@@ -3,7 +3,7 @@
  * Extrait de Editor.tsx pour respecter la limite de 300 lignes
  */
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
 import { logger, LogCategory } from '@/utils/logger';
@@ -213,6 +213,10 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     }
   }, [editor]);
 
+  // ✅ FIX: Debounce ref pour éviter boucles infinies lors de suppression massive
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastUpdateContentRef = useRef<string | null>(null);
+
   // Handler: Mise à jour de l'éditeur
   const handleEditorUpdate = useCallback(({ editor: e }: { editor: TiptapEditor }) => {
     if (!e || editorState.internal.isUpdatingFromStore) return;
@@ -252,11 +256,28 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
         return;
       }
 
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug(LogCategory.EDITOR, 'Sauvegarde (utilisateur a tapé)');
+      // ✅ FIX: Protection contre boucles infinies - ne pas mettre à jour si identique à la dernière mise à jour
+      if (sanitizedNext === lastUpdateContentRef.current) {
+        logger.debug(LogCategory.EDITOR, 'Contenu identique à dernière mise à jour, skip (évite boucle)');
+        return;
       }
 
-      updateNote(noteId, { markdown_content: sanitizedNext || '' });
+      // ✅ FIX: Debounce pour éviter boucles infinies lors de suppression massive
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+
+      updateTimeoutRef.current = setTimeout(() => {
+        if (process.env.NODE_ENV === 'development') {
+          logger.debug(LogCategory.EDITOR, 'Sauvegarde (utilisateur a tapé)');
+        }
+
+        // ✅ Marquer le contenu comme dernière mise à jour AVANT l'appel
+        lastUpdateContentRef.current = sanitizedNext;
+        
+        updateNote(noteId, { markdown_content: sanitizedNext || '' });
+        updateTimeoutRef.current = null;
+      }, 500); // ✅ Debounce 500ms pour éviter boucles infinies
     } catch (error) {
       // ✅ FIX: Logger l'erreur avec plus de détails pour diagnostiquer
       logger.error(LogCategory.EDITOR, 'Erreur lors de la mise à jour du contenu:', {

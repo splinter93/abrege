@@ -1484,6 +1484,9 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   flex-shrink: 0 !important;
   /* ✅ FIX: Empêcher le header d'être scrollé hors du viewport */
   will-change: transform !important;
+  /* ✅ FIX: Scroll snap pour garantir que le header reste au top */
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 /* ✅ FIX: S'assurer que l'image header ne masque pas le header */
@@ -1584,6 +1587,10 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   /* ✅ Scrollbar masquée */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
+  /* ✅ FIX: Garantir que le scroll reste au top par défaut */
+  scroll-snap-type: y mandatory;
+  /* ✅ FIX: Empêcher le scroll de se restaurer automatiquement */
+  overscroll-behavior-y: contain;
 }
 
 /* ✅ Masquer scrollbar webkit */
@@ -2093,7 +2100,7 @@ body.chat-font-manrope-active .chatgpt-message-bubble-user {
   width: 100%;
   max-width: calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)); /* ✅ Même largeur que messages (sans padding) */
   background: var(--chat-gradient-input);
-  border-radius: var(--chat-radius-xl);
+  border-radius: 18px; /* ✅ Radius légèrement augmenté (16px → 18px) */
   padding: 12px 12px; /* ✅ Padding vertical réduit : top/bottom 12px, left/right 12px */
   display: flex;
   flex-direction: column;

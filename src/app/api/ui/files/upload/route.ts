@@ -378,48 +378,90 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             return filename;
           }
           
-          // Si pas de filename dans le path, utiliser le domaine + timestamp
-          return `${urlObj.hostname}_${Date.now()}`;
+          // Si pas de filename dans le path, utiliser le domaine
+          // On évite Date.now() pour avoir un filename stable
+          return `${urlObj.hostname}_image`;
         } catch {
-          return `external_image_${Date.now()}`;
+          return `external_image`;
         }
       }
       
-      // Enregistrement direct en base de données (pas d'upload S3)
-      const { data: dbFileRecord, error: dbError } = await userSupabase
+      const externalUrl = uploadData.externalUrl!;
+      const storageType = 'external';
+      
+      // Vérifier si le fichier existe déjà par URL (plus fiable que filename)
+      // car l'URL est l'identifiant réel du fichier externe
+      const { data: existingFile, error: selectError } = await userSupabase
         .from('files')
-        .insert({
-          filename: uploadData.fileName || extractFilenameFromUrl(uploadData.externalUrl!),
-          mime_type: uploadData.fileType || 'image/jpeg',
-          size: 0, // Taille 0 pour les URLs externes
-          s3_key: null, // Pas de clé S3 pour les URLs externes
-          owner_id: userId,
-          user_id: userId,
-          folder_id: uploadData.folderId || null,
-          status: 'ready',
-          request_id: requestId,
-          sha256: null, // Pas de hash pour les URLs externes
-          url: uploadData.externalUrl, // URL externe directe
-          visibility_mode: 'inherit_note',
-          storage_type: 'external' // Nouveau champ pour discriminer
-        })
-        .select()
-        .single();
+        .select('*')
+        .eq('user_id', userId)
+        .eq('url', externalUrl)
+        .eq('storage_type', storageType)
+        .maybeSingle();
 
-      if (dbError) {
-        logApi.info(`❌ Erreur DB pour URL externe: ${dbError.message}`, { 
+      if (selectError) {
+        logApi.info(`❌ Erreur lors de la vérification du fichier existant: ${selectError.message}`, { 
           requestId, 
           userId,
           externalUrl: uploadData.externalUrl
         });
         
         return NextResponse.json(
-          { error: `Erreur base de données: ${dbError.message}` }, 
+          { error: `Erreur base de données: ${selectError.message}` }, 
           { status: 500 }
         );
       }
 
-      fileRecord = dbFileRecord;
+      // Si le fichier existe déjà, le retourner directement
+      if (existingFile) {
+        logApi.info(`✅ Fichier externe déjà existant, réutilisation`, { 
+          requestId, 
+          userId,
+          fileId: existingFile.id,
+          externalUrl: uploadData.externalUrl
+        });
+        
+        fileRecord = existingFile as FileRecord;
+      } else {
+        // Générer le filename si pas fourni
+        const filename = uploadData.fileName || extractFilenameFromUrl(externalUrl);
+        
+        // Enregistrement direct en base de données (pas d'upload S3)
+        const { data: dbFileRecord, error: dbError } = await userSupabase
+          .from('files')
+          .insert({
+            filename,
+            mime_type: uploadData.fileType || 'image/jpeg',
+            size: 0, // Taille 0 pour les URLs externes
+            s3_key: null, // Pas de clé S3 pour les URLs externes
+            owner_id: userId,
+            user_id: userId,
+            folder_id: uploadData.folderId || null,
+            status: 'ready',
+            request_id: requestId,
+            sha256: null, // Pas de hash pour les URLs externes
+            url: uploadData.externalUrl, // URL externe directe
+            visibility_mode: 'inherit_note',
+            storage_type: storageType
+          })
+          .select()
+          .single();
+
+        if (dbError) {
+          logApi.info(`❌ Erreur DB pour URL externe: ${dbError.message}`, { 
+            requestId, 
+            userId,
+            externalUrl: uploadData.externalUrl
+          });
+          
+          return NextResponse.json(
+            { error: `Erreur base de données: ${dbError.message}` }, 
+            { status: 500 }
+          );
+        }
+
+        fileRecord = dbFileRecord;
+      }
     }
 
     // ========================================

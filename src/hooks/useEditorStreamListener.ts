@@ -345,13 +345,21 @@ export function useEditorStreamListener(
                     });
                     
                     const result = await res.json();
-                    if (result.success && result.note?.markdown_content) {
-                      const newContent = result.note.markdown_content;
+                    if (result.success && result.note?.markdown_content !== undefined) {
+                      const newContent = result.note.markdown_content || '';
                       const currentContent = getEditorMarkdown(editor);
                       
                       // ✅ Si le contenu est identique, ne rien faire (évite les rechargements inutiles)
                       if (currentContent === newContent) {
                         logger.debug(LogCategory.EDITOR, '[useEditorStreamListener] Content unchanged, skipping update', {
+                          noteId
+                        });
+                        return;
+                      }
+                      
+                      // ✅ FIX: Protection contre boucles infinies - si l'utilisateur a le focus et le contenu est vide, ne pas forcer la mise à jour
+                      if (editor.isFocused && !newContent && !currentContent) {
+                        logger.debug(LogCategory.EDITOR, '[useEditorStreamListener] User focused with empty content, skipping update (évite boucle)', {
                           noteId
                         });
                         return;
@@ -363,6 +371,7 @@ export function useEditorStreamListener(
                       const currentSelection = editor.state.selection;
                       const wasFocused = editor.isFocused;
                       
+                      // ✅ FIX: Utiliser setIsUpdatingFromStore pour éviter déclencher handleEditorUpdate
                       editor.commands.setContent(newContent, { emitUpdate: false });
                       
                       // Essayer de restaurer la position du curseur si possible
