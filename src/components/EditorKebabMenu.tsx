@@ -200,7 +200,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       exporting: 'Export en cours...',
       wideMode: 'Mode Large',
       a4Mode: 'Mode A4',
-      toolbar: 'Toolbar',
+      toolbar: 'Zen Mode',
       published: 'Publié',
       publish: 'Publier',
       comingSoon: 'Bientôt'
@@ -211,7 +211,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       exporting: 'Exporting...',
       wideMode: 'Wide Mode',
       a4Mode: 'A4 Mode',
-      toolbar: 'Toolbar',
+      toolbar: 'Zen Mode',
       published: 'Published',
       publish: 'Publish',
       comingSoon: 'Coming Soon'
