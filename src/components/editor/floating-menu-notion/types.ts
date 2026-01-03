@@ -14,6 +14,8 @@ export interface FloatingMenuNotionProps {
   noteSlug?: string;
   classeurId?: string;
   classeurName?: string;
+  /** Contexte de l'éditeur : 'editor' (normal) ou 'canvas' (mode canvas) */
+  toolbarContext?: 'editor' | 'canvas';
 }
 
 // Position du menu

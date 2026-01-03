@@ -141,14 +141,15 @@ const Editor: React.FC<EditorProps> = ({
     onReady
   });
 
-  // ✅ Détecter les sélections de texte dans le canvas
-  useCanvasSelection({
-    editor,
-    noteId,
-    noteSlug: note?.slug,
-    noteTitle: note?.source_title,
-    enabled: toolbarContext === 'canvas' && !isReadonly
-  });
+  // ✅ DÉSACTIVÉ : Détection automatique des sélections (remplacée par bouton "Add to chat")
+  // L'ajout au chat se fait maintenant explicitement via le bouton dans le menu flottant
+  // useCanvasSelection({
+  //   editor,
+  //   noteId,
+  //   noteSlug: note?.slug,
+  //   noteTitle: note?.source_title,
+  //   enabled: false // Désactivé : utilisation explicite via bouton
+  // });
 
   // ✅ DÉSACTIVÉ EditorSyncManager : Chargement manuel du contenu initial
   const hasLoadedInitialContentRef = React.useRef(false);
@@ -479,6 +480,7 @@ const Editor: React.FC<EditorProps> = ({
               noteTitle={note?.source_title}
               noteContent={rawContent}
               noteSlug={note?.slug}
+              toolbarContext={toolbarContext}
               classeurId={note?.classeur_id ?? undefined}
               isContentReady={isContentReady}
             />

@@ -29,6 +29,8 @@ interface EditorMainContentProps {
   noteSlug?: string;
   classeurId?: string;
   classeurName?: string;
+  /** Contexte de l'éditeur : 'editor' (normal) ou 'canvas' (mode canvas) */
+  toolbarContext?: 'editor' | 'canvas';
   // FIX React 18: Attendre que le contenu initial soit chargé
   isContentReady?: boolean;
 }
@@ -48,6 +50,7 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
   noteSlug,
   classeurId,
   classeurName,
+  toolbarContext = 'editor',
   isContentReady = true
 }) => {
   if (isReadonly) {
@@ -62,19 +65,20 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
 
   return (
     <EditorEditableContent
-              editor={editor}
+      editor={editor}
       editorContainerRef={editorContainerRef}
       slashMenuRef={slashMenuRef}
       slashLang={slashLang}
       onOpenImageMenu={onOpenImageMenu}
       onSlashInsert={onSlashInsert}
-              noteId={noteId}
-              noteTitle={noteTitle}
-              noteContent={noteContent}
-              noteSlug={noteSlug}
-              classeurId={classeurId}
-              classeurName={classeurName}
-            />
+      noteId={noteId}
+      noteTitle={noteTitle}
+      noteContent={noteContent}
+      noteSlug={noteSlug}
+      classeurId={classeurId}
+      classeurName={classeurName}
+      toolbarContext={toolbarContext}
+    />
   );
 };
 

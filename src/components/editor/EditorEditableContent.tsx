@@ -30,6 +30,8 @@ interface EditorEditableContentProps {
   noteSlug?: string;
   classeurId?: string;
   classeurName?: string;
+  /** Contexte de l'éditeur : 'editor' (normal) ou 'canvas' (mode canvas) */
+  toolbarContext?: 'editor' | 'canvas';
 }
 
 const EditorEditableContent: React.FC<EditorEditableContentProps> = ({
@@ -44,7 +46,8 @@ const EditorEditableContent: React.FC<EditorEditableContentProps> = ({
   noteContent,
   noteSlug,
   classeurId,
-  classeurName
+  classeurName,
+  toolbarContext = 'editor'
 }) => {
   return (
     <EditorContentWrapper>
@@ -58,6 +61,7 @@ const EditorEditableContent: React.FC<EditorEditableContentProps> = ({
           noteSlug={noteSlug}
           classeurId={classeurId}
           classeurName={classeurName}
+          toolbarContext={toolbarContext}
         />
         
         {/* Contenu Tiptap */}
