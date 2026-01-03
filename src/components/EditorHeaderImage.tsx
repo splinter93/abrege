@@ -267,43 +267,43 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
         WebkitBackdropFilter: 'blur(18px)'
       }}>
         {/* Fermer */}
-        <Tooltip text="Fermer">
+        <Tooltip text="Fermer" position="left">
           <button
             className="header-image-btn"
             onClick={() => onHeaderChange(null)}
             style={headerBtnStyle}
-            onMouseOver={e => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
+            onMouseOver={e => { e.currentTarget.style.color = '#e55a2b'; }}
             onMouseOut={e => { e.currentTarget.style.color = 'var(--text-2)'; }}
           >
             <MdClose size={18} />
           </button>
         </Tooltip>
         {/* Overlay */}
-        <Tooltip text={`Overlay: ${headerImageOverlay}/5`}>
+        <Tooltip text={`Overlay: ${headerImageOverlay}/5`} position="left">
           <button
             className="header-image-btn"
             onClick={() => onHeaderOverlayChange && onHeaderOverlayChange((headerImageOverlay + 1) % 6)}
             style={headerBtnStyle}
-            onMouseOver={e => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
+            onMouseOver={e => { e.currentTarget.style.color = '#e55a2b'; }}
             onMouseOut={e => { e.currentTarget.style.color = 'var(--text-2)'; }}
           >
             <LuMoon size={18} />
           </button>
         </Tooltip>
         {/* Blur */}
-        <Tooltip text={`Blur: ${headerImageBlur}/5`}>
+        <Tooltip text={`Blur: ${headerImageBlur}/5`} position="left">
           <button
             className="header-image-btn"
             onClick={() => onHeaderBlurChange && onHeaderBlurChange((headerImageBlur + 1) % 6)}
             style={headerBtnStyle}
-            onMouseOver={e => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
+            onMouseOver={e => { e.currentTarget.style.color = '#e55a2b'; }}
             onMouseOut={e => { e.currentTarget.style.color = 'var(--text-2)'; }}
           >
             <FiDroplet size={18} />
           </button>
         </Tooltip>
         {/* Toggle titre dans l'image */}
-        <Tooltip text={`Titre ${headerTitleInImage ? 'dans' : 'sous'} l'image`}>
+        <Tooltip text={`Titre ${headerTitleInImage ? 'dans' : 'sous'} l'image`} position="left">
           <button
             className="header-image-btn"
             onClick={() => onHeaderTitleInImageChange && onHeaderTitleInImageChange(!headerTitleInImage)}
@@ -311,22 +311,22 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
               ...headerBtnStyle,
               fontFamily: 'Inter, sans-serif',
               fontWeight: 600,
-              color: headerTitleInImage ? 'var(--accent-primary)' : 'var(--text-2)',
+              color: headerTitleInImage ? '#e55a2b' : 'var(--text-2)',
               padding: '4px 10px',
             }}
-            onMouseOver={e => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
-            onMouseOut={e => { e.currentTarget.style.color = headerTitleInImage ? 'var(--accent-primary)' : 'var(--text-2)'; }}
+            onMouseOver={e => { e.currentTarget.style.color = '#e55a2b'; }}
+            onMouseOut={e => { e.currentTarget.style.color = headerTitleInImage ? '#e55a2b' : 'var(--text-2)'; }}
           >
             T
           </button>
         </Tooltip>
         {/* Changer d'image */}
-        <Tooltip text="Changer d'image">
+        <Tooltip text="Changer d'image" position="left">
           <button
             className="header-image-btn"
             onClick={() => onHeaderChange(getRandomHeaderImage(headerImageUrl))}
             style={headerBtnStyle}
-            onMouseOver={e => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
+            onMouseOver={e => { e.currentTarget.style.color = '#e55a2b'; }}
             onMouseOut={e => { e.currentTarget.style.color = 'var(--text-2)'; }}
           >
             <FiImage size={18} />

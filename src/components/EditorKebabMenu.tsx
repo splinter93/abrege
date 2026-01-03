@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiGlobe, FiCheck, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiGlobe, FiCheck, FiEye, FiEyeOff, FiCircle } from 'react-icons/fi';
 import './editor-kebab-menu.css';
 import ShareMenu from './ShareMenu';
 import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
@@ -253,12 +253,12 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     {
       id: 'toolbar',
       label: t.toolbar,
-      icon: showToolbar ? <FiEye size={18} /> : <FiEyeOff size={18} />,
+      icon: showToolbar ? <FiCircle size={18} /> : <FiCircle size={18} />,
       onClick: () => { 
         toggleToolbar();
         onClose(); 
       },
-      color: showToolbar ? '#10b981' : '#D4D4D4',
+      color: showToolbar ? '#D4D4D4' : '#10b981', // Inversé : vert quand Zen Mode (toolbar cachée)
       showCopyButton: false,
     },
     {
@@ -329,6 +329,23 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
               {opt.icon}
               {opt.label}
             </span>
+            {/* Toggle pour Zen Mode et Wide Mode */}
+            {(opt.id === 'toolbar' || opt.id === 'fullWidth') && (
+              <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center' }}>
+                <label className="kebab-toggle" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={opt.id === 'toolbar' ? !showToolbar : fullWidth}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      opt.onClick();
+                    }}
+                    aria-label={opt.label}
+                  />
+                  <span className="kebab-toggle-slider"></span>
+                </label>
+              </span>
+            )}
             {opt.id === 'share' && opt.showCopyButton && (
               <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <button

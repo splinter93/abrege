@@ -110,7 +110,7 @@
 }
 
 .editor-header-image-btn:hover {
-  color: var(--accent-primary);
+  color: #e55a2b; /* Orange pour hover */
   background: var(--surface-hover);
 }
 

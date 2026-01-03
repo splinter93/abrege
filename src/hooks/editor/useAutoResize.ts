@@ -49,11 +49,9 @@ export const useAutoResize = ({
     // Reset le compteur si le textarea est visible
     visibilityCheckAttempts.current = 0;
 
-    // ✅ Nettoyer la valeur pour éviter les sauts de ligne en fin
-    const cleanedValue = value.replace(/\n+$/, '').replace(/\r+$/, '');
-    if (textarea.value !== cleanedValue) {
-      textarea.value = cleanedValue;
-    }
+    // ✅ Ne pas modifier textarea.value si l'utilisateur est en train de taper
+    // Le nettoyage des sauts de ligne se fait dans EditorTitle.onChange
+    // Ici, on ajuste seulement la hauteur sans toucher à la valeur
 
     // Sauvegarder les styles actuels
     const currentPadding = textarea.style.padding || window.getComputedStyle(textarea).padding;

@@ -58,4 +58,19 @@
   border-color: transparent transparent rgba(30, 30, 40, 0.97) transparent;
 }
 
-/* Optionally, add more positions (bottom, left, right) if needed */ 
+.custom-tooltip-left {
+  right: 120%;
+  top: 50%;
+  left: auto;
+  bottom: auto;
+  transform: translateY(-50%) translateX(-4px);
+}
+
+.custom-tooltip-left::after {
+  left: auto;
+  right: -12px;
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  border-color: transparent transparent transparent rgba(30, 30, 40, 0.97);
+} 

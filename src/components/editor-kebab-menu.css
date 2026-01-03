@@ -72,7 +72,7 @@
   display: inline-block;
 }
 .kebab-toggle input[type="checkbox"]:checked + .kebab-toggle-slider {
-  background: var(--accent-primary, #2994ff);
+  background: #e55a2b; /* Orange pour toggle actif */
 }
 .kebab-toggle-slider::before {
   content: '';
