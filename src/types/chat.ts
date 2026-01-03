@@ -76,6 +76,8 @@ export interface UserMessage extends BaseMessage {
   mentions?: import('@/types/noteMention').NoteMention[];
   /** Mentions légères de prompts (metadata ~10-20 tokens) */
   prompts?: import('@/types/promptMention').PromptMention[];
+  /** Sélections de texte du canvas (metadata ~50-200 tokens) */
+  canvasSelections?: import('@/types/canvasSelection').CanvasSelection[];
 }
 
 /**

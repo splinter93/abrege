@@ -182,7 +182,8 @@ export async function POST(request: NextRequest) {
       sessionId: sessionId ?? '',
       agentId: finalAgentConfig?.id,
       attachedNotes: context.attachedNotes,
-      mentionedNotes: context.mentionedNotes
+      mentionedNotes: context.mentionedNotes,
+      canvasSelections: context.canvasSelections
     } as import('@/services/llm/context/types').ExtendedLLMContext;
     
     // Construire le system message (instructions agent + contexte UI)

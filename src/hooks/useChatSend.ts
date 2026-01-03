@@ -11,6 +11,7 @@ import type { ImageAttachment, MessageContent } from '@/types/image';
 import type { SelectedNote, NoteWithContent, NotesLoadStats } from './useNotesLoader';
 import type { NoteMention } from '@/types/noteMention';
 import type { PromptMention } from '@/types/promptMention';
+import type { CanvasSelection } from '@/types/canvasSelection';
 import { filterPromptsInMessage } from '@/utils/promptPlaceholders';
 
 interface UseChatSendOptions {
@@ -22,6 +23,7 @@ interface UseChatSendOptions {
     notes?: NoteWithContent[],
     mentions?: NoteMention[],
     prompts?: PromptMention[],
+    canvasSelections?: CanvasSelection[], // ✅ NOUVEAU : Sélections du canvas
     reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => void;
   setUploadError: (error: string | null) => void;
@@ -50,6 +52,7 @@ export function useChatSend({
     selectedNotes: SelectedNote[],
     mentions: NoteMention[],
     usedPrompts: PromptMention[],
+    canvasSelections: CanvasSelection[], // ✅ NOUVEAU : Sélections du canvas
     reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => {
       logger.dev('[useChatSend] 🚀 START', {
@@ -58,6 +61,7 @@ export function useChatSend({
         notesCount: selectedNotes.length,
         mentionsCount: mentions.length,
         promptsCount: usedPrompts.length,
+        canvasSelectionsCount: canvasSelections.length,
         messageContent: message.substring(0, 100) // Preview pour debug
       });
     
@@ -102,17 +106,20 @@ export function useChatSend({
         ? filterPromptsInMessage(message, promptsToSendRaw)
         : undefined;
       
-      // ✅ Envoyer avec mentions légères + prompts metadata + notes épinglées + reasoning override
-      // Ne passer mentions/prompts que si vraiment présents (éviter tableau vide)
+      // ✅ Envoyer avec mentions légères + prompts metadata + notes épinglées + canvas selections + reasoning override
+      // Ne passer mentions/prompts/selections que si vraiment présents (éviter tableau vide)
       const mentionsToSend = mentions && mentions.length > 0 ? mentions : undefined;
+      const canvasSelectionsToSend = canvasSelections && canvasSelections.length > 0 ? canvasSelections : undefined;
 
-      onSend(content, images, notesWithContent, mentionsToSend, promptsToSend, reasoningOverride);
+      onSend(content, images, notesWithContent, mentionsToSend, promptsToSend, canvasSelectionsToSend, reasoningOverride);
       
       logger.dev('[useChatSend] ✅ COMPLETE', {
         mentionsSent: mentionsToSend?.length || 0,
         promptsSent: promptsToSend?.length || 0,
+        canvasSelectionsSent: canvasSelectionsToSend?.length || 0,
         hasMentions: !!mentionsToSend,
-        hasPrompts: !!promptsToSend
+        hasPrompts: !!promptsToSend,
+        hasCanvasSelections: !!canvasSelectionsToSend
       });
       
       return true;
@@ -132,10 +139,11 @@ export function useChatSend({
     selectedNotes: SelectedNote[],
     mentions: NoteMention[],
     usedPrompts: PromptMention[], // ✅ NOUVEAU : Prompts utilisés
+    canvasSelections: CanvasSelection[], // ✅ NOUVEAU : Sélections du canvas
     reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => {
     // Générer un ID unique pour cette opération
-    const operationId = `${message}-${images.map(i => i.id).join(',')}-${selectedNotes.map(n => n.id).join(',')}-${mentions.map(m => m.id).join(',')}-${usedPrompts.map(p => p.id).join(',')}-${reasoningOverride || 'null'}`;
+    const operationId = `${message}-${images.map(i => i.id).join(',')}-${selectedNotes.map(n => n.id).join(',')}-${mentions.map(m => m.id).join(',')}-${usedPrompts.map(p => p.id).join(',')}-${canvasSelections.map(s => s.id).join(',')}-${reasoningOverride || 'null'}`;
     
     // Vérifier si cette opération est déjà en cours
     if (sendQueue.current.has(operationId)) {
@@ -144,7 +152,7 @@ export function useChatSend({
     }
 
     // Créer la promesse d'envoi
-    const sendPromise = sendInternal(message, images, selectedNotes, mentions, usedPrompts, reasoningOverride);
+    const sendPromise = sendInternal(message, images, selectedNotes, mentions, usedPrompts, canvasSelections, reasoningOverride);
     
     // Stocker dans la queue
     sendQueue.current.set(operationId, sendPromise);

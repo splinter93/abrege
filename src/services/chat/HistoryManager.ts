@@ -140,6 +140,7 @@ export class HistoryManager {
       attachedNotes?: Array<{ id: string; slug: string; title: string; word_count?: number }>;
       mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>;
       prompts?: PromptMention[];
+      canvasSelections?: Array<{ id: string; text: string; noteId?: string; noteSlug?: string; noteTitle?: string; startPos?: number; endPos?: number; timestamp: string }>; // ✅ NOUVEAU : Sélections du canvas
     }
   ): Promise<ChatMessage> {
     try {
@@ -154,11 +155,12 @@ export class HistoryManager {
       
       const timeline = assistantMsg?.stream_timeline as StreamTimeline | undefined;
       
-      // ✅ TypeScript strict : Le paramètre a déjà attachedImages/attachedNotes/mentions/prompts dans son type
+      // ✅ TypeScript strict : Le paramètre a déjà attachedImages/attachedNotes/mentions/prompts/canvasSelections dans son type
       const attachedImages = isUser ? message.attachedImages : null;
       const attachedNotes = isUser ? message.attachedNotes : null;
       const mentions = isUser ? message.mentions : null;
       const prompts = isUser ? message.prompts : null;
+      const canvasSelections = isUser ? message.canvasSelections : null; // ✅ NOUVEAU
       
       logger.dev('[HistoryManager] 📥 addMessage appelé:', {
         sessionId,
@@ -172,14 +174,17 @@ export class HistoryManager {
         hasMentions: !!mentions,
         mentionsCount: (mentions || []).length,
         hasPrompts: !!prompts,
-        promptsCount: (prompts || []).length
+        promptsCount: (prompts || []).length,
+        hasCanvasSelections: !!canvasSelections,
+        canvasSelectionsCount: (canvasSelections || []).length
       });
       
       logger.dev('[HistoryManager] 📤 Envoi à add_message_atomic:', {
         p_attached_images: attachedImages,
         p_attached_notes: attachedNotes,
         p_mentions: mentions,
-        p_prompts: prompts
+        p_prompts: prompts,
+        p_canvas_selections: canvasSelections
       });
       
       const { data, error } = await supabase.rpc('add_message_atomic', {
@@ -193,8 +198,9 @@ export class HistoryManager {
         p_timestamp: new Date().toISOString(),
         p_attached_images: attachedImages,
         p_attached_notes: attachedNotes,
-        p_mentions: mentions || null, // ✅ NOUVEAU
-        p_prompts: prompts || null    // ✅ NOUVEAU
+        p_mentions: mentions || null,
+        p_prompts: prompts || null,
+        p_canvas_selections: canvasSelections || null // ✅ NOUVEAU : Sélections du canvas
       });
 
       if (error) {
@@ -309,7 +315,8 @@ export class HistoryManager {
           ...msg,
           // ✅ Mapper snake_case DB → camelCase frontend
           ...(msg.attached_images && { attachedImages: msg.attached_images }),
-          ...(msg.attached_notes && { attachedNotes: msg.attached_notes })
+          ...(msg.attached_notes && { attachedNotes: msg.attached_notes }),
+          ...(msg.canvas_selections && { canvasSelections: msg.canvas_selections }) // ✅ NOUVEAU : Sélections du canvas
         } as ChatMessage;
         
         // ✅ DÉDUPLICATION: Nettoyer les tool_execution en double dans stream_timeline
@@ -379,7 +386,8 @@ export class HistoryManager {
           ...msg,
           // ✅ Mapper snake_case DB → camelCase frontend
           ...(msg.attached_images && { attachedImages: msg.attached_images }),
-          ...(msg.attached_notes && { attachedNotes: msg.attached_notes })
+          ...(msg.attached_notes && { attachedNotes: msg.attached_notes }),
+          ...(msg.canvas_selections && { canvasSelections: msg.canvas_selections }) // ✅ NOUVEAU : Sélections du canvas
         } as ChatMessage;
         
         // ✅ DÉDUPLICATION: Nettoyer les tool_execution en double dans stream_timeline

@@ -15,6 +15,7 @@ import { chatContextBuilder, type Note } from './ChatContextBuilder';
 import type { Agent, ChatMessage, ChatSession } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { LLMContext } from '@/types/llmContext';
+import type { CanvasSelection } from '@/types/canvasSelection';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
@@ -26,6 +27,7 @@ export interface SendMessageOptions {
   notes?: Note[];
   mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>; // ✅ Mentions légères
   prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null; placeholderValues?: Record<string, string> }>; // ✅ NOUVEAU: Prompts metadata
+  canvasSelections?: CanvasSelection[]; // ✅ NOUVEAU: Sélections du canvas
   reasoningOverride?: 'advanced' | 'general' | 'fast' | null; // ✅ NOUVEAU: Override reasoning
   sessionId: string;
   currentSession: ChatSession;
@@ -112,6 +114,7 @@ export class ChatMessageSendingService {
       notes,
       mentions,
       prompts,
+      canvasSelections,
       reasoningOverride,
       sessionId,
       selectedAgent,
@@ -160,6 +163,7 @@ export class ChatMessageSendingService {
         notes,
         mentions: options.mentions, // ✅ Mentions légères
         prompts: options.prompts, // ✅ NOUVEAU : Prompts metadata
+        canvasSelections: options.canvasSelections, // ✅ NOUVEAU : Sélections du canvas
         reasoningOverride: reasoningOverride, // ✅ NOUVEAU : Override reasoning
         llmContext
       });

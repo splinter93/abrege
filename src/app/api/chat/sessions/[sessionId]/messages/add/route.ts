@@ -61,6 +61,17 @@ const messageSchema = z.object({
     context: z.enum(['editor', 'chat', 'both']).optional(),
     agent_id: z.string().nullable().optional(),
     placeholderValues: z.record(z.string(), z.string()).optional()
+  })).optional(),
+  // ✅ NOUVEAU : Sélections du canvas
+  canvasSelections: z.array(z.object({
+    id: z.string().uuid(),
+    text: z.string().min(1),
+    noteId: z.string().uuid().optional(),
+    noteSlug: z.string().optional(),
+    noteTitle: z.string().optional(),
+    startPos: z.number().int().nonnegative().optional(),
+    endPos: z.number().int().nonnegative().optional(),
+    timestamp: z.string()
   })).optional()
 });
 

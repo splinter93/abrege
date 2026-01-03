@@ -33,7 +33,7 @@ import ScriviaFilePicker from './ScriviaFilePicker';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 
 interface ChatInputProps {
-  onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[], mentions?: import('@/types/noteMention').NoteMention[], usedPrompts?: import('@/types/promptMention').PromptMention[], reasoningOverride?: 'advanced' | 'general' | 'fast' | null) => void;
+  onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[], mentions?: import('@/types/noteMention').NoteMention[], usedPrompts?: import('@/types/promptMention').PromptMention[], canvasSelections?: import('@/types/canvasSelection').CanvasSelection[], reasoningOverride?: 'advanced' | 'general' | 'fast' | null) => void;
   loading: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
@@ -138,6 +138,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setMentions,
     usedPrompts,
     setUsedPrompts,
+    canvasSelections,
+    setCanvasSelections,
     audioError,
     setAudioError,
     showImageSourceModal,
@@ -280,6 +282,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     selectedNotes,
     mentions,
     usedPrompts,
+    canvasSelections,
     loading,
     disabled,
     textareaRef,
@@ -288,6 +291,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setSelectedNotes,
     setMentions,
     setUsedPrompts,
+    setCanvasSelections,
     setAudioError,
     detectCommands,
     send,
@@ -341,6 +345,41 @@ const ChatInput: React.FC<ChatInputProps> = ({
     enabled: true
   });
 
+  // ✅ Écouter les sélections du canvas
+  useEffect(() => {
+    const handleCanvasSelection = (event: Event) => {
+      const customEvent = event as CustomEvent<import('@/types/canvasSelection').CanvasSelection>;
+      const selection = customEvent.detail;
+      
+      // ✅ FIX: Ignorer les sélections trop courtes (minimum 3 caractères)
+      if (!selection.text || selection.text.trim().length < 3) {
+        return;
+      }
+      
+      // Ajouter la sélection au state (éviter les doublons)
+      setCanvasSelections(prev => {
+        // Vérifier si une sélection identique existe déjà (même texte et même note)
+        const exists = prev.some(s => 
+          s.text.trim() === selection.text.trim() && 
+          s.noteId === selection.noteId
+        );
+        if (exists) return prev;
+        
+        // ✅ Remplacer la dernière sélection de la même note si elle existe
+        // (une seule sélection active par note à la fois)
+        const filtered = prev.filter(s => s.noteId !== selection.noteId);
+        
+        return [...filtered, selection];
+      });
+    };
+
+    document.addEventListener('canvas-selection', handleCanvasSelection as EventListener);
+    
+    return () => {
+      document.removeEventListener('canvas-selection', handleCanvasSelection as EventListener);
+    };
+  }, [setCanvasSelections]);
+
   // 🎯 Fermer les menus au clic extérieur
   useMultipleMenusClickOutside([
     { isOpen: showFileMenu, menuClass: 'chat-file-menu', triggerClass: 'chatgpt-input-file', onClose: closeMenu },
@@ -378,6 +417,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         selectedNotes={selectedNotes} onRemoveNote={handleRemoveNote}
         mentions={mentions} onRemoveMention={(id) => setMentions(mentions.filter(m => m.id !== id))}
         usedPrompts={usedPrompts}
+        canvasSelections={canvasSelections} onRemoveCanvasSelection={(id) => setCanvasSelections(canvasSelections.filter(s => s.id !== id))}
         editingMessageId={editingMessageId} onCancelEdit={onCancelEdit}
         isDragging={isDragging} onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave} onDragOver={handleDragOver} onDrop={handleDrop}

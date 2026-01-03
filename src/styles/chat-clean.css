@@ -3417,6 +3417,72 @@ body.chat-font-manrope-active .chatgpt-message-bubble-user {
   color: var(--chat-accent-primary);
 }
 
+/* ✅ Sélections du canvas (pills avec couleur différente) */
+.chat-canvas-selections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 8px 0 8px;
+}
+
+.chat-canvas-selection-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: rgba(59, 130, 246, 0.16); /* Bleu pour différencier des notes */
+  border: none;
+  border-radius: 20px;
+  color: var(--chat-text-primary);
+  font-size: 13px;
+  font-family: var(--font-chat-ui);
+  transition: background var(--chat-transition-fast);
+}
+
+.chat-canvas-selection-pill:hover {
+  background: rgba(59, 130, 246, 0.24);
+}
+
+.chat-canvas-selection-pill-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.chat-canvas-selection-pill-text {
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-canvas-selection-pill-note {
+  font-size: 11px;
+  color: var(--chat-text-secondary);
+  opacity: 0.7;
+  font-style: italic;
+  white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-canvas-selection-pill-remove {
+  background: transparent;
+  border: none;
+  color: var(--chat-text-secondary);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  margin-left: 4px;
+  transition: color var(--chat-transition-fast);
+}
+
+.chat-canvas-selection-pill-remove:hover {
+  color: var(--chat-accent-primary);
+}
+
 /* Container des notes dans les messages (plus compact) */
 .chatgpt-message-notes {
   display: flex;

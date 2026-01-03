@@ -31,6 +31,20 @@ const promptMentionSchema = z.object({
 });
 
 /**
+ * Schéma pour les sélections du canvas
+ */
+const canvasSelectionSchema = z.object({
+  id: z.string().uuid(),
+  text: z.string().min(1),
+  noteId: z.string().uuid().optional(),
+  noteSlug: z.string().optional(),
+  noteTitle: z.string().optional(),
+  startPos: z.number().int().nonnegative().optional(),
+  endPos: z.number().int().nonnegative().optional(),
+  timestamp: z.string()
+});
+
+/**
  * Schéma pour les notes attachées (full content)
  */
 const attachedNoteSchema = z.object({
@@ -80,6 +94,7 @@ const uiContextSchema = z.object({
   attachedNotes: z.array(attachedNoteSchema).optional(),
   mentionedNotes: z.array(noteMentionSchema).optional(),
   prompts: z.array(promptMentionSchema).optional(),
+  canvasSelections: z.array(canvasSelectionSchema).optional(), // ✅ NOUVEAU : Sélections du canvas
   canva_context: z.unknown().optional(), // Structure complexe, validation partielle
   reasoningOverride: z.enum(['advanced', 'general', 'fast']).nullable().optional() // ✅ NOUVEAU : Override reasoning
 }).passthrough(); // Autoriser champs additionnels pour extensibilité

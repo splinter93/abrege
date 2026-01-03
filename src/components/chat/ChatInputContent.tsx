@@ -13,6 +13,7 @@ import type { ImageAttachment } from '@/types/image';
 import type { SelectedNote } from '@/hooks/useNotesLoader';
 import type { NoteMention } from '@/types/noteMention';
 import type { PromptMention } from '@/types/promptMention';
+import type { CanvasSelection } from '@/types/canvasSelection';
 import TextareaWithMentions from './TextareaWithMentions';
 import { CHAT_LIMITS, formatCharacterCount } from '@/utils/chatValidation';
 
@@ -43,6 +44,10 @@ interface ChatInputContentProps {
   
   // Prompts utilisés (nouveau)
   usedPrompts?: PromptMention[];
+  
+  // Sélections du canvas (nouveau)
+  canvasSelections?: CanvasSelection[];
+  onRemoveCanvasSelection?: (selectionId: string) => void;
   
   // Édition
   editingMessageId: string | null | undefined;
@@ -84,6 +89,8 @@ const ChatInputContent: React.FC<ChatInputContentProps> = ({
   mentions = [],
   onRemoveMention,
   usedPrompts = [],
+  canvasSelections = [],
+  onRemoveCanvasSelection,
   editingMessageId,
   onCancelEdit,
   isDragging,
@@ -119,6 +126,32 @@ const ChatInputContent: React.FC<ChatInputContentProps> = ({
                 className="chat-note-pill-remove"
                 onClick={() => onRemoveNote(note.id)}
                 aria-label="Retirer la note"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {/* Sélections du canvas (pills AU-DESSUS du textarea, couleur différente) */}
+      {canvasSelections.length > 0 && (
+        <div className="chat-canvas-selections">
+          {canvasSelections.map((selection) => (
+            <div key={selection.id} className="chat-canvas-selection-pill">
+              <span className="chat-canvas-selection-pill-icon">📝</span>
+              <span className="chat-canvas-selection-pill-text" title={selection.text}>
+                {selection.text.length > 50 ? `${selection.text.substring(0, 50)}...` : selection.text}
+              </span>
+              {selection.noteTitle && (
+                <span className="chat-canvas-selection-pill-note" title={selection.noteTitle}>
+                  {selection.noteTitle}
+                </span>
+              )}
+              <button
+                className="chat-canvas-selection-pill-remove"
+                onClick={() => onRemoveCanvasSelection?.(selection.id)}
+                aria-label="Retirer la sélection"
               >
                 ×
               </button>

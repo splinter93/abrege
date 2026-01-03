@@ -42,6 +42,7 @@ import { preprocessEmbeds } from '@/utils/preprocessEmbeds';
 import { useEditorStreamListener } from '@/hooks/useEditorStreamListener';
 import { getEditorMarkdown } from '@/utils/editorHelpers';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
+import { useCanvasSelection } from '@/hooks/useCanvasSelection';
 
 interface EditorProps { 
   noteId: string; 
@@ -138,6 +139,15 @@ const Editor: React.FC<EditorProps> = ({
     onEditorUpdate: handlers.handleEditorUpdate,
     onEditorRef,
     onReady
+  });
+
+  // ✅ Détecter les sélections de texte dans le canvas
+  useCanvasSelection({
+    editor,
+    noteId,
+    noteSlug: note?.slug,
+    noteTitle: note?.source_title,
+    enabled: toolbarContext === 'canvas' && !isReadonly
   });
 
   // ✅ DÉSACTIVÉ EditorSyncManager : Chargement manuel du contenu initial

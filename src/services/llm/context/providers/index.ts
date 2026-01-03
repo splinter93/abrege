@@ -8,6 +8,7 @@ export { SessionContextProvider } from './SessionContextProvider';
 export { CanvaContextProvider } from './CanvaContextProvider';
 export { AttachedNotesContextProvider } from './AttachedNotesContextProvider';
 export { MentionedNotesContextProvider } from './MentionedNotesContextProvider';
+export { CanvasSelectionsContextProvider } from './CanvasSelectionsContextProvider';
 export { TasksContextProvider } from './TasksContextProvider';
 export { buildCanvaContextSection } from './CanvaContextProviderHelper';
 

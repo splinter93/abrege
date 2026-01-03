@@ -10,7 +10,8 @@ import {
   SessionContextProvider,
   CanvaContextProvider,
   AttachedNotesContextProvider,
-  MentionedNotesContextProvider
+  MentionedNotesContextProvider,
+  CanvasSelectionsContextProvider
 } from './providers';
 
 // Enregistrer tous les providers au démarrage
@@ -20,6 +21,7 @@ contextInjectionService.registerSystemProvider(new SessionContextProvider());
 contextInjectionService.registerSystemProvider(new CanvaContextProvider());
 contextInjectionService.registerMessageProvider(new AttachedNotesContextProvider());
 contextInjectionService.registerMessageProvider(new MentionedNotesContextProvider());
+contextInjectionService.registerMessageProvider(new CanvasSelectionsContextProvider());
 
 export { contextInjectionService } from './ContextInjectionService';
 export * from './types';

@@ -12,6 +12,7 @@
 import type { ChatMessage } from '@/types/chat';
 import type { AgentSystemConfig } from '@/services/llm/SystemMessageBuilder';
 import type { LLMContext } from '@/types/llmContext';
+import type { CanvasSelection } from '@/types/canvasSelection';
 
 /**
  * Note attachée (pour AttachedNotesContextProvider)
@@ -47,6 +48,9 @@ export interface ExtendedLLMContext extends LLMContext {
   
   // Notes mentionnées (pour MentionedNotesContextProvider)
   mentionedNotes?: MentionedNote[];
+  
+  // Sélections du canvas (pour CanvasSelectionsContextProvider)
+  canvasSelections?: CanvasSelection[];
 }
 
 /**

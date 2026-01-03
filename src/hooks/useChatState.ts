@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import type { NoteMention } from '@/types/noteMention';
 import type { PromptMention } from '@/types/promptMention';
+import type { CanvasSelection } from '@/types/canvasSelection';
 
 interface UseChatStateOptions {
   editingContent?: string;
@@ -39,6 +40,9 @@ export function useChatState({
   // ✅ NOUVEAU : Prompts utilisés (state séparé comme mentions[])
   const [usedPrompts, setUsedPrompts] = useState<PromptMention[]>([]);
   
+  // ✅ NOUVEAU : Sélections du canvas (state séparé comme mentions[])
+  const [canvasSelections, setCanvasSelections] = useState<CanvasSelection[]>([]);
+  
   // ✅ NOUVEAU : Mention menu (séparé de NoteSelector)
   const [showMentionMenu, setShowMentionMenu] = useState(false);
   const [mentionMenuPosition, setMentionMenuPosition] = useState<{ top: number; left: number } | null>(null);
@@ -69,6 +73,10 @@ export function useChatState({
     // Prompts
     usedPrompts,
     setUsedPrompts,
+    
+    // Canvas selections
+    canvasSelections,
+    setCanvasSelections,
     
     // Erreurs
     audioError,

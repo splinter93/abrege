@@ -20,6 +20,7 @@ export interface ChatInputContainerProps {
     notes?: Note[],
     mentions?: import('@/types/noteMention').NoteMention[], // ✅ Mentions légères
     usedPrompts?: import('@/types/promptMention').PromptMention[], // ✅ NOUVEAU : Prompts utilisés
+    canvasSelections?: import('@/types/canvasSelection').CanvasSelection[], // ✅ NOUVEAU : Sélections du canvas
     reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => void;
   loading: boolean;

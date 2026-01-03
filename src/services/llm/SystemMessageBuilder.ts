@@ -116,7 +116,8 @@ export class SystemMessageBuilder {
           session: ctx.session,
           // Notes attachées et mentionnées (si présentes dans le contexte)
           attachedNotes: (ctx as { attachedNotes?: unknown[] }).attachedNotes as ExtendedLLMContext['attachedNotes'],
-          mentionedNotes: (ctx as { mentionedNotes?: unknown[] }).mentionedNotes as ExtendedLLMContext['mentionedNotes']
+          mentionedNotes: (ctx as { mentionedNotes?: unknown[] }).mentionedNotes as ExtendedLLMContext['mentionedNotes'],
+          canvasSelections: (ctx as { canvasSelections?: unknown[] }).canvasSelections as ExtendedLLMContext['canvasSelections']
         };
 
         // Utiliser ContextInjectionService pour injecter le contexte UI

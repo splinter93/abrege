@@ -24,6 +24,7 @@ import type { Agent, ChatMessage, UserMessage } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { LLMContext } from '@/types/llmContext';
 import type { Note, LLMContextForOrchestrator } from '@/services/chat/ChatContextBuilder';
+import type { CanvasSelection } from '@/types/canvasSelection';
 import { simpleLogger as logger } from '@/utils/logger';
 import { tokenManager } from '@/utils/tokenManager';
 import { filterPromptsInMessage } from '@/utils/promptPlaceholders';
@@ -61,6 +62,7 @@ export interface UseChatMessageActionsReturn {
     notes?: Note[],
     mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number }>,
     prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>, // ✅ NOUVEAU : Prompts metadata
+    canvasSelections?: CanvasSelection[], // ✅ NOUVEAU : Sélections du canvas
     reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => Promise<void>;
   
@@ -202,6 +204,7 @@ export function useChatMessageActions(
     notes?: Note[],
     mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>,
     prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>,
+    canvasSelections?: CanvasSelection[], // ✅ NOUVEAU : Sélections du canvas
     reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => {
     // ✅ Auth guard
@@ -281,6 +284,7 @@ export function useChatMessageActions(
         notes,
         mentions, // ✅ Mentions légères
         prompts: filteredPrompts,
+        canvasSelections, // ✅ NOUVEAU : Sélections du canvas
         reasoningOverride, // ✅ NOUVEAU : Override reasoning
         sessionId: currentSession.id,
         currentSession,
@@ -309,7 +313,8 @@ export function useChatMessageActions(
         ...(tempMessage.attachedImages && { attachedImages: tempMessage.attachedImages }),
         ...(tempMessage.attachedNotes && { attachedNotes: tempMessage.attachedNotes }),
         ...(mentions && mentions.length > 0 && { mentions }),
-        ...(filteredPrompts.length > 0 && { prompts: filteredPrompts })
+        ...(filteredPrompts.length > 0 && { prompts: filteredPrompts }),
+        ...(canvasSelections && canvasSelections.length > 0 && { canvasSelections }) // ✅ NOUVEAU : Sélections du canvas
       };
 
       sessionSyncService.addMessageAndSync(currentSession.id, messageToSave)

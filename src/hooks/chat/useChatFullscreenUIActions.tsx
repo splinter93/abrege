@@ -16,6 +16,7 @@ import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { Note } from '@/services/chat/ChatContextBuilder';
 import type { NoteMention } from '@/types/noteMention';
 import type { PromptMention } from '@/types/promptMention';
+import type { CanvasSelection } from '@/types/canvasSelection';
 import type { UseChatMessageActionsReturn } from './useChatMessageActions';
 import type { UseChatFullscreenUIStateReturn } from './useChatFullscreenUIState';
 import type { CanvaSession } from '@/store/useCanvaStore';
@@ -60,6 +61,7 @@ export interface UseChatFullscreenUIActionsReturn {
     notes?: Note[],
     mentions?: NoteMention[],
     usedPrompts?: PromptMention[],
+    canvasSelections?: CanvasSelection[], // ✅ NOUVEAU : Sélections du canvas
     reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => Promise<void>;
   handleOpenCanva: () => Promise<void>;
@@ -155,6 +157,7 @@ export function useChatFullscreenUIActions(
     notes?: Note[],
     mentions?: NoteMention[],
     usedPrompts?: PromptMention[],
+    canvasSelections?: CanvasSelection[], // ✅ NOUVEAU : Sélections du canvas
     reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => {
     // ✏️ Si en mode édition, router vers editMessage
@@ -187,8 +190,8 @@ export function useChatFullscreenUIActions(
       images: images && images.length > 0 ? images : undefined
     });
 
-    // Mode normal (avec mentions légères + prompts metadata + reasoning override)
-    await messageActions.sendMessage(message, images, notes, mentions, usedPrompts, reasoningOverride);
+    // Mode normal (avec mentions légères + prompts metadata + canvas selections + reasoning override)
+    await messageActions.sendMessage(message, images, notes, mentions, usedPrompts, canvasSelections, reasoningOverride);
   }, [editingMessage, messageActions, uiState.setLastUserMessage]);
 
   const handleOpenCanva = useCallback(async () => {

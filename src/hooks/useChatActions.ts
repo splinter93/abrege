@@ -10,6 +10,7 @@ import type { SelectedNote, NoteWithContent } from './useNotesLoader';
 import type { AudioRecorderRef } from '@/components/chat/AudioRecorder';
 import type { NoteMention } from '@/types/noteMention';
 import type { PromptMention } from '@/types/promptMention';
+import type { CanvasSelection } from '@/types/canvasSelection';
 import { useMentionDeletion } from './useMentionDeletion';
 import { validateMessage } from '@/utils/chatValidation';
 import { chatError } from '@/utils/chatToast';
@@ -21,6 +22,7 @@ interface UseChatActionsOptions {
   selectedNotes: SelectedNote[];
   mentions: NoteMention[];
   usedPrompts: PromptMention[]; // ✅ NOUVEAU
+  canvasSelections: CanvasSelection[]; // ✅ NOUVEAU : Sélections du canvas
   loading: boolean;
   disabled: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -31,11 +33,12 @@ interface UseChatActionsOptions {
   setSelectedNotes: (notes: SelectedNote[]) => void;
   setMentions: (mentions: NoteMention[]) => void;
   setUsedPrompts: (prompts: PromptMention[]) => void; // ✅ NOUVEAU
+  setCanvasSelections: (selections: CanvasSelection[]) => void; // ✅ NOUVEAU
   setAudioError: (error: string | null) => void;
   
   // Fonctions
   detectCommands: (value: string, cursorPosition: number) => void;
-  send: (message: string, images: ImageAttachment[], notes: SelectedNote[], mentions: NoteMention[], usedPrompts: PromptMention[], reasoningOverride?: 'advanced' | 'general' | 'fast' | null) => Promise<boolean>; // ✅ NOUVEAU param reasoningOverride
+  send: (message: string, images: ImageAttachment[], notes: SelectedNote[], mentions: NoteMention[], usedPrompts: PromptMention[], canvasSelections: CanvasSelection[], reasoningOverride?: 'advanced' | 'general' | 'fast' | null) => Promise<boolean>; // ✅ NOUVEAU param canvasSelections
   clearImages: () => void;
   
   // État reasoning
@@ -56,6 +59,7 @@ export function useChatActions({
   selectedNotes,
   mentions,
   usedPrompts,
+  canvasSelections,
   loading,
   disabled,
   textareaRef,
@@ -64,6 +68,7 @@ export function useChatActions({
   setSelectedNotes,
   setMentions,
   setUsedPrompts,
+  setCanvasSelections,
   setAudioError,
   detectCommands,
   send,
@@ -125,12 +130,13 @@ export function useChatActions({
     
     const hasContent = message.trim() || images.length > 0;
     if (hasContent && !loading && !disabled) {
-      const success = await send(message.trim(), images, selectedNotes, mentions, usedPrompts, reasoningOverride);
+      const success = await send(message.trim(), images, selectedNotes, mentions, usedPrompts, canvasSelections, reasoningOverride);
       if (success) {
         setMessage('');
         setSelectedNotes([]);
         setMentions([]); // ✅ Clear mentions après envoi
         setUsedPrompts([]); // ✅ Clear prompts après envoi
+        setCanvasSelections([]); // ✅ Clear canvas selections après envoi
         clearImages();
         
         // ✅ Refocus la textarea pour continuer à taper (flow conversationnel)
@@ -143,7 +149,7 @@ export function useChatActions({
         }
       }
     }
-  }, [message, images, selectedNotes, mentions, usedPrompts, reasoningOverride, loading, disabled, send, setMessage, setSelectedNotes, setMentions, setUsedPrompts, clearImages, textareaRef, audioRecorderRef]);
+  }, [message, images, selectedNotes, mentions, usedPrompts, canvasSelections, reasoningOverride, loading, disabled, send, setMessage, setSelectedNotes, setMentions, setUsedPrompts, setCanvasSelections, clearImages, textareaRef, audioRecorderRef]);
   
   /**
    * Handler pour la touche Enter dans textarea
