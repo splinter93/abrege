@@ -1405,7 +1405,7 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   display: flex;
   flex-direction: column;
   background: var(--color-bg-primary); /* ✅ Même couleur que l'éditeur */
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.05); /* ✅ Bordure assombrie (0.08 → 0.05) */
   border-radius: 18px;
   padding: 0;
   backdrop-filter: blur(18px);
@@ -1581,6 +1581,14 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   /* ✅ FIX: S'assurer que le header sticky fonctionne correctement */
   /* Le header doit être le premier enfant pour que sticky fonctionne */
   align-items: stretch;
+  /* ✅ Scrollbar masquée */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* ✅ Masquer scrollbar webkit */
+.chat-canva-pane .editor-layout::-webkit-scrollbar {
+  display: none;
 }
 
 .chat-canva-pane .editor-layout.noteLayout {
@@ -1645,42 +1653,18 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   display: none !important;
 }
 
-/* ✅ Scrollbar discrète pour le canevas */
+/* ✅ Scrollbar masquée pour le canevas */
+.chat-canva-pane__editor > *,
+.chat-canva-pane .editor-content-wrapper,
+.chat-canva-pane .editor-layout {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
 .chat-canva-pane__editor > *::-webkit-scrollbar,
 .chat-canva-pane .editor-content-wrapper::-webkit-scrollbar,
 .chat-canva-pane .editor-layout::-webkit-scrollbar {
-  width: 8px;
-}
-
-.chat-canva-pane__editor > *::-webkit-scrollbar-track,
-.chat-canva-pane .editor-content-wrapper::-webkit-scrollbar-track,
-.chat-canva-pane .editor-layout::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.chat-canva-pane__editor > *::-webkit-scrollbar-thumb,
-.chat-canva-pane .editor-content-wrapper::-webkit-scrollbar-thumb,
-.chat-canva-pane .editor-layout::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
-  background-clip: padding-box;
-  border: 2px solid transparent;
-  border-radius: 4px;
-  /* ✅ Pas de hover/focus visible - reste discrète */
-}
-
-.chat-canva-pane__editor > *::-webkit-scrollbar-thumb:hover,
-.chat-canva-pane .editor-content-wrapper::-webkit-scrollbar-thumb:hover,
-.chat-canva-pane .editor-layout::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.12);
-  background-clip: padding-box;
-  /* ✅ Hover très subtil */
-}
-
-.chat-canva-pane__editor > *::-webkit-scrollbar-thumb:active,
-.chat-canva-pane .editor-content-wrapper::-webkit-scrollbar-thumb:active,
-.chat-canva-pane .editor-layout::-webkit-scrollbar-thumb:active {
-  background: rgba(255, 255, 255, 0.15);
-  background-clip: padding-box;
+  display: none; /* ✅ Masquer scrollbar webkit */
 }
 
 .chatgpt-message {
