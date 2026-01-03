@@ -65,20 +65,20 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
 
   return (
     <EditorEditableContent
-      editor={editor}
+              editor={editor}
       editorContainerRef={editorContainerRef}
       slashMenuRef={slashMenuRef}
       slashLang={slashLang}
       onOpenImageMenu={onOpenImageMenu}
       onSlashInsert={onSlashInsert}
-      noteId={noteId}
-      noteTitle={noteTitle}
-      noteContent={noteContent}
-      noteSlug={noteSlug}
-      classeurId={classeurId}
-      classeurName={classeurName}
+              noteId={noteId}
+              noteTitle={noteTitle}
+              noteContent={noteContent}
+              noteSlug={noteSlug}
+              classeurId={classeurId}
+              classeurName={classeurName}
       toolbarContext={toolbarContext}
-    />
+            />
   );
 };
 

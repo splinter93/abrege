@@ -81,8 +81,8 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
     }, 100); // Petit délai pour laisser le DOM se stabiliser
   }, []);
 
-  // ✅ FIX: Garantir que le header reste toujours visible
-  // Combinaison de plusieurs techniques pour robustesse maximale
+  // ✅ FIX: S'assurer que le scroll commence au top uniquement au refresh/chargement initial
+  // Le header sticky reste visible naturellement lors du scroll normal
   useEffect(() => {
     if (!isEditorReady) return;
 
@@ -98,109 +98,24 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       return { layout, header };
     };
 
-    const { layout: editorLayout, header: editorHeader } = findElements();
-
-    if (!editorLayout || !editorHeader) {
-      // Réessayer après un court délai si les éléments ne sont pas encore disponibles
-      const timeoutId = setTimeout(() => {
-        const retry = findElements();
-        if (retry.layout && retry.header) {
-          setupScrollProtection(retry.layout, retry.header);
-        }
-      }, 200);
-      return () => clearTimeout(timeoutId);
-    }
-
-    // ✅ Fonction centralisée pour la protection du scroll
-    const setupScrollProtection = (layout: HTMLElement, header: HTMLElement): (() => void) => {
-      // 1. Forcer scrollTop à 0 immédiatement
-      layout.scrollTop = 0;
-
-      // 2. Listener de scroll avec debounce pour éviter les saccades
-      let scrollTimeout: NodeJS.Timeout | null = null;
-      const handleScroll = () => {
-        if (scrollTimeout) clearTimeout(scrollTimeout);
-        
-        scrollTimeout = setTimeout(() => {
-          // Si scrollTop > 0, remettre à 0 pour garder le header visible
-          if (layout.scrollTop > 0) {
-            layout.scrollTop = 0;
-            logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] ✅ Scroll réinitialisé via listener', {
-              scrollTop: layout.scrollTop,
-              timestamp: Date.now()
-            });
-          }
-        }, 50); // Debounce de 50ms
-      };
-
-      layout.addEventListener('scroll', handleScroll, { passive: true });
-
-      // 3. Intersection Observer pour détecter si le header est visible
-      const observer = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            // Si le header n'est pas complètement visible (intersectionRatio < 1) et scrollTop > 0
-            if (entry.intersectionRatio < 1 && layout.scrollTop > 0) {
-              layout.scrollTop = 0;
-              logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] ✅ Header restauré via Intersection Observer', {
-                scrollTop: layout.scrollTop,
-                isIntersecting: entry.isIntersecting,
-                intersectionRatio: entry.intersectionRatio,
-                timestamp: Date.now()
-              });
-            }
-          }
-        },
-        {
-          root: layout,
-          rootMargin: '0px',
-          threshold: [0, 0.1, 0.5, 1]
-        }
-      );
-
-      observer.observe(header);
-
-      // 4. MutationObserver pour détecter les changements de layout qui pourraient affecter le scroll
-      const mutationObserver = new MutationObserver(() => {
-        // Vérifier et corriger le scroll après un changement de layout
-        requestAnimationFrame(() => {
-          if (layout.scrollTop > 0) {
-            layout.scrollTop = 0;
-          }
+    // ✅ Vérification initiale UNIQUEMENT au chargement (refresh)
+    const timeoutId = setTimeout(() => {
+      const { layout } = findElements();
+      
+      if (layout) {
+        // S'assurer que le scroll est au top au chargement initial uniquement
+        layout.scrollTop = 0;
+        logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] ✅ Scroll initialisé au top au chargement', {
+          scrollTop: layout.scrollTop,
+          timestamp: Date.now()
         });
-      });
+      }
+    }, 100); // Petit délai pour laisser le DOM se stabiliser
 
-      mutationObserver.observe(layout, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['style', 'class']
-      });
-
-      // 5. Vérification périodique (fallback de sécurité)
-      const checkInterval = setInterval(() => {
-        if (layout.scrollTop > 0) {
-          layout.scrollTop = 0;
-          logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] ✅ Scroll corrigé via vérification périodique', {
-            scrollTop: layout.scrollTop,
-            timestamp: Date.now()
-          });
-        }
-      }, 1000); // Vérifier toutes les secondes
-
-      // Retourner la fonction de cleanup
-      return () => {
-        if (scrollTimeout) clearTimeout(scrollTimeout);
-        layout.removeEventListener('scroll', handleScroll);
-        observer.disconnect();
-        mutationObserver.disconnect();
-        clearInterval(checkInterval);
-      };
+    return () => {
+      clearTimeout(timeoutId);
     };
-
-    const cleanup = setupScrollProtection(editorLayout, editorHeader);
-    return cleanup;
-  }, [isEditorReady, session?.id]); // ✅ Ajouter session?.id pour réinitialiser au changement de session
+  }, [isEditorReady, session?.id]); // ✅ Réinitialiser au changement de session
 
   // 🎯 Realtime édition note via RealtimeService (articles)
   const realtimeState = useRealtime({

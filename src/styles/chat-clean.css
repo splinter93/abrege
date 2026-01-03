@@ -1404,6 +1404,7 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   flex: 0 0 66%;
   display: flex;
   flex-direction: column;
+  position: relative; /* ✅ Pour positionner le header en absolute */
   background: var(--color-bg-primary); /* ✅ Même couleur que l'éditeur */
   border: 2px solid rgba(255, 255, 255, 0.05); /* ✅ Bordure assombrie (0.08 → 0.05) */
   border-radius: 18px;
@@ -1466,7 +1467,7 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   display: none !important;
 }
 
-/* ✅ FIX: S'assurer que le header reste visible dans le canvas et AU-DESSUS de l'image */
+/* ✅ FIX: Header STICKY dans le canvas (reste visible lors du scroll) */
 .chat-canva-pane .editor-header {
   position: sticky !important;
   top: 0 !important;
@@ -1475,18 +1476,10 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   width: 100% !important;
   z-index: 1002 !important; /* Z-index plus élevé que l'image header */
   background: var(--color-bg-header) !important;
-  /* ✅ Empêcher la disparition lors du scroll */
-  /* ✅ S'assurer que le header est toujours visible au-dessus de l'image */
-  /* ✅ FIX: Forcer le header à rester au top du conteneur scrollable */
   margin-top: 0 !important;
   margin-bottom: 0 !important;
-  /* ✅ FIX: S'assurer que le header est toujours au début du conteneur scrollable */
   flex-shrink: 0 !important;
-  /* ✅ FIX: Empêcher le header d'être scrollé hors du viewport */
-  will-change: transform !important;
-  /* ✅ FIX: Scroll snap pour garantir que le header reste au top */
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+  /* ✅ Header sticky reste visible au top du conteneur scrollable */
 }
 
 /* ✅ FIX: S'assurer que l'image header ne masque pas le header */
@@ -1574,23 +1567,16 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   display: flex;
   flex-direction: column;
   position: relative;
-  /* ✅ Container de scroll pour permettre sticky header */
+  /* ✅ Container de scroll normal - header sticky fonctionne si conteneur commence au top */
   overflow-y: auto;
   overflow-x: hidden;
-  /* ✅ FIX: S'assurer que le scroll commence au top */
   scroll-behavior: smooth;
-  /* ✅ FIX: Forcer le scroll initial à 0 */
-  scroll-padding-top: 0;
-  /* ✅ FIX: S'assurer que le header sticky fonctionne correctement */
-  /* Le header doit être le premier enfant pour que sticky fonctionne */
   align-items: stretch;
+  /* ✅ S'assurer que le scroll commence au top (header visible) */
+  scroll-padding-top: 0;
   /* ✅ Scrollbar masquée */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
-  /* ✅ FIX: Garantir que le scroll reste au top par défaut */
-  scroll-snap-type: y mandatory;
-  /* ✅ FIX: Empêcher le scroll de se restaurer automatiquement */
-  overscroll-behavior-y: contain;
 }
 
 /* ✅ Masquer scrollbar webkit */

@@ -410,7 +410,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           { error: `Erreur base de données: ${selectError.message}` }, 
           { status: 500 }
         );
-      }
+        }
 
       // Si le fichier existe déjà, le retourner directement
       if (existingFile) {
@@ -425,42 +425,42 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       } else {
         // Générer le filename si pas fourni
         const filename = uploadData.fileName || extractFilenameFromUrl(externalUrl);
-        
-        // Enregistrement direct en base de données (pas d'upload S3)
-        const { data: dbFileRecord, error: dbError } = await userSupabase
-          .from('files')
-          .insert({
+      
+      // Enregistrement direct en base de données (pas d'upload S3)
+      const { data: dbFileRecord, error: dbError } = await userSupabase
+        .from('files')
+        .insert({
             filename,
-            mime_type: uploadData.fileType || 'image/jpeg',
-            size: 0, // Taille 0 pour les URLs externes
-            s3_key: null, // Pas de clé S3 pour les URLs externes
-            owner_id: userId,
-            user_id: userId,
-            folder_id: uploadData.folderId || null,
-            status: 'ready',
-            request_id: requestId,
-            sha256: null, // Pas de hash pour les URLs externes
-            url: uploadData.externalUrl, // URL externe directe
-            visibility_mode: 'inherit_note',
+          mime_type: uploadData.fileType || 'image/jpeg',
+          size: 0, // Taille 0 pour les URLs externes
+          s3_key: null, // Pas de clé S3 pour les URLs externes
+          owner_id: userId,
+          user_id: userId,
+          folder_id: uploadData.folderId || null,
+          status: 'ready',
+          request_id: requestId,
+          sha256: null, // Pas de hash pour les URLs externes
+          url: uploadData.externalUrl, // URL externe directe
+          visibility_mode: 'inherit_note',
             storage_type: storageType
-          })
-          .select()
-          .single();
+        })
+        .select()
+        .single();
 
-        if (dbError) {
-          logApi.info(`❌ Erreur DB pour URL externe: ${dbError.message}`, { 
-            requestId, 
-            userId,
-            externalUrl: uploadData.externalUrl
-          });
-          
-          return NextResponse.json(
-            { error: `Erreur base de données: ${dbError.message}` }, 
-            { status: 500 }
-          );
-        }
+      if (dbError) {
+        logApi.info(`❌ Erreur DB pour URL externe: ${dbError.message}`, { 
+          requestId, 
+          userId,
+          externalUrl: uploadData.externalUrl
+        });
+        
+        return NextResponse.json(
+          { error: `Erreur base de données: ${dbError.message}` }, 
+          { status: 500 }
+        );
+      }
 
-        fileRecord = dbFileRecord;
+      fileRecord = dbFileRecord;
       }
     }
 
