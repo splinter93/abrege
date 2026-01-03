@@ -170,92 +170,51 @@ export async function POST(request: NextRequest) {
       attachedNotesCount: context.attachedNotes?.length || 0
     });
 
-    // ✅ Construire le system message SANS notes (instructions agent uniquement)
+    // ✅ Construire le system message (instructions agent + contexte UI via ContextInjectionService)
     const { SystemMessageBuilder } = await import('@/services/llm/SystemMessageBuilder');
+    const { contextInjectionService } = await import('@/services/llm/context');
     const systemMessageBuilder = SystemMessageBuilder.getInstance();
     
+    // Construire ExtendedLLMContext pour ContextInjectionService (pour context messages uniquement)
+    // uiContext contient déjà tous les champs requis de LLMContext
+    const extendedContext: import('@/services/llm/context/types').ExtendedLLMContext = {
+      ...uiContext,
+      sessionId: sessionId ?? '',
+      agentId: finalAgentConfig?.id,
+      attachedNotes: context.attachedNotes,
+      mentionedNotes: context.mentionedNotes
+    } as import('@/services/llm/context/types').ExtendedLLMContext;
+    
+    // Construire le system message (instructions agent + contexte UI)
+    // SystemMessageBuilder utilise déjà ContextInjectionService pour le contexte UI
     const systemMessageResult = systemMessageBuilder.buildSystemMessage(
       finalAgentConfig || {},
       {
         type: context.type || 'chat_session',
         name: context.name || 'Chat',
         id: context.id ?? sessionId ?? 'unknown',
-        sessionId: sessionId ?? '', // ✅ CRITIQUE : Injecter sessionId explicitement pour tous les LLM
+        sessionId: sessionId ?? '',
         provider: providerType,
-        ...uiContext  // Sans attachedNotes
+        ...uiContext
       }
     );
     
     const systemMessage = systemMessageResult.content;
     
-    logger.dev('[Stream Route] 📝 System message construit:', {
-      length: systemMessage.length,
-      hasContext: systemMessage.includes('Contexte actuel'),
+    // Injecter les context messages (notes, mentions) via ContextInjectionService
+    // Note: SystemMessageBuilder a déjà injecté le contexte UI dans le system message
+    // Ici on récupère uniquement les MessageContextProviders (notes, mentions)
+    const contextInjectionResult = contextInjectionService.injectContext(
+      finalAgentConfig || {},
+      extendedContext
+    );
+    
+    logger.dev('[Stream Route] 📝 Messages construits:', {
+      systemMessageLength: systemMessage.length,
+      contextMessagesCount: contextInjectionResult.contextMessages.length,
+      providersApplied: contextInjectionResult.metadata.providersApplied,
       agentName: finalAgentConfig?.name || 'default'
     });
-
-    // ✅ NOUVEAU: Construire message contexte séparé style Cursor si notes présentes
-    const { attachedNotesFormatter } = await import('@/services/llm/AttachedNotesFormatter');
-    const { mentionedNotesFormatter } = await import('@/services/llm/MentionedNotesFormatter');
-    let contextMessage: ChatMessage | null = null;
-    let mentionsMessage: ChatMessage | null = null;
-    
-    // 📎 NOTES ÉPINGLÉES (chargement complet)
-    if (context.attachedNotes && context.attachedNotes.length > 0) {
-      try {
-        const contextContent = attachedNotesFormatter.buildContextMessage(context.attachedNotes);
-        
-        if (contextContent) {
-          contextMessage = {
-            // Role 'user' choisi pour compatibilité maximale tous providers
-            // Alternatives évaluées :
-            // - 'system' : Plus sémantique mais peut être mal géré par certains providers
-            // - 'developer' : Utilisé par Cursor mais pas supporté par Groq/XAI
-            // - 'user' : ✅ Supporté partout, traité comme contexte par LLM
-            role: 'user',
-            content: contextContent,
-            timestamp: new Date().toISOString()
-          };
-          
-          logger.info('[Stream Route] 📎 Contexte notes épinglées construit (full content):', {
-            count: context.attachedNotes.length,
-            contentLength: contextContent.length,
-            totalLines: context.attachedNotes.reduce((sum: number, n: { markdown_content?: string }) => 
-              sum + (n.markdown_content?.split('\n').length || 0), 0
-            ),
-            titles: context.attachedNotes.map((n: { title: string }) => n.title)
-          });
-        }
-      } catch (error) {
-        logger.error('[Stream Route] ❌ Erreur construction contexte notes:', error);
-        // Continue sans notes (fallback gracieux)
-      }
-    }
-    
-    // @ MENTIONS LÉGÈRES (métadonnées uniquement)
-    if (context.mentionedNotes && context.mentionedNotes.length > 0) {
-      try {
-        const mentionsContent = mentionedNotesFormatter.buildContextMessage(context.mentionedNotes);
-        
-        if (mentionsContent) {
-          mentionsMessage = {
-            role: 'user',
-            content: mentionsContent,
-            timestamp: new Date().toISOString()
-          };
-          
-          logger.info('[Stream Route] @ Contexte mentions légères construit (metadata only):', {
-            count: context.mentionedNotes.length,
-            contentLength: mentionsContent.length,
-            tokensEstimate: Math.ceil(mentionsContent.length / 4),
-            slugs: context.mentionedNotes.map((m: { slug: string }) => m.slug)
-          });
-        }
-      } catch (error) {
-        logger.error('[Stream Route] ❌ Erreur construction contexte mentions:', error);
-        // Continue sans mentions (fallback gracieux)
-      }
-    }
     
     // ✅ NOUVEAU : Remplacer prompts /slug par templates avant LLM
     // ⚠️ IMPORTANT: Garder le format original (string OU array multi-modal avec images)
@@ -470,10 +429,8 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString()
       },
       ...sanitizedHistory,
-      // Injecter contexte notes épinglées (full content)
-      ...(contextMessage ? [contextMessage] : []),
-      // Injecter contexte mentions légères (metadata only)
-      ...(mentionsMessage ? [mentionsMessage] : []),
+      // Injecter context messages (notes, mentions) via ContextInjectionService
+      ...contextInjectionResult.contextMessages,
       // N'ajouter le message user que si pas en mode skip (avec images extraites)
       ...(skipAddingUserMessage ? [] : [{
         role: 'user' as const,

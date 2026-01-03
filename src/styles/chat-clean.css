@@ -1791,12 +1791,14 @@ body.chat-font-manrope-active .chatgpt-message-bubble-user {
   background: var(--chat-gradient-user-hover);
 }
 
-/* Images attachées dans les messages user */
+/* Images attachées dans les messages user - au-dessus de la bulle */
 .chatgpt-message-images {
   display: flex;
   flex-direction: column;
   gap: var(--chat-space-sm);
-  margin-bottom: var(--chat-space-md);
+  margin-bottom: var(--chat-space-sm);
+  align-self: flex-end; /* Aligner à droite pour les messages user */
+  max-width: 70%; /* Même largeur max que la bulle user */
 }
 
 .chatgpt-message-image {

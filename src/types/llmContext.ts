@@ -26,6 +26,12 @@ export interface LLMContext {
     name: string;         // "John Doe"
     locale: 'fr' | 'en';  // Langue préférée
     email?: string;       // Optionnel, pour logs
+    last_login?: string;  // Date de dernière connexion (ISO 8601)
+    stats?: {
+      notes_count?: number;    // Nombre de notes de l'utilisateur
+      sessions_count?: number;   // Nombre de sessions de l'utilisateur
+    };
+    notifications_count?: number; // Nombre de notifications non lues
   };
   
   // === PAGE/CONTEXTE APP (20-30 tokens) ===
@@ -74,6 +80,13 @@ export interface LLMContext {
 
   // === CONTEXTE CANVA (optionnel) ===
   canva_context?: CanvaContextPayload;
+  
+  // === SESSION ENRICHIE (optionnel) ===
+  session?: {
+    message_count?: number;        // Nombre de messages dans cette session
+    tools_used?: string[];        // Liste des tools utilisés dans cette session
+    attached_notes_count?: number;  // Nombre de notes attachées dans cette session
+  };
 }
 
 /**

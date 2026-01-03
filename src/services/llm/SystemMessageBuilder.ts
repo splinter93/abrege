@@ -1,12 +1,14 @@
 /**
  * SystemMessageBuilder - Construction intelligente des messages système
  * Gère l'injection des instructions système et templates contextuels des agents
+ * 
+ * Refactorisé pour utiliser ContextInjectionService (délégation contexte UI)
  */
 
 import { simpleLogger as logger } from '@/utils/logger';
 import type { LLMContext } from '@/types/llmContext';
-import type { CanvaContextPayload } from '@/types/canvaContext';
-import { buildCanvaContextSection } from './context/CanvaContextProvider';
+import { contextInjectionService } from './context';
+import type { ExtendedLLMContext } from './context/types';
 
 export interface AgentSystemConfig {
   system_instructions?: string;
@@ -21,7 +23,7 @@ export interface SystemMessageContext {
   name: string;
   id: string;
   content?: string;
-  provider?: string; // ✅ NOUVEAU : Pour détecter le provider (xai, groq, etc.)
+  provider?: string;
   [key: string]: unknown;
 }
 
@@ -37,6 +39,8 @@ export interface SystemMessageResult {
 /**
  * Builder pour les messages système des agents
  * Centralise la logique d'injection des instructions système
+ * 
+ * Contexte UI délégué à ContextInjectionService
  */
 export class SystemMessageBuilder {
   private static instance: SystemMessageBuilder;
@@ -50,6 +54,12 @@ export class SystemMessageBuilder {
 
   /**
    * Construit le message système complet pour un agent
+   * 
+   * Processus:
+   * 1. Instructions système personnalisées (ou fallback)
+   * 2. Injection contexte UI via ContextInjectionService
+   * 3. Template contextuel avec variables
+   * 4. Personnalité (optionnel)
    */
   buildSystemMessage(
     agentConfig: AgentSystemConfig,
@@ -76,147 +86,56 @@ export class SystemMessageBuilder {
         logger.dev(`[SystemMessageBuilder] ⚙️ Template par défaut utilisé`);
       }
 
-      // ✅ Injection contexte UI compact (date, device, page)
+      // 2. Injection contexte UI via ContextInjectionService
       if (context && typeof context === 'object') {
-        const ctx = context as Partial<LLMContext> & {
-          attachedNotes?: Array<{
-            title: string;
-            slug: string;
-            markdown_content: string;
-          }>;
-        }; // ✅ Type strict (pas any)
-        const contextParts: string[] = [];
+        const ctx = context as Partial<LLMContext> & SystemMessageContext;
         
-        // Format ultra-compact avec emojis (comme AgentOrchestrator)
-        if (ctx.time?.local && ctx.device?.type && ctx.user?.locale) {
-          const deviceEmoji = ctx.device.type === 'mobile' ? '📱' : ctx.device.type === 'tablet' ? '📲' : '💻';
-          const localeFlag = ctx.user.locale === 'fr' ? '🇫🇷' : '🇬🇧';
-          const timezone = ctx.time.timezone ?? ctx.time.timestamp ?? 'UTC';
-          contextParts.push(`📅 ${ctx.time.local} (${timezone}) | ${deviceEmoji} ${ctx.device.type} | ${localeFlag} ${ctx.user.locale.toUpperCase()}`);
-          
-          // Page actuelle
-          if (ctx.page) {
-            const pageEmojiMap: Record<string, string> = {
-              chat: '💬',
-              editor: '✍️',
-              folder: '📁',
-              classeur: '📚',
-              home: '🏠'
-            };
-            const pageEmoji = pageEmojiMap[ctx.page.type] || '❓';
-            contextParts.push(`${pageEmoji} ${ctx.page.type}${ctx.page.action ? ` (${ctx.page.action})` : ''}`);
-          }
-          
-          // Contexte actif
-          if (ctx.active?.note) {
-            contextParts.push(`📝 Note: ${ctx.active.note.title}`);
-          }
-          if (ctx.active?.folder) {
-            contextParts.push(`📁 Dossier: ${ctx.active.folder.name}`);
-          }
-          if (ctx.active?.classeur) {
-            contextParts.push(`📚 Classeur: ${ctx.active.classeur.name}`);
-          }
-        }
+        // Construire ExtendedLLMContext à partir du contexte reçu
+        const extendedContext: ExtendedLLMContext = {
+          sessionId: ctx.sessionId || context.id || 'current',
+          agentId: ctx.agentId,
+          time: ctx.time || {
+            local: new Date().toLocaleString('fr-FR'),
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timestamp: new Date().toISOString()
+          },
+          user: ctx.user || {
+            name: 'Utilisateur',
+            locale: 'fr'
+          },
+          page: ctx.page || {
+            type: 'chat',
+            path: '/chat'
+          },
+          device: ctx.device || {
+            type: 'desktop'
+          },
+          active: ctx.active,
+          recent: ctx.recent,
+          canva_context: ctx.canva_context,
+          session: ctx.session,
+          // Notes attachées et mentionnées (si présentes dans le contexte)
+          attachedNotes: (ctx as { attachedNotes?: unknown[] }).attachedNotes as ExtendedLLMContext['attachedNotes'],
+          mentionedNotes: (ctx as { mentionedNotes?: unknown[] }).mentionedNotes as ExtendedLLMContext['mentionedNotes']
+        };
 
-        // ✅ CRITIQUE : Injecter sessionId systématiquement (visible par tous les LLM)
-        // Même si les autres parties du contexte ne sont pas présentes
-        if (ctx.sessionId && ctx.sessionId !== 'current') {
-          contextParts.push(`🔑 Session ID: ${ctx.sessionId}`);
-        }
-        
-        // Injecter la section contexte si on a au moins le sessionId ou d'autres infos
-        if (contextParts.length > 0) {
-          content += `\n\n## Contexte Actuel\n${contextParts.join('\n')}`;
-          // Avertissement date/heure uniquement si on a injecté le contexte temporel
-          if (ctx.time?.local && ctx.device?.type && ctx.user?.locale) {
-            content += `\n\n⚠️ Date/heure ci-dessus = MAINTENANT (actualisée automatiquement). Ne cherche pas l'heure ailleurs.`;
-          }
-          logger.dev(`[SystemMessageBuilder] 🌍 Contexte UI injecté (compact)`, {
-            hasSessionId: !!(ctx.sessionId && ctx.sessionId !== 'current'),
-            partsCount: contextParts.length
+        // Utiliser ContextInjectionService pour injecter le contexte UI
+        const contextResult = contextInjectionService.injectContext(
+          agentConfig,
+          extendedContext
+        );
+
+        // Ajouter le contexte UI au system message
+        if (contextResult.systemMessage) {
+          content += `\n\n${contextResult.systemMessage}`;
+          logger.dev(`[SystemMessageBuilder] 🌍 Contexte UI injecté via ContextInjectionService`, {
+            providersApplied: contextResult.metadata.providersApplied,
+            systemMessageLength: contextResult.metadata.systemMessageLength
           });
-        } else if (ctx.sessionId && ctx.sessionId !== 'current') {
-          // ✅ FALLBACK : Si seul le sessionId est présent, l'injecter quand même
-          content += `\n\n## Contexte Actuel\n🔑 Session ID: ${ctx.sessionId}`;
-          logger.dev(`[SystemMessageBuilder] 🔑 Session ID injecté (contexte minimal)`);
         }
-
-        const canvaContext = (ctx as any).canva_context as CanvaContextPayload | undefined;
-        if (canvaContext) {
-          const canvaSection = buildCanvaContextSection(canvaContext);
-          if (canvaSection) {
-            content += `\n\n${canvaSection}`;
-            logger.dev('[SystemMessageBuilder] 🧩 Canva context injecté');
-          }
-        }
-
-        // ✅ ENRICHISSEMENT : User stats, session, notifications
-        const enrichedParts: string[] = [];
-
-        // User stats (si disponible)
-        if (ctx.user) {
-          const userParts: string[] = [];
-          
-          if ((ctx.user as any).last_login) {
-            const lastLoginAgo = this.getTimeAgo((ctx.user as any).last_login);
-            userParts.push(`🕒 Dernière connexion: ${lastLoginAgo}`);
-          }
-          
-          if ((ctx.user as any).stats) {
-            const stats = (ctx.user as any).stats;
-            if (stats.notes_count !== undefined || stats.sessions_count !== undefined) {
-              const notesStr = stats.notes_count !== undefined ? `${stats.notes_count} notes` : '';
-              const sessionsStr = stats.sessions_count !== undefined ? `${stats.sessions_count} sessions` : '';
-              const statsStr = [notesStr, sessionsStr].filter(Boolean).join(' | ');
-              if (statsStr) userParts.push(`📊 ${statsStr}`);
-            }
-          }
-          
-          if ((ctx.user as any).notifications_count && (ctx.user as any).notifications_count > 0) {
-            userParts.push(`🔔 ${(ctx.user as any).notifications_count} notifications non lues`);
-          }
-
-          if (userParts.length > 0) {
-            enrichedParts.push(`## Utilisateur\n${userParts.join('\n')}`);
-          }
-        }
-
-        // Session info (si disponible)
-        if ((ctx as any).session) {
-          const session = (ctx as any).session;
-          const sessionParts: string[] = [];
-          
-          if (session.message_count !== undefined && session.message_count > 0) {
-            sessionParts.push(`💬 ${session.message_count} messages dans cette session`);
-          }
-          
-          if (session.tools_used && Array.isArray(session.tools_used) && session.tools_used.length > 0) {
-            const recentTools = session.tools_used.slice(-3).join(', ');
-            sessionParts.push(`🔧 Tools utilisés: ${recentTools}`);
-          }
-          
-          if (session.attached_notes_count && session.attached_notes_count > 0) {
-            sessionParts.push(`📎 ${session.attached_notes_count} note(s) attachée(s)`);
-          }
-
-          if (sessionParts.length > 0) {
-            enrichedParts.push(`## Session\n${sessionParts.join('\n')}`);
-          }
-        }
-
-        if (enrichedParts.length > 0) {
-          content += `\n\n${enrichedParts.join('\n\n')}`;
-          logger.dev(`[SystemMessageBuilder] ✨ Contexte enrichi (user stats + session)`);
-        }
-        
-        // ✅ REFACTO: Notes attachées gérées séparément (évite duplication tokens)
-        // Les notes sont injectées comme message séparé dans la route API
-        // Voir: AttachedNotesFormatter.buildContextMessage() et /api/chat/llm/stream/route.ts
-        // Raison: Séparation données (notes) vs instructions (system), citations précises avec numéros de lignes
       }
 
-      // 2. Template contextuel avec variables
+      // 3. Template contextuel avec variables
       if (agentConfig.context_template) {
         try {
           const contextualContent = this.renderContextTemplate(agentConfig.context_template, context);
@@ -230,14 +149,12 @@ export class SystemMessageBuilder {
         }
       }
 
-      // 3. Personnalité (optionnel - feature smart pour dupliquer agents)
+      // 4. Personnalité (optionnel)
       if (agentConfig.personality?.trim()) {
         content += `\n\n## Personnalité\n${agentConfig.personality.trim()}`;
         hasPersonality = true;
         logger.dev(`[SystemMessageBuilder] 🎭 Personnalité ajoutée`);
       }
-
-      // ✅ SIMPLIFIÉ : Expertise et capabilities supprimés (redondant avec system_instructions)
 
       logger.dev(`[SystemMessageBuilder] ✅ Message système construit (${content.length} chars)`, {
         hasCustomInstructions,
@@ -256,7 +173,7 @@ export class SystemMessageBuilder {
 
     } catch (error) {
       logger.error(`[SystemMessageBuilder] ❌ Erreur construction message système:`, error);
-      
+
       // Fallback en cas d'erreur
       return {
         content: fallbackTemplate,
@@ -270,33 +187,6 @@ export class SystemMessageBuilder {
   }
 
   /**
-   * Convertit un timestamp en format "il y a X temps" lisible
-   */
-  private getTimeAgo(timestamp: string): string {
-    try {
-      const now = new Date();
-      const then = new Date(timestamp);
-      const diff = now.getTime() - then.getTime();
-      
-      const minutes = Math.floor(diff / 60000);
-      const hours = Math.floor(diff / 3600000);
-      const days = Math.floor(diff / 86400000);
-      
-      if (minutes < 1) return 'à l\'instant';
-      if (minutes < 60) return `il y a ${minutes} min`;
-      if (hours < 24) return `il y a ${hours}h`;
-      if (days === 1) return 'hier';
-      if (days < 7) return `il y a ${days} jours`;
-      if (days < 30) return `il y a ${Math.floor(days / 7)} semaine${Math.floor(days / 7) > 1 ? 's' : ''}`;
-      if (days < 365) return `il y a ${Math.floor(days / 30)} mois`;
-      return `il y a ${Math.floor(days / 365)} an${Math.floor(days / 365) > 1 ? 's' : ''}`;
-    } catch (error) {
-      logger.error('[SystemMessageBuilder] ❌ Erreur getTimeAgo:', error);
-      return 'récemment';
-    }
-  }
-
-  /**
    * Rend un template contextuel avec substitution de variables
    */
   private renderContextTemplate(template: string, context: SystemMessageContext): string {
@@ -305,9 +195,8 @@ export class SystemMessageBuilder {
     }
 
     try {
-      // Substitution simple des variables {{variable}}
       let rendered = template;
-      
+
       // Remplacer les variables du contexte
       Object.entries(context).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -335,7 +224,6 @@ export class SystemMessageBuilder {
       return false;
     }
 
-    // Au moins une source d'instructions doit être présente
     const hasInstructions = !!(
       agentConfig.system_instructions?.trim() ||
       agentConfig.context_template?.trim()

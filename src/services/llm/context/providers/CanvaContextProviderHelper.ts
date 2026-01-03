@@ -1,3 +1,8 @@
+/**
+ * Helper pour construire la section Canva context
+ * Extrait de CanvaContextProvider.ts pour réutilisabilité
+ */
+
 import type { CanvaContextPayload, CanvaContextSession } from '@/types/canvaContext';
 
 function formatSessionSummary(session: CanvaContextSession, index: number): string {

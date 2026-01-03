@@ -94,25 +94,25 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   return (
     <div className={`chatgpt-message chatgpt-message-${role} ${className || ''}`}>
-      <div className={`chatgpt-message-bubble chatgpt-message-bubble-${role}`}>
-        {/* Images attachées (messages user uniquement) */}
-        {hasAttachedImages && (
-          <div className="chatgpt-message-images">
-            {userMessage.attachedImages!.map((img, index) => (
-              <img
-                key={index}
-                src={img.url}
-                alt={img.fileName || `Image ${index + 1}`}
-                className="chatgpt-message-image"
-                loading="lazy"
-                onDoubleClick={() => handleImageDoubleClick(img.url, img.fileName)}
-                style={{ cursor: 'pointer' }}
-                title="Double-cliquer pour agrandir"
-              />
-            ))}
-          </div>
-        )}
+      {/* Images attachées (messages user uniquement) - au-dessus de la bulle */}
+      {hasAttachedImages && (
+        <div className="chatgpt-message-images">
+          {userMessage.attachedImages!.map((img, index) => (
+            <img
+              key={index}
+              src={img.url}
+              alt={img.fileName || `Image ${index + 1}`}
+              className="chatgpt-message-image"
+              loading="lazy"
+              onDoubleClick={() => handleImageDoubleClick(img.url, img.fileName)}
+              style={{ cursor: 'pointer' }}
+              title="Double-cliquer pour agrandir"
+            />
+          ))}
+        </div>
+      )}
 
+      <div className={`chatgpt-message-bubble chatgpt-message-bubble-${role}`}>
         {/* Notes attachées (messages user uniquement) */}
         {hasAttachedNotes && (
           <div className="chatgpt-message-notes">
