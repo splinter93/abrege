@@ -3409,6 +3409,7 @@ body.chat-font-manrope-active .chatgpt-message-bubble-user {
   flex-wrap: wrap;
   gap: 8px;
   padding: 4px 8px 0 8px;
+  margin-bottom: -4px;
 }
 
 .chat-canvas-selection-pill {
@@ -3436,6 +3437,7 @@ body.chat-font-manrope-active .chatgpt-message-bubble-user {
 
 .chat-canvas-selection-pill-text {
   font-weight: 500;
+  font-style: italic;
   white-space: nowrap;
   max-width: 200px;
   overflow: hidden;
