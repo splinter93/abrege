@@ -39,7 +39,7 @@
 
 .toc-container.expanded {
   width: 270px; /* Plus compact: 300px → 270px */
-  background: var(--surface-1);
+  background: #141618; /* ✅ Même couleur que la sidebar */
   border: 1.5px solid var(--border-subtle);
   border-radius: 16px;
   color: var(--editor-text-color);
