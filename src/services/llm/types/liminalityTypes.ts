@@ -200,7 +200,7 @@ export interface LiminalityResponse {
  * - 'error' : Erreur
  */
 export interface LiminalityStreamEvent {
-  type: 'start' | 'text.delta' | 'chunk' | 'text.done' | 'tool_block.start' | 'tool_block.done' | 'done' | 'tool_call' | 'tool_result' | 'end' | 'error';
+  type: 'start' | 'text.start' | 'text.delta' | 'chunk' | 'text.done' | 'tool_block.start' | 'tool_block.done' | 'done' | 'tool_call' | 'tool_result' | 'end' | 'error';
   delta?: string; // Pour 'text.delta'
   content?: string; // Pour 'chunk' ou contenu général
   block_id?: string; // Pour 'tool_block.start' et 'tool_block.done'
