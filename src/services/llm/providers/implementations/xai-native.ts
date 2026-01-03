@@ -127,6 +127,7 @@ const XAI_NATIVE_INFO: ProviderInfo = {
     'grok-4-1-fast-reasoning',
     'grok-4-1-fast-non-reasoning',
     'grok-4-1-fast',
+    'grok-4-fast-reasoning',       // Legacy reasoning (migrated to 4.1)
     'grok-beta',
     'grok-vision-beta'
   ],

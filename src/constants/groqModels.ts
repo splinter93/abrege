@@ -140,6 +140,18 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: true
   },
   {
+    id: 'grok-4-fast-reasoning',
+    name: 'Grok 4 Fast Reasoning (Legacy)',
+    category: 'xai',
+    provider: 'xai',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning'],
+    contextWindow: 131072,
+    maxOutput: 8000,
+    speed: 700,
+    pricing: { input: '$0.20', output: '$0.50' },
+    description: 'Reasoning avancé (legacy, migré vers 4.1)'
+  },
+  {
     id: 'grok-beta',
     name: 'Grok Beta 128k',
     category: 'xai',
