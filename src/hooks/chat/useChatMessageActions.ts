@@ -60,7 +60,8 @@ export interface UseChatMessageActionsReturn {
     images?: ImageAttachment[],
     notes?: Note[],
     mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number }>,
-    prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }> // ✅ NOUVEAU : Prompts metadata
+    prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>, // ✅ NOUVEAU : Prompts metadata
+    reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => Promise<void>;
   
   editMessage: (options: {
@@ -200,7 +201,8 @@ export function useChatMessageActions(
     images?: ImageAttachment[],
     notes?: Note[],
     mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>,
-    prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>
+    prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>,
+    reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => {
     // ✅ Auth guard
     if (!requireAuth()) {
@@ -279,6 +281,7 @@ export function useChatMessageActions(
         notes,
         mentions, // ✅ Mentions légères
         prompts: filteredPrompts,
+        reasoningOverride, // ✅ NOUVEAU : Override reasoning
         sessionId: currentSession.id,
         currentSession,
         selectedAgent,

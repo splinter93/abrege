@@ -80,7 +80,8 @@ const uiContextSchema = z.object({
   attachedNotes: z.array(attachedNoteSchema).optional(),
   mentionedNotes: z.array(noteMentionSchema).optional(),
   prompts: z.array(promptMentionSchema).optional(),
-  canva_context: z.unknown().optional() // Structure complexe, validation partielle
+  canva_context: z.unknown().optional(), // Structure complexe, validation partielle
+  reasoningOverride: z.enum(['advanced', 'general', 'fast']).nullable().optional() // ✅ NOUVEAU : Override reasoning
 }).passthrough(); // Autoriser champs additionnels pour extensibilité
 
 /**

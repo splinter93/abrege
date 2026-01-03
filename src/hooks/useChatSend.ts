@@ -21,7 +21,8 @@ interface UseChatSendOptions {
     images?: ImageAttachment[],
     notes?: NoteWithContent[],
     mentions?: NoteMention[],
-    prompts?: PromptMention[]
+    prompts?: PromptMention[],
+    reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => void;
   setUploadError: (error: string | null) => void;
 }
@@ -48,7 +49,8 @@ export function useChatSend({
     images: ImageAttachment[],
     selectedNotes: SelectedNote[],
     mentions: NoteMention[],
-    usedPrompts: PromptMention[]
+    usedPrompts: PromptMention[],
+    reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => {
       logger.dev('[useChatSend] 🚀 START', {
         messageLength: message.length,
@@ -100,11 +102,11 @@ export function useChatSend({
         ? filterPromptsInMessage(message, promptsToSendRaw)
         : undefined;
       
-      // ✅ Envoyer avec mentions légères + prompts metadata + notes épinglées
+      // ✅ Envoyer avec mentions légères + prompts metadata + notes épinglées + reasoning override
       // Ne passer mentions/prompts que si vraiment présents (éviter tableau vide)
       const mentionsToSend = mentions && mentions.length > 0 ? mentions : undefined;
 
-      onSend(content, images, notesWithContent, mentionsToSend, promptsToSend);
+      onSend(content, images, notesWithContent, mentionsToSend, promptsToSend, reasoningOverride);
       
       logger.dev('[useChatSend] ✅ COMPLETE', {
         mentionsSent: mentionsToSend?.length || 0,
@@ -129,10 +131,11 @@ export function useChatSend({
     images: ImageAttachment[],
     selectedNotes: SelectedNote[],
     mentions: NoteMention[],
-    usedPrompts: PromptMention[] // ✅ NOUVEAU : Prompts utilisés
+    usedPrompts: PromptMention[], // ✅ NOUVEAU : Prompts utilisés
+    reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => {
     // Générer un ID unique pour cette opération
-    const operationId = `${message}-${images.map(i => i.id).join(',')}-${selectedNotes.map(n => n.id).join(',')}-${mentions.map(m => m.id).join(',')}-${usedPrompts.map(p => p.id).join(',')}`;
+    const operationId = `${message}-${images.map(i => i.id).join(',')}-${selectedNotes.map(n => n.id).join(',')}-${mentions.map(m => m.id).join(',')}-${usedPrompts.map(p => p.id).join(',')}-${reasoningOverride || 'null'}`;
     
     // Vérifier si cette opération est déjà en cours
     if (sendQueue.current.has(operationId)) {
@@ -141,7 +144,7 @@ export function useChatSend({
     }
 
     // Créer la promesse d'envoi
-    const sendPromise = sendInternal(message, images, selectedNotes, mentions, usedPrompts);
+    const sendPromise = sendInternal(message, images, selectedNotes, mentions, usedPrompts, reasoningOverride);
     
     // Stocker dans la queue
     sendQueue.current.set(operationId, sendPromise);

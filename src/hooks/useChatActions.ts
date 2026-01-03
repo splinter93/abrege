@@ -35,8 +35,11 @@ interface UseChatActionsOptions {
   
   // Fonctions
   detectCommands: (value: string, cursorPosition: number) => void;
-  send: (message: string, images: ImageAttachment[], notes: SelectedNote[], mentions: NoteMention[], usedPrompts: PromptMention[]) => Promise<boolean>; // ✅ NOUVEAU param
+  send: (message: string, images: ImageAttachment[], notes: SelectedNote[], mentions: NoteMention[], usedPrompts: PromptMention[], reasoningOverride?: 'advanced' | 'general' | 'fast' | null) => Promise<boolean>; // ✅ NOUVEAU param reasoningOverride
   clearImages: () => void;
+  
+  // État reasoning
+  reasoningOverride?: 'advanced' | 'general' | 'fast' | null; // ✅ NOUVEAU : Override reasoning
   
   // Menus (pour bloquer Enter)
   showMentionMenu?: boolean;
@@ -66,7 +69,8 @@ export function useChatActions({
   send,
   clearImages,
   showMentionMenu,
-  showSlashMenu
+  showSlashMenu,
+  reasoningOverride
 }: UseChatActionsOptions) {
   
   // ✅ Hook pour suppression atomique des mentions ET prompts
@@ -121,7 +125,7 @@ export function useChatActions({
     
     const hasContent = message.trim() || images.length > 0;
     if (hasContent && !loading && !disabled) {
-      const success = await send(message.trim(), images, selectedNotes, mentions, usedPrompts);
+      const success = await send(message.trim(), images, selectedNotes, mentions, usedPrompts, reasoningOverride);
       if (success) {
         setMessage('');
         setSelectedNotes([]);
@@ -139,7 +143,7 @@ export function useChatActions({
         }
       }
     }
-  }, [message, images, selectedNotes, mentions, usedPrompts, loading, disabled, send, setMessage, setSelectedNotes, setMentions, setUsedPrompts, clearImages, textareaRef, audioRecorderRef]);
+  }, [message, images, selectedNotes, mentions, usedPrompts, reasoningOverride, loading, disabled, send, setMessage, setSelectedNotes, setMentions, setUsedPrompts, clearImages, textareaRef, audioRecorderRef]);
   
   /**
    * Handler pour la touche Enter dans textarea

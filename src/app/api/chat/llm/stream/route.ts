@@ -149,19 +149,11 @@ export async function POST(request: NextRequest) {
     
     // Validation et normalisation des paramètres LLM
     const { temperature, topP, maxTokens } = normalizeLLMParams(finalAgentConfig);
-
-    // Créer le provider approprié
-    let provider;
-    if (providerType === 'xai') {
-      // ✅ Utiliser XAINativeProvider pour support MCP complet
-      const { XAINativeProvider } = await import('@/services/llm/providers/implementations/xai-native');
-      provider = new XAINativeProvider({ model, temperature, topP, maxTokens });
-    } else if (providerType === 'liminality') {
-      const { LiminalityProvider } = await import('@/services/llm/providers/implementations/liminality');
-      provider = new LiminalityProvider({ model, temperature, topP, maxTokens });
-    } else {
-      provider = new GroqProvider({ model, temperature, topP, maxTokens });
-    }
+    
+    // ✅ Variables pour paramètres finaux (seront mises à jour après override si nécessaire)
+    let finalTemperature = temperature;
+    let finalTopP = topP;
+    let finalMaxTokens = maxTokens;
 
     // ✅ Construire le contexte UI (SANS attachedNotes - gérées séparément)
     const uiContext = {
@@ -407,6 +399,119 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // ✅ CRITIQUE : Détection d'images APRÈS extraction complète (pour override modèle)
+    const hasImages = !!(userMessageImages && userMessageImages.length > 0);
+
+    // ✅ NOUVEAU : Résolution override modèle/params (images + reasoning)
+    // Maintenant qu'on a extrait les images, on peut faire la détection correctement
+    const { modelOverrideService } = await import('@/services/llm/modelOverride');
+    const overrideContext: import('@/services/llm/modelOverride').ModelOverrideContext = {
+      originalModel: model,
+      provider: providerType,
+      hasImages: hasImages,
+      reasoningOverride: context.reasoningOverride || null,
+      originalParams: { temperature, topP, maxTokens }
+    };
+
+    const overrideResult = modelOverrideService.resolveModelAndParams(overrideContext);
+    model = overrideResult.model;
+    // ✅ Mettre à jour les paramètres finaux (déjà déclarés plus haut)
+    finalTemperature = overrideResult.params.temperature ?? temperature;
+    finalTopP = overrideResult.params.topP ?? topP;
+    finalMaxTokens = overrideResult.params.maxTokens ?? maxTokens;
+
+    // ✅ CRITIQUE : Re-détecter le provider depuis le modèle final (après override)
+    // Si le modèle a changé, le provider peut aussi avoir changé (ex: liminality → groq)
+    const finalModelInfo = getModelInfo(model);
+    if (finalModelInfo?.provider && finalModelInfo.provider !== providerType) {
+      logger.info(`[Stream Route] 🔄 Provider auto-corrigé après override: ${providerType} → ${finalModelInfo.provider} (modèle: ${model})`);
+      providerType = finalModelInfo.provider;
+    }
+
+    if (overrideResult.reasons.length > 0) {
+      logger.info('[Stream Route] 🔄 Model/Params override appliqué:', {
+        originalModel: overrideResult.originalModel,
+        newModel: overrideResult.model,
+        originalProvider: overrideContext.provider,
+        finalProvider: providerType,
+        originalParams: { temperature, topP, maxTokens },
+        newParams: overrideResult.params,
+        reasons: overrideResult.reasons
+      });
+    }
+
+    // ✅ CRITIQUE : Convertir les URLs S3 canoniques en presigned URLs pour les providers qui en ont besoin
+    // Groq et xAI doivent pouvoir télécharger les images, donc on génère des presigned URLs avec expiration longue
+    logger.dev('[Stream Route] 🔍 Vérification conversion URLs S3:', {
+      hasImages: !!(userMessageImages && userMessageImages.length > 0),
+      imageCount: userMessageImages?.length || 0,
+      providerType: providerType,
+      shouldConvert: !!(userMessageImages && userMessageImages.length > 0 && (providerType === 'groq' || providerType === 'xai'))
+    });
+    
+    if (userMessageImages && userMessageImages.length > 0 && (providerType === 'groq' || providerType === 'xai')) {
+      const { s3Service } = await import('@/services/s3Service');
+      
+      for (const image of userMessageImages) {
+        logger.dev('[Stream Route] 🔍 Analyse URL image:', {
+          url: image.url.substring(0, 100) + (image.url.length > 100 ? '...' : ''),
+          urlLength: image.url.length
+        });
+        
+        // Détecter si c'est une URL S3 canonique (format: https://{bucket}.s3.{region}.amazonaws.com/{key})
+        const s3CanonicalPattern = /^https:\/\/([^/]+)\.s3\.([^.]+)\.amazonaws\.com\/(.+)$/;
+        const match = image.url.match(s3CanonicalPattern);
+        
+        logger.dev('[Stream Route] 🔍 Pattern match résultat:', {
+          matched: !!match,
+          groups: match ? [match[1], match[2], match[3]?.substring(0, 50)] : null
+        });
+        
+        if (match) {
+          const [, bucket, region, key] = match;
+          const decodedKey = decodeURIComponent(key);
+          
+          try {
+            // Générer une presigned URL avec expiration longue (24 heures = 86400 secondes)
+            // Cela permet au provider de télécharger l'image même si le bucket n'est pas public
+            const presignedUrl = await s3Service.generateGetUrl(decodedKey, 86400);
+            image.url = presignedUrl;
+            
+            logger.info('[Stream Route] 🔑 URL S3 convertie en presigned URL:', {
+              provider: providerType,
+              originalUrl: `https://${bucket}.s3.${region}.amazonaws.com/${key.substring(0, 50)}...`,
+              key: decodedKey.substring(0, 50) + '...',
+              expiresIn: '24h',
+              presignedUrlLength: presignedUrl.length
+            });
+          } catch (s3Error) {
+            logger.warn('[Stream Route] ⚠️ Erreur génération presigned URL, utilisation URL originale:', {
+              error: s3Error instanceof Error ? s3Error.message : String(s3Error),
+              originalUrl: image.url.substring(0, 100)
+            });
+            // Continuer avec l'URL originale (peut-être que le bucket est public)
+          }
+        } else {
+          logger.dev('[Stream Route] ⚠️ URL ne correspond pas au pattern S3 canonique, utilisation telle quelle:', {
+            url: image.url.substring(0, 100)
+          });
+        }
+      }
+    }
+
+    // ✅ CRITIQUE : Créer le provider APRÈS l'override (pour utiliser les bons paramètres)
+    let provider;
+    if (providerType === 'xai') {
+      // ✅ Utiliser XAINativeProvider pour support MCP complet
+      const { XAINativeProvider } = await import('@/services/llm/providers/implementations/xai-native');
+      provider = new XAINativeProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
+    } else if (providerType === 'liminality') {
+      const { LiminalityProvider } = await import('@/services/llm/providers/implementations/liminality');
+      provider = new LiminalityProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
+    } else {
+      provider = new GroqProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
+    }
+
     const messages: ChatMessage[] = ([
       {
         role: 'system',
@@ -426,6 +531,25 @@ export async function POST(request: NextRequest) {
         ...(userMessageImages && userMessageImages.length > 0 && { attachedImages: userMessageImages })
       }])
     ]) as ChatMessage[];
+
+    // ✅ DEBUG : Logger les messages avant envoi au provider (surtout pour debug override)
+    const lastUserMessage = messages.filter(m => m.role === 'user').pop();
+    logger.info('[Stream Route] 📋 Messages construits pour le provider:', {
+      totalMessages: messages.length,
+      historyLength: sanitizedHistory.length,
+      hasUserMessage: !skipAddingUserMessage,
+      userMessageText: userMessageText.substring(0, 100) + (userMessageText.length > 100 ? '...' : ''),
+      userMessageHasImages: !!(userMessageImages && userMessageImages.length > 0),
+      userMessageImageCount: userMessageImages?.length || 0,
+      provider: providerType,
+      model: model,
+      messagesRoles: messages.map(m => m.role),
+      lastMessageRole: messages[messages.length - 1]?.role,
+      lastMessageHasImages: !!(messages[messages.length - 1] && 'attachedImages' in messages[messages.length - 1] && (messages[messages.length - 1] as { attachedImages?: unknown[] }).attachedImages?.length),
+      // ✅ CRITIQUE : Vérifier si le dernier message user a bien attachedImages
+      lastUserMessageHasAttachedImages: !!(lastUserMessage && 'attachedImages' in lastUserMessage && (lastUserMessage as { attachedImages?: unknown[] }).attachedImages?.length),
+      lastUserMessageAttachedImagesCount: lastUserMessage && 'attachedImages' in lastUserMessage ? ((lastUserMessage as { attachedImages?: unknown[] }).attachedImages?.length || 0) : 0
+    });
 
     // ✅ Charger les tools (OpenAPI + MCP) ET les endpoints
     let tools: Tool[] = [];
@@ -539,11 +663,18 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode(chunk));
           };
 
-          // Envoyer un chunk de début
+          // Envoyer un chunk de début avec info modèle (pour debug)
+          const wasOverridden = overrideResult.model !== overrideResult.originalModel || overrideResult.reasons.length > 0;
           sendSSE({
             type: 'start',
             sessionId,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            model: {
+              original: overrideResult.originalModel,
+              current: overrideResult.model,
+              wasOverridden,
+              reasons: overrideResult.reasons
+            }
           });
 
           // ✅ Boucle agentic en streaming (max 5 tours)
@@ -614,6 +745,16 @@ export async function POST(request: NextRequest) {
 
             // ✅ Stream depuis le provider avec gestion d'erreur
             try {
+              // ✅ CRITIQUE : Logger le modèle utilisé et les images avant l'appel
+              const lastUserMsg = currentMessages.filter(m => m.role === 'user').pop();
+              logger.info(`[Stream Route] 🚀 Appel provider - Round ${roundCount}:`, {
+                provider: providerType,
+                model: model,
+                hasImages: !!(lastUserMsg && 'attachedImages' in lastUserMsg && (lastUserMsg as { attachedImages?: unknown[] }).attachedImages?.length),
+                imageCount: lastUserMsg && 'attachedImages' in lastUserMsg ? ((lastUserMsg as { attachedImages?: unknown[] }).attachedImages?.length || 0) : 0,
+                messagesCount: currentMessages.length
+              });
+              
               // Extraire les callables si disponibles (pour Liminality uniquement)
               const synesiaCallables = (tools as Tool[] & { _synesiaCallables?: string[] })._synesiaCallables;
               

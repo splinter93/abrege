@@ -27,6 +27,13 @@ interface UseChatResponseOptions {
   onToolExecution?: (toolCount: number, toolCalls: ToolCall[]) => void;
   useStreaming?: boolean;
   onAssistantRoundComplete?: (content: string, toolCalls: ToolCall[]) => void;
+  // ✅ NOUVEAU : Callback pour info modèle (debug)
+  onModelInfo?: (modelInfo: {
+    original: string;
+    current: string;
+    wasOverridden: boolean;
+    reasons: string[];
+  }) => void;
 }
 
 interface UseChatResponseReturn {
@@ -110,7 +117,12 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
               headers,
               body: JSON.stringify({
                 message,
-                context: context || { sessionId }, 
+                context: {
+                  ...(context || { sessionId }),
+                  reasoningOverride: (context && typeof context === 'object' && 'reasoningOverride' in context)
+                    ? (context as { reasoningOverride?: 'advanced' | 'general' | 'fast' | null }).reasoningOverride
+                    : null
+                }, 
                 history: history || [],
                 sessionId,
                 skipAddingUserMessage
@@ -146,7 +158,8 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           onToolExecution,
           onToolResult,
           onComplete,
-          onError
+          onError,
+          onModelInfo: options.onModelInfo // ✅ NOUVEAU : Passer callback modelInfo
         });
 
         return;

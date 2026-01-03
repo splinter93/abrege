@@ -39,6 +39,7 @@ import ChatMessagesArea from './ChatMessagesArea';
 import ChatInputContainer from './ChatInputContainer';
 import SidebarUltraClean from './SidebarUltraClean';
 import ChatCanvaPane from './ChatCanvaPane';
+import ModelDebug, { type ModelDebugInfo } from './ModelDebug';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { useCanvaContextPayload } from '@/hooks/chat/useCanvaContextPayload';
 import type { CanvaSession as CanvaSessionDB, ListCanvasResponse } from '@/types/canva';
@@ -217,11 +218,18 @@ const ChatFullscreenV2: React.FC = () => {
   // ✅ FIX: Extraire les callbacks pour éviter les re-renders
   const { updateContent, startStreaming, endStreaming } = streamingState;
   
+  // ✅ NOUVEAU : État pour info modèle (debug)
+  const [modelInfo, setModelInfo] = useState<ModelDebugInfo | null>(null);
+  
   const { sendMessage } = useChatResponse({
     useStreaming: true,
     onStreamChunk: updateContent,
     onStreamStart: startStreaming,
     onStreamEnd: endStreaming,
+    onModelInfo: (info) => {
+      // ✅ NOUVEAU : Capturer l'info du modèle depuis le stream
+      setModelInfo(info);
+    },
     onToolExecution: (toolCount, toolCalls) => {
       // ✅ FIX TypeScript : Garantir type: 'function'
       const typedToolCalls = toolCalls.map(tc => ({
@@ -484,6 +492,9 @@ const ChatFullscreenV2: React.FC = () => {
           )}
           </div>
         </div>
+        
+        {/* ✅ NOUVEAU : Debug modèle (bas à droite) */}
+        <ModelDebug modelInfo={modelInfo} />
       </div>
   );
 };

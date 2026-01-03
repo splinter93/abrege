@@ -26,6 +26,7 @@ export interface SendMessageOptions {
   notes?: Note[];
   mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>; // ✅ Mentions légères
   prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null; placeholderValues?: Record<string, string> }>; // ✅ NOUVEAU: Prompts metadata
+  reasoningOverride?: 'advanced' | 'general' | 'fast' | null; // ✅ NOUVEAU: Override reasoning
   sessionId: string;
   currentSession: ChatSession;
   selectedAgent: Agent | null;
@@ -109,6 +110,9 @@ export class ChatMessageSendingService {
       message,
       images,
       notes,
+      mentions,
+      prompts,
+      reasoningOverride,
       sessionId,
       selectedAgent,
       infiniteMessages,
@@ -156,6 +160,7 @@ export class ChatMessageSendingService {
         notes,
         mentions: options.mentions, // ✅ Mentions légères
         prompts: options.prompts, // ✅ NOUVEAU : Prompts metadata
+        reasoningOverride: reasoningOverride, // ✅ NOUVEAU : Override reasoning
         llmContext
       });
 

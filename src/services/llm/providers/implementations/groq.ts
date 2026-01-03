@@ -352,6 +352,18 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       // ✅ CHAT COMPLETIONS: Streaming normal pour tools classiques
       logger.dev(`[GroqProvider] 🌊 Streaming Chat Completions avec ${messages.length} messages`);
       
+      // ✅ DEBUG : Logger les messages reçus (surtout pour debug override provider)
+      logger.info('[GroqProvider] 📋 Messages reçus pour conversion:', {
+        totalMessages: messages.length,
+        roles: messages.map(m => m.role),
+        hasImages: messages.some(m => 'attachedImages' in m && (m as { attachedImages?: unknown[] }).attachedImages?.length),
+        lastMessageRole: messages[messages.length - 1]?.role,
+        lastMessageHasImages: !!(messages[messages.length - 1] && 'attachedImages' in messages[messages.length - 1] && (messages[messages.length - 1] as { attachedImages?: unknown[] }).attachedImages?.length),
+        lastMessageContent: typeof messages[messages.length - 1]?.content === 'string' 
+          ? messages[messages.length - 1].content.substring(0, 100) + (messages[messages.length - 1].content.length > 100 ? '...' : '')
+          : 'multi-modal'
+      });
+      
       // Conversion des ChatMessage vers le format API
       const apiMessages = this.convertChatMessagesToApiFormat(messages);
       const payload = await this.preparePayload(apiMessages, tools);
@@ -505,6 +517,13 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
    * ✅ Support multi-modal: Construit le contenu avec images pour les modèles vision
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): GroqMessage[] {
+    logger.dev(`[GroqProvider] 📋 Messages reçus pour conversion (${messages.length} messages):`, {
+      roles: messages.map(m => m.role),
+      hasAttachedImages: messages.some(m => m.role === 'user' && 'attachedImages' in m && m.attachedImages && m.attachedImages.length > 0),
+      lastMessageContentPreview: messages[messages.length - 1]?.content?.toString().substring(0, 100),
+      lastMessageHasAttachedImages: !!(messages[messages.length - 1] && messages[messages.length - 1].role === 'user' && 'attachedImages' in messages[messages.length - 1] && (messages[messages.length - 1] as { attachedImages?: unknown[] }).attachedImages?.length)
+    });
+    
     return messages.map((msg, index) => {
       // ✅ CRITICAL: Gérer les images attachées pour les modèles vision (Llama Scout/Maverick)
       let content: string | null | GroqContentPart[];

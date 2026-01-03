@@ -19,7 +19,8 @@ export interface ChatInputContainerProps {
     images?: ImageAttachment[],
     notes?: Note[],
     mentions?: import('@/types/noteMention').NoteMention[], // ✅ Mentions légères
-    usedPrompts?: import('@/types/promptMention').PromptMention[] // ✅ NOUVEAU : Prompts utilisés
+    usedPrompts?: import('@/types/promptMention').PromptMention[], // ✅ NOUVEAU : Prompts utilisés
+    reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => void;
   loading: boolean;
   sessionId: string;

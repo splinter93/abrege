@@ -641,7 +641,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       return false;
     }
     const e = event as Record<string, unknown>;
-    const validTypes = ['start', 'text.delta', 'chunk', 'text.done', 'tool_block.start', 'tool_block.done', 'done', 'tool_call', 'tool_result', 'end', 'error'];
+    const validTypes = ['start', 'text.start', 'text.delta', 'chunk', 'text.done', 'tool_block.start', 'tool_block.done', 'done', 'tool_call', 'tool_result', 'end', 'error'];
     return typeof e.type === 'string' && validTypes.includes(e.type);
   }
 
@@ -680,6 +680,11 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
     switch (event.type) {
       case 'start':
         // Event de démarrage, on ne yield rien
+        return null;
+
+      case 'text.start':
+        // ✅ Début d'un bloc texte (nouveau format Liminality)
+        // On ignore cet événement, on attend les text.delta
         return null;
 
       case 'text.delta':

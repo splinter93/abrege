@@ -284,11 +284,31 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
       .pop();
     
     if (lastUserMessage && lastUserMessage.content) {
-      return lastUserMessage.content;
+      // Gérer les différents types de content
+      if (typeof lastUserMessage.content === 'string') {
+        return lastUserMessage.content;
+      }
+      if (Array.isArray(lastUserMessage.content)) {
+        // Extraire le texte des parties de contenu
+        return lastUserMessage.content
+          .filter(part => part.type === 'text')
+          .map(part => part.text || '')
+          .join(' ');
+      }
     }
     
     // Fallback
-    return messages[messages.length - 1]?.content || '';
+    const fallbackContent = messages[messages.length - 1]?.content;
+    if (typeof fallbackContent === 'string') {
+      return fallbackContent;
+    }
+    if (Array.isArray(fallbackContent)) {
+      return fallbackContent
+        .filter(part => part.type === 'text')
+        .map(part => part.text || '')
+        .join(' ');
+    }
+    return '';
   }
 
   /**

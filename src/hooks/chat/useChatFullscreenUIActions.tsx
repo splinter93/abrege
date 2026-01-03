@@ -59,7 +59,8 @@ export interface UseChatFullscreenUIActionsReturn {
     images?: ImageAttachment[],
     notes?: Note[],
     mentions?: NoteMention[],
-    usedPrompts?: PromptMention[]
+    usedPrompts?: PromptMention[],
+    reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => Promise<void>;
   handleOpenCanva: () => Promise<void>;
   handleRetryMessage: () => Promise<void>;
@@ -153,7 +154,8 @@ export function useChatFullscreenUIActions(
     images?: ImageAttachment[],
     notes?: Note[],
     mentions?: NoteMention[],
-    usedPrompts?: PromptMention[]
+    usedPrompts?: PromptMention[],
+    reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => {
     // ✏️ Si en mode édition, router vers editMessage
     if (editingMessage) {
@@ -185,8 +187,8 @@ export function useChatFullscreenUIActions(
       images: images && images.length > 0 ? images : undefined
     });
 
-    // Mode normal (avec mentions légères + prompts metadata)
-    await messageActions.sendMessage(message, images, notes, mentions, usedPrompts);
+    // Mode normal (avec mentions légères + prompts metadata + reasoning override)
+    await messageActions.sendMessage(message, images, notes, mentions, usedPrompts, reasoningOverride);
   }, [editingMessage, messageActions, uiState.setLastUserMessage]);
 
   const handleOpenCanva = useCallback(async () => {

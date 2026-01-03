@@ -32,6 +32,7 @@ export interface BuildContextOptions {
   notes?: Note[];
   mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>; // ✅ Mentions légères
   prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null; placeholderValues?: Record<string, string> }>; // ✅ NOUVEAU: Prompts metadata
+  reasoningOverride?: 'advanced' | 'general' | 'fast' | null; // ✅ NOUVEAU: Override reasoning
   llmContext: LLMContext;
 }
 
@@ -50,6 +51,7 @@ export interface LLMContextForOrchestrator {
   attachedNotes?: Note[];
   mentionedNotes?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>; // ✅ Mentions légères
   prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null; placeholderValues?: Record<string, string> }>; // ✅ NOUVEAU: Prompts metadata
+  reasoningOverride?: 'advanced' | 'general' | 'fast' | null; // ✅ NOUVEAU: Override reasoning
 }
 
 /**
@@ -84,7 +86,7 @@ export class ChatContextBuilder {
    * @throws {ValidationError} Si sessionId manquant ou invalide
    */
   build(options: BuildContextOptions): LLMContextForOrchestrator {
-    const { sessionId, agentId, notes, mentions, prompts, llmContext } = options;
+    const { sessionId, agentId, notes, mentions, prompts, reasoningOverride, llmContext } = options;
 
     // Validation
     if (!sessionId || typeof sessionId !== 'string' || sessionId.trim() === '') {
@@ -121,6 +123,11 @@ export class ChatContextBuilder {
     // ✅ NOUVEAU : Ajouter prompts metadata si présents
     if (prompts && prompts.length > 0) {
       context.prompts = prompts;
+    }
+
+    // ✅ NOUVEAU : Ajouter reasoningOverride si présent
+    if (reasoningOverride !== undefined && reasoningOverride !== null) {
+      context.reasoningOverride = reasoningOverride;
     }
 
     // Validation finale

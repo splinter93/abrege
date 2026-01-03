@@ -46,6 +46,13 @@ export interface StreamCallbacks {
     streamTimeline?: StreamTimeline
   ) => void;
   onError?: (error: string | StreamErrorDetails) => void;
+  // ✅ NOUVEAU : Callback pour info modèle (debug)
+  onModelInfo?: (modelInfo: {
+    original: string;
+    current: string;
+    wasOverridden: boolean;
+    reasons: string[];
+  }) => void;
 }
 
 /**
@@ -174,6 +181,10 @@ export class StreamOrchestrator {
     switch (chunk.type) {
       case 'start':
         logger.dev('[StreamOrchestrator] 🚀 Stream démarré');
+        // ✅ NOUVEAU : Capturer modelInfo si présent
+        if (chunk.modelInfo) {
+          callbacks.onModelInfo?.(chunk.modelInfo);
+        }
         break;
 
       case 'delta':

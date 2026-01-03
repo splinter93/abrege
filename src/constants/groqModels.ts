@@ -64,6 +64,7 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     id: 'meta-llama/llama-4-scout-17b-16e-instruct',
     name: 'Llama 4 Scout (17Bx16E) 128k',
     category: 'llama',
+    provider: 'groq', // ✅ CRITIQUE : Défini pour auto-détection provider après override
     capabilities: ['text', 'images', 'function_calling', 'tool_use', 'json_mode'],
     contextWindow: 131072,
     maxOutput: 8192,
@@ -76,6 +77,7 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     id: 'meta-llama/llama-4-maverick-17b-128e-instruct',
     name: 'Llama 4 Maverick (17Bx128E) 128k',
     category: 'llama',
+    provider: 'groq', // ✅ CRITIQUE : Défini pour auto-détection provider après override
     capabilities: ['text', 'images', 'function_calling', 'tool_use', 'json_mode'],
     contextWindow: 131072,
     maxOutput: 8192,

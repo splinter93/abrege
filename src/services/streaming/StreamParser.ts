@@ -33,11 +33,18 @@ export interface StreamChunk {
   error?: string;
   errorCode?: string; // Code d'erreur spécifique (ex: "tool_use_failed")
   provider?: string; // Provider qui a émis l'erreur
-  model?: string; // Modèle utilisé
+  model?: string; // Modèle utilisé (legacy, pour erreurs)
   statusCode?: number; // HTTP status code
   roundCount?: number; // Round où l'erreur s'est produite
   recoverable?: boolean; // Si l'erreur peut être récupérée avec retry
   timestamp?: number; // Timestamp de l'erreur
+  // ✅ NOUVEAU : Info modèle pour debug (dans chunk 'start')
+  modelInfo?: {
+    original: string;
+    current: string;
+    wasOverridden: boolean;
+    reasons: string[];
+  };
 }
 
 /**

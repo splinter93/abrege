@@ -33,7 +33,7 @@ import ScriviaFilePicker from './ScriviaFilePicker';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 
 interface ChatInputProps {
-  onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[], mentions?: import('@/types/noteMention').NoteMention[], usedPrompts?: import('@/types/promptMention').PromptMention[]) => void;
+  onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[], mentions?: import('@/types/noteMention').NoteMention[], usedPrompts?: import('@/types/promptMention').PromptMention[], reasoningOverride?: 'advanced' | 'general' | 'fast' | null) => void;
   loading: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
@@ -293,7 +293,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
     send,
     clearImages,
     showMentionMenu, // ✅ Bloquer Enter si menu ouvert
-    showSlashMenu // ✅ Bloquer Enter si menu ouvert
+    showSlashMenu, // ✅ Bloquer Enter si menu ouvert
+    reasoningOverride // ✅ NOUVEAU : Override reasoning
   });
 
   // 🎯 Hook sélection notes - Mode MENTION (@ dans textarea)
