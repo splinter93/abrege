@@ -45,6 +45,19 @@ export const EditorContextMenuContainer: React.FC<EditorContextMenuContainerProp
 
     try {
       switch (action) {
+        case 'paste':
+          // Coller depuis le presse-papiers
+          navigator.clipboard.readText().then((text) => {
+            if (text) {
+              editor.chain().focus().insertContent(text).run();
+            }
+          }).catch((err) => {
+            logger.error(LogCategory.EDITOR, 'Erreur collage:', err);
+            // Fallback : utiliser la commande paste native
+            document.execCommand('paste');
+          });
+          break;
+
         case 'duplicate':
           // Dupliquer le bloc actuel
           const pos = editorState.contextMenu.nodePosition;

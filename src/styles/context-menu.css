@@ -1,147 +1,85 @@
-/* Styles pour le menu contextuel Notion-like */
+/* Menu contextuel - Design simple et propre */
 
 .context-menu {
-  background: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%); /* Même dégradé que kebab */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: none; /* Pas de bordure */
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  padding: 4px;
-  min-width: 200px;
-  max-width: 280px;
-  z-index: 1000;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-  line-height: 1.4;
-  color: #e5e7eb;
+  background: var(--color-bg-secondary) !important;
+  border: 1.2px solid var(--border-subtle) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06) !important;
+  padding: 6px !important;
+  min-width: 140px !important;
+  z-index: 1000 !important;
+  font-family: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  animation: contextMenuFadeIn 0.15s ease-out !important;
+  overflow: visible !important;
 }
 
 .context-menu-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
 }
 
 .context-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border: none;
-  background: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: left;
-  width: 100%;
-  font-size: 14px;
-  color: #e5e7eb; /* Texte clair pour fond sombre */
-  position: relative;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: background 150ms ease !important;
+  width: 100% !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  box-sizing: border-box !important;
+  text-align: left !important;
+  white-space: nowrap !important;
 }
 
 .context-menu-item:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.08); /* Hover gris subtil */
+  background: rgba(255, 255, 255, 0.08) !important;
+  transform: none !important;
 }
 
-.context-menu-item.selected {
-  background-color: #3b82f6;
-  color: white;
-}
-
-.context-menu-item.selected .context-menu-item-shortcut {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.context-menu-item.danger {
-  color: #dc2626;
-}
-
-.context-menu-item.danger:hover:not(:disabled) {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-.context-menu-item.danger.selected {
-  background-color: #dc2626;
-  color: white;
+.context-menu-item:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12) !important;
+  transform: none !important;
 }
 
 .context-menu-item:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
 }
 
 .context-menu-item-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-.context-menu-item-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex: 1;
-  min-width: 0;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .context-menu-item-label {
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: 1 !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
 }
 
+.context-menu-item-content,
 .context-menu-item-shortcut {
-  font-size: 12px;
-  color: #6b7280;
-  font-weight: 400;
-  margin-left: 8px;
-  flex-shrink: 0;
-}
-
-/* Mode sombre */
-@media (prefers-color-scheme: dark) {
-  .context-menu {
-    background: #1f2937;
-    border-color: #374151;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  .context-menu-item {
-    color: #e5e7eb;
-  }
-
-  .context-menu-item:hover:not(:disabled) {
-    background-color: #374151;
-  }
-
-  .context-menu-item.selected {
-    background-color: #3b82f6;
-    color: white;
-  }
-
-  .context-menu-item.danger {
-    color: #f87171;
-  }
-
-  .context-menu-item.danger:hover:not(:disabled) {
-    background-color: #7f1d1d;
-    color: #f87171;
-  }
-
-  .context-menu-item-shortcut {
-    color: #9ca3af;
-  }
-}
-
-/* Animation d'entrée */
-.context-menu {
-  animation: contextMenuFadeIn 0.15s ease-out;
+  display: none !important;
 }
 
 @keyframes contextMenuFadeIn {
@@ -152,21 +90,5 @@
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
-  }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .context-menu {
-    min-width: 180px;
-    max-width: 240px;
-  }
-  
-  .context-menu-item {
-    padding: 10px 12px;
-  }
-  
-  .context-menu-item-shortcut {
-    display: none; /* Masquer les raccourcis sur mobile */
   }
 }

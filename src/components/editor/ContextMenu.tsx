@@ -1,19 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  FiCopy, 
-  FiTrash2, 
-  FiEdit3, 
-  FiMove, 
-  FiMoreHorizontal,
-  FiType,
-  FiList,
-  FiMessageSquare,
-  FiCode,
-  FiImage,
-  FiGrid,
-  FiMinus
-} from 'react-icons/fi';
+import { FiTrash2, FiClipboard } from 'react-icons/fi';
 
 interface ContextMenuProps {
   isOpen: boolean;
@@ -46,108 +33,24 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 
   // Actions disponibles selon le type de nœud
   const getActions = useCallback((): MenuAction[] => {
-    const baseActions: MenuAction[] = [
+    // ✅ Actions : Coller et Supprimer
+    return [
       {
-        id: 'duplicate',
-        label: 'Dupliquer',
-        icon: <FiCopy size={16} />,
-        shortcut: 'Ctrl+D'
+        id: 'paste',
+        label: 'Coller',
+        icon: <FiClipboard size={16} />,
+        shortcut: undefined,
+        danger: false
       },
       {
         id: 'delete',
         label: 'Supprimer',
         icon: <FiTrash2 size={16} />,
-        shortcut: 'Delete',
+        shortcut: undefined,
         danger: true
       }
     ];
-
-    // Actions de transformation selon le type de nœud
-    const transformActions: MenuAction[] = [];
-    
-    if (nodeType !== 'heading') {
-      transformActions.push(
-        {
-          id: 'turn-into-h1',
-          label: 'Titre 1',
-          icon: <FiType size={16} />,
-          shortcut: 'Ctrl+1'
-        },
-        {
-          id: 'turn-into-h2',
-          label: 'Titre 2',
-          icon: <FiType size={16} />,
-          shortcut: 'Ctrl+2'
-        },
-        {
-          id: 'turn-into-h3',
-          label: 'Titre 3',
-          icon: <FiType size={16} />,
-          shortcut: 'Ctrl+3'
-        }
-      );
-    }
-
-    if (nodeType !== 'bulletList' && nodeType !== 'orderedList') {
-      transformActions.push(
-        {
-          id: 'turn-into-bullet-list',
-          label: 'Liste à puces',
-          icon: <FiList size={16} />
-        },
-        {
-          id: 'turn-into-ordered-list',
-          label: 'Liste numérotée',
-          icon: <FiList size={16} />
-        }
-      );
-    }
-
-    if (nodeType !== 'blockquote') {
-      transformActions.push({
-        id: 'turn-into-blockquote',
-        label: 'Citation',
-        icon: <FiMessageSquare size={16} />
-      });
-    }
-
-    if (nodeType !== 'codeBlock') {
-      transformActions.push({
-        id: 'turn-into-code-block',
-        label: 'Bloc de code',
-        icon: <FiCode size={16} />
-      });
-    }
-
-    if (nodeType !== 'image') {
-      transformActions.push({
-        id: 'turn-into-image',
-        label: 'Image',
-        icon: <FiImage size={16} />
-      });
-    }
-
-    if (nodeType !== 'table') {
-      transformActions.push({
-        id: 'turn-into-table',
-        label: 'Tableau',
-        icon: <FiGrid size={16} />
-      });
-    }
-
-    transformActions.push({
-      id: 'turn-into-divider',
-      label: 'Diviseur',
-      icon: <FiMinus size={16} />
-    });
-
-    // ✅ Pour les note embeds, pas d'actions de transformation (nodes spéciaux)
-    if (nodeType === 'noteEmbed') {
-      return baseActions; // Seulement dupliquer et supprimer
-    }
-
-    return [...baseActions, ...transformActions];
-  }, [nodeType]);
+  }, []);
 
   const actions = getActions();
 
@@ -248,15 +151,12 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             disabled={action.disabled}
             onMouseEnter={() => setSelectedIndex(index)}
           >
-            <div className="context-menu-item-icon">
-              {action.icon}
-            </div>
-            <div className="context-menu-item-content">
-              <span className="context-menu-item-label">{action.label}</span>
-              {action.shortcut && (
-                <span className="context-menu-item-shortcut">{action.shortcut}</span>
-              )}
-            </div>
+            {action.icon && (
+              <div className="context-menu-item-icon">
+                {action.icon}
+              </div>
+            )}
+            <span className="context-menu-item-label">{action.label}</span>
           </button>
         ))}
       </div>

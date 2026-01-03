@@ -14,6 +14,8 @@ import { NoteEmbedHydrator } from './NoteEmbedHydrator';
 import { logger, LogCategory } from '@/utils/logger';
 import { useMermaidRenderer } from '@/hooks/editor/useMermaidRenderer';
 import { usePreviewEventListeners } from '@/hooks/editor/usePreviewEventListeners';
+import { openImageModal } from '@/components/chat/ImageModal';
+import { openMermaidModal } from '@/components/mermaid/MermaidModal';
 
 interface EditorPreviewProps {
   html: string;
@@ -194,6 +196,96 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({
     };
     
   }, [html, containerRef, noteId, htmlHash, renderMermaidBlocks, checkAndRenderMermaid, setupEventListeners]);
+
+  // ✅ Gestionnaire de clic sur les images en mode preview
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleImageClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'IMG') {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const imgSrc = target.getAttribute('src');
+        const imgAlt = target.getAttribute('alt');
+        
+        if (imgSrc) {
+          openImageModal({
+            src: imgSrc,
+            alt: imgAlt || undefined
+          });
+        }
+      }
+    };
+
+    // Ajouter le listener sur le container
+    container.addEventListener('click', handleImageClick);
+
+    // Ajouter un style cursor pointer aux images pour indiquer qu'elles sont cliquables
+    const images = container.querySelectorAll('img');
+    images.forEach(img => {
+      (img as HTMLElement).style.cursor = 'pointer';
+      if (!(img as HTMLElement).title) {
+        (img as HTMLElement).title = 'Cliquer pour agrandir';
+      }
+    });
+
+    return () => {
+      container.removeEventListener('click', handleImageClick);
+    };
+  }, [containerRef, html]);
+
+  // ✅ Gestionnaire de clic sur les diagrammes Mermaid en mode preview
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleMermaidClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Chercher le bloc Mermaid parent (peut être le SVG ou un élément à l'intérieur)
+      const mermaidBlock = target.closest('.u-block--mermaid');
+      
+      if (mermaidBlock) {
+        // Ignorer les clics sur les boutons de la toolbar
+        if (target.closest('.u-block__toolbar')) {
+          return;
+        }
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Récupérer le contenu Mermaid depuis l'attribut data-mermaid-content ou depuis pre code
+        const mermaidBody = mermaidBlock.querySelector('.u-block__body') as HTMLElement;
+        const mermaidContent = mermaidBody?.dataset?.mermaidContent || 
+                              mermaidBody?.querySelector('pre code')?.textContent || '';
+        
+        if (mermaidContent) {
+          openMermaidModal(mermaidContent);
+        }
+      }
+    };
+
+    // Ajouter le listener sur le container
+    container.addEventListener('click', handleMermaidClick);
+
+    // Ajouter un style cursor pointer aux blocs Mermaid pour indiquer qu'ils sont cliquables
+    const mermaidBlocks = container.querySelectorAll('.u-block--mermaid');
+    mermaidBlocks.forEach(block => {
+      const body = block.querySelector('.u-block__body') as HTMLElement;
+      if (body) {
+        body.style.cursor = 'pointer';
+        if (!body.title) {
+          body.title = 'Cliquer pour agrandir';
+        }
+      }
+    });
+
+    return () => {
+      container.removeEventListener('click', handleMermaidClick);
+    };
+  }, [containerRef, html]);
 
   // ✅ SÉCURITÉ: Sanitizer le HTML avant injection (conformité GUIDE-EXCELLENCE-CODE.md)
   const sanitizedHtml = useMemo(() => {

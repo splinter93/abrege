@@ -55,10 +55,10 @@
   line-height: var(--fm-line-height);
   color: var(--fm-text-primary);
   
-  background: #141618; /* ✅ Même couleur que la sidebar */
+  background: var(--color-bg-secondary); /* ✅ Même couleur que la sidebar éditeur (#121416) */
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1.5px solid var(--border-subtle);
+  border: 1.2px solid var(--border-subtle);
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   
