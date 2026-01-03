@@ -88,10 +88,10 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
 
     const findElements = (): { layout: HTMLElement | null; header: HTMLElement | null } => {
       const layout = editorLayoutRef.current || 
-        (document.querySelector('.chat-canva-pane .editor-layout') as HTMLElement | null);
+      (document.querySelector('.chat-canva-pane .editor-layout') as HTMLElement | null);
       const header = headerRef.current || 
-        (document.querySelector('.chat-canva-pane .editor-header') as HTMLElement | null);
-      
+      (document.querySelector('.chat-canva-pane .editor-header') as HTMLElement | null);
+
       if (layout) editorLayoutRef.current = layout;
       if (header) headerRef.current = header;
       
@@ -99,7 +99,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
     };
 
     // ✅ Vérification initiale UNIQUEMENT au chargement (refresh)
-    const timeoutId = setTimeout(() => {
+      const timeoutId = setTimeout(() => {
       const { layout } = findElements();
       
       if (layout) {
@@ -107,9 +107,9 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
         layout.scrollTop = 0;
         logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] ✅ Scroll initialisé au top au chargement', {
           scrollTop: layout.scrollTop,
-          timestamp: Date.now()
-        });
-      }
+              timestamp: Date.now()
+            });
+          }
     }, 100); // Petit délai pour laisser le DOM se stabiliser
 
     return () => {

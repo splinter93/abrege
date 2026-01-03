@@ -8,7 +8,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pencil, X } from 'lucide-react';
-import { Feather } from 'react-feather';
+import { Feather, Clipboard } from 'react-feather';
 import type { ImageAttachment } from '@/types/image';
 import type { SelectedNote } from '@/hooks/useNotesLoader';
 import type { NoteMention } from '@/types/noteMention';
@@ -139,15 +139,10 @@ const ChatInputContent: React.FC<ChatInputContentProps> = ({
         <div className="chat-canvas-selections">
           {canvasSelections.map((selection) => (
             <div key={selection.id} className="chat-canvas-selection-pill">
-              <span className="chat-canvas-selection-pill-icon">📝</span>
+              <Clipboard size={14} className="chat-canvas-selection-pill-icon" />
               <span className="chat-canvas-selection-pill-text" title={selection.text}>
                 {selection.text.length > 50 ? `${selection.text.substring(0, 50)}...` : selection.text}
               </span>
-              {selection.noteTitle && (
-                <span className="chat-canvas-selection-pill-note" title={selection.noteTitle}>
-                  {selection.noteTitle}
-                </span>
-              )}
               <button
                 className="chat-canvas-selection-pill-remove"
                 onClick={() => onRemoveCanvasSelection?.(selection.id)}

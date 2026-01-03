@@ -3416,7 +3416,7 @@ body.chat-font-manrope-active .chatgpt-message-bubble-user {
   align-items: center;
   gap: 8px;
   padding: 4px 12px;
-  background: rgba(59, 130, 246, 0.16); /* Bleu pour différencier des notes */
+  background: rgba(251, 146, 60, 0.16); /* Orange pour différencier des notes */
   border: none;
   border-radius: 20px;
   color: var(--chat-text-primary);
@@ -3426,12 +3426,12 @@ body.chat-font-manrope-active .chatgpt-message-bubble-user {
 }
 
 .chat-canvas-selection-pill:hover {
-  background: rgba(59, 130, 246, 0.24);
+  background: rgba(251, 146, 60, 0.24);
 }
 
 .chat-canvas-selection-pill-icon {
-  font-size: 14px;
   flex-shrink: 0;
+  color: rgba(251, 146, 60, 0.9); /* Orange pour l'icône */
 }
 
 .chat-canvas-selection-pill-text {
