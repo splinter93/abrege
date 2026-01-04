@@ -4,7 +4,7 @@
  */
 
 import WebSocket from 'ws';
-import { logger, LogCategory } from "../utils/logger';
+import { logger, LogCategory } from "./utils/logger";
 import type { ConnectionManager } from './connectionManager';
 import type { XAIVoiceProxyConfig } from './types';
 import { getRawDataLength } from './connectionTypes';

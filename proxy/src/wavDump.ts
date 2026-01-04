@@ -6,7 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { logger, LogCategory } from "../utils/logger';
+import { logger, LogCategory } from "./utils/logger";
 
 /**
  * Dump le premier chunk audio reçu en fichier WAV dans /tmp

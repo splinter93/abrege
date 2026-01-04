@@ -4,7 +4,7 @@
  */
 
 // Import relatif depuis server/ vers src/
-import { logger, LogCategory } from "../utils/logger';
+import { logger, LogCategory } from "./utils/logger";
 
 /**
  * Erreur de connexion proxy

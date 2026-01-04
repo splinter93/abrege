@@ -3,7 +3,7 @@
  * Extrait de XAIVoiceProxyService.ts pour réduire la taille du fichier principal
  */
 
-import { logger, LogCategory } from "../utils/logger';
+import { logger, LogCategory } from "./utils/logger";
 import { ProxyErrorHandler } from './errorHandler';
 import type { ConnectionManager } from './connectionManager';
 

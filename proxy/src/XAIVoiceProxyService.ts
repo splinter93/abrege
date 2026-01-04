@@ -7,7 +7,7 @@
 import WebSocket from 'ws';
 import { WebSocketServer } from 'ws';
 // Import relatif depuis server/ vers src/
-import { logger, LogCategory } from "../utils/logger';
+import { logger, LogCategory } from "./utils/logger";
 import { ProxyConnectionMetadata, XAIVoiceProxyConfig } from './types';
 import { ProxyErrorHandler, ProxyConnectionError } from './errorHandler';
 import type { ActiveConnection } from './connectionTypes';

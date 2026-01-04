@@ -8,7 +8,7 @@ import { config as loadEnv } from 'dotenv';
 loadEnv({ path: '.env.local' });
 loadEnv(); // Charger .env aussi
 
-import { logger, LogCategory } from "../utils/logger";
+import { logger, LogCategory } from "./utils/logger";
 import { XAIVoiceProxyService } from './XAIVoiceProxyService';
 import { XAIVoiceProxyConfig } from './types';
 import { ProxyErrorHandler, ProxyConfigError } from './errorHandler';
