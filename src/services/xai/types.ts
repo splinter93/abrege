@@ -14,10 +14,10 @@ export type XAIVoiceMessageType =
   | 'input_audio_buffer.committed'
   | 'conversation.item.commit'
   | 'conversation.item.committed'
+  | 'conversation.item.create'
   | 'input_audio_buffer.speech_started'
   | 'input_audio_buffer.speech_stopped'
   | 'conversation.created'
-  | 'conversation.item.create'
   | 'conversation.item.added'
   | 'conversation.item.input_audio_transcription.completed'
   | 'response.create'
@@ -28,6 +28,11 @@ export type XAIVoiceMessageType =
   | 'response.output_audio.delta'
   | 'response.output_audio.done'
   | 'response.done'
+  | 'response.function_call_arguments.delta'
+  | 'response.function_call_arguments.done'
+  | 'response.output_item.done'
+  | 'response.content_part.added'
+  | 'response.content_part.done'
   | 'error'
   | 'ping';
 
@@ -104,7 +109,16 @@ export interface XAIVoiceSessionConfig {
   modalities?: Array<'text' | 'audio'>;
   tools?: XAIVoiceTool[];
   tool_choice?: 'auto' | 'none' | 'required';
-  tool_result?: unknown;
+  tool_result?: XAIVoiceToolResult[];
+}
+
+/**
+ * Structure pour response.output_item (tool calls)
+ */
+export interface XAIVoiceOutputItem {
+  type: 'tool_call';
+  tool_calls?: XAIVoiceToolCall[];
+  [key: string]: unknown;
 }
 
 /**
@@ -113,13 +127,24 @@ export interface XAIVoiceSessionConfig {
 export interface XAIVoiceMessage {
   type: XAIVoiceMessageType;
   session?: XAIVoiceSessionConfig;
-  item?: unknown;
-  response?: unknown;
+  item?: {
+    type?: string;
+    call_id?: string;
+    output?: string;
+    [key: string]: unknown;
+  };
+  response?: {
+    output_item?: XAIVoiceOutputItem;
+    [key: string]: unknown;
+  } | unknown;
   event_id?: string;
   audio?: string; // Base64 encoded audio
   transcript?: string;
   item_id?: string;
   delta?: string;
+  name?: string; // Pour function calls
+  call_id?: string; // Pour function calls
+  arguments?: string; // Pour function calls
   error?: {
     type: string;
     message: string;
@@ -135,6 +160,28 @@ export interface XAIVoiceAudioDeltaMessage extends XAIVoiceMessage {
 }
 
 /**
+ * Tool Call reçu de l'API XAI Voice (format standard)
+ */
+export interface XAIVoiceToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string; // JSON string
+  };
+}
+
+/**
+ * Tool Result à envoyer à l'API XAI Voice
+ */
+export interface XAIVoiceToolResult {
+  tool_call_id: string;
+  name: string;
+  content: string; // JSON string ou string simple
+  error?: string; // Optionnel, pour les erreurs
+}
+
+/**
  * Callbacks pour les événements
  */
 export interface XAIVoiceCallbacks {
@@ -145,6 +192,7 @@ export interface XAIVoiceCallbacks {
   onError?: (error: Error | string) => void;
   onConnected?: () => void;
   onDisconnected?: () => void;
+  onToolCall?: (toolCalls: XAIVoiceToolCall[]) => void; // Callback pour tool calls détectés
 }
 
 /**

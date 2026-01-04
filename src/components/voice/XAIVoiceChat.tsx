@@ -3,11 +3,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Mic, Square, Volume2, Loader, X } from 'lucide-react';
 import { xaiVoiceService, XAIVoiceSessionConfig } from '@/services/xai/xaiVoiceService';
-import type { XAIVoiceTool } from '@/services/xai/types';
+import type { XAIVoiceTool, XAIVoiceToolCall, XAIVoiceToolResult } from '@/services/xai/types';
 import { logger, LogCategory } from '@/utils/logger';
 import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 import { useAudioQueue } from '@/hooks/voice/useAudioQueue';
 import { useTranscriptMessages, type TranscriptMessage } from '@/hooks/voice/useTranscriptMessages';
+import { OpenApiToolExecutor } from '@/services/llm/executors/OpenApiToolExecutor';
+import type { ToolCall, ToolResult } from '@/services/llm/types/apiV2Types';
+import { parseOpenApiEndpoints } from '@/services/xai/utils/parseOpenApiEndpoints';
 import './XAIVoiceChat.css';
 
 /**
@@ -18,6 +21,7 @@ interface XAIVoiceChatProps {
   instructions?: string;
   tools?: XAIVoiceTool[];
   tool_choice?: 'auto' | 'none' | 'required';
+  selectedSchemaId?: string; // SchemaId pour exécution des tools OpenAPI
   onError?: (error: string) => void;
 }
 
@@ -42,6 +46,7 @@ export function XAIVoiceChat({
   instructions = 'You are a helpful AI assistant. Respond naturally and concisely.',
   tools,
   tool_choice,
+  selectedSchemaId,
   onError
 }: XAIVoiceChatProps) {
   // Hooks extraits
@@ -174,6 +179,119 @@ export function XAIVoiceChat({
           logger.error(LogCategory.AUDIO, '[XAIVoiceChat] Erreur', { error }, error instanceof Error ? error : undefined);
           setState(prev => ({ ...prev, error: errorMsg, isProcessing: false }));
           onError?.(errorMsg);
+        },
+        onToolCall: async (toolCalls: XAIVoiceToolCall[]) => {
+          logger.info(LogCategory.AUDIO, '[XAIVoiceChat] 🎯 Tool calls reçus !', { 
+            count: toolCalls.length,
+            selectedSchemaId,
+            toolCalls: toolCalls.map(tc => ({ id: tc.id, name: tc.function.name }))
+          });
+
+          if (!selectedSchemaId) {
+            logger.warn(LogCategory.AUDIO, '[XAIVoiceChat] ⚠️ Tool calls reçus mais aucun schemaId configuré');
+            return;
+          }
+
+          try {
+
+            // Récupérer le token utilisateur
+            const token = await loadToken();
+            if (!token) {
+              throw new Error('Token utilisateur non disponible');
+            }
+
+            // Récupérer le schéma OpenAPI
+            const schemaResponse = await fetch(`/api/ui/openapi-schemas/${selectedSchemaId}/content`);
+            if (!schemaResponse.ok) {
+              throw new Error(`Erreur récupération schéma: ${schemaResponse.status}`);
+            }
+
+            const schemaData = await schemaResponse.json();
+            if (!schemaData.success || !schemaData.schema?.content) {
+              throw new Error('Schéma OpenAPI non trouvé');
+            }
+
+            const schemaContent = typeof schemaData.schema.content === 'string' 
+              ? JSON.parse(schemaData.schema.content)
+              : schemaData.schema.content;
+
+            // Parser les endpoints
+            const endpoints = parseOpenApiEndpoints(
+              schemaContent,
+              schemaData.schema.api_key || undefined,
+              schemaData.schema.header || undefined
+            );
+
+            if (endpoints.size === 0) {
+              logger.warn(LogCategory.AUDIO, '[XAIVoiceChat] Aucun endpoint trouvé dans le schéma');
+              // Envoyer des résultats d'erreur
+              const errorResults: XAIVoiceToolResult[] = toolCalls.map(tc => ({
+                tool_call_id: tc.id,
+                name: tc.function.name,
+                content: JSON.stringify({ success: false, error: 'Endpoint non trouvé dans le schéma' }),
+                error: 'Endpoint non trouvé'
+              }));
+              xaiVoiceService.sendToolResult(errorResults);
+              return;
+            }
+
+            // Créer l'exécuteur
+            const executor = new OpenApiToolExecutor('', endpoints);
+
+            // Convertir XAIVoiceToolCall -> ToolCall
+            const standardToolCalls: ToolCall[] = toolCalls.map(tc => ({
+              id: tc.id,
+              type: 'function',
+              function: {
+                name: tc.function.name,
+                arguments: tc.function.arguments
+              }
+            }));
+
+            logger.info(LogCategory.AUDIO, '[XAIVoiceChat] 🔧 Tool calls convertis', {
+              count: standardToolCalls.length,
+              toolCalls: standardToolCalls.map(tc => ({
+                id: tc.id,
+                name: tc.function.name,
+                arguments: tc.function.arguments,
+                argumentsParsed: tc.function.arguments ? JSON.parse(tc.function.arguments) : null
+              }))
+            });
+
+            // Exécuter les tools
+            const toolResults = await executor.executeToolCalls(standardToolCalls, token);
+
+            // Convertir ToolResult -> XAIVoiceToolResult
+            const voiceToolResults: XAIVoiceToolResult[] = toolResults.map(tr => ({
+              tool_call_id: tr.tool_call_id,
+              name: tr.name,
+              content: tr.content,
+              error: tr.success ? undefined : (tr.error || 'Erreur inconnue')
+            }));
+
+            // Envoyer les résultats
+            xaiVoiceService.sendToolResult(voiceToolResults);
+            logger.info(LogCategory.AUDIO, '[XAIVoiceChat] Tool results envoyés', { count: voiceToolResults.length });
+
+            // Cleanup
+            executor.cleanup();
+
+          } catch (error) {
+            logger.error(LogCategory.AUDIO, '[XAIVoiceChat] Erreur exécution tools', undefined, error instanceof Error ? error : new Error(String(error)));
+            
+            // Envoyer des résultats d'erreur pour chaque tool call
+            const errorResults: XAIVoiceToolResult[] = toolCalls.map(tc => ({
+              tool_call_id: tc.id,
+              name: tc.function.name,
+              content: JSON.stringify({
+                success: false,
+                error: error instanceof Error ? error.message : 'Erreur inconnue'
+              }),
+              error: error instanceof Error ? error.message : 'Erreur inconnue'
+            }));
+            
+            xaiVoiceService.sendToolResult(errorResults);
+          }
         }
       });
     } catch (error) {
@@ -181,7 +299,7 @@ export function XAIVoiceChat({
       setState(prev => ({ ...prev, error: errorMsg, isConnected: false }));
       onError?.(errorMsg);
     }
-  }, [loadToken, instructions, voice, tools, tool_choice, onError, addAudioChunk, updateAssistantMessage, addUserMessage]);
+  }, [loadToken, instructions, voice, tools, tool_choice, selectedSchemaId, onError, addAudioChunk, updateAssistantMessage, addUserMessage]);
 
   /**
    * Démarrer l'enregistrement

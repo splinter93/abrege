@@ -15,10 +15,12 @@ export default function VoicePage() {
     instructions: string;
     tools: XAIVoiceTool[];
     tool_choice: 'auto' | 'none' | 'required';
+    selectedSchemaId?: string | null;
   }>({
     instructions: 'You are a helpful AI assistant. Respond naturally and concisely.',
     tools: [],
-    tool_choice: 'auto'
+    tool_choice: 'auto',
+    selectedSchemaId: null
   });
 
   return (
@@ -51,6 +53,7 @@ export default function VoicePage() {
           instructions={config.instructions}
           tools={config.tools}
           tool_choice={config.tool_choice}
+          selectedSchemaId={config.selectedSchemaId || undefined}
         />
       </div>
     </div>

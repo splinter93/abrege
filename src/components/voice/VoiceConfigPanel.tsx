@@ -23,6 +23,7 @@ export interface VoiceConfigPanelProps {
     instructions: string;
     tools: XAIVoiceTool[];
     tool_choice: 'auto' | 'none' | 'required';
+    selectedSchemaId?: string | null; // SchemaId pour exécution des tools
   }) => void;
 }
 
@@ -136,7 +137,8 @@ export function VoiceConfigPanel({ onConfigChange }: VoiceConfigPanelProps) {
     onConfigChange({
       instructions,
       tools: allTools,
-      tool_choice: toolChoice
+      tool_choice: toolChoice,
+      selectedSchemaId: selectedSchemaId || null
     });
   }, [instructions, predefinedTools, openApiTools, toolChoice, onConfigChange]);
 

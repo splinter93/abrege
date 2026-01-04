@@ -19,7 +19,8 @@ import type {
   XAIVoiceConnectionState,
   XAIVoiceTool,
   XAIVoicePredefinedTool,
-  XAIVoiceFunctionTool
+  XAIVoiceFunctionTool,
+  XAIVoiceToolResult
 } from './types';
 export type {
   XAIVoiceMessageType,
@@ -250,9 +251,10 @@ export class XAIVoiceService {
     if (config.temperature !== undefined) {
       sessionConfig['temperature'] = config.temperature;
     }
+    let formattedTools: Array<{ type: string; name?: string; description?: string; parameters?: unknown }> = [];
     if (config.tools && config.tools.length > 0) {
       // Convertir XAIVoiceTool[] au format XAI API
-      const formattedTools = config.tools.map(tool => {
+      formattedTools = config.tools.map(tool => {
         if (tool.type === 'file_search' || tool.type === 'web_search' || tool.type === 'x_search') {
           // Tools prédéfinis : format { type: 'file_search' } (ou string selon doc XAI)
           return { type: tool.type };
@@ -279,9 +281,33 @@ export class XAIVoiceService {
       session: sessionConfig as unknown as XAIVoiceSessionConfig
     };
 
+    // Log détaillé des tools AVANT envoi
+    if (config.tools && config.tools.length > 0) {
+      logger.info(LogCategory.AUDIO, '[XAIVoiceService] 🔧 Tools envoyés à XAI Voice', { 
+        voice: config.voice,
+        toolsCount: config.tools.length,
+        toolChoice: config.tool_choice || 'auto',
+        toolsPreview: formattedTools.map(t => ({ type: t.type, name: t.name }))
+      });
+      logger.info(LogCategory.AUDIO, '[XAIVoiceService] 🔧 Format complet des tools', { 
+        tools: formattedTools
+      });
+      logger.info(LogCategory.AUDIO, '[XAIVoiceService] 🔧 Message session.update complet', {
+        message: JSON.stringify(message, null, 2)
+      });
+    }
+
     this.ws.send(JSON.stringify(message));
     this.sessionConfigured = true;
-    logger.info(LogCategory.AUDIO, '[XAIVoiceService] Session configurée', { voice: config.voice });
+    
+    if (config.tools && config.tools.length > 0) {
+      logger.info(LogCategory.AUDIO, '[XAIVoiceService] ✅ Session configurée avec tools', { 
+        voice: config.voice,
+        toolsCount: config.tools.length
+      });
+    } else {
+      logger.info(LogCategory.AUDIO, '[XAIVoiceService] Session configurée', { voice: config.voice });
+    }
     
     // Déterminer le type de détection de tour
     if (config.turn_detection === null) {
@@ -293,6 +319,57 @@ export class XAIVoiceService {
     }
     
     this.responseModalities = config.modalities || ['text', 'audio'];
+  }
+
+  /**
+   * Envoyer les résultats d'exécution de tools (format XAI Voice)
+   * Selon la doc XAI Voice, il faut :
+   * 1. Envoyer conversation.item.create avec type function_call_output
+   * 2. Envoyer response.create pour continuer la conversation
+   */
+  sendToolResult(toolResults: XAIVoiceToolResult[]): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      logger.error(LogCategory.AUDIO, '[XAIVoiceService] Impossible d\'envoyer tool_result : WebSocket non connecté');
+      return;
+    }
+
+    if (!toolResults || toolResults.length === 0) {
+      logger.warn(LogCategory.AUDIO, '[XAIVoiceService] sendToolResult appelé avec un tableau vide');
+      return;
+    }
+
+    try {
+      // Pour chaque résultat, envoyer conversation.item.create
+      for (const result of toolResults) {
+        const itemMessage: XAIVoiceMessage = {
+          type: 'conversation.item.create',
+          item: {
+            type: 'function_call_output',
+            call_id: result.tool_call_id,
+            output: result.error ? JSON.stringify({ error: result.error }) : result.content
+          }
+        };
+        
+        logger.info(LogCategory.AUDIO, '[XAIVoiceService] 📤 Envoi function_call_output', {
+          callId: result.tool_call_id,
+          name: result.name,
+          hasError: !!result.error
+        });
+        
+        this.ws.send(JSON.stringify(itemMessage));
+      }
+      
+      // Puis envoyer response.create pour continuer
+      const responseMessage: XAIVoiceMessage = {
+        type: 'response.create'
+      };
+      
+      this.ws.send(JSON.stringify(responseMessage));
+      
+      logger.info(LogCategory.AUDIO, '[XAIVoiceService] ✅ Tool results envoyés + response.create', { count: toolResults.length });
+    } catch (error) {
+      logger.error(LogCategory.AUDIO, '[XAIVoiceService] Erreur lors de l\'envoi de tool_result', undefined, error instanceof Error ? error : new Error(String(error)));
+    }
   }
 
   /**

@@ -69,8 +69,28 @@ export function parseOpenApiToVoiceTools(
         // Construire les paramètres du tool
         const parameters = buildToolParameters(op, pathName, openApiContent);
 
-        // Construire la description
-        const enrichedDescription = description || summary || `${method.toUpperCase()} ${pathName}`;
+        // ✅ Construire une description EXPLICITE pour XAI Voice
+        // XAI Voice a besoin d'instructions très claires sur quand et comment utiliser le tool
+        let enrichedDescription = description || summary || `${method.toUpperCase()} ${pathName}`;
+        
+        // Ajouter les paramètres requis dans la description pour aider XAI
+        const requiredParams = parameters.required || [];
+        if (requiredParams.length > 0) {
+          const paramsDesc = requiredParams.map((param: string) => {
+            const paramInfo = parameters.properties[param] as { description?: string; type?: string } | undefined;
+            return `${param} (${paramInfo?.type || 'string'})`;
+          }).join(', ');
+          enrichedDescription += `. Required parameters: ${paramsDesc}.`;
+        }
+        
+        // Ajouter des instructions d'utilisation selon le type d'opération
+        if (operationId.toLowerCase().includes('search')) {
+          enrichedDescription += ` Use this to search for content. Always provide a search query.`;
+        } else if (operationId.toLowerCase().includes('get')) {
+          enrichedDescription += ` Use this to retrieve specific data.`;
+        } else if (operationId.toLowerCase().includes('create')) {
+          enrichedDescription += ` Use this to create new content.`;
+        }
 
         // Créer le tool au format aplati XAI Voice
         const tool: XAIVoiceFunctionTool = {
@@ -85,7 +105,8 @@ export function parseOpenApiToVoiceTools(
         logger.debug(LogCategory.AUDIO, '[parseOpenApiToVoiceTools] Tool créé', {
           name: operationId,
           method: method.toUpperCase(),
-          pathName
+          pathName,
+          description: enrichedDescription
         });
       }
     }

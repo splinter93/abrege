@@ -32,7 +32,7 @@ export async function GET(
 
     const { data: schema, error } = await supabase
       .from('openapi_schemas')
-      .select('id, name, content, status')
+      .select('id, name, content, status, api_key, header')
       .eq('id', schemaId)
       .eq('status', 'active')
       .maybeSingle();
@@ -60,7 +60,9 @@ export async function GET(
       schema: {
         id: schema.id,
         name: schema.name,
-        content: schema.content
+        content: schema.content,
+        api_key: schema.api_key || undefined,
+        header: schema.header || undefined
       }
     });
 
