@@ -22,9 +22,10 @@ function loadConfig(): XAIVoiceProxyConfig {
     throw new ProxyConfigError('XAI_API_KEY non configurée. Configurez XAI_API_KEY dans les variables d\'environnement.');
   }
 
-  const port = parseInt(process.env.XAI_VOICE_PROXY_PORT || '3001', 10);
+  // Railway/Render utilisent $PORT, mais on garde XAI_VOICE_PROXY_PORT pour compatibilité
+  const port = parseInt(process.env.PORT || process.env.XAI_VOICE_PROXY_PORT || '3001', 10);
   if (isNaN(port) || port < 1 || port > 65535) {
-    throw new ProxyConfigError(`Port invalide: ${process.env.XAI_VOICE_PROXY_PORT || '3001'}. Utilisez un port entre 1 et 65535.`);
+    throw new ProxyConfigError(`Port invalide: ${process.env.PORT || process.env.XAI_VOICE_PROXY_PORT || '3001'}. Utilisez un port entre 1 et 65535.`);
   }
 
   return {
