@@ -61,6 +61,9 @@ export const SERVER_ENV = {
     whisperApiUrl: process.env.WHISPER_API_URL || optionalServerEnvVars.WHISPER_API_URL,
     redisUrl: process.env.REDIS_URL || optionalServerEnvVars.REDIS_URL
   },
+  xaiVoiceProxy: {
+    port: parseInt(process.env.XAI_VOICE_PROXY_PORT || '3001', 10)
+  },
   nodeEnv: process.env.NODE_ENV || optionalServerEnvVars.NODE_ENV,
   isDevelopment: process.env.NODE_ENV === 'development',
   isProduction: process.env.NODE_ENV === 'production'

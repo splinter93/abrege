@@ -275,3 +275,4 @@ results.sort((a: SearchResult, b: SearchResult) => {
 **Verdict :** Les 3 `any` critiques du chat doivent être corrigés **AVANT** de vendre à 3 clients.
 
 
+

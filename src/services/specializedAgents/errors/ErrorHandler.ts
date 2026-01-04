@@ -97,3 +97,4 @@ Modèle utilisé : ${model}`;
   }
 }
 
+

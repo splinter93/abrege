@@ -129,3 +129,4 @@ export function calculateUsagePercent(current: number, max: number): number {
   return Math.min(100, Math.round((current / max) * 100));
 }
 
+

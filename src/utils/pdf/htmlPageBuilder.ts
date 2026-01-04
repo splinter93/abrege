@@ -34,34 +34,52 @@ function getPlaywrightStyles(hasHeaderImage: boolean): string {
       
       * {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
       
       html, body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
+        font-family: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
         font-size: 11pt;
-        line-height: 1.75;
+        line-height: 1.5;
         color: #1a1a1a;
         background: #ffffff;
-        margin: 0;
-        padding: 0;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none;
+        outline: none;
+        width: 100%;
+        box-sizing: border-box;
       }
       
       .container {
-        /* Pas de width fixe, laisser le navigateur gérer */
+        width: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none;
+        outline: none;
       }
       
       .header-image {
-        width: 100%;
-        height: 200px;
+        width: 100% !important;
+        height: 200px !important;
         object-fit: cover;
         display: block;
-        margin: 0;
-        padding: 0;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        outline: none !important;
+        vertical-align: top;
+        position: relative;
+        left: 0;
+        top: 0;
       }
       
       .content-wrapper {
         padding: 20mm;
-        padding-top: ${hasHeaderImage ? '10mm' : '20mm'};
+        padding-top: ${hasHeaderImage ? '24px' : '20mm'};
+        padding-bottom: 30mm;
+        box-sizing: border-box;
       }
       
       h1 {
@@ -75,16 +93,16 @@ function getPlaywrightStyles(hasHeaderImage: boolean): string {
       }
       
       .markdown-body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
+        font-family: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
         font-size: 11pt;
-        line-height: 1.75;
+        line-height: 1.5;
         color: #1a1a1a;
       }
       
       .markdown-body h1 { 
         font-size: 24pt; 
-        margin-top: 24px; 
-        margin-bottom: 16px; 
+        margin-top: 20px; 
+        margin-bottom: 12px; 
         page-break-after: avoid; 
         color: #000000; 
         font-weight: 700; 
@@ -93,26 +111,26 @@ function getPlaywrightStyles(hasHeaderImage: boolean): string {
       
       .markdown-body h2 { 
         font-size: 20pt; 
-        margin-top: 32px; 
-        margin-bottom: 12px; 
+        margin-top: 24px; 
+        margin-bottom: 10px; 
+        page-break-after: avoid; 
+        color: #000000; 
+        font-weight: 600; 
+        line-height: 1.25;
+      }
+      
+      .markdown-body h3 { 
+        font-size: 16pt; 
+        margin-top: 18px; 
+        margin-bottom: 8px; 
         page-break-after: avoid; 
         color: #000000; 
         font-weight: 600; 
         line-height: 1.3;
       }
       
-      .markdown-body h3 { 
-        font-size: 16pt; 
-        margin-top: 24px; 
-        margin-bottom: 10px; 
-        page-break-after: avoid; 
-        color: #000000; 
-        font-weight: 600; 
-        line-height: 1.4;
-      }
-      
       .markdown-body p { 
-        margin: 12px 0; 
+        margin: 8px 0; 
         orphans: 3; 
         widows: 3; 
         color: #1a1a1a; 
@@ -192,9 +210,9 @@ function getPlaywrightStyles(hasHeaderImage: boolean): string {
       }
       
       .markdown-body li { 
-        margin: 8px 0; 
+        margin: 4px 0; 
         color: #1a1a1a; 
-        line-height: 1.6;
+        line-height: 1.5;
       }
       
       .markdown-body blockquote { 
@@ -222,16 +240,16 @@ export function createFullHtmlPage(options: HtmlPageOptions): string {
   const styles = getPlaywrightStyles(!!headerImage);
   
   return `<!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" style="margin: 0; padding: 0; border: none; outline: none;">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title || 'Note'}</title>
   ${styles}
 </head>
-<body>
-  <div class="container">
-    ${headerImage ? `<img src="${headerImage}" alt="Header" class="header-image" />` : ''}
+<body style="margin: 0 !important; padding: 0 !important; border: none; outline: none;">
+  <div class="container" style="margin: 0 !important; padding: 0 !important; border: none; outline: none;">
+    ${headerImage ? `<img src="${headerImage}" alt="Header" class="header-image" style="margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; display: block; width: 100%; height: 200px; object-fit: cover; vertical-align: top;" />` : ''}
     <div class="content-wrapper">
       <h1>${title || 'Note'}</h1>
       <div class="markdown-body" id="pdf-content">
@@ -244,6 +262,14 @@ export function createFullHtmlPage(options: HtmlPageOptions): string {
     window.addEventListener('load', function() {
       // Forcer le reflow pour s'assurer que tout est rendu
       document.body.offsetHeight;
+      // S'assurer que le header image n'a pas de marges
+      const headerImg = document.querySelector('.header-image');
+      if (headerImg) {
+        headerImg.style.margin = '0';
+        headerImg.style.padding = '0';
+        headerImg.style.border = 'none';
+        headerImg.style.outline = 'none';
+      }
       // Marquer que le contenu est prêt
       document.body.setAttribute('data-ready', 'true');
     });

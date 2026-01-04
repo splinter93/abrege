@@ -23,7 +23,7 @@ function createContainer(): HTMLElement {
   container.style.margin = '0';
   container.style.backgroundColor = '#ffffff';
   container.style.color = '#000000';
-  container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif';
+  container.style.fontFamily = "'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif";
   container.style.fontSize = '11pt';
   container.style.lineHeight = '1.6';
   container.style.boxSizing = 'border-box';

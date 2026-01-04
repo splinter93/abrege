@@ -50,6 +50,7 @@ export async function exportNoteToPdf(
     }
     
     // Essayer d'abord avec l'API Playwright (meilleure qualité)
+    logger.info('[pdfExportService] Tentative export via Playwright...');
     const playwrightResult = await generatePdfWithPlaywright({
       title,
       htmlContent,
@@ -58,13 +59,14 @@ export async function exportNoteToPdf(
     });
 
     if (playwrightResult.success) {
-      logger.info('[pdfExportService] PDF généré via Playwright avec succès');
+      logger.info('[pdfExportService] ✅ PDF généré via Playwright avec succès');
       return playwrightResult;
     }
 
     // Fallback sur html2canvas si Playwright échoue
-    logger.warn('[pdfExportService] API Playwright indisponible, fallback sur html2canvas', {
-      error: playwrightResult.error
+    logger.warn('[pdfExportService] ⚠️ API Playwright indisponible, fallback sur html2canvas', {
+      playwrightError: playwrightResult.error,
+      note: 'Vérifier les logs ci-dessus pour comprendre pourquoi Playwright a échoué'
     });
 
     const html2canvasResult = await generatePdfWithHtml2Canvas({

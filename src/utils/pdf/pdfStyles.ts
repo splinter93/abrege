@@ -15,15 +15,15 @@
 export function getPdfStyles(): string {
   return `
     .markdown-body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif;
+      font-family: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
       font-size: 11pt;
-      line-height: 1.75;
+      line-height: 1.5;
       color: #1a1a1a;
     }
     .markdown-body h1 { 
       font-size: 24pt; 
-      margin-top: 24px; 
-      margin-bottom: 16px; 
+      margin-top: 20px; 
+      margin-bottom: 12px; 
       page-break-after: avoid; 
       color: #000000; 
       font-weight: 700; 
@@ -31,32 +31,33 @@ export function getPdfStyles(): string {
     }
     .markdown-body h2 { 
       font-size: 20pt; 
-      margin-top: 32px; 
-      margin-bottom: 12px; 
-      page-break-after: avoid; 
-      color: #000000; 
-      font-weight: 600; 
-      line-height: 1.3;
-    }
-    .markdown-body h3 { 
-      font-size: 16pt; 
       margin-top: 24px; 
       margin-bottom: 10px; 
       page-break-after: avoid; 
       color: #000000; 
       font-weight: 600; 
-      line-height: 1.4;
+      line-height: 1.25;
     }
-    .markdown-body h4 { 
-      font-size: 14pt; 
-      margin-top: 20px; 
+    .markdown-body h3 { 
+      font-size: 16pt; 
+      margin-top: 18px; 
       margin-bottom: 8px; 
       page-break-after: avoid; 
       color: #000000; 
       font-weight: 600; 
+      line-height: 1.3;
+    }
+    .markdown-body h4 { 
+      font-size: 14pt; 
+      margin-top: 16px; 
+      margin-bottom: 6px; 
+      page-break-after: avoid; 
+      color: #000000; 
+      font-weight: 600; 
+      line-height: 1.35;
     }
     .markdown-body p { 
-      margin: 12px 0; 
+      margin: 8px 0; 
       orphans: 3; 
       widows: 3; 
       color: #1a1a1a; 
@@ -157,9 +158,9 @@ export function getPdfStyles(): string {
       padding-left: 2.5em; 
     }
     .markdown-body li { 
-      margin: 8px 0; 
+      margin: 4px 0; 
       color: #1a1a1a; 
-      line-height: 1.6;
+      line-height: 1.5;
     }
     .markdown-body a { 
       color: #007bff; 

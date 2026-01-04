@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
+    "dev:proxy": "tsx server/xai-voice-proxy/server.ts",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:proxy\"",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint",
@@ -154,7 +156,9 @@
     "@types/react-dom": "^19",
     "@types/react-window": "^1.8.8",
     "@types/turndown": "^5.0.5",
+    "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^5.1.0",
+    "concurrently": "^9.2.1",
     "dotenv": "^17.2.0",
     "eslint": "^9",
     "eslint-config-next": "^16.0.7",

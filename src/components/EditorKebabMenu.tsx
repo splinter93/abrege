@@ -9,8 +9,6 @@ import { getDefaultShareSettings } from '@/types/sharing';
 import { simpleLogger as logger } from '@/utils/logger';
 import { exportNoteToPdf } from '@/services/pdfExportService';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
-import { preprocessMarkdown } from '@/utils/markdownPreprocessor';
 import toast from 'react-hot-toast';
 
 interface EditorKebabMenuProps {
@@ -55,9 +53,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
 
   // Récupérer la note depuis le store
   const note = useFileSystemStore((state) => state.notes[noteId]);
-  const rawContent = note?.markdown_content || '';
-  const content = React.useMemo(() => preprocessMarkdown(rawContent), [rawContent]);
-  const { html } = useMarkdownRender({ content });
+  // Utiliser directement html_content de la base de données (généré par Tiptap)
+  const htmlContent = note?.html_content || '';
 
   useEffect(() => {
     if (!open) return;
@@ -129,14 +126,14 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         logger.dev('[EditorKebabMenu] Export PDF', {
           noteId,
           title,
-          htmlLength: html.length,
-          htmlPreview: html.substring(0, 200),
+          htmlLength: htmlContent.length,
+          htmlPreview: htmlContent.substring(0, 200),
           hasNote: !!note,
-          hasContent: !!html && html.length > 0
+          hasContent: !!htmlContent && htmlContent.length > 0
         });
       }
 
-      if (!html || html.trim().length === 0) {
+      if (!htmlContent || htmlContent.trim().length === 0) {
         toast.error(
           slashLang === 'fr' 
             ? 'Erreur: Le contenu de la note est vide' 
@@ -147,7 +144,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
 
       const result = await exportNoteToPdf({
         title,
-        htmlContent: html,
+        htmlContent: htmlContent,
         filename: `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`,
         headerImage: note?.header_image || null
       });

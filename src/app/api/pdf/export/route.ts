@@ -60,9 +60,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // ✅ Créer la page HTML complète
     const fullHtml = createFullHtmlPage({ title, htmlContent, headerImage });
     
+    // ✅ Debug: Log du HTML généré (premiers 500 caractères)
+    logApi.info('📄 HTML généré pour Playwright', {
+      ...context,
+      htmlLength: fullHtml.length,
+      htmlPreview: fullHtml.substring(0, 500),
+      hasHeaderImage: !!headerImage
+    });
+    
     // ✅ Encoder en base64 pour créer un data URI
     const base64Html = Buffer.from(fullHtml, 'utf-8').toString('base64');
     const dataUri = `data:text/html;base64,${base64Html}`;
+    
+    // ✅ Debug: Vérifier le data URI
+    logApi.info('🔗 Data URI créé', {
+      ...context,
+      dataUriLength: dataUri.length,
+      dataUriPreview: dataUri.substring(0, 100) + '...',
+      startsWithDataUri: dataUri.startsWith('data:text/html;base64,')
+    });
     
     // ✅ Appeler l'API Playwright
     logApi.info('📞 Appel API Playwright', context);

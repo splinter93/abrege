@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { XAIVoiceService } from '../xaiVoiceService';
-import type { XAIVoiceCallbacks, XAIVoiceMessage } from '../xaiVoiceService';
+import type { XAIVoiceCallbacks, XAIVoiceMessage } from '../types';
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({

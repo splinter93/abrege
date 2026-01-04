@@ -547,3 +547,4 @@ const sendOpDebounced = useMemo(
 **Standard de référence** : GUIDE-EXCELLENCE-CODE.md v2.0  
 **Prochaine révision** : Après corrections critiques
 
+

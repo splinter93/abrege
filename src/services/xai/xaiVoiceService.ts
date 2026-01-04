@@ -11,88 +11,23 @@
 'use client';
 
 import { logger, LogCategory } from '@/utils/logger';
-
-/**
- * Types de messages XAI Voice API
- */
-export type XAIVoiceMessageType =
-  | 'session.update'
-  | 'session.updated'
-  | 'input_audio_buffer.append'
-  | 'input_audio_buffer.commit'
-  | 'input_audio_buffer.committed'
-  | 'input_audio_buffer.speech_started'
-  | 'input_audio_buffer.speech_stopped'
-  | 'conversation.created'
-  | 'conversation.item.create'
-  | 'conversation.item.added'
-  | 'conversation.item.input_audio_transcription.completed'
-  | 'response.create'
-  | 'response.created'
-  | 'response.output_item.added'
-  | 'response.output_audio_transcript.delta'
-  | 'response.output_audio_transcript.done'
-  | 'response.output_audio.delta'
-  | 'response.output_audio.done'
-  | 'response.done'
-  | 'error';
-
-/**
- * Configuration de session XAI Voice
- */
-export interface XAIVoiceSessionConfig {
-  instructions?: string;
-  voice?: 'Ara' | 'Rex' | 'Sal' | 'Eve' | 'Leo';
-  input_audio_format?: 'audio/pcm' | 'audio/pcmu' | 'audio/pcma' | 'audio/opus';
-  input_audio_transcription?: {
-    model: string;
-  };
-  output_audio_format?: 'audio/pcm' | 'audio/pcmu' | 'audio/pcma' | 'audio/opus';
-  output_audio_transcription?: {
-    model: string;
-  };
-  sample_rate?: 16000 | 24000 | 48000;
-  temperature?: number;
-  max_response_output_tokens?: number;
-  modalities?: Array<'text' | 'audio'>;
-  tools?: Array<unknown>;
-  tool_choice?: 'auto' | 'none' | 'required';
-  tool_result?: unknown;
-}
-
-/**
- * Message XAI Voice
- */
-export interface XAIVoiceMessage {
-  type: XAIVoiceMessageType;
-  session?: XAIVoiceSessionConfig;
-  audio?: string; // Base64 encoded audio
-  transcript?: string;
-  item_id?: string;
-  delta?: string;
-  error?: {
-    type: string;
-    message: string;
-  };
-}
-
-/**
- * Callbacks pour les événements
- */
-export interface XAIVoiceCallbacks {
-  onAudioDelta?: (audio: string) => void; // Base64 audio chunk
-  onAudioDone?: () => void;
-  onTranscriptDelta?: (text: string) => void;
-  onTranscriptDone?: (text: string) => void;
-  onError?: (error: Error | string) => void;
-  onConnected?: () => void;
-  onDisconnected?: () => void;
-}
-
-/**
- * État de la connexion
- */
-export type XAIVoiceConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
+import type {
+  XAIVoiceMessageType,
+  XAIVoiceSessionConfig,
+  XAIVoiceMessage,
+  XAIVoiceCallbacks,
+  XAIVoiceConnectionState
+} from './types';
+export type {
+  XAIVoiceMessageType,
+  XAIVoiceSessionConfig,
+  XAIVoiceMessage,
+  XAIVoiceAudioDeltaMessage,
+  XAIVoiceCallbacks,
+  XAIVoiceConnectionState
+} from './types';
+import { handleXAIVoiceMessage } from './messageHandler';
+import { ReconnectManager } from './reconnectManager';
 
 /**
  * Service XAI Voice
@@ -102,10 +37,23 @@ export class XAIVoiceService {
   private token: string | null = null;
   private callbacks: XAIVoiceCallbacks = {};
   private state: XAIVoiceConnectionState = 'disconnected';
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 3;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
+  private reconnectManager: ReconnectManager;
   private sessionConfigured = false;
+  private turnDetectionType: 'server_vad' | 'client_vad' | 'none' = 'server_vad';
+  private responseModalities: Array<'text' | 'audio'> = ['text', 'audio'];
+  private idleTimeout: NodeJS.Timeout | null = null;
+  private lastActivity = 0;
+  private inFlight = false; // Flag pour éviter fermeture prématurée pendant traitement
+  private pendingDisconnect: (() => void) | null = null; // Callback de disconnect en attente
+
+  constructor() {
+    this.reconnectManager = new ReconnectManager({
+      maxAttempts: 3,
+      token: null,
+      connect: this.connect.bind(this) as (token: string, callbacks?: unknown) => Promise<void>,
+      callbacks: {}
+    });
+  }
 
   /**
    * Connecter au service XAI Voice
@@ -121,41 +69,77 @@ export class XAIVoiceService {
     this.state = 'connecting';
 
     try {
-      // Créer la connexion WebSocket
-      // Note: Les WebSockets browser ne supportent pas les headers HTTP custom
-      // XAI Voice API utilise le token dans l'URL selon la doc: wss://api.x.ai/v1/realtime?token=<ephemeral_token>
-      if (!token) {
-        throw new Error('Token éphémère manquant');
-      }
+      // Utiliser le proxy WebSocket au lieu de la connexion directe XAI
+      // Le proxy gère l'authentification avec l'API key côté serveur
+      const proxyUrl = process.env.NEXT_PUBLIC_XAI_VOICE_PROXY_URL || 'ws://localhost:3001/ws/xai-voice';
       
-      // Vérifier le format du token
-      const tokenPrefix = token.substring(0, Math.min(30, token.length));
-      logger.info(LogCategory.AUDIO, '[XAIVoiceService] Connexion WebSocket', { 
-        tokenLength: token.length,
-        tokenPrefix: tokenPrefix,
-        tokenStartsWithXAI: token.startsWith('xai-')
+      logger.info(LogCategory.AUDIO, '[XAIVoiceService] Connexion WebSocket via proxy', { 
+        proxyUrl: proxyUrl.replace(/:\d+/, ':****'), // Masquer le port dans les logs
+        hasToken: !!token // Token conservé pour compatibilité future mais non utilisé
       });
       
-      const wsUrl = `wss://api.x.ai/v1/realtime?token=${encodeURIComponent(token)}`;
-      this.ws = new WebSocket(wsUrl);
+      this.ws = new WebSocket(proxyUrl);
 
       this.ws.onopen = () => {
         logger.info(LogCategory.AUDIO, '[XAIVoiceService] ✅ WebSocket connecté');
         this.state = 'connected';
-        this.reconnectAttempts = 0;
+        this.reconnectManager.reset();
         this.sessionConfigured = false;
+        this.lastActivity = Date.now();
+        this.startIdleTimeout();
         this.callbacks.onConnected?.();
       };
 
-      this.ws.onmessage = (event) => {
+      this.ws.onmessage = async (event) => {
         try {
-          const message = JSON.parse(event.data) as XAIVoiceMessage;
-          this.handleMessage(message);
-        } catch (error) {
-          logger.error(LogCategory.AUDIO, '[XAIVoiceService] ❌ Erreur parsing message', {
-            error: error instanceof Error ? error.message : String(error)
+          // Gérer les données binaires (Blob) et texte (string)
+          let dataText: string;
+          
+          if (event.data instanceof Blob) {
+            // Convertir Blob en texte (UTF-8)
+            dataText = await event.data.text();
+          } else if (typeof event.data === 'string') {
+            dataText = event.data;
+          } else if (event.data instanceof ArrayBuffer) {
+            // Convertir ArrayBuffer en texte
+            dataText = new TextDecoder().decode(event.data);
+          } else {
+            // Fallback: convertir en string
+            dataText = String(event.data);
+          }
+
+          const message = JSON.parse(dataText) as XAIVoiceMessage;
+          handleXAIVoiceMessage(message, {
+            callbacks: this.callbacks,
+            updateLastActivity: () => {
+              this.lastActivity = Date.now();
+            },
+            setInFlight: (value: boolean) => {
+              this.inFlight = value;
+            },
+            getPendingDisconnect: () => this.pendingDisconnect,
+            clearPendingDisconnect: () => {
+              this.pendingDisconnect = null;
+            },
+            executePendingDisconnect: () => {
+              if (this.pendingDisconnect) {
+                const disconnectFn = this.pendingDisconnect;
+                this.pendingDisconnect = null;
+                disconnectFn();
+              }
+            }
           });
-          this.callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          
+          // Ne pas logger comme erreur critique si c'est un problème de format de données
+          // (pourrait être un message binaire non-JSON)
+          logger.error(LogCategory.AUDIO, '[XAIVoiceService] ❌ Erreur parsing message', {
+            error: errorMessage,
+            dataType: event.data instanceof Blob ? 'Blob' : event.data instanceof ArrayBuffer ? 'ArrayBuffer' : typeof event.data
+          });
+          // Ne pas déclencher onError pour les erreurs de parsing de format non-critiques
+          // Le service continue à fonctionner même si un message ne peut pas être parsé
         }
       };
 
@@ -164,7 +148,7 @@ export class XAIVoiceService {
         // On log ce qu'on peut, mais on attend onclose pour plus d'infos
         logger.error(LogCategory.AUDIO, '[XAIVoiceService] ❌ Erreur WebSocket détectée', {
           wsState: this.ws?.readyState,
-          url: wsUrl.replace(token, '***')
+          proxyUrl: proxyUrl.replace(/:\d+/, ':****')
         });
         // Ne pas changer l'état ici, onclose le fera avec plus de détails
       };
@@ -177,19 +161,20 @@ export class XAIVoiceService {
           code: closeCode, 
           reason: closeReason,
           wasClean: event.wasClean,
-          url: wsUrl.replace(token, '***')
+          proxyUrl: proxyUrl.replace(/:\d+/, ':****')
         });
         
         this.state = 'disconnected';
         this.sessionConfigured = false;
+        this.inFlight = false;
+        this.pendingDisconnect = null;
         
         // Codes d'erreur WebSocket courants
         if (closeCode === 1006) {
-          const errorMsg = 'Connexion WebSocket refusée par le serveur XAI (1006). Cela peut indiquer que le token éphémère n\'est pas accepté via query parameter, ou que l\'API nécessite une authentification différente.';
+          const errorMsg = 'Connexion WebSocket proxy fermée de manière anormale. Vérifiez que le proxy est démarré.';
           logger.error(LogCategory.AUDIO, '[XAIVoiceService] ❌ Connexion fermée anormalement (1006)', { 
             closeReason,
-            tokenPrefix: this.token?.substring(0, 30),
-            suggestion: 'L\'API XAI pourrait nécessiter un proxy WebSocket côté serveur pour l\'authentification'
+            proxyUrl: proxyUrl.replace(/:\d+/, ':****')
           });
           this.callbacks.onError?.(errorMsg);
         } else if (closeCode !== 1000) {
@@ -201,19 +186,7 @@ export class XAIVoiceService {
         this.callbacks.onDisconnected?.();
 
         // Tentative de reconnexion si ce n'est pas une fermeture volontaire
-        if (closeCode !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
-          this.reconnectAttempts++;
-          const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
-          logger.info(LogCategory.AUDIO, `[XAIVoiceService] Tentative de reconnexion ${this.reconnectAttempts}/${this.maxReconnectAttempts} dans ${delay}ms`);
-          
-          this.reconnectTimeout = setTimeout(() => {
-            if (this.token) {
-              this.connect(this.token, this.callbacks).catch((err) => {
-                logger.error(LogCategory.AUDIO, '[XAIVoiceService] Erreur reconnexion', undefined, err instanceof Error ? err : new Error(String(err)));
-              });
-            }
-          }, delay);
-        }
+        this.reconnectManager.attemptReconnect(closeCode);
       };
 
     } catch (error) {
@@ -239,10 +212,10 @@ export class XAIVoiceService {
     const sessionConfig: Record<string, unknown> = {
       instructions: config.instructions || 'You are a helpful AI assistant.',
       voice: config.voice || 'Ara',
-      turn_detection: {
+      turn_detection: config.turn_detection === null ? null : (config.turn_detection || {
         type: 'server_vad' // Utiliser VAD côté serveur pour détection automatique
-      },
-      audio: {
+      }),
+      audio: config.audio || {
         input: {
           format: {
             type: config.input_audio_format || 'audio/pcm',
@@ -259,6 +232,9 @@ export class XAIVoiceService {
     };
 
     // Ajouter les autres paramètres optionnels
+    if (config.modalities) {
+      sessionConfig['modalities'] = config.modalities;
+    }
     if (config.input_audio_transcription) {
       sessionConfig['input_audio_transcription'] = config.input_audio_transcription;
     }
@@ -267,6 +243,9 @@ export class XAIVoiceService {
     }
     if (config.max_response_output_tokens) {
       sessionConfig['max_response_output_tokens'] = config.max_response_output_tokens;
+    }
+    if (config.temperature !== undefined) {
+      sessionConfig['temperature'] = config.temperature;
     }
     if (config.tools) {
       sessionConfig['tools'] = config.tools;
@@ -282,7 +261,18 @@ export class XAIVoiceService {
 
     this.ws.send(JSON.stringify(message));
     this.sessionConfigured = true;
-      logger.info(LogCategory.AUDIO, '[XAIVoiceService] Session configurée', { voice: config.voice });
+    logger.info(LogCategory.AUDIO, '[XAIVoiceService] Session configurée', { voice: config.voice });
+    
+    // Déterminer le type de détection de tour
+    if (config.turn_detection === null) {
+      this.turnDetectionType = 'none';
+    } else if (config.turn_detection?.type) {
+      this.turnDetectionType = config.turn_detection.type;
+    } else {
+      this.turnDetectionType = 'server_vad';
+    }
+    
+    this.responseModalities = config.modalities || ['text', 'audio'];
   }
 
   /**
@@ -292,6 +282,8 @@ export class XAIVoiceService {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       throw new Error('WebSocket non connecté');
     }
+
+    this.lastActivity = Date.now();
 
     if (!this.sessionConfigured) {
       logger.warn(LogCategory.AUDIO, '[XAIVoiceService] Session non configurée, configuration par défaut...');
@@ -303,7 +295,13 @@ export class XAIVoiceService {
       audio: audioBase64
     };
 
-    this.ws.send(JSON.stringify(message));
+    const messageStr = JSON.stringify(message);
+    logger.info(LogCategory.AUDIO, '[XAIVoiceService] Envoi audio chunk', { 
+      audioLength: audioBase64.length,
+      messageLength: messageStr.length,
+      wsReadyState: this.ws?.readyState
+    });
+    this.ws.send(messageStr);
   }
 
   /**
@@ -314,93 +312,147 @@ export class XAIVoiceService {
       throw new Error('WebSocket non connecté');
     }
 
+    this.lastActivity = Date.now();
+    this.inFlight = true; // Marquer comme "en cours de traitement"
+    logger.info(LogCategory.AUDIO, '[XAIVoiceService] 🔵 CALL commitAudio - Début commit');
+
+    // XAI API n'accepte que 'input_audio_buffer.commit' (pas 'conversation.item.commit')
     const message: XAIVoiceMessage = {
       type: 'input_audio_buffer.commit'
     };
 
     this.ws.send(JSON.stringify(message));
-    logger.info(LogCategory.AUDIO, '[XAIVoiceService] Audio input finalisé');
+    logger.info(LogCategory.AUDIO, '[XAIVoiceService] ✅ Audio input finalisé (commit envoyé)', { commitType: 'input_audio_buffer.commit' });
+    
+    // Dans TOUS les cas, envoyer response.create pour forcer une réponse (debug + proof)
+    this.createResponse();
+    
+    // Timeout de sécurité : si pas de réponse après 5s, autoriser la fermeture
+    setTimeout(() => {
+      if (this.inFlight) {
+        logger.warn(LogCategory.AUDIO, '[XAIVoiceService] ⏱️ Timeout réponse (5s) - autoriser fermeture');
+        this.inFlight = false;
+        // Si un disconnect était en attente, l'exécuter
+        if (this.pendingDisconnect) {
+          const disconnectFn = this.pendingDisconnect;
+          this.pendingDisconnect = null;
+          disconnectFn();
+        }
+      }
+    }, 5000);
   }
 
   /**
-   * Gérer les messages reçus
+   * Envoyer un message texte (TEXT-ONLY smoke test)
    */
-  private handleMessage(message: XAIVoiceMessage): void {
-    switch (message.type) {
-      case 'session.updated':
-        logger.info(LogCategory.AUDIO, '[XAIVoiceService] Session mise à jour');
-        break;
-
-      case 'conversation.created':
-        logger.info(LogCategory.AUDIO, '[XAIVoiceService] Conversation créée');
-        break;
-
-      case 'input_audio_buffer.speech_started':
-        logger.info(LogCategory.AUDIO, '[XAIVoiceService] Parole détectée');
-        break;
-
-      case 'input_audio_buffer.speech_stopped':
-        logger.info(LogCategory.AUDIO, '[XAIVoiceService] Parole terminée');
-        break;
-
-      case 'conversation.item.input_audio_transcription.completed':
-        if (message.transcript) {
-          this.callbacks.onTranscriptDone?.(message.transcript);
-        }
-        break;
-
-      case 'response.output_audio_transcript.delta':
-        if (message.delta) {
-          this.callbacks.onTranscriptDelta?.(message.delta);
-        }
-        break;
-
-      case 'response.output_audio_transcript.done':
-        logger.info(LogCategory.AUDIO, '[XAIVoiceService] Transcription terminée');
-        break;
-
-      case 'response.output_audio.delta':
-        if ((message as any).delta) {
-          this.callbacks.onAudioDelta?.((message as any).delta);
-        }
-        break;
-
-      case 'response.output_audio.done':
-        this.callbacks.onAudioDone?.();
-        break;
-
-      case 'response.done':
-        logger.info(LogCategory.AUDIO, '[XAIVoiceService] Réponse terminée');
-        break;
-
-      case 'error':
-        const errorMsg = message.error?.message || 'Erreur inconnue';
-        logger.error(LogCategory.AUDIO, '[XAIVoiceService] ❌ Erreur serveur', { error: message.error });
-        this.callbacks.onError?.(errorMsg);
-        break;
-
-      default:
-        logger.debug(LogCategory.AUDIO, '[XAIVoiceService] Message non géré', { type: message.type });
+  sendTextMessage(text: string): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      throw new Error('WebSocket non connecté');
     }
+
+    this.lastActivity = Date.now();
+
+    if (!this.sessionConfigured) {
+      logger.warn(LogCategory.AUDIO, '[XAIVoiceService] Session non configurée, configuration par défaut...');
+      this.configureSession({});
+    }
+
+    // 1) Créer un item conversation avec input_text
+    const createItemMessage: XAIVoiceMessage = {
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'user',
+        content: [
+          {
+            type: 'input_text',
+            text
+          }
+        ]
+      }
+    };
+
+    this.ws.send(JSON.stringify(createItemMessage));
+    logger.info(LogCategory.AUDIO, '[XAIVoiceService] conversation.item.create envoyé (TEXT)', { textLength: text.length });
+
+    // 2) Demander une réponse
+    this.createResponse();
   }
 
   /**
-   * Déconnecter
+   * Demander explicitement une réponse (utile en client_vad / none)
+   */
+  createResponse(modalities: Array<'text' | 'audio'> = this.responseModalities): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      throw new Error('WebSocket non connecté');
+    }
+
+    const message: XAIVoiceMessage = {
+      type: 'response.create',
+      response: {
+        modalities
+      }
+    };
+
+    this.ws.send(JSON.stringify(message));
+    logger.info(LogCategory.AUDIO, '[XAIVoiceService] response.create envoyé', { modalities });
+  }
+
+  /**
+   * Démarrer le timeout idle (auto-disconnect après 15s d'inactivité)
+   */
+  private startIdleTimeout(): void {
+    if (this.idleTimeout) {
+      clearTimeout(this.idleTimeout);
+    }
+    this.idleTimeout = setTimeout(() => {
+      const idleTime = Date.now() - this.lastActivity;
+      if (idleTime >= 15000) {
+        logger.info(LogCategory.AUDIO, '[XAIVoiceService] ⏱️ Auto-disconnect idle (15s)', { idleTime });
+        this.disconnect();
+      } else {
+        // Reschedule
+        this.startIdleTimeout();
+      }
+    }, 15000);
+  }
+
+
+  /**
+   * Déconnecter (avec guard contre fermeture prématurée)
    */
   disconnect(): void {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
+    // Si en cours de traitement, repousser la fermeture
+    if (this.inFlight) {
+      logger.info(LogCategory.AUDIO, '[XAIVoiceService] ⏸️ Disconnect demandé mais inFlight=true - reporté');
+      this.pendingDisconnect = () => {
+        this.disconnect();
+      };
+      return;
     }
 
+    // Cleanup des timeouts
+    this.reconnectManager.clearReconnectTimeout();
+
+    if (this.idleTimeout) {
+      clearTimeout(this.idleTimeout);
+      this.idleTimeout = null;
+    }
+
+    // Fermer la WebSocket
     if (this.ws) {
+      logger.info(LogCategory.AUDIO, '[XAIVoiceService] 🔌 Déconnexion WebSocket');
       this.ws.close(1000, 'Déconnexion volontaire');
       this.ws = null;
     }
 
+    // Réinitialiser l'état
     this.state = 'disconnected';
     this.sessionConfigured = false;
-    this.reconnectAttempts = 0;
+    this.reconnectManager.reset();
+    this.lastActivity = 0;
+    this.inFlight = false;
+    this.pendingDisconnect = null;
   }
 
   /**
