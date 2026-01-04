@@ -7,8 +7,18 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // Couleurs du chat existantes
+      // Couleurs du chat existantes + Landing page
       colors: {
+        // Landing page colors
+        background: '#030303',
+        surface: '#0A0A0A',
+        surfaceHighlight: '#121212',
+        border: '#1F1F1F',
+        primary: '#FF5722',
+        primaryHover: '#FF7043',
+        textMain: '#F2F2F2',
+        textMuted: '#888888',
+        
         // Backgrounds - Équilibrés pour cohérence avec --color-bg-primary
         'chat-bg-primary': '#121212',
         'chat-bg-secondary': '#171717',
@@ -59,6 +69,7 @@ module.exports = {
         'editor-text': ['Inter', 'sans-serif'],
         'editor-headings': ['Noto Sans', 'sans-serif'],
         'editor-mono': ['JetBrains Mono', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'monospace'],
+        'sans': ['Figtree', 'sans-serif'],
       },
       
       // Espacements
@@ -90,6 +101,9 @@ module.exports = {
         'glass-subtle': '0 2px 8px rgba(0, 0, 0, 0.08)',
         'glass-soft': '0 4px 12px rgba(0, 0, 0, 0.12)',
         'glass-medium': '0 6px 16px rgba(0, 0, 0, 0.15)',
+        'glow': '0 0 40px -10px rgba(255, 87, 34, 0.3)',
+        'glow-strong': '0 0 50px -10px rgba(255, 87, 34, 0.5)',
+        'inner-light': 'inset 0 1px 0 rgba(255, 255, 255, 0.15)',
       },
       
       // Flou
@@ -130,6 +144,16 @@ module.exports = {
         'chat-button-xl': '40px',
         'chat-header': '56px',
         'chat-input': '60px',
+      },
+      animation: {
+        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'float': 'float 6s ease-in-out infinite',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
       },
     },
   },

@@ -1,0 +1,147 @@
+.xai-voice-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--bg-primary, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.xai-voice-chat__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.xai-voice-chat__header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a1a);
+}
+
+.xai-voice-chat__status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.xai-voice-chat__status.connected {
+  background: #10b981;
+  color: white;
+}
+
+.xai-voice-chat__status.disconnected {
+  background: #6b7280;
+  color: white;
+}
+
+.xai-voice-chat__error {
+  padding: 1rem;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 0.875rem;
+}
+
+.xai-voice-chat__controls {
+  display: flex;
+  justify-content: center;
+}
+
+.xai-voice-chat__button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background: var(--accent-primary, #3b82f6);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.xai-voice-chat__button:hover:not(:disabled) {
+  background: var(--accent-hover, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.xai-voice-chat__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.xai-voice-chat__button.recording {
+  background: #ef4444;
+  animation: pulse 2s infinite;
+}
+
+.xai-voice-chat__button.recording:hover {
+  background: #dc2626;
+}
+
+.xai-voice-chat__button.processing {
+  background: #3b82f6;
+}
+
+.xai-voice-chat__icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
+}
+
+.xai-voice-chat__icon.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.xai-voice-chat__transcript {
+  padding: 1.5rem;
+  background: var(--bg-secondary, #f9fafb);
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.xai-voice-chat__transcript h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a1a);
+}
+
+.xai-voice-chat__transcript p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--text-secondary, #4b5563);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
