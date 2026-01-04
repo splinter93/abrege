@@ -112,12 +112,21 @@ export function extractSelectionText(editor: Editor, from: number, to: number): 
 }
 
 /**
+ * Type pour un nœud TipTap générique
+ */
+type TipTapNode = {
+  type: string;
+  content?: unknown[];
+  attrs?: Record<string, unknown>;
+  text?: string;
+  marks?: Array<{ type: string }>;
+};
+
+/**
  * Convertit un nœud JSON TipTap en markdown
  * Gère les paragraphes, titres, code blocks, tableaux, listes, etc.
  */
-function convertNodeToMarkdown(
-  node: { type: string; content?: unknown[]; attrs?: Record<string, unknown>; text?: string; marks?: Array<{ type: string }> }
-): string {
+function convertNodeToMarkdown(node: TipTapNode): string {
   const lines: string[] = [];
 
   if (node.type === 'paragraph') {
@@ -137,17 +146,17 @@ function convertNodeToMarkdown(
     lines.push('```');
   } else if (node.type === 'table') {
     // ✅ Conversion tableau en markdown
-    const tableMarkdown = convertTableToMarkdown(node);
+    const tableMarkdown = convertTableToMarkdown(node as { type: string; content?: Array<{ type: string; content?: unknown[] }> });
     if (tableMarkdown) {
       lines.push(tableMarkdown);
     }
   } else if (node.type === 'bulletList' || node.type === 'orderedList') {
-    const listMarkdown = convertListToMarkdown(node);
+    const listMarkdown = convertListToMarkdown(node as { type: string; content?: Array<{ type: string; content?: unknown[] }> });
     if (listMarkdown) {
       lines.push(listMarkdown);
     }
   } else if (node.type === 'taskList') {
-    const taskListMarkdown = convertTaskListToMarkdown(node);
+    const taskListMarkdown = convertTaskListToMarkdown(node as { type: string; content?: Array<{ type: string; attrs?: Record<string, unknown>; content?: unknown[] }> });
     if (taskListMarkdown) {
       lines.push(taskListMarkdown);
     }
@@ -162,7 +171,7 @@ function convertNodeToMarkdown(
   } else if (node.content && Array.isArray(node.content)) {
     // Récursion pour les nœuds conteneurs
     node.content.forEach((child: unknown) => {
-      const childMarkdown = convertNodeToMarkdown(child as { type: string; content?: unknown[]; attrs?: Record<string, unknown>; text?: string; marks?: Array<{ type: string }> });
+      const childMarkdown = convertNodeToMarkdown(child as TipTapNode);
       if (childMarkdown) {
         lines.push(childMarkdown);
       }
@@ -176,7 +185,7 @@ function convertNodeToMarkdown(
  * Extrait le texte d'un nœud avec ses marks (bold, italic, etc.)
  */
 function extractTextFromNode(
-  node: { content?: unknown[]; text?: string; marks?: Array<{ type: string }> }
+  node: TipTapNode
 ): string {
   if (node.text) {
     let text = node.text;
@@ -194,7 +203,7 @@ function extractTextFromNode(
   
   if (node.content && Array.isArray(node.content)) {
     return node.content.map((child: unknown) => 
-      extractTextFromNode(child as { content?: unknown[]; text?: string; marks?: Array<{ type: string }> })
+      extractTextFromNode(child as TipTapNode)
     ).join('');
   }
   
@@ -214,13 +223,15 @@ function convertTableToMarkdown(
   const rows: string[][] = [];
 
   // Parcourir les lignes (tableRow)
-  tableNode.content.forEach((rowNode) => {
-    if (rowNode.type === 'tableRow' && rowNode.content && Array.isArray(rowNode.content)) {
+  tableNode.content.forEach((rowNode: unknown) => {
+    const row = rowNode as TipTapNode & { content?: unknown[] };
+    if (row.type === 'tableRow' && row.content && Array.isArray(row.content)) {
       const cells: string[] = [];
       
-      rowNode.content.forEach((cellNode) => {
-        if (cellNode.type === 'tableCell' || cellNode.type === 'tableHeader') {
-          const cellText = extractTextFromNode(cellNode as { content?: unknown[]; text?: string; marks?: Array<{ type: string }> });
+      row.content.forEach((cellNode: unknown) => {
+        const cell = cellNode as TipTapNode;
+        if (cell.type === 'tableCell' || cell.type === 'tableHeader') {
+          const cellText = extractTextFromNode(cell);
           // Nettoyer le texte (remplacer sauts de ligne par espaces dans les cellules)
           cells.push(cellText.replace(/\n/g, ' ').trim());
         }
@@ -289,10 +300,11 @@ function convertListToMarkdown(
   const lines: string[] = [];
   const isOrdered = listNode.type === 'orderedList';
 
-  listNode.content.forEach((itemNode, index) => {
-    if (itemNode.type === 'listItem' && itemNode.content && Array.isArray(itemNode.content)) {
-      const itemText = itemNode.content
-        .map((child: unknown) => extractTextFromNode(child as { content?: unknown[]; text?: string; marks?: Array<{ type: string }> }))
+  listNode.content.forEach((itemNode: unknown, index) => {
+    const item = itemNode as TipTapNode & { content?: unknown[] };
+    if (item.type === 'listItem' && item.content && Array.isArray(item.content)) {
+      const itemText = item.content
+        .map((child: unknown) => extractTextFromNode(child as TipTapNode))
         .join(' ')
         .trim();
       
@@ -318,11 +330,12 @@ function convertTaskListToMarkdown(
 
   const lines: string[] = [];
 
-  taskListNode.content.forEach((itemNode) => {
-    if (itemNode.type === 'taskItem' && itemNode.content && Array.isArray(itemNode.content)) {
-      const checked = itemNode.attrs?.checked === true;
-      const itemText = itemNode.content
-        .map((child: unknown) => extractTextFromNode(child as { content?: unknown[]; text?: string; marks?: Array<{ type: string }> }))
+  taskListNode.content.forEach((itemNode: unknown) => {
+    const item = itemNode as TipTapNode & { attrs?: Record<string, unknown>; content?: unknown[] };
+    if (item.type === 'taskItem' && item.content && Array.isArray(item.content)) {
+      const checked = item.attrs?.checked === true;
+      const itemText = item.content
+        .map((child: unknown) => extractTextFromNode(child as TipTapNode))
         .join(' ')
         .trim();
       
