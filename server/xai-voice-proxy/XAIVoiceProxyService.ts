@@ -6,49 +6,15 @@
 
 import WebSocket from 'ws';
 import { WebSocketServer } from 'ws';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 // Import relatif depuis server/ vers src/
 import { logger, LogCategory } from '../../src/utils/logger';
-import { ProxyConnectionMetadata, ProxyConnectionState, ProxyConnectionOptions, XAIVoiceProxyConfig } from './types';
-import { ProxyErrorHandler, ProxyConnectionError, XAIAPIError } from './errorHandler';
-
-/**
- * Connexion proxy active
- */
-interface ActiveConnection {
-  clientWs: WebSocket;
-  xaiWs: WebSocket | null;
-  metadata: ProxyConnectionMetadata;
-  pingInterval?: NodeJS.Timeout;
-  messageQueue: string[]; // Queue (text frames) pour les messages reçus avant connexion XAI
-  audioChunkCount?: number; // Compteur pour dump WAV (1 chunk sur N)
-}
-
-/**
- * Helper pour calculer la longueur de WebSocket.RawData
- * Note: Type assertion utilisée car TypeScript a du mal avec l'union type complexe de ws
- */
-function getRawDataLength(data: WebSocket.RawData): number | string {
-  // Type assertion nécessaire car TypeScript ne peut pas bien inférer le type union
-  const dataTyped = data as string | Buffer | ArrayBuffer | Buffer[];
-  if (typeof dataTyped === 'string') {
-    return dataTyped.length;
-  }
-  if (Buffer.isBuffer(dataTyped)) {
-    return dataTyped.length;
-  }
-  if (dataTyped instanceof ArrayBuffer) {
-    return dataTyped.byteLength;
-  }
-  if (Array.isArray(dataTyped)) {
-    return dataTyped.reduce((acc: number, buf: Buffer) => {
-      return acc + (Buffer.isBuffer(buf) ? buf.length : 0);
-    }, 0);
-  }
-  return 'unknown';
-}
+import { ProxyConnectionMetadata, XAIVoiceProxyConfig } from './types';
+import { ProxyErrorHandler, ProxyConnectionError } from './errorHandler';
+import type { ActiveConnection } from './connectionTypes';
+import { getRawDataLength } from './connectionTypes';
+import { ConnectionManager } from './connectionManager';
+import { handleClientMessage, handleXAIMessage } from './messageHandlers';
+import { handleClientClose, handleXAIClose, handleClientError, handleXAIError } from './eventHandlers';
 
 /**
  * Service singleton pour gérer le proxy WebSocket XAI Voice
@@ -56,12 +22,13 @@ function getRawDataLength(data: WebSocket.RawData): number | string {
 export class XAIVoiceProxyService {
   private static instance: XAIVoiceProxyService | null = null;
   private wss: WebSocketServer | null = null;
-  private connections: Map<string, ActiveConnection> = new Map();
+  private connectionManager: ConnectionManager;
   private config: XAIVoiceProxyConfig;
   private isRunning = false;
 
   private constructor(config: XAIVoiceProxyConfig) {
     this.config = config;
+    this.connectionManager = new ConnectionManager();
   }
 
   /**
@@ -120,7 +87,7 @@ export class XAIVoiceProxyService {
     logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] Arrêt du serveur...');
 
     // Fermer toutes les connexions actives
-    for (const [connectionId, connection] of this.connections.entries()) {
+    for (const [connectionId] of this.connectionManager.getAll()) {
       this.closeConnection(connectionId, 1001, 'Server shutting down');
     }
 
@@ -157,18 +124,19 @@ export class XAIVoiceProxyService {
     });
 
     // Stocker la connexion AVANT d'appeler connectToXAI (évite race condition)
-    this.connections.set(connectionId, {
+    const newConnection: ActiveConnection = {
       clientWs,
       xaiWs: null,
       metadata,
       messageQueue: [],
       audioChunkCount: 0
-    });
+    };
+    this.connectionManager.add(connectionId, newConnection);
 
     // Vérifier que la connexion est bien stockée
-    const storedConnection = this.connections.get(connectionId);
+    const storedConnection = this.connectionManager.get(connectionId);
     if (!storedConnection) {
-      logger.error(LogCategory.AUDIO, '[XAIVoiceProxyService] ❌ Connexion non stockée après set()', { connectionId });
+      logger.error(LogCategory.AUDIO, '[XAIVoiceProxyService] ❌ Connexion non stockée après add()', { connectionId });
       clientWs.close(1011, 'Internal server error');
       return;
     }
@@ -196,17 +164,26 @@ export class XAIVoiceProxyService {
         dataType: typeof data,
         dataLength
       });
-      this.handleClientMessage(connectionId, data);
+      handleClientMessage(connectionId, data, {
+        connectionManager: this.connectionManager,
+        config: this.config
+      });
     });
 
     // Gestion de la fermeture client
     clientWs.on('close', () => {
-      this.handleClientClose(connectionId);
+      handleClientClose(connectionId, {
+        connectionManager: this.connectionManager,
+        closeConnection: this.closeConnection.bind(this)
+      });
     });
 
     // Gestion des erreurs client
     clientWs.on('error', (error: Error) => {
-      this.handleClientError(connectionId, error);
+      handleClientError(connectionId, error, {
+        connectionManager: this.connectionManager,
+        closeConnection: this.closeConnection.bind(this)
+      });
     });
 
     // Ping pour maintenir la connexion
@@ -216,7 +193,7 @@ export class XAIVoiceProxyService {
       }
     }, this.config.pingInterval || 30000);
 
-    const connection = this.connections.get(connectionId);
+    const connection = this.connectionManager.get(connectionId);
     if (connection) {
       connection.pingInterval = pingInterval;
     }
@@ -229,7 +206,7 @@ export class XAIVoiceProxyService {
     connectionId: string,
     metadata: ProxyConnectionMetadata
   ): Promise<void> {
-    const connection = this.connections.get(connectionId);
+    const connection = this.connectionManager.get(connectionId);
     if (!connection) {
       throw new ProxyConnectionError('Connexion introuvable', connectionId, 'CONNECTION_NOT_FOUND');
     }
@@ -260,18 +237,29 @@ export class XAIVoiceProxyService {
             connectionId
           });
           
-          // Envoyer les messages en queue maintenant que la connexion est prête
-          const connection = this.connections.get(connectionId);
-          if (connection && connection.messageQueue.length > 0) {
-            logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] Envoi des messages en queue', {
-              connectionId,
-              queueLength: connection.messageQueue.length
-            });
-            for (const queuedMessage of connection.messageQueue) {
-              connection.xaiWs?.send(queuedMessage);
-            }
-            connection.messageQueue = [];
-          }
+      // Gestion des messages XAI → Client
+      xaiWs.on('message', (data: WebSocket.RawData) => {
+        handleXAIMessage(connectionId, data, {
+          connectionManager: this.connectionManager,
+          config: this.config
+        });
+      });
+
+      // Gestion de la fermeture XAI
+      xaiWs.on('close', (code: number) => {
+        handleXAIClose(connectionId, code, {
+          connectionManager: this.connectionManager,
+          closeConnection: this.closeConnection.bind(this)
+        });
+      });
+
+      // Gestion des erreurs XAI
+      xaiWs.on('error', (error: Error) => {
+        handleXAIError(connectionId, error, {
+          connectionManager: this.connectionManager,
+          closeConnection: this.closeConnection.bind(this)
+        });
+      });
           
           resolve();
         });
@@ -284,17 +272,26 @@ export class XAIVoiceProxyService {
 
       // Gestion des messages XAI → Client
       xaiWs.on('message', (data: WebSocket.RawData) => {
-        this.handleXAIMessage(connectionId, data);
+        handleXAIMessage(connectionId, data, {
+          connectionManager: this.connectionManager,
+          config: this.config
+        });
       });
 
       // Gestion de la fermeture XAI
       xaiWs.on('close', (code: number) => {
-        this.handleXAIClose(connectionId, code);
+        handleXAIClose(connectionId, code, {
+          connectionManager: this.connectionManager,
+          closeConnection: this.closeConnection.bind(this)
+        });
       });
 
       // Gestion des erreurs XAI
       xaiWs.on('error', (error: Error) => {
-        this.handleXAIError(connectionId, error);
+        handleXAIError(connectionId, error, {
+          connectionManager: this.connectionManager,
+          closeConnection: this.closeConnection.bind(this)
+        });
       });
     } catch (error) {
       metadata.state = 'error';
@@ -303,9 +300,9 @@ export class XAIVoiceProxyService {
   }
 
   /**
-   * Gère un message du client vers XAI
+   * Ferme une connexion proprement
    */
-  private handleClientMessage(connectionId: string, data: WebSocket.RawData): void {
+  private closeConnection(connectionId: string, code: number, reason: string): void {
     const connection = this.connections.get(connectionId);
     if (!connection) {
       logger.warn(LogCategory.AUDIO, '[XAIVoiceProxyService] Message reçu mais connexion introuvable', {
@@ -724,7 +721,7 @@ export class XAIVoiceProxyService {
    * Récupère le nombre de connexions actives
    */
   getActiveConnectionsCount(): number {
-    return this.connections.size;
+    return this.connectionManager.count();
   }
 
   /**
