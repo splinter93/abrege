@@ -37,5 +37,5 @@ EXPOSE 3001
 # Variable d'environnement
 ENV NODE_ENV=production
 
-# Commande de démarrage
-CMD ["npm", "start"]
+# Commande de démarrage (npx trouve automatiquement tsx dans node_modules/.bin/)
+CMD ["npx", "tsx", "src/server.ts"]
