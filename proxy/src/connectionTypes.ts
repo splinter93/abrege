@@ -7,6 +7,11 @@ import WebSocket from 'ws';
 import type { ProxyConnectionMetadata } from './types';
 
 /**
+ * Taille maximale de la queue de messages
+ */
+export const MAX_QUEUE_SIZE = 50;
+
+/**
  * Connexion proxy active
  */
 export interface ActiveConnection {
@@ -14,6 +19,7 @@ export interface ActiveConnection {
   xaiWs: WebSocket | null;
   metadata: ProxyConnectionMetadata;
   pingInterval?: NodeJS.Timeout;
+  heartbeatTimeout?: NodeJS.Timeout;
   messageQueue: string[]; // Queue (text frames) pour les messages reçus avant connexion XAI
   audioChunkCount?: number; // Compteur pour dump WAV (1 chunk sur N)
 }

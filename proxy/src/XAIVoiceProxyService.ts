@@ -110,6 +110,17 @@ export class XAIVoiceProxyService {
    * Gère une nouvelle connexion client
    */
   private handleClientConnection(clientWs: WebSocket): void {
+    // Vérifier la limite de connexions AVANT d'accepter
+    const currentConnections = this.connectionManager.count();
+    if (this.config.maxConnections && currentConnections >= this.config.maxConnections) {
+      logger.warn(LogCategory.AUDIO, '[XAIVoiceProxyService] Limite de connexions atteinte', {
+        current: currentConnections,
+        max: this.config.maxConnections
+      });
+      clientWs.close(1008, 'Too many connections');
+      return;
+    }
+
     const connectionId = this.generateConnectionId();
     const metadata: ProxyConnectionMetadata = {
       connectionId,
@@ -189,6 +200,28 @@ export class XAIVoiceProxyService {
     const connection = this.connectionManager.get(connectionId);
     if (connection) {
       connection.pingInterval = pingInterval;
+      
+      // Heartbeat timeout : fermer connexion si inactive > 60s
+      const HEARTBEAT_TIMEOUT_MS = 60000; // 60 secondes
+      const heartbeatTimeout = setInterval(() => {
+        const conn = this.connectionManager.get(connectionId);
+        if (!conn) {
+          clearInterval(heartbeatTimeout);
+          return;
+        }
+        
+        const inactiveTime = Date.now() - conn.metadata.lastActivity;
+        if (inactiveTime > HEARTBEAT_TIMEOUT_MS) {
+          logger.warn(LogCategory.AUDIO, '[XAIVoiceProxyService] Connexion inactive fermée', {
+            connectionId,
+            inactiveTimeMs: inactiveTime
+          });
+          clearInterval(heartbeatTimeout);
+          this.closeConnection(connectionId, 1001, 'Connection timeout');
+        }
+      }, 30000); // Vérifier toutes les 30s
+      
+      connection.heartbeatTimeout = heartbeatTimeout;
     }
   }
 
@@ -299,6 +332,11 @@ export class XAIVoiceProxyService {
       // Arrêter le ping interval
       if (connection.pingInterval) {
         clearInterval(connection.pingInterval);
+      }
+
+      // Arrêter le heartbeat timeout
+      if (connection.heartbeatTimeout) {
+        clearInterval(connection.heartbeatTimeout);
       }
 
       // Fermer connexion XAI

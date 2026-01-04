@@ -7,7 +7,7 @@ import WebSocket from 'ws';
 import { logger, LogCategory } from "./utils/logger";
 import type { ConnectionManager } from './connectionManager';
 import type { XAIVoiceProxyConfig } from './types';
-import { getRawDataLength } from './connectionTypes';
+import { getRawDataLength, MAX_QUEUE_SIZE } from './connectionTypes';
 import { normalizeClientMessage } from './messageNormalizer';
 import { dumpFirstAudioChunk } from './wavDump';
 
@@ -150,6 +150,16 @@ export function handleClientMessage(
     connection.xaiWs.send(outboundStr);
   } else {
     // Sinon, mettre en queue pour envoi une fois la connexion établie
+    // Limiter la taille de la queue pour éviter memory leak
+    if (connection.messageQueue.length >= MAX_QUEUE_SIZE) {
+      logger.warn(LogCategory.AUDIO, '[XAIVoiceProxyService] Queue pleine, rejet message', {
+        connectionId,
+        queueLength: connection.messageQueue.length,
+        maxQueueSize: MAX_QUEUE_SIZE
+      });
+      return;
+    }
+    
     logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] Message mis en queue (XAI non prêt)', {
       connectionId,
       queueLength: connection.messageQueue.length,

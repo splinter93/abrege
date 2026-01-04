@@ -8,6 +8,7 @@ import { config as loadEnv } from 'dotenv';
 loadEnv({ path: '.env.local' });
 loadEnv(); // Charger .env aussi
 
+import { createServer } from 'http';
 import { logger, LogCategory } from "./utils/logger";
 import { XAIVoiceProxyService } from './XAIVoiceProxyService';
 import { XAIVoiceProxyConfig } from './types';
@@ -41,11 +42,15 @@ function loadConfig(): XAIVoiceProxyConfig {
 /**
  * Gestion du graceful shutdown
  */
-function setupGracefulShutdown(service: XAIVoiceProxyService): void {
+function setupGracefulShutdown(service: XAIVoiceProxyService, healthServer: ReturnType<typeof createServer> | null): void {
   const shutdown = async (signal: string) => {
     logger.info(LogCategory.AUDIO, `[Server] Signal ${signal} reçu, arrêt gracieux...`);
     
     try {
+      // Fermer le serveur health check
+      if (healthServer) {
+        healthServer.close();
+      }
       await service.stop();
       process.exit(0);
     } catch (error) {
@@ -89,12 +94,37 @@ async function main(): Promise<void> {
     const service = XAIVoiceProxyService.getInstance(config);
     await service.start();
 
+    // Démarrer le serveur health check sur un port séparé
+    const healthCheckPort = parseInt(process.env.HEALTH_CHECK_PORT || String(config.port + 1), 10);
+    const healthServer = createServer((req, res) => {
+      if (req.url === '/health' && req.method === 'GET') {
+        const connectionsCount = service.getActiveConnectionsCount();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          status: 'ok',
+          connections: connectionsCount,
+          maxConnections: config.maxConnections || 100,
+          timestamp: new Date().toISOString()
+        }));
+      } else {
+        res.writeHead(404);
+        res.end();
+      }
+    });
+
+    healthServer.listen(healthCheckPort, () => {
+      logger.info(LogCategory.AUDIO, '[Server] Health check server démarré', {
+        port: healthCheckPort
+      });
+    });
+
     // Configuration graceful shutdown
-    setupGracefulShutdown(service);
+    setupGracefulShutdown(service, healthServer);
 
     logger.info(LogCategory.AUDIO, '[Server] ✅ Serveur proxy démarré avec succès', {
       port: config.port,
-      path: config.path
+      path: config.path,
+      healthCheckPort
     });
   } catch (error) {
     const handled = ProxyErrorHandler.handleError(error, { operation: 'main' });
