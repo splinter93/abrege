@@ -11,7 +11,6 @@ import { logger, LogCategory } from '../../src/utils/logger';
 import { ProxyConnectionMetadata, XAIVoiceProxyConfig } from './types';
 import { ProxyErrorHandler, ProxyConnectionError } from './errorHandler';
 import type { ActiveConnection } from './connectionTypes';
-import { getRawDataLength } from './connectionTypes';
 import { ConnectionManager } from './connectionManager';
 import { handleClientMessage, handleXAIMessage } from './messageHandlers';
 import { handleClientClose, handleXAIClose, handleClientError, handleXAIError } from './eventHandlers';
@@ -158,12 +157,6 @@ export class XAIVoiceProxyService {
 
     // Gestion des messages client → XAI
     clientWs.on('message', (data: WebSocket.RawData) => {
-      const dataLength = getRawDataLength(data);
-      logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] 📨 Message reçu du client (avant handleClientMessage)', {
-        connectionId,
-        dataType: typeof data,
-        dataLength
-      });
       handleClientMessage(connectionId, data, {
         connectionManager: this.connectionManager,
         config: this.config
@@ -237,29 +230,20 @@ export class XAIVoiceProxyService {
             connectionId
           });
           
-      // Gestion des messages XAI → Client
-      xaiWs.on('message', (data: WebSocket.RawData) => {
-        handleXAIMessage(connectionId, data, {
-          connectionManager: this.connectionManager,
-          config: this.config
-        });
-      });
-
-      // Gestion de la fermeture XAI
-      xaiWs.on('close', (code: number) => {
-        handleXAIClose(connectionId, code, {
-          connectionManager: this.connectionManager,
-          closeConnection: this.closeConnection.bind(this)
-        });
-      });
-
-      // Gestion des erreurs XAI
-      xaiWs.on('error', (error: Error) => {
-        handleXAIError(connectionId, error, {
-          connectionManager: this.connectionManager,
-          closeConnection: this.closeConnection.bind(this)
-        });
-      });
+          // Envoyer les messages en queue une fois la connexion établie
+          const storedConnection = this.connectionManager.get(connectionId);
+          if (storedConnection && storedConnection.messageQueue.length > 0) {
+            logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] Envoi messages en queue', {
+              connectionId,
+              queueLength: storedConnection.messageQueue.length
+            });
+            for (const queuedMessage of storedConnection.messageQueue) {
+              if (xaiWs.readyState === WebSocket.OPEN) {
+                xaiWs.send(queuedMessage);
+              }
+            }
+            storedConnection.messageQueue = [];
+          }
           
           resolve();
         });
@@ -299,359 +283,13 @@ export class XAIVoiceProxyService {
     }
   }
 
-  /**
-   * Ferme une connexion proprement
-   */
-  private closeConnection(connectionId: string, code: number, reason: string): void {
-    const connection = this.connections.get(connectionId);
-    if (!connection) {
-      logger.warn(LogCategory.AUDIO, '[XAIVoiceProxyService] Message reçu mais connexion introuvable', {
-        connectionId
-      });
-      return;
-    }
-
-    connection.metadata.lastActivity = Date.now();
-    
-    const DEBUG_RAW = process.env.DEBUG_XAI_RAW === '1';
-    const dataStr = typeof data === 'string'
-      ? data
-      : data instanceof Buffer
-        ? data.toString('utf8')
-        : Buffer.from(data as any).toString('utf8');
-    const dataSize = data instanceof Buffer ? data.length : dataStr.length;
-    // Some clients use older/alternative event names or include unsupported session keys.
-    // We normalize a few known cases here so XAI consistently processes the stream.
-    let outboundStr = dataStr;
-    
-    try {
-      const parsed = JSON.parse(dataStr) as any;
-      // Normalize event type aggressively (trims + removes zero-width chars) so mappings always trigger.
-      const normalizedType = typeof parsed.type === 'string'
-        ? parsed.type.trim().replace(/[\u200B-\u200D\uFEFF]/g, '')
-        : parsed.type;
-      const messageType = typeof normalizedType === 'string' ? normalizedType : (normalizedType || 'unknown');
-
-      // ---- Normalization layer (prevents “ping-only” sessions due to ignored messages) ----
-      const mutations: string[] = [];
-      let outgoing: any = parsed;
-
-      // 1) `session.update` does NOT document a `modalities` field in `session`.
-      //    Some clients send it; strip it to avoid the server ignoring the update.
-      if (messageType === 'session.update' && outgoing?.session && Array.isArray(outgoing.session.modalities)) {
-        delete outgoing.session.modalities;
-        mutations.push('removed session.modalities');
-      }
-
-      // 2) Some clients send `conversation.item.commit`; server expects `input_audio_buffer.commit`.
-      //    Be extremely defensive: some clients include invisible chars or odd variants.
-      if (
-        messageType === 'conversation.item.commit' ||
-        (typeof messageType === 'string' && messageType.startsWith('conversation.item.commit')) ||
-        (typeof parsed.type === 'string' && parsed.type.includes('conversation.item.commit'))
-      ) {
-        outgoing = { ...outgoing, type: 'input_audio_buffer.commit' };
-        mutations.push('renamed conversation.item.commit -> input_audio_buffer.commit');
-      }
-
-      // 3) Normalize text message shapes (ensure `item.content` is an array with `input_text`).
-      if (messageType === 'conversation.item.create' && outgoing?.item) {
-        if (typeof outgoing.item.content === 'string') {
-          outgoing.item = {
-            ...outgoing.item,
-            content: [{ type: 'input_text', text: outgoing.item.content }]
-          };
-          mutations.push('normalized item.content string -> input_text[]');
-        } else if (Array.isArray(outgoing.item.content)) {
-          outgoing.item = {
-            ...outgoing.item,
-            content: outgoing.item.content.map((c: any) => {
-              if (c && typeof c === 'object' && !c.type && typeof c.text === 'string') {
-                return { ...c, type: 'input_text' };
-              }
-              return c;
-            })
-          };
-        }
-      }
-
-      // If we mutated the payload, use the normalized JSON as the outbound frame.
-      if (mutations.length) {
-        outboundStr = JSON.stringify(outgoing);
-      }
-      // -------------------------------------------------------------------------------
-
-      // Dump WAV pour audio (1er chunk seulement)
-      if (messageType === 'input_audio_buffer.append' && parsed.audio && typeof parsed.audio === 'string') {
-        connection.audioChunkCount = (connection.audioChunkCount || 0) + 1;
-        if (connection.audioChunkCount === 1) {
-          try {
-            // Décoder base64 -> Buffer
-            const audioBuffer = Buffer.from(parsed.audio, 'base64');
-
-            // Créer header WAV (PCM16 mono 24000 Hz)
-            const sampleRate = 24000;
-            const numChannels = 1;
-            const bitsPerSample = 16;
-            const dataSize = audioBuffer.length;
-            const fileSize = 36 + dataSize;
-
-            const wavHeader = Buffer.alloc(44);
-            // RIFF
-            wavHeader.write('RIFF', 0);
-            wavHeader.writeUInt32LE(fileSize, 4);
-            wavHeader.write('WAVE', 8);
-            // fmt chunk
-            wavHeader.write('fmt ', 12);
-            wavHeader.writeUInt32LE(16, 16); // fmt chunk size
-            wavHeader.writeUInt16LE(1, 20); // audio format (PCM)
-            wavHeader.writeUInt16LE(numChannels, 22);
-            wavHeader.writeUInt32LE(sampleRate, 24);
-            wavHeader.writeUInt32LE(sampleRate * numChannels * bitsPerSample / 8, 28); // byte rate
-            wavHeader.writeUInt16LE(numChannels * bitsPerSample / 8, 32); // block align
-            wavHeader.writeUInt16LE(bitsPerSample, 34);
-            // data chunk
-            wavHeader.write('data', 36);
-            wavHeader.writeUInt32LE(dataSize, 40);
-
-            // Concat header + data
-            const wavBuffer = Buffer.concat([wavHeader, audioBuffer]);
-
-            // Écrire fichier dans /tmp
-            const timestamp = Date.now();
-            const filename = `xai-debug-${timestamp}.wav`;
-            const filepath = path.join(os.tmpdir(), filename);
-
-            fs.writeFileSync(filepath, wavBuffer);
-            logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] 💾 WAV dump créé', {
-              connectionId,
-              filepath,
-              audioSize: audioBuffer.length,
-              wavSize: wavBuffer.length
-            });
-          } catch (error) {
-            logger.error(LogCategory.AUDIO, '[XAIVoiceProxyService] Erreur création WAV dump', undefined, error instanceof Error ? error : new Error(String(error)));
-          }
-        }
-      }
-
-      // Log systématique: type + taille + keys principales
-      const logData: Record<string, unknown> = {
-        connectionId,
-        type: messageType,
-        size: dataSize,
-        xaiReady: connection.xaiWs?.readyState === WebSocket.OPEN
-      };
-
-      if (mutations.length) {
-        logData.proxyMutations = mutations;
-      }
-
-      // Keys principales selon le type
-      if (parsed.session) {
-        logData.sessionKeys = Object.keys(parsed.session);
-        logData.hasModalities = !!parsed.session.modalities;
-        logData.modalities = parsed.session.modalities;
-      }
-      if (parsed.audio) {
-        logData.audioLength = parsed.audio.length;
-        logData.hasAudio = true;
-      }
-      if (parsed.item) {
-        logData.itemKeys = Object.keys(parsed.item);
-        logData.itemType = parsed.item.type;
-      }
-      if (parsed.response) {
-        logData.responseKeys = Object.keys(parsed.response);
-        logData.responseModalities = parsed.response.modalities;
-      }
-
-      // Log JSON complet si DEBUG_RAW (sans audio base64 pour éviter spam)
-      if (DEBUG_RAW) {
-        const loggableParsed = { ...parsed };
-        if (loggableParsed.audio && typeof loggableParsed.audio === 'string') {
-          loggableParsed.audio = `[BASE64_${loggableParsed.audio.length}_chars]`;
-        }
-        logData.rawJSON = JSON.stringify(loggableParsed, null, 2).substring(0, 2000);
-      }
-
-      // Helpful when debugging mappings: show what we actually sent.
-      if (mutations.length) {
-        try {
-          const effective = JSON.parse(outboundStr as any);
-          logData.effectiveType = effective?.type;
-        } catch {
-          // ignore
-        }
-      }
-
-      logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] 📤 Message client → XAI', logData);
-
-    } catch {
-      logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] Message client → XAI (non-JSON)', {
-        connectionId,
-        size: dataSize,
-        xaiReady: connection.xaiWs?.readyState === WebSocket.OPEN
-      });
-    }
-
-    // Final ultra-defensive fixups (works even if JSON parsing / normalization above failed)
-    // Some clients still emit `conversation.item.commit` on teardown/end-of-turn; XAI expects `input_audio_buffer.commit`.
-    if (typeof outboundStr === 'string' && outboundStr.includes('conversation.item.commit')) {
-      outboundStr = outboundStr.replace(/conversation\.item\.commit/g, 'input_audio_buffer.commit');
-    }
-    // IMPORTANT: XAI attend des frames TEXT (JSON). Envoyer un Buffer = frame binaire, souvent ignorée.
-    if (connection.xaiWs && connection.xaiWs.readyState === WebSocket.OPEN) {
-      connection.xaiWs.send(outboundStr);
-    } else {
-      // Sinon, mettre en queue pour envoi une fois la connexion établie
-      logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] Message mis en queue (XAI non prêt)', {
-        connectionId,
-        queueLength: connection.messageQueue.length,
-        xaiState: connection.xaiWs?.readyState
-      });
-      connection.messageQueue.push(outboundStr);
-    }
-  }
-
-  /**
-   * Gère un message de XAI vers le client
-   */
-  private handleXAIMessage(connectionId: string, data: WebSocket.RawData): void {
-    const connection = this.connections.get(connectionId);
-    if (!connection) {
-      return;
-    }
-
-    if (connection.clientWs.readyState === WebSocket.OPEN) {
-      connection.metadata.lastActivity = Date.now();
-      
-      const DEBUG_RAW = process.env.DEBUG_XAI_RAW === '1';
-      const dataStr = typeof data === 'string'
-        ? data
-        : data instanceof Buffer
-          ? data.toString('utf8')
-          : Buffer.from(data as any).toString('utf8');
-      const dataSize = data instanceof Buffer ? data.length : dataStr.length;
-      
-      try {
-        const parsed = JSON.parse(dataStr);
-        const messageType = parsed.type || 'unknown';
-        
-        // Log systématique: type + taille + keys principales
-        const logData: Record<string, unknown> = {
-          connectionId,
-          type: messageType,
-          size: dataSize
-        };
-        
-        // Keys principales selon le type
-        if (parsed.error) {
-          logData.error = parsed.error;
-          logData.errorType = parsed.error.type;
-          logData.errorMessage = parsed.error.message;
-          logData.errorCode = parsed.error.code;
-        }
-        if (parsed.delta) {
-          logData.hasDelta = true;
-          logData.deltaLength = parsed.delta.length;
-          logData.deltaType = typeof parsed.delta;
-        }
-        if (parsed.session) {
-          logData.sessionKeys = Object.keys(parsed.session);
-        }
-        if (parsed.conversation) {
-          logData.conversationKeys = Object.keys(parsed.conversation);
-        }
-        
-        // Log JSON complet si DEBUG_RAW (sans delta pour éviter spam)
-        if (DEBUG_RAW) {
-          const loggableParsed = { ...parsed };
-          if (loggableParsed.delta && typeof loggableParsed.delta === 'string') {
-            loggableParsed.delta = `[DELTA_${loggableParsed.delta.length}_chars]`;
-          }
-          logData.rawJSON = JSON.stringify(loggableParsed, null, 2).substring(0, 2000);
-        }
-        
-        if (messageType === 'error') {
-          logger.error(LogCategory.AUDIO, '[XAIVoiceProxyService] ❌ Message XAI → client (ERROR)', logData);
-        } else {
-          logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] 📥 Message XAI → client', logData);
-        }
-      } catch {
-        logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] Message XAI → client (non-JSON)', {
-          connectionId,
-          size: dataSize
-        });
-      }
-      
-      connection.clientWs.send(dataStr);
-    }
-  }
-
-  /**
-   * Gère la fermeture du client
-   */
-  private handleClientClose(connectionId: string): void {
-    logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] Client fermé', {
-      connectionId
-    });
-    this.closeConnection(connectionId, 1000, 'Client closed');
-  }
-
-  /**
-   * Gère la fermeture de XAI
-   */
-  private handleXAIClose(connectionId: string, code?: number): void {
-    logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] Connexion XAI fermée', {
-      connectionId,
-      code
-    });
-    this.closeConnection(connectionId, code || 1000, 'XAI connection closed');
-  }
-
-  /**
-   * Gère une erreur client
-   */
-  private handleClientError(connectionId: string, error: Error): void {
-    const handled = ProxyErrorHandler.handleError(error, {
-      connectionId,
-      operation: 'clientError'
-    });
-    logger.error(LogCategory.AUDIO, '[XAIVoiceProxyService] Erreur client', {
-      connectionId,
-      message: handled.message
-    }, error);
-    
-    if (handled.shouldClose) {
-      this.closeConnection(connectionId, 1011, handled.message);
-    }
-  }
-
-  /**
-   * Gère une erreur XAI
-   */
-  private handleXAIError(connectionId: string, error: Error): void {
-    const handled = ProxyErrorHandler.handleError(error, {
-      connectionId,
-      operation: 'xaiError'
-    });
-    logger.error(LogCategory.AUDIO, '[XAIVoiceProxyService] Erreur XAI', {
-      connectionId,
-      message: handled.message
-    }, error);
-    
-    if (handled.shouldClose) {
-      this.closeConnection(connectionId, 1011, handled.message);
-    }
-  }
 
   /**
    * Ferme une connexion proprement
    */
   private closeConnection(connectionId: string, code: number, reason: string): void {
     try {
-      const connection = this.connections.get(connectionId);
+      const connection = this.connectionManager.get(connectionId);
       if (!connection) {
         return;
       }
@@ -692,7 +330,7 @@ export class XAIVoiceProxyService {
       }
 
       // Retirer de la Map
-      this.connections.delete(connectionId);
+      this.connectionManager.delete(connectionId);
       connection.metadata.state = 'disconnected';
       
       logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] Connexion fermée', {
