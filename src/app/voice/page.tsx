@@ -1,6 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { XAIVoiceChat } from '@/components/voice/XAIVoiceChat';
+import { VoiceConfigPanel } from '@/components/voice/VoiceConfigPanel';
+import type { XAIVoiceTool } from '@/services/xai/types';
 
 /**
  * Page de test pour XAI Voice
@@ -8,6 +11,16 @@ import { XAIVoiceChat } from '@/components/voice/XAIVoiceChat';
  * URL: /voice
  */
 export default function VoicePage() {
+  const [config, setConfig] = useState<{
+    instructions: string;
+    tools: XAIVoiceTool[];
+    tool_choice: 'auto' | 'none' | 'required';
+  }>({
+    instructions: 'You are a helpful AI assistant. Respond naturally and concisely.',
+    tools: [],
+    tool_choice: 'auto'
+  });
+
   return (
     <div style={{ 
       minHeight: '100vh', 
@@ -30,11 +43,14 @@ export default function VoicePage() {
           lineHeight: 1.6
         }}>
           Testez la fonctionnalité de conversation vocale avec XAI Grok Voice Agent API.
-          Cliquez sur le bouton pour commencer à parler.
+          Configurez les instructions et tools ci-dessous, puis cliquez sur le bouton pour commencer à parler.
         </p>
+        <VoiceConfigPanel onConfigChange={setConfig} />
         <XAIVoiceChat 
           voice="Ara"
-          instructions="You are a helpful AI assistant. Respond naturally and concisely."
+          instructions={config.instructions}
+          tools={config.tools}
+          tool_choice={config.tool_choice}
         />
       </div>
     </div>

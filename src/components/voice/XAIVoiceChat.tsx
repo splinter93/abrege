@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Mic, Square, Volume2, Loader, X } from 'lucide-react';
 import { xaiVoiceService, XAIVoiceSessionConfig } from '@/services/xai/xaiVoiceService';
+import type { XAIVoiceTool } from '@/services/xai/types';
 import { logger, LogCategory } from '@/utils/logger';
 import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 import { useAudioQueue } from '@/hooks/voice/useAudioQueue';
@@ -15,6 +16,8 @@ import './XAIVoiceChat.css';
 interface XAIVoiceChatProps {
   voice?: 'Ara' | 'Rex' | 'Sal' | 'Eve' | 'Leo';
   instructions?: string;
+  tools?: XAIVoiceTool[];
+  tool_choice?: 'auto' | 'none' | 'required';
   onError?: (error: string) => void;
 }
 
@@ -37,6 +40,8 @@ interface XAIVoiceState {
 export function XAIVoiceChat({
   voice = 'Ara',
   instructions = 'You are a helpful AI assistant. Respond naturally and concisely.',
+  tools,
+  tool_choice,
   onError
 }: XAIVoiceChatProps) {
   // Hooks extraits
@@ -137,7 +142,9 @@ export function XAIVoiceChat({
             input_audio_format: 'audio/pcm',
             output_audio_format: 'audio/pcm',
             sample_rate: 24000,
-            modalities: ['text', 'audio']
+            modalities: ['text', 'audio'],
+            tools,
+            tool_choice
           };
           xaiVoiceService.configureSession(sessionConfig);
         },
@@ -174,7 +181,7 @@ export function XAIVoiceChat({
       setState(prev => ({ ...prev, error: errorMsg, isConnected: false }));
       onError?.(errorMsg);
     }
-  }, [loadToken, instructions, voice, onError, addAudioChunk, updateAssistantMessage, addUserMessage]);
+  }, [loadToken, instructions, voice, tools, tool_choice, onError, addAudioChunk, updateAssistantMessage, addUserMessage]);
 
   /**
    * Démarrer l'enregistrement

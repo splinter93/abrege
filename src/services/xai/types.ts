@@ -32,6 +32,42 @@ export type XAIVoiceMessageType =
   | 'ping';
 
 /**
+ * Type de tool prédéfini XAI Voice
+ */
+export type XAIVoicePredefinedToolType = 'file_search' | 'web_search' | 'x_search';
+
+/**
+ * Tool prédéfini XAI Voice (file_search, web_search, x_search)
+ */
+export interface XAIVoicePredefinedTool {
+  type: XAIVoicePredefinedToolType;
+}
+
+/**
+ * Tool function XAI Voice (format aplati)
+ */
+export interface XAIVoiceFunctionTool {
+  type: 'function';
+  name: string;
+  description: string;
+  parameters: {
+    type: 'object';
+    properties: Record<string, {
+      type: string;
+      description?: string;
+      enum?: string[];
+      [key: string]: unknown;
+    }>;
+    required?: string[];
+  };
+}
+
+/**
+ * Union type pour tous les tools XAI Voice
+ */
+export type XAIVoiceTool = XAIVoicePredefinedTool | XAIVoiceFunctionTool;
+
+/**
  * Configuration de session XAI Voice
  */
 export interface XAIVoiceSessionConfig {
@@ -66,7 +102,7 @@ export interface XAIVoiceSessionConfig {
   temperature?: number;
   max_response_output_tokens?: number;
   modalities?: Array<'text' | 'audio'>;
-  tools?: Array<unknown>;
+  tools?: XAIVoiceTool[];
   tool_choice?: 'auto' | 'none' | 'required';
   tool_result?: unknown;
 }

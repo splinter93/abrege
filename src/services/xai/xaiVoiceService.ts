@@ -16,7 +16,10 @@ import type {
   XAIVoiceSessionConfig,
   XAIVoiceMessage,
   XAIVoiceCallbacks,
-  XAIVoiceConnectionState
+  XAIVoiceConnectionState,
+  XAIVoiceTool,
+  XAIVoicePredefinedTool,
+  XAIVoiceFunctionTool
 } from './types';
 export type {
   XAIVoiceMessageType,
@@ -247,8 +250,25 @@ export class XAIVoiceService {
     if (config.temperature !== undefined) {
       sessionConfig['temperature'] = config.temperature;
     }
-    if (config.tools) {
-      sessionConfig['tools'] = config.tools;
+    if (config.tools && config.tools.length > 0) {
+      // Convertir XAIVoiceTool[] au format XAI API
+      const formattedTools = config.tools.map(tool => {
+        if (tool.type === 'file_search' || tool.type === 'web_search' || tool.type === 'x_search') {
+          // Tools prédéfinis : format { type: 'file_search' } (ou string selon doc XAI)
+          return { type: tool.type };
+        } else if (tool.type === 'function') {
+          // Tools functions : format aplati (déjà au bon format)
+          const functionTool = tool as XAIVoiceFunctionTool;
+          return {
+            type: 'function',
+            name: functionTool.name,
+            description: functionTool.description,
+            parameters: functionTool.parameters
+          };
+        }
+        return tool;
+      });
+      sessionConfig['tools'] = formattedTools;
     }
     if (config.tool_choice) {
       sessionConfig['tool_choice'] = config.tool_choice;
