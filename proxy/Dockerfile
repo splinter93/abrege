@@ -38,4 +38,4 @@ EXPOSE 3001
 ENV NODE_ENV=production
 
 # Commande de démarrage
-CMD ["tsx", "src/server.ts"]
+CMD ["npm", "start"]
