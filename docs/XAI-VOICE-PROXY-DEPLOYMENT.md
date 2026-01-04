@@ -47,7 +47,7 @@
 
 4. **Mettre à jour le client** (`.env.local` ou `.env.production`)
    ```
-   NEXT_PUBLIC_XAI_VOICE_PROXY_URL=wss://votre-proxy.railway.app/ws/xai-voice
+   NEXT_PUBLIC_XAI_VOICE_PROXY_URL=wss://scrivia-proxy.up.railway.app/ws/xai-voice
    ```
 
 5. **Déployer :**
@@ -160,7 +160,7 @@ const port = parseInt(process.env.PORT || process.env.XAI_VOICE_PROXY_PORT || '3
 Dans `.env.production` ou via les variables d'environnement de votre plateforme Next.js :
 
 ```
-NEXT_PUBLIC_XAI_VOICE_PROXY_URL=wss://votre-proxy.railway.app/ws/xai-voice
+NEXT_PUBLIC_XAI_VOICE_PROXY_URL=wss://scrivia-proxy.up.railway.app/ws/xai-voice
 ```
 
 ---
