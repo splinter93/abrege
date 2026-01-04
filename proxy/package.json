@@ -1,0 +1,25 @@
+{
+  "name": "xai-voice-proxy",
+  "version": "1.0.0",
+  "description": "WebSocket proxy for XAI Voice API",
+  "main": "src/server.ts",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "dev": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.9",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
+
