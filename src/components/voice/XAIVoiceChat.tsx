@@ -45,7 +45,7 @@ export function XAIVoiceChat({
     error: null
   });
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaRecorderRef = useRef<{ stream: MediaStream; processor: ScriptProcessorNode } | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioQueueRef = useRef<string[]>([]);
@@ -102,7 +102,7 @@ export function XAIVoiceChat({
       return data.client_secret;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Erreur lors de la génération du token';
-      logger.error('[XAIVoiceChat] Erreur chargement token', error);
+      logger.error(LogCategory.AUDIO, '[XAIVoiceChat] Erreur chargement token', undefined, error instanceof Error ? error : new Error(String(error)));
       setState(prev => ({ ...prev, error: errorMsg }));
       onError?.(errorMsg);
       throw error;
@@ -122,7 +122,7 @@ export function XAIVoiceChat({
       
       await xaiVoiceService.connect(token, {
         onConnected: () => {
-          logger.info('[XAIVoiceChat] ✅ Connecté');
+          logger.info(LogCategory.AUDIO, '[XAIVoiceChat] ✅ Connecté');
           setState(prev => ({ ...prev, isConnected: true, error: null }));
 
           // Configurer la session
@@ -137,7 +137,7 @@ export function XAIVoiceChat({
           xaiVoiceService.configureSession(sessionConfig);
         },
         onDisconnected: () => {
-          logger.info('[XAIVoiceChat] Déconnecté');
+          logger.info(LogCategory.AUDIO, '[XAIVoiceChat] Déconnecté');
           setState(prev => ({ ...prev, isConnected: false }));
         },
         onAudioDelta: (audioBase64: string) => {
@@ -146,7 +146,7 @@ export function XAIVoiceChat({
           playAudioQueue();
         },
         onAudioDone: () => {
-          logger.info('[XAIVoiceChat] Audio reçu terminé');
+          logger.info(LogCategory.AUDIO, '[XAIVoiceChat] Audio reçu terminé');
           setState(prev => ({ ...prev, isProcessing: false }));
         },
         onTranscriptDelta: (text: string) => {
@@ -156,7 +156,7 @@ export function XAIVoiceChat({
           }));
         },
         onTranscriptDone: (text: string) => {
-          logger.info('[XAIVoiceChat] Transcription terminée', { text });
+          logger.info(LogCategory.AUDIO, '[XAIVoiceChat] Transcription terminée', { text });
           setState(prev => ({
             ...prev,
             transcript: text,
@@ -165,7 +165,7 @@ export function XAIVoiceChat({
         },
         onError: (error) => {
           const errorMsg = error instanceof Error ? error.message : String(error);
-          logger.error('[XAIVoiceChat] Erreur', { error });
+          logger.error(LogCategory.AUDIO, '[XAIVoiceChat] Erreur', { error }, error instanceof Error ? error : undefined);
           setState(prev => ({ ...prev, error: errorMsg, isProcessing: false }));
           onError?.(errorMsg);
         }
@@ -218,7 +218,7 @@ export function XAIVoiceChat({
         await new Promise(resolve => setTimeout(resolve, 50));
       }
     } catch (error) {
-      logger.error('[XAIVoiceChat] Erreur lecture audio', error);
+      logger.error(LogCategory.AUDIO, '[XAIVoiceChat] Erreur lecture audio', undefined, error instanceof Error ? error : new Error(String(error)));
     } finally {
       isPlayingRef.current = false;
     }
@@ -308,7 +308,7 @@ export function XAIVoiceChat({
         try {
           xaiVoiceService.sendAudio(base64);
         } catch (error) {
-          logger.error('[XAIVoiceChat] Erreur envoi audio', error);
+          logger.error(LogCategory.AUDIO, '[XAIVoiceChat] Erreur envoi audio', undefined, error instanceof Error ? error : new Error(String(error)));
         }
       };
 
@@ -324,14 +324,14 @@ export function XAIVoiceChat({
       }));
 
       // Stocker les références pour cleanup
-      (mediaRecorderRef as unknown as { current: { stream: MediaStream; processor: ScriptProcessorNode } }).current = {
+      mediaRecorderRef.current = {
         stream,
         processor
-      } as unknown as MediaRecorder;
+      };
 
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Erreur d\'accès au microphone';
-      logger.error('[XAIVoiceChat] Erreur démarrage enregistrement', error);
+      logger.error(LogCategory.AUDIO, '[XAIVoiceChat] Erreur démarrage enregistrement', undefined, error instanceof Error ? error : new Error(String(error)));
       setState(prev => ({ ...prev, error: errorMsg }));
       onError?.(errorMsg);
     }
@@ -347,16 +347,15 @@ export function XAIVoiceChat({
     try {
       xaiVoiceService.commitAudio();
     } catch (error) {
-      logger.error('[XAIVoiceChat] Erreur finalisation audio', error);
+      logger.error(LogCategory.AUDIO, '[XAIVoiceChat] Erreur finalisation audio', undefined, error instanceof Error ? error : new Error(String(error)));
     }
 
     // Cleanup
-    const recorderRef = mediaRecorderRef.current as unknown as { stream?: MediaStream; processor?: ScriptProcessorNode };
-    if (recorderRef?.stream) {
-      recorderRef.stream.getTracks().forEach(track => track.stop());
+    if (mediaRecorderRef.current?.stream) {
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
     }
-    if (recorderRef?.processor) {
-      recorderRef.processor.disconnect();
+    if (mediaRecorderRef.current?.processor) {
+      mediaRecorderRef.current.processor.disconnect();
     }
     if (audioContextRef.current) {
       audioContextRef.current.close();
@@ -383,11 +382,11 @@ export function XAIVoiceChat({
   useEffect(() => {
     return () => {
       xaiVoiceService.disconnect();
-      if (mediaRecorderRef.current) {
-        const recorderRef = mediaRecorderRef.current as unknown as { stream?: MediaStream; processor?: ScriptProcessorNode };
-        if (recorderRef?.stream) {
-          recorderRef.stream.getTracks().forEach(track => track.stop());
-        }
+      if (mediaRecorderRef.current?.stream) {
+        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      }
+      if (mediaRecorderRef.current?.processor) {
+        mediaRecorderRef.current.processor.disconnect();
       }
       if (audioContextRef.current) {
         audioContextRef.current.close();
