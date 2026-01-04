@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import type { MenuPosition } from '../types';
+import { extractSelectionMarkdown } from '@/utils/canvasSelectionUtils';
 
 interface UseMenuVisibilityParams {
   editor: Editor | null;
@@ -76,12 +77,14 @@ export function useMenuVisibility({
       
       updatePosition();
       
-      // Extraire le texte sélectionné
+      // ✅ Extraire le texte sélectionné avec sauts de ligne préservés
       const { state } = editor;
       const { selection } = state;
       if (!selection.empty) {
-        const text = state.doc.textBetween(selection.from, selection.to);
+        const text = extractSelectionMarkdown(editor, selection.from, selection.to);
         setSelectedText(text);
+      } else {
+        setSelectedText('');
       }
     };
 

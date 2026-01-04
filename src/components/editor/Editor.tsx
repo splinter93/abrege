@@ -141,15 +141,9 @@ const Editor: React.FC<EditorProps> = ({
     onReady
   });
 
-  // ✅ DÉSACTIVÉ : Détection automatique des sélections (remplacée par bouton "Add to chat")
-  // L'ajout au chat se fait maintenant explicitement via le bouton dans le menu flottant
-  // useCanvasSelection({
-  //   editor,
-  //   noteId,
-  //   noteSlug: note?.slug,
-  //   noteTitle: note?.source_title,
-  //   enabled: false // Désactivé : utilisation explicite via bouton
-  // });
+  // ✅ NOTE : Détection automatique des sélections désactivée
+  // L'ajout au chat se fait explicitement via le bouton "Add to chat" dans le menu flottant (FloatingMenuNotion)
+  // Ce hook (useCanvasSelection) est disponible mais non utilisé pour éviter les sélections automatiques non désirées
 
   // ✅ DÉSACTIVÉ EditorSyncManager : Chargement manuel du contenu initial
   const hasLoadedInitialContentRef = React.useRef(false);

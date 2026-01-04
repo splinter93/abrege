@@ -24,6 +24,8 @@ import { useChatPrompts } from '@/hooks/useChatPrompts';
 import { useChatState } from '@/hooks/useChatState';
 import { useChatActions } from '@/hooks/useChatActions';
 import { useGlobalChatShortcuts } from '@/hooks/useGlobalChatShortcuts';
+import { isValidCanvasSelection } from '@/utils/canvasSelectionUtils';
+import { logger, LogCategory } from '@/utils/logger';
 import ChatInputContent from './ChatInputContent';
 import ChatInputToolbar from './ChatInputToolbar';
 import SlashMenu from './SlashMenu';
@@ -348,29 +350,53 @@ const ChatInput: React.FC<ChatInputProps> = ({
   // ✅ Écouter les sélections du canvas
   useEffect(() => {
     const handleCanvasSelection = (event: Event) => {
-      const customEvent = event as CustomEvent<import('@/types/canvasSelection').CanvasSelection>;
-      const selection = customEvent.detail;
-      
-      // ✅ FIX: Ignorer les sélections trop courtes (minimum 3 caractères)
-      if (!selection.text || selection.text.trim().length < 3) {
-        return;
+      try {
+        // ✅ Type guard pour valider que c'est un CustomEvent avec detail
+        if (!(event instanceof CustomEvent)) {
+          logger.warn(LogCategory.EDITOR, '[ChatInput] Événement canvas-selection invalide (pas un CustomEvent)', {
+            eventType: event.type
+          });
+          return;
+        }
+
+        const customEvent = event as CustomEvent<import('@/types/canvasSelection').CanvasSelection>;
+        
+        // ✅ Validation que detail existe et contient les propriétés attendues
+        if (!customEvent.detail || typeof customEvent.detail !== 'object') {
+          logger.warn(LogCategory.EDITOR, '[ChatInput] Événement canvas-selection invalide (detail manquant)', {
+            hasDetail: !!customEvent.detail
+          });
+          return;
+        }
+
+        const selection = customEvent.detail;
+        
+        // ✅ Validation stricte avec fonction centralisée
+        if (!selection.text || !isValidCanvasSelection(selection.text)) {
+          return;
+        }
+        
+        // Ajouter la sélection au state (éviter les doublons)
+        setCanvasSelections(prev => {
+          // Vérifier si une sélection identique existe déjà (même texte et même note)
+          const exists = prev.some(s => 
+            s.text.trim() === selection.text.trim() && 
+            s.noteId === selection.noteId
+          );
+          if (exists) return prev;
+          
+          // ✅ Remplacer la dernière sélection de la même note si elle existe
+          // (une seule sélection active par note à la fois)
+          const filtered = prev.filter(s => s.noteId !== selection.noteId);
+          
+          return [...filtered, selection];
+        });
+      } catch (error) {
+        logger.error(LogCategory.EDITOR, '[ChatInput] ❌ Erreur lors du traitement de canvas-selection', {
+          error: error instanceof Error ? error.message : String(error),
+          eventType: event.type
+        });
       }
-      
-      // Ajouter la sélection au state (éviter les doublons)
-      setCanvasSelections(prev => {
-        // Vérifier si une sélection identique existe déjà (même texte et même note)
-        const exists = prev.some(s => 
-          s.text.trim() === selection.text.trim() && 
-          s.noteId === selection.noteId
-        );
-        if (exists) return prev;
-        
-        // ✅ Remplacer la dernière sélection de la même note si elle existe
-        // (une seule sélection active par note à la fois)
-        const filtered = prev.filter(s => s.noteId !== selection.noteId);
-        
-        return [...filtered, selection];
-      });
     };
 
     document.addEventListener('canvas-selection', handleCanvasSelection as EventListener);

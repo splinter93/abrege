@@ -8,6 +8,7 @@ import { useEffect, useRef } from 'react';
 import type { Editor } from '@tiptap/react';
 import { logger, LogCategory } from '@/utils/logger';
 import type { CanvasSelection } from '@/types/canvasSelection';
+import { isValidCanvasSelection, extractSelectionMarkdown } from '@/utils/canvasSelectionUtils';
 
 interface UseCanvasSelectionOptions {
   /** Éditeur TipTap du canvas */
@@ -62,11 +63,11 @@ export function useCanvasSelection({
         return;
       }
 
-      // Récupérer le texte sélectionné
-      const selectedText = editor.state.doc.textBetween(from, to, ' ').trim();
+      // ✅ Récupérer le texte sélectionné avec sauts de ligne préservés
+      const selectedText = extractSelectionMarkdown(editor, from, to);
       
       // Ignorer si sélection vide ou trop courte (minimum 3 caractères)
-      if (!selectedText || selectedText.length < 3) {
+      if (!isValidCanvasSelection(selectedText)) {
         return;
       }
 
@@ -82,11 +83,11 @@ export function useCanvasSelection({
       debounceTimeoutRef.current = setTimeout(() => {
         // Vérifier que la sélection n'a pas changé pendant le debounce
         const currentSelection = editor.state.selection;
-        const currentText = editor.state.doc.textBetween(
+        const currentText = extractSelectionMarkdown(
+          editor,
           currentSelection.from,
-          currentSelection.to,
-          ' '
-        ).trim();
+          currentSelection.to
+        );
 
         // Ignorer si la sélection a changé ou est identique à la dernière émise
         if (currentText !== lastSelectionRef.current || currentText === lastEmittedSelectionRef.current) {
@@ -94,7 +95,7 @@ export function useCanvasSelection({
         }
 
         // Ignorer si sélection trop courte
-        if (currentText.length < 3) {
+        if (!isValidCanvasSelection(currentText)) {
           return;
         }
 
