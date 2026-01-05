@@ -7,6 +7,7 @@ import { handleGroqGptOss120b } from '@/services/llm/groqGptOss120b';
 import { logger, LogCategory } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
 import { dynamicChatRateLimiter } from '@/services/dynamicRateLimiter';
+import { llmCacheService } from '@/services/cache/LLMCacheService';
 import type { ChatMessage } from '@/types/chat';
 import type { AgentConfig } from '@/services/llm/types/agentTypes';
 import { llmRequestSchema } from './validation';
@@ -321,6 +322,54 @@ export async function POST(request: NextRequest) {
 
     const normalizedMessage = message ?? '';
 
+    // ✅ Cache LLM : Vérifier si la requête est en cache
+    // Note: On ne cache que les requêtes simples sans tool calls pour éviter la complexité
+    const shouldCache = sanitizedHistory.length < 10; // Cache seulement pour conversations courtes
+    
+    let cachedResponse = null;
+    if (shouldCache) {
+      const llmRequest = {
+        messages: [
+          ...sanitizedHistory.map(msg => ({
+            role: msg.role,
+            content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+          })),
+          {
+            role: 'user',
+            content: normalizedMessage
+          }
+        ],
+        model: finalAgentConfig.model,
+        temperature: finalAgentConfig.temperature,
+        maxTokens: finalAgentConfig.max_tokens
+      };
+
+      cachedResponse = await llmCacheService.get(llmRequest);
+      if (cachedResponse) {
+        logger.info(LogCategory.API, '[LLM Route] ✅ Cache hit', {
+          model: finalAgentConfig.model,
+          sessionId
+        });
+        
+        // Retourner la réponse en cache dans le format attendu
+        return NextResponse.json({
+          success: true,
+          content: cachedResponse.content,
+          model: cachedResponse.model,
+          finishReason: cachedResponse.finishReason,
+          usage: cachedResponse.usage,
+          tool_calls: [],
+          tool_results: [],
+          thinking: [],
+          progress: [],
+          is_relance: true,
+          sessionId,
+          status: 200
+        });
+      }
+    }
+
+    // Cache miss : Appeler le LLM
     const result = await handleGroqGptOss120b({
       message: normalizedMessage,
       appContext: {
@@ -334,6 +383,43 @@ export async function POST(request: NextRequest) {
       userToken: userToken!,
       sessionId
     });
+
+    // ✅ Cache LLM : Mettre en cache la réponse après réception (si pas de tool calls)
+    if (shouldCache) {
+      try {
+        const responseClone = result.clone();
+        const responseData = await responseClone.json();
+        if (responseData.success && responseData.content && (!responseData.tool_calls || responseData.tool_calls.length === 0)) {
+          const llmRequest = {
+            messages: [
+              ...sanitizedHistory.map(msg => ({
+                role: msg.role,
+                content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
+              })),
+              {
+                role: 'user',
+                content: normalizedMessage
+              }
+            ],
+            model: finalAgentConfig.model,
+            temperature: finalAgentConfig.temperature,
+            maxTokens: finalAgentConfig.max_tokens
+          };
+          
+          await llmCacheService.set(llmRequest, {
+            content: responseData.content,
+            model: responseData.model || finalAgentConfig.model,
+            finishReason: responseData.finishReason,
+            usage: responseData.usage
+          });
+        }
+      } catch (cacheError) {
+        // Ne pas bloquer si le cache échoue
+        logger.warn(LogCategory.API, '[LLM Route] ⚠️ Erreur mise en cache', {
+          error: cacheError instanceof Error ? cacheError.message : 'Unknown error'
+        });
+      }
+    }
     
     return result;
 

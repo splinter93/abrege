@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { logApi } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
+import { noteEmbedCacheService } from '@/services/cache/NoteEmbedCacheService';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -22,12 +23,15 @@ export async function GET(
     ref
   };
 
-  logApi.info('🚀 Début récupération note v2', context);
+  logger.info(LogCategory.API, '🚀 Début récupération note v2', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
+    logger.info(LogCategory.API, `❌ Authentification échouée`, {
+      ...context,
+      error: authResult.error
+    });
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -54,6 +58,39 @@ export async function GET(
     const noteId = resolveResult.id;
   const userToken = extractTokenFromRequest(request);
     const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
+
+    // ✅ Cache Note Embed : Vérifier le cache si mode 'content' ou 'all'
+    if (fields === 'content' || fields === 'all') {
+      const cachedEmbed = await noteEmbedCacheService.get(noteId);
+      if (cachedEmbed) {
+        // Vérifier que la note n'a pas été modifiée depuis le cache
+        const { data: currentNote } = await supabase
+          .from('articles')
+          .select('updated_at, html_content')
+          .eq('id', noteId)
+          .single();
+        
+        if (currentNote && cachedEmbed.updatedAt === currentNote.updated_at) {
+          logger.info(LogCategory.API, '[Note GET] ✅ Cache hit', {
+            noteId: noteId.substring(0, 8) + '...',
+            fields
+          });
+          
+          return NextResponse.json({
+            success: true,
+            note: {
+              id: cachedEmbed.noteId,
+              title: cachedEmbed.title,
+              html_content: cachedEmbed.htmlContent,
+              markdown_content: cachedEmbed.markdownContent,
+              updated_at: cachedEmbed.updatedAt
+            },
+            mode: fields,
+            cached: true
+          });
+        }
+      }
+    }
 
     // Construire la requête selon le paramètre fields
     let selectFields: string;
@@ -87,7 +124,10 @@ export async function GET(
       .single();
 
     if (fetchError || !note) {
-      logApi.info(`❌ Erreur récupération note: ${fetchError?.message || 'Note non trouvée'}`, context);
+      logger.info(LogCategory.API, `❌ Erreur récupération note`, {
+        ...context,
+        error: fetchError?.message || 'Note non trouvée'
+      });
       return NextResponse.json(
         { error: 'Note non trouvée' },
         { status: 404, headers: { "Content-Type": "application/json" } }
@@ -141,8 +181,31 @@ export async function GET(
         break;
     }
 
+    // ✅ Cache Note Embed : Mettre en cache si mode 'content' ou 'all' avec html_content
+    if ((fields === 'content' || fields === 'all') && noteData.html_content) {
+      try {
+        await noteEmbedCacheService.set(noteId, {
+          noteId,
+          htmlContent: noteData.html_content as string,
+          markdownContent: noteData.markdown_content as string || '',
+          title: noteData.source_title as string || '',
+          updatedAt: noteData.updated_at as string || new Date().toISOString()
+        });
+      } catch (cacheError) {
+        // Ne pas bloquer si le cache échoue
+        logger.warn(LogCategory.API, '[Note GET] ⚠️ Erreur mise en cache', {
+          noteId: noteId.substring(0, 8) + '...',
+          error: cacheError instanceof Error ? cacheError.message : 'Unknown error'
+        });
+      }
+    }
+
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Note récupérée avec succès en ${apiTime}ms (mode: ${fields})`, context);
+    logger.info(LogCategory.API, `✅ Note récupérée avec succès`, {
+      ...context,
+      duration: apiTime,
+      fields
+    });
 
     return NextResponse.json({
       success: true,
@@ -152,7 +215,10 @@ export async function GET(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi.info(`❌ Erreur serveur: ${error}`, context);
+    logger.info(LogCategory.API, `❌ Erreur serveur`, {
+      ...context,
+      error: error instanceof Error ? error.message : String(error)
+    });
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

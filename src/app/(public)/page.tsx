@@ -12,12 +12,15 @@ import type { Classeur } from '@/services/llm/types/apiV2Types';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import { MessageSquare, Plus, Upload, Youtube, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Feather } from 'react-feather';
-import NotesCarouselNotion from '@/components/NotesCarouselNotion';
+import React, { Suspense } from 'react';
 import PerformanceMonitor from '@/components/PerformanceMonitor';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
-import RecentFilesList from '@/components/RecentFilesList';
-import UnifiedUploadZone from '@/components/UnifiedUploadZone';
 import SearchBar, { SearchResult } from '@/components/SearchBar';
+
+// ✅ OPTIMISATION : Lazy load composants lourds (conforme GUIDE-EXCELLENCE-CODE.md)
+const NotesCarouselNotion = React.lazy(() => import('@/components/NotesCarouselNotion'));
+const RecentFilesList = React.lazy(() => import('@/components/RecentFilesList'));
+const UnifiedUploadZone = React.lazy(() => import('@/components/UnifiedUploadZone'));
 import { motion } from 'framer-motion';
 import './home.css';
 import './dashboard.css';
@@ -345,7 +348,9 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
                 </div>
               </div>
               <div className="section-content recent-files-centered">
+                <Suspense fallback={<SimpleLoadingState message="Chargement des fichiers..." />}>
                   <RecentFilesList ref={filesScrollRef} limit={10} />
+                </Suspense>
               </div>
             </motion.section>
 
@@ -363,9 +368,11 @@ function AuthenticatedHomeContent({ user }: { user: { id: string; email?: string
               </div>
               <div className="section-content drop-zone-centered">
                 <div className="drop-zone-card">
-                  <UnifiedUploadZone />
+                  <Suspense fallback={<SimpleLoadingState message="Chargement de la zone d'upload..." />}>
+                    <UnifiedUploadZone />
+                  </Suspense>
+                </div>
               </div>
-            </div>
           </motion.section>
 
           {/* Input file caché pour l'import */}

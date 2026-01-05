@@ -1,11 +1,17 @@
 "use client";
 
-import ChatFullscreenV2 from '@/components/chat/ChatFullscreenV2';
+import React, { Suspense } from 'react';
+import { SimpleLoadingState } from '@/components/DossierLoadingStates';
+
+// ✅ OPTIMISATION : Lazy load composant lourd (conforme GUIDE-EXCELLENCE-CODE.md)
+const ChatFullscreenV2 = React.lazy(() => import('@/components/chat/ChatFullscreenV2'));
 
 export default function PrivateChatPage() {
   return (
     <div style={{ width: '100vw', minHeight: '100vh' }}>
-      <ChatFullscreenV2 />
+      <Suspense fallback={<SimpleLoadingState message="Chargement du chat..." />}>
+        <ChatFullscreenV2 />
+      </Suspense>
     </div>
   );
 } 

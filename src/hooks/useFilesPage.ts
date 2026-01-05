@@ -5,6 +5,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { STORAGE_CONFIG } from '@/config/storage';
 import SubscriptionService from '@/services/subscriptionService';
 import { TrashService } from '@/services/trashService';
+import { useDebounce } from './useDebounce';
 
 // ==========================================================================
 // TYPES
@@ -43,6 +44,9 @@ export function useFilesPage() {
   // CALCULS DÉRIVÉS
   // ========================================
   
+  // ✅ OPTIMISATION : Debounce searchTerm (conforme GUIDE-EXCELLENCE-CODE.md)
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  
   const filteredFiles = useCallback(() => {
     let filtered = files;
     
@@ -51,15 +55,15 @@ export function useFilesPage() {
       filtered = filtered.filter(file => file.folder_id === selectedFolderId);
     }
     
-    // Filtrage par recherche
-    if (searchTerm) {
+    // Filtrage par recherche (utilise debouncedSearchTerm)
+    if (debouncedSearchTerm) {
       filtered = filtered.filter(file => 
-        file.filename.toLowerCase().includes(searchTerm.toLowerCase())
+        file.filename.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
     }
     
     return filtered;
-  }, [files, selectedFolderId, searchTerm]);
+  }, [files, selectedFolderId, debouncedSearchTerm]);
 
   // ========================================
   // ACTIONS

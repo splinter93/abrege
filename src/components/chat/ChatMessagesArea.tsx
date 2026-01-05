@@ -10,8 +10,9 @@
  * - Streaming timeline
  */
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import type { ChatMessage as ChatMessageType, Agent } from '@/types/chat';
 import type { StreamTimelineItem } from '@/types/streamTimeline';
 import type { StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
@@ -78,6 +79,17 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
   messagesEndRef,
   keyboardInset = 0
 }) => {
+  // ✅ OPTIMISATION : Virtualisation si > 100 messages (conforme GUIDE-EXCELLENCE-CODE.md)
+  const shouldVirtualize = messages.length > 100;
+  const virtualizerRef = useRef<HTMLDivElement>(null);
+  
+  const virtualizer = shouldVirtualize ? useVirtualizer({
+    count: messages.length,
+    getScrollElement: () => containerRef.current,
+    estimateSize: () => 120, // Hauteur estimée par message
+    overscan: 5
+  }) : null;
+
   return (
     <div
       className="chatgpt-messages-container"
@@ -109,9 +121,60 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
           <MessageLoader isLoadingMore />
         )}
 
-        {/* Messages list */}
-        <AnimatePresence mode="sync">
-          {messages.map((message, index) => {
+        {/* Messages list - Virtualisée si > 100 messages */}
+        {shouldVirtualize && virtualizer ? (
+          <div
+            ref={virtualizerRef}
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative'
+            }}
+          >
+            {virtualizer.getVirtualItems().map((virtualItem) => {
+              const message = messages[virtualItem.index];
+              const index = virtualItem.index;
+              
+              // ✅ Clé unique garantie
+              const fallbackKeyParts = [message.role, message.timestamp, index];
+              if (message.role === 'tool' && 'tool_call_id' in message) {
+                fallbackKeyParts.push(message.tool_call_id || 'unknown');
+              }
+              const fallbackKey = fallbackKeyParts.join('-');
+              const messageKey = message.clientMessageId || message.id || fallbackKey;
+
+              // ✅ Masquer le dernier message assistant si streaming OU timeline active
+              const isLastAssistant = index === messages.length - 1 && message.role === 'assistant';
+              const isBeingStreamed = isLastAssistant && (isStreaming || streamingTimeline.length > 0);
+
+              if (isBeingStreamed) return null;
+
+              return (
+                <div
+                  key={messageKey}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualItem.size}px`,
+                    transform: `translateY(${virtualItem.start}px)`
+                  }}
+                >
+                  <ChatMessage
+                    message={message}
+                    messageIndex={index}
+                    onEdit={onEditMessage}
+                    animateContent={false}
+                    isStreaming={false}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <AnimatePresence mode="sync">
+            {messages.map((message, index) => {
             // ✅ Clé unique garantie
             const fallbackKeyParts = [message.role, message.timestamp, index];
             if (message.role === 'tool' && 'tool_call_id' in message) {
@@ -152,6 +215,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
             );
           })}
         </AnimatePresence>
+        )}
 
         {/* Indicateur de saisie */}
         {loading && (!isStreaming || streamingTimeline.length === 0) && messages.length > 0 && (

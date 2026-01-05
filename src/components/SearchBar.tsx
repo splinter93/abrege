@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
+import { useDebounce } from '@/hooks/useDebounce';
 import './SearchBar.css';
 
 interface SearchResult {
@@ -131,21 +132,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
     await performSearch(searchQuery);
   }, [searchQuery, performSearch]);
 
-  // ✅ Recherche en temps réel avec debounce (300ms)
+  // ✅ OPTIMISATION : Debounce avec hook (conforme GUIDE-EXCELLENCE-CODE.md)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  
   useEffect(() => {
-    if (!searchQuery.trim()) {
+    if (!debouncedSearchQuery.trim()) {
       setSearchResults([]);
       setShowSearchResults(false);
       return;
     }
 
-    // Délai de 300ms avant de lancer la recherche
-    const timeoutId = setTimeout(() => {
-      performSearch(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, performSearch]);
+    performSearch(debouncedSearchQuery);
+  }, [debouncedSearchQuery, performSearch]);
 
   // Navigation vers un résultat
   const handleSearchResultClick = useCallback((result: SearchResult) => {

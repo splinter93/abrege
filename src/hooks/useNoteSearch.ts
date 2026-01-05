@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
+import { useDebounce } from './useDebounce';
 import type { SelectedNote } from './useNotesLoader';
 import type { RecentNotesAPIResponse, SearchAPIResponse, RecentNoteAPIResponse, SearchNoteAPIResponse } from '@/types/api';
 
@@ -85,16 +86,19 @@ export function useNoteSearch({ getAccessToken }: UseNoteSearchOptions) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getAccessToken, lastLoadTime]);
 
+  // ✅ OPTIMISATION : Debounce avec hook (conforme GUIDE-EXCELLENCE-CODE.md)
+  const debouncedSearchQuery = useDebounce(noteSearchQuery, 300);
+  
   // Recherche de notes avec debounce
   useEffect(() => {
-    if (!noteSearchQuery || noteSearchQuery.length < 2) {
+    if (!debouncedSearchQuery || debouncedSearchQuery.length < 2) {
       setSearchedNotes([]);
       setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
-    const timeoutId = setTimeout(async () => {
+    const performSearch = async () => {
       try {
         const token = await getAccessToken();
         if (!token) {
@@ -102,7 +106,7 @@ export function useNoteSearch({ getAccessToken }: UseNoteSearchOptions) {
           return;
         }
 
-        const response = await fetch(`/api/v2/search?q=${encodeURIComponent(noteSearchQuery)}&type=notes&limit=10`, {
+        const response = await fetch(`/api/v2/search?q=${encodeURIComponent(debouncedSearchQuery)}&type=notes&limit=10`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -129,10 +133,10 @@ export function useNoteSearch({ getAccessToken }: UseNoteSearchOptions) {
       } finally {
         setIsSearching(false);
       }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [noteSearchQuery, getAccessToken]);
+    };
+    
+    void performSearch();
+  }, [debouncedSearchQuery, getAccessToken]);
 
   // Sélectionner/désélectionner une note
   const handleSelectNote = useCallback((note: SelectedNote) => {

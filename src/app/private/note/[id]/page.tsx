@@ -1,13 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import Editor from '@/components/editor/Editor';
 import { useOptimizedNoteLoader } from '@/hooks/useOptimizedNoteLoader';
 import { useRealtime } from '@/hooks/useRealtime';
 import { useAuth } from '@/hooks/useAuth';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
+
+// ✅ OPTIMISATION : Lazy load composant lourd (conforme GUIDE-EXCELLENCE-CODE.md)
+const Editor = React.lazy(() => import('@/components/editor/Editor'));
 
 export default function NotePage() {
   const params = useParams();

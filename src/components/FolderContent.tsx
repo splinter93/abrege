@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 import FolderItem from './FolderItem';
 import FileItem from './FileItem';
@@ -97,6 +98,24 @@ const FolderContent: React.FC<FolderContentProps> = ({
   // Robustness: always use arrays to avoid React #310 errors
   const safeFolders = Array.isArray(folders) ? folders : [];
   const safeFiles = Array.isArray(files) ? files : [];
+  
+  // ✅ OPTIMISATION : Virtualisation si total > 50 items (conforme GUIDE-EXCELLENCE-CODE.md)
+  const totalItems = safeFolders.length + safeFiles.length;
+  const shouldVirtualize = totalItems > 50 && viewMode === 'list'; // Virtualiser seulement en mode list
+  const virtualizerRef = useRef<HTMLDivElement>(null);
+  
+  // Combiner folders et files pour virtualisation
+  const allItems = React.useMemo(() => [
+    ...safeFolders.map(f => ({ ...f, type: 'folder' as const })),
+    ...safeFiles.map(f => ({ ...f, type: 'file' as const }))
+  ], [safeFolders, safeFiles]);
+  
+  const virtualizer = shouldVirtualize ? useVirtualizer({
+    count: allItems.length,
+    getScrollElement: () => virtualizerRef.current,
+    estimateSize: () => 60, // Hauteur estimée par item
+    overscan: 5
+  }) : null;
 
   if (loading) {
     return (
@@ -181,6 +200,69 @@ const FolderContent: React.FC<FolderContentProps> = ({
             <div className="folder-empty-subtitle">Create your first folder or note using the toolbar.</div>
           </div>
         )
+      ) : shouldVirtualize && virtualizer ? (
+        /* Virtualized list mode */
+        <div
+          ref={virtualizerRef}
+          className="folder-virtualized-container"
+          style={{
+            height: '600px',
+            overflow: 'auto'
+          }}
+        >
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative'
+            }}
+          >
+            {virtualizer.getVirtualItems().map((virtualItem) => {
+              const item = allItems[virtualItem.index];
+              
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualItem.size}px`,
+                    transform: `translateY(${virtualItem.start}px)`
+                  }}
+                >
+                  {item.type === 'folder' ? (
+                    <FolderItem
+                      folder={item}
+                      onOpen={onFolderOpen}
+                      isRenaming={renamingItemId === item.id}
+                      onRename={(newName, type) => onRenameFolder && onRenameFolder(item.id, newName, type)}
+                      onCancelRename={onCancelRename}
+                      onContextMenu={onContextMenuItem}
+                      onDropItem={(itemId, itemType) => {
+                        if (onDropItem) {
+                          onDropItem(itemId, itemType, item.id);
+                        }
+                      }}
+                      onStartRenameClick={onStartRenameFolderClick}
+                    />
+                  ) : (
+                    <FileItem
+                      file={item}
+                      onOpen={onFileOpen}
+                      isRenaming={renamingItemId === item.id}
+                      onRename={(newName, type) => onRenameFile && onRenameFile(item.id, newName, type)}
+                      onCancelRename={onCancelRename}
+                      onContextMenu={onContextMenuItem}
+                      onStartRenameClick={onStartRenameFileClick}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       ) : (
         /* Container for grids - macOS style */
         <div className="folder-grid-container">
