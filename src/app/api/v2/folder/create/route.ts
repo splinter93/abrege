@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { logApi } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 import { createFolderV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
+import { folderCreateRateLimiter } from '@/services/rateLimiter';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -18,12 +19,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     clientType
   };
 
-  logApi.info('🚀 Début création dossier v2', context);
+  logger.info(LogCategory.API, '🚀 Début création dossier v2', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi.error(`❌ Authentification échouée: ${authResult.error}`, authResult);
+    logger.error(LogCategory.API, `❌ Authentification échouée: ${authResult.error}`, authResult);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -31,6 +32,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = authResult.userId!;
+
+  // ✅ Rate limiting par utilisateur
+  const rateLimit = await folderCreateRateLimiter.check(userId);
+  if (!rateLimit.allowed) {
+    logger.warn(LogCategory.API, '[Folder Create] ⛔ Rate limit dépassé', {
+      userId: userId.substring(0, 8) + '...',
+      limit: rateLimit.limit,
+      resetTime: rateLimit.resetTime
+    });
+
+    const retryAfter = Math.ceil((rateLimit.resetTime - Date.now()) / 1000);
+    return NextResponse.json(
+      {
+        error: 'Rate limit exceeded',
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: `Vous avez atteint la limite de ${rateLimit.limit} créations de dossiers par minute. Veuillez réessayer dans ${retryAfter} secondes.`,
+        retryAfter
+      },
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-RateLimit-Limit': rateLimit.limit.toString(),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': rateLimit.resetTime.toString(),
+          'Retry-After': retryAfter.toString()
+        }
+      }
+    );
+  }
   
   // 🔧 CORRECTION: Créer le client Supabase authentifié
   const userToken = extractTokenFromRequest(request);
@@ -42,7 +73,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validation Zod V2
     const validationResult = validatePayload(createFolderV2Schema, body);
     if (!validationResult.success) {
-      logApi.error('❌ Validation échouée', validationResult);
+      logger.error(LogCategory.API, '❌ Validation échouée', validationResult);
       return createValidationErrorResponse(validationResult);
     }
 
@@ -52,7 +83,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const result = await V2DatabaseUtils.createFolder(validatedData, userId, context, supabase);
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Dossier créé en ${apiTime}ms`, context);
+    logger.info(LogCategory.API, `✅ Dossier créé en ${apiTime}ms`, context);
 
     // 🎯 Le polling ciblé est maintenant géré côté client par V2UnifiedApi
 
@@ -64,7 +95,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi.error(`❌ Erreur serveur: ${error}`, error);
+    logger.error(LogCategory.API, `❌ Erreur serveur: ${error}`, error);
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

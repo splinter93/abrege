@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { logApi } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 import { createClasseurV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { SlugGenerator } from '@/utils/slugGenerator';
+import { classeurCreateRateLimiter } from '@/services/rateLimiter';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -25,12 +26,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     clientType
   };
 
-  logApi.info('🚀 Début création classeur v2', context);
+  logger.info(LogCategory.API, '🚀 Début création classeur v2', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi.info(`❌ Authentification échouée: ${authResult.error}`, context);
+    logger.info(LogCategory.API, `❌ Authentification échouée: ${authResult.error}`, context);
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -38,6 +39,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const userId = authResult.userId!;
+
+  // ✅ Rate limiting par utilisateur
+  const rateLimit = await classeurCreateRateLimiter.check(userId);
+  if (!rateLimit.allowed) {
+    logger.warn(LogCategory.API, '[Classeur Create] ⛔ Rate limit dépassé', {
+      userId: userId.substring(0, 8) + '...',
+      limit: rateLimit.limit,
+      resetTime: rateLimit.resetTime
+    });
+
+    const retryAfter = Math.ceil((rateLimit.resetTime - Date.now()) / 1000);
+    return NextResponse.json(
+      {
+        error: 'Rate limit exceeded',
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: `Vous avez atteint la limite de ${rateLimit.limit} créations de classeurs par minute. Veuillez réessayer dans ${retryAfter} secondes.`,
+        retryAfter
+      },
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-RateLimit-Limit': rateLimit.limit.toString(),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': rateLimit.resetTime.toString(),
+          'Retry-After': retryAfter.toString()
+        }
+      }
+    );
+  }
   
   // 🔧 CORRECTION: Client Supabase standard, getAuthenticatedUser a déjà validé
   const userToken = extractTokenFromRequest(request);
@@ -57,7 +88,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     
     // ✅ CORRECTION : Pour l'impersonation d'agent, utiliser un utilisateur système existant
     // ou créer directement dans la table sans contrainte de clé étrangère
-    logApi.info(`[Classeur Create] 🤖 Impersonation d'agent - utilisation service role pour contourner RLS`);
+    logger.info(LogCategory.API, `[Classeur Create] 🤖 Impersonation d'agent - utilisation service role pour contourner RLS`);
     
     // Vérifier si l'utilisateur existe dans la table profiles
     const { data: existingProfile, error: profileError } = await supabaseAdmin
@@ -68,7 +99,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     
     if (profileError && profileError.code === 'PGRST116') {
       // Créer le profil directement
-      logApi.info(`[Classeur Create] 👤 Création profil pour agent: ${userId}`);
+      logger.info(LogCategory.API, `[Classeur Create] 👤 Création profil pour agent: ${userId}`);
       
       const { error: createProfileError } = await supabaseAdmin
         .from('profiles')
@@ -81,14 +112,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         });
       
       if (createProfileError) {
-        logApi.error(`[Classeur Create] ❌ Erreur création profil: ${createProfileError.message}`, context);
+        logger.error(LogCategory.API, `[Classeur Create] ❌ Erreur création profil: ${createProfileError.message}`, context);
         // Continuer quand même, l'utilisateur pourrait exister dans auth.users
       } else {
-        logApi.info(`[Classeur Create] ✅ Profil créé: ${userId}`);
+        logger.info(LogCategory.API, `[Classeur Create] ✅ Profil créé: ${userId}`);
       }
     }
     
-    logApi.info(`[Classeur Create] 🔑 Utilisation client Supabase avec service role pour agent: ${userId}`);
+    logger.info(LogCategory.API, `[Classeur Create] 🔑 Utilisation client Supabase avec service role pour agent: ${userId}`);
   }
 
   try {
@@ -122,7 +153,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .single();
 
     if (createError) {
-      logApi.error(`❌ Erreur création classeur:`, {
+      logger.error(LogCategory.API, `❌ Erreur création classeur:`, {
         message: createError.message,
         code: createError.code,
         details: createError.details,
@@ -140,7 +171,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Classeur créé en ${apiTime}ms`, context);
+    logger.info(LogCategory.API, `✅ Classeur créé en ${apiTime}ms`, context);
 
     // 🎯 Le polling ciblé est maintenant géré côté client par V2UnifiedApi
 
@@ -151,7 +182,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    logApi.error(`❌ Erreur inattendue: ${errorMessage}`, context);
+    logger.error(LogCategory.API, `❌ Erreur inattendue: ${errorMessage}`, context);
     
     return NextResponse.json(
       { error: 'Erreur interne du serveur' },

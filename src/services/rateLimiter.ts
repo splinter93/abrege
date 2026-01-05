@@ -3,7 +3,7 @@
  * Utilise une stratégie en mémoire (avec possibilité d'upgrade vers Redis)
  */
 
-import { simpleLogger as logger } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 
 interface RateLimitConfig {
   windowMs: number;
@@ -38,7 +38,54 @@ export class RateLimiter {
   }
 
   /**
-   * Vérifie si une requête est autorisée
+   * Vérifie si une requête est autorisée (version synchrone pour middleware)
+   * @param identifier Identifiant unique (userId, IP, etc.)
+   * @returns true si autorisé, false si rate limit dépassé
+   */
+  checkSync(identifier: string): {
+    allowed: boolean;
+    remaining: number;
+    resetTime: number;
+    limit: number;
+  } {
+    const key = `${this.config.keyPrefix}:${identifier}`;
+    const now = Date.now();
+    
+    let entry = this.store.get(key);
+
+    // Créer ou réinitialiser l'entrée si expirée
+    if (!entry || now > entry.resetTime) {
+      entry = {
+        count: 0,
+        resetTime: now + this.config.windowMs
+      };
+      this.store.set(key, entry);
+    }
+
+    // Incrémenter le compteur
+    entry.count++;
+
+    const allowed = entry.count <= this.config.maxRequests;
+    const remaining = Math.max(0, this.config.maxRequests - entry.count);
+
+    if (!allowed) {
+      logger.warn(LogCategory.API, `[RateLimiter] Limite dépassée pour ${identifier}`, {
+        identifier,
+        count: entry.count,
+        limit: this.config.maxRequests
+      });
+    }
+
+    return {
+      allowed,
+      remaining,
+      resetTime: entry.resetTime,
+      limit: this.config.maxRequests
+    };
+  }
+
+  /**
+   * Vérifie si une requête est autorisée (version async)
    * @param identifier Identifiant unique (userId, IP, etc.)
    * @returns true si autorisé, false si rate limit dépassé
    */
@@ -69,9 +116,11 @@ export class RateLimiter {
     const remaining = Math.max(0, this.config.maxRequests - entry.count);
 
     if (!allowed) {
-      logger.warn(`[RateLimiter] Limite dépassée pour ${identifier}: ${entry.count}/${this.config.maxRequests}`);
-    } else {
-      logger.dev(`[RateLimiter] Requête autorisée pour ${identifier}: ${entry.count}/${this.config.maxRequests}`);
+      logger.warn(LogCategory.API, `[RateLimiter] Limite dépassée pour ${identifier}`, {
+        identifier,
+        count: entry.count,
+        limit: this.config.maxRequests
+      });
     }
 
     return {
@@ -88,7 +137,9 @@ export class RateLimiter {
   async reset(identifier: string): Promise<void> {
     const key = `${this.config.keyPrefix}:${identifier}`;
     this.store.delete(key);
-    logger.dev(`[RateLimiter] Compteur réinitialisé pour ${identifier}`);
+    logger.debug(LogCategory.API, `[RateLimiter] Compteur réinitialisé pour ${identifier}`, {
+      identifier
+    });
   }
 
   /**
@@ -135,7 +186,9 @@ export class RateLimiter {
     }
 
     if (cleaned > 0) {
-      logger.dev(`[RateLimiter] ${cleaned} entrées expirées nettoyées`);
+      logger.debug(LogCategory.API, `[RateLimiter] ${cleaned} entrées expirées nettoyées`, {
+        cleanedCount: cleaned
+      });
     }
   }
 
@@ -201,5 +254,49 @@ export const apiRateLimiter = new RateLimiter({
   keyPrefix: 'api'
 });
 
-logger.info('[RateLimiter] Services de rate limiting initialisés');
+// ✅ Instances pour rate limiting par IP (middleware)
+export const ipApiRateLimiter = new RateLimiter({
+  windowMs: 60000, // 1 minute
+  maxRequests: 100, // 100 requêtes API par minute par IP
+  keyPrefix: 'ip:api'
+});
+
+export const ipChatRateLimiter = new RateLimiter({
+  windowMs: 60000, // 1 minute
+  maxRequests: 20, // 20 requêtes chat par minute par IP
+  keyPrefix: 'ip:chat'
+});
+
+export const ipUploadRateLimiter = new RateLimiter({
+  windowMs: 60000, // 1 minute
+  maxRequests: 10, // 10 requêtes upload par minute par IP
+  keyPrefix: 'ip:upload'
+});
+
+// ✅ Instances pour rate limiting par endpoint critique
+export const noteCreateRateLimiter = new RateLimiter({
+  windowMs: 60000, // 1 minute
+  maxRequests: 30, // 30 créations de notes par minute par utilisateur
+  keyPrefix: 'note:create'
+});
+
+export const classeurCreateRateLimiter = new RateLimiter({
+  windowMs: 60000, // 1 minute
+  maxRequests: 10, // 10 créations de classeurs par minute par utilisateur
+  keyPrefix: 'classeur:create'
+});
+
+export const folderCreateRateLimiter = new RateLimiter({
+  windowMs: 60000, // 1 minute
+  maxRequests: 20, // 20 créations de dossiers par minute par utilisateur
+  keyPrefix: 'folder:create'
+});
+
+export const canvaSessionsRateLimiter = new RateLimiter({
+  windowMs: 60000, // 1 minute
+  maxRequests: 10, // 10 créations de sessions canva par minute par utilisateur
+  keyPrefix: 'canva:sessions'
+});
+
+logger.info(LogCategory.API, '[RateLimiter] Services de rate limiting initialisés');
 

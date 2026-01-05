@@ -4,6 +4,7 @@ import { CanvaNoteService } from '@/services/canvaNoteService';
 import { logger, LogCategory } from '@/utils/logger';
 import { createSupabaseClient } from '@/utils/supabaseClient';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
+import { canvaSessionsRateLimiter } from '@/services/rateLimiter';
 import {
   createCanvaSessionSchema,
   listCanvaSessionsSchema,
@@ -32,6 +33,37 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const userId = authResult.userId!;
+
+    // ✅ Rate limiting par utilisateur
+    const rateLimit = await canvaSessionsRateLimiter.check(userId);
+    if (!rateLimit.allowed) {
+      logger.warn(LogCategory.API, '[Canva Sessions] ⛔ Rate limit dépassé', {
+        userId: userId.substring(0, 8) + '...',
+        limit: rateLimit.limit,
+        resetTime: rateLimit.resetTime
+      });
+
+      const retryAfter = Math.ceil((rateLimit.resetTime - Date.now()) / 1000);
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          code: 'RATE_LIMIT_EXCEEDED',
+          message: `Vous avez atteint la limite de ${rateLimit.limit} créations de sessions canva par minute. Veuillez réessayer dans ${retryAfter} secondes.`,
+          retryAfter
+        },
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-RateLimit-Limit': rateLimit.limit.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimit.resetTime.toString(),
+            'Retry-After': retryAfter.toString()
+          }
+        }
+      );
+    }
+
     let body: unknown = {};
 
     try {

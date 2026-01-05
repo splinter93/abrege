@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { logApi } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 import { createNoteV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { createSupabaseClient } from '@/utils/supabaseClient';
 import { createClient } from '@supabase/supabase-js';
@@ -7,6 +7,7 @@ import { getAuthenticatedUser } from '@/utils/authUtils';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
 import { canPerformAction } from '@/utils/scopeValidation';
 import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
+import { noteCreateRateLimiter } from '@/services/rateLimiter';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -22,12 +23,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     clientType
   };
 
-  logApi.info('🚀 Début création note v2', context);
+  logger.info(LogCategory.API, '🚀 Début création note v2', context);
 
   // 🔐 Authentification
   const authResult = await getAuthenticatedUser(request);
   if (!authResult.success) {
-    logApi.error(`❌ Authentification échouée: ${authResult.error}`, authResult);
+    logger.error(LogCategory.API, `❌ Authentification échouée`, {
+      error: authResult.error,
+      status: authResult.status
+    });
     return NextResponse.json(
       { error: authResult.error },
       { status: authResult.status || 401, headers: { "Content-Type": "application/json" } }
@@ -36,9 +40,42 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const userId = authResult.userId!;
 
+  // ✅ Rate limiting par utilisateur
+  const rateLimit = await noteCreateRateLimiter.check(userId);
+  if (!rateLimit.allowed) {
+    logger.warn(LogCategory.API, '[Note Create] ⛔ Rate limit dépassé', {
+      userId: userId.substring(0, 8) + '...',
+      limit: rateLimit.limit,
+      resetTime: rateLimit.resetTime
+    });
+
+    const retryAfter = Math.ceil((rateLimit.resetTime - Date.now()) / 1000);
+    return NextResponse.json(
+      {
+        error: 'Rate limit exceeded',
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: `Vous avez atteint la limite de ${rateLimit.limit} créations de notes par minute. Veuillez réessayer dans ${retryAfter} secondes.`,
+        retryAfter
+      },
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-RateLimit-Limit': rateLimit.limit.toString(),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': rateLimit.resetTime.toString(),
+          'Retry-After': retryAfter.toString()
+        }
+      }
+    );
+  }
+
   // 🔐 Vérification des permissions pour créer une note
   if (!canPerformAction(authResult, 'notes:create', context)) {
-    logApi.warn(`❌ Permissions insuffisantes pour notes:create`, context);
+    logger.warn(LogCategory.API, `❌ Permissions insuffisantes pour notes:create`, {
+      userId: userId.substring(0, 8) + '...',
+      operation: context.operation
+    });
     return NextResponse.json(
       { 
         error: `Permissions insuffisantes. Scope requis: notes:create`,
@@ -57,7 +94,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validation Zod V2
     const validationResult = validatePayload(createNoteV2Schema, body);
     if (!validationResult.success) {
-      logApi.error('❌ Validation échouée', validationResult);
+      logger.error(LogCategory.API, '❌ Validation échouée', {
+        errors: validationResult.error
+      });
       return createValidationErrorResponse(validationResult);
     }
 
@@ -70,10 +109,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (classeurId !== null) {
       // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
       if (!classeurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        logApi.info(`🔍 Résolution du slug: ${classeurId}`, context);
-        logApi.info(`🔍 User ID: ${userId}`, context);
+        logger.info(LogCategory.API, `🔍 Résolution du slug`, { ...context, slug: classeurId });
+        logger.info(LogCategory.API, `🔍 User ID`, { ...context, userId });
         
-        logApi.info(`🔍 Recherche classeur avec slug: ${classeurId} et user_id: ${userId}`, context);
+        logger.info(LogCategory.API, `🔍 Recherche classeur avec slug`, { ...context, slug: classeurId, userId });
         
         const { data: classeur, error: resolveError } = await supabase
           .from('classeurs')
@@ -82,11 +121,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           .eq('user_id', userId)
           .single();
         
-        logApi.info(`🔍 Résultat recherche:`, { classeur, error: resolveError });
+        logger.info(LogCategory.API, `🔍 Résultat recherche`, { ...context, classeur, error: resolveError });
         
         if (resolveError || !classeur) {
-          logApi.error(`❌ Classeur non trouvé pour le slug: ${classeurId}`, resolveError);
-          logApi.error(`❌ Erreur détaillée:`, resolveError);
+          logger.error(LogCategory.API, `❌ Classeur non trouvé pour le slug`, {
+            ...context,
+            slug: classeurId,
+            error: resolveError?.message
+          });
+          logger.error(LogCategory.API, `❌ Erreur détaillée`, {
+            ...context,
+            error: resolveError?.message
+          });
           
           // 🔧 ANTI-BUG: Essayer de lister tous les classeurs pour debug
           const { data: allClasseurs, error: listError } = await supabase
@@ -94,7 +140,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             .select('id, name, slug, user_id')
             .eq('user_id', userId);
           
-          logApi.info(`🔍 Tous les classeurs de l'utilisateur:`, allClasseurs || []);
+          logger.info(LogCategory.API, `🔍 Tous les classeurs de l'utilisateur`, {
+            ...context,
+            count: allClasseurs?.length || 0
+          });
           
           return NextResponse.json(
             { error: `Classeur non trouvé: ${classeurId}` },
@@ -103,10 +152,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
         
         classeurId = classeur.id;
-        logApi.info(`✅ Slug résolu: ${validatedData.notebook_id} -> ${classeurId}`, context);
+        logger.info(LogCategory.API, `✅ Slug résolu`, {
+          ...context,
+          original: validatedData.notebook_id,
+          resolved: classeurId
+        });
       }
     } else {
-      logApi.info(`🎨 Création note orpheline (Canva)`, context);
+      logger.info(LogCategory.API, `🎨 Création note orpheline (Canva)`, context);
     }
 
     // Générer le slug et l'URL publique
@@ -124,7 +177,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     } catch (e) {
       // Fallback minimal en cas d'échec
       slug = `${validatedData.source_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`.slice(0, 120);
-      logApi.warn(`⚠️ Fallback slug utilisé: ${slug}`, e);
+      logger.warn(LogCategory.API, `⚠️ Fallback slug utilisé`, {
+        ...context,
+        slug,
+        error: e instanceof Error ? e.message : String(e)
+      });
     }
 
     // 🛡️ SÉCURITÉ : Sanitizer le markdown pour empêcher les injections HTML
@@ -163,7 +220,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .single();
 
     if (createError) {
-      logApi.error(`❌ Erreur création note: ${createError.message}`, createError);
+      logger.error(LogCategory.API, `❌ Erreur création note`, {
+        ...context,
+        error: createError.message
+      });
       return NextResponse.json(
         { error: `Erreur création note: ${createError.message}` },
         { status: 500 }
@@ -182,17 +242,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         .eq('user_id', userId);
 
       if (updateUrlError) {
-        logApi.warn(`⚠️ Erreur mise à jour URL publique: ${updateUrlError.message}`, updateUrlError);
+        logger.warn(LogCategory.API, `⚠️ Erreur mise à jour URL publique`, {
+          ...context,
+          error: updateUrlError.message
+        });
       } else {
         note.public_url = finalPublicUrl; // Mettre à jour l'objet retourné
-        logApi.info(`✅ URL publique générée: ${finalPublicUrl}`, context);
+        logger.info(LogCategory.API, `✅ URL publique générée`, {
+          ...context,
+          url: finalPublicUrl
+        });
       }
     } catch (urlError) {
-      logApi.warn(`⚠️ Erreur génération URL publique (non bloquant): ${urlError}`, urlError);
+      logger.warn(LogCategory.API, `⚠️ Erreur génération URL publique (non bloquant)`, {
+        ...context,
+        error: urlError instanceof Error ? urlError.message : String(urlError)
+      });
     }
 
     const apiTime = Date.now() - startTime;
-    logApi.info(`✅ Note créée en ${apiTime}ms`, context);
+    logger.info(LogCategory.API, `✅ Note créée`, {
+      ...context,
+      duration: apiTime
+    });
 
     // 🎯 Le polling ciblé est maintenant géré côté client par V2UnifiedApi
 
@@ -203,7 +275,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
   } catch (err: unknown) {
-    logApi.error(`❌ Erreur serveur: ${err}`, err);
+    logger.error(LogCategory.API, `❌ Erreur serveur`, {
+      ...context,
+      error: err instanceof Error ? err.message : String(err)
+    });
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }

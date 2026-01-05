@@ -1,0 +1,1230 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Slack Web API",
+    "version": "1.0.0",
+    "description": "API officielle Slack pour envoyer des messages, gérer les conversations, les utilisateurs et les fichiers. Authentification via Bearer token OAuth."
+  },
+  "servers": [
+    {
+      "url": "https://slack.com/api",
+      "description": "Slack Web API Server"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "components": {
+    "schemas": {
+      "SlackSuccessResponse": {
+        "type": "object",
+        "required": ["ok"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "Indique si la requête a réussi"
+          },
+          "error": {
+            "type": "string",
+            "description": "Code d'erreur si ok est false"
+          },
+          "warning": {
+            "type": "string",
+            "description": "Avertissement éventuel"
+          }
+        }
+      },
+      "SlackErrorResponse": {
+        "type": "object",
+        "required": ["ok", "error"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "description": "Code d'erreur Slack",
+            "example": "invalid_auth"
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Texte du message"
+          },
+          "channel": {
+            "type": "string",
+            "description": "ID du canal"
+          },
+          "ts": {
+            "type": "string",
+            "description": "Timestamp du message"
+          },
+          "user": {
+            "type": "string",
+            "description": "ID de l'utilisateur"
+          }
+        }
+      },
+      "Conversation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID de la conversation"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nom de la conversation"
+          },
+          "is_channel": {
+            "type": "boolean",
+            "description": "True si c'est un canal"
+          },
+          "is_group": {
+            "type": "boolean",
+            "description": "True si c'est un groupe privé"
+          },
+          "is_im": {
+            "type": "boolean",
+            "description": "True si c'est un message direct"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID de l'utilisateur"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nom d'utilisateur"
+          },
+          "real_name": {
+            "type": "string",
+            "description": "Nom réel"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email de l'utilisateur"
+          },
+          "is_bot": {
+            "type": "boolean",
+            "description": "True si c'est un bot"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Token",
+        "description": "Token OAuth Slack. Format: Bearer xoxb-... ou xoxp-..."
+      }
+    }
+  },
+  "paths": {
+    "/auth.test": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Teste l'authentification",
+        "description": "Vérifie l'authentification et retourne les informations du token. Permet de valider que le token est valide et obtenir les infos de l'équipe.",
+        "operationId": "post__auth_test",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authentification valide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "URL de l'équipe Slack",
+                      "example": "https://myteam.slack.com"
+                    },
+                    "team": {
+                      "type": "string",
+                      "description": "Nom de l'équipe",
+                      "example": "My Team"
+                    },
+                    "user": {
+                      "type": "string",
+                      "description": "Nom d'utilisateur",
+                      "example": "myuser"
+                    },
+                    "team_id": {
+                      "type": "string",
+                      "description": "ID de l'équipe",
+                      "example": "T123456"
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "description": "ID de l'utilisateur",
+                      "example": "U123456"
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "url": "https://myteam.slack.com",
+                  "team": "My Team",
+                  "user": "myuser",
+                  "team_id": "T123456",
+                  "user_id": "U123456"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalide ou expiré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                },
+                "example": {
+                  "ok": false,
+                  "error": "invalid_auth"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat.postMessage": {
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Envoie un message",
+        "description": "Envoie un message dans un canal, groupe privé ou message direct. Supporte le formatage Slack (markdown, mentions, etc.).",
+        "operationId": "post__chat_postMessage",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Paramètres du message à envoyer",
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["channel", "text"],
+                "properties": {
+                  "channel": {
+                    "type": "string",
+                    "description": "ID du canal, groupe ou utilisateur (ex: C123456, @U123456)",
+                    "example": "C1234567890"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Texte du message. Supporte le formatage Slack.",
+                    "example": "Hello world!"
+                  },
+                  "thread_ts": {
+                    "type": "string",
+                    "description": "Timestamp du message parent pour répondre dans un thread",
+                    "example": "1234567890.123456"
+                  },
+                  "blocks": {
+                    "type": "array",
+                    "description": "Blocs Block Kit pour un message riche",
+                    "items": {
+                      "type": "object",
+                      "properties": {},
+                      "additionalProperties": true
+                    }
+                  },
+                  "attachments": {
+                    "type": "array",
+                    "description": "Pièces jointes au message",
+                    "items": {
+                      "type": "object",
+                      "properties": {},
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              },
+              "examples": {
+                "simple": {
+                  "summary": "Message simple",
+                  "value": {
+                    "channel": "C1234567890",
+                    "text": "Hello world!"
+                  }
+                },
+                "thread": {
+                  "summary": "Réponse dans un thread",
+                  "value": {
+                    "channel": "C1234567890",
+                    "text": "Réponse dans le thread",
+                    "thread_ts": "1234567890.123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message envoyé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "channel": {
+                      "type": "string",
+                      "description": "ID du canal",
+                      "example": "C1234567890"
+                    },
+                    "ts": {
+                      "type": "string",
+                      "description": "Timestamp du message envoyé",
+                      "example": "1234567890.123456"
+                    },
+                    "message": {
+                      "$ref": "#/components/schemas/Message"
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "channel": "C1234567890",
+                  "ts": "1234567890.123456",
+                  "message": {
+                    "text": "Hello world!",
+                    "user": "U123456",
+                    "ts": "1234567890.123456"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide (canal inexistant, texte manquant, etc.)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                },
+                "example": {
+                  "ok": false,
+                  "error": "channel_not_found"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations.list": {
+      "get": {
+        "tags": ["Conversations"],
+        "summary": "Liste les conversations",
+        "description": "Récupère la liste des conversations (canaux, groupes privés, messages directs) accessibles au token. Supporte la pagination avec cursor.",
+        "operationId": "get__conversations_list",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "types",
+            "in": "query",
+            "description": "Types de conversations à inclure (séparés par virgule: public_channel,private_channel,mpim,im)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "public_channel,private_channel,mpim,im"
+            },
+            "example": "public_channel,private_channel"
+          },
+          {
+            "name": "exclude_archived",
+            "in": "query",
+            "description": "Exclure les conversations archivées",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre maximum de résultats",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Token de pagination pour récupérer la page suivante",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des conversations récupérée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "channels": {
+                      "type": "array",
+                      "description": "Liste des conversations",
+                      "items": {
+                        "$ref": "#/components/schemas/Conversation"
+                      }
+                    },
+                    "response_metadata": {
+                      "type": "object",
+                      "properties": {
+                        "next_cursor": {
+                          "type": "string",
+                          "description": "Token pour la page suivante"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "channels": [
+                    {
+                      "id": "C1234567890",
+                      "name": "general",
+                      "is_channel": true,
+                      "is_group": false,
+                      "is_im": false
+                    }
+                  ],
+                  "response_metadata": {
+                    "next_cursor": ""
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations.create": {
+      "post": {
+        "tags": ["Conversations"],
+        "summary": "Crée une conversation",
+        "description": "Crée un canal public ou groupe privé. Retourne l'objet conversation créé avec ses informations.",
+        "operationId": "post__conversations_create",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Paramètres pour créer la conversation",
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Nom de la conversation (canal ou groupe)",
+                    "example": "my-new-channel"
+                  },
+                  "is_private": {
+                    "type": "boolean",
+                    "description": "True pour créer un groupe privé, false pour un canal public",
+                    "default": false
+                  }
+                }
+              },
+              "examples": {
+                "public": {
+                  "summary": "Créer un canal public",
+                  "value": {
+                    "name": "general-announcements",
+                    "is_private": false
+                  }
+                },
+                "private": {
+                  "summary": "Créer un groupe privé",
+                  "value": {
+                    "name": "secret-team",
+                    "is_private": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conversation créée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "channel": {
+                      "$ref": "#/components/schemas/Conversation"
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "channel": {
+                    "id": "C1234567890",
+                    "name": "my-new-channel",
+                    "is_channel": true,
+                    "is_group": false,
+                    "is_im": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erreur (nom déjà utilisé, invalide, etc.)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                },
+                "example": {
+                  "ok": false,
+                  "error": "name_taken"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations.info": {
+      "get": {
+        "tags": ["Conversations"],
+        "summary": "Récupère les infos d'une conversation",
+        "description": "Récupère les informations détaillées d'une conversation (canal, groupe privé ou message direct) par son ID.",
+        "operationId": "get__conversations_info",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "description": "ID de la conversation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "C1234567890"
+          },
+          {
+            "name": "include_locale",
+            "in": "query",
+            "description": "Inclure les informations de locale",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Informations de la conversation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "channel": {
+                      "$ref": "#/components/schemas/Conversation"
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "channel": {
+                    "id": "C1234567890",
+                    "name": "general",
+                    "is_channel": true,
+                    "is_group": false,
+                    "is_im": false
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                },
+                "example": {
+                  "ok": false,
+                  "error": "channel_not_found"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations.members": {
+      "get": {
+        "tags": ["Conversations"],
+        "summary": "Liste les membres d'une conversation",
+        "description": "Récupère la liste des membres d'une conversation (canal, groupe privé). Supporte la pagination avec cursor.",
+        "operationId": "get__conversations_members",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "description": "ID de la conversation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "C1234567890"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre maximum de résultats",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Token de pagination pour récupérer la page suivante",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des membres récupérée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "members": {
+                      "type": "array",
+                      "description": "Liste des IDs des membres",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "response_metadata": {
+                      "type": "object",
+                      "properties": {
+                        "next_cursor": {
+                          "type": "string",
+                          "description": "Token pour la page suivante"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "members": [
+                    "U123456",
+                    "U234567",
+                    "U345678"
+                  ],
+                  "response_metadata": {
+                    "next_cursor": ""
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Conversation non trouvée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users.list": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Liste les utilisateurs",
+        "description": "Récupère la liste des utilisateurs de l'équipe Slack. Supporte la pagination avec cursor.",
+        "operationId": "get__users_list",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre maximum de résultats",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Token de pagination pour récupérer la page suivante",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_locale",
+            "in": "query",
+            "description": "Inclure les informations de locale",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des utilisateurs récupérée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "members": {
+                      "type": "array",
+                      "description": "Liste des utilisateurs",
+                      "items": {
+                        "$ref": "#/components/schemas/User"
+                      }
+                    },
+                    "response_metadata": {
+                      "type": "object",
+                      "properties": {
+                        "next_cursor": {
+                          "type": "string",
+                          "description": "Token pour la page suivante"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "members": [
+                    {
+                      "id": "U123456",
+                      "name": "john",
+                      "real_name": "John Doe",
+                      "email": "john@example.com",
+                      "is_bot": false
+                    }
+                  ],
+                  "response_metadata": {
+                    "next_cursor": ""
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users.info": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Récupère les infos d'un utilisateur",
+        "description": "Récupère les informations détaillées d'un utilisateur par son ID.",
+        "operationId": "get__users_info",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user",
+            "in": "query",
+            "description": "ID de l'utilisateur",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "U123456"
+          },
+          {
+            "name": "include_locale",
+            "in": "query",
+            "description": "Inclure les informations de locale",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Informations de l'utilisateur",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "user": {
+                    "id": "U123456",
+                    "name": "john",
+                    "real_name": "John Doe",
+                    "email": "john@example.com",
+                    "is_bot": false
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Utilisateur non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                },
+                "example": {
+                  "ok": false,
+                  "error": "user_not_found"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/files.upload": {
+      "post": {
+        "tags": ["Files"],
+        "summary": "Upload un fichier",
+        "description": "Téléverse un fichier dans Slack. Le fichier peut être partagé dans un canal ou en message direct.",
+        "operationId": "post__files_upload",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Fichier et métadonnées à uploader",
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Fichier à uploader"
+                  },
+                  "channels": {
+                    "type": "string",
+                    "description": "IDs des canaux séparés par virgule où partager le fichier",
+                    "example": "C1234567890,C2345678901"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Titre du fichier",
+                    "example": "My Document"
+                  },
+                  "initial_comment": {
+                    "type": "string",
+                    "description": "Commentaire initial avec le fichier",
+                    "example": "Voici le document demandé"
+                  }
+                }
+              },
+              "examples": {
+                "simple": {
+                  "summary": "Upload simple dans un canal",
+                  "value": {
+                    "file": "<binary>",
+                    "channels": "C1234567890",
+                    "title": "document.pdf"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fichier uploadé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "file": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "ID du fichier",
+                          "example": "F1234567890"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Nom du fichier",
+                          "example": "document.pdf"
+                        },
+                        "title": {
+                          "type": "string",
+                          "description": "Titre du fichier",
+                          "example": "My Document"
+                        },
+                        "mimetype": {
+                          "type": "string",
+                          "description": "Type MIME du fichier",
+                          "example": "application/pdf"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "description": "Taille en octets",
+                          "example": 123456
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "file": {
+                    "id": "F1234567890",
+                    "name": "document.pdf",
+                    "title": "My Document",
+                    "mimetype": "application/pdf",
+                    "size": 123456
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erreur (fichier invalide, canal inexistant, etc.)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                },
+                "example": {
+                  "ok": false,
+                  "error": "invalid_file"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/files.info": {
+      "get": {
+        "tags": ["Files"],
+        "summary": "Récupère les infos d'un fichier",
+        "description": "Récupère les informations détaillées d'un fichier uploadé dans Slack par son ID.",
+        "operationId": "get__files_info",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "file",
+            "in": "query",
+            "description": "ID du fichier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "F1234567890"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Informations du fichier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "file": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "ID du fichier",
+                          "example": "F1234567890"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Nom du fichier",
+                          "example": "document.pdf"
+                        },
+                        "title": {
+                          "type": "string",
+                          "description": "Titre du fichier",
+                          "example": "My Document"
+                        },
+                        "mimetype": {
+                          "type": "string",
+                          "description": "Type MIME",
+                          "example": "application/pdf"
+                        },
+                        "size": {
+                          "type": "integer",
+                          "description": "Taille en octets",
+                          "example": 123456
+                        },
+                        "url_private": {
+                          "type": "string",
+                          "description": "URL privée pour télécharger le fichier",
+                          "example": "https://files.slack.com/files-pri/..."
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "ok": true,
+                  "file": {
+                    "id": "F1234567890",
+                    "name": "document.pdf",
+                    "title": "My Document",
+                    "mimetype": "application/pdf",
+                    "size": 123456,
+                    "url_private": "https://files.slack.com/files-pri/..."
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fichier non trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                },
+                "example": {
+                  "ok": false,
+                  "error": "file_not_found"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

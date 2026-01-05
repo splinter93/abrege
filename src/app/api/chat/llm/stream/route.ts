@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { simpleLogger as logger } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -12,7 +12,7 @@ import type { Tool, McpTool } from '@/services/llm/types/strictTypes';
 import type { ToolCall } from '@/services/llm/types/strictTypes';
 import { isMcpTool, isFunctionTool } from '@/services/llm/types/strictTypes';
 import { llmStreamRequestSchema } from '../validation';
-import { chatRateLimiter } from '@/services/rateLimiter';
+import { dynamicChatRateLimiter } from '@/services/dynamicRateLimiter';
 import {
   validateAndExtractUserId,
   resolveAgent,
@@ -48,7 +48,9 @@ export async function POST(request: NextRequest) {
     const validation = llmStreamRequestSchema.safeParse(body);
     
     if (!validation.success) {
-      logger.warn('[Stream Route] ❌ Validation failed:', validation.error.format());
+      logger.warn(LogCategory.API, '[Stream Route] ❌ Validation failed', {
+        errors: validation.error.format()
+      });
       return new Response(
         JSON.stringify({ 
           error: 'Validation failed', 
@@ -93,12 +95,16 @@ export async function POST(request: NextRequest) {
     
     const userId = userIdResult.userId;
 
-    // ✅ SÉCURITÉ: Rate limiting par utilisateur
-    const chatLimit = await chatRateLimiter.check(userId);
+    // ✅ SÉCURITÉ: Rate limiting par utilisateur (différencié free/premium)
+    const chatLimit = await dynamicChatRateLimiter.check(userId);
     
     if (!chatLimit.allowed) {
       const resetDate = new Date(chatLimit.resetTime);
-      logger.warn(`[Stream Route] ⛔ Rate limit dépassé pour userId ${userId.substring(0, 8)}...`);
+      logger.warn(LogCategory.API, `[Stream Route] ⛔ Rate limit dépassé pour userId`, {
+        userId: userId.substring(0, 8) + '...',
+        limit: chatLimit.limit,
+        resetTime: chatLimit.resetTime
+      });
       
       return new Response(
         JSON.stringify({
@@ -140,7 +146,11 @@ export async function POST(request: NextRequest) {
     const { getModelInfo } = await import('@/constants/groqModels');
     const modelInfo = getModelInfo(model);
     if (modelInfo?.provider && modelInfo.provider !== providerType) {
-      logger.warn(`[Stream Route] ⚠️ Correction automatique provider: ${providerType} → ${modelInfo.provider} (modèle: ${model})`);
+      logger.warn(LogCategory.API, `[Stream Route] ⚠️ Correction automatique provider`, {
+        from: providerType,
+        to: modelInfo.provider,
+        model
+      });
       providerType = modelInfo.provider;
     }
     
@@ -161,7 +171,7 @@ export async function POST(request: NextRequest) {
       // Notes ne sont PLUS passées ici (évite duplication tokens)
     };
     
-    logger.dev('[Stream Route] 🕵️‍♂️ Contexte UI reçu:', {
+    logger.debug(LogCategory.API, '[Stream Route] 🕵️‍♂️ Contexte UI reçu', {
       hasUIContext: !!context.uiContext,
       uiContextKeys: context.uiContext ? Object.keys(context.uiContext) : [],
       contextType: context.type,
@@ -210,7 +220,7 @@ export async function POST(request: NextRequest) {
       extendedContext
     );
     
-    logger.dev('[Stream Route] 📝 Messages construits:', {
+    logger.debug(LogCategory.API, '[Stream Route] 📝 Messages construits:', {
       systemMessageLength: systemMessage.length,
       contextMessagesCount: contextInjectionResult.contextMessages.length,
       providersApplied: contextInjectionResult.metadata.providersApplied,
@@ -259,7 +269,7 @@ export async function POST(request: NextRequest) {
 
             const template = templateMap.get(promptMeta.slug);
             if (!template || !template.trim()) {
-              logger.warn('[Stream Route] ⚠️ Prompt template manquant', {
+              logger.warn(LogCategory.API, '[Stream Route] ⚠️ Prompt template manquant', {
                 promptId: promptMeta.id,
                 slug: promptMeta.slug
               });
@@ -276,14 +286,14 @@ export async function POST(request: NextRequest) {
 
             const remainingPlaceholders = parsePromptPlaceholders(resolvedTemplate);
             if (remainingPlaceholders.length > 0) {
-              logger.warn('[Stream Route] ⚠️ Placeholders non remplis détectés', {
+              logger.warn(LogCategory.API, '[Stream Route] ⚠️ Placeholders non remplis détectés', {
                 slug: promptMeta.slug,
                 missing: remainingPlaceholders.map((placeholder) => placeholder.name)
               });
             }
 
             finalContent = finalContent.replace(pattern, `${resolvedTemplate}\n\n`);
-            logger.dev('[Stream Route] ✅ Prompt remplacé', {
+            logger.debug(LogCategory.API,'[Stream Route] ✅ Prompt remplacé', {
               slug: promptMeta.slug,
               name: promptMeta.name,
               hasValues: Object.keys(placeholderValues).length > 0
@@ -299,14 +309,16 @@ export async function POST(request: NextRequest) {
             processedMessage = finalContent;
           }
 
-          logger.info('[Stream Route] 📝 Prompts remplacés', {
+          logger.info(LogCategory.API, '[Stream Route] 📝 Prompts remplacés', {
             count: prompts.length,
             originalLength: processedMessage.length,
             finalLength: processedMessage.length
           });
         }
       } catch (promptError) {
-        logger.error('[Stream Route] ❌ Erreur remplacement prompts:', promptError);
+        logger.error(LogCategory.API, '[Stream Route] ❌ Erreur remplacement prompts', {
+          error: promptError instanceof Error ? promptError.message : String(promptError)
+        }, promptError instanceof Error ? promptError : undefined);
       }
     }
     }
@@ -340,7 +352,7 @@ export async function POST(request: NextRequest) {
             fileName: undefined // Pas de fileName dans le format multi-modal
           }));
           
-          logger.dev('[Stream Route] 🖼️ Images extraites du format multi-modal:', {
+          logger.debug(LogCategory.API,'[Stream Route] 🖼️ Images extraites du format multi-modal:', {
             count: userMessageImages.length,
             urlPrefixes: userMessageImages.map(img => {
               const url = img.url;
@@ -383,12 +395,16 @@ export async function POST(request: NextRequest) {
     // ✅ CRITIQUE : Utiliser le provider final du résultat override (si détecté)
     // Si le modèle a changé, le provider peut aussi avoir changé (ex: liminality → groq)
     if (overrideResult.finalProvider && overrideResult.finalProvider !== providerType) {
-      logger.info(`[Stream Route] 🔄 Provider auto-corrigé après override: ${providerType} → ${overrideResult.finalProvider} (modèle: ${model})`);
+      logger.info(LogCategory.API, `[Stream Route] 🔄 Provider auto-corrigé après override`, {
+        from: providerType,
+        to: overrideResult.finalProvider,
+        model
+      });
       providerType = overrideResult.finalProvider;
     }
 
     if (overrideResult.reasons.length > 0) {
-      logger.info('[Stream Route] 🔄 Model/Params override appliqué:', {
+      logger.info(LogCategory.API, '[Stream Route] 🔄 Model/Params override appliqué', {
         originalModel: overrideResult.originalModel,
         newModel: overrideResult.model,
         originalProvider: overrideContext.provider,
@@ -443,7 +459,7 @@ export async function POST(request: NextRequest) {
 
     // ✅ DEBUG : Logger les messages avant envoi au provider (surtout pour debug override)
     const lastUserMessage = messages.filter(m => m.role === 'user').pop();
-    logger.info('[Stream Route] 📋 Messages construits pour le provider:', {
+    logger.info(LogCategory.API, '[Stream Route] 📋 Messages construits pour le provider', {
       totalMessages: messages.length,
       historyLength: sanitizedHistory.length,
       hasUserMessage: !skipAddingUserMessage,
@@ -465,7 +481,9 @@ export async function POST(request: NextRequest) {
     let openApiEndpoints = new Map<string, OpenApiEndpoint>();
     
     // 🔥 LOG CRITIQUE : Vérifier si context.agentId existe
-    logger.info(`[Stream Route] 🔥 MCP - Context: agentId=${context.agentId || 'none'}`);
+    logger.info(LogCategory.API, `[Stream Route] 🔥 MCP - Context`, {
+      agentId: context.agentId || 'none'
+    });
     
     if (context.agentId) {
       try {
@@ -475,7 +493,9 @@ export async function POST(request: NextRequest) {
           .select('openapi_schema_id')
           .eq('agent_id', context.agentId);
 
-        logger.info(`[Stream Route] 🔥 MCP - Schémas OpenAPI: ${agentSchemas?.length || 0}`);
+        logger.info(LogCategory.API, `[Stream Route] 🔥 MCP - Schémas OpenAPI`, {
+          count: agentSchemas?.length || 0
+        });
 
         let openApiTools: Tool[] = [];
 
@@ -488,15 +508,21 @@ export async function POST(request: NextRequest) {
           openApiTools = tools;
           openApiEndpoints = endpoints;
           
-          logger.info(`[Stream Route] 🔥 MCP - OpenAPI tools: ${openApiTools.length}`);
+          logger.info(LogCategory.API, `[Stream Route] 🔥 MCP - OpenAPI tools`, {
+            count: openApiTools.length
+          });
         } else {
-          logger.warn(`[Stream Route] ⚠️ Aucun schéma OpenAPI pour agent ${context.agentId}, mais on charge quand même les MCP tools`);
+          logger.warn(LogCategory.API, `[Stream Route] ⚠️ Aucun schéma OpenAPI pour agent, mais on charge quand même les MCP tools`, {
+            agentId: context.agentId
+          });
         }
         
         // 2. Charger les tools MCP de l'agent (TOUJOURS, même sans schémas OpenAPI)
         const { mcpConfigService } = await import('@/services/llm/mcpConfigService');
         
-        logger.info(`[Stream Route] 🔥 MCP - Appel buildHybridTools (${openApiTools.length} OpenAPI tools)`);
+        logger.info(LogCategory.API, `[Stream Route] 🔥 MCP - Appel buildHybridTools`, {
+          openApiToolsCount: openApiTools.length
+        });
         
         // ✅ Type-safe: buildHybridTools retourne Tool[] | McpServerConfig[]
         const hybridTools = await mcpConfigService.buildHybridTools(
@@ -513,7 +539,9 @@ export async function POST(request: NextRequest) {
         const synesiaCallableIds = agentCallables.length > 0 ? agentCallables.map(c => c.id) : undefined;
         
         if (synesiaCallableIds && synesiaCallableIds.length > 0) {
-          logger.info(`[Stream Route] 🔗 ${synesiaCallableIds.length} callables trouvés pour l'agent`);
+          logger.info(LogCategory.API, `[Stream Route] 🔗 Callables trouvés pour l'agent`, {
+            count: synesiaCallableIds.length
+          });
           // Stocker pour utilisation avec LiminalityProvider
           (tools as Tool[] & { _synesiaCallables?: string[] })._synesiaCallables = synesiaCallableIds;
         }
@@ -521,15 +549,27 @@ export async function POST(request: NextRequest) {
         const mcpCount = tools.filter(isMcpTool).length;
         const openApiCount = tools.length - mcpCount;
         
-        logger.info(`[Stream Route] ✅ MCP - Tools chargés: ${tools.length} total (${mcpCount} MCP + ${openApiCount} OpenAPI) + ${agentCallables.length} callables`);
+        logger.info(LogCategory.API, `[Stream Route] ✅ MCP - Tools chargés`, {
+          total: tools.length,
+          mcpCount,
+          openApiCount,
+          callables: agentCallables.length
+        });
         
-        logger.dev(`[Stream Route] ✅ ${tools.length} tools chargés (${mcpCount} MCP + ${openApiCount} OpenAPI), ${openApiEndpoints.size} endpoints, ${agentCallables.length} callables`);
+        logger.debug(LogCategory.API, `[Stream Route] ✅ ${tools.length} tools chargés`, {
+        mcpCount,
+        openApiCount,
+        endpoints: openApiEndpoints.size,
+        callables: agentCallables.length
+      });
       } catch (toolsError) {
-        logger.error('[Stream Route] ❌ Erreur chargement tools:', toolsError);
+        logger.error(LogCategory.API, '[Stream Route] ❌ Erreur chargement tools', {
+          error: toolsError instanceof Error ? toolsError.message : String(toolsError)
+        }, toolsError instanceof Error ? toolsError : undefined);
         // Continue sans tools
       }
     } else {
-      logger.warn(`[Stream Route] ⚠️ PAS de context.agentId → 0 tools chargés`);
+      logger.warn(LogCategory.API, `[Stream Route] ⚠️ PAS de context.agentId → 0 tools chargés`);
     }
 
     // ✅ Créer le ReadableStream pour SSE avec gestion tool calls
@@ -563,7 +603,7 @@ export async function POST(request: NextRequest) {
         let roundCount = 0;
         
         try {
-          logger.dev('[Stream Route] 📡 Démarrage du stream SSE');
+          logger.debug(LogCategory.API,'[Stream Route] 📡 Démarrage du stream SSE');
           
           // Helper pour envoyer un chunk SSE
           const sendSSE = (data: unknown) => {
@@ -605,7 +645,7 @@ export async function POST(request: NextRequest) {
           // ✅ Créer une Map des tool names OpenAPI → pour routing d'exécution
           const openApiToolNames = new Set(openApiTools.map(t => t.function.name));
           
-          logger.dev(`[Stream Route] 🗺️ Tools séparés:`, {
+          logger.debug(LogCategory.API,`[Stream Route] 🗺️ Tools séparés:`, {
             totalTools: tools.length,
             mcpCount: mcpTools.length,
             openApiCount: openApiTools.length,
@@ -618,13 +658,13 @@ export async function POST(request: NextRequest) {
 
           while (roundCount < maxRounds) {
             roundCount++;
-            logger.dev(`[Stream Route] 🔄 Round ${roundCount}/${maxRounds}`);
+            logger.debug(LogCategory.API,`[Stream Route] 🔄 Round ${roundCount}/${maxRounds}`);
 
             // ✅ AUDIT DÉTAILLÉ : Logger les messages envoyés au LLM pour ce round
             const lastMessage = currentMessages[currentMessages.length - 1];
             const lastContent = lastMessage?.content ? extractTextFromContent(lastMessage.content) : '';
             
-            logger.dev(`[Stream Route] 📋 MESSAGES ENVOYÉS AU LLM - ROUND ${roundCount}:`, {
+            logger.debug(LogCategory.API,`[Stream Route] 📋 MESSAGES ENVOYÉS AU LLM - ROUND ${roundCount}:`, {
               messageCount: currentMessages.length,
               roles: currentMessages.map(m => m.role),
               hasToolCalls: currentMessages.some(m => hasToolCalls(m)),
@@ -636,11 +676,11 @@ export async function POST(request: NextRequest) {
             // ✅ AUDIT DÉTAILLÉ : Logger les 5 derniers messages pour voir l'ordre
             if (roundCount > 1) {
               const last5 = currentMessages.slice(-5);
-              logger.info(`[Stream Route] 🔍 DERNIERS 5 MESSAGES (Round ${roundCount}):`);
+              logger.info(LogCategory.API, `[Stream Route] 🔍 DERNIERS 5 MESSAGES (Round ${roundCount}):`);
               last5.forEach((m, i) => {
                 const toolCallId = m.role === 'tool' ? (m as { tool_call_id?: string }).tool_call_id : undefined;
                 const toolCallsCount = m.role === 'assistant' && 'tool_calls' in m && Array.isArray(m.tool_calls) ? m.tool_calls.length : 0;
-                logger.info(`  ${i+1}. ${m.role} - toolCalls:${toolCallsCount} - toolCallId:${toolCallId||'none'}`);
+                logger.info(LogCategory.API, `  ${i+1}. ${m.role} - toolCalls:${toolCallsCount} - toolCallId:${toolCallId||'none'}`);
               });
             }
 
@@ -656,7 +696,7 @@ export async function POST(request: NextRequest) {
             try {
               // ✅ CRITIQUE : Logger le modèle utilisé et les images avant l'appel
               const lastUserMsg = currentMessages.filter(m => m.role === 'user').pop();
-              logger.info(`[Stream Route] 🚀 Appel provider - Round ${roundCount}:`, {
+              logger.info(LogCategory.API, `[Stream Route] 🚀 Appel provider - Round ${roundCount}:`, {
                 provider: providerType,
                 model: model,
                 hasImages: !!(lastUserMsg && 'attachedImages' in lastUserMsg && (lastUserMsg as { attachedImages?: unknown[] }).attachedImages?.length),
@@ -715,7 +755,7 @@ export async function POST(request: NextRequest) {
                   const mcpCalls = (chunk.x_groq as { mcp_calls?: Array<{ server_label: string; name: string; arguments: Record<string, unknown>; output?: unknown }> }).mcp_calls;
                   if (mcpCalls && Array.isArray(mcpCalls)) {
                     currentRoundMcpCalls = mcpCalls;
-                    logger.dev(`[Stream Route] 🔧 MCP calls détectés dans chunk: ${mcpCalls.length}`);
+                    logger.debug(LogCategory.API,`[Stream Route] 🔧 MCP calls détectés dans chunk: ${mcpCalls.length}`);
                   }
                 }
                 
@@ -726,7 +766,7 @@ export async function POST(request: NextRequest) {
                     const mcpToolCall = tc as ToolCall & { alreadyExecuted?: boolean; result?: unknown };
                     const hasCustomProps = mcpToolCall.alreadyExecuted !== undefined || mcpToolCall.result !== undefined;
                     if (hasCustomProps) {
-                      logger.dev(`[Stream Route] 🔧 Tool call avec props MCP:`, { 
+                      logger.debug(LogCategory.API,`[Stream Route] 🔧 Tool call avec props MCP:`, { 
                         id: tc.id, 
                         name: tc.function.name,
                         alreadyExecuted: mcpToolCall.alreadyExecuted,
@@ -752,7 +792,7 @@ export async function POST(request: NextRequest) {
                       // Accumuler les arguments progressifs
                       const existing = toolCallsMap.get(tc.id);
                       if (!existing) {
-                        logger.error(`[Stream Route] ⚠️ Tool call ${tc.id} not found in map`, { toolCallId: tc.id });
+                        logger.error(LogCategory.API, `[Stream Route] ⚠️ Tool call ${tc.id} not found in map`, { toolCallId: tc.id });
                         continue;
                       }
                       if (tc.function.name) existing.function.name = tc.function.name;
@@ -799,7 +839,7 @@ export async function POST(request: NextRequest) {
                 }
               }
               
-              logger.error(`[Stream Route] ❌ ERREUR STREAMING PROVIDER (Round ${roundCount}):`, {
+              logger.error(LogCategory.API, `[Stream Route] ❌ ERREUR STREAMING PROVIDER (Round ${roundCount}):`, {
                 provider: providerFromError || providerType,
                 model,
                 statusCode,
@@ -815,7 +855,7 @@ export async function POST(request: NextRequest) {
               if (errorCode === 'tool_use_failed' && toolValidationRetryCount < maxToolValidationRetries) {
                 toolValidationRetryCount++;
                 
-                logger.warn(`[Stream Route] 🔄 Retry automatique pour tool_use_failed (${toolValidationRetryCount}/${maxToolValidationRetries})`);
+                logger.warn(LogCategory.API, `[Stream Route] 🔄 Retry automatique pour tool_use_failed (${toolValidationRetryCount}/${maxToolValidationRetries})`);
                 
                 // Envoyer un SSE pour informer le client du retry
                 sendSSE({
@@ -852,7 +892,7 @@ export async function POST(request: NextRequest) {
             }
 
             // ✅ AUDIT DÉTAILLÉ : Logger la décision de fin de round
-            logger.dev(`[Stream Route] 🎯 DÉCISION ROUND ${roundCount}:`, {
+            logger.debug(LogCategory.API,`[Stream Route] 🎯 DÉCISION ROUND ${roundCount}:`, {
               finishReason,
               toolCallsCount: toolCallsMap.size,
               accumulatedContentLength: accumulatedContent.length,
@@ -861,28 +901,28 @@ export async function POST(request: NextRequest) {
 
             // ✅ RECOVERY: Si on est dans un round final forcé, sortir immédiatement après la réponse
             if (forcedFinalRound) {
-              logger.info('[Stream Route] ✅ Round final de recovery terminé - sortie de la boucle');
+              logger.info(LogCategory.API, '[Stream Route] ✅ Round final de recovery terminé - sortie de la boucle');
               break;
             }
 
             // ✅ Décision basée sur finish_reason
             // ⚠️ CRITICAL: Si finishReason === 'stop' MAIS on a des tool calls MCP, on doit les afficher AVANT de sortir
             if (finishReason === 'tool_calls' && toolCallsMap.size > 0) {
-              logger.dev(`[Stream Route] 🔧 Tool calls détectés (${toolCallsMap.size}), exécution...`);
+              logger.debug(LogCategory.API,`[Stream Route] 🔧 Tool calls détectés (${toolCallsMap.size}), exécution...`);
             } else if (finishReason === 'stop') {
               // ✅ CRITICAL FIX: Si on a des tool calls MCP (déjà exécutés), on doit les afficher AVANT de sortir
               if (toolCallsMap.size > 0) {
-                logger.dev(`[Stream Route] 🔧 finishReason='stop' mais ${toolCallsMap.size} tool call(s) MCP à afficher - traitement avant sortie`);
+                logger.debug(LogCategory.API,`[Stream Route] 🔧 finishReason='stop' mais ${toolCallsMap.size} tool call(s) MCP à afficher - traitement avant sortie`);
                 // On continue pour traiter les tool calls MCP (lignes suivantes)
               } else {
-                logger.dev('[Stream Route] ✅ Réponse finale (stop), fin du stream');
+                logger.debug(LogCategory.API,'[Stream Route] ✅ Réponse finale (stop), fin du stream');
                 break;
               }
             } else if (finishReason === 'length') {
-              logger.warn('[Stream Route] ⚠️ Token limit atteint');
+              logger.warn(LogCategory.API, '[Stream Route] ⚠️ Token limit atteint');
               break;
             } else {
-              logger.dev('[Stream Route] ✅ Pas de tool calls, fin du stream');
+              logger.debug(LogCategory.API,'[Stream Route] ✅ Pas de tool calls, fin du stream');
               break;
             }
 
@@ -900,7 +940,7 @@ export async function POST(request: NextRequest) {
               }
             });
 
-            logger.dev(`[Stream Route] 🔧 Tool calls: ${alreadyExecutedTools.length} déjà exécutés (MCP x.ai), ${toolsToExecute.length} à exécuter`);
+            logger.debug(LogCategory.API,`[Stream Route] 🔧 Tool calls: ${alreadyExecutedTools.length} déjà exécutés (MCP x.ai), ${toolsToExecute.length} à exécuter`);
 
             // ✅ Déduplication forte : ne pas exécuter deux fois le même tool (nom + args)
             const uniqueToolCalls: ToolCall[] = [];
@@ -908,7 +948,7 @@ export async function POST(request: NextRequest) {
               const signature = `${tc.function.name}:${tc.function.arguments}`;
               const isDuplicate = executedToolCallsSignatures.has(signature);
 
-              logger.info(`[Stream Route] 🔧 TOOL CALL ${index + 1}:`, {
+              logger.info(LogCategory.API, `[Stream Route] 🔧 TOOL CALL ${index + 1}:`, {
                 id: tc.id,
                 functionName: tc.function.name,
                 args: tc.function.arguments.substring(0, 100),
@@ -916,7 +956,7 @@ export async function POST(request: NextRequest) {
               });
 
               if (isDuplicate) {
-                logger.warn(`[Stream Route] ⚠️ DOUBLON DÉTECTÉ - SKIP ${tc.function.name}`);
+                logger.warn(LogCategory.API, `[Stream Route] ⚠️ DOUBLON DÉTECTÉ - SKIP ${tc.function.name}`);
                 return;
               }
 
@@ -931,7 +971,7 @@ export async function POST(request: NextRequest) {
             const allToolsForTimeline = [...alreadyExecutedTools, ...uniqueToolCalls];
             
             if (accumulatedContent || allToolsForTimeline.length > 0) {
-              logger.dev(`[Stream Route] 📤 Envoi assistant_round_complete:`, {
+              logger.debug(LogCategory.API,`[Stream Route] 📤 Envoi assistant_round_complete:`, {
                 toolCallsCount: allToolsForTimeline.length,
                 mcpCount: alreadyExecutedTools.length,
                 openApiCount: uniqueToolCalls.length,
@@ -961,7 +1001,7 @@ export async function POST(request: NextRequest) {
             // On continue pour traiter les tool calls MCP (lignes suivantes)
             // Le break sera après l'envoi des tool_result (voir ligne ~950)
             if (uniqueToolCalls.length === 0 && alreadyExecutedTools.length > 0 && accumulatedContent.length > 0) {
-              logger.info('[Stream Route] ✅ MCP tools déjà exécutés + contenu reçu - réponse finale de xAI, traitement puis fin du round');
+              logger.info(LogCategory.API, '[Stream Route] ✅ MCP tools déjà exécutés + contenu reçu - réponse finale de xAI, traitement puis fin du round');
               // On continue pour envoyer assistant_round_complete et tool_result
             }
 
@@ -969,7 +1009,7 @@ export async function POST(request: NextRequest) {
             // pour que le LLM explique la situation à l'utilisateur au lieu d'un arrêt silencieux
             // ⚠️ MAIS: Si on a des MCP tools déjà exécutés, PAS besoin de forcer un round
             if (uniqueToolCalls.length === 0 && toolsToExecute.length > 0 && alreadyExecutedTools.length === 0) {
-              logger.warn('[Stream Route] ⚠️ Tous les tool calls étaient des doublons - forçage dernier round SANS tools');
+              logger.warn(LogCategory.API, '[Stream Route] ⚠️ Tous les tool calls étaient des doublons - forçage dernier round SANS tools');
               
               // Ajouter un message système expliquant la situation
               currentMessages.push({
@@ -1013,7 +1053,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             // ✅ Exécuter les tool calls (uniques uniquement)
             // ⚠️ Les MCP tools x.ai sont déjà exécutés côté serveur, on ajoute juste leur résultat
             if (alreadyExecutedTools.length > 0) {
-              logger.info(`[Stream Route] ✅ ${alreadyExecutedTools.length} MCP tool(s) déjà exécuté(s) par x.ai - ajout résultats`);
+              logger.info(LogCategory.API, `[Stream Route] ✅ ${alreadyExecutedTools.length} MCP tool(s) déjà exécuté(s) par x.ai - ajout résultats`);
               
               // Ajouter les signatures MCP pour éviter de les re-exécuter
               for (const mcpTool of alreadyExecutedTools) {
@@ -1049,12 +1089,12 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
               
               // ✅ CRITICAL FIX: Si c'était la fin (finishReason === 'stop'), sortir APRÈS avoir envoyé les tool_result
               if (finishReason === 'stop' && uniqueToolCalls.length === 0) {
-                logger.info('[Stream Route] ✅ Tool_result MCP envoyés, fin du stream (finishReason=stop)');
+                logger.info(LogCategory.API, '[Stream Route] ✅ Tool_result MCP envoyés, fin du stream (finishReason=stop)');
                 break;
               }
             }
             
-            logger.dev(`[Stream Route] 🔧 Exécution de ${uniqueToolCalls.length} tool calls OpenAPI (après déduplication)`);
+            logger.debug(LogCategory.API,`[Stream Route] 🔧 Exécution de ${uniqueToolCalls.length} tool calls OpenAPI (après déduplication)`);
             
             // Envoyer un événement d'exécution de tools (seulement pour ceux à exécuter)
             if (uniqueToolCalls.length > 0) {
@@ -1083,7 +1123,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             for (const toolCall of uniqueToolCalls) {
               checkTimeout(`tool_execution:${toolCall.function.name}`); // Vérifier timeout avant chaque tool
               try {
-                logger.dev(`[Stream Route] 🔧 Exécution tool: ${toolCall.function.name}`);
+                logger.debug(LogCategory.API,`[Stream Route] 🔧 Exécution tool: ${toolCall.function.name}`);
                 
                 // ✅ Vérifier si c'est un tool OpenAPI (exécuté par nous)
                 // Les tools MCP sont exécutés nativement par Groq, on ne les touche pas
@@ -1091,7 +1131,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                 
                 if (!isOpenApiTool) {
                   // ✅ Tool MCP : Groq l'a déjà exécuté, afficher dans la timeline
-                  logger.dev(`[Stream Route] 🔧 MCP tool détecté (géré par Groq): ${toolCall.function.name}`);
+                  logger.debug(LogCategory.API,`[Stream Route] 🔧 MCP tool détecté (géré par Groq): ${toolCall.function.name}`);
                   
                   // ✅ Chercher le résultat MCP correspondant
                   let mcpOutput: string | unknown = 'MCP tool executed by Groq';
@@ -1116,7 +1156,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                     isMcp: true // ✅ Flag pour différencier les MCP tools dans l'UI
                   });
                   
-                  logger.dev(`[Stream Route] ✅ MCP tool ${toolCall.function.name} affiché dans timeline`);
+                  logger.debug(LogCategory.API,`[Stream Route] ✅ MCP tool ${toolCall.function.name} affiché dans timeline`);
                   continue;
                 }
                 
@@ -1124,7 +1164,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                 const result = await openApiExecutor.executeToolCall(toolCall, userToken);
 
                 // ✅ AUDIT DÉTAILLÉ : Logger après exécution
-                logger.dev(`[Stream Route] ✅ APRÈS EXÉCUTION TOOL:`, {
+                logger.debug(LogCategory.API,`[Stream Route] ✅ APRÈS EXÉCUTION TOOL:`, {
                   toolName: toolCall.function.name,
                   success: result.success,
                   resultLength: typeof result.content === 'string' ? result.content.length : 'object',
@@ -1150,10 +1190,10 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                   timestamp: Date.now()
                 });
 
-                logger.dev(`[Stream Route] ✅ Tool ${toolCall.function.name} exécuté (success: ${result.success})`);
+                logger.debug(LogCategory.API,`[Stream Route] ✅ Tool ${toolCall.function.name} exécuté (success: ${result.success})`);
 
               } catch (toolError) {
-                logger.error(`[Stream Route] ❌ Erreur tool ${toolCall.function.name}:`, toolError);
+                logger.error(LogCategory.API, `[Stream Route] ❌ Erreur tool ${toolCall.function.name}:`, undefined, toolError instanceof Error ? toolError : undefined);
                 
                 // Ajouter un résultat d'erreur
                 const errorContent = `Erreur: ${toolError instanceof Error ? toolError.message : String(toolError)}`;
@@ -1181,7 +1221,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             const hasReachedRoundLimit = roundCount >= maxRounds;
 
             if (hasReachedRoundLimit) {
-              logger.warn(`[Stream Route] ⚠️ Limite de ${maxRounds} rounds atteinte, relance finale forcée sans nouveaux tool calls`);
+              logger.warn(LogCategory.API, `[Stream Route] ⚠️ Limite de ${maxRounds} rounds atteinte, relance finale forcée sans nouveaux tool calls`);
               
               try {
                 // Pas de callables dans le round final (forcer réponse)
@@ -1195,7 +1235,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                   const response = finalResponse as { tool_calls?: unknown[]; content?: string; reasoning?: string };
                   
                   if ('tool_calls' in response && response.tool_calls && Array.isArray(response.tool_calls) && response.tool_calls.length > 0) {
-                    logger.warn('[Stream Route] ⚠️ Réponse finale forcée contient encore des tool calls, ils seront ignorés', {
+                    logger.warn(LogCategory.API, '[Stream Route] ⚠️ Réponse finale forcée contient encore des tool calls, ils seront ignorés', {
                       requestedToolCalls: response.tool_calls.length
                     });
                   }
@@ -1222,21 +1262,21 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                       timestamp: new Date().toISOString()
                     });
                   } else {
-                    logger.error('[Stream Route] ❌ Réponse finale forcée vide, envoi d\'une erreur au client');
+                    logger.error(LogCategory.API, '[Stream Route] ❌ Réponse finale forcée vide, envoi d\'une erreur au client');
                     sendSSE({
                       type: 'error',
                       error: 'Réponse finale indisponible après la limite de tool calls'
                     });
                   }
                 } else {
-                  logger.error('[Stream Route] ❌ Réponse finale invalide, envoi d\'une erreur au client');
+                  logger.error(LogCategory.API, '[Stream Route] ❌ Réponse finale invalide, envoi d\'une erreur au client');
                   sendSSE({
                     type: 'error',
                     error: 'Réponse finale invalide après la limite de tool calls'
                   });
                 }
               } catch (finalError) {
-                logger.error('[Stream Route] ❌ Erreur lors de la relance finale forcée', finalError);
+                logger.error(LogCategory.API, '[Stream Route] ❌ Erreur lors de la relance finale forcée', undefined, finalError instanceof Error ? finalError : undefined);
                 sendSSE({
                   type: 'error',
                   error: 'Erreur lors de la relance finale forcée'
@@ -1247,7 +1287,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             }
 
             // Continuer la boucle pour relancer le LLM avec les résultats
-            logger.dev(`[Stream Route] 🔄 Relance du LLM avec ${currentMessages.length} messages`);
+            logger.debug(LogCategory.API,`[Stream Route] 🔄 Relance du LLM avec ${currentMessages.length} messages`);
           }
 
           // Envoyer un chunk de fin
@@ -1264,7 +1304,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             });
           }
 
-          logger.info('[Stream Route] ✅ Stream terminé avec succès');
+          logger.info(LogCategory.API, '[Stream Route] ✅ Stream terminé avec succès');
           controller.close();
 
         } catch (error) {
@@ -1276,7 +1316,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
           
           const errorMessage = error instanceof Error ? error.message : String(error);
           
-          logger.error('[Stream Route] ❌ Erreur stream:', {
+          logger.error(LogCategory.API, '[Stream Route] ❌ Erreur stream:', {
             error: errorMessage,
             isTimeout,
             elapsed: elapsed ? `${Math.round(elapsed / 1000)}s` : undefined,
@@ -1323,7 +1363,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
     });
 
   } catch (error) {
-    logger.error('[Stream Route] ❌ Erreur globale:', error);
+    logger.error(LogCategory.API, '[Stream Route] ❌ Erreur globale:', undefined, error instanceof Error ? error : undefined);
     
     return new Response(
       JSON.stringify({

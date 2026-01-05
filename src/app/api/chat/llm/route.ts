@@ -4,9 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 import { handleGroqGptOss120b } from '@/services/llm/groqGptOss120b';
-import { simpleLogger as logger } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
-import { chatRateLimiter } from '@/services/rateLimiter';
+import { dynamicChatRateLimiter } from '@/services/dynamicRateLimiter';
 import type { ChatMessage } from '@/types/chat';
 import type { AgentConfig } from '@/services/llm/types/agentTypes';
 import { llmRequestSchema } from './validation';
@@ -46,7 +46,9 @@ export async function POST(request: NextRequest) {
     const validation = llmRequestSchema.safeParse(body);
     
     if (!validation.success) {
-      logger.warn('[LLM Route] ❌ Validation failed:', validation.error.format());
+      logger.warn(LogCategory.API, '[LLM Route] ❌ Validation failed', {
+        errors: validation.error.format()
+      });
       return NextResponse.json(
         { 
           error: 'Validation failed', 
@@ -72,7 +74,7 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      logger.error(`[LLM Route] ❌ Token manquant ou invalide:`, {
+      logger.error(LogCategory.API, `[LLM Route] ❌ Token manquant ou invalide`, {
         hasHeader: !!authHeader,
         headerValue: authHeader ? 'Present but invalid format' : 'Missing'
       });
@@ -90,7 +92,7 @@ export async function POST(request: NextRequest) {
     try {
       // ✅ JWT OBLIGATOIRE : rejet des UUID nus (impersonation)
       if (!userToken.includes('.')) {
-        logger.error('[LLM Route] ❌ Token non signé reçu (UUID nu rejeté)');
+        logger.error(LogCategory.API, '[LLM Route] ❌ Token non signé reçu (UUID nu rejeté)');
         return NextResponse.json(
           { error: 'Token JWT requis' },
           { status: 401 }
@@ -101,7 +103,9 @@ export async function POST(request: NextRequest) {
       const { data: { user }, error: authError } = await supabase.auth.getUser(userToken);
       
       if (authError || !user) {
-        logger.error(`[LLM Route] ❌ Token invalide ou expiré:`, authError);
+        logger.error(LogCategory.API, `[LLM Route] ❌ Token invalide ou expiré`, {
+          error: authError?.message || 'Unknown error'
+        }, authError || undefined);
         return NextResponse.json(
           { error: 'Token invalide ou expiré' },
           { status: 401 }
@@ -111,19 +115,25 @@ export async function POST(request: NextRequest) {
       // Extraire le userId du JWT
       userId = user.id;
     } catch (validationError) {
-      logger.error(`[LLM Route] ❌ Erreur validation token:`, validationError);
+      logger.error(LogCategory.API, `[LLM Route] ❌ Erreur validation token`, {
+        error: validationError instanceof Error ? validationError.message : 'Unknown error'
+      }, validationError instanceof Error ? validationError : undefined);
       return NextResponse.json(
         { error: 'Erreur de validation du token' },
         { status: 401 }
       );
     }
     
-    // ✅ SÉCURITÉ: Rate limiting par utilisateur
-    const chatLimit = await chatRateLimiter.check(userId);
+    // ✅ SÉCURITÉ: Rate limiting par utilisateur (différencié free/premium)
+    const chatLimit = await dynamicChatRateLimiter.check(userId);
     
     if (!chatLimit.allowed) {
       const resetDate = new Date(chatLimit.resetTime);
-      logger.warn(`[LLM Route] ⛔ Rate limit dépassé pour userId ${userId.substring(0, 8)}...`);
+      logger.warn(LogCategory.API, `[LLM Route] ⛔ Rate limit dépassé pour userId`, {
+        userId: userId.substring(0, 8) + '...',
+        limit: chatLimit.limit,
+        resetTime: chatLimit.resetTime
+      });
       
       return NextResponse.json(
         {
@@ -156,7 +166,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.info(`[LLM Route] 🚀 Démarrage pour session ${sessionId} avec provider ${provider || 'default'}`);
+    logger.info(LogCategory.API, `[LLM Route] 🚀 Démarrage pour session`, {
+      sessionId,
+      provider: provider || 'default'
+    });
 
     // 🎯 Récupérer l'agentConfig depuis la base de données
     let resolvedAgentConfig: Partial<AgentConfig> | null = agentConfig;
@@ -172,7 +185,9 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (agentByIdError) {
-          logger.warn(`[LLM Route] ⚠️ Erreur récupération agent par ID: ${agentByIdError.message}`);
+          logger.warn(LogCategory.API, `[LLM Route] ⚠️ Erreur récupération agent par ID`, {
+          error: agentByIdError.message
+        });
         } else if (agentById) {
           resolvedAgentConfig = agentById;
         }
@@ -190,11 +205,16 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (agentError) {
-          logger.warn(`[LLM Route] ⚠️ Erreur récupération agent ${provider}: ${agentError.message}`);
+          logger.warn(LogCategory.API, `[LLM Route] ⚠️ Erreur récupération agent`, {
+          provider,
+          error: agentError.message
+        });
         } else if (agent) {
           resolvedAgentConfig = agent;
         } else {
-          logger.warn(`[LLM Route] ⚠️ Aucun agent trouvé pour le provider: ${provider}`);
+          logger.warn(LogCategory.API, `[LLM Route] ⚠️ Aucun agent trouvé pour le provider`, {
+          provider
+        });
         }
       }
 
@@ -209,11 +229,13 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (defaultAgentError) {
-          logger.warn(`[LLM Route] ⚠️ Erreur récupération agent par défaut: ${defaultAgentError.message}`);
+          logger.warn(LogCategory.API, `[LLM Route] ⚠️ Erreur récupération agent par défaut`, {
+          error: defaultAgentError.message
+        });
         } else if (defaultAgent) {
           resolvedAgentConfig = defaultAgent;
         } else {
-          logger.warn(`[LLM Route] ⚠️ Aucun agent actif trouvé dans la base de données`);
+          logger.warn(LogCategory.API, `[LLM Route] ⚠️ Aucun agent actif trouvé dans la base de données`);
         }
       }
 
@@ -223,7 +245,9 @@ export async function POST(request: NextRequest) {
         const hasScopes = resolvedAgentConfig.api_v2_capabilities && resolvedAgentConfig.api_v2_capabilities.length > 0;
         
         if (!hasScopes) {
-          logger.warn(`[LLM Route] ⚠️ Agent ${resolvedAgentConfig.name} n'a pas de scopes configurés, ajout des scopes par défaut`);
+          logger.warn(LogCategory.API, `[LLM Route] ⚠️ Agent n'a pas de scopes configurés, ajout des scopes par défaut`, {
+          agentName: resolvedAgentConfig.name
+        });
           
           // Mettre à jour l'agent avec les scopes par défaut
           const { error: updateError } = await supabase
@@ -234,7 +258,9 @@ export async function POST(request: NextRequest) {
             .eq('id', resolvedAgentConfig.id);
 
           if (updateError) {
-            logger.error(`[LLM Route] ❌ Erreur mise à jour scopes agent: ${updateError.message}`);
+            logger.error(LogCategory.API, `[LLM Route] ❌ Erreur mise à jour scopes agent`, {
+            error: updateError.message
+          });
           } else {
             // Mettre à jour la config locale
             resolvedAgentConfig.api_v2_capabilities = DEFAULT_AGENT_SCOPES;
@@ -243,7 +269,9 @@ export async function POST(request: NextRequest) {
       }
 
     } catch (error) {
-      logger.error(`[LLM Route] ❌ Erreur lors de la récupération de l'agent: ${error}`);
+      logger.error(LogCategory.API, `[LLM Route] ❌ Erreur lors de la récupération de l'agent`, {
+        error: error instanceof Error ? error.message : String(error)
+      }, error instanceof Error ? error : undefined);
     }
 
     // Configuration par défaut si aucun agent n'est trouvé
@@ -275,7 +303,7 @@ export async function POST(request: NextRequest) {
     };
     
     // 🔍 DEBUG: Log de l'agent config envoyé à l'orchestrateur
-    logger.info(`[LLM Route] 📤 Envoi à l'orchestrateur:`, {
+    logger.info(LogCategory.API, `[LLM Route] 📤 Envoi à l'orchestrateur`, {
       agentId: finalAgentConfig.id,
       agentName: finalAgentConfig.name,
       model: finalAgentConfig.model,
@@ -310,7 +338,7 @@ export async function POST(request: NextRequest) {
     return result;
 
   } catch (error) {
-    logger.error(`[LLM Route] ❌ Erreur fatale:`, {
+    logger.error(LogCategory.API, `[LLM Route] ❌ Erreur fatale`, {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       sessionId: sessionId || 'unknown',
@@ -321,7 +349,7 @@ export async function POST(request: NextRequest) {
 
     // 🔧 Gestion spéciale des erreurs Groq 500 - on fournit une réponse de fallback
     if (error instanceof Error && error.message.includes('Groq API error: 500')) {
-      logger.warn(`[LLM Route] ⚠️ Erreur Groq 500 détectée, fourniture d'une réponse de fallback`);
+      logger.warn(LogCategory.API, `[LLM Route] ⚠️ Erreur Groq 500 détectée, fourniture d'une réponse de fallback`);
       
       return NextResponse.json({
         success: true, // ✅ On considère comme succès pour permettre la persistance
