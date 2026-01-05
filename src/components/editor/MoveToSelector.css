@@ -1,0 +1,161 @@
+/* =============================================================================
+   MOVE TO SELECTOR - Modale pour déplacer une note
+   ========================================================================== */
+
+.move-to-selector-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+}
+
+.move-to-selector {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 420px;
+  max-height: 80vh;
+  background: linear-gradient(135deg, #1c2028 0%, #2d3139 50%, #1c2028 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  z-index: 1001;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.move-to-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: none;
+}
+
+.move-to-selector-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.move-to-selector-close {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.move-to-selector-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+}
+
+.move-to-selector-content {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.move-to-selector-loading,
+.move-to-selector-empty {
+  padding: 24px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.move-to-selector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.move-to-selector-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: none;
+  border: none;
+  color: #e5e7eb;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  width: 100%;
+  position: relative;
+}
+
+.move-to-selector-option:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.move-to-selector-option:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.move-to-selector-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.move-to-selector-option.current {
+  background: rgba(41, 148, 255, 0.15);
+  color: #60a5fa;
+}
+
+.move-to-selector-option.current:hover {
+  background: rgba(41, 148, 255, 0.2);
+}
+
+.move-to-selector-option-emoji {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.move-to-selector-option-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.move-to-selector-option-badge {
+  font-size: 12px;
+  color: #60a5fa;
+  padding: 2px 8px;
+  background: rgba(41, 148, 255, 0.2);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.move-to-selector-option-loading {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+  flex-shrink: 0;
+}
+

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiGlobe, FiCheck, FiEye, FiEyeOff, FiCircle } from 'react-icons/fi';
+import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiGlobe, FiCheck, FiEye, FiEyeOff, FiCircle, FiFolder } from 'react-icons/fi';
 import './editor-kebab-menu.css';
 import ShareMenu from './ShareMenu';
+import MoveToSelector from './editor/MoveToSelector';
 import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -49,12 +50,14 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const [copyConfirmed, setCopyConfirmed] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [moveToMenuOpen, setMoveToMenuOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   // Récupérer la note depuis le store
   const note = useFileSystemStore((state) => state.notes[noteId]);
   // Utiliser directement html_content de la base de données (généré par Tiptap)
   const htmlContent = note?.html_content || '';
+  const currentClasseurId = note?.classeur_id || null;
 
   useEffect(() => {
     if (!open) return;
@@ -73,7 +76,19 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         return;
       }
       
-      // ShareMenu fermé, logique normale
+      // Si le MoveToSelector est ouvert, ne pas fermer le menu kebab
+      if (moveToMenuOpen) {
+        // Vérifier si le clic est dans le MoveToSelector
+        if (target.closest('.move-to-selector')) {
+          return; // Clic dans le MoveToSelector, ne rien faire
+        }
+        // Clic à l'extérieur du MoveToSelector, fermer les deux
+        onClose();
+        setMoveToMenuOpen(false);
+        return;
+      }
+      
+      // Menus fermés, logique normale
       if (menuRef.current && !menuRef.current.contains(target)) {
         onClose();
       }
@@ -82,6 +97,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       if (e.key === 'Escape') {
         onClose();
         setShareMenuOpen(false); // Fermer aussi le ShareMenu
+        setMoveToMenuOpen(false); // Fermer aussi le MoveToSelector
       }
     };
     document.addEventListener('mousedown', handleClick);
@@ -90,7 +106,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleEsc);
     };
-  }, [open, onClose, shareMenuOpen]);
+  }, [open, onClose, shareMenuOpen, moveToMenuOpen]);
 
   if (!open) return null;
   
@@ -195,6 +211,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       share: 'Partager',
       export: 'Exporter en PDF',
       exporting: 'Export en cours...',
+      moveTo: 'Déplacer vers...',
       wideMode: 'Mode Large',
       a4Mode: 'Mode A4',
       toolbar: 'Zen Mode',
@@ -206,6 +223,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       share: 'Share',
       export: 'Export to PDF',
       exporting: 'Exporting...',
+      moveTo: 'Move to...',
       wideMode: 'Wide Mode',
       a4Mode: 'A4 Mode',
       toolbar: 'Zen Mode',
@@ -246,6 +264,17 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       color: isExporting ? '#10b981' : '#D4D4D4',
       showCopyButton: false,
       disabled: isExporting,
+    },
+    {
+      id: 'moveTo',
+      label: t.moveTo,
+      icon: <FiFolder size={18} />,
+      onClick: () => {
+        setMoveToMenuOpen(true);
+        // Ne pas fermer le menu kebab, le MoveToSelector se superposera
+      },
+      color: '#D4D4D4',
+      showCopyButton: false,
     },
     {
       id: 'toolbar',
@@ -298,7 +327,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
           top: '100%',           /* ✅ Juste sous le header */
           right: '55px',        /* ✅ Décalé 100px vers la gauche (6px + 100px) */
           marginTop: '0px',      /* ✅ Petit espace sous le header */
-          zIndex: shareMenuOpen ? 999 : 1000
+          zIndex: (shareMenuOpen || moveToMenuOpen) ? 999 : 1000
         }}
       >
         {menuOptions.map((opt) => (
@@ -368,6 +397,20 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         isOpen={shareMenuOpen}
         onClose={() => setShareMenuOpen(false)}
       />
+      
+      {/* MoveToSelector intégré */}
+      {moveToMenuOpen && (
+        <MoveToSelector
+          noteId={noteId}
+          currentClasseurId={currentClasseurId}
+          onMoveComplete={() => {
+            setMoveToMenuOpen(false);
+            onClose();
+          }}
+          onClose={() => setMoveToMenuOpen(false)}
+          lang={slashLang}
+        />
+      )}
     </>
   );
 };
