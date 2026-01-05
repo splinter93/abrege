@@ -8,7 +8,7 @@
 ```json
 "servers": [
   {
-    "url": "https://scrivia.app/api/v2",
+    "url": "https://www.scrivia.app/api/v2",
     "description": "Production"
   }
 ]

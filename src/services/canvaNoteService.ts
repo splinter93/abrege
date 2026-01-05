@@ -407,7 +407,71 @@ export class CanvaNoteService {
         throw new Error('Note introuvable ou accès refusé');
       }
 
-      // 2. Créer session canva (title vient du JOIN avec articles)
+      // 2. ✅ Vérifier si un canva_session existe déjà pour cette note
+      // Constraint UNIQUE(note_id) : une note = un seul canva max
+      const { data: existingSession, error: checkError } = await client
+        .from('canva_sessions')
+        .select('id, chat_session_id, status')
+        .eq('note_id', noteId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (checkError) {
+        logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Erreur vérification canva existant', {
+          error: checkError,
+          noteId,
+          errorCode: (checkError as { code?: string }).code,
+          errorMessage: (checkError as { message?: string }).message,
+          errorDetails: (checkError as { details?: string }).details
+        });
+        throw checkError;
+      }
+
+      // 3. Si canva_session existe déjà, le récupérer et mettre à jour
+      if (existingSession) {
+        logger.info(LogCategory.EDITOR, '[CanvaNoteService] 🔄 Canva session existante trouvée, mise à jour', {
+          canvaId: existingSession.id,
+          noteId,
+          currentChatSession: existingSession.chat_session_id,
+          newChatSession: chatSessionId,
+          currentStatus: existingSession.status
+        });
+
+        // Mettre à jour : status='open' et chat_session_id si différent
+        const updates: Record<string, unknown> = { status: 'open' };
+        if (existingSession.chat_session_id !== chatSessionId) {
+          updates.chat_session_id = chatSessionId;
+        }
+
+        const { data: updatedSession, error: updateError } = await client
+          .from('canva_sessions')
+          .update(updates)
+          .eq('id', existingSession.id)
+          .eq('user_id', userId)
+          .select()
+          .single();
+
+        if (updateError) {
+          logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Erreur mise à jour canva existant', {
+            error: updateError,
+            canvaId: existingSession.id,
+            errorCode: (updateError as { code?: string }).code,
+            errorMessage: (updateError as { message?: string }).message,
+            errorDetails: (updateError as { details?: string }).details
+          });
+          throw updateError;
+        }
+
+        logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Canva session existante réouverte', {
+          canvaId: updatedSession.id,
+          noteId,
+          title: note.source_title
+        });
+
+        return { canvaId: updatedSession.id, noteId };
+      }
+
+      // 4. Sinon, créer nouvelle session canva
       const { data: canvaSession, error: canvaError } = await client
         .from('canva_sessions')
         .insert({
@@ -420,10 +484,20 @@ export class CanvaNoteService {
         .single();
 
       if (canvaError) {
+        // ✅ Améliorer le logging pour voir la vraie erreur Supabase
+        logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Erreur création canva session', {
+          error: canvaError,
+          noteId,
+          chatSessionId,
+          errorCode: (canvaError as { code?: string }).code,
+          errorMessage: (canvaError as { message?: string }).message,
+          errorDetails: (canvaError as { details?: string }).details,
+          errorHint: (canvaError as { hint?: string }).hint
+        });
         throw canvaError;
       }
 
-      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Existing note opened as canva', {
+      logger.info(LogCategory.EDITOR, '[CanvaNoteService] ✅ Nouvelle canva session créée', {
         canvaId: canvaSession.id,
         noteId,
         title: note.source_title
@@ -432,8 +506,46 @@ export class CanvaNoteService {
       return { canvaId: canvaSession.id, noteId };
 
     } catch (error) {
-      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to open existing note as canva', error);
-      throw new Error(`Failed to open note as canva: ${error instanceof Error ? error.message : String(error)}`);
+      // ✅ Améliorer le logging d'erreur pour voir la vraie erreur Supabase
+      const errorDetails = error instanceof Error 
+        ? {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+          }
+        : {
+            type: typeof error,
+            stringified: String(error),
+            json: JSON.stringify(error, Object.getOwnPropertyNames(error))
+          };
+
+      logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Failed to open existing note as canva', {
+        error,
+        noteId,
+        chatSessionId,
+        errorDetails
+      });
+
+      // ✅ Construire un message d'erreur plus informatif
+      let errorMessage = 'Failed to open note as canva';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        // Gérer les erreurs Supabase PostgrestError
+        const supabaseError = error as { code?: string; message?: string; details?: string; hint?: string };
+        if (supabaseError.code === '23505') {
+          // Constraint unique violation
+          errorMessage = 'Cette note est déjà associée à un canevas. Utilisez canva.list_sessions pour trouver le canevas existant.';
+        } else if (supabaseError.message) {
+          errorMessage = supabaseError.message;
+        } else {
+          errorMessage = JSON.stringify(error, Object.getOwnPropertyNames(error));
+        }
+      } else {
+        errorMessage = String(error);
+      }
+
+      throw new Error(errorMessage);
     }
   }
 
