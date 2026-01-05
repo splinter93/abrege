@@ -3,6 +3,7 @@ import { logger, LogCategory } from '@/utils/logger';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { noteEmbedCacheService } from '@/services/cache/NoteEmbedCacheService';
+import { metricsCollector } from '@/services/monitoring/MetricsCollector';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -14,6 +15,7 @@ export async function GET(
   { params }: { params: Promise<{ ref: string }> }
 ): Promise<NextResponse> {
   const startTime = Date.now();
+  let success = false;
   const { ref } = await params;
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
   const context = {
@@ -207,6 +209,7 @@ export async function GET(
       fields
     });
 
+    success = true;
     return NextResponse.json({
       success: true,
       note: responseNote,
@@ -215,6 +218,14 @@ export async function GET(
 
   } catch (err: unknown) {
     const error = err as Error;
+    const errorType = error instanceof Error && error.message.includes('not found')
+      ? 'not_found_error'
+      : error instanceof Error && error.message.includes('auth')
+      ? 'auth_error'
+      : 'server_error';
+    
+    metricsCollector.recordError('v2/note', errorType, error);
+    
     logger.info(LogCategory.API, `❌ Erreur serveur`, {
       ...context,
       error: error instanceof Error ? error.message : String(error)
@@ -223,6 +234,10 @@ export async function GET(
       { error: 'Erreur serveur' },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
+  } finally {
+    const latency = Date.now() - startTime;
+    metricsCollector.recordLatency('v2/note', latency, success);
+    metricsCollector.recordThroughput('v2/note');
   }
 }
 

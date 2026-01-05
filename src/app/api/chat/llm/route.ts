@@ -8,6 +8,7 @@ import { logger, LogCategory } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
 import { dynamicChatRateLimiter } from '@/services/dynamicRateLimiter';
 import { llmCacheService } from '@/services/cache/LLMCacheService';
+import { metricsCollector } from '@/services/monitoring/MetricsCollector';
 import type { ChatMessage } from '@/types/chat';
 import type { AgentConfig } from '@/services/llm/types/agentTypes';
 import { llmRequestSchema } from './validation';
@@ -31,6 +32,8 @@ const DEFAULT_AGENT_SCOPES = [
 ];
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  let success = false;
   // Extraire les variables en dehors du try pour qu'elles soient accessibles dans le catch
   let sessionId: string | undefined;
   let userToken: string | undefined;
@@ -421,9 +424,20 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    success = true;
     return result;
 
   } catch (error) {
+    const errorType = error instanceof Error && error.message.includes('Validation') 
+      ? 'validation_error' 
+      : error instanceof Error && error.message.includes('Rate limit')
+      ? 'rate_limit_error'
+      : error instanceof Error && error.message.includes('Groq API error')
+      ? 'llm_provider_error'
+      : 'server_error';
+    
+    metricsCollector.recordError('chat/llm', errorType, error instanceof Error ? error : new Error(String(error)));
+    
     logger.error(LogCategory.API, `[LLM Route] ❌ Erreur fatale`, {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
@@ -437,6 +451,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message.includes('Groq API error: 500')) {
       logger.warn(LogCategory.API, `[LLM Route] ⚠️ Erreur Groq 500 détectée, fourniture d'une réponse de fallback`);
       
+      success = true; // ✅ On considère comme succès pour permettre la persistance
       return NextResponse.json({
         success: true, // ✅ On considère comme succès pour permettre la persistance
         content: "Je comprends votre demande. Malheureusement, je rencontre actuellement des difficultés techniques temporaires qui m'empêchent de traiter votre requête de manière optimale. Votre message a bien été enregistré et je pourrai y répondre plus en détail une fois ces problèmes résolus. En attendant, n'hésitez pas à reformuler votre question ou à essayer une approche différente.",
@@ -464,5 +479,9 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+  } finally {
+    const latency = Date.now() - startTime;
+    metricsCollector.recordLatency('chat/llm', latency, success);
+    metricsCollector.recordThroughput('chat/llm');
   }
 }

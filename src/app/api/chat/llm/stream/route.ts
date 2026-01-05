@@ -21,6 +21,7 @@ import {
   extractTextFromContent
 } from './helpers';
 import { streamBroadcastService } from '@/services/streamBroadcastService';
+import { metricsCollector } from '@/services/monitoring/MetricsCollector';
 
 // Force Node.js runtime for streaming
 export const runtime = 'nodejs';
@@ -38,6 +39,8 @@ const supabase = createClient(
  * Provider sélectionné automatiquement selon la config agent
  */
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  let success = false;
   let sessionId: string | undefined;
   let userToken: string | undefined;
   
@@ -1354,6 +1357,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
     });
 
     // Retourner la réponse avec headers SSE
+    success = true;
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
@@ -1363,6 +1367,14 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
     });
 
   } catch (error) {
+    const errorType = error instanceof Error && error.message.includes('Validation') 
+      ? 'validation_error' 
+      : error instanceof Error && error.message.includes('Rate limit')
+      ? 'rate_limit_error'
+      : 'server_error';
+    
+    metricsCollector.recordError('chat/llm/stream', errorType, error instanceof Error ? error : new Error(String(error)));
+    
     logger.error(LogCategory.API, '[Stream Route] ❌ Erreur globale:', undefined, error instanceof Error ? error : undefined);
     
     return new Response(
@@ -1375,6 +1387,10 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
         headers: { 'Content-Type': 'application/json' }
       }
     );
+  } finally {
+    const latency = Date.now() - startTime;
+    metricsCollector.recordLatency('chat/llm/stream', latency, success);
+    metricsCollector.recordThroughput('chat/llm/stream');
   }
 }
 

@@ -10,6 +10,7 @@
 
 import { DistributedCache, DEFAULT_CACHE_CONFIG } from './DistributedCache';
 import { logger, LogCategory } from '@/utils/logger';
+import { metricsCollector } from '@/services/monitoring/MetricsCollector';
 import { createHash } from 'crypto';
 
 export interface LLMRequest {
@@ -66,6 +67,9 @@ export class LLMCacheService {
     try {
       const key = generateCacheKey(request);
       const cached = await this.cache.get<LLMResponse>(key);
+      
+      // Enregistrer cache hit/miss
+      metricsCollector.recordCacheHit('llm', !!cached);
       
       if (cached) {
         logger.debug(LogCategory.API, '[LLMCache] Cache hit', {

@@ -10,6 +10,7 @@
 
 import { DistributedCache, DEFAULT_CACHE_CONFIG } from './DistributedCache';
 import { logger, LogCategory } from '@/utils/logger';
+import { metricsCollector } from '@/services/monitoring/MetricsCollector';
 
 export interface NoteEmbed {
   noteId: string;
@@ -37,6 +38,9 @@ export class NoteEmbedCacheService {
     try {
       const key = `note:embed:${noteId}`;
       const cached = await this.cache.get<NoteEmbed>(key);
+      
+      // Enregistrer cache hit/miss
+      metricsCollector.recordCacheHit('note_embed', !!cached);
       
       if (cached) {
         logger.debug(LogCategory.API, '[NoteEmbedCache] Cache hit', {

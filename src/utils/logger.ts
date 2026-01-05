@@ -20,7 +20,8 @@ export enum LogCategory {
   EXTENSIONS = 'EXTENSIONS',
   API = 'API',
   AUDIO = 'AUDIO',
-  PERFORMANCE = 'PERFORMANCE'
+  PERFORMANCE = 'PERFORMANCE',
+  MONITORING = 'MONITORING'
 }
 
 interface LogEntry {

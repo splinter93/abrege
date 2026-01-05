@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger, LogCategory } from '@/utils/logger';
 import { ipApiRateLimiter, ipChatRateLimiter, ipUploadRateLimiter } from '@/services/rateLimiter';
+import { metricsCollector } from '@/services/monitoring/MetricsCollector';
 
 /**
  * Extrait l'IP client depuis les headers de la requête
@@ -85,6 +86,9 @@ export function middleware(req: NextRequest) {
 
     // Utiliser checkSync() car le middleware Next.js ne peut pas être async
     const rateLimitResult = limiter.checkSync(clientIP);
+
+    // Enregistrer rate limit hit/miss
+    metricsCollector.recordRateLimit(endpointType, clientIP, !rateLimitResult.allowed);
 
     // Si rate limit dépassé, retourner 429
     if (!rateLimitResult.allowed) {
