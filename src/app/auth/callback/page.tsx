@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
 import LogoHeader from '@/components/LogoHeader';
+import { logger, LogCategory } from '@/utils/logger';
 import './callback.css';
 
 type OAuthParams = {
@@ -31,7 +32,9 @@ function isAllowedRedirect(uri: string) {
     
     // ✅ Vérification plus souple pour les URLs ChatGPT
     if (u.hostname.includes('chat.openai.com') || u.hostname.includes('openai.com')) {
-      console.log('✅ URL ChatGPT détectée, autorisation accordée');
+      logger.info(LogCategory.API, '[OAuth] ✅ URL ChatGPT détectée, autorisation accordée', {
+        hostname: u.hostname
+      });
       return true;
     }
     
@@ -71,12 +74,16 @@ async function createChatGPTOAuthCode(userId: string, params: OAuthParams): Prom
   const validScopes = scopes.filter(scope => allowedScopes.includes(scope));
   
   // Log des scopes pour debug
-  console.log('🔍 [OAuth] Scopes demandés:', scopes);
-  console.log('🔍 [OAuth] Scopes autorisés:', validScopes);
-  console.log('🔍 [OAuth] Scopes rejetés:', scopes.filter(scope => !allowedScopes.includes(scope)));
+  logger.debug(LogCategory.API, '[OAuth] 🔍 Scopes demandés', { scopes });
+  logger.debug(LogCategory.API, '[OAuth] 🔍 Scopes autorisés', { validScopes });
+  logger.debug(LogCategory.API, '[OAuth] 🔍 Scopes rejetés', {
+    rejectedScopes: scopes.filter(scope => !allowedScopes.includes(scope))
+  });
   
   if (validScopes.length === 0) {
-    console.warn('⚠️ [OAuth] Aucun scope valide, utilisation des scopes par défaut');
+    logger.warn(LogCategory.API, '[OAuth] ⚠️ Aucun scope valide, utilisation des scopes par défaut', {
+      requestedScopes: scopes
+    });
     validScopes.push('notes:read'); // Scope minimal par défaut
   }
 
@@ -138,7 +145,9 @@ function AuthCallbackContent() {
         if (abortRef.current) return;
 
         if (sessionError || !data?.session) {
-          console.error('❌ Pas de session Supabase:', sessionError);
+          logger.error(LogCategory.API, '[Callback] ❌ Pas de session Supabase', {
+            error: sessionError?.message || 'No session data'
+          }, sessionError || undefined);
           setError('Impossible de récupérer la session');
           setStatus('error');
           return;
@@ -151,7 +160,7 @@ function AuthCallbackContent() {
           ? window.sessionStorage.getItem('oauth_external_params')
           : null;
 
-        console.log('🔍 [Callback] Vérification flux OAuth externe:', {
+        logger.debug(LogCategory.API, '[Callback] 🔍 Vérification flux OAuth externe', {
           oauthExternalParams: oauthExternalParams ? 'PRÉSENT' : 'ABSENT',
           sessionStorage: typeof window !== 'undefined' ? {
             oauth_external_params: window.sessionStorage.getItem('oauth_external_params')
@@ -161,43 +170,60 @@ function AuthCallbackContent() {
         if (oauthExternalParams) {
           try {
             const params = JSON.parse(oauthExternalParams) as OAuthParams;
-            console.log('🔍 [Callback] Paramètres OAuth ChatGPT récupérés:', params);
+            logger.debug(LogCategory.API, '[Callback] 🔍 Paramètres OAuth ChatGPT récupérés', {
+              client_id: params.client_id,
+              redirect_uri: params.redirect_uri,
+              hasState: !!params.state,
+              hasScope: !!params.scope
+            });
             
             // ✅ OPTIMISATION : Nettoyage immédiat après parsing
             window.sessionStorage.removeItem('oauth_external_params');
 
             if (!isAllowedRedirect(params.redirect_uri)) {
-              console.error('❌ redirect_uri non autorisée:', params.redirect_uri);
+              logger.error(LogCategory.API, '[Callback] ❌ redirect_uri non autorisée', {
+                redirect_uri: params.redirect_uri
+              });
               setError('redirect_uri non autorisée');
               setStatus('error');
               return;
             }
 
             try {
-              console.log('🔍 [Callback] Création du code OAuth ChatGPT pour utilisateur:', data.session.user.id);
+              logger.info(LogCategory.API, '[Callback] 🔍 Création du code OAuth ChatGPT pour utilisateur', {
+                userId: data.session.user.id
+              });
               const code = await createChatGPTOAuthCode(data.session.user.id, params);
               if (abortRef.current) return;
 
-              console.log('🔍 [Callback] Code OAuth créé avec succès:', code);
+              logger.info(LogCategory.API, '[Callback] 🔍 Code OAuth créé avec succès', {
+                codeLength: code.length
+              });
 
               const redirect = new URL(params.redirect_uri);
               redirect.searchParams.set('code', code);
               redirect.searchParams.set('state', sanitizeState(params.state));
 
-              console.log('🔍 [Callback] URL de redirection construite:', redirect.toString());
-              console.log('🔍 [Callback] Redirection vers ChatGPT...');
+              logger.info(LogCategory.API, '[Callback] 🔍 URL de redirection construite', {
+                redirectUrl: redirect.toString().replace(/code=[^&]+/, 'code=***')
+              });
+              logger.info(LogCategory.API, '[Callback] 🔍 Redirection vers ChatGPT...');
 
               // ✅ OPTIMISATION : Redirection immédiate sans délai
               window.location.href = redirect.toString();
               return;
             } catch (e) {
-              console.error('❌ Erreur création code OAuth ChatGPT:', e);
+              logger.error(LogCategory.API, '[Callback] ❌ Erreur création code OAuth ChatGPT', {
+                error: e instanceof Error ? e.message : 'Unknown error'
+              }, e instanceof Error ? e : undefined);
               setError('Erreur lors de la création du code OAuth');
               setStatus('error');
               return;
             }
           } catch (e) {
-            console.error('❌ Erreur parsing paramètres OAuth externes:', e);
+            logger.error(LogCategory.API, '[Callback] ❌ Erreur parsing paramètres OAuth externes', {
+              error: e instanceof Error ? e.message : 'Unknown error'
+            }, e instanceof Error ? e : undefined);
             // ✅ OPTIMISATION : Nettoyage en cas d'erreur
             if (typeof window !== 'undefined') {
               window.sessionStorage.removeItem('oauth_external_params');
@@ -209,12 +235,14 @@ function AuthCallbackContent() {
         }
 
         // ✅ OPTIMISATION : Flux normal (pas de redirection vers /auth)
-        console.log('🔍 [Callback] Flux normal, redirection vers home');
+        logger.info(LogCategory.API, '[Callback] 🔍 Flux normal, redirection vers home');
         const t = setTimeout(() => router.push('/'), 900);
         return () => clearTimeout(t);
       } catch (e) {
         if (abortRef.current) return;
-        console.error('Erreur inattendue lors de la récupération session:', e);
+        logger.error(LogCategory.API, '[Callback] Erreur inattendue lors de la récupération session', {
+          error: e instanceof Error ? e.message : 'Unknown error'
+        }, e instanceof Error ? e : undefined);
         setError('Erreur inattendue lors de la récupération session');
         setStatus('error');
       }

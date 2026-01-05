@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { logApi as originalLogApi } from './logger';
+import { logger, LogCategory } from './logger';
 import { V2ResourceResolver } from './v2ResourceResolver';
 import { SlugGenerator } from './slugGenerator';
 import { SlugAndUrlService } from '@/services/slugAndUrlService';
@@ -34,14 +34,22 @@ export interface AgentData {
   [key: string]: unknown;
 }
 
-// Wrapper pour logApi pour accepter les paramètres ApiContext
-const logApi = {
-  info: (message: string, context?: ApiContext) => {
-    originalLogApi.info(message);
-  },
-  error: (message: string, context?: ApiContext) => {
-    originalLogApi.error(message);
-  }
+// Helper pour formater le contexte ApiContext pour le logger
+const formatContext = (context?: ApiContext): Record<string, unknown> => {
+  if (!context) return {};
+  return {
+    userId: context.userId,
+    sessionId: context.sessionId,
+    operation: context.operation
+  };
+};
+
+// Helper pour convertir ApiContext en format attendu par V2ResourceResolver
+const toResolverContext = (context: ApiContext): { operation: string; component: string } => {
+  return {
+    operation: context.operation,
+    component: context.component
+  };
 };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -126,7 +134,7 @@ export class V2DatabaseUtils {
    * Créer une note
    */
   static async createNote(data: CreateNoteData, userId: string, context: ApiContext) {
-          logApi.info('🚀 Création note directe DB', context);
+          logger.info(LogCategory.API,'🚀 Création note directe DB', toResolverContext(context));
     
     try {
       // Résoudre le notebook_id (peut être un UUID ou un slug)
@@ -180,11 +188,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur création note: ${createError.message}`);
       }
 
-      logApi.info(`✅ Note créée avec succès`, context);
+      logger.info(LogCategory.API,`✅ Note créée avec succès`, toResolverContext(context));
       return { success: true, data: note };
       
     } catch (error) {
-      logApi.info(`❌ Erreur création note: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur création note: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -193,7 +201,7 @@ export class V2DatabaseUtils {
    * Mettre à jour une note
    */
   static async updateNote(ref: string, data: UpdateNoteData, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Mise à jour note ${ref}`, context);
+    logger.info(LogCategory.API,`🚀 Mise à jour note ${ref}`, toResolverContext(context));
     
     try {
       // Résoudre la référence (UUID ou slug)
@@ -269,11 +277,16 @@ export class V2DatabaseUtils {
             updateData.slug = newSlug;
             updateData.public_url = publicUrl;
             
-            if (process.env.NODE_ENV === 'development') {
-              console.log(`[V2DatabaseUtils] Mise à jour slug via SlugAndUrlService: "${currentNote?.source_title || 'N/A'}" → "${normalizedTitle}" → "${newSlug}"`);
-            }
+            logger.debug(LogCategory.API, '[V2DatabaseUtils] Mise à jour slug via SlugAndUrlService', {
+              oldTitle: currentNote?.source_title || 'N/A',
+              newTitle: normalizedTitle,
+              newSlug
+            });
           } catch (error) {
-            logApi.error(`❌ Erreur mise à jour slug/URL pour la note ${noteId}: ${error}`);
+            logger.error(LogCategory.API, `❌ Erreur mise à jour slug/URL pour la note ${noteId}`, {
+              noteId,
+              error: error instanceof Error ? error.message : String(error)
+            }, error instanceof Error ? error : undefined);
             // Continuer sans mettre à jour le slug en cas d'erreur
           }
         }
@@ -289,9 +302,9 @@ export class V2DatabaseUtils {
       if (data.header_image_offset !== undefined) {
         const roundedOffset = Math.round(data.header_image_offset * 10) / 10;
         updateData.header_image_offset = roundedOffset;
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[V2DatabaseUtils] Mise à jour header_image_offset:', roundedOffset);
-        }
+        logger.debug(LogCategory.API, '[V2DatabaseUtils] Mise à jour header_image_offset', {
+          roundedOffset
+        });
       }
       if (data.header_image_blur !== undefined) updateData.header_image_blur = data.header_image_blur;
       if (data.header_image_overlay !== undefined) updateData.header_image_overlay = data.header_image_overlay;
@@ -320,11 +333,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur mise à jour note: ${updateError.message}`);
       }
 
-      logApi.info('✅ Note mise à jour avec succès', context);
+      logger.info(LogCategory.API,'✅ Note mise à jour avec succès', toResolverContext(context));
       return { success: true, data: note };
       
     } catch (error) {
-      logApi.error(`❌ Erreur mise à jour note: ${error}`, context);
+      logger.error(LogCategory.API,`❌ Erreur mise à jour note: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -333,31 +346,44 @@ export class V2DatabaseUtils {
    * Supprimer une note
    */
   static async deleteNote(ref: string, userId: string, context: ApiContext) {
-    console.log('🚀 [V2DatabaseUtils] Début suppression note:', { ref, userId, context });
-    logApi.info(`🚀 Suppression note ${ref}`, context);
+    logger.info(LogCategory.API, `🚀 [V2DatabaseUtils] Début suppression note`, {
+      ref,
+      ...toResolverContext(context)
+    });
     
     try {
-      console.log('🔍 [V2DatabaseUtils] Résolution référence via V2ResourceResolver...');
+      logger.debug(LogCategory.API, '[V2DatabaseUtils] 🔍 Résolution référence via V2ResourceResolver...', {
+        ref,
+        ...toResolverContext(context)
+      });
       
       // Résoudre la référence (UUID ou slug)
       const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
-      console.log('🔍 [V2DatabaseUtils] Résultat résolution:', {
+      logger.debug(LogCategory.API, '[V2DatabaseUtils] 🔍 Résultat résolution', {
         success: resolveResult.success,
         id: resolveResult.success ? resolveResult.id : 'N/A',
         error: !resolveResult.success ? resolveResult.error : 'N/A',
-        status: !resolveResult.success ? resolveResult.status : 'N/A'
+        status: !resolveResult.success ? resolveResult.status : 'N/A',
+        ...toResolverContext(context)
       });
       
       if (!resolveResult.success) {
         const errorMsg = `❌ Échec résolution référence: ${resolveResult.error}`;
-        console.error(errorMsg, { resolveResult, ref, userId, context });
+        logger.error(LogCategory.API, errorMsg, {
+          resolveResult,
+          ref,
+          ...toResolverContext(context)
+        });
         throw new Error(resolveResult.error);
       }
 
       const noteId = resolveResult.id;
-      console.log('✅ [V2DatabaseUtils] Référence résolue:', { ref, noteId });
+      logger.info(LogCategory.API, '[V2DatabaseUtils] ✅ Référence résolue', { ref, noteId, ...toResolverContext(context) });
 
-      console.log('🗑️ [V2DatabaseUtils] Suppression note de la base...');
+      logger.debug(LogCategory.API, '[V2DatabaseUtils] 🗑️ Suppression note de la base...', {
+        noteId,
+        ...toResolverContext(context)
+      });
       
       // Supprimer la note
       const { error: deleteError } = await supabase
@@ -368,18 +394,27 @@ export class V2DatabaseUtils {
 
       if (deleteError) {
         const errorMsg = `❌ Erreur suppression note: ${deleteError.message}`;
-        console.error(errorMsg, { deleteError, noteId, userId, context });
+        logger.error(LogCategory.API, errorMsg, {
+          deleteError: deleteError.message,
+          noteId,
+          ...toResolverContext(context)
+        });
         throw new Error(errorMsg);
       }
 
-      console.log('✅ [V2DatabaseUtils] Note supprimée avec succès de la base');
-      logApi.info('✅ Note supprimée avec succès', context);
+      logger.info(LogCategory.API, '[V2DatabaseUtils] ✅ Note supprimée avec succès de la base', {
+        noteId,
+        ...toResolverContext(context)
+      });
       return { success: true };
       
     } catch (error) {
       const errorMsg = `❌ Erreur suppression note: ${error}`;
-      console.error(errorMsg, { error, ref, userId, context });
-      logApi.error(errorMsg, context);
+      logger.error(LogCategory.API, errorMsg, {
+        error: error instanceof Error ? error.message : String(error),
+        ref,
+        ...toResolverContext(context)
+      }, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -388,7 +423,7 @@ export class V2DatabaseUtils {
    * Récupérer le contenu d'une note
    */
   static async getNoteContent(ref: string, userId: string, context: ApiContext) {
-    logApi.info('🚀 Récupération contenu note directe DB', context);
+    logger.info(LogCategory.API,'🚀 Récupération contenu note directe DB', toResolverContext(context));
     
     try {
       // Résoudre la référence (peut être un UUID ou un slug)
@@ -422,11 +457,11 @@ export class V2DatabaseUtils {
         throw new Error(`Note non trouvée: ${noteId}`);
       }
 
-      logApi.info(`✅ Contenu récupéré avec succès`, context);
+      logger.info(LogCategory.API,`✅ Contenu récupéré avec succès`, toResolverContext(context));
       return { success: true, data: note };
       
     } catch (error) {
-      logApi.info(`❌ Erreur récupération contenu: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur récupération contenu: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -435,7 +470,7 @@ export class V2DatabaseUtils {
    * Ajouter du contenu à une note
    */
   static async addContentToNote(ref: string, content: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Ajout contenu note directe DB`, context);
+    logger.info(LogCategory.API,`🚀 Ajout contenu note directe DB`, toResolverContext(context));
     
     try {
       // Résoudre la référence (peut être un UUID ou un slug)
@@ -488,11 +523,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur mise à jour note: ${updateError.message}`);
       }
 
-      logApi.info(`✅ Contenu ajouté avec succès`, context);
+      logger.info(LogCategory.API,`✅ Contenu ajouté avec succès`, toResolverContext(context));
       return { success: true, data: updatedNote };
       
     } catch (error) {
-      logApi.info(`❌ Erreur ajout contenu: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur ajout contenu: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -501,7 +536,7 @@ export class V2DatabaseUtils {
    * Déplacer une note
    */
   static async moveNote(ref: string, targetFolderId: string | null, userId: string, context: ApiContext, targetClasseurId?: string) {
-    logApi.info(`🚀 Déplacement note ${ref} vers folder ${targetFolderId}, targetClasseurId: ${targetClasseurId}`, context);
+    logger.info(LogCategory.API,`🚀 Déplacement note ${ref} vers folder ${targetFolderId}, targetClasseurId: ${targetClasseurId}`, toResolverContext(context));
     
     try {
       // Résoudre la référence de la note
@@ -535,7 +570,7 @@ export class V2DatabaseUtils {
       // Si cross-classeur, mettre à jour aussi le classeur_id
       if (targetClasseurId) {
         updateData.classeur_id = targetClasseurId;
-        logApi.info(`🔄 Mise à jour classeur_id vers ${targetClasseurId}`, context);
+        logger.info(LogCategory.API,`🔄 Mise à jour classeur_id vers ${targetClasseurId}`, toResolverContext(context));
       }
       
       const { data: note, error: moveError } = await supabase
@@ -550,11 +585,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur déplacement note: ${moveError.message}`);
       }
 
-      logApi.info(`✅ Note déplacée avec succès`, context);
+      logger.info(LogCategory.API,`✅ Note déplacée avec succès`, toResolverContext(context));
       return { success: true, data: note };
       
     } catch (error) {
-      logApi.info(`❌ Erreur déplacement note: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur déplacement note: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -563,7 +598,7 @@ export class V2DatabaseUtils {
    * Créer un dossier
    */
   static async createFolder(data: CreateFolderData, userId: string, context: ApiContext, supabaseClient?: SupabaseClient) {
-    logApi.info(`🚀 Création dossier optimisée`, context);
+    logger.info(LogCategory.API,`🚀 Création dossier optimisée`, toResolverContext(context));
     
     try {
       // 🔧 CORRECTION: Utiliser le client authentifié si fourni
@@ -613,11 +648,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur création dossier: ${createError.message}`);
       }
 
-      logApi.info(`✅ Dossier créé optimisé`, context);
+      logger.info(LogCategory.API,`✅ Dossier créé optimisé`, toResolverContext(context));
       return { success: true, data: folder };
       
     } catch (error) {
-      logApi.info(`❌ Erreur création dossier: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur création dossier: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -626,11 +661,11 @@ export class V2DatabaseUtils {
    * Mettre à jour un dossier
    */
   static async updateFolder(ref: string, data: UpdateFolderData, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Mise à jour dossier ${ref}`, context);
+    logger.info(LogCategory.API,`🚀 Mise à jour dossier ${ref}`, toResolverContext(context));
     
     try {
       // Résoudre la référence (UUID ou slug)
-      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'folder', userId, context);
+      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'folder', userId, toResolverContext(context));
       if (!resolveResult.success) {
         throw new Error(resolveResult.error);
       }
@@ -668,11 +703,13 @@ export class V2DatabaseUtils {
           );
           updateData.slug = newSlug;
           
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`[V2DatabaseUtils] Mise à jour slug dossier: "${currentFolder.name}" → "${data.name}" → "${newSlug}"`);
-          }
+          logger.debug(LogCategory.API, '[V2DatabaseUtils] Mise à jour slug dossier', {
+            oldName: currentFolder.name,
+            newName: data.name,
+            newSlug
+          });
         } catch (error) {
-          logApi.error(`❌ Erreur mise à jour slug pour le dossier ${folderId}: ${error}`);
+          logger.error(LogCategory.API,`❌ Erreur mise à jour slug pour le dossier ${folderId}: ${error}`);
           // Continuer sans mettre à jour le slug en cas d'erreur
         }
       }
@@ -704,11 +741,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur mise à jour dossier: ${updateError.message}`);
       }
 
-      logApi.info(`✅ Dossier mis à jour avec succès`, context);
+      logger.info(LogCategory.API,`✅ Dossier mis à jour avec succès`, toResolverContext(context));
       return { success: true, data: folder };
       
     } catch (error) {
-      logApi.info(`❌ Erreur mise à jour dossier: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur mise à jour dossier: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -717,11 +754,11 @@ export class V2DatabaseUtils {
    * Déplacer un dossier
    */
   static async moveFolder(ref: string, targetParentId: string | null, userId: string, context: ApiContext, targetClasseurId?: string) {
-    logApi.info(`🚀 Déplacement dossier ${ref}`, context);
+    logger.info(LogCategory.API,`🚀 Déplacement dossier ${ref}`, toResolverContext(context));
     
     try {
       // Résoudre la référence (UUID ou slug)
-      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'folder', userId, context);
+      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'folder', userId, toResolverContext(context));
       if (!resolveResult.success) {
         throw new Error(resolveResult.error);
       }
@@ -788,7 +825,7 @@ export class V2DatabaseUtils {
 
       // 🔄 DÉPLACER AUSSI TOUTES LES NOTES ET DOSSIERS ENFANTS DU DOSSIER
       if (targetClasseurId) {
-        logApi.info(`🔄 Déplacement des notes et dossiers enfants du dossier vers le nouveau classeur`, context);
+        logger.info(LogCategory.API,`🔄 Déplacement des notes et dossiers enfants du dossier vers le nouveau classeur`, toResolverContext(context));
         
         // Fonction récursive pour déplacer tous les dossiers enfants
         const moveChildFolders = async (parentFolderId: string) => {
@@ -800,7 +837,7 @@ export class V2DatabaseUtils {
             .eq('user_id', userId);
 
           if (childFoldersError) {
-            logApi.info(`⚠️ Erreur récupération dossiers enfants: ${childFoldersError.message}`, context);
+            logger.info(LogCategory.API,`⚠️ Erreur récupération dossiers enfants: ${childFoldersError.message}`, toResolverContext(context));
             return;
           }
 
@@ -816,7 +853,7 @@ export class V2DatabaseUtils {
               .eq('user_id', userId);
 
             if (moveChildError) {
-              logApi.info(`⚠️ Erreur déplacement dossier enfant ${childFolder.id}: ${moveChildError.message}`, context);
+              logger.info(LogCategory.API,`⚠️ Erreur déplacement dossier enfant ${childFolder.id}: ${moveChildError.message}`, toResolverContext(context));
             } else {
               // Récursivement déplacer les dossiers enfants de ce dossier
               await moveChildFolders(childFolder.id);
@@ -838,18 +875,18 @@ export class V2DatabaseUtils {
           .eq('user_id', userId);
 
         if (notesUpdateError) {
-          logApi.info(`⚠️ Erreur mise à jour notes du dossier: ${notesUpdateError.message}`, context);
+          logger.info(LogCategory.API,`⚠️ Erreur mise à jour notes du dossier: ${notesUpdateError.message}`, toResolverContext(context));
           // Ne pas faire échouer l'opération pour une erreur de notes
         } else {
-          logApi.info(`✅ Notes du dossier déplacées vers le nouveau classeur`, context);
+          logger.info(LogCategory.API,`✅ Notes du dossier déplacées vers le nouveau classeur`, toResolverContext(context));
         }
       }
 
-      logApi.info(`✅ Dossier déplacé avec succès`, context);
+      logger.info(LogCategory.API,`✅ Dossier déplacé avec succès`, toResolverContext(context));
       return { success: true, data: updatedFolder };
 
     } catch (error) {
-      logApi.info(`❌ Erreur déplacement dossier: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur déplacement dossier: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -858,11 +895,11 @@ export class V2DatabaseUtils {
    * Supprimer un dossier
    */
   static async deleteFolder(ref: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Suppression dossier ${ref}`, context);
+    logger.info(LogCategory.API,`🚀 Suppression dossier ${ref}`, toResolverContext(context));
     
     try {
       // Résoudre la référence (UUID ou slug)
-      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'folder', userId, context);
+      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'folder', userId, toResolverContext(context));
       if (!resolveResult.success) {
         throw new Error(resolveResult.error);
       }
@@ -902,11 +939,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur suppression dossier: ${deleteError.message}`);
       }
 
-      logApi.info(`✅ Dossier supprimé avec succès`, context);
+      logger.info(LogCategory.API,`✅ Dossier supprimé avec succès`, toResolverContext(context));
       return { success: true };
       
     } catch (error) {
-      logApi.info(`❌ Erreur suppression dossier: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur suppression dossier: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -915,7 +952,7 @@ export class V2DatabaseUtils {
    * Créer un classeur
    */
   static async createClasseur(data: CreateClasseurData, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Création classeur directe DB`, context);
+    logger.info(LogCategory.API,`🚀 Création classeur directe DB`, toResolverContext(context));
     
     try {
       // Générer un slug unique avec le client authentifié
@@ -939,11 +976,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur création classeur: ${createError.message}`);
       }
 
-      logApi.info(`✅ Classeur créé avec succès`, context);
+      logger.info(LogCategory.API,`✅ Classeur créé avec succès`, toResolverContext(context));
       return { success: true, data: classeur };
       
     } catch (error) {
-      logApi.info(`❌ Erreur création classeur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur création classeur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -952,7 +989,7 @@ export class V2DatabaseUtils {
    * Mettre à jour un classeur
    */
   static async updateClasseur(ref: string, data: UpdateClasseurData, userId: string, context: ApiContext, userToken?: string) {
-    logApi.info(`🚀 Mise à jour classeur ${ref}`, context);
+    logger.info(LogCategory.API,`🚀 Mise à jour classeur ${ref}`, toResolverContext(context));
     
     try {
       // Créer un client Supabase authentifié si un token est fourni (RLS)
@@ -1013,11 +1050,13 @@ export class V2DatabaseUtils {
           );
           updateData.slug = newSlug;
           
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`[V2DatabaseUtils] Mise à jour slug classeur: "${currentClasseur.name}" → "${data.name}" → "${newSlug}"`);
-          }
+          logger.debug(LogCategory.API, '[V2DatabaseUtils] Mise à jour slug classeur', {
+            oldName: currentClasseur.name,
+            newName: data.name,
+            newSlug
+          });
         } catch (error) {
-          logApi.error(`❌ Erreur mise à jour slug pour le classeur ${classeurId}: ${error}`);
+          logger.error(LogCategory.API,`❌ Erreur mise à jour slug pour le classeur ${classeurId}: ${error}`);
           // Continuer sans mettre à jour le slug en cas d'erreur
         }
       }
@@ -1035,11 +1074,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur mise à jour classeur: ${updateError.message}`);
       }
 
-      logApi.info(`✅ Classeur mis à jour avec succès`, context);
+      logger.info(LogCategory.API,`✅ Classeur mis à jour avec succès`, toResolverContext(context));
       return { success: true, data: classeur };
       
     } catch (error) {
-      logApi.info(`❌ Erreur mise à jour classeur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur mise à jour classeur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1048,11 +1087,11 @@ export class V2DatabaseUtils {
    * Supprimer un classeur
    */
   static async deleteClasseur(ref: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Suppression classeur ${ref}`, context);
+    logger.info(LogCategory.API,`🚀 Suppression classeur ${ref}`, toResolverContext(context));
     
     try {
       // Résoudre la référence (UUID ou slug)
-      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context);
+      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, toResolverContext(context));
       if (!resolveResult.success) {
         throw new Error(resolveResult.error);
       }
@@ -1093,11 +1132,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur suppression classeur: ${deleteError.message}`);
       }
 
-      logApi.info(`✅ Classeur supprimé avec succès`, context);
+      logger.info(LogCategory.API,`✅ Classeur supprimé avec succès`, toResolverContext(context));
       return { success: true };
       
     } catch (error) {
-      logApi.info(`❌ Erreur suppression classeur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur suppression classeur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1106,7 +1145,7 @@ export class V2DatabaseUtils {
    * Récupérer l'arbre d'un classeur
    */
   static async getClasseurTree(notebookId: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération arbre classeur directe DB`, context);
+    logger.info(LogCategory.API,`🚀 Récupération arbre classeur directe DB`, toResolverContext(context));
     
     try {
       // ✅ CORRECTION: Vérifier que notebookId n'est pas undefined
@@ -1122,7 +1161,7 @@ export class V2DatabaseUtils {
       const isValidUuid = uuidPattern.test(classeurId);
       
       if (!isValidUuid) {
-        logApi.info(`⚠️ UUID mal formaté: ${classeurId}`, context);
+        logger.info(LogCategory.API,`⚠️ UUID mal formaté: ${classeurId}`, toResolverContext(context));
         
         // Essayer de corriger l'UUID si possible
         if (classeurId.length === 35) {
@@ -1133,7 +1172,7 @@ export class V2DatabaseUtils {
             sections[2] = sections[2] + '0';
             const correctedUuid = sections.join('-');
             if (uuidPattern.test(correctedUuid)) {
-              logApi.info(`🔧 UUID corrigé: ${correctedUuid}`, context);
+              logger.info(LogCategory.API,`🔧 UUID corrigé: ${correctedUuid}`, toResolverContext(context));
               classeurId = correctedUuid;
             } else {
               throw new Error(`UUID mal formaté: ${notebookId}. Format attendu: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`);
@@ -1207,11 +1246,11 @@ export class V2DatabaseUtils {
         notes: notes || []
       };
 
-      logApi.info(`✅ Arbre classeur récupéré avec succès`, context);
+      logger.info(LogCategory.API,`✅ Arbre classeur récupéré avec succès`, toResolverContext(context));
       return { success: true, data: classeurComplet };
       
     } catch (error) {
-      logApi.info(`❌ Erreur récupération arbre: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur récupération arbre: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1220,7 +1259,7 @@ export class V2DatabaseUtils {
    * Réorganiser les classeurs
    */
   static async reorderClasseurs(classeurs: Array<{ id: string; position: number }>, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Réorganisation classeurs directe DB`, context);
+    logger.info(LogCategory.API,`🚀 Réorganisation classeurs directe DB`, toResolverContext(context));
     
     try {
       // Vérifier que tous les classeurs appartiennent à l'utilisateur
@@ -1267,11 +1306,11 @@ export class V2DatabaseUtils {
         throw new Error(`Erreur récupération classeurs mis à jour: ${fetchUpdatedError.message}`);
       }
 
-      logApi.info(`✅ Classeurs réorganisés avec succès`, context);
+      logger.info(LogCategory.API,`✅ Classeurs réorganisés avec succès`, toResolverContext(context));
       return { success: true, data: updatedClasseurs || [] };
       
     } catch (error) {
-      logApi.info(`❌ Erreur réorganisation classeurs: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur réorganisation classeurs: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1280,14 +1319,16 @@ export class V2DatabaseUtils {
    * Obtenir la liste des classeurs
    */
   static async getClasseurs(userId: string, context: ApiContext) {
-    console.error(`🚨🚨🚨 [FORCE DEBUG] V2DatabaseUtils.getClasseurs appelé avec userId: ${userId} 🚨🚨🚨`);
-    console.log(`🔍 [DEBUG] getClasseurs appelé avec userId: ${userId}`);
-    logApi.info(`🚀 Récupération classeurs`, context);
+    logger.debug(LogCategory.API, `🔍 [DEBUG] getClasseurs appelé avec userId`, {
+      userId,
+      ...toResolverContext(context)
+    });
+    logger.info(LogCategory.API,`🚀 Récupération classeurs`, toResolverContext(context));
     
     try {
-      logApi.info(`🔍 User ID: ${userId}`, context);
-      logApi.info(`🔍 User ID type: ${typeof userId}`, context);
-      logApi.info(`🔍 User ID length: ${userId.length}`, context);
+      logger.info(LogCategory.API,`🔍 User ID: ${userId}`, toResolverContext(context));
+      logger.info(LogCategory.API,`🔍 User ID type: ${typeof userId}`, toResolverContext(context));
+      logger.info(LogCategory.API,`🔍 User ID length: ${userId.length}`, toResolverContext(context));
       
       // D'abord, vérifier si la table existe et combien de classeurs il y a au total
       const { data: allClasseurs, error: allError } = await supabase
@@ -1295,9 +1336,9 @@ export class V2DatabaseUtils {
         .select('id, name, user_id')
         .limit(5);
       
-      logApi.info(`📊 Tous les classeurs (premiers 5):`, context);
-      logApi.info(`   - Data: ${JSON.stringify(allClasseurs)}`, context);
-      logApi.info(`   - Error: ${allError ? JSON.stringify(allError) : 'null'}`, context);
+      logger.info(LogCategory.API,`📊 Tous les classeurs (premiers 5):`, toResolverContext(context));
+      logger.info(LogCategory.API,`   - Data: ${JSON.stringify(allClasseurs)}`, toResolverContext(context));
+      logger.info(LogCategory.API,`   - Error: ${allError ? JSON.stringify(allError) : 'null'}`, toResolverContext(context));
       
       // Maintenant la requête normale
       const { data: classeurs, error } = await supabase
@@ -1307,13 +1348,13 @@ export class V2DatabaseUtils {
         .order('position', { ascending: true })
         .order('created_at', { ascending: false });
 
-      logApi.info(`📊 Résultat Supabase:`, context);
-      logApi.info(`   - Data: ${JSON.stringify(classeurs)}`, context);
-      logApi.info(`   - Error: ${error ? JSON.stringify(error) : 'null'}`, context);
-      logApi.info(`   - Count: ${classeurs ? classeurs.length : 'undefined'}`, context);
+      logger.info(LogCategory.API,`📊 Résultat Supabase:`, toResolverContext(context));
+      logger.info(LogCategory.API,`   - Data: ${JSON.stringify(classeurs)}`, toResolverContext(context));
+      logger.info(LogCategory.API,`   - Error: ${error ? JSON.stringify(error) : 'null'}`, toResolverContext(context));
+      logger.info(LogCategory.API,`   - Count: ${classeurs ? classeurs.length : 'undefined'}`, toResolverContext(context));
 
       if (error) {
-        logApi.info(`❌ Erreur Supabase: ${error.message}`, context);
+        logger.info(LogCategory.API,`❌ Erreur Supabase: ${error.message}`, toResolverContext(context));
         throw new Error(`Erreur récupération classeurs: ${error.message}`);
       }
 
@@ -1330,11 +1371,11 @@ export class V2DatabaseUtils {
         }
       };
       
-      logApi.info(`✅ Retour final: ${JSON.stringify(result)}`, context);
+      logger.info(LogCategory.API,`✅ Retour final: ${JSON.stringify(result)}`, toResolverContext(context));
       return result;
       
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1343,7 +1384,7 @@ export class V2DatabaseUtils {
    * Insérer du contenu à une position spécifique
    */
   static async insertContentToNote(ref: string, content: string, position: number, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Insertion contenu à position ${position}`, context);
+    logger.info(LogCategory.API,`🚀 Insertion contenu à position ${position}`, toResolverContext(context));
     
     try {
       // Résoudre la référence
@@ -1388,7 +1429,7 @@ export class V2DatabaseUtils {
         message: 'Contenu inséré avec succès'
       };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1397,7 +1438,7 @@ export class V2DatabaseUtils {
    * Ajouter du contenu à une section spécifique
    */
   static async addContentToSection(ref: string, sectionId: string, content: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Ajout contenu à section ${sectionId}`, context);
+    logger.info(LogCategory.API,`🚀 Ajout contenu à section ${sectionId}`, toResolverContext(context));
     
     try {
       // Résoudre la référence
@@ -1441,7 +1482,7 @@ export class V2DatabaseUtils {
         message: 'Contenu ajouté à la section avec succès'
       };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1450,7 +1491,7 @@ export class V2DatabaseUtils {
    * Vider une section
    */
   static async clearSection(ref: string, sectionId: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Vidage section ${sectionId}`, context);
+    logger.info(LogCategory.API,`🚀 Vidage section ${sectionId}`, toResolverContext(context));
     
     try {
       // Résoudre la référence
@@ -1494,7 +1535,7 @@ export class V2DatabaseUtils {
         message: 'Section vidée avec succès'
       };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1503,7 +1544,7 @@ export class V2DatabaseUtils {
    * Supprimer une section
    */
   static async eraseSection(ref: string, sectionId: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Suppression section ${sectionId}`, context);
+    logger.info(LogCategory.API,`🚀 Suppression section ${sectionId}`, toResolverContext(context));
     
     try {
       // Résoudre la référence
@@ -1547,7 +1588,7 @@ export class V2DatabaseUtils {
         message: 'Section supprimée avec succès'
       };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1556,7 +1597,7 @@ export class V2DatabaseUtils {
    * Récupérer la table des matières
    */
   static async getTableOfContents(ref: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération table des matières`, context);
+    logger.info(LogCategory.API,`🚀 Récupération table des matières`, toResolverContext(context));
     
     try {
       // Résoudre la référence
@@ -1587,7 +1628,7 @@ export class V2DatabaseUtils {
         toc: toc
       };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1596,7 +1637,7 @@ export class V2DatabaseUtils {
    * Récupérer les statistiques d'une note
    */
   static async getNoteStatistics(ref: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération statistiques`, context);
+    logger.info(LogCategory.API,`🚀 Récupération statistiques`, toResolverContext(context));
     
     try {
       // Résoudre la référence
@@ -1637,7 +1678,7 @@ export class V2DatabaseUtils {
         }
       };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1646,7 +1687,7 @@ export class V2DatabaseUtils {
    * Publier une note
    */
   static async publishNote(ref: string, visibility: 'private' | 'public' | 'link-private' | 'link-public' | 'limited' | 'scrivia', userId: string, context: ApiContext) {
-    logApi.info(`🚀 Publication note (${visibility})`, context);
+    logger.info(LogCategory.API,`🚀 Publication note (${visibility})`, toResolverContext(context));
     
     try {
       // Résoudre la référence
@@ -1675,7 +1716,7 @@ export class V2DatabaseUtils {
         message: visibility !== 'private' ? 'Note publiée avec succès' : 'Note rendue privée avec succès'
       };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1684,11 +1725,11 @@ export class V2DatabaseUtils {
    * Récupérer l'arborescence d'un dossier
    */
   static async getFolderTree(ref: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération arborescence dossier`, context);
+    logger.info(LogCategory.API,`🚀 Récupération arborescence dossier`, toResolverContext(context));
     
     try {
       // Résoudre la référence
-      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'folder', userId, context);
+      const resolveResult = await V2ResourceResolver.resolveRef(ref, 'folder', userId, toResolverContext(context));
       if (!resolveResult.success) {
         throw new Error(resolveResult.error);
       }
@@ -1741,7 +1782,7 @@ export class V2DatabaseUtils {
         }
       };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1750,7 +1791,7 @@ export class V2DatabaseUtils {
    * Générer un slug
    */
   static async generateSlug(text: string, type: 'note' | 'classeur' | 'folder', userId: string, context: ApiContext, supabaseClient?: SupabaseClient) {
-    logApi.info(`🚀 Génération slug pour ${type}`, context);
+    logger.info(LogCategory.API,`🚀 Génération slug pour ${type}`, toResolverContext(context));
     
     try {
       // 🔧 CORRECTION: Passer le client Supabase authentifié
@@ -1766,7 +1807,7 @@ export class V2DatabaseUtils {
         original: text
       };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       throw error;
     }
   }
@@ -1779,7 +1820,7 @@ export class V2DatabaseUtils {
    * Récupérer un classeur par ID
    */
   static async getClasseur(classeurId: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération classeur ${classeurId}`, context);
+    logger.info(LogCategory.API,`🚀 Récupération classeur ${classeurId}`, toResolverContext(context));
     
     try {
       const { data: classeur, error } = await supabase
@@ -1795,7 +1836,7 @@ export class V2DatabaseUtils {
 
       return { success: true, data: classeur };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -1804,7 +1845,7 @@ export class V2DatabaseUtils {
    * Récupérer un dossier par ID
    */
   static async getFolder(folderId: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération dossier ${folderId}`, context);
+    logger.info(LogCategory.API,`🚀 Récupération dossier ${folderId}`, toResolverContext(context));
     
     try {
       const { data: folder, error } = await supabase
@@ -1820,7 +1861,7 @@ export class V2DatabaseUtils {
 
       return { success: true, data: folder };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -1829,7 +1870,7 @@ export class V2DatabaseUtils {
    * Récupérer une note par ID
    */
   static async getNote(noteId: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération note ${noteId}`, context);
+    logger.info(LogCategory.API,`🚀 Récupération note ${noteId}`, toResolverContext(context));
     
     try {
       const { data: note, error } = await supabase
@@ -1845,7 +1886,7 @@ export class V2DatabaseUtils {
 
       return { success: true, data: note };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -1854,7 +1895,7 @@ export class V2DatabaseUtils {
    * Rechercher dans les notes
    */
   static async searchNotes(query: string, limit: number, offset: number, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Recherche notes: "${query}"`, context);
+    logger.info(LogCategory.API,`🚀 Recherche notes: "${query}"`, toResolverContext(context));
     
     try {
       const { data: notes, error } = await supabase
@@ -1871,7 +1912,7 @@ export class V2DatabaseUtils {
 
       return { success: true, data: notes || [] };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -1880,7 +1921,7 @@ export class V2DatabaseUtils {
    * Rechercher dans les classeurs
    */
   static async searchClasseurs(query: string, limit: number, offset: number, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Recherche classeurs: "${query}"`, context);
+    logger.info(LogCategory.API,`🚀 Recherche classeurs: "${query}"`, toResolverContext(context));
     
     try {
       const { data: classeurs, error } = await supabase
@@ -1897,7 +1938,7 @@ export class V2DatabaseUtils {
 
       return { success: true, data: classeurs || [] };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -1906,7 +1947,7 @@ export class V2DatabaseUtils {
    * Rechercher dans les fichiers
    */
   static async searchFiles(query: string, limit: number, offset: number, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Recherche fichiers: "${query}"`, context);
+    logger.info(LogCategory.API,`🚀 Recherche fichiers: "${query}"`, toResolverContext(context));
     
     try {
       const { data: files, error } = await supabase
@@ -1924,7 +1965,7 @@ export class V2DatabaseUtils {
 
       return { success: true, data: files || [] };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -1933,7 +1974,7 @@ export class V2DatabaseUtils {
    * Récupérer les informations utilisateur
    */
   static async getUserInfo(userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération infos utilisateur ${userId}`, context);
+    logger.info(LogCategory.API,`🚀 Récupération infos utilisateur ${userId}`, toResolverContext(context));
     
     try {
       const { data: user, error } = await supabase
@@ -1948,7 +1989,7 @@ export class V2DatabaseUtils {
 
       return { success: true, data: user };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -1957,7 +1998,7 @@ export class V2DatabaseUtils {
    * Insérer du contenu dans une note (alias pour insertContentToNote)
    */
   static async insertNoteContent(noteId: string, params: { content: string; position: number }, userId: string, context: ApiContext) {
-    return await this.insertContentToNote(noteId, params.content, params.position, userId, context);
+    return await this.insertContentToNote(noteId, params.content, params.position, userId, toResolverContext(context));
   }
 
   // ============================================================================
@@ -1968,14 +2009,14 @@ export class V2DatabaseUtils {
    * Appliquer des opérations de contenu à une note
    */
   static async applyContentOperations(ref: string, operations: ContentOperation[], userId: string, context: ApiContext) {
-    logApi.info(`🚀 Application opérations contenu ${ref}`, context);
+    logger.info(LogCategory.API,`🚀 Application opérations contenu ${ref}`, toResolverContext(context));
     
     try {
       // Pour l'instant, implémentation basique
       // TODO: Implémenter la logique complète des opérations
       return { success: true, data: { operations_applied: operations.length } };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -1984,14 +2025,14 @@ export class V2DatabaseUtils {
    * Récupérer la table des matières d'une note (alias pour getTableOfContents)
    */
   static async getNoteTOC(ref: string, userId: string, context: ApiContext) {
-    return await this.getTableOfContents(ref, userId, context);
+    return await this.getTableOfContents(ref, userId, toResolverContext(context));
   }
 
   /**
    * Récupérer les paramètres de partage d'une note
    */
   static async getNoteShareSettings(ref: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération paramètres partage ${ref}`, context);
+    logger.info(LogCategory.API,`🚀 Récupération paramètres partage ${ref}`, toResolverContext(context));
     
     try {
       const { data: note, error } = await supabase
@@ -2014,7 +2055,7 @@ export class V2DatabaseUtils {
         }
       };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -2023,7 +2064,7 @@ export class V2DatabaseUtils {
    * Mettre à jour les paramètres de partage d'une note
    */
   static async updateNoteShareSettings(ref: string, settings: ShareSettings, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Mise à jour paramètres partage ${ref}`, context);
+    logger.info(LogCategory.API,`🚀 Mise à jour paramètres partage ${ref}`, toResolverContext(context));
     
     try {
       const { error } = await supabase
@@ -2043,7 +2084,7 @@ export class V2DatabaseUtils {
 
       return { success: true, data: { message: 'Paramètres de partage mis à jour' } };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -2052,7 +2093,7 @@ export class V2DatabaseUtils {
    * Récupérer les notes récentes
    */
   static async getRecentNotes(limit: number = 10, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération notes récentes (${limit})`, context);
+    logger.info(LogCategory.API,`🚀 Récupération notes récentes (${limit})`, toResolverContext(context));
     
     try {
       const { data: notes, error } = await supabase
@@ -2069,7 +2110,7 @@ export class V2DatabaseUtils {
 
       return { success: true, data: notes || [] };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -2078,34 +2119,34 @@ export class V2DatabaseUtils {
    * Récupérer les classeurs avec contenu (alias pour getClasseurs)
    */
   static async getClasseursWithContent(userId: string, context: ApiContext) {
-    return await this.getClasseurs(userId, context);
+    return await this.getClasseurs(userId, toResolverContext(context));
   }
 
   /**
    * Récupérer les classeurs (alias pour getClasseurs)
    */
   static async listClasseurs(userId: string, context: ApiContext) {
-    return await this.getClasseurs(userId, context);
+    return await this.getClasseurs(userId, toResolverContext(context));
   }
 
   /**
    * Rechercher du contenu (notes, dossiers, classeurs)
    */
   static async searchContent(query: string, type: string = 'all', limit: number = 20, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Recherche contenu: "${query}" (type: ${type})`, context);
+    logger.info(LogCategory.API,`🚀 Recherche contenu: "${query}" (type: ${type})`, toResolverContext(context));
     
     try {
       const results: Array<Record<string, unknown> & { type: string }> = [];
 
       if (type === 'all' || type === 'notes') {
-        const notesResult = await this.searchNotes(query, limit, 0, userId, context);
+        const notesResult = await this.searchNotes(query, limit, 0, userId, toResolverContext(context));
         if (notesResult.success) {
           (notesResult.data ?? []).forEach(note => results.push({ ...note, type: 'note' }));
         }
       }
 
       if (type === 'all' || type === 'classeurs') {
-        const classeursResult = await this.searchClasseurs(query, limit, 0, userId, context);
+        const classeursResult = await this.searchClasseurs(query, limit, 0, userId, toResolverContext(context));
         if (classeursResult.success) {
           (classeursResult.data ?? []).forEach(classeur => results.push({ ...classeur, type: 'classeur' }));
         }
@@ -2113,7 +2154,7 @@ export class V2DatabaseUtils {
 
       return { success: true, data: results };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -2122,7 +2163,7 @@ export class V2DatabaseUtils {
    * Récupérer les statistiques utilisateur
    */
   static async getStats(userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération statistiques ${userId}`, context);
+    logger.info(LogCategory.API,`🚀 Récupération statistiques ${userId}`, toResolverContext(context));
     
     try {
       // Compter les notes
@@ -2156,7 +2197,7 @@ export class V2DatabaseUtils {
         }
       };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -2165,14 +2206,14 @@ export class V2DatabaseUtils {
    * Récupérer le profil utilisateur (alias pour getUserInfo)
    */
   static async getUserProfile(userId: string, context: ApiContext) {
-    return await this.getUserInfo(userId, context);
+    return await this.getUserInfo(userId, toResolverContext(context));
   }
 
   /**
    * Récupérer la corbeille
    */
   static async getTrash(userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération corbeille ${userId}`, context);
+    logger.info(LogCategory.API,`🚀 Récupération corbeille ${userId}`, toResolverContext(context));
     
     try {
       // Récupérer les éléments supprimés
@@ -2188,7 +2229,7 @@ export class V2DatabaseUtils {
 
       return { success: true, data: trashItems || [] };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -2197,13 +2238,13 @@ export class V2DatabaseUtils {
    * Restaurer depuis la corbeille
    */
   static async restoreFromTrash(itemId: string, itemType: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Restauration ${itemType} ${itemId}`, context);
+    logger.info(LogCategory.API,`🚀 Restauration ${itemType} ${itemId}`, toResolverContext(context));
     
     try {
       // TODO: Implémenter la logique de restauration
       return { success: true, data: { message: 'Élément restauré' } };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -2212,13 +2253,13 @@ export class V2DatabaseUtils {
    * Vider la corbeille
    */
   static async purgeTrash(userId: string, context: ApiContext) {
-    logApi.info(`🚀 Vidage corbeille ${userId}`, context);
+    logger.info(LogCategory.API,`🚀 Vidage corbeille ${userId}`, toResolverContext(context));
     
     try {
       // TODO: Implémenter la logique de vidage
       return { success: true, data: { message: 'Corbeille vidée' } };
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -2227,21 +2268,21 @@ export class V2DatabaseUtils {
    * Supprimer une ressource (note, dossier, classeur)
    */
   static async deleteResource(resourceType: string, ref: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Suppression ${resourceType} ${ref}`, context);
+    logger.info(LogCategory.API,`🚀 Suppression ${resourceType} ${ref}`, toResolverContext(context));
     
     try {
       switch (resourceType) {
         case 'note':
-          return await this.deleteNote(ref, userId, context);
+          return await this.deleteNote(ref, userId, toResolverContext(context));
         case 'folder':
-          return await this.deleteFolder(ref, userId, context);
+          return await this.deleteFolder(ref, userId, toResolverContext(context));
         case 'classeur':
-          return await this.deleteClasseur(ref, userId, context);
+          return await this.deleteClasseur(ref, userId, toResolverContext(context));
         default:
           throw new Error(`Type de ressource non supporté: ${resourceType}`);
       }
     } catch (error) {
-      logApi.info(`❌ Erreur: ${error}`, context);
+      logger.info(LogCategory.API,`❌ Erreur: ${error}`, toResolverContext(context));
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -2254,7 +2295,7 @@ export class V2DatabaseUtils {
    * Lister les agents
    */
   static async listAgents(userId: string, context: ApiContext) {
-    logApi.info(`🚀 Liste agents ${userId}`, context);
+    logger.info(LogCategory.API,`🚀 Liste agents ${userId}`, toResolverContext(context));
     return { success: true, data: [] };
   }
 
@@ -2262,7 +2303,7 @@ export class V2DatabaseUtils {
    * Créer un agent
    */
   static async createAgent(data: AgentData, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Création agent`, context);
+    logger.info(LogCategory.API,`🚀 Création agent`, toResolverContext(context));
     return { success: true, data: { id: 'placeholder' } };
   }
 
@@ -2270,7 +2311,7 @@ export class V2DatabaseUtils {
    * Récupérer un agent
    */
   static async getAgent(agentId: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Récupération agent ${agentId}`, context);
+    logger.info(LogCategory.API,`🚀 Récupération agent ${agentId}`, toResolverContext(context));
     return { success: true, data: { id: agentId } };
   }
 
@@ -2278,7 +2319,7 @@ export class V2DatabaseUtils {
    * Exécuter un agent
    */
   static async executeAgent(data: Record<string, unknown>, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Exécution agent`, context);
+    logger.info(LogCategory.API,`🚀 Exécution agent`, toResolverContext(context));
     return { success: true, data: { response: 'placeholder' } };
   }
 
@@ -2286,7 +2327,7 @@ export class V2DatabaseUtils {
    * Mettre à jour un agent
    */
   static async updateAgent(agentId: string, data: AgentData, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Mise à jour agent ${agentId}`, context);
+    logger.info(LogCategory.API,`🚀 Mise à jour agent ${agentId}`, toResolverContext(context));
     return { success: true, data: { id: agentId } };
   }
 
@@ -2294,7 +2335,7 @@ export class V2DatabaseUtils {
    * Patcher un agent
    */
   static async patchAgent(agentId: string, data: Partial<AgentData>, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Patch agent ${agentId}`, context);
+    logger.info(LogCategory.API,`🚀 Patch agent ${agentId}`, toResolverContext(context));
     return { success: true, data: { id: agentId } };
   }
 
@@ -2302,7 +2343,7 @@ export class V2DatabaseUtils {
    * Supprimer un agent
    */
   static async deleteAgent(agentId: string, userId: string, context: ApiContext) {
-    logApi.info(`🚀 Suppression agent ${agentId}`, context);
+    logger.info(LogCategory.API,`🚀 Suppression agent ${agentId}`, toResolverContext(context));
     return { success: true, data: { message: 'Agent supprimé' } };
   }
 
@@ -2310,7 +2351,7 @@ export class V2DatabaseUtils {
    * Lister les tools
    */
   static async listTools(userId: string, context: ApiContext) {
-    logApi.info(`🚀 Liste tools ${userId}`, context);
+    logger.info(LogCategory.API,`🚀 Liste tools ${userId}`, toResolverContext(context));
     return { success: true, data: [] };
   }
 
@@ -2318,7 +2359,7 @@ export class V2DatabaseUtils {
    * Informations de debug
    */
   static async debugInfo(userId: string, context: ApiContext) {
-    logApi.info(`🚀 Debug info ${userId}`, context);
+    logger.info(LogCategory.API,`🚀 Debug info ${userId}`, toResolverContext(context));
     return { 
       success: true, 
       data: {

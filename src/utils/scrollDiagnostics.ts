@@ -3,6 +3,8 @@
  * À SUPPRIMER après debug
  */
 
+import { logger, LogCategory } from './logger';
+
 // Active/désactive les diagnostics
 const DIAGNOSTICS_ENABLED = process.env.NODE_ENV === 'development';
 
@@ -20,16 +22,16 @@ export function enableScrollDiagnostics() {
     if (!isScrolling) {
       isScrolling = true;
       repaintsDuringScroll = 0;
-      console.log('%c[ScrollDiag] 🔵 Scroll START', 'color: blue; font-weight: bold');
+      logger.debug(LogCategory.PERFORMANCE, '[ScrollDiag] 🔵 Scroll START');
     }
 
     clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => {
       isScrolling = false;
-      console.log(
-        `%c[ScrollDiag] 🔴 Scroll END - Repaints détectés: ${repaintsDuringScroll}`,
-        repaintsDuringScroll > 5 ? 'color: red; font-weight: bold' : 'color: green'
-      );
+      logger.debug(LogCategory.PERFORMANCE, '[ScrollDiag] 🔴 Scroll END - Repaints détectés', {
+        repaintsCount: repaintsDuringScroll,
+        isHigh: repaintsDuringScroll > 5
+      });
     }, 200);
   }, { passive: true });
 
@@ -41,18 +43,15 @@ export function enableScrollDiagnostics() {
       // Log les mutations coûteuses
       mutations.forEach(mutation => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-          console.warn(
-            `%c[ScrollDiag] ⚠️ Style mutation pendant scroll:`,
-            'color: orange',
-            mutation.target
-          );
+          logger.warn(LogCategory.PERFORMANCE, '[ScrollDiag] ⚠️ Style mutation pendant scroll', {
+            target: mutation.target instanceof Element ? mutation.target.tagName : 'Unknown'
+          });
         }
         if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          console.warn(
-            `%c[ScrollDiag] ⚠️ DOM insertion pendant scroll:`,
-            'color: orange',
-            mutation.target
-          );
+          logger.warn(LogCategory.PERFORMANCE, '[ScrollDiag] ⚠️ DOM insertion pendant scroll', {
+            target: mutation.target instanceof Element ? mutation.target.tagName : 'Unknown',
+            addedNodesCount: mutation.addedNodes.length
+          });
         }
       });
     }
@@ -65,7 +64,7 @@ export function enableScrollDiagnostics() {
     subtree: true,
   });
 
-  console.log('%c[ScrollDiag] 🔍 Diagnostics activés', 'color: cyan; font-weight: bold');
+  logger.debug(LogCategory.PERFORMANCE, '[ScrollDiag] 🔍 Diagnostics activés');
 }
 
 // Performance observer pour detecter long tasks
@@ -76,20 +75,23 @@ export function enablePerformanceDiagnostics() {
     const observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         // Long task > 50ms pendant scroll = saccade garantie
-        if ((entry as any).duration > 50) {
-          console.error(
-            `%c[ScrollDiag] 🐌 LONG TASK détectée: ${(entry as any).duration.toFixed(0)}ms`,
-            'color: red; font-weight: bold; font-size: 14px',
-            entry
-          );
+        const duration = (entry as { duration?: number }).duration || 0;
+        if (duration > 50) {
+          logger.error(LogCategory.PERFORMANCE, `[ScrollDiag] 🐌 LONG TASK détectée: ${duration.toFixed(0)}ms`, {
+            duration,
+            entryType: entry.entryType,
+            name: entry.name
+          });
         }
       }
     });
 
     observer.observe({ entryTypes: ['longtask'] });
-    console.log('%c[ScrollDiag] 📊 Performance monitoring activé', 'color: cyan');
+    logger.debug(LogCategory.PERFORMANCE, '[ScrollDiag] 📊 Performance monitoring activé');
   } catch (e) {
-    console.warn('[ScrollDiag] Performance monitoring non supporté');
+    logger.warn(LogCategory.PERFORMANCE, '[ScrollDiag] Performance monitoring non supporté', {
+      error: e instanceof Error ? e.message : 'Unknown error'
+    });
   }
 }
 

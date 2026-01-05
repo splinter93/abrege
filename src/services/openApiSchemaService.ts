@@ -5,6 +5,7 @@
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { logger, LogCategory } from '@/utils/logger';
 
 export interface OpenAPISchema {
   openapi: string;
@@ -54,7 +55,7 @@ export class OpenAPISchemaService {
 
     // 🔧 CORRECTION: Vérifier que nous sommes côté serveur
     if (typeof window !== 'undefined') {
-      console.warn('[OpenAPISchemaService] ⚠️ Tentative de chargement côté client - utilisation du schéma par défaut');
+      logger.warn(LogCategory.API, '[OpenAPISchemaService] ⚠️ Tentative de chargement côté client - utilisation du schéma par défaut');
       // Retourner un schéma minimal pour éviter les erreurs côté client
       this.schema = {
         openapi: '3.0.0',
@@ -67,17 +68,23 @@ export class OpenAPISchemaService {
     }
 
     try {
-      console.log('[OpenAPISchemaService] 🔧 Chargement du schéma OpenAPI V2...');
+      logger.info(LogCategory.API, '[OpenAPISchemaService] 🔧 Chargement du schéma OpenAPI V2...');
       
       const schemaContent = readFileSync(this.schemaPath, 'utf-8');
       this.schema = JSON.parse(schemaContent) as OpenAPISchema;
       
-      console.log(`[OpenAPISchemaService] ✅ Schéma chargé: ${this.schema.info.title} v${this.schema.info.version}`);
-      console.log(`[OpenAPISchemaService] 📊 ${Object.keys(this.schema.paths).length} endpoints disponibles`);
+      logger.info(LogCategory.API, `[OpenAPISchemaService] ✅ Schéma chargé: ${this.schema.info.title} v${this.schema.info.version}`, {
+        title: this.schema.info.title,
+        version: this.schema.info.version,
+        endpointsCount: Object.keys(this.schema.paths).length
+      });
       
       return this.schema;
     } catch (error) {
-      console.error('[OpenAPISchemaService] ❌ Erreur lors du chargement du schéma:', error);
+      logger.error(LogCategory.API, '[OpenAPISchemaService] ❌ Erreur lors du chargement du schéma', {
+        error: error instanceof Error ? error.message : String(error),
+        schemaPath: this.schemaPath
+      }, error instanceof Error ? error : undefined);
       throw new Error(`Impossible de charger le schéma OpenAPI V2: ${error}`);
     }
   }

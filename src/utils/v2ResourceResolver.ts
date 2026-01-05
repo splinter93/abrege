@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { ResourceType } from './slugGenerator';
-import { logApi } from './logger';
+import { logger, LogCategory } from './logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 // IMPORTANT: L'API V2 est utilisée par l'Agent côté serveur sans JWT utilisateur.
@@ -23,27 +23,31 @@ export class V2ResourceResolver {
     
     try {
       // ✅ LOGGING DÉTAILLÉ pour debug
-      console.log('🔍 [V2ResourceResolver] Tentative de résolution:', {
+      logger.debug(LogCategory.API, '[V2ResourceResolver] 🔍 Tentative de résolution', {
         ref,
         type,
         userId,
         hasUserToken: !!userToken,
-        context
+        operation: context.operation,
+        component: context.component
       });
-      
-      logApi.info(`🔍 Tentative de résolution: ${ref} (type: ${type}, userId: ${userId})`, context);
       
       // Utiliser directement le service role key au lieu de ResourceResolver
       const resolvedId = await this.resolveRefDirect(ref, type, userId);
-      console.log('🔍 [V2ResourceResolver] Résultat résolution directe:', {
+      logger.debug(LogCategory.API, '[V2ResourceResolver] 🔍 Résultat résolution directe', {
         resolvedId,
         hasResolvedId: !!resolvedId
       });
       
       if (!resolvedId) {
         const errorMsg = `❌ Référence non trouvée: ${ref} (type: ${type})`;
-        console.error(errorMsg, { ref, type, userId, context });
-        logApi.error(errorMsg, context);
+        logger.error(LogCategory.API, errorMsg, {
+          ref,
+          type,
+          userId,
+          operation: context.operation,
+          component: context.component
+        });
         return {
           success: false,
           error: `${type === 'note' ? 'Note' : type === 'folder' ? 'Dossier' : 'Classeur'} non trouvé`,
@@ -51,19 +55,24 @@ export class V2ResourceResolver {
         };
       }
 
-      console.log('✅ [V2ResourceResolver] Référence résolue avec succès:', {
+      logger.info(LogCategory.API, '[V2ResourceResolver] ✅ Référence résolue avec succès', {
         ref,
         resolvedId,
         type
       });
       
-      logApi.info(`✅ Référence résolue: ${ref} → ${resolvedId}`, context);
       return { success: true, id: resolvedId };
 
     } catch (error) {
       const errorMsg = `❌ Erreur résolution: ${error}`;
-      console.error(errorMsg, { error, ref, type, userId, context });
-      logApi.error(errorMsg, context);
+      logger.error(LogCategory.API, errorMsg, {
+        error: error instanceof Error ? error.message : String(error),
+        ref,
+        type,
+        userId,
+        operation: context.operation,
+        component: context.component
+      }, error instanceof Error ? error : undefined);
       return {
         success: false,
         error: 'Erreur lors de la résolution de la référence',
@@ -82,7 +91,7 @@ export class V2ResourceResolver {
   ): Promise<string | null> {
     const tableName = this.getTableName(type);
     
-    console.log('🔍 [V2ResourceResolver] Résolution directe:', {
+    logger.debug(LogCategory.API, '[V2ResourceResolver] 🔍 Résolution directe', {
       ref,
       type,
       tableName,
@@ -91,7 +100,7 @@ export class V2ResourceResolver {
     
     // ✅ 1. Nettoyer l'ID (remplacer les tirets longs par des tirets courts)
     const cleanRef = ref.replace(/‑/g, '-'); // Remplace les em-dash (‑) par des hyphens (-)
-    console.log('🧹 [V2ResourceResolver] Référence nettoyée:', {
+    logger.debug(LogCategory.API, '[V2ResourceResolver] 🧹 Référence nettoyée', {
       original: ref,
       cleaned: cleanRef,
       hasEmDash: ref.includes('‑'),
@@ -100,7 +109,7 @@ export class V2ResourceResolver {
     
     // ✅ 2. Si c'est un UUID, vérifier qu'il existe et appartient à l'utilisateur
     if (this.isUUID(cleanRef)) {
-      console.log('🔍 [V2ResourceResolver] Référence est un UUID, validation...');
+      logger.debug(LogCategory.API, '[V2ResourceResolver] 🔍 Référence est un UUID, validation...');
       
       try {
         const { data } = await supabase
@@ -110,20 +119,22 @@ export class V2ResourceResolver {
           .eq('user_id', userId)
           .single();
         
-        console.log('✅ [V2ResourceResolver] UUID validé:', {
+        logger.debug(LogCategory.API, '[V2ResourceResolver] ✅ UUID validé', {
           found: !!data,
           id: data?.id || null
         });
         
         return data?.id || null;
       } catch (error) {
-        console.error(`❌ [V2ResourceResolver] Erreur validation UUID ${cleanRef}:`, error);
+        logger.error(LogCategory.API, `❌ [V2ResourceResolver] Erreur validation UUID ${cleanRef}`, {
+          error: error instanceof Error ? error.message : String(error)
+        }, error instanceof Error ? error : undefined);
         return null;
       }
     }
     
     // ✅ 3. Sinon, chercher par slug (utiliser la référence originale pour le slug)
-    console.log('🔍 [V2ResourceResolver] Référence n\'est pas un UUID, recherche par slug...');
+    logger.debug(LogCategory.API, '[V2ResourceResolver] 🔍 Référence n\'est pas un UUID, recherche par slug...');
     
     try {
       const { data } = await supabase
@@ -133,7 +144,7 @@ export class V2ResourceResolver {
         .eq('user_id', userId)
         .single();
       
-      console.log('✅ [V2ResourceResolver] Slug résolu:', {
+      logger.debug(LogCategory.API, '[V2ResourceResolver] ✅ Slug résolu', {
         slug: ref,
         found: !!data,
         id: data?.id || null
@@ -141,7 +152,9 @@ export class V2ResourceResolver {
       
       return data?.id || null;
     } catch (error) {
-      console.error(`❌ [V2ResourceResolver] Erreur résolution slug ${ref}:`, error);
+      logger.error(LogCategory.API, `❌ [V2ResourceResolver] Erreur résolution slug ${ref}`, {
+        error: error instanceof Error ? error.message : String(error)
+      }, error instanceof Error ? error : undefined);
       return null;
     }
   }
@@ -168,7 +181,13 @@ export class V2ResourceResolver {
         .single();
 
       if (error || !data) {
-        logApi.error(`❌ Ressource non trouvée: ${id}`, context);
+        logger.error(LogCategory.API, `❌ Ressource non trouvée: ${id}`, {
+          id,
+          type,
+          userId,
+          operation: context.operation,
+          component: context.component
+        });
         return {
           success: false,
           error: `${type === 'note' ? 'Note' : type === 'folder' ? 'Dossier' : 'Classeur'} non trouvé`,
@@ -177,7 +196,14 @@ export class V2ResourceResolver {
       }
 
       if (data.user_id !== userId) {
-        logApi.error(`❌ Accès refusé: ${id}`, context);
+        logger.error(LogCategory.API, `❌ Accès refusé: ${id}`, {
+          id,
+          type,
+          userId,
+          resourceUserId: data.user_id,
+          operation: context.operation,
+          component: context.component
+        });
         return {
           success: false,
           error: 'Accès refusé',
@@ -185,11 +211,24 @@ export class V2ResourceResolver {
         };
       }
 
-      logApi.info(`✅ Ressource validée: ${id}`, context);
+      logger.info(LogCategory.API, `✅ Ressource validée: ${id}`, {
+        id,
+        type,
+        userId,
+        operation: context.operation,
+        component: context.component
+      });
       return { success: true, data };
 
     } catch (error) {
-      logApi.error(`❌ Erreur validation: ${error}`, context);
+      logger.error(LogCategory.API, `❌ Erreur validation: ${error}`, {
+        id,
+        type,
+        userId,
+        error: error instanceof Error ? error.message : String(error),
+        operation: context.operation,
+        component: context.component
+      }, error instanceof Error ? error : undefined);
       return {
         success: false,
         error: 'Erreur lors de la validation',

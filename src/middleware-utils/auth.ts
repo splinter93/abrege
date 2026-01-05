@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getAuthenticatedUser as getAuthUser } from '@/utils/authUtils';
-import { simpleLogger as logger } from '@/utils/logger';
+import { logger, LogCategory } from '@/utils/logger';
 
 export interface AuthenticatedUser {
   id: string;
@@ -18,13 +18,15 @@ export interface AuthResult {
  */
 export async function authenticateUser(req: NextRequest): Promise<AuthResult> {
   try {
-    console.log('🚨 [AUTH] ===== DÉBUT AUTHENTICATEUSER =====');
+    logger.debug(LogCategory.API, '[AUTH] 🚨 ===== DÉBUT AUTHENTICATEUSER =====');
     
     // Utiliser la fonction unifiée d'authentification
     const authResult = await getAuthUser(req);
     
     if (!authResult.success) {
-      console.log('🚨 [AUTH] ❌ Authentification échouée:', authResult.error);
+      logger.warn(LogCategory.API, '[AUTH] 🚨 ❌ Authentification échouée', {
+        error: authResult.error
+      });
       return { user: null, error: authResult.error || 'Authentification requise' };
     }
     
@@ -42,13 +44,18 @@ export async function authenticateUser(req: NextRequest): Promise<AuthResult> {
       .single();
 
     if (profileError || !userProfile) {
-      console.log('🚨 [AUTH] ❌ Erreur récupération profil:', profileError);
+      logger.error(LogCategory.API, '[AUTH] 🚨 ❌ Erreur récupération profil', {
+        error: profileError?.message,
+        userId: authResult.userId
+      }, profileError || undefined);
       return { user: null, error: 'Profil utilisateur non trouvé' };
     }
 
-    console.log('🚨 [AUTH] ✅ Utilisateur authentifié:', userProfile.email);
-    console.log('🚨 [AUTH] Type d\'auth:', authResult.authType);
-    console.log('🚨 [AUTH] ===== FIN AUTHENTICATEUSER =====');
+    logger.info(LogCategory.API, '[AUTH] 🚨 ✅ Utilisateur authentifié', {
+      email: userProfile.email,
+      authType: authResult.authType
+    });
+    logger.debug(LogCategory.API, '[AUTH] 🚨 ===== FIN AUTHENTICATEUSER =====');
 
     return {
       user: {
@@ -59,8 +66,9 @@ export async function authenticateUser(req: NextRequest): Promise<AuthResult> {
     };
 
   } catch (error) {
-    console.error('🚨 [AUTH] ❌ Erreur inattendue:', error);
-    logger.error('Erreur d\'authentification:', error);
+    logger.error(LogCategory.API, '[AUTH] 🚨 ❌ Erreur inattendue', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, error instanceof Error ? error : undefined);
     return { user: null, error: 'Erreur d\'authentification' };
   }
 }

@@ -1,4 +1,5 @@
 import type { TrashItem, TrashStatistics } from '@/types/supabase';
+import { logger, LogCategory } from '@/utils/logger';
 
 /**
  * Service pour la gestion de la corbeille
@@ -27,15 +28,13 @@ export class TrashService {
         
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🔍 TrashService - Session récupérée:', {
-            hasSession: !!session,
-            hasError: !!error,
-            userId: session?.user?.id,
-            email: session?.user?.email,
-            hasAccessToken: !!session?.access_token
-          });
-        }
+        logger.debug(LogCategory.API, '[TrashService] 🔍 Session récupérée', {
+          hasSession: !!session,
+          hasError: !!error,
+          userId: session?.user?.id,
+          email: session?.user?.email,
+          hasAccessToken: !!session?.access_token
+        });
         
         if (session?.access_token) {
           // Ajouter le token d'authentification si disponible
@@ -53,9 +52,9 @@ export class TrashService {
         'X-Client-Type': 'web'
       };
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('❌ TrashService - Erreur récupération session:', error);
-      }
+      logger.error(LogCategory.API, '[TrashService] ❌ Erreur récupération session', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }, error instanceof Error ? error : undefined);
       // En cas d'erreur, retourner les headers de base
       return {
         'Content-Type': 'application/json',
@@ -139,26 +138,31 @@ export class TrashService {
   static async emptyTrash(): Promise<void> {
     const headers = await this.getAuthHeaders();
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 TrashService.emptyTrash - Headers:', headers);
-      console.log('🔍 TrashService.emptyTrash - URL:', this.API_BASE);
-    }
+    const headersRecord = headers as Record<string, string>;
+    logger.debug(LogCategory.API, '[TrashService.emptyTrash] 🔍 Headers', {
+      hasContentType: !!headersRecord['Content-Type'],
+      hasClientType: !!headersRecord['X-Client-Type'],
+      hasAuth: !!headersRecord['Authorization']
+    });
+    logger.debug(LogCategory.API, '[TrashService.emptyTrash] 🔍 URL', { url: this.API_BASE });
     
     const response = await fetch(this.API_BASE, {
       method: 'DELETE',
       headers
     });
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 TrashService.emptyTrash - Response status:', response.status);
-      console.log('🔍 TrashService.emptyTrash - Response ok:', response.ok);
-    }
+    logger.debug(LogCategory.API, '[TrashService.emptyTrash] 🔍 Response', {
+      status: response.status,
+      ok: response.ok
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      if (process.env.NODE_ENV === 'development') {
-        console.error('🔍 TrashService.emptyTrash - Error response:', errorText);
-      }
+      logger.error(LogCategory.API, '[TrashService.emptyTrash] 🔍 Error response', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText
+      });
       throw new Error(`Erreur ${response.status}: ${response.statusText}`);
     }
 

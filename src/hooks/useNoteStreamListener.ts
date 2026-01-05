@@ -97,14 +97,7 @@ export function useNoteStreamListener(
     const currentSessions = useCanvaStore.getState().sessions;
     const session = Object.values(currentSessions).find(s => s.noteId === noteId);
     if (!session) {
-      console.warn('⚠️ [useNoteStreamListener] Session not found', {
-        noteId,
-        availableSessions: Object.keys(currentSessions).map(id => ({
-          id,
-          noteId: currentSessions[id].noteId
-        }))
-      });
-      logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] Session not found', {
+      logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] ⚠️ Session not found', {
         noteId,
         availableSessions: Object.keys(currentSessions).map(id => ({
           id,
@@ -116,7 +109,7 @@ export function useNoteStreamListener(
   };
 
   // ✅ LOG AVANT useEffect pour confirmer que le hook s'exécute
-  console.log('🔍 [useNoteStreamListener] Hook function called (BEFORE useEffect)', {
+  logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] 🔍 Hook function called (BEFORE useEffect)', {
     noteId,
     enabled,
     debug,
@@ -127,7 +120,7 @@ export function useNoteStreamListener(
   });
 
   // ✅ FORCER un log juste avant useEffect pour confirmer qu'on arrive ici
-  console.log('🔍 [useNoteStreamListener] About to call useEffect', {
+  logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] 🔍 About to call useEffect', {
     noteId,
     enabled,
     debug,
@@ -137,7 +130,7 @@ export function useNoteStreamListener(
   // ✅ TEST: Utiliser useEffect (pas useLayoutEffect car il ne s'exécute pas)
   useEffect(() => {
     // ✅ FORCER un log SYNCHRONE au tout début (pas de await, pas de condition)
-    console.log('🔍 [useNoteStreamListener] ⚡⚡⚡ useEffect STARTED ⚡⚡⚡', {
+    logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] 🔍 ⚡⚡⚡ useEffect STARTED ⚡⚡⚡', {
       noteId,
       enabled,
       debug,
@@ -146,7 +139,7 @@ export function useNoteStreamListener(
     
     // ✅ LOG IMMÉDIAT pour vérifier que le hook s'exécute
     const currentSessions = useCanvaStore.getState().sessions;
-    console.log('🔍 [useNoteStreamListener] Hook executed', {
+    logger.info(LogCategory.EDITOR, '[useNoteStreamListener] 🔍 Hook executed', {
       noteId,
       enabled,
       sessionsCount: Object.keys(currentSessions).length,
@@ -156,20 +149,9 @@ export function useNoteStreamListener(
         noteId: currentSessions[id].noteId
       }))
     });
-    logger.info(LogCategory.EDITOR, '[useNoteStreamListener] Hook executed', {
-      noteId,
-      enabled,
-      sessionsCount: Object.keys(currentSessions).length,
-      availableNoteIds: Object.values(currentSessions).map(s => s.noteId)
-    });
 
     // Skip si pas de noteId ou désactivé
     if (!noteId || !enabled) {
-      console.warn('⚠️ [useNoteStreamListener] Skipped', { 
-        noteId, 
-        enabled,
-        reason: !noteId ? 'no noteId' : 'disabled'
-      });
       logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] ⚠️ Skipped', { 
         noteId, 
         enabled,
@@ -236,29 +218,21 @@ export function useNoteStreamListener(
 
       // ✅ Utiliser ops:listen qui écoute streamBroadcastService (utilisé par editNoteContent)
       const url = `/api/v2/canvas/${noteId}/ops:listen?token=${encodeURIComponent(token)}`;
-      console.log('🔍 [useNoteStreamListener] Creating EventSource', {
+      logger.info(LogCategory.EDITOR, '[useNoteStreamListener] 🔍 Creating EventSource', {
         noteId,
-        url: url.replace(/token=[^&]+/, 'token=***'),
+        url: url.replace(/token=[^&]+/, 'token=***'), // Masquer le token dans les logs
         hasToken: Boolean(token)
-      });
-      logger.info(LogCategory.EDITOR, '[useNoteStreamListener] Creating EventSource', {
-        noteId,
-        url: url.replace(/token=[^&]+/, 'token=***') // Masquer le token dans les logs
       });
       const eventSource = new EventSource(url);
       
       // Log quand la connexion est ouverte
       eventSource.onopen = () => {
-        console.log('✅ [useNoteStreamListener] EventSource opened', {
+        logger.info(LogCategory.EDITOR, '[useNoteStreamListener] ✅ EventSource opened', {
           noteId,
-                  readyState: eventSource.readyState,
-                  url: eventSource.url.replace(/token=[^&]+/, 'token=***')
-                });
-                logger.info(LogCategory.EDITOR, '[useNoteStreamListener] ✅ EventSource opened', {
-                  noteId,
-                  readyState: eventSource.readyState
-                });
-              };
+          readyState: eventSource.readyState,
+          url: eventSource.url.replace(/token=[^&]+/, 'token=***')
+        });
+      };
       
       // Log les erreurs de connexion
       eventSource.onerror = (error) => {
@@ -337,7 +311,7 @@ export function useNoteStreamListener(
               useCanvaStore.getState().appendStreamChunk(sessionId, data.data);
 
               // ✅ Callback optionnel (insertion directe)
-              console.log('🔍 [useNoteStreamListener] Calling onChunk callback', {
+              logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] 🔍 Calling onChunk callback', {
                 noteId,
                 sessionId,
                 chunkLength: data.data.length,
@@ -347,15 +321,19 @@ export function useNoteStreamListener(
               if (onChunkRef.current) {
                 try {
                   onChunkRef.current(data.data);
-                  console.log('✅ [useNoteStreamListener] onChunk callback executed successfully');
+                  logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] ✅ onChunk callback executed successfully');
                 } catch (error) {
-                  console.error('❌ [useNoteStreamListener] onChunk callback failed', {
+                  logger.error(LogCategory.EDITOR, '[useNoteStreamListener] ❌ onChunk callback failed', {
+                    noteId,
+                    sessionId,
                     error: error instanceof Error ? error.message : 'Unknown error'
-                  });
-                  logger.error(LogCategory.EDITOR, '[useNoteStreamListener] onChunk callback failed', error);
+                  }, error instanceof Error ? error : undefined);
                 }
               } else {
-                console.warn('⚠️ [useNoteStreamListener] No onChunk callback provided');
+                logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] ⚠️ No onChunk callback provided', {
+                  noteId,
+                  sessionId
+                });
               }
 
               // ✅ Toujours logger les chunks pour debug (même sans debug mode)
@@ -383,7 +361,7 @@ export function useNoteStreamListener(
             });
 
             // ✅ Callback optionnel (conversion markdown)
-            console.log('🔍 [useNoteStreamListener] Calling onEnd callback', {
+            logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] 🔍 Calling onEnd callback', {
               noteId,
               hasCallback: typeof onEndRef.current === 'function'
             });
@@ -391,15 +369,19 @@ export function useNoteStreamListener(
             if (onEndRef.current) {
               try {
                 onEndRef.current();
-                console.log('✅ [useNoteStreamListener] onEnd callback executed successfully');
-              } catch (error) {
-                console.error('❌ [useNoteStreamListener] onEnd callback failed', {
-                  error: error instanceof Error ? error.message : 'Unknown error'
+                logger.debug(LogCategory.EDITOR, '[useNoteStreamListener] ✅ onEnd callback executed successfully', {
+                  noteId
                 });
-                logger.error(LogCategory.EDITOR, '[useNoteStreamListener] onEnd callback failed', error);
+              } catch (error) {
+                logger.error(LogCategory.EDITOR, '[useNoteStreamListener] ❌ onEnd callback failed', {
+                  noteId,
+                  error: error instanceof Error ? error.message : 'Unknown error'
+                }, error instanceof Error ? error : undefined);
               }
             } else {
-              console.warn('⚠️ [useNoteStreamListener] No onEnd callback provided');
+              logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] ⚠️ No onEnd callback provided', {
+                noteId
+              });
             }
             break;
 

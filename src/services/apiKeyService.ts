@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { randomBytes, createHash } from 'crypto';
+import { logger, LogCategory } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -89,7 +90,9 @@ export class ApiKeyService {
       return { apiKey, info };
 
     } catch (error) {
-      console.error('❌ Erreur création API Key:', error);
+      logger.error(LogCategory.API, '[ApiKeyService] ❌ Erreur création API Key', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -111,13 +114,17 @@ export class ApiKeyService {
         .single();
 
       if (error || !data) {
-        console.log('🔧 [ApiKeyService] Clé API non trouvée ou inactive:', error?.message);
+        logger.debug(LogCategory.API, '[ApiKeyService] 🔧 Clé API non trouvée ou inactive', {
+          error: error?.message
+        });
         return null;
       }
 
       // Vérifier l'expiration
       if (data.expires_at && new Date(data.expires_at) < new Date()) {
-        console.log('🔧 [ApiKeyService] Clé API expirée:', data.expires_at);
+        logger.debug(LogCategory.API, '[ApiKeyService] 🔧 Clé API expirée', {
+          expiresAt: data.expires_at
+        });
         return null;
       }
 
@@ -136,7 +143,7 @@ export class ApiKeyService {
         expires_at: data.expires_at
       };
 
-      console.log('✅ [ApiKeyService] Clé API validée:', {
+      logger.info(LogCategory.API, '[ApiKeyService] ✅ Clé API validée', {
         userId: info.user_id,
         scopes: info.scopes,
         name: info.api_key_name
@@ -145,7 +152,9 @@ export class ApiKeyService {
       return info;
 
     } catch (error) {
-      console.error('❌ [ApiKeyService] Erreur validation API Key:', error);
+      logger.error(LogCategory.API, '[ApiKeyService] ❌ Erreur validation API Key', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }, error instanceof Error ? error : undefined);
       return null;
     }
   }
@@ -168,7 +177,9 @@ export class ApiKeyService {
       return data || [];
 
     } catch (error) {
-      console.error('❌ Erreur liste API Keys:', error);
+      logger.error(LogCategory.API, '[ApiKeyService] ❌ Erreur liste API Keys', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -191,7 +202,9 @@ export class ApiKeyService {
       return true;
 
     } catch (error) {
-      console.error('❌ Erreur désactivation API Key:', error);
+      logger.error(LogCategory.API, '[ApiKeyService] ❌ Erreur désactivation API Key', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }, error instanceof Error ? error : undefined);
       throw error;
     }
   }
@@ -214,7 +227,9 @@ export class ApiKeyService {
       return true;
 
     } catch (error) {
-      console.error('❌ Erreur suppression API Key:', error);
+      logger.error(LogCategory.API, '[ApiKeyService] ❌ Erreur suppression API Key', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }, error instanceof Error ? error : undefined);
       throw error;
     }
   }
