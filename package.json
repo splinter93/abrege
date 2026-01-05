@@ -158,6 +158,7 @@
     "@types/turndown": "^5.0.5",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^5.1.0",
+    "@vitest/coverage-v8": "^4.0.16",
     "concurrently": "^9.2.1",
     "dotenv": "^17.2.0",
     "eslint": "^9",

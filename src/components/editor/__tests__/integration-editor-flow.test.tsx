@@ -16,6 +16,34 @@ import type { Editor as TiptapEditor } from '@tiptap/react';
 
 // Setup variables d'environnement
 process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-anon-key';
+
+// Mock Supabase client
+vi.mock('@/utils/supabaseClientSingleton', () => ({
+  getSupabaseClient: vi.fn(() => ({
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+    },
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: null, error: null }),
+    })),
+  })),
+}));
+
+// Mock ENV config
+vi.mock('@/config/env', () => ({
+  ENV: {
+    supabase: {
+      url: 'http://localhost:54321',
+      anonKey: 'test-anon-key',
+    },
+  },
+}));
 
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
@@ -135,7 +163,14 @@ vi.mock('@/hooks/useEditorNavigation', () => ({
 
 // Mock composants enfants
 vi.mock('../EditorLayout', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div data-testid="editor-layout">{children}</div>,
+  default: ({ content, header, title, footer }: { content?: React.ReactNode; header?: React.ReactNode; title?: React.ReactNode; footer?: React.ReactNode }) => (
+    <div data-testid="editor-layout">
+      {header}
+      {title}
+      {content}
+      {footer}
+    </div>
+  ),
 }));
 
 vi.mock('../EditorMainContent', () => ({

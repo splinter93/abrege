@@ -893,7 +893,6 @@ export async function POST(request: NextRequest) {
             const toolsToExecute: ToolCall[] = [];
             
             accumulatedToolCalls.forEach((tc) => {
-              // @ts-expect-error - Extension custom pour MCP tools exécutés par x.ai
               if (tc.alreadyExecuted === true) {
                 alreadyExecutedTools.push(tc);
               } else {

@@ -143,7 +143,7 @@ export function useChatSend({
     reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => {
     // Générer un ID unique pour cette opération
-    const operationId = `${message}-${images.map(i => i.id).join(',')}-${selectedNotes.map(n => n.id).join(',')}-${mentions.map(m => m.id).join(',')}-${usedPrompts.map(p => p.id).join(',')}-${canvasSelections.map(s => s.id).join(',')}-${reasoningOverride || 'null'}`;
+    const operationId = `${message}-${images.map(i => i.id).join(',')}-${selectedNotes.map(n => n.id).join(',')}-${mentions.map(m => m.id).join(',')}-${usedPrompts.map(p => p.id).join(',')}-${(canvasSelections || []).map(s => s.id).join(',')}-${reasoningOverride || 'null'}`;
     
     // Vérifier si cette opération est déjà en cours
     if (sendQueue.current.has(operationId)) {

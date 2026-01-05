@@ -43,7 +43,7 @@ export default defineConfig({
     
     // Include/Exclude
     include: ['**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['node_modules', 'dist', 'build', '.next'],
+    exclude: ['node_modules', 'dist', 'build', '.next', 'tests/e2e/**'], // Exclure tests Playwright
     
     // Timeout
     testTimeout: 10000,

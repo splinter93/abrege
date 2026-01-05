@@ -29,13 +29,14 @@ export interface ParsePromptPlaceholderOptions {
  * - Placeholders are delimited with `{placeholder}`.
  * - Duplicate placeholders are returned once.
  * - Reserved placeholders are filtered unless `includeReserved` is provided.
+ * - Returns empty array for non-string inputs (undefined, null, etc.)
  *
  * @param template Prompt template to inspect.
  * @param options Parsing options.
  * @returns Array of parsed placeholders.
  */
 export function parsePromptPlaceholders(
-  template: string,
+  template: string | undefined,
   options: ParsePromptPlaceholderOptions = {}
 ): ParsedPlaceholder[] {
   if (!template || typeof template !== 'string') {
@@ -79,7 +80,7 @@ export function parsePromptPlaceholders(
  * @param template Prompt template to inspect.
  * @returns True if a user-defined placeholder exists.
  */
-export function hasPromptPlaceholders(template: string): boolean {
+export function hasPromptPlaceholders(template: string | undefined): boolean {
   return parsePromptPlaceholders(template).length > 0;
 }
 

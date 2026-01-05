@@ -734,7 +734,6 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
                           name: mcpCall.name,
                           arguments: mcpCall.arguments || '{}'
                         },
-                        // @ts-expect-error - Extension custom pour MCP tools exécutés par x.ai
                         alreadyExecuted: true,
                         result: output || 'Executed by x.ai (MCP)'
                       }],

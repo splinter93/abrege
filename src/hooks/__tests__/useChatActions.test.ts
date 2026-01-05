@@ -18,6 +18,7 @@ describe('useChatActions', () => {
   const mockClearImages = vi.fn();
   const mockSetMentions = vi.fn();
   const mockSetUsedPrompts = vi.fn();
+  const mockSetCanvasSelections = vi.fn();
 
   const defaultProps = {
     message: '',
@@ -34,8 +35,10 @@ describe('useChatActions', () => {
     clearImages: mockClearImages,
     mentions: [],
     usedPrompts: [],
+    canvasSelections: [],
     setMentions: mockSetMentions,
-    setUsedPrompts: mockSetUsedPrompts
+    setUsedPrompts: mockSetUsedPrompts,
+    setCanvasSelections: mockSetCanvasSelections
   };
 
   beforeEach(() => {
@@ -76,7 +79,7 @@ describe('useChatActions', () => {
         await result.current.handleSend();
       });
 
-      expect(mockSend).toHaveBeenCalledWith('Hello world', [], [], [], []);
+      expect(mockSend).toHaveBeenCalledWith('Hello world', [], [], [], [], [], undefined);
     });
 
     it('should send message with images', async () => {
@@ -96,7 +99,7 @@ describe('useChatActions', () => {
         await result.current.handleSend();
       });
 
-      expect(mockSend).toHaveBeenCalledWith('Look at this', mockImages, [], [], []);
+      expect(mockSend).toHaveBeenCalledWith('Look at this', mockImages, [], [], [], [], undefined);
     });
 
     it('should not send if message empty and no images', async () => {
@@ -161,6 +164,9 @@ describe('useChatActions', () => {
 
       expect(mockSetMessage).toHaveBeenCalledWith('');
       expect(mockSetSelectedNotes).toHaveBeenCalledWith([]);
+      expect(mockSetMentions).toHaveBeenCalledWith([]);
+      expect(mockSetUsedPrompts).toHaveBeenCalledWith([]);
+      expect(mockSetCanvasSelections).toHaveBeenCalledWith([]);
       expect(mockClearImages).toHaveBeenCalled();
     });
 

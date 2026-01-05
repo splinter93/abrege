@@ -221,13 +221,15 @@ describe('SessionTitleGenerator', () => {
     });
 
     it('should handle timeout', async () => {
-      // Mock slow response (> 10s)
+      // Mock fetch qui ne répond jamais (simule timeout)
       (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(() => 
-        new Promise((resolve) => {
-          setTimeout(() => resolve({
-            ok: true,
-            json: async () => ({ choices: [] })
-          }), 15000);
+        new Promise((_resolve, reject) => {
+          // Simuler AbortError après 11s (après le timeout de 10s)
+          setTimeout(() => {
+            const abortError = new Error('The operation was aborted');
+            abortError.name = 'AbortError';
+            reject(abortError);
+          }, 11000);
         })
       );
 
@@ -238,7 +240,7 @@ describe('SessionTitleGenerator', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Timeout');
-    }, 20000); // Timeout de 20s pour ce test
+    }, 15000); // Timeout de 15s pour ce test
 
     it('should handle empty response from API', async () => {
       (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
@@ -283,14 +285,15 @@ describe('SessionTitleGenerator', () => {
       expect(result.title![0]).toBe('A'); // First char capitalized
     });
 
-    it.skip('should use fallback title if sanitized result empty', async () => {
+    it('should use fallback title if sanitized result empty', async () => {
+      // Simuler un content qui devient vide après sanitization (guillemets vides)
       (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           choices: [
             {
               message: {
-                content: '   ',
+                content: '""', // Guillemets vides qui seront supprimés par sanitizeTitle
                 role: 'assistant'
               },
               finish_reason: 'stop'

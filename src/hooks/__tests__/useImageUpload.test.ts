@@ -34,8 +34,8 @@ describe('useImageUpload', () => {
     it('should reject files > 10MB', async () => {
       const { result } = renderHook(() => useImageUpload({ sessionId }));
 
-      // Fichier de 11MB
-      const largeFile = new File(['x'.repeat(11 * 1024 * 1024)], 'large.png', { type: 'image/png' });
+      // Fichier de 21MB (au-dessus de la limite de 20MB)
+      const largeFile = new File(['x'.repeat(21 * 1024 * 1024)], 'large.png', { type: 'image/png' });
 
       let success: boolean = false;
       await act(async () => {
@@ -43,9 +43,9 @@ describe('useImageUpload', () => {
       });
 
       expect(success).toBe(false);
-      expect(result.current.uploadError).toContain('Image trop grande');
-      expect(result.current.uploadError).toContain('11');
-      expect(result.current.uploadError).toContain('10');
+      expect(result.current.uploadError).toContain('Image trop volumineuse');
+      expect(result.current.uploadError).toContain('21');
+      expect(result.current.uploadError).toContain('20'); // MAX_FILE_SIZE est 20MB
       expect(chatImageUploadService.uploadImages).not.toHaveBeenCalled();
     });
 

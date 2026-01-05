@@ -20,14 +20,19 @@ vi.mock('@/utils/supabaseClient', () => {
 });
 
 vi.mock('@/supabaseClient', () => {
-  const supabase = {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue({ data: { id: 'session' }, error: null }),
+  const mockSupabase = {
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ 
+        data: { id: 'test-session-id', user_id: 'test-user-id' }, 
+        error: null 
+      }),
+    })),
   };
-  return { supabase };
+  return { supabase: mockSupabase };
 });
 
 vi.mock('../HistoryManager', () => {
@@ -53,7 +58,11 @@ vi.mock('../HistoryManager', () => {
     },
     getRecentMessages: async (_sessionId: string, limit: number) => {
       const slice = messages.slice(-limit);
-      return { messages: slice, hasMore: messages.length > limit };
+      return { 
+        messages: slice, 
+        hasMore: messages.length > limit,
+        totalCount: messages.length
+      };
     },
     getMessagesBefore: async (_sessionId: string, sequence: number, limit: number) => {
       const filtered = messages.filter(m => (m.sequence_number ?? 0) < sequence);
@@ -62,9 +71,24 @@ vi.mock('../HistoryManager', () => {
     },
     buildLLMHistory: async (_sessionId: string, opts: { maxMessages: number; includeTools?: boolean }) => {
       const includeTools = opts.includeTools ?? true;
+      
+      // Collecter tous les tool_call_ids valides depuis les messages assistant
+      const validToolCallIds = new Set<string>();
+      for (const msg of messages) {
+        if (msg.role === 'assistant' && msg.tool_calls) {
+          for (const tc of msg.tool_calls) {
+            validToolCallIds.add(tc.id);
+          }
+        }
+      }
+      
       const filtered = messages.filter(m => {
         if (!includeTools && m.role === 'tool') return false;
-        if (m.role === 'tool' && !m.tool_call_id) return false;
+        // Filtrer les tool messages orphelins (tool_call_id qui n'existe pas dans un assistant précédent)
+        if (m.role === 'tool') {
+          if (!m.tool_call_id) return false;
+          if (!validToolCallIds.has(m.tool_call_id)) return false; // Orphan tool
+        }
         return true;
       });
       const slice = filtered.slice(-opts.maxMessages);
@@ -75,7 +99,7 @@ vi.mock('../HistoryManager', () => {
       messages = messages.filter(m => (m.sequence_number ?? 0) <= sequence);
       return before - messages.length;
     },
-    getSessionStats: async () => {
+    getSessionStats: async (_sessionId: string) => {
       return {
         totalMessages: messages.length,
         userMessages: messages.filter(m => m.role === 'user').length,
@@ -108,11 +132,14 @@ import type { ChatMessage } from '@/types/chat';
  * - Assertions précises
  */
 
-describe.skip('HistoryManager', () => {
+describe('HistoryManager', () => {
   let testSessionId: string;
   let testUserId: string;
 
   beforeEach(async () => {
+    // Réinitialiser le mock historyManager
+    historyManager.reset();
+    
     // Créer un user de test (ou utiliser un existant)
     testUserId = 'test-user-' + Date.now();
     
@@ -132,6 +159,9 @@ describe.skip('HistoryManager', () => {
   });
 
   afterEach(async () => {
+    // Réinitialiser le mock historyManager
+    historyManager.reset();
+    
     // Cleanup: Supprimer la session (CASCADE supprime les messages)
     await supabase
       .from('chat_sessions')

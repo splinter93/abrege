@@ -50,7 +50,6 @@ describe('parsePromptPlaceholders', () => {
 
   it('handles non-string inputs gracefully', () => {
     expect(parsePromptPlaceholders('')).toEqual([]);
-    // @ts-expect-error testing runtime fallback
     expect(parsePromptPlaceholders(undefined)).toEqual([]);
   });
 });

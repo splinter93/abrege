@@ -9,12 +9,13 @@
  * - Switch vers Llama 4 Maverick si nécessaire
  */
 
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ImageSupportRule } from '../ImageSupportRule';
 import type { ModelOverrideContext } from '../../types';
 
 // Mock getModelInfo
-jest.mock('@/constants/groqModels', () => ({
-  getModelInfo: (modelId: string) => {
+vi.mock('@/constants/groqModels', () => ({
+  getModelInfo: vi.fn((modelId: string) => {
     const models: Record<string, { capabilities: string[] }> = {
       'openai/gpt-oss-20b': { capabilities: ['text', 'function_calling'] },
       'openai/gpt-oss-120b': { capabilities: ['text', 'function_calling'] },
@@ -22,7 +23,7 @@ jest.mock('@/constants/groqModels', () => ({
       'meta-llama/llama-4-scout-17b-16e-instruct': { capabilities: ['text', 'images', 'function_calling'] }
     };
     return models[modelId] || undefined;
-  }
+  })
 }));
 
 describe('ImageSupportRule', () => {
@@ -94,10 +95,10 @@ describe('ImageSupportRule', () => {
 
       const result = rule.apply(context);
 
-      expect(result.model).toBe('meta-llama/llama-4-maverick-17b-128e-instruct');
+      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
       expect(result.originalModel).toBe('openai/gpt-oss-20b');
       expect(result.wasOverridden).toBe(true);
-      expect(result.reason).toContain('Llama 4 Maverick');
+      expect(result.reason).toContain('Llama 4 Scout');
     });
   });
 });

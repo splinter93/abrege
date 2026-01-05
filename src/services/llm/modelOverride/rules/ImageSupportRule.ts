@@ -71,7 +71,7 @@ export class ImageSupportRule implements ModelOverrideRule {
     return {
       model: VISION_FALLBACK_MODEL,
       originalModel: context.originalModel,
-      reason: `Modèle ${context.originalModel} ne supporte pas les images → switch vers Llama 4 Maverick`,
+      reason: `Modèle ${context.originalModel} ne supporte pas les images → switch vers Llama 4 Scout`,
       wasOverridden: true
     };
   }

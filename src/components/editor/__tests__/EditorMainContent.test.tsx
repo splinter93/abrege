@@ -31,7 +31,12 @@ const createMockEditor = (): TiptapEditor => {
 
 // Mock composants enfants
 vi.mock('../EditorEditableContent', () => ({
-  default: () => <div data-testid="editor-editable-content">EditorEditableContent</div>,
+  default: () => (
+    <div data-testid="editor-editable-content">
+      EditorEditableContent
+      <div data-testid="editor-slash-menu">EditorSlashMenu</div>
+    </div>
+  ),
 }));
 
 vi.mock('../EditorPreview', () => ({

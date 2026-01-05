@@ -62,7 +62,7 @@ describe('[EditorHeader] Component', () => {
       const onClose = vi.fn();
       render(<EditorHeader {...defaultProps} onClose={onClose} />);
       
-      const closeButton = screen.getByRole('button', { name: /close/i });
+      const closeButton = screen.getByRole('button', { name: /fermer/i });
       fireEvent.click(closeButton);
       
       expect(onClose).toHaveBeenCalledTimes(1);
@@ -72,7 +72,7 @@ describe('[EditorHeader] Component', () => {
       const onPreview = vi.fn();
       render(<EditorHeader {...defaultProps} onPreview={onPreview} />);
       
-      const previewButton = screen.getByRole('button', { name: /preview/i });
+      const previewButton = screen.getByRole('button', { name: /mode lecture/i });
       fireEvent.click(previewButton);
       
       expect(onPreview).toHaveBeenCalledTimes(1);
@@ -107,7 +107,8 @@ describe('[EditorHeader] Component', () => {
     it('should render in preview mode', () => {
       render(<EditorHeader {...defaultProps} previewMode={true} />);
       
-      expect(screen.getByTestId('editor-toolbar')).toBeInTheDocument();
+      // En mode preview, la toolbar ne devrait pas être rendue
+      expect(screen.queryByTestId('editor-toolbar')).not.toBeInTheDocument();
     });
 
     it('should render in edit mode when previewMode is false', () => {

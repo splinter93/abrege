@@ -39,9 +39,11 @@ vi.mock('@/utils/editorHelpers', () => ({
   isTemporaryCanvaNote: vi.fn((noteId: string) => noteId.startsWith('temp-')),
 }));
 
+const mockHandleSaveInternal = vi.fn().mockResolvedValue(undefined);
+
 vi.mock('@/hooks/useEditorSave', () => ({
   default: () => ({
-    handleSave: vi.fn().mockResolvedValue(undefined),
+    handleSave: mockHandleSaveInternal,
   }),
 }));
 
@@ -137,6 +139,7 @@ describe('[useEditorHandlers] Hook', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockHandleSaveInternal.mockClear();
   });
 
   describe('Handlers - Save', () => {
@@ -148,12 +151,13 @@ describe('[useEditorHandlers] Hook', () => {
 
     it('should call handleSave with title and content', async () => {
       const { result } = renderHook(() => useEditorHandlers(defaultOptions));
+      const handleSaveSpy = vi.spyOn(result.current, 'handleSave');
 
       await act(async () => {
         await result.current.handleSave('New Title', 'New content');
       });
 
-      expect(result.current.handleSave).toHaveBeenCalled();
+      expect(handleSaveSpy).toHaveBeenCalledWith('New Title', 'New content');
     });
   });
 
@@ -211,13 +215,15 @@ describe('[useEditorHandlers] Hook', () => {
     });
 
     it('should call handleSave when handleTitleBlur is called', async () => {
+      mockHandleSaveInternal.mockClear();
       const { result } = renderHook(() => useEditorHandlers(defaultOptions));
 
       await act(async () => {
         await result.current.handleTitleBlur();
       });
 
-      expect(result.current.handleSave).toHaveBeenCalled();
+      // handleTitleBlur appelle handleSave avec le titre et le contenu
+      expect(mockHandleSaveInternal).toHaveBeenCalled();
     });
   });
 

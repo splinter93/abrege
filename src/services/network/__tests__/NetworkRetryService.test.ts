@@ -128,15 +128,16 @@ describe('NetworkRetryService', () => {
 
       const fn = vi.fn().mockRejectedValue(recoverableError);
 
+      // Avancer le temps pour tous les délais (100ms + 200ms = 300ms total)
       const promise = service.executeWithRetry(fn, {
         maxRetries: 3,
         initialDelay: 100,
         operationName: 'test-operation'
       });
 
-      // Avancer le temps pour tous les délais (100ms + 200ms = 300ms total)
       await vi.advanceTimersByTimeAsync(300);
 
+      // Attendre que la promesse soit rejetée
       await expect(promise).rejects.toThrow('Bad Gateway');
       expect(fn).toHaveBeenCalledTimes(3);
     });
@@ -181,6 +182,7 @@ describe('NetworkRetryService', () => {
       expect(fn).toHaveBeenCalledTimes(3);
 
       // Tentative 3 → échec → fin (pas de délai après dernière tentative)
+      // Attendre que la promesse soit rejetée
       await expect(promise).rejects.toThrow('Bad Gateway');
       expect(fn).toHaveBeenCalledTimes(3);
     });

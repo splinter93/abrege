@@ -14,6 +14,16 @@ export interface ToolCall {
     name: string;
     arguments: string; // JSON string
   };
+  /**
+   * Extension custom pour MCP tools exécutés par x.ai
+   * Indique si le tool call a déjà été exécuté côté MCP
+   */
+  alreadyExecuted?: boolean;
+  /**
+   * Extension custom pour MCP tools exécutés par x.ai
+   * Résultat de l'exécution si déjà exécuté
+   */
+  result?: string;
 }
 
 export interface ToolResult {

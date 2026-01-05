@@ -15,43 +15,45 @@ import { RealtimeEditorService } from '../RealtimeEditorService';
 import type { RealtimeEditorConfig, RealtimeEditorState, RealtimeEditorEvent } from '../RealtimeEditorService';
 
 // Mock dépendances
-vi.mock('../RealtimeConnection', () => ({
-  RealtimeConnection: vi.fn().mockImplementation(() => ({
-    connect: vi.fn().mockResolvedValue({
-      send: vi.fn(),
-      unsubscribe: vi.fn(),
-    }),
-    disconnect: vi.fn().mockResolvedValue(undefined),
-    destroy: vi.fn(),
-    getChannel: vi.fn().mockReturnValue({
-      send: vi.fn().mockResolvedValue(undefined),
-      unsubscribe: vi.fn(),
-    }),
-  })),
-}));
+const mockChannel = {
+  send: vi.fn().mockResolvedValue(undefined),
+  unsubscribe: vi.fn(),
+  on: vi.fn(),
+};
+
+vi.mock('../RealtimeConnection', () => {
+  return {
+    RealtimeConnection: class MockRealtimeConnection {
+      connect = vi.fn().mockResolvedValue(mockChannel);
+      disconnect = vi.fn().mockResolvedValue(undefined);
+      destroy = vi.fn();
+      getChannel = vi.fn().mockReturnValue(mockChannel);
+    },
+  };
+});
 
 vi.mock('../RealtimeEvents', () => ({
-  RealtimeEvents: vi.fn().mockImplementation(() => ({
-    setupChannelListeners: vi.fn(),
-  })),
+  RealtimeEvents: class MockRealtimeEvents {
+    setupChannelListeners = vi.fn();
+  },
 }));
 
 vi.mock('../RealtimeState', () => ({
-  RealtimeState: vi.fn().mockImplementation(() => ({
-    getState: vi.fn().mockReturnValue({
+  RealtimeState: class MockRealtimeState {
+    getState = vi.fn().mockReturnValue({
       isConnected: false,
       isConnecting: false,
       connectionStatus: 'disconnected' as const,
       lastError: null,
       reconnectAttempts: 0,
       lastActivity: 0,
-    }),
-    onStateChange: vi.fn().mockReturnValue(() => {}),
-    onEvent: vi.fn().mockReturnValue(() => {}),
-    clearCallbacks: vi.fn(),
-    updateState: vi.fn(),
-    notifyEvent: vi.fn(),
-  })),
+    });
+    onStateChange = vi.fn().mockReturnValue(() => {});
+    onEvent = vi.fn().mockReturnValue(() => {});
+    clearCallbacks = vi.fn();
+    updateState = vi.fn();
+    notifyEvent = vi.fn();
+  },
 }));
 
 vi.mock('@/utils/logger', () => ({
@@ -80,7 +82,7 @@ describe('[RealtimeEditorService] Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset singleton pour chaque test
-    (RealtimeEditorService as any).instance = null;
+    (RealtimeEditorService as unknown as { instance: RealtimeEditorService | null }).instance = null;
     service = RealtimeEditorService.getInstance();
   });
 

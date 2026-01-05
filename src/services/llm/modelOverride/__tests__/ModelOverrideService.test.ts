@@ -18,14 +18,14 @@ import type { ModelOverrideContext } from '../types';
 // Mock getModelInfo
 vi.mock('@/constants/groqModels', () => ({
   getModelInfo: vi.fn((modelId: string) => {
-    const models: Record<string, { provider?: string }> = {
-      'openai/gpt-oss-20b': { provider: 'groq' },
-      'openai/gpt-oss-120b': { provider: 'groq' },
-      'meta-llama/llama-4-scout-17b-16e-instruct': { provider: 'groq' },
-      'meta-llama/llama-4-maverick-17b-128e-instruct': { provider: 'groq' },
-      'grok-4-1-fast-non-reasoning': { provider: 'xai' },
-      'grok-beta': { provider: 'xai' },
-      'liminality-model': { provider: 'liminality' }
+    const models: Record<string, { provider?: string; capabilities?: string[] }> = {
+      'openai/gpt-oss-20b': { provider: 'groq', capabilities: [] }, // Pas de support images
+      'openai/gpt-oss-120b': { provider: 'groq', capabilities: [] },
+      'meta-llama/llama-4-scout-17b-16e-instruct': { provider: 'groq', capabilities: ['images'] }, // Support images
+      'meta-llama/llama-4-maverick-17b-128e-instruct': { provider: 'groq', capabilities: [] },
+      'grok-4-1-fast-non-reasoning': { provider: 'xai', capabilities: [] },
+      'grok-beta': { provider: 'xai', capabilities: [] },
+      'liminality-model': { provider: 'liminality', capabilities: [] }
     };
     return models[modelId] || undefined;
   })
@@ -95,9 +95,9 @@ describe('ModelOverrideService', () => {
 
       const result = service.resolveModelAndParams(context);
 
-      expect(result.model).toBe('meta-llama/llama-4-maverick-17b-128e-instruct');
+      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
       expect(result.reasons).toHaveLength(1);
-      expect(result.reasons[0]).toContain('Llama 4 Maverick');
+      expect(result.reasons[0]).toContain('Llama 4 Scout');
     });
 
     it('devrait appliquer ReasoningOverrideRule si reasoningOverride présent', () => {
@@ -132,8 +132,8 @@ describe('ModelOverrideService', () => {
 
       const result = service.resolveModelAndParams(context);
 
-      // ImageSupportRule appliquée en premier → switch vers Llama 4 Maverick
-      expect(result.model).toBe('meta-llama/llama-4-maverick-17b-128e-instruct');
+      // ImageSupportRule appliquée en premier → switch vers Llama 4 Scout
+      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
       // ReasoningOverrideRule ne s'applique pas car provider !== 'xai'
       expect(result.reasons.length).toBeGreaterThan(0);
     });
