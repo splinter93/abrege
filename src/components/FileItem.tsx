@@ -26,9 +26,9 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
-          // Positionner le curseur à la fin du texte
+          // Sélectionner tout le texte pour permettre remplacement immédiat
           const length = inputRef.current.value.length;
-          inputRef.current.setSelectionRange(length, length);
+          inputRef.current.setSelectionRange(0, length);
           // Ajuster la hauteur automatiquement
           inputRef.current.style.height = 'auto';
           inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
@@ -45,15 +45,17 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && onRename) {
-      // Cmd/Ctrl + Enter pour valider
+    if (e.key === 'Enter' && !e.shiftKey) {
+      // Enter seul (sans Shift) pour valider le renommage
+      // Shift+Enter permet le saut de ligne si besoin
       e.preventDefault();
-      if (inputValue.trim() && inputValue !== file.source_title) {
+      if (onRename && inputValue.trim() && inputValue !== file.source_title) {
         onRename(inputValue.trim(), 'file');
       } else if (onCancelRename) {
         onCancelRename();
       }
     } else if (e.key === 'Escape' && onCancelRename) {
+      e.preventDefault();
       onCancelRename();
     }
   };

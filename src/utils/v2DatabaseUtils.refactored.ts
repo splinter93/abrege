@@ -33,6 +33,7 @@ import type { ResourceType } from '@/utils/slugGenerator';
 // Importer toutes les fonctions des modules refactorés
 import * as noteQueries from './database/queries/noteQueries';
 import * as noteMutations from './database/mutations/noteMutations';
+import * as noteContentMutations from './database/mutations/noteContentMutations';
 import * as classeurQueries from './database/queries/classeurQueries';
 import * as classeurMutations from './database/mutations/classeurMutations';
 import * as dossierQueries from './database/queries/dossierQueries';
@@ -161,12 +162,12 @@ export class V2DatabaseUtils {
   // PERMISSIONS / PARTAGE
   // ============================================================================
 
-  static async getNoteShareSettings(ref: string, userId: string, context: Parameters<typeof permissionQueries.getNoteShareSettings>[2]) {
-    return permissionQueries.getNoteShareSettings(ref, userId, context);
+  static async getNoteShareSettings(ref: string, userId: string, context: Parameters<typeof noteQueries.getNoteShareSettings>[2]) {
+    return noteQueries.getNoteShareSettings(ref, userId, context);
   }
 
-  static async updateNoteShareSettings(ref: string, settings: Parameters<typeof permissionQueries.updateNoteShareSettings>[1], userId: string, context: Parameters<typeof permissionQueries.updateNoteShareSettings>[3]) {
-    return permissionQueries.updateNoteShareSettings(ref, settings, userId, context);
+  static async updateNoteShareSettings(ref: string, settings: Parameters<typeof noteContentMutations.updateNoteShareSettings>[1], userId: string, context: Parameters<typeof noteContentMutations.updateNoteShareSettings>[3]) {
+    return noteContentMutations.updateNoteShareSettings(ref, settings, userId, context);
   }
 
   // ============================================================================

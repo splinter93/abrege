@@ -10,7 +10,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import type { ApiContext } from '@/utils/v2DatabaseUtils';
+import type { ApiContext } from '@/utils/database/types/databaseTypes';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -239,6 +239,47 @@ export async function getRecentNotes(limit: number = 10, userId: string, context
     return { success: true, data: notes || [] };
   } catch (error) {
     logApi.error(`❌ Erreur: ${error}`, context);
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+/**
+ * Récupérer les paramètres de partage d'une note
+ */
+export async function getNoteShareSettings(ref: string, userId: string, context: ApiContext) {
+  logApi.info(`🚀 Récupération paramètres partage ${ref}`, context);
+  
+  try {
+    // Résoudre la référence
+    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
+    if (!resolveResult.success) {
+      throw new Error(resolveResult.error);
+    }
+
+    const noteId = resolveResult.id;
+
+    const { data: note, error } = await supabase
+      .from('articles')
+      .select('id, visibility, allow_edit, allow_comments')
+      .eq('id', noteId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !note) {
+      throw new Error(`Note non trouvée: ${ref}`);
+    }
+
+    logApi.info(`✅ Paramètres partage récupérés avec succès`, context);
+    return { 
+      success: true, 
+      data: {
+        visibility: note.visibility || 'private',
+        allow_edit: note.allow_edit || false,
+        allow_comments: note.allow_comments || false
+      }
+    };
+  } catch (error) {
+    logApi.error(`❌ Erreur récupération paramètres partage: ${error}`, context);
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }

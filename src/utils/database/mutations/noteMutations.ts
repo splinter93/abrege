@@ -7,14 +7,13 @@
  * - 1 fichier = 1 responsabilité
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { SlugGenerator } from '@/utils/slugGenerator';
-import { SlugAndUrlService } from '@/services/slugAndUrlService';
 import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
-import { sanitizeNoteEmbedHtml } from '@/utils/sanitizeNoteEmbedHtml';
-import type { ApiContext, CreateNoteData, UpdateNoteData } from '@/utils/v2DatabaseUtils';
+import { prepareNoteUpdateData } from './noteMutationsHelpers';
+import type { ApiContext, CreateNoteData, UpdateNoteData } from '@/utils/database/types/databaseTypes';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -113,76 +112,30 @@ export async function updateNote(ref: string, data: UpdateNoteData, userId: stri
       throw new Error(`Erreur lecture note courante: ${currentError.message}`);
     }
     
-    // Préparer les données de mise à jour
-    const updateData: Record<string, unknown> = {
-      wide_mode: currentNote.wide_mode,
-      a4_mode: currentNote.a4_mode,
-      slash_lang: currentNote.slash_lang,
-      font_family: currentNote.font_family,
-      folder_id: currentNote.folder_id,
-      description: currentNote.description
-    };
-    
-    // Préserver header_image et settings si non fournis
-    if (data.header_image === undefined) updateData.header_image = currentNote.header_image;
-    if (data.header_image_offset === undefined) updateData.header_image_offset = currentNote.header_image_offset;
-    if (data.header_image_blur === undefined) updateData.header_image_blur = currentNote.header_image_blur;
-    if (data.header_image_overlay === undefined) updateData.header_image_overlay = currentNote.header_image_overlay;
-    if (data.header_title_in_image === undefined) updateData.header_title_in_image = currentNote.header_title_in_image;
-    
-    // Mettre à jour le titre et slug si nécessaire
-    if (data.source_title !== undefined) {
-      const normalizedTitle = String(data.source_title).trim();
-      updateData.source_title = normalizedTitle;
-      
-      if (normalizedTitle && normalizedTitle !== currentNote.source_title) {
-        try {
-          const supabaseForSlug = supabase as unknown as Parameters<typeof SlugAndUrlService.updateNoteSlugAndUrl>[3];
-          const currentNoteForSlug = {
-            id: currentNote.id ?? '',
-            source_title: currentNote.source_title ?? '',
-            slug: currentNote.slug ?? '',
-            public_url: currentNote.public_url ?? null
-          };
-          const { slug: newSlug, publicUrl } = await SlugAndUrlService.updateNoteSlugAndUrl(
-            noteId,
-            normalizedTitle,
-            userId,
-            supabaseForSlug,
-            currentNoteForSlug
-          );
-          updateData.slug = newSlug;
-          updateData.public_url = publicUrl;
-        } catch (error) {
-          logApi.error(`❌ Erreur mise à jour slug/URL: ${error}`);
-        }
-      }
-    }
-    
-    // Sanitizer le contenu
-    if (data.markdown_content !== undefined) {
-      updateData.markdown_content = sanitizeMarkdownContent(data.markdown_content);
-    }
-    if (data.html_content !== undefined) {
-      updateData.html_content = sanitizeNoteEmbedHtml(data.html_content);
-    }
-    
-    // Mettre à jour les autres champs
-    if (data.header_image !== undefined) updateData.header_image = data.header_image;
-    if (data.header_image_offset !== undefined) {
-      updateData.header_image_offset = Math.round(data.header_image_offset * 10) / 10;
-    }
-    if (data.header_image_blur !== undefined) updateData.header_image_blur = data.header_image_blur;
-    if (data.header_image_overlay !== undefined) updateData.header_image_overlay = data.header_image_overlay;
-    if (data.header_title_in_image !== undefined) updateData.header_title_in_image = data.header_title_in_image;
-    if (data.wide_mode !== undefined) updateData.wide_mode = data.wide_mode;
-    if (data.a4_mode !== undefined) updateData.a4_mode = data.a4_mode;
-    if (data.slash_lang !== undefined) updateData.slash_lang = data.slash_lang;
-    if (data.font_family !== undefined) updateData.font_family = data.font_family;
-    if (data.folder_id !== undefined) updateData.folder_id = data.folder_id;
-    if (data.description !== undefined) updateData.description = data.description;
-    
-    updateData.updated_at = new Date().toISOString();
+    // Préparer les données de mise à jour via helper
+    const updateData = await prepareNoteUpdateData(
+      {
+        id: currentNote.id,
+        slug: currentNote.slug,
+        public_url: currentNote.public_url,
+        wide_mode: currentNote.wide_mode,
+        a4_mode: currentNote.a4_mode,
+        slash_lang: currentNote.slash_lang,
+        font_family: currentNote.font_family,
+        folder_id: currentNote.folder_id,
+        description: currentNote.description,
+        source_title: currentNote.source_title,
+        header_image: currentNote.header_image,
+        header_image_offset: currentNote.header_image_offset,
+        header_image_blur: currentNote.header_image_blur,
+        header_image_overlay: currentNote.header_image_overlay,
+        header_title_in_image: currentNote.header_title_in_image
+      },
+      data,
+      noteId,
+      userId,
+      supabase
+    );
 
     // Mettre à jour la note
     const { data: note, error: updateError } = await supabase
@@ -300,4 +253,5 @@ export async function moveNote(ref: string, targetFolderId: string | null, userI
     throw error;
   }
 }
+
 

@@ -7,6 +7,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { SlugGenerator } from '@/utils/slugGenerator';
+import { moveChildFoldersRecursive, validateFolderParent } from './dossierMutationsHelpers';
 import type { ApiContext, CreateFolderData, UpdateFolderData } from '@/utils/v2DatabaseUtils';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -187,26 +188,8 @@ export async function moveFolder(ref: string, targetParentId: string | null, use
       throw new Error('Permissions insuffisantes');
     }
 
-    // Vérifier le nouveau parent
-    if (targetParentId) {
-      const { data: parentFolder, error: parentError } = await supabase
-        .from('folders')
-        .select('id, user_id')
-        .eq('id', targetParentId)
-        .single();
-
-      if (parentError || !parentFolder) {
-        throw new Error('Dossier parent non trouvé');
-      }
-
-      if (parentFolder.user_id !== userId) {
-        throw new Error('Permissions insuffisantes pour le dossier parent');
-      }
-
-      if (targetParentId === folderId) {
-        throw new Error('Un dossier ne peut pas être son propre parent');
-      }
-    }
+    // Vérifier le nouveau parent via helper
+    await validateFolderParent(targetParentId, folderId, userId, supabase);
 
     // Mettre à jour le parent du dossier
     const updateData: Record<string, unknown> = {
@@ -230,26 +213,7 @@ export async function moveFolder(ref: string, targetParentId: string | null, use
 
     // Déplacer aussi tous les dossiers enfants si cross-classeur
     if (targetClasseurId) {
-      const moveChildFolders = async (parentFolderId: string) => {
-        const { data: childFolders } = await supabase
-          .from('folders')
-          .select('id')
-          .eq('parent_id', parentFolderId)
-          .eq('user_id', userId);
-
-        if (childFolders) {
-          for (const child of childFolders) {
-            await supabase
-              .from('folders')
-              .update({ classeur_id: targetClasseurId })
-              .eq('id', child.id);
-            
-            await moveChildFolders(child.id);
-          }
-        }
-      };
-
-      await moveChildFolders(folderId);
+      await moveChildFoldersRecursive(folderId, targetClasseurId, userId, supabase);
     }
 
     logApi.info(`✅ Dossier déplacé avec succès`, context);
