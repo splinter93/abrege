@@ -1,15 +1,18 @@
 /**
- * Construction des messages système pour les agents
+ * Service de construction des messages système pour les agents spécialisés
  * Extrait de SpecializedAgentManager pour respecter limite 300 lignes
  */
 
-import type { SpecializedAgentConfig } from '@/types/specializedAgents';
+import type { SpecializedAgentConfig, OpenAPISchema } from '@/types/specializedAgents';
 
+/**
+ * Service de construction des messages système
+ */
 export class SystemMessageBuilder {
   /**
    * Construire le message système spécialisé
    */
-  static build(agent: SpecializedAgentConfig, input: Record<string, unknown>): string {
+  buildSpecializedSystemMessage(agent: SpecializedAgentConfig, input: Record<string, unknown>): string {
     let systemMessage = agent.system_instructions || agent.description || '';
     
     // Ajouter les instructions pour l'utilisation des tools
@@ -61,6 +64,3 @@ Instructions importantes :
     return systemMessage;
   }
 }
-
-
-

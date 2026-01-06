@@ -1,31 +1,55 @@
 /**
- * Manager principal des agents spécialisés (orchestration)
- * Extrait de SpecializedAgentManager pour respecter limite 300 lignes
- * 
- * Orchestre l'exécution des agents en utilisant les modules spécialisés
+ * Service principal d'orchestration des agents spécialisés
+ * Orchestre tous les modules pour l'exécution complète
  */
 
 import { simpleLogger as logger } from '@/utils/logger';
-import { MultimodalHandler } from '../multimodalHandler';
-import { AgentConfig } from './AgentConfig';
-import { AgentExecutor } from '../executors/AgentExecutor';
-import { InputValidator } from '../validators/InputValidator';
-import { OutputFormatter } from '../formatters/OutputFormatter';
-import { SystemMessageBuilder } from './SystemMessageBuilder';
-import type { 
-  SpecializedAgentConfig, 
-  SpecializedAgentResponse 
+import { SchemaValidator } from '../schemaValidator';
+import type {
+  SpecializedAgentConfig,
+  SpecializedAgentRequest,
+  SpecializedAgentResponse
 } from '@/types/specializedAgents';
+import { AgentConfigService } from './AgentConfigService';
+import { SystemMessageBuilder } from './SystemMessageBuilder';
+import { InputValidator } from '../validation/InputValidator';
+import { AgentExecutor } from '../execution/AgentExecutor';
+import { ResponseBuilder } from '../formatting/ResponseBuilder';
+import { GroqErrorHandler } from '../errors/GroqErrorHandler';
+import { MultimodalExecutor } from '../execution/MultimodalExecutor';
+import { NormalModeExecutor } from '../execution/NormalModeExecutor';
+import { OutputFormatter } from '../formatting/OutputFormatter';
 
+/**
+ * Service principal d'orchestration des agents spécialisés
+ */
 export class AgentManager {
-  private agentConfig: AgentConfig;
+  private agentConfigService: AgentConfigService;
+  private systemMessageBuilder: SystemMessageBuilder;
+  private inputValidator: InputValidator;
+  private agentExecutor: AgentExecutor;
+  private responseBuilder: ResponseBuilder;
+  private errorHandler: GroqErrorHandler;
 
-  constructor(agentConfig: AgentConfig) {
-    this.agentConfig = agentConfig;
+  constructor() {
+    // Initialiser tous les services
+    this.agentConfigService = new AgentConfigService();
+    this.systemMessageBuilder = new SystemMessageBuilder();
+    this.inputValidator = new InputValidator();
+    this.errorHandler = new GroqErrorHandler();
+    
+    // Services avec dépendances
+    const multimodalExecutor = new MultimodalExecutor(this.errorHandler);
+    const normalModeExecutor = new NormalModeExecutor(this.systemMessageBuilder);
+    this.agentExecutor = new AgentExecutor(multimodalExecutor, normalModeExecutor);
+    
+    const outputFormatter = new OutputFormatter();
+    this.responseBuilder = new ResponseBuilder(outputFormatter);
   }
 
   /**
-   * Exécuter un agent spécialisé
+   * Exécuter un agent spécialisé via l'infrastructure existante
+   * Supporte les requêtes multimodales (texte + images)
    */
   async executeSpecializedAgent(
     agentId: string, 
@@ -34,202 +58,142 @@ export class AgentManager {
     sessionId?: string
   ): Promise<SpecializedAgentResponse> {
     const startTime = Date.now();
-    const traceId = `trace-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const traceId = `agent-${agentId}-${Date.now()}`;
 
     try {
+      // 1. Validation des inputs
+      const tokenValidation = this.inputValidator.validateUserToken(userToken, agentId);
+      if (!tokenValidation.valid) {
+        return tokenValidation.error!;
+      }
+
+      const inputValidation = this.inputValidator.validateInput(input, agentId);
+      if (!inputValidation.valid) {
+        return inputValidation.error!;
+      }
+
+      const agentIdValidation = this.inputValidator.validateAgentId(agentId);
+      if (!agentIdValidation.valid) {
+        return agentIdValidation.error!;
+      }
+
+      const sessionIdValidation = this.inputValidator.validateSessionId(sessionId, agentId);
+      if (!sessionIdValidation.valid) {
+        return sessionIdValidation.error!;
+      }
+
       logger.info(`[AgentManager] 🚀 Exécution agent ${agentId}`, { traceId, agentId });
 
-      // 1. Validation de l'agentId
-      const agentIdValidation = InputValidator.validateAgentId(agentId);
-      if (!agentIdValidation.valid) {
-        return {
-          success: false,
-          error: agentIdValidation.errors.join(', '),
-          metadata: {
-            agentId: 'unknown',
-            executionTime: 0,
-            model: 'unknown'
-          }
-        };
-      }
-
-      // 2. Validation du token utilisateur
-      const tokenValidation = InputValidator.validateUserToken(userToken);
-      if (!tokenValidation.valid) {
-        return {
-          success: false,
-          error: tokenValidation.errors.join(', '),
-          metadata: {
-            agentId,
-            executionTime: 0,
-            model: 'unknown'
-          }
-        };
-      }
-
-      // 3. Récupérer l'agent (avec cache)
-      const agent = await this.agentConfig.getAgentByIdOrSlug(agentId);
+      // 2. Récupérer l'agent (avec cache)
+      const agent = await this.agentConfigService.getAgentByIdOrSlug(agentId);
       if (!agent) {
         logger.warn(`[AgentManager] ❌ Agent non trouvé: ${agentId}`, { traceId });
-        return {
-          success: false,
-          error: `Agent ${agentId} not found`,
-          metadata: {
-            agentId,
-            executionTime: Date.now() - startTime,
-            model: 'unknown'
-          }
-        };
-      }
-
-      // 4. Validation de l'input
-      const inputValidation = InputValidator.validateInput(input, agent, traceId);
-      if (!inputValidation.valid) {
-        return {
-          success: false,
-          error: `Validation failed: ${inputValidation.errors.join(', ')}`,
-          metadata: {
-            agentId,
-            executionTime: Date.now() - startTime,
-            model: agent.model
-          }
-        };
-      }
-
-      // 5. Préparation multimodale si nécessaire
-      let processedInput = input;
-      let isMultimodal = false;
-      let groqPayload: {
-        messages: Array<{
-          role: string;
-          content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
-        }>;
-        model: string;
-        temperature?: number;
-        max_tokens?: number;
-        top_p?: number;
-        reasoning_effort?: string;
-        stream?: boolean;
-      } | null = null;
-      
-      if (MultimodalHandler.isMultimodalModel(agent.model)) {
-        const multimodalPrep = MultimodalHandler.prepareGroqContent(input, agent.model);
-        
-        if (multimodalPrep.error) {
-          logger.warn(`[AgentManager] ❌ Erreur préparation multimodale`, { traceId, error: multimodalPrep.error });
-          return {
-            success: false,
-            error: `Erreur multimodale: ${multimodalPrep.error}`,
-            metadata: {
-              agentId,
-              executionTime: Date.now() - startTime,
-              model: agent.model
-            }
-          };
-        }
-
-        MultimodalHandler.logMultimodalRequest(
-          agent.model,
-          multimodalPrep.text,
-          multimodalPrep.imageUrl,
-          traceId
+        return this.responseBuilder.buildErrorResponse(
+          `Agent ${agentId} not found`,
+          agentId,
+          Date.now() - startTime,
+          'unknown'
         );
-
-        groqPayload = MultimodalHandler.createGroqPayload(
-          agent.model,
-          multimodalPrep.text,
-          multimodalPrep.imageUrl,
-          {
-            temperature: agent.temperature,
-            max_completion_tokens: agent.max_tokens,
-            stream: false
-          }
-        );
-        isMultimodal = true;
       }
 
-      // 6. Exécution selon le type
-      let result: SpecializedAgentResponse;
-      const hasImage = !!(input.image || input.imageUrl || input.image_url);
-      
-      if (isMultimodal && groqPayload) {
-        logger.info(`[AgentManager] 🖼️ Exécution multimodale directe`, { traceId, model: agent.model });
-        result = await AgentExecutor.executeMultimodalDirect(groqPayload, agent, traceId);
-      } else if (hasImage && MultimodalHandler.isMultimodalModel(agent.model)) {
-        // Fallback pour forcer l'exécution multimodale
-        logger.warn(`[AgentManager] ⚠️ Image détectée, tentative fallback multimodale`, { traceId });
-        const fallbackMultimodalPrep = MultimodalHandler.prepareGroqContent(input, agent.model);
-        if (!fallbackMultimodalPrep.error) {
-          const fallbackGroqPayload = MultimodalHandler.createGroqPayload(
-            agent.model,
-            fallbackMultimodalPrep.text,
-            fallbackMultimodalPrep.imageUrl,
-            {
-              temperature: agent.temperature,
-              max_completion_tokens: agent.max_tokens,
-              stream: false
-            }
+      // 3. Validation du schéma d'entrée
+      if (agent.input_schema) {
+        const validation = SchemaValidator.validateInput(input, agent.input_schema);
+        if (!validation.valid) {
+          logger.warn(`[AgentManager] ❌ Validation échouée pour ${agentId}`, { 
+            traceId, 
+            errors: validation.errors 
+          });
+          return this.responseBuilder.buildErrorResponse(
+            `Validation failed: ${validation.errors.join(', ')}`,
+            agentId,
+            Date.now() - startTime,
+            agent.model
           );
-          result = await AgentExecutor.executeMultimodalDirect(fallbackGroqPayload, agent, traceId);
-        } else {
-          result = await AgentExecutor.executeNormalMode(agent, input, userToken, sessionId, traceId);
         }
-      } else {
-        result = await AgentExecutor.executeNormalMode(agent, input, userToken, sessionId, traceId);
       }
 
-      // 7. Formater selon le schéma de sortie
-      const formattedResult = OutputFormatter.formatOutput(result, agent.output_schema);
-      
+      // 4. Exécuter l'agent
+      const result = await this.agentExecutor.executeAgent(
+        agent,
+        input,
+        userToken,
+        sessionId,
+        traceId
+      );
+
+      // Si l'exécution a échoué, retourner directement
+      if (!result.success) {
+        const executionTime = Date.now() - startTime;
+        await this.updateAgentMetrics(agentId, false, executionTime);
+        return {
+          ...result,
+          metadata: {
+            agentId: result.metadata?.agentId || agentId,
+            executionTime,
+            model: result.metadata?.model || 'unknown'
+          }
+        };
+      }
+
+      // 5. Construire la réponse finale
       const executionTime = Date.now() - startTime;
-      logger.info(`[AgentManager] ✅ Agent ${agentId} exécuté avec succès`, { traceId, executionTime });
+      const finalResponse = this.responseBuilder.buildResponse(
+        result,
+        agent,
+        executionTime,
+        traceId
+      );
 
-      // 8. Extraire la réponse finale
-      let finalResponse = 'Aucune réponse générée';
-      
-      if (typeof formattedResult.result === 'string' && formattedResult.result.trim()) {
-        finalResponse = formattedResult.result;
-      } else if (typeof formattedResult.content === 'string' && formattedResult.content.trim()) {
-        finalResponse = formattedResult.content;
-      } else if (typeof formattedResult.response === 'string' && formattedResult.response.trim()) {
-        finalResponse = formattedResult.response;
-      } else if (result && typeof result === 'object' && 'content' in result) {
-        const content = (result as { content?: unknown }).content;
-        if (typeof content === 'string' && content.trim()) {
-          finalResponse = content;
-        }
-      }
+      logger.info(`[AgentManager] ✅ Agent ${agentId} exécuté avec succès`, { 
+        traceId, 
+        executionTime 
+      });
 
-      return {
-        success: true,
-        result: {
-          response: finalResponse,
-          model: agent.model,
-          provider: 'groq'
-        },
-        metadata: {
-          agentId: agent.id || agent.slug || 'unknown',
-          executionTime,
-          model: agent.model
-        }
-      };
+      // 6. Mettre à jour les métriques
+      await this.updateAgentMetrics(agentId, true, executionTime);
+
+      return finalResponse;
 
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      logger.error(`[AgentManager] ❌ Erreur exécution agent ${agentId}:`, error);
+      logger.error(`[AgentManager] ❌ Erreur exécution agent ${agentId}:`, {
+        traceId,
+        error: error instanceof Error ? error.message : String(error)
+      });
       
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erreur inconnue',
-        metadata: {
-          agentId,
-          executionTime,
-          model: 'unknown'
-        }
-      };
+      await this.updateAgentMetrics(agentId, false, executionTime);
+      
+      return this.responseBuilder.buildErrorResponse(
+        `Erreur interne: ${error instanceof Error ? error.message : String(error)}`,
+        agentId,
+        executionTime,
+        'unknown'
+      );
     }
   }
+
+  /**
+   * Mettre à jour les métriques d'exécution d'un agent
+   */
+  private async updateAgentMetrics(agentId: string, success: boolean, executionTime: number): Promise<void> {
+    try {
+      // Ici on pourrait implémenter un système de métriques plus sophistiqué
+      // Pour l'instant, on log simplement
+      logger.dev(`[AgentManager] 📊 Métriques agent ${agentId}:`, {
+        success,
+        executionTime,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.warn(`[AgentManager] ⚠️ Erreur mise à jour métriques:`, error);
+    }
+  }
+
+  /**
+   * Obtenir le service de configuration (pour accès externe)
+   */
+  getAgentConfigService(): AgentConfigService {
+    return this.agentConfigService;
+  }
 }
-
-
-
