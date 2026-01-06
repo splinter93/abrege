@@ -5,93 +5,63 @@
 
 ---
 
-## 📊 SCORE ACTUEL : 7.5/10
+## 📊 SCORE ACTUEL : 8.5/10
 
-**Verdict :** ✅ **PRÊT POUR 3 CLIENTS** après corrections urgentes (3h)
+**Verdict :** ✅ **PRÊT POUR 3 CLIENTS** - Tous les blockers critiques corrigés !
 
 ---
 
-## 🔴 URGENT (AVANT PROD - 3h)
+## ✅ URGENT - TOUS LES BLOCKERS CORRIGÉS !
 
-### 1. Fixer les 7 tests qui échouent (2h)
-
-**Fichier :** `src/services/network/__tests__/NetworkRetryService.test.ts`
+### ✅ 1. Tests - CORRIGÉ
 
 **Statut actuel :**
 ```
-Test Files  1 failed | 45 passed (46)
-Tests       7 failed | 587 passed (594)
+Test Files  46 passed (46)
+Tests       594 passed (594)
 ```
 
-**Impact :** 
-- Pipeline rouge (tests bloquants)
-- Confiance zéro si client demande "vos tests passent ?"
-- Risque de régressions non détectées
-
-**Action :**
-1. Analyser les 7 tests qui échouent
-2. Corriger les problèmes (probablement mocks/timeouts)
-3. Vérifier que tous les tests passent
-
-**Effort :** 2h
+**✅ TOUS LES TESTS PASSENT**
 
 ---
 
-### 2. Corriger vulnérabilités CRITICAL npm (1-2h)
+### ✅ 2. Vulnérabilités npm - CORRIGÉ
 
-**Statut actuel :** 2 vulnérabilités CRITICAL
+**Statut actuel :** ✅ **0 vulnérabilité**
 
-**Dépendances vulnérables :**
-- `jspdf` (via `html2pdf.js`) : **Local File Inclusion/Path Traversal**
-  - CVE : GHSA-f8cm-6447-x5h2
-  - Versions affectées : <=3.0.4
-  - **Aucun fix disponible** ⚠️
-
-**Impact :**
-- Risques sécurité critiques (Path Traversal)
-- Client peut demander audit sécurité
-- Conformité/RGPD
-- **⚠️ Si utilisé pour générer PDFs avec input utilisateur → risque élevé**
-
-**Action :**
-1. Vérifier si `html2pdf.js`/`jspdf` est utilisé en prod
-2. Si oui :
-   - Option A : Remplacer par alternative (puppeteer, pdfkit)
-   - Option B : Isoler dans sandbox si possible
-   - Option C : Ne pas utiliser avec input utilisateur non validé
-3. Si non utilisé → Supprimer dépendance
-4. Vérifier que build fonctionne
-
-**Effort :** 1-2h (selon si utilisé ou pas)
-
-**Note :** Si `html2pdf.js` n'est pas utilisé en prod → Supprimer = 15min
+**Action effectuée :**
+- Upgrade `jspdf@3.0.4` → `jspdf@4.0.0` (fix GHSA-f8cm-6447-x5h2)
+- Suppression `html2pdf.js` (non utilisé)
+- ✅ `npm audit` : found 0 vulnerabilities
 
 ---
 
 ## 🟡 IMPORTANT (APRÈS 3 CLIENTS - 1 semaine)
 
-### 3. Nettoyer console.log restants (4h)
+### 3. Nettoyer console.log restants (2h)
 
-**Statut actuel :** 254 console.log dans `src/` (68 fichiers)
+**Statut actuel :** 163 console.log (158 hors tests)
 
-**Fichiers prioritaires :**
-- `src/services/V2UnifiedApi.ts` : 7 console.log
-- `src/components/UnifiedSidebar.tsx` : 4 console.log
-- `src/store/useFileSystemStore.ts` : 7 console.log
+**✅ APIs critiques propres :**
+- `src/app/api/v2/` : **0 console.log** ✅
+- Les APIs de production sont propres !
+
+**Répartition :**
+- Scripts/endpoints debug : ~56 (à garder pour debug)
+- APIs non-critiques : ~42 (debug principalement)
+- Services/Components : ~60
 
 **Impact :**
-- Performance dégradée en prod
-- Risque d'exposition secrets (si mal configuré)
-- Debug difficile (logs non structurés)
+- ⚠️ Faible - APIs de production propres
+- Reste surtout dans scripts de debug
 
 **Action :**
-1. Remplacer par `logger` structuré dans APIs critiques
-2. Garder console.log uniquement en dev (avec guards)
-3. Vérifier qu'aucun secret n'est loggé
+1. Nettoyer services/components (non bloquant)
+2. Garder console.log dans scripts debug (acceptable)
 
-**Effort :** 4h
+**Effort :** 2h
 
-**Priorité :** MOYENNE (peut attendre, monitoring Sentry détecte les bugs)
+**Priorité :** BASSE (APIs critiques propres, reste non bloquant)
 
 ---
 
@@ -119,37 +89,29 @@ Tests       7 failed | 587 passed (594)
 
 ## 🟢 MOYEN (PLUS TARD - 2-3 semaines)
 
-### 5. Refactoriser fichiers massifs (22h)
+### 5. Refactoriser fichiers massifs restants (14h)
 
-**Problème :**
-- `src/utils/v2DatabaseUtils.ts` : **2372 lignes** (+40 depuis déc) 🔥
-- `src/services/V2UnifiedApi.ts` : **1490 lignes** (+61 depuis déc) 🔥
-- `src/services/specializedAgents/SpecializedAgentManager.ts` : **1641 lignes**
+**État actuel :**
+
+- ✅ **`src/utils/v2DatabaseUtils.ts`** : **137 lignes** (REFACTORÉ)
+  - Wrapper qui délègue aux modules
+  - Modules dans `src/utils/database/` (20 fichiers, moyenne 137 lignes)
+
+- ⚠️ `src/services/V2UnifiedApi.ts` : **1523 lignes** (508% limite)
+- ⚠️ `src/services/specializedAgents/SpecializedAgentManager.ts` : **1641 lignes**
 
 **Impact :**
-- Maintenance impossible
-- Bugs cachés garantis
-- Testabilité zéro
-- **Dette technique EN AUGMENTATION** (fichiers deviennent plus gros)
+- Maintenance difficile
+- **Mais fonctionne en prod**
 
 **Action :**
-1. `v2DatabaseUtils.ts` → Extraire en modules (8h)
-   - Module CRUD notes
-   - Module CRUD classeurs/dossiers
-   - Module permissions/partage
-   - Module search/stats
+1. ✅ `v2DatabaseUtils.ts` : DÉJÀ REFACTORÉ
 2. `V2UnifiedApi.ts` → Extraire en modules (6h)
-   - Module endpoints notes
-   - Module endpoints fichiers
-   - Module endpoints agents
 3. `SpecializedAgentManager.ts` → Extraire en modules (8h)
-   - Module configuration
-   - Module exécution
-   - Module streaming
 
-**Effort :** 22h (3 jours)
+**Effort :** 14h (2 jours)
 
-**Priorité :** BASSE (fonctionne en prod, mais devient ingérable)
+**Priorité :** MOYENNE (fonctionne, mais à améliorer)
 
 ---
 
@@ -256,10 +218,11 @@ Tests       7 failed | 587 passed (594)
 
 ## 📋 CHECKLIST AVANT PROD
 
-### 🔴 Bloquants (3h)
+### ✅ Bloquants - TOUS CORRIGÉS
 
-- [ ] Fixer les 7 tests qui échouent (2h)
-- [ ] Corriger 2 vulnérabilités CRITICAL npm (1h)
+- [x] Fixer les tests (✅ 594/594 passent)
+- [x] Corriger vulnérabilités npm (✅ 0 vulnérabilité)
+- [x] v2DatabaseUtils refactoré (✅ 137 lignes)
 
 ### ✅ Déjà OK
 
@@ -274,13 +237,12 @@ Tests       7 failed | 587 passed (594)
 
 ## 🎯 TIMELINE RECOMMANDÉE
 
-### Semaine 1 (AVANT PROD)
+### ✅ PROD PRÊT MAINTENANT !
 
-**Jour 1 (3h) :**
-- Fixer tests (2h)
-- Corriger vulns npm (1h)
-
-**→ PROD PRÊT ✅**
+**Tous les blockers critiques sont corrigés :**
+- ✅ Tests : 594/594 passent
+- ✅ Vulnérabilités npm : 0
+- ✅ v2DatabaseUtils : Refactoré
 
 ### Semaine 2-3 (APRÈS 3 CLIENTS)
 
