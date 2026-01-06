@@ -11,6 +11,17 @@ export const dynamic = 'force-dynamic';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+interface SearchResult {
+  type: 'note' | 'folder' | 'classeur';
+  id: string;
+  title: string;
+  slug?: string;
+  classeur_id?: string;
+  score: number;
+  excerpt?: string;
+  updated_at: string;
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
   const clientType = request.headers.get('X-Client-Type') || 'unknown';
@@ -62,7 +73,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const userToken = extractTokenFromRequest(request);
     const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
     
-    const results: unknown[] = [];
+    const results: SearchResult[] = [];
     let totalCount = 0;
 
     // Recherche dans les notes
@@ -175,7 +186,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // ✅ OPTIMISATION : Trier seulement si recherche active
     if (searchQuery) {
-      results.sort((a: any, b: any) => b.score - a.score);
+      results.sort((a: SearchResult, b: SearchResult) => b.score - a.score);
     }
 
     // Limiter le nombre de résultats

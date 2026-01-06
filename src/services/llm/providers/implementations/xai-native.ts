@@ -389,8 +389,10 @@ export class XAINativeProvider extends BaseProvider implements LLMProvider {
     if (Array.isArray(tools) && tools.length > 0) {
       const filteredTools = tools.filter(t => {
         if (this.isMcpTool(t)) {
+          // Dans ce bloc, t est de type McpServerConfig grâce au type guard
+          const toolName = t.server_label || 'unknown';
           logger.warn('[XAINativeProvider] ⚠️ MCP tool filtré (non supporté par /v1/chat/completions):', {
-            name: 'server_label' in t ? t.server_label : (t as any).name
+            name: toolName
           });
           return false;
         }

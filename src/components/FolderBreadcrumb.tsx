@@ -38,20 +38,19 @@ const FolderBreadcrumb: React.FC<FolderBreadcrumbProps> = ({
 
         {/* Dossiers - H2, H3, etc. */}
         {folderPath.map((folder, index) => {
-          const HeadingTag = `h${Math.min(index + 2, 6)}` as any;
+          const headingLevel = Math.min(index + 2, 6);
+          const HeadingTag = `h${headingLevel}` as 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
           const isLast = index === folderPath.length - 1;
           
           return (
             <React.Fragment key={folder.id}>
               <span className="breadcrumb-separator">/</span>
-              <HeadingTag
-                className={`breadcrumb-folder ${isLast ? 'breadcrumb-current' : 'breadcrumb-link'}`}
-                onClick={isLast ? undefined : () => onGoToFolder(folder.id)}
-                title={isLast ? 'Dossier actuel' : `Aller à ${folder.name}`}
-                style={{ cursor: isLast ? 'default' : 'pointer' }}
-              >
-                {folder.name}
-              </HeadingTag>
+              {React.createElement(HeadingTag, {
+                className: `breadcrumb-folder ${isLast ? 'breadcrumb-current' : 'breadcrumb-link'}`,
+                onClick: isLast ? undefined : () => onGoToFolder(folder.id),
+                title: isLast ? 'Dossier actuel' : `Aller à ${folder.name}`,
+                style: { cursor: isLast ? 'default' : 'pointer' }
+              }, folder.name)}
             </React.Fragment>
           );
         })}

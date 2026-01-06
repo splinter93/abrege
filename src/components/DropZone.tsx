@@ -9,7 +9,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 interface DropZoneProps {
   className?: string;
   children?: React.ReactNode;
-  onFilesDropped?: (files: any[]) => void;
+  onFilesDropped?: (files: File[]) => void;
   onError?: (error: string) => void;
   overlayMessage?: string;
   showOverlay?: boolean;

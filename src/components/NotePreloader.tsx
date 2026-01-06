@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
 import { optimizedNoteService } from '@/services/optimizedNoteService';
+import type { NoteMetadata } from '@/services/optimizedNoteService';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { supabase } from '@/supabaseClient';
 import { simpleLogger } from '@/utils/logger';
@@ -51,12 +52,12 @@ const NotePreloader: React.FC<NotePreloaderProps> = ({
         // Exécuter en parallèle sans bloquer
         Promise.allSettled(preloadPromises).then(results => {
           const successfulNotes = results
-            .filter(result => result.status === 'fulfilled')
-            .map(result => (result as PromiseFulfilledResult<unknown>).value);
+            .filter((result): result is PromiseFulfilledResult<NoteMetadata> => result.status === 'fulfilled')
+            .map(result => result.value);
 
           // Mettre à jour le store avec les notes préchargées
           if (successfulNotes.length > 0) {
-            const notesToAdd = successfulNotes.map((metadata: any) => ({
+            const notesToAdd = successfulNotes.map((metadata) => ({
               id: metadata.id,
               source_title: metadata.source_title || 'Untitled',
               markdown_content: '',
@@ -68,15 +69,15 @@ const NotePreloader: React.FC<NotePreloaderProps> = ({
               header_image_overlay: 0,
               header_title_in_image: false,
               wide_mode: metadata.wide_mode || false,
-              font_family: metadata.font_family || null,
+              ...(metadata.font_family && { font_family: metadata.font_family }),
               updated_at: metadata.updated_at,
               created_at: metadata.created_at,
-              slug: metadata.slug,
+              slug: metadata.slug || metadata.id, // Utiliser l'ID comme fallback si pas de slug
               public_url: '',
               visibility: 'private',
               folder_id: metadata.folder_id ?? null,
               classeur_id: metadata.classeur_id ?? null,
-              position: metadata.position ?? 0
+              position: 0 // Position par défaut pour les notes préchargées
             }));
 
             setNotes(notesToAdd);

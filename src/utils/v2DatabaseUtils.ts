@@ -35,6 +35,9 @@ import type {
   ContentOperation
 } from './database/types/databaseTypes';
 
+// Importer le type SupabaseClient
+import type { SupabaseClient } from '@supabase/supabase-js';
+
 // Importer tous les modules
 import * as noteQueries from './database/queries/noteQueries';
 import * as noteMutations from './database/mutations/noteMutations';
@@ -95,7 +98,7 @@ export class V2DatabaseUtils {
   static async getFolder(folderId: string, userId: string, context: ApiContext) { return dossierQueries.getFolder(folderId, userId, context); }
 
   // DOSSIERS - Mutations
-  static async createFolder(data: CreateFolderData, userId: string, context: ApiContext, supabaseClient?: unknown) { return dossierMutations.createFolder(data, userId, context, supabaseClient as any); }
+  static async createFolder(data: CreateFolderData, userId: string, context: ApiContext, supabaseClient?: SupabaseClient) { return dossierMutations.createFolder(data, userId, context, supabaseClient); }
   static async updateFolder(ref: string, data: UpdateFolderData, userId: string, context: ApiContext) { return dossierMutations.updateFolder(ref, data, userId, context); }
   static async moveFolder(ref: string, targetParentId: string | null, userId: string, context: ApiContext, targetClasseurId?: string) { return dossierMutations.moveFolder(ref, targetParentId, userId, context, targetClasseurId); }
   static async deleteFolder(ref: string, userId: string, context: ApiContext) { return dossierMutations.deleteFolder(ref, userId, context); }
@@ -131,7 +134,7 @@ export class V2DatabaseUtils {
   static async searchContent(query: string, type: string = 'all', limit: number = 20, userId: string, context: ApiContext) { return searchQueries.searchContent(query, type, limit, userId, context); }
 
   // UTILS - Queries
-  static async generateSlug(text: string, type: 'note' | 'classeur' | 'folder', userId: string, context: ApiContext, supabaseClient?: unknown) { return utilsQueries.generateSlug(text, type, userId, context, supabaseClient as any); }
+  static async generateSlug(text: string, type: 'note' | 'classeur' | 'folder', userId: string, context: ApiContext, supabaseClient?: SupabaseClient) { return utilsQueries.generateSlug(text, type, userId, context, supabaseClient); }
   static async listTools(userId: string, context: ApiContext) { return utilsQueries.listTools(userId, context); }
   static async debugInfo(userId: string, context: ApiContext) { return utilsQueries.debugInfo(userId, context); }
 }

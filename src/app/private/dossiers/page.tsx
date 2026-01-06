@@ -11,7 +11,8 @@ import DossierErrorBoundary from "@/components/DossierErrorBoundary";
 import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 import AuthGuard from "@/components/AuthGuard";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
-import SearchBar, { SearchResult } from "@/components/SearchBar";
+import SearchBar from "@/components/SearchBar";
+import type { SearchResult } from "@/components/FolderManager";
 import FolderToolbar from "@/components/FolderToolbar";
 import { Folder as FolderIcon } from "lucide-react";
 import {
@@ -644,7 +645,7 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
                 onToggleView={handleToggleView}
                 onCreateFolder={handleCreateFolder}
                 onCreateFile={handleCreateNote}
-                onSearchResult={handleSearchResult as any}
+                onSearchResult={handleSearchResult}
               />
             </div>
           )}

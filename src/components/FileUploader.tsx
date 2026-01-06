@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileItem } from '@/types/files';
 import DropZone from './DropZone';
@@ -33,11 +33,31 @@ const FileUploader: React.FC<FileUploaderProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Conversion de File[] (navigateur) vers FileItem[] (métier)
+  const handleFilesDropped = useCallback((droppedFiles: File[]) => {
+    // Convertir File[] en FileItem[] (création temporaire pour upload)
+    const fileItems: FileItem[] = droppedFiles.map((file, index) => ({
+      id: `temp-${Date.now()}-${index}`,
+      user_id: '', // Sera rempli lors de l'upload
+      filename: file.name,
+      mime_type: file.type || 'application/octet-stream',
+      size: file.size,
+      url: '', // Sera rempli après upload
+      s3_key: '', // Sera rempli après upload
+      visibility_mode: 'inherit_note',
+      owner_id: '', // Sera rempli lors de l'upload
+      status: 'uploading' as const,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }));
+    onFilesDropped(fileItems);
+  }, [onFilesDropped]);
+
   return (
     <div className={`file-uploader ${className}`}>
       {/* Zone de drop principale */}
       <DropZone
-        onFilesDropped={onFilesDropped}
+        onFilesDropped={handleFilesDropped}
         onError={onError}
         className="file-uploader-drop-zone"
         disabled={disabled}

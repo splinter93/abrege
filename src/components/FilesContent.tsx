@@ -89,6 +89,27 @@ const FilesContent: React.FC<FilesContentProps> = ({
   onFilesDropped,
   onUploadError,
 }) => {
+  // Conversion de File[] (navigateur) vers FileItem[] (métier)
+  const handleFilesDropped = useCallback((droppedFiles: File[]) => {
+    if (!onFilesDropped) return;
+    // Convertir File[] en FileItem[] (création temporaire pour upload)
+    const fileItems: FileItem[] = droppedFiles.map((file, index) => ({
+      id: `temp-${Date.now()}-${index}`,
+      user_id: '', // Sera rempli lors de l'upload
+      filename: file.name,
+      mime_type: file.type || 'application/octet-stream',
+      size: file.size,
+      url: '', // Sera rempli après upload
+      s3_key: '', // Sera rempli après upload
+      visibility_mode: 'inherit_note',
+      owner_id: '', // Sera rempli lors de l'upload
+      status: 'uploading' as const,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }));
+    onFilesDropped(fileItems);
+  }, [onFilesDropped]);
+
   // État pour la modal d'image
   const [imageModal, setImageModal] = useState<{
     isOpen: boolean;
@@ -215,7 +236,7 @@ const FilesContent: React.FC<FilesContentProps> = ({
     >
       {viewMode === 'grid' ? (
         <DropZone
-          onFilesDropped={onFilesDropped}
+          onFilesDropped={handleFilesDropped}
           onError={onUploadError}
           className="files-grid-drop-zone"
           overlayMessage="Déposez vos fichiers ici pour les ajouter à votre bibliothèque"

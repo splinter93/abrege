@@ -59,9 +59,23 @@ export async function GET(
     }
 
     // Filtrer les schémas actifs
-    const activeLinks = (links || []).filter(link => 
-      link.openapi_schema && (link.openapi_schema as any).status === 'active'
-    );
+    // openapi_schema peut être un tableau ou un objet selon la requête Supabase
+    interface OpenAPISchemaWithStatus {
+      status?: string;
+      [key: string]: unknown;
+    }
+    const activeLinks = (links || []).filter(link => {
+      const schema = link.openapi_schema;
+      if (!schema) return false;
+      // Si c'est un tableau, prendre le premier élément
+      if (Array.isArray(schema)) {
+        const firstSchema = schema[0] as OpenAPISchemaWithStatus | undefined;
+        return firstSchema?.status === 'active';
+      }
+      // Sinon, c'est un objet
+      const schemaObj = schema as OpenAPISchemaWithStatus;
+      return schemaObj.status === 'active';
+    });
 
     logger.dev(`[AgentOpenApiSchemas] ✅ ${activeLinks.length} schémas actifs pour agent ${agentId}`);
 

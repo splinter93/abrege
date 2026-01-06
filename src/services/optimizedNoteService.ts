@@ -5,7 +5,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 // TYPES
 // ==========================================================================
 
-interface NoteMetadata {
+export interface NoteMetadata {
   id: string;
   source_title: string;
   folder_id?: string;

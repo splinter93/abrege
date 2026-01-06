@@ -80,6 +80,14 @@ export function addPaginationToQuery<T extends { range: (from: number, to: numbe
 /**
  * Compter le total d'éléments pour la pagination
  */
+// Type pour les erreurs Supabase (PostgrestError n'est pas exporté directement)
+type SupabaseError = {
+  message: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+} | null;
+
 type CountBuilder = {
   eq: (column: string, value: unknown) => CountBuilder;
   then?: unknown;
@@ -101,7 +109,8 @@ export async function countTotal(
     }
   });
 
-  const { count, error } = await (query as unknown as Promise<{ count: number | null; error: any }>);
+  const result = await (query as unknown as Promise<{ count: number | null; error: SupabaseError }>);
+  const { count, error } = result;
   
   if (error) {
     throw new Error(`Erreur lors du comptage: ${error.message}`);

@@ -3,7 +3,12 @@
  * Version optimisée et fonctionnelle
  */
 import type MarkdownIt from 'markdown-it';
-type RuleBlock = (state: any, startLine: number, endLine: number, silent: boolean) => boolean;
+
+// Type pour l'état du parser MarkdownIt
+// MarkdownIt.State n'est pas exporté directement, on utilise Parameters pour extraire le type réel
+// Basé sur la signature de md.block.ruler.before()
+type MarkdownItStateBlock = Parameters<Parameters<MarkdownIt['block']['ruler']['before']>[2]>[0];
+type RuleBlock = (state: MarkdownItStateBlock, startLine: number, endLine: number, silent: boolean) => boolean;
 
 export default function markdownItGithubTables(md: MarkdownIt): void {
   // Regex pour détecter les tables GitHub
