@@ -394,6 +394,39 @@ export class V2UnifiedApi {
 
       // 🎯 Le polling ciblé est maintenant géré par le système ciblé
 
+      // 🔧 FIX CACHE: Invalider le cache du service de chargement après sauvegarde
+      // Pour éviter que la note réouverte charge une version obsolète du cache
+      try {
+        const { OptimizedNoteService } = await import('@/services/optimizedNoteService');
+        const noteService = OptimizedNoteService.getInstance();
+        
+        // Récupérer userId depuis la session Supabase (même méthode que getAuthHeaders)
+        let userId: string | null = null;
+        if (typeof window !== 'undefined') {
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          );
+          const { data: { session } } = await supabase.auth.getSession();
+          userId = session?.user?.id || null;
+        }
+        
+        if (userId) {
+          noteService.invalidateNoteCache(cleanNoteId, userId);
+          // Aussi invalider par slug si la note en a un
+          if (result.note?.slug) {
+            noteService.invalidateNoteCache(result.note.slug, userId);
+          }
+          logger.dev('[V2UnifiedApi] ✅ Cache invalidé après sauvegarde', { noteId: cleanNoteId, userId });
+        } else {
+          logger.warn('[V2UnifiedApi] ⚠️ Impossible de récupérer userId pour invalidation cache');
+        }
+      } catch (cacheError) {
+        // Non-bloquant : logger mais continuer
+        logger.warn('[V2UnifiedApi] ⚠️ Erreur invalidation cache (non-bloquant)', cacheError);
+      }
+
       const duration = Date.now() - startTime;
       return {
         success: true,
