@@ -594,3 +594,4 @@ Le codebase suit strictement le **GUIDE-EXCELLENCE-CODE.md** :
 
 **Fin du document**
 
+

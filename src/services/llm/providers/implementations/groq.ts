@@ -255,7 +255,9 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
       payload.stream = false;
       
       // Payload prêt
-      logger.info(`[GroqProvider] → Chat Completions: ${payload.model} | ${(payload.messages as any[])?.length} msgs | ${(payload.tools as any[])?.length || 0} tools`);
+      const messagesCount = Array.isArray(payload.messages) ? payload.messages.length : 0;
+      const toolsCount = Array.isArray(payload.tools) ? payload.tools.length : 0;
+      logger.info(`[GroqProvider] → Chat Completions: ${payload.model} | ${messagesCount} msgs | ${toolsCount} tools`);
       
       const response = await this.makeApiCall(payload);
       const result = this.extractResponse(response);
@@ -715,16 +717,17 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
         // payload.tool_choice = 'auto'; // Optionnel, par défaut auto
       }
       
+      const toolsCount = Array.isArray(payload.tools) ? payload.tools.length : 0;
       logger.dev('[GroqProvider] 📤 Payload Responses API:', {
         model: payload.model,
         inputType: typeof input,
         inputLength: typeof input === 'string' ? input.length : Array.isArray(input) ? input.length : 0,
-        toolsCount: (payload.tools as any[])?.length || 0,
+        toolsCount,
         mcpServers: tools.filter((t) => isMcpTool(t)).map((t) => (t as McpTool).server_label)
       });
       
       // Payload Responses API prêt
-      logger.info(`[GroqProvider] → Responses API: ${payload.model} | ${(payload.tools as any[])?.length} tools`);
+      logger.info(`[GroqProvider] → Responses API: ${payload.model} | ${toolsCount} tools`);
       
       // ✅ DEBUG: Logger le payload complet pour identifier le problème
       logger.dev('[GroqProvider] 🔍 Payload complet:', JSON.stringify(payload, null, 2));

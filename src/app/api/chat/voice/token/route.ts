@@ -15,10 +15,14 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Réponse de l'API XAI pour le token éphémère
+ * L'API peut retourner différents formats selon la version
  */
 interface XAITokenResponse {
-  client_secret: string;
-  expires_in: number;
+  client_secret?: string;
+  expires_in?: number;
+  value?: string; // Format alternatif pour le token
+  token?: string; // Format alternatif pour le token
+  expires_at?: number; // Timestamp Unix pour l'expiration
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -91,8 +95,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       });
 
       // XAI retourne "value" pour le token et "expires_at" (timestamp) pour l'expiration
-      const clientSecret = (tokenData as any).value || (tokenData as XAITokenResponse).client_secret || (tokenData as any).token;
-      const expiresAt = (tokenData as any).expires_at;
+      // Utiliser une assertion de type pour accéder aux propriétés optionnelles
+      const tokenResponse = tokenData as XAITokenResponse;
+      const clientSecret = tokenResponse.value || tokenResponse.client_secret || tokenResponse.token;
+      const expiresAt = tokenResponse.expires_at;
       
       // Calculer expires_in en secondes à partir de expires_at (timestamp Unix)
       let expiresIn: number | undefined;

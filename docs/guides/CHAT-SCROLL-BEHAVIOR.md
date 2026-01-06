@@ -307,3 +307,4 @@ const paddingRatio = isCanvaLayout ? 0.76 : 0.81; // Modifier ici
 
 
 
+

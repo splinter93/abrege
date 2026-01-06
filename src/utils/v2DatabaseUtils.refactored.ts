@@ -24,6 +24,12 @@ export type {
   ContentOperation
 } from './v2DatabaseUtils';
 
+// Importer types supplémentaires nécessaires
+import type { ApiContext, AgentData, ContentOperation } from './v2DatabaseUtils';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { VisibilityLevel } from '@/types/sharing';
+import type { ResourceType } from '@/utils/slugGenerator';
+
 // Importer toutes les fonctions des modules refactorés
 import * as noteQueries from './database/queries/noteQueries';
 import * as noteMutations from './database/mutations/noteMutations';
@@ -190,71 +196,71 @@ export class V2DatabaseUtils {
   // Ces méthodes ne sont pas encore migrées mais sont nécessaires pour compatibilité
   // TODO: Migrer vers modules appropriés
   
-  static async addContentToNote(ref: string, content: string, userId: string, context: any) {
+  static async addContentToNote(ref: string, content: string, userId: string, context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('addContentToNote: À migrer vers noteMutations');
   }
 
-  static async insertContentToNote(ref: string, content: string, position: number, userId: string, context: any) {
+  static async insertContentToNote(ref: string, content: string, position: number, userId: string, context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('insertContentToNote: À migrer vers noteMutations');
   }
 
-  static async addContentToSection(ref: string, sectionId: string, content: string, userId: string, context: any) {
+  static async addContentToSection(ref: string, sectionId: string, content: string, userId: string, context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('addContentToSection: À migrer vers noteMutations');
   }
 
-  static async clearSection(ref: string, sectionId: string, userId: string, context: any) {
+  static async clearSection(ref: string, sectionId: string, userId: string, context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('clearSection: À migrer vers noteMutations');
   }
 
-  static async eraseSection(ref: string, sectionId: string, userId: string, context: any) {
+  static async eraseSection(ref: string, sectionId: string, userId: string, context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('eraseSection: À migrer vers noteMutations');
   }
 
-  static async publishNote(ref: string, visibility: any, userId: string, context: any) {
+  static async publishNote(ref: string, visibility: VisibilityLevel, userId: string, context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('publishNote: À migrer vers noteMutations');
   }
 
-  static async generateSlug(text: string, type: any, userId: string, context: any, supabaseClient?: any) {
+  static async generateSlug(text: string, type: ResourceType, userId: string, context: ApiContext, supabaseClient?: SupabaseClient) {
     // TODO: Migrer vers utils approprié
     throw new Error('generateSlug: À migrer');
   }
 
-  static async getUserInfo(userId: string, context: any) {
+  static async getUserInfo(userId: string, context: ApiContext) {
     // TODO: Migrer vers userQueries
     throw new Error('getUserInfo: À migrer vers userQueries');
   }
 
-  static async getUserProfile(userId: string, context: any) {
+  static async getUserProfile(userId: string, context: ApiContext) {
     return this.getUserInfo(userId, context);
   }
 
-  static async getStats(userId: string, context: any) {
+  static async getStats(userId: string, context: ApiContext) {
     // TODO: Migrer vers statsQueries
     throw new Error('getStats: À migrer vers statsQueries');
   }
 
-  static async getTrash(userId: string, context: any) {
+  static async getTrash(userId: string, context: ApiContext) {
     // TODO: Migrer vers trashQueries
     throw new Error('getTrash: À migrer vers trashQueries');
   }
 
-  static async restoreFromTrash(itemId: string, itemType: string, userId: string, context: any) {
+  static async restoreFromTrash(itemId: string, itemType: string, userId: string, context: ApiContext) {
     // TODO: Migrer vers trashQueries
     throw new Error('restoreFromTrash: À migrer vers trashQueries');
   }
 
-  static async purgeTrash(userId: string, context: any) {
+  static async purgeTrash(userId: string, context: ApiContext) {
     // TODO: Migrer vers trashQueries
     throw new Error('purgeTrash: À migrer vers trashQueries');
   }
 
-  static async deleteResource(resourceType: string, ref: string, userId: string, context: any) {
+  static async deleteResource(resourceType: string, ref: string, userId: string, context: ApiContext) {
     switch (resourceType) {
       case 'note':
         return this.deleteNote(ref, userId, context);
@@ -267,12 +273,12 @@ export class V2DatabaseUtils {
     }
   }
 
-  static async applyContentOperations(ref: string, operations: any[], userId: string, context: any) {
+  static async applyContentOperations(ref: string, operations: ContentOperation[], userId: string, context: ApiContext) {
     // TODO: Migrer vers contentOperations
     throw new Error('applyContentOperations: À migrer vers contentOperations');
   }
 
-  static async insertNoteContent(noteId: string, params: any, userId: string, context: any) {
+  static async insertNoteContent(noteId: string, params: { content: string; position: number }, userId: string, context: ApiContext) {
     return this.insertContentToNote(noteId, params.content, params.position, userId, context);
   }
 
@@ -280,39 +286,39 @@ export class V2DatabaseUtils {
   // AGENTS (placeholders)
   // ============================================================================
 
-  static async listAgents(userId: string, context: any) {
+  static async listAgents(userId: string, context: ApiContext) {
     return { success: true, data: [] };
   }
 
-  static async createAgent(data: any, userId: string, context: any) {
+  static async createAgent(data: AgentData, userId: string, context: ApiContext) {
     return { success: true, data: { id: 'placeholder' } };
   }
 
-  static async getAgent(agentId: string, userId: string, context: any) {
+  static async getAgent(agentId: string, userId: string, context: ApiContext) {
     return { success: true, data: { id: agentId } };
   }
 
-  static async executeAgent(data: any, userId: string, context: any) {
+  static async executeAgent(data: AgentData, userId: string, context: ApiContext) {
     return { success: true, data: { response: 'placeholder' } };
   }
 
-  static async updateAgent(agentId: string, data: any, userId: string, context: any) {
+  static async updateAgent(agentId: string, data: AgentData, userId: string, context: ApiContext) {
     return { success: true, data: { id: agentId } };
   }
 
-  static async patchAgent(agentId: string, data: any, userId: string, context: any) {
+  static async patchAgent(agentId: string, data: AgentData, userId: string, context: ApiContext) {
     return { success: true, data: { id: agentId } };
   }
 
-  static async deleteAgent(agentId: string, userId: string, context: any) {
+  static async deleteAgent(agentId: string, userId: string, context: ApiContext) {
     return { success: true, data: { message: 'Agent supprimé' } };
   }
 
-  static async listTools(userId: string, context: any) {
+  static async listTools(userId: string, context: ApiContext) {
     return { success: true, data: [] };
   }
 
-  static async debugInfo(userId: string, context: any) {
+  static async debugInfo(userId: string, context: ApiContext) {
     return { 
       success: true, 
       data: {

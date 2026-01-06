@@ -109,8 +109,10 @@ export function OpenAPIEditor({
         throw new Error(validation.error || 'Schéma OpenAPI invalide');
       }
 
-      setCurrentSchema(schemaData as any);
-      onSchemaLoad(schemaData as any);
+      // schemaData est validé comme OpenAPISchema par validateOpenAPISchema
+      const validatedSchema = schemaData as OpenAPITypes.OpenAPISchema;
+      setCurrentSchema(validatedSchema);
+      onSchemaLoad(validatedSchema);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors du chargement du schéma';
       onError(errorMessage);

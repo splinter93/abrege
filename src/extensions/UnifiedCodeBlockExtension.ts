@@ -9,9 +9,33 @@ import { openMermaidModal } from '@/components/mermaid/MermaidModal';
 import { normalizeMermaidContent } from '@/components/chat/mermaidService';
 import { initializeMermaid } from '@/services/mermaid/mermaidConfig';
 import { simpleLogger as logger } from '@/utils/logger';
-import { NodeViewProps } from '@tiptap/react';
+import { NodeViewProps, Editor } from '@tiptap/react';
 import { createCodeBlockToolbar } from './CodeBlockToolbar';
 import '@/styles/UnifiedToolbar.css';
+
+/**
+ * Type pour l'extension parent (CodeBlockLowlight)
+ */
+interface CodeBlockLowlightExtension {
+  parent?: () => Record<string, unknown>;
+}
+
+/**
+ * Type pour le storage de l'éditeur avec lowlight
+ */
+interface EditorStorage {
+  lowlight?: {
+    highlight: (code: string, language: string) => { value: string };
+  };
+}
+
+/**
+ * Type pour l'éditeur avec storage lowlight
+ * Utilise une intersection type pour étendre le storage existant
+ */
+type EditorWithStorage = Editor & {
+  storage: Editor['storage'] & EditorStorage;
+};
 
 /**
  * Nettoie TOUS les SVG Mermaid orphelins du DOM
@@ -41,20 +65,24 @@ const UnifiedCodeBlockExtension = CodeBlockLowlight.extend({
   name: 'codeBlock', // Nom standard pour remplacer l'extension native
   
   addOptions() {
+    const parentOptions = (this as unknown as CodeBlockLowlightExtension).parent?.() || {};
     return {
-      ...(this as any).parent?.(),
+      ...parentOptions,
       lowlight: {},
       defaultLanguage: null,
     };
   },
 
   addNodeView() {
-    return ({ node, getPos, editor }: any) => {
+    return ({ node, getPos, editor }: NodeViewProps) => {
       const language = node.attrs.language;
+      // getPos peut être undefined dans NodeViewProps, on doit le gérer
+      // Les fonctions attendent getPos: () => number, donc on crée une fonction qui retourne toujours un nombre
+      const safeGetPos: () => number = getPos ? () => getPos() ?? 0 : () => 0;
       if (language === 'mermaid') {
-        return createMermaidNodeView(node, getPos, editor);
+        return createMermaidNodeView(node, safeGetPos, editor);
       } else {
-        return createCodeBlockNodeView(node, getPos, editor);
+        return createCodeBlockNodeView(node, safeGetPos, editor);
       }
     };
   },
@@ -154,7 +182,8 @@ function createCodeBlockNodeView(node: Node, getPos: () => number, editor: NodeV
         // Re-appliquer la coloration syntaxique
         if (updatedNode.attrs.language && updatedNode.textContent) {
           try {
-            const lowlight = (editor as any).storage?.lowlight;
+            const editorWithStorage = editor as EditorWithStorage;
+            const lowlight = editorWithStorage.storage?.lowlight;
             if (lowlight && lowlight.highlight) {
               const result = lowlight.highlight(updatedNode.textContent, updatedNode.attrs.language);
               code.innerHTML = result.value;

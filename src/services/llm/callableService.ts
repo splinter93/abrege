@@ -23,6 +23,16 @@ interface CallablesCache {
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
+ * Interface pour les erreurs Supabase
+ */
+interface SupabaseError {
+  code?: string;
+  message?: string;
+  details?: string;
+  hint?: string;
+}
+
+/**
  * Service de gestion des callables Synesia
  */
 export class CallableService {
@@ -117,9 +127,13 @@ export class CallableService {
           updated_at: now,
         };
         
-        // Type assertion nécessaire car Supabase ne peut pas inférer le type de la table dynamiquement
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (this.supabase.from('synesia_callables') as any).upsert(upsertData, {
+        // Utiliser une assertion de type plus précise que any
+        // Supabase ne peut pas inférer le type de la table dynamiquement
+        // On utilise unknown puis on accède aux méthodes avec une interface inline
+        const queryBuilder = this.supabase.from('synesia_callables') as unknown as {
+          upsert: (data: typeof upsertData, options?: { onConflict?: string }) => Promise<{ error: unknown }>;
+        };
+        const { error } = await queryBuilder.upsert(upsertData, {
           onConflict: 'id',
         });
 
@@ -242,9 +256,13 @@ export class CallableService {
       }
 
       // Créer le lien
-      // Type assertion nécessaire car Supabase ne peut pas inférer le type de la table dynamiquement
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: linkError } = await (this.supabase.from('agent_callables') as any).insert({
+      // Utiliser une assertion de type plus précise que any
+      // Supabase ne peut pas inférer le type de la table dynamiquement
+      // On utilise unknown puis on accède aux méthodes avec une interface inline
+      const queryBuilder = this.supabase.from('agent_callables') as unknown as {
+        insert: (data: { agent_id: string; callable_id: string }) => Promise<{ error: SupabaseError | null }>;
+      };
+      const { error: linkError } = await queryBuilder.insert({
         agent_id: agentId,
         callable_id: callableId,
       });

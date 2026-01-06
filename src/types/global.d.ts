@@ -36,6 +36,13 @@ export type GTag = {
 };
 
 /**
+ * Extension de Navigator pour iOS standalone
+ */
+interface NavigatorWithStandalone extends Navigator {
+  standalone?: boolean;
+}
+
+/**
  * Extensions de l'interface Window globale
  */
 declare global {
@@ -56,6 +63,14 @@ declare global {
      * Data layer pour Google Tag Manager
      */
     dataLayer?: unknown[];
+  }
+  
+  interface Navigator {
+    /**
+     * Propriété iOS standalone pour détecter les PWA installées
+     * @see https://developer.apple.com/documentation/webkitjs/window/1633193-standalone
+     */
+    standalone?: boolean;
   }
 }
 

@@ -116,7 +116,8 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   const storeNotes = useFileSystemStore((state) => state.notes);
   
   // Fusion intelligente des données pour éviter les doublons
-  const mergeData = useCallback((preloaded: (Folder | FileArticle)[], store: Record<string, Folder | FileArticle>) => {
+  // Note: store peut contenir Note (du store Zustand) qui n'a pas tous les champs de FileArticle
+  const mergeData = useCallback((preloaded: (Folder | FileArticle)[], store: Record<string, Folder | FileArticle | { id: string; [key: string]: unknown }>) => {
     const storeArray = Object.values(store);
     
     // Si pas de données préchargées, utiliser le store
@@ -150,13 +151,16 @@ const FolderManager: React.FC<FolderManagerProps> = ({
   }, []);
   
   // Utiliser la fusion intelligente
+  // storeFolders et storeNotes sont des Record<string, Folder | FileArticle | Note>
+  // Note: Note du store peut ne pas avoir tous les champs de FileArticle
+  // Utiliser unknown pour contourner la limitation de type TypeScript
   const effectiveFolders = mergeData(
     usePreloadedData ? Object.values(preloadedFolders || {}) : [],
-    storeFolders as any
+    storeFolders as unknown as Record<string, Folder | FileArticle | { id: string; [key: string]: unknown }>
   );
   const effectiveFiles = mergeData(
     usePreloadedData ? Object.values(preloadedNotes || {}) : [],
-    storeNotes as any
+    storeNotes as unknown as Record<string, Folder | FileArticle | { id: string; [key: string]: unknown }>
   );
   
   // Filtrer les données par classeur actif ET par dossier parent

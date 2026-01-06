@@ -31,7 +31,7 @@ export const createCanvaSessionSchema = z.object({
   title: z.string().min(1).max(255).optional(),
   classeur_id: z.string().min(1).optional(),
   initial_content: z.string().max(100_000).optional(),
-  metadata: z.record(z.any()).optional()
+  metadata: z.record(z.unknown()).optional()
 }).superRefine((data, ctx) => {
   // Si note_id est absent, title devient obligatoire (création d'un nouveau canvas)
   if (!data.note_id && !data.title) {
@@ -58,7 +58,7 @@ export const listCanvaSessionsSchema = z.object({
  */
 export const updateCanvaSessionSchema = z.object({
   status: canvaStatusSchema.optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
   reason: z.enum(['user_action', 'inactivity', 'llm_tool']).optional()
 }).refine((data) => data.status || data.metadata, {
   message: 'Au moins status ou metadata doit être fourni'

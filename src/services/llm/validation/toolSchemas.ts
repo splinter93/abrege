@@ -163,7 +163,7 @@ export const createCanvaSessionSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   classeur_id: z.string().min(1).optional(),
   initial_content: z.string().max(100000).optional(),
-  metadata: z.record(z.any()).optional()
+  metadata: z.record(z.unknown()).optional()
 }).superRefine((data, ctx) => {
   if (!data.note_id && !data.create_if_missing) {
     ctx.addIssue({
@@ -192,7 +192,7 @@ export const getCanvaSessionSchema = z.object({
 export const updateCanvaSessionSchema = z.object({
   session_id: z.string().uuid('session_id doit être un UUID valide'),
   status: z.enum(['open', 'closed', 'saved', 'deleted']).optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.unknown()).optional(),
   reason: z.enum(['user_action', 'inactivity', 'llm_tool']).optional()
 }).refine((data) => data.status || data.metadata, {
   message: 'Au moins status ou metadata doit être fourni'

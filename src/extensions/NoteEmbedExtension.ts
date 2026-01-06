@@ -21,6 +21,26 @@ import { MAX_EMBED_DEPTH, type NoteEmbedDisplayStyle } from '@/types/noteEmbed';
 import { simpleLogger as logger } from '@/utils/logger';
 
 /**
+ * Type pour l'événement dans stopEvent
+ * Peut être directement un Event ou un objet avec une propriété event
+ */
+type StopEventParameter = Event | { event: Event };
+
+/**
+ * Type pour le paramètre update dans ReactNodeViewRenderer
+ * Contient oldNode et newNode
+ */
+interface UpdateParameter {
+  oldNode: ProseMirrorNode;
+  newNode: ProseMirrorNode;
+  oldDecorations?: unknown;
+  newDecorations?: unknown;
+  oldInnerDecorations?: unknown;
+  innerDecorations?: unknown;
+  updateProps?: () => void;
+}
+
+/**
  * Options de l'extension
  */
 export interface NoteEmbedOptions {
@@ -256,9 +276,15 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
       // ✅ FIX React 18: Éviter les re-renders synchrones qui causent flushSync error
       as: 'div',
       // ✅ Autoriser contextmenu et click, bloquer le reste
-      stopEvent: (event) => {
+      stopEvent: (event: StopEventParameter) => {
+        // Gérer les deux formats possibles : Event direct ou { event: Event }
+        const ev: Event | null = 'event' in event && event.event instanceof Event 
+          ? event.event 
+          : event instanceof Event 
+            ? event 
+            : null;
+        
         // Autoriser le menu contextuel (clic droit)
-        const ev = (event as any).event ?? (event as any);
         if (ev?.type === 'contextmenu') return false;
         // Autoriser le click pour la navigation (géré par React)
         if (ev?.type === 'click') return false;
@@ -266,14 +292,14 @@ const NoteEmbedExtension = Node.create<NoteEmbedOptions>({
         return true;
       },
       // ✅ CRITIQUE: Ne jamais re-render sauf si les attrs changent
-      update: (node: any) => {
-        if (!node || !node.type) {
+      update: (updateParam: UpdateParameter) => {
+        if (!updateParam?.newNode || !updateParam.newNode.type) {
           return false;
         }
 
         // Retourner false = ne pas re-render ce NodeView quand l'éditeur update
         // Le contenu React se gère lui-même avec ses propres states
-        return node.type.name === 'noteEmbed';
+        return updateParam.newNode.type.name === 'noteEmbed';
       },
     });
   },

@@ -7,6 +7,26 @@ import { isValidYouTubeVideoId, parseYouTubeInput, parseYouTubeTimestamp } from 
 import { simpleLogger as logger } from '@/utils/logger';
 import YouTubeEmbedView from '@/components/editor/YouTubeEmbedView';
 
+/**
+ * Type pour l'événement dans stopEvent
+ * Peut être directement un Event ou un objet avec une propriété event
+ */
+type StopEventParameter = Event | { event: Event };
+
+/**
+ * Type pour le paramètre update dans ReactNodeViewRenderer
+ * Contient oldNode et newNode
+ */
+interface UpdateParameter {
+  oldNode: ProseMirrorNode;
+  newNode: ProseMirrorNode;
+  oldDecorations?: unknown;
+  newDecorations?: unknown;
+  oldInnerDecorations?: unknown;
+  innerDecorations?: unknown;
+  updateProps?: () => void;
+}
+
 export interface YouTubeEmbedAttributes {
   videoId: string;
   depth: number;
@@ -242,8 +262,14 @@ const YouTubeEmbedExtension = Node.create<YouTubeEmbedOptions>({
   addNodeView() {
     return ReactNodeViewRenderer(YouTubeEmbedView, {
       as: 'div',
-      stopEvent: (event) => {
-        const ev = (event as any).event ?? (event as any);
+      stopEvent: (event: StopEventParameter) => {
+        // Gérer les deux formats possibles : Event direct ou { event: Event }
+        const ev: Event | null = 'event' in event && event.event instanceof Event 
+          ? event.event 
+          : event instanceof Event 
+            ? event 
+            : null;
+        
         if (ev?.type === 'contextmenu') {
           return false;
         }
@@ -252,7 +278,9 @@ const YouTubeEmbedExtension = Node.create<YouTubeEmbedOptions>({
         }
         return true;
       },
-      update: (node: any) => node?.type?.name === 'youtubeEmbed',
+      update: (updateParam: UpdateParameter) => {
+        return updateParam?.newNode?.type?.name === 'youtubeEmbed';
+      },
     });
   },
 });

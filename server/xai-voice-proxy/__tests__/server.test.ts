@@ -3,36 +3,59 @@
  * Conforme au GUIDE D'EXCELLENCE - >80% coverage, Arrange/Act/Assert
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import WebSocket from 'ws';
+import { describe, it, expect, beforeEach, afterEach, vi, type MockedFunction } from 'vitest';
+import WebSocket, { WebSocketServer } from 'ws';
 import { XAIVoiceProxyService } from '../XAIVoiceProxyService';
 import { XAIVoiceProxyConfig } from '../types';
 import { ProxyErrorHandler, ProxyConnectionError } from '../errorHandler';
 
+// Mock logger
+vi.mock('../../src/utils/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+  LogCategory: {
+    AUDIO: 'AUDIO',
+  },
+}));
+
 // Mock WebSocket server
+// Note: vi.mock() est hoisted, donc on crée le mock directement dans la factory
 vi.mock('ws', () => {
-  const mockServer = vi.fn().mockImplementation(() => ({
-    on: vi.fn(),
-    close: vi.fn((callback?: () => void) => {
+  // Créer une vraie fonction constructeur pour WebSocketServer
+  function MockWebSocketServer(this: { on: ReturnType<typeof vi.fn>; close: ReturnType<typeof vi.fn> }, _options?: { port?: number; path?: string }) {
+    this.on = vi.fn();
+    this.close = vi.fn((callback?: () => void) => {
       if (callback) {
         // Appeler immédiatement pour que la promesse se résolve
         callback();
       }
-    }),
-  }));
+    });
+  }
+  
+  // Wrapper pour permettre à vi.mocked() de fonctionner
+  const MockWebSocketServerFn = vi.fn(MockWebSocketServer);
   
   const mockWs = vi.fn();
-  mockWs.Server = mockServer;
+  mockWs.Server = MockWebSocketServerFn;
+  mockWs.CONNECTING = 0;
+  mockWs.OPEN = 1;
+  mockWs.CLOSING = 2;
+  mockWs.CLOSED = 3;
   
   return { 
     default: mockWs,
-    WebSocketServer: mockServer
+    WebSocketServer: MockWebSocketServerFn
   };
 });
 
 describe('XAIVoiceProxyService', () => {
   let config: XAIVoiceProxyConfig;
   let service: XAIVoiceProxyService;
+  let mockWebSocketServer: MockedFunction<typeof WebSocketServer>;
 
   beforeEach(() => {
     config = {
@@ -46,6 +69,9 @@ describe('XAIVoiceProxyService', () => {
     
     // Reset singleton
     (XAIVoiceProxyService as unknown as { instance: XAIVoiceProxyService | null }).instance = null;
+    // Récupérer le mock
+    mockWebSocketServer = vi.mocked(WebSocketServer);
+    mockWebSocketServer.mockClear();
     service = XAIVoiceProxyService.getInstance(config);
   });
 
@@ -66,23 +92,13 @@ describe('XAIVoiceProxyService', () => {
   describe('start', () => {
     it('should start WebSocket server on configured port', async () => {
       // Arrange
-      const WebSocketServerMock = WebSocket.Server as unknown as ReturnType<typeof vi.fn>;
-      WebSocketServerMock.mockImplementation((options: { port: number; path: string }) => {
-        return {
-          on: vi.fn(),
-          close: vi.fn((callback?: () => void) => {
-            if (callback) callback();
-          }),
-          port: options.port,
-          path: options.path
-        };
-      });
+      mockWebSocketServer.mockClear();
 
       // Act
       await service.start();
 
       // Assert
-      expect(WebSocketServerMock).toHaveBeenCalledWith({
+      expect(mockWebSocketServer).toHaveBeenCalledWith({
         port: config.port,
         path: config.path
       });
@@ -91,47 +107,40 @@ describe('XAIVoiceProxyService', () => {
 
     it('should not start if already running', async () => {
       // Arrange
-      const WebSocketServerMock = WebSocket.Server as unknown as ReturnType<typeof vi.fn>;
-      WebSocketServerMock.mockImplementation(() => ({
-        on: vi.fn(),
-        close: vi.fn((callback?: () => void) => {
-          if (callback) callback();
-        })
-      }));
-
+      mockWebSocketServer.mockClear();
       await service.start();
-      const initialCallCount = WebSocketServerMock.mock.calls.length;
+      const initialCallCount = mockWebSocketServer.mock.calls.length;
 
       // Act
       await service.start();
 
       // Assert
-      expect(WebSocketServerMock.mock.calls.length).toBe(initialCallCount);
+      expect(mockWebSocketServer.mock.calls.length).toBe(initialCallCount);
+      expect(service.isServerRunning()).toBe(true);
     });
   });
 
   describe('stop', () => {
     it('should stop server and close all connections', async () => {
       // Arrange
-      const closeCallback = vi.fn();
-      const WebSocketServerMock = WebSocket.Server as unknown as ReturnType<typeof vi.fn>;
-      WebSocketServerMock.mockImplementation(() => ({
-        on: vi.fn(),
-        close: vi.fn((callback?: () => void) => {
-          if (callback) {
-            // Appeler immédiatement pour que la promesse se résolve
-            callback();
-          }
-        })
-      }));
-
+      mockWebSocketServer.mockClear();
       await service.start();
+      expect(service.isServerRunning()).toBe(true);
+      
+      // Récupérer l'instance mockée créée par start()
+      const mockInstance = mockWebSocketServer.mock.results[0]?.value;
+      if (mockInstance) {
+        vi.mocked(mockInstance.close).mockClear();
+      }
 
       // Act
       await service.stop();
 
       // Assert
       expect(service.isServerRunning()).toBe(false);
+      if (mockInstance) {
+        expect(mockInstance.close).toHaveBeenCalled();
+      }
     }, 15000); // Timeout de 15s pour ce test
 
     it('should handle stop when not running', async () => {

@@ -36,12 +36,22 @@ export default function TargetedPollingManager() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // Exposer les fonctions de polling sur window pour les actions UI
+      // Les fonctions acceptent un paramètre optionnel OperationType, mais l'API globale attend string[]
+      // On crée des wrappers pour adapter les signatures
       window.targetedPolling = {
-        pollNotes: pollNotes as any,
-        pollFolders: pollFolders as any,
-        pollClasseurs: pollClasseurs as any,
+        pollNotes: async (noteIds: string[]) => {
+          // L'API globale attend noteIds mais notre hook n'en a pas besoin
+          // On appelle simplement pollNotes() sans paramètre
+          await pollNotes();
+        },
+        pollFolders: async (folderIds: string[]) => {
+          await pollFolders();
+        },
+        pollClasseurs: async (classeurIds: string[]) => {
+          await pollClasseurs();
+        },
         pollAll,
-      } as any;
+      };
     }
   }, [pollNotes, pollFolders, pollClasseurs, pollAll]);
 

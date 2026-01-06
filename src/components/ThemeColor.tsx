@@ -21,7 +21,7 @@ export default function ThemeColor() {
       
       // MODE STANDALONE (PWA installée) = Noir pur
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-                          (window.navigator as any).standalone === true; // iOS
+                          window.navigator.standalone === true; // iOS
       
       if (isStandalone) {
         color = '#000000'; // Noir pur pour app installée
@@ -86,8 +86,11 @@ export default function ThemeColor() {
       }
     };
     
-    window.addEventListener('focus', debouncedUpdate, { passive: true } as any);
-    document.addEventListener('visibilitychange', handleVisibility, { passive: true } as any);
+    // Options pour addEventListener avec passive
+    // TypeScript ne reconnaît pas toujours passive pour tous les événements
+    const passiveOptions: AddEventListenerOptions = { passive: true };
+    window.addEventListener('focus', debouncedUpdate, passiveOptions);
+    document.addEventListener('visibilitychange', handleVisibility, passiveOptions);
     
     return () => {
       if (updateTimeoutRef.current) {

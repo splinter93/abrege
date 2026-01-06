@@ -73,7 +73,7 @@ interface FolderManagerResult {
 }
 
 // Adaptateur pour convertir les Folder Zustand en Folder UI
-function toUIFolder(f: any): Folder {
+function toUIFolder(f: ZustandFolder): Folder {
   return {
     id: f.id,
     name: f.name,
@@ -109,9 +109,15 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   const activeClasseurId = useFileSystemStore(selectActiveClasseurId);
 
   // Correction : filtrage par classeurId et parentFolderId
+  // folders est un array de ZustandFolder (du store)
   const filteredFolders: Folder[] = useMemo(
     () => folders
-      .filter((f: any) => f.classeur_id === classeurId && (f.parent_id === parentFolderId || (!f.parent_id && !parentFolderId)))
+      .filter((f): f is ZustandFolder => {
+        // Type guard pour s'assurer que f est un ZustandFolder avec les propriétés nécessaires
+        return f && typeof f === 'object' && 'id' in f && 'classeur_id' in f && 
+               f.classeur_id === classeurId && 
+               (f.parent_id === parentFolderId || (!f.parent_id && !parentFolderId));
+      })
       .map(toUIFolder),
     [folders, classeurId, parentFolderId]
   );

@@ -40,6 +40,30 @@ interface OpenSessionParams {
 }
 
 /**
+ * Type pour le row de DB avec JOIN sur articles
+ * Utilisé pour mapper les résultats de Supabase vers CanvaSession
+ */
+interface CanvaSessionRow {
+  id: string;
+  chat_session_id: string;
+  note_id: string;
+  user_id: string;
+  title?: string;
+  status: string;
+  created_at: string;
+  closed_at: string | null;
+  saved_at: string | null;
+  metadata: Record<string, unknown> | null;
+  note?: {
+    source_title?: string;
+    slug?: string;
+    classeur_id?: string;
+    updated_at?: string;
+    header_image?: string;
+  };
+}
+
+/**
  * Service centralisé pour la gestion des canvases
  */
 export class CanvaNoteService {
@@ -351,7 +375,7 @@ export class CanvaNoteService {
       }
 
       // Mapper résultat pour synchroniser titre
-      const canvaSessions: CanvaSession[] = (data || []).map((row: any) =>
+      const canvaSessions: CanvaSession[] = (data || []).map((row: CanvaSessionRow) =>
         this.mapRowToSession(row)
       );
 
@@ -865,14 +889,14 @@ export class CanvaNoteService {
     return updated;
   }
 
-  private static mapRowToSession(row: any): CanvaSession {
+  private static mapRowToSession(row: CanvaSessionRow): CanvaSession {
     return {
       id: row.id,
       chat_session_id: row.chat_session_id,
       note_id: row.note_id,
       user_id: row.user_id,
       title: row.note?.source_title || row.title || this.generateDefaultTitle(),
-      status: row.status,
+      status: row.status as CanvaSession['status'], // Type assertion car DB retourne string
       created_at: row.created_at,
       closed_at: row.closed_at,
       saved_at: row.saved_at,

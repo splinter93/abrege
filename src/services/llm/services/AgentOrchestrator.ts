@@ -23,7 +23,7 @@ import { openApiSchemaService } from '../openApiSchemaService';
 import { createClient } from '@supabase/supabase-js';
 import { groqCircuitBreaker } from '@/services/circuitBreaker';
 import type { Tool, McpCall, LLMResponse } from '../types/strictTypes';
-import { isMcpTool } from '../types/strictTypes';
+import { isMcpTool, isFunctionTool } from '../types/strictTypes';
 import { systemMessageBuilder } from '../SystemMessageBuilder';
 import type { McpServerConfig } from '@/types/mcp';
 
@@ -198,7 +198,10 @@ export class AgentOrchestrator {
     const index: Record<string, number> = {};
     
     for (const tool of tools) {
-      const toolName = (tool as any).function?.name as string;
+      // Utiliser type guard pour accéder à function.name de manière type-safe
+      if (!isFunctionTool(tool)) continue;
+      
+      const toolName = tool.function.name;
       if (!toolName) continue;
       
       // Extraire le namespace (partie avant le premier '__')
@@ -422,8 +425,8 @@ export class AgentOrchestrator {
             mcp: mcpCount,
             openapi: openApiCount,
             index: toolsIndex,
-            sample: filteredOpenApiTools.map(t => (t as any).function?.name).slice(0, 10),
-            mcpServers: tools.filter(isMcpTool).map(t => (t as any).server_label || (t as any).name || 'unknown')
+            sample: filteredOpenApiTools.filter(isFunctionTool).map(t => t.function.name).slice(0, 10),
+            mcpServers: tools.filter(isMcpTool).map(t => t.server_label || t.name || 'unknown')
           });
         } else {
           // Groq/OpenAI : Combiner les tools OpenAPI avec les MCP tools
@@ -454,7 +457,7 @@ export class AgentOrchestrator {
             mcp: mcpCount,
             openapi: openApiCount,
             index: toolsIndex,
-            sample: filteredOpenApiTools.map(t => (t as any).function?.name).slice(0, 10)
+            sample: filteredOpenApiTools.filter(isFunctionTool).map(t => t.function.name).slice(0, 10)
           });
         }
       } else {
@@ -477,7 +480,7 @@ export class AgentOrchestrator {
             provider: 'xai-native',
             total: tools.length,
             mcp: mcpCount,
-            mcpServers: tools.filter(isMcpTool).map(t => (t as any).server_label || (t as any).name || 'unknown')
+            mcpServers: tools.filter(isMcpTool).map(t => t.server_label || t.name || 'unknown')
           });
         } else {
           // Groq/OpenAI : MCP tools uniquement
@@ -494,7 +497,7 @@ export class AgentOrchestrator {
             provider: selectedProvider,
             total: tools.length,
             mcp: mcpCount,
-            tools: tools.map(t => `MCP:${(t as any).server_label}`).slice(0, 20)
+            tools: tools.filter(isMcpTool).map(t => `MCP:${t.server_label}`).slice(0, 20)
           });
         }
       }
@@ -641,11 +644,20 @@ export class AgentOrchestrator {
    * Build system message using SystemMessageBuilder
    * ✅ Utilise le builder centralisé qui gère attachedNotes
    */
-  private buildSystemMessage(agentConfig: AgentTemplateConfig, uiContext?: UIContext | any): string {
+  private buildSystemMessage(agentConfig: AgentTemplateConfig, uiContext?: UIContext): string {
     // Utiliser le SystemMessageBuilder centralisé qui gère les notes attachées
+    // SystemMessageBuilder accepte SystemMessageContext avec type, name, id requis
+    // UIContext est compatible via [key: string]: unknown dans SystemMessageContext
+    const systemContext = uiContext ? {
+      type: 'chat',
+      name: 'Session',
+      id: 'current',
+      ...uiContext
+    } : undefined;
+    
     const result = systemMessageBuilder.buildSystemMessage(
       agentConfig,
-      uiContext,
+      systemContext,
       agentConfig.system_instructions || 'Tu es un assistant IA utile et bienveillant.'
     );
     
