@@ -66,6 +66,8 @@ export interface StreamResult {
   toolResults: ToolResult[];
   timeline: StreamTimeline;
   error?: string;
+  // ✅ Flag pour indiquer que l'erreur a déjà été traitée (onError déjà appelé)
+  errorAlreadyHandled?: boolean;
 }
 
 /**
@@ -157,6 +159,8 @@ export class StreamOrchestrator {
         });
       }
 
+      // ✅ Retourner un résultat avec success: false au lieu de throw
+      // Cela évite que useChatResponse rappelle onError (déjà appelé si isStreamError)
       return {
         success: false,
         content: '',
@@ -164,7 +168,9 @@ export class StreamOrchestrator {
         toolCalls: [],
         toolResults: [],
         timeline: this.timeline.getTimeline(),
-        error: errorMessage
+        error: errorMessage,
+        // ✅ Flag pour indiquer que l'erreur a déjà été traitée
+        errorAlreadyHandled: isStreamError
       };
     }
   }

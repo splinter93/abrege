@@ -1,10 +1,10 @@
 /**
  * StreamErrorDisplay - Affichage des erreurs de streaming LLM
- * Design moderne avec actions (retry, copy)
+ * Design simple : encadré rouge glassmorphism, pleine largeur
  */
 
 import React, { useState } from 'react';
-import { AlertTriangle, RefreshCw, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 import { simpleLogger as logger } from '@/utils/logger';
 import './StreamErrorDisplay.css';
 
@@ -31,221 +31,52 @@ export const StreamErrorDisplay: React.FC<StreamErrorDisplayProps> = ({
   onDismiss
 }) => {
   const [copied, setCopied] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+
+  // Message d'erreur principal
+  const errorMessage = error.error || 'Une erreur est survenue';
 
   const handleCopy = async () => {
-    const errorDetails = `
-🔴 ERREUR STREAMING LLM
-━━━━━━━━━━━━━━━━━━━━━━
-Provider: ${error.provider || 'unknown'}
-Model: ${error.model || 'unknown'}
-Status Code: ${error.statusCode || 'N/A'}
-Error Code: ${error.errorCode || 'N/A'}
-Round: ${error.roundCount || 'N/A'}
-Recoverable: ${error.recoverable ? 'Oui' : 'Non'}
-Timestamp: ${error.timestamp ? new Date(error.timestamp).toISOString() : 'N/A'}
-
-Message:
-${error.error}
-    `.trim();
-
     try {
-      await navigator.clipboard.writeText(errorDetails);
+      await navigator.clipboard.writeText(errorMessage);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      logger.error('[StreamErrorDisplay] Failed to copy error details', {
+      logger.error('[StreamErrorDisplay] Failed to copy error', {
         error: err instanceof Error ? err.message : String(err),
         stack: err instanceof Error ? err.stack : undefined
       });
     }
   };
 
-  const getStatusCodeInfo = (code?: number) => {
-    if (!code) return null;
-    
-    const codeInfo: Record<number, { label: string; description: string }> = {
-      400: { label: 'Requête Invalide', description: 'Les paramètres envoyés sont incorrects' },
-      401: { label: 'Non Authentifié', description: 'Clé API invalide ou expirée' },
-      403: { label: 'Accès Refusé', description: 'Vous n\'avez pas accès à cette ressource' },
-      413: { label: 'Payload Trop Large', description: 'Le message ou le contexte est trop volumineux' },
-      429: { label: 'Limite Dépassée', description: 'Trop de requêtes, veuillez patienter' },
-      500: { label: 'Erreur Serveur', description: 'Erreur interne du provider LLM' },
-      502: { label: 'Bad Gateway', description: 'Le serveur LLM est temporairement indisponible' },
-      503: { label: 'Service Indisponible', description: 'Le provider est actuellement surchargé' }
-    };
-    
-    return codeInfo[code] || { label: `Erreur ${code}`, description: 'Erreur non documentée' };
-  };
-
-  const getErrorCodeInfo = (code?: string) => {
-    if (!code) return null;
-    
-    const codeInfo: Record<string, { label: string; description: string; suggestion: string }> = {
-      'tool_use_failed': { 
-        label: 'Validation Tool Call', 
-        description: 'Le modèle a tenté d\'appeler un outil qui n\'existe pas ou avec des paramètres invalides',
-        suggestion: 'L\'agent va réessayer automatiquement avec les bons paramètres. Si l\'erreur persiste, reformulez votre demande.'
-      },
-      'invalid_request_error': {
-        label: 'Requête Invalide',
-        description: 'Les paramètres de la requête ne respectent pas le format attendu par le provider',
-        suggestion: 'Vérifiez que votre message ne contient pas de caractères spéciaux ou de format incompatible.'
-      },
-      'rate_limit_exceeded': {
-        label: 'Limite de Taux',
-        description: 'Trop de requêtes envoyées en peu de temps',
-        suggestion: 'Patientez quelques secondes avant de réessayer.'
-      },
-      'context_length_exceeded': {
-        label: 'Contexte Trop Long',
-        description: 'La conversation est trop longue pour le modèle',
-        suggestion: 'Créez une nouvelle session ou réduisez la taille de votre message.'
-      },
-      'model_overloaded': {
-        label: 'Modèle Surchargé',
-        description: 'Le modèle reçoit trop de requêtes simultanées',
-        suggestion: 'Réessayez dans quelques instants.'
-      }
-    };
-    
-    return codeInfo[code] || { 
-      label: code.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), 
-      description: `Erreur de type ${code}`,
-      suggestion: 'Consultez la documentation du provider pour plus d\'informations.'
-    };
-  };
-
-  const statusInfo = getStatusCodeInfo(error.statusCode);
-  const errorCodeInfo = getErrorCodeInfo(error.errorCode);
-
   return (
     <div className="stream-error-container">
       <div className="stream-error">
-        {/* Header avec icône et titre */}
-        <div className="stream-error-header">
-          <div className="stream-error-icon">
-            <AlertTriangle size={20} strokeWidth={2.5} />
-          </div>
-          <div className="stream-error-title">
-            <span className="stream-error-title-text">Erreur de Streaming</span>
-            {errorCodeInfo ? (
-              <span className="stream-error-subtitle">{errorCodeInfo.label}</span>
-            ) : error.statusCode && statusInfo ? (
-              <span className="stream-error-subtitle">{statusInfo.label}</span>
-            ) : null}
-          </div>
+        {/* Message d'erreur */}
+        <div className="stream-error-content">
+          <span className="stream-error-text">{errorMessage}</span>
+        </div>
+
+        {/* Footer avec bouton copier à gauche et Relancer */}
+        <div className="stream-error-footer">
           <button 
-            className="stream-error-expand"
-            onClick={() => setExpanded(!expanded)}
-            aria-label={expanded ? 'Réduire' : 'Développer'}
+            className="stream-error-copy"
+            onClick={handleCopy}
+            aria-label="Copier le log d'erreur"
+            title="Copier le log"
           >
-            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-          </button>
-        </div>
-
-        {/* Message d'erreur principal */}
-        <div className="stream-error-message">
-          {errorCodeInfo ? errorCodeInfo.description : error.error}
-        </div>
-        
-        {/* Suggestion si errorCode reconnu */}
-        {errorCodeInfo && errorCodeInfo.suggestion && (
-          <div className="stream-error-suggestion">
-            💡 {errorCodeInfo.suggestion}
-          </div>
-        )}
-
-        {/* Détails déroulants */}
-        {expanded && (
-          <div className="stream-error-details">
-            <div className="stream-error-detail-grid">
-              {error.provider && (
-                <div className="stream-error-detail-item">
-                  <span className="stream-error-detail-label">Provider</span>
-                  <span className="stream-error-detail-value">{error.provider.toUpperCase()}</span>
-                </div>
-              )}
-              {error.model && (
-                <div className="stream-error-detail-item">
-                  <span className="stream-error-detail-label">Modèle</span>
-                  <span className="stream-error-detail-value">{error.model}</span>
-                </div>
-              )}
-              {error.statusCode && (
-                <div className="stream-error-detail-item">
-                  <span className="stream-error-detail-label">Code HTTP</span>
-                  <span className="stream-error-detail-value">{error.statusCode}</span>
-                </div>
-              )}
-              {error.errorCode && (
-                <div className="stream-error-detail-item">
-                  <span className="stream-error-detail-label">Code Erreur</span>
-                  <span className="stream-error-detail-value">{error.errorCode}</span>
-                </div>
-              )}
-              {error.roundCount !== undefined && (
-                <div className="stream-error-detail-item">
-                  <span className="stream-error-detail-label">Round</span>
-                  <span className="stream-error-detail-value">{error.roundCount}</span>
-                </div>
-              )}
-              {error.recoverable !== undefined && (
-                <div className="stream-error-detail-item">
-                  <span className="stream-error-detail-label">Récupérable</span>
-                  <span className="stream-error-detail-value">
-                    {error.recoverable ? '✓ Oui' : '✗ Non'}
-                  </span>
-                </div>
-              )}
-            </div>
-            
-            {statusInfo && (
-              <div className="stream-error-description">
-                💡 {statusInfo.description}
-              </div>
+            {copied ? (
+              <Check size={16} strokeWidth={2.5} />
+            ) : (
+              <Copy size={16} strokeWidth={2.5} />
             )}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="stream-error-actions">
+          </button>
           {onRetry && (
             <button 
-              className="stream-error-button retry"
+              className="stream-error-retry"
               onClick={onRetry}
               aria-label="Relancer le message"
             >
-              <RefreshCw size={14} strokeWidth={2.5} />
-              <span>Relancer</span>
-            </button>
-          )}
-          
-          <button 
-            className="stream-error-button copy"
-            onClick={handleCopy}
-            aria-label="Copier les détails"
-          >
-            {copied ? (
-              <>
-                <Check size={14} strokeWidth={2.5} />
-                <span>Copié !</span>
-              </>
-            ) : (
-              <>
-                <Copy size={14} strokeWidth={2.5} />
-                <span>Copier détails</span>
-              </>
-            )}
-          </button>
-
-          {onDismiss && (
-            <button 
-              className="stream-error-button dismiss"
-              onClick={onDismiss}
-              aria-label="Fermer"
-            >
-              <span>Fermer</span>
+              Relancer
             </button>
           )}
         </div>

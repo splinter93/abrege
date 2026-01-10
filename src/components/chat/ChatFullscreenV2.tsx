@@ -46,7 +46,6 @@ import type { CanvaSession as CanvaSessionDB, ListCanvasResponse } from '@/types
 
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
-import { chatError, chatSuccess } from '@/utils/chatToast';
 
 import '@/styles/chat-clean.css';
 import '@/styles/sidebar-collapsible.css';
@@ -205,12 +204,7 @@ const ChatFullscreenV2: React.FC = () => {
       
       logger.error('[ChatFullscreenV2] ❌ Erreur streaming reçue:', errorDetails);
       
-      // ✅ Toast pour notification immédiate
-      chatError('Erreur de streaming LLM', {
-        suggestion: 'Vous pouvez relancer le message en cliquant sur "Relancer" ci-dessous.',
-        duration: 5000,
-        position: 'top-center'
-      });
+      // ✅ Pas de toast : le log d'erreur dans l'UI suffit
     }
   });
 
@@ -352,6 +346,12 @@ const ChatFullscreenV2: React.FC = () => {
   });
 
   // 🎯 UI STATE (déjà extrait dans useChatFullscreenUIState)
+
+  // ✅ Reset l'erreur quand la session change (sécurité supplémentaire)
+  useEffect(() => {
+    // Réinitialiser l'erreur quand currentSession change
+    uiState.setStreamError(null);
+  }, [currentSession?.id, uiState.setStreamError]);
 
   // 🎯 HANDLERS UI (extrait dans useChatFullscreenUIActions)
   useEffect(() => {

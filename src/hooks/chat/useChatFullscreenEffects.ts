@@ -364,22 +364,39 @@ export function useChatFullscreenEffects(
 
   // Détecter changement session et vider immédiatement
   useEffect(() => {
-    if (currentSession?.id && currentSession.id !== uiState.previousSessionIdRef.current) {
+    const previousSessionId = uiState.previousSessionIdRef.current;
+    const currentSessionId = currentSession?.id || null;
+
+    // ✅ Réinitialiser si changement de session (y compris null → nouvelle session, ou session → autre session)
+    if (currentSessionId !== previousSessionId) {
       animations.setDisplayedSessionId(null);
       animations.resetAnimation();
       clearInfiniteMessages();
       streamingState.reset(); // ✅ Reset le streaming précédent aussi
+      uiState.setStreamError(null); // ✅ Reset l'erreur lors du changement de session
       // ✅ Reset padding inline éventuel appliqué par useChatScroll (scroll padding temporaire)
       if (uiState.messagesContainerRef.current) {
         uiState.messagesContainerRef.current.style.paddingBottom = '';
       }
-      uiState.previousSessionIdRef.current = currentSession.id;
+      uiState.previousSessionIdRef.current = currentSessionId;
+      
+      logger.dev('[useChatFullscreenEffects] 🔄 Changement de session, reset complet (y compris erreur)', {
+        previousSessionId,
+        currentSessionId
+      });
     }
 
-    if (!isLoadingMessages && !animations.displayedSessionId && currentSession?.id) {
-      animations.setDisplayedSessionId(currentSession.id);
+    // ✅ Réinitialiser l'erreur aussi si currentSession devient null (session fermée)
+    if (!currentSessionId && previousSessionId) {
+      uiState.setStreamError(null);
+      uiState.previousSessionIdRef.current = null;
+      logger.dev('[useChatFullscreenEffects] 🔄 Session fermée, reset erreur');
     }
-  }, [currentSession?.id, animations, isLoadingMessages, infiniteMessages.length, clearInfiniteMessages, streamingState, uiState.previousSessionIdRef, uiState.messagesContainerRef]);
+
+    if (!isLoadingMessages && !animations.displayedSessionId && currentSessionId) {
+      animations.setDisplayedSessionId(currentSessionId);
+    }
+  }, [currentSession?.id, animations, isLoadingMessages, infiniteMessages.length, clearInfiniteMessages, streamingState, uiState.setStreamError, uiState.previousSessionIdRef, uiState.messagesContainerRef]);
 
   // Animation + scroll quand session chargée
   useEffect(() => {

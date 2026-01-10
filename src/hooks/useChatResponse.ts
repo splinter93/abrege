@@ -150,7 +150,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         const orchestrator = orchestratorRef.current!;
         orchestrator.reset(); // Reset pour nouveau stream
         
-        await orchestrator.processStream(response, {
+        const streamResult = await orchestrator.processStream(response, {
           onStreamStart,
           onStreamChunk,
           onStreamEnd,
@@ -161,6 +161,19 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           onError,
           onModelInfo: options.onModelInfo // ✅ NOUVEAU : Passer callback modelInfo
         });
+
+        // ✅ Si le stream a échoué mais que l'erreur a déjà été traitée (onError déjà appelé),
+        // ne pas rappeler onError dans le catch block
+        if (!streamResult.success && streamResult.errorAlreadyHandled) {
+          return;
+        }
+
+        // ✅ Si le stream a échoué mais que l'erreur n'a pas encore été traitée,
+        // appeler onError maintenant
+        if (!streamResult.success && streamResult.error) {
+          onError?.(streamResult.error);
+          return;
+        }
 
         return;
       }

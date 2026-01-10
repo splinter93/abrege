@@ -32,6 +32,7 @@ import { Toaster } from "react-hot-toast";
 import ThemeColor from "@/components/ThemeColor";
 import PWASplash from "@/components/PWASplash";
 import ScrollPerformance from "@/components/ScrollPerformance";
+import { CommandPaletteProvider } from "@/components/command-palette/CommandPaletteProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -105,7 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
           body { 
             background: var(--color-bg-primary, #121212) !important; 
-            color: var(--color-text-primary, #d0d0d0) !important; 
+            color: var(--text-primary, #d0d0d0) !important; 
             font-family: 'Figtree', 'Geist', -apple-system, sans-serif !important;
             margin: 0;
             padding: 0;
@@ -155,12 +156,60 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             height: 100vh !important;
           }
         ` }} />
+        <script dangerouslySetInnerHTML={{ __html: `
+          // ✅ Intercepter CMD+P / Ctrl+P TRÈS TÔT pour bloquer l'impression du navigateur
+          (function() {
+            document.addEventListener('keydown', function(e) {
+              // CMD+P (Mac) ou Ctrl+P (Windows/Linux)
+              const isPKey = (e.key === 'p' || e.key === 'P' || e.code === 'KeyP');
+              const isCommandP = (e.metaKey || e.ctrlKey) && isPKey && !e.shiftKey && !e.altKey;
+              
+              if (isCommandP) {
+                // Guards : Ne pas bloquer si dans un input/textarea avec du texte
+                const activeElement = document.activeElement;
+                const isInInput = activeElement?.tagName === 'INPUT';
+                const isInTextarea = activeElement?.tagName === 'TEXTAREA';
+                
+                if (isInInput) {
+                  return; // Laisser le navigateur gérer
+                }
+                
+                if (isInTextarea) {
+                  const textarea = activeElement;
+                  if (textarea && textarea.value && textarea.value.trim().length > 0) {
+                    return; // Laisser le navigateur gérer si du texte
+                  }
+                }
+                
+                // Guard : Ne pas bloquer si dans un éditeur contenteditable avec du contenu
+                const isInEditable = activeElement?.getAttribute('contenteditable') === 'true' ||
+                                   activeElement?.closest('[contenteditable="true"]') !== null;
+                
+                if (isInEditable) {
+                  const editable = activeElement;
+                  if (editable && editable.textContent && editable.textContent.trim().length > 0) {
+                    return; // Laisser le navigateur gérer si du contenu
+                  }
+                }
+                
+                // ✅ Bloquer l'impression du navigateur
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
+                // Déclencher un événement personnalisé que React pourra écouter
+                window.dispatchEvent(new CustomEvent('command-palette:open'));
+              }
+            }, true); // Capture phase pour intercepter avant le navigateur
+          })();
+        ` }} />
       </head>
       <body className={`${geistSans.className} ${geistSans.variable} ${geistMono.variable} ${notoSans.variable} app-container`}>
         <PWASplash />
         <ThemeColor />
         <ScrollPerformance />
         <LanguageProvider>
+          <CommandPaletteProvider />
           <Toaster 
             position="top-right"
             toastOptions={{

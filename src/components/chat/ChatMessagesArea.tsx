@@ -234,8 +234,8 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
 
         {/* ✅ ERREUR DE STREAMING */}
         {streamError && (
-          <div className="chatgpt-message chatgpt-message-assistant">
-            <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant" style={{ background: 'transparent', border: 'none', padding: 0 }}>
+          <div className="chatgpt-message chatgpt-message-assistant" style={{ width: '100%', maxWidth: '100%' }}>
+            <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant" style={{ background: 'transparent', border: 'none', padding: 0, width: '100%', maxWidth: '100%' }}>
               <StreamErrorDisplay
                 error={streamError}
                 onRetry={onRetryMessage}
