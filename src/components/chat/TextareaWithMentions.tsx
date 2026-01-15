@@ -189,6 +189,7 @@ const TextareaWithMentions: React.FC<TextareaWithMentionsProps> = ({
   
   /**
    * Synchroniser le scroll de l'overlay avec le textarea
+   * ✅ CRITICAL : Synchronisation parfaite pour éviter décalage
    */
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -197,16 +198,45 @@ const TextareaWithMentions: React.FC<TextareaWithMentionsProps> = ({
     if (!textarea || !highlight) return;
     
     const handleScroll = () => {
+      // ⚡ Force synchronisation immédiate (pas de RAF pour éviter lag)
       highlight.scrollTop = textarea.scrollTop;
       highlight.scrollLeft = textarea.scrollLeft;
     };
     
+    // ⚡ Synchroniser aussi au resize (important en responsive)
+    const handleResize = () => {
+      if (textarea && highlight) {
+        highlight.scrollTop = textarea.scrollTop;
+        highlight.scrollLeft = textarea.scrollLeft;
+      }
+    };
+    
     textarea.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
+    
+    // ✅ Synchronisation initiale
+    handleScroll();
     
     return () => {
       textarea.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
     };
   }, [textareaRef]);
+  
+  /**
+   * Re-synchroniser le scroll quand le contenu change
+   * ⚡ Important en responsive : le line wrapping peut changer
+   */
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    const highlight = highlightRef.current;
+    
+    if (!textarea || !highlight) return;
+    
+    // Force re-sync après changement de contenu
+    highlight.scrollTop = textarea.scrollTop;
+    highlight.scrollLeft = textarea.scrollLeft;
+  }, [value, textareaRef]);
   
   return (
     <div className="textarea-with-mentions-container">
