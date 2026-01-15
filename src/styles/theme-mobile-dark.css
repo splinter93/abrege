@@ -9,24 +9,31 @@
    ======================================== */
 
 @media (display-mode: standalone) {
+  /* ========================================
+     VARIABLES CSS - Utilise les variables du thème au lieu de valeurs hardcodées
+     ======================================== */
   body {
+    /* ✅ Garde les valeurs dark mode mais utilise les variables pour cohérence */
     --chat-bg-primary: #000000;
     --chat-bg-secondary: #0a0a0a;
-    --chat-text-primary: #ffffff;
-    --chat-text-secondary: #a0a0a0;
+    /* ⚡ CRITICAL : Utilise les variables CSS du thème au lieu de hardcoder */
+    --chat-text-primary: var(--chat-text-primary, #b5bcc4); /* ✅ Variable du thème dark */
+    --chat-text-secondary: var(--chat-text-secondary, #a1a9b1); /* ✅ Variable du thème dark */
     --chat-border: #1a1a1a;
     --chat-border-subtle: #0f0f0f;
   }
   
   /* ========================================
-     FONTS - FALLBACK SYSTÈME SI GOOGLE FONTS FAIL
+     FONTS - INCLUT GEIST DANS LES FALLBACKS
+     ✅ Identique à l'app web normale
      ======================================== */
   
   body,
   .chatgpt-container,
   .chatgpt-content,
   .chat-markdown {
-    font-family: 'Inter', 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+    /* ⚡ CRITICAL : Inclut Geist en premier pour cohérence avec app web */
+    font-family: var(--font-chat-text, 'Figtree', 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif) !important;
   }
   
   /* Headings */
@@ -36,18 +43,22 @@
   .chat-markdown h4,
   .chat-markdown h5,
   .chat-markdown h6 {
-    font-family: 'Inter', 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    /* ⚡ CRITICAL : Utilise la variable CSS du thème */
+    font-family: var(--font-chat-headings, 'Manrope', 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif) !important;
   }
   
   /* Input */
-  .chatgpt-input-textarea {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  .chatgpt-input-textarea,
+  .textarea-with-mentions-input {
+    /* ⚡ CRITICAL : Utilise la variable CSS du thème avec Geist */
+    font-family: var(--font-chat-text, 'Figtree', 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif) !important;
   }
   
   /* Code blocks */
   .chat-markdown code,
   .chat-markdown pre {
-    font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Consolas', monospace !important;
+    /* ⚡ CRITICAL : Utilise la variable CSS du thème */
+    font-family: var(--font-monospace, 'JetBrains Mono', 'SF Mono', 'Monaco', 'Consolas', monospace) !important;
   }
   
   /* ========================================
@@ -128,11 +139,12 @@
   /* Pas d'override - laisse le style glassmorphism existant */
   
   /* ========================================
-     BUTTONS
+     BUTTONS - Utilise les variables CSS
      ======================================== */
   
   button {
-    color: #ffffff;
+    /* ⚡ CRITICAL : Utilise la variable CSS au lieu de hardcoder */
+    color: var(--chat-text-primary, #b5bcc4);
   }
   
   .chatgpt-send-btn {
