@@ -268,12 +268,25 @@ body.chat-font-manrope-active .chat-markdown h6 {
 
 /* Items de liste normaux */
 .chat-markdown li:not(.task-list-item) {
+  /* ⚡ CRITICAL : Font et couleur explicites pour cohérence PWA/web */
+  font-family: var(--font-chat-text) !important;
+  font-size: var(--chat-text-base) !important; /* ✅ Même taille que paragraphes */
+  font-weight: var(--chat-weight-normal) !important;
+  color: var(--chat-text-primary) !important; /* ✅ Même couleur que paragraphes */
   margin: var(--md-chat-list-item-margin) 0;  /* ✅ Variable chat */
   line-height: 1.75;
+  letter-spacing: var(--chat-tracking-normal);
 }
 
 .chat-markdown li > p {
+  /* ⚡ CRITICAL : Hérite explicitement des styles du parent li */
   margin: 0;
+  font-family: var(--font-chat-text) !important;
+  font-size: var(--chat-text-base) !important;
+  font-weight: var(--chat-weight-normal) !important;
+  color: var(--chat-text-primary) !important;
+  line-height: var(--chat-leading-relaxed);
+  letter-spacing: var(--chat-tracking-normal);
 }
 
 /* Listes imbriquées */
@@ -520,6 +533,17 @@ body.chat-font-manrope-active .chat-markdown h6 {
   .chat-markdown h4 { font-size: var(--chat-text-xl); }
   .chat-markdown h5 { font-size: var(--chat-text-lg); }
   .chat-markdown h6 { font-size: var(--chat-text-base); }
+  
+  /* ⚡ CRITICAL : Listes - Garantir même taille et couleur que paragraphes en mobile */
+  .chat-markdown li:not(.task-list-item) {
+    font-size: var(--chat-text-base) !important;
+    color: var(--chat-text-primary) !important;
+  }
+  
+  .chat-markdown li > p {
+    font-size: var(--chat-text-base) !important;
+    color: var(--chat-text-primary) !important;
+  }
   
   .chat-markdown th,
   .chat-markdown td {

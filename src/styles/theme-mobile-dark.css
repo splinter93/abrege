@@ -61,6 +61,19 @@
     font-family: var(--font-monospace, 'JetBrains Mono', 'SF Mono', 'Monaco', 'Consolas', monospace) !important;
   }
   
+  /* ⚡ CRITICAL : Listes - Garantir même taille et couleur que paragraphes en PWA */
+  .chat-markdown li:not(.task-list-item) {
+    font-family: var(--font-chat-text, 'Figtree', 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif) !important;
+    font-size: var(--chat-text-base, 1rem) !important;
+    color: var(--chat-text-primary, #b5bcc4) !important;
+  }
+  
+  .chat-markdown li > p {
+    font-family: var(--font-chat-text, 'Figtree', 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif) !important;
+    font-size: var(--chat-text-base, 1rem) !important;
+    color: var(--chat-text-primary, #b5bcc4) !important;
+  }
+  
   /* ========================================
      CONTAINER PRINCIPAL
      ======================================== */
