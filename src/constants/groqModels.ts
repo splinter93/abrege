@@ -248,7 +248,7 @@ export const GROQ_MODELS: GroqModelInfo[] = [
   },
   {
     id: 'fireworks/z-ai-glm-4-7',
-    name: 'GLM-4.7',
+    name: 'GLM-4.7 (Fireworks)',
     category: 'liminality',
     provider: 'liminality',
     capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
@@ -256,8 +256,23 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     maxOutput: 8192,
     speed: 600,
     pricing: { input: 'Variable', output: 'Variable' },
-    description: 'GLM-4.7 via Liminality avec support des outils avancés',
+    description: 'GLM-4.7 via Fireworks avec support des outils avancés',
     recommended: false
+  },
+  
+  // Cerebras Models
+  {
+    id: 'cerebras/zai-glm-4-7',
+    name: 'Z.ai GLM 4.7 (Cerebras)',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
+    contextWindow: 128000,
+    maxOutput: 8192,
+    speed: 800,
+    pricing: { input: '$0.10', output: '$0.10' },
+    description: 'Z.ai GLM 4.7 via Cerebras ultra-rapide, excellent pour tâches de production',
+    recommended: true
   },
   
   // OpenRouter Models via Liminality

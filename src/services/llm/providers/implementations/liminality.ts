@@ -86,6 +86,7 @@ const LIMINALITY_INFO: ProviderInfo = {
     'claude-3-5-sonnet',
     'groq-llama-3-70b',
     'deepseek-chat',
+    'cerebras/zai-glm-4-7',
     'fireworks/z-ai-glm-4-7',
     'openrouter/mimo-v2-flash:free',
     'openrouter/kimi-k2-thinking',

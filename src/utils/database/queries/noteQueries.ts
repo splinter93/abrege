@@ -283,4 +283,3 @@ export async function getNoteShareSettings(ref: string, userId: string, context:
     return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
-
