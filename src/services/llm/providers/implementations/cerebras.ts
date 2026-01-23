@@ -562,13 +562,16 @@ export class CerebrasProvider extends BaseProvider implements LLMProvider {
     
     // ✅ zai-glm-4.7: Ajouter clear_thinking si configuré
     // Contrôle si le thinking précédent est inclus dans le contexte (défaut: true = exclure)
+    // Documentation: https://inference-docs.cerebras.ai/models/zai-glm-47
     if (this.config.clearThinking !== undefined) {
       payload.clear_thinking = this.config.clearThinking;
     }
     
     // ✅ gpt-oss-120b: Ajouter reasoning_effort si configuré
-    // Contrôle le niveau de reasoning (low, medium, high) - défaut: medium
-    if (this.config.reasoningEffort) {
+    // ⚠️ IMPORTANT: reasoning_effort est UNIQUEMENT pour gpt-oss-120b, PAS pour zai-glm-4.7
+    // zai-glm-4.7 a le reasoning activé par défaut (pas de paramètre reasoning_effort)
+    // Documentation: https://inference-docs.cerebras.ai/models/openai-oss
+    if (this.config.reasoningEffort && this.config.model === 'gpt-oss-120b') {
       payload.reasoning_effort = this.config.reasoningEffort;
     }
     
