@@ -129,6 +129,16 @@ export function validateAndNormalizeModel(
     return model;
   }
   
+  // Cerebras gère ses propres modèles
+  if (providerType === 'cerebras') {
+    const isCerebrasModel = model.includes('zai-glm') || model.includes('gpt-oss') || model.includes('llama-3.3') || model.includes('llama-3.1') || model.startsWith('cerebras/');
+    if (!isCerebrasModel) {
+      logger.warn(`[Stream Helpers] ⚠️ Modèle non Cerebras (${model}), utilisation du modèle par défaut`);
+      return 'zai-glm-4.7'; // ✅ Modèle par défaut mis à jour
+    }
+    return model;
+  }
+  
   const isXaiModel = model.includes('grok') && !model.includes('/');
   const isGroqModel = model.startsWith('openai/gpt-oss-') || model.includes('llama') || model.includes('moonshotai/');
   

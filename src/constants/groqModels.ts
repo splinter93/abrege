@@ -19,7 +19,7 @@ export interface GroqModelInfo {
   id: string;
   name: string;
   category: 'gpt-oss' | 'llama' | 'qwen' | 'xai' | 'whisper' | 'tts' | 'liminality' | 'other';
-  provider?: 'groq' | 'xai' | 'liminality'; // Provider du modèle
+  provider?: 'groq' | 'xai' | 'liminality' | 'cerebras'; // Provider du modèle
   capabilities: string[];
   contextWindow: number;
   maxOutput: number;
@@ -262,17 +262,30 @@ export const GROQ_MODELS: GroqModelInfo[] = [
   
   // Cerebras Models
   {
-    id: 'cerebras/zai-glm-4-7',
+    id: 'zai-glm-4.7',
     name: 'Z.ai GLM 4.7 (Cerebras)',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
-    contextWindow: 128000,
-    maxOutput: 8192,
-    speed: 800,
-    pricing: { input: '$0.10', output: '$0.10' },
-    description: 'Z.ai GLM 4.7 via Cerebras ultra-rapide, excellent pour tâches de production',
+    category: 'other',
+    provider: 'cerebras',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning'],
+    contextWindow: 131000,
+    maxOutput: 40000,
+    speed: 1000,
+    pricing: { input: '$2.25', output: '$2.75' },
+    description: 'Z.ai GLM 4.7 via Cerebras - Reasoning avancé, tool calling, structured outputs',
     recommended: true
+  },
+  {
+    id: 'gpt-oss-120b',
+    name: 'GPT-OSS 120B (Cerebras)',
+    category: 'other',
+    provider: 'cerebras',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning'],
+    contextWindow: 131000,
+    maxOutput: 40000,
+    speed: 3000,
+    pricing: { input: '$0.35', output: '$0.75' },
+    description: 'OpenAI GPT OSS 120B via Cerebras - Très rapide (~3000 tokens/sec), reasoning contrôlable',
+    recommended: false
   },
   
   // OpenRouter Models via Liminality
@@ -380,11 +393,12 @@ export const LLM_MODELS = GROQ_MODELS;
  */
 export const GROQ_MODELS_BY_CATEGORY = {
   'Liminality (Synesia) ⭐': GROQ_MODELS.filter(m => m.category === 'liminality'),
+  'Cerebras ⚡': GROQ_MODELS.filter(m => m.provider === 'cerebras'),
   'xAI Grok (Recommandé)': GROQ_MODELS.filter(m => m.category === 'xai'),
   'GPT-OSS': GROQ_MODELS.filter(m => m.category === 'gpt-oss'),
   'Llama 4 (Multimodal)': GROQ_MODELS.filter(m => m.category === 'llama'),
   'Qwen3': GROQ_MODELS.filter(m => m.category === 'qwen'),
-  'Kimi K2': GROQ_MODELS.filter(m => m.category === 'other'),
+  'Kimi K2': GROQ_MODELS.filter(m => m.category === 'other' && m.provider !== 'cerebras'),
 };
 
 /**

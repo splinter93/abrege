@@ -1,5 +1,5 @@
 import type { LLMProvider, AppContext, ChatMessage, LLMResponse } from './types';
-import { GroqProvider, GroqResponsesProvider, XAINativeProvider, LiminalityProvider } from './providers';
+import { GroqProvider, GroqResponsesProvider, XAINativeProvider, LiminalityProvider, CerebrasProvider } from './providers';
 import { logger, LogCategory } from '@/utils/logger';
 
 interface ProviderMetrics {
@@ -21,6 +21,7 @@ export class LLMProviderManager {
     this.registerProvider(new GroqResponsesProvider());
     this.registerProvider(new XAINativeProvider()); // ✅ Native API avec support MCP
     this.registerProvider(new LiminalityProvider());
+    this.registerProvider(new CerebrasProvider());
     
     // Initialiser les métriques
     this.initializeMetrics();

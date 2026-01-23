@@ -438,6 +438,9 @@ export async function POST(request: NextRequest) {
     } else if (providerType === 'liminality') {
       const { LiminalityProvider } = await import('@/services/llm/providers/implementations/liminality');
       provider = new LiminalityProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
+    } else if (providerType === 'cerebras') {
+      const { CerebrasProvider } = await import('@/services/llm/providers/implementations/cerebras');
+      provider = new CerebrasProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
     } else {
       provider = new GroqProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
     }
