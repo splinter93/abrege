@@ -576,23 +576,44 @@ export async function POST(request: NextRequest) {
           logger.info(LogCategory.API, `[Stream Route] 🔗 Callables trouvés pour l'agent`, {
             count: synesiaCallableIds.length
           });
-          // Stocker pour utilisation avec LiminalityProvider
-          (tools as Tool[] & { _synesiaCallables?: string[] })._synesiaCallables = synesiaCallableIds;
+          
+          // ✅ Pour Liminality : stocker les IDs pour utilisation native
+          if (providerType === 'liminality') {
+            (tools as Tool[] & { _synesiaCallables?: string[] })._synesiaCallables = synesiaCallableIds;
+          } else {
+            // ✅ Pour les autres providers : convertir en FunctionTool
+            const { CallableToolsAdapter } = await import('@/services/llm/providers/adapters/CallableToolsAdapter');
+            const { tools: callableTools, mapping: callableMapping } = CallableToolsAdapter.convertToFunctionTools(agentCallables);
+            
+            if (callableTools.length > 0) {
+              tools.push(...callableTools);
+              
+              // Stocker le mapping pour utilisation dans l'exécution
+              (tools as Tool[] & { _callableMapping?: Map<string, string> })._callableMapping = callableMapping;
+              
+              logger.info(LogCategory.API, `[Stream Route] ✅ ${callableTools.length} callables convertis en tools pour provider ${providerType}`);
+            }
+          }
         }
         
         const mcpCount = tools.filter(isMcpTool).length;
-        const openApiCount = tools.length - mcpCount;
+        const functionTools = tools.filter(isFunctionTool);
+        const openApiCount = functionTools.length;
+        const callableMapping = (tools as Tool[] & { _callableMapping?: Map<string, string> })._callableMapping;
+        const callableCount = callableMapping ? callableMapping.size : 0;
         
         logger.info(LogCategory.API, `[Stream Route] ✅ MCP - Tools chargés`, {
           total: tools.length,
           mcpCount,
           openApiCount,
+          callableCount,
           callables: agentCallables.length
         });
         
         logger.debug(LogCategory.API, `[Stream Route] ✅ ${tools.length} tools chargés`, {
         mcpCount,
         openApiCount,
+        callableCount,
         endpoints: openApiEndpoints.size,
         callables: agentCallables.length
       });
@@ -677,12 +698,18 @@ export async function POST(request: NextRequest) {
           // ✅ Créer une Map des tool names OpenAPI → pour routing d'exécution
           const openApiToolNames = new Set(openApiTools.map(t => t.function.name));
           
+          // ✅ Récupérer le mapping des callables si disponible
+          const callableMapping = (tools as Tool[] & { _callableMapping?: Map<string, string> })._callableMapping;
+          const callableToolNames = callableMapping ? new Set(callableMapping.keys()) : new Set<string>();
+          
           logger.debug(LogCategory.API,`[Stream Route] 🗺️ Tools séparés:`, {
             totalTools: tools.length,
             mcpCount: mcpTools.length,
             openApiCount: openApiTools.length,
+            callableCount: callableToolNames.size,
             mcpServers: mcpTools.map(t => (t as McpTool).server_label),
-            openApiNames: Array.from(openApiToolNames)
+            openApiNames: Array.from(openApiToolNames),
+            callableNames: Array.from(callableToolNames)
           });
 
           // ✅ Helper: Extraire le texte d'un MessageContent (string ou array multi-modal)
@@ -1196,6 +1223,61 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                 // ✅ Vérifier si c'est un tool OpenAPI (exécuté par nous)
                 // Les tools MCP sont exécutés nativement par Groq, on ne les touche pas
                 const isOpenApiTool = openApiToolNames.has(toolCall.function.name);
+                const isCallableTool = callableToolNames.has(toolCall.function.name);
+                
+                if (isCallableTool) {
+                  // ✅ Tool Callable : Exécuter via CallableToolExecutor
+                  logger.debug(LogCategory.API,`[Stream Route] 🔧 Callable tool détecté: ${toolCall.function.name}`);
+                  
+                  if (!callableMapping) {
+                    throw new Error(`Mapping callable manquant pour ${toolCall.function.name}`);
+                  }
+                  
+                  const { CallableToolExecutor } = await import('@/services/llm/executors/CallableToolExecutor');
+                  const callableExecutor = new CallableToolExecutor(callableMapping);
+                  const result = await callableExecutor.executeToolCall(toolCall, userToken);
+                  
+                  // ✅ AUDIT DÉTAILLÉ : Logger après exécution
+                  logger.debug(LogCategory.API,`[Stream Route] ✅ APRÈS EXÉCUTION CALLABLE:`, {
+                    toolName: toolCall.function.name,
+                    success: result.success,
+                    resultLength: typeof result.content === 'string' ? result.content.length : 'object',
+                    resultPreview: typeof result.content === 'string' ? result.content.substring(0, 100) + '...' : 'object'
+                  });
+
+                  // Ajouter le résultat aux messages
+                  currentMessages.push({
+                    role: 'tool',
+                    tool_call_id: toolCall.id,
+                    name: toolCall.function.name,
+                    content: result.content,
+                    timestamp: new Date().toISOString()
+                  });
+
+                  // Envoyer dans la timeline UI
+                  let parsedResult: unknown;
+                  try {
+                    parsedResult = JSON.parse(result.content);
+                  } catch (parseError) {
+                    logger.warn(LogCategory.API, `[Stream Route] ⚠️ Erreur parsing résultat callable, utilisation du contenu brut`, {
+                      error: parseError instanceof Error ? parseError.message : String(parseError)
+                    });
+                    parsedResult = result.content;
+                  }
+                  
+                  sendSSE({
+                    type: 'tool_result',
+                    toolCallId: toolCall.id,
+                    toolName: toolCall.function.name,
+                    success: result.success,
+                    result: parsedResult,
+                    timestamp: Date.now(),
+                    isCallable: true // ✅ Flag pour différencier les callable tools dans l'UI
+                  });
+                  
+                  logger.debug(LogCategory.API,`[Stream Route] ✅ Callable tool ${toolCall.function.name} exécuté et résultat envoyé`);
+                  continue;
+                }
                 
                 if (!isOpenApiTool) {
                   // ✅ Tool MCP : Groq l'a déjà exécuté, afficher dans la timeline
