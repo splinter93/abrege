@@ -83,6 +83,75 @@ const CEREBRAS_INFO: ProviderInfo = {
 };
 
 /**
+ * Rotation des clés API Cerebras (round-robin)
+ */
+class CerebrasApiKeyRotator {
+  private static instance: CerebrasApiKeyRotator;
+  private apiKeys: string[] = [];
+  private currentIndex = 0;
+
+  private constructor() {
+    // Récupérer toutes les clés disponibles depuis les variables d'environnement
+    const keys: string[] = [];
+    if (process.env.CEREBRAS_API_KEY) {
+      keys.push(process.env.CEREBRAS_API_KEY);
+    }
+    if (process.env.CEREBRAS_API_KEY_2) {
+      keys.push(process.env.CEREBRAS_API_KEY_2);
+    }
+    // Support pour plus de clés si nécessaire
+    let keyIndex = 3;
+    while (process.env[`CEREBRAS_API_KEY_${keyIndex}`]) {
+      keys.push(process.env[`CEREBRAS_API_KEY_${keyIndex}`] as string);
+      keyIndex++;
+    }
+
+    this.apiKeys = keys.filter(key => key && key.trim().length > 0);
+
+    if (this.apiKeys.length === 0) {
+      logger.warn('[CerebrasApiKeyRotator] ⚠️ Aucune clé API Cerebras trouvée');
+    } else {
+      logger.info(`[CerebrasApiKeyRotator] ✅ ${this.apiKeys.length} clé(s) API configurée(s) pour rotation`);
+    }
+  }
+
+  static getInstance(): CerebrasApiKeyRotator {
+    if (!CerebrasApiKeyRotator.instance) {
+      CerebrasApiKeyRotator.instance = new CerebrasApiKeyRotator();
+    }
+    return CerebrasApiKeyRotator.instance;
+  }
+
+  /**
+   * Obtient la prochaine clé API (round-robin)
+   */
+  getNextApiKey(): string {
+    if (this.apiKeys.length === 0) {
+      return '';
+    }
+
+    const key = this.apiKeys[this.currentIndex];
+    this.currentIndex = (this.currentIndex + 1) % this.apiKeys.length;
+    
+    return key;
+  }
+
+  /**
+   * Obtient toutes les clés disponibles
+   */
+  getAllKeys(): string[] {
+    return [...this.apiKeys];
+  }
+
+  /**
+   * Vérifie si au moins une clé est disponible
+   */
+  hasKeys(): boolean {
+    return this.apiKeys.length > 0;
+  }
+}
+
+/**
  * Configuration par défaut de Cerebras
  */
 const DEFAULT_CEREBRAS_CONFIG: CerebrasConfig = {
@@ -284,12 +353,16 @@ export class CerebrasProvider extends BaseProvider implements LLMProvider {
       const toolsCount = Array.isArray(payload.tools) ? payload.tools.length : 0;
       logger.info(`[CerebrasProvider] 🚀 PAYLOAD → CEREBRAS: ${payload.model} | ${messageCount} messages | ${toolsCount} tools`);
       
+      // ✅ Rotation automatique des clés API
+      const rotator = CerebrasApiKeyRotator.getInstance();
+      const apiKey = rotator.hasKeys() ? rotator.getNextApiKey() : this.config.apiKey;
+
       // Appel API avec streaming
       const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`
+          'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify(payload)
       });
@@ -659,10 +732,14 @@ export class CerebrasProvider extends BaseProvider implements LLMProvider {
    * Effectue l'appel API à Cerebras
    */
   private async makeApiCall(payload: CerebrasChatCompletionRequest): Promise<CerebrasChatCompletionResponse> {
+    // ✅ Rotation automatique des clés API
+    const rotator = CerebrasApiKeyRotator.getInstance();
+    const apiKey = rotator.hasKeys() ? rotator.getNextApiKey() : this.config.apiKey;
+
     const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.config.apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload),
