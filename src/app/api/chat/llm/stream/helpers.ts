@@ -139,6 +139,16 @@ export function validateAndNormalizeModel(
     return model;
   }
   
+  // DeepSeek gère ses propres modèles
+  if (providerType === 'deepseek') {
+    const isDeepSeekModel = model.includes('deepseek-chat') || model.includes('deepseek-reasoner') || model.startsWith('deepseek/');
+    if (!isDeepSeekModel) {
+      logger.warn(`[Stream Helpers] ⚠️ Modèle non DeepSeek (${model}), utilisation du modèle par défaut`);
+      return 'deepseek-chat'; // ✅ Modèle par défaut
+    }
+    return model;
+  }
+  
   const isXaiModel = model.includes('grok') && !model.includes('/');
   const isGroqModel = model.startsWith('openai/gpt-oss-') || model.includes('llama') || model.includes('moonshotai/');
   

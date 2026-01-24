@@ -18,8 +18,8 @@
 export interface GroqModelInfo {
   id: string;
   name: string;
-  category: 'gpt-oss' | 'llama' | 'qwen' | 'xai' | 'whisper' | 'tts' | 'liminality' | 'other';
-  provider?: 'groq' | 'xai' | 'liminality' | 'cerebras'; // Provider du modèle
+  category: 'gpt-oss' | 'llama' | 'qwen' | 'xai' | 'whisper' | 'tts' | 'liminality' | 'deepseek' | 'other';
+  provider?: 'groq' | 'xai' | 'liminality' | 'cerebras' | 'deepseek'; // Provider du modèle
   capabilities: string[];
   contextWindow: number;
   maxOutput: number;
@@ -176,34 +176,35 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     description: 'Multimodal avec analyse avancée d\'images (beta)'
   },
   
-  // Liminality Models (Synesia LLM Exec API)
-  // DeepSeek Models - Recommandés pour reasoning et économie
+  // DeepSeek Models - Provider direct DeepSeek
   {
-    id: 'deepseek/deepseek-chat',
+    id: 'deepseek-chat',
     name: 'DeepSeek Chat V3.2',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
+    category: 'deepseek',
+    provider: 'deepseek',
+    capabilities: ['text', 'function_calling', 'streaming'],
     contextWindow: 64000,
-    maxOutput: 8000,
+    maxOutput: 16000,
     speed: 800,
-    pricing: { input: '$0.14', output: '$0.21' },
+    pricing: { input: '$0.14', output: '$0.28' },
     description: 'DeepSeek V3.2 rapide et économique, excellent rapport qualité/prix',
     recommended: true
   },
   {
-    id: 'deepseek/deepseek-reasoner',
+    id: 'deepseek-reasoner',
     name: 'DeepSeek Reasoner V3.2',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning'],
+    category: 'deepseek',
+    provider: 'deepseek',
+    capabilities: ['text', 'function_calling', 'streaming', 'reasoning'],
     contextWindow: 64000,
-    maxOutput: 8000,
+    maxOutput: 16000,
     speed: 700,
-    pricing: { input: '$0.14', output: '$0.21' },
-    description: 'DeepSeek V3.2 avec reasoning avancé, idéal pour tâches complexes',
+    pricing: { input: '$0.14', output: '$0.28' },
+    description: 'DeepSeek V3.2 avec thinking mode (reasoning avancé), idéal pour tâches complexes',
     recommended: true
   },
+  
+  // Liminality Models (Synesia LLM Exec API)
   
   // OpenAI Models via Liminality
   {
@@ -392,6 +393,7 @@ export const LLM_MODELS = GROQ_MODELS;
  * Grouper les modèles par catégorie pour le menu déroulant
  */
 export const GROQ_MODELS_BY_CATEGORY = {
+  'DeepSeek ⚡': GROQ_MODELS.filter(m => m.category === 'deepseek'),
   'Liminality (Synesia) ⭐': GROQ_MODELS.filter(m => m.category === 'liminality'),
   'Cerebras ⚡': GROQ_MODELS.filter(m => m.provider === 'cerebras'),
   'xAI Grok (Recommandé)': GROQ_MODELS.filter(m => m.category === 'xai'),

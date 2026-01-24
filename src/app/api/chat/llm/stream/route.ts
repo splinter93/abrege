@@ -145,17 +145,42 @@ export async function POST(request: NextRequest) {
     let providerType = finalAgentConfig?.provider?.toLowerCase() || 'groq';
     let model = finalAgentConfig?.model || (providerType === 'xai' ? 'grok-4-1-fast-reasoning' : 'openai/gpt-oss-20b');
     
+    logger.info(LogCategory.API, `[Stream Route] 🔍 Configuration initiale:`, {
+      agentProvider: finalAgentConfig?.provider,
+      agentModel: finalAgentConfig?.model,
+      providerType,
+      model
+    });
+    
     // 🔍 Auto-détection du provider depuis le modèle (pour éviter incohérences)
     const { getModelInfo } = await import('@/constants/groqModels');
     const modelInfo = getModelInfo(model);
-    if (modelInfo?.provider && modelInfo.provider !== providerType) {
+    
+    // ✅ Détection supplémentaire pour DeepSeek si le modèle contient "deepseek"
+    if (!modelInfo && (model.includes('deepseek') || model.startsWith('deepseek'))) {
+      logger.warn(LogCategory.API, `[Stream Route] ⚠️ Modèle DeepSeek détecté mais non trouvé dans getModelInfo, correction automatique`, {
+        model,
+        currentProvider: providerType
+      });
+      providerType = 'deepseek';
+    } else if (modelInfo?.provider && modelInfo.provider !== providerType) {
       logger.warn(LogCategory.API, `[Stream Route] ⚠️ Correction automatique provider`, {
         from: providerType,
         to: modelInfo.provider,
-        model
+        model,
+        modelInfoId: modelInfo.id
       });
       providerType = modelInfo.provider;
     }
+    
+    // ✅ Log final pour debug
+    logger.info(LogCategory.API, `[Stream Route] 🔍 Provider sélectionné:`, {
+      providerType,
+      model,
+      modelInfoFound: !!modelInfo,
+      modelInfoProvider: modelInfo?.provider,
+      modelInfoId: modelInfo?.id
+    });
     
     // 🔍 Validation et normalisation du modèle
     model = validateAndNormalizeModel(providerType, model);
@@ -441,6 +466,9 @@ export async function POST(request: NextRequest) {
     } else if (providerType === 'cerebras') {
       const { CerebrasProvider } = await import('@/services/llm/providers/implementations/cerebras');
       provider = new CerebrasProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
+    } else if (providerType === 'deepseek') {
+      const { DeepSeekProvider } = await import('@/services/llm/providers/implementations/deepseek');
+      provider = new DeepSeekProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
     } else {
       provider = new GroqProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
     }
@@ -639,8 +667,6 @@ export async function POST(request: NextRequest) {
           const maxToolValidationRetries = 1; // ✅ Max 1 retry automatique
           
           // ✅ AUDIT : Tracker les tool calls déjà exécutés pour détecter les doublons
-          const executedToolCallsSignatures = new Set<string>();
-          
           // ✅ RECOVERY: Flag pour indiquer qu'on est dans un round final de recovery (sans tools)
           let forcedFinalRound = false;
           
@@ -768,6 +794,15 @@ export async function POST(request: NextRequest) {
                 // ✅ Accumuler tool calls (peuvent venir en plusieurs chunks)
                 if (chunk && typeof chunk === 'object' && 'tool_calls' in chunk && chunk.tool_calls && Array.isArray(chunk.tool_calls) && chunk.tool_calls.length > 0) {
                   for (const tc of chunk.tool_calls) {
+                    // ✅ VALIDATION: Filtrer les tool calls sans ID valide (chunks incomplets)
+                    if (!tc.id || tc.id.trim().length === 0) {
+                      logger.debug(LogCategory.API, `[Stream Route] ⚠️ SKIP tool call chunk sans ID valide (chunk incomplet, attendre prochain chunk)`, {
+                        hasName: !!tc.function?.name,
+                        hasArgs: !!tc.function?.arguments
+                      });
+                      continue; // ⚠️ Attendre le chunk suivant avec l'ID
+                    }
+                    
                     // Extension custom pour MCP tools (alreadyExecuted, result)
                     const mcpToolCall = tc as ToolCall & { alreadyExecuted?: boolean; result?: unknown };
                     const hasCustomProps = mcpToolCall.alreadyExecuted !== undefined || mcpToolCall.result !== undefined;
@@ -786,8 +821,8 @@ export async function POST(request: NextRequest) {
                         id: tc.id,
                         type: 'function' as const,
                         function: {
-                          name: tc.function.name || '',
-                          arguments: tc.function.arguments || ''
+                          name: tc.function?.name || '', // ⚠️ Peut être vide dans le premier chunk
+                          arguments: tc.function?.arguments || ''
                         }
                       };
                       
@@ -801,8 +836,14 @@ export async function POST(request: NextRequest) {
                         logger.error(LogCategory.API, `[Stream Route] ⚠️ Tool call ${tc.id} not found in map`, { toolCallId: tc.id });
                         continue;
                       }
-                      if (tc.function.name) existing.function.name = tc.function.name;
-                      if (tc.function.arguments) existing.function.arguments += tc.function.arguments;
+                      // ✅ Mettre à jour le nom si présent (peut arriver après l'ID dans le stream)
+                      if (tc.function?.name && tc.function.name.trim().length > 0) {
+                        existing.function.name = tc.function.name;
+                      }
+                      // ✅ Accumuler les arguments (peuvent venir en plusieurs chunks)
+                      if (tc.function?.arguments) {
+                        existing.function.arguments += tc.function.arguments;
+                      }
                     }
                   }
                 }
@@ -934,11 +975,28 @@ export async function POST(request: NextRequest) {
 
             const accumulatedToolCalls = Array.from(toolCallsMap.values());
 
+            // ✅ VALIDATION: Filtrer les tool calls invalides (id vide, name vide)
+            const validToolCalls = accumulatedToolCalls.filter((tc) => {
+              const hasValidId = tc.id && tc.id.trim().length > 0;
+              const hasValidName = tc.function?.name && tc.function.name.trim().length > 0;
+              
+              if (!hasValidId || !hasValidName) {
+                logger.warn(LogCategory.API, `[Stream Route] ⚠️ SKIP tool call invalide:`, {
+                  id: tc.id || '(vide)',
+                  name: tc.function?.name || '(vide)',
+                  hasValidId,
+                  hasValidName
+                });
+                return false;
+              }
+              return true;
+            });
+
             // ✅ Séparer les tool calls : MCP x.ai (déjà exécutés) vs autres (à exécuter)
             const alreadyExecutedTools: ToolCall[] = [];
             const toolsToExecute: ToolCall[] = [];
             
-            accumulatedToolCalls.forEach((tc) => {
+            validToolCalls.forEach((tc) => {
               if (tc.alreadyExecuted === true) {
                 alreadyExecutedTools.push(tc);
               } else {
@@ -946,27 +1004,43 @@ export async function POST(request: NextRequest) {
               }
             });
 
-            logger.debug(LogCategory.API,`[Stream Route] 🔧 Tool calls: ${alreadyExecutedTools.length} déjà exécutés (MCP x.ai), ${toolsToExecute.length} à exécuter`);
+            logger.debug(LogCategory.API,`[Stream Route] 🔧 Tool calls: ${alreadyExecutedTools.length} déjà exécutés (MCP x.ai), ${toolsToExecute.length} à exécuter (${accumulatedToolCalls.length - validToolCalls.length} invalides filtrés)`);
 
-            // ✅ Déduplication forte : ne pas exécuter deux fois le même tool (nom + args)
+            // ✅ DÉDUPLICATION SIMPLE: Utiliser uniquement l'ID (les IDs sont uniques par définition)
+            // ⚠️ IMPORTANT: On ne bloque PAS les tool calls entre les rounds - c'est normal qu'un tool soit appelé plusieurs fois dans une conversation
             const uniqueToolCalls: ToolCall[] = [];
+            const seenToolCallIds = new Set<string>(); // ✅ IDs déjà vus dans ce round uniquement
+            
             toolsToExecute.forEach((tc, index) => {
-              const signature = `${tc.function.name}:${tc.function.arguments}`;
-              const isDuplicate = executedToolCallsSignatures.has(signature);
+              // ✅ Validation
+              if (!tc.id || tc.id.trim().length === 0) {
+                logger.warn(LogCategory.API, `[Stream Route] ⚠️ SKIP tool call sans ID valide`);
+                return;
+              }
+              
+              if (!tc.function?.name || tc.function.name.trim().length === 0) {
+                logger.warn(LogCategory.API, `[Stream Route] ⚠️ SKIP tool call sans nom de fonction`);
+                return;
+              }
+
+              // ✅ Vérifier uniquement si l'ID a déjà été vu dans CE round (vrai doublon)
+              if (seenToolCallIds.has(tc.id)) {
+                logger.warn(LogCategory.API, `[Stream Route] ⚠️ DOUBLON DÉTECTÉ (même ID dans ce round) - SKIP ${tc.function.name}`, {
+                  id: tc.id,
+                  round: roundCount
+                });
+                return;
+              }
 
               logger.info(LogCategory.API, `[Stream Route] 🔧 TOOL CALL ${index + 1}:`, {
                 id: tc.id,
                 functionName: tc.function.name,
-                args: tc.function.arguments.substring(0, 100),
-                isDuplicate
+                args: (tc.function.arguments || '').substring(0, 100),
+                round: roundCount
               });
 
-              if (isDuplicate) {
-                logger.warn(LogCategory.API, `[Stream Route] ⚠️ DOUBLON DÉTECTÉ - SKIP ${tc.function.name}`);
-                return;
-              }
-
-              // ✅ N'ajoute PAS la signature ici - sera fait après le message assistant
+              // ✅ Ajouter l'ID à la liste des IDs vus dans ce round
+              seenToolCallIds.add(tc.id);
               uniqueToolCalls.push(tc);
             });
 
@@ -1061,12 +1135,6 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             if (alreadyExecutedTools.length > 0) {
               logger.info(LogCategory.API, `[Stream Route] ✅ ${alreadyExecutedTools.length} MCP tool(s) déjà exécuté(s) par x.ai - ajout résultats`);
               
-              // Ajouter les signatures MCP pour éviter de les re-exécuter
-              for (const mcpTool of alreadyExecutedTools) {
-                const signature = `${mcpTool.function.name}:${mcpTool.function.arguments}`;
-                executedToolCallsSignatures.add(signature);
-              }
-              
               // Ajouter les résultats MCP dans l'historique pour le prochain round
               for (const mcpTool of alreadyExecutedTools) {
                 // Extension custom pour MCP tools (result)
@@ -1109,12 +1177,6 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                 toolCount: uniqueToolCalls.length,
                 timestamp: Date.now()
               });
-            }
-
-            // ✅ Ajouter les signatures des OpenAPI tools AVANT exécution (pour éviter doublons)
-            for (const tc of uniqueToolCalls) {
-              const signature = `${tc.function.name}:${tc.function.arguments}`;
-              executedToolCallsSignatures.add(signature);
             }
 
             if (!userToken) {

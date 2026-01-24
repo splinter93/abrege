@@ -412,63 +412,144 @@ export class CerebrasProvider extends BaseProvider implements LLMProvider {
 
   /**
    * Convertit les ChatMessage vers le format API Cerebras
+   * ⚠️ CRITIQUE: Cerebras REQUIS qu'un message 'tool' soit précédé d'un message 'assistant' avec 'tool_calls'
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): CerebrasMessage[] {
-    return messages.map((msg) => {
+    const result: CerebrasMessage[] = [];
+    
+    for (let i = 0; i < messages.length; i++) {
+      const msg = messages[i];
+      
+      // ✅ Gérer les messages assistant
+      if (msg.role === 'assistant') {
+        const assistantMsg = msg as import('@/types/chat').AssistantMessage;
+        
+        // ✅ CRITIQUE: Si tool_calls existe, vérifier s'ils sont résolus
+        if (assistantMsg.tool_calls && assistantMsg.tool_calls.length > 0) {
+          // ✅ Cas 1: tool_results présents dans le champ → tool_calls résolus
+          if (assistantMsg.tool_results && assistantMsg.tool_results.length > 0) {
+            // ✅ Envoyer assistant SANS tool_calls (les tool_results suivent)
+            const assistantMessage: CerebrasMessage = {
+              role: 'assistant',
+              content: typeof msg.content === 'string' ? msg.content : null
+            };
+            result.push(assistantMessage);
+            
+            // ✅ Transformer tool_results en messages tool
+            for (const toolResult of assistantMsg.tool_results) {
+              result.push({
+                role: 'tool',
+                tool_call_id: toolResult.tool_call_id,
+                content: typeof toolResult.content === 'string' 
+                  ? toolResult.content 
+                  : JSON.stringify(toolResult.content ?? null)
+              });
+            }
+            
+            logger.dev(`[CerebrasProvider] ✅ Message assistant avec ${assistantMsg.tool_results.length} tool_results (dans champ)`);
+            continue;
+          }
+          
+          // ✅ Cas 2: Pas de tool_results dans le champ → vérifier s'il y a des messages tool qui suivent
+          const followingToolMessages: ChatMessage[] = [];
+          let j = i + 1;
+          while (j < messages.length && messages[j].role === 'tool') {
+            followingToolMessages.push(messages[j]);
+            j++;
+          }
+          
+          // ✅ Si des messages tool suivent → tool_calls résolus (messages tool séparés)
+          if (followingToolMessages.length > 0) {
+            // ✅ Envoyer assistant AVEC tool_calls
+            const assistantMessage: CerebrasMessage = {
+              role: 'assistant',
+              content: typeof msg.content === 'string' ? msg.content : null,
+              tool_calls: assistantMsg.tool_calls.map(tc => ({
+                id: tc.id,
+                type: 'function' as const,
+                function: {
+                  name: tc.function?.name || '',
+                  arguments: tc.function?.arguments || ''
+                }
+              }))
+            };
+            result.push(assistantMessage);
+            
+            // ✅ Envoyer les messages tool qui suivent
+            for (const toolMsg of followingToolMessages) {
+              if (toolMsg.role !== 'tool') {
+                continue;
+              }
+              
+              const toolMessage = toolMsg as import('@/types/chat').ToolMessage;
+              const toolCallId = toolMessage.tool_call_id;
+              if (!toolCallId) {
+                logger.warn(`[CerebrasProvider] ⚠️ Message tool sans tool_call_id, SKIP`);
+                continue;
+              }
+              
+              result.push({
+                role: 'tool',
+                tool_call_id: toolCallId,
+                content: typeof toolMessage.content === 'string' 
+                  ? toolMessage.content 
+                  : (typeof toolMessage.content === 'object' && toolMessage.content !== null 
+                    ? JSON.stringify(toolMessage.content) 
+                    : String(toolMessage.content ?? ''))
+              });
+            }
+            
+            // ✅ Avancer l'index pour skip les messages tool qu'on vient de traiter
+            i = j - 1; // -1 car le for va incrémenter
+            
+            logger.dev(`[CerebrasProvider] ✅ Message assistant avec ${assistantMsg.tool_calls.length} tool_calls + ${followingToolMessages.length} messages tool séparés`);
+            continue;
+          }
+          
+          // ✅ Cas 3: Pas de tool_results ET pas de messages tool suivants → SKIP (appel en cours)
+          logger.warn(`[CerebrasProvider] ⚠️ SKIP message assistant avec ${assistantMsg.tool_calls.length} tool_calls non résolus (pas de tool_results ni messages tool suivants)`);
+          continue;
+        }
+        
+        // ✅ Message assistant sans tool_calls : envoyer normalement
+        const assistantMessage: CerebrasMessage = {
+          role: 'assistant',
+          content: typeof msg.content === 'string' ? msg.content : null
+        };
+        result.push(assistantMessage);
+        continue;
+      }
+      
+      // ✅ Gérer les messages tool : uniquement s'ils ne sont pas déjà traités (après un assistant)
+      // Les messages tool sont normalement traités avec leur assistant précédent
+      // Mais on peut avoir des messages tool orphelins (sans assistant précédent) → on les skip
+      if (msg.role === 'tool') {
+        // ✅ Vérifier si le message précédent dans result est un assistant avec tool_calls
+        const lastResult = result[result.length - 1];
+        const isAfterAssistantWithToolCalls = lastResult?.role === 'assistant' && lastResult.tool_calls && lastResult.tool_calls.length > 0;
+        
+        if (!isAfterAssistantWithToolCalls) {
+          logger.warn(`[CerebrasProvider] ⚠️ SKIP message tool orphelin (pas d'assistant avec tool_calls précédent)`);
+          continue;
+        }
+        // Sinon, le message tool a déjà été traité avec son assistant précédent
+        continue;
+      }
+      
+      // ✅ Messages user et system : envoyer normalement
       const messageObj: CerebrasMessage = {
-        role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
+        role: msg.role as 'user' | 'system',
         content: typeof msg.content === 'string' ? msg.content : null
       };
-
-      // ✅ Gérer les tool calls pour les messages assistant
-      // Conversion explicite vers le type ToolCall de strictTypes
-      if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
-        if (!msg.tool_results || msg.tool_results.length === 0) {
-          messageObj.tool_calls = msg.tool_calls.map(tc => ({
-            id: tc.id,
-            type: 'function' as const,
-            function: {
-              name: tc.function?.name || '',
-              arguments: tc.function?.arguments || ''
-            }
-          }));
-        } else {
-          logger.warn(`[CerebrasProvider] ⚠️ Skipping tool_calls (already resolved with ${msg.tool_results.length} results)`);
-        }
-      }
-
-      // ✅ Gérer les tool results pour les messages tool (format Cerebras)
-      // Documentation: role: "tool", tool_call_id: string, content: string
-      if (msg.role === 'tool') {
-        const toolCallId = msg.tool_call_id;
-        
-        if (!toolCallId) {
-          logger.warn(`[CerebrasProvider] ⚠️ Message tool sans tool_call_id, SKIP`);
-          return null;
-        }
-        
-        messageObj.tool_call_id = toolCallId;
-        
-        // ✅ Convertir content en string (Cerebras attend une string)
-        // Le content peut être JSON stringifié si c'est un objet
-        if (typeof msg.content === 'object' && msg.content !== null) {
-          messageObj.content = JSON.stringify(msg.content);
-        } else if (typeof msg.content === 'string') {
-          messageObj.content = msg.content;
-        } else {
-          messageObj.content = String(msg.content ?? '');
-        }
-        
-        // ✅ Note: Cerebras n'utilise PAS le champ 'name' pour les messages tool
-        // Seul tool_call_id est requis
-      }
-
-      return messageObj;
-    }).filter((msg): msg is CerebrasMessage => msg !== null);
+      result.push(messageObj);
+    }
+    
+    return result;
   }
 
   /**
    * Prépare les messages pour l'API
+   * ⚠️ Utilise convertChatMessagesToApiFormat pour gérer correctement tool_calls et tool messages
    */
   private prepareMessages(message: string, context: AppContext, history: ChatMessage[]): CerebrasMessage[] {
     const messages: CerebrasMessage[] = [];
@@ -480,54 +561,10 @@ export class CerebrasProvider extends BaseProvider implements LLMProvider {
       content: systemContent
     });
 
-    // Historique des messages
-    for (const msg of history) {
-      const messageObj: CerebrasMessage = {
-        role: msg.role as 'user' | 'assistant' | 'system' | 'tool',
-        content: typeof msg.content === 'string' ? msg.content : null
-      };
-
-      // ✅ Gérer les tool calls pour les messages assistant
-      // Conversion explicite vers le type ToolCall de strictTypes
-      if (msg.role === 'assistant' && msg.tool_calls && msg.tool_calls.length > 0) {
-        messageObj.tool_calls = msg.tool_calls.map(tc => ({
-          id: tc.id,
-          type: 'function' as const,
-          function: {
-            name: tc.function?.name || '',
-            arguments: tc.function?.arguments || ''
-          }
-        }));
-      }
-
-      // ✅ Gérer les tool results pour les messages tool (format Cerebras conforme)
-      if (msg.role === 'tool' && msg.tool_call_id) {
-        messageObj.tool_call_id = msg.tool_call_id;
-        // ✅ Convertir content en string si nécessaire
-        if (typeof msg.content === 'object' && msg.content !== null) {
-          messageObj.content = JSON.stringify(msg.content);
-        }
-        // ✅ Note: Cerebras n'utilise PAS le champ 'name' pour les messages tool
-      }
-
-      messages.push(messageObj);
-
-      // ✅ Transformer `tool_results` en messages `tool` séparés (format Cerebras conforme)
-      // Documentation: role: "tool", tool_call_id: string, content: string (pas de name)
-      if (msg.role === 'assistant' && msg.tool_results && msg.tool_results.length > 0) {
-        for (const result of msg.tool_results) {
-          messages.push({
-            role: 'tool',
-            tool_call_id: result.tool_call_id,
-            // ✅ Content doit être une string (JSON stringifié si objet)
-            content: typeof result.content === 'string' 
-              ? result.content 
-              : JSON.stringify(result.content ?? null)
-            // ✅ Pas de champ 'name' selon la doc Cerebras
-          });
-        }
-      }
-    }
+    // ✅ Utiliser convertChatMessagesToApiFormat pour gérer correctement tool_calls et tool messages
+    // Cette méthode gère déjà les tool_results et les messages tool séparés
+    const historyMessages = this.convertChatMessagesToApiFormat(history);
+    messages.push(...historyMessages);
 
     // Message utilisateur actuel
     messages.push({
