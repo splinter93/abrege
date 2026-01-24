@@ -137,8 +137,12 @@ export function useInputDetection({
     if (lastAtIndex !== -1) {
       const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
       
-      if (textAfterAt.includes(' ') || textAfterAt.includes('\n')) {
-        // Fermer mention menu si espace/newline après @
+      // ✅ Tolérer 1 espace pour recherche, fermer si 2 espaces consécutifs ou newline
+      const hasDoubleSpace = textAfterAt.includes('  '); // 2 espaces consécutifs
+      const hasNewline = textAfterAt.includes('\n');
+      
+      if (hasDoubleSpace || hasNewline) {
+        // Fermer mention menu si 2 espaces consécutifs ou newline après @
         if (showMentionMenu) {
           setShowMentionMenu(false);
           setMentionSearchQuery('');
