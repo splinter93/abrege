@@ -42,7 +42,7 @@ export default function AgentsV2Page() {
 
 function AgentsV2Content() {
   const { user, loading: authLoading } = useAuth();
-  const { agents, loading, error, loadAgents } = useSpecializedAgents();
+  const { agents, loading, error, loadAgents, deleteAgent } = useSpecializedAgents();
   const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -509,6 +509,24 @@ function AgentsV2Content() {
     [agentCallables]
   );
 
+  const handleDeleteAgent = useCallback(
+    async (agent: SpecializedAgentConfig) => {
+      const name = agent.display_name || agent.name || 'cet agent';
+      if (!window.confirm(`Supprimer l'agent « ${name} » ?`)) {
+        return;
+      }
+      try {
+        const ok = await deleteAgent(agent.id);
+        if (ok && selectedAgent?.id === agent.id) {
+          handleCloseModal();
+        }
+      } catch (e) {
+        simpleLogger.error('[AgentsV2] Failed to delete agent', e);
+      }
+    },
+    [deleteAgent, selectedAgent, handleCloseModal]
+  );
+
   if (authLoading || !user?.id) {
     return (
       <div className="page-wrapper">
@@ -597,9 +615,7 @@ function AgentsV2Content() {
                     onToggle={() => {
                       // TODO: hook toggle (reprendre logique prompts)
                     }}
-                    onDelete={() => {
-                      // TODO: suppression depuis modal
-                    }}
+                    onDelete={() => handleDeleteAgent(agent)}
                   />
                 ))}
               </div>
@@ -644,7 +660,7 @@ function AgentsV2Content() {
                           onToggleFavorite={() => {}}
                           onSave={handleSaveAgent}
                           onCancel={handleCancelChanges}
-                          onDelete={handleCloseModal}
+                          onDelete={() => selectedAgent && handleDeleteAgent(selectedAgent)}
                           onUpdateField={handleFieldUpdate}
                           onOpenChat={() => {
                             if (!selectedAgent) return;
