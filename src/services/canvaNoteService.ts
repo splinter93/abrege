@@ -106,8 +106,30 @@ export class CanvaNoteService {
       await this.ensureChatSessionOwnership(chatSessionId, userId, client);
       const noteTitle = options?.title || this.generateDefaultTitle();
       const initialContent = options?.initialContent || '';
-      const targetClasseurId = options?.classeurId ?? null;
-      const targetFolderId = options?.folderId ?? null;
+      let targetClasseurId = options?.classeurId ?? null;
+      let targetFolderId = options?.folderId ?? null;
+
+      // Si aucun classeur spécifié, utiliser Quicknotes > dossier Canvas
+      if (!targetClasseurId && !targetFolderId) {
+        try {
+          const { getOrCreateQuicknotesFoldersServer } = await import(
+            '@/utils/quicknotesUtils'
+          );
+          const quicknotesFolders = await getOrCreateQuicknotesFoldersServer(userId, client);
+          targetClasseurId = quicknotesFolders.quicknotesClasseurId;
+          targetFolderId = quicknotesFolders.canvasFolderId;
+          logger.info(LogCategory.EDITOR, '[CanvaNoteService] Utilisation Quicknotes > Canvas', {
+            classeurId: targetClasseurId,
+            folderId: targetFolderId,
+          });
+        } catch (err) {
+          logger.warn(LogCategory.EDITOR, '[CanvaNoteService] Erreur Quicknotes, note orpheline', {
+            error: err instanceof Error ? err.message : String(err),
+          });
+          // Continuer avec null (note orpheline) si Quicknotes non disponible
+        }
+      }
+
       const sessionMetadata = options?.metadata ?? {};
 
       logger.info(LogCategory.EDITOR, '[CanvaNoteService] Creating canva note', {

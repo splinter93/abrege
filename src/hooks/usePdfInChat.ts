@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { SelectedNote } from './useNotesLoader';
 import { hybridPdfParserService, validatePdfFile } from '@/services/hybridPdfParserService';
 import { V2UnifiedApi } from '@/services/V2UnifiedApi';
+import { getOrCreateQuicknotesFolders } from '@/utils/quicknotesUtils';
 
 interface UsePdfInChatOptions {
   setSelectedNotes: React.Dispatch<React.SetStateAction<SelectedNote[]>>;
@@ -69,6 +70,17 @@ export function usePdfInChat({ setSelectedNotes }: UsePdfInChatOptions) {
         return;
       }
 
+      // Récupérer ou créer Quicknotes et dossier PDF
+      let quicknotesFolders;
+      try {
+        quicknotesFolders = await getOrCreateQuicknotesFolders();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setPdfError(`Erreur Quicknotes: ${message}`);
+        setIsParsingPdf(false);
+        return;
+      }
+
       const v2Api = V2UnifiedApi.getInstance();
 
       for (const file of pdfFiles) {
@@ -102,13 +114,14 @@ export function usePdfInChat({ setSelectedNotes }: UsePdfInChatOptions) {
           const markdown =
             parseResult.data.fullMarkdown ?? parseResult.data.fullText ?? '';
 
-          // Note orpheline (sans classeur) : API accepte notebook_id null/omis
+          // Note dans Quicknotes > dossier PDF
           // Exception justifiée : CreateNoteData requiert notebook_id: string mais l'API v2/note/create
           // accepte null (validé par Zod schema). Le type TypeScript ne reflète pas cette flexibilité.
           const createPayload = {
             source_title: title,
             markdown_content: markdown,
-            notebook_id: null,
+            notebook_id: quicknotesFolders.quicknotesClasseurId,
+            folder_id: quicknotesFolders.pdfFolderId,
           } as unknown as Parameters<typeof v2Api.createNote>[0];
 
           const createResult = await v2Api.createNote(createPayload);
