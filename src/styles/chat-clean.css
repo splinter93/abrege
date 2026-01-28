@@ -2142,6 +2142,12 @@ body.chat-font-manrope-active .chatgpt-message-bubble-user {
   padding-top: 0;
 }
 
+.chatgpt-input-parsing-pdf {
+  font-size: 12px;
+  color: var(--chat-text-secondary);
+  white-space: nowrap;
+}
+
 .chatgpt-input-mention,
 .chatgpt-input-file,
 .chatgpt-input-speaker,

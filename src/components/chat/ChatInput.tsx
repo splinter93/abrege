@@ -15,6 +15,7 @@ import { useNotesLoader, type NoteWithContent } from '@/hooks/useNotesLoader';
 import { useNoteSearch } from '@/hooks/useNoteSearch';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { useChatInputHandlers } from '@/hooks/useChatInputHandlers';
+import { usePdfInChat } from '@/hooks/usePdfInChat';
 import { useMultipleMenusClickOutside } from '@/hooks/useMenuClickOutside';
 import { useInputDetection } from '@/hooks/useInputDetection';
 import { useChatSend } from '@/hooks/useChatSend';
@@ -112,6 +113,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
     handleRemoveNote,
     loadRecentNotes
   } = useNoteSearch({ getAccessToken });
+
+  // 🎯 Hook PDF dans le chat (parse → note → attach)
+  const { handlePdfFiles, isParsingPdf, pdfError, clearPdfError } = usePdfInChat({
+    setSelectedNotes,
+  });
   
   // 🎯 Hook upload images
   const {
@@ -130,7 +136,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     handleDrop,
     handleCameraCapture,
     openCamera
-  } = useImageUpload({ sessionId });
+  } = useImageUpload({ sessionId, onPdfDrop: handlePdfFiles });
   
   // 🎯 Hook état local (nouveau)
   const {
@@ -201,7 +207,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
     openCamera,
     processAndUploadImage,
     usedPrompts,
-    setUsedPrompts
+    setUsedPrompts,
+    onPdfFiles: handlePdfFiles,
   });
 
   // Handler pour ouvrir le file picker Scrivia
@@ -437,8 +444,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
       <ChatInputContent
         message={message} onChange={handleInputChange} onKeyDown={handleKeyDown}
         placeholder={placeholder} textareaRef={textareaRef}
-        audioError={audioError} uploadError={uploadError}
-        onClearErrors={() => { setAudioError(null); setUploadError(null); }}
+        audioError={audioError} uploadError={uploadError || pdfError}
+        onClearErrors={() => { setAudioError(null); setUploadError(null); clearPdfError(); }}
         images={images} onRemoveImage={removeImage}
         selectedNotes={selectedNotes} onRemoveNote={handleRemoveNote}
         mentions={mentions} onRemoveMention={(id) => setMentions(mentions.filter(m => m.id !== id))}
@@ -489,7 +496,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onTranscriptionComplete={handleTranscriptionComplete} onAudioError={setAudioError}
         audioRecorderRef={audioRecorderRef}
         onSend={handleSend} canSend={!!message.trim() || images.length > 0}
-        disabled={disabled} loading={loading}
+        disabled={disabled || isParsingPdf} loading={loading || isParsingPdf}
+        isParsingPdf={isParsingPdf}
       />
 
       <PromptArgumentsModal

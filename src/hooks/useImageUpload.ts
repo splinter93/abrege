@@ -12,6 +12,8 @@ import { chatImageUploadService } from '@/services/chatImageUploadService';
 
 interface UseImageUploadOptions {
   sessionId: string;
+  /** Si fourni, les PDFs déposés sont passés à ce callback (parse → note → chat) */
+  onPdfDrop?: (files: File[]) => void | Promise<void>;
 }
 
 // Constantes de validation (utilise les limites centralisées)
@@ -22,7 +24,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'ima
  * Hook useImageUpload
  * Gère l'upload d'images avec preview instantané et upload S3 asynchrone
  */
-export function useImageUpload({ sessionId }: UseImageUploadOptions) {
+export function useImageUpload({ sessionId, onPdfDrop }: UseImageUploadOptions) {
   const [images, setImages] = useState<ImageAttachment[]>([]);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -146,18 +148,24 @@ export function useImageUpload({ sessionId }: UseImageUploadOptions) {
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    const pdfFiles = files.filter(
+      (f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')
+    );
+    const imageFiles = files.filter((file) => file.type.startsWith('image/'));
 
-    if (imageFiles.length === 0) {
-      setUploadError('Seules les images sont acceptées');
+    if (pdfFiles.length > 0 && onPdfDrop) {
+      await onPdfDrop(pdfFiles);
+    }
+    if (imageFiles.length > 0) {
+      for (const file of imageFiles) {
+        await processAndUploadImage(file);
+      }
+    }
+    if (pdfFiles.length === 0 && imageFiles.length === 0) {
+      setUploadError('Déposez des images ou des PDF');
       setTimeout(() => setUploadError(null), 3000);
-      return;
     }
-
-    for (const file of imageFiles) {
-      await processAndUploadImage(file);
-    }
-  }, [processAndUploadImage]);
+  }, [processAndUploadImage, onPdfDrop]);
 
   /**
    * Handler pour capturer une photo

@@ -67,6 +67,8 @@ interface ChatInputToolbarProps {
   // UI state
   disabled?: boolean;
   loading?: boolean;
+  /** True pendant le parsing PDF (affiche "Parsing PDF...") */
+  isParsingPdf?: boolean;
 }
 
 /**
@@ -126,7 +128,8 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
   
   // UI state
   disabled = false,
-  loading = false
+  loading = false,
+  isParsingPdf = false
 }) => {
   // ✅ État local pour tracking de l'enregistrement audio
   const [isRecording, setIsRecording] = useState(false);
@@ -254,6 +257,11 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
         disabled={disabled}
       />
       
+      {isParsingPdf && (
+        <span className="chatgpt-input-parsing-pdf" aria-live="polite">
+          Parsing PDF...
+        </span>
+      )}
       <button 
         onClick={onSend} 
         disabled={!canSend || loading || disabled || isRecording}

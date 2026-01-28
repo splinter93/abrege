@@ -16,8 +16,8 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3000/api/v2",
-      "description": "Local development"
+      "url": "https://scrivia.app/api/v2",
+      "description": "Production server"
     }
   ],
   "security": [
@@ -76,7 +76,7 @@
       "post": {
         "operationId": "createNote",
         "summary": "Créer une nouvelle note",
-        "description": "Créer une nouvelle note structurée dans un classeur spécifique",
+        "description": "Créer une nouvelle note structurée dans un classeur spécifique. IMPORTANT: Ne pas inclure de H1 dans le body/content. Le champ source_title sert de H1.",
         "tags": ["Notes"],
         "security": [{"ApiKeyAuth": []}],
         "requestBody": {
@@ -151,7 +151,7 @@
       "put": {
         "operationId": "updateNote",
         "summary": "Mettre à jour une note",
-        "description": "Met à jour le contenu et les métadonnées d'une note existante",
+        "description": "Met à jour le contenu et les métadonnées d'une note existante. IMPORTANT: Ne pas inclure de H1 dans le body/content. Le champ source_title sert de H1.",
         "tags": ["Notes"],
         "security": [{"ApiKeyAuth": []}],
         "parameters": [
@@ -487,7 +487,7 @@
       "post": {
         "operationId": "applyContentOperations",
         "summary": "Appliquer des opérations de contenu",
-        "description": "Applique des opérations de contenu sur une note (insert, replace, delete, upsert_section) avec précision chirurgicale",
+        "description": "Applique des opérations de contenu sur une note (insert, replace, delete, upsert_section) avec précision chirurgicale. IMPORTANT: Ne pas inclure de H1 dans le body/content. Le champ source_title sert de H1.",
         "tags": ["Notes"],
         "security": [{"ApiKeyAuth": []}],
         "parameters": [
@@ -796,7 +796,7 @@
       "post": {
         "operationId": "editNoteContent",
         "summary": "Appliquer opérations avec streaming automatique",
-        "description": "Applique des opérations de contenu avec streaming automatique si canva/éditeur ouvert. Identique à content:apply mais stream le résultat progressivement si un canva avec status='open' existe pour cette note.",
+        "description": "Applique des opérations de contenu avec streaming automatique si canva/éditeur ouvert. Identique à content:apply mais stream le résultat progressivement si un canva avec status='open' existe pour cette note. IMPORTANT: Ne pas inclure de H1 dans le body/content. Le champ source_title sert de H1.",
         "tags": ["Notes"],
         "security": [{"ApiKeyAuth": []}],
         "parameters": [

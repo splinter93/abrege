@@ -21,6 +21,8 @@ interface UseChatInputHandlersOptions {
   processAndUploadImage: (file: File) => Promise<boolean>;
   usedPrompts: PromptMention[]; // ✅ NOUVEAU : Liste des prompts utilisés
   setUsedPrompts: React.Dispatch<React.SetStateAction<PromptMention[]>>; // ✅ NOUVEAU
+  /** Si fourni, "Charger un fichier" ouvre le sélecteur PDF et appelle ce callback */
+  onPdfFiles?: (files: File[]) => void | Promise<void>;
 }
 
 /**
@@ -37,7 +39,8 @@ export function useChatInputHandlers({
   openCamera,
   processAndUploadImage,
   usedPrompts,
-  setUsedPrompts
+  setUsedPrompts,
+  onPdfFiles
 }: UseChatInputHandlersOptions) {
   
   // File Menu handlers
@@ -48,8 +51,22 @@ export function useChatInputHandlers({
 
   const handleLoadFile = useCallback(() => {
     closeMenu();
-    logger.dev('[ChatInput] Load file - TODO');
-  }, [closeMenu]);
+    if (!onPdfFiles) {
+      logger.dev('[ChatInput] Load file - PDF non configuré');
+      return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,application/pdf';
+    input.multiple = true;
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (files && files.length > 0) {
+        onPdfFiles(Array.from(files));
+      }
+    };
+    input.click();
+  }, [closeMenu, onPdfFiles]);
 
   const handleTakePhoto = useCallback(() => {
     closeMenu();
