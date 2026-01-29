@@ -1,7 +1,7 @@
 /**
- * Rétrocompat : délègue au provider PDF (même logique que /api/pdf/parse).
- * GET retourne le format legacy { service, upstream } pour d'éventuels anciens clients.
- * À terme : déprécier et rediriger les clients vers /api/pdf/parse.
+ * Route unique pour le parsing PDF.
+ * GET = health check du provider configuré, POST = parse PDF.
+ * Délègue au provider (env PDF_PARSER_PROVIDER).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -17,7 +17,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/pdf/hybrid-parse-v4 — health check (format legacy avec service/upstream).
+ * GET /api/pdf/parse — health check du provider configuré.
  */
 export async function GET(_request: NextRequest): Promise<NextResponse> {
   const authResult = await getAuthenticatedUser(_request);
@@ -31,28 +31,21 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
   try {
     const provider = getPdfParserProvider();
     const result = await provider.healthCheck();
-    const normalized = {
-      service: 'Hybrid PDF Parser V4',
-      upstream: {
-        status: result.status,
-        services: result.services ?? { pdfParse: false, pdfPlumber: false },
-        version: '1.0.0',
-      },
-    };
-    return NextResponse.json(normalized);
+    return NextResponse.json(result);
   } catch (err) {
-    logger.error(LogCategory.API, '[hybrid-parse-v4] GET error', {
+    logger.error(LogCategory.API, '[api/pdf/parse] GET error', {
       error: err instanceof Error ? err.message : String(err),
     });
     return NextResponse.json(
-      { service: 'Hybrid PDF Parser V4', status: 'degraded', error: 'Service unavailable' },
+      { status: 'down', error: 'Service unavailable' },
       { status: 502 }
     );
   }
 }
 
 /**
- * POST /api/pdf/hybrid-parse-v4 — parse PDF (délègue au provider).
+ * POST /api/pdf/parse — parse PDF via le provider configuré.
+ * Body: FormData avec champ "file". Query: result_type, split_by_page, preset, include_tables.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const authResult = await getAuthenticatedUser(request);
@@ -92,7 +85,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       status: result.success ? 200 : 400,
     });
   } catch (err) {
-    logger.error(LogCategory.API, '[hybrid-parse-v4] POST error', {
+    logger.error(LogCategory.API, '[api/pdf/parse] POST error', {
       error: err instanceof Error ? err.message : String(err),
     });
     return NextResponse.json(

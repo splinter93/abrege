@@ -8,7 +8,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { chatSuccess } from '@/utils/chatToast';
 import { useAuth } from '@/hooks/useAuth';
 import type { SelectedNote } from './useNotesLoader';
-import { hybridPdfParserService, validatePdfFile } from '@/services/hybridPdfParserService';
+import { pdfParserService, validatePdfFile } from '@/features/pdf-parsing';
 import { V2UnifiedApi } from '@/services/V2UnifiedApi';
 import { getOrCreateQuicknotesFolders } from '@/utils/quicknotesUtils';
 
@@ -91,7 +91,7 @@ export function usePdfInChat({ setSelectedNotes }: UsePdfInChatOptions) {
         }
 
         try {
-          const parseResult = await hybridPdfParserService.parse(
+          const parseResult = await pdfParserService.parse(
             file,
             {
               resultType: 'markdown',
