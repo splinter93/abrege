@@ -51,13 +51,14 @@ export async function POST(request: NextRequest) {
     const validation = llmStreamRequestSchema.safeParse(body);
     
     if (!validation.success) {
+      const fieldErrors = validation.error.flatten().fieldErrors;
       logger.warn(LogCategory.API, '[Stream Route] ❌ Validation failed', {
         errors: validation.error.format()
       });
       return new Response(
-        JSON.stringify({ 
-          error: 'Validation failed', 
-          details: validation.error.flatten().fieldErrors 
+        JSON.stringify({
+          error: 'Validation échouée. Vérifiez que le message et la session sont valides.',
+          details: fieldErrors
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );

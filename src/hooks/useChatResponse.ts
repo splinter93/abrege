@@ -130,8 +130,15 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
             });
 
             if (!fetchResponse.ok) {
-              // Créer une NetworkError typée pour le retry service
-              const error = networkRetryService.createNetworkError(fetchResponse);
+              const errorData = (await fetchResponse.json().catch(() => ({}))) as { error?: string };
+              const message =
+                typeof errorData?.error === 'string'
+                  ? errorData.error
+                  : `HTTP ${fetchResponse.status}: ${fetchResponse.statusText}`;
+              const error = networkRetryService.createNetworkError(
+                fetchResponse,
+                new Error(message)
+              );
               throw error;
             }
 
@@ -196,8 +203,15 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           });
 
           if (!fetchResponse.ok) {
-            // Créer une NetworkError typée pour le retry service
-            const error = networkRetryService.createNetworkError(fetchResponse);
+            const errorData = (await fetchResponse.json().catch(() => ({}))) as { error?: string };
+            const message =
+              typeof errorData?.error === 'string'
+                ? errorData.error
+                : `HTTP ${fetchResponse.status}: ${fetchResponse.statusText}`;
+            const error = networkRetryService.createNetworkError(
+              fetchResponse,
+              new Error(message)
+            );
             throw error;
           }
 

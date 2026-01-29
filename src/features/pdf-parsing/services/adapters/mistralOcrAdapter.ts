@@ -211,20 +211,17 @@ export class MistralOcrAdapter implements IPdfParserProvider {
 
     let fileId: string;
     try {
-      const buffer = await file.arrayBuffer();
-      const base64 = Buffer.from(buffer).toString('base64');
+      const form = new FormData();
+      form.append('file', file, fileName);
+      form.append('purpose', 'ocr');
 
       const uploadRes = await fetch(MISTRAL_FILES_URL, {
         method: 'POST',
         signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
         headers: {
           Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          file: { content: base64, fileName },
-          purpose: 'ocr',
-        }),
+        body: form,
       });
 
       const uploadData = (await uploadRes.json()) as MistralFileUploadResponse;
@@ -257,7 +254,7 @@ export class MistralOcrAdapter implements IPdfParserProvider {
     return this.callOcr(apiKey, { type: 'file', file_id: fileId }, options, fileId);
   }
 
-  /** Parse un document à partir d'une URL publique (DocumentURLChunk). */
+  /** Parse un document à partir d'une URL publique (DocumentURLChunk). Doc Mistral : document_url est une chaîne. */
   private async parseFromUrl(
     apiKey: string,
     url: string,
@@ -266,7 +263,7 @@ export class MistralOcrAdapter implements IPdfParserProvider {
     const requestId = `url-${url.slice(0, 40)}`;
     return this.callOcr(
       apiKey,
-      { type: 'document_url', document_url: { url } },
+      { type: 'document_url', document_url: url },
       options,
       requestId
     );
@@ -276,7 +273,7 @@ export class MistralOcrAdapter implements IPdfParserProvider {
     apiKey: string,
     document:
       | { type: 'file'; file_id: string }
-      | { type: 'document_url'; document_url: { url: string } },
+      | { type: 'document_url'; document_url: string },
     options: PdfParseOptions,
     requestId: string
   ): Promise<PdfParseResult> {
