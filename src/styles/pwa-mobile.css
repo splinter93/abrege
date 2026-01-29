@@ -60,11 +60,11 @@ html, body {
     background: #000000 !important;
   }
   
-  /* Safe areas sur le container */
+  /* Safe areas sur le container : pas de padding-bottom pour éviter la bande vide sous l'input.
+   * La barre d'input (position: fixed; bottom: 0) gère la safe-area en padding interne. */
   .chatgpt-container {
     background: #000000 !important;
     padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
     box-sizing: border-box;
@@ -170,9 +170,9 @@ button, a, input, textarea, select {
    ======================================== */
 
 @media (display-mode: standalone) {
-  /* App installée - Safe areas prioritaires */
+  /* App installée - Fond noir pour éviter toute bande visible sous l'input */
   body {
-    background: var(--color-bg-primary);
+    background: #000000 !important;
   }
   
   /* Empêcher le pull-to-refresh natif (Android) */

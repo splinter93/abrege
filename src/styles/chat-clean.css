@@ -1159,7 +1159,7 @@ body.chat-theme-glass .chatgpt-header {
 @media (max-width: 1023px) {
   .chatgpt-container {
     padding-top: var(--chat-safe-top);
-    padding-bottom: var(--chat-safe-bottom);
+    /* Pas de padding-bottom : la barre d'input fixe en bas remplit jusqu'au bord (safe-area en padding interne) */
     padding-left: var(--chat-safe-left);
     padding-right: var(--chat-safe-right);
     box-sizing: border-box;
