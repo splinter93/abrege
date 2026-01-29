@@ -21,7 +21,7 @@ Les types canoniques (`PdfParseOptions`, `PdfParseResult`, `PdfParserHealthResul
 
 - `types/` — types canoniques (domaine)
 - `services/contract.ts` — interface `IPdfParserProvider`
-- `services/adapters/` — implémentations (Railway, etc.)
+- `services/adapters/` — implémentations (Railway, Mistral OCR, etc.)
 - `services/getPdfParserProvider.ts` — factory (env `PDF_PARSER_PROVIDER`)
 - `services/pdfParserClient.ts` — client navigateur (appelle `/api/pdf/parse`)
 - `validation/` — schéma Zod pour les query params de la route

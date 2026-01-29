@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, User, Bell, Palette, Link2, Calendar, Database, Lock, Users, UserCircle, Moon, Sun, Sparkles, Circle, Info, Flame, Snowflake, Zap } from 'lucide-react';
+import { X, User, Bell, Palette, Link2, Calendar, Database, Lock, Users, UserCircle, Moon, Sun, Sparkles, Circle, Info, Flame, Snowflake, Zap, FileText } from 'lucide-react';
 import { useTheme, type ChatTheme } from '@/hooks/useTheme';
 import { useChatStore } from '@/store/useChatStore';
 import {
@@ -43,6 +43,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   // Font state (Manrope par défaut)
   const [selectedFont, setSelectedFont] = useState<string>('manrope');
   const [selectedColorPalette, setSelectedColorPalette] = useState<string>('soft-dark');
+  // PDF Parser (General) : railway = Hybrid Parser v4, mistral = Mistral OCR
+  const [selectedPdfParser, setSelectedPdfParser] = useState<string>('railway');
 
   // Color palettes
   const availableColorPalettes = [
@@ -172,6 +174,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       applyChatFontPreset('manrope');
     }
 
+    const savedPdfParser = localStorage.getItem('chat-pdf-parser-preference');
+    if (savedPdfParser === 'railway' || savedPdfParser === 'mistral') {
+      setSelectedPdfParser(savedPdfParser);
+    }
+
     const savedColors = localStorage.getItem('chat-color-preference');
     if (savedColors) {
       setSelectedColorPalette(savedColors);
@@ -201,6 +208,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     setSelectedFont(presetId);
     localStorage.setItem('chat-font-preference', presetId);
     applyChatFontPreset(presetId);
+  };
+
+  const handlePdfParserChange = (value: string) => {
+    if (value !== 'railway' && value !== 'mistral') return;
+    setSelectedPdfParser(value);
+    localStorage.setItem('chat-pdf-parser-preference', value);
   };
 
   const handleColorPaletteChange = (paletteValue: string) => {
@@ -261,7 +274,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             <p className="settings-content-description">
               Configure your general preferences and application behavior.
             </p>
-            {/* Content à ajouter */}
+
+            {/* PDF Parser (chat) */}
+            <div className="settings-field">
+              <label className="settings-field-label">Parseur PDF</label>
+              <CustomSelect
+                value={selectedPdfParser}
+                options={[
+                  { value: 'railway', label: 'Hybrid Parser v4', icon: <FileText size={16} /> },
+                  { value: 'mistral', label: 'Mistral OCR', icon: <FileText size={16} /> },
+                ]}
+                onChange={handlePdfParserChange}
+              />
+            </div>
           </div>
         );
       case 'notifications':

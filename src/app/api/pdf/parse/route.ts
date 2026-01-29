@@ -45,7 +45,8 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
 
 /**
  * POST /api/pdf/parse — parse PDF via le provider configuré.
- * Body: FormData avec champ "file". Query: result_type, split_by_page, preset, include_tables.
+ * Body: FormData avec "file" (PDF) et/ou "document_url". Query: document_url, result_type, split_by_page, preset, include_tables.
+ * Mistral OCR accepte une URL (document_url) en lieu du fichier.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const authResult = await getAuthenticatedUser(request);
@@ -59,14 +60,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const formData = await request.formData();
     const file = formData.get('file');
-    if (!file || !(file instanceof Blob)) {
+    const { searchParams } = new URL(request.url);
+    const documentUrl = searchParams.get('document_url') ?? (formData.get('document_url') as string | null);
+    const hasFile = file && file instanceof Blob;
+    const hasUrl = typeof documentUrl === 'string' && documentUrl.trim().length > 0;
+    if (!hasFile && !hasUrl) {
       return NextResponse.json(
-        { success: false, error: 'Missing or invalid file field' },
+        { success: false, error: 'Missing or invalid file field. Provide a PDF file or document_url (query or form).' },
+        { status: 400 }
+      );
+    }
+    if (file && !(file instanceof Blob)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid file field' },
         { status: 400 }
       );
     }
 
-    const { searchParams } = new URL(request.url);
     const queryRaw = {
       result_type: searchParams.get('result_type') ?? undefined,
       split_by_page: searchParams.get('split_by_page') ?? undefined,
@@ -78,8 +88,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       ? queryToPdfParseOptions(parsed.data)
       : { resultType: 'markdown' as const };
     const requestQuery = searchParams.toString();
-
-    const provider = getPdfParserProvider();
+    const pdfParserOverride = searchParams.get('pdf_parser')?.trim().toLowerCase();
+    const provider = getPdfParserProvider(
+      pdfParserOverride === 'railway' || pdfParserOverride === 'mistral' ? pdfParserOverride : undefined
+    );
     const result = await provider.parse(formData, options, requestQuery);
     return NextResponse.json(result, {
       status: result.success ? 200 : 400,
