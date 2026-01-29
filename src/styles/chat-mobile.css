@@ -29,28 +29,26 @@
 /* ========== MOBILE (376px - 768px) ========== */
 
 @media (max-width: 768px) {
-  /* ⚡ CRITICAL : Container principal - utilise 100dvh pour s'ajuster au clavier */
+  /* Container rétrécit quand le clavier s'ouvre (--keyboard-inset injecté par JS) */
   .chatgpt-container {
-    /* 100dvh s'ajuste automatiquement quand le clavier apparaît */
     height: 100vh;
-    height: 100dvh; /* Dynamic viewport height (iOS Safari) */
+    height: 100dvh;
+    height: calc(100dvh - var(--keyboard-inset, 0px));
   }
   
   /* ⚡ CRITICAL : Container principal - utilise 100dvh pour s'ajuster au clavier */
   .chatgpt-main {
-    /* Hauteur basée sur 100dvh qui s'ajuste avec le clavier */
     height: 100%;
-    /* Garde flex: 1 pour prendre l'espace disponible */
+    flex: 1;
+    min-height: 0;
   }
   
   /* ⚡ CRITICAL : Container des messages - hauteur qui s'ajuste avec le clavier */
   .chatgpt-messages-container {
-    /* Hauteur = 100% du parent moins header et input (s'ajuste automatiquement avec 100dvh) */
     height: calc(100% - var(--header-height, 56px) - var(--input-height, 80px));
-    /* S'assurer que le padding-bottom est géré dynamiquement par JS */
-    padding-bottom: 120px; /* Base, sera override par inline style si keyboardInset > 0 */
-    /* Override flex pour forcer la hauteur calculée */
+    padding-bottom: 120px;
     flex: none;
+    min-height: 0;
   }
   
   /* Containers */
@@ -137,6 +135,7 @@
 /* ========== KEYBOARD UX iOS ========== */
 
 @supports (-webkit-touch-callout: none) {
+  /* Input fixé en bas du viewport visible (au-dessus du clavier quand il est ouvert) */
   .chat-input-container,
   .chatgpt-input-container {
     position: fixed;
@@ -148,25 +147,23 @@
     z-index: 100;
   }
   
-  /* ⚡ CRITICAL : Container principal - utilise 100dvh pour s'ajuster au clavier */
+  /* Container rétrécit avec --keyboard-inset pour que messages + tout remontent ensemble */
   .chatgpt-container {
-    /* 100dvh s'ajuste automatiquement quand le clavier apparaît */
     height: 100vh;
-    height: 100dvh; /* Dynamic viewport height (iOS Safari) */
+    height: 100dvh;
+    height: calc(100dvh - var(--keyboard-inset, 0px));
   }
   
-  /* ⚡ CRITICAL : Container principal - utilise 100% pour hériter de 100dvh */
   .chatgpt-main {
-    /* Hauteur basée sur 100% du parent (qui utilise 100dvh) */
     height: 100%;
+    flex: 1;
+    min-height: 0;
   }
   
-  /* ⚡ CRITICAL : Container des messages - hauteur calculée qui s'ajuste avec le clavier */
   .chatgpt-messages-container {
-    /* Hauteur = 100% du parent moins header et input (s'ajuste automatiquement avec 100dvh) */
     height: calc(100% - var(--header-height, 56px) - var(--input-height, 80px));
-    /* Override flex pour forcer la hauteur calculée */
     flex: none;
+    min-height: 0;
   }
   
   .chat-messages-area { 

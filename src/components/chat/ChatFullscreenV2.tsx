@@ -46,6 +46,7 @@ import type { CanvaSession as CanvaSessionDB, ListCanvasResponse } from '@/types
 
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
+import { applyChatFontPreset, CHAT_FONT_PRESETS, type ChatFontPresetId } from '@/constants/chatFontPresets';
 
 import '@/styles/chat-clean.css';
 import '@/styles/sidebar-collapsible.css';
@@ -360,14 +361,33 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [allowSidebarHover, uiState.setSidebarHovered]);
 
+  // ✅ Preset font appliqué dès le chargement du chat (PWA + desktop) pour que le texte ait la bonne police
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('chat-font-preference') as ChatFontPresetId | null;
+      const presetId = saved && saved in CHAT_FONT_PRESETS ? saved : 'manrope';
+      applyChatFontPreset(presetId);
+    } catch {
+      applyChatFontPreset('manrope');
+    }
+  }, []);
+
   // ✅ SUPPRIMÉ : Plus d'auto-sélection de session
   // L'utilisateur choisit explicitement (via agent favori ou clic sidebar)
 
   // 🎯 Layout (utilise uiState)
 
   // 🎯 RENDU (100% déclaratif avec composants extraits)
+  // En PWA/mobile : --keyboard-inset permet de faire rétrécir tout le layout quand le clavier s'ouvre (messages + input remontent ensemble)
+  const containerStyle = !isDesktop && uiState.keyboardInset > 0
+    ? { ['--keyboard-inset' as string]: `${uiState.keyboardInset}px` }
+    : undefined;
+
   return (
-      <div className={`chatgpt-container ${(isDesktop && isCanvaOpen) ? 'canva-active' : ''}`}>
+      <div
+        className={`chatgpt-container ${(isDesktop && isCanvaOpen) ? 'canva-active' : ''}`}
+        style={containerStyle}
+      >
       <ChatHeader
         sidebarOpen={uiState.sidebarOpen}
         onToggleSidebar={uiActions.handleSidebarToggle}

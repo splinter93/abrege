@@ -32,19 +32,19 @@
   .chatgpt-container,
   .chatgpt-content,
   .chat-markdown {
-    font-family: var(--font-chat-text) !important;
-    font-size: var(--chat-font-size-base) !important;
-    font-weight: var(--chat-weight-normal) !important;
+    font-family: var(--font-chat-text, 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif) !important;
+    font-size: var(--chat-font-size-base, 15px) !important;
+    font-weight: var(--chat-weight-normal, 525) !important;
   }
   
-  /* Headings - poids du preset */
+  /* Headings - poids du preset + fallback */
   .chat-markdown h1,
   .chat-markdown h2,
   .chat-markdown h3,
   .chat-markdown h4,
   .chat-markdown h5,
   .chat-markdown h6 {
-    font-family: var(--font-chat-text) !important;
+    font-family: var(--font-chat-text, 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif) !important;
   }
   .chat-markdown h1 { font-weight: var(--chat-weight-extrabold) !important; }
   .chat-markdown h2,
@@ -53,39 +53,41 @@
   .chat-markdown h5,
   .chat-markdown h6 { font-weight: var(--chat-weight-semibold) !important; }
   
-  /* Paragraphes et listes */
+  /* Paragraphes et listes - fallback Manrope si variables pas encore appliquées (PWA) */
   .chat-markdown p,
   .chat-markdown li:not(.task-list-item),
-  .chat-markdown li > p {
-    font-family: var(--font-chat-text) !important;
-    font-size: var(--chat-font-size-base) !important;
-    font-weight: var(--chat-weight-normal) !important;
+  .chat-markdown li > p,
+  .chat-markdown div:not([class]) {
+    font-family: var(--font-chat-text, 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif) !important;
+    font-size: var(--chat-font-size-base, 15px) !important;
+    font-weight: var(--chat-weight-normal, 525) !important;
     color: var(--chat-text-primary) !important;
   }
   
-  /* Input - preset */
+  /* Input - preset + fallback */
   .chatgpt-input-textarea,
   .textarea-with-mentions-input {
-    font-family: var(--font-chat-text) !important;
-    font-size: var(--chat-font-size-base) !important;
-    font-weight: var(--chat-weight-normal) !important;
+    font-family: var(--font-chat-text, 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif) !important;
+    font-size: var(--chat-font-size-base, 15px) !important;
+    font-weight: var(--chat-weight-normal, 525) !important;
   }
   
-  /* Bulles messages - preset */
+  /* Bulles messages - preset + fallback */
   .chatgpt-message-bubble,
   .chatgpt-message-bubble-user,
-  .chatgpt-message-bubble-assistant {
-    font-family: var(--font-chat-text) !important;
-    font-size: var(--chat-font-size-base) !important;
-    font-weight: var(--chat-weight-normal) !important;
+  .chatgpt-message-bubble-assistant,
+  .chatgpt-message-content {
+    font-family: var(--font-chat-text, 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif) !important;
+    font-size: var(--chat-font-size-base, 15px) !important;
+    font-weight: var(--chat-weight-normal, 525) !important;
   }
   
-  /* Sidebar - preset */
+  /* Sidebar - preset + fallback */
   .sidebar-item-clean,
   .sidebar-session-name,
   .sidebar-user-name-clean {
-    font-family: var(--font-chat-text) !important;
-    font-weight: var(--chat-weight-normal) !important;
+    font-family: var(--font-chat-text, 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif) !important;
+    font-weight: var(--chat-weight-normal, 525) !important;
   }
   
   /* Code blocks */
