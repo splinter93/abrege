@@ -722,7 +722,7 @@ body.chat-theme-glass .chatgpt-header {
 }
 
 .chatgpt-sidebar-toggle-btn-header {
-  display: none; /* ✅ Caché en desktop par défaut */
+  display: flex; /* ✅ Toujours visible (sidebar toggle permanent) */
   align-items: center;
   justify-content: center;
   padding: 0; /* ✅ Pas de padding pour centrage parfait */
@@ -735,10 +735,6 @@ body.chat-theme-glass .chatgpt-header {
   width: 36px;
   height: 36px;
   flex-shrink: 0; /* ✅ Ne pas rétrécir */
-}
-
-.chatgpt-container.canva-active .chatgpt-sidebar-toggle-btn-header {
-  display: flex;
 }
 
 .chatgpt-container.canva-active .chatgpt-header-left {
@@ -2566,11 +2562,6 @@ body.chat-theme-glass .chatgpt-messages > div {
   
   *::-webkit-scrollbar {
     display: none; /* Chrome/Safari/Android */
-  }
-  
-  /* ✅ Afficher le bouton sidebar en mobile */
-  .chatgpt-sidebar-toggle-btn-header {
-    display: flex !important;
   }
   
   /* ✅ Ajuster le margin en mobile pour coller le bouton à 5px du bord */
