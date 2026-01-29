@@ -204,63 +204,6 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: true
   },
   
-  // Liminality Models (Synesia LLM Exec API)
-  
-  // OpenAI Models via Liminality
-  {
-    id: 'openai/gpt-4o-mini',
-    name: 'GPT-4o Mini',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
-    contextWindow: 128000,
-    maxOutput: 16384,
-    speed: 900,
-    pricing: { input: '$0.15', output: '$0.60' },
-    description: 'Rapide et économique pour tâches ciblées',
-    recommended: true
-  },
-  {
-    id: 'openai/gpt-5',
-    name: 'GPT-5',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'images', 'function_calling', 'streaming', 'structured_output', 'reasoning', 'mcp'],
-    contextWindow: 400000,
-    maxOutput: 128000,
-    speed: 600,
-    pricing: { input: '$1.25', output: '$10.00' },
-    description: 'Le meilleur pour coding et tâches agentiques avancées'
-  },
-  
-  // Fireworks AI Models
-  {
-    id: 'fireworks/kimi-k2-thinking',
-    name: 'Kimi K2 Thinking',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'streaming', 'reasoning'],
-    contextWindow: 256000,
-    maxOutput: 4000,
-    speed: 500,
-    pricing: { input: '$1.00', output: '$3.00' },
-    description: 'Contexte ultra-long (256k) avec reasoning avancé',
-    recommended: true
-  },
-  {
-    id: 'fireworks/z-ai-glm-4-7',
-    name: 'GLM-4.7 (Fireworks)',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
-    contextWindow: 128000,
-    maxOutput: 8192,
-    speed: 600,
-    pricing: { input: 'Variable', output: 'Variable' },
-    description: 'GLM-4.7 via Fireworks avec support des outils avancés',
-    recommended: false
-  },
-  
   // Cerebras Models
   {
     id: 'zai-glm-4.7',
@@ -317,6 +260,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: false
   },
   {
+    id: 'openrouter/kimi-k2.5',
+    name: 'Kimi K2.5 Thinking',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 262144,
+    maxOutput: 8192,
+    speed: 500,
+    pricing: { input: '$0.40', output: '$1.75' },
+    description: 'MoonshotAI Kimi K2.5 Thinking via OpenRouter, contexte ultra-long (262K)',
+    recommended: false
+  },
+  {
     id: 'openrouter/glm-4.7',
     name: 'GLM 4.7',
     category: 'liminality',
@@ -367,20 +323,6 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     pricing: { input: '$0.15', output: '$0.60' },
     description: 'Qwen3 VL 30B multimodal via OpenRouter, analyse d\'images et outils',
     recommended: false
-  },
-  
-  // xAI Models via Liminality (pour orchestration avancée)
-  {
-    id: 'xai/grok-4-1-fast-reasoning',
-    name: 'Grok 4.1 Fast Reasoning',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'images', 'function_calling', 'streaming', 'structured_output', 'reasoning', 'mcp'],
-    contextWindow: 2000000,
-    maxOutput: 8000,
-    speed: 700,
-    pricing: { input: '$0.20', output: '$0.50' },
-    description: 'Grok 4.1 via Liminality avec orchestration automatique des tools'
   },
 ];
 

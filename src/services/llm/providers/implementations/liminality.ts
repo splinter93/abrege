@@ -79,17 +79,9 @@ const LIMINALITY_INFO: ProviderInfo = {
     structuredOutput: true
   },
   supportedModels: [
-    'gpt-4o-mini',
-    'gpt-4o',
-    'claude-3-haiku',
-    'claude-3-sonnet',
-    'claude-3-5-sonnet',
-    'groq-llama-3-70b',
-    'deepseek-chat',
-    'cerebras/zai-glm-4-7',
-    'fireworks/z-ai-glm-4-7',
     'openrouter/mimo-v2-flash:free',
     'openrouter/kimi-k2-thinking',
+    'openrouter/kimi-k2.5',
     'openrouter/glm-4.7',
     'openrouter/gemini-3-flash-preview',
     'openrouter/minimax-m2.1',
