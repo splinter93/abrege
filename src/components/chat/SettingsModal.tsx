@@ -3,6 +3,11 @@ import { createPortal } from 'react-dom';
 import { X, User, Bell, Palette, Link2, Calendar, Database, Lock, Users, UserCircle, Moon, Sun, Sparkles, Circle, Info, Flame, Snowflake, Zap } from 'lucide-react';
 import { useTheme, type ChatTheme } from '@/hooks/useTheme';
 import { useChatStore } from '@/store/useChatStore';
+import {
+  CHAT_FONT_PRESETS,
+  applyChatFontPreset,
+  type ChatFontPresetId,
+} from '@/constants/chatFontPresets';
 import CustomSelect from './CustomSelect';
 import './SettingsModal.css';
 
@@ -35,8 +40,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const { theme, setTheme, availableThemes, mounted } = useTheme();
   const { currentSession, updateSession } = useChatStore();
   
-  // Font state
-  const [selectedFont, setSelectedFont] = useState<string>('figtree');
+  // Font state (Manrope par défaut)
+  const [selectedFont, setSelectedFont] = useState<string>('manrope');
   const [selectedColorPalette, setSelectedColorPalette] = useState<string>('soft-dark');
 
   // Color palettes
@@ -143,13 +148,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   ];
 
-  const availableFonts = [
-    { value: 'figtree', label: 'Figtree', preview: 'Figtree' },
-    { value: 'geist', label: 'Geist', preview: 'Geist' },
-    { value: 'inter', label: 'Inter', preview: 'Inter' },
-    { value: 'noto-sans', label: 'Noto Sans', preview: 'Noto Sans' },
-    { value: 'manrope', label: 'Manrope', preview: 'Manrope' },
-  ];
+  const availableFonts = Object.values(CHAT_FONT_PRESETS).map((p) => ({
+    value: p.id,
+    label: p.label,
+    preview: p.label,
+  }));
 
   const darkenColor = useCallback((hex: string, percent: number): string => {
     const num = parseInt(hex.replace('#', ''), 16);
@@ -161,17 +164,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   // Load preferences
   useEffect(() => {
-    const savedFont = localStorage.getItem('chat-font-preference');
-    if (savedFont) {
+    const savedFont = localStorage.getItem('chat-font-preference') as ChatFontPresetId | null;
+    if (savedFont && savedFont in CHAT_FONT_PRESETS) {
       setSelectedFont(savedFont);
-      // Appliquer la classe Manrope si nécessaire au chargement
-      if (savedFont === 'manrope') {
-        document.body.classList.add('chat-font-manrope-active');
-      } else {
-        document.body.classList.remove('chat-font-manrope-active');
-      }
+      applyChatFontPreset(savedFont);
+    } else {
+      applyChatFontPreset('manrope');
     }
-    
+
     const savedColors = localStorage.getItem('chat-color-preference');
     if (savedColors) {
       setSelectedColorPalette(savedColors);
@@ -196,25 +196,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   }, [currentSession, availableColorPalettes, darkenColor]);
 
   const handleFontChange = (fontValue: string) => {
-    setSelectedFont(fontValue);
-    localStorage.setItem('chat-font-preference', fontValue);
-    
-    const fontMap: Record<string, string> = {
-      'figtree': "'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      'geist': "'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      'inter': "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      'noto-sans': "'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      'manrope': "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    };
-    
-    document.documentElement.style.setProperty('--font-chat-base', fontMap[fontValue]);
-    
-    // Ajouter/enlever classe pour Manrope (pour ajuster font-weight)
-    if (fontValue === 'manrope') {
-      document.body.classList.add('chat-font-manrope-active');
-    } else {
-      document.body.classList.remove('chat-font-manrope-active');
-    }
+    const presetId = fontValue as ChatFontPresetId;
+    if (!(presetId in CHAT_FONT_PRESETS)) return;
+    setSelectedFont(presetId);
+    localStorage.setItem('chat-font-preference', presetId);
+    applyChatFontPreset(presetId);
   };
 
   const handleColorPaletteChange = (paletteValue: string) => {

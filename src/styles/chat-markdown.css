@@ -17,10 +17,10 @@
    ============================================================================= */
 
 :root {
-  /* Tailles de police */
+  /* Tailles de police (défaut = Manrope 15px) */
   --chat-text-xs: 0.75rem;
   --chat-text-sm: 0.875rem;
-  --chat-text-base: 1rem; /* 16px - ✅ Synchronisé avec --chat-font-size-base */
+  --chat-text-base: 15px; /* Défaut chat = Manrope */
   --chat-text-lg: 1.0625rem;
   --chat-text-xl: 1.1875rem;
   --chat-text-2xl: 1.4375rem;
@@ -36,12 +36,12 @@
   --chat-leading-relaxed: 1.7;   /* Augmenté pour texte principal */
   --chat-leading-loose: 1.8;
   
-  /* Poids */
-  --chat-weight-normal: 425;  /* Légèrement plus visible que l'éditeur */
-  --chat-weight-medium: 600;  /* Augmenté de 500 à 600 */
-  --chat-weight-semibold: 750;  /* Augmenté à 750 pour titres */
-  --chat-weight-bold: 800;  /* Augmenté à 800 pour titres */
-  --chat-weight-extrabold: 900;  /* Augmenté à 900 pour titres principaux */
+  /* Poids (défaut = preset Manrope ; surchargés par preset dans SettingsModal) */
+  --chat-weight-normal: 525;
+  --chat-weight-medium: 600;
+  --chat-weight-semibold: 750;
+  --chat-weight-bold: 800;
+  --chat-weight-extrabold: 850;
   
   /* Espacements */
   --chat-space-xs: 0.25rem;
@@ -84,49 +84,13 @@
 }
 
 /* =============================================================================
-   AJUSTEMENT FONT-WEIGHT POUR MANROPE
-   ============================================================================= */
-/* Augmente légèrement le font-weight de Manrope pour meilleure lisibilité */
-
-body.chat-font-manrope-active .chat-markdown {
-  font-weight: 525; /* Légèrement plus gras que 425 */
-  font-size: 15.5px; /* ✅ Taille spécifique pour Manrope */
-}
-
-body.chat-font-manrope-active .chat-markdown p {
-  font-weight: 525; /* Légèrement plus gras que 425 */
-}
-
-body.chat-font-manrope-active .chat-markdown strong {
-  font-weight: 775; /* Légèrement plus gras que 750 */
-}
-
-body.chat-font-manrope-active .chat-markdown h1 {
-  font-weight: 850; /* ✅ Augmenté pour Manrope (était 825) */
-}
-
-body.chat-font-manrope-active .chat-markdown h2 {
-  font-weight: 800; /* ✅ Augmenté pour Manrope (était 775) */
-}
-
-body.chat-font-manrope-active .chat-markdown h3 {
-  font-weight: 800; /* ✅ Augmenté pour Manrope (était 775) */
-}
-
-body.chat-font-manrope-active .chat-markdown h4,
-body.chat-font-manrope-active .chat-markdown h5,
-body.chat-font-manrope-active .chat-markdown h6 {
-  font-weight: 750; /* ✅ Augmenté pour Manrope (était 725) */
-}
-
-/* =============================================================================
-   TITRES
+   TITRES (poids pilotés par preset : --chat-weight-*)
    ============================================================================= */
 
 .chat-markdown h1 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
   font-size: 2.25rem; /* 36px - Sweet spot blog premium */
-  font-weight: 800;  /* Plus impactant */
+  font-weight: var(--chat-weight-extrabold);
   line-height: var(--chat-leading-tight);
   letter-spacing: var(--chat-tracking-tight);
   color: var(--chat-text-primary);
@@ -136,7 +100,7 @@ body.chat-font-manrope-active .chat-markdown h6 {
 .chat-markdown h2 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
   font-size: 1.75rem; /* 28px - Standard professionnel */
-  font-weight: 750;  /* Plus visible */
+  font-weight: var(--chat-weight-bold);
   line-height: var(--chat-leading-tight);
   letter-spacing: var(--chat-tracking-tight);
   color: var(--chat-text-primary);
@@ -146,7 +110,7 @@ body.chat-font-manrope-active .chat-markdown h6 {
 .chat-markdown h3 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
   font-size: 1.5rem;  /* 24px - Aligné avec éditeur */
-  font-weight: 750;  /* Plus visible */
+  font-weight: var(--chat-weight-bold);
   line-height: var(--chat-leading-snug);
   letter-spacing: var(--chat-tracking-normal);
   color: var(--chat-text-primary);
@@ -156,7 +120,7 @@ body.chat-font-manrope-active .chat-markdown h6 {
 .chat-markdown h4 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
   font-size: 1.125rem;  /* 18px - Réduit de 10% */
-  font-weight: 700;  /* Plus visible */
+  font-weight: var(--chat-weight-semibold);
   line-height: var(--chat-leading-snug);
   letter-spacing: var(--chat-tracking-normal);
   color: var(--chat-text-primary);
@@ -166,7 +130,7 @@ body.chat-font-manrope-active .chat-markdown h6 {
 .chat-markdown h5 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
   font-size: 1rem;  /* 16px - Réduit de 10% */
-  font-weight: 700;  /* Plus visible */
+  font-weight: var(--chat-weight-semibold);
   line-height: var(--chat-leading-normal);
   letter-spacing: var(--chat-tracking-normal);
   color: var(--chat-text-secondary);
@@ -176,7 +140,7 @@ body.chat-font-manrope-active .chat-markdown h6 {
 .chat-markdown h6 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
   font-size: 0.875rem;  /* 14px - Réduit de 10% */
-  font-weight: 700;  /* Plus visible */
+  font-weight: var(--chat-weight-semibold);
   line-height: var(--chat-leading-normal);
   letter-spacing: var(--chat-tracking-wide);
   color: var(--chat-text-muted);

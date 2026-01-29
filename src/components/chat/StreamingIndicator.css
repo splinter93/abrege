@@ -84,11 +84,6 @@
 }
 
 /* ✅ Ajustement font-weight pour Manrope uniquement */
-body.chat-font-manrope-active .tool-item-name {
-  font-weight: 525;
-}
-
-
 .tool-item-status {
   display: flex;
   align-items: center;
@@ -218,11 +213,6 @@ body.chat-font-manrope-active .tool-item-name {
 }
 
 /* ✅ Ajustement font-weight et font-size pour Manrope uniquement */
-body.chat-font-manrope-active .streaming-indicator.completed .tool-item-name {
-  font-weight: 525;
-  font-size: 15.5px; /* ✅ Taille spécifique pour Manrope */
-}
-
 .streaming-indicator.completed .tool-detail-label {
   color: var(--chat-text-primary);
   font-family: var(--font-chat-text);

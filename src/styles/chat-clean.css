@@ -91,10 +91,9 @@
   --chat-border-error: rgba(239, 68, 68, 0.3);    /* Bordure erreur */
   
   /* ========================================
-     TYPOGRAPHIE
+     TYPOGRAPHIE (défaut = preset Manrope)
      ======================================== */
-  /* Les variables sont héritées de typography.css */
-  --chat-font-size-base: 16px; /* ✅ Taille standard 16px pour meilleure lisibilité */
+  --chat-font-size-base: 15px; /* Défaut chat = Manrope 15px */
   --chat-line-height-normal: 1.5;
   --chat-line-height-relaxed: 1.75;
   
@@ -964,17 +963,6 @@ body.chat-theme-glass .chatgpt-header {
   font-weight: var(--chat-weight-normal, 425);
 }
 
-/* ✅ Ajustement font-weight et font-size pour Manrope uniquement */
-body.chat-font-manrope-active .sidebar-item-clean {
-  font-weight: 525;
-  font-size: 15.5px; /* ✅ Taille spécifique pour Manrope */
-}
-
-body.chat-font-manrope-active .sidebar-item-clean.active {
-  font-weight: 525;
-  font-size: 15.5px; /* ✅ Taille spécifique pour Manrope */
-}
-
 .sidebar-item-icon-clean {
   flex-shrink: 0;
   width: 18px;
@@ -999,12 +987,6 @@ body.chat-font-manrope-active .sidebar-item-clean.active {
 
 .sidebar-agent-row .sidebar-item-clean {
   font-weight: var(--chat-weight-normal, 425);
-}
-
-/* ✅ Ajustement font-weight et font-size pour Manrope uniquement */
-body.chat-font-manrope-active .sidebar-agent-row .sidebar-item-clean {
-  font-weight: 525;
-  font-size: 15.5px; /* ✅ Taille spécifique pour Manrope */
 }
 
 /* Hint "Lancer un Chat" - caché par défaut, visible au hover */
@@ -1095,12 +1077,6 @@ body.chat-font-manrope-active .sidebar-agent-row .sidebar-item-clean {
   color: var(--chat-text-primary);
 }
 
-/* ✅ Ajustement font-weight et font-size pour Manrope uniquement */
-body.chat-font-manrope-active .sidebar-user-name-clean {
-  font-weight: 525;
-  font-size: 15.5px; /* ✅ Taille spécifique pour Manrope */
-}
-
 /* ========================================
    BOUTON SUPPRIMER CONVERSATION
    ======================================== */
@@ -1121,12 +1097,6 @@ body.chat-font-manrope-active .sidebar-user-name-clean {
 
 .sidebar-session-name {
   font-weight: var(--chat-weight-normal, 425);
-}
-
-/* ✅ Ajustement font-weight et font-size pour Manrope uniquement */
-body.chat-font-manrope-active .sidebar-session-name {
-  font-weight: 525;
-  font-size: 15.5px; /* ✅ Taille spécifique pour Manrope */
 }
 
 .sidebar-delete-btn {
@@ -1730,11 +1700,6 @@ body.chat-theme-glass .chatgpt-messages > div {
   font-family: var(--font-chat-text);
 }
 
-/* ✅ Ajustement font-size pour Manrope uniquement */
-body.chat-font-manrope-active .chatgpt-message-bubble {
-  font-size: 15.5px; /* ✅ Taille spécifique pour Manrope */
-}
-
 .chatgpt-message-bubble-assistant {
   background: transparent;
   color: var(--chat-text-primary);
@@ -1750,12 +1715,6 @@ body.chat-font-manrope-active .chatgpt-message-bubble {
   border: none;
   padding: 11px 17px; /* ✅ Légèrement augmenté */
   font-weight: var(--chat-weight-normal, 425);
-}
-
-/* ✅ Ajustement font-weight et font-size pour Manrope uniquement */
-body.chat-font-manrope-active .chatgpt-message-bubble-user {
-  font-weight: 525;
-  font-size: 15.5px; /* ✅ Taille spécifique pour Manrope */
 }
 
 .chatgpt-message-bubble-user:hover {
