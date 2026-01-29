@@ -94,13 +94,6 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
     <div
       className="chatgpt-messages-container"
       ref={containerRef}
-      style={
-        keyboardInset > 0
-          ? {
-              paddingBottom: Math.max(100, keyboardInset + 40)
-            }
-          : undefined
-      }
     >
       <div
         className={`chatgpt-messages ${shouldAnimateMessages ? 'messages-fade-in' : ''}`}

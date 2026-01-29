@@ -29,26 +29,34 @@
 /* ========== MOBILE (376px - 768px) ========== */
 
 @media (max-width: 768px) {
-  /* Container rétrécit quand le clavier s'ouvre (--keyboard-inset injecté par JS) */
+  /* Container pleine hauteur (pas de rétrécissement clavier = input stable) */
   .chatgpt-container {
     height: 100vh;
     height: 100dvh;
-    height: calc(100dvh - var(--keyboard-inset, 0px));
   }
   
-  /* ⚡ CRITICAL : Container principal - utilise 100dvh pour s'ajuster au clavier */
   .chatgpt-main {
     height: 100%;
     flex: 1;
     min-height: 0;
   }
   
-  /* ⚡ CRITICAL : Container des messages - hauteur qui s'ajuste avec le clavier */
   .chatgpt-messages-container {
-    height: calc(100% - var(--header-height, 56px) - var(--input-height, 80px));
-    padding-bottom: 120px;
-    flex: none;
+    flex: 1;
     min-height: 0;
+    padding-bottom: 120px; /* Réserve pour l'input fixe en bas */
+  }
+  
+  /* Input fixe en bas : ne bouge plus en PWA/mobile */
+  .chatgpt-input-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding: 8px 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    background: var(--chat-bg-primary, #0d0d0d);
   }
   
   /* Containers */
@@ -135,44 +143,13 @@
 /* ========== KEYBOARD UX iOS ========== */
 
 @supports (-webkit-touch-callout: none) {
-  /* Input fixé en bas du viewport visible (au-dessus du clavier quand il est ouvert) */
-  .chat-input-container,
-  .chatgpt-input-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--color-bg-primary);
-    border-top: 1px solid var(--color-border);
-    z-index: 100;
-  }
-  
-  /* Container rétrécit avec --keyboard-inset pour que messages + tout remontent ensemble */
-  .chatgpt-container {
-    height: 100vh;
-    height: 100dvh;
-    height: calc(100dvh - var(--keyboard-inset, 0px));
-  }
-  
-  .chatgpt-main {
-    height: 100%;
-    flex: 1;
-    min-height: 0;
-  }
-  
-  .chatgpt-messages-container {
-    height: calc(100% - var(--header-height, 56px) - var(--input-height, 80px));
-    flex: none;
-    min-height: 0;
-  }
-  
-  .chat-messages-area { 
-    padding-bottom: calc(var(--input-height, 80px) + 20px); 
-  }
-  
+  /* iOS : même layout, body fixed pour éviter scroll parasite */
   body { 
     position: fixed; 
     width: 100%; 
+  }
+  .chat-messages-area { 
+    padding-bottom: calc(var(--input-height, 80px) + 20px); 
   }
 }
 

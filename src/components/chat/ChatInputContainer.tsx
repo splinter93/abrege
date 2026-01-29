@@ -53,16 +53,7 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
   keyboardInset = 0
 }) => {
   return (
-    <div
-      className="chatgpt-input-container"
-      style={
-        keyboardInset > 0
-          ? {
-              paddingBottom: Math.max(24, keyboardInset + 16)
-            }
-          : undefined
-      }
-    >
+    <div className="chatgpt-input-container">
       {renderAuthStatus()}
       <ChatInput
         onSend={onSend}
