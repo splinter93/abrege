@@ -15,9 +15,9 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
-import { Search, MessageSquare, FileText } from 'lucide-react';
+import { Search, MessageSquare, FileText, FolderOpen, Bot } from 'lucide-react';
 import { useCommandPalette } from '@/hooks/useCommandPalette';
-import type { CommandPaletteOption } from '@/hooks/useCommandPalette';
+import type { CommandPaletteOption, CommandPaletteShortcut } from '@/hooks/useCommandPalette';
 import './CommandPalette.css';
 
 interface CommandPaletteProps {
@@ -35,6 +35,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const {
     query,
     results,
+    shortcuts,
     isLoading,
     isLoadingRecent,
     selectedIndex,
@@ -142,7 +143,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             ref={inputRef}
             type="text"
             className="command-palette-input"
-            placeholder="Rechercher une note ou ouvrir le chat..."
+            placeholder="Rechercher une note..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoComplete="off"
@@ -157,7 +158,11 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
 
         {/* Liste des résultats */}
         {results.length > 0 && (
-          <div className="command-palette-results">
+          <div className="command-palette-results-wrapper">
+            {query.trim().length < 2 && (
+              <div className="command-palette-results-title">Notes récentes</div>
+            )}
+            <div className="command-palette-results">
             {results.map((option, index) => (
               <CommandPaletteItem
                 key={option.id}
@@ -168,6 +173,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                 }}
               />
             ))}
+            </div>
           </div>
         )}
 
@@ -196,8 +202,39 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             </div>
           </div>
         )}
+
+        {/* Bandeau de raccourcis (en bas) */}
+        <div className="command-palette-shortcuts">
+          {shortcuts.map((shortcut) => (
+            <ShortcutButton key={shortcut.id} shortcut={shortcut} />
+          ))}
+        </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Bouton du bandeau de raccourcis
+ */
+function ShortcutButton({ shortcut }: { shortcut: CommandPaletteShortcut }) {
+  const Icon = shortcut.icon === 'chat' ? MessageSquare
+    : shortcut.icon === 'folder' ? FolderOpen
+    : shortcut.icon === 'prompt' ? FileText
+    : Bot;
+  const iconColorClass = `command-palette-shortcut-icon-${shortcut.icon}`;
+  return (
+    <button
+      type="button"
+      className="command-palette-shortcut"
+      onClick={shortcut.action}
+      aria-label={shortcut.title}
+    >
+      <span className={`command-palette-shortcut-icon ${iconColorClass}`}>
+        <Icon size={18} />
+      </span>
+      <span className="command-palette-shortcut-label">{shortcut.title}</span>
+    </button>
   );
 }
 
@@ -236,7 +273,7 @@ function CommandPaletteItem({ option, isSelected, onClick }: CommandPaletteItemP
         // Optionnel : mettre à jour l'index de sélection au survol
       }}
     >
-      <div className={`command-palette-item-icon ${option.id === 'action-chat' ? 'command-palette-item-icon-chat' : ''}`}>
+      <div className="command-palette-item-icon">
         <Icon size={18} />
       </div>
       <div className="command-palette-item-content">

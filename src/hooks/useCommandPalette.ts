@@ -13,7 +13,7 @@
  * - Logging structuré
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDebounce } from './useDebounce';
 import { simpleLogger as logger } from '@/utils/logger';
@@ -42,6 +42,16 @@ export interface CommandPaletteOption {
   action: () => void;
 }
 
+/** Raccourci du bandeau (Chat, Classeurs, Agents, Prompts) */
+export interface CommandPaletteShortcut {
+  id: string;
+  title: string;
+  icon: 'chat' | 'folder' | 'bot' | 'prompt';
+  action: () => void;
+  /** Aligner à droite dans le bandeau */
+  alignRight?: boolean;
+}
+
 /**
  * Options du hook
  */
@@ -59,6 +69,7 @@ export interface UseCommandPaletteReturn {
   isOpen: boolean;
   query: string;
   results: CommandPaletteOption[];
+  shortcuts: CommandPaletteShortcut[];
   isLoading: boolean;
   isLoadingRecent: boolean;
   selectedIndex: number;
@@ -218,7 +229,7 @@ export function useCommandPalette(
     try {
       const headers = await getAuthHeaders();
       
-      const response = await fetch('/api/v2/note/recent?limit=5', {
+      const response = await fetch('/api/v2/note/recent?limit=10', {
         headers,
         signal: abortControllerRef.current?.signal
       });
@@ -296,30 +307,44 @@ export function useCommandPalette(
   /**
    * Construire les options du menu
    */
+  const runAndClose = useCallback(() => {
+    if (externalIsOpen === undefined) setInternalIsOpen(false);
+    setQuery('');
+    onClose?.();
+  }, [externalIsOpen, onClose]);
+
+  const shortcuts: CommandPaletteShortcut[] = useMemo(() => [
+    {
+      id: 'shortcut-chat',
+      title: 'Ouvrir le chat',
+      icon: 'chat',
+      action: () => { router.push('/chat'); runAndClose(); }
+    },
+    {
+      id: 'shortcut-classeurs',
+      title: 'Mes classeurs',
+      icon: 'folder',
+      action: () => { router.push('/private/dossiers'); runAndClose(); }
+    },
+    {
+      id: 'shortcut-agents',
+      title: 'Mes Agents',
+      icon: 'bot',
+      action: () => { router.push('/private/agents'); runAndClose(); }
+    },
+    {
+      id: 'shortcut-prompts',
+      title: 'Mes Prompts',
+      icon: 'prompt',
+      alignRight: true,
+      action: () => { router.push('/private/prompts'); runAndClose(); }
+    }
+  ], [router, runAndClose]);
+
   const buildOptions = useCallback((): CommandPaletteOption[] => {
     const options: CommandPaletteOption[] = [];
     const hasSearch = query.trim().length >= 2;
     const notesToShow = hasSearch ? notes : recentNotes;
-
-    const chatAction: CommandPaletteOption = {
-      id: 'action-chat',
-      type: 'action',
-      title: 'Ouvrir le chat',
-      icon: '💬',
-      action: () => {
-        router.push('/chat');
-        if (externalIsOpen === undefined) {
-          setInternalIsOpen(false);
-        }
-        setQuery('');
-        onClose?.();
-      }
-    };
-
-    // Sans recherche : "Ouvrir le chat" en premier, puis notes récentes
-    if (!hasSearch) {
-      options.push(chatAction);
-    }
 
     notesToShow.forEach((note) => {
       options.push({
@@ -330,22 +355,13 @@ export function useCommandPalette(
         icon: '📝',
         action: () => {
           router.push(`/private/note/${note.slug || note.id}`);
-          if (externalIsOpen === undefined) {
-            setInternalIsOpen(false);
-          }
-          setQuery('');
-          onClose?.();
+          runAndClose();
         }
       });
     });
 
-    // Avec recherche : résultats d'abord, puis "Ouvrir le chat" à la fin
-    if (hasSearch) {
-      options.push(chatAction);
-    }
-
     return options;
-  }, [notes, recentNotes, query, router, externalIsOpen, onClose]);
+  }, [notes, recentNotes, query, router, runAndClose]);
 
   const results = buildOptions();
 
@@ -420,6 +436,7 @@ export function useCommandPalette(
     isOpen,
     query,
     results,
+    shortcuts,
     isLoading,
     isLoadingRecent,
     selectedIndex,

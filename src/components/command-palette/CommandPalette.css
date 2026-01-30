@@ -60,6 +60,70 @@
   }
 }
 
+/* Bandeau de raccourcis (en bas) */
+.command-palette-shortcuts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  flex-wrap: wrap;
+  margin-top: auto;
+  min-height: 48px;
+}
+
+.command-palette-shortcut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  min-height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-secondary, rgba(0, 0, 0, 0.05));
+  color: var(--text-primary, #000);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.command-palette-shortcut:hover {
+  background: var(--bg-hover, rgba(0, 0, 0, 0.08));
+}
+
+.command-palette-shortcut-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-secondary, #666);
+}
+
+/* Couleur par icône */
+.command-palette-shortcut-icon-chat {
+  color: #22c55e; /* vert */
+}
+
+.command-palette-shortcut-icon-folder {
+  color: #3b82f6; /* bleu */
+}
+
+.command-palette-shortcut-icon-bot {
+  color: #8b5cf6; /* violet */
+}
+
+.command-palette-shortcut-icon-prompt {
+  color: #f59e0b; /* ambre / orange */
+}
+
+.command-palette-shortcut-label {
+  white-space: nowrap;
+}
+
 .command-palette-input-wrapper {
   position: relative;
   display: flex;
@@ -108,6 +172,23 @@
   }
 }
 
+.command-palette-results-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.command-palette-results-title {
+  padding: 10px 16px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .command-palette-results {
   flex: 1;
   overflow-y: auto;
@@ -148,10 +229,6 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-}
-
-.command-palette-item-icon-chat {
-  color: var(--color-success, #22c55e);
 }
 
 .command-palette-item-content {
