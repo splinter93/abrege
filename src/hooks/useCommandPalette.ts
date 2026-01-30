@@ -298,13 +298,13 @@ export function useCommandPalette(
    */
   const buildOptions = useCallback((): CommandPaletteOption[] => {
     const options: CommandPaletteOption[] = [];
+    const hasSearch = query.trim().length >= 2;
+    const notesToShow = hasSearch ? notes : recentNotes;
 
-    // Action : Ouvrir le chat (toujours disponible)
-    options.push({
+    const chatAction: CommandPaletteOption = {
       id: 'action-chat',
       type: 'action',
       title: 'Ouvrir le chat',
-      description: 'Accéder à l\'interface de chat',
       icon: '💬',
       action: () => {
         router.push('/chat');
@@ -314,12 +314,13 @@ export function useCommandPalette(
         setQuery('');
         onClose?.();
       }
-    });
+    };
 
-    // ✅ Afficher les notes de recherche si query active, sinon les notes récentes
-    const notesToShow = (query.trim().length >= 2) ? notes : recentNotes;
+    // Sans recherche : "Ouvrir le chat" en premier, puis notes récentes
+    if (!hasSearch) {
+      options.push(chatAction);
+    }
 
-    // Notes à afficher (recherche ou récentes)
     notesToShow.forEach((note) => {
       options.push({
         id: `note-${note.id}`,
@@ -337,6 +338,11 @@ export function useCommandPalette(
         }
       });
     });
+
+    // Avec recherche : résultats d'abord, puis "Ouvrir le chat" à la fin
+    if (hasSearch) {
+      options.push(chatAction);
+    }
 
     return options;
   }, [notes, recentNotes, query, router, externalIsOpen, onClose]);

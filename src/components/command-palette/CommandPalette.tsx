@@ -236,7 +236,7 @@ function CommandPaletteItem({ option, isSelected, onClick }: CommandPaletteItemP
         // Optionnel : mettre à jour l'index de sélection au survol
       }}
     >
-      <div className="command-palette-item-icon">
+      <div className={`command-palette-item-icon ${option.id === 'action-chat' ? 'command-palette-item-icon-chat' : ''}`}>
         <Icon size={18} />
       </div>
       <div className="command-palette-item-content">

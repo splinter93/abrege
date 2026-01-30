@@ -150,6 +150,10 @@
   height: 24px;
 }
 
+.command-palette-item-icon-chat {
+  color: var(--color-success, #22c55e);
+}
+
 .command-palette-item-content {
   flex: 1;
   min-width: 0;

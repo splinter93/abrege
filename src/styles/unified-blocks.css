@@ -35,7 +35,7 @@
   color: var(--blk-fg) ;
   border: none ;
   border-radius: var(--blk-radius) ;
-  margin: 1.75rem 0 ;
+  margin: 1rem 0 ;
   display: flex ;
   flex-direction: column ;
   /* ✅ PAS de overflow ici - géré individuellement sur toolbar et body */
@@ -203,9 +203,20 @@ body.chat-theme-glass .chat-markdown .u-block {
 .ProseMirror .u-block__body,
 .markdown-body .u-block__body,
 .chat-markdown-content .u-block__body,
-.chat-markdown .u-block__body,
+.chat-markdown .u-block__body {
+  padding: 10px 16px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto; /* ✅ Scroll sur body uniquement, pas sur toolbar */
+  border-radius: 0 0 var(--blk-radius) var(--blk-radius); /* ✅ Radius bas uniquement */
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--blk-fg) !important; /* Couleur code blocks - suit le thème */
+}
+
 .unified-block-content { /* Added for chat CodeBlock */
-  padding: 16px 20px;
+  padding: 10px 16px;
   flex: 1;
   min-height: 0;
   overflow: auto; /* ✅ Scroll sur body uniquement, pas sur toolbar */
