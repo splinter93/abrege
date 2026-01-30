@@ -99,11 +99,11 @@
      ========================================================================== */
   --editor-title-weight: 1000;     /* Poids titre principal title area */
   --editor-h1-weight: 775;            /* Poids pour H1 - Égal au title area */
-  --editor-h2-weight: 600;            /* H2 */
-  --editor-h3-weight: 550;            /* H3 */
-  --editor-h4-weight: 500;            /* H4 */
-  --editor-h5-weight: 450;            /* H5 */
-  --editor-h6-weight: 400;            /* H6 */
+  --editor-h2-weight: 500;            /* H2 */
+  --editor-h3-weight: 450;            /* H3 */
+  --editor-h4-weight: 400;            /* H4 */
+  --editor-h5-weight: 350;            /* H5 */
+  --editor-h6-weight: 350;            /* H6 */
   --editor-body-weight: 400;          /* Poids pour le contenu principal */
   --editor-strong-weight: 700;        /* Poids pour le texte en gras */
   --editor-table-header-weight: 900;  /* Poids pour les en-têtes de tableau */

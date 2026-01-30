@@ -104,6 +104,12 @@
   overflow-wrap: break-word;
 }
 
+/* Mode preview : même padding bas que l’édition pour un espace propre sous le texte */
+.noteLayout-content .editor-content-wrapper.markdown-body {
+  padding: var(--editor-content-padding);
+  box-sizing: border-box;
+}
+
 /* ==========================================================================
    MODE IMAGE AVEC TITRE DANS L'IMAGE - POSITIONNEMENT
    ========================================================================== */
