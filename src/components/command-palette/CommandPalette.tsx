@@ -267,10 +267,15 @@ function CommandPaletteItem({ option, isSelected, onClick }: CommandPaletteItemP
   return (
     <div
       ref={itemRef}
+      role="button"
+      tabIndex={0}
       className={`command-palette-item ${isSelected ? 'command-palette-item-selected' : ''}`}
       onClick={onClick}
-      onMouseEnter={() => {
-        // Optionnel : mettre à jour l'index de sélection au survol
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
       }}
     >
       <div className="command-palette-item-icon">

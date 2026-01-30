@@ -204,7 +204,7 @@ body.chat-theme-glass .chat-markdown .u-block {
 .markdown-body .u-block__body,
 .chat-markdown-content .u-block__body,
 .chat-markdown .u-block__body {
-  padding: 10px 16px;
+  padding: 10px 16px 26px 16px;
   flex: 1;
   min-height: 0;
   overflow: auto; /* ✅ Scroll sur body uniquement, pas sur toolbar */
@@ -216,7 +216,7 @@ body.chat-theme-glass .chat-markdown .u-block {
 }
 
 .unified-block-content { /* Added for chat CodeBlock */
-  padding: 10px 16px;
+  padding: 10px 16px 26px 16px;
   flex: 1;
   min-height: 0;
   overflow: auto; /* ✅ Scroll sur body uniquement, pas sur toolbar */

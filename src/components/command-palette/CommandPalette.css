@@ -95,6 +95,11 @@
   background: var(--bg-hover, rgba(0, 0, 0, 0.08));
 }
 
+.command-palette-shortcut:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--bg-primary, #fff), 0 0 0 2.5px #f59e0b;
+}
+
 .command-palette-shortcut-icon {
   display: flex;
   align-items: center;
@@ -146,6 +151,12 @@
   font-size: 16px;
   color: var(--text-primary, #000);
   font-family: inherit;
+}
+
+.command-palette-input:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px #f59e0b;
+  border-radius: 6px;
 }
 
 .command-palette-input::placeholder {
@@ -208,6 +219,11 @@
 
 .command-palette-item:hover {
   background: var(--bg-hover, rgba(0, 0, 0, 0.05));
+}
+
+.command-palette-item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px #f59e0b;
 }
 
 .command-palette-item-selected {
