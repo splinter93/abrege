@@ -1,15 +1,24 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { applyEditorFontPreset, getEditorPresetId } from '@/constants/chatFontPresets';
 
 /**
- * Hook pour gérer le changement de police dans l'éditeur
- * Change dynamiquement les variables CSS --editor-font-family-headings et --editor-font-family-body
+ * Hook pour gérer le changement de police dans l'éditeur.
+ * Si la police est un preset (Figtree, Geist, Inter, Noto Sans, Manrope), applique
+ * family + taille + poids du preset. Sinon applique uniquement la family.
  */
 export const useFontManager = (currentFont: string | null | undefined) => {
   
-  // Fonction pour changer la police dans le CSS
   const changeFont = useCallback((fontName: string, scope: 'all' | 'headings' | 'body' = 'all') => {
     try {
-      // Mapper les noms de police aux familles CSS
+      const presetId = getEditorPresetId(fontName);
+      if (presetId) {
+        applyEditorFontPreset(presetId);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[FontManager] 🎨 Preset éditeur appliqué: ${fontName}`);
+        }
+        return;
+      }
+
       const fontFamilyMap: Record<string, string> = {
         'Noto Sans': "'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
         'Inter': "'Inter', sans-serif",
@@ -33,22 +42,16 @@ export const useFontManager = (currentFont: string | null | undefined) => {
         'Fira Code': "'Fira Code', 'JetBrains Mono', 'Noto Sans Mono', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace"
       };
 
-      // Récupérer la famille de police correspondante
       const fontFamily = fontFamilyMap[fontName] || fontFamilyMap['Figtree'];
-      
-      // Changer les variables CSS selon le scope
       if (scope === 'all' || scope === 'headings') {
         document.documentElement.style.setProperty('--editor-font-family-headings', fontFamily);
       }
       if (scope === 'all' || scope === 'body') {
         document.documentElement.style.setProperty('--editor-font-family-body', fontFamily);
       }
-      
-      // ✅ Log seulement en dev et de manière concise
       if (process.env.NODE_ENV === 'development') {
         console.log(`[FontManager] 🎨 Police changée: ${fontName} (${scope})`);
       }
-      
     } catch (error) {
       console.error('[FontManager] ❌ Erreur lors du changement de police:', error);
     }

@@ -83,7 +83,7 @@
   /* ==========================================================================
      TAILLES HARMONISÉES - PREMIUM EDITOR
      ========================================================================== */
-  --editor-title-size: 2.375rem;      /* 38px - Taille augmentée pour meilleure visibilité */
+  --editor-title-size: 2.625rem;      /* 42px - Titre principal title area */
   --editor-body-size: 1rem;      /* 16px - taille de base de l'éditeur */
   --editor-body-size-mobile: 1rem; /* 16px - taille mobile cohérente */
   --editor-h1-size: 2.25rem;         /* 36px - Aligné avec chat */
@@ -97,13 +97,13 @@
   /* ==========================================================================
      FONT-WEIGHTS CENTRALISÉS - PREMIUM EDITOR
      ========================================================================== */
-  --editor-title-weight: 800;         /* Poids pour les titres principaux - Le plus important */
+  --editor-title-weight: 1000;     /* Poids titre principal title area */
   --editor-h1-weight: 775;            /* Poids pour H1 - Égal au title area */
-  --editor-h2-weight: 700;            /* Poids pour H2 - Moins gras que title/H1 pour hiérarchie claire */
-  --editor-h3-weight: 650;            /* Poids pour H3 - Hiérarchie décroissante */
-  --editor-h4-weight: 600;            /* Poids pour H4 - Hiérarchie décroissante */
-  --editor-h5-weight: 550;            /* Poids pour H5 - Hiérarchie décroissante */
-  --editor-h6-weight: 500;            /* Poids pour H6 - Hiérarchie décroissante */
+  --editor-h2-weight: 600;            /* H2 */
+  --editor-h3-weight: 550;            /* H3 */
+  --editor-h4-weight: 500;            /* H4 */
+  --editor-h5-weight: 450;            /* H5 */
+  --editor-h6-weight: 400;            /* H6 */
   --editor-body-weight: 400;          /* Poids pour le contenu principal */
   --editor-strong-weight: 700;        /* Poids pour le texte en gras */
   --editor-table-header-weight: 900;  /* Poids pour les en-têtes de tableau */
@@ -126,7 +126,7 @@
   /* ==========================================================================
      RESPONSIVE TAILLES - PREMIUM
      ========================================================================== */
-  --editor-title-size-mobile: 2.375rem;   /* 38px */
+  --editor-title-size-mobile: 2.625rem;  /* 42px - aligné avec desktop */
   --editor-h1-size-mobile: 2rem;      /* 32px */
   --editor-h2-size-mobile: 1.5rem;     /* 24px */
   --editor-h3-size-mobile: 1.25rem;     /* 20px */

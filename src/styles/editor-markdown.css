@@ -119,7 +119,7 @@
 
 .ProseMirror strong,
 .markdown-body strong {
-  font-weight: 600;
+  font-weight: var(--editor-strong-weight);
   color: var(--text-primary, #e4e4e7);
 }
 

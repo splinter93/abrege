@@ -8,7 +8,7 @@
   margin: 0;
   margin-right: 0;
   font-size: var(--editor-title-size);
-  /* font-weight géré par typography.css */
+  font-weight: var(--editor-title-weight);
   color: var(--text-primary);  /* ✅ Utilise la variable (Sombre Doux #B5BCC4) */
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -64,7 +64,7 @@ textarea.editor-title-field {
   display: block;
   padding: 0;
   font-size: var(--editor-title-size);
-  /* font-weight géré par typography.css */
+  font-weight: var(--editor-title-weight);
   line-height: 1.2;
   color: var(--text-primary);  /* ✅ Utilise la variable (Sombre Doux #B5BCC4) */
   background: none;
