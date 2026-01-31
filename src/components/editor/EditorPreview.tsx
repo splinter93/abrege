@@ -304,6 +304,8 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({
         'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
         'hr', 'br',
         'input', 'label',
+        'button',
+        'svg', 'path', 'rect', 'polyline',
         'note-embed', 'youtube-embed'
       ],
       ALLOWED_ATTR: [
@@ -311,7 +313,8 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({
         'data-language', 'data-content', 'data-index', 'data-mermaid', 'data-mermaid-content',
         'colspan', 'rowspan', 'scope', 'headers',
         'width', 'height', 'align', 'valign',
-        'type', 'checked', 'disabled'
+        'type', 'checked', 'disabled',
+        'viewbox', 'fill', 'stroke', 'stroke-width', 'd', 'x', 'y', 'rx', 'ry', 'points'
       ],
       ALLOW_DATA_ATTR: true,
       ALLOW_UNKNOWN_PROTOCOLS: false

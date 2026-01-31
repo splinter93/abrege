@@ -187,6 +187,26 @@ body.chat-theme-glass .chat-markdown .u-block {
   flex-shrink: 0 !important;
   pointer-events: none !important; /* Le SVG ne capture pas les clics */
   margin: auto !important; /* ✅ Centrage parfait dans bouton 26px */
+  color: inherit !important;
+}
+
+/* ✅ Fallback preview : icônes SVG (DOMPurify peut retirer attributs) */
+.markdown-body .toolbar-btn svg path,
+.editor-content-wrapper .toolbar-btn svg path,
+.chat-markdown-content .toolbar-btn svg path,
+.chat-markdown .toolbar-btn svg path {
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+}
+
+.markdown-body .toolbar-btn svg rect,
+.editor-content-wrapper .toolbar-btn svg rect,
+.chat-markdown-content .toolbar-btn svg rect,
+.chat-markdown .toolbar-btn svg rect {
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
 }
 
 /* ✅ CRITIQUE: Forcer dimensions sur rect SVG (DOMPurify les retire) */
