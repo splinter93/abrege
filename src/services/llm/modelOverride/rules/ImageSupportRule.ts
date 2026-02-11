@@ -1,13 +1,14 @@
 /**
- * Rule : Fallback automatique vers Llama 4 Maverick si images présentes
- * 
+ * Rule : Fallback automatique vers Llama 4 Scout si images présentes
+ *
  * Logique :
  * - Si provider === 'xai' → pas de switch (xAI a la vision native)
  * - Si hasImages === false → pas de switch
- * - Si modèle actuel supporte déjà les images → pas de switch
- * - Sinon → switch vers Llama 4 Maverick
- * 
- * Modèle fallback : meta-llama/llama-4-maverick-17b-128e-instruct
+ * - Si modèle actuel a capabilities incluant 'images' → pas de switch (vision native)
+ *   (ex. Kimi K2.5 sur Liminality lit les images lui-même, pas de fallback)
+ * - Sinon → switch vers Llama 4 Scout
+ *
+ * Modèle fallback : meta-llama/llama-4-scout-17b-16e-instruct
  */
 
 import { simpleLogger as logger } from '@/utils/logger';

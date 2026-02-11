@@ -264,12 +264,12 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     name: 'Kimi K2.5 Thinking',
     category: 'liminality',
     provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    capabilities: ['text', 'images', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
     contextWindow: 262144,
     maxOutput: 8192,
     speed: 500,
     pricing: { input: '$0.40', output: '$1.75' },
-    description: 'MoonshotAI Kimi K2.5 Thinking via OpenRouter, contexte ultra-long (262K)',
+    description: 'MoonshotAI Kimi K2.5 Thinking via OpenRouter, vision native (lit les images), contexte 262K',
     recommended: false
   },
   {
