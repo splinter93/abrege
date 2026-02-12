@@ -79,7 +79,8 @@ const LIMINALITY_INFO: ProviderInfo = {
     structuredOutput: true
   },
   supportedModels: [
-    'openrouter/mimo-v2-flash:free',
+    'openrouter/mimo-v2-flash',
+    'openrouter/glm-5',
     'openrouter/kimi-k2-thinking',
     'openrouter/kimi-k2.5',
     'openrouter/glm-4.7',

@@ -234,16 +234,16 @@ export const GROQ_MODELS: GroqModelInfo[] = [
   
   // OpenRouter Models via Liminality
   {
-    id: 'openrouter/mimo-v2-flash:free',
-    name: 'MiMo-V2-Flash (free)',
+    id: 'openrouter/mimo-v2-flash',
+    name: 'MiMo-V2-Flash',
     category: 'liminality',
     provider: 'liminality',
     capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
     contextWindow: 262144,
     maxOutput: 8192,
     speed: 700,
-    pricing: { input: '$0.00', output: '$0.00' },
-    description: 'Xiaomi MiMo-V2-Flash gratuit via OpenRouter, avec reasoning et outils',
+    pricing: { input: '$0.10', output: '$0.30' },
+    description: 'Xiaomi MiMo-V2-Flash via OpenRouter, avec reasoning et outils',
     recommended: true
   },
   {
@@ -283,6 +283,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     speed: 600,
     pricing: { input: '$0.40', output: '$1.50' },
     description: 'Z.AI GLM 4.7 via OpenRouter avec reasoning et outils avancés',
+    recommended: false
+  },
+  {
+    id: 'openrouter/glm-5',
+    name: 'GLM 5',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 128000,
+    maxOutput: 8192,
+    speed: 600,
+    pricing: { input: '$0.40', output: '$1.50' },
+    description: 'Z.AI GLM 5 via OpenRouter avec reasoning et outils avancés',
     recommended: false
   },
   {
