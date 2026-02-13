@@ -76,7 +76,7 @@
         "post": {
           "operationId": "createNote",
           "summary": "Créer une nouvelle note",
-          "description": "Créer une note dans un classeur. Utiliser notebook_id et markdown_content (pas content ni classeur_id). folder_id : UUID ou null.",
+          "description": "Créer une note. notebook_id optionnel : vide/null → Quicknotes. folder_id optionnel : vide/null = racine ; si folder_id seul fourni → note dans ce dossier (classeur déduit).",
           "tags": ["Notes"],
           "security": [{"ApiKeyAuth": []}],
           "requestBody": {

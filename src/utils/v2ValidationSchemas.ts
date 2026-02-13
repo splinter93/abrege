@@ -11,14 +11,22 @@ export type ValidationErrorDetail = { field: string; message: string };
 
 /**
  * Schéma pour créer une note V2
+ * - notebook_id optionnel : vide/null → note dans Quicknotes (classeur par défaut)
+ * - folder_id optionnel : vide/null → racine du classeur ; si rempli sans notebook_id → classeur déduit du dossier
  */
 export const createNoteV2Schema = z.object({
   source_title: z.string().min(1, 'source_title requis').max(255, 'source_title trop long'),
-  notebook_id: z.string().min(1, 'notebook_id requis').nullable().optional(), // ✅ Accepter null pour notes orphelines (Canva)
+  notebook_id: z.preprocess(
+    (val) => (val === '' ? null : val),
+    z.union([z.string().min(1, 'notebook_id requis'), z.null()]).optional()
+  ),
   markdown_content: z.string().optional().default(''),
   header_image: z.string().url('header_image doit être une URL valide').optional(),
-  folder_id: z.string().uuid('folder_id doit être un UUID valide').nullable().optional(),
-  is_canva_draft: z.boolean().optional().default(false), // ✅ NOUVEAU: Flag canva draft (exclure notes recentes)
+  folder_id: z.preprocess(
+    (val) => (val === '' ? null : val),
+    z.union([z.string().uuid('folder_id doit être un UUID valide'), z.null()]).optional()
+  ),
+  is_canva_draft: z.boolean().optional().default(false),
 });
 
 /**

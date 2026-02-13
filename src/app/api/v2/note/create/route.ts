@@ -99,64 +99,75 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const validatedData = validationResult.data;
 
-    // ✅ NOUVEAU: Supporter notebook_id = null pour notes orphelines (Canva)
-    let classeurId: string | null = validatedData.notebook_id ?? null;
-    
-    // Si notebook_id est fourni, le résoudre (UUID ou slug)
+    // notebook_id optionnel : vide/null → Quicknotes par défaut, ou classeur déduit de folder_id si fourni
+    const rawNotebookId = validatedData.notebook_id ?? null;
+    const folderId = validatedData.folder_id ?? null;
+
+    const hasNotebookId = rawNotebookId != null && String(rawNotebookId).trim() !== '';
+    let classeurId: string | null = hasNotebookId ? (rawNotebookId as string) : null;
+
     if (classeurId !== null) {
-      // Si ce n'est pas un UUID, essayer de le résoudre comme un slug
+      // Résoudre UUID ou slug → id classeur
       if (!classeurId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-        logger.info(LogCategory.API, `🔍 Résolution du slug`, { ...context, slug: classeurId });
-        logger.info(LogCategory.API, `🔍 User ID`, { ...context, userId });
-        
-        logger.info(LogCategory.API, `🔍 Recherche classeur avec slug`, { ...context, slug: classeurId, userId });
-        
         const { data: classeur, error: resolveError } = await supabase
           .from('classeurs')
           .select('id, name, slug, user_id')
           .eq('slug', classeurId)
           .eq('user_id', userId)
           .single();
-        
-        logger.info(LogCategory.API, `🔍 Résultat recherche`, { ...context, classeur, error: resolveError });
-        
+
         if (resolveError || !classeur) {
           logger.error(LogCategory.API, `❌ Classeur non trouvé pour le slug`, {
             ...context,
             slug: classeurId,
             error: resolveError?.message
           });
-          logger.error(LogCategory.API, `❌ Erreur détaillée`, {
-            ...context,
-            error: resolveError?.message
-          });
-          
-          // 🔧 ANTI-BUG: Essayer de lister tous les classeurs pour debug
-          const { data: allClasseurs, error: listError } = await supabase
-            .from('classeurs')
-            .select('id, name, slug, user_id')
-            .eq('user_id', userId);
-          
-          logger.info(LogCategory.API, `🔍 Tous les classeurs de l'utilisateur`, {
-            ...context,
-            count: allClasseurs?.length || 0
-          });
-          
           return NextResponse.json(
             { error: `Classeur non trouvé: ${classeurId}` },
             { status: 404 }
           );
         }
-        
         classeurId = classeur.id;
-        logger.info(LogCategory.API, `✅ Slug résolu`, {
-          ...context,
-          original: validatedData.notebook_id,
-          resolved: classeurId
-        });
       }
     } else {
-      logger.info(LogCategory.API, `🎨 Création note orpheline (Canva)`, context);
+      // notebook_id vide/null : Quicknotes par défaut, ou classeur du dossier si folder_id fourni
+      if (folderId) {
+        const { data: folder, error: folderError } = await supabase
+          .from('folders')
+          .select('id, classeur_id')
+          .eq('id', folderId)
+          .eq('user_id', userId)
+          .single();
+        if (folderError || !folder) {
+          logger.error(LogCategory.API, `❌ Dossier non trouvé`, { ...context, folder_id: folderId });
+          return NextResponse.json(
+            { error: `Dossier non trouvé: ${folderId}` },
+            { status: 404 }
+          );
+        }
+        classeurId = folder.classeur_id as string;
+        logger.info(LogCategory.API, `📁 Note dans le dossier fourni (classeur déduit)`, {
+          ...context,
+          folder_id: folderId,
+          classeur_id: classeurId
+        });
+      } else {
+        try {
+          const { getOrCreateQuicknotesFoldersServer } = await import('@/utils/quicknotesUtils');
+          const quicknotes = await getOrCreateQuicknotesFoldersServer(userId, supabase);
+          classeurId = quicknotes.quicknotesClasseurId;
+          logger.info(LogCategory.API, `📒 Note dans Quicknotes (classeur par défaut)`, { ...context, classeur_id: classeurId });
+        } catch (e) {
+          logger.error(LogCategory.API, `❌ Quicknotes non disponible`, {
+            ...context,
+            error: e instanceof Error ? e.message : String(e)
+          });
+          return NextResponse.json(
+            { error: 'Classeur Quicknotes non trouvé. Créez un classeur nommé "Quicknotes" ou fournissez notebook_id.' },
+            { status: 404 }
+          );
+        }
+      }
     }
 
     // Générer le slug et l'URL publique
@@ -192,8 +203,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         markdown_content: safeMarkdown,
         html_content: safeMarkdown, // Pour l'instant, on met le même contenu
         header_image: validatedData.header_image,
-        folder_id: validatedData.folder_id,
-        classeur_id: classeurId, // 🔧 CORRECTION TEMPORAIRE: Utiliser uniquement classeur_id
+        folder_id: folderId,
+        classeur_id: classeurId,
         font_family: 'Figtree',
         user_id: userId,
         slug,

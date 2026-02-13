@@ -579,7 +579,7 @@ function getExistingEndpoints(): Record<string, unknown> {
     '/api/v2/note/create': {
       post: {
         summary: 'Créer une nouvelle note',
-        description: 'Créer une note dans un classeur. Ne pas inclure de H1 dans le contenu : source_title sert de titre. Utiliser notebook_id (ID du classeur) et markdown_content pour le corps.',
+        description: 'Créer une note. notebook_id optionnel : vide/null → Quicknotes (par défaut). folder_id optionnel : vide/null = racine ; si folder_id seul fourni → note dans ce dossier (classeur déduit).',
         tags: ['Notes'],
         security: [
           { BearerAuth: [] },
@@ -600,7 +600,7 @@ function getExistingEndpoints(): Record<string, unknown> {
                   },
                   notebook_id: {
                     type: 'string',
-                    description: 'ID du classeur (UUID ou slug). Optionnel pour brouillons Canva ; sinon requis pour une note dans un classeur.'
+                    description: 'ID du classeur (UUID ou slug). Optionnel : vide/null → note dans Quicknotes (par défaut).'
                   },
                   markdown_content: {
                     type: 'string',
@@ -611,7 +611,7 @@ function getExistingEndpoints(): Record<string, unknown> {
                     type: 'string',
                     format: 'uuid',
                     nullable: true,
-                    description: 'ID du dossier parent (UUID) ou null pour la racine du classeur'
+                    description: 'ID du dossier (UUID). Vide ou null = racine ; si rempli sans notebook_id, note dans ce dossier (classeur déduit).'
                   },
                   header_image: {
                     type: 'string',

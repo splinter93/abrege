@@ -76,7 +76,7 @@
       "post": {
         "operationId": "createNote",
         "summary": "Créer une nouvelle note",
-        "description": "Créer une nouvelle note dans un classeur. Ne pas inclure de H1 dans le contenu : source_title sert de titre. Utiliser notebook_id (ID du classeur) et markdown_content pour le corps.",
+        "description": "Créer une note dans un classeur. Ne pas inclure de H1 dans le contenu : source_title sert de titre. notebook_id optionnel : si vide/null, la note va dans le classeur Quicknotes (par défaut). folder_id optionnel : vide ou null = racine du classeur ; si folder_id est rempli sans notebook_id, la note est créée dans ce dossier (classeur déduit).",
         "tags": ["Notes"],
         "security": [{"ApiKeyAuth": []}],
         "requestBody": {
@@ -94,7 +94,7 @@
                   },
                   "notebook_id": {
                     "type": "string",
-                    "description": "ID du classeur (UUID ou slug). Optionnel pour brouillons Canva ; sinon requis pour une note dans un classeur."
+                    "description": "ID du classeur (UUID ou slug). Optionnel : si vide ou null, la note est créée dans le classeur Quicknotes (par défaut)."
                   },
                   "markdown_content": {
                     "type": "string",
@@ -105,7 +105,7 @@
                     "type": "string",
                     "format": "uuid",
                     "nullable": true,
-                    "description": "ID du dossier parent (UUID) ou null pour la racine du classeur"
+                    "description": "ID du dossier parent (UUID). Vide ou null = note à la racine du classeur. Si rempli sans notebook_id, la note est créée dans ce dossier (classeur déduit automatiquement)."
                   },
                   "header_image": {
                     "type": "string",
