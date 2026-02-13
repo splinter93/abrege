@@ -150,6 +150,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
               }
             }
           },
+          ValidationError: {
+            type: 'object',
+            description: 'Réponse 422 : erreur de validation du payload avec détails par champ',
+            properties: {
+              error: { type: 'string', example: 'Payload invalide', description: 'Message d\'erreur générique' },
+              details: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    field: { type: 'string', description: 'Nom du champ en erreur (ex: folder_id, notebook_id)' },
+                    message: { type: 'string', description: 'Message Zod (ex: folder_id doit être un UUID valide)' }
+                  },
+                  required: ['field', 'message']
+                },
+                description: 'Liste des erreurs par champ'
+              },
+              summary: { type: 'string', description: 'Résumé lisible pour logs' }
+            },
+            required: ['error', 'details']
+          },
           Success: {
             type: 'object',
             properties: {
@@ -555,6 +576,89 @@ function getExistingEndpoints(): Record<string, unknown> {
         }
       }
     },
+    '/api/v2/note/create': {
+      post: {
+        summary: 'Créer une nouvelle note',
+        description: 'Créer une note dans un classeur. Ne pas inclure de H1 dans le contenu : source_title sert de titre. Utiliser notebook_id (ID du classeur) et markdown_content pour le corps.',
+        tags: ['Notes'],
+        security: [
+          { BearerAuth: [] },
+          { ApiKeyAuth: [] }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  source_title: {
+                    type: 'string',
+                    minLength: 1,
+                    maxLength: 255,
+                    description: 'Titre de la note (obligatoire)'
+                  },
+                  notebook_id: {
+                    type: 'string',
+                    description: 'ID du classeur (UUID ou slug). Optionnel pour brouillons Canva ; sinon requis pour une note dans un classeur.'
+                  },
+                  markdown_content: {
+                    type: 'string',
+                    default: '',
+                    description: 'Contenu markdown de la note (pas de H1 : le titre est source_title)'
+                  },
+                  folder_id: {
+                    type: 'string',
+                    format: 'uuid',
+                    nullable: true,
+                    description: 'ID du dossier parent (UUID) ou null pour la racine du classeur'
+                  },
+                  header_image: {
+                    type: 'string',
+                    format: 'uri',
+                    description: 'URL de l\'image d\'en-tête (optionnel)'
+                  },
+                  is_canva_draft: {
+                    type: 'boolean',
+                    default: false,
+                    description: 'True pour un brouillon Canva (optionnel)'
+                  }
+                },
+                required: ['source_title']
+              }
+            }
+          }
+        },
+        responses: {
+          '201': {
+            description: 'Note créée avec succès',
+            content: {
+              'application/json': {
+                schema: {
+                  allOf: [
+                    { $ref: '#/components/schemas/Success' },
+                    {
+                      type: 'object',
+                      properties: {
+                        data: { type: 'object', description: 'Note créée (id, slug, source_title, ...)' }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          '422': {
+            description: 'Payload invalide (voir details[].field et details[].message)',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ValidationError' }
+              }
+            }
+          }
+        }
+      }
+    },
     '/api/v2/agents/execute': {
       post: {
         summary: 'Exécuter un agent universel',
@@ -688,10 +792,10 @@ function getExistingEndpoints(): Record<string, unknown> {
             }
           },
           '422': {
-            description: 'Erreur de validation des paramètres',
+            description: 'Payload invalide (voir details[].field et details[].message)',
             content: {
               'application/json': {
-                schema: { $ref: '#/components/schemas/Error' }
+                schema: { $ref: '#/components/schemas/ValidationError' }
               }
             }
           },

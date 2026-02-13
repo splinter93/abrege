@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
+import { logger, LogCategory } from '@/utils/logger';
+
+/** Détail d'erreur de validation (champ + message) pour réponses 422 et logs */
+export type ValidationErrorDetail = { field: string; message: string };
 
 // ============================================================================
 // NOTE MANAGEMENT SCHEMAS
@@ -387,19 +391,24 @@ export const treeResponseV2Schema = z.object({
 // ============================================================================
 
 /**
- * Valide un payload avec un schéma Zod et retourne une réponse d'erreur si invalide
+ * Valide un payload avec un schéma Zod et retourne une réponse d'erreur si invalide.
+ * details contient pour chaque erreur le champ concerné (field) et le message Zod.
  */
-export function validatePayload<T>(schema: z.ZodSchema<T>, payload: unknown): { success: true; data: T } | { success: false; error: string; details: string[] } {
+export function validatePayload<T>(schema: z.ZodSchema<T>, payload: unknown): { success: true; data: T } | { success: false; error: string; details: ValidationErrorDetail[] } {
   const parseResult = schema.safeParse(payload);
-  
+
   if (!parseResult.success) {
+    const details: ValidationErrorDetail[] = parseResult.error.errors.map((issue) => ({
+      field: issue.path?.length ? issue.path.join('.') : 'body',
+      message: issue.message,
+    }));
     return {
       success: false,
       error: 'Payload invalide',
-      details: parseResult.error.errors.map(e => e.message)
+      details,
     };
   }
-  
+
   return {
     success: true,
     data: parseResult.data
@@ -407,13 +416,33 @@ export function validatePayload<T>(schema: z.ZodSchema<T>, payload: unknown): { 
 }
 
 /**
- * Crée une réponse d'erreur de validation
+ * Retourne une phrase lisible pour les logs (ex: "folder_id: doit être un UUID; notebook_id: requis").
  */
-export function createValidationErrorResponse(validationResult: { success: false; error: string; details: string[] }): NextResponse {
+export function formatValidationSummary(details: ValidationErrorDetail[]): string {
+  return details.map((d) => `${d.field}: ${d.message}`).join(' ; ');
+}
+
+/**
+ * Crée une réponse 422 avec détails champ par champ.
+ * Si context.operation est fourni, log une ligne claire en API pour faciliter le debug.
+ */
+export function createValidationErrorResponse(
+  validationResult: { success: false; error: string; details: ValidationErrorDetail[] },
+  context?: { operation?: string }
+): NextResponse {
+  const summary = formatValidationSummary(validationResult.details);
+  if (context?.operation) {
+    logger.error(LogCategory.API, `❌ Validation échouée [${context.operation}]`, {
+      operation: context.operation,
+      validationErrors: validationResult.details,
+      summary,
+    });
+  }
   return NextResponse.json(
     {
       error: validationResult.error,
-      details: validationResult.details
+      details: validationResult.details,
+      summary: summary,
     },
     { status: 422 }
   );

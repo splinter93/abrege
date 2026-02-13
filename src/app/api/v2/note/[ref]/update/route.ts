@@ -43,8 +43,7 @@ export async function PUT(
     // Validation Zod V2
     const validationResult = validatePayload(updateNoteV2Schema, body);
     if (!validationResult.success) {
-      logApi.error('❌ Validation échouée');
-      return createValidationErrorResponse(validationResult);
+      return createValidationErrorResponse(validationResult, context);
     }
 
     const validatedData = validationResult.data;

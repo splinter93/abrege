@@ -76,7 +76,7 @@
         "post": {
           "operationId": "createNote",
           "summary": "Créer une nouvelle note",
-          "description": "Créer une nouvelle note structurée dans un classeur spécifique",
+          "description": "Créer une note dans un classeur. Ne pas inclure de H1 dans le contenu : source_title sert de titre. Utiliser notebook_id (ID ou slug du classeur) et markdown_content pour le corps. folder_id doit être un UUID ou null (pas la chaîne \"default\").",
           "tags": ["Notes"],
           "security": [{"ApiKeyAuth": []}],
           "requestBody": {
@@ -88,29 +88,37 @@
                   "properties": {
                     "source_title": {
                       "type": "string",
+                      "minLength": 1,
                       "maxLength": 255,
-                      "description": "Titre de la note"
+                      "description": "Titre de la note (obligatoire)"
                     },
                     "notebook_id": {
                       "type": "string",
-                      "description": "ID ou slug du classeur parent"
+                      "description": "ID ou slug du classeur parent. Optionnel pour brouillons Canva."
+                    },
+                    "markdown_content": {
+                      "type": "string",
+                      "default": "",
+                      "description": "Contenu markdown (pas de H1 : le titre est source_title)"
                     },
                     "folder_id": {
                       "type": "string",
                       "format": "uuid",
-                      "description": "ID du dossier parent (optionnel)"
-                    },
-                    "markdown_content": {
-                      "type": "string",
-                      "description": "Contenu markdown de la note"
+                      "nullable": true,
+                      "description": "ID du dossier parent (UUID) ou null pour la racine"
                     },
                     "header_image": {
                       "type": "string",
                       "format": "uri",
                       "description": "URL de l'image d'en-tête (optionnel)"
+                    },
+                    "is_canva_draft": {
+                      "type": "boolean",
+                      "default": false,
+                      "description": "True pour un brouillon Canva (optionnel)"
                     }
                   },
-                  "required": ["source_title", "notebook_id"]
+                  "required": ["source_title"]
                 }
               }
             }
@@ -134,11 +142,11 @@
                 }
               }
             },
-            "400": {
-              "description": "Données invalides",
+            "422": {
+              "description": "Payload invalide (voir details[].field et details[].message)",
               "content": {
                 "application/json": {
-                  "schema": {"$ref": "#/components/schemas/Error"}
+                  "schema": {"$ref": "#/components/schemas/ValidationError"}
                 }
               }
             }
@@ -2687,6 +2695,26 @@
             }
           },
           "required": ["success", "error"]
+        },
+        "ValidationError": {
+          "type": "object",
+          "description": "Réponse 422 : erreur de validation du payload avec détails par champ",
+          "properties": {
+            "error": { "type": "string", "example": "Payload invalide" },
+            "details": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": { "type": "string" },
+                  "message": { "type": "string" }
+                },
+                "required": ["field", "message"]
+              }
+            },
+            "summary": { "type": "string" }
+          },
+          "required": ["error", "details"]
         },
         "Note": {
           "type": "object",

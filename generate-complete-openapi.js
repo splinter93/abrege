@@ -76,7 +76,7 @@
         "post": {
           "operationId": "createNote",
           "summary": "Créer une nouvelle note",
-          "description": "Créer une nouvelle note structurée dans un classeur spécifique",
+          "description": "Créer une note dans un classeur. Utiliser notebook_id et markdown_content (pas content ni classeur_id). folder_id : UUID ou null.",
           "tags": ["Notes"],
           "security": [{"ApiKeyAuth": []}],
           "requestBody": {
@@ -86,33 +86,14 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "source_title": {
-                      "type": "string",
-                      "maxLength": 255,
-                      "description": "Titre de la note"
-                    },
-                    "classeur_id": {
-                      "type": "string",
-                      "format": "uuid",
-                      "description": "ID du classeur parent"
-                    },
-                    "folder_id": {
-                      "type": "string",
-                      "format": "uuid",
-                      "description": "ID du dossier parent (optionnel)"
-                    },
-                    "content": {
-                      "type": "string",
-                      "description": "Contenu markdown de la note"
-                    },
-                    "visibility": {
-                      "type": "string",
-                      "enum": ["private", "public", "link-private", "link-public"],
-                      "default": "private",
-                      "description": "Visibilité de la note"
-                    }
+                    "source_title": {"type": "string", "minLength": 1, "maxLength": 255},
+                    "notebook_id": {"type": "string"},
+                    "markdown_content": {"type": "string", "default": ""},
+                    "folder_id": {"type": "string", "format": "uuid", "nullable": true},
+                    "header_image": {"type": "string", "format": "uri"},
+                    "is_canva_draft": {"type": "boolean", "default": false}
                   },
-                  "required": ["source_title", "classeur_id"]
+                  "required": ["source_title"]
                 }
               }
             }
@@ -125,22 +106,17 @@
                   "schema": {
                     "allOf": [
                       {"$ref": "#/components/schemas/Success"},
-                      {
-                        "type": "object",
-                        "properties": {
-                          "data": {"$ref": "#/components/schemas/Note"}
-                        }
-                      }
+                      {"type": "object", "properties": {"data": {"$ref": "#/components/schemas/Note"}}}
                     ]
                   }
                 }
               }
             },
-            "400": {
-              "description": "Données invalides",
+            "422": {
+              "description": "Payload invalide (voir details[].field et details[].message)",
               "content": {
                 "application/json": {
-                  "schema": {"$ref": "#/components/schemas/Error"}
+                  "schema": {"$ref": "#/components/schemas/ValidationError"}
                 }
               }
             }
@@ -2298,6 +2274,26 @@
             }
           },
           "required": ["success", "error"]
+        },
+        "ValidationError": {
+          "type": "object",
+          "description": "Réponse 422 : erreur de validation du payload avec détails par champ",
+          "properties": {
+            "error": {"type": "string", "example": "Payload invalide"},
+            "details": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {"type": "string"},
+                  "message": {"type": "string"}
+                },
+                "required": ["field", "message"]
+              }
+            },
+            "summary": {"type": "string"}
+          },
+          "required": ["error", "details"]
         },
         "Note": {
           "type": "object",

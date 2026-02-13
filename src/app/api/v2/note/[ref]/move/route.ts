@@ -43,8 +43,7 @@ export async function PUT(
     // Validation Zod V2 pour le déplacement de dossier uniquement
     const validationResult = validatePayload(moveNoteV2Schema, body);
     if (!validationResult.success) {
-      logApi.info('❌ Validation échouée', context);
-      return createValidationErrorResponse(validationResult);
+      return createValidationErrorResponse(validationResult, context);
     }
 
     const validatedData = validationResult.data;

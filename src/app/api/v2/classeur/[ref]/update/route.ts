@@ -48,7 +48,7 @@ export async function PUT(
     // Validation du payload
     const validationResult = validatePayload(updateClasseurV2Schema, body);
     if (!validationResult.success) {
-      return createValidationErrorResponse(validationResult);
+      return createValidationErrorResponse(validationResult, context);
     }
 
     // ✅ FIX SLUG: Utiliser V2DatabaseUtils.updateClasseur qui inclut la logique de mise à jour du slug

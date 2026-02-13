@@ -94,10 +94,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validation Zod V2
     const validationResult = validatePayload(createNoteV2Schema, body);
     if (!validationResult.success) {
-      logger.error(LogCategory.API, '❌ Validation échouée', {
-        errors: validationResult.error
-      });
-      return createValidationErrorResponse(validationResult);
+      return createValidationErrorResponse(validationResult, context);
     }
 
     const validatedData = validationResult.data;

@@ -73,8 +73,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validation Zod V2
     const validationResult = validatePayload(createFolderV2Schema, body);
     if (!validationResult.success) {
-      logger.error(LogCategory.API, '❌ Validation échouée', validationResult);
-      return createValidationErrorResponse(validationResult);
+      return createValidationErrorResponse(validationResult, context);
     }
 
     const validatedData = validationResult.data;

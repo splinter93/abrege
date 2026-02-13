@@ -184,8 +184,7 @@ export async function POST(
     const validationResult = validatePayload(contentApplyV2Schema, body);
 
     if (!validationResult.success) {
-      logApi.info('❌ Validation échouée', context);
-      return createValidationErrorResponse(validationResult);
+      return createValidationErrorResponse(validationResult, context);
     }
 
     const { ops, transaction, conflict_strategy, return: returnType, idempotency_key } = validationResult.data;

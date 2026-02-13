@@ -132,8 +132,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const validationResult = validatePayload(executeAgentV2Schema, body);
     
     if (!validationResult.success) {
-      logApi.info('❌ Validation échouée', context);
-      return createValidationErrorResponse(validationResult);
+      return createValidationErrorResponse(validationResult, context);
     }
 
     const { ref, input, image, options = {} } = validationResult.data;

@@ -128,7 +128,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Validation du payload
     const validationResult = validatePayload(createClasseurV2Schema, body);
     if (!validationResult.success) {
-      return createValidationErrorResponse(validationResult);
+      return createValidationErrorResponse(validationResult, context);
     }
 
     const { name, emoji, description } = validationResult.data;
