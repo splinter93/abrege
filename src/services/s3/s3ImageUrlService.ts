@@ -58,10 +58,10 @@ export async function convertS3UrlsToPresigned(
     return;
   }
 
-  if (provider !== 'groq' && provider !== 'xai') {
-    // Liminality gère les images différemment (base64 ou URLs publiques)
+  if (provider !== 'groq' && provider !== 'xai' && provider !== 'liminality') {
     return;
   }
+  // Liminality : images via metadata.imageInputs ; URLs doivent être accessibles par le serveur Synesia
 
   // Lazy import pour éviter les dépendances circulaires
   const { s3Service } = await import('@/services/s3Service');

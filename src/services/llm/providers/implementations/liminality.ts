@@ -30,6 +30,10 @@ import type {
   LiminalityToolCallInMessage
 } from '../../types/liminalityTypes';
 
+/** Limites API Synesia pour metadata.imageInputs (doc LLM Exec vision) */
+const MAX_IMAGE_INPUTS = 10;
+const MAX_IMAGE_INPUT_LENGTH = 5_000_000;
+
 /**
  * Configuration spécifique à Liminality
  */
@@ -216,12 +220,13 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
     try {
       logger.dev(`[LiminalityProvider] 🚀 Appel avec ${messages.length} messages`);
       
-      // Conversion des ChatMessage vers le format API Liminality
+      // Conversion des ChatMessage vers le format API Liminality (content = texte uniquement)
       const apiMessages = this.convertChatMessagesToApiFormat(messages);
-      
+      const imageInputs = this.extractImageInputsFromMessages(messages);
+
       // Conversion des tools via l'adapter
       let liminalityTools = LiminalityToolsAdapter.convert(tools);
-      
+
       // Ajouter les callables Synesia si fournis
       if (synesiaCallables && synesiaCallables.length > 0) {
         liminalityTools = LiminalityToolsAdapter.addSynesiaTools(liminalityTools, {
@@ -229,11 +234,11 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
         });
         logger.info(`[LiminalityProvider] 🔗 ${synesiaCallables.length} callables ajoutés aux tools`);
       }
-      
-      // Préparer le payload
-      const payload = this.preparePayload(apiMessages, liminalityTools);
-      
-      logger.info(`[LiminalityProvider] 🚀 PAYLOAD → LIMINALITY: ${payload.model} | ${apiMessages.length} messages | ${liminalityTools.length} tools`);
+
+      // Préparer le payload (images via metadata.imageInputs, jamais dans content)
+      const payload = this.preparePayload(apiMessages, liminalityTools, imageInputs);
+
+      logger.info(`[LiminalityProvider] 🚀 PAYLOAD → LIMINALITY: ${payload.model} | ${apiMessages.length} messages | ${liminalityTools.length} tools | images=${imageInputs.length}`);
       
       // Appel API
       const response = await this.makeApiCall(payload);
@@ -273,12 +278,13 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
     try {
       logger.dev(`[LiminalityProvider] 🌊 Streaming avec ${messages.length} messages`);
       
-      // Conversion des ChatMessage vers le format API
+      // Conversion des ChatMessage vers le format API (content = texte uniquement)
       const apiMessages = this.convertChatMessagesToApiFormat(messages);
-      
+      const imageInputs = this.extractImageInputsFromMessages(messages);
+
       // Conversion des tools via l'adapter
       let liminalityTools = LiminalityToolsAdapter.convert(tools);
-      
+
       // Ajouter les callables Synesia si fournis
       if (synesiaCallables && synesiaCallables.length > 0) {
         liminalityTools = LiminalityToolsAdapter.addSynesiaTools(liminalityTools, {
@@ -286,11 +292,11 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
         });
         logger.info(`[LiminalityProvider] 🔗 ${synesiaCallables.length} callables ajoutés aux tools`);
       }
-      
-      // Préparer le payload
-      const payload = this.preparePayload(apiMessages, liminalityTools);
-      
-      logger.info(`[LiminalityProvider] 🚀 Stream call: ${payload.model} | ${apiMessages.length} messages | ${liminalityTools.length} tools`);
+
+      // Préparer le payload (images via metadata.imageInputs)
+      const payload = this.preparePayload(apiMessages, liminalityTools, imageInputs);
+
+      logger.info(`[LiminalityProvider] 🚀 Stream call: ${payload.model} | ${apiMessages.length} messages | ${liminalityTools.length} tools | images=${imageInputs.length}`);
       
       // Appel API avec streaming
       const response = await fetch(`${this.config.baseUrl}/llm-exec/round/stream`, {
@@ -428,6 +434,37 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
   }
 
   /**
+   * Extrait les URLs d'images du dernier message user pour metadata.imageInputs.
+   * Conforme doc Synesia : images uniquement dans metadata.imageInputs, jamais dans content.
+   * Limites : max 10 images, max 5M caractères par URL.
+   */
+  private extractImageInputsFromMessages(messages: ChatMessage[]): string[] {
+    const lastUser = messages.filter((m) => m.role === 'user').pop();
+    if (!lastUser || !('attachedImages' in lastUser) || !lastUser.attachedImages?.length) {
+      return [];
+    }
+    const urls: string[] = [];
+    for (const img of lastUser.attachedImages.slice(0, MAX_IMAGE_INPUTS)) {
+      if (typeof img.url !== 'string' || !img.url.trim()) continue;
+      if (img.url.length > MAX_IMAGE_INPUT_LENGTH) {
+        logger.warn('[LiminalityProvider] ⚠️ Image ignorée (trop volumineuse)', {
+          length: img.url.length,
+          max: MAX_IMAGE_INPUT_LENGTH
+        });
+        continue;
+      }
+      urls.push(img.url.trim());
+    }
+    if (urls.length > 0) {
+      logger.dev('[LiminalityProvider] 🖼️ imageInputs pour metadata:', {
+        count: urls.length,
+        prefixes: urls.map((u) => (u.startsWith('data:') ? 'data:...' : u.substring(0, 40) + '...'))
+      });
+    }
+    return urls;
+  }
+
+  /**
    * Convertit les ChatMessage vers le format API Liminality
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): LiminalityMessage[] {
@@ -515,11 +552,13 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
   }
 
   /**
-   * Prépare le payload pour l'API Liminality
+   * Prépare le payload pour l'API Liminality.
+   * Les images sont envoyées via metadata.imageInputs (doc Synesia LLM Exec vision).
    */
   private preparePayload(
     messages: LiminalityMessage[],
-    tools: LiminalityTool[]
+    tools: LiminalityTool[],
+    imageInputs?: string[]
   ): LiminalityRequestPayload {
     const llmConfig: LiminalityLLMConfig = {
       temperature: this.config.temperature,
@@ -540,9 +579,12 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       config: orchestrationConfig
     };
 
-    // Ajouter les tools si présents
     if (tools && tools.length > 0) {
       payload.tools = tools;
+    }
+
+    if (imageInputs && imageInputs.length > 0) {
+      payload.metadata = { imageInputs };
     }
 
     return payload;

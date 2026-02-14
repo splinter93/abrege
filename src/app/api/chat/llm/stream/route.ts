@@ -445,8 +445,8 @@ export async function POST(request: NextRequest) {
     }
 
     // ✅ CRITIQUE : Convertir les URLs S3 canoniques en presigned URLs pour les providers qui en ont besoin
-    // Groq et xAI doivent pouvoir télécharger les images, donc on génère des presigned URLs avec expiration longue
-    if (userMessageImages && userMessageImages.length > 0 && (providerType === 'groq' || providerType === 'xai')) {
+    // Groq, xAI et Liminality : le serveur (ou Synesia) doit pouvoir GET les images
+    if (userMessageImages && userMessageImages.length > 0 && (providerType === 'groq' || providerType === 'xai' || providerType === 'liminality')) {
       const { convertS3UrlsToPresigned } = await import('@/services/s3/s3ImageUrlService');
       await convertS3UrlsToPresigned({
         images: userMessageImages,

@@ -227,7 +227,17 @@ export interface LiminalityToolCallInMessage {
 }
 
 /**
- * Payload complet pour l'API /llm-exec/round
+ * Métadonnées optionnelles pour l'API Synesia LLM Exec.
+ * Les images doivent être envoyées uniquement via metadata.imageInputs
+ * (jamais dans messages[].content). Le serveur les injecte dans le dernier message user.
+ */
+export interface LiminalityRequestMetadata {
+  /** URLs ou data URLs d'images. Max 10 par requête, ~5 MB par image en base64. */
+  imageInputs?: string[];
+}
+
+/**
+ * Payload complet pour l'API /llm-exec/round (et /llm-exec/round/stream)
  */
 export interface LiminalityRequestPayload {
   model: string;
@@ -237,5 +247,7 @@ export interface LiminalityRequestPayload {
   config?: LiminalityOrchestrationConfig;
   instructions?: string;
   thread_id?: string;
+  /** Images pour modèles vision : tableau d'URLs ou data URLs. Injecté côté serveur dans le dernier message user. */
+  metadata?: LiminalityRequestMetadata;
 }
 

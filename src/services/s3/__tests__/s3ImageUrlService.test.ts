@@ -113,17 +113,20 @@ describe('S3ImageUrlService', () => {
       expect(s3Service.generateGetUrl).not.toHaveBeenCalled();
     });
 
-    it('ne devrait pas convertir pour provider Liminality', async () => {
+    it('devrait convertir les URLs S3 pour provider Liminality (serveur Synesia doit pouvoir GET)', async () => {
       const originalUrl = 'https://bucket.s3.region.amazonaws.com/image.jpg';
+      const presignedUrl = 'https://bucket.s3.region.amazonaws.com/image.jpg?X-Amz-Algorithm=...';
       const images = [{ url: originalUrl }];
+
+      s3Service.generateGetUrl.mockResolvedValueOnce(presignedUrl);
 
       await convertS3UrlsToPresigned({
         images,
         provider: 'liminality'
       });
 
-      expect(images[0].url).toBe(originalUrl);
-      expect(s3Service.generateGetUrl).not.toHaveBeenCalled();
+      expect(images[0].url).toBe(presignedUrl);
+      expect(s3Service.generateGetUrl).toHaveBeenCalled();
     });
 
     it('devrait gérer les erreurs S3 gracieusement (fallback sur URL originale)', async () => {
