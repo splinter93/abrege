@@ -299,6 +299,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: false
   },
   {
+    id: 'fireworks/glm-5',
+    name: 'GLM 5 Fireworks',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 128000,
+    maxOutput: 8192,
+    speed: 600,
+    pricing: { input: '$0.40', output: '$1.50' },
+    description: 'Z.AI GLM 5 via Fireworks avec reasoning et outils avancés',
+    recommended: false
+  },
+  {
     id: 'openrouter/gemini-3-flash-preview',
     name: 'Gemini 3 Flash Preview',
     category: 'liminality',
