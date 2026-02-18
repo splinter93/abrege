@@ -193,7 +193,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // 🛡️ SÉCURITÉ : Sanitizer le markdown pour empêcher les injections HTML
-    const safeMarkdown = sanitizeMarkdownContent(validatedData.markdown_content || '');
+    // Accepter "content" comme alias de markdown_content (payloads externes / Synesia envoient souvent "content")
+    const rawContent = validatedData.markdown_content || validatedData.content || '';
+    const safeMarkdown = sanitizeMarkdownContent(rawContent);
 
     // Créer la note directement dans la base de données
     const { data: note, error: createError } = await supabase

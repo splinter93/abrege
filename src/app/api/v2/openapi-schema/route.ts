@@ -605,7 +605,11 @@ function getExistingEndpoints(): Record<string, unknown> {
                   markdown_content: {
                     type: 'string',
                     default: '',
-                    description: 'Contenu markdown de la note (pas de H1 : le titre est source_title)'
+                    description: 'Contenu markdown de la note (pas de H1 : le titre est source_title). Préférer ce champ ou content.'
+                  },
+                  content: {
+                    type: 'string',
+                    description: 'Alias accepté pour le contenu markdown. Si fourni et markdown_content absent, utilisé comme contenu de la note. Équivalent à markdown_content.'
                   },
                   folder_id: {
                     type: 'string',

@@ -20,7 +20,9 @@ export const createNoteV2Schema = z.object({
     (val) => (val === '' ? null : val),
     z.union([z.string().min(1, 'notebook_id requis'), z.null()]).optional()
   ),
+  /** Contenu markdown. Accepte aussi l'alias `content` pour compatibilité (ex. clients qui envoient "content"). */
   markdown_content: z.string().optional().default(''),
+  content: z.string().optional(),
   header_image: z.string().url('header_image doit être une URL valide').optional(),
   folder_id: z.preprocess(
     (val) => (val === '' ? null : val),
