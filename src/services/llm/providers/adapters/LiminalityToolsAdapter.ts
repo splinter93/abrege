@@ -74,28 +74,44 @@ export class LiminalityToolsAdapter {
   }
 
   /**
-   * Convertit un MCP tool vers le format Liminality
-   * 
-   * @param tool - Tool MCP au format Groq/xAI
-   * @returns Tool MCP au format Liminality
+   * Convertit un MCP tool vers le format Liminality/Synesia
+   * Conforme doc « Intégration des outils MCP » : allowed_tools et require_approval obligatoires.
+   *
+   * @param tool - Tool MCP au format Groq/xAI (McpTool)
+   * @returns Tool MCP au format Liminality (payload /llm-exec/round)
    */
   private static convertMcpTool(tool: McpTool): LiminalityMCPTool {
-    // Extraire le server_label avec type guard
     let serverLabel = 'mcp-server';
     if (tool.server_label && typeof tool.server_label === 'string') {
       serverLabel = tool.server_label;
     } else if (tool.name && typeof tool.name === 'string') {
       serverLabel = tool.name;
     }
-    
-    return     {
+
+    const allowedTools = tool.allowed_tools;
+    const allowedToolsArray =
+      Array.isArray(allowedTools) && allowedTools.every((t): t is string => typeof t === 'string')
+        ? allowedTools
+        : [];
+
+    const requireApproval = tool.require_approval;
+    const validApproval = requireApproval === 'always' || requireApproval === 'never' || requireApproval === 'auto'
+      ? requireApproval
+      : 'auto';
+
+    const base: LiminalityMCPTool = {
       type: 'mcp',
       server_label: serverLabel,
       server_url: (tool.server_url as string) || '',
-      allowed_tools: tool.allowed_tools as string[] | undefined,
-      require_approval: 'auto', // Mode auto par défaut pour éviter les interruptions
-      headers: (tool.headers || {}) as Record<string, string>
+      allowed_tools: allowedToolsArray,
+      require_approval: validApproval
     };
+
+    if (tool.headers && typeof tool.headers === 'object' && Object.keys(tool.headers).length > 0) {
+      base.headers = tool.headers as Record<string, string | { secret_key: string }>;
+    }
+
+    return base;
   }
 
   /**

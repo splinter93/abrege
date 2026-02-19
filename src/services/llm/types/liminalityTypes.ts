@@ -56,15 +56,29 @@ export interface LiminalityOpenAPITool {
 }
 
 /**
+ * Valeur d'un header MCP : littérale ou référence à un secret Synesia (onglet Authentication).
+ * Doc §3 : "chaque clé est un nom d'en-tête HTTP et la valeur est soit une chaîne,
+ * soit une référence à un secret stocké dans le projet" via { "secret_key": "MCP_TOKEN" }.
+ */
+export type LiminalityMCPHeaderValue = string | { secret_key: string };
+
+/**
  * Tool MCP : Connecte à un serveur Model Context Protocol
+ * Conforme doc « Intégration des outils MCP dans les requêtes LLM Exec » :
+ * - type, server_label, server_url, allowed_tools, require_approval obligatoires
+ * - allowed_tools = [] signifie « tous les tools du serveur »
+ * - headers optionnel ; valeurs string ou { secret_key: "..." }
  */
 export interface LiminalityMCPTool {
   type: 'mcp';
   server_label: string;
   server_url: string;
-  allowed_tools?: string[];
-  require_approval?: 'always' | 'never' | 'auto';
-  headers?: Record<string, string>;
+  /** Liste des tools autorisés ; [] = tous les tools retournés par le serveur. */
+  allowed_tools: string[];
+  /** Comportement d'approbation avant exécution (always | never | auto). */
+  require_approval: 'always' | 'never' | 'auto';
+  /** En-têtes HTTP (auth, etc.) ; valeur = string ou { secret_key: "..." }. */
+  headers?: Record<string, LiminalityMCPHeaderValue>;
 }
 
 /**
@@ -184,27 +198,47 @@ export interface LiminalityResponse {
 }
 
 /**
- * Events de streaming SSE (format réel de l'API Liminality)
- * 
- * Types d'events observés :
- * - 'start' : Démarrage du stream
- * - 'text.delta' : Chunk de texte avec delta
- * - 'chunk' : Chunk de contenu (ancien format)
- * - 'text.done' : Fin du texte
- * - 'tool_block.start' : Début d'un tool call
- * - 'tool_block.done' : Fin d'un tool call
- * - 'done' : Fin du stream avec messages complets
- * - 'tool_call' : Tool call en cours (ancien format)
- * - 'tool_result' : Résultat de tool (ancien format)
- * - 'end' : Fin du stream (ancien format)
- * - 'error' : Erreur
+ * Types d'événements internal_tool (callables) — doc LLM Exec §6
+ */
+export type LiminalityInternalToolEventType = 'internal_tool.start' | 'internal_tool.done' | 'internal_tool.error';
+
+/**
+ * Events de streaming SSE (format réel de l'API Liminality / Synesia LLM Exec)
+ *
+ * Conforme doc « Intégration des callables dans les requêtes LLM Exec » :
+ * - internal_tool.start : début exécution callable (tool_call_id, name, arguments)
+ * - internal_tool.done : fin callable (tool_call_id, name, result)
+ * - internal_tool.error : erreur callable (tool_call_id, name, error)
  */
 export interface LiminalityStreamEvent {
-  type: 'start' | 'text.start' | 'text.delta' | 'chunk' | 'text.done' | 'tool_block.start' | 'tool_block.done' | 'done' | 'tool_call' | 'tool_result' | 'end' | 'error';
+  type:
+    | 'start'
+    | 'text.start'
+    | 'text.delta'
+    | 'chunk'
+    | 'text.done'
+    | 'tool_block.start'
+    | 'tool_block.done'
+    | 'internal_tool.start'
+    | 'internal_tool.done'
+    | 'internal_tool.error'
+    | 'done'
+    | 'tool_call'
+    | 'tool_result'
+    | 'end'
+    | 'error';
   delta?: string; // Pour 'text.delta'
   content?: string; // Pour 'chunk' ou contenu général
   block_id?: string; // Pour 'tool_block.start' et 'tool_block.done'
   tool_name?: string; // Pour 'tool_call' et 'tool_result' (ancien format)
+  /** internal_tool.* : identifiant du tool call */
+  tool_call_id?: string;
+  /** internal_tool.* : nom du callable/outil */
+  name?: string;
+  /** internal_tool.start : arguments envoyés au callable */
+  arguments?: Record<string, unknown>;
+  /** internal_tool.done : résultat du callable */
+  result?: unknown;
   messages?: Array<{
     role: string;
     tool_calls?: Array<LiminalityToolCallInMessage>;

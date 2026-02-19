@@ -208,10 +208,10 @@ describe('LiminalityProvider', () => {
 
     test('should return supported models', () => {
       const models = provider.getSupportedModels();
-      
-      expect(models).toContain('gpt-4o-mini');
-      expect(models).toContain('claude-3-haiku');
-      expect(models).toContain('groq-llama-3-70b');
+
+      expect(models.length).toBeGreaterThan(0);
+      expect(models).toContain('openrouter/mimo-v2-flash');
+      expect(models).toContain('openrouter/glm-5');
     });
 
     test('should return pricing info', () => {
