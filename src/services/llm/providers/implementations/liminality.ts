@@ -27,7 +27,10 @@ import type {
   LiminalityResponse,
   LiminalityStreamEvent,
   LiminalityRequestPayload,
-  LiminalityToolCallInMessage
+  LiminalityToolCallInMessage,
+  InternalToolStartChunk,
+  InternalToolDoneChunk,
+  InternalToolErrorChunk
 } from '../../types/liminalityTypes';
 
 /** Limites API Synesia pour metadata.imageInputs (doc LLM Exec vision) */
@@ -51,7 +54,7 @@ interface TokenUsage {
 }
 
 /**
- * Type pour les chunks de streaming SSE
+ * Type pour les chunks de streaming SSE (delta, error, tool_calls dans done)
  */
 interface StreamChunk {
   type?: 'delta' | 'error';
@@ -59,12 +62,22 @@ interface StreamChunk {
   tool_calls?: ToolCall[];
   finishReason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
   reasoning?: string;
-  usage?: TokenUsage; // ✅ TYPÉ au lieu de unknown
-  error?: string; // Message d'erreur
-  errorCode?: string; // Code d'erreur spécifique
-  provider?: string; // Provider qui a émis l'erreur
-  model?: string; // Modèle utilisé
+  usage?: TokenUsage;
+  error?: string;
+  errorCode?: string;
+  provider?: string;
+  model?: string;
 }
+
+/**
+ * Union des chunks émis par callWithMessagesStream.
+ * Inclut les chunks internal_tool (callables) pour traduction en assistant_round_complete / tool_result par la route.
+ */
+export type LiminalityStreamChunk =
+  | StreamChunk
+  | InternalToolStartChunk
+  | InternalToolDoneChunk
+  | InternalToolErrorChunk;
 
 /**
  * Informations sur le provider Liminality
@@ -271,7 +284,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
     messages: ChatMessage[], 
     tools: Tool[],
     synesiaCallables?: string[]
-  ): AsyncGenerator<StreamChunk, void, unknown> {
+  ): AsyncGenerator<LiminalityStreamChunk, void, unknown> {
     if (!this.isAvailable()) {
       throw new Error('Liminality provider non configuré');
     }
@@ -678,7 +691,12 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       return false;
     }
     const e = event as Record<string, unknown>;
-    const validTypes = ['start', 'text.start', 'text.delta', 'chunk', 'text.done', 'tool_block.start', 'tool_block.done', 'done', 'tool_call', 'tool_result', 'end', 'error'];
+    const validTypes = [
+      'start', 'text.start', 'text.delta', 'chunk', 'text.done',
+      'tool_block.start', 'tool_block.done',
+      'internal_tool.start', 'internal_tool.done', 'internal_tool.error',
+      'done', 'tool_call', 'tool_result', 'end', 'error'
+    ];
     return typeof e.type === 'string' && validTypes.includes(e.type);
   }
 
@@ -700,13 +718,13 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
   }
 
   /**
-   * Convertit un event de stream Liminality vers le format StreamChunk
-   * 
+   * Convertit un event de stream Liminality vers le format StreamChunk ou InternalTool*Chunk.
+   *
    * @param event - Event Liminality validé
-   * @returns StreamChunk ou null si event ignoré
+   * @returns LiminalityStreamChunk ou null si event ignoré
    * @throws {Error} Si event invalide
    */
-  private convertStreamEvent(event: unknown): StreamChunk | null {
+  private convertStreamEvent(event: unknown): LiminalityStreamChunk | null {
     // ✅ VALIDATION STRICTE : Type guard
     if (!this.isValidLiminalityStreamEvent(event)) {
       logger.error('[LiminalityProvider] ❌ Event invalide reçu', { 
@@ -752,7 +770,79 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
         logger.dev(`[LiminalityProvider] ✅ Tool call done: ${event.block_id}`);
         return null;
 
-      case 'done':
+      case 'internal_tool.start': {
+        const toolCallId = event.tool_call_id;
+        const name = event.name;
+        if (typeof toolCallId !== 'string' || !toolCallId.trim() || typeof name !== 'string' || !name.trim()) {
+          logger.warn('[LiminalityProvider] ⚠️ internal_tool.start ignoré (tool_call_id ou name manquant/invalide)', {
+            hasToolCallId: typeof toolCallId === 'string',
+            hasName: typeof name === 'string'
+          });
+          return null;
+        }
+        let args: Record<string, unknown> = {};
+        if (event.arguments != null && typeof event.arguments === 'object' && !Array.isArray(event.arguments)) {
+          args = event.arguments as Record<string, unknown>;
+        }
+        const startChunk: InternalToolStartChunk = {
+          type: 'internal_tool.start',
+          tool_call_id: toolCallId,
+          name,
+          arguments: Object.keys(args).length > 0 ? args : undefined,
+          block_id: typeof event.block_id === 'string' ? event.block_id : undefined
+        };
+        logger.dev(`[LiminalityProvider] 🔧 internal_tool.start: ${name}`);
+        return startChunk;
+      }
+
+      case 'internal_tool.done': {
+        const toolCallId = event.tool_call_id;
+        const name = event.name;
+        if (typeof toolCallId !== 'string' || !toolCallId.trim() || typeof name !== 'string' || !name.trim()) {
+          logger.warn('[LiminalityProvider] ⚠️ internal_tool.done ignoré (tool_call_id ou name manquant/invalide)', {
+            hasToolCallId: typeof toolCallId === 'string',
+            hasName: typeof name === 'string'
+          });
+          return null;
+        }
+        const doneChunk: InternalToolDoneChunk = {
+          type: 'internal_tool.done',
+          tool_call_id: toolCallId,
+          name,
+          result: event.result,
+          block_id: typeof event.block_id === 'string' ? event.block_id : undefined
+        };
+        logger.dev(`[LiminalityProvider] ✅ internal_tool.done: ${name}`);
+        return doneChunk;
+      }
+
+      case 'internal_tool.error': {
+        const toolCallId = event.tool_call_id;
+        const name = event.name;
+        if (typeof toolCallId !== 'string' || !toolCallId.trim() || typeof name !== 'string' || !name.trim()) {
+          logger.warn('[LiminalityProvider] ⚠️ internal_tool.error ignoré (tool_call_id ou name manquant/invalide)', {
+            hasToolCallId: typeof toolCallId === 'string',
+            hasName: typeof name === 'string'
+          });
+          return null;
+        }
+        const errorStr = typeof event.error === 'string'
+          ? event.error
+          : (event.error && typeof event.error === 'object' && 'message' in event.error && typeof (event.error as { message: unknown }).message === 'string')
+            ? (event.error as { message: string }).message
+            : 'Unknown error';
+        const errorChunk: InternalToolErrorChunk = {
+          type: 'internal_tool.error',
+          tool_call_id: toolCallId,
+          name,
+          error: errorStr,
+          block_id: typeof event.block_id === 'string' ? event.block_id : undefined
+        };
+        logger.dev(`[LiminalityProvider] ❌ internal_tool.error: ${name}`);
+        return errorChunk;
+      }
+
+      case 'done': {
         // ✅ Fin du stream avec usage et éventuels tool calls
         // Extraire les tool calls du dernier message si présent
         const lastMessage = event.messages?.[event.messages.length - 1];
@@ -815,6 +905,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
           finishReason: 'stop',
           usage: event.usage
         };
+      }
 
       case 'tool_call':
         // Tool call en cours (ancien format)
@@ -840,7 +931,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
           usage: event.usage
         };
 
-      case 'error':
+      case 'error': {
         // ✅ Erreur pendant le stream - retourner un chunk d'erreur au lieu de thrower
         const errorMessage = event.error?.message || 'Stream error';
         const errorCode = event.error?.code || 'stream_error';
@@ -855,6 +946,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
           provider: 'liminality',
           model: this.config.model
         };
+      }
 
       default:
         return null;

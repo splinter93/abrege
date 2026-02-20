@@ -221,5 +221,184 @@ describe('LiminalityProvider', () => {
       expect(pricing.output).toBeTruthy();
     });
   });
+
+  describe('Stream internal_tool events (callables)', () => {
+    const encoder = new TextEncoder();
+
+    function sseLine(data: object): string {
+      return `data: ${JSON.stringify(data)}\n\n`;
+    }
+
+    test('should yield internal_tool.start, internal_tool.done, internal_tool.error chunks', async () => {
+      const streamBody = [
+        sseLine({ type: 'start' }),
+        sseLine({ type: 'tool_block.start', block_id: 'blk-1' }),
+        sseLine({
+          type: 'internal_tool.start',
+          tool_call_id: 'fc_abc-123',
+          block_id: 'blk-1',
+          name: 'tim',
+          arguments: { value: 'Send a message to K.' }
+        }),
+        sseLine({
+          type: 'internal_tool.done',
+          tool_call_id: 'fc_abc-123',
+          block_id: 'blk-1',
+          name: 'tim',
+          result: 'Message sent successfully.'
+        }),
+        sseLine({ type: 'tool_block.done', block_id: 'blk-1' }),
+        sseLine({ type: 'text.delta', delta: 'Done!' }),
+        sseLine({ type: 'done', complete: true, usage: { prompt_tokens: 1, completion_tokens: 2, total_tokens: 3 } })
+      ].join('');
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(streamBody));
+            controller.close();
+          }
+        })
+      });
+
+      const messages = [
+        {
+          id: '1',
+          role: 'user' as const,
+          content: 'Ask Tim to message K',
+          created_at: new Date().toISOString(),
+          user_id: 'test-user',
+          conversation_id: 'test-conv'
+        }
+      ];
+
+      const chunks: unknown[] = [];
+      for await (const chunk of provider.callWithMessagesStream(messages, [])) {
+        chunks.push(chunk);
+      }
+
+      const startChunk = chunks.find((c): c is { type: 'internal_tool.start'; tool_call_id: string; name: string; arguments?: Record<string, unknown> } =>
+        typeof c === 'object' && c !== null && 'type' in c && (c as { type: string }).type === 'internal_tool.start'
+      );
+      const doneChunk = chunks.find((c): c is { type: 'internal_tool.done'; tool_call_id: string; name: string; result: unknown } =>
+        typeof c === 'object' && c !== null && 'type' in c && (c as { type: string }).type === 'internal_tool.done'
+      );
+
+      expect(startChunk).toBeDefined();
+      expect(startChunk?.type).toBe('internal_tool.start');
+      expect(startChunk?.tool_call_id).toBe('fc_abc-123');
+      expect(startChunk?.name).toBe('tim');
+      expect(startChunk?.arguments).toEqual({ value: 'Send a message to K.' });
+
+      expect(doneChunk).toBeDefined();
+      expect(doneChunk?.type).toBe('internal_tool.done');
+      expect(doneChunk?.tool_call_id).toBe('fc_abc-123');
+      expect(doneChunk?.name).toBe('tim');
+      expect(doneChunk?.result).toBe('Message sent successfully.');
+    });
+
+    test('should yield internal_tool.error chunk and not throw', async () => {
+      const streamBody = [
+        sseLine({ type: 'start' }),
+        sseLine({
+          type: 'internal_tool.start',
+          tool_call_id: 'fc_err-1',
+          name: 'tim',
+          arguments: {}
+        }),
+        sseLine({
+          type: 'internal_tool.error',
+          tool_call_id: 'fc_err-1',
+          name: 'tim',
+          error: 'Invalid tool results: timeout'
+        }),
+        sseLine({ type: 'done', complete: true, usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 } })
+      ].join('');
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(streamBody));
+            controller.close();
+          }
+        })
+      });
+
+      const messages = [
+        {
+          id: '1',
+          role: 'user' as const,
+          content: 'Call tim',
+          created_at: new Date().toISOString(),
+          user_id: 'test-user',
+          conversation_id: 'test-conv'
+        }
+      ];
+
+      const chunks: unknown[] = [];
+      await (async () => {
+        for await (const chunk of provider.callWithMessagesStream(messages, [])) {
+          chunks.push(chunk);
+        }
+      })();
+
+      const errorChunk = chunks.find((c): c is { type: 'internal_tool.error'; tool_call_id: string; name: string; error: string } =>
+        typeof c === 'object' && c !== null && 'type' in c && (c as { type: string }).type === 'internal_tool.error'
+      );
+
+      expect(errorChunk).toBeDefined();
+      expect(errorChunk?.type).toBe('internal_tool.error');
+      expect(errorChunk?.tool_call_id).toBe('fc_err-1');
+      expect(errorChunk?.name).toBe('tim');
+      expect(errorChunk?.error).toBe('Invalid tool results: timeout');
+    });
+
+    test('should not throw on internal_tool.start with missing tool_call_id (yields no chunk)', async () => {
+      const streamBody = [
+        sseLine({ type: 'start' }),
+        sseLine({
+          type: 'internal_tool.start',
+          name: 'tim',
+          arguments: { value: 'x' }
+        }),
+        sseLine({ type: 'done', complete: true, usage: { prompt_tokens: 1, completion_tokens: 0, total_tokens: 1 } })
+      ].join('');
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(streamBody));
+            controller.close();
+          }
+        })
+      });
+
+      const messages = [
+        {
+          id: '1',
+          role: 'user' as const,
+          content: 'Hi',
+          created_at: new Date().toISOString(),
+          user_id: 'test-user',
+          conversation_id: 'test-conv'
+        }
+      ];
+
+      const chunks: unknown[] = [];
+      await (async () => {
+        for await (const chunk of provider.callWithMessagesStream(messages, [])) {
+          chunks.push(chunk);
+        }
+      })();
+
+      const internalToolChunks = chunks.filter(
+        (c) => typeof c === 'object' && c !== null && 'type' in c && String((c as { type: string }).type).startsWith('internal_tool.')
+      );
+      expect(internalToolChunks).toHaveLength(0);
+    });
+  });
 });
 

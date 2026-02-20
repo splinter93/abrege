@@ -11,6 +11,11 @@ import type { OpenApiEndpoint } from '@/services/llm/executors/OpenApiToolExecut
 import type { Tool, McpTool } from '@/services/llm/types/strictTypes';
 import type { ToolCall } from '@/services/llm/types/strictTypes';
 import { isMcpTool, isFunctionTool } from '@/services/llm/types/strictTypes';
+import type {
+  InternalToolStartChunk,
+  InternalToolDoneChunk,
+  InternalToolErrorChunk
+} from '@/services/llm/types/liminalityTypes';
 import { llmStreamRequestSchema } from '../validation';
 import { dynamicChatRateLimiter } from '@/services/dynamicRateLimiter';
 import {
@@ -789,7 +794,65 @@ export async function POST(request: NextRequest) {
                   // Arrêter le stream en cas d'erreur
                   break;
                 }
-                
+
+                // ✅ Liminality callables : traduire internal_tool.* en événements SSE client (assistant_round_complete / tool_result)
+                if (chunk && typeof chunk === 'object' && 'type' in chunk) {
+                  if (chunk.type === 'internal_tool.start') {
+                    const startChunk = chunk as InternalToolStartChunk;
+                    logger.debug(LogCategory.API, '[Stream Route] 🔧 internal_tool.start → assistant_round_complete', {
+                      name: startChunk.name,
+                      toolCallId: startChunk.tool_call_id.substring(0, 8)
+                    });
+                    sendSSE({
+                      type: 'assistant_round_complete',
+                      content: '',
+                      tool_calls: [{
+                        id: startChunk.tool_call_id,
+                        type: 'function',
+                        function: {
+                          name: startChunk.name,
+                          arguments: JSON.stringify(startChunk.arguments ?? {})
+                        }
+                      }],
+                      finishReason: 'tool_calls',
+                      timestamp: Date.now()
+                    });
+                    continue;
+                  }
+                  if (chunk.type === 'internal_tool.done') {
+                    const doneChunk = chunk as InternalToolDoneChunk;
+                    logger.debug(LogCategory.API, '[Stream Route] ✅ internal_tool.done → tool_result', {
+                      name: doneChunk.name
+                    });
+                    sendSSE({
+                      type: 'tool_result',
+                      toolCallId: doneChunk.tool_call_id,
+                      toolName: doneChunk.name,
+                      result: doneChunk.result,
+                      success: true,
+                      timestamp: Date.now(),
+                      isCallable: true
+                    });
+                    continue;
+                  }
+                  if (chunk.type === 'internal_tool.error') {
+                    const errChunk = chunk as InternalToolErrorChunk;
+                    logger.debug(LogCategory.API, '[Stream Route] ❌ internal_tool.error → tool_result', {
+                      name: errChunk.name
+                    });
+                    sendSSE({
+                      type: 'tool_result',
+                      toolCallId: errChunk.tool_call_id,
+                      toolName: errChunk.name,
+                      result: errChunk.error,
+                      success: false,
+                      timestamp: Date.now(),
+                      isCallable: true
+                    });
+                    continue;
+                  }
+                }
+
                 // ✅ Le chunk contient déjà type: 'delta' (ajouté par le provider)
                 sendSSE(chunk);
 
@@ -895,8 +958,8 @@ export async function POST(request: NextRequest) {
               
               let statusCode = enrichedError.statusCode;
               let errorCode = enrichedError.errorCode;
-              let providerFromError = enrichedError.provider;
-              let errorDetails = errorMessage;
+              const providerFromError = enrichedError.provider;
+              const errorDetails = errorMessage;
               
               // ✅ Fallback: Parser le message pour extraire statusCode si non présent
               if (!statusCode) {

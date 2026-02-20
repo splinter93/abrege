@@ -203,6 +203,42 @@ export interface LiminalityResponse {
 export type LiminalityInternalToolEventType = 'internal_tool.start' | 'internal_tool.done' | 'internal_tool.error';
 
 /**
+ * Chunk émis par le provider pour internal_tool.start (début d'exécution callable).
+ * La route le traduit en assistant_round_complete pour l'affichage chat.
+ */
+export interface InternalToolStartChunk {
+  type: 'internal_tool.start';
+  tool_call_id: string;
+  name: string;
+  arguments?: Record<string, unknown>;
+  block_id?: string;
+}
+
+/**
+ * Chunk émis par le provider pour internal_tool.done (fin réussie callable).
+ * La route le traduit en tool_result (success: true).
+ */
+export interface InternalToolDoneChunk {
+  type: 'internal_tool.done';
+  tool_call_id: string;
+  name: string;
+  result: unknown;
+  block_id?: string;
+}
+
+/**
+ * Chunk émis par le provider pour internal_tool.error (échec callable).
+ * La route le traduit en tool_result (success: false).
+ */
+export interface InternalToolErrorChunk {
+  type: 'internal_tool.error';
+  tool_call_id: string;
+  name: string;
+  error: string;
+  block_id?: string;
+}
+
+/**
  * Events de streaming SSE (format réel de l'API Liminality / Synesia LLM Exec)
  *
  * Conforme doc « Intégration des callables dans les requêtes LLM Exec » :
