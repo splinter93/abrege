@@ -13,9 +13,9 @@
      VARIABLES CSS - Utilise les variables du thème au lieu de valeurs hardcodées
      ======================================== */
   body {
-    /* ✅ Garde les valeurs dark mode mais utilise les variables pour cohérence */
-    --chat-bg-primary: #000000;
-    --chat-bg-secondary: #0a0a0a;
+    /* ✅ Couleur normale de l'app (slate dark), pas noir pur */
+    --chat-bg-primary: #0e1012;
+    --chat-bg-secondary: #121416;
     /* ⚡ CRITICAL : Utilise les variables CSS du thème au lieu de hardcoder */
     --chat-text-primary: var(--chat-text-primary, #b5bcc4); /* ✅ Variable du thème dark */
     --chat-text-secondary: var(--chat-text-secondary, #a1a9b1); /* ✅ Variable du thème dark */
@@ -103,15 +103,15 @@
      ======================================== */
   
   .chatgpt-container {
-    background: #000000 !important;
+    background: var(--chat-bg-primary) !important;
   }
   
   .chatgpt-content {
-    background: #000000 !important;
+    background: var(--chat-bg-primary) !important;
   }
   
   .chatgpt-main {
-    background: #000000 !important;
+    background: var(--chat-bg-primary) !important;
   }
   
   /* ========================================
@@ -165,7 +165,7 @@
   
   .chatgpt-main {
     border-bottom: none !important;
-    background: #000000 !important; /* Noir pur pour couvrir jusqu'au bout */
+    background: var(--chat-bg-primary) !important;
   }
   
   /* Input garde son dégradé gris glassmorphism */
@@ -200,7 +200,7 @@
   
   ::-webkit-scrollbar {
     width: 8px;
-    background: #000000;
+    background: var(--chat-bg-primary);
   }
   
   ::-webkit-scrollbar-thumb {

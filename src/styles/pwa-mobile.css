@@ -51,16 +51,16 @@ html, body {
 
 /* Safe areas UNIQUEMENT en mode PWA standalone (pas en browser) */
 @media (display-mode: standalone) {
-  /* Background noir pur sur html/body pour couvrir safe areas */
+  /* Couleur normale de l'app (pas noir pur) */
   html {
-    background: #000000 !important;
+    background: var(--chat-bg-primary, #0e1012) !important;
   }
   
   body {
-    background: #000000 !important;
+    background: var(--chat-bg-primary, #0e1012) !important;
   }
   
-  /* Remplir la safe area du bas en noir + 2px pour couvrir la ligne de séparation (Android) */
+  /* Remplir la safe area du bas avec la couleur de l'app */
   body::after {
     content: '';
     position: fixed;
@@ -68,31 +68,29 @@ html, body {
     left: 0;
     right: 0;
     height: calc(env(safe-area-inset-bottom, 0px) + 2px);
-    background: #000000 !important;
+    background: var(--chat-bg-primary, #0e1012) !important;
     z-index: 9998;
     pointer-events: none;
   }
   
   /* Safe areas sur le container */
   .chatgpt-container {
-    background: #000000 !important;
+    background: var(--chat-bg-primary, #0e1012) !important;
     padding-top: env(safe-area-inset-top, 0px);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
     box-sizing: border-box;
   }
   
-  /* Toute la colonne chat en noir (évite bande/ligne marron qui vient d'un parent) */
   .chatgpt-main,
   .chatgpt-content,
   .chatgpt-main-chat {
-    background: #000000 !important;
+    background: var(--chat-bg-primary, #0e1012) !important;
   }
   
-  /* Chat input : fond noir, aucune bordure ni ombre (évite ligne de séparation) */
   .chatgpt-input-container {
     padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-    background: #000000 !important;
+    background: var(--chat-bg-primary, #0e1012) !important;
     border: none !important;
     border-top: none !important;
     border-bottom: none !important;
@@ -106,7 +104,6 @@ html, body {
     box-shadow: none !important;
   }
   
-  /* Masquer le gradient footer sous l'input (évite la ligne) */
   .chatgpt-input-container::before {
     display: none !important;
   }
