@@ -13,9 +13,9 @@
      VARIABLES CSS - Utilise les variables du thème au lieu de valeurs hardcodées
      ======================================== */
   body {
-    /* ✅ Couleur normale de l'app (slate dark), pas noir pur */
-    --chat-bg-primary: #0e1012;
-    --chat-bg-secondary: #121416;
+    /* PWA : fond noir complet partout (safe area incluse) */
+    --chat-bg-primary: #000000;
+    --chat-bg-secondary: #0a0a0a;
     /* ⚡ CRITICAL : Utilise les variables CSS du thème au lieu de hardcoder */
     --chat-text-primary: var(--chat-text-primary, #b5bcc4); /* ✅ Variable du thème dark */
     --chat-text-secondary: var(--chat-text-secondary, #a1a9b1); /* ✅ Variable du thème dark */

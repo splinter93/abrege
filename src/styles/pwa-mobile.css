@@ -49,35 +49,33 @@ html, body {
   box-sizing: border-box;
 }
 
-/* Safe areas UNIQUEMENT en mode PWA standalone (pas en browser) */
+/* PWA standalone : fond noir complet partout, safe area incluse, sans bordure (Android/iOS) */
 @media (display-mode: standalone) {
-  /* Couleur normale de l'app + supprimer les radial-gradients du body (évite bande marron sous l'input) */
   html {
-    background: var(--chat-bg-primary, #0e1012) !important;
+    background: #000000 !important;
     background-image: none !important;
   }
   
   body {
-    background: var(--chat-bg-primary, #0e1012) !important;
+    background: #000000 !important;
     background-image: none !important;
   }
   
-  /* Remplir la safe area du bas avec la couleur de l'app */
+  /* Safe area du bas : noir pur, élimine tout parasite de couleur */
   body::after {
     content: '';
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    height: calc(env(safe-area-inset-bottom, 0px) + 2px);
-    background: var(--chat-bg-primary, #0e1012) !important;
+    height: calc(env(safe-area-inset-bottom, 0px) + 4px);
+    background: #000000 !important;
     z-index: 9998;
     pointer-events: none;
   }
   
-  /* Safe areas sur le container */
   .chatgpt-container {
-    background: var(--chat-bg-primary, #0e1012) !important;
+    background: #000000 !important;
     padding-top: env(safe-area-inset-top, 0px);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
@@ -87,7 +85,19 @@ html, body {
   .chatgpt-main,
   .chatgpt-content,
   .chatgpt-main-chat {
-    background: var(--chat-bg-primary, #0e1012) !important;
+    background: #000000 !important;
+  }
+  
+  .chatgpt-input-container {
+    background: #000000 !important;
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+  }
+  
+  .chatgpt-input-container::before {
+    display: none !important;
   }
   
   /* Pas d’override input en PWA : même padding / div que le mode normal (chat-clean.css) */
@@ -197,25 +207,22 @@ button, a, input, textarea, select {
    ======================================== */
 
 @media (display-mode: standalone) {
-  /* App installée - Fond unifié (couleur thème), sans gradient = pas de bande marron */
   body {
-    background: var(--chat-bg-primary, #0e1012) !important;
+    background: #000000 !important;
     background-image: none !important;
   }
   
-  /* Empêcher le pull-to-refresh natif (Android) */
   body {
     overscroll-behavior-y: contain;
   }
   
-  /* Status bar overlay (iOS) */
   .pwa-status-bar-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     height: var(--safe-area-top);
-    background: var(--color-bg-primary);
+    background: #000000;
     z-index: 9999;
     pointer-events: none;
   }
