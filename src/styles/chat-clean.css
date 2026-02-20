@@ -167,13 +167,13 @@
    Usage : Ajouter .chat-theme-dark sur body (ou par défaut si pas de classe)
      ======================================== */
 .chat-theme-dark,
-body:not(.chat-theme-light):not(.chat-theme-grey):not(.chat-theme-anthracite) {
-  /* Dégradés - Mode Dark avec teinte slate élégante */
-  --chat-gradient-block: linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%); /* Gris slate moderne */
+body:not(.chat-theme-light):not(.chat-theme-grey):not(.chat-theme-anthracite):not(.chat-theme-glass) {
+  /* Dégradés - Mode Dark assombri (input, blocs, sidebar) */
+  --chat-gradient-block: linear-gradient(135deg, #161a1e 0%, #1c1f24 50%, #161a1e 100%); /* Gris slate très foncé */
   --chat-gradient-input: var(--chat-gradient-block);
   --chat-gradient-sidebar: var(--chat-gradient-block); /* ✅ Même gradient que les blocs */
   --chat-gradient-user: var(--chat-gradient-block);
-  --chat-gradient-user-hover: linear-gradient(135deg, #2d3139 0%, #353942 50%, #2d3139 100%);
+  --chat-gradient-user-hover: linear-gradient(135deg, #1a1d22 0%, #1e2226 50%, #1a1d22 100%);
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
@@ -291,21 +291,21 @@ body.chat-theme-grey,
   --chat-border-subtle: transparent;
   --chat-border-soft: transparent;
   
-  /* Dégradés Grey Mode - BEAUCOUP PLUS CLAIRS avec dégradé accentué */
+  /* Dégradés Grey Mode - gris très foncé (input, sidebar, blocs) */
   /* Gradient utilisé pour input, sidebar, blocs code, messages user */
   --chat-gradient-block: linear-gradient(135deg, 
-    #3a3d42 0%, 
-    #404348 50%, 
-    #3a3d42 100%); /* Gradient gris BEAUCOUP PLUS CLAIR accentué au milieu */
-  
+    #161a1e 0%, 
+    #1c1f24 50%, 
+    #161a1e 100%); /* Gradient gris très foncé */
+
   /* ✅ TOUS les éléments utilisent le même gradient pour cohérence */
   --chat-gradient-input: var(--chat-gradient-block);     /* Input area */
   --chat-gradient-sidebar: var(--chat-gradient-block);   /* Sidebar */
   --chat-gradient-user: var(--chat-gradient-block);      /* Messages user */
   --chat-gradient-user-hover: linear-gradient(135deg, 
-    #3d4045 0%, 
-    #42454a 50%, 
-    #3d4045 100%); /* Hover accentué - légèrement plus clair */
+    #1a1d22 0%, 
+    #1e2226 50%, 
+    #1a1d22 100%); /* Hover accentué - légèrement plus clair */
   --chat-gradient-kebab: var(--chat-gradient-block);     /* Menu kebab */
   
   /* ✅ Surcharge directe pour les code blocks (utilise le même gradient) */
@@ -2063,6 +2063,8 @@ body.chat-theme-glass .chatgpt-messages > div {
   background: transparent;
   border: none;
   font-family: var(--font-chat-text) !important;
+  font-weight: var(--chat-weight-normal, 400); /* ✅ Même poids que le texte du chat */
+  font-style: normal;
   outline: none;
   resize: none;
   font-size: var(--chat-font-size-base);
@@ -3770,6 +3772,8 @@ body.chat-theme-glass .chatgpt-messages > div {
   padding: 8px 0 0 8px;
   font-size: var(--chat-font-size-base);
   font-family: var(--font-chat-text) !important;
+  font-weight: var(--chat-weight-normal, 400); /* ✅ Même poids que le texte du chat */
+  font-style: normal;
   line-height: var(--chat-line-height-normal);
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -3780,7 +3784,6 @@ body.chat-theme-glass .chatgpt-messages > div {
   letter-spacing: 0px;
   word-spacing: 0px;
   text-transform: none;
-  font-weight: 400;
   /* Subpixel rendering cohérent */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -3799,11 +3802,12 @@ body.chat-theme-glass .chatgpt-messages > div {
     padding: 8px 0 0 8px !important;
     font-size: 16px !important; /* ✅ Valeur explicite, pas variable CSS */
     font-family: var(--font-chat-text) !important;
+    font-weight: var(--chat-weight-normal, 400) !important; /* ✅ Même poids que le chat */
+    font-style: normal !important;
     line-height: 1.5 !important; /* ✅ Valeur explicite */
     letter-spacing: 0px !important; /* ✅ Force 0 pour éviter variations */
     word-spacing: 0px !important; /* ✅ Force 0 pour éviter variations */
     text-transform: none !important;
-    font-weight: 400 !important; /* ✅ Normal weight explicite */
     white-space: pre-wrap !important;
     word-wrap: break-word !important;
     box-sizing: border-box !important;
@@ -3821,7 +3825,7 @@ body.chat-theme-glass .chatgpt-messages > div {
     line-height: 1.5 !important;
     letter-spacing: 0px !important;
     word-spacing: 0px !important;
-    font-weight: 400 !important;
+    font-weight: var(--chat-weight-normal, 400) !important;
   }
   
   .textarea-highlight-overlay {
@@ -3926,6 +3930,8 @@ body.chat-theme-glass .chatgpt-messages > div {
   padding: 8px 0 0 8px;
   font-size: var(--chat-font-size-base);
   font-family: var(--font-chat-text) !important;
+  font-weight: var(--chat-weight-normal, 400); /* ✅ Même poids que le texte du chat */
+  font-style: normal;
   line-height: var(--chat-line-height-normal);
   color: transparent; /* ✅ Texte invisible (overlay visible dessous) */
   caret-color: var(--chat-text-primary); /* ✅ Curseur visible */
@@ -3942,7 +3948,6 @@ body.chat-theme-glass .chatgpt-messages > div {
   letter-spacing: 0px;
   word-spacing: 0px;
   text-transform: none;
-  font-weight: 400;
   /* Subpixel rendering cohérent */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -4001,11 +4006,12 @@ body.chat-theme-glass .chatgpt-messages > div {
     padding: 8px 0 0 8px !important;
     font-size: 16px !important; /* ✅ Évite zoom iOS + sync overlay */
     font-family: var(--font-chat-text) !important;
+    font-weight: var(--chat-weight-normal, 400) !important; /* ✅ Même poids que le chat */
+    font-style: normal !important;
     line-height: 1.5 !important;
     letter-spacing: 0px !important;
     word-spacing: 0px !important;
     text-transform: none !important;
-    font-weight: 400 !important;
     box-sizing: border-box !important;
     white-space: pre-wrap !important;
     word-wrap: break-word !important;
