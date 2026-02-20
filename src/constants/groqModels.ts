@@ -350,6 +350,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     description: 'Qwen3 VL 30B multimodal via OpenRouter, analyse d\'images et outils',
     recommended: false
   },
+  {
+    id: 'openrouter/qwen3.5-397b-a17b',
+    name: 'Qwen3.5 397B A17B',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'images', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 131072,
+    maxOutput: 8192,
+    speed: 400,
+    pricing: { input: 'Variable', output: 'Variable' },
+    description: 'Qwen3.5 397B A17B via OpenRouter, vision et analyse d\'images',
+    recommended: false
+  },
 ];
 
 /**

@@ -104,7 +104,8 @@ const LIMINALITY_INFO: ProviderInfo = {
     'openrouter/glm-4.7',
     'openrouter/gemini-3-flash-preview',
     'openrouter/minimax-m2.1',
-    'openrouter/qwen3-vl-30b-a3b-instruct'
+    'openrouter/qwen3-vl-30b-a3b-instruct',
+    'openrouter/qwen3.5-397b-a17b'
   ],
   pricing: {
     input: 'Variable (depends on underlying model)',
