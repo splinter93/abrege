@@ -82,7 +82,7 @@ export function externalServerToMcpTool(server: ExternalMcpServer): McpServerCon
     headers: server.header && server.api_key ? { [server.header]: server.api_key } : undefined,
     server_description: server.server_description,
     require_approval: server.require_approval,
-    allowed_tools: server.allowed_tools
+    allowed_tools: server.allowed_tools ?? undefined
   };
 }
 
