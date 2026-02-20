@@ -51,13 +51,15 @@ html, body {
 
 /* Safe areas UNIQUEMENT en mode PWA standalone (pas en browser) */
 @media (display-mode: standalone) {
-  /* Couleur normale de l'app (pas noir pur) */
+  /* Couleur normale de l'app + supprimer les radial-gradients du body (évite bande marron sous l'input) */
   html {
     background: var(--chat-bg-primary, #0e1012) !important;
+    background-image: none !important;
   }
   
   body {
     background: var(--chat-bg-primary, #0e1012) !important;
+    background-image: none !important;
   }
   
   /* Remplir la safe area du bas avec la couleur de l'app */
@@ -105,6 +107,11 @@ html, body {
   }
   
   .chatgpt-input-container::before {
+    display: none !important;
+  }
+  
+  /* Pas de gradient sur le container (thème glass) = pas de bande marron */
+  .chatgpt-container::before {
     display: none !important;
   }
 }
@@ -208,9 +215,10 @@ button, a, input, textarea, select {
    ======================================== */
 
 @media (display-mode: standalone) {
-  /* App installée - Fond noir pour éviter toute bande visible sous l'input */
+  /* App installée - Fond unifié (couleur thème), sans gradient = pas de bande marron */
   body {
-    background: #000000 !important;
+    background: var(--chat-bg-primary, #0e1012) !important;
+    background-image: none !important;
   }
   
   /* Empêcher le pull-to-refresh natif (Android) */
