@@ -90,25 +90,7 @@ html, body {
     background: var(--chat-bg-primary, #0e1012) !important;
   }
   
-  .chatgpt-input-container {
-    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-    background: var(--chat-bg-primary, #0e1012) !important;
-    border: none !important;
-    border-top: none !important;
-    border-bottom: none !important;
-    box-shadow: none !important;
-  }
-  
-  .chatgpt-input-area {
-    border: none !important;
-    border-top: none !important;
-    border-bottom: none !important;
-    box-shadow: none !important;
-  }
-  
-  .chatgpt-input-container::before {
-    display: none !important;
-  }
+  /* Pas d’override input en PWA : même padding / div que le mode normal (chat-clean.css) */
   
   /* Pas de gradient sur le container (thème glass) = pas de bande marron */
   .chatgpt-container::before {

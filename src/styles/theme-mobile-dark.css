@@ -158,10 +158,7 @@
   
   /* Pas d'override - laisse le style glassmorphism existant */
   
-  /* Retirer border-top qui crée la ligne horizontale */
-  .chatgpt-input-area {
-    border-top: none !important;
-  }
+  /* Input area = même rendu qu’en mode normal (pas d’override PWA) */
   
   .chatgpt-main {
     border-bottom: none !important;
