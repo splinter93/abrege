@@ -168,12 +168,12 @@
      ======================================== */
 .chat-theme-dark,
 body:not(.chat-theme-light):not(.chat-theme-grey):not(.chat-theme-anthracite):not(.chat-theme-glass) {
-  /* Dégradés - Mode Dark assombri (input, blocs, sidebar) */
-  --chat-gradient-block: linear-gradient(135deg, #161a1e 0%, #1c1f24 50%, #161a1e 100%); /* Gris slate très foncé */
+  /* Dégradés - Mode Dark, très atténués (subtil) */
+  --chat-gradient-block: linear-gradient(135deg, #161a1e 0%, #181b20 50%, #161a1e 100%);
   --chat-gradient-input: var(--chat-gradient-block);
   --chat-gradient-sidebar: var(--chat-gradient-block); /* ✅ Même gradient que les blocs */
   --chat-gradient-user: var(--chat-gradient-block);
-  --chat-gradient-user-hover: linear-gradient(135deg, #1a1d22 0%, #1e2226 50%, #1a1d22 100%);
+  --chat-gradient-user-hover: linear-gradient(135deg, #1a1d22 0%, #1b1e23 50%, #1a1d22 100%);
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
@@ -231,11 +231,11 @@ body.chat-theme-light,
   --chat-accent-primary: #f97316;      /* Orange vif */
   --chat-accent-hover: #ea580c;        /* Orange foncé */
   
-  /* Dégradés Light Mode - Beige BEAUCOUP plus foncé pour les blocs */
+  /* Dégradés Light Mode - très atténués (subtil) */
   --chat-gradient-block: linear-gradient(135deg, 
     #d4c4b0 0%, 
-    #d8c8b4 50%, 
-    #d4c4b0 100%); /* Gradient beige BEAUCOUP plus foncé pour input, sidebar, blocs */
+    #d6c6b2 50%, 
+    #d4c4b0 100%);
   
   /* ✅ TOUS les éléments (sidebar incluse) utilisent le même gradient */
   --chat-gradient-input: var(--chat-gradient-block);
@@ -243,8 +243,8 @@ body.chat-theme-light,
   --chat-gradient-user: var(--chat-gradient-block);
   --chat-gradient-user-hover: linear-gradient(135deg, 
     #d8c8b4 0%, 
-    #dcccb8 50%, 
-    #d8c8b4 100%); /* Hover beige foncé légèrement plus clair */
+    #d9c9b5 50%, 
+    #d8c8b4 100%);
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
@@ -291,12 +291,11 @@ body.chat-theme-grey,
   --chat-border-subtle: transparent;
   --chat-border-soft: transparent;
   
-  /* Dégradés Grey Mode - gris très foncé (input, sidebar, blocs) */
-  /* Gradient utilisé pour input, sidebar, blocs code, messages user */
+  /* Dégradés Grey Mode - très atténués (subtil) */
   --chat-gradient-block: linear-gradient(135deg, 
     #161a1e 0%, 
-    #1c1f24 50%, 
-    #161a1e 100%); /* Gradient gris très foncé */
+    #181b20 50%, 
+    #161a1e 100%);
 
   /* ✅ TOUS les éléments utilisent le même gradient pour cohérence */
   --chat-gradient-input: var(--chat-gradient-block);     /* Input area */
@@ -304,8 +303,8 @@ body.chat-theme-grey,
   --chat-gradient-user: var(--chat-gradient-block);      /* Messages user */
   --chat-gradient-user-hover: linear-gradient(135deg, 
     #1a1d22 0%, 
-    #1e2226 50%, 
-    #1a1d22 100%); /* Hover accentué - légèrement plus clair */
+    #1b1e23 50%, 
+    #1a1d22 100%);
   --chat-gradient-kebab: var(--chat-gradient-block);     /* Menu kebab */
   
   /* ✅ Surcharge directe pour les code blocks (utilise le même gradient) */
@@ -386,11 +385,11 @@ body.chat-theme-anthracite,
   --chat-border-subtle: transparent;
   --chat-border-soft: transparent;
   
-  /* Dégradés Anthracite Mode - ULTRA-LISSÉS gris froid très atténués */
+  /* Dégradés Anthracite Mode - très atténués (subtil) */
   --chat-gradient-block: linear-gradient(135deg, 
     #383b42 0%, 
-    #3a3e46 50%, 
-    #383b42 100%); /* Gradient très atténué -2 hex encore */
+    #383c44 50%, 
+    #383b42 100%);
   
   /* ✅ TOUS les éléments (sidebar incluse) utilisent le même gradient */
   --chat-gradient-input: var(--chat-gradient-block);
@@ -398,8 +397,8 @@ body.chat-theme-anthracite,
   --chat-gradient-user: var(--chat-gradient-block);
   --chat-gradient-user-hover: linear-gradient(135deg, 
     #3b3f45 0%, 
-    #3d4149 50%, 
-    #3b3f45 100%); /* Hover très atténué -2 hex encore */
+    #3c4047 50%, 
+    #3b3f45 100%);
   --chat-gradient-kebab: var(--chat-gradient-block);
   
   /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
@@ -2296,9 +2295,9 @@ body.chat-theme-glass .chatgpt-messages > div {
 
 .chatgpt-input-send {
   background: linear-gradient(135deg, 
-    #e8e8ea 0%, 
-    #ffffff 50%, 
-    #e8e8ea 100%);
+    #d8d8dc 0%, 
+    #e2e2e5 50%, 
+    #d8d8dc 100%); /* ✅ Actif un peu plus sombre */
   border: none;
   color: var(--chat-bg-primary); /* Icône en couleur du background pour contraste */
   cursor: pointer;
@@ -2315,14 +2314,14 @@ body.chat-theme-glass .chatgpt-messages > div {
 
 .chatgpt-input-send:hover {
   background: linear-gradient(135deg, 
-    #ffffff 0%, 
-    #f5f5f7 50%, 
-    #ffffff 100%);
+    #e2e2e5 0%, 
+    #e8e8eb 50%, 
+    #e2e2e5 100%);
   transform: scale(1.05);
 }
 
 .chatgpt-input-send:disabled {
-  background: var(--chat-text-secondary); /* ✅ Bouton désactivé = texte secondaire */
+  background: #52565c; /* ✅ Bouton inactif un peu plus sombre */
   border: none;
   color: var(--chat-bg-secondary); /* Flèche un poil plus sombre */
   cursor: not-allowed;
@@ -2330,7 +2329,7 @@ body.chat-theme-glass .chatgpt-messages > div {
 }
 
 .chatgpt-input-send:disabled:hover {
-  background: var(--chat-text-secondary);
+  background: #52565c;
   transform: none;
 }
 

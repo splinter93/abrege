@@ -277,7 +277,7 @@
   width: 100%;
   max-width: 100%; /* ✅ Ne jamais dépasser container */
   border-collapse: collapse;
-  margin: var(--md-chat-table-margin) 0;  /* ✅ Variable chat */
+  margin: 0.5rem 0 1rem 0; /* ✅ Moins au-dessus, pareil en dessous que code blocks */
   background: var(--blk-bg); /* ✅ Même gradient que code blocks */
   border-radius: var(--blk-radius); /* 14px - cohérent avec code blocks */
   overflow: hidden;
@@ -330,7 +330,7 @@
 .chat-markdown .table-wrapper-chat {
   width: 100%;
   overflow-x: auto; /* ✅ Auto sur TOUS devices (évite dépassement) */
-  margin: var(--md-table-margin) 0;
+  margin: 0.5rem 0 1rem 0; /* ✅ Moins au-dessus, pareil en dessous que code blocks */
   border: none;
   background: transparent;
   -webkit-overflow-scrolling: touch;
