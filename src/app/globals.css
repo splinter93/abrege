@@ -99,6 +99,27 @@ body.chat-active {
   height: 100%;
 }
 
+/* Mobile uniquement : supprimer les radial-gradients du body (évite la bande marron en bas / safe area).
+   Sur tablette (> 768px) on ne touche pas. La landing n’a pas le souci car elle couvre tout avec un fond plein. */
+@media (max-width: 768px) {
+  body {
+    background-image: none !important;
+    background: var(--color-bg-primary, #121212) !important;
+  }
+  /* Barre en arrière-plan pour remplir la safe area (z-index -1 = derrière le contenu) */
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: max(env(safe-area-inset-bottom, 0px), 2px);
+    background: var(--color-bg-primary, #121212) !important;
+    z-index: -1;
+    pointer-events: none;
+  }
+}
+
 /* Conteneur principal pour éviter les débordements */
 #__next {
   width: 100%;
