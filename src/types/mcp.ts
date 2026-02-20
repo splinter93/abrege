@@ -49,7 +49,8 @@ export interface McpServerConfig {
   headers?: Record<string, string>;
   server_description?: string;  // ✅ NOUVEAU: Description pour aider le modèle
   require_approval?: 'never' | 'always' | 'auto';
-  allowed_tools?: string[] | null;  // null = tous les tools
+  /** Liste des tools autorisés ; [] = tous les tools du serveur (défaut). */
+  allowed_tools?: string[];
 }
 
 export interface AgentMcpConfig {

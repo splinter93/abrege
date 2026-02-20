@@ -103,6 +103,11 @@ export class McpConfigService {
         .map(link => {
           const server = link.mcp_servers!; // Non-null après le filter
           
+          // Par défaut : tous les tools acceptés (allowed_tools vide = tous, doc LLM Exec MCP)
+          const allowedTools = Array.isArray(server.allowed_tools) && server.allowed_tools.length > 0
+            ? server.allowed_tools
+            : [];
+
           const mcpServer: McpServerConfig = {
             type: 'mcp' as const,
             server_label: server.name?.toLowerCase().replace(/\s+/g, '-') || 'unnamed',
@@ -110,10 +115,9 @@ export class McpConfigService {
             headers: server.header && server.api_key 
               ? { [server.header]: server.api_key }
               : undefined,
-            // ✅ NOUVEAUX CHAMPS GROQ
             server_description: server.server_description || undefined,
             require_approval: server.require_approval || 'never',
-            allowed_tools: server.allowed_tools || null
+            allowed_tools
           };
           
           return mcpServer;
