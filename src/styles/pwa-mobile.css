@@ -60,8 +60,20 @@ html, body {
     background: #000000 !important;
   }
   
-  /* Safe areas sur le container : pas de padding-bottom pour éviter la bande vide sous l'input.
-   * La barre d'input (position: fixed; bottom: 0) gère la safe-area en padding interne. */
+  /* Remplir la safe area du bas en noir (évite la bande marron Android) */
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-bottom, 0px);
+    background: #000000 !important;
+    z-index: 9998;
+    pointer-events: none;
+  }
+  
+  /* Safe areas sur le container */
   .chatgpt-container {
     background: #000000 !important;
     padding-top: env(safe-area-inset-top, 0px);
