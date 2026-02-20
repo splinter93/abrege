@@ -3858,6 +3858,37 @@ body.chat-theme-glass .chatgpt-messages > div {
   }
 }
 
+/* PWA standalone : overlay et textarea strictement identiques (évite décalage) */
+@media (display-mode: standalone) {
+  .textarea-highlight-overlay {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .textarea-highlight-overlay::-webkit-scrollbar {
+    display: none;
+  }
+  .textarea-highlight-content,
+  .textarea-with-mentions-input {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+    padding: 8px 0 0 8px !important;
+    font-family: var(--font-chat-text) !important;
+    font-weight: var(--chat-weight-normal, 400) !important;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
+    box-sizing: border-box !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+  }
+  .textarea-mention-highlight,
+  .textarea-prompt-highlight {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+  }
+}
+
 /* Mentions colorées (gradient orange) */
 .textarea-mention-highlight {
   background: linear-gradient(135deg, 

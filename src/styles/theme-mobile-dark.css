@@ -72,6 +72,8 @@
     font-weight: var(--chat-weight-normal, 525) !important;
   }
   
+  /* PWA: overlay géré par chat-clean.css @media (display-mode: standalone) */
+  
   /* Bulles messages - preset + fallback */
   .chatgpt-message-bubble,
   .chatgpt-message-bubble-user,

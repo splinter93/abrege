@@ -310,6 +310,7 @@
 .chat-markdown td {
   padding: 10px 16px !important;
   border-bottom: 0.5px solid rgba(255, 255, 255, 0.03) !important; /* ✅ Ligne ultra-fine */
+  background: transparent !important; /* ✅ Lignes transparentes */
   color: var(--chat-text-primary, #e4e4e7) !important; /* ✅ Même couleur que le texte du chat */
   font-size: var(--chat-text-base) !important; /* ✅ Même taille que le texte du chat */
   font-weight: var(--chat-weight-normal) !important; /* ✅ Même poids que le texte du chat */
@@ -322,8 +323,12 @@
   border-bottom: none;
 }
 
+.chat-markdown tbody tr:hover td {
+  background: rgba(0, 0, 0, 0.04) !important; /* ✅ Hover léger pour feedback */
+}
+
 .chat-markdown tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent; /* td gère le fond */
 }
 
 /* Wrapper tableau scroll horizontal */

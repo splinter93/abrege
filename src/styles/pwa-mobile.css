@@ -69,6 +69,17 @@ html, body {
     padding-right: env(safe-area-inset-right, 0px);
     box-sizing: border-box;
   }
+  
+  /* Chat input propre : pas d'espace ni ligne marron en dessous */
+  .chatgpt-input-container {
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+    background: #000000 !important;
+  }
+  
+  /* Masquer le gradient footer sous l'input (évite la ligne) */
+  .chatgpt-input-container::before {
+    display: none !important;
+  }
 }
 
 /* ========================================
