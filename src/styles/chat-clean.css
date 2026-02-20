@@ -146,6 +146,45 @@
 }
 
 /* ========================================
+   RESPONSIVE FLUID - Dès 1300px (rétrécissement progressif)
+   Padding préservé, largeur contenu + texte qui diminuent
+   ======================================== */
+@media (max-width: 1300px) {
+  :root {
+    /* Largeur max du contenu : ne dépasse jamais la vue (sidebar 250px + 2×24px) */
+    --chat-container-width: min(1000px, calc(100vw - 298px));
+    /* Texte qui rétrécit progressivement (15px à 1300px → ~13px vers 900px) */
+    --chat-font-size-base: clamp(13px, 2px + 1vw, 15px);
+    /* Padding latéral qui rétrécit progressivement (24px → 12px) */
+    --chat-padding-horizontal: clamp(12px, 2vw, 24px);
+  }
+}
+
+/* Mobile (≤900px) : padding 6px + contenu qui prend toute la largeur restante */
+@media (max-width: 900px) {
+  :root {
+    --chat-padding-horizontal: 6px;
+    /* Contenu = viewport moins les 6px de chaque côté (plus safe area si besoin) */
+    --chat-container-width: min(1000px, calc(100vw - 12px - var(--chat-safe-left) - var(--chat-safe-right)));
+  }
+  
+  .chatgpt-container {
+    padding-left: calc(6px + var(--chat-safe-left)) !important;
+    padding-right: calc(6px + var(--chat-safe-right)) !important;
+  }
+  
+  .chatgpt-messages {
+    padding-left: calc(6px + var(--chat-safe-left)) !important;
+    padding-right: calc(6px + var(--chat-safe-right)) !important;
+  }
+  
+  .chatgpt-input-container {
+    padding-left: calc(6px + var(--chat-safe-left)) !important;
+    padding-right: calc(6px + var(--chat-safe-right)) !important;
+  }
+}
+
+/* ========================================
    SÉLECTION DE TEXTE - STYLE GLOBAL
    ========================================
    Application à tous les éléments du chat
@@ -1144,35 +1183,17 @@ body.chat-theme-glass .chatgpt-header {
   margin-left: 250px;
 }
 
-/* En mode responsive, garder la largeur fixe et laisser déborder */
+/* Pas de breakpoint à 1023px : on garde le rétrécissement progressif (container + padding fluides).
+   Seule la safe area est ajoutée sur le container. */
 @media (max-width: 1023px) {
   .chatgpt-container {
     padding-top: var(--chat-safe-top);
-    /* Pas de padding-bottom : la barre d'input fixe en bas remplit jusqu'au bord (safe-area en padding interne) */
-    padding-left: var(--chat-safe-left);
-    padding-right: var(--chat-safe-right);
+    padding-left: calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
+    padding-right: calc(var(--chat-padding-horizontal) + var(--chat-safe-right));
     box-sizing: border-box;
   }
 
-  /* ✅ Forcer la largeur fixe sur TOUS les containers (sidebar ouverte OU fermée) */
-  .chatgpt-messages {
-    max-width: none;
-    width: calc(100vw - var(--chat-safe-left) - var(--chat-safe-right));
-    min-width: calc(100vw - var(--chat-safe-left) - var(--chat-safe-right));
-  }
-  
-  .chatgpt-input-container {
-    width: 100vw;
-    max-width: none;
-    left: 0;
-    right: auto;
-  }
-  
-  .chatgpt-input-area {
-    max-width: calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal));
-  }
-  
-  /* ✅ Décalage uniquement quand sidebar ouverte (pas de resize) */
+  /* ✅ Décalage uniquement quand sidebar ouverte */
   .chatgpt-content.sidebar-open {
     margin-left: 250px;
   }
@@ -1831,7 +1852,7 @@ body.chat-theme-glass .chatgpt-messages > div {
 }
 
 .chatgpt-main--canva-open .chatgpt-input-area {
-  max-width: min(var(--chat-container-width), 100%);
+  max-width: min(calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)), 100%);
 }
 
 .chatgpt-main--canva-open .chatgpt-messages {
@@ -2017,12 +2038,12 @@ body.chat-theme-glass .chatgpt-messages > div {
   z-index: 0;
 }
 
-/* Input au-dessus du footer */
+/* Input au-dessus du footer - ne dépasse jamais le bord droit (100% = parent) */
 .chatgpt-input-area {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)); /* ✅ Même largeur que messages (sans padding) */
+  max-width: min(calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)), 100%); /* ✅ Aligné messages, jamais overflow */
   background: var(--chat-gradient-input);
   border-radius: 18px; /* ✅ Radius légèrement augmenté (16px → 18px) */
   padding: 12px 12px; /* ✅ Padding vertical réduit : top/bottom 12px, left/right 12px */
@@ -2548,12 +2569,8 @@ body.chat-theme-glass .chatgpt-messages > div {
    Les paddings changent simultanément pour messages et input
    ======================================== */
 
-/* Mobile et tablette (< 1024px) - Correspond au breakpoint React */
+/* Mobile et tablette (< 1024px) - Pas de changement de padding (reste fluide via 1300px) */
 @media (max-width: 1023px) {
-  :root {
-    --chat-padding-horizontal: 16px;  /* ✅ Appliqué simultanément messages + input */
-  }
-  
   /* ✅ Masquer toutes les scrollbars sur mobile */
   * {
     scrollbar-width: none; /* Firefox */
@@ -2580,7 +2597,18 @@ body.chat-theme-glass .chatgpt-messages > div {
   
   .chatgpt-messages-container {
     padding-bottom: calc(100px + var(--chat-safe-bottom)); /* 🎯 Mobile : padding normal */
-    padding-top: calc(var(--chat-space-xl) + var(--chat-safe-top));
+    /* Pas de padding-top ici : le fade ::before reste 5px en haut, sans s'allonger */
+  }
+  
+  /* Fade en haut : hauteur fixe, ne doit pas bouger sous 1023px */
+  .chatgpt-messages-container::before {
+    height: 5px;
+    min-height: 5px;
+    max-height: 5px;
+  }
+  
+  .chatgpt-messages {
+    padding-top: calc(var(--chat-space-xl) + var(--chat-safe-top)); /* Espace sous le fade */
   }
   
   .chatgpt-message-bubble-assistant {

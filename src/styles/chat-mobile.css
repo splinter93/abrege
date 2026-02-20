@@ -58,24 +58,24 @@
     padding-bottom: 120px; /* Réserve pour l'input fixe en bas */
   }
   
-  /* Input fixe en bas : ne bouge plus en PWA/mobile */
+  /* Input fixe en bas : padding latéral = variable (5px sous 900px) */
   .chatgpt-input-container {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     z-index: 10;
-    padding: 8px 12px;
+    padding: 8px var(--chat-padding-horizontal, 12px);
     padding-bottom: max(12px, env(safe-area-inset-bottom));
     background: var(--chat-bg-primary, #0d0d0d);
   }
   
   /* Containers */
-  .chat-messages-container { max-width: 100%; padding: 0 12px; }
+  .chat-messages-container { max-width: 100%; padding: 0 var(--chat-padding-horizontal, 12px); }
   
   /* Header - Fix overflow */
   .chatgpt-header {
-    padding: 8px 12px;
+    padding: 8px var(--chat-padding-horizontal, 12px);
     flex-wrap: wrap;
     gap: 8px;
     width: 100%;
@@ -87,12 +87,12 @@
   .chatgpt-header-left,
   .chatgpt-header-right { flex-shrink: 1; min-width: 0; overflow: hidden; }
   
-  .chat-header { padding: 8px 12px; flex-wrap: wrap; gap: 8px; }
+  .chat-header { padding: 8px var(--chat-padding-horizontal, 12px); flex-wrap: wrap; gap: 8px; }
   .chat-header-title { font-size: 16px; }
   .chat-header-actions { gap: 6px; }
   
   /* Input */
-  .chat-input-container { padding: 8px 12px; }
+  .chat-input-container { padding: 8px var(--chat-padding-horizontal, 12px); }
   .chat-input-wrapper { gap: 8px; }
   
   /* Sidebar - Overlay */
