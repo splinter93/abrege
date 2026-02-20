@@ -60,14 +60,14 @@ html, body {
     background: #000000 !important;
   }
   
-  /* Remplir la safe area du bas en noir (évite la bande marron Android) */
+  /* Remplir la safe area du bas en noir + 2px pour couvrir la ligne de séparation (Android) */
   body::after {
     content: '';
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    height: env(safe-area-inset-bottom, 0px);
+    height: calc(env(safe-area-inset-bottom, 0px) + 2px);
     background: #000000 !important;
     z-index: 9998;
     pointer-events: none;
@@ -82,10 +82,28 @@ html, body {
     box-sizing: border-box;
   }
   
-  /* Chat input propre : pas d'espace ni ligne marron en dessous */
+  /* Toute la colonne chat en noir (évite bande/ligne marron qui vient d'un parent) */
+  .chatgpt-main,
+  .chatgpt-content,
+  .chatgpt-main-chat {
+    background: #000000 !important;
+  }
+  
+  /* Chat input : fond noir, aucune bordure ni ombre (évite ligne de séparation) */
   .chatgpt-input-container {
     padding-bottom: env(safe-area-inset-bottom, 0px) !important;
     background: #000000 !important;
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+  }
+  
+  .chatgpt-input-area {
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
   }
   
   /* Masquer le gradient footer sous l'input (évite la ligne) */
