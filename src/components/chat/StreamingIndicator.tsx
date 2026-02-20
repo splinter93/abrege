@@ -96,7 +96,7 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
                       style={{ cursor: 'pointer' }}
                     >
                       <span className="tool-item-name">
-                        {functionName}
+                        Calling {functionName}
                       </span>
                     <span className="tool-item-status">
                       {tool.success === true ? (
