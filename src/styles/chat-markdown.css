@@ -289,11 +289,11 @@
 .chat-markdown th {
   padding: 12px 16px !important;
   text-align: left !important;
-  font-weight: 600 !important;
+  font-weight: var(--chat-weight-semibold) !important; /* ✅ En-tête en gras */
+  font-size: var(--chat-text-base) !important; /* ✅ Même taille que le texte du chat */
   color: var(--chat-text-primary, #e4e4e7) !important;
   background: transparent !important;
   border-bottom: 0.5px solid rgba(255, 255, 255, 0.04) !important; /* ✅ Ligne ultra-fine */
-  font-size: var(--editor-body-size, 15.5px) !important;
   font-family: var(--font-chat-text) !important;
   white-space: normal !important; /* ✅ Permet wrap (évite dépassement headers longs) */
   word-break: break-word !important; /* ✅ Casse mots très longs */
@@ -310,8 +310,9 @@
 .chat-markdown td {
   padding: 10px 16px !important;
   border-bottom: 0.5px solid rgba(255, 255, 255, 0.03) !important; /* ✅ Ligne ultra-fine */
-  color: var(--chat-text-secondary, #a1a1aa) !important;
-  font-size: var(--editor-body-size, 15.5px) !important;
+  color: var(--chat-text-primary, #e4e4e7) !important; /* ✅ Même couleur que le texte du chat */
+  font-size: var(--chat-text-base) !important; /* ✅ Même taille que le texte du chat */
+  font-weight: var(--chat-weight-normal) !important; /* ✅ Même poids que le texte du chat */
   font-family: var(--font-chat-text) !important;
   white-space: normal !important; /* ✅ Permet wrap du texte */
   word-break: break-word !important; /* ✅ Casse mots très longs */
@@ -365,10 +366,10 @@
   background: transparent;
   border-radius: 0;
   font-style: normal;
-  color: var(--text-primary, #e4e4e7);
+  color: var(--chat-text-primary, #e4e4e7);
   position: relative;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: var(--chat-text-base); /* ✅ Même taille que le texte du chat */
+  font-weight: var(--chat-weight-normal); /* ✅ Même poids que le texte du chat */
 }
 
 .chat-markdown blockquote::before {
@@ -385,9 +386,9 @@
 
 .chat-markdown blockquote p {
   margin: 0;
-  font-size: 1rem;
-  line-height: 1.75;
-  font-weight: 500;
+  font-size: var(--chat-text-base); /* ✅ Même taille que le texte du chat */
+  line-height: var(--chat-leading-relaxed);
+  font-weight: var(--chat-weight-normal); /* ✅ Même poids que le texte du chat */
 }
 
 .chat-markdown blockquote p:last-child {
@@ -512,7 +513,7 @@
   .chat-markdown th,
   .chat-markdown td {
     padding: var(--chat-space-sm) var(--chat-space-md);
-    font-size: var(--chat-font-size-sm);
+    font-size: var(--chat-text-base) !important; /* ✅ Même taille que le texte du chat */
   }
 }
 

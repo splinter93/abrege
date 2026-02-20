@@ -2114,7 +2114,8 @@ body.chat-theme-glass .chatgpt-messages > div {
 .chatgpt-input-reasoning {
   background: transparent;
   border: none;
-  color: var(--chat-text-secondary);
+  color: var(--chat-text-secondary); /* ✅ Même couleur que le placeholder */
+  opacity: 0.7; /* ✅ Même rendu que le placeholder du textarea */
   cursor: pointer;
   padding: 8px;
   border-radius: var(--chat-radius-md);
@@ -2136,6 +2137,7 @@ body.chat-theme-glass .chatgpt-messages > div {
 .chatgpt-input-reasoning:hover {
   background: var(--chat-overlay-hover);
   color: var(--chat-text-primary);
+  opacity: 1; /* ✅ Pleine opacité au hover */
   border-radius: var(--chat-radius-md);
 }
 
@@ -2143,12 +2145,14 @@ body.chat-theme-glass .chatgpt-messages > div {
 .chatgpt-input-mention.active {
   background: var(--chat-overlay-active);
   color: var(--chat-accent-primary);
+  opacity: 1;
 }
 
 /* Bouton fichier actif */
 .chatgpt-input-file.active {
   background: var(--chat-overlay-active);
   color: var(--chat-accent-primary);
+  opacity: 1;
 }
 
 
@@ -2156,18 +2160,21 @@ body.chat-theme-glass .chatgpt-messages > div {
 .chatgpt-input-websearch.active {
   background: var(--chat-overlay-active);
   color: var(--chat-accent-primary);
+  opacity: 1;
 }
 
 /* Bouton reasoning actif (menu ouvert) */
 .chatgpt-input-reasoning.active {
   background: var(--chat-overlay-hover);
   color: var(--chat-text-primary);
+  opacity: 1;
 }
 
 /* ⚠️ Bouton reasoning avec override (icône orange + fond neutre léger persistant) */
 .chatgpt-input-reasoning.override-active {
   background: rgba(255, 255, 255, 0.04);
   color: var(--chat-accent-primary) !important;
+  opacity: 1;
 }
 
 .chatgpt-input-reasoning.override-active:hover {
