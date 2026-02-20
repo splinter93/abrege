@@ -3878,20 +3878,43 @@ body.chat-theme-glass .chatgpt-messages > div {
   }
 }
 
-/* PWA standalone : overlay et textarea strictement identiques (évite décalage) */
+/* PWA standalone : overlay et textarea strictement identiques (calage curseur parfait) */
 @media (display-mode: standalone) {
   .textarea-highlight-overlay {
     overflow-y: auto !important;
     overflow-x: hidden !important;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    box-sizing: border-box !important;
+    /* Même zone que le textarea sans aucun décalage */
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
   }
   .textarea-highlight-overlay::-webkit-scrollbar {
     display: none;
   }
-  .textarea-highlight-content,
+  /* Contenu overlay = mêmes métriques exactes que le textarea (16px comme mobile) */
+  .textarea-highlight-content {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+    padding: 8px 0 0 8px !important;
+    font-family: var(--font-chat-text) !important;
+    font-weight: var(--chat-weight-normal, 400) !important;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-height: 24px !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+  }
   .textarea-with-mentions-input {
-    font-size: 15px !important;
+    font-size: 16px !important;
     line-height: 1.5 !important;
     padding: 8px 0 0 8px !important;
     font-family: var(--font-chat-text) !important;
@@ -3901,10 +3924,13 @@ body.chat-theme-glass .chatgpt-messages > div {
     box-sizing: border-box !important;
     -webkit-font-smoothing: antialiased !important;
     -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    outline: none !important;
+    border: none !important;
   }
   .textarea-mention-highlight,
   .textarea-prompt-highlight {
-    font-size: 15px !important;
+    font-size: 16px !important;
     line-height: 1.5 !important;
   }
 }
