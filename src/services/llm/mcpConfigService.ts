@@ -117,7 +117,7 @@ export class McpConfigService {
               : undefined,
             server_description: server.server_description || undefined,
             require_approval: server.require_approval || 'never',
-            allowed_tools
+            allowed_tools: allowedTools
           };
           
           return mcpServer;
