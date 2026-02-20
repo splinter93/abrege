@@ -304,6 +304,11 @@
   gap: var(--spacing-xl);
 }
 
+/* Barre avec bouton menu : visible uniquement sur mobile */
+.page-mobile-sidebar-header {
+  display: none;
+}
+
 /* ==========================================================================
    RESPONSIVE DESIGN UNIFIÉ
    ========================================================================== */
@@ -358,68 +363,106 @@
 }
 
 @media (max-width: 768px) {
-  .page-content-area {
-    padding: var(--spacing-md) !important;
-    margin-left: 0;
+  /* Zéro marge/padding à gauche sur mobile (override sidebar-collapsible 56px) */
+  .page-wrapper.page-is-mobile .page-content-area {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    padding-top: var(--spacing-md) !important;
+    padding-right: var(--spacing-md) !important;
+    padding-bottom: var(--spacing-md) !important;
+    transition: margin-left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
-  
+
+  /* Push du contenu quand la sidebar est ouverte (comme le chat) */
+  .page-wrapper.main-sidebar-open .page-content-area {
+    margin-left: 220px !important;
+    padding-left: var(--spacing-md) !important;
+  }
+
+  /* Sidebar complètement masquée sur mobile : le conteneur ET l’inner (position:fixed) */
   .page-sidebar-fixed {
     transform: translateX(-100%);
-    transition: transform var(--transition-normal);
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
   }
-  
+
   .page-sidebar-fixed.mobile-visible {
-    transform: translateX(0);
+    pointer-events: auto;
   }
-  
+
+  /* .unified-sidebar est position:fixed donc ne suit pas le parent : on la translate aussi */
+  .page-sidebar-fixed:not(.mobile-visible) .unified-sidebar {
+    transform: translateX(-100%) !important;
+  }
+
+  .page-sidebar-fixed.mobile-visible .unified-sidebar {
+    transform: translateX(0) !important;
+  }
+
+  /* Barre mobile : bouton menu en haut à gauche (12px comme le chat) */
+  .page-mobile-sidebar-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    margin: calc(-1 * var(--spacing-md)) calc(-1 * var(--spacing-md)) 0 calc(-1 * var(--spacing-md));
+    min-height: 56px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .page-mobile-sidebar-header .main-sidebar-toggle-btn {
+    margin-left: 0;
+    flex-shrink: 0;
+  }
+
   .page-title-container-glass {
     min-height: 64px;
     padding: 14px 16px;
   }
-  
+
   .page-title-content {
     flex-direction: column;
     gap: 12px;
     align-items: flex-start;
   }
-  
+
   .page-title-left-section {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .page-title-icon-container {
     width: 40px;
     height: 40px;
   }
-  
+
   .page-title-icon {
     font-size: 16px;
   }
-  
+
   .page-title {
     font-size: 20px;
   }
-  
+
   .page-subtitle {
     font-size: 12px;
   }
-  
+
   .page-title-stats {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .page-title-stats-item {
     flex: 1;
     padding: 8px 12px;
     min-width: auto;
   }
-  
+
   .page-title-stats-number {
     font-size: 14px;
   }
-  
+
   .page-title-stats-label {
     font-size: 8px;
   }

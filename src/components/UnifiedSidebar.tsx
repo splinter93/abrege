@@ -244,6 +244,7 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
                   href={item.href} 
                   className={`unified-nav-link ${activeLink === item.key ? 'active' : ''}`}
                   title={isCollapsed ? item.label : undefined}
+                  onClick={onClose}
                 >
                   <item.icon />
                   {!isCollapsed && <span>{item.label}</span>}
@@ -272,6 +273,7 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
                   href={item.href} 
                   className={`unified-nav-link ${activeLink === item.key ? 'active' : ''}`}
                   title={isCollapsed ? item.label : undefined}
+                  onClick={onClose}
                 >
                   <item.icon />
                   {!isCollapsed && <span>{item.label}</span>}
@@ -279,7 +281,7 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
               </motion.div>
             ))}
             <motion.button 
-              onClick={handleLogout} 
+              onClick={() => { onClose(); handleLogout(); }} 
               className="unified-nav-link unified-logout-button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

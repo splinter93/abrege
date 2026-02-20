@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useMemo, memo } from "react";
 import { FileItem } from "@/types/files";
 import { useFilesPage } from "@/hooks/useFilesPage";
 import { useAuth } from "@/hooks/useAuth";
-import UnifiedSidebar from "@/components/UnifiedSidebar";
+import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
 import SearchFiles, { FileFilters, FileSortOptions } from "@/components/SearchFiles";
 import UnifiedUploadZone from "@/components/UnifiedUploadZone";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -39,14 +39,9 @@ function FilesPageContent() {
   // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
   if (authLoading || !user?.id) {
     return (
-      <div className="page-wrapper">
-        <aside className="page-sidebar-fixed">
-          <UnifiedSidebar />
-        </aside>
-        <main className="page-content-area">
-          <SimpleLoadingState message="Chargement" />
-        </main>
-      </div>
+      <PageWithSidebarLayout>
+        <SimpleLoadingState message="Chargement" />
+      </PageWithSidebarLayout>
     );
   }
   
@@ -653,14 +648,9 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   );
 
   return (
-    <div className="page-wrapper">
-      <aside className="page-sidebar-fixed">
-        <UnifiedSidebar />
-      </aside>
-      
-      <main className="page-content-area">
-        {/* Titre de la page avec design uniforme */}
-        <UnifiedPageTitle
+    <PageWithSidebarLayout>
+      {/* Titre de la page avec design uniforme */}
+      <UnifiedPageTitle
           icon={FileText}
           title="Mes Fichiers"
           subtitle="Gérez et organisez vos documents"
@@ -867,8 +857,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
-    </div>
+    </PageWithSidebarLayout>
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import UnifiedSidebar from "@/components/UnifiedSidebar";
+import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
 import AuthGuard from "@/components/AuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
@@ -11,12 +11,7 @@ export default function FavoritesPage() {
   return (
     <ErrorBoundary>
       <AuthGuard>
-        <div className="page-wrapper">
-      <aside className="page-sidebar-fixed">
-        <UnifiedSidebar />
-      </aside>
-      
-      <main className="page-content-area">
+        <PageWithSidebarLayout>
           {/* Titre de la page avec design uniforme */}
           <UnifiedPageTitle
             icon={Star}
@@ -46,8 +41,7 @@ export default function FavoritesPage() {
               </div>
             </div>
           </motion.section>
-              </main>
-    </div>
+        </PageWithSidebarLayout>
       </AuthGuard>
     </ErrorBoundary>
   );

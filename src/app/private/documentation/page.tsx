@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useCallback } from "react";
-import UnifiedSidebar from "@/components/UnifiedSidebar";
+import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
 import AuthGuard from "@/components/AuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
@@ -786,13 +786,8 @@ GUIDELINES :
   );
 
   return (
-    <div className="page-wrapper">
-      <aside className="page-sidebar-fixed">
-        <UnifiedSidebar />
-      </aside>
-      
-      <main className="page-content-area">
-        <UnifiedPageTitle
+    <PageWithSidebarLayout>
+      <UnifiedPageTitle
           icon={BookOpen}
           title="Documentation Scrivia"
           subtitle="Guide complet pour maîtriser toutes les fonctionnalités"
@@ -877,8 +872,7 @@ GUIDELINES :
             </AnimatePresence>
           </div>
         </div>
-      </main>
-    </div>
+    </PageWithSidebarLayout>
   );
 };
 

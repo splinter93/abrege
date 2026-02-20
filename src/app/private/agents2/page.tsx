@@ -7,7 +7,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSpecializedAgents } from '@/hooks/useSpecializedAgents';
-import UnifiedSidebar from '@/components/UnifiedSidebar';
+import PageWithSidebarLayout from '@/components/PageWithSidebarLayout';
 import AuthGuard from '@/components/AuthGuard';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
@@ -529,55 +529,35 @@ function AgentsV2Content() {
 
   if (authLoading || !user?.id) {
     return (
-      <div className="page-wrapper">
-        <aside className="page-sidebar-fixed">
-          <UnifiedSidebar />
-        </aside>
-        <main className="page-content-area">
-          <SimpleLoadingState message="Chargement" />
-        </main>
-      </div>
+      <PageWithSidebarLayout>
+        <SimpleLoadingState message="Chargement" />
+      </PageWithSidebarLayout>
     );
   }
 
   if (loading) {
     return (
-      <div className="page-wrapper">
-        <aside className="page-sidebar-fixed">
-          <UnifiedSidebar />
-        </aside>
-        <main className="page-content-area">
-          <SimpleLoadingState message="Chargement des agents" />
-        </main>
-      </div>
+      <PageWithSidebarLayout>
+        <SimpleLoadingState message="Chargement des agents" />
+      </PageWithSidebarLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="page-wrapper">
-        <aside className="page-sidebar-fixed">
-          <UnifiedSidebar />
-        </aside>
-        <main className="page-content-area">
-          <div className="agents2-section">
-            <div className="agents2-error">
-              <p>❌ Erreur: {error}</p>
-            </div>
+      <PageWithSidebarLayout>
+        <div className="agents2-section">
+          <div className="agents2-error">
+            <p>❌ Erreur: {error}</p>
           </div>
-        </main>
-      </div>
+        </div>
+      </PageWithSidebarLayout>
     );
   }
 
   return (
-    <div className="page-wrapper">
-      <aside className="page-sidebar-fixed">
-        <UnifiedSidebar />
-      </aside>
-
-      <main className="page-content-area">
-        <div className="page-content-inner">
+    <PageWithSidebarLayout>
+      <div className="page-content-inner">
           <div className="agents2-section">
             <div className="agents2-container">
               <UnifiedPageTitle
@@ -701,9 +681,8 @@ function AgentsV2Content() {
               </div>
             </div>
           ) : null}
-        </div>
-      </main>
-    </div>
+      </div>
+    </PageWithSidebarLayout>
   );
 }
 

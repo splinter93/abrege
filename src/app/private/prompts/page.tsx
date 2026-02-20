@@ -11,7 +11,7 @@ import { useEditorPrompts } from '@/hooks/useEditorPrompts';
 import { useAgents } from '@/hooks/useAgents';
 import PromptCard from '@/components/prompts/PromptCard';
 import PromptFormModal from '@/components/prompts/PromptFormModal';
-import UnifiedSidebar from '@/components/UnifiedSidebar';
+import PageWithSidebarLayout from '@/components/PageWithSidebarLayout';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
 import AuthGuard from '@/components/AuthGuard';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -94,61 +94,41 @@ function PromptsPageContent() {
 
   if (authLoading || !user?.id) {
     return (
-      <div className="page-wrapper">
-        <aside className="page-sidebar-fixed">
-          <UnifiedSidebar />
-        </aside>
-        <main className="page-content-area">
-          <SimpleLoadingState message="Chargement" />
-        </main>
-      </div>
+      <PageWithSidebarLayout>
+        <SimpleLoadingState message="Chargement" />
+      </PageWithSidebarLayout>
     );
   }
 
   if (loading) {
     return (
-      <div className="page-wrapper">
-        <aside className="page-sidebar-fixed">
-          <UnifiedSidebar />
-        </aside>
-        <main className="page-content-area">
-          <div className="prompts-section">
-            <div className="prompts-loading">
-              <div className="prompts-loading-spinner" />
-              <p>Chargement des prompts...</p>
-            </div>
+      <PageWithSidebarLayout>
+        <div className="prompts-section">
+          <div className="prompts-loading">
+            <div className="prompts-loading-spinner" />
+            <p>Chargement des prompts...</p>
           </div>
-        </main>
-      </div>
+        </div>
+      </PageWithSidebarLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="page-wrapper">
-        <aside className="page-sidebar-fixed">
-          <UnifiedSidebar />
-        </aside>
-        <main className="page-content-area">
-          <div className="prompts-section">
-            <div className="prompts-error">
-              <p>❌ Erreur: {error}</p>
-            </div>
+      <PageWithSidebarLayout>
+        <div className="prompts-section">
+          <div className="prompts-error">
+            <p>❌ Erreur: {error}</p>
           </div>
-        </main>
-      </div>
+        </div>
+      </PageWithSidebarLayout>
     );
   }
 
   return (
-    <div className="page-wrapper">
-      <aside className="page-sidebar-fixed">
-        <UnifiedSidebar />
-      </aside>
-      
-      <main className="page-content-area">
-        <div className="page-content-inner">
-          <div className="prompts-section">
+    <PageWithSidebarLayout>
+      <div className="page-content-inner">
+        <div className="prompts-section">
           <div className="prompts-container">
             <UnifiedPageTitle
               icon={Zap}
@@ -191,20 +171,19 @@ function PromptsPageContent() {
         </div>
         </div>
 
-        {/* Modal */}
-        {isModalOpen && (
-          <PromptFormModal
-            prompt={editingPrompt}
-            agents={agents}
-            onSave={handleSave}
-            onCancel={() => {
-              setIsModalOpen(false);
-              setEditingPrompt(null);
-            }}
-          />
-        )}
-      </main>
-    </div>
+      {/* Modal */}
+      {isModalOpen && (
+        <PromptFormModal
+          prompt={editingPrompt}
+          agents={agents}
+          onSave={handleSave}
+          onCancel={() => {
+            setIsModalOpen(false);
+            setEditingPrompt(null);
+          }}
+        />
+      )}
+    </PageWithSidebarLayout>
   );
 }
 

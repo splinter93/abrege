@@ -8,7 +8,7 @@ import type { AuthenticatedUser } from '@/types/dossiers';
 import type { TrashItem, TrashStatistics } from '@/types/supabase';
 import AuthGuard from '@/components/AuthGuard';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import UnifiedSidebar from '@/components/UnifiedSidebar';
+import PageWithSidebarLayout from '@/components/PageWithSidebarLayout';
 import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
 import { simpleLogger as logger } from '@/utils/logger';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
@@ -224,14 +224,9 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
   }
 
   return (
-    <div className="page-wrapper">
-      <aside className="page-sidebar-fixed">
-        <UnifiedSidebar />
-      </aside>
-      
-      <main className="page-content-area">
-        {/* Titre de la page avec design uniforme */}
-        <UnifiedPageTitle
+    <PageWithSidebarLayout>
+      {/* Titre de la page avec design uniforme */}
+      <UnifiedPageTitle
           icon={Trash2}
           title="Corbeille"
           subtitle="Gérez vos éléments supprimés et restaurez ce qui est important"
@@ -338,8 +333,7 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
             </div>
           </div>
         </motion.div>
-      </main>
-    </div>
+    </PageWithSidebarLayout>
   );
 }
 

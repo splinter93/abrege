@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
 import type { FileArticle } from "@/components/types";
 import FolderManager from "@/components/FolderManager";
-import UnifiedSidebar from "@/components/UnifiedSidebar";
+import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
 import DossierErrorBoundary from "@/components/DossierErrorBoundary";
 import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 import AuthGuard from "@/components/AuthGuard";
@@ -542,12 +542,8 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
   }
 
   return (
-    <div className="page-wrapper dossiers-page">
-      <aside className="page-sidebar-fixed">
-        <UnifiedSidebar />
-      </aside>
-      
-      <main className="page-content-area">
+    <PageWithSidebarLayout>
+      <div className="dossiers-page">
         {/* Titre de la page avec design uniforme */}
         <UnifiedPageTitle
           icon={FolderIcon}
@@ -650,12 +646,12 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
             </div>
           )}
         </motion.div>
-      </main>
-      
+      </div>
+
       <TargetedPollingManager />
       <TargetedPollingMonitor />
       <RealtimeStatus userId={user.id} />
-      
+
       {/* Menu contextuel des classeurs */}
       {contextMenuState.visible && contextMenuState.item && (
         <SimpleContextMenu
@@ -669,6 +665,6 @@ function AuthenticatedDossiersContent({ user }: { user: AuthenticatedUser }) {
           onClose={closeContextMenu}
         />
       )}
-    </div>
+    </PageWithSidebarLayout>
   );
 } 

@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import UnifiedSidebar from "@/components/UnifiedSidebar";
+import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
 import AuthGuard from "@/components/AuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
@@ -92,14 +92,9 @@ export default function AccountPage() {
   return (
     <ErrorBoundary>
       <AuthGuard>
-        <div className="page-wrapper">
-          <aside className="page-sidebar-fixed">
-            <UnifiedSidebar />
-          </aside>
-          
-          <main className="page-content-area">
-            {/* Titre de la page avec design uniforme */}
-            <UnifiedPageTitle
+        <PageWithSidebarLayout>
+          {/* Titre de la page avec design uniforme */}
+          <UnifiedPageTitle
               icon={User}
               title="Mon Compte"
               subtitle="Gérez votre compte et vos préférences"
@@ -268,8 +263,7 @@ export default function AccountPage() {
               </motion.section>
 
             </div>
-          </main>
-        </div>
+        </PageWithSidebarLayout>
       </AuthGuard>
     </ErrorBoundary>
   );

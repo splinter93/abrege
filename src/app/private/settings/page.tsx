@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import UnifiedSidebar from "@/components/UnifiedSidebar";
+import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { logApi } from "@/utils/logger";
@@ -53,14 +53,9 @@ function SettingsPageContent() {
   // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
   if (authLoading || !user?.id) {
     return (
-      <div className="page-wrapper">
-        <aside className="page-sidebar-fixed">
-          <UnifiedSidebar />
-        </aside>
-        <main className="page-content-area">
-          <SimpleLoadingState message="Chargement" />
-        </main>
-      </div>
+      <PageWithSidebarLayout>
+        <SimpleLoadingState message="Chargement" />
+      </PageWithSidebarLayout>
     );
   }
   
@@ -196,14 +191,9 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
   // 🔧 FIX: Plus besoin de vérifier authLoading car c'est déjà fait dans le composant parent
 
   return (
-    <div className="page-wrapper">
-      <aside className="page-sidebar-fixed">
-        <UnifiedSidebar />
-      </aside>
-      
-      <main className="page-content-area">
-        {/* Titre de la page avec design uniforme */}
-        <UnifiedPageTitle
+    <PageWithSidebarLayout>
+      {/* Titre de la page avec design uniforme */}
+      <UnifiedPageTitle
           icon={Settings}
           title="Réglages"
           subtitle="Gérez vos préférences et clés API"
@@ -497,7 +487,6 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
           </motion.div>
         )}
       </AnimatePresence>
-      </main>
-    </div>
+    </PageWithSidebarLayout>
   );
 } 

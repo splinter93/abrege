@@ -46,15 +46,15 @@
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
-  width: 250px !important;
+  width: 220px !important;
   height: 100vh !important;
   /* ✅ Même background que sidebar éditeur - légèrement plus clair */
   background: #141618 !important; /* Légèrement plus clair que #121416 */
-  /* ✅ Même bordure que sidebar éditeur */
+  /* ✅ Même bordure que sidebar éditeur - pas de radius */
   border: 1px solid rgba(255, 255, 255, 0.05) !important;
   border-left: none !important;
-  border-top-right-radius: 16px !important;
-  border-bottom-right-radius: 16px !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
@@ -73,8 +73,8 @@ aside.unified-sidebar {
   background: #141618 !important; /* ✅ Légèrement plus clair que sidebar éditeur */
   border: 1px solid rgba(255, 255, 255, 0.05) !important;
   border-left: none !important;
-  border-top-right-radius: 16px !important;
-  border-bottom-right-radius: 16px !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
@@ -84,11 +84,11 @@ aside.unified-sidebar {
 .unified-sidebar.collapsed {
   width: 56px !important;
   overflow: hidden !important;
-  /* ✅ Même bordure que sidebar normale */
+  /* ✅ Même bordure que sidebar normale - pas de radius */
   border: 1px solid rgba(255, 255, 255, 0.05) !important;
   border-left: none !important;
-  border-top-right-radius: 16px !important;
-  border-bottom-right-radius: 16px !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
@@ -620,7 +620,7 @@ aside.unified-sidebar {
 
 @keyframes sidebarCollapse {
   from {
-    width: 250px !important;
+    width: 220px !important;
   }
   to {
     width: 56px !important;
@@ -632,7 +632,7 @@ aside.unified-sidebar {
     width: 56px !important;
   }
   to {
-    width: 250px !important;
+    width: 220px !important;
   }
 }
 
