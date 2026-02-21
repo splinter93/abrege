@@ -372,6 +372,12 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, []);
 
+  // Noir absolu sur mobile : classe sur <html> pour que le CSS puisse forcer html/body (variables + fond)
+  useEffect(() => {
+    document.documentElement.classList.add('chat-page');
+    return () => document.documentElement.classList.remove('chat-page');
+  }, []);
+
   // ✅ SUPPRIMÉ : Plus d'auto-sélection de session
   // L'utilisateur choisit explicitement (via agent favori ou clic sidebar)
 

@@ -227,10 +227,8 @@ button, a, input, textarea, select {
   }
 }
 
-/* Mobile / touch (Capacitor WebView) : overlay zone notification + fond noir sur le chat uniquement.
-   NE PAS toucher html/body/root globalement — cela casse la page auth et les autres pages. */
+/* Mobile / touch (Capacitor WebView) : overlay zone notification + fond noir sur le chat uniquement. */
 @media (hover: none) and (pointer: coarse) {
-  /* Overlay zone notification (barre de statut Android) */
   .pwa-status-bar-overlay {
     position: fixed;
     top: 0;
@@ -242,8 +240,9 @@ button, a, input, textarea, select {
     z-index: 99999;
     pointer-events: none;
   }
-  /* Fond noir uniquement sur les containers chat */
   body:has(.chatgpt-container) {
+    --color-bg-primary: #000000;
+    --chat-bg-primary: #000000;
     background: #000000 !important;
     background-image: none !important;
   }
@@ -254,6 +253,27 @@ button, a, input, textarea, select {
   body:has(.chatgpt-container) .chatgpt-header,
   body:has(.chatgpt-container) .chatgpt-input-container,
   body:has(.chatgpt-container) .chatgpt-messages-container {
+    background: #000000 !important;
+  }
+}
+
+/* Mobile viewport (768px) : noir absolu sur la page chat (classe .chat-page sur <html> posée par ChatFullscreenV2). */
+@media (max-width: 768px) {
+  html.chat-page,
+  html.chat-page body {
+    --color-bg-primary: #000000;
+    --chat-bg-primary: #000000;
+    background: #000000 !important;
+    background-image: none !important;
+  }
+  html.chat-page .chatgpt-container,
+  html.chat-page .chatgpt-main,
+  html.chat-page .chatgpt-content,
+  html.chat-page .chatgpt-main-chat,
+  html.chat-page .chatgpt-header,
+  html.chat-page .chatgpt-input-container,
+  html.chat-page .chatgpt-messages-container,
+  html.chat-page .chatgpt-messages-container::before {
     background: #000000 !important;
   }
 }

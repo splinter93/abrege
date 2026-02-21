@@ -56,7 +56,8 @@
   .chatgpt-messages-container {
     flex: 1;
     min-height: 0;
-    padding-bottom: 120px; /* Réserve pour l'input fixe en bas */
+    /* Réserve input + clavier : sans --keyboard-inset le contenu passerait sous l'input */
+    padding-bottom: calc(120px + var(--keyboard-inset, 0px));
   }
   
   /* Input fixe en bas. --keyboard-inset : remonter le bloc au-dessus du clavier (bottom = hauteur clavier). */

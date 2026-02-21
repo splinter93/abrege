@@ -103,15 +103,16 @@ Tu peux le copier sur ton téléphone (câble USB, Google Drive, AirDroid, etc.)
 
 ## URL de l’app (prod)
 
-Par défaut en dev : `http://10.0.2.2:3000`. Pour pointer vers la prod (build release) :
+Par défaut en dev : `http://10.0.2.2:3000`. **Sur téléphone physique**, l'app doit charger la prod (scrivia.app) :
 
 ```bash
-export CAPACITOR_SERVER_URL=https://ton-domaine.com
-npm run cap:sync
-# puis build depuis Android Studio
+# 1. Build Next.js + déployer scrivia.app (Vercel / CI)
+# 2. Sync et run avec l'URL prod (évite d'écraser server.url)
+npm run build && npm run cap:run:android:prod
 ```
 
-Ou modifier temporairement `server.url` dans `capacitor.config.ts`.
+Ou manuellement : `npm run cap:sync:prod` puis build/run depuis Android Studio.  
+**Important :** ne pas utiliser `cap:run:android` seul pour le device physique — il remet `server.url` à l'émulateur → écran vide.
 
 ---
 
