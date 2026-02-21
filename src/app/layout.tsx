@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 // import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Noto_Sans } from "next/font/google";
@@ -55,16 +55,20 @@ export const metadata: Metadata = {
   title: "Scrivia",
   description:
     "Scrivia is a modern, collaborative, and LLM-friendly markdown knowledge base. Organize, publish, and share your notes with clean URLs and a beautiful UI.",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    viewportFit: "cover", // ✅ Remplit haut et bas (barre nav Android)
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  // adjustResize (AndroidManifest) redimensionne le WebView quand le clavier apparaît.
+  // interactiveWidget=resizes-content dit à Chrome de faire pareil côté CSS (dvh, fixed).
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark theme-dark">
+    <html lang="en" className="dark theme-dark" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/feather.svg" type="image/svg+xml" />
         <link rel="manifest" href="/manifest.json" />
@@ -127,14 +131,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             body { background-image: none !important; }
           }
           
-          /* PWA STANDALONE - Fond unifié pour couvrir les safe areas */
+          /* PWA STANDALONE - Fond noir absolu */
           @media (display-mode: standalone) {
-            html {
-              background: #000000 !important;
-            }
-            body {
-              background: #000000 !important;
-            }
+            html, body { background: #000000 !important; background-image: none !important; }
           }
           
           /* CRITICAL SIDEBAR CSS - Éviter le flash de sidebar noire */
@@ -216,6 +215,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         ` }} />
       </head>
       <body className={`${geistSans.className} ${geistSans.variable} ${geistMono.variable} ${notoSans.variable} app-container`}>
+        {/* Overlay zone notification : noir opaque pour que le contenu ne passe pas à travers (mobile / Capacitor) */}
+        <div className="pwa-status-bar-overlay" aria-hidden="true" />
         <PWASplash />
         <ThemeColor />
         <ScrollPerformance />

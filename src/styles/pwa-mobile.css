@@ -51,6 +51,10 @@ html, body {
 
 /* PWA standalone : fond noir complet partout, safe area incluse, sans bordure (Android/iOS) */
 @media (display-mode: standalone) {
+  :root {
+    --color-bg-primary: #000000;
+    --chat-bg-primary: #000000;
+  }
   html {
     background: #000000 !important;
     background-image: none !important;
@@ -69,7 +73,7 @@ html, body {
     left: 0;
     right: 0;
     height: calc(env(safe-area-inset-bottom, 0px) + 4px);
-    background: var(--chat-bg-primary, #000000) !important;
+    background: #000000 !important;
     z-index: 9998;
     pointer-events: none;
   }
@@ -84,15 +88,13 @@ html, body {
   
   .chatgpt-main,
   .chatgpt-content,
-  .chatgpt-main-chat {
+  .chatgpt-main-chat,
+  .chatgpt-header {
     background: #000000 !important;
   }
-  
   .chatgpt-input-container {
     background: #000000 !important;
     border: none !important;
-    border-top: none !important;
-    border-bottom: none !important;
     box-shadow: none !important;
   }
   
@@ -210,21 +212,49 @@ button, a, input, textarea, select {
   body {
     background: #000000 !important;
     background-image: none !important;
-  }
-  
-  body {
     overscroll-behavior-y: contain;
   }
-  
   .pwa-status-bar-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    height: var(--safe-area-top);
-    background: #000000;
-    z-index: 9999;
+    height: env(safe-area-inset-top, 0px);
+    min-height: env(safe-area-inset-top, 0px);
+    background: #000000 !important;
+    z-index: 99999;
     pointer-events: none;
+  }
+}
+
+/* Mobile / touch (Capacitor WebView) : overlay zone notification + fond noir sur le chat uniquement.
+   NE PAS toucher html/body/root globalement — cela casse la page auth et les autres pages. */
+@media (hover: none) and (pointer: coarse) {
+  /* Overlay zone notification (barre de statut Android) */
+  .pwa-status-bar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top, 0px);
+    min-height: env(safe-area-inset-top, 0px);
+    background: #000000 !important;
+    z-index: 99999;
+    pointer-events: none;
+  }
+  /* Fond noir uniquement sur les containers chat */
+  body:has(.chatgpt-container) {
+    background: #000000 !important;
+    background-image: none !important;
+  }
+  body:has(.chatgpt-container) .chatgpt-container,
+  body:has(.chatgpt-container) .chatgpt-main,
+  body:has(.chatgpt-container) .chatgpt-content,
+  body:has(.chatgpt-container) .chatgpt-main-chat,
+  body:has(.chatgpt-container) .chatgpt-header,
+  body:has(.chatgpt-container) .chatgpt-input-container,
+  body:has(.chatgpt-container) .chatgpt-messages-container {
+    background: #000000 !important;
   }
 }
 

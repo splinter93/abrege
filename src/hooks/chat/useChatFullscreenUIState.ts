@@ -86,28 +86,56 @@ export function useChatFullscreenUIState(
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // 🎯 Keyboard inset detection (mobile)
+  // Natif (Capacitor) : @capacitor/keyboard donne la hauteur réelle du clavier.
+  // Web : visualViewport comme fallback.
   useEffect(() => {
-    if (typeof window === 'undefined' || !('visualViewport' in window)) {
-      return;
-    }
+    if (typeof window === 'undefined') return;
 
-    const handleViewportChange = () => {
-      const viewport = window.visualViewport;
-      if (!viewport) return;
+    let removeListeners: (() => void) | undefined;
 
-      const heightDiff = window.innerHeight - viewport.height;
-      const isKeyboardVisible = heightDiff > 120 && viewport.height < window.innerHeight;
-      setKeyboardInset(isKeyboardVisible ? heightDiff : 0);
-    };
+    (async () => {
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (Capacitor.isNativePlatform()) {
+          const { Keyboard } = await import('@capacitor/keyboard');
+          const showHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
+            setKeyboardInset(info.keyboardHeight ?? 0);
+          });
+          const hideHandle = await Keyboard.addListener('keyboardWillHide', () => {
+            setKeyboardInset(0);
+          });
+          removeListeners = () => {
+            showHandle.remove();
+            hideHandle.remove();
+          };
+          return;
+        }
+      } catch {
+        // Capacitor non dispo (SSR ou web sans plugin)
+      }
 
-    handleViewportChange();
-    window.visualViewport?.addEventListener('resize', handleViewportChange);
-    window.visualViewport?.addEventListener('scroll', handleViewportChange);
+      if (!('visualViewport' in window)) return;
 
-    return () => {
-      window.visualViewport?.removeEventListener('resize', handleViewportChange);
-      window.visualViewport?.removeEventListener('scroll', handleViewportChange);
-    };
+      const handleViewportChange = () => {
+        const viewport = window.visualViewport;
+        if (!viewport) return;
+
+        const heightDiff = window.innerHeight - viewport.height;
+        const isKeyboardVisible = heightDiff > 120 && viewport.height < window.innerHeight;
+        setKeyboardInset(isKeyboardVisible ? heightDiff : 0);
+      };
+
+      handleViewportChange();
+      window.visualViewport?.addEventListener('resize', handleViewportChange);
+      window.visualViewport?.addEventListener('scroll', handleViewportChange);
+
+      removeListeners = () => {
+        window.visualViewport?.removeEventListener('resize', handleViewportChange);
+        window.visualViewport?.removeEventListener('scroll', handleViewportChange);
+      };
+    })();
+
+    return () => removeListeners?.();
   }, []);
 
   // 🎯 Layout logic

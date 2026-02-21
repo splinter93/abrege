@@ -116,8 +116,7 @@ body.chat-active {
   }
 }
 
-/* Safe area bottom : fond plein dans la zone navigation bar (edge-to-edge Android 15+).
-   z-index: 0 (anciennement -1 inutile) pour couvrir le fond du body, sous le contenu applicatif. */
+/* Safe area bottom : fond plein dans la zone navigation bar (edge-to-edge Android 15+). */
 body::after {
   content: '';
   position: fixed;
@@ -128,6 +127,11 @@ body::after {
   background: var(--color-bg-primary, #0e1012) !important;
   z-index: 0;
   pointer-events: none;
+}
+@media (hover: none) and (pointer: coarse) {
+  body::after {
+    background: var(--color-bg-primary, #0e1012) !important;
+  }
 }
 
 /* Conteneur principal pour éviter les débordements */

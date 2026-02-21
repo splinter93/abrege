@@ -52,3 +52,12 @@ next-env.d.ts
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Capacitor Android (build artifacts only; android/ source is versioned)
+android/app/build
+android/build
+android/.gradle
+android/local.properties
+android/.idea
+*.iml
+www
