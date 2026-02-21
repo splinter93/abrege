@@ -1,13 +1,25 @@
 import { useState } from 'react';
+import { registerPlugin } from '@capacitor/core';
 import { supabase } from '@/supabaseClient';
 import type { AuthProvider } from '@/config/authProviders';
 
 /**
  * URL de callback pour le flux OAuth natif (Capacitor).
  * Scheme custom = pas besoin d'assetlinks.json.
- * À enregistrer aussi dans Supabase Dashboard > Auth > URL Configuration > Redirect URLs.
+ * À enregistrer dans Supabase Dashboard > Auth > URL Configuration > Redirect URLs.
  */
 const NATIVE_OAUTH_REDIRECT = 'scrivia://callback';
+
+/**
+ * Plugin natif local (OpenInBrowserPlugin.java) enregistré dans MainActivity.
+ * Deux mécanismes :
+ *   - openUrl()          : appel explicite → Intent ACTION_VIEW → Chrome
+ *   - shouldOverrideLoad : intercepte accounts.google.com dans le WebView → Chrome
+ */
+interface OpenInBrowserPlugin {
+  openUrl(options: { url: string }): Promise<void>;
+}
+const OpenInBrowser = registerPlugin<OpenInBrowserPlugin>('OpenInBrowser');
 
 function isSupabaseError(error: unknown): error is { message: string; status?: number } {
   return (
@@ -24,10 +36,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-/**
- * Détecte si on tourne dans un WebView Capacitor natif.
- * Import dynamique pour éviter les erreurs SSR.
- */
+/** Détecte si on tourne dans un WebView Capacitor natif (import dynamique pour SSR). */
 async function isNative(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
   try {
@@ -49,10 +58,10 @@ export function useOAuth() {
       const native = await isNative();
 
       if (native) {
-        // ─── CAPACITOR NATIF ───────────────────────────────────────────────
-        // Google bloque OAuth dans les WebViews. On ouvre l'URL dans un navigateur
-        // (Chrome Custom Tab si @capacitor/browser dispo, sinon navigateur système).
-        // Le callback revient via deep link scrivia://callback (AndroidManifest).
+        // ─── CAPACITOR NATIF ────────────────────────────────────────────────
+        // Google refuse OAuth dans les WebViews (403 disallowed_useragent).
+        // On obtient l'URL OAuth Supabase sans rediriger, puis on l'ouvre dans
+        // le navigateur système via différentes stratégies.
         const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
           provider,
           options: {
@@ -61,87 +70,28 @@ export function useOAuth() {
           },
         });
         if (oauthError) throw oauthError;
+
         if (data?.url) {
-          // Google bloque OAuth dans les WebViews (403 disallowed_useragent).
-          // On ouvre uniquement dans un navigateur système. Ordre :
-          // 1. OpenInBrowser (plugin local dans l'APK, fiable avec server.url)
-          // 2. Browser / InAppBrowser (peuvent être "not implemented" si chargement distant)
-          let opened = false;
-          try {
-            const { Capacitor } = await import('@capacitor/core');
-            const openInBrowser = Capacitor.Plugins['OpenInBrowser'] as
-              | { openUrl: (opts: { url: string }) => Promise<void> }
-              | undefined;
-            if (openInBrowser) {
-              await openInBrowser.openUrl({ url: data.url });
-              opened = true;
-            }
-          } catch {
-            // Plugin absent (APK ancien) ou erreur — fall through
-          }
-          if (!opened) {
-            try {
-              const { Browser } = await import('@capacitor/browser');
-              await Browser.open({ url: data.url });
-              opened = true;
-            } catch (browserErr) {
-              const msg = getErrorMessage(browserErr, '');
-              if (!msg.includes('not implemented') && !msg.includes('Browser')) throw browserErr;
-            }
-          }
-          if (!opened) {
-            try {
-              const { InAppBrowser, DefaultSystemBrowserOptions } = await import(
-                '@capacitor/inappbrowser'
-              );
-              await InAppBrowser.openInSystemBrowser({
-                url: data.url,
-                options: DefaultSystemBrowserOptions,
-              });
-              opened = true;
-            } catch (inAppErr) {
-              const msg = getErrorMessage(inAppErr, '');
-              if (!msg.includes('not implemented') && !msg.includes('InAppBrowser')) throw inAppErr;
-            }
-          }
-          if (!opened) {
-            try {
-              const { InAppBrowser } = await import('@capacitor/inappbrowser');
-              await InAppBrowser.openInExternalBrowser({ url: data.url });
-              opened = true;
-            } catch {
-              // fall through
-            }
-          }
-          if (!opened) {
-            setError(
-              'Connexion Google indisponible dans cette version. Reconstruisez l’app (npm run cap:run:android:prod) puis réinstallez.',
-            );
-            setLoading(false);
-          }
+          await openOAuthUrl(data.url);
         }
         // Le reste est géré par useCapacitorDeepLink (appUrlOpen listener).
-        // setLoading(false) intentionnellement omis : le spinner reste actif
-        // jusqu'à ce que l'app reçoive le deep link et navigue.
+        // setLoading(false) intentionnellement omis : spinner actif jusqu'au deep link.
       } else {
         // ─── WEB ──────────────────────────────────────────────────────────
         const { error: oauthError } = await supabase.auth.signInWithOAuth({
           provider,
-          options: {
-            redirectTo: `${window.location.origin}/auth/callback`,
-          },
+          options: { redirectTo: `${window.location.origin}/auth/callback` },
         });
         if (oauthError) throw oauthError;
-        // Pas de setLoading(false) : redirect immédiate.
       }
     } catch (err: unknown) {
       console.error(`useOAuth signIn error for ${provider}:`, err);
       const msg = getErrorMessage(err, 'An unexpected error occurred.');
-      if (msg.includes('not configured') || msg.includes('not enabled')) {
-        setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} OAuth is not configured.`);
-      } else {
-        setError(msg);
-      }
+      setError(
+        msg.includes('not configured') || msg.includes('not enabled')
+          ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} OAuth is not configured.`
+          : msg,
+      );
       setLoading(false);
     }
   }
@@ -161,4 +111,58 @@ export function useOAuth() {
   }
 
   return { signIn, signOut, loading, error };
+}
+
+/**
+ * Ouvre l'URL OAuth dans le navigateur système Android.
+ *
+ * Ordre de priorité :
+ *   1. OpenInBrowser.openUrl()     — plugin natif local (le plus fiable, Intent direct)
+ *   2. Browser.open()              — @capacitor/browser (Chrome Custom Tabs)
+ *   3. InAppBrowser (system puis external)
+ *   4. window.location.href        — dernier recours : shouldOverrideLoad dans
+ *                                    OpenInBrowserPlugin intercepte accounts.google.com
+ *                                    et ouvre Chrome sans quitter l'app.
+ */
+async function openOAuthUrl(url: string): Promise<void> {
+  // 1. Plugin natif local (disponible après rebuild avec OpenInBrowserPlugin.java)
+  try {
+    await OpenInBrowser.openUrl({ url });
+    return;
+  } catch {
+    // Plugin absent ou bridge indispo — fall through
+  }
+
+  // 2. @capacitor/browser (Chrome Custom Tabs)
+  try {
+    const { Browser } = await import('@capacitor/browser');
+    await Browser.open({ url });
+    return;
+  } catch {
+    // fall through
+  }
+
+  // 3. @capacitor/inappbrowser — System Browser (Custom Tabs)
+  try {
+    const { InAppBrowser, DefaultSystemBrowserOptions } = await import('@capacitor/inappbrowser');
+    await InAppBrowser.openInSystemBrowser({ url, options: DefaultSystemBrowserOptions });
+    return;
+  } catch {
+    // fall through
+  }
+
+  // 4. @capacitor/inappbrowser — External Browser
+  try {
+    const { InAppBrowser } = await import('@capacitor/inappbrowser');
+    await InAppBrowser.openInExternalBrowser({ url });
+    return;
+  } catch {
+    // fall through
+  }
+
+  // 5. Dernier recours : window.location.href
+  // shouldOverrideLoad dans OpenInBrowserPlugin.java intercepte la navigation
+  // vers accounts.google.com → Intent Chrome → WebView reste sur la page.
+  // Ne fonctionne qu'après rebuild avec le plugin.
+  window.location.href = url;
 }
