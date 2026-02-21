@@ -40,13 +40,15 @@
 /* ========== MOBILE (376px - 768px) ========== */
 
 @media (max-width: 768px) {
-  /* Quand le clavier apparaît : le container remonte depuis le bas (= keyboard-inset).
-     Tout le layout intérieur (messages + input) se réduit naturellement. */
+  /* Quand le clavier apparaît : on réduit la hauteur du container (pas seulement bottom)
+     pour que messages + input remontent ensemble. Sans ça, seul l'input bouge. */
   .chatgpt-container {
     height: 100vh;
     height: 100dvh;
+    height: calc(100dvh - var(--keyboard-inset, 0px));
     padding-top: 0;
-    bottom: var(--keyboard-inset, 0px) !important;
+    bottom: auto !important;
+    top: 0 !important;
   }
   
   .chatgpt-main {
