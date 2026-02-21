@@ -50,11 +50,9 @@ export function useOAuth() {
 
       if (native) {
         // ─── CAPACITOR NATIF ───────────────────────────────────────────────
-        // Google bloque OAuth dans les WebViews. On utilise un Chrome Custom
-        // Tab (@capacitor/browser) que Google reconnaît comme navigateur sûr.
-        // skipBrowserRedirect = on récupère l'URL sans déclencher la navigation.
+        // Google bloque OAuth dans les WebViews. On ouvre l'URL dans un navigateur
+        // (Chrome Custom Tab si @capacitor/browser dispo, sinon navigateur système).
         // Le callback revient via deep link scrivia://callback (AndroidManifest).
-        const { Browser } = await import('@capacitor/browser');
         const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
           provider,
           options: {
@@ -64,7 +62,18 @@ export function useOAuth() {
         });
         if (oauthError) throw oauthError;
         if (data?.url) {
-          await Browser.open({ url: data.url, windowName: '_self' });
+          try {
+            const { Browser } = await import('@capacitor/browser');
+            await Browser.open({ url: data.url });
+          } catch (browserErr) {
+            // Fallback si "Browser plugin is not implemented on android" (app chargée depuis URL distante)
+            const msg = getErrorMessage(browserErr, '');
+            if (msg.includes('not implemented') || msg.includes('Browser')) {
+              window.open(data.url, '_blank', 'noopener,noreferrer');
+            } else {
+              throw browserErr;
+            }
+          }
         }
         // Le reste est géré par useCapacitorDeepLink (appUrlOpen listener).
         // setLoading(false) intentionnellement omis : le spinner reste actif
