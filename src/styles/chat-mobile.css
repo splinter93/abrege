@@ -40,8 +40,8 @@
 /* ========== MOBILE (376px - 768px) ========== */
 
 @media (max-width: 768px) {
-  /* Quand le clavier apparaît : on réduit la hauteur du container (pas seulement bottom)
-     pour que messages + input remontent ensemble. Sans ça, seul l'input bouge. */
+  /* Clavier : le container rétrécit (height) pour que la zone messages remonte.
+     L'input reste fixe en bas de la zone visible, juste au-dessus du clavier. */
   .chatgpt-container {
     height: 100vh;
     height: 100dvh;
@@ -49,44 +49,34 @@
     padding-top: 0;
     bottom: auto !important;
     top: 0 !important;
-    transition: height 0.25s ease-out;
-  }
-  
-  /* Layout flex vertical : container rétrécit → messages rétrécissent → input reste en bas */
-  .chatgpt-main {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
+    transition: height 0.2s ease-out;
   }
 
-  .chatgpt-main-chat {
+  .chatgpt-main {
+    height: 100%;
     flex: 1;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
   }
-  
+
   .chatgpt-messages-container {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
-    padding-bottom: 16px;
+    padding-bottom: 120px;
   }
-  
-  /* Input dans le flux (pas fixed) : il se place en bas naturellement grâce au flex.
-     La réduction de height du container suffit pour qu'il remonte avec le clavier. */
+
+  /* Input fixe au-dessus du clavier (bottom = hauteur du clavier). Ne pas le mettre dans le flux. */
   .chatgpt-input-container {
-    position: relative;
-    bottom: auto;
-    flex-shrink: 0;
+    position: fixed;
+    bottom: var(--keyboard-inset, 0px);
+    left: 0;
+    right: 0;
+    z-index: 10;
     padding: 8px var(--chat-padding-horizontal, 12px);
     padding-bottom: max(15px, env(safe-area-inset-bottom, 0px));
     background: var(--chat-bg-primary, #0e1012);
-    z-index: 10;
+    transition: bottom 0.2s ease-out;
   }
-  
-  /* Désactiver le gradient fade-to-transparent sur mobile */
+
   .chatgpt-input-container::before {
     display: none !important;
   }

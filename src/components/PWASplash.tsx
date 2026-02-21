@@ -2,28 +2,39 @@
 
 import { useEffect, useState } from 'react';
 
+const SPLASH_DONE_KEY = 'scrivia_splash_done';
+
 /**
- * PWA Splash Screen - Client-only pour éviter hydration error
- * Affiche logo-scrivia-white.png pendant 800ms au chargement
- * UNIQUEMENT sur mobile/PWA (pas sur desktop)
+ * PWA Splash Screen - Client-only pour éviter hydration error.
+ * Affiche le logo 800ms au premier chargement sur mobile/PWA.
+ * Ne se réaffiche pas au retour dans l'app (sessionStorage) pour éviter
+ * le flash de splash à chaque resume quand la page n'a pas rechargé.
  */
 export default function PWASplash() {
   const [visible, setVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Détecter si mobile (< 768px) ou PWA standalone
     const checkMobile = () => {
       const isSmallScreen = window.innerWidth < 768;
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
       setIsMobile(isSmallScreen || isStandalone);
     };
-    
     checkMobile();
 
-    // Fade out après 800ms
+    if (typeof window === 'undefined') return;
+    if (sessionStorage.getItem(SPLASH_DONE_KEY)) {
+      setVisible(false);
+      return;
+    }
+
     const timer = setTimeout(() => {
       setVisible(false);
+      try {
+        sessionStorage.setItem(SPLASH_DONE_KEY, '1');
+      } catch {
+        // ignore
+      }
     }, 800);
 
     return () => clearTimeout(timer);

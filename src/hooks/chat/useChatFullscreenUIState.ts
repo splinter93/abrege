@@ -99,7 +99,9 @@ export function useChatFullscreenUIState(
         if (Capacitor.isNativePlatform()) {
           const { Keyboard } = await import('@capacitor/keyboard');
           const showHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
-            setKeyboardInset(info.keyboardHeight ?? 0);
+            const raw = info.keyboardHeight ?? 0;
+            const maxInset = Math.floor(window.innerHeight * 0.6);
+            setKeyboardInset(Math.min(raw, maxInset));
           });
           const hideHandle = await Keyboard.addListener('keyboardWillHide', () => {
             setKeyboardInset(0);
