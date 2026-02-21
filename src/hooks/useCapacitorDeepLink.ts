@@ -1,102 +1,37 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/supabaseClient';
-import { simpleLogger } from '@/utils/logger';
 
 /**
- * Écoute les deep links entrants sur Capacitor natif.
+ * Gère le retour OAuth sur Capacitor Android.
  *
- * Flux OAuth Google :
- *  1. Chrome ouvre l'URL Google OAuth (OpenInBrowser / Browser)
- *  2. Google → Supabase → redirige vers scrivia://callback?code=xxx (PKCE)
- *     ou scrivia://callback#access_token=xxx (implicit)
- *  3. Android intercepte scrivia://callback (intent filter)
- *  4. URL reçue via appUrlOpen (retour en arrière-plan) ou getLaunchUrl() (cold start)
- *  5. Échange du code / setSession → navigation vers /chat
+ * Architecture :
+ *  A. onAuthStateChange — dès que Supabase crée une session (SIGNED_IN),
+ *     on navigue vers /chat. C'est le déclencheur principal, indépendant
+ *     du timing du deep link.
  *
- * On utilise window.location.assign('/chat') pour forcer un rechargement et que
- * la session Supabase soit bien lue par l'app (router.replace peut laisser le cache).
+ *  B. appUrlOpen — reçoit scrivia://callback?code=xxx, extrait le code,
+ *     appelle exchangeCodeForSession. onAuthStateChange prend le relais.
+ *
+ * Pas de getLaunchUrl() : trop risqué (URL périmée d'un lancement précédent).
+ * Pas de processedUrlRef : on laisse Supabase gérer la déduplication.
+ * console.error au lieu de simpleLogger.dev : visible en production (logcat).
  */
 export function useCapacitorDeepLink() {
-  const processedUrlRef = useRef<string | null>(null);
-
   useEffect(() => {
-    let removeListener: (() => void) | undefined;
+    if (typeof window === 'undefined') return;
 
-    async function processCallbackUrl(url: string): Promise<boolean> {
-      if (!url.startsWith('scrivia://callback')) return false;
-      // Éviter de traiter deux fois la même URL (appUrlOpen + getLaunchUrl)
-      if (processedUrlRef.current === url) return false;
-      processedUrlRef.current = url;
+    let removeAppListener: (() => void) | undefined;
 
-      simpleLogger.dev(`[CapacitorDeepLink] Traitement: ${url.slice(0, 80)}…`);
-
-      try {
-        const { Browser } = await import('@capacitor/browser');
-        await Browser.close();
-      } catch {
-        // Browser déjà fermé ou non dispo
+    // A. Écoute les changements de session — navigation fiable vers /chat
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        window.location.assign('/chat');
       }
+    });
 
-      const qIndex = url.indexOf('?');
-      const hIndex = url.indexOf('#');
-
-      // ─── PKCE : code dans les query params ───────────────────────────
-      if (qIndex !== -1) {
-        const queryStr = url.slice(qIndex + 1, hIndex !== -1 ? hIndex : undefined);
-        const params = new URLSearchParams(queryStr);
-        const code = params.get('code');
-        const errorParam = params.get('error');
-
-        if (errorParam) {
-          simpleLogger.dev(`[CapacitorDeepLink] Erreur OAuth: ${errorParam}`);
-          window.location.assign(`/auth?error=${encodeURIComponent(errorParam)}`);
-          return true;
-        }
-
-        if (code) {
-          simpleLogger.dev('[CapacitorDeepLink] PKCE code reçu, exchange…');
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) {
-            simpleLogger.dev(`[CapacitorDeepLink] exchangeCodeForSession: ${error.message}`);
-            // code_verifier perdu si app tuée → demander de réessayer
-            window.location.assign(`/auth?error=session_expired`);
-            return true;
-          }
-          simpleLogger.dev('[CapacitorDeepLink] Session créée ✓');
-          window.location.assign('/chat');
-          return true;
-        }
-      }
-
-      // ─── Implicit : tokens dans le hash ───────────────────────────────
-      if (hIndex !== -1) {
-        const hashStr = url.slice(hIndex + 1);
-        const params = new URLSearchParams(hashStr);
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-
-        if (accessToken && refreshToken) {
-          simpleLogger.dev('[CapacitorDeepLink] Tokens implicit, setSession…');
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          if (error) {
-            simpleLogger.dev(`[CapacitorDeepLink] setSession: ${error.message}`);
-            window.location.assign(`/auth?error=session_error`);
-            return true;
-          }
-          simpleLogger.dev('[CapacitorDeepLink] Session créée ✓');
-          window.location.assign('/chat');
-          return true;
-        }
-      }
-
-      return true;
-    }
-
+    // B. Écoute les deep links entrants
     (async () => {
       try {
         const { Capacitor } = await import('@capacitor/core');
@@ -104,26 +39,79 @@ export function useCapacitorDeepLink() {
 
         const { App } = await import('@capacitor/app');
 
-        // Cold start : l'app a été ouverte via scrivia://callback (getLaunchUrl)
-        const launch = await App.getLaunchUrl();
-        if (launch?.url) {
-          simpleLogger.dev(`[CapacitorDeepLink] getLaunchUrl: ${launch.url.slice(0, 60)}…`);
-          const handled = await processCallbackUrl(launch.url);
-          if (handled) return;
-        }
-
-        // Retour d'arrière-plan : appUrlOpen
         const handle = await App.addListener('appUrlOpen', async ({ url }) => {
-          simpleLogger.dev(`[CapacitorDeepLink] appUrlOpen: ${url.slice(0, 60)}…`);
-          await processCallbackUrl(url);
+          console.log('[DeepLink] appUrlOpen reçu:', url.slice(0, 100));
+
+          if (!url.startsWith('scrivia://callback')) return;
+
+          // Fermer le tab Chrome si ouvert via @capacitor/browser
+          try {
+            const { Browser } = await import('@capacitor/browser');
+            await Browser.close();
+          } catch { /* ignore */ }
+
+          // Parser l'URL (scrivia://callback?code=xxx ou #access_token=xxx)
+          const normalized = url.replace('scrivia://callback', 'https://scrivia.local/callback');
+          let urlObj: URL;
+          try {
+            urlObj = new URL(normalized);
+          } catch (e) {
+            console.error('[DeepLink] URL invalide:', url, e);
+            return;
+          }
+
+          const errorParam = urlObj.searchParams.get('error');
+          const code = urlObj.searchParams.get('code');
+          const hash = urlObj.hash ? new URLSearchParams(urlObj.hash.slice(1)) : null;
+          const accessToken = hash?.get('access_token');
+          const refreshToken = hash?.get('refresh_token');
+
+          // Erreur renvoyée par Supabase / Google
+          if (errorParam) {
+            console.error('[DeepLink] Erreur OAuth:', errorParam);
+            window.location.assign(`/auth?error=${encodeURIComponent(errorParam)}`);
+            return;
+          }
+
+          // PKCE : échange du code contre une session
+          if (code) {
+            console.log('[DeepLink] Code PKCE reçu, exchange…');
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) {
+              console.error('[DeepLink] exchangeCodeForSession échoué:', error.message);
+              window.location.assign('/auth?error=session_expired');
+            }
+            // onAuthStateChange (SIGNED_IN) prend le relais pour naviguer vers /chat
+            return;
+          }
+
+          // Implicit flow : tokens dans le hash
+          if (accessToken && refreshToken) {
+            console.log('[DeepLink] Tokens implicit, setSession…');
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (error) {
+              console.error('[DeepLink] setSession échoué:', error.message);
+              window.location.assign('/auth?error=session_error');
+            }
+            // onAuthStateChange (SIGNED_IN) prend le relais
+            return;
+          }
+
+          console.warn('[DeepLink] URL de callback sans code ni tokens:', url.slice(0, 100));
         });
 
-        removeListener = () => handle.remove();
-      } catch {
-        // Capacitor non disponible (SSR ou web)
+        removeAppListener = () => handle.remove();
+      } catch (e) {
+        console.error('[DeepLink] Erreur init listener:', e);
       }
     })();
 
-    return () => removeListener?.();
+    return () => {
+      subscription.unsubscribe();
+      removeAppListener?.();
+    };
   }, []);
 }
