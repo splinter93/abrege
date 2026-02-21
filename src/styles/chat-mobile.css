@@ -52,33 +52,41 @@
     transition: height 0.25s ease-out;
   }
   
+  /* Layout flex vertical : container rétrécit → messages rétrécissent → input reste en bas */
   .chatgpt-main {
-    height: 100%;
     flex: 1;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chatgpt-main-chat {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
   
   .chatgpt-messages-container {
     flex: 1;
     min-height: 0;
-    padding-bottom: 120px; /* Espace sous le dernier message pour l'input */
+    overflow-y: auto;
+    padding-bottom: 16px;
   }
   
-  /* Input fixe en bas du container (même position que container bottom). */
+  /* Input dans le flux (pas fixed) : il se place en bas naturellement grâce au flex.
+     La réduction de height du container suffit pour qu'il remonte avec le clavier. */
   .chatgpt-input-container {
-    position: fixed;
-    bottom: var(--keyboard-inset, 0px);
-    left: 0;
-    right: 0;
-    z-index: 10;
+    position: relative;
+    bottom: auto;
+    flex-shrink: 0;
     padding: 8px var(--chat-padding-horizontal, 12px);
-    padding-bottom: max(15px, env(safe-area-inset-bottom, 0px)); /* 12 + 3 px mobile */
+    padding-bottom: max(15px, env(safe-area-inset-bottom, 0px));
     background: var(--chat-bg-primary, #0e1012);
-    transition: bottom 0.25s ease-out;
+    z-index: 10;
   }
   
-  /* Désactiver le gradient fade-to-transparent sur mobile : l'input a un fond solide,
-     le ::before crée une ligne visible (séparateur) si le fond du container derrière diffère. */
+  /* Désactiver le gradient fade-to-transparent sur mobile */
   .chatgpt-input-container::before {
     display: none !important;
   }
