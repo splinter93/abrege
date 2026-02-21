@@ -63,16 +63,31 @@ export function useOAuth() {
         if (oauthError) throw oauthError;
         if (data?.url) {
           // Google bloque OAuth dans les WebViews (403 disallowed_useragent).
-          // On ouvre uniquement dans un navigateur système (Custom Tabs / externe),
-          // jamais window.open (reste en WebView).
+          // On ouvre uniquement dans un navigateur système. Ordre :
+          // 1. OpenInBrowser (plugin local dans l'APK, fiable avec server.url)
+          // 2. Browser / InAppBrowser (peuvent être "not implemented" si chargement distant)
           let opened = false;
           try {
-            const { Browser } = await import('@capacitor/browser');
-            await Browser.open({ url: data.url });
-            opened = true;
-          } catch (browserErr) {
-            const msg = getErrorMessage(browserErr, '');
-            if (!msg.includes('not implemented') && !msg.includes('Browser')) throw browserErr;
+            const { Capacitor } = await import('@capacitor/core');
+            const openInBrowser = Capacitor.Plugins['OpenInBrowser'] as
+              | { openUrl: (opts: { url: string }) => Promise<void> }
+              | undefined;
+            if (openInBrowser) {
+              await openInBrowser.openUrl({ url: data.url });
+              opened = true;
+            }
+          } catch {
+            // Plugin absent (APK ancien) ou erreur — fall through
+          }
+          if (!opened) {
+            try {
+              const { Browser } = await import('@capacitor/browser');
+              await Browser.open({ url: data.url });
+              opened = true;
+            } catch (browserErr) {
+              const msg = getErrorMessage(browserErr, '');
+              if (!msg.includes('not implemented') && !msg.includes('Browser')) throw browserErr;
+            }
           }
           if (!opened) {
             try {
@@ -95,12 +110,10 @@ export function useOAuth() {
               await InAppBrowser.openInExternalBrowser({ url: data.url });
               opened = true;
             } catch {
-              // Plugin non dispo dans ce build (APK ancien) — fall through
+              // fall through
             }
           }
           if (!opened) {
-            // Aucun plugin natif dispo (Browser / InAppBrowser) : l'APK n'a pas été rebuild.
-            // L'intent:// en window.location échoue dans le WebView (ERR_UNKNOWN_URL_SCHEME).
             setError(
               'Connexion Google indisponible dans cette version. Reconstruisez l’app (npm run cap:run:android:prod) puis réinstallez.',
             );
