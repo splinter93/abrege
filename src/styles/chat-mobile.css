@@ -69,7 +69,7 @@
     right: 0;
     z-index: 10;
     padding: 8px var(--chat-padding-horizontal, 12px);
-    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    padding-bottom: max(15px, env(safe-area-inset-bottom, 0px)); /* 12 + 3 px mobile */
     background: var(--chat-bg-primary, #0e1012);
   }
   

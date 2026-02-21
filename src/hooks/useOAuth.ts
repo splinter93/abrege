@@ -62,16 +62,41 @@ export function useOAuth() {
         });
         if (oauthError) throw oauthError;
         if (data?.url) {
+          // Google bloque OAuth dans les WebViews (403 disallowed_useragent).
+          // On ouvre uniquement dans un navigateur système (Custom Tabs / externe),
+          // jamais window.open (reste en WebView).
+          let opened = false;
           try {
             const { Browser } = await import('@capacitor/browser');
             await Browser.open({ url: data.url });
+            opened = true;
           } catch (browserErr) {
-            // Fallback si "Browser plugin is not implemented on android" (app chargée depuis URL distante)
             const msg = getErrorMessage(browserErr, '');
-            if (msg.includes('not implemented') || msg.includes('Browser')) {
-              window.open(data.url, '_blank', 'noopener,noreferrer');
-            } else {
-              throw browserErr;
+            if (!msg.includes('not implemented') && !msg.includes('Browser')) throw browserErr;
+          }
+          if (!opened) {
+            try {
+              const { InAppBrowser, DefaultSystemBrowserOptions } = await import(
+                '@capacitor/inappbrowser'
+              );
+              await InAppBrowser.openInSystemBrowser({
+                url: data.url,
+                options: DefaultSystemBrowserOptions,
+              });
+              opened = true;
+            } catch (inAppErr) {
+              const msg = getErrorMessage(inAppErr, '');
+              if (!msg.includes('not implemented') && !msg.includes('InAppBrowser')) throw inAppErr;
+            }
+          }
+          if (!opened) {
+            try {
+              const { InAppBrowser } = await import('@capacitor/inappbrowser');
+              await InAppBrowser.openInExternalBrowser({ url: data.url });
+            } catch (externalErr) {
+              throw new Error(
+                'OAuth requires the system browser. Please update the app or try again.',
+              );
             }
           }
         }
