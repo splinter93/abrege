@@ -49,6 +49,7 @@
     padding-top: 0;
     bottom: auto !important;
     top: 0 !important;
+    transition: height 0.25s ease-out;
   }
   
   .chatgpt-main {
@@ -73,6 +74,7 @@
     padding: 8px var(--chat-padding-horizontal, 12px);
     padding-bottom: max(15px, env(safe-area-inset-bottom, 0px)); /* 12 + 3 px mobile */
     background: var(--chat-bg-primary, #0e1012);
+    transition: bottom 0.25s ease-out;
   }
   
   /* Désactiver le gradient fade-to-transparent sur mobile : l'input a un fond solide,
@@ -132,6 +134,11 @@
   }
   .chat-sidebar.open { transform: translateX(0); }
   
+  /* Messages : copier / haut-parleur toujours visibles (pas de hover sur tactile) */
+  .chatgpt-message-assistant .bubble-buttons {
+    opacity: 1;
+  }
+
   /* Messages */
   .chat-message { padding: 12px; }
   .chat-message-user { max-width: 90%; }
