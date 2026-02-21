@@ -330,7 +330,7 @@ export function useCommandPalette(
       id: 'shortcut-agents',
       title: 'Mes Agents',
       icon: 'bot',
-      action: () => { router.push('/private/agents'); runAndClose(); }
+      action: () => { router.push('/private/agents2'); runAndClose(); }
     },
     {
       id: 'shortcut-prompts',

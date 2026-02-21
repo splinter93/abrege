@@ -153,10 +153,9 @@
   font-family: inherit;
 }
 
-.command-palette-input:focus-visible {
+.command-palette-input:focus {
   outline: none;
-  box-shadow: inset 0 0 0 1px #f59e0b;
-  border-radius: 6px;
+  box-shadow: none;
 }
 
 .command-palette-input::placeholder {
