@@ -93,11 +93,16 @@ export function useOAuth() {
             try {
               const { InAppBrowser } = await import('@capacitor/inappbrowser');
               await InAppBrowser.openInExternalBrowser({ url: data.url });
-            } catch (externalErr) {
-              throw new Error(
-                'OAuth requires the system browser. Please update the app or try again.',
-              );
+              opened = true;
+            } catch {
+              // Plugin non dispo dans ce build (APK ancien) — fall through
             }
+          }
+          if (!opened) {
+            // Dernier recours Android : Intent VIEW force le navigateur système,
+            // évite le WebView. À remplacer dès que l'APK est rebuild avec InAppBrowser.
+            const intentUrl = `intent://${data.url.replace(/^https?:\/\//, '')}#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`;
+            window.location.href = intentUrl;
           }
         }
         // Le reste est géré par useCapacitorDeepLink (appUrlOpen listener).
