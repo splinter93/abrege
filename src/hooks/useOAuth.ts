@@ -99,10 +99,12 @@ export function useOAuth() {
             }
           }
           if (!opened) {
-            // Dernier recours Android : Intent VIEW force le navigateur système,
-            // évite le WebView. À remplacer dès que l'APK est rebuild avec InAppBrowser.
-            const intentUrl = `intent://${data.url.replace(/^https?:\/\//, '')}#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`;
-            window.location.href = intentUrl;
+            // Aucun plugin natif dispo (Browser / InAppBrowser) : l'APK n'a pas été rebuild.
+            // L'intent:// en window.location échoue dans le WebView (ERR_UNKNOWN_URL_SCHEME).
+            setError(
+              'Connexion Google indisponible dans cette version. Reconstruisez l’app (npm run cap:run:android:prod) puis réinstallez.',
+            );
+            setLoading(false);
           }
         }
         // Le reste est géré par useCapacitorDeepLink (appUrlOpen listener).
