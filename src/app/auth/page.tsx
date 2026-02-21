@@ -98,6 +98,19 @@ function AuthPageContent() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams, isExternalOAuth, clientId, redirectUri]);
 
+  // Erreur renvoyée après callback OAuth natif (ex: session_expired, session_error)
+  useEffect(() => {
+    const err = searchParams?.get('error');
+    if (!err) return;
+    if (err === 'session_expired') {
+      setError('Session expirée. Réessayez de vous connecter avec Google.');
+    } else if (err === 'session_error') {
+      setError('Erreur de session. Réessayez de vous connecter.');
+    } else {
+      setError(err === 'access_denied' ? 'Connexion annulée.' : `Erreur: ${err}`);
+    }
+  }, [searchParams]);
+
   // Form email/password
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
