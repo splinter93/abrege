@@ -3,8 +3,12 @@ import { supabase } from '@/supabaseClient';
 import type { AuthProvider } from '@/config/authProviders';
 
 /**
- * Type guard pour vérifier si une erreur est une erreur Supabase
+ * URL de callback pour le flux OAuth natif (Capacitor).
+ * Scheme custom = pas besoin d'assetlinks.json.
+ * À enregistrer aussi dans Supabase Dashboard > Auth > URL Configuration > Redirect URLs.
  */
+const NATIVE_OAUTH_REDIRECT = 'scrivia://callback';
+
 function isSupabaseError(error: unknown): error is { message: string; status?: number } {
   return (
     typeof error === 'object' &&
@@ -14,17 +18,24 @@ function isSupabaseError(error: unknown): error is { message: string; status?: n
   );
 }
 
-/**
- * Extrait un message d'erreur sûr depuis une erreur inconnue
- */
 function getErrorMessage(error: unknown, fallback: string): string {
-  if (isSupabaseError(error)) {
-    return error.message;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
+  if (isSupabaseError(error)) return error.message;
+  if (error instanceof Error) return error.message;
   return fallback;
+}
+
+/**
+ * Détecte si on tourne dans un WebView Capacitor natif.
+ * Import dynamique pour éviter les erreurs SSR.
+ */
+async function isNative(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  try {
+    const { Capacitor } = await import('@capacitor/core');
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
 }
 
 export function useOAuth() {
@@ -35,27 +46,47 @@ export function useOAuth() {
     setLoading(true);
     setError(null);
     try {
-      // Toujours utiliser le callback Supabase standard
-      // Supabase gère automatiquement la redirection vers notre app
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { 
-          redirectTo: `${window.location.origin}/auth/callback`
+      const native = await isNative();
+
+      if (native) {
+        // ─── CAPACITOR NATIF ───────────────────────────────────────────────
+        // Google bloque OAuth dans les WebViews. On utilise un Chrome Custom
+        // Tab (@capacitor/browser) que Google reconnaît comme navigateur sûr.
+        // skipBrowserRedirect = on récupère l'URL sans déclencher la navigation.
+        // Le callback revient via deep link scrivia://callback (AndroidManifest).
+        const { Browser } = await import('@capacitor/browser');
+        const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            skipBrowserRedirect: true,
+            redirectTo: NATIVE_OAUTH_REDIRECT,
+          },
+        });
+        if (oauthError) throw oauthError;
+        if (data?.url) {
+          await Browser.open({ url: data.url, windowName: '_self' });
         }
-      });
-      if (oauthError) {
-        throw oauthError;
+        // Le reste est géré par useCapacitorDeepLink (appUrlOpen listener).
+        // setLoading(false) intentionnellement omis : le spinner reste actif
+        // jusqu'à ce que l'app reçoive le deep link et navigue.
+      } else {
+        // ─── WEB ──────────────────────────────────────────────────────────
+        const { error: oauthError } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (oauthError) throw oauthError;
+        // Pas de setLoading(false) : redirect immédiate.
       }
-      // No need to setLoading(false) here; redirect will occur
     } catch (err: unknown) {
       console.error(`useOAuth signIn error for ${provider}:`, err);
-      
-      const errorMessage = getErrorMessage(err, 'An unexpected error occurred.');
-      
-      if (errorMessage.includes('not configured') || errorMessage.includes('not enabled')) {
+      const msg = getErrorMessage(err, 'An unexpected error occurred.');
+      if (msg.includes('not configured') || msg.includes('not enabled')) {
         setError(`${provider.charAt(0).toUpperCase() + provider.slice(1)} OAuth is not configured.`);
       } else {
-        setError(errorMessage);
+        setError(msg);
       }
       setLoading(false);
     }
@@ -66,9 +97,7 @@ export function useOAuth() {
     setError(null);
     try {
       const { error: signOutError } = await supabase.auth.signOut();
-      if (signOutError) {
-        throw signOutError;
-      }
+      if (signOutError) throw signOutError;
     } catch (err: unknown) {
       console.error('useOAuth signOut error:', err);
       setError(getErrorMessage(err, 'An unexpected error occurred during sign out.'));

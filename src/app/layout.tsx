@@ -31,6 +31,7 @@ import { LanguageProvider } from "../contexts/LanguageContext";
 import { Toaster } from "react-hot-toast";
 import ThemeColor from "@/components/ThemeColor";
 import PWASplash from "@/components/PWASplash";
+import CapacitorInit from "@/components/CapacitorInit";
 import ScrollPerformance from "@/components/ScrollPerformance";
 import { CommandPaletteProvider } from "@/components/command-palette/CommandPaletteProvider";
 
@@ -218,6 +219,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PWASplash />
         <ThemeColor />
         <ScrollPerformance />
+        <CapacitorInit />
         <LanguageProvider>
           <CommandPaletteProvider />
           <Toaster 
