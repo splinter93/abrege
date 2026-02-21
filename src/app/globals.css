@@ -99,25 +99,35 @@ body.chat-active {
   height: 100%;
 }
 
-/* Mobile uniquement : supprimer les radial-gradients du body (évite la bande marron en bas / safe area).
-   Sur tablette (> 768px) on ne touche pas. La landing n’a pas le souci car elle couvre tout avec un fond plein. */
-@media (max-width: 768px) {
+/* Supprimer les radial-gradients sur TOUS les mobiles/touch (évite la bande marron en safe area).
+   Le gradient ambre "97% 96%" est la source du marron visible dans la zone navigation bar (Android 15+ edge-to-edge). */
+@media (max-width: 1023px) {
   body {
     background-image: none !important;
-    background: var(--color-bg-primary, #121212) !important;
+    background: var(--color-bg-primary, #0e1012) !important;
   }
-  /* Barre en arrière-plan pour remplir la safe area (z-index -1 = derrière le contenu) */
-  body::after {
-    content: '';
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: max(env(safe-area-inset-bottom, 0px), 2px);
-    background: var(--color-bg-primary, #121212) !important;
-    z-index: -1;
-    pointer-events: none;
+}
+
+/* WebView Capacitor natif : même fix via media hover+touch (display-mode: standalone ne matche pas). */
+@media (hover: none) and (pointer: coarse) {
+  body {
+    background-image: none !important;
+    background: var(--color-bg-primary, #0e1012) !important;
   }
+}
+
+/* Safe area bottom : fond plein dans la zone navigation bar (edge-to-edge Android 15+).
+   z-index: 0 (anciennement -1 inutile) pour couvrir le fond du body, sous le contenu applicatif. */
+body::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: max(env(safe-area-inset-bottom, 0px), 0px);
+  background: var(--color-bg-primary, #0e1012) !important;
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* Conteneur principal pour éviter les débordements */

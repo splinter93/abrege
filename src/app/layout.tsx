@@ -103,11 +103,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <style dangerouslySetInnerHTML={{ __html: `
           /* CRITICAL CSS - Éviter le flash de couleur */
           html { 
-            background: var(--color-bg-primary, #121212) !important; 
+            background: var(--color-bg-primary, #0e1012) !important; 
             height: 100%;
           }
           body { 
-            background: var(--color-bg-primary, #121212) !important; 
+            background: var(--color-bg-primary, #0e1012) !important; 
             color: var(--text-primary, #d0d0d0) !important; 
             font-family: 'Figtree', 'Geist', -apple-system, sans-serif !important;
             margin: 0;
@@ -118,7 +118,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }
           * { box-sizing: border-box; }
           
-          /* PWA STANDALONE - Noir pur partout pour couvrir safe areas */
+          /* MOBILE/TOUCH - Éliminer les radial-gradients dès le chargement initial (évite flash marron). */
+          @media (max-width: 1023px) {
+            body { background-image: none !important; }
+          }
+          @media (hover: none) and (pointer: coarse) {
+            body { background-image: none !important; }
+          }
+          
+          /* PWA STANDALONE - Fond unifié pour couvrir les safe areas */
           @media (display-mode: standalone) {
             html {
               background: #000000 !important;
