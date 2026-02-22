@@ -33,10 +33,6 @@ export function useCapacitorDeepLink() {
         const { Capacitor } = await import('@capacitor/core');
         if (!Capacitor.isNativePlatform()) return;
 
-        // Courte attente pour que le bridge natif ait enregistré les plugins (évite
-        // "App plugin is not implemented" quand la WebView charge une URL distante).
-        await new Promise((r) => setTimeout(r, 150));
-
         let pendingRedirectToChat = false;
 
         // A. Rediriger vers /chat seulement si on vient de traiter un callback OAuth
@@ -47,8 +43,6 @@ export function useCapacitorDeepLink() {
           }
         });
         unsubscribeAuth = () => subscription.unsubscribe();
-
-        const { App } = await import('@capacitor/app');
 
         const processedUrls = new Set<string>();
         const processCallbackUrl = async (url: string) => {
@@ -113,9 +107,30 @@ export function useCapacitorDeepLink() {
           console.warn('[DeepLink] URL sans code ni tokens:', url.slice(0, 100));
         };
 
-        const handle = await App.addListener('appUrlOpen', async ({ url }) => {
-          await processCallbackUrl(url);
-        });
+        const maxAttempts = 6;
+        const delayMs = 250;
+        let handle: { remove: () => Promise<void> } | undefined;
+        let App: { addListener: (event: string, cb: (e: { url: string }) => Promise<void>) => Promise<{ remove: () => Promise<void> }>; getLaunchUrl: () => Promise<{ url?: string } | undefined> };
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          try {
+            const appMod = await import('@capacitor/app');
+            App = appMod.App;
+            handle = await App.addListener('appUrlOpen', async ({ url }) => {
+              await processCallbackUrl(url);
+            });
+            break;
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            if ((msg.includes('not implemented') || msg.includes('UNIMPLEMENTED')) && attempt < maxAttempts) {
+              await new Promise((r) => setTimeout(r, delayMs));
+              continue;
+            }
+            throw err;
+          }
+        }
+
+        if (!handle || !App) throw new Error('App plugin unavailable');
 
         // Fallback : au lancement, l’intent peut être disponible via getLaunchUrl()
         // (appUrlOpen ne se déclenche pas toujours au retour du navigateur)
