@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { supabase } from '@/supabaseClient';
+import type { App as AppPluginType } from '@capacitor/app';
 
 /**
  * Gère le retour OAuth sur Capacitor Android.
@@ -110,7 +111,7 @@ export function useCapacitorDeepLink() {
         const maxAttempts = 6;
         const delayMs = 250;
         let handle: { remove: () => Promise<void> } | undefined;
-        let App: { addListener: (event: string, cb: (e: { url: string }) => Promise<void>) => Promise<{ remove: () => Promise<void> }>; getLaunchUrl: () => Promise<{ url?: string } | undefined> };
+        let App: AppPluginType | undefined;
 
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
           try {
