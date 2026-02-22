@@ -33,9 +33,9 @@ export function useCapacitorDeepLink() {
         const { Capacitor } = await import('@capacitor/core');
         if (!Capacitor.isNativePlatform()) return;
 
-        // Attendre que le bridge natif soit prêt (évite "App plugin is not implemented"
-        // quand la WebView charge une URL distante et que le JS s'exécute avant le bridge).
-        await Capacitor.ready();
+        // Courte attente pour que le bridge natif ait enregistré les plugins (évite
+        // "App plugin is not implemented" quand la WebView charge une URL distante).
+        await new Promise((r) => setTimeout(r, 150));
 
         let pendingRedirectToChat = false;
 
