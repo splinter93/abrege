@@ -593,7 +593,7 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
         // Ne resubscrire que si le channel est réellement déconnecté
         const channelState = channelRef.current?.state;
         if (channelState === 'joined') {
-          logger.dev(LogCategory.EDITOR, '[CanvaRealtime] TOKEN_REFRESHED - channel healthy, skip resubscribe');
+          logger.debug(LogCategory.EDITOR, '[CanvaRealtime] TOKEN_REFRESHED - channel healthy, skip resubscribe');
           return;
         }
         logger.info(LogCategory.EDITOR, '[CanvaRealtime] 🔄 Auth change - channel not joined, resubscribing', {
