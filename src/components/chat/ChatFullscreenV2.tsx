@@ -384,15 +384,12 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 Layout (utilise uiState)
 
   // 🎯 RENDU (100% déclaratif avec composants extraits)
-  // En PWA/mobile : --keyboard-inset permet de faire rétrécir tout le layout quand le clavier s'ouvre (messages + input remontent ensemble)
-  const containerStyle = !isDesktop && uiState.keyboardInset > 0
-    ? { ['--keyboard-inset' as string]: `${uiState.keyboardInset}px` }
-    : undefined;
+  // adjustResize gère le viewport → pas besoin d'injecter --keyboard-inset en CSS.
+  // keyboardInset reste utile côté JS (scroll-to-bottom, etc.) mais pas pour le positionnement.
 
   return (
       <div
         className={`chatgpt-container ${(isDesktop && isCanvaOpen) ? 'canva-active' : ''}`}
-        style={containerStyle}
       >
       <ChatHeader
         sidebarOpen={uiState.sidebarOpen}
