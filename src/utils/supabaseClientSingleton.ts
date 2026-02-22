@@ -12,7 +12,12 @@ let supabaseClientInstance: SupabaseClient | null = null;
  */
 export function getSupabaseClient(): SupabaseClient {
   if (!supabaseClientInstance) {
-    supabaseClientInstance = createClient(ENV.supabase.url, ENV.supabase.anonKey);
+    supabaseClientInstance = createClient(ENV.supabase.url, ENV.supabase.anonKey, {
+      auth: {
+        flowType: 'pkce',
+        detectSessionInUrl: true,
+      },
+    });
   }
   
   return supabaseClientInstance;

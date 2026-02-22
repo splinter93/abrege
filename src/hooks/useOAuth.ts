@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { registerPlugin } from '@capacitor/core';
 import { supabase } from '@/supabaseClient';
 import type { AuthProvider } from '@/config/authProviders';
@@ -50,6 +50,26 @@ async function isNative(): Promise<boolean> {
 export function useOAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Natif : au retour sur l’app (après OAuth dans le navigateur), réinitialiser le loading
+  // si le deep link n’a pas encore redirigé (évite "Chargement..." infini)
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
+    let removed = false;
+    const handleVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      t = setTimeout(() => setLoading((prev) => (prev ? false : prev)), 2500);
+    };
+    isNative().then((native) => {
+      if (!native || removed) return;
+      document.addEventListener('visibilitychange', handleVisible);
+    });
+    return () => {
+      removed = true;
+      clearTimeout(t);
+      document.removeEventListener('visibilitychange', handleVisible);
+    };
+  }, []);
 
   async function signIn(provider: AuthProvider) {
     setLoading(true);

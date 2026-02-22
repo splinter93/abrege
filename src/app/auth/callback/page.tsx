@@ -141,6 +141,20 @@ function AuthCallbackContent() {
 
     const checkSession = async () => {
       try {
+        // Capacitor / WebView : si la redirection arrive en https (pas scrivia://), le code est dans l’URL
+        const codeFromUrl = searchParams?.get('code');
+        if (codeFromUrl) {
+          logger.info(LogCategory.API, '[Callback] Code PKCE dans l’URL (WebView), échange…');
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(codeFromUrl);
+          if (abortRef.current) return;
+          if (exchangeError) {
+            logger.error(LogCategory.API, '[Callback] ❌ exchangeCodeForSession', { error: exchangeError.message });
+            setError('Échange du code échoué. Réessayez.');
+            setStatus('error');
+            return;
+          }
+        }
+
         const { data, error: sessionError } = await supabase.auth.getSession();
         if (abortRef.current) return;
 
@@ -234,9 +248,10 @@ function AuthCallbackContent() {
           }
         }
 
-        // ✅ OPTIMISATION : Flux normal (pas de redirection vers /auth)
-        logger.info(LogCategory.API, '[Callback] 🔍 Flux normal, redirection vers home');
-        const t = setTimeout(() => router.push('/'), 900);
+        // Flux normal : si on a échangé un code (callback WebView / app), aller au chat, sinon home
+        const target = codeFromUrl ? '/chat' : '/';
+        logger.info(LogCategory.API, '[Callback] 🔍 Flux normal, redirection vers', target);
+        const t = setTimeout(() => router.push(target), 900);
         return () => clearTimeout(t);
       } catch (e) {
         if (abortRef.current) return;

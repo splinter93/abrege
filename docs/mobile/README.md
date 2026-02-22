@@ -133,3 +133,7 @@ Ou manuellement : `npm run cap:sync:prod` puis build/run depuis Android Studio.
 - **App blanche ou “Chargement…”** : vérifier que `npm run dev` tourne et que l’émulateur peut joindre `10.0.2.2:3000`. Sur device physique, utiliser l’IP de ta machine et `CAPACITOR_SERVER_URL=http://192.168.x.x:3000`.
 - **Barre de statut pas comme voulu** : ajuster `plugins.StatusBar` dans `capacitor.config.ts` (style, backgroundColor, overlaysWebView).
 - **Safe area incorrecte** : vérifier que la PWA utilise bien `env(safe-area-inset-*)` et `viewport-fit=cover` (déjà en place dans `layout.tsx` et les CSS mobile).
+- **OAuth Google ne renvoie pas à l’app / reste sur "Chargement"** :  
+  1. **Supabase** → Auth → URL Configuration → **Redirect URLs** : ajouter **exactement** `scrivia://callback` (sans slash final, sans chemin).  
+  2. Vérifier que l’app a bien été recompilée après toute modif (sync + build APK).  
+  3. Au retour du navigateur (Chrome), l’app revérifie le deep link au focus ; si ça échoue encore, regarder les logs (logcat) pour `[DeepLink]` ou `exchangeCodeForSession`.
