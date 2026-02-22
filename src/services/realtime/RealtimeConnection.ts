@@ -331,19 +331,20 @@ export class RealtimeConnection {
       return;
     }
 
+    let lastReconnectAt = 0;
+    const RECONNECT_THROTTLE_MS = 2000;
+
     this.visibilityHandler = () => {
       if (!this.config || !this.state) return;
-
-      if (document.visibilityState === 'visible' && !this.state.getState().isConnected) {
-        logger.info(LogCategory.EDITOR, '[RealtimeConnection] 🔄 Page visible - reconnexion automatique');
-        this.connect().catch(error => {
-          logger.error(LogCategory.EDITOR, '[RealtimeConnection] Erreur reconnexion page visible:', error);
-        });
-      } else if (document.visibilityState === 'hidden' && this.state.getState().isConnected) {
-        logger.info(LogCategory.EDITOR, '[RealtimeConnection] 👁️ Page cachée - connexion maintenue');
-        // On maintient la connexion même quand la page est cachée
-        // pour recevoir les mises à jour LLM
-      }
+      if (document.visibilityState !== 'visible') return;
+      if (this.state.getState().isConnected || this.state.getState().isConnecting) return;
+      const now = Date.now();
+      if (now - lastReconnectAt < RECONNECT_THROTTLE_MS) return;
+      lastReconnectAt = now;
+      logger.info(LogCategory.EDITOR, '[RealtimeConnection] 🔄 Page visible - reconnexion automatique');
+      this.connect().catch(error => {
+        logger.error(LogCategory.EDITOR, '[RealtimeConnection] Erreur reconnexion page visible:', error);
+      });
     };
 
     document.addEventListener('visibilitychange', this.visibilityHandler);

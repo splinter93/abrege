@@ -74,8 +74,9 @@ export class RealtimeService {
   // Throttling des reconnexions par canal
   private channelReconnectTimes: Map<string, number> = new Map();
   
-  // Gestionnaire de visibilité
+  // Gestionnaires (références pour cleanup correct)
   private visibilityHandler: (() => void) | null = null;
+  private windowFocusHandler: (() => void) | null = null;
 
   private constructor() {
     // Singleton pattern
@@ -748,32 +749,25 @@ export class RealtimeService {
       return;
     }
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // Vérifier si on est connecté
-        if (!this.state.isConnected && !this.state.isConnecting && this.config) {
-          this.connect();
-        }
-      }
-    };
+    let lastReconnectAt = 0;
+    const RECONNECT_THROTTLE_MS = 2000;
 
-    // Gestionnaire de visibilité
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Gestionnaire de focus de la fenêtre (backup)
-    const handleWindowFocus = () => {
+    const tryReconnect = () => {
+      const now = Date.now();
+      if (now - lastReconnectAt < RECONNECT_THROTTLE_MS) return;
       if (!this.state.isConnected && !this.state.isConnecting && this.config) {
+        lastReconnectAt = now;
         this.connect();
       }
     };
-    
-    window.addEventListener('focus', handleWindowFocus);
-    
-    // Stocker les références pour le cleanup
+
     this.visibilityHandler = () => {
-      handleVisibilityChange();
-      handleWindowFocus();
+      if (document.visibilityState === 'visible') tryReconnect();
     };
+    this.windowFocusHandler = () => tryReconnect();
+
+    document.addEventListener('visibilitychange', this.visibilityHandler);
+    window.addEventListener('focus', this.windowFocusHandler);
   }
 
   /**
@@ -826,13 +820,16 @@ export class RealtimeService {
    */
   public destroy(): void {
     this.disconnect();
-    
-    // Nettoyer le gestionnaire de visibilité
-    if (this.visibilityHandler && typeof document !== 'undefined') {
-      document.removeEventListener('visibilitychange', this.visibilityHandler);
-      this.visibilityHandler = null;
+    if (typeof document !== 'undefined') {
+      if (this.visibilityHandler) {
+        document.removeEventListener('visibilitychange', this.visibilityHandler);
+        this.visibilityHandler = null;
+      }
+      if (this.windowFocusHandler) {
+        window.removeEventListener('focus', this.windowFocusHandler);
+        this.windowFocusHandler = null;
+      }
     }
-    
     this.stateCallbacks.clear();
     this.eventCallbacks.clear();
     RealtimeService.instance = null;
