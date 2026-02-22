@@ -26,16 +26,19 @@ export function useCapacitorDeepLink() {
     let unsubscribeAuth: (() => void) | undefined;
 
     // A + B : uniquement sur plateforme Capacitor native (Android/iOS)
-    // Sur desktop/web, SIGNED_IN ne doit pas déclencher window.location.assign
-    // car cela provoque un rechargement complet à chaque retour sur l'onglet.
+    // Redirection vers /chat uniquement après OAuth callback (pas à chaque SIGNED_IN),
+    // sinon un clic sur "Agents" ou autre lien déclencherait une redirection vers /chat.
     (async () => {
       try {
         const { Capacitor } = await import('@capacitor/core');
         if (!Capacitor.isNativePlatform()) return;
 
-        // A. Écoute les changements de session — navigation fiable vers /chat
+        let pendingRedirectToChat = false;
+
+        // A. Rediriger vers /chat seulement si on vient de traiter un callback OAuth
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-          if (event === 'SIGNED_IN') {
+          if (event === 'SIGNED_IN' && pendingRedirectToChat) {
+            pendingRedirectToChat = false;
             window.location.assign('/chat');
           }
         });
@@ -80,27 +83,29 @@ export function useCapacitorDeepLink() {
           // PKCE : échange du code contre une session
           if (code) {
             console.log('[DeepLink] Code PKCE reçu, exchange…');
+            pendingRedirectToChat = true;
             const { error } = await supabase.auth.exchangeCodeForSession(code);
             if (error) {
+              pendingRedirectToChat = false;
               console.error('[DeepLink] exchangeCodeForSession échoué:', error.message);
               window.location.assign('/auth?error=session_expired');
             }
-            // onAuthStateChange (SIGNED_IN) prend le relais pour naviguer vers /chat
             return;
           }
 
           // Implicit flow : tokens dans le hash
           if (accessToken && refreshToken) {
             console.log('[DeepLink] Tokens implicit, setSession…');
+            pendingRedirectToChat = true;
             const { error } = await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });
             if (error) {
+              pendingRedirectToChat = false;
               console.error('[DeepLink] setSession échoué:', error.message);
               window.location.assign('/auth?error=session_error');
             }
-            // onAuthStateChange (SIGNED_IN) prend le relais
             return;
           }
 
