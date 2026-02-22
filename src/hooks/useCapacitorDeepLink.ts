@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { supabase } from '@/supabaseClient';
 
-/** Type minimal pour le plugin App (addListener/getLaunchUrl). Évite conflit avec l’export value du package. */
+/** Type minimal pour le plugin App (addListener/getLaunchUrl). Évite conflit avec l'export value du package. */
 interface AppPluginRef {
   addListener(event: 'appUrlOpen', cb: (e: { url: string }) => Promise<void>): Promise<{ remove: () => Promise<void> }>;
   getLaunchUrl(): Promise<{ url?: string } | undefined>;
@@ -14,15 +14,19 @@ interface AppPluginRef {
  *
  * Architecture :
  *  A. onAuthStateChange — dès que Supabase crée une session (SIGNED_IN),
- *     on navigue vers /chat. C'est le déclencheur principal, indépendant
- *     du timing du deep link.
+ *     on navigue vers /chat. C'est le déclencheur principal.
  *
- *  B. appUrlOpen — reçoit scrivia://callback?code=xxx, extrait le code,
- *     appelle exchangeCodeForSession. onAuthStateChange prend le relais.
+ *  B. appUrlOpen — reçoit scrivia://callback?code=xxx, appelle exchangeCodeForSession.
+ *     onAuthStateChange prend le relais pour la navigation.
  *
- * Pas de getLaunchUrl() : trop risqué (URL périmée d'un lancement précédent).
- * Pas de processedUrlRef : on laisse Supabase gérer la déduplication.
- * console.error au lieu de simpleLogger.dev : visible en production (logcat).
+ * Timing critique (URL distante) :
+ *  - @capacitor/core est bundlé dans le JS → window.Capacitor existe dès le chargement
+ *  - native-bridge.js est injecté par Android via evaluateJavascript après onPageFinished
+ *    (asynchrone, ~1-3s après le chargement) → ajoute triggerEvent + active les plugins
+ *  - Appeler App.addListener avant native-bridge.js → "not implemented on android"
+ *
+ *  Solution : attendre que window.Capacitor.triggerEvent existe (signal bridge prêt)
+ *  avant d'enregistrer le listener (jusqu'à 10s d'attente).
  */
 export function useCapacitorDeepLink() {
   useEffect(() => {
@@ -31,9 +35,6 @@ export function useCapacitorDeepLink() {
     let removeAppListener: (() => void) | undefined;
     let unsubscribeAuth: (() => void) | undefined;
 
-    // A + B : uniquement sur plateforme Capacitor native (Android/iOS)
-    // Redirection vers /chat uniquement après OAuth callback (pas à chaque SIGNED_IN),
-    // sinon un clic sur "Agents" ou autre lien déclencherait une redirection vers /chat.
     (async () => {
       try {
         const { Capacitor } = await import('@capacitor/core');
@@ -113,54 +114,48 @@ export function useCapacitorDeepLink() {
           console.warn('[DeepLink] URL sans code ni tokens:', url.slice(0, 100));
         };
 
-        const maxAttempts = 6;
-        const delayMs = 250;
-        let handle: { remove: () => Promise<void> } | undefined;
-        let App: AppPluginRef | undefined;
-
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-          try {
-            const appMod = await import('@capacitor/app');
-            App = appMod.App as AppPluginRef;
-            handle = await App.addListener('appUrlOpen', async ({ url }) => {
-              await processCallbackUrl(url);
-            });
+        // B. Attendre que native-bridge.js soit injecté par Android.
+        //    Signal : window.Capacitor.triggerEvent devient une vraie fonction.
+        //    Durée max : 20 × 500ms = 10s.
+        const POLL_INTERVAL = 500;
+        const MAX_POLLS = 20;
+        let bridgeReady = false;
+        for (let i = 0; i < MAX_POLLS; i++) {
+          const cap = window.Capacitor as { triggerEvent?: unknown };
+          if (typeof cap.triggerEvent === 'function') {
+            bridgeReady = true;
             break;
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            if ((msg.includes('not implemented') || msg.includes('UNIMPLEMENTED')) && attempt < maxAttempts) {
-              await new Promise((r) => setTimeout(r, delayMs));
-              continue;
-            }
-            throw err;
           }
+          console.log(`[DeepLink] Bridge pas encore prêt, attente... (${i + 1}/${MAX_POLLS})`);
+          await new Promise((r) => setTimeout(r, POLL_INTERVAL));
         }
 
-        if (!handle || !App) throw new Error('App plugin unavailable');
+        if (!bridgeReady) {
+          console.error('[DeepLink] Bridge non disponible après 10s, abandon.');
+          return;
+        }
 
-        // Fallback : au lancement, l’intent peut être disponible via getLaunchUrl()
-        // (appUrlOpen ne se déclenche pas toujours au retour du navigateur)
-        const tryLaunchUrl = async (): Promise<boolean> => {
-          try {
-            const launch = await App.getLaunchUrl();
-            if (launch?.url?.startsWith('scrivia://callback')) {
-              await processCallbackUrl(launch.url);
-              return true;
-            }
-          } catch { /* ignore */ }
-          return false;
-        };
-        await tryLaunchUrl();
+        console.log('[DeepLink] Bridge prêt, enregistrement du listener appUrlOpen.');
 
-        const onVisibility = () => {
-          if (document.visibilityState !== 'visible') return;
-          tryLaunchUrl();
-        };
-        document.addEventListener('visibilitychange', onVisibility);
+        const appMod = await import('@capacitor/app');
+        const App = appMod.App as AppPluginRef;
+
+        const handle = await App.addListener('appUrlOpen', async ({ url }) => {
+          await processCallbackUrl(url);
+        });
+
+        console.log('[DeepLink] Listener appUrlOpen enregistré.');
+
+        // Fallback au lancement (intent disponible via getLaunchUrl)
+        try {
+          const launch = await App.getLaunchUrl();
+          if (launch?.url?.startsWith('scrivia://callback')) {
+            await processCallbackUrl(launch.url);
+          }
+        } catch { /* ignore */ }
 
         removeAppListener = () => {
           handle.remove();
-          document.removeEventListener('visibilitychange', onVisibility);
         };
       } catch (e) {
         console.error('[DeepLink] Erreur init listener:', e);
