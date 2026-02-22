@@ -3,31 +3,39 @@
 import { useEffect } from 'react';
 import { supabase } from '@/supabaseClient';
 
-/** Type minimal pour le plugin App (addListener/getLaunchUrl). Évite conflit avec l'export value du package. */
+/**
+ * Gère le retour OAuth sur Capacitor Android.
+ *
+ * Architecture (remote URL) :
+ *  - Le bridge Capacitor (WebMessagePort) n'est pas fiable pour les URLs distantes :
+ *    native-bridge.js peut ne pas s'exécuter, rendant addListener inopérant.
+ *
+ *  Mécanisme principal : window.__scriviaDeepLink / window.__scriviaDeepLinkPending
+ *    → MainActivity.java injecte l'URL via evaluateJavascript dans onNewIntent.
+ *    → Si le handler JS est prêt : appelé directement.
+ *    → Sinon : stocké dans __scriviaDeepLinkPending, consommé ici au montage.
+ *
+ *  Mécanisme secondaire (fallback) :
+ *    → Tente App.addListener via le bridge Capacitor (fonctionne si le bridge est prêt).
+ *    → Tente getLaunchUrl() au montage et au retour en premier plan.
+ *
+ *  Redirection vers /chat :
+ *    → onAuthStateChange (SIGNED_IN) après un callback OAuth traité.
+ *    → Pas de redirection systématique pour ne pas perturber la navigation normale.
+ */
+
 interface AppPluginRef {
   addListener(event: 'appUrlOpen', cb: (e: { url: string }) => Promise<void>): Promise<{ remove: () => Promise<void> }>;
   getLaunchUrl(): Promise<{ url?: string } | undefined>;
 }
 
-/**
- * Gère le retour OAuth sur Capacitor Android.
- *
- * Architecture :
- *  A. onAuthStateChange — dès que Supabase crée une session (SIGNED_IN),
- *     on navigue vers /chat. C'est le déclencheur principal.
- *
- *  B. appUrlOpen — reçoit scrivia://callback?code=xxx, appelle exchangeCodeForSession.
- *     onAuthStateChange prend le relais pour la navigation.
- *
- * Timing critique (URL distante) :
- *  - @capacitor/core est bundlé dans le JS → window.Capacitor existe dès le chargement
- *  - native-bridge.js est injecté par Android via evaluateJavascript après onPageFinished
- *    (asynchrone, ~1-3s après le chargement) → ajoute triggerEvent + active les plugins
- *  - Appeler App.addListener avant native-bridge.js → "not implemented on android"
- *
- *  Solution : attendre que window.Capacitor.triggerEvent existe (signal bridge prêt)
- *  avant d'enregistrer le listener (jusqu'à 10s d'attente).
- */
+declare global {
+  interface Window {
+    __scriviaDeepLink?: (url: string) => void;
+    __scriviaDeepLinkPending?: string;
+  }
+}
+
 export function useCapacitorDeepLink() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -42,7 +50,6 @@ export function useCapacitorDeepLink() {
 
         let pendingRedirectToChat = false;
 
-        // A. Rediriger vers /chat seulement si on vient de traiter un callback OAuth
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
           if (event === 'SIGNED_IN' && pendingRedirectToChat) {
             pendingRedirectToChat = false;
@@ -114,57 +121,83 @@ export function useCapacitorDeepLink() {
           console.warn('[DeepLink] URL sans code ni tokens:', url.slice(0, 100));
         };
 
-        // B. Attendre que native-bridge.js soit injecté par Android.
-        //    Signal : window.Capacitor.triggerEvent devient une vraie fonction.
-        //    Durée max : 20 × 500ms = 10s.
-        const POLL_INTERVAL = 500;
-        const MAX_POLLS = 20;
-        let bridgeReady = false;
-        for (let i = 0; i < MAX_POLLS; i++) {
-          const cap = (window as unknown as Record<string, unknown>)['Capacitor'] as { triggerEvent?: unknown } | undefined;
-          if (typeof cap?.triggerEvent === 'function') {
-            bridgeReady = true;
-            break;
-          }
-          console.log(`[DeepLink] Bridge pas encore prêt, attente... (${i + 1}/${MAX_POLLS})`);
-          await new Promise((r) => setTimeout(r, POLL_INTERVAL));
+        // ── Mécanisme principal : handler global injecté depuis MainActivity.java ──
+        // Consommer une URL en attente (arrivée avant le montage du hook)
+        if (window.__scriviaDeepLinkPending) {
+          const pending = window.__scriviaDeepLinkPending;
+          delete window.__scriviaDeepLinkPending;
+          console.log('[DeepLink] URL pending trouvée:', pending.slice(0, 80));
+          await processCallbackUrl(pending);
         }
 
-        if (!bridgeReady) {
-          console.error('[DeepLink] Bridge non disponible après 10s, abandon.');
-          return;
-        }
-
-        console.log('[DeepLink] Bridge prêt, enregistrement du listener appUrlOpen.');
-
-        const appMod = await import('@capacitor/app');
-        const App = appMod.App as AppPluginRef;
-
-        const handle = await App.addListener('appUrlOpen', async ({ url }) => {
-          await processCallbackUrl(url);
-        });
-
-        console.log('[DeepLink] Listener appUrlOpen enregistré.');
-
-        // Fallback au lancement (intent disponible via getLaunchUrl)
-        try {
-          const launch = await App.getLaunchUrl();
-          if (launch?.url?.startsWith('scrivia://callback')) {
-            await processCallbackUrl(launch.url);
-          }
-        } catch { /* ignore */ }
-
-        removeAppListener = () => {
-          handle.remove();
+        // Exposer le handler pour les deep links futurs
+        window.__scriviaDeepLink = (url: string) => {
+          console.log('[DeepLink] Handler global appelé:', url.slice(0, 80));
+          processCallbackUrl(url);
         };
+
+        // ── Mécanisme secondaire : bridge Capacitor (best-effort) ──
+        try {
+          const appMod = await import('@capacitor/app');
+          const App = appMod.App as AppPluginRef;
+
+          // Tenter getLaunchUrl immédiatement
+          try {
+            const launch = await App.getLaunchUrl();
+            if (launch?.url?.startsWith('scrivia://callback')) {
+              console.log('[DeepLink] getLaunchUrl() trouvé:', launch.url.slice(0, 80));
+              await processCallbackUrl(launch.url);
+            }
+          } catch { /* ignore, bridge peut ne pas être prêt */ }
+
+          // Tenter addListener
+          const handle = await App.addListener('appUrlOpen', async ({ url }) => {
+            await processCallbackUrl(url);
+          });
+          console.log('[DeepLink] addListener Capacitor enregistré.');
+
+          const onVisibility = async () => {
+            if (document.visibilityState !== 'visible') return;
+            try {
+              const launch = await App.getLaunchUrl();
+              if (launch?.url?.startsWith('scrivia://callback')) {
+                await processCallbackUrl(launch.url);
+              }
+            } catch { /* ignore */ }
+          };
+          document.addEventListener('visibilitychange', onVisibility);
+
+          removeAppListener = () => {
+            handle.remove();
+            document.removeEventListener('visibilitychange', onVisibility);
+          };
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          if (msg.includes('not implemented') || msg.includes('UNIMPLEMENTED')) {
+            console.log('[DeepLink] Bridge Capacitor non disponible (remote URL) — mécanisme principal actif.');
+          } else {
+            console.error('[DeepLink] Erreur bridge secondaire:', e);
+          }
+
+          // Même sans bridge : écouter visibilitychange pour attraper le retour depuis Chrome
+          const onVisibility = () => {
+            if (document.visibilityState !== 'visible') return;
+            // Le handler global __scriviaDeepLink sera appelé par evaluateJavascript depuis MainActivity
+            // Rien d'autre à faire ici
+          };
+          document.addEventListener('visibilitychange', onVisibility);
+          removeAppListener = () => document.removeEventListener('visibilitychange', onVisibility);
+        }
+
       } catch (e) {
-        console.error('[DeepLink] Erreur init listener:', e);
+        console.error('[DeepLink] Erreur init:', e);
       }
     })();
 
     return () => {
       unsubscribeAuth?.();
       removeAppListener?.();
+      delete window.__scriviaDeepLink;
     };
   }, []);
 }
