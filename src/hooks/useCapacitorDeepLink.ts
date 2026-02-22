@@ -23,19 +23,23 @@ export function useCapacitorDeepLink() {
     if (typeof window === 'undefined') return;
 
     let removeAppListener: (() => void) | undefined;
+    let unsubscribeAuth: (() => void) | undefined;
 
-    // A. Écoute les changements de session — navigation fiable vers /chat
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        window.location.assign('/chat');
-      }
-    });
-
-    // B. Écoute les deep links entrants
+    // A + B : uniquement sur plateforme Capacitor native (Android/iOS)
+    // Sur desktop/web, SIGNED_IN ne doit pas déclencher window.location.assign
+    // car cela provoque un rechargement complet à chaque retour sur l'onglet.
     (async () => {
       try {
         const { Capacitor } = await import('@capacitor/core');
         if (!Capacitor.isNativePlatform()) return;
+
+        // A. Écoute les changements de session — navigation fiable vers /chat
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+          if (event === 'SIGNED_IN') {
+            window.location.assign('/chat');
+          }
+        });
+        unsubscribeAuth = () => subscription.unsubscribe();
 
         const { App } = await import('@capacitor/app');
 
@@ -110,7 +114,7 @@ export function useCapacitorDeepLink() {
     })();
 
     return () => {
-      subscription.unsubscribe();
+      unsubscribeAuth?.();
       removeAppListener?.();
     };
   }, []);

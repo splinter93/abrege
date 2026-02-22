@@ -583,17 +583,27 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
       }
     }, 60 * 1000);
 
-    // ✅ Resubscribe on token refresh / sign-in
+    // ✅ Resubscribe on sign-in only, not token refresh if channel is healthy.
+    // TOKEN_REFRESHED fires on every tab return; Supabase realtime handles token
+    // refresh internally. Forcing a resubscribe causes channel teardown/rebuild
+    // and cascading re-renders in ChatHeader.
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (isCancelled) return;
       if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
-        logger.info(LogCategory.EDITOR, '[CanvaRealtime] 🔄 Auth change detected, resubscribing', {
+        // Ne resubscrire que si le channel est réellement déconnecté
+        const channelState = channelRef.current?.state;
+        if (channelState === 'joined') {
+          logger.dev(LogCategory.EDITOR, '[CanvaRealtime] TOKEN_REFRESHED - channel healthy, skip resubscribe');
+          return;
+        }
+        logger.info(LogCategory.EDITOR, '[CanvaRealtime] 🔄 Auth change - channel not joined, resubscribing', {
           chatSessionId,
-          event
+          event,
+          channelState
         });
         clearResubTimer();
         resubscribeAttemptRef.current = 0;
-        circuitBreakerRef.current = false; // ✅ Réinitialiser le circuit breaker sur changement d'auth
+        circuitBreakerRef.current = false;
         if (channelRef.current) {
           supabase.removeChannel(channelRef.current);
           channelRef.current = null;

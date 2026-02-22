@@ -110,7 +110,12 @@ export class RealtimeService {
     if (!this.authUnsubscribe) {
       const { data: listener } = supabase.auth.onAuthStateChange((event) => {
         if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
-          this.reconnect();
+          // Supabase realtime gère le refresh du token internement côté WebSocket.
+          // On ne reconnecte que si on est réellement déconnecté, pour éviter le cycle
+          // TOKEN_REFRESHED → reconnect() → 3 updateState() → re-renders en cascade.
+          if (!this.state.isConnected && !this.state.isConnecting) {
+            this.reconnect();
+          }
         } else if (event === 'SIGNED_OUT') {
           this.disconnect();
         }
@@ -683,6 +688,12 @@ export class RealtimeService {
    * Met à jour l'état et notifie les callbacks
    */
   private updateState(updates: Partial<RealtimeState>): void {
+    // Skip si rien n'a changé (évite notifications et re-renders inutiles)
+    const hasChanges = (Object.keys(updates) as (keyof RealtimeState)[]).some(
+      (key) => this.state[key] !== updates[key]
+    );
+    if (!hasChanges) return;
+
     this.state = { ...this.state, ...updates };
     
     // Notifier les callbacks de manière sécurisée
