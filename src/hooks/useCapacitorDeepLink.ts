@@ -2,7 +2,12 @@
 
 import { useEffect } from 'react';
 import { supabase } from '@/supabaseClient';
-import type { App as AppPluginType } from '@capacitor/app';
+
+/** Type minimal pour le plugin App (addListener/getLaunchUrl). Évite conflit avec l’export value du package. */
+interface AppPluginRef {
+  addListener(event: 'appUrlOpen', cb: (e: { url: string }) => Promise<void>): Promise<{ remove: () => Promise<void> }>;
+  getLaunchUrl(): Promise<{ url?: string } | undefined>;
+}
 
 /**
  * Gère le retour OAuth sur Capacitor Android.
@@ -111,12 +116,12 @@ export function useCapacitorDeepLink() {
         const maxAttempts = 6;
         const delayMs = 250;
         let handle: { remove: () => Promise<void> } | undefined;
-        let App: AppPluginType | undefined;
+        let App: AppPluginRef | undefined;
 
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
           try {
             const appMod = await import('@capacitor/app');
-            App = appMod.App;
+            App = appMod.App as AppPluginRef;
             handle = await App.addListener('appUrlOpen', async ({ url }) => {
               await processCallbackUrl(url);
             });
