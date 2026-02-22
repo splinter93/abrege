@@ -121,8 +121,8 @@ export function useCapacitorDeepLink() {
         const MAX_POLLS = 20;
         let bridgeReady = false;
         for (let i = 0; i < MAX_POLLS; i++) {
-          const cap = window.Capacitor as { triggerEvent?: unknown };
-          if (typeof cap.triggerEvent === 'function') {
+          const cap = (window as Record<string, unknown>)['Capacitor'] as { triggerEvent?: unknown } | undefined;
+          if (typeof cap?.triggerEvent === 'function') {
             bridgeReady = true;
             break;
           }
