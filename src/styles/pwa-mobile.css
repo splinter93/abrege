@@ -55,7 +55,9 @@ html, body {
 */
 
 html.capacitor-native.chat-page {
-  --capacitor-safe-top: env(safe-area-inset-top, 24px);
+  /* Fallback 0px : si env() retourne 0 (overlaysWebView non actif ou non supporté),
+     on ne pousse pas le header avec 24px arbitraires. */
+  --capacitor-safe-top: env(safe-area-inset-top, 0px);
 }
 
 /* 1. Container = padding-top : safe-area-top + keyboard push animé.

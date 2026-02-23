@@ -93,6 +93,16 @@ export function useChatFullscreenUIState(
 
     let removeListeners: (() => void) | undefined;
 
+    // Scroll le container messages vers le bas — appelé au moment exact où le
+    // clavier apparaît (avant que la CSS transition ait démarré).
+    // scrollTop = scrollHeight → le navigateur clamp au max courant :
+    // ainsi, pendant toute la transition (280ms), le bas reste visible.
+    const scrollMessagesToBottom = () => {
+      const container = messagesContainerRef.current;
+      if (!container) return;
+      container.scrollTop = container.scrollHeight;
+    };
+
     (async () => {
       try {
         const { Capacitor } = await import('@capacitor/core');
@@ -102,6 +112,9 @@ export function useChatFullscreenUIState(
             const raw = info.keyboardHeight ?? 0;
             const maxInset = Math.floor(window.innerHeight * 0.6);
             setKeyboardInset(Math.min(raw, maxInset));
+            // Scroll synchrone : avant la CSS transition, les messages sont déjà au bas.
+            // Le container va rétrécir (transition 280ms) — le bas reste toujours visible.
+            scrollMessagesToBottom();
           });
           const hideHandle = await Keyboard.addListener('keyboardWillHide', () => {
             setKeyboardInset(0);
@@ -118,6 +131,7 @@ export function useChatFullscreenUIState(
 
       if (!('visualViewport' in window)) return;
 
+      let wasKeyboardVisible = false;
       const handleViewportChange = () => {
         const viewport = window.visualViewport;
         if (!viewport) return;
@@ -125,6 +139,12 @@ export function useChatFullscreenUIState(
         const heightDiff = window.innerHeight - viewport.height;
         const isKeyboardVisible = heightDiff > 120 && viewport.height < window.innerHeight;
         setKeyboardInset(isKeyboardVisible ? heightDiff : 0);
+
+        // Scroll au moment où le clavier APPARAÎT (transition 0→visible)
+        if (isKeyboardVisible && !wasKeyboardVisible) {
+          scrollMessagesToBottom();
+        }
+        wasKeyboardVisible = isKeyboardVisible;
       };
 
       handleViewportChange();
@@ -138,7 +158,7 @@ export function useChatFullscreenUIState(
     })();
 
     return () => removeListeners?.();
-  }, []);
+  }, [messagesContainerRef]);
 
   // 🎯 Layout logic
   const mainClassNames = useMemo(() => {

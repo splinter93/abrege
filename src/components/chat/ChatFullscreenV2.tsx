@@ -379,24 +379,8 @@ const ChatFullscreenV2: React.FC = () => {
     return () => document.documentElement.classList.remove('chat-page');
   }, []);
 
-  // 🎯 KEYBOARD SCROLL — quand le clavier s'ouvre, scroll instantané vers le bas
-  // Le container monte (CSS transition 280ms) et les messages suivent immédiatement.
-  const prevKeyboardInsetRef = useRef(0);
-  useEffect(() => {
-    const prev = prevKeyboardInsetRef.current;
-    const curr = uiState.keyboardInset;
-    prevKeyboardInsetRef.current = curr;
-
-    // Déclenche uniquement quand le clavier APPARAÎT (0 → N)
-    if (curr > 0 && prev === 0) {
-      // Scroll instantané avant que la transition CSS du container soit terminée
-      requestAnimationFrame(() => {
-        const container = uiState.messagesContainerRef.current;
-        if (!container) return;
-        container.scrollTop = container.scrollHeight - container.clientHeight;
-      });
-    }
-  }, [uiState.keyboardInset, uiState.messagesContainerRef, scrollToBottom]);
+  // 🎯 KEYBOARD SCROLL — géré directement dans useChatFullscreenUIState.ts
+  // (handler synchrone keyboardWillShow / visualViewport, avant la CSS transition)
 
   // ✅ SUPPRIMÉ : Plus d'auto-sélection de session
   // L'utilisateur choisit explicitement (via agent favori ou clic sidebar)
