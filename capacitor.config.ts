@@ -48,6 +48,16 @@ const config: CapacitorConfig = {
       // Pas de resize forcé (car on n'est plus en mode overlay/fullscreen strict sur Android)
       resizeOnFullScreen: false,
     },
+    // Configuration du Splash Screen pour éviter le fond blanc au chargement/resume
+    SplashScreen: {
+      backgroundColor: '#000000',
+      launchShowDuration: 0,
+      launchAutoHide: true,
+      showSpinner: false,
+      androidScaleType: 'CENTER_CROP',
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
   },
 
   android: {
