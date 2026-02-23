@@ -2,7 +2,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
@@ -11,6 +11,8 @@
         <!-- Barre de statut et barre de navigation = noir (aligné fond app) -->
         <item name="android:statusBarColor">#000000</item>
         <item name="android:navigationBarColor">#000000</item>
+        <!-- Texte/Icônes clairs (blanc) sur fond sombre -->
+        <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
     </style>
 
