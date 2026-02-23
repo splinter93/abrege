@@ -7,74 +7,51 @@ import { useCapacitorDeepLink } from '@/hooks/useCapacitorDeepLink';
  * CapacitorInit — Bootstrap natif Android/iOS.
  *
  * Responsabilités :
- *  1. Ajoute `html.capacitor-native` (déclencheur CSS dans pwa-mobile.css).
- *  2. Détecte l'ouverture/fermeture du clavier → injecte `--keyboard-height`.
- *     Le CSS `pwa-mobile.css` utilise cette variable + une transition CSS pour
- *     animer le container vers le haut en sync avec le clavier natif.
- *
- * Stratégie clavier : adjustNothing (Android) / KeyboardResize.None (iOS).
- * - Le viewport NE change jamais quand le clavier s'ouvre.
- * - Sur natif : @capacitor/keyboard `keyboardWillShow` fire au DÉBUT de l'animation
- *   avec la hauteur finale → transition CSS de 280ms synchronisée avec le clavier.
- * - Sur web/PWA : visualViewport fallback (frame-by-frame, pas de transition CSS).
- *
- * Toutes les règles CSS sont dans pwa-mobile.css sous `html.capacitor-native`.
+ *  1. Ajoute `html.capacitor-native` + `platform-ios`/`platform-android`.
+ *  2. Gère le clavier spécifiquement par plateforme :
+ *     - Android : RIEN (laisser `adjustResize` natif faire le travail).
+ *     - iOS : Détecte `keyboardWillShow` → injecte `--keyboard-height` pour
+ *       compenser le clavier qui passe par-dessus la webview (KeyboardResize.None).
  */
 function useCapacitorLayoutFix() {
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return;
-    const w = window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } };
-    if (!w.Capacitor?.isNativePlatform?.()) return;
-
-    const setKeyboardHeight = (h: number) => {
-      document.documentElement.style.setProperty('--keyboard-height', `${h}px`);
-    };
-
-    let cleanupFn = () => {};
 
     (async () => {
-      // Tentative : plugin @capacitor/keyboard — fire au START de l'animation native.
-      // keyboardWillShow donne la hauteur finale → CSS transition prend le relais.
       try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (!Capacitor.isNativePlatform()) return;
+
+        const platform = Capacitor.getPlatform(); // 'ios' ou 'android'
+        document.documentElement.classList.add('capacitor-native');
+        document.documentElement.classList.add(`platform-${platform}`);
+
+        // ANDROID : Le manifest est en `adjustResize`. La webview se redimensionne nativement.
+        // Pas besoin de JS pour gérer le clavier. Le CSS s'adapte à la nouvelle hauteur.
+        if (platform === 'android') {
+          return;
+        }
+
+        // iOS : Le clavier passe par-dessus (KeyboardResize.None).
+        // On doit réduire la hauteur du container manuellement via CSS + var.
         const { Keyboard } = await import('@capacitor/keyboard');
-        const showHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
-          setKeyboardHeight(info.keyboardHeight ?? 0);
-        });
-        const hideHandle = await Keyboard.addListener('keyboardWillHide', () => {
-          setKeyboardHeight(0);
-        });
-        cleanupFn = () => {
-          showHandle.remove();
-          hideHandle.remove();
-          setKeyboardHeight(0);
+        
+        const setKeyboardHeight = (h: number) => {
+          document.documentElement.style.setProperty('--keyboard-height', `${h}px`);
         };
-        return; // Plugin OK — pas besoin du fallback visualViewport
+
+        await Keyboard.addListener('keyboardWillShow', (info) => {
+          setKeyboardHeight(info.keyboardHeight || 0);
+        });
+        
+        await Keyboard.addListener('keyboardWillHide', () => {
+          setKeyboardHeight(0);
+        });
+
       } catch {
-        // Plugin non disponible (plugin non installé ou bridge absent)
+        // Capacitor non dispo ou erreur plugin
       }
-
-      // Fallback : visualViewport — frame-by-frame, la CSS transition n'est PAS utilisée
-      // (le container suit le clavier en temps réel sans délai supplémentaire).
-      const vv = window.visualViewport;
-      if (!vv) return;
-
-      const onViewportChange = () => {
-        const h = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop ?? 0));
-        setKeyboardHeight(h);
-      };
-
-      vv.addEventListener('resize', onViewportChange);
-      vv.addEventListener('scroll', onViewportChange);
-      onViewportChange();
-
-      cleanupFn = () => {
-        vv.removeEventListener('resize', onViewportChange);
-        vv.removeEventListener('scroll', onViewportChange);
-        setKeyboardHeight(0);
-      };
     })();
-
-    return () => cleanupFn();
   }, []);
 }
 
@@ -84,27 +61,11 @@ export default function CapacitorInit() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    (async () => {
-      try {
-        const { Capacitor } = await import('@capacitor/core');
-        if (!Capacitor.isNativePlatform()) return;
-
-        document.documentElement.classList.add('capacitor-native');
-
-        try {
-          const { Keyboard } = await import('@capacitor/keyboard');
-          await Keyboard.hide();
-        } catch {
-          // Plugin non disponible — pas bloquant
-        }
-      } catch {
-        // Capacitor non disponible (browser) — normal
-      }
-    })();
-
+    // Nettoyage au unmount (rare car composant racine)
     return () => {
       document.documentElement.classList.remove('capacitor-native');
+      document.documentElement.classList.remove('platform-ios');
+      document.documentElement.classList.remove('platform-android');
     };
   }, []);
 

@@ -37,11 +37,10 @@ const config: CapacitorConfig = {
       overlaysWebView: true,
       backgroundColor: '#000000',
     },
-    // Stratégie clavier : adjustNothing (Android manifest) + visualViewport CSS
-    // resize: 'none' = iOS KeyboardResize.None : le viewport ne change pas quand le clavier s'ouvre.
-    // Le layout est géré en CSS via --keyboard-height (cf. pwa-mobile.css + CapacitorInit.tsx).
+    // Stratégie clavier :
+    // - Android : "Native" (défaut) + adjustResize (manifest) -> la webview se redimensionne nativement.
+    // - iOS : "None" (défaut) -> le clavier passe par-dessus -> géré via JS (CapacitorInit) + CSS.
     Keyboard: {
-      resize: 'none',
       style: 'DARK',
       resizeOnFullScreen: false,
     },

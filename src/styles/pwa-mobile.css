@@ -60,34 +60,28 @@ html.capacitor-native.chat-page {
   --capacitor-safe-top: env(safe-area-inset-top, 0px);
 }
 
-/* 1. Container = padding-top : safe-area-top + keyboard push animé.
+/* 1. Container = padding-top : safe-area-top.
    STRATÉGIE FLEX : le header reste en flux normal (PAS position:fixed).
    Le container est déjà position:fixed;top:0 — le header ne bougera jamais.
-   padding-top = safe-area-top pousse le header juste sous la status bar.
-   bottom: var(--keyboard-height) shrink le container quand le clavier s'ouvre.
-   transition: bottom sync avec l'animation native du clavier (280ms Android / 350ms iOS). */
+   padding-top = safe-area-top pousse le header juste sous la status bar. */
 html.capacitor-native.chat-page .chatgpt-container {
   padding-top: var(--capacitor-safe-top) !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
+  bottom: 0 !important; /* Défaut Android : viewport resize, bottom reste 0 */
+}
+
+/* iOS ONLY : KeyboardResize.None -> le clavier passe par dessus.
+   On doit réduire la hauteur manuellement via bottom + var(--keyboard-height). */
+html.platform-ios.capacitor-native.chat-page .chatgpt-container {
   bottom: var(--keyboard-height, 0px) !important;
-  transition: bottom 280ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: bottom 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
   will-change: bottom;
 }
 
-/* 2. Overlay status bar : noir opaque, z-index max, couvre exactement la safe area */
-html.capacitor-native.chat-page::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--capacitor-safe-top);
-  min-height: var(--capacitor-safe-top);
-  background: #000000;
-  z-index: 99999;
-  pointer-events: none;
-}
+/* 2. Overlay status bar : SUPPRIMÉ.
+   La config Capacitor (StatusBar.backgroundColor=#000000) gère déjà le fond.
+   Le padding-top du container suffit pour décaler le contenu. */
 
 /* 3. Header : reste dans le flux flex — ne pas remettre position:fixed ici.
    Le container gère l'offset safe-area via padding-top. */

@@ -106,14 +106,26 @@ export function useChatFullscreenUIState(
     (async () => {
       try {
         const { Capacitor } = await import('@capacitor/core');
-        if (Capacitor.isNativePlatform()) {
+        const platform = Capacitor.getPlatform();
+        const isNative = Capacitor.isNativePlatform();
+
+        // ANDROID NATIVE : Layout géré par adjustResize (manifest).
+        // Le viewport se redimensionne nativement.
+        // On ne DOIT PAS détecter keyboardInset ici, sinon on ajouterait un padding
+        // en plus du clavier qui pousse déjà le contenu (double espace).
+        if (isNative && platform === 'android') {
+          return;
+        }
+
+        if (isNative) {
+          // iOS NATIVE : Le clavier passe par dessus (KeyboardResize.None).
+          // On écoute keyboardWillShow pour setKeyboardInset et scroller.
           const { Keyboard } = await import('@capacitor/keyboard');
           const showHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
             const raw = info.keyboardHeight ?? 0;
             const maxInset = Math.floor(window.innerHeight * 0.6);
             setKeyboardInset(Math.min(raw, maxInset));
-            // Scroll synchrone : avant la CSS transition, les messages sont déjà au bas.
-            // Le container va rétrécir (transition 280ms) — le bas reste toujours visible.
+            // Scroll synchrone
             scrollMessagesToBottom();
           });
           const hideHandle = await Keyboard.addListener('keyboardWillHide', () => {
@@ -126,9 +138,11 @@ export function useChatFullscreenUIState(
           return;
         }
       } catch {
-        // Capacitor non dispo (SSR ou web sans plugin)
+        // Capacitor non dispo
       }
 
+      // WEB / PWA (Browser mobile)
+      // visualViewport détecte le clavier sur Android Chrome / iOS Safari.
       if (!('visualViewport' in window)) return;
 
       let wasKeyboardVisible = false;
