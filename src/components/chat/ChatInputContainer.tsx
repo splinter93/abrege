@@ -30,14 +30,12 @@ export interface ChatInputContainerProps {
   editingContent: string;
   onCancelEdit: () => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  renderAuthStatus: () => React.ReactNode;
   selectedAgent: { name: string; display_name?: string } | null;
   keyboardInset?: number;
 }
 
 /**
- * Container pour l'input du chat
- * Affiche le warning auth + ChatInput
+ * Container pour l'input du chat (auth gérée par AuthRequiredModal en non-connecté).
  */
 const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
   onSend,
@@ -48,13 +46,11 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
   editingContent,
   onCancelEdit,
   textareaRef,
-  renderAuthStatus,
   selectedAgent,
   keyboardInset = 0
 }) => {
   return (
     <div className="chatgpt-input-container">
-      {renderAuthStatus()}
       <ChatInput
         onSend={onSend}
         loading={loading}

@@ -93,7 +93,7 @@ html, body {
     background: #000000 !important;
   }
   .chatgpt-input-container {
-    background: #000000 !important;
+    background: transparent !important;
     border: none !important;
     box-shadow: none !important;
   }

@@ -1,0 +1,84 @@
+/* Modale auth requise : fond flouté, contenu centré */
+
+.auth-required-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  animation: authRequiredFadeIn 0.2s ease-out;
+}
+
+@keyframes authRequiredFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.auth-required-modal {
+  background: var(--chat-gradient-block, #1a1d22);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: authRequiredSlideUp 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes authRequiredSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-required-modal-title {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--chat-text-primary, #f1f5f9);
+}
+
+.auth-required-modal-text {
+  margin: 0 0 24px;
+  font-size: 0.9375rem;
+  color: var(--chat-text-secondary, #cbd5e1);
+  line-height: 1.5;
+}
+
+.auth-required-modal-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--chat-accent-primary, #ff6b00);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: filter 0.15s ease;
+}
+
+.auth-required-modal-button:hover {
+  filter: brightness(1.1);
+}
+
+.auth-required-modal-button:focus-visible {
+  outline: 2px solid var(--chat-accent-primary);
+  outline-offset: 2px;
+}

@@ -37,6 +37,7 @@ import { useAgents } from '@/hooks/useAgents';
 import ChatHeader from './ChatHeader';
 import ChatMessagesArea from './ChatMessagesArea';
 import ChatInputContainer from './ChatInputContainer';
+import AuthRequiredModal from './AuthRequiredModal';
 import SidebarUltraClean from './SidebarUltraClean';
 import ChatCanvaPane from './ChatCanvaPane';
 import ModelDebug, { type ModelDebugInfo } from './ModelDebug';
@@ -492,7 +493,6 @@ const ChatFullscreenV2: React.FC = () => {
                     editingContent={uiState.editingContent}
                     onCancelEdit={uiActions.handleCancelEdit}
                     textareaRef={uiState.textareaRef}
-                    renderAuthStatus={uiActions.renderAuthStatus}
                     selectedAgent={selectedAgent}
                     keyboardInset={uiState.keyboardInset}
                   />
@@ -519,7 +519,10 @@ const ChatFullscreenV2: React.FC = () => {
           </div>
         </div>
         
-        {/* ✅ NOUVEAU : Debug modèle (bas à droite) */}
+        {/* Modale connexion requise (non connecté) */}
+        <AuthRequiredModal isOpen={!authLoading && !user} />
+
+        {/* Debug modèle (bas à droite) */}
         <ModelDebug modelInfo={modelInfo} />
       </div>
   );
