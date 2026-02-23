@@ -26,9 +26,12 @@ function useCapacitorLayoutFix() {
       const style = document.createElement('style');
       style.id = STYLE_ID;
       style.textContent = `
-        /* Reset padding-top container : évite le double safe-area */
+        /* Reset padding-top container : évite le double safe-area.
+           bottom suit la hauteur du clavier : le container rétrécit depuis le bas,
+           le flex layout interne pousse l'input au-dessus du clavier. */
         .chatgpt-container {
           padding-top: 0 !important;
+          bottom: var(--keyboard-height, 0px) !important;
         }
         /* Header fixe : ne bouge jamais, collé sous la status bar */
         .chatgpt-header {
@@ -58,11 +61,6 @@ function useCapacitorLayoutFix() {
           z-index: 99999 !important;
           pointer-events: none !important;
           display: block !important;
-        }
-        /* Compensation clavier (adjustNothing) : VisualViewport resize met à jour
-           --keyboard-height via JS, le container se réduit d'autant en bas */
-        .chatgpt-container {
-          padding-bottom: var(--keyboard-height, 0px) !important;
         }
       `;
       document.head.appendChild(style);
