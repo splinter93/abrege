@@ -58,15 +58,19 @@ html.capacitor-native.chat-page {
   --capacitor-safe-top: env(safe-area-inset-top, 24px);
 }
 
-/* 1. Reset padding-top container + keyboard push :
-   bottom: var(--keyboard-height) shrink le container depuis le bas quand le clavier s'ouvre.
-   Le flex layout interne pousse l'input + les messages au-dessus automatiquement. */
+/* 1. Container = padding-top : safe-area-top + keyboard push.
+   STRATÉGIE FLEX : le header reste en flux normal (PAS position:fixed).
+   Le container est déjà position:fixed;top:0 — le header ne bougera jamais.
+   padding-top = safe-area-top pousse le header juste sous la status bar.
+   bottom: var(--keyboard-height) shrink le container depuis le bas quand le clavier s'ouvre. */
 html.capacitor-native.chat-page .chatgpt-container {
-  padding-top: 0 !important;
+  padding-top: var(--capacitor-safe-top) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
   bottom: var(--keyboard-height, 0px) !important;
 }
 
-/* 2. Overlay status bar : noir opaque, z-index max */
+/* 2. Overlay status bar : noir opaque, z-index max, couvre exactement la safe area */
 html.capacitor-native.chat-page::before {
   content: '';
   position: fixed;
@@ -80,21 +84,22 @@ html.capacitor-native.chat-page::before {
   pointer-events: none;
 }
 
-/* 3. Header fixe : collé sous la status bar. Position: fixed résiste au clavier. */
+/* 3. Header : reste dans le flux flex — ne pas remettre position:fixed ici.
+   Le container gère l'offset safe-area via padding-top. */
 html.capacitor-native.chat-page .chatgpt-header {
-  position: fixed !important;
-  top: var(--capacitor-safe-top) !important;
-  left: 0 !important;
-  right: 0 !important;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
   width: 100% !important;
-  z-index: 1000 !important;
+  z-index: 1001 !important;
   box-sizing: border-box !important;
   background: #000000 !important;
 }
 
-/* 4. Décale le contenu : status bar + 56px header. */
+/* 4. Content : pas de padding-top supplémentaire, le flex layout l'handle. */
 html.capacitor-native.chat-page .chatgpt-content {
-  padding-top: calc(56px + var(--capacitor-safe-top)) !important;
+  padding-top: 0 !important;
 }
 
 /* 5. Couleurs — fond noir sur toutes les surfaces du chat */
@@ -136,35 +141,36 @@ html.capacitor-native.chat-page .sidebar-ultra-clean {
   height: calc(100dvh - 56px - var(--capacitor-safe-top) - 24px) !important;
 }
 
-/* Fallback: Page chat en viewport mobile (si JS capacitor-native pas encore chargé) */
+/* Fallback: Page chat en viewport mobile (si JS capacitor-native pas encore chargé).
+   Même stratégie que le bloc capacitor-native : flex layout, pas de position:fixed sur le header. */
 @media (max-width: 1024px) {
-  html.chat-page .chatgpt-container {
-    padding-top: 0 !important;
+  html.chat-page:not(.capacitor-native) .chatgpt-container {
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
-  html.chat-page::before {
+  html.chat-page:not(.capacitor-native)::before {
     content: '';
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    height: env(safe-area-inset-top, 24px);
-    min-height: env(safe-area-inset-top, 24px);
+    height: env(safe-area-inset-top, 0px);
+    min-height: env(safe-area-inset-top, 0px);
     background: #000000;
     z-index: 99999;
     pointer-events: none;
   }
-  html.chat-page .chatgpt-header {
-    position: fixed !important;
-    top: env(safe-area-inset-top, 0px) !important;
-    left: 0 !important;
-    right: 0 !important;
+  html.chat-page:not(.capacitor-native) .chatgpt-header {
+    position: relative !important;
+    top: auto !important;
     width: 100% !important;
-    z-index: 1000 !important;
+    z-index: 1001 !important;
     box-sizing: border-box !important;
     background: #000000 !important;
   }
-  html.chat-page .chatgpt-content {
-    padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+  html.chat-page:not(.capacitor-native) .chatgpt-content {
+    padding-top: 0 !important;
   }
 }
 
@@ -215,39 +221,39 @@ html.capacitor-native.chat-page .sidebar-ultra-clean {
     background: #000000 !important;
   }
 
-  /* ── Chat page sur standalone (Capacitor + PWA installée) ──────────────
-     html.chat-page posée par ChatFullscreenV2.tsx.
-     Pas de dépendance à capacitor-native ni à une media query de largeur.   */
+  /* ── Chat page sur standalone (PWA installée, non Capacitor) ─────────────
+     Même stratégie flex que le bloc capacitor-native. */
 
-  /* Overlay noir opaque sur la zone de notification, toujours au premier plan. */
-  html.chat-page::before {
+  /* Overlay status bar */
+  html.chat-page:not(.capacitor-native)::before {
     content: '';
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    height: env(safe-area-inset-top, 24px);
-    min-height: env(safe-area-inset-top, 24px);
+    height: env(safe-area-inset-top, 0px);
+    min-height: env(safe-area-inset-top, 0px);
     background: #000000;
     z-index: 99999;
     pointer-events: none;
   }
 
-  /* Header fixe, collé juste en dessous de la zone de notification. */
-  html.chat-page .chatgpt-header {
-    position: fixed !important;
-    top: env(safe-area-inset-top, 0px) !important;
-    left: 0 !important;
-    right: 0 !important;
+  /* Header en flux flex, container padding-top gère l'offset safe-area */
+  html.chat-page:not(.capacitor-native) .chatgpt-container {
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  html.chat-page:not(.capacitor-native) .chatgpt-header {
+    position: relative !important;
+    top: auto !important;
     width: 100% !important;
-    z-index: 1000 !important;
+    z-index: 1001 !important;
     box-sizing: border-box !important;
     background: #000000 !important;
   }
-
-  /* Décale le contenu pour ne pas passer derrière le header fixe. */
-  html.chat-page .chatgpt-content {
-    padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+  html.chat-page:not(.capacitor-native) .chatgpt-content {
+    padding-top: 0 !important;
   }
   /* Container input : toujours transparent, seul le footer a la couleur */
   .chatgpt-input-container {
