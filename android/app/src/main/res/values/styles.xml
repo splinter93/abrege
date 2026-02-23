@@ -3,14 +3,19 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-        <!-- Fix Flash Blanc : Fond de la fenêtre noir -->
+        <!-- Couleurs primaires forcées au noir ou sombre -->
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#000000</item>
+        <item name="colorAccent">#000000</item>
+        
+        <!-- Fix Flash Blanc : Fond de la fenêtre et de l'application -->
         <item name="android:windowBackground">#000000</item>
+        <item name="android:colorBackground">#000000</item>
+        
         <!-- Barre de statut et barre de navigation = noir (aligné fond app) -->
         <item name="android:statusBarColor">#000000</item>
         <item name="android:navigationBarColor">#000000</item>
+        
         <!-- Texte/Icônes clairs (blanc) sur fond sombre -->
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
