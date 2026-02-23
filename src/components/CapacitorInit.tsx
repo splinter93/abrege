@@ -16,6 +16,7 @@ export default function CapacitorInit() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    let cleanupOrientation: (() => void) | undefined;
 
     (async () => {
       try {
@@ -32,12 +33,52 @@ export default function CapacitorInit() {
         } catch {
           // Plugin non disponible ou clavier déjà masqué — pas bloquant
         }
+
+        // Mobile <= 480px: verrou portrait. > 480px: rotation autorisée.
+        const media = window.matchMedia('(max-width: 480px)');
+        const applyOrientationPolicy = async () => {
+          const orientation = window.screen?.orientation;
+          if (!orientation) return;
+          try {
+            if (media.matches) {
+              await orientation.lock('portrait');
+            } else {
+              orientation.unlock();
+            }
+          } catch {
+            // lock/unlock peut échouer selon device/OS, on ignore sans casser l'app
+          }
+        };
+
+        await applyOrientationPolicy();
+        const onMediaChange = () => {
+          void applyOrientationPolicy();
+        };
+
+        if (typeof media.addEventListener === 'function') {
+          media.addEventListener('change', onMediaChange);
+          cleanupOrientation = () => {
+            media.removeEventListener('change', onMediaChange);
+            try {
+              window.screen?.orientation?.unlock();
+            } catch {}
+          };
+        } else {
+          media.addListener(onMediaChange);
+          cleanupOrientation = () => {
+            media.removeListener(onMediaChange);
+            try {
+              window.screen?.orientation?.unlock();
+            } catch {}
+          };
+        }
       } catch {
         // Capacitor non disponible (browser) — normal
       }
     })();
 
     return () => {
+      cleanupOrientation?.();
       document.documentElement.classList.remove('capacitor-native');
     };
   }, []);
