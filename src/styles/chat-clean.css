@@ -825,7 +825,7 @@ body.chat-theme-glass .chatgpt-header {
   width: 250px;
   /* Même style que .chatgpt-input-area */
   background: #171a1e;
-  border: 1.4px solid rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.05);
   border-radius: 25px;
   box-shadow: none;
   transform: translateX(-250px);
@@ -2069,7 +2069,7 @@ body.chat-theme-glass .chatgpt-messages > div {
   flex-direction: column;
   gap: 12px;
   box-sizing: border-box;
-  border: 1.4px solid rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.05);
   box-shadow: none;
 }
 
