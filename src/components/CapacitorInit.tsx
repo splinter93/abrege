@@ -35,14 +35,17 @@ export default function CapacitorInit() {
         }
 
         // Mobile <= 480px: verrou portrait. > 480px: rotation autorisée.
+        // Screen Orientation API: lock/unlock pas dans les types DOM par défaut.
         const media = window.matchMedia('(max-width: 480px)');
+        const orientation = window.screen?.orientation as
+          | (ScreenOrientation & { lock?(mode: string): Promise<void>; unlock?(): void })
+          | undefined;
         const applyOrientationPolicy = async () => {
-          const orientation = window.screen?.orientation;
           if (!orientation) return;
           try {
-            if (media.matches) {
+            if (media.matches && typeof orientation.lock === 'function') {
               await orientation.lock('portrait');
-            } else {
+            } else if (typeof orientation.unlock === 'function') {
               orientation.unlock();
             }
           } catch {
@@ -60,7 +63,7 @@ export default function CapacitorInit() {
           cleanupOrientation = () => {
             media.removeEventListener('change', onMediaChange);
             try {
-              window.screen?.orientation?.unlock();
+              (window.screen?.orientation as { unlock?(): void } | undefined)?.unlock?.();
             } catch {}
           };
         } else {
@@ -68,7 +71,7 @@ export default function CapacitorInit() {
           cleanupOrientation = () => {
             media.removeListener(onMediaChange);
             try {
-              window.screen?.orientation?.unlock();
+              (window.screen?.orientation as { unlock?(): void } | undefined)?.unlock?.();
             } catch {}
           };
         }
