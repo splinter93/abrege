@@ -34,10 +34,11 @@ const config: CapacitorConfig = {
   plugins: {
     StatusBar: {
       style: 'DARK',
-      // overlaysWebView: false pour stabilité Android (permet adjustResize natif sans hacks).
-      // La status bar est un bloc noir distinct au-dessus de l'app.
-      // Le header sera collé en haut de la webview (y=0).
-      overlaysWebView: false,
+      // overlaysWebView: true — la WebView couvre tout l'écran.
+      // Avec adjustResize, quand le clavier s'ouvre, la WebView rétrécit VERS LE BAS
+      // (derrière le clavier, donc invisible). Rien ne transparaît.
+      // overlaysWebView: false faisait apparaître le fond natif Android sur les bords.
+      overlaysWebView: true,
       backgroundColor: '#000000',
     },
     // Stratégie clavier :
