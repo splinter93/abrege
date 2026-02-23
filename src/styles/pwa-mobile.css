@@ -58,16 +58,19 @@ html.capacitor-native.chat-page {
   --capacitor-safe-top: env(safe-area-inset-top, 24px);
 }
 
-/* 1. Container = padding-top : safe-area-top + keyboard push.
+/* 1. Container = padding-top : safe-area-top + keyboard push animé.
    STRATÉGIE FLEX : le header reste en flux normal (PAS position:fixed).
    Le container est déjà position:fixed;top:0 — le header ne bougera jamais.
    padding-top = safe-area-top pousse le header juste sous la status bar.
-   bottom: var(--keyboard-height) shrink le container depuis le bas quand le clavier s'ouvre. */
+   bottom: var(--keyboard-height) shrink le container quand le clavier s'ouvre.
+   transition: bottom sync avec l'animation native du clavier (280ms Android / 350ms iOS). */
 html.capacitor-native.chat-page .chatgpt-container {
   padding-top: var(--capacitor-safe-top) !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
   bottom: var(--keyboard-height, 0px) !important;
+  transition: bottom 280ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  will-change: bottom;
 }
 
 /* 2. Overlay status bar : noir opaque, z-index max, couvre exactement la safe area */
