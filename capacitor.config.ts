@@ -42,7 +42,8 @@ const config: CapacitorConfig = {
     // - iOS : "None" (défaut) -> le clavier passe par-dessus -> géré via JS (CapacitorInit) + CSS.
     Keyboard: {
       style: 'DARK',
-      resizeOnFullScreen: false,
+      // ACTIVE le resize sur Android (sinon fallback sur adjustPan et tout remonte)
+      resizeOnFullScreen: true,
     },
   },
 
