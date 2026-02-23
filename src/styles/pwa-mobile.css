@@ -49,10 +49,78 @@ html, body {
   box-sizing: border-box;
 }
 
-/* ── Page chat en viewport mobile : header fixe + status bar opaque ─────────────
-   S'applique TOUJOURS (Capacitor WebView, PWA, browser) dès que html.chat-page
-   et largeur <= 1024px. En Capacitor, display-mode: standalone est souvent faux,
-   donc on ne dépend pas de lui. */
+/* ── Capacitor Android natif (html.capacitor-native posée par CapacitorInit.tsx) ────────────
+   Règles déclenchées par JS uniquement : 100% fiables, s'appliquent dès que l'app est en mode natif.
+   Force le layout mobile "header fixe" quelle que soit la taille de l'écran.
+*/
+
+html.capacitor-native.chat-page {
+  --capacitor-safe-top: env(safe-area-inset-top, 24px);
+}
+
+/* 1. Reset padding-top container : TUE le double padding.
+   Gagne sur chat-clean.css (padding-top: var(--chat-safe-top)) grâce à !important. */
+html.capacitor-native.chat-page .chatgpt-container {
+  padding-top: 0 !important;
+}
+
+/* 2. Overlay status bar : noir opaque, z-index max */
+html.capacitor-native.chat-page::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--capacitor-safe-top);
+  min-height: var(--capacitor-safe-top);
+  background: #000000;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+/* 3. Header fixe : collé sous la status bar. Position: fixed résiste au clavier. */
+html.capacitor-native.chat-page .chatgpt-header {
+  position: fixed !important;
+  top: var(--capacitor-safe-top) !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 1000 !important;
+  box-sizing: border-box !important;
+  background: #000000 !important;
+}
+
+/* 4. Décale le contenu : status bar + 56px header. */
+html.capacitor-native.chat-page .chatgpt-content {
+  padding-top: calc(56px + var(--capacitor-safe-top)) !important;
+}
+
+/* 5. Couleurs et style input spécifiques Capacitor */
+html.capacitor-native.chat-page,
+html.capacitor-native.chat-page body {
+  background: #000000 !important;
+  --color-bg-primary: #000000;
+  --chat-bg-primary: #000000;
+}
+html.capacitor-native.chat-page .chatgpt-main,
+html.capacitor-native.chat-page .chatgpt-chat-footer,
+html.capacitor-native.chat-page .chatgpt-messages-container {
+  background: #000000 !important;
+}
+html.capacitor-native.chat-page .chatgpt-chat-bottom,
+html.capacitor-native.chat-page .chatgpt-input-container {
+  background: transparent !important;
+}
+html.capacitor-native.chat-page .chatgpt-input-container::before {
+  display: block !important;
+}
+html.capacitor-native.chat-page .chatgpt-input-area {
+  background: #0d0f11 !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 25px !important;
+}
+
+/* Fallback: Page chat en viewport mobile (si JS capacitor-native pas encore chargé) */
 @media (max-width: 1024px) {
   html.chat-page .chatgpt-container {
     padding-top: 0 !important;
