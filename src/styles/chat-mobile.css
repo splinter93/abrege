@@ -95,8 +95,17 @@
     box-sizing: border-box;
     overflow-x: hidden;
     overflow-y: auto;
-    padding: 8px var(--chat-padding-horizontal, 12px) 0;
-    background: transparent;
+    padding: 0 var(--chat-padding-horizontal, 12px) 0; /* pas de padding-top = ne dépasse pas au-dessus de l'input */
+    background: transparent !important;
+    background-color: transparent !important;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+  }
+  /* Même en background noir mobile : container input toujours transparent */
+  .chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container {
+    background: transparent !important;
+    background-color: transparent !important;
   }
 
   .chatgpt-chat-footer {

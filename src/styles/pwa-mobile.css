@@ -89,13 +89,21 @@ html, body {
   .chatgpt-main,
   .chatgpt-content,
   .chatgpt-main-chat,
-  .chatgpt-header {
+  .chatgpt-header,
+  .chatgpt-chat-bottom,
+  .chatgpt-chat-footer {
     background: #000000 !important;
   }
+  /* Container input : toujours transparent, seul le footer a la couleur */
   .chatgpt-input-container {
     background: transparent !important;
+    background-color: transparent !important;
     border: none !important;
     box-shadow: none !important;
+  }
+  .chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container {
+    background: transparent !important;
+    background-color: transparent !important;
   }
   
   .chatgpt-input-container::before {
@@ -252,10 +260,14 @@ button, a, input, textarea, select {
   body:has(.chatgpt-container) .chatgpt-main-chat,
   body:has(.chatgpt-container) .chatgpt-header,
   body:has(.chatgpt-container) .chatgpt-chat-bottom,
-  body:has(.chatgpt-container) .chatgpt-input-container,
   body:has(.chatgpt-container) .chatgpt-chat-footer,
   body:has(.chatgpt-container) .chatgpt-messages-container {
     background: #000000 !important;
+  }
+  body:has(.chatgpt-container) .chatgpt-input-container,
+  body:has(.chatgpt-container) .chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container {
+    background: transparent !important;
+    background-color: transparent !important;
   }
 }
 
@@ -274,11 +286,15 @@ button, a, input, textarea, select {
   html.chat-page .chatgpt-main-chat,
   html.chat-page .chatgpt-header,
   html.chat-page .chatgpt-chat-bottom,
-  html.chat-page .chatgpt-input-container,
   html.chat-page .chatgpt-chat-footer,
   html.chat-page .chatgpt-messages-container,
   html.chat-page .chatgpt-messages-container::before {
     background: #000000 !important;
+  }
+  html.chat-page .chatgpt-input-container,
+  html.chat-page .chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container {
+    background: transparent !important;
+    background-color: transparent !important;
   }
 }
 
@@ -311,5 +327,14 @@ button, a, input, textarea, select {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ========================================
+   INPUT CONTAINER - TOUJOURS TRANSPARENT
+   Règle finale : gagne sur tout le reste dans ce fichier (PWA / mobile noir).
+   ======================================== */
+.chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 

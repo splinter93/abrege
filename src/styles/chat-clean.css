@@ -1856,7 +1856,7 @@ body.chat-theme-glass .chatgpt-messages > div {
   position: relative;
   flex-shrink: 0;
   padding: var(--chat-safe-top) calc(var(--chat-padding-horizontal) + var(--chat-safe-left)) 0;
-  background: transparent;
+  background: transparent !important; /* toujours transparent (desktop + responsive + PWA), seul le footer a la couleur */
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -4181,4 +4181,13 @@ body.chat-theme-glass .chatgpt-messages > div {
   flex: 1; /* Prendre l'espace disponible */
   display: flex;
   flex-direction: column;
+}
+
+/* ========================================
+   INPUT CONTAINER - TOUJOURS TRANSPARENT
+   Spécificité max pour gagner sur tous les thèmes / PWA / mobile
+   ======================================== */
+.chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container {
+  background: transparent !important;
+  background-color: transparent !important;
 }

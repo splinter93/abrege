@@ -16,7 +16,6 @@ import "../styles/unified-page-layout.css";
 import "../styles/pages-unified-layout.css";
 import "../styles/pwa-mobile.css";
 import "../styles/chat-mobile.css";
-import "../styles/theme-mobile-dark.css";
 import "../components/editor/editor-header.css";
 import "../components/editor/editor-title.css";
 import "../components/editor/editor-content.css";

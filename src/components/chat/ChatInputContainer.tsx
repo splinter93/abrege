@@ -50,7 +50,7 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
   keyboardInset = 0
 }) => {
   return (
-    <div className="chatgpt-input-container">
+    <div className="chatgpt-input-container" style={{ background: 'transparent' }}>
       <ChatInput
         onSend={onSend}
         loading={loading}
