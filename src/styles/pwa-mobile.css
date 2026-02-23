@@ -60,12 +60,11 @@ html.capacitor-native.chat-page {
   --capacitor-safe-top: env(safe-area-inset-top, 0px);
 }
 
-/* 1. Container = padding-top : safe-area-top.
-   STRATÉGIE FLEX : le header reste en flux normal (PAS position:fixed).
-   Le container est déjà position:fixed;top:0 — le header ne bougera jamais.
-   padding-top = safe-area-top pousse le header juste sous la status bar. */
+/* 1. Container = padding-top : safe-area-top + hauteur header (56px).
+   STRATÉGIE FIXE : Header fixed pour ne pas scroller avec le clavier Android (adjustResize).
+   Le container doit avoir un padding égal à la hauteur TOTALE du header (56px + safe-area). */
 html.capacitor-native.chat-page .chatgpt-container {
-  padding-top: var(--capacitor-safe-top) !important;
+  padding-top: calc(56px + var(--capacitor-safe-top)) !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
   bottom: 0 !important; /* Défaut Android : viewport resize, bottom reste 0 */
@@ -79,24 +78,24 @@ html.platform-ios.capacitor-native.chat-page .chatgpt-container {
   will-change: bottom;
 }
 
-/* 2. Overlay status bar : SUPPRIMÉ.
-   La config Capacitor (StatusBar.backgroundColor=#000000) gère déjà le fond.
-   Le padding-top du container suffit pour décaler le contenu. */
+/* 2. Overlay status bar : SUPPRIMÉ. */
 
-/* 3. Header : reste dans le flux flex — ne pas remettre position:fixed ici.
-   Le container gère l'offset safe-area via padding-top. */
+/* 3. Header FIXE : position:fixed pour rester ancré en haut même si le clavier scroll le view.
+   Hauteur = 56px + safe-area. Padding-top = safe-area (texte centré dans les 56px restants). */
 html.capacitor-native.chat-page .chatgpt-header {
-  position: relative !important;
-  top: auto !important;
-  left: auto !important;
-  right: auto !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
   width: 100% !important;
+  height: calc(56px + var(--capacitor-safe-top)) !important;
+  padding-top: var(--capacitor-safe-top) !important;
   z-index: 1001 !important;
   box-sizing: border-box !important;
   background: #000000 !important;
 }
 
-/* 4. Content : pas de padding-top supplémentaire, le flex layout l'handle. */
+/* 4. Content : le padding-top est géré par le container, donc 0 ici. */
 html.capacitor-native.chat-page .chatgpt-content {
   padding-top: 0 !important;
 }
