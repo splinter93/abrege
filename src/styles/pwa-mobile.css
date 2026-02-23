@@ -115,7 +115,7 @@ html, body {
   /* Barre de saisie : même style que web (Grok-like) sur PWA/Capacitor */
   .chatgpt-input-area {
     background: #171a1e !important;
-    border: 1.2px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1.4px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 25px;
     box-shadow: none;
   }

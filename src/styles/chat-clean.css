@@ -823,7 +823,11 @@ body.chat-theme-glass .chatgpt-header {
   left: 0;
   height: calc(100vh - 56px - 24px);
   width: 250px;
-  background: var(--chat-gradient-sidebar);
+  /* Même style que .chatgpt-input-area */
+  background: #171a1e;
+  border: 1.4px solid rgba(255, 255, 255, 0.08);
+  border-radius: 25px;
+  box-shadow: none;
   transform: translateX(-250px);
   transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
               opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -833,8 +837,6 @@ body.chat-theme-glass .chatgpt-header {
   padding: 0;
   overflow: hidden;
   margin-bottom: 0;
-  border-top-right-radius: var(--chat-radius-2xl);
-  border-bottom-right-radius: var(--chat-radius-2xl);
   will-change: transform;
   pointer-events: auto;
   opacity: 1;
@@ -2067,7 +2069,7 @@ body.chat-theme-glass .chatgpt-messages > div {
   flex-direction: column;
   gap: 12px;
   box-sizing: border-box;
-  border: 1.2px solid rgba(255, 255, 255, 0.08);
+  border: 1.4px solid rgba(255, 255, 255, 0.08);
   box-shadow: none;
 }
 
