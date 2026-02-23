@@ -2054,21 +2054,21 @@ body.chat-theme-glass .chatgpt-messages > div {
   z-index: 0;
 }
 
-/* Input au-dessus du footer - ne dépasse jamais le bord droit (100% = parent) */
+/* Input au-dessus du footer - style Grok : fond #212121, bordure subtile */
 .chatgpt-input-area {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: min(calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)), 100%); /* ✅ Aligné messages, jamais overflow */
-  background: var(--chat-gradient-input);
-  border-radius: 18px; /* ✅ Radius légèrement augmenté (16px → 18px) */
-  padding: 12px 12px; /* ✅ Padding vertical réduit : top/bottom 12px, left/right 12px */
+  max-width: min(calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)), 100%);
+  background: #171a1e;
+  border-radius: 25px;
+  padding: 12px 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px; /* ✅ Espace augmenté entre textarea et toolbar */
+  gap: 12px;
   box-sizing: border-box;
-  border: 1.2px solid var(--chat-border, #2a2d32);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+  border: 1.1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: none;
 }
 
 /* État drag & drop */

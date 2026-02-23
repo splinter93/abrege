@@ -112,6 +112,13 @@ html, body {
   
   /* Pas d’override input en PWA : même padding / div que le mode normal (chat-clean.css) */
   
+  /* Barre de saisie : même style que web (Grok-like) sur PWA/Capacitor */
+  .chatgpt-input-area {
+    background: #171a1e !important;
+    border: 1.1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 25px;
+    box-shadow: none;
+  }
   /* Pas de gradient sur le container (thème glass) = pas de bande marron */
   .chatgpt-container::before {
     display: none !important;
