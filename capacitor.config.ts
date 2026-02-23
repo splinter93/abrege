@@ -34,7 +34,10 @@ const config: CapacitorConfig = {
   plugins: {
     StatusBar: {
       style: 'DARK',
-      overlaysWebView: true,
+      // overlaysWebView: false pour stabilité Android (permet adjustResize natif sans hacks).
+      // La status bar est un bloc noir distinct au-dessus de l'app.
+      // Le header sera collé en haut de la webview (y=0).
+      overlaysWebView: false,
       backgroundColor: '#000000',
     },
     // Stratégie clavier :
@@ -42,8 +45,8 @@ const config: CapacitorConfig = {
     // - iOS : "None" (défaut) -> le clavier passe par-dessus -> géré via JS (CapacitorInit) + CSS.
     Keyboard: {
       style: 'DARK',
-      // ACTIVE le resize sur Android (sinon fallback sur adjustPan et tout remonte)
-      resizeOnFullScreen: true,
+      // Pas de resize forcé (car on n'est plus en mode overlay/fullscreen strict sur Android)
+      resizeOnFullScreen: false,
     },
   },
 

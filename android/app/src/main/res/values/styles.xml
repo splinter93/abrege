@@ -6,6 +6,8 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <!-- Fix Flash Blanc : Fond de la fenêtre noir -->
+        <item name="android:windowBackground">#000000</item>
         <!-- Barre de statut et barre de navigation = noir (aligné fond app) -->
         <item name="android:statusBarColor">#000000</item>
         <item name="android:navigationBarColor">#000000</item>
