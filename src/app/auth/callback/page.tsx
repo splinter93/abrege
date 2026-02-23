@@ -142,14 +142,18 @@ function AuthCallbackContent() {
     const checkSession = async () => {
       try {
         // Capacitor / WebView : si la redirection arrive en https (pas scrivia://), le code est dans l’URL
-        const codeFromUrl = searchParams?.get('code');
+        const codeFromUrl = searchParams?.get('code')?.trim();
         if (codeFromUrl) {
           logger.info(LogCategory.API, '[Callback] Code PKCE dans l’URL (WebView), échange…');
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(codeFromUrl);
           if (abortRef.current) return;
           if (exchangeError) {
-            logger.error(LogCategory.API, '[Callback] ❌ exchangeCodeForSession', { error: exchangeError.message });
-            setError('Échange du code échoué. Réessayez.');
+            const errMsg = exchangeError.message ?? '';
+            const isVerifierMissing = /code verifier|code_verifier|non-empty/i.test(errMsg);
+            logger.error(LogCategory.API, '[Callback] ❌ exchangeCodeForSession', { error: errMsg });
+            setError(isVerifierMissing
+              ? 'La session de connexion a expiré ou cette page a été ouverte dans un autre onglet. Merci de vous reconnecter depuis la page de connexion.'
+              : 'Échange du code échoué. Réessayez.');
             setStatus('error');
             return;
           }

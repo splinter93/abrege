@@ -36,19 +36,20 @@ source ~/.zshrc
 
 ## Workflow
 
-### 1. Lancer l’app web en local
+### 1. Lancer l’app web en local (optionnel, pour dev)
 
-L’app Android charge l’URL configurée dans `capacitor.config.ts`. En dev, par défaut : `http://10.0.2.2:3000` (émulateur Android = localhost de la machine).
+Par défaut, l’app Android charge **la prod** (`https://www.scrivia.app`). Pour charger ton serveur local (émulateur) :
 
 ```bash
 npm run dev
+# Dans un autre terminal :
+CAPACITOR_SERVER_URL=http://10.0.2.2:3000 npm run cap:sync
+npm run cap:run:android
 ```
 
-Garder ce terminal ouvert.
+### 2. Synchroniser et lancer sur Android (prod)
 
-### 2. Synchroniser et lancer sur Android
-
-Dans un autre terminal :
+Sans variable d’environnement, `cap sync` utilise déjà l’URL prod. Sur device physique ou émulateur :
 
 ```bash
 npm run cap:sync
@@ -101,18 +102,13 @@ Tu peux le copier sur ton téléphone (câble USB, Google Drive, AirDroid, etc.)
 
 ---
 
-## URL de l’app (prod)
+## URL de l’app
 
-Par défaut en dev : `http://10.0.2.2:3000`. **Sur téléphone physique**, l'app doit charger la prod (scrivia.app) :
+**Par défaut** : l’app charge `https://www.scrivia.app` (prod). Un simple `npm run cap:sync` puis build/run suffit pour le téléphone physique.
 
-```bash
-# 1. Build Next.js + déployer scrivia.app (Vercel / CI)
-# 2. Sync et run avec l'URL prod (évite d'écraser server.url)
-npm run build && npm run cap:run:android:prod
-```
-
-Ou manuellement : `npm run cap:sync:prod` puis build/run depuis Android Studio.  
-**Important :** ne pas utiliser `cap:run:android` seul pour le device physique — il remet `server.url` à l'émulateur → écran vide.
+Pour **dev local** (émulateur + `npm run dev`) :  
+`CAPACITOR_SERVER_URL=http://10.0.2.2:3000 npm run cap:sync` puis `npm run cap:run:android`.  
+Si tu avais déjà sync sans cette env et que l’écran reste noir sur le device, refaire un `cap sync` (sans env) pour repasser en prod, puis rebuilder l’APK.
 
 ---
 
@@ -124,13 +120,14 @@ Ou manuellement : `npm run cap:sync:prod` puis build/run depuis Android Studio.
 | `www/` | Contenu minimal pour `cap sync` ; l’app réelle est chargée via `server.url` |
 | `android/` | Projet Android (versionné) ; ne pas modifier à la main sauf thème/splash |
 | `docs/mobile/PLAN-APP-MOBILE.md` | Plan directeur et prochaines étapes |
+| `docs/mobile/AUDIT-CAPACITOR-ET-PROBLEMES-RESOLUS.md` | Audit du socle + problèmes majeurs (auth Google, re-renders) et correctifs |
 
 ---
 
 ## Dépannage
 
 - **ERR_SDK_NOT_FOUND / No valid Android SDK root found** : définir `ANDROID_HOME` (voir section « Configuration de l’environnement Android » ci‑dessus). Puis relancer `npm run cap:run:android`. Alternative : lancer l’app depuis Android Studio avec `npm run cap:open:android`, puis Run (▶).
-- **App blanche ou “Chargement…”** : vérifier que `npm run dev` tourne et que l’émulateur peut joindre `10.0.2.2:3000`. Sur device physique, utiliser l’IP de ta machine et `CAPACITOR_SERVER_URL=http://192.168.x.x:3000`.
+- **App blanche ou “Chargement…”** : vérifier que `npm run dev` tourne et que l’émulateur peut joindre `10.0.2.2:3000`. Sur device physique : si écran noir, refaire `npx cap sync android` sans env (pour repasser en prod) puis rebuilder ; en dev avec IP locale : `CAPACITOR_SERVER_URL=http://192.168.x.x:3000`.
 - **Barre de statut pas comme voulu** : ajuster `plugins.StatusBar` dans `capacitor.config.ts` (style, backgroundColor, overlaysWebView).
 - **Safe area incorrecte** : vérifier que la PWA utilise bien `env(safe-area-inset-*)` et `viewport-fit=cover` (déjà en place dans `layout.tsx` et les CSS mobile).
 - **OAuth Google ne renvoie pas à l’app / reste sur "Chargement"** :  

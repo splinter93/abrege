@@ -16,7 +16,8 @@ const config: CapacitorConfig = {
   webDir: 'www',
 
   server: {
-    url: process.env.CAPACITOR_SERVER_URL || 'http://10.0.2.2:3000',
+    // Prod par défaut. Dev local : CAPACITOR_SERVER_URL=http://10.0.2.2:3000 npm run cap:sync
+    url: process.env.CAPACITOR_SERVER_URL || 'https://www.scrivia.app',
     cleartext: true,
     // Garder la navigation (auth, redirections) dans le WebView au lieu d’ouvrir le navigateur
     allowNavigation: [
