@@ -66,9 +66,12 @@
 
 /* ========== KEYBOARD UX iOS ========== */
 
+/* Sur iOS Safari (PWA browser uniquement, pas Capacitor) :
+   body fixed évite le scroll parasite du viewport quand le clavier s'ouvre.
+   Sur Capacitor, cette règle est exclue : la stratégie adjustNothing + visualViewport
+   + --keyboard-height gère le layout sans toucher au body. */
 @supports (-webkit-touch-callout: none) {
-  /* iOS : même layout, body fixed pour éviter scroll parasite */
-  body { 
+  html:not(.capacitor-native) body:has(.chatgpt-container) {
     position: fixed; 
     width: 100%; 
   }

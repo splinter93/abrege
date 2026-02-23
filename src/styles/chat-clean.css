@@ -1857,7 +1857,8 @@ body.chat-theme-glass .chatgpt-messages > div {
 .chatgpt-input-container {
   position: relative;
   flex-shrink: 0;
-  padding: var(--chat-safe-top) calc(var(--chat-padding-horizontal) + var(--chat-safe-left)) 0;
+  /* Padding horizontal uniquement — pas de safe-area-top ici (l'input est en bas de l'écran) */
+  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
   background: transparent !important; /* toujours transparent (desktop + responsive + PWA), seul le footer a la couleur */
   display: flex;
   justify-content: center;

@@ -3,17 +3,22 @@
 import { useEffect, useLayoutEffect } from 'react';
 import { useCapacitorDeepLink } from '@/hooks/useCapacitorDeepLink';
 
-const STYLE_ID = 'capacitor-layout-fix';
-
 /**
- * Injecte les styles de layout Capacitor directement dans le DOM.
- * useLayoutEffect = synchrone avant le premier paint.
- * window.Capacitor est injecté par Android avant tout JS → synchrone, pas d'import async.
+ * CapacitorInit — Bootstrap natif Android/iOS.
  *
- * Stratégie clavier (adjustNothing) :
- * - Le viewport ne change jamais quand le clavier s'ouvre → header fixe ne bouge pas.
- * - window.visualViewport détecte la hauteur du clavier sans dépendance au bridge.
- * - --keyboard-height compensate the layout to push content above the keyboard.
+ * Responsabilités :
+ *  1. Ajoute `html.capacitor-native` (déclencheur CSS dans pwa-mobile.css).
+ *  2. Détecte la hauteur du clavier via visualViewport → injecte `--keyboard-height`.
+ *     Le CSS `pwa-mobile.css` utilise cette variable pour shrink `.chatgpt-container`
+ *     depuis le bas, poussant l'input + les messages au-dessus du clavier.
+ *
+ * Stratégie clavier : adjustNothing (Android) / KeyboardResize.None (iOS).
+ * - Le viewport NE change jamais quand le clavier s'ouvre.
+ * - `visualViewport.height` détecte la hauteur du clavier sans le bridge Capacitor.
+ * - `--keyboard-height` pousse le contenu via CSS pur (pas de JS layout).
+ *
+ * Toutes les règles CSS (header fixed, content padding-top, status bar overlay)
+ * sont dans pwa-mobile.css sous `html.capacitor-native`. Pas de <style> injecté ici.
  */
 function useCapacitorLayoutFix() {
   useLayoutEffect(() => {
@@ -21,76 +26,22 @@ function useCapacitorLayoutFix() {
     const w = window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } };
     if (!w.Capacitor?.isNativePlatform?.()) return;
 
-    // Injecter les styles de base (header fixe, status bar, padding)
-    if (!document.getElementById(STYLE_ID)) {
-      const style = document.createElement('style');
-      style.id = STYLE_ID;
-      style.textContent = `
-        /* Reset padding-top container : évite le double safe-area.
-           bottom suit la hauteur du clavier : le container rétrécit depuis le bas,
-           le flex layout interne pousse l'input au-dessus du clavier. */
-        .chatgpt-container {
-          padding-top: 0 !important;
-          bottom: var(--keyboard-height, 0px) !important;
-        }
-        /* Header fixe : ne bouge jamais, collé sous la status bar */
-        .chatgpt-header {
-          position: fixed !important;
-          top: env(safe-area-inset-top, 0px) !important;
-          left: 0 !important;
-          right: 0 !important;
-          width: 100% !important;
-          z-index: 1000 !important;
-          background: #000000 !important;
-          box-sizing: border-box !important;
-        }
-        /* Décale le contenu sous le header fixe */
-        .chatgpt-content {
-          padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
-        }
-        /* Status bar : overlay noir opaque, toujours visible */
-        body::before {
-          content: '' !important;
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-          height: env(safe-area-inset-top, 24px) !important;
-          min-height: env(safe-area-inset-top, 24px) !important;
-          background: #000000 !important;
-          z-index: 99999 !important;
-          pointer-events: none !important;
-          display: block !important;
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-    // VisualViewport API : détecte la hauteur du clavier sans le bridge Capacitor.
-    // adjustNothing = viewport constant, visualViewport.height réduit quand clavier ouvert.
     const vv = window.visualViewport;
-    let cleanup = () => {};
+    if (!vv) return;
 
-    if (vv) {
-      const onViewportChange = () => {
-        const keyboardHeight = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop ?? 0));
-        document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
-      };
+    const onViewportChange = () => {
+      const keyboardHeight = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop ?? 0));
+      document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+    };
 
-      vv.addEventListener('resize', onViewportChange);
-      vv.addEventListener('scroll', onViewportChange);
-      onViewportChange();
-
-      cleanup = () => {
-        vv.removeEventListener('resize', onViewportChange);
-        vv.removeEventListener('scroll', onViewportChange);
-        document.documentElement.style.removeProperty('--keyboard-height');
-      };
-    }
+    vv.addEventListener('resize', onViewportChange);
+    vv.addEventListener('scroll', onViewportChange);
+    onViewportChange();
 
     return () => {
-      cleanup();
-      document.getElementById(STYLE_ID)?.remove();
+      vv.removeEventListener('resize', onViewportChange);
+      vv.removeEventListener('scroll', onViewportChange);
+      document.documentElement.style.removeProperty('--keyboard-height');
     };
   }, []);
 }
