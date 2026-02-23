@@ -251,7 +251,9 @@ button, a, input, textarea, select {
   body:has(.chatgpt-container) .chatgpt-content,
   body:has(.chatgpt-container) .chatgpt-main-chat,
   body:has(.chatgpt-container) .chatgpt-header,
+  body:has(.chatgpt-container) .chatgpt-chat-bottom,
   body:has(.chatgpt-container) .chatgpt-input-container,
+  body:has(.chatgpt-container) .chatgpt-chat-footer,
   body:has(.chatgpt-container) .chatgpt-messages-container {
     background: #000000 !important;
   }
@@ -271,7 +273,9 @@ button, a, input, textarea, select {
   html.chat-page .chatgpt-content,
   html.chat-page .chatgpt-main-chat,
   html.chat-page .chatgpt-header,
+  html.chat-page .chatgpt-chat-bottom,
   html.chat-page .chatgpt-input-container,
+  html.chat-page .chatgpt-chat-footer,
   html.chat-page .chatgpt-messages-container,
   html.chat-page .chatgpt-messages-container::before {
     background: #000000 !important;

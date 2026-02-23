@@ -482,19 +482,22 @@ const ChatFullscreenV2: React.FC = () => {
                   keyboardInset={uiState.keyboardInset}
                 />
 
-                <ChatInputContainer
-                  onSend={uiActions.handleSendMessage}
-                  loading={messageActions.isLoading}
-                  sessionId={currentSession?.id || 'temp'}
-                  currentAgentModel={selectedAgent?.model}
-                  editingMessageId={editingMessage?.messageId || null}
-                  editingContent={uiState.editingContent}
-                  onCancelEdit={uiActions.handleCancelEdit}
-                  textareaRef={uiState.textareaRef}
-                  renderAuthStatus={uiActions.renderAuthStatus}
-                  selectedAgent={selectedAgent}
-                  keyboardInset={uiState.keyboardInset}
-                />
+                <div className="chatgpt-chat-bottom">
+                  <ChatInputContainer
+                    onSend={uiActions.handleSendMessage}
+                    loading={messageActions.isLoading}
+                    sessionId={currentSession?.id || 'temp'}
+                    currentAgentModel={selectedAgent?.model}
+                    editingMessageId={editingMessage?.messageId || null}
+                    editingContent={uiState.editingContent}
+                    onCancelEdit={uiActions.handleCancelEdit}
+                    textareaRef={uiState.textareaRef}
+                    renderAuthStatus={uiActions.renderAuthStatus}
+                    selectedAgent={selectedAgent}
+                    keyboardInset={uiState.keyboardInset}
+                  />
+                  <footer className="chatgpt-chat-footer" aria-hidden="true" />
+                </div>
               </div>
 
           {uiState.shouldRenderDesktopCanva && (
