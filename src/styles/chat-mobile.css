@@ -37,164 +37,10 @@
   .chat-markdown pre { font-size: var(--chat-text-sm, 0.875rem); padding: 10px; overflow-x: auto; }
 }
 
-/* ========== MOBILE (376px - 768px) ========== */
-
-@media (max-width: 768px) {
-  /*
-   * CLAVIER ANDROID (adjustResize)
-   * --------------------------------
-   * windowSoftInputMode="adjustResize" réduit automatiquement le viewport
-   * quand le clavier s'ouvre. 100dvh = espace VISIBLE au-dessus du clavier.
-   * NE PAS utiliser keyboard-inset ici : le viewport a déjà été réduit,
-   * ajouter un offset supplémentaire pousse l'input trop haut (double-compte).
-   *
-   * Règle simple : container = 100dvh, input = bottom: 0.
-   * Le navigateur/WebView gère le reste.
-   */
-  .chatgpt-container {
-    height: 100vh;
-    height: 100dvh;
-    padding-top: 0;
-    top: 0 !important;
-    bottom: 0 !important;
-  }
-
-  .chatgpt-main {
-    height: 100%;
-    flex: 1;
-    min-height: 0;
-  }
-
-  .chatgpt-messages-container {
-    flex: 1;
-    min-height: 0;
-    padding-bottom: 150px; /* input + footer, évite que le contenu passe sous la barre fixe */
-  }
-
-  /* Barre fixe : input + footer (ne doit jamais dépasser au-dessus ni sur les côtés) */
-  .chatgpt-chat-bottom {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    max-width: 100vw;
-    width: 100%;
-    box-sizing: border-box;
-    overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .chatgpt-input-container {
-    position: relative;
-    flex-shrink: 0;
-    max-width: 100%;
-    width: 100%;
-    max-height: 45vh; /* ne jamais dépasser au-dessus de la zone messages */
-    box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding: 0 var(--chat-padding-horizontal, 12px) 0; /* pas de padding-top = ne dépasse pas au-dessus de l'input */
-    background: transparent !important;
-    background-color: transparent !important;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-  }
-  /* Même en background noir mobile : container input toujours transparent */
-  .chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container {
-    background: transparent !important;
-    background-color: transparent !important;
-  }
-
-  .chatgpt-chat-footer {
-    flex-shrink: 0;
-    min-height: 16px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
-    background: var(--chat-bg-primary, #0e1012);
-  }
-
-  .chatgpt-input-container::before {
-    display: none !important;
-  }
-  
-  /* Containers */
-  .chat-messages-container { max-width: 100%; padding: 0 var(--chat-padding-horizontal, 12px); }
-  
-  /* Header fixe : reste visible quand le clavier s'ouvre, ne disparaît pas sous la barre de statut */
-  .chatgpt-header {
-    position: fixed;
-    top: env(safe-area-inset-top, 0px);
-    left: 0;
-    right: 0;
-    z-index: 1001;
-    height: 56px;
-    padding-top: 8px;
-    padding-right: var(--chat-padding-horizontal, 12px);
-    padding-bottom: 8px;
-    padding-left: var(--chat-padding-horizontal, 12px);
-    flex-wrap: wrap;
-    gap: 8px;
-    width: 100%;
-    max-width: 100vw;
-    overflow-x: hidden;
-    box-sizing: border-box;
-  }
-  /* Contenu sous le header fixe (évite que le chat passe sous la barre de notification) */
-  .chatgpt-content {
-    margin-top: calc(56px + env(safe-area-inset-top, 0px));
-  }
-  
-  .chatgpt-header-left,
-  .chatgpt-header-right { flex-shrink: 1; min-width: 0; overflow: hidden; }
-  
-  .chat-header { padding: 8px var(--chat-padding-horizontal, 12px); flex-wrap: wrap; gap: 8px; }
-  .chat-header-title { font-size: 16px; }
-  .chat-header-actions { gap: 6px; }
-  
-  /* Input */
-  .chat-input-container { padding: 8px var(--chat-padding-horizontal, 12px); }
-  .chat-input-wrapper { gap: 8px; }
-  
-  /* Sidebar - Overlay */
-  .chat-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    z-index: 1000;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-  }
-  .chat-sidebar.open { transform: translateX(0); }
-  
-  /* Messages : copier / haut-parleur toujours visibles (pas de hover sur tactile) */
-  .chatgpt-message-assistant .bubble-buttons {
-    opacity: 1;
-  }
-
-  /* Messages */
-  .chat-message { padding: 12px; }
-  .chat-message-user { max-width: 90%; }
-  .chat-message-assistant { max-width: 100%; }
-  .chat-avatar { width: 32px; height: 32px; font-size: 14px; }
-  
-  /* Modals - Fullscreen */
-  .modal-overlay .modal-content {
-    width: 100%;
-    height: 100vh;
-    max-width: 100%;
-    max-height: 100vh;
-    border-radius: 0;
-  }
-  
-  .settings-modal-content { padding: 16px; }
-  .agent-selector-dropdown { max-height: 60vh; }
-  .tool-result-content { font-size: 13px; max-height: 200px; }
-  .reasoning-dropdown { font-size: 13px; }
-}
+/* ========== 768px : pas de layout mobile ici ==========
+   Rétrécissement = chat-clean.css (1023px, 900px, 1300px).
+   Noir absolu = pwa-mobile.css @media (max-width: 768px).
+   On ne change ni position fixed, ni paddings, ni max-width messages. */
 
 /* ========== TABLET (769px - 1024px) ========== */
 
@@ -323,4 +169,14 @@
   .chat-sidebar { transition: none; }
   .chat-message { animation: none; }
   * { scroll-behavior: auto !important; }
+}
+
+/* ========== < 768px : FORCER CONTAINER INPUT TRANSPARENT ==========
+   Règle finale pour le breakpoint 768px : aucune autre règle ne doit
+   appliquer un fond noir sur le container (spécificité max). */
+@media (max-width: 768px) {
+  html body .chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
 }

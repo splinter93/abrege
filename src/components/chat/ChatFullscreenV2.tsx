@@ -223,8 +223,8 @@ const ChatFullscreenV2: React.FC = () => {
     onStreamStart: startStreaming,
     onStreamEnd: endStreaming,
     onModelInfo: (info) => {
-      // ✅ NOUVEAU : Capturer l'info du modèle depuis le stream
-      setModelInfo(info);
+      // Déferrer pour éviter "state update on unmounted component" si le stream envoie l'info avant la fin du montage
+      queueMicrotask(() => setModelInfo(info));
     },
     onToolExecution: (toolCount, toolCalls) => {
       // ✅ FIX TypeScript : Garantir type: 'function'

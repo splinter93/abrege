@@ -115,7 +115,7 @@ html, body {
   /* Barre de saisie : même style que web (Grok-like) sur PWA/Capacitor */
   .chatgpt-input-area {
     background: #171a1e !important;
-    border: 1.1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1.2px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 25px;
     box-shadow: none;
   }
@@ -278,7 +278,7 @@ button, a, input, textarea, select {
   }
 }
 
-/* Mobile viewport (768px) : noir absolu sur la page chat (classe .chat-page sur <html> posée par ChatFullscreenV2). */
+/* Mobile viewport (768px) : noir absolu, SAUF le container de l'input (toujours transparent). */
 @media (max-width: 768px) {
   html.chat-page,
   html.chat-page body {
@@ -287,21 +287,47 @@ button, a, input, textarea, select {
     background: #000000 !important;
     background-image: none !important;
   }
+  /* Zone de notification (status bar) : toujours opaque noir, même quand le clavier s'ouvre. */
+  html.chat-page::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top, 20px);
+    min-height: env(safe-area-inset-top, 20px);
+    background: #000000;
+    z-index: 99999;
+    pointer-events: none;
+  }
   html.chat-page .chatgpt-container,
   html.chat-page .chatgpt-main,
   html.chat-page .chatgpt-content,
   html.chat-page .chatgpt-main-chat,
   html.chat-page .chatgpt-header,
-  html.chat-page .chatgpt-chat-bottom,
   html.chat-page .chatgpt-chat-footer,
   html.chat-page .chatgpt-messages-container,
   html.chat-page .chatgpt-messages-container::before {
     background: #000000 !important;
   }
+  /* chatgpt-chat-bottom exclu du fond noir : le container input (transparent) hériterait sinon du noir. */
+  html.chat-page .chatgpt-chat-bottom {
+    background: transparent !important;
+  }
+  /* Container input : jamais noir, toujours transparent (règles après les fonds noirs). */
   html.chat-page .chatgpt-input-container,
-  html.chat-page .chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container {
+  html.chat-page .chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container,
+  html body .chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container {
     background: transparent !important;
     background-color: transparent !important;
+  }
+  html.chat-page body .chatgpt-container .chatgpt-content .chatgpt-main .chatgpt-main-chat .chatgpt-chat-bottom .chatgpt-input-container {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+  /* Pas de gradient ::before sur l'input (sinon var(--chat-bg-primary) = noir). */
+  html.chat-page .chatgpt-input-container::before {
+    display: none !important;
   }
 }
 
