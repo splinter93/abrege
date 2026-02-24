@@ -115,6 +115,7 @@ body.chat-theme-glass .chat-markdown .u-block {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-shrink: 0; /* ✅ Titre du bloc toujours visible, même en responsive */
 }
 
 /* Buttons */
@@ -430,6 +431,7 @@ body.chat-theme-glass .chat-markdown .u-block {
   color: var(--blk-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  flex-shrink: 0; /* ✅ Titre toujours visible en responsive */
 }
 .ProseMirror .u-block--mermaid .u-block__body,
 .markdown-body .u-block--mermaid .u-block__body,
@@ -677,7 +679,7 @@ body.chat-theme-glass .chat-markdown .u-block {
    RESPONSIVE & ANIMATIONS
    ========================================================================== */
 @media (max-width: 768px) {
-  .u-block__toolbar .toolbar-label { display: none; }
+  /* toolbar-label ne disparaît plus : toujours visible (flex-shrink: 0 en base) */
   .toolbar-btn span { display: none; } /* Hide text on mobile */
   .toolbar-btn { padding: 0 8px; } /* Adjust padding for icon-only */
 }

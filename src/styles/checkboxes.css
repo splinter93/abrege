@@ -134,7 +134,7 @@ ul[data-type="taskList"] li::marker,
   appearance: none !important;
   -webkit-appearance: none !important;
   border: var(--chat-surface-border, 1.5px solid rgba(255,255,255,0.05)) !important;
-  border-radius: var(--chat-radius-md, 6px) !important;
+  border-radius: 6px !important; /* Légèrement moins que --chat-radius-md pour les checkboxes */
   background: var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)) !important;
   filter: var(--code-brightness-filter, brightness(1.18)) !important;
   cursor: pointer !important;
@@ -177,7 +177,7 @@ ul[data-type="taskList"] .task-item-wrapper > label > input[type="checkbox"] {
   appearance: none !important;
   -webkit-appearance: none !important;
   border: var(--chat-surface-border, 1.5px solid rgba(255,255,255,0.05)) !important;
-  border-radius: var(--chat-radius-md, 6px) !important;
+  border-radius: 6px !important; /* Légèrement moins que --chat-radius-md pour les checkboxes */
   background: var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)) !important;
   filter: var(--code-brightness-filter, brightness(1.18)) !important;
   cursor: pointer !important;

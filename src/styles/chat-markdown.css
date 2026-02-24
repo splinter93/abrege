@@ -465,9 +465,9 @@
 .chat-markdown hr {
   margin: var(--md-hr-margin) 0;
   border: none;
-  height: 2.5px;
+  height: 3.5px;
   background: var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
-  border-radius: 2px;
+  border-radius: 3px;
   opacity: 0.6;
   mask-image: linear-gradient(
     to right,
@@ -492,7 +492,7 @@
 .chat-markdown img {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--blk-radius, var(--chat-surface-radius, 14px)); /* Même radius que blocs code et tableaux */
   margin-top: var(--md-img-margin-top); /* 16px - utilise la variable unifiée */
   margin-bottom: 0; /* Pas de margin en bas */
   display: block;

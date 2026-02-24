@@ -406,9 +406,9 @@ div.markdown-body ul[data-type="taskList"],
 .markdown-body hr {
   margin: var(--md-hr-margin) 0;
   border: none;
-  height: 2.5px;
+  height: 3.5px;
   background: var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
-  border-radius: 2px;
+  border-radius: 3px;
   opacity: 0.6;
   mask-image: linear-gradient(
     to right,
@@ -435,7 +435,7 @@ div.markdown-body ul[data-type="taskList"],
 .markdown-body img {
   max-width: 100%;
   height: auto;
-  border-radius: 12px !important; /* ✅ Augmenté à 12px pour un radius plus visible */
+  border-radius: var(--blk-radius, var(--chat-surface-radius, 14px)) !important; /* Même radius que blocs code et tableaux */
   margin-top: var(--md-img-margin-top); /* 16px par défaut lecture/chat */
   margin-bottom: var(--md-img-margin-bottom); /* 12px par défaut lecture/chat */
   display: block;
@@ -445,7 +445,7 @@ div.markdown-body ul[data-type="taskList"],
 .ProseMirror img {
   margin-top: var(--md-img-margin-top-edit); /* 4px en édition */
   margin-bottom: -9px; /* -9px en édition (négatif pour compenser padding) */
-  border-radius: 12px !important; /* ✅ Augmenté à 12px pour un radius plus visible */
+  border-radius: var(--blk-radius, var(--chat-surface-radius, 14px)) !important; /* Même radius que blocs code et tableaux */
 }
 
 /* ✅ SUPPRIMÉ : L'espacement est maintenant géré directement par margin-bottom de l'image
