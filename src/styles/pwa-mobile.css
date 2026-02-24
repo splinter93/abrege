@@ -81,7 +81,7 @@ html.platform-ios.capacitor-native.chat-page .chatgpt-container {
 /* 2. Overlay status bar : SUPPRIMÉ. */
 
 /* 3. Header FIXE : position:fixed pour rester ancré en haut même si le clavier scroll le view.
-   Hauteur = 56px + safe-area. Padding-top = safe-area (texte centré dans les 56px restants). */
+   Hauteur = 56px + safe-area. Padding-top = safe-area ; padding-bottom à 0 pour éviter l’épaisseur en bas. */
 html.capacitor-native.chat-page .chatgpt-header {
   position: fixed !important;
   top: 0 !important;
@@ -89,7 +89,7 @@ html.capacitor-native.chat-page .chatgpt-header {
   right: 0 !important;
   width: 100% !important;
   height: calc(56px + var(--capacitor-safe-top)) !important;
-  padding-top: var(--capacitor-safe-top) !important;
+  padding: var(--capacitor-safe-top) calc(var(--chat-space-md) + var(--chat-safe-right)) 0 calc(var(--chat-space-md) + var(--chat-safe-left)) !important;
   z-index: 1001 !important;
   box-sizing: border-box !important;
   background: #000000 !important;
