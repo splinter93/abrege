@@ -2179,7 +2179,7 @@ body.chat-theme-glass .chatgpt-messages > div {
   background: transparent;
   border: none;
   color: var(--chat-text-secondary); /* ✅ Même couleur que le placeholder */
-  opacity: 0.7; /* ✅ Même rendu que le placeholder du textarea */
+  opacity: 0.82; /* ✅ Assombrissement léger (boutons input) */
   cursor: pointer;
   padding: 8px;
   border-radius: var(--chat-radius-md);
@@ -2359,12 +2359,12 @@ body.chat-theme-glass .chatgpt-messages > div {
 }
 
 .chatgpt-input-send {
-  background: linear-gradient(135deg, 
-    #d8d8dc 0%, 
-    #e2e2e5 50%, 
-    #d8d8dc 100%); /* ✅ Actif un peu plus sombre */
+  background: linear-gradient(135deg,
+    #ceced2 0%,
+    #d8d8dc 50%,
+    #ceced2 100%); /* ✅ Actif : à peine moins clair */
   border: none;
-  color: var(--chat-bg-primary); /* Icône en couleur du background pour contraste */
+  color: var(--chat-bg-primary);
   cursor: pointer;
   padding: var(--chat-space-sm);
   border-radius: 50%;
@@ -2378,23 +2378,23 @@ body.chat-theme-glass .chatgpt-messages > div {
 }
 
 .chatgpt-input-send:hover {
-  background: linear-gradient(135deg, 
-    #e2e2e5 0%, 
-    #e8e8eb 50%, 
-    #e2e2e5 100%);
+  background: linear-gradient(135deg,
+    #d8d8dc 0%,
+    #e0e0e3 50%,
+    #d8d8dc 100%);
   transform: scale(1.05);
 }
 
 .chatgpt-input-send:disabled {
-  background: #52565c; /* ✅ Bouton inactif un peu plus sombre */
+  background: #64686e; /* ✅ Bouton inactif : encore un poil plus clair */
   border: none;
-  color: var(--chat-bg-secondary); /* Flèche un poil plus sombre */
+  color: var(--chat-bg-secondary);
   cursor: not-allowed;
   opacity: 1;
 }
 
 .chatgpt-input-send:disabled:hover {
-  background: #52565c;
+  background: #64686e;
   transform: none;
 }
 
@@ -4101,7 +4101,7 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
 .textarea-with-mentions-input::placeholder {
   color: var(--chat-text-secondary);
   -webkit-text-fill-color: var(--chat-text-secondary);
-  opacity: 0.7;
+  opacity: 0.82; /* ✅ Assombrissement un poil plus léger */
 }
 
 .textarea-with-mentions-input:focus::placeholder {

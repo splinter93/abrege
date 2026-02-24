@@ -79,7 +79,7 @@ ul[data-type="taskList"] li::marker,
   display: none !important;
 }
 
-/* Chat - ZÉRO décalage (pas de margin négatif) */
+/* Chat - ZÉRO décalage + même taille que le texte du chat */
 .chat-markdown li:has(> input[type="checkbox"]),
 .chat-markdown li.task-list-item,
 .chat-markdown .task-list-item {
@@ -92,8 +92,8 @@ ul[data-type="taskList"] li::marker,
   margin-bottom: var(--editor-list-item-margin-vertical, 0.375rem) !important;
   line-height: var(--editor-line-height-base, 1.75) !important;
   position: relative !important;
-  font-family: var(--editor-font-family-body) !important; /* ✅ Variable dynamique */
-  font-size: var(--editor-body-size) !important;
+  font-family: var(--editor-font-family-body) !important;
+  font-size: var(--chat-font-size-base, var(--chat-text-base, 15px)) !important; /* ✅ Même taille que le texte du chat */
   font-weight: var(--editor-body-weight, 500) !important;
 }
 
