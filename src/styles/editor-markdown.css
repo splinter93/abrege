@@ -346,7 +346,7 @@ div.markdown-body ul[data-type="taskList"],
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.07));
   border-radius: 2px;
   opacity: 0.6;
 }
@@ -413,15 +413,15 @@ div.markdown-body ul[data-type="taskList"],
   mask-image: linear-gradient(
     to right,
     transparent 0%,
-    black 10%,
-    black 90%,
+    black 5%,
+    black 95%,
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
-    black 10%,
-    black 90%,
+    black 5%,
+    black 95%,
     transparent 100%
   );
 }
