@@ -21,7 +21,7 @@ vi.mock('@/constants/groqModels', () => ({
     const models: Record<string, { provider?: string; capabilities?: string[] }> = {
       'openai/gpt-oss-20b': { provider: 'groq', capabilities: [] }, // Pas de support images
       'openai/gpt-oss-120b': { provider: 'groq', capabilities: [] },
-      'meta-llama/llama-4-scout-17b-16e-instruct': { provider: 'groq', capabilities: ['images'] }, // Support images
+      'openrouter/qwen3-vl-30b-a3b-instruct': { provider: 'liminality', capabilities: ['images'] }, // Fallback vision
       'meta-llama/llama-4-maverick-17b-128e-instruct': { provider: 'groq', capabilities: [] },
       'grok-4-1-fast-non-reasoning': { provider: 'xai', capabilities: [] },
       'grok-beta': { provider: 'xai', capabilities: [] },
@@ -95,9 +95,9 @@ describe('ModelOverrideService', () => {
 
       const result = service.resolveModelAndParams(context);
 
-      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
+      expect(result.model).toBe('openrouter/qwen3-vl-30b-a3b-instruct');
       expect(result.reasons).toHaveLength(1);
-      expect(result.reasons[0]).toContain('Llama 4 Scout');
+      expect(result.reasons[0]).toContain('Qwen 3 VL 30B');
     });
 
     it('devrait appliquer ReasoningOverrideRule si reasoningOverride présent', () => {
@@ -132,8 +132,8 @@ describe('ModelOverrideService', () => {
 
       const result = service.resolveModelAndParams(context);
 
-      // ImageSupportRule appliquée en premier → switch vers Llama 4 Scout
-      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
+      // ImageSupportRule appliquée en premier → switch vers Qwen 3 VL 30B
+      expect(result.model).toBe('openrouter/qwen3-vl-30b-a3b-instruct');
       // ReasoningOverrideRule ne s'applique pas car provider !== 'xai'
       expect(result.reasons.length).toBeGreaterThan(0);
     });
@@ -163,7 +163,7 @@ describe('ModelOverrideService', () => {
       
       const result = service.resolveModelAndParams(context);
       // ImageSupportRule devrait quand même s'appliquer
-      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
+      expect(result.model).toBe('openrouter/qwen3-vl-30b-a3b-instruct');
     });
 
     it('devrait retourner finalProvider si modèle override change de provider', () => {
@@ -179,13 +179,12 @@ describe('ModelOverrideService', () => {
 
       const result = service.resolveModelAndParams(context);
 
-      // Modèle override vers Llama Scout (Groq)
-      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
-      // Provider devrait être détecté comme 'groq'
-      expect(result.finalProvider).toBe('groq');
+      // Modèle override vers Qwen 3 VL 30B (Liminality) → provider reste liminality
+      expect(result.model).toBe('openrouter/qwen3-vl-30b-a3b-instruct');
+      expect(result.finalProvider).toBe('liminality');
     });
 
-    it('devrait retourner finalProvider identique si provider ne change pas', () => {
+    it('devrait retourner finalProvider liminality quand override groq → Qwen 3 VL 30B', () => {
       service.registerRule(new ImageSupportRule());
 
       const context: ModelOverrideContext = {
@@ -198,12 +197,12 @@ describe('ModelOverrideService', () => {
 
       const result = service.resolveModelAndParams(context);
 
-      // Modèle override mais provider reste 'groq'
-      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
-      expect(result.finalProvider).toBe('groq');
+      // Modèle override vers OpenRouter (Liminality)
+      expect(result.model).toBe('openrouter/qwen3-vl-30b-a3b-instruct');
+      expect(result.finalProvider).toBe('liminality');
     });
 
-    it('devrait retourner undefined pour finalProvider si modèle non trouvé', () => {
+    it('devrait retourner finalProvider depuis le modèle override', () => {
       service.registerRule(new ImageSupportRule());
 
       const context: ModelOverrideContext = {
@@ -216,9 +215,9 @@ describe('ModelOverrideService', () => {
 
       const result = service.resolveModelAndParams(context);
 
-      // Modèle override mais provider non détectable (modèle inconnu)
-      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
-      expect(result.finalProvider).toBe('groq'); // Détecté depuis le modèle override
+      // Modèle override → finalProvider détecté depuis openrouter/qwen3-vl-30b-a3b-instruct (liminality)
+      expect(result.model).toBe('openrouter/qwen3-vl-30b-a3b-instruct');
+      expect(result.finalProvider).toBe('liminality');
     });
 
     it('devrait retourner undefined pour finalProvider si pas d\'override', () => {

@@ -26,6 +26,7 @@ import { useChatState } from '@/hooks/useChatState';
 import { useChatActions } from '@/hooks/useChatActions';
 import { useGlobalChatShortcuts } from '@/hooks/useGlobalChatShortcuts';
 import { isValidCanvasSelection } from '@/utils/canvasSelectionUtils';
+import { isImageUrlUploaded } from '@/utils/imageUtils';
 import { logger, LogCategory } from '@/utils/logger';
 import ChatInputContent from './ChatInputContent';
 import ChatInputToolbar from './ChatInputToolbar';
@@ -495,9 +496,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onAdvancedReasoning={handleAdvancedReasoning}
         onTranscriptionComplete={handleTranscriptionComplete} onAudioError={setAudioError}
         audioRecorderRef={audioRecorderRef}
-        onSend={handleSend} canSend={!!message.trim() || images.length > 0}
+        onSend={handleSend} canSend={(!!message.trim() || images.length > 0) && (images.length === 0 || images.every(img => isImageUrlUploaded(img.base64)))}
         disabled={disabled || isParsingPdf} loading={loading || isParsingPdf}
         isParsingPdf={isParsingPdf}
+        imagesUploading={images.length > 0 && images.some(img => !isImageUrlUploaded(img.base64))}
       />
 
       <PromptArgumentsModal

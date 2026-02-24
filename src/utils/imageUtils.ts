@@ -387,6 +387,15 @@ export function extractTextFromContent(content: MessageContent): string {
 }
 
 /**
+ * Indique si une image est déjà hébergée (URL S3/http) et non plus en base64 inline.
+ * Envoyer du base64 dans le body provoque des 413 (Payload Too Large) côté Next.js ou Groq.
+ * @param urlOrBase64 - URL (S3, http) ou data: URL (base64)
+ */
+export function isImageUrlUploaded(urlOrBase64: string): boolean {
+  return typeof urlOrBase64 === 'string' && !urlOrBase64.startsWith('data:');
+}
+
+/**
  * Compte le nombre d'images dans un MessageContent
  * @param content - Le contenu du message
  * @returns Le nombre d'images

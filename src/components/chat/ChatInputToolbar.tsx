@@ -69,6 +69,8 @@ interface ChatInputToolbarProps {
   loading?: boolean;
   /** True pendant le parsing PDF (affiche "Parsing PDF...") */
   isParsingPdf?: boolean;
+  /** True si des images sont encore en cours d'upload S3 (évite 413) */
+  imagesUploading?: boolean;
 }
 
 /**
@@ -129,7 +131,8 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
   // UI state
   disabled = false,
   loading = false,
-  isParsingPdf = false
+  isParsingPdf = false,
+  imagesUploading = false
 }) => {
   // ✅ État local pour tracking de l'enregistrement audio
   const [isRecording, setIsRecording] = useState(false);
@@ -260,6 +263,11 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
       {isParsingPdf && (
         <span className="chatgpt-input-parsing-pdf" aria-live="polite">
           Parsing PDF...
+        </span>
+      )}
+      {imagesUploading && (
+        <span className="chatgpt-input-parsing-pdf" aria-live="polite">
+          Upload des images...
         </span>
       )}
       <button 

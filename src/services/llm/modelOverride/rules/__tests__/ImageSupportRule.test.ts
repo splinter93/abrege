@@ -6,7 +6,7 @@
  * - Pas de switch pour xAI (vision native)
  * - Pas de switch si pas d'images
  * - Pas de switch si modèle supporte déjà les images
- * - Switch vers Llama 4 Maverick si nécessaire
+ * - Switch vers Qwen 3 VL 30B (OpenRouter) si nécessaire
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -20,7 +20,7 @@ vi.mock('@/constants/groqModels', () => ({
       'openai/gpt-oss-20b': { capabilities: ['text', 'function_calling'] },
       'openai/gpt-oss-120b': { capabilities: ['text', 'function_calling'] },
       'meta-llama/llama-4-maverick-17b-128e-instruct': { capabilities: ['text', 'images', 'function_calling'] },
-      'meta-llama/llama-4-scout-17b-16e-instruct': { capabilities: ['text', 'images', 'function_calling'] }
+      'openrouter/qwen3-vl-30b-a3b-instruct': { capabilities: ['text', 'images', 'function_calling'] }
     };
     return models[modelId] || undefined;
   })
@@ -84,7 +84,7 @@ describe('ImageSupportRule', () => {
   });
 
   describe('apply', () => {
-    it('devrait retourner Llama 4 Maverick comme modèle fallback', () => {
+    it('devrait retourner Qwen 3 VL 30B (OpenRouter) comme modèle fallback', () => {
       const context: ModelOverrideContext = {
         originalModel: 'openai/gpt-oss-20b',
         provider: 'groq',
@@ -95,10 +95,10 @@ describe('ImageSupportRule', () => {
 
       const result = rule.apply(context);
 
-      expect(result.model).toBe('meta-llama/llama-4-scout-17b-16e-instruct');
+      expect(result.model).toBe('openrouter/qwen3-vl-30b-a3b-instruct');
       expect(result.originalModel).toBe('openai/gpt-oss-20b');
       expect(result.wasOverridden).toBe(true);
-      expect(result.reason).toContain('Llama 4 Scout');
+      expect(result.reason).toContain('Qwen 3 VL 30B');
     });
   });
 });

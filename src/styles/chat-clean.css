@@ -353,6 +353,17 @@ body.chat-theme-grey .chatgpt-input-area {
   border: none;
 }
 
+/* Bulle user : même style que l'input */
+body.chat-theme-grey .chatgpt-message-bubble-user {
+  background: var(--chat-gradient-input);
+  border: none;
+  border-radius: 25px;
+}
+
+body.chat-theme-grey .chatgpt-message-bubble-user:hover {
+  filter: brightness(1.05);
+}
+
 /* Grey Mode - Le ::before du container gère le masque fade */
 
 /* Header transparent - laisse passer le background du container */
@@ -1716,17 +1727,20 @@ body.chat-theme-glass .chatgpt-messages > div {
   padding: 0;
 }
 
+/* Même couleur et bordure que .chatgpt-input-area */
 .chatgpt-message-bubble-user {
-  background: var(--chat-gradient-user);
+  background: #171a1e;
   color: var(--chat-text-primary);
   max-width: 70%;
-  border: none;
-  padding: 11px 17px; /* ✅ Légèrement augmenté */
+  border: 1.5px solid rgba(255, 255, 255, 0.05);
+  border-radius: 25px;
+  padding: 11px 17px;
   font-weight: var(--chat-weight-normal, 425);
+  box-shadow: none;
 }
 
 .chatgpt-message-bubble-user:hover {
-  background: var(--chat-gradient-user-hover);
+  filter: brightness(1.05);
 }
 
 /* Images attachées dans les messages user - au-dessus de la bulle */

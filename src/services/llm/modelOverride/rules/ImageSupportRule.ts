@@ -1,14 +1,14 @@
 /**
- * Rule : Fallback automatique vers Llama 4 Scout si images présentes
+ * Rule : Fallback automatique vers Qwen 3 VL 30B (OpenRouter) si images présentes
  *
  * Logique :
  * - Si provider === 'xai' → pas de switch (xAI a la vision native)
  * - Si hasImages === false → pas de switch
  * - Si modèle actuel a capabilities incluant 'images' → pas de switch (vision native)
  *   (ex. Kimi K2.5 sur Liminality lit les images lui-même, pas de fallback)
- * - Sinon → switch vers Llama 4 Scout
+ * - Sinon → switch vers Qwen 3 VL 30B (OpenRouter / Liminality)
  *
- * Modèle fallback : meta-llama/llama-4-scout-17b-16e-instruct
+ * Modèle fallback : openrouter/qwen3-vl-30b-a3b-instruct
  */
 
 import { simpleLogger as logger } from '@/utils/logger';
@@ -16,12 +16,9 @@ import type { ModelOverrideContext, ModelOverrideResult, ModelOverrideRule } fro
 import { getModelInfo } from '@/constants/groqModels';
 
 /**
- * Modèle fallback pour la vision
- * 
- * Note: Llama 4 Scout est explicitement documenté comme supportant les images
- * Llama 4 Maverick pourrait ne pas supporter les images via l'API Groq
+ * Modèle fallback pour la vision (OpenRouter via Liminality)
  */
-const VISION_FALLBACK_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+const VISION_FALLBACK_MODEL = 'openrouter/qwen3-vl-30b-a3b-instruct';
 
 /**
  * Rule pour le fallback automatique vers un modèle avec vision
@@ -60,7 +57,7 @@ export class ImageSupportRule implements ModelOverrideRule {
   }
 
   /**
-   * Applique l'override : switch vers Llama 4 Maverick
+   * Applique l'override : switch vers Qwen 3 VL 30B (OpenRouter)
    */
   apply(context: ModelOverrideContext): ModelOverrideResult {
     logger.info(`[ImageSupportRule] 🖼️ Switch vers modèle avec vision:`, {
@@ -72,7 +69,7 @@ export class ImageSupportRule implements ModelOverrideRule {
     return {
       model: VISION_FALLBACK_MODEL,
       originalModel: context.originalModel,
-      reason: `Modèle ${context.originalModel} ne supporte pas les images → switch vers Llama 4 Scout`,
+      reason: `Modèle ${context.originalModel} ne supporte pas les images → switch vers Qwen 3 VL 30B (OpenRouter)`,
       wasOverridden: true
     };
   }
