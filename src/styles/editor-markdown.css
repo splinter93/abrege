@@ -304,9 +304,15 @@ div.markdown-body ul[data-type="taskList"],
   font-family: var(--editor-font-family-body) !important;
 }
 
+/* Dernière ligne du tableau : pas de border-bottom sur les cellules = pas de doublon avec la bordure du table */
 .ProseMirror tbody tr:last-child td,
 .markdown-body tbody tr:last-child td {
-  border-bottom: none;
+  border-bottom: none !important;
+}
+/* Tableau sans tbody (que des en-têtes) : dernière ligne = thead, éviter doublon */
+.ProseMirror table:not(:has(tbody)) thead tr:last-child th,
+.markdown-body table:not(:has(tbody)) thead tr:last-child th {
+  border-bottom: none !important;
 }
 
 .ProseMirror tbody tr:hover,

@@ -341,8 +341,13 @@
   word-break: break-word !important; /* ✅ Casse mots très longs */
 }
 
+/* Dernière ligne du tableau : pas de border-bottom sur les cellules = pas de doublon avec la bordure du table */
 .chat-markdown tbody tr:last-child td {
-  border-bottom: none;
+  border-bottom: none !important;
+}
+/* Tableau sans tbody (que des en-têtes) : dernière ligne = thead, éviter doublon */
+.chat-markdown table:not(:has(tbody)) thead tr:last-child th {
+  border-bottom: none !important;
 }
 
 .chat-markdown tbody tr:hover td {
