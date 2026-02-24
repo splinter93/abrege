@@ -763,7 +763,7 @@ body.chat-theme-glass .chatgpt-header {
   padding: 12px 20px;
   background: var(--chat-bg-error);
   border: 1px solid var(--chat-border-error);
-  border-radius: var(--chat-radius-md);
+  border-radius: var(--chat-surface-radius);
   max-width: 500px;
 }
 
@@ -903,9 +903,10 @@ body.chat-theme-glass .chatgpt-header {
   padding: 7px 12px 7px 40px;
   background: var(--sidebar-search-overlay);
   border: none;
-  border-radius: var(--chat-radius-2xl);
+  border-radius: var(--chat-radius-lg);
   color: var(--chat-text-primary);
   font-size: 14px;
+  font-weight: var(--chat-weight-normal, 400);
   outline: none;
   transition: all var(--chat-transition-fast);
 }
@@ -1860,7 +1861,7 @@ body.chat-theme-glass .chatgpt-messages > div {
   padding: var(--chat-space-md);
   background: var(--chat-bg-error);
   border: 1px solid var(--chat-border-error);
-  border-radius: var(--chat-radius-md);
+  border-radius: var(--chat-surface-radius);
   color: var(--chat-text-error);
 }
 
@@ -2877,9 +2878,9 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
-  background: var(--chat-gradient-input);
-  border: none;
-  border-radius: var(--chat-radius-md);
+  background: var(--chat-gradient-block);
+  border: var(--chat-surface-border);
+  border-radius: var(--blk-radius);
   padding: 4px;
   display: flex;
   flex-direction: column;
@@ -2898,9 +2899,10 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   padding: 10px 12px;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--chat-radius-lg);
   color: var(--chat-text-primary);
   font-size: 14px;
+  font-weight: var(--chat-weight-normal, 400);
   font-family: var(--font-chat-ui);
   cursor: pointer;
   transition: all var(--chat-transition-fast);
@@ -2925,9 +2927,9 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
-  background: var(--chat-gradient-input);
-  border: none;
-  border-radius: var(--chat-radius-md);
+  background: var(--chat-gradient-block);
+  border: var(--chat-surface-border);
+  border-radius: var(--blk-radius);
   padding: 4px;
   display: flex;
   flex-direction: column;
@@ -2958,9 +2960,10 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   padding: 10px 12px;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--chat-radius-lg);
   color: var(--chat-text-primary);
   font-size: 14px;
+  font-weight: var(--chat-weight-normal, 400);
   font-family: var(--font-chat-ui);
   cursor: pointer;
   transition: all var(--chat-transition-fast);
@@ -2985,9 +2988,9 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
-  background: var(--chat-gradient-input);
-  border: none;
-  border-radius: var(--chat-radius-md);
+  background: var(--chat-gradient-block);
+  border: var(--chat-surface-border);
+  border-radius: var(--blk-radius);
   padding: 4px;
   display: flex;
   flex-direction: column;
@@ -3006,9 +3009,10 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   padding: 10px 12px;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--chat-radius-lg);
   color: var(--chat-text-primary);
   font-size: 14px;
+  font-weight: var(--chat-weight-normal, 400);
   font-family: var(--font-chat-ui);
   cursor: pointer;
   transition: all var(--chat-transition-fast);
@@ -3139,9 +3143,9 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
-  background: var(--chat-gradient-input);
-  border: none;
-  border-radius: var(--chat-radius-md);
+  background: var(--chat-gradient-block);
+  border: var(--chat-surface-border);
+  border-radius: var(--blk-radius);
   padding: 8px;
   width: 380px; /* Largeur fixe */
   max-height: 300px; /* ~5 notes visibles */
@@ -3159,9 +3163,9 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
 .chat-slash-menu {
   position: absolute;
   /* top et left calculés dynamiquement en JS (comme mention-menu) */
-  background: var(--chat-gradient-input);
-  border: none;
-  border-radius: var(--chat-radius-md);
+  background: var(--chat-gradient-block);
+  border: var(--chat-surface-border);
+  border-radius: var(--blk-radius);
   padding: 8px;
   width: 280px;
   max-height: 280px;
@@ -3194,7 +3198,7 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   gap: 8px;
   padding: 8px 12px;
   background: rgba(255, 255, 255, 0.02); /* Ultra subtil */
-  border-radius: var(--chat-radius-md);
+  border-radius: var(--chat-radius-lg);
   border: none;
   transition: background var(--chat-transition-fast);
 }
@@ -3215,6 +3219,7 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   outline: none;
   color: var(--chat-text-primary);
   font-size: 14px;
+  font-weight: var(--chat-weight-normal, 400);
   font-family: var(--font-chat-ui);
 }
 
@@ -3306,7 +3311,7 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   padding: 10px 12px;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--chat-radius-lg);
   color: var(--chat-text-primary);
   font-size: 14px;
   font-family: var(--font-chat-ui);
@@ -3364,7 +3369,7 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
 .chat-note-item-title {
   font-family: var(--font-chat-text);
   font-size: 14px; /* ✅ Même taille que mention-menu-item-title */
-  font-weight: normal; /* ✅ Même weight que textarea (pas bold) */
+  font-weight: var(--chat-weight-normal, 400); /* ✅ Même weight que le texte du chat */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3645,7 +3650,7 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   padding: var(--chat-space-md);
   background: var(--chat-bg-error);
   border: 1px solid var(--chat-border-error);
-  border-radius: var(--chat-radius-md);
+  border-radius: var(--chat-surface-radius);
   color: var(--chat-text-error);
   font-size: 13px;
 }
@@ -3708,9 +3713,9 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
 .mention-menu {
   position: absolute;
   /* top et left calculés dynamiquement en JS */
-  background: var(--chat-gradient-input);
-  border: none; /* ✅ Épuré comme NoteSelector */
-  border-radius: var(--chat-radius-md);
+  background: var(--chat-gradient-block);
+  border: var(--chat-surface-border);
+  border-radius: var(--blk-radius);
   padding: 8px; /* ✅ Padding direct (pas de header) */
   width: 320px;
   max-height: 280px;
@@ -3759,7 +3764,7 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
   align-items: flex-start;
   gap: 10px;
   padding: 10px 12px;
-  border-radius: 8px; /* ✅ Même radius que NoteSelector */
+  border-radius: var(--chat-radius-lg);
   cursor: pointer;
   transition: all 0.12s ease;
   margin-bottom: 2px;
@@ -3768,8 +3773,7 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
 .mention-menu-item:hover,
 .mention-menu-item.selected {
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 8px; /* ✅ Même radius au hover */
-  /* ✅ Pas de border-left : style épuré comme NoteSelector */
+  border-radius: var(--chat-radius-lg);
 }
 
 .mention-menu-item-icon {
@@ -3786,7 +3790,7 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
 .mention-menu-item-title {
   color: var(--chat-text-primary);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: var(--chat-weight-normal, 400); /* ✅ Même weight que le texte du chat */
   margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
