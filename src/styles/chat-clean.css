@@ -2629,7 +2629,7 @@ body.chat-theme-glass .chatgpt-messages > div {
   }
   
   .chatgpt-messages-container {
-    padding-bottom: calc(100px + var(--chat-safe-bottom)); /* 🎯 Mobile : padding normal */
+    padding-bottom: calc(120px + var(--chat-safe-bottom)); /* 🎯 Même offset qu'en desktop (120px) + safe area */
     /* Pas de padding-top ici : le fade ::before reste 5px en haut, sans s'allonger */
   }
   
