@@ -212,11 +212,11 @@
    LISTES
    ============================================================================= */
 
-/* Listes à puces - spécificité pour override Tailwind */
+/* Listes à puces - alignement comme les checkboxes (moins de retrait) */
 .chat-markdown.chat-markdown ul:not(.contains-task-list),
 .chat-markdown ul:not(.contains-task-list) {
   margin: var(--md-chat-list-margin) 0 !important;  /* ✅ Variable chat */
-  padding-left: 1.5rem !important;
+  padding-left: 1.10rem !important; /* Aligné avec les listes à checkboxes */
   list-style-type: disc !important;
   list-style-position: outside !important;
 }
@@ -225,7 +225,7 @@
 .chat-markdown.chat-markdown ol,
 .chat-markdown ol {
   margin: var(--md-chat-list-margin) 0 !important;  /* ✅ Variable chat */
-  padding-left: 1.5rem !important;
+  padding-left: 1.10rem !important; /* Aligné avec les listes à checkboxes */
   list-style-type: decimal !important;
   list-style-position: outside !important;
 }
@@ -256,7 +256,7 @@
 /* Listes imbriquées */
 .chat-markdown ul ul {
   margin: var(--md-list-nested-margin) 0;
-  padding-left: 1.5rem;
+  padding-left: 1.10rem;
   list-style-type: circle !important;
 }
 
@@ -266,7 +266,7 @@
 
 .chat-markdown ol ol {
   margin: var(--md-list-nested-margin) 0;
-  padding-left: 1.5rem;
+  padding-left: 1.10rem;
 }
 
 /* =============================================================================

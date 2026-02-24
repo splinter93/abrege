@@ -62,7 +62,8 @@ export function createMarkdownIt() {
     if (isTaskList) {
       return '<ul class="contains-task-list">\n';
     }
-    return '<ul style="list-style-type: disc !important; padding-left: 1.5rem !important;">\n';
+    /* Pas de padding-left en inline : laissé au CSS (.chat-markdown = 1rem, .markdown-body = 1.5rem) */
+    return '<ul>\n';
   };
   
   // Custom renderer pour les code blocks - même structure que mode édition avec boutons
