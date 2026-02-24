@@ -20,6 +20,12 @@ ul[data-type="taskList"],
   list-style-type: none !important; /* ✅ Enlever les bullets des task lists */
 }
 
+/* Chat : même marge au-dessus qu’une liste à puces */
+.chat-markdown ul[data-type="taskList"],
+.chat-markdown ul.contains-task-list {
+  margin: var(--md-chat-list-margin, 0.875rem) 0 !important;
+}
+
 /* Les LI - Aligné à gauche en mode édition (ProseMirror) */
 ul[data-type="taskList"] li,
 .ProseMirror li[data-type="taskItem"],
