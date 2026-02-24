@@ -148,12 +148,12 @@
 .ProseMirror code:not(pre code),
 .markdown-body code:not(pre code) {
   background: var(--blk-bg); /* ✅ Même gradient que code blocks et tableaux */
-  padding: 0.2rem 0.375rem;
+  padding: 0.15rem 0.375rem; /* vertical réduit pour moins serrer quand 2 codes sur 2 lignes */
   border-radius: 0.25rem;
   font-family: var(--font-monospace);
-  font-size: 0.875em;
+  font-size: 0.85em; /* ✅ Légère réduction vs texte */
   color: var(--blk-fg); /* ✅ Texte gris comme code blocks */
-  font-weight: 400;
+  font-weight: 500; /* ✅ Aligné visuellement avec les blocs de code */
   border: none;
   filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Même brightness */
 }
