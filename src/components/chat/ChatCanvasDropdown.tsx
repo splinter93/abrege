@@ -238,8 +238,8 @@ export function ChatCanvasDropdown({
       {isOpen && (
         <div className="chat-canvas-dropdown__menu">
           <div className="chat-canvas-dropdown__header">
-            <PenSquare size={16} />
-            <span>Drafts ({canvasCount})</span>
+            <span>DRAFTS</span>
+            <span>{canvasCount}</span>
           </div>
 
           {/* Action nouveau draft */}

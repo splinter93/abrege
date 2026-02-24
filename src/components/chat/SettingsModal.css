@@ -44,7 +44,8 @@ body.chat-theme-light .settings-modal-overlay {
   height: 85vh;
   max-height: 700px;
   background: var(--chat-gradient-block);
-  border-radius: 16px;
+  border: var(--chat-surface-border);
+  border-radius: var(--chat-surface-radius);
   overflow: hidden;
   animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
@@ -114,7 +115,7 @@ body.chat-theme-light .settings-modal-close:hover {
   width: 240px;
   min-width: 240px;
   background: rgba(0, 0, 0, 0.2);
-  border-right: none; /* ✅ Pas de bordure */
+  border-right: var(--chat-surface-border);
   padding: 32px 12px 12px 12px; /* ✅ Plus d'espace en haut */
   overflow-y: auto;
   display: flex;
@@ -468,7 +469,7 @@ body.chat-theme-light .settings-option-card.active {
     min-width: 100%;
     max-height: 200px;
     border-right: none;
-    border-bottom: none; /* ✅ Pas de bordure */
+    border-bottom: var(--chat-surface-border);
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;

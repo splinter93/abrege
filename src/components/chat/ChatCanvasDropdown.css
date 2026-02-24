@@ -75,8 +75,8 @@
   max-height: 500px;
   background: var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%));
   backdrop-filter: blur(20px);
-  border: none;
-  border-radius: 12px;
+  border: var(--chat-surface-border);
+  border-radius: var(--chat-surface-radius);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   z-index: 1000;
@@ -97,17 +97,17 @@
 .chat-canvas-dropdown__header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: var(--chat-surface-border);
   font-size: 13px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);
 }
 
 .chat-canvas-dropdown__separator {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.06);
+  height: var(--chat-surface-border-width, 1.5px);
+  background: var(--chat-surface-border-color, rgba(255, 255, 255, 0.06));
   margin: 4px 0;
 }
 
