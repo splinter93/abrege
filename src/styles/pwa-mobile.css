@@ -127,11 +127,7 @@ html.capacitor-native.chat-page .chatgpt-container .chatgpt-content .chatgpt-mai
 html.capacitor-native.chat-page .chatgpt-input-container::before {
   display: block !important;
 }
-html.capacitor-native.chat-page .chatgpt-input-area {
-  background: #0d0f11 !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.05) !important;
-  border-radius: 25px !important;
-}
+/* Input area : pas d’override Capacitor → même couleur que le web (#171a1e, chat-clean.css) */
 
 /* 6. Sidebar : décalée sous le header (safe-area-top + 56px header) */
 html.capacitor-native.chat-page .sidebar-ultra-clean {

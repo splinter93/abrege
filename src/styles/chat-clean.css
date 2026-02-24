@@ -2481,6 +2481,11 @@ body.chat-theme-glass .chatgpt-messages > div {
   opacity: 1;
 }
 
+/* Capacitor : pas de hover fiable → boutons toujours visibles */
+html.capacitor-native .chatgpt-message .bubble-buttons {
+  opacity: 1;
+}
+
 .chatgpt-message-user .bubble-buttons {
   justify-content: flex-end; /* ✅ Aligné à droite comme la bulle */
   margin-top: 2px; /* ✅ Descendu encore un peu */
