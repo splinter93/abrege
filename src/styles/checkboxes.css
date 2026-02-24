@@ -305,3 +305,37 @@ ul[data-type="taskList"] .task-item-wrapper > label,
   margin-right: 0 !important; /* Pas de marge à droite du label */
 }
 
+/* ============================================================================
+   CHECKBOX COCHÉE : texte assombri + barré
+   ============================================================================ */
+ul[data-type="taskList"] li:has(input[type="checkbox"]:checked) > *:not(input[type="checkbox"]),
+ul[data-type="taskList"] li:has(input[type="checkbox"]:checked) p,
+ul[data-type="taskList"] li:has(input[type="checkbox"]:checked) .task-item-wrapper > div,
+.ProseMirror li[data-type="taskItem"]:has(input[type="checkbox"]:checked) > *:not(input[type="checkbox"]),
+.ProseMirror li[data-type="taskItem"]:has(input[type="checkbox"]:checked) p,
+.ProseMirror li[data-type="taskItem"]:has(input[type="checkbox"]:checked) .task-item-wrapper > div,
+.ProseMirror .task-list-item:has(input[type="checkbox"]:checked) > *:not(input[type="checkbox"]),
+.ProseMirror .task-list-item:has(input[type="checkbox"]:checked) p,
+.ProseMirror .task-item-wrapper:has(input[type="checkbox"]:checked) > div,
+.markdown-body li:has(input[type="checkbox"]:checked) > *:not(input[type="checkbox"]),
+.markdown-body li:has(input[type="checkbox"]:checked) p,
+.markdown-body li.task-list-item:has(input[type="checkbox"]:checked) > *:not(input[type="checkbox"]),
+.markdown-body li.task-list-item:has(input[type="checkbox"]:checked) p,
+.chat-markdown li:has(input[type="checkbox"]:checked) > *:not(input[type="checkbox"]),
+.chat-markdown li:has(input[type="checkbox"]:checked) p,
+.chat-markdown li.task-list-item:has(input[type="checkbox"]:checked) > *:not(input[type="checkbox"]),
+.chat-markdown li.task-list-item:has(input[type="checkbox"]:checked) p,
+.public-note-container .markdown-body li:has(input[type="checkbox"]:checked) > *:not(input[type="checkbox"]),
+.public-note-container .markdown-body li:has(input[type="checkbox"]:checked) p,
+.public-note-container .markdown-body li.task-list-item:has(input[type="checkbox"]:checked) > *:not(input[type="checkbox"]),
+.public-note-container .markdown-body li.task-list-item:has(input[type="checkbox"]:checked) p,
+/* Label contenant le texte (markdown readonly) */
+ul[data-type="taskList"] li:has(input[type="checkbox"]:checked) > label,
+.markdown-body li:has(input[type="checkbox"]:checked) > label,
+.chat-markdown li:has(input[type="checkbox"]:checked) > label,
+.public-note-container .markdown-body li:has(input[type="checkbox"]:checked) > label {
+  opacity: 0.72;
+  color: inherit;
+  text-decoration: line-through;
+}
+
