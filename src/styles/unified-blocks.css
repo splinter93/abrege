@@ -14,7 +14,7 @@
   --blk-bg: var(--chat-gradient-block); /* Background défini par le thème */
   --blk-fg: var(--chat-text-secondary); /* ✅ Texte des blocs = texte secondaire */
   --blk-muted: var(--chat-text-secondary); /* Labels/secondaire */
-  --blk-radius: 14px;
+  /* --blk-radius défini dans chat-clean.css (un peu moins que --chat-surface-radius pour blocs/tableaux) */
   --blk-pad-y: 12px;
   --blk-pad-x: 16px;
   --blk-toolbar-h: 40px;
@@ -33,8 +33,8 @@
 .chat-markdown .u-block {
   background: var(--blk-bg) ;
   color: var(--blk-fg) ;
-  border: none ;
-  border-radius: var(--blk-radius) ;
+  border: var(--chat-surface-border, none) ;
+  border-radius: var(--blk-radius, var(--chat-surface-radius, 14px)) ;
   margin: 1rem 0 ;
   display: flex ;
   flex-direction: column ;
@@ -228,7 +228,7 @@ body.chat-theme-glass .chat-markdown .u-block {
   flex: 1;
   min-height: 0;
   overflow: auto; /* ✅ Scroll sur body uniquement, pas sur toolbar */
-  border-radius: 0 0 var(--blk-radius) var(--blk-radius); /* ✅ Radius bas uniquement */
+  border-radius: 0 0 var(--blk-radius, var(--chat-surface-radius, 14px)) var(--blk-radius, var(--chat-surface-radius, 14px)); /* ✅ Radius bas uniquement */
   font-family: var(--mono);
   font-size: 14px;
   line-height: 1.8;
@@ -240,7 +240,7 @@ body.chat-theme-glass .chat-markdown .u-block {
   flex: 1;
   min-height: 0;
   overflow: auto; /* ✅ Scroll sur body uniquement, pas sur toolbar */
-  border-radius: 0 0 var(--blk-radius) var(--blk-radius); /* ✅ Radius bas uniquement */
+  border-radius: 0 0 var(--blk-radius, var(--chat-surface-radius, 14px)) var(--blk-radius, var(--chat-surface-radius, 14px)); /* ✅ Radius bas uniquement */
   font-family: var(--mono);
   font-size: 14px;
   line-height: 1.8;
@@ -368,8 +368,8 @@ body.chat-theme-glass .chat-markdown .u-block {
 .chat-markdown .u-block--mermaid {
   background: var(--blk-bg);
   color: var(--blk-fg);
-  border: none;
-  border-radius: var(--blk-radius);
+  border: var(--chat-surface-border, none);
+  border-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
   margin: 16px 0;  /* ✅ Aligné avec code blocks (au lieu de 1.75rem) */
   box-shadow: none;
   overflow: hidden;
@@ -393,7 +393,7 @@ body.chat-theme-glass .chat-markdown .u-block {
   border-bottom: none !important;
   user-select: none !important;
   flex-shrink: 0 !important;
-  border-radius: var(--blk-radius) var(--blk-radius) 0 0 !important;
+  border-radius: var(--blk-radius, var(--chat-surface-radius, 14px)) var(--blk-radius, var(--chat-surface-radius, 14px)) 0 0 !important;
 }
 
 .ProseMirror .u-block--mermaid .u-block__toolbar .toolbar-left,

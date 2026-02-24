@@ -197,14 +197,14 @@
    ============================================================================= */
 
 .chat-markdown code:not(pre code) {
-  background: var(--blk-bg); /* ✅ Même gradient que code blocks et tableaux */
+  background: var(--blk-bg); /* ✅ Surface variable (couleur + bordure) */
+  border: var(--chat-surface-border);
+  border-radius: var(--chat-radius-md, 0.25rem); /* radius proportionné à l’inline */
   padding: 0.2rem 0.375rem;
-  border-radius: 0.25rem;
-  font-family: var(--font-monospace);
+  font-family: var(--mono, var(--font-monospace)); /* ✅ Même police que les blocs de code */
   font-size: 0.875em;
   color: var(--blk-fg); /* ✅ Texte gris comme code blocks */
   font-weight: 400;
-  border: none;
   filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Même brightness */
 }
 
@@ -276,14 +276,36 @@
 .chat-markdown table {
   width: 100%;
   max-width: 100%; /* ✅ Ne jamais dépasser container */
-  border-collapse: collapse;
+  border-collapse: separate; /* separate + border-spacing:0 = bordure nette comme les blocs code */
+  border-spacing: 0;
   margin: 0.5rem 0 1rem 0; /* ✅ Moins au-dessus, pareil en dessous que code blocks */
-  background: var(--blk-bg); /* ✅ Même gradient que code blocks */
-  border-radius: var(--blk-radius); /* 14px - cohérent avec code blocks */
+  background: var(--blk-bg); /* ✅ Surface variable (couleur + bordure + radius) */
+  border: var(--chat-surface-border);
+  border-radius: var(--blk-radius); /* Exception : même radius que blocs code/mermaid */
   overflow: hidden;
-  border: none;
   filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Même brightness que code blocks */
   table-layout: auto; /* ✅ Layout automatique pour colonnes adaptatives */
+}
+
+/* Coins arrondis sur les cellules pour que le fond ne dépasse pas de la bordure */
+.chat-markdown thead tr:first-child th:first-child {
+  border-top-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+}
+.chat-markdown thead tr:first-child th:last-child {
+  border-top-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+}
+.chat-markdown tbody tr:last-child td:first-child {
+  border-bottom-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+}
+.chat-markdown tbody tr:last-child td:last-child {
+  border-bottom-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+}
+/* Tableau sans thead : première ligne = tbody, arrondir le haut */
+.chat-markdown tbody tr:first-child td:first-child {
+  border-top-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+}
+.chat-markdown tbody tr:first-child td:last-child {
+  border-top-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
 }
 
 .chat-markdown th {

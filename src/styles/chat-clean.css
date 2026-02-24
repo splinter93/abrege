@@ -126,6 +126,26 @@
   --chat-radius-lg: 12px;
   --chat-radius-xl: 16px;
   --chat-radius-2xl: 20px;
+
+  /* ========================================
+     DESIGN SURFACE – UNE VARIABLE = TOUT CHANGE
+     ========================================
+     Modifier ici → input chat, sidebar, bulle user, blocs code, mermaid,
+     tableaux, code inline, checkboxes : même couleur, même bordure, même radius.
+
+     • Couleur (fond) : --chat-gradient-block (définie par thème plus bas :
+       .chat-theme-dark, .chat-theme-grey, etc.). Utilisée partout via
+       --blk-bg ou directement.
+     • Bordure : --chat-surface-border-color + --chat-surface-border-width.
+       --chat-surface-border en dérive (border + box-shadow tableaux).
+     • Radius : --chat-surface-radius (input, sidebar, bulles). Exception :
+       --blk-radius = un peu moins, pour blocs code, mermaid et tableaux uniquement.
+     ======================================== */
+  --chat-surface-border-color: rgba(255, 255, 255, 0.05);
+  --chat-surface-border-width: 1.5px;
+  --chat-surface-border: var(--chat-surface-border-width) solid var(--chat-surface-border-color);
+  --chat-surface-radius: 25px;
+  --blk-radius: calc(var(--chat-surface-radius) - 4px); /* Exception : un peu moins pour code / mermaid / tableaux */
   
   /* ========================================
      TRANSITIONS
@@ -207,17 +227,16 @@
      ======================================== */
 .chat-theme-dark,
 body:not(.chat-theme-light):not(.chat-theme-grey):not(.chat-theme-anthracite):not(.chat-theme-glass) {
-  /* Dégradés - Mode Dark, très atténués (subtil), variable unique = tous les blocs en même temps */
-  --chat-gradient-block: linear-gradient(135deg, #1e2226 0%, #202428 50%, #1e2226 100%);
+  /* Surface unique = input, bulle user, sidebar, blocs : même couleur + bordure (variables --chat-surface-*) */
+  --chat-gradient-block: #171a1e;
   --chat-gradient-input: var(--chat-gradient-block);
-  --chat-gradient-sidebar: var(--chat-gradient-block); /* ✅ Même gradient que les blocs */
+  --chat-gradient-sidebar: var(--chat-gradient-block);
   --chat-gradient-user: var(--chat-gradient-block);
-  --chat-gradient-user-hover: linear-gradient(135deg, #22262a 0%, #24282c 50%, #22262a 100%);
+  --chat-gradient-user-hover: #171a1e; /* hover géré par filter: brightness(1.05) */
   --chat-gradient-kebab: var(--chat-gradient-block);
   
-  /* ✅ Surcharge directe de --blk-bg et --blk-fg pour les code blocks */
   --blk-bg: var(--chat-gradient-block);
-  --blk-fg: var(--chat-text-secondary); /* ✅ Texte des blocs = secondaire */
+  --blk-fg: var(--chat-text-secondary);
 }
 
 /* ========================================
@@ -353,11 +372,11 @@ body.chat-theme-grey .chatgpt-input-area {
   border: none;
 }
 
-/* Bulle user : même style que l'input */
+/* Bulle user : même style que l'input (variable, sans bordure en grey) */
 body.chat-theme-grey .chatgpt-message-bubble-user {
   background: var(--chat-gradient-input);
   border: none;
-  border-radius: 25px;
+  border-radius: var(--chat-surface-radius);
 }
 
 body.chat-theme-grey .chatgpt-message-bubble-user:hover {
@@ -834,10 +853,10 @@ body.chat-theme-glass .chatgpt-header {
   left: 0;
   height: calc(100vh - 56px - 24px);
   width: 250px;
-  /* Même style que .chatgpt-input-area */
-  background: #171a1e;
-  border: 1.5px solid rgba(255, 255, 255, 0.05);
-  border-radius: 25px;
+  /* Même surface que .chatgpt-input-area (variable) */
+  background: var(--chat-gradient-block);
+  border: var(--chat-surface-border);
+  border-radius: var(--chat-surface-radius);
   box-shadow: none;
   transform: translateX(-250px);
   transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
@@ -1727,13 +1746,13 @@ body.chat-theme-glass .chatgpt-messages > div {
   padding: 0;
 }
 
-/* Même couleur et bordure que .chatgpt-input-area */
+/* Même surface que .chatgpt-input-area (variable) */
 .chatgpt-message-bubble-user {
-  background: #171a1e;
+  background: var(--chat-gradient-block);
+  border: var(--chat-surface-border);
+  border-radius: var(--chat-surface-radius);
   color: var(--chat-text-primary);
   max-width: 70%;
-  border: 1.5px solid rgba(255, 255, 255, 0.05);
-  border-radius: 25px;
   padding: 11px 17px;
   font-weight: var(--chat-weight-normal, 425);
   box-shadow: none;
@@ -2071,20 +2090,20 @@ body.chat-theme-glass .chatgpt-messages > div {
   z-index: 0;
 }
 
-/* Input au-dessus du footer - style Grok : fond #212121, bordure subtile */
+/* Input : surface variable (couleur + bordure + radius) */
 .chatgpt-input-area {
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: min(calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)), 100%);
-  background: #171a1e;
-  border-radius: 25px;
+  background: var(--chat-gradient-block);
+  border: var(--chat-surface-border);
+  border-radius: var(--chat-surface-radius);
   padding: 12px 12px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   box-sizing: border-box;
-  border: 1.5px solid rgba(255, 255, 255, 0.05);
   box-shadow: none;
 }
 

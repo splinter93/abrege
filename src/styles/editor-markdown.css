@@ -236,13 +236,41 @@ div.markdown-body ul[data-type="taskList"],
 .ProseMirror table,
 .markdown-body table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate; /* separate + border-spacing:0 = bordure nette comme les blocs code */
+  border-spacing: 0;
   margin: var(--md-table-margin) 0;
-  background: var(--blk-bg); /* ✅ Même gradient que code blocks */
-  border-radius: var(--blk-radius); /* 14px - cohérent avec code blocks */
+  background: var(--blk-bg); /* ✅ Surface variable (couleur + bordure) */
+  border: var(--chat-surface-border);
+  border-radius: var(--blk-radius);
   overflow: hidden;
-  border: none;
   filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Même brightness que code blocks */
+}
+
+/* Coins arrondis sur les cellules pour que le fond ne dépasse pas de la bordure */
+.ProseMirror thead tr:first-child th:first-child,
+.markdown-body thead tr:first-child th:first-child {
+  border-top-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+}
+.ProseMirror thead tr:first-child th:last-child,
+.markdown-body thead tr:first-child th:last-child {
+  border-top-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+}
+.ProseMirror tbody tr:last-child td:first-child,
+.markdown-body tbody tr:last-child td:first-child {
+  border-bottom-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+}
+.ProseMirror tbody tr:last-child td:last-child,
+.markdown-body tbody tr:last-child td:last-child {
+  border-bottom-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+}
+/* Tableau sans thead : première ligne = tbody, arrondir le haut */
+.ProseMirror tbody tr:first-child td:first-child,
+.markdown-body tbody tr:first-child td:first-child {
+  border-top-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+}
+.ProseMirror tbody tr:first-child td:last-child,
+.markdown-body tbody tr:first-child td:last-child {
+  border-top-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
 }
 
 .ProseMirror th,
