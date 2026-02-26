@@ -31,6 +31,8 @@ export interface StreamToolExecutionEvent {
   toolCount: number;
   timestamp: number;
   roundNumber: number;
+  /** Si présent : outil MCP (Liminality/Synesia), server_label pour badge UI */
+  mcp_server?: string;
 }
 
 /**
@@ -43,6 +45,8 @@ export interface StreamToolResultEvent {
   result: unknown;
   success: boolean;
   timestamp: number;
+  /** Si présent : outil MCP, server_label pour badge UI */
+  mcp_server?: string;
 }
 
 /**

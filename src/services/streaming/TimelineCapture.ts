@@ -50,8 +50,9 @@ export class TimelineCapture {
    * Ajoute un événement tool_execution à la timeline
    * @param toolCalls - Tool calls à exécuter
    * @param toolCount - Nombre de tools
+   * @param mcp_server - Si présent : server_label MCP (Liminality) pour badge UI
    */
-  addToolExecutionEvent(toolCalls: ToolCall[], toolCount: number): void {
+  addToolExecutionEvent(toolCalls: ToolCall[], toolCount: number, mcp_server?: string): void {
     // ✅ DÉDUPLICATION: Extraire les IDs des tool calls déjà présents dans la timeline
     const existingToolCallIds = new Set(
       this.items
@@ -92,7 +93,8 @@ export class TimelineCapture {
       toolCalls: toolCallsSnapshot,
       toolCount: toolCount || toolCallsSnapshot.length,
       timestamp: Date.now() - this.startTime,
-      roundNumber: this.currentRoundNumber
+      roundNumber: this.currentRoundNumber,
+      ...(mcp_server && { mcp_server })
     });
   }
 
@@ -102,12 +104,14 @@ export class TimelineCapture {
    * @param toolName - Nom du tool
    * @param result - Résultat
    * @param success - Succès ou échec
+   * @param mcp_server - Si présent : server_label MCP pour badge UI
    */
   addToolResultEvent(
     toolCallId: string,
     toolName: string,
     result: unknown,
-    success: boolean
+    success: boolean,
+    mcp_server?: string
   ): void {
     this.items.push({
       type: 'tool_result',
@@ -115,7 +119,8 @@ export class TimelineCapture {
       toolName,
       result,
       success,
-      timestamp: Date.now() - this.startTime
+      timestamp: Date.now() - this.startTime,
+      ...(mcp_server && { mcp_server })
     });
   }
 

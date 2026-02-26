@@ -163,10 +163,21 @@ export interface FunctionTool {
   };
 }
 
+/**
+ * Tool MCP (format interne / Groq) — converti vers Liminality (LiminalityMCPTool).
+ * Conforme doc « Intégration des outils MCP dans les requêtes LLM Exec » :
+ * server_label, server_url, allowed_tools, require_approval, headers.
+ */
 export interface McpTool {
   type: 'mcp';
   server_label: string;
   name?: string;
+  server_url?: string;
+  /** Liste des tools autorisés ; [] = tous les tools du serveur. */
+  allowed_tools?: string[];
+  require_approval?: 'always' | 'never' | 'auto';
+  /** En-têtes HTTP ; valeur = string ou { secret_key: string } (référence secret Synesia). */
+  headers?: Record<string, string | { secret_key: string }>;
   [key: string]: unknown;
 }
 

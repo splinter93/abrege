@@ -801,7 +801,8 @@ export async function POST(request: NextRequest) {
                     const startChunk = chunk as InternalToolStartChunk;
                     logger.debug(LogCategory.API, '[Stream Route] 🔧 internal_tool.start → assistant_round_complete', {
                       name: startChunk.name,
-                      toolCallId: startChunk.tool_call_id.substring(0, 8)
+                      toolCallId: startChunk.tool_call_id.substring(0, 8),
+                      ...(startChunk.mcp_server && { mcp_server: startChunk.mcp_server })
                     });
                     sendSSE({
                       type: 'assistant_round_complete',
@@ -815,14 +816,16 @@ export async function POST(request: NextRequest) {
                         }
                       }],
                       finishReason: 'tool_calls',
-                      timestamp: Date.now()
+                      timestamp: Date.now(),
+                      ...(startChunk.mcp_server && { mcp_server: startChunk.mcp_server })
                     });
                     continue;
                   }
                   if (chunk.type === 'internal_tool.done') {
                     const doneChunk = chunk as InternalToolDoneChunk;
                     logger.debug(LogCategory.API, '[Stream Route] ✅ internal_tool.done → tool_result', {
-                      name: doneChunk.name
+                      name: doneChunk.name,
+                      ...(doneChunk.mcp_server && { mcp_server: doneChunk.mcp_server })
                     });
                     sendSSE({
                       type: 'tool_result',
@@ -831,14 +834,16 @@ export async function POST(request: NextRequest) {
                       result: doneChunk.result,
                       success: true,
                       timestamp: Date.now(),
-                      isCallable: true
+                      isCallable: true,
+                      ...(doneChunk.mcp_server && { mcp_server: doneChunk.mcp_server })
                     });
                     continue;
                   }
                   if (chunk.type === 'internal_tool.error') {
                     const errChunk = chunk as InternalToolErrorChunk;
                     logger.debug(LogCategory.API, '[Stream Route] ❌ internal_tool.error → tool_result', {
-                      name: errChunk.name
+                      name: errChunk.name,
+                      ...(errChunk.mcp_server && { mcp_server: errChunk.mcp_server })
                     });
                     sendSSE({
                       type: 'tool_result',
@@ -847,7 +852,8 @@ export async function POST(request: NextRequest) {
                       result: errChunk.error,
                       success: false,
                       timestamp: Date.now(),
-                      isCallable: true
+                      isCallable: true,
+                      ...(errChunk.mcp_server && { mcp_server: errChunk.mcp_server })
                     });
                     continue;
                   }

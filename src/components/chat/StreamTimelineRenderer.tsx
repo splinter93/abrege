@@ -88,6 +88,7 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
                   }))}
                   isExpanded={expandedBlocks.has(index)}
                   onToggle={() => toggleBlock(index)}
+                  mcp_server={item.mcp_server}
                 />
               </div>
             );

@@ -26,6 +26,8 @@ interface StreamingIndicatorProps {
   toolCalls?: ToolCallDetail[]; // ✅ NOUVEAU: Pour l'état completed
   onToggle?: () => void; // ✅ NOUVEAU: Callback pour collapse/expand
   isExpanded?: boolean; // ✅ NOUVEAU: État du collapse
+  /** Si présent : outil MCP (Liminality), server_label pour badge */
+  mcp_server?: string;
 }
 
 export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
@@ -35,7 +37,8 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
   roundNumber,
   toolCalls = [],
   onToggle,
-  isExpanded = false
+  isExpanded = false,
+  mcp_server
 }) => {
   // Fonction pour retirer les préfixes de service (scrivia__, local__, etc.)
   const cleanFunctionName = (name: string): string => {
@@ -97,6 +100,11 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
                     >
                       <span className="tool-item-name">
                         Calling {functionName}
+                        {mcp_server && (
+                          <span className="tool-item-mcp-badge" title={`Outil MCP: ${mcp_server}`}>
+                            MCP · {mcp_server}
+                          </span>
+                        )}
                       </span>
                     <span className="tool-item-status">
                       {tool.success === true ? (
@@ -155,6 +163,11 @@ export const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
                   >
                     <span className="tool-item-name">
                       Calling {functionName}
+                      {mcp_server && (
+                        <span className="tool-item-mcp-badge" title={`Outil MCP: ${mcp_server}`}>
+                          MCP · {mcp_server}
+                        </span>
+                      )}
                     </span>
                     <span className="tool-item-status">
                       {tool.success ? (

@@ -352,10 +352,10 @@ export class StreamOrchestrator {
    * Traite un chunk tool_result
    */
   private processToolResultChunk(
-    chunk: { toolName?: string; toolCallId?: string; result?: unknown; success?: boolean },
+    chunk: { toolName?: string; toolCallId?: string; result?: unknown; success?: boolean; mcp_server?: string },
     callbacks: StreamCallbacks
   ): void {
-    logger.dev(`[StreamOrchestrator] ✅ Tool result: ${chunk.toolName}`);
+    logger.dev(`[StreamOrchestrator] ✅ Tool result: ${chunk.toolName}${chunk.mcp_server ? ` (MCP: ${chunk.mcp_server})` : ''}`);
 
     const toolResult: ToolResult = {
       tool_call_id: chunk.toolCallId || `call_${Date.now()}`,
@@ -366,12 +366,13 @@ export class StreamOrchestrator {
 
     this.allToolResults.push(toolResult);
 
-    // Ajouter à la timeline
+    // Ajouter à la timeline (avec mcp_server si présent pour badge UI)
     this.timeline.addToolResultEvent(
       toolResult.tool_call_id,
       toolResult.name,
       chunk.result,
-      toolResult.success
+      toolResult.success,
+      chunk.mcp_server
     );
 
     // Notifier
@@ -386,7 +387,7 @@ export class StreamOrchestrator {
   /**
    * Traite un événement assistant_round_complete
    * Cet événement contient les tool_calls qui doivent être affichés dans la timeline
-   * ⚠️ IMPORTANT : Pour les MCP tools x.ai, ils sont déjà exécutés côté serveur
+   * ⚠️ IMPORTANT : Pour les MCP tools (Liminality), ils sont déjà exécutés côté serveur
    * On doit SEULEMENT les afficher dans la timeline, PAS les exécuter
    */
   private processAssistantRoundComplete(
@@ -397,17 +398,19 @@ export class StreamOrchestrator {
         id: string; 
         type?: string; 
         function?: { name?: string; arguments?: string } 
-      }> 
+      }>; 
+      mcp_server?: string;
     },
     callbacks: StreamCallbacks
   ): void {
     logger.dev(`[StreamOrchestrator] 🔵 Round terminé:`, { 
       finishReason: chunk.finishReason,
-      toolCallsCount: chunk.tool_calls?.length || 0
+      toolCallsCount: chunk.tool_calls?.length || 0,
+      ...(chunk.mcp_server && { mcp_server: chunk.mcp_server })
     });
 
     // ✅ Si le round contient des tool_calls, les ajouter à la timeline ET notifier le hook
-    // ⚠️ IMPORTANT : Pour les MCP tools x.ai, ils sont déjà exécutés côté serveur
+    // ⚠️ IMPORTANT : Pour les MCP tools (Liminality), ils sont déjà exécutés côté serveur
     // On doit les afficher dans la timeline MAIS aussi notifier le hook pour qu'il les ajoute
     if (chunk.tool_calls && chunk.tool_calls.length > 0) {
       logger.dev(`[StreamOrchestrator] 🔧 ${chunk.tool_calls.length} tool call(s) dans round complete (MCP déjà exécutés)`);
@@ -426,8 +429,8 @@ export class StreamOrchestrator {
         callbacks.onToolExecution?.(toolCallsForTimeline.length, toolCallsForTimeline);
         this.toolTracker.markExecutionNotified(toolCallsForTimeline);
         
-        // Ajouter à la timeline
-        this.timeline.addToolExecutionEvent(toolCallsForTimeline, toolCallsForTimeline.length);
+        // Ajouter à la timeline (avec mcp_server si présent pour badge MCP)
+        this.timeline.addToolExecutionEvent(toolCallsForTimeline, toolCallsForTimeline.length, chunk.mcp_server);
         
         logger.dev(`[StreamOrchestrator] ✅ ${toolCallsForTimeline.length} tool call(s) ajouté(s) à la timeline ET notifié au hook`);
       } else {

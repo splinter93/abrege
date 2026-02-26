@@ -790,9 +790,10 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
           tool_call_id: toolCallId,
           name,
           arguments: Object.keys(args).length > 0 ? args : undefined,
-          block_id: typeof event.block_id === 'string' ? event.block_id : undefined
+          block_id: typeof event.block_id === 'string' ? event.block_id : undefined,
+          mcp_server: typeof event.mcp_server === 'string' ? event.mcp_server : undefined
         };
-        logger.dev(`[LiminalityProvider] 🔧 internal_tool.start: ${name}`);
+        logger.dev(`[LiminalityProvider] 🔧 internal_tool.start: ${name}${event.mcp_server ? ` (MCP: ${event.mcp_server})` : ''}`);
         return startChunk;
       }
 
@@ -811,9 +812,10 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
           tool_call_id: toolCallId,
           name,
           result: event.result,
-          block_id: typeof event.block_id === 'string' ? event.block_id : undefined
+          block_id: typeof event.block_id === 'string' ? event.block_id : undefined,
+          mcp_server: typeof event.mcp_server === 'string' ? event.mcp_server : undefined
         };
-        logger.dev(`[LiminalityProvider] ✅ internal_tool.done: ${name}`);
+        logger.dev(`[LiminalityProvider] ✅ internal_tool.done: ${name}${event.mcp_server ? ` (MCP: ${event.mcp_server})` : ''}`);
         return doneChunk;
       }
 
@@ -837,9 +839,10 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
           tool_call_id: toolCallId,
           name,
           error: errorStr,
-          block_id: typeof event.block_id === 'string' ? event.block_id : undefined
+          block_id: typeof event.block_id === 'string' ? event.block_id : undefined,
+          mcp_server: typeof event.mcp_server === 'string' ? event.mcp_server : undefined
         };
-        logger.dev(`[LiminalityProvider] ❌ internal_tool.error: ${name}`);
+        logger.dev(`[LiminalityProvider] ❌ internal_tool.error: ${name}${event.mcp_server ? ` (MCP: ${event.mcp_server})` : ''}`);
         return errorChunk;
       }
 

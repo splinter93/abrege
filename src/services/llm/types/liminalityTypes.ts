@@ -205,6 +205,7 @@ export type LiminalityInternalToolEventType = 'internal_tool.start' | 'internal_
 /**
  * Chunk émis par le provider pour internal_tool.start (début d'exécution callable).
  * La route le traduit en assistant_round_complete pour l'affichage chat.
+ * Pour les outils MCP, Synesia envoie mcp_server (server_label) pour badge UI.
  */
 export interface InternalToolStartChunk {
   type: 'internal_tool.start';
@@ -212,11 +213,14 @@ export interface InternalToolStartChunk {
   name: string;
   arguments?: Record<string, unknown>;
   block_id?: string;
+  /** Si présent : outil MCP, valeur = server_label (ex. "brave_search"). */
+  mcp_server?: string;
 }
 
 /**
  * Chunk émis par le provider pour internal_tool.done (fin réussie callable).
  * La route le traduit en tool_result (success: true).
+ * Pour les outils MCP, Synesia envoie mcp_server (server_label).
  */
 export interface InternalToolDoneChunk {
   type: 'internal_tool.done';
@@ -224,11 +228,14 @@ export interface InternalToolDoneChunk {
   name: string;
   result: unknown;
   block_id?: string;
+  /** Si présent : outil MCP, valeur = server_label. */
+  mcp_server?: string;
 }
 
 /**
  * Chunk émis par le provider pour internal_tool.error (échec callable).
  * La route le traduit en tool_result (success: false).
+ * Pour les outils MCP, Synesia envoie mcp_server (server_label).
  */
 export interface InternalToolErrorChunk {
   type: 'internal_tool.error';
@@ -236,6 +243,8 @@ export interface InternalToolErrorChunk {
   name: string;
   error: string;
   block_id?: string;
+  /** Si présent : outil MCP, valeur = server_label. */
+  mcp_server?: string;
 }
 
 /**
@@ -275,6 +284,8 @@ export interface LiminalityStreamEvent {
   arguments?: Record<string, unknown>;
   /** internal_tool.done : résultat du callable */
   result?: unknown;
+  /** internal_tool.* (MCP) : server_label du serveur MCP pour badge UI (doc §10). */
+  mcp_server?: string;
   messages?: Array<{
     role: string;
     tool_calls?: Array<LiminalityToolCallInMessage>;

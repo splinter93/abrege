@@ -231,8 +231,16 @@ Même règles d’auth (x-api-key ou Bearer + x-project-id) et même flux de rou
 - Les colonnes **`require_approval`** et **`allowed_tools`** (et **`server_description`**) doivent exister sur `mcp_servers`. La migration initiale ne les contenait pas.
 - **Correction apportée** : migration **`20250220000000_add_mcp_servers_llm_exec_columns.sql`** ajoutant `server_description`, `require_approval`, `allowed_tools` à `mcp_servers`. À appliquer si votre schéma ne les a pas encore (ex. déploiement local ; Factoria peut déjà les avoir).
 
-### 11.4 Synthèse
+### 11.4 Événements stream et identification MCP (doc §10)
 
-- **Conformité** : l’implémentation est **conforme** au document pour le provider Liminality : les champs obligatoires sont toujours envoyés, `allowed_tools` et `require_approval` sont gérés selon la spec, et les tools MCP sont bien visibles par les agents Liminality.
+En mode **stream**, Synesia envoie sur `internal_tool.start`, `internal_tool.done`, `internal_tool.error` un champ optionnel **`mcp_server`** (server_label) pour les outils MCP. L’implémentation :
+
+- **Types** (`liminalityTypes.ts`) : `InternalToolStartChunk`, `InternalToolDoneChunk`, `InternalToolErrorChunk` et `LiminalityStreamEvent` incluent `mcp_server?: string`.
+- **LiminalityProvider** : lors du parsing des événements stream, `mcp_server` est recopié depuis l’event Synesia vers le chunk émis.
+- **Route** (`stream/route.ts`) : les SSE `assistant_round_complete` et `tool_result` incluent `mcp_server` lorsqu’il est présent, pour que l’UI puisse afficher un badge/libellé MCP (ex. `if (event.mcp_server) { displayAsMcpTool(event.name, event.mcp_server); }`).
+
+### 11.5 Synthèse
+
+- **Conformité** : l’implémentation est **conforme** au document pour le provider Liminality : les champs obligatoires sont toujours envoyés, `allowed_tools` et `require_approval` sont gérés selon la spec, les tools MCP sont bien visibles par les agents Liminality, et le champ **`mcp_server`** est propagé dans le stream pour l’UI.
 - **Action requise** : appliquer la migration **`20250220000000_add_mcp_servers_llm_exec_columns.sql`** si les colonnes `require_approval` et `allowed_tools` (et optionnellement `server_description`) n’existent pas encore sur `mcp_servers`.
 - **Aucune autre correction** n’est nécessaire pour que les MCP soient correctement envoyés et que les tools MCP soient exposés au LLM via Liminality.
