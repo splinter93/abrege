@@ -66,9 +66,9 @@ body {
 .noteLayout-content .markdown-body,
 .noteLayout-content .ProseMirror,
 .editor-content-wrapper .editor-content {
-  /* Font rendering précis (évite les "sauts" de pixels pendant scroll) */
-  -webkit-font-smoothing: subpixel-antialiased;
-  -moz-osx-font-smoothing: auto;
+  /* Aligné sur le rendu global (antialiased) — subpixel-antialiased rendait le texte visuellement trop gras */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   
   /* Backface visibility (évite flickering) */
   -webkit-backface-visibility: hidden;
