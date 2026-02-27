@@ -43,7 +43,7 @@ class SynesiaClient {
     llmConfig: LLMConfig = {},
     stream = false
   ) {
-    const endpoint = stream ? '/llm-exec/round/stream' : '/llm-exec/round';
+    const endpoint = stream ? '/v1/llm-exec/round/stream' : '/v1/llm-exec/round';
 
     const response = await fetch(`${this.config.baseUrl}${endpoint}`, {
       method: 'POST',

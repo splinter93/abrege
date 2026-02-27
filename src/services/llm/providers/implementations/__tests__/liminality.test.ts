@@ -164,7 +164,7 @@ describe('LiminalityProvider', () => {
       expect(result.content).toBe('Test response');
       expect(result.usage).toEqual(mockResponse.usage);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/llm-exec/round'),
+        expect.stringContaining('/v1/llm-exec/round'),
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({

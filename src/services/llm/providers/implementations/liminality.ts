@@ -314,7 +314,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       logger.info(`[LiminalityProvider] 🚀 Stream call: ${payload.model} | ${apiMessages.length} messages | ${liminalityTools.length} tools | images=${imageInputs.length}`);
       
       // Appel API avec streaming
-      const response = await fetch(`${this.config.baseUrl}/llm-exec/round/stream`, {
+      const response = await fetch(`${this.config.baseUrl}/v1/llm-exec/round/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -345,7 +345,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
           model: this.config.model,
           messagesCount: messages.length,
           toolsCount: tools.length,
-          url: `${this.config.baseUrl}/llm-exec/round/stream`
+          url: `${this.config.baseUrl}/v1/llm-exec/round/stream`
         });
         
         const error = new Error(`Liminality API error: ${response.status} - ${errorMessage}`);
@@ -609,7 +609,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
    * Effectue l'appel API vers Liminality
    */
   private async makeApiCall(payload: LiminalityRequestPayload): Promise<LiminalityResponse> {
-    const url = `${this.config.baseUrl}/llm-exec/round`;
+    const url = `${this.config.baseUrl}/v1/llm-exec/round`;
     
     // 🔍 DEBUG: Log de la requête
     logger.dev('[LiminalityProvider] 📤 Requête API:', {

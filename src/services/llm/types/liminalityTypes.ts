@@ -318,7 +318,7 @@ export interface LiminalityRequestMetadata {
 }
 
 /**
- * Payload complet pour l'API /llm-exec/round (et /llm-exec/round/stream)
+ * Payload complet pour l'API /v1/llm-exec/round (et /v1/llm-exec/round/stream)
  */
 export interface LiminalityRequestPayload {
   model: string;
