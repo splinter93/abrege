@@ -283,7 +283,7 @@ export async function GET(
     });
 
     // 📤 Réponse avec champs numériques normalisés (même logique que PATCH)
-    const normalized = normalizeAgentNumericFields(agent as Record<string, unknown>);
+    const normalized = normalizeAgentNumericFields(agent as unknown as Record<string, unknown>);
     return NextResponse.json({
       success: true,
       id: agent.id,
@@ -618,7 +618,7 @@ export async function PATCH(
 
     return NextResponse.json({
       success: true,
-      agent: normalizeAgentNumericFields(result as Record<string, unknown>),
+      agent: normalizeAgentNumericFields(result as unknown as Record<string, unknown>),
       message: 'Agent mis à jour partiellement avec succès',
       metadata: {
         agentId,
