@@ -181,7 +181,7 @@ export function normalizeLLMParams(agentConfig: AgentConfig | null): {
     : 0.9;
   
   const maxTokens = typeof agentConfig?.max_tokens === 'number'
-    ? Math.max(1, Math.min(100000, agentConfig.max_tokens))
+    ? Math.max(1, Math.min(128000, agentConfig.max_tokens))
     : 8000;
     
   return { temperature, topP, maxTokens };

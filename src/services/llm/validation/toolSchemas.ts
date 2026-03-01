@@ -224,7 +224,7 @@ export const createAgentSchema = z.object({
   ], { errorMap: () => ({ message: 'Modèle non supporté' }) }),
   system_instructions: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
-  max_tokens: z.number().int().min(1).max(10000).optional(),
+  max_tokens: z.number().int().min(1).max(128000).optional(),
   provider: z.enum(['groq', 'openai', 'anthropic']).optional(),
   is_chat_agent: z.boolean().optional(),
   input_schema: z.record(z.unknown()).optional(),
@@ -238,7 +238,7 @@ export const executeAgentSchema = z.object({
   image: z.string().url().optional(),
   options: z.object({
     temperature: z.number().min(0).max(2).optional(),
-    max_tokens: z.number().int().min(1).max(10000).optional(),
+    max_tokens: z.number().int().min(1).max(128000).optional(),
     stream: z.boolean().optional()
   }).optional()
 });

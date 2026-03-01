@@ -256,10 +256,10 @@ export class AgentValidator {
     }
 
     // Max tokens
-    if (config.max_tokens !== undefined && (config.max_tokens < 1 || config.max_tokens > 8192)) {
+    if (config.max_tokens !== undefined && (config.max_tokens < 1 || config.max_tokens > 128000)) {
       errors.push({
         code: 'INVALID_MAX_TOKENS',
-        message: 'Max tokens doit être entre 1 et 8192',
+        message: 'Max tokens doit être entre 1 et 128000',
         field: 'max_tokens'
       });
     }
@@ -300,10 +300,10 @@ export class AgentValidator {
       });
     }
 
-    if (config.max_tokens !== undefined && (config.max_tokens < 1 || config.max_tokens > 8192)) {
+    if (config.max_tokens !== undefined && (config.max_tokens < 1 || config.max_tokens > 128000)) {
       errors.push({
         code: 'INVALID_MAX_TOKENS',
-        message: 'Max tokens doit être entre 1 et 8192',
+        message: 'Max tokens doit être entre 1 et 128000',
         field: 'max_tokens'
       });
     }

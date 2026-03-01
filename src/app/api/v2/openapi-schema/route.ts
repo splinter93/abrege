@@ -701,7 +701,7 @@ function getExistingEndpoints(): Record<string, unknown> {
                       max_tokens: { 
                         type: 'integer', 
                         minimum: 1, 
-                        maximum: 10000,
+                        maximum: 128000,
                         description: 'Nombre maximum de tokens'
                       },
                       stream: { 

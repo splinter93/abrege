@@ -264,8 +264,8 @@ export class SpecializedAgentManagerV2 {
 
     const temperature = this.sanitizeNumber(agent.temperature, 0.7, 0, 2);
     const top_p = this.sanitizeNumber(agent.top_p, 1, 0, 1);
-    const max_tokens = this.sanitizeNumber(agent.max_tokens, 4000, 1, 8192);
-    const max_completion_tokens = this.sanitizeNumber(agent.max_completion_tokens, max_tokens, 1, 8192);
+    const max_tokens = this.sanitizeNumber(agent.max_tokens, 4000, 1, 128000);
+    const max_completion_tokens = this.sanitizeNumber(agent.max_completion_tokens, max_tokens, 1, 128000);
     const priority = this.sanitizeNumber(agent.priority, 10, 0, 100);
 
     return {

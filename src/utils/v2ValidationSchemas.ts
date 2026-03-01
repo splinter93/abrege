@@ -168,7 +168,7 @@ export const createAgentV2Schema = z.object({
   capabilities: z.array(z.string()).optional().default([]),
   api_v2_capabilities: z.array(z.string()).optional().default([]),
   temperature: z.number().min(0).max(2).optional().default(0.7),
-  max_tokens: z.number().int().min(1).max(10000).optional().default(2000),
+  max_tokens: z.number().int().min(1).max(128000).optional().default(2000),
   priority: z.number().int().min(0).max(100).optional().default(50)
 });
 
@@ -187,7 +187,7 @@ export const updateAgentV2Schema = z.object({
   capabilities: z.array(z.string()).optional(),
   api_v2_capabilities: z.array(z.string()).optional(),
   temperature: z.number().min(0).max(2).optional(),
-  max_tokens: z.number().int().min(1).max(10000).optional(),
+  max_tokens: z.number().int().min(1).max(128000).optional(),
   priority: z.number().int().min(0).max(100).optional()
 });
 
@@ -200,7 +200,7 @@ export const executeAgentV2Schema = z.object({
   image: z.string().url().optional().describe('URL de l\'image à analyser (supporté par les modèles Llama)'),
   options: z.object({
     temperature: z.number().min(0).max(2).optional(),
-    max_tokens: z.number().int().min(1).max(10000).optional(),
+    max_tokens: z.number().int().min(1).max(128000).optional(),
     stream: z.boolean().optional()
   }).optional()
 });

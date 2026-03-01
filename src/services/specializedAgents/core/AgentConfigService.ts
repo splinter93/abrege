@@ -105,7 +105,7 @@ export class AgentConfigService {
         processedAgent.temperature = 0.7;
       }
 
-      if (processedAgent.max_tokens < 1 || processedAgent.max_tokens > 8192) {
+      if (processedAgent.max_tokens < 1 || processedAgent.max_tokens > 128000) {
         logger.warn(`[AgentConfigService] ⚠️ Max tokens invalide, utilisation de la valeur par défaut`, {
           agentId,
           max_tokens: processedAgent.max_tokens

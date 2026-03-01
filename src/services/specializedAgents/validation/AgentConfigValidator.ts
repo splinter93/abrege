@@ -41,8 +41,8 @@ export class AgentConfigValidator {
     }
 
     if (config.max_tokens !== undefined) {
-      if (typeof config.max_tokens !== 'number' || config.max_tokens < 1 || config.max_tokens > 8192) {
-        errors.push('Max tokens doit être un nombre entre 1 et 8192');
+      if (typeof config.max_tokens !== 'number' || config.max_tokens < 1 || config.max_tokens > 128000) {
+        errors.push('Max tokens doit être un nombre entre 1 et 128000');
       }
     }
 
