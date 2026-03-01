@@ -239,15 +239,24 @@ export class AgentCRUDService {
         throw new Error(`Erreur base de données: ${error.message}`);
       }
 
-      // Convertir les types numériques pour tous les agents
-      const processedAgents = (agents || []).map(agent => ({
-        ...agent,
-        temperature: typeof agent.temperature === 'string' ? parseFloat(agent.temperature) : agent.temperature,
-        top_p: typeof agent.top_p === 'string' ? parseFloat(agent.top_p) : agent.top_p,
-        max_tokens: typeof agent.max_tokens === 'string' ? parseInt(agent.max_tokens) : agent.max_tokens,
-        max_completion_tokens: typeof agent.max_completion_tokens === 'string' ? parseInt(agent.max_completion_tokens) : agent.max_completion_tokens,
-        priority: typeof agent.priority === 'string' ? parseInt(agent.priority) : agent.priority
-      }));
+      // Même normalisation que AgentConfigService pour max_tokens (éviter valeurs différentes list vs GET)
+      const toNum = (v: unknown, defaultVal: number): number => {
+        if (typeof v === 'number' && !Number.isNaN(v)) return v;
+        const n = typeof v === 'string' ? parseInt(v, 10) : Number(v);
+        return typeof n === 'number' && !Number.isNaN(n) ? n : defaultVal;
+      };
+      const clampMaxTokens = (v: number) => Math.max(1, Math.min(128000, v));
+      const processedAgents = (agents || []).map(agent => {
+        const maxTok = toNum(agent.max_tokens, 4000);
+        return {
+          ...agent,
+          temperature: (() => { const t = toNum(agent.temperature, 0.7); return t >= 0 && t <= 2 ? t : 0.7; })(),
+          top_p: (() => { const p = toNum(agent.top_p, 1); return p >= 0 && p <= 1 ? p : 1; })(),
+          max_tokens: clampMaxTokens(maxTok),
+          max_completion_tokens: (() => { const c = toNum(agent.max_completion_tokens, maxTok); return clampMaxTokens(c); })(),
+          priority: (() => { const pr = toNum(agent.priority, 10); return pr >= 0 && pr <= 100 ? pr : 10; })()
+        };
+      });
 
       logger.dev(`[AgentCRUDService] ✅ ${processedAgents.length} agents récupérés`, { 
         userId, 

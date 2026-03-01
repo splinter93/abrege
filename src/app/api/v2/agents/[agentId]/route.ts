@@ -49,6 +49,22 @@ interface AgentInfoResponse {
 // Instance globale du manager (singleton)
 const agentManager = new SpecializedAgentManager();
 
+/** Normalise les champs numériques d'un agent pour la réponse API (évite NaN / incohérences). */
+function normalizeAgentNumericFields(agent: Record<string, unknown>): Record<string, unknown> {
+  const num = (v: unknown, fallback: number): number => {
+    if (v == null) return fallback;
+    const n = Number(v);
+    return Number.isNaN(n) ? fallback : n;
+  };
+  return {
+    ...agent,
+    temperature: num(agent.temperature, 0.7),
+    top_p: num(agent.top_p, 1),
+    max_tokens: Math.max(1, Math.min(128000, num(agent.max_tokens, 4000))),
+    priority: num(agent.priority, 10)
+  };
+}
+
 /**
  * POST /api/v2/agents/{agentId}
  * Exécuter un agent spécialisé
@@ -266,7 +282,8 @@ export async function GET(
       agentName: agent.display_name
     });
 
-    // 📤 Retourner les informations de l'agent (max_tokens en nombre pour persistance UI)
+    // 📤 Réponse avec champs numériques normalisés (même logique que PATCH)
+    const normalized = normalizeAgentNumericFields(agent as Record<string, unknown>);
     return NextResponse.json({
       success: true,
       id: agent.id,
@@ -287,10 +304,10 @@ export async function GET(
       is_endpoint_agent: agent.is_endpoint_agent,
       capabilities: agent.capabilities,
       api_v2_capabilities: agent.api_v2_capabilities,
-      temperature: agent.temperature != null ? Number(agent.temperature) : agent.temperature,
-      top_p: agent.top_p != null ? Number(agent.top_p) : agent.top_p,
-      max_tokens: agent.max_tokens != null ? Number(agent.max_tokens) : agent.max_tokens,
-      priority: agent.priority != null ? Number(agent.priority) : agent.priority,
+      temperature: normalized.temperature,
+      top_p: normalized.top_p,
+      max_tokens: normalized.max_tokens,
+      priority: normalized.priority,
       version: agent.version,
       is_default: agent.is_default,
       context_template: agent.context_template,
@@ -601,7 +618,7 @@ export async function PATCH(
 
     return NextResponse.json({
       success: true,
-      agent: result,
+      agent: normalizeAgentNumericFields(result as Record<string, unknown>),
       message: 'Agent mis à jour partiellement avec succès',
       metadata: {
         agentId,

@@ -211,8 +211,11 @@ export class AgentUpdateService {
         throw new Error(`Erreur base de données: ${error.message}`);
       }
 
-      // Invalider le cache (id + slug pour éviter lecture stale)
+      // Invalider le cache sous toutes les clés possibles (id + slug) pour éviter lecture stale
       this.agentConfigService.invalidateAgentCache(agentId);
+      if (existingAgent.id) {
+        this.agentConfigService.invalidateAgentCache(String(existingAgent.id));
+      }
       if (existingAgent.slug) {
         this.agentConfigService.invalidateAgentCache(existingAgent.slug);
       }

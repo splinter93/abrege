@@ -86,40 +86,36 @@ export class AgentConfigService {
         return null;
       }
 
-      // Validation et conversion des types numériques
+      // Conversion des types numériques (une seule source de vérité pour éviter valeurs chaotiques)
+      const rawMaxTokens = typeof agent.max_tokens === 'string' ? parseInt(agent.max_tokens, 10) : agent.max_tokens;
+      const safeMaxTokens =
+        typeof rawMaxTokens === 'number' && !Number.isNaN(rawMaxTokens) && rawMaxTokens >= 1 && rawMaxTokens <= 128000
+          ? rawMaxTokens
+          : 4000;
+      if (rawMaxTokens !== safeMaxTokens) {
+        logger.dev(`[AgentConfigService] max_tokens normalisé: ${rawMaxTokens} → ${safeMaxTokens}`, { agentId });
+      }
+
       const processedAgent = {
         ...agent,
-        temperature: typeof agent.temperature === 'string' ? parseFloat(agent.temperature) : agent.temperature,
-        top_p: typeof agent.top_p === 'string' ? parseFloat(agent.top_p) : agent.top_p,
-        max_tokens: typeof agent.max_tokens === 'string' ? parseInt(agent.max_tokens) : agent.max_tokens,
-        max_completion_tokens: typeof agent.max_completion_tokens === 'string' ? parseInt(agent.max_completion_tokens) : agent.max_completion_tokens,
-        priority: typeof agent.priority === 'string' ? parseInt(agent.priority) : agent.priority
+        temperature: (() => {
+          const t = typeof agent.temperature === 'string' ? parseFloat(agent.temperature) : agent.temperature;
+          return typeof t === 'number' && !Number.isNaN(t) && t >= 0 && t <= 2 ? t : 0.7;
+        })(),
+        top_p: (() => {
+          const p = typeof agent.top_p === 'string' ? parseFloat(agent.top_p) : agent.top_p;
+          return typeof p === 'number' && !Number.isNaN(p) && p >= 0 && p <= 1 ? p : 1;
+        })(),
+        max_tokens: safeMaxTokens,
+        max_completion_tokens: (() => {
+          const c = typeof agent.max_completion_tokens === 'string' ? parseInt(agent.max_completion_tokens, 10) : agent.max_completion_tokens;
+          return typeof c === 'number' && !Number.isNaN(c) && c >= 1 ? Math.min(c, 128000) : safeMaxTokens;
+        })(),
+        priority: (() => {
+          const pr = typeof agent.priority === 'string' ? parseInt(agent.priority, 10) : agent.priority;
+          return typeof pr === 'number' && !Number.isNaN(pr) && pr >= 0 && pr <= 100 ? pr : 10;
+        })()
       };
-
-      // Validation des paramètres de l'agent
-      if (processedAgent.temperature < 0 || processedAgent.temperature > 2) {
-        logger.warn(`[AgentConfigService] ⚠️ Temperature invalide, utilisation de la valeur par défaut`, {
-          agentId,
-          temperature: processedAgent.temperature
-        });
-        processedAgent.temperature = 0.7;
-      }
-
-      if (processedAgent.max_tokens < 1 || processedAgent.max_tokens > 128000) {
-        logger.warn(`[AgentConfigService] ⚠️ Max tokens invalide, utilisation de la valeur par défaut`, {
-          agentId,
-          max_tokens: processedAgent.max_tokens
-        });
-        processedAgent.max_tokens = 4000;
-      }
-
-      if (processedAgent.top_p < 0 || processedAgent.top_p > 1) {
-        logger.warn(`[AgentConfigService] ⚠️ Top_p invalide, utilisation de la valeur par défaut`, {
-          agentId,
-          top_p: processedAgent.top_p
-        });
-        processedAgent.top_p = 1;
-      }
 
       // Mettre en cache
       this.agentCache.set(agentId, processedAgent as SpecializedAgentConfig);
