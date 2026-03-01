@@ -219,15 +219,21 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
       e.preventDefault();
       e.stopPropagation();
 
-      const content = button.getAttribute('data-content');
-      if (!content) return;
+      // Pour les longs contenus (ex. gros blocs HTML), lire depuis le DOM au lieu de data-content
+      // (data-content peut être tronqué ou absent au-delà d'une certaine taille)
+      const codeBlock = button.closest('.u-block--code, .u-block--mermaid');
+      const fromDom = codeBlock?.querySelector('pre code')?.textContent
+        ?? (codeBlock?.querySelector('[data-mermaid-content]') as HTMLElement)?.getAttribute('data-mermaid-content');
+      let textToCopy: string;
+      if (fromDom != null && fromDom.length > 0) {
+        textToCopy = fromDom.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+      } else {
+        const content = button.getAttribute('data-content');
+        if (!content) return;
+        textToCopy = content.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+      }
 
-      try {
-        // Décoder les entités HTML
-        const decoded = content.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-        await navigator.clipboard.writeText(decoded);
-        
-        // Changer icône en checkmark
+      const showCopied = () => {
         const originalHTML = button.innerHTML;
         button.innerHTML = `
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -235,13 +241,34 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
           </svg>
         `;
         button.classList.add('copied');
-        
         setTimeout(() => {
           button.innerHTML = originalHTML;
           button.classList.remove('copied');
         }, 2000);
-      } catch (err) {
-        logger.error('Erreur copie code:', err);
+      };
+
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(textToCopy);
+          showCopied();
+        } else {
+          throw new Error('Clipboard API unavailable');
+        }
+      } catch {
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = textToCopy;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          textarea.setAttribute('readonly', '');
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          showCopied();
+        } catch (err) {
+          logger.error('Erreur copie code:', err);
+        }
       }
     };
 
