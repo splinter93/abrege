@@ -181,6 +181,23 @@ export class AgentUpdateService {
         updated_at: new Date().toISOString()
       };
 
+      // Garantir que max_tokens (et champs numériques) sont des nombres pour la persistance
+      if (mergedData.max_tokens !== undefined) {
+        mergedData.max_tokens =
+          typeof mergedData.max_tokens === 'number'
+            ? mergedData.max_tokens
+            : parseInt(String(mergedData.max_tokens), 10) || 4000;
+      }
+      if (mergedData.temperature !== undefined && typeof mergedData.temperature !== 'number') {
+        mergedData.temperature = parseFloat(String(mergedData.temperature)) ?? 0.7;
+      }
+      if (mergedData.top_p !== undefined && typeof mergedData.top_p !== 'number') {
+        mergedData.top_p = parseFloat(String(mergedData.top_p)) ?? 1;
+      }
+      if (mergedData.priority !== undefined && typeof mergedData.priority !== 'number') {
+        mergedData.priority = parseInt(String(mergedData.priority), 10) ?? 10;
+      }
+
       // Mettre à jour en base
       const { data: updatedAgent, error } = await supabase
         .from('agents')
@@ -194,11 +211,13 @@ export class AgentUpdateService {
         throw new Error(`Erreur base de données: ${error.message}`);
       }
 
-      // Invalider le cache
+      // Invalider le cache (id + slug pour éviter lecture stale)
       this.agentConfigService.invalidateAgentCache(agentId);
-      if (nameChanged && patchData.slug) {
-        // Invalider aussi l'ancien slug
+      if (existingAgent.slug) {
         this.agentConfigService.invalidateAgentCache(existingAgent.slug);
+      }
+      if (nameChanged && patchData.slug) {
+        this.agentConfigService.invalidateAgentCache(String(patchData.slug));
       }
 
       logger.dev(`[AgentUpdateService] ✅ Agent ${agentId} patché`, { 

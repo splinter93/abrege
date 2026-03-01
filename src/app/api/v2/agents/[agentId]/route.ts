@@ -266,7 +266,7 @@ export async function GET(
       agentName: agent.display_name
     });
 
-    // 📤 Retourner les informations de l'agent
+    // 📤 Retourner les informations de l'agent (max_tokens en nombre pour persistance UI)
     return NextResponse.json({
       success: true,
       id: agent.id,
@@ -287,10 +287,10 @@ export async function GET(
       is_endpoint_agent: agent.is_endpoint_agent,
       capabilities: agent.capabilities,
       api_v2_capabilities: agent.api_v2_capabilities,
-      temperature: agent.temperature,
-      top_p: agent.top_p,
-      max_tokens: agent.max_tokens,
-      priority: agent.priority,
+      temperature: agent.temperature != null ? Number(agent.temperature) : agent.temperature,
+      top_p: agent.top_p != null ? Number(agent.top_p) : agent.top_p,
+      max_tokens: agent.max_tokens != null ? Number(agent.max_tokens) : agent.max_tokens,
+      priority: agent.priority != null ? Number(agent.priority) : agent.priority,
       version: agent.version,
       is_default: agent.is_default,
       context_template: agent.context_template,

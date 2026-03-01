@@ -216,7 +216,7 @@ export function AgentParameters({
                 type="range"
                 className="field-range"
                 min="1"
-                max="100000"
+                max="128000"
                 step="100"
                 value={editedAgent.max_tokens ?? 0}
                 onChange={event => onUpdateField('max_tokens', parseInt(event.target.value, 10))}
