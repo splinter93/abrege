@@ -85,7 +85,10 @@ const XAI_INFO: ProviderInfo = {
     'grok-4-fast-reasoning',       // Legacy reasoning (migrated to 4.1)
     'grok-4-fast-non-reasoning',   // Legacy fast (migrated to 4.1)
     'grok-beta',                   // Beta access
-    'grok-vision-beta'             // Vision model (beta)
+    'grok-vision-beta',            // Vision model (beta)
+    'grok-4.20-multi-agent-experimental-beta-0304',
+    'grok-4.20-experimental-beta-0304-reasoning',
+    'grok-4.20-experimental-beta-0304-non-reasoning'
   ],
   pricing: {
     input: '$0.20/1M tokens',

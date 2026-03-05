@@ -175,6 +175,42 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     pricing: { input: '$0.20', output: '$0.50' },
     description: 'Multimodal avec analyse avancée d\'images (beta)'
   },
+  {
+    id: 'grok-4.20-multi-agent-experimental-beta-0304',
+    name: 'Grok 4.20 Multi-Agent (Experimental)',
+    category: 'xai',
+    provider: 'xai',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'multi_agent'],
+    contextWindow: 2000000,
+    maxOutput: 8000,
+    speed: 480,
+    pricing: { input: '$2.00', output: '$6.00' },
+    description: 'Multi-agent experimental, 2M context, 4M tpm, 480 rpm'
+  },
+  {
+    id: 'grok-4.20-experimental-beta-0304-reasoning',
+    name: 'Grok 4.20 Reasoning (Experimental)',
+    category: 'xai',
+    provider: 'xai',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning', 'images'],
+    contextWindow: 2000000,
+    maxOutput: 8000,
+    speed: 480,
+    pricing: { input: '$2.00', output: '$6.00' },
+    description: 'Reasoning experimental, 2M context, 4M tpm, 480 rpm'
+  },
+  {
+    id: 'grok-4.20-experimental-beta-0304-non-reasoning',
+    name: 'Grok 4.20 Fast (Experimental)',
+    category: 'xai',
+    provider: 'xai',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
+    contextWindow: 2000000,
+    maxOutput: 8000,
+    speed: 480,
+    pricing: { input: '$2.00', output: '$6.00' },
+    description: 'Non-reasoning experimental, 2M context, 4M tpm, 480 rpm'
+  },
   
   // DeepSeek Models - Provider direct DeepSeek
   {
