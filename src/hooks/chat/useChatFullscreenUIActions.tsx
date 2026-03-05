@@ -266,27 +266,48 @@ export function useChatFullscreenUIActions(
   }, [openCanva, closeCanva, user, currentSession, activeCanvaId]);
 
   const handleRetryMessage = useCallback(async () => {
-    if (!uiState.lastUserMessage || !currentSession) {
-      logger.warn('[useChatFullscreenUIActions] ⚠️ Pas de dernier message à relancer');
+    if (!currentSession) {
+      logger.warn('[useChatFullscreenUIActions] ⚠️ Pas de session active pour relancer');
       return;
     }
-    
-    logger.info('[useChatFullscreenUIActions] 🔄 Relance du dernier message:', {
-      content: typeof uiState.lastUserMessage.content === 'string' 
-        ? uiState.lastUserMessage.content.substring(0, 100) 
-        : '[rich content]',
-      hasImages: !!uiState.lastUserMessage.images && uiState.lastUserMessage.images.length > 0
+
+    // Trouver le dernier message user dans l'historique
+    let userIndex = -1;
+    for (let i = infiniteMessages.length - 1; i >= 0; i--) {
+      if (infiniteMessages[i]?.role === 'user') {
+        userIndex = i;
+        break;
+      }
+    }
+
+    if (userIndex === -1) {
+      logger.warn('[useChatFullscreenUIActions] ⚠️ Aucun message user à relancer');
+      return;
+    }
+
+    const userMsg = infiniteMessages[userIndex];
+    const messageId = userMsg.id;
+    if (!messageId) {
+      logger.error('[useChatFullscreenUIActions] ⚠️ Message user sans id — impossible de relancer');
+      return;
+    }
+
+    logger.info('[useChatFullscreenUIActions] 🔄 Relance (même flow que régénération):', {
+      messageId,
+      contentPreview: typeof userMsg.content === 'string' ? userMsg.content.substring(0, 100) : '[multi-modal]'
     });
-    
+
     // Clear l'erreur avant de relancer
     uiState.setStreamError(null);
-    
-    // Relancer avec le même contenu
-    await messageActions.sendMessage(
-      uiState.lastUserMessage.content, 
-      uiState.lastUserMessage.images || []
-    );
-  }, [uiState.lastUserMessage, uiState.setStreamError, currentSession, messageActions]);
+
+    // Même effet que régénération : delete cascade + renvoi tel quel (sans doublon)
+    const content = typeof userMsg.content === 'string' ? userMsg.content : '';
+    await messageActions.editMessage({
+      messageId,
+      newContent: content,
+      messageIndex: userIndex
+    });
+  }, [currentSession, infiniteMessages, uiState.setStreamError, messageActions]);
   
   const handleDismissError = useCallback(() => {
     uiState.setStreamError(null);
