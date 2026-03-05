@@ -70,6 +70,9 @@ export interface UseChatMessageActionsReturn {
     messageId: string;
     newContent: string;
     images?: ImageAttachment[];
+    notes?: Note[];
+    mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>;
+    usedPrompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>;
     messageIndex?: number;
   }) => Promise<void>;
   
@@ -437,10 +440,13 @@ export function useChatMessageActions(
       messageId: string;
       newContent: string;
       images?: ImageAttachment[];
+      notes?: Note[];
+      mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number; created_at?: string }>;
+      usedPrompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>;
       messageIndex?: number;
     }
   ) => {
-    const { messageId, newContent, images, messageIndex } = options;
+    const { messageId, newContent, images, notes, mentions, usedPrompts, messageIndex } = options;
     // ✅ Auth guard
     if (!requireAuth()) {
       setError('Authentification requise');
@@ -523,7 +529,7 @@ export function useChatMessageActions(
       //    - Ajouter le message user
       //    - Appeler le LLM
       //    - Gérer la réponse
-      await sendMessage(newContent, images);
+      await sendMessage(newContent, images, notes, mentions, usedPrompts);
 
       logger.dev('[useChatMessageActions] ✅ Message édité renvoyé (flow normal)');
 

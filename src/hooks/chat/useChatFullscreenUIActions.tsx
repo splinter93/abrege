@@ -197,7 +197,7 @@ export function useChatFullscreenUIActions(
     canvasSelections?: CanvasSelection[], // ✅ NOUVEAU : Sélections du canvas
     reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
   ) => {
-    // ✏️ Si en mode édition, router vers editMessage
+    // ✏️ Si en mode édition, router vers editMessage (avec mentions, notes et prompts)
     if (editingMessage) {
       let textContent = '';
       if (typeof message === 'string') {
@@ -210,6 +210,9 @@ export function useChatFullscreenUIActions(
         messageId: editingMessage.messageId,
         newContent: textContent,
         images,
+        notes,
+        mentions,
+        usedPrompts,
         messageIndex: editingMessage.messageIndex
       });
       return;
