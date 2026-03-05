@@ -309,6 +309,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: false
   },
   {
+    id: 'fireworks/kimi-k2p5',
+    name: 'Kimi K2.5 P (Fireworks)',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'images', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 262144,
+    maxOutput: 8192,
+    speed: 500,
+    pricing: { input: '$0.40', output: '$1.75' },
+    description: 'MoonshotAI Kimi K2.5 P via Fireworks, vision native (lit les images), contexte 262K',
+    recommended: false
+  },
+  {
     id: 'openrouter/glm-4.7',
     name: 'GLM 4.7',
     category: 'liminality',

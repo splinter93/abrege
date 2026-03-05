@@ -101,6 +101,7 @@ const LIMINALITY_INFO: ProviderInfo = {
     'fireworks/glm-5',
     'openrouter/kimi-k2-thinking',
     'openrouter/kimi-k2.5',
+    'fireworks/kimi-k2p5',
     'openrouter/glm-4.7',
     'openrouter/gemini-3-flash-preview',
     'openrouter/minimax-m2.1',
