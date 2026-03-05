@@ -21,6 +21,7 @@ interface ChatMessageProps {
   animateContent?: boolean; // Nouveau prop pour contrôler l'animation
   messageIndex?: number; // Index du message dans le thread
   onEdit?: (messageId: string, content: string, index: number) => void; // Callback d'édition
+  onRegenerate?: (assistantMessageId: string) => void; // Régénérer la réponse (par id du message assistant)
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ 
@@ -29,24 +30,27 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   isStreaming = false,
   animateContent = false,
   messageIndex,
-  onEdit
+  onEdit,
+  onRegenerate
 }) => {
   const [displayedContent, setDisplayedContent] = useState('');
-  
+
+  const content = message?.content ?? '';
+  const role = message?.role;
+
+  // ✅ Hooks inconditionnels avant tout return conditionnel — règle des hooks React
+  useEffect(() => {
+    if (content) setDisplayedContent(content);
+  }, [content]);
+
   if (!message) {
     logger.warn('ChatMessage: message is undefined');
     return null;
   }
-  
-  const { role, content } = message;
 
   // Masquer les observations internes et messages tool
   if (isObservationMessage(message)) return null;
   if (role === 'tool') return null;
-
-  useEffect(() => {
-    if (content) setDisplayedContent(content);
-  }, [content]);
 
   // ✅ SUPPRIMÉ: parseSuccessFromContent et getToolResultsForAssistant
   // Plus utilisés car ToolCallMessage est remplacé par StreamTimelineRenderer
@@ -186,8 +190,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             }}
             onVoice={() => logger.dev('Lecture vocale du message')}
             onEdit={onEdit}
+            onRegenerate={role === 'assistant' && message.id ? () => onRegenerate?.(message.id!) : undefined}
             showVoiceButton={role === 'assistant'}
             showEditButton={role === 'user'}
+            showRegenerateButton={role === 'assistant'}
             className={role === 'user' ? 'bubble-buttons-user' : ''}
           />
         </div>

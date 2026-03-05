@@ -47,7 +47,7 @@ import type { CanvaSession as CanvaSessionDB, ListCanvasResponse } from '@/types
 
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
-import { applyChatFontPreset, CHAT_FONT_PRESETS, type ChatFontPresetId } from '@/constants/chatFontPresets';
+import { applyChatFontPreset } from '@/constants/chatFontPresets';
 
 import '@/styles/chat-clean.css';
 import '@/styles/sidebar-collapsible.css';
@@ -362,12 +362,11 @@ const ChatFullscreenV2: React.FC = () => {
     }
   }, [allowSidebarHover, uiState.setSidebarHovered]);
 
-  // ✅ Preset font appliqué dès le chargement du chat (PWA + desktop) pour que le texte ait la bonne police
+  // ✅ Police chat : variable --font-chat-base. On applique toujours Manrope (preset) au chargement.
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('chat-font-preference') as ChatFontPresetId | null;
-      const presetId = saved && saved in CHAT_FONT_PRESETS ? saved : 'manrope';
-      applyChatFontPreset(presetId);
+      applyChatFontPreset('manrope');
+      localStorage.setItem('chat-font-preference', 'manrope');
     } catch {
       applyChatFontPreset('manrope');
     }
@@ -481,6 +480,7 @@ const ChatFullscreenV2: React.FC = () => {
                   onRetryMessage={uiActions.handleRetryMessage}
                   onDismissError={uiActions.handleDismissError}
                   onEditMessage={uiActions.handleEditMessage}
+                  onRegenerateResponse={uiActions.handleRegenerateResponse}
                   containerRef={uiState.messagesContainerRef}
                   messagesEndRef={messagesEndRef}
                   keyboardInset={uiState.keyboardInset}

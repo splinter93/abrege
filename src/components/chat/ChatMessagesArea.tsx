@@ -46,6 +46,7 @@ export interface ChatMessagesAreaProps {
   onRetryMessage?: () => void; // ✅ NOUVEAU: Callback retry
   onDismissError?: () => void; // ✅ NOUVEAU: Callback dismiss erreur
   onEditMessage: (messageId: string, content: string, index: number) => void;
+  onRegenerateResponse?: (assistantMessageId: string) => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   keyboardInset?: number;
@@ -75,6 +76,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
   onRetryMessage, // ✅ NOUVEAU
   onDismissError, // ✅ NOUVEAU
   onEditMessage,
+  onRegenerateResponse,
   containerRef,
   messagesEndRef,
   keyboardInset = 0
@@ -158,6 +160,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
                     message={message}
                     messageIndex={index}
                     onEdit={onEditMessage}
+                    onRegenerate={onRegenerateResponse}
                     animateContent={false}
                     isStreaming={false}
                   />
@@ -201,6 +204,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
                   message={message}
                   messageIndex={index}
                   onEdit={onEditMessage}
+                  onRegenerate={onRegenerateResponse}
                   animateContent={false}
                   isStreaming={false}
                 />

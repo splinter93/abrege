@@ -2,7 +2,7 @@ import React from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import './BubbleButtons.css';
 import { FiCopy, FiCheck } from 'react-icons/fi';
-import { Volume2 } from 'lucide-react';
+import { Volume2, RefreshCw } from 'lucide-react';
 
 interface BubbleButtonsProps {
   content: string;
@@ -11,8 +11,10 @@ interface BubbleButtonsProps {
   onCopy?: () => void;
   onVoice?: () => void;
   onEdit?: (messageId: string, content: string, index: number) => void;
+  onRegenerate?: () => void;
   showVoiceButton?: boolean;
   showEditButton?: boolean;
+  showRegenerateButton?: boolean;
   className?: string;
 }
 
@@ -23,8 +25,10 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
   onCopy,
   onVoice,
   onEdit,
+  onRegenerate,
   showVoiceButton = false,
   showEditButton = false,
+  showRegenerateButton = false,
   className = ''
 }) => {
   const [copied, setCopied] = React.useState(false);
@@ -64,6 +68,17 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
           >
             {copied ? <FiCheck size={14} /> : <FiCopy size={14} />}
           </button>
+
+          {showRegenerateButton && onRegenerate && (
+            <button
+              className="bubble-button regenerate-button"
+              onClick={onRegenerate}
+              title="Régénérer la réponse"
+              aria-label="Régénérer la réponse"
+            >
+              <RefreshCw size={14} />
+            </button>
+          )}
 
           {showVoiceButton && (
             <button

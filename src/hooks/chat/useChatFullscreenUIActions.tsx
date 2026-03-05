@@ -54,6 +54,7 @@ export interface UseChatFullscreenUIActionsReturn {
   handleSidebarMouseEnter: () => void;
   handleSidebarMouseLeave: () => void;
   handleEditMessage: (messageId: string, content: string, index: number) => void;
+  handleRegenerateResponse: (assistantMessageId: string) => Promise<void>;
   handleCancelEdit: () => void;
   handleSendMessage: (
     message: string | MessageContent,
@@ -144,6 +145,43 @@ export function useChatFullscreenUIActions(
     startEditingMessage(messageId, content, realIndex);
     uiState.setEditingContent(content);
   }, [startEditingMessage, requireAuth, infiniteMessages, uiState.setEditingContent]);
+
+  /** Régénère la réponse : retrouve le message user précédant l'assistant donné par id, le renvoie tel quel en supprimant ce qui suit. */
+  const handleRegenerateResponse = useCallback(async (assistantMessageId: string) => {
+    if (!requireAuth() || !currentSession) return;
+
+    const assistantIndex = infiniteMessages.findIndex(m => m.id === assistantMessageId);
+    if (assistantIndex <= 0) {
+      logger.warn('[useChatFullscreenUIActions] Régénération impossible : message assistant introuvable ou en premier', { assistantMessageId });
+      return;
+    }
+
+    let userIndex = -1;
+    for (let i = assistantIndex - 1; i >= 0; i--) {
+      if (infiniteMessages[i]?.role === 'user') {
+        userIndex = i;
+        break;
+      }
+    }
+    if (userIndex === -1) {
+      logger.warn('[useChatFullscreenUIActions] Régénération impossible : aucun message user avant l\'assistant', { assistantMessageId });
+      return;
+    }
+
+    const userMsg = infiniteMessages[userIndex];
+    const messageId = userMsg.id;
+    if (!messageId) {
+      logger.error('[useChatFullscreenUIActions] Message user sans id — impossible de régénérer', { userIndex });
+      return;
+    }
+
+    const content = typeof userMsg.content === 'string' ? userMsg.content : '';
+    await messageActions.editMessage({
+      messageId,
+      newContent: content,
+      messageIndex: userIndex
+    });
+  }, [requireAuth, currentSession, infiniteMessages, messageActions]);
 
   const handleCancelEdit = useCallback(() => {
     cancelEditing();
@@ -301,6 +339,7 @@ export function useChatFullscreenUIActions(
     handleSidebarMouseEnter,
     handleSidebarMouseLeave,
     handleEditMessage,
+    handleRegenerateResponse,
     handleCancelEdit,
     handleSendMessage,
     handleOpenCanva,
