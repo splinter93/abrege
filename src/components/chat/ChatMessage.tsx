@@ -36,7 +36,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const [displayedContent, setDisplayedContent] = useState('');
 
   const content = message?.content ?? '';
-  const role = message?.role;
+  const messageId = message?.id;
 
   // ✅ Hooks inconditionnels avant tout return conditionnel — règle des hooks React
   useEffect(() => {
@@ -47,6 +47,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     logger.warn('ChatMessage: message is undefined');
     return null;
   }
+
+  // ✅ Déstructuration après le guard — message est garanti non-null ici
+  const { role } = message;
 
   // Masquer les observations internes et messages tool
   if (isObservationMessage(message)) return null;
@@ -178,7 +181,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         <div className="chatgpt-message-actions">
           <BubbleButtons
             content={content}
-            messageId={message.id}
+            messageId={messageId}
             messageIndex={messageIndex}
             onCopy={async () => {
               try {
@@ -190,7 +193,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             }}
             onVoice={() => logger.dev('Lecture vocale du message')}
             onEdit={onEdit}
-            onRegenerate={role === 'assistant' && message.id ? () => onRegenerate?.(message.id!) : undefined}
+            onRegenerate={role === 'assistant' && messageId ? () => onRegenerate?.(messageId) : undefined}
             showVoiceButton={role === 'assistant'}
             showEditButton={role === 'user'}
             showRegenerateButton={role === 'assistant'}
