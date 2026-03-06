@@ -7,6 +7,88 @@ import type { AgentSchemaLink, OpenApiSchema } from '@/hooks/useOpenApiSchemas';
 import type { AgentCallableLink, CallableListItem } from '@/hooks/useCallables';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 
+const inputBase =
+  'w-full px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/60 text-zinc-100 text-sm placeholder:text-zinc-500 focus:border-zinc-600 focus:bg-zinc-800/20 focus:outline-none transition-colors';
+const labelBase = 'text-xs font-medium text-zinc-400 block mb-1.5';
+const boxBase = 'p-6 rounded-2xl border border-zinc-800/40 bg-[var(--color-bg-primary)]';
+
+/* Custom slider: track + fill + native input (value/onChange preserved) */
+function CustomSlider({
+  id,
+  label,
+  valueDisplay,
+  min,
+  max,
+  step,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  valueDisplay: string;
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const percent = max > min ? ((value - min) / (max - min)) * 100 : 0;
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className={labelBase} htmlFor={id}>
+          {label}
+        </label>
+        <span className="font-mono text-xs text-zinc-500">{valueDisplay}</span>
+      </div>
+      <div className="relative h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-zinc-300 hover:bg-white transition-colors pointer-events-none"
+          style={{ width: `${percent}%` }}
+        />
+        <input
+          id={id}
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={e => onChange(parseFloat(e.target.value))}
+          className="relative z-10 w-full h-full appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-zinc-300 [&::-webkit-slider-thumb]:hover:bg-white [&::-webkit-slider-thumb]:transition-colors [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-zinc-300 [&::-moz-range-thumb]:border-0"
+        />
+      </div>
+    </div>
+  );
+}
+
+/* Tool row: badge line + remove on hover */
+function ToolItem({
+  children,
+  onRemove,
+  titleRemove,
+}: {
+  children: React.ReactNode;
+  onRemove: () => void;
+  titleRemove: string;
+}) {
+  return (
+    <div className="group flex items-center justify-between gap-2 p-2.5 rounded-lg border border-zinc-800/40 bg-zinc-900/20 hover:border-zinc-700/50 transition-colors">
+      <div className="min-w-0 truncate text-sm text-zinc-200">{children}</div>
+      <button
+        type="button"
+        onClick={e => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        className="shrink-0 p-1.5 rounded-md opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
+        title={titleRemove}
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
 interface AgentParametersProps {
   selectedAgent: SpecializedAgentConfig | null;
   editedAgent: Partial<SpecializedAgentConfig> | null;
@@ -63,12 +145,11 @@ export function AgentParameters({
   const [showMcpDropdown, setShowMcpDropdown] = useState(false);
   const [showCallablesDropdown, setShowCallablesDropdown] = useState(false);
 
-  // Mode création : selectedAgent est null mais editedAgent existe
   const isCreating = !selectedAgent && editedAgent !== null;
 
   if (loadingDetails) {
     return (
-      <div className="agent-settings-panel agent-params-panel">
+      <div className="py-8">
         <SimpleLoadingState message="Chargement des réglages" />
       </div>
     );
@@ -76,12 +157,10 @@ export function AgentParameters({
 
   if (!editedAgent) {
     return (
-      <div className="agent-settings-panel agent-params-panel">
-        <div className="agent-modal-state agent-modal-state--empty">
-          <div className="agent-modal-state__icon">🤖</div>
-          <h3>Sélectionnez un agent</h3>
-          <p>Choisissez un agent pour accéder aux réglages avancés.</p>
-        </div>
+      <div className="py-12 text-center">
+        <div className="text-4xl">🤖</div>
+        <h3 className="mt-4 text-lg font-semibold text-zinc-100">Sélectionnez un agent</h3>
+        <p className="mt-1 text-sm text-zinc-500">Choisissez un agent pour accéder aux réglages avancés.</p>
       </div>
     );
   }
@@ -100,9 +179,7 @@ export function AgentParameters({
   const handleLinkServer = async (serverId: string) => {
     if (!selectedAgent) return;
     const linked = await onLinkServer(selectedAgent.id, serverId);
-    if (linked) {
-      setShowMcpDropdown(false);
-    }
+    if (linked) setShowMcpDropdown(false);
   };
 
   const handleUnlinkServer = async (serverId: string) => {
@@ -113,9 +190,7 @@ export function AgentParameters({
   const handleLinkCallable = async (callableId: string) => {
     if (!onLinkCallable || !selectedAgent) return;
     const linked = await onLinkCallable(selectedAgent.id, callableId);
-    if (linked) {
-      setShowCallablesDropdown(false);
-    }
+    if (linked) setShowCallablesDropdown(false);
   };
 
   const handleUnlinkCallable = async (callableId: string) => {
@@ -126,385 +201,290 @@ export function AgentParameters({
   const modelInfo = editedAgent.model ? getModelInfo(editedAgent.model) : null;
 
   return (
-    <div className="agent-settings-panel agent-params-panel">
-      <div className="agent-params">
-        <section className="agent-params-card agent-params-card--model">
-          <div className="agent-params-card__header">
-            <h3>Modèle LLM</h3>
-          </div>
-          <div className="agent-params-card__body">
-            <label className="visually-hidden" htmlFor="agent-model">
+    <div className="space-y-8">
+      {/* Modèle LLM */}
+      <section className={boxBase}>
+        <h3 className="text-sm font-semibold text-zinc-100 mb-4">Modèle LLM</h3>
+        <div className="flex gap-2">
+          <div className="flex-1 min-w-0">
+            <label className="sr-only" htmlFor="agent-model">
               Modèle LLM
             </label>
-            <div className="agent-params-select">
-              <select
-                id="agent-model"
-                className="field-select"
-                value={editedAgent.model || ''}
-                onChange={event => onUpdateField('model', event.target.value)}
-              >
-                {!editedAgent.model && <option value="">-- Choisissez un modèle --</option>}
-                {Object.entries(GROQ_MODELS_BY_CATEGORY).map(([category, models]) => (
-                  <optgroup key={category} label={category}>
-                    {models.map(model => (
-                      <option key={model.id} value={model.id}>
-                        {model.name} {model.recommended ? '⭐' : ''} • {model.speed} TPS
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              {modelInfo && (
-                <button
-                  type="button"
-                  className="agent-select-info"
-                  title={`${modelInfo.description}\nTarifs : ${modelInfo.pricing.input} input / ${modelInfo.pricing.output} output\nVitesses : ${modelInfo.speed} TPS`}
-                >
-                  <Info size={16} />
-                </button>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section className="agent-params-card">
-          <div className="agent-params-card__header">
-            <h3>Réglages principaux</h3>
-          </div>
-          <div className="agent-params-card__body agent-params-grid">
-            <div className="agent-params-field">
-              <div className="agent-params-field__label">
-                <span>Température</span>
-                <span className="agent-params-field__value">{(editedAgent.temperature ?? 0).toFixed(1)}</span>
-              </div>
-              <input
-                id="agent-temperature"
-                type="range"
-                className="field-range"
-                min="0"
-                max="2"
-                step="0.1"
-                value={editedAgent.temperature ?? 0}
-                onChange={event => onUpdateField('temperature', parseFloat(event.target.value))}
-              />
-            </div>
-
-            <div className="agent-params-field">
-              <div className="agent-params-field__label">
-                <span>Top P</span>
-                <span className="agent-params-field__value">{(editedAgent.top_p ?? 1).toFixed(2)}</span>
-              </div>
-              <input
-                id="agent-top-p"
-                type="range"
-                className="field-range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={editedAgent.top_p ?? 1}
-                onChange={event => onUpdateField('top_p', parseFloat(event.target.value))}
-              />
-            </div>
-
-            <div className="agent-params-field">
-              <div className="agent-params-field__label">
-                <span>Max tokens</span>
-                <span className="agent-params-field__value">{editedAgent.max_tokens ?? 0}</span>
-              </div>
-              <input
-                id="agent-max-tokens"
-                type="range"
-                className="field-range"
-                min="1"
-                max="128000"
-                step="100"
-                value={editedAgent.max_tokens ?? 0}
-                onChange={event => onUpdateField('max_tokens', parseInt(event.target.value, 10))}
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="agent-params-card">
-          <div className="agent-params-card__header">
-            <h3>OpenAPI Tools</h3>
-            {!isCreating && (
-              <div className="agent-params-card__actions">
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => setShowOpenApiDropdown(value => !value)}
-                >
-                  <Plus size={16} />
-                  Ajouter
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="agent-params-card__body">
-            {showOpenApiDropdown && openApiSchemas.length > 0 && (
-              <div className="agent-params-dropdown">
-                {openApiSchemas
-                  .filter(schema => !isSchemaLinked(schema.id))
-                  .map(schema => (
-                    <button
-                      key={schema.id}
-                      type="button"
-                      className="agent-params-dropdown__item agent-params-dropdown__item--compact"
-                      onClick={() => handleLinkSchema(schema.id)}
-                    >
-                      <div className="agent-params-dropdown__name">{schema.name}</div>
-                    </button>
+            <select
+              id="agent-model"
+              className={`${inputBase} cursor-pointer`}
+              value={editedAgent.model || ''}
+              onChange={e => onUpdateField('model', e.target.value)}
+            >
+              {!editedAgent.model && <option value="">-- Choisissez un modèle --</option>}
+              {Object.entries(GROQ_MODELS_BY_CATEGORY).map(([category, models]) => (
+                <optgroup key={category} label={category}>
+                  {models.map(model => (
+                    <option key={model.id} value={model.id}>
+                      {model.name} {model.recommended ? '⭐' : ''} • {model.speed} TPS
+                    </option>
                   ))}
-                {openApiSchemas.filter(schema => !isSchemaLinked(schema.id)).length === 0 && (
-                  <div className="agent-params-dropdown__empty">
-                    Tous les schémas disponibles sont déjà liés
-                  </div>
-                )}
-              </div>
-            )}
-
-            {isCreating ? (
-              <div className="agent-params-empty">
-                <p>Les outils OpenAPI peuvent être configurés après la création de l&apos;agent.</p>
-              </div>
-            ) : openApiLoading ? (
-              <div className="agent-params-state">
-                <div className="loading-spinner" />
-                <p>Chargement des schémas disponibles…</p>
-              </div>
-            ) : agentOpenApiSchemas.length === 0 ? (
-              <div className="agent-params-empty">
-                <p>Aucun schéma OpenAPI lié pour cet agent.</p>
-              </div>
-            ) : (
-              <div className="agent-params-list">
-                {agentOpenApiSchemas.map(schema => (
-                  <div key={schema.id} className="agent-params-list__item">
-                    <div className="agent-params-list__content">
-                      <div className="agent-params-list__title">{schema.openapi_schema?.name ?? schema.openapi_schema_id}</div>
-                    </div>
-                    <button
-                      type="button"
-                      className="agent-params-list__remove"
-                      onClick={() => handleUnlinkSchema(schema.openapi_schema_id)}
-                      title="Retirer ce schéma"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                </optgroup>
+              ))}
+            </select>
           </div>
-        </section>
+          {modelInfo && (
+            <button
+              type="button"
+              className="shrink-0 p-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30 transition-colors"
+              title={`${modelInfo.description}\nTarifs : ${modelInfo.pricing.input} input / ${modelInfo.pricing.output} output\nVitesses : ${modelInfo.speed} TPS`}
+            >
+              <Info className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </section>
 
-        <section className="agent-params-card">
-          <div className="agent-params-card__header">
-            <h3>MCP Tools</h3>
-            {!isCreating && (
-              <div className="agent-params-card__actions">
+      {/* Réglages principaux : sliders */}
+      <section className={boxBase}>
+        <h3 className="text-sm font-semibold text-zinc-100 mb-6">Réglages principaux</h3>
+        <div className="space-y-6">
+          <CustomSlider
+            id="agent-temperature"
+            label="Température"
+            valueDisplay={(editedAgent.temperature ?? 0).toFixed(1)}
+            min={0}
+            max={2}
+            step={0.1}
+            value={editedAgent.temperature ?? 0}
+            onChange={v => onUpdateField('temperature', v)}
+          />
+          <CustomSlider
+            id="agent-top-p"
+            label="Top P"
+            valueDisplay={(editedAgent.top_p ?? 1).toFixed(2)}
+            min={0}
+            max={1}
+            step={0.05}
+            value={editedAgent.top_p ?? 1}
+            onChange={v => onUpdateField('top_p', v)}
+          />
+          <CustomSlider
+            id="agent-max-tokens"
+            label="Max tokens"
+            valueDisplay={String(editedAgent.max_tokens ?? 0)}
+            min={1}
+            max={128000}
+            step={100}
+            value={editedAgent.max_tokens ?? 0}
+            onChange={v => onUpdateField('max_tokens', Math.round(v))}
+          />
+        </div>
+      </section>
+
+      {/* OpenAPI Tools */}
+      <section className={boxBase}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-zinc-100">OpenAPI Tools</h3>
+          {!isCreating && (
+            <button
+              type="button"
+              onClick={() => setShowOpenApiDropdown(v => !v)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-xs font-medium hover:bg-zinc-800/30 hover:text-zinc-200 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Ajouter
+            </button>
+          )}
+        </div>
+        {showOpenApiDropdown && openApiSchemas.length > 0 && (
+          <div className="mb-4 space-y-1">
+            {openApiSchemas
+              .filter(schema => !isSchemaLinked(schema.id))
+              .map(schema => (
                 <button
+                  key={schema.id}
                   type="button"
-                  className="btn-ghost"
-                  onClick={() => setShowMcpDropdown(value => !value)}
+                  className="w-full text-left px-2.5 py-2 rounded-lg border border-zinc-800/40 bg-zinc-900/20 text-zinc-300 text-sm hover:bg-zinc-800/30 transition-colors"
+                  onClick={() => handleLinkSchema(schema.id)}
                 >
-                  <Plus size={16} />
-                  Ajouter
+                  {schema.name}
                 </button>
-              </div>
+              ))}
+            {openApiSchemas.filter(schema => !isSchemaLinked(schema.id)).length === 0 && (
+              <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les schémas disponibles sont déjà liés</p>
             )}
           </div>
-
-          <div className="agent-params-card__body">
-            {showMcpDropdown && mcpServers.length > 0 && (
-              <div className="agent-params-dropdown">
-                {mcpServers
-                  .filter(server => !isServerLinked(server.id))
-                  .map(server => (
-                    <button
-                      key={server.id}
-                      type="button"
-                      className="agent-params-dropdown__item agent-params-dropdown__item--compact"
-                      onClick={() => handleLinkServer(server.id)}
-                    >
-                      <div className="agent-params-dropdown__name">{server.name}</div>
-                    </button>
-                  ))}
-                {mcpServers.filter(server => !isServerLinked(server.id)).length === 0 && (
-                  <div className="agent-params-dropdown__empty">
-                    Tous les serveurs disponibles sont déjà liés
-                  </div>
-                )}
-              </div>
-            )}
-
-            {isCreating ? (
-              <div className="agent-params-empty">
-                <p>Les outils MCP peuvent être configurés après la création de l&apos;agent.</p>
-              </div>
-            ) : mcpLoading ? (
-              <div className="agent-params-state">
-                <div className="loading-spinner" />
-                <p>Chargement des serveurs MCP…</p>
-              </div>
-            ) : agentMcpServers.length === 0 ? (
-              <div className="agent-params-empty">
-                <p>Aucun serveur MCP n&apos;est actuellement lié.</p>
-              </div>
-            ) : (
-              <div className="agent-params-list">
-                {agentMcpServers.map(link => (
-                  <div key={link.id} className="agent-params-list__item">
-                    <div className="agent-params-list__content">
-                      <div className="agent-params-list__title">{link.mcp_server.name}</div>
-                    </div>
-                    <button
-                      className="agent-params-list__remove"
-                      type="button"
-                      onClick={() => handleUnlinkServer(link.mcp_server_id)}
-                      title="Retirer ce serveur"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {onLinkCallable && onUnlinkCallable && (
-          <section className="agent-params-card">
-            <div className="agent-params-card__header">
-              <h3>Callables Synesia</h3>
-              {!isCreating && (
-                <div className="agent-params-card__actions">
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    onClick={() => setShowCallablesDropdown(value => !value)}
-                  >
-                    <Plus size={16} />
-                    Ajouter
-                  </button>
-                </div>
-              )}
-            </div>
-
-          <div className="agent-params-card__body">
-            {showCallablesDropdown && availableCallables.length > 0 && (
-              <div className="agent-params-dropdown">
-                {availableCallables
-                  .filter(callable => !isCallableLinked(callable.id))
-                  .map(callable => (
-                    <button
-                      key={callable.id}
-                      type="button"
-                      className="agent-params-dropdown__item agent-params-dropdown__item--compact"
-                      onClick={() => handleLinkCallable(callable.id)}
-                    >
-                      <div className="agent-params-dropdown__name">
-                        {callable.name}
-                        {callable.type && (
-                          <span className="agent-params-dropdown__badge">
-                            {callable.type}
-                          </span>
-                        )}
-                      </div>
-                      {callable.description && (
-                        <div className="agent-params-dropdown__description">
-                          {callable.description}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                {availableCallables.filter(callable => !isCallableLinked(callable.id)).length === 0 && (
-                  <div className="agent-params-dropdown__empty">
-                    Tous les callables disponibles sont déjà liés
-                  </div>
-                )}
-              </div>
-            )}
-
-            {isCreating ? (
-              <div className="agent-params-empty">
-                <p>Les callables peuvent être configurés après la création de l&apos;agent.</p>
-              </div>
-            ) : callablesLoading ? (
-              <div className="agent-params-state">
-                <div className="loading-spinner" />
-                <p>Chargement des callables…</p>
-              </div>
-            ) : agentCallables.length === 0 ? (
-              <div className="agent-params-empty">
-                <p>Aucun callable n&apos;est actuellement lié.</p>
-              </div>
-            ) : (
-              <div className="agent-params-list">
-                {agentCallables.map(link => (
-                  <div key={link.id} className="agent-params-list__item">
-                    <div className="agent-params-list__content">
-                      <div className="agent-params-list__title">
-                        {link.synesia_callable.name}
-                        {link.synesia_callable.type && (
-                          <span className="agent-params-list__badge">
-                            {link.synesia_callable.type}
-                          </span>
-                        )}
-                      </div>
-                      {link.synesia_callable.description && (
-                        <div className="agent-params-list__description">
-                          {link.synesia_callable.description}
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      className="agent-params-list__remove"
-                      type="button"
-                      onClick={() => handleUnlinkCallable(link.callable_id)}
-                      title="Retirer ce callable"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          </section>
         )}
-
-        <section className="agent-params-card">
-          <div className="agent-params-card__header">
-            <h3>Réglages avancés</h3>
+        {isCreating ? (
+          <p className="text-xs text-zinc-500">Les outils OpenAPI peuvent être configurés après la création de l&apos;agent.</p>
+        ) : openApiLoading ? (
+          <div className="flex items-center gap-2 text-zinc-500 text-sm">
+            <span className="inline-block w-4 h-4 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
+            Chargement…
           </div>
-          <div className="agent-params-card__body agent-params-grid agent-params-grid--state">
-            <div className="agent-params-field">
-              <label className="field-label" htmlFor="agent-priority">
-                Priorité
-              </label>
-              <input
-                id="agent-priority"
-                type="number"
-                className="field-input"
-                value={editedAgent.priority ?? 0}
-                onChange={event => onUpdateField('priority', parseInt(event.target.value, 10))}
-              />
-            </div>
-
-            <div className="agent-params-field agent-params-field--readonly">
-              <label className="field-label" htmlFor="agent-version">
-                Version
-              </label>
-              <p className="field-value field-readonly" id="agent-version">
-                {selectedAgent?.version || '1.0.0'}
-              </p>
-            </div>
+        ) : agentOpenApiSchemas.length === 0 ? (
+          <p className="text-xs text-zinc-500">Aucun schéma OpenAPI lié.</p>
+        ) : (
+          <div className="space-y-2">
+            {agentOpenApiSchemas.map(schema => (
+              <ToolItem
+                key={schema.id}
+                onRemove={() => handleUnlinkSchema(schema.openapi_schema_id)}
+                titleRemove="Retirer ce schéma"
+              >
+                {schema.openapi_schema?.name ?? schema.openapi_schema_id}
+              </ToolItem>
+            ))}
           </div>
+        )}
+      </section>
+
+      {/* MCP Tools */}
+      <section className={boxBase}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-zinc-100">MCP Tools</h3>
+          {!isCreating && (
+            <button
+              type="button"
+              onClick={() => setShowMcpDropdown(v => !v)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-xs font-medium hover:bg-zinc-800/30 hover:text-zinc-200 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Ajouter
+            </button>
+          )}
+        </div>
+        {showMcpDropdown && mcpServers.length > 0 && (
+          <div className="mb-4 space-y-1">
+            {mcpServers
+              .filter(server => !isServerLinked(server.id))
+              .map(server => (
+                <button
+                  key={server.id}
+                  type="button"
+                  className="w-full text-left px-2.5 py-2 rounded-lg border border-zinc-800/40 bg-zinc-900/20 text-zinc-300 text-sm hover:bg-zinc-800/30 transition-colors"
+                  onClick={() => handleLinkServer(server.id)}
+                >
+                  {server.name}
+                </button>
+              ))}
+            {mcpServers.filter(server => !isServerLinked(server.id)).length === 0 && (
+              <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les serveurs disponibles sont déjà liés</p>
+            )}
+          </div>
+        )}
+        {isCreating ? (
+          <p className="text-xs text-zinc-500">Les outils MCP peuvent être configurés après la création de l&apos;agent.</p>
+        ) : mcpLoading ? (
+          <div className="flex items-center gap-2 text-zinc-500 text-sm">
+            <span className="inline-block w-4 h-4 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
+            Chargement…
+          </div>
+        ) : agentMcpServers.length === 0 ? (
+          <p className="text-xs text-zinc-500">Aucun serveur MCP lié.</p>
+        ) : (
+          <div className="space-y-2">
+            {agentMcpServers.map(link => (
+              <ToolItem
+                key={link.id}
+                onRemove={() => handleUnlinkServer(link.mcp_server_id)}
+                titleRemove="Retirer ce serveur"
+              >
+                {link.mcp_server.name}
+              </ToolItem>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Callables Synesia */}
+      {onLinkCallable && onUnlinkCallable && (
+        <section className={boxBase}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-zinc-100">Callables Synesia</h3>
+            {!isCreating && (
+              <button
+                type="button"
+                onClick={() => setShowCallablesDropdown(v => !v)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-xs font-medium hover:bg-zinc-800/30 hover:text-zinc-200 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Ajouter
+              </button>
+            )}
+          </div>
+          {showCallablesDropdown && availableCallables.length > 0 && (
+            <div className="mb-4 space-y-1">
+              {availableCallables
+                .filter(callable => !isCallableLinked(callable.id))
+                .map(callable => (
+                  <button
+                    key={callable.id}
+                    type="button"
+                    className="w-full text-left px-2.5 py-2 rounded-lg border border-zinc-800/40 bg-zinc-900/20 text-zinc-300 text-sm hover:bg-zinc-800/30 transition-colors"
+                    onClick={() => handleLinkCallable(callable.id)}
+                  >
+                    <span>{callable.name}</span>
+                    {callable.type && (
+                      <span className="ml-2 text-[10px] text-zinc-500 font-mono">{callable.type}</span>
+                    )}
+                  </button>
+                ))}
+              {availableCallables.filter(callable => !isCallableLinked(callable.id)).length === 0 && (
+                <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les callables disponibles sont déjà liés</p>
+              )}
+            </div>
+          )}
+          {isCreating ? (
+            <p className="text-xs text-zinc-500">Les callables peuvent être configurés après la création de l&apos;agent.</p>
+          ) : callablesLoading ? (
+            <div className="flex items-center gap-2 text-zinc-500 text-sm">
+              <span className="inline-block w-4 h-4 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
+              Chargement…
+            </div>
+          ) : agentCallables.length === 0 ? (
+            <p className="text-xs text-zinc-500">Aucun callable lié.</p>
+          ) : (
+            <div className="space-y-2">
+              {agentCallables.map(link => (
+                <ToolItem
+                  key={link.id}
+                  onRemove={() => handleUnlinkCallable(link.callable_id)}
+                  titleRemove="Retirer ce callable"
+                >
+                  <span>{link.synesia_callable.name}</span>
+                  {link.synesia_callable.type && (
+                    <span className="ml-2 text-[10px] text-zinc-500 font-mono">{link.synesia_callable.type}</span>
+                  )}
+                </ToolItem>
+              ))}
+            </div>
+          )}
         </section>
-      </div>
+      )}
+
+      {/* Réglages avancés */}
+      <section className={boxBase}>
+        <h3 className="text-sm font-semibold text-zinc-100 mb-4">Réglages avancés</h3>
+        <div className="space-y-4">
+          <div>
+            <label className={labelBase} htmlFor="agent-priority">
+              Priorité
+            </label>
+            <input
+              id="agent-priority"
+              type="number"
+              className={inputBase}
+              value={editedAgent.priority ?? 0}
+              onChange={e => onUpdateField('priority', parseInt(e.target.value, 10) || 0)}
+            />
+          </div>
+          <div>
+            <label className={labelBase} htmlFor="agent-version">
+              Version
+            </label>
+            <p id="agent-version" className="px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/60 text-zinc-500 text-sm font-mono">
+              {selectedAgent?.version || '1.0.0'}
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

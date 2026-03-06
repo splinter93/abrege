@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, X, Trash2, Star, Image as ImageIcon, MessageCircle } from 'lucide-react';
+import { X, Star, Image as ImageIcon, MessageCircle } from 'lucide-react';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 
@@ -9,6 +9,10 @@ const TTS_VOICE_OPTIONS = [
   { value: 'fr-male-orion', label: 'FR · Orion (M)' },
   { value: 'en-female-luna', label: 'EN · Luna (F)' },
 ];
+
+const inputBase =
+  'w-full px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/60 text-zinc-100 text-sm placeholder:text-zinc-500 focus:border-zinc-600 focus:bg-zinc-800/20 focus:outline-none transition-colors';
+const labelBase = 'text-xs font-medium text-zinc-400 block mb-1.5';
 
 interface AgentConfigurationProps {
   selectedAgent: SpecializedAgentConfig | null;
@@ -44,28 +48,22 @@ export function AgentConfiguration({
 }: AgentConfigurationProps) {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
 
-  // Mode création : selectedAgent est null mais editedAgent existe
   const isCreating = !selectedAgent && editedAgent !== null;
 
   if (loadingDetails || (!editedAgent && !isCreating)) {
     return (
-      <div className="agent-details-panel">
+      <div className="py-8">
         <SimpleLoadingState message="Chargement de la configuration" />
       </div>
     );
   }
 
-  // Si on n'est pas en mode création et qu'il n'y a pas d'agent sélectionné, afficher le message
   if (!selectedAgent && !isCreating) {
     return (
-      <div className="agent-details-panel">
-        <div className="empty-state">
-          <span className="empty-icon" role="img" aria-label="Robot">
-            🤖
-          </span>
-          <h3>Sélectionnez un agent</h3>
-          <p>Choisissez un agent pour afficher sa configuration.</p>
-        </div>
+      <div className="py-12 text-center">
+        <span className="text-4xl" role="img" aria-label="Robot">🤖</span>
+        <h3 className="mt-4 text-lg font-semibold text-zinc-100">Sélectionnez un agent</h3>
+        <p className="mt-1 text-sm text-zinc-500">Choisissez un agent pour afficher sa configuration.</p>
       </div>
     );
   }
@@ -90,13 +88,11 @@ export function AgentConfiguration({
       onUpdateField('is_endpoint_agent', false);
       return;
     }
-
     if (value === 'endpoint') {
       onUpdateField('is_chat_agent', false);
       onUpdateField('is_endpoint_agent', true);
       return;
     }
-
     onUpdateField('is_chat_agent', true);
     onUpdateField('is_endpoint_agent', true);
   };
@@ -110,244 +106,252 @@ export function AgentConfiguration({
 
   return (
     <>
-      <div className="agent-details-panel agent-config-panel">
-        <div className="agent-details">
-        <div className="agent-profile-card">
-          <button
-            type="button"
-            className="agent-profile-card__avatar"
-            onClick={() => setShowAvatarModal(true)}
-            aria-label="Voir et éditer l'avatar de l'agent"
-          >
-            {displayAvatarPreview ? (
-              <img
-                src={editedAgent.profile_picture}
-                alt={`Avatar de ${agentDisplayName}`}
-                onError={event => {
-                  event.currentTarget.style.display = 'none';
-                }}
-              />
-            ) : (
-              <span>{avatarFallback}</span>
-            )}
-          </button>
-
-          <div className="agent-profile-card__main">
-            <label className="visually-hidden" htmlFor="agent-display-name">
-              Nom d&apos;affichage
-            </label>
-            <input
-              id="agent-display-name"
-              type="text"
-              className="agent-profile-card__name"
-              value={editedAgent.display_name || ''}
-              onChange={event => onUpdateField('display_name', event.target.value)}
-              placeholder="Nom de l'agent"
-            />
-
-            <label className="visually-hidden" htmlFor="agent-description">
-              Description
-            </label>
-            <input
-              id="agent-description"
-              className="agent-profile-card__description agent-profile-card__description--inline"
-              value={editedAgent.description || ''}
-              onChange={event => onUpdateField('description', event.target.value)}
-              placeholder="Décrivez rapidement le rôle de cet agent…"
-            />
+      <div className="space-y-10">
+        {/* Identité : avatar + nom + description */}
+        <section className="space-y-4">
+          <div className="flex items-start gap-4">
+            <button
+              type="button"
+              onClick={() => setShowAvatarModal(true)}
+              aria-label="Voir et éditer l'avatar de l'agent"
+              className="shrink-0 w-14 h-14 rounded-full overflow-hidden border border-zinc-800/60 bg-zinc-900/30 flex items-center justify-center text-zinc-400 text-sm font-medium hover:border-zinc-600 transition-colors"
+            >
+              {displayAvatarPreview ? (
+                <img
+                  src={editedAgent.profile_picture}
+                  alt={`Avatar de ${agentDisplayName}`}
+                  className="w-full h-full object-cover"
+                  onError={e => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <span>{avatarFallback}</span>
+              )}
+            </button>
+            <div className="flex-1 min-w-0 space-y-4">
+              <div>
+                <label className={labelBase} htmlFor="agent-display-name">
+                  Nom d&apos;affichage
+                </label>
+                <input
+                  id="agent-display-name"
+                  type="text"
+                  className={inputBase}
+                  value={editedAgent.display_name || ''}
+                  onChange={e => onUpdateField('display_name', e.target.value)}
+                  placeholder="Nom de l'agent"
+                />
+              </div>
+              <div>
+                <label className={labelBase} htmlFor="agent-description">
+                  Description
+                </label>
+                <input
+                  id="agent-description"
+                  type="text"
+                  className={inputBase}
+                  value={editedAgent.description || ''}
+                  onChange={e => onUpdateField('description', e.target.value)}
+                  placeholder="Décrivez rapidement le rôle de cet agent…"
+                />
+              </div>
+            </div>
           </div>
-
-          <div className="agent-profile-card__actions">
+          <div className="flex flex-wrap items-center gap-2">
             {selectedAgent && (
               <button
-                className="btn-chat"
                 type="button"
                 onClick={onOpenChat}
                 title="Accéder au chat"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-sm hover:bg-zinc-800/20 hover:text-zinc-100 transition-colors"
               >
-                <MessageCircle size={16} />
+                <MessageCircle className="w-4 h-4" />
+                Chat
               </button>
             )}
             {selectedAgent && (
               <button
-                className={`btn-favorite ${isFavorite ? 'active' : ''}`}
                 type="button"
                 onClick={onToggleFavorite}
                 disabled={togglingFavorite}
                 title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors ${isFavorite ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : 'border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:bg-zinc-800/20 hover:text-zinc-100'}`}
               >
-                <Star size={18} fill={isFavorite ? 'currentColor' : 'none'} />
+                <Star size={16} fill={isFavorite ? 'currentColor' : 'none'} />
+                Favori
               </button>
             )}
-
             {hasChanges && (
               <>
                 <button
-                  className="btn-tertiary"
                   type="button"
                   onClick={onCancel}
                   disabled={loadingDetails}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-sm hover:bg-zinc-800/20 hover:text-zinc-100 transition-colors disabled:opacity-50"
                 >
-                  <X size={16} />
-                  <span>Annuler</span>
+                  <X className="w-4 h-4" />
+                  Annuler
                 </button>
                 <button
-                  className="btn-primary"
                   type="button"
                   onClick={onSave}
                   disabled={loadingDetails}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
                 >
-                  <span className="btn-primary__icon">
-                    <Save size={16} />
-                  </span>
-                  <span className="btn-primary__label">Sauvegarder</span>
+                  Enregistrer
                 </button>
               </>
             )}
-
             {selectedAgent && (
-              <button className="btn-danger" type="button" onClick={onDelete} title="Supprimer l'agent">
-                <Trash2 size={16} />
+              <button
+                type="button"
+                onClick={onDelete}
+                title="Supprimer l'agent"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-red-400/80 text-sm hover:bg-red-500/10 hover:text-red-400 transition-colors"
+              >
+                Supprimer
               </button>
             )}
           </div>
-        </div>
+        </section>
 
-        <div className="agent-config-sections">
-          <section className="agent-config-inline">
-            <div className="agent-inline-field">
-              <label className="field-label" htmlFor="agent-kind">
-                Type d&apos;agent
-              </label>
-              <select
-                id="agent-kind"
-                className="field-select"
-                value={agentTypeValue}
-                onChange={event => handleAgentTypeChange(event.target.value as 'chat' | 'endpoint' | 'both')}
-              >
-                <option value="chat">Agent de Chat</option>
-                <option value="endpoint">Agent d&apos;Exécution</option>
-                <option value="both">Chat &amp; Exécution</option>
-              </select>
-            </div>
+        {/* Type d'agent */}
+        <section>
+          <label className={labelBase} htmlFor="agent-kind">
+            Type d&apos;agent
+          </label>
+          <select
+            id="agent-kind"
+            className={`${inputBase} cursor-pointer`}
+            value={agentTypeValue}
+            onChange={e => handleAgentTypeChange(e.target.value as 'chat' | 'endpoint' | 'both')}
+          >
+            <option value="chat">Agent de Chat</option>
+            <option value="endpoint">Agent d&apos;Exécution</option>
+            <option value="both">Chat &amp; Exécution</option>
+          </select>
+        </section>
 
-            <div className="agent-inline-field agent-inline-toggle">
-              <span id="agent-active-label" className="field-label">
-                Agent actif
-              </span>
-              <button
-                type="button"
-                className={`agent-toggle ${editedAgent.is_active ? 'agent-toggle--on' : ''}`}
-                onClick={() => onUpdateField('is_active', !editedAgent.is_active)}
-                aria-pressed={Boolean(editedAgent.is_active)}
-                aria-labelledby="agent-active-label"
-              >
-                <span className="agent-toggle__thumb" />
-              </button>
-            </div>
-          </section>
+        {/* Agent actif / Suspendu — bouton pleine largeur */}
+        <section>
+          <button
+            type="button"
+            onClick={() => onUpdateField('is_active', !editedAgent.is_active)}
+            aria-pressed={Boolean(editedAgent.is_active)}
+            className={`w-full py-3 px-4 rounded-xl border text-sm font-medium transition-colors ${
+              editedAgent.is_active
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/15'
+                : 'bg-zinc-900/30 border-zinc-800/60 text-zinc-500 hover:bg-zinc-800/30'
+            }`}
+          >
+            {editedAgent.is_active ? 'Agent actif' : 'Agent suspendu'}
+          </button>
+        </section>
 
-          <section className="agent-config-section">
-            <div className="agent-config-section__header">
-              <h3>Instructions système</h3>
-              {hasChanges && <span className="agent-config-section__status">Modifié</span>}
-            </div>
-
-            <label className="visually-hidden" htmlFor="agent-system-instructions">
+        {/* Instructions système */}
+        <section>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className={labelBase} htmlFor="agent-system-instructions">
               Instructions système
             </label>
-            <textarea
-              id="agent-system-instructions"
-              className="field-textarea code agent-config-editor__textarea"
-              value={editedAgent.system_instructions || ''}
-              onChange={event => onUpdateField('system_instructions', event.target.value)}
-              rows={12}
-              placeholder="Définissez précisément le comportement, la voix, les contraintes et les objectifs de l'agent."
-            />
-          </section>
+            {hasChanges && (
+              <span className="text-[10px] font-medium text-amber-400/80">Modifié</span>
+            )}
+          </div>
+          <textarea
+            id="agent-system-instructions"
+            className={`${inputBase} font-mono text-[13px] leading-relaxed resize-none`}
+            rows={12}
+            value={editedAgent.system_instructions || ''}
+            onChange={e => onUpdateField('system_instructions', e.target.value)}
+            placeholder="Définissez précisément le comportement, la voix, les contraintes et les objectifs de l'agent."
+          />
+        </section>
 
-          <section className="agent-config-section">
-            <div className="agent-config-field">
-              <label className="field-label" htmlFor="agent-personality">
-                Personnalité
-              </label>
-              <textarea
-                id="agent-personality"
-                className="field-textarea"
-                value={editedAgent.personality || ''}
-                onChange={event => onUpdateField('personality', event.target.value)}
-                rows={3}
-                placeholder="Ex: Pragmatique, empathique, spécialisé finance..."
-              />
-            </div>
-          </section>
+        {/* Personnalité */}
+        <section>
+          <label className={labelBase} htmlFor="agent-personality">
+            Personnalité
+          </label>
+          <textarea
+            id="agent-personality"
+            className={`${inputBase} resize-none`}
+            rows={3}
+            value={editedAgent.personality || ''}
+            onChange={e => onUpdateField('personality', e.target.value)}
+            placeholder="Ex: Pragmatique, empathique, spécialisé finance..."
+          />
+        </section>
 
-          <section className="agent-config-section">
-            <div className="agent-config-section__header">
-              <h3>Voix (TTS)</h3>
-            </div>
-
-            <div className="agent-config-grid">
-              <div className="agent-config-field">
-                <label className="visually-hidden" htmlFor="agent-voice">
-                  Voix TTS
-                </label>
-                <select
-                  id="agent-voice"
-                  className="field-select"
-                  value={editedAgent.voice ?? ''}
-                  onChange={event => onUpdateField('voice', event.target.value)}
-                >
-                  {TTS_VOICE_OPTIONS.map(option => (
-                    <option key={option.value || 'default'} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </section>
-
-        </div>
+        {/* Voix TTS */}
+        <section>
+          <label className={labelBase} htmlFor="agent-voice">
+            Voix (TTS)
+          </label>
+          <select
+            id="agent-voice"
+            className={`${inputBase} cursor-pointer`}
+            value={editedAgent.voice ?? ''}
+            onChange={e => onUpdateField('voice', e.target.value)}
+          >
+            {TTS_VOICE_OPTIONS.map(option => (
+              <option key={option.value || 'default'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </section>
       </div>
-    </div>
 
+      {/* Modal Avatar */}
       {showAvatarModal && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="agent-avatar-modal-title">
-          <div className="modal-content agent-avatar-modal">
-            <div className="modal-header">
-              <h3 id="agent-avatar-modal-title">Avatar de l&apos;agent</h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="agent-avatar-modal-title"
+        >
+          <div className="w-full max-w-md rounded-2xl border border-zinc-800/60 bg-[var(--color-bg-primary)] p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 id="agent-avatar-modal-title" className="text-base font-semibold text-zinc-100">
+                Avatar de l&apos;agent
+              </h3>
               <button
                 type="button"
-                className="modal-close"
                 onClick={() => setShowAvatarModal(false)}
-                aria-label="Fermer la fenêtre"
+                aria-label="Fermer"
+                className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40 transition-colors"
               >
-                <X size={18} />
+                <X className="w-4 h-4" />
               </button>
             </div>
-
-            <div className="modal-body agent-avatar-modal__body">
-              <div className="agent-avatar-modal__preview">
-                {displayAvatarPreview ? (
-                  <img src={editedAgent.profile_picture} alt={`Avatar de ${agentDisplayName}`} />
-                ) : (
-                  <span>{avatarFallback}</span>
-                )}
+            <div className="space-y-6">
+              <div className="flex justify-center">
+                <div className="w-24 h-24 rounded-full overflow-hidden border border-zinc-800/60 bg-zinc-900/30 flex items-center justify-center text-zinc-400 text-2xl font-medium">
+                  {displayAvatarPreview ? (
+                    <img
+                      src={editedAgent.profile_picture}
+                      alt={`Avatar de ${agentDisplayName}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>{avatarFallback}</span>
+                  )}
+                </div>
               </div>
-
-              <div className="agent-avatar-modal__field">
-                <label className="field-label" htmlFor="agent-avatar-url">
+              <div>
+                <label className={labelBase} htmlFor="agent-avatar-url">
                   URL de l&apos;image
                 </label>
-                <div className="agent-avatar-modal__input">
-                  <ImageIcon size={16} aria-hidden="true" />
+                <div className="relative">
+                  <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
                   <input
                     id="agent-avatar-url"
                     type="text"
-                    className="field-input"
+                    className={`${inputBase} pl-9`}
                     value={editedAgent.profile_picture || ''}
-                    onChange={event => onUpdateField('profile_picture', event.target.value)}
+                    onChange={e => onUpdateField('profile_picture', e.target.value)}
                     placeholder="https://example.com/avatar.png"
                   />
                 </div>
@@ -361,4 +365,3 @@ export function AgentConfiguration({
 }
 
 export default AgentConfiguration;
-

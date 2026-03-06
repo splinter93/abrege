@@ -21,7 +21,7 @@ import { agentsService } from '@/services/agents/agentsService';
 import { mcpService } from '@/services/agents/mcpService';
 import { useCallables } from '@/hooks/useCallables';
 import { simpleLogger } from '@/utils/logger';
-import { Bot, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import '@/styles/main.css';
 import '@/app/private/agents_page_backup_legacy/agents.css';
@@ -405,9 +405,13 @@ function AgentDetailContent() {
   if (!id) {
     return (
       <PageWithSidebarLayout>
-        <div className="agents2-section">
-          <p>Identifiant agent manquant.</p>
-          <Link href="/private/agents2">Retour aux agents</Link>
+        <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center px-4">
+          <div className="text-center">
+            <p className="text-zinc-400 mb-4">Identifiant agent manquant.</p>
+            <Link href="/private/agents2" className="text-zinc-100 hover:text-white text-sm font-medium inline-flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" /> Retour aux agents
+            </Link>
+          </div>
         </div>
       </PageWithSidebarLayout>
     );
@@ -416,11 +420,11 @@ function AgentDetailContent() {
   if (loadError && !isNew && !selectedAgent) {
     return (
       <PageWithSidebarLayout>
-        <div className="agents2-section">
-          <div className="agents2-error">
-            <p>Erreur : {loadError}</p>
-            <Link href="/private/agents2" className="agents2-back-link">
-              <ArrowLeft size={18} /> Retour aux agents
+        <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center px-4">
+          <div className="text-center">
+            <p className="text-zinc-400 mb-4">Erreur : {loadError}</p>
+            <Link href="/private/agents2" className="text-zinc-100 hover:text-white text-sm font-medium inline-flex items-center gap-2">
+              <ArrowLeft className="w-4 h-4" /> Retour aux agents
             </Link>
           </div>
         </div>
@@ -429,52 +433,111 @@ function AgentDetailContent() {
   }
 
   const pageTitle = isNew ? 'Nouvel agent' : (editedAgent?.display_name || editedAgent?.name || 'Agent');
-  const pageSubtitle = isNew ? 'Créer un nouvel agent IA' : 'Configuration et paramètres';
+  const agentIdBadge = selectedAgent ? (selectedAgent.slug || selectedAgent.id) : null;
+  const displayAvatar =
+    typeof editedAgent?.profile_picture === 'string' && (editedAgent?.profile_picture || '').trim().length > 0;
+  const avatarFallback = (pageTitle || '?')
+    .split(' ')
+    .map(chunk => chunk.charAt(0))
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <PageWithSidebarLayout>
-      <div className="page-content-inner">
-        <div className="agents2-section agents2-section--page">
-          <div className="agents2-container agents2-container--page">
-            <div className="agents2-page-header">
-              <Link href="/private/agents2" className="agents2-back-link" aria-label="Retour aux agents">
-                <ArrowLeft size={20} /> Agents
-              </Link>
-              <UnifiedPageTitle
-                icon={Bot}
-                title={pageTitle}
-                subtitle={pageSubtitle}
-                initialAnimation={false}
-              />
-            </div>
-
-            {panelLoading && !editedAgent ? (
-              <div className="agents2-modal__loading">
-                <SimpleLoadingState message="Chargement de la configuration" />
-              </div>
-            ) : (
-              <div className="agents-layout agents-layout--page">
-                <div className="agent-panel-motion">
-                  <AgentConfiguration
-                    selectedAgent={selectedAgent}
-                    editedAgent={editedAgent}
-                    hasChanges={hasLocalChanges}
-                    isFavorite={Boolean(selectedAgent?.is_favorite)}
-                    togglingFavorite={false}
-                    loadingDetails={panelLoading}
-                    onToggleFavorite={() => {}}
-                    onSave={handleSaveAgent}
-                    onCancel={handleCancelChanges}
-                    onDelete={selectedAgent ? handleDeleteAgent : () => {}}
-                    onUpdateField={handleFieldUpdate}
-                    onOpenChat={() => {
-                      if (!selectedAgent) return;
-                      const identifier = selectedAgent.slug || selectedAgent.id;
-                      router.push(`/chat?agent=${encodeURIComponent(identifier)}`);
-                    }}
-                  />
+      <div className="page-content-inner bg-[var(--color-bg-primary)] min-h-screen w-full max-w-none mx-0">
+        {/* Header sticky Linear */}
+        <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/80 backdrop-blur-xl border-b border-zinc-800/60">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <Link
+                  href="/private/agents2"
+                  className="flex items-center gap-2 text-zinc-400 hover:text-zinc-100 text-sm transition-colors shrink-0"
+                  aria-label="Retour aux agents"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Agents
+                </Link>
+                <span className="w-px h-6 bg-zinc-800/80 shrink-0" aria-hidden />
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative shrink-0">
+                    {displayAvatar && editedAgent?.profile_picture ? (
+                      <img
+                        src={editedAgent.profile_picture}
+                        alt=""
+                        className="w-9 h-9 rounded-full object-cover border border-zinc-800/60"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-zinc-800/80 border border-zinc-800/60 flex items-center justify-center text-zinc-400 text-xs font-medium">
+                        {avatarFallback}
+                      </div>
+                    )}
+                    {editedAgent?.is_active && (
+                      <span
+                        className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[var(--color-bg-primary)]"
+                        title="Actif"
+                      />
+                    )}
+                    {editedAgent && !editedAgent.is_active && (
+                      <span
+                        className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-zinc-500 border-2 border-[var(--color-bg-primary)]"
+                        title="Suspendu"
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex items-center gap-2">
+                    <span className="text-zinc-100 font-medium truncate">{pageTitle}</span>
+                    {agentIdBadge && (
+                      <span className="px-2 py-0.5 rounded border border-zinc-800/80 bg-zinc-900/50 font-mono text-[10px] text-zinc-500 shrink-0">
+                        {agentIdBadge}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="agent-panel-motion">
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleSaveAgent}
+                  disabled={panelLoading}
+                  className="px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {panelLoading && !editedAgent ? (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex justify-center">
+            <SimpleLoadingState message="Chargement de la configuration" />
+          </div>
+        ) : (
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+              <div className="lg:col-span-8 space-y-10">
+                <AgentConfiguration
+                  selectedAgent={selectedAgent}
+                  editedAgent={editedAgent}
+                  hasChanges={hasLocalChanges}
+                  isFavorite={Boolean(selectedAgent?.is_favorite)}
+                  togglingFavorite={false}
+                  loadingDetails={panelLoading}
+                  onToggleFavorite={() => {}}
+                  onSave={handleSaveAgent}
+                  onCancel={handleCancelChanges}
+                  onDelete={selectedAgent ? handleDeleteAgent : () => {}}
+                  onUpdateField={handleFieldUpdate}
+                  onOpenChat={() => {
+                    if (!selectedAgent) return;
+                    const identifier = selectedAgent.slug || selectedAgent.id;
+                    router.push(`/chat?agent=${encodeURIComponent(identifier)}`);
+                  }}
+                />
+              </div>
+              <div className="lg:col-span-4">
+                <div className="sticky top-28 space-y-8">
                   <AgentParameters
                     selectedAgent={selectedAgent}
                     editedAgent={editedAgent}
@@ -501,9 +564,9 @@ function AgentDetailContent() {
                   />
                 </div>
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          </main>
+        )}
       </div>
     </PageWithSidebarLayout>
   );

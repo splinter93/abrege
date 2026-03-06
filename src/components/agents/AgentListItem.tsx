@@ -2,19 +2,17 @@ import React from 'react';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { Power, Edit2, Trash2 } from 'lucide-react';
 
-interface AgentCardProps {
+interface AgentListItemProps {
   agent: SpecializedAgentConfig;
   onEdit: () => void;
   onDelete: () => void;
   onToggle: () => void;
 }
 
-const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle }) => {
+const AgentListItem: React.FC<AgentListItemProps> = ({ agent, onEdit, onDelete, onToggle }) => {
   const displayName = agent.display_name || agent.name;
-  const description =
-    agent.description ||
-    agent.system_instructions ||
-    'Aucune description fournie pour cet agent.';
+  const roleOrDesc =
+    agent.description || agent.system_instructions || agent.category || 'Agent';
   const modelLabel = agent.model || 'Modèle non défini';
   const avatarUrl = agent.profile_picture;
 
@@ -27,14 +25,14 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle
 
   return (
     <div
-      className={`group flex flex-col p-5 rounded-2xl border border-zinc-800/40 bg-zinc-900/10 hover:bg-zinc-800/20 hover:border-zinc-700/60 transition-all duration-300 cursor-pointer ${!agent.is_active ? 'opacity-60' : ''}`}
+      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 hover:bg-zinc-800/20 transition-colors cursor-pointer"
       onClick={onEdit}
       role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
-      {/* Top: avatar + actions (actions visible on group-hover) */}
-      <div className="flex items-start justify-between gap-3 mb-4">
+      {/* Left: avatar + name + role */}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="relative flex-shrink-0">
           {avatarUrl ? (
             <img
@@ -54,8 +52,18 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle
             />
           )}
         </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-zinc-100 truncate">{displayName}</p>
+          <p className="text-xs text-zinc-500 truncate">{roleOrDesc}</p>
+        </div>
+      </div>
 
-        <div className="flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+      {/* Right: model tag + actions */}
+      <div className="flex flex-wrap items-center justify-end sm:justify-between gap-2 sm:gap-4 flex-shrink-0">
+        <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-[140px] truncate">
+          {modelLabel}
+        </span>
+        <div className="flex items-center gap-1">
           <button
             type="button"
             title={agent.is_active ? 'Désactiver' : 'Activer'}
@@ -91,21 +99,8 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle
           </button>
         </div>
       </div>
-
-      {/* Main: title + description */}
-      <div className="flex flex-col gap-1.5 min-h-0 flex-1">
-        <h3 className="text-base font-semibold text-zinc-100 truncate">{displayName}</h3>
-        <p className="text-sm text-zinc-500 line-clamp-2 leading-relaxed">{description}</p>
-      </div>
-
-      {/* Footer: model tag (code style) */}
-      <div className="mt-4 pt-4 border-t border-zinc-800/40">
-        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-full truncate">
-          {modelLabel}
-        </span>
-      </div>
     </div>
   );
 };
 
-export default AgentCard;
+export default AgentListItem;
