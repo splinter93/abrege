@@ -689,8 +689,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                   <Filter className="w-3.5 h-3.5 shrink-0" />
                   <span className="hidden sm:inline">Filter</span>
                 </button>
-                {!isMobile && (
-                  <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5">
+                <div className="hidden sm:flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5">
                     <button
                       type="button"
                       onClick={() => setViewMode('grid')}
@@ -708,7 +707,6 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                       <List className="w-4 h-4" />
                     </button>
                   </div>
-                )}
                 <button
                   type="button"
                   onClick={handleUploadFile}

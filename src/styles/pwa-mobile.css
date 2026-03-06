@@ -408,15 +408,11 @@ html.capacitor-native .page-mobile-sidebar-header {
   min-height: calc(52px + env(safe-area-inset-top, 0px)) !important;
 }
 
-/* Drawer : doit aussi partir sous la status bar (sinon clip du haut) */
+/* Drawer : démarre sous la top bar (même calc que unified-page-layout) */
 html.capacitor-native .page-sidebar-fixed.page-sidebar-drawer {
-  top: 0 !important;
-  /* Le contenu interne (Sidebar) doit pousser son contenu en-dessous de la status bar */
-}
-
-/* Sidebar interne du drawer : padding-top = safe area */
-html.capacitor-native .page-sidebar-drawer .sidebar-root {
-  padding-top: env(safe-area-inset-top, 0px) !important;
+  top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+  height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)) !important;
+  z-index: 60 !important;
 }
 
 /* Safe area bottom : éviter que le contenu passe sous la barre de navigation Android */

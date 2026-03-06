@@ -365,23 +365,35 @@
 }
 
 @media (max-width: 768px) {
-  /* Zéro marge/padding/gap sur mobile : header burger collé au contenu */
+  /* Top bar mobile : fixed en haut, hors du flux */
+  .mobile-top-bar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 50 !important;
+  }
+
+  /* Contenu principal : padding-top = hauteur top bar (56px + safe area) */
   .page-wrapper.page-is-mobile .page-content-area {
     margin-left: 0 !important;
     padding: 0 !important;
+    padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
     gap: 0 !important;
-    /* Fond jusqu'en bas : même couleur que le reste de la page */
     min-height: 100dvh;
     min-height: 100vh;
     background: var(--color-bg-primary);
   }
 
-  /* Pas de push du contenu : sidebar en overlay drawer */
-
+  /* Overlay : sous la top bar (z-50), au-dessus du drawer (z-40) */
   .dashboard-sidebar-overlay {
     position: fixed;
-    inset: 0;
-    z-index: 1000;
+    top: calc(56px + env(safe-area-inset-top, 0px));
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 45;
     background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
@@ -390,13 +402,13 @@
     padding: 0;
   }
 
-  /* Drawer : forcer position fixed + z-index élevé (annule les overrides relative d'autres CSS) */
+  /* Drawer : au premier plan, au-dessus de l'overlay et de la top bar */
   .page-sidebar-fixed.page-sidebar-drawer {
     position: fixed !important;
-    top: 0 !important;
+    top: calc(56px + env(safe-area-inset-top, 0px)) !important;
     left: 0 !important;
-    height: 100dvh !important;
-    z-index: 1001 !important;
+    height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)) !important;
+    z-index: 60 !important;
     width: min(260px, 80vw) !important;
     max-width: none !important;
     transform: translateX(-100%);
@@ -412,12 +424,12 @@
     box-shadow: 8px 0 32px rgba(0, 0, 0, 0.4);
   }
 
-  /* Contenu sidebar : pleine largeur dans le drawer, pas de bordure dupliquée */
+  /* Contenu sidebar : pleine largeur dans le drawer, hauteur du drawer */
   .page-sidebar-drawer .sidebar-root {
     max-width: none !important;
     width: 100% !important;
     border-right: none !important;
-    height: 100dvh;
+    height: 100%;
   }
 
   .page-mobile-sidebar-header {
