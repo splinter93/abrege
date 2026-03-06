@@ -398,14 +398,14 @@ function AuthenticatedHomeContent({
           <ActionButton icon={Upload} label="Import" onClick={handleImport} />
         </section>
 
-        {/* 3. Notes récentes */}
+        {/* 3. Latest Notes */}
         <section className="flex flex-col gap-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider shrink-0">
-              Notes récentes
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <h2 className="text-sm font-semibold text-zinc-400 tracking-wider shrink-0">
+              Latest Notes
             </h2>
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="flex-1 min-w-[140px] max-w-[220px]">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="min-w-[160px] max-w-[220px] w-40 shrink-0">
                 <SearchBar
                   placeholder="Rechercher..."
                   onSearchResult={handleSearchResult}
@@ -414,22 +414,24 @@ function AuthenticatedHomeContent({
                   className="dashboard-search-inline"
                 />
               </div>
-              <button
-                type="button"
-                onClick={handleNotesPrev}
-                aria-label="Précédent"
-                className="flex items-center justify-center w-9 h-9 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all shrink-0"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={handleNotesNext}
-                aria-label="Suivant"
-                className="flex items-center justify-center w-9 h-9 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all shrink-0"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleNotesPrev}
+                  aria-label="Précédent"
+                  className="flex items-center justify-center w-9 h-9 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNotesNext}
+                  aria-label="Suivant"
+                  className="flex items-center justify-center w-9 h-9 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
           <div
@@ -464,11 +466,11 @@ function AuthenticatedHomeContent({
           </div>
         </section>
 
-        {/* 4. Fichiers récents */}
+        {/* 4. Latest Files */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
-              Fichiers récents
+            <h2 className="text-sm font-semibold text-zinc-400 tracking-wider">
+              Latest Files
             </h2>
             <Link
               href="/private/files"
