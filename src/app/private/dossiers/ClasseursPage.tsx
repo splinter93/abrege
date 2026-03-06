@@ -104,7 +104,6 @@ interface BreadcrumbSegment {
 }
 
 function ClasseursHeader({
-  breadcrumbSegments,
   statsLabel,
   searchQuery,
   onSearch,
@@ -115,7 +114,6 @@ function ClasseursHeader({
   onCreateFolder,
   onCreateNote,
 }: {
-  breadcrumbSegments: BreadcrumbSegment[];
   statsLabel: string;
   searchQuery: string;
   onSearch: (q: string) => void;
@@ -128,54 +126,32 @@ function ClasseursHeader({
 }) {
   return (
     <header className="flex w-full flex-col gap-4 border-b border-zinc-800/60 py-4 px-4 sm:px-6 lg:px-8">
-      <nav className="flex flex-wrap items-center gap-1 text-xs uppercase tracking-wider text-zinc-500 font-medium" aria-label="Fil d'Ariane">
-        {breadcrumbSegments.length === 0 ? (
-          <span>Workspace &gt; Mes Classeurs</span>
-        ) : (
-          breadcrumbSegments.map((seg, i) => (
-            <span key={i} className="flex items-center gap-1">
-              {i > 0 && <span className="text-zinc-700 mx-1">/</span>}
-              {seg.onClick ? (
-                <button
-                  type="button"
-                  onClick={seg.onClick}
-                  className="transition-colors hover:text-zinc-300 focus:outline-none"
-                >
-                  {seg.label}
-                </button>
-              ) : (
-                <span className="text-zinc-400">{seg.label}</span>
-              )}
-            </span>
-          ))
-        )}
-      </nav>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-semibold text-white tracking-tight">Mes Classeurs</h1>
-          <span className="rounded-full border border-zinc-800/60 bg-zinc-900/50 px-2.5 py-0.5 text-xs font-medium text-zinc-500">
+          <h1 className="text-xl sm:text-3xl font-semibold text-white tracking-tight">Mes Classeurs</h1>
+          <span className="rounded-full border border-zinc-800/60 bg-zinc-900/50 px-2.5 py-0.5 text-xs font-medium text-zinc-500 whitespace-nowrap">
             {statsLabel}
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative group">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative group flex-1 sm:flex-none">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500 transition-colors group-focus-within:text-zinc-300" />
             <input
               type="search"
               placeholder="Rechercher..."
               value={searchQuery}
               onChange={(e) => onSearch(e.target.value)}
-              className="h-9 w-64 rounded-lg border border-zinc-800/60 bg-zinc-900/50 pl-10 pr-3 text-sm text-zinc-100 placeholder:text-zinc-500 transition-all focus:border-zinc-600 focus:bg-zinc-900 focus:outline-none focus:ring-0"
+              className="h-9 w-full sm:w-64 rounded-lg border border-zinc-800/60 bg-zinc-900/50 pl-10 pr-3 text-sm text-zinc-100 placeholder:text-zinc-500 transition-all focus:border-zinc-600 focus:bg-zinc-900 focus:outline-none focus:ring-0"
             />
           </div>
-          <div className="relative">
+          <div className="relative shrink-0">
             <button
               type="button"
               onClick={onNouveauClick}
-              className="flex items-center gap-2 rounded-lg bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-950 transition-all hover:bg-white active:scale-95"
+              className="flex items-center gap-2 rounded-lg bg-zinc-100 px-3 py-2 sm:px-4 text-sm font-semibold text-zinc-950 transition-all hover:bg-white active:scale-95 whitespace-nowrap"
             >
               <Plus className="h-4 w-4" strokeWidth={2.5} />
-              Nouveau
+              <span>Nouveau</span>
               <ChevronDown className="h-3.5 w-3.5 opacity-50" />
             </button>
             {nouveauOpen && (
@@ -572,7 +548,7 @@ function ItemListRow({
 type ViewMode = "grid" | "list";
 
 function ClasseursContent({
-  activeTabName,
+  breadcrumbSegments,
   items,
   viewMode,
   onViewModeChange,
@@ -589,7 +565,7 @@ function ClasseursContent({
   onFolderDragOver,
   onFolderDragLeave,
 }: {
-  activeTabName: string;
+  breadcrumbSegments: BreadcrumbSegment[];
   items: ClasseurItem[];
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
@@ -615,10 +591,39 @@ function ClasseursContent({
     );
   }, [items, searchQuery]);
 
+  /* Fil d'Ariane à partir du classeur uniquement (sans Workspace / Mes Classeurs) */
+  const contentBreadcrumb = useMemo(
+    () => breadcrumbSegments.slice(2),
+    [breadcrumbSegments]
+  );
+
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex min-w-0 items-center justify-between gap-4">
-        <h2 className="truncate text-xl font-semibold text-white tracking-tight">{activeTabName}</h2>
+        <nav className="flex min-w-0 flex-wrap items-center gap-1 text-xs uppercase tracking-wider text-zinc-500 font-medium" aria-label="Fil d'Ariane">
+          {contentBreadcrumb.length === 0 ? (
+            <span className="text-zinc-400">Mes Classeurs</span>
+          ) : (
+            contentBreadcrumb.map((seg, i) => (
+              <span key={i} className="flex items-center gap-1">
+                {i > 0 && <span className="text-zinc-700 mx-1">/</span>}
+                {seg.onClick ? (
+                  <button
+                    type="button"
+                    onClick={seg.onClick}
+                    className={`transition-colors hover:text-zinc-300 focus:outline-none ${i === 0 ? "uppercase" : ""}`}
+                  >
+                    {seg.label}
+                  </button>
+                ) : (
+                  <span className={`text-zinc-400 ${i === 0 ? "uppercase" : ""}`}>
+                    {seg.label}
+                  </span>
+                )}
+              </span>
+            ))
+          )}
+        </nav>
         {!isMobileContent && (
         <div className="flex rounded-lg border border-zinc-800/60 p-1 bg-zinc-900/30">
           <button
@@ -1070,7 +1075,6 @@ export default function ClasseursPage() {
     <div className="classeurs-page-root flex h-full min-h-screen w-full min-w-0">
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
         <ClasseursHeader
-          breadcrumbSegments={breadcrumbSegments}
           statsLabel={statsLabel}
           searchQuery={searchQuery}
           onSearch={setSearchQuery}
@@ -1105,7 +1109,7 @@ export default function ClasseursPage() {
             )}
             {activeClasseur && (
               <ClasseursContent
-                activeTabName={activeClasseur.name}
+                breadcrumbSegments={breadcrumbSegments}
                 items={items}
                 viewMode={effectiveViewMode}
                 onViewModeChange={setViewMode}

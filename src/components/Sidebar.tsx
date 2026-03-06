@@ -35,23 +35,24 @@ interface SidebarItemProps {
 function SidebarItem({ icon: Icon, label, href, active = false, badge, onNavigate }: SidebarItemProps) {
   const content = (
     <>
-      <span className="flex items-center gap-2 min-w-0">
+      <span className="flex items-center gap-2.5 min-w-0">
         <Icon
-          className={`flex-shrink-0 transition-colors duration-200 ${
+          className={`flex-shrink-0 transition-colors duration-300 ${
             active ? "text-white" : "text-zinc-500 group-hover:text-zinc-300"
           }`}
-          size={18}
+          size={16}
+          strokeWidth={active ? 2 : 1.5}
         />
         <span
-          className={`truncate text-sm transition-colors duration-200 ${
-            active ? "font-medium text-white" : "text-zinc-400 group-hover:text-zinc-200"
+          className={`truncate text-sm tracking-tight transition-colors duration-300 ${
+            active ? "font-semibold text-white" : "text-zinc-400 group-hover:text-zinc-200"
           }`}
         >
           {label}
         </span>
       </span>
       {badge && (
-        <span className="flex-shrink-0 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400">
+        <span className="flex-shrink-0 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20 shadow-sm">
           {badge}
         </span>
       )}
@@ -59,10 +60,10 @@ function SidebarItem({ icon: Icon, label, href, active = false, badge, onNavigat
   );
 
   const baseClass =
-    "group flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 transition-all duration-200 " +
+    "group flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 transition-all duration-300 " +
     (active
-      ? "bg-zinc-800/50 text-white"
-      : "text-zinc-400 hover:bg-zinc-800/30 hover:text-zinc-200");
+      ? "sidebar-item-active text-white"
+      : "sidebar-item-hover text-zinc-400");
 
   return (
     <Link
@@ -82,8 +83,8 @@ function SidebarItem({ icon: Icon, label, href, active = false, badge, onNavigat
 
 function SidebarSectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="pt-4 pb-2 px-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+    <div className="pt-6 pb-2 px-3">
+      <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-600">
         {children}
       </p>
     </div>
@@ -107,15 +108,15 @@ export default function Sidebar() {
       aria-label="Navigation principale"
     >
       {/* En-tête : Logo + Nom */}
-      <header className="p-4">
+      <header className="p-5">
         <div className="flex items-center gap-3">
           <div
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-gradient-to-br from-zinc-700 to-zinc-900"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-white/10 bg-gradient-to-br from-zinc-700 via-zinc-800 to-black shadow-lg"
             aria-hidden
           >
-            <Zap className="h-4 w-4 text-white" strokeWidth={2} />
+            <Zap className="h-4 w-4 text-white fill-white/10" strokeWidth={2} />
           </div>
-          <span className="text-lg font-semibold tracking-tight text-white">Scrivia</span>
+          <span className="text-[17px] font-bold tracking-tight text-white/90">Scrivia</span>
         </div>
       </header>
 
@@ -183,7 +184,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <footer className="space-y-1 border-t border-zinc-800/60 p-3">
+      <footer className="space-y-1 border-t border-white/[0.04] p-4">
         <SidebarItem
           icon={Settings}
           label="Paramètres"
