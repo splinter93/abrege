@@ -666,7 +666,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
 
   return (
     <PageWithSidebarLayout>
-      <div className="page-content-inner page-content-inner-files min-h-full flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
+      <div className="page-content-inner page-content-inner-files w-full max-w-none mx-0 bg-[var(--color-bg-primary)]">
         {/* En-tête de contenu — optimisé mobile (2 lignes) et desktop */}
         <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
           <div className="flex flex-col gap-3 mb-4 sm:mb-6 mt-0">
@@ -736,7 +736,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
         </div>
 
         {/* Contenu principal */}
-        <main className="flex-1 overflow-y-auto no-scrollbar pt-0 px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
+        <main className="pt-0 px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
           <div className="max-w-screen-2xl mx-auto w-full">
             {loading ? (
               <div className="flex items-center justify-center py-24">

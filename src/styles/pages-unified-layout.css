@@ -578,14 +578,26 @@
 @media (max-width: 768px) {
   .page-wrapper {
     flex-direction: column;
+    height: 100dvh;
+    height: 100vh; /* fallback */
+    min-height: 0 !important;
+    overflow: hidden;
   }
   
   /* Drawer mobile géré par unified-page-layout.css — ne pas écraser */
   
   .page-content-area {
     margin-left: 0;
-    padding: var(--spacing-md) !important;
     order: 1;
+    display: block !important; /* Casse le flex hérité du desktop */
+    min-height: 0 !important; /* Un flex-item scrollable doit pouvoir se compresser */
+    /* Mobile : borner la hauteur pour activer overflow-y: auto */
+    /* Note: padding-top géré par unified-page-layout.css (.page-is-mobile) */
+    height: 100dvh;
+    height: 100vh; /* fallback */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
   }
   
   .page-title-container-glass {

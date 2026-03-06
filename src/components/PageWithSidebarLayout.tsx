@@ -62,7 +62,7 @@ function PageWithSidebarLayoutInner({ children }: { children: React.ReactNode })
         <Sidebar />
       </aside>
       <main className="page-content-area">
-        <div className="flex-1 min-h-0 pt-0">
+        <div className="pt-0">
           {children}
         </div>
       </main>

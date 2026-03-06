@@ -365,6 +365,13 @@
 }
 
 @media (max-width: 768px) {
+  .page-wrapper.page-is-mobile {
+    height: 100dvh;
+    height: 100vh; /* fallback */
+    min-height: 0 !important;
+    overflow: hidden;
+  }
+
   /* Top bar mobile : fixed en haut, hors du flux */
   .mobile-top-bar {
     position: fixed !important;
@@ -375,14 +382,19 @@
     z-index: 50 !important;
   }
 
-  /* Contenu principal : padding-top = hauteur top bar (56px + safe area) */
+  /* Contenu principal : height bornée + scroll interne (active overflow-y: auto sur mobile) */
   .page-wrapper.page-is-mobile .page-content-area {
     margin-left: 0 !important;
     padding: 0 !important;
     padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
     gap: 0 !important;
-    min-height: 100dvh;
-    min-height: 100vh;
+    display: block !important; /* Casse le flex-column hérité du desktop — sinon overflow-y inopérant */
+    min-height: 0 !important; /* Un flex-item scrollable doit pouvoir se compresser */
+    height: 100dvh;
+    height: 100vh; /* fallback navigateurs sans dvh */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
     background: var(--color-bg-primary);
   }
 

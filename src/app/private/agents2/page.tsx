@@ -128,7 +128,7 @@ function AgentsV2Content() {
 
   return (
     <PageWithSidebarLayout>
-      <div className="page-content-inner page-content-inner-agents bg-[var(--color-bg-primary)] min-h-full w-full max-w-none mx-0 flex flex-col">
+      <div className="page-content-inner page-content-inner-agents bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
         {/* En-tête de contenu — optimisé mobile (2 lignes) et desktop */}
         <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
           <div className="flex flex-col gap-3 mb-4 sm:mb-6 mt-0">

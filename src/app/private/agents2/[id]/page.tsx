@@ -405,7 +405,7 @@ function AgentDetailContent() {
   if (!id) {
     return (
       <PageWithSidebarLayout>
-        <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center px-4">
+        <div className="bg-[var(--color-bg-primary)] flex items-center justify-center px-4 py-24">
           <div className="text-center">
             <p className="text-zinc-400 mb-4">Identifiant agent manquant.</p>
             <Link href="/private/agents2" className="text-zinc-100 hover:text-white text-sm font-medium inline-flex items-center gap-2">
@@ -420,7 +420,7 @@ function AgentDetailContent() {
   if (loadError && !isNew && !selectedAgent) {
     return (
       <PageWithSidebarLayout>
-        <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center px-4">
+        <div className="bg-[var(--color-bg-primary)] flex items-center justify-center px-4 py-24">
           <div className="text-center">
             <p className="text-zinc-400 mb-4">Erreur : {loadError}</p>
             <Link href="/private/agents2" className="text-zinc-100 hover:text-white text-sm font-medium inline-flex items-center gap-2">
@@ -444,7 +444,7 @@ function AgentDetailContent() {
 
   return (
     <PageWithSidebarLayout>
-      <div className="page-content-inner page-content-inner-agents bg-[var(--color-bg-primary)] min-h-full w-full max-w-none mx-0 flex flex-col">
+      <div className="page-content-inner page-content-inner-agents bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
         {/* Header sticky Linear */}
         <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/80 backdrop-blur-xl border-b border-zinc-800/60">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -531,7 +531,7 @@ function AgentDetailContent() {
                 />
               </div>
               <div className="lg:col-span-4">
-                <div className="sticky top-28 space-y-8">
+                <div className="lg:sticky lg:top-28 space-y-8">
                   <AgentParameters
                     selectedAgent={selectedAgent}
                     editedAgent={editedAgent}
