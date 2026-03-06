@@ -2,13 +2,11 @@
 
 import React, { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   Folder,
   FileText,
   Search,
-  Settings,
-  Trash2,
   LayoutGrid,
   List,
   MoreHorizontal,
@@ -94,70 +92,6 @@ export interface ClasseurItem {
 interface ClasseurTab {
   id: string;
   name: string;
-}
-
-// ---------------------------------------------------------------------------
-// Sidebar
-// ---------------------------------------------------------------------------
-
-function ClasseursSidebar() {
-  return (
-    <aside
-      className="w-64 flex-shrink-0 flex flex-col border-r border-zinc-800/60"
-      style={{ backgroundColor: "var(--surface-primary)" }}
-    >
-      <div className="flex items-center gap-3 px-4 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-700 to-zinc-900">
-          <BookMarked className="h-4 w-4 text-zinc-300" />
-        </div>
-        <span className="text-sm font-semibold text-white">Scrivia</span>
-      </div>
-
-      <nav className="flex-1 px-2 py-2">
-        <Link
-          href="/private/dossiers"
-          className="flex items-center gap-2 rounded-md px-2 py-2 text-white transition-all duration-200 bg-zinc-800/50"
-        >
-          <Folder className="h-4 w-4 text-zinc-400" />
-          <span className="text-sm">Mes Classeurs</span>
-        </Link>
-        <Link
-          href="/private/dossiers"
-          className="flex items-center gap-2 rounded-md px-2 py-2 text-zinc-400 transition-all duration-200 hover:bg-zinc-800/30 hover:text-zinc-200"
-        >
-          <FileText className="h-4 w-4" />
-          <span className="text-sm">Toutes les notes</span>
-        </Link>
-
-        <div className="mt-6 px-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-            Workspace
-          </p>
-        </div>
-      </nav>
-
-      <div className="border-t border-zinc-800/40 px-2 py-3">
-        <Link
-          href="/private/settings"
-          className="flex items-center gap-2 rounded-md px-2 py-2 text-zinc-400 transition-all duration-200 hover:bg-zinc-800/30 hover:text-zinc-200"
-        >
-          <Settings className="h-4 w-4" />
-          <span className="text-sm">Paramètres</span>
-        </Link>
-        <Link
-          href="/private/trash"
-          className="flex items-center gap-2 rounded-md px-2 py-2 text-zinc-400 transition-all duration-200 hover:bg-zinc-800/30 hover:text-zinc-200"
-        >
-          <Trash2 className="h-4 w-4" />
-          <span className="text-sm">Corbeille</span>
-        </Link>
-        <div className="mt-2 flex items-center gap-2 rounded-md px-2 py-2 text-zinc-500">
-          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs">Realtime: Connecté</span>
-        </div>
-      </div>
-    </aside>
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -672,6 +606,7 @@ function ClasseursContent({
   onFolderDragOver?: (folderId: string) => void;
   onFolderDragLeave?: () => void;
 }) {
+  const isMobileContent = useIsMobile();
   const filtered = useMemo(() => {
     if (!searchQuery.trim()) return items;
     const q = searchQuery.toLowerCase();
@@ -681,9 +616,10 @@ function ClasseursContent({
   }, [items, searchQuery]);
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden px-8 py-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden px-4 sm:px-8 py-8">
       <div className="flex min-w-0 items-center justify-between gap-4">
         <h2 className="truncate text-xl font-semibold text-white tracking-tight">{activeTabName}</h2>
+        {!isMobileContent && (
         <div className="flex rounded-lg border border-zinc-800/60 p-1 bg-zinc-900/30">
           <button
             type="button"
@@ -706,6 +642,7 @@ function ClasseursContent({
             <List className="h-4 w-4" />
           </button>
         </div>
+        )}
       </div>
 
       {viewMode === "grid" ? (
@@ -777,8 +714,10 @@ function ClasseursContent({
 export default function ClasseursPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const isMobile = useIsMobile();
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const effectiveViewMode: ViewMode = isMobile ? "list" : viewMode;
   const [searchQuery, setSearchQuery] = useState("");
   const [nouveauOpen, setNouveauOpen] = useState(false);
   const [contextMenuItem, setContextMenuItem] = useState<{
@@ -1129,7 +1068,6 @@ export default function ClasseursPage() {
 
   return (
     <div className="classeurs-page-root flex h-full min-h-screen w-full min-w-0">
-      <ClasseursSidebar />
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
         <ClasseursHeader
           breadcrumbSegments={breadcrumbSegments}
@@ -1169,7 +1107,7 @@ export default function ClasseursPage() {
               <ClasseursContent
                 activeTabName={activeClasseur.name}
                 items={items}
-                viewMode={viewMode}
+                viewMode={effectiveViewMode}
                 onViewModeChange={setViewMode}
                 searchQuery={searchQuery}
                 onItemOpen={handleItemOpen}

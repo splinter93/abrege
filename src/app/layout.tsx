@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 // import type { ReactNode } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
-import { Noto_Sans } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 // Ordre critique : variables de base en premier
 import "../styles/variables.css";
 import "../styles/design-system.css";
@@ -11,7 +10,6 @@ import "./globals.css";
 import "../styles/editor.css";
 import "../styles/page-title-containers.css";
 import "../styles/unified-page-title.css";
-import "../styles/sidebar-collapsible.css";
 import "../styles/unified-page-layout.css";
 import "../styles/pages-unified-layout.css";
 import "../styles/pwa-mobile.css";
@@ -34,20 +32,9 @@ import CapacitorInit from "@/components/CapacitorInit";
 import ScrollPerformance from "@/components/ScrollPerformance";
 import { CommandPaletteProvider } from "@/components/command-palette/CommandPaletteProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const notoSans = Noto_Sans({
-  variable: "--font-noto-sans",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -67,7 +54,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark theme-dark" suppressHydrationWarning>
+    <html lang="en" className={`dark theme-dark ${geistMono.variable}`} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/feather.svg" type="image/svg+xml" />
         <link rel="manifest" href="/manifest.json" />
@@ -85,38 +72,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="Scrivia Chat" />
         
+        {/* Manrope partout (critical CSS + typography). Geist Mono pour --font-mono (code) uniquement. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" />
-        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" />
         <style dangerouslySetInnerHTML={{ __html: `
-          /* CRITICAL CSS - Éviter le flash de couleur */
-          html { 
-            background: var(--color-bg-primary, #0e1012) !important; 
+          /* CRITICAL CSS - Manrope partout */
+          html {
+            background: var(--color-bg-primary, #0e1012) !important;
             height: 100%;
+            font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
           }
-          body { 
-            background: var(--color-bg-primary, #0e1012) !important; 
-            color: var(--text-primary, #d0d0d0) !important; 
-            font-family: 'Figtree', 'Geist', -apple-system, sans-serif !important;
+          body, .app-container {
+            font-family: inherit !important;
+            background: var(--color-bg-primary, #0e1012) !important;
+            color: var(--text-primary, #d0d0d0) !important;
             margin: 0;
             padding: 0;
-            /* PWA Fullscreen - Remplit haut et bas */
             min-height: 100vh;
             min-height: -webkit-fill-available;
           }
@@ -135,35 +106,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             html, body { background: #000000 !important; background-image: none !important; }
           }
           
-          /* CRITICAL SIDEBAR CSS - Éviter le flash de sidebar noire */
-          .unified-sidebar {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 250px !important;
-            height: 100vh !important;
-            background: linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%) !important;
-            border: none !important;
-            border-right: none !important;
-            border-top-right-radius: 0 !important;
-            border-bottom-right-radius: 0 !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            z-index: 1000 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            overflow: hidden !important;
-            padding-top: 16px !important;
-            padding-bottom: 16px !important;
-          }
-          
-          /* CRITICAL PAGE CONTENT CSS - S'assurer que le contenu est bien positionné */
-          .page-content-area {
-            margin-left: 250px !important;
-            flex: 1 !important;
-            overflow-y: auto !important;
-            height: 100vh !important;
-          }
         ` }} />
         <script dangerouslySetInnerHTML={{ __html: `
           // ✅ Intercepter CMD+P / Ctrl+P TRÈS TÔT pour bloquer l'impression du navigateur
@@ -213,7 +155,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           })();
         ` }} />
       </head>
-      <body className={`${geistSans.className} ${geistSans.variable} ${geistMono.variable} ${notoSans.variable} app-container`}>
+      <body className="app-container">
         {/* Overlay zone notification : noir opaque pour que le contenu ne passe pas à travers (mobile / Capacitor) */}
         <div className="pwa-status-bar-overlay" aria-hidden="true" />
         <PWASplash />

@@ -47,7 +47,4 @@
    ========================================================================== */
 @import './unified-page-title.css';
 
-/* ==========================================================================
-   SIDEBAR UNIFIÉE - ARCHITECTURE OPTIMISÉE
-   ========================================================================== */
-@import './sidebar-collapsible.css';
+/* sidebar-collapsible.css supprimé — remplacé par le système drawer dans unified-page-layout.css */

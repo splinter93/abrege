@@ -399,6 +399,38 @@ button, a, input, textarea, select {
 
 /* ── SUPPRIMÉ : doublon du bloc html.capacitor-native.chat-page ci-dessus (lignes 57–123). ── */
 
+/* ── Capacitor : safe areas pour le layout dashboard (pages hors chat) ────────────────────
+   overlaysWebView: true → la WebView couvre toute l'écran, y compris la status bar.
+   On doit décaler le header burger + le drawer pour qu'ils ne passent pas sous la barre native.
+*/
+html.capacitor-native .page-mobile-sidebar-header {
+  padding-top: env(safe-area-inset-top, 0px) !important;
+  min-height: calc(52px + env(safe-area-inset-top, 0px)) !important;
+}
+
+/* Drawer : doit aussi partir sous la status bar (sinon clip du haut) */
+html.capacitor-native .page-sidebar-fixed.page-sidebar-drawer {
+  top: 0 !important;
+  /* Le contenu interne (Sidebar) doit pousser son contenu en-dessous de la status bar */
+}
+
+/* Sidebar interne du drawer : padding-top = safe area */
+html.capacitor-native .page-sidebar-drawer .sidebar-root {
+  padding-top: env(safe-area-inset-top, 0px) !important;
+}
+
+/* Safe area bottom : éviter que le contenu passe sous la barre de navigation Android */
+html.capacitor-native .page-content-area {
+  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+}
+
+/* Safe areas latérales (mode paysage) */
+html.capacitor-native .page-mobile-sidebar-header {
+  padding-left: max(16px, env(safe-area-inset-left, 16px)) !important;
+  padding-right: max(16px, env(safe-area-inset-right, 16px)) !important;
+}
+
+
 /* ── PWA mobile (display-mode: standalone, non Capacitor) : fond noir + touch device ──── */
 @media (hover: none) and (pointer: coarse) {
   body:has(.chatgpt-container) {

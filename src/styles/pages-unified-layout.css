@@ -580,12 +580,7 @@
     flex-direction: column;
   }
   
-  .page-sidebar-fixed {
-    position: relative;
-    width: 100%;
-    height: auto;
-    order: 2;
-  }
+  /* Drawer mobile géré par unified-page-layout.css — ne pas écraser */
   
   .page-content-area {
     margin-left: 0;

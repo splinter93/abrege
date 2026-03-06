@@ -69,7 +69,7 @@ function ActionButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-sm font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/50 hover:border-zinc-700 transition-all"
+      className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-sm font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/50 hover:border-zinc-700 transition-all shrink-0"
     >
       <Icon className="w-4 h-4 text-zinc-500 shrink-0" />
       {label}
@@ -380,7 +380,7 @@ function AuthenticatedHomeContent({
         }}
       />
 
-      <main className="w-full max-w-5xl mx-auto px-8 py-12 flex flex-col gap-12">
+      <main className="w-full max-w-5xl mx-auto px-4 py-6 sm:px-8 sm:py-12 flex flex-col gap-8 sm:gap-12">
         {/* 1. Welcome */}
         <header className="flex flex-col items-center text-center">
           <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-900/80 border border-zinc-800/80 mb-4">
@@ -393,7 +393,7 @@ function AuthenticatedHomeContent({
         </header>
 
         {/* 2. Quick Actions */}
-        <section className="flex flex-wrap items-center justify-center gap-3">
+        <section className="flex items-center gap-3 overflow-x-auto no-scrollbar -mx-2 px-2">
           <ActionButton icon={Plus} label="Nouvelle note" onClick={handleCreateNote} />
           <ActionButton icon={Upload} label="Importer" onClick={handleImport} />
           <ActionButton
