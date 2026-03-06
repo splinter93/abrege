@@ -403,6 +403,14 @@ button, a, input, textarea, select {
    overlaysWebView: true → la WebView couvre toute l'écran, y compris la status bar.
    On doit décaler le header burger + le drawer pour qu'ils ne passent pas sous la barre native.
 */
+
+/* Top bar mobile : forcer hauteur totale 56px + safe-area (évite header tout fin en WebView) */
+html.capacitor-native .mobile-top-bar {
+  min-height: calc(56px + env(safe-area-inset-top, 0px)) !important;
+  height: calc(56px + env(safe-area-inset-top, 0px)) !important;
+  box-sizing: border-box !important;
+}
+
 html.capacitor-native .page-mobile-sidebar-header {
   padding-top: env(safe-area-inset-top, 0px) !important;
   min-height: calc(52px + env(safe-area-inset-top, 0px)) !important;
