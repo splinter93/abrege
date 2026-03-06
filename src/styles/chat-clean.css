@@ -873,8 +873,8 @@ body.chat-theme-glass .chatgpt-header {
   border-top: none;
   box-shadow: none;
   transform: translateX(-250px);
-  transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
-              opacity 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: transform 0.45s cubic-bezier(0.25, 0.1, 0.25, 1),
+              opacity 0.45s cubic-bezier(0.25, 0.1, 0.25, 1);
   z-index: var(--chat-z-sidebar);
   display: flex;
   flex-direction: column;
@@ -1254,8 +1254,23 @@ body.chat-theme-glass .chatgpt-header {
   }
 }
 
+/* Overlay chat : invisible par défaut, transition fluide */
 .chatgpt-sidebar-overlay {
-  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--chat-z-sidebar) - 1);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.chatgpt-sidebar-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .chatgpt-main {
@@ -2708,22 +2723,23 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
     font-size: 16px !important; /* Évite le zoom sur iOS */
   }
   
-  /* Garde le même style qu'en desktop */
+  /* Mobile : sidebar en overlay au premier plan, pas de décalage du contenu */
   .sidebar-ultra-clean {
-    transform: translateX(-250px) !important;  /* Cachée par défaut */
+    transform: translateX(-250px) !important;
+    z-index: calc(var(--chat-z-sidebar) + 10) !important;
   }
 
   .sidebar-ultra-clean.visible {
     transform: translateX(0) !important;
   }
-  
+
   .sidebar-hover-zone {
-    display: none !important;  /* ✅ Force le masquage */
+    display: none !important;
   }
-  
-  /* ✅ Plus d'overlay en mobile : la sidebar garde son style et repousse le contenu */
-  .chatgpt-sidebar-overlay.visible {
-    display: none;
+
+  /* Annule le décalage du contenu + overlay visible */
+  .chatgpt-content.sidebar-open {
+    margin-left: 0 !important;
   }
   
   /* ✅ Menu @ (Note Selector) - Adapté à la largeur mobile */
