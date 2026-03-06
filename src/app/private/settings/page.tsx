@@ -200,7 +200,7 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
                 <Settings className="w-6 h-6 text-zinc-400" />
               </div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-zinc-100">Réglages</h1>
+                <h1 className="text-xl font-bold text-zinc-100">Réglages</h1>
                 <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-400">
                   {apiKeys.length} clé{apiKeys.length !== 1 ? 's' : ''} API
                 </span>

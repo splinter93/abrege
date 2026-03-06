@@ -139,7 +139,7 @@ function PromptsPageContent() {
           <div className="px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-xl font-semibold text-zinc-100 flex items-center gap-2">
+                <h1 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
                   <Zap className="w-5 h-5 text-zinc-400" />
                   Prompts
                 </h1>

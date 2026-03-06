@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Zap,
+  Feather,
   LayoutDashboard,
   FolderKanban,
   Files,
@@ -111,12 +111,12 @@ export default function Sidebar() {
       <header className="p-5">
         <div className="flex items-center gap-3">
           <div
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-white/10 bg-gradient-to-br from-zinc-700 via-zinc-800 to-black shadow-lg"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-800/50"
             aria-hidden
           >
-            <Zap className="h-4 w-4 text-white fill-white/10" strokeWidth={2} />
+            <Feather className="h-4 w-4 text-zinc-300" strokeWidth={1.75} />
           </div>
-          <span className="text-[17px] font-bold tracking-tight text-white/90">Scrivia</span>
+          <span className="font-sans text-[17px] font-semibold tracking-tight text-white/95 antialiased">Scrivia</span>
         </div>
       </header>
 

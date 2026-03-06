@@ -288,18 +288,19 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
 
   // Gestion des actions sur les fichiers
   const handleFileOpen = useCallback((file: FileItem) => {
-    // Si c'est une image, ouvrir la modale (comme dans le chat/dashboard)
-    if (file.mime_type?.startsWith('image/') && file.url) {
+    const imageUrl = file.preview_url || file.url;
+    const isImage =
+      file.mime_type?.startsWith('image/') ||
+      isImageUrl(imageUrl) ||
+      (!!imageUrl && /^photo-/i.test(file.filename || ''));
+    if (isImage && imageUrl) {
       openImageModal({
-        src: file.url,
+        src: imageUrl,
         fileName: file.filename || 'Image',
         alt: file.filename || undefined
       });
-    } else {
-      // Pour les autres types de fichiers, ouvrir dans un nouvel onglet
-      if (file.url) {
-        window.open(file.url, '_blank');
-      }
+    } else if (file.url) {
+      window.open(file.url, '_blank');
     }
   }, []);
 
@@ -656,66 +657,60 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   return (
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-files min-h-screen flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
-        {/* Header sticky Linear / Finder */}
-        <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-zinc-800/60 px-4 sm:px-6 lg:px-8 py-6">
-          <div className="max-w-screen-2xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
-                  <FileBox className="w-6 h-6 text-zinc-400" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-zinc-100">Mes Fichiers</h1>
-                  <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-400">
-                    {statsData.fileCount} {statsData.fileCountLabel}
-                    <span className="w-1 h-1 rounded-full bg-zinc-700" aria-hidden />
-                    {formatTotalSize(displayFiles.reduce((a, f) => a + (f.size || 0), 0))}
-                  </span>
-                </div>
+        {/* Header aligné Classeurs : titre + badge | search + toggles + Upload */}
+        <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-zinc-800/60 py-4 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-screen-2xl mx-auto w-full">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight">Mes Fichiers</h1>
+              <span className="rounded-full border border-zinc-800/60 bg-zinc-900/50 px-2.5 py-0.5 text-xs font-medium text-zinc-500 whitespace-nowrap">
+                {statsData.fileCount} {statsData.fileCountLabel}
+                <span className="mx-1.5 text-zinc-600" aria-hidden>·</span>
+                {formatTotalSize(displayFiles.reduce((a, f) => a + (f.size || 0), 0))}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="relative group flex-1 sm:flex-none min-w-0">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                <input
+                  type="search"
+                  placeholder="Rechercher…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-9 w-full sm:w-64 pl-10 pr-3 rounded-lg border border-zinc-800/60 bg-zinc-900/50 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-0 focus:border-zinc-600 transition-colors"
+                />
               </div>
-
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <div className="relative flex-1 sm:min-w-[200px] sm:max-w-[280px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-                  <input
-                    type="search"
-                    placeholder="Rechercher…"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-zinc-900/40 border border-zinc-800/80 text-zinc-100 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-colors"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 rounded-lg border border-zinc-800/60 bg-zinc-900/50 p-1">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('grid')}
-                      className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                      title="Vue grille"
-                    >
-                      <LayoutGrid className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('list')}
-                      className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                      title="Vue liste"
-                    >
-                      <List className="w-4 h-4" />
-                    </button>
-                  </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="hidden sm:flex items-center gap-1 rounded-lg border border-zinc-800/60 bg-zinc-900/50 p-1">
                   <button
                     type="button"
-                    onClick={handleUploadFile}
-                    disabled={loading}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 disabled:opacity-50 transition-colors whitespace-nowrap"
+                    onClick={() => setViewMode('grid')}
+                    className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    title="Vue grille"
                   >
-                    <Upload className="w-4 h-4" />
-                    Upload
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    title="Vue liste"
+                  >
+                    <List className="w-4 h-4" />
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleUploadFile}
+                  disabled={loading}
+                  className="inline-flex items-center justify-center gap-2 px-3 py-2 sm:px-4 rounded-lg bg-white text-black text-sm font-semibold hover:bg-zinc-200 disabled:opacity-50 transition-colors whitespace-nowrap"
+                >
+                  <Upload className="w-4 h-4" />
+                  Upload
+                </button>
               </div>
             </div>
+          </div>
           </div>
         </header>
 
@@ -942,6 +937,22 @@ function formatFileDate(createdAt: string | undefined): string {
   }
 }
 
+/** True si l’URL pointe vraisemblablement vers une image (extension ou chemin). */
+function isImageUrl(url: string | undefined): boolean {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const u = new URL(url);
+    const path = u.pathname.toLowerCase();
+    const host = u.hostname.toLowerCase();
+    if (/\.(jpe?g|png|gif|webp|avif|svg|bmp)(\?|$)/i.test(path)) return true;
+    if (host.includes('unsplash.com') || host.includes('images.unsplash.com')) return true;
+    if (path.includes('/photo-') || path.includes('/photos/')) return true;
+    return false;
+  } catch {
+    return /\.(jpe?g|png|gif|webp|avif|svg|bmp)(\?|$)/i.test(url) || /unsplash\.com|\/photo-|\/photos\//i.test(url);
+  }
+}
+
 const FileItemMemo = memo(({
   file,
   index,
@@ -1001,7 +1012,12 @@ const FileItemMemo = memo(({
     onFileRename(file.id, file.filename || '');
   }, [file.id, file.filename, onFileRename]);
 
-  const isImage = file.mime_type?.startsWith('image/');
+  const imagePreviewUrl = file.preview_url || file.url;
+  const looksLikeImage =
+    file.mime_type?.startsWith('image/') ||
+    isImageUrl(imagePreviewUrl) ||
+    (!!imagePreviewUrl && /^photo-/i.test(file.filename || ''));
+  const showImagePreview = !!imagePreviewUrl && looksLikeImage;
   const sizeStr = formatFileSize(file.size || 0);
   const dateStr = formatFileDate(file.created_at);
 
@@ -1017,8 +1033,8 @@ const FileItemMemo = memo(({
         className="flex items-center gap-4 px-4 py-3 hover:bg-zinc-800/20 transition-colors cursor-pointer"
       >
         <div className="w-8 h-8 rounded-lg bg-zinc-900/20 border border-zinc-800/40 flex items-center justify-center shrink-0 overflow-hidden">
-          {isImage && file.url ? (
-            <img src={file.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+          {showImagePreview ? (
+            <img src={imagePreviewUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
           ) : (
             <FileText className="w-4 h-4 text-zinc-400" />
           )}
@@ -1072,10 +1088,10 @@ const FileItemMemo = memo(({
       </button>
 
       <div className="w-full aspect-square bg-zinc-900/20 rounded-lg border border-zinc-800/40 flex items-center justify-center overflow-hidden relative">
-        {isImage && file.url ? (
+        {showImagePreview ? (
           <>
             <img
-              src={file.url}
+              src={imagePreviewUrl}
               alt={file.filename || ''}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"

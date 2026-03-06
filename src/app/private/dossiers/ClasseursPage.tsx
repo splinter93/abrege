@@ -128,7 +128,7 @@ function ClasseursHeader({
     <header className="flex w-full flex-col gap-4 border-b border-zinc-800/60 py-4 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl sm:text-3xl font-semibold text-white tracking-tight">Mes Classeurs</h1>
+          <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight">Mes Classeurs</h1>
           <span className="rounded-full border border-zinc-800/60 bg-zinc-900/50 px-2.5 py-0.5 text-xs font-medium text-zinc-500 whitespace-nowrap">
             {statsLabel}
           </span>

@@ -385,7 +385,7 @@ function AuthenticatedHomeContent({
           <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-900/80 border border-zinc-800/80 mb-4">
             <Home className="w-6 h-6 text-zinc-400" />
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-white mb-2">
+          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
             Welcome Home, {displayName}.
           </h1>
           <p className="text-zinc-400 text-sm">Let&apos;s craft amazing work today.</p>
