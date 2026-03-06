@@ -8,10 +8,9 @@ import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { logApi } from "@/utils/logger";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
-import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 import "@/components/DossierLoadingStates.css";
-import { Settings, Edit, Trash2 } from "lucide-react";
+import { Settings, Edit, Trash2, Plus } from "lucide-react";
 import "@/styles/main.css";
 import "@/styles/account.css";
 import "@/app/(public)/dashboard.css";
@@ -192,97 +191,107 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
 
   return (
     <PageWithSidebarLayout>
-      {/* Titre de la page avec design uniforme */}
-      <UnifiedPageTitle
-          icon={Settings}
-          title="Réglages"
-          subtitle="Gérez vos préférences et clés API"
-        />
+      <div className="page-content-inner page-content-inner-settings min-h-screen flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
+        {/* Header sticky Linear (même bloc titre que Fichiers) */}
+        <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-zinc-800/60 px-4 sm:px-6 lg:px-8 py-6">
+          <div className="max-w-screen-2xl mx-auto">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+                <Settings className="w-6 h-6 text-zinc-400" />
+              </div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-semibold text-zinc-100">Réglages</h1>
+                <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-400">
+                  {apiKeys.length} clé{apiKeys.length !== 1 ? 's' : ''} API
+                </span>
+              </div>
+            </div>
+          </div>
+        </header>
 
-        {/* Dashboard principal avec design moderne */}
-        <div className="main-dashboard">
+        {/* Contenu principal */}
+        <main className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6 lg:p-8">
+          <div className="max-w-screen-2xl mx-auto w-full flex flex-col gap-8">
 
-          {/* Section Clés API */}
-          <motion.section 
-            className="dashboard-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <div className="section-header">
-              <div className="section-title-row">
-                <h2 className="section-title">Clés API</h2>
-                <button 
-                  className="account-create-button"
+            {/* Section Clés API */}
+            <motion.section
+              className="rounded-xl border border-zinc-800/60 bg-zinc-900/20 overflow-hidden"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.05 }}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 border-b border-zinc-800/60">
+                <h2 className="text-lg font-semibold text-zinc-100 m-0">Clés API</h2>
+                <button
+                  type="button"
                   onClick={() => setShowCreateForm(!showCreateForm)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors shrink-0"
                 >
-                  ➕ Nouvelle clé
+                  <Plus className="w-4 h-4" />
+                  Nouvelle clé
                 </button>
               </div>
-              <div className="section-separator"></div>
-            </div>
-            {/* Formulaire de création de nouvelle clé */}
-            <AnimatePresence>
-              {showCreateForm && (
-                <motion.div
-                  className="account-create-key-form"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="account-field">
-                    <label className="account-field-label">Nom de la clé API</label>
-                    <input 
-                      type="text"
-                      value={newApiKeyName}
-                      onChange={(e) => setNewApiKeyName(e.target.value)}
-                      placeholder="Ex: ChatGPT Integration, Clé de production..."
-                      className="account-field-input"
-                    />
-                  </div>
-
-                  <div className="account-field">
-                    <label className="account-field-label">Permissions (scopes)</label>
-                    <div className="account-scopes-grid">
-                      {availableScopes.map((scope) => (
-                        <label key={scope.key} className="account-scope-checkbox">
-                          <input
-                            type="checkbox"
-                            checked={selectedScopes.includes(scope.key)}
-                            onChange={() => toggleScope(scope.key)}
-                          />
-                          <div className="account-scope-content">
-                            <span className="account-scope-label">{scope.label}</span>
-                            <span className="account-scope-description">{scope.description}</span>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="account-create-input-group">
-                    <button 
-                      className="account-button-primary"
-                      onClick={handleCreateApiKey}
-                      disabled={!newApiKeyName.trim()}
+              <div className="p-6 pt-0">
+                <AnimatePresence>
+                  {showCreateForm && (
+                    <motion.div
+                      className="account-create-key-form"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
                     >
-                      Créer la clé
-                    </button>
-                    <button 
-                      className="account-button-secondary"
-                      onClick={() => setShowCreateForm(false)}
-                    >
-                      Annuler
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                      <div className="account-field">
+                        <label className="account-field-label">Nom de la clé API</label>
+                        <input
+                          type="text"
+                          value={newApiKeyName}
+                          onChange={(e) => setNewApiKeyName(e.target.value)}
+                          placeholder="Ex: ChatGPT Integration, Clé de production..."
+                          className="account-field-input"
+                        />
+                      </div>
+                      <div className="account-field">
+                        <label className="account-field-label">Permissions (scopes)</label>
+                        <div className="account-scopes-grid">
+                          {availableScopes.map((scope) => (
+                            <label key={scope.key} className="account-scope-checkbox">
+                              <input
+                                type="checkbox"
+                                checked={selectedScopes.includes(scope.key)}
+                                onChange={() => toggleScope(scope.key)}
+                              />
+                              <div className="account-scope-content">
+                                <span className="account-scope-label">{scope.label}</span>
+                                <span className="account-scope-description">{scope.description}</span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="account-create-input-group">
+                        <button
+                          className="account-button-primary"
+                          onClick={handleCreateApiKey}
+                          disabled={!newApiKeyName.trim()}
+                        >
+                          Créer la clé
+                        </button>
+                        <button
+                          className="account-button-secondary"
+                          onClick={() => setShowCreateForm(false)}
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-            {/* Liste des clés API */}
                 {loading ? (
-                  <SimpleLoadingState message="Chargement" />
+                  <div className="py-12 flex justify-center">
+                    <SimpleLoadingState message="Chargement" />
+                  </div>
                 ) : apiKeys.length === 0 ? (
                   <div className="account-empty-state">
                     <span className="account-empty-icon">🔑</span>
@@ -290,149 +299,149 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
                     <p>Créez votre première clé API pour commencer à utiliser Scrivia avec ChatGPT</p>
                   </div>
                 ) : (
-                  apiKeys.map((apiKey, index) => (
-                    <motion.div 
-                      key={apiKey.id}
-                      className={`account-api-key-item ${!apiKey.is_active ? 'inactive' : ''}`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4, delay: 0.2 + index * 0.1 }}
-                    >
-                      <div className="account-api-key-header">
-                        <div className="account-api-key-info">
-                          <div className="account-api-key-name-row">
-                            <h3 className="account-api-key-name">{apiKey.api_key_name}</h3>
-                            <div className={`account-status-badge ${apiKey.is_active ? 'active' : 'inactive'}`}>
-                              {apiKey.is_active ? 'Actif' : 'Inactif'}
+                  <div className="flex flex-col gap-3">
+                    {apiKeys.map((apiKey, index) => (
+                      <motion.div
+                        key={apiKey.id}
+                        className={`account-api-key-item ${!apiKey.is_active ? 'inactive' : ''}`}
+                        initial={{ opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                      >
+                        <div className="account-api-key-header">
+                          <div className="account-api-key-info">
+                            <div className="account-api-key-name-row">
+                              <h3 className="account-api-key-name">{apiKey.api_key_name}</h3>
+                              <div className={`account-status-badge ${apiKey.is_active ? 'active' : 'inactive'}`}>
+                                {apiKey.is_active ? 'Actif' : 'Inactif'}
+                              </div>
+                            </div>
+                            <div className="account-api-key-meta">
+                              <span className="account-api-key-date">Créée le {new Date(apiKey.created_at).toLocaleDateString()}</span>
+                              {apiKey.last_used_at && (
+                                <span className="account-api-key-last">Dernière utilisation: {new Date(apiKey.last_used_at).toLocaleDateString()}</span>
+                              )}
                             </div>
                           </div>
-                          <div className="account-api-key-meta">
-                            <span className="account-api-key-date">Créée le {new Date(apiKey.created_at).toLocaleDateString()}</span>
-                            {apiKey.last_used_at && (
-                              <span className="account-api-key-last">Dernière utilisation: {new Date(apiKey.last_used_at).toLocaleDateString()}</span>
-                            )}
+                          <div className="account-api-key-actions-header">
+                            <button
+                              type="button"
+                              className="account-action-button edit"
+                              onClick={() => {/* TODO: Implémenter la modification */}}
+                              title="Modifier la clé"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              className="account-action-button delete"
+                              onClick={() => handleDeleteApiKey(apiKey.api_key_name)}
+                              title="Supprimer la clé"
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </div>
                         </div>
-                        <div className="account-api-key-actions-header">
-                          <button 
-                            className="account-action-button edit"
-                            onClick={() => {/* TODO: Implémenter la modification */}}
-                            title="Modifier la clé"
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                            className="account-action-button delete"
-                            onClick={() => handleDeleteApiKey(apiKey.api_key_name)}
-                            title="Supprimer la clé"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="account-api-key-content">
-                        <div className="account-api-key-scopes-row">
-                          <div className="account-api-key-scopes">
-                            <strong>Permissions:</strong>
-                            <div className="account-scopes-tags">
-                              {apiKey.scopes.map((scope) => (
-                                <span key={scope} className="account-scope-tag">
-                                  {scope}
-                                </span>
-                              ))}
+                        <div className="account-api-key-content">
+                          <div className="account-api-key-scopes-row">
+                            <div className="account-api-key-scopes">
+                              <strong>Permissions:</strong>
+                              <div className="account-scopes-tags">
+                                {apiKey.scopes.map((scope) => (
+                                  <span key={scope} className="account-scope-tag">
+                                    {scope}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="account-api-key-creation-date">
+                              Créée le {new Date(apiKey.created_at).toLocaleDateString()}
                             </div>
                           </div>
-                          <div className="account-api-key-creation-date">
-                            Créée le {new Date(apiKey.created_at).toLocaleDateString()}
-                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))
+                      </motion.div>
+                    ))}
+                  </div>
                 )}
-          </motion.section>
-
-          {/* Section Préférences */}
-          <motion.section 
-            className="dashboard-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <div className="section-header">
-              <div className="section-title-row">
-                <h2 className="section-title">Préférences</h2>
               </div>
-              <div className="section-separator"></div>
-            </div>
-            <div className="section-content">
-              <div className="account-glass-block">
-                <div className="account-preferences-grid">
-                  <div className="account-field">
-                    <label className="account-field-label">Langue</label>
-                    <select className="account-field-select">
-                      <option value="fr">Français</option>
-                      <option value="en">English</option>
-                    </select>
-                  </div>
-                  <div className="account-field">
-                    <label className="account-field-label">Thème</label>
-                    <select className="account-field-select">
-                      <option value="light">Clair</option>
-                      <option value="dark">Sombre</option>
-                      <option value="auto">Automatique</option>
-                    </select>
-                  </div>
-                  <div className="account-field">
-                    <label className="account-field-label">Notifications</label>
-                    <div className="account-checkbox-group">
-                      <label className="account-checkbox">
-                        <input type="checkbox" defaultChecked />
-                        <span className="account-checkbox-text">Email</span>
-                      </label>
-                      <label className="account-checkbox">
-                        <input type="checkbox" />
-                        <span className="account-checkbox-text">Push</span>
-                      </label>
+            </motion.section>
+
+            {/* Section Préférences */}
+            <motion.section
+              className="rounded-xl border border-zinc-800/60 bg-zinc-900/20 overflow-hidden"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <div className="p-6 border-b border-zinc-800/60">
+                <h2 className="text-lg font-semibold text-zinc-100 m-0">Préférences</h2>
+              </div>
+              <div className="p-6">
+                <div className="account-glass-block">
+                  <div className="account-preferences-grid">
+                    <div className="account-field">
+                      <label className="account-field-label">Langue</label>
+                      <select className="account-field-select">
+                        <option value="fr">Français</option>
+                        <option value="en">English</option>
+                      </select>
+                    </div>
+                    <div className="account-field">
+                      <label className="account-field-label">Thème</label>
+                      <select className="account-field-select">
+                        <option value="light">Clair</option>
+                        <option value="dark">Sombre</option>
+                        <option value="auto">Automatique</option>
+                      </select>
+                    </div>
+                    <div className="account-field">
+                      <label className="account-field-label">Notifications</label>
+                      <div className="account-checkbox-group">
+                        <label className="account-checkbox">
+                          <input type="checkbox" defaultChecked />
+                          <span className="account-checkbox-text">Email</span>
+                        </label>
+                        <label className="account-checkbox">
+                          <input type="checkbox" />
+                          <span className="account-checkbox-text">Push</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.section>
+            </motion.section>
 
-          {/* Section Sécurité */}
-          <motion.section 
-            className="dashboard-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <div className="section-header">
-              <div className="section-title-row">
-                <h2 className="section-title">Sécurité</h2>
+            {/* Section Sécurité */}
+            <motion.section
+              className="rounded-xl border border-zinc-800/60 bg-zinc-900/20 overflow-hidden"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.15 }}
+            >
+              <div className="p-6 border-b border-zinc-800/60">
+                <h2 className="text-lg font-semibold text-zinc-100 m-0">Sécurité</h2>
               </div>
-              <div className="section-separator"></div>
-            </div>
-            <div className="section-content">
-              <div className="account-glass-block">
-                <div className="account-security-actions">
-                  <button className="account-button-secondary">
-                    🔒 Changer le mot de passe
-                  </button>
-                  <button className="account-button-secondary">
-                    📱 Authentification à deux facteurs
-                  </button>
-                  <button className="account-button-danger">
-                    🗑️ Supprimer le compte
-                  </button>
+              <div className="p-6">
+                <div className="account-glass-block">
+                  <div className="account-security-actions">
+                    <button type="button" className="account-button-secondary">
+                      🔒 Changer le mot de passe
+                    </button>
+                    <button type="button" className="account-button-secondary">
+                      📱 Authentification à deux facteurs
+                    </button>
+                    <button type="button" className="account-button-danger">
+                      🗑️ Supprimer le compte
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.section>
+            </motion.section>
 
-        </div>
+          </div>
+        </main>
+      </div>
 
       {/* Modal pour afficher la nouvelle clé */}
       <AnimatePresence key="settings-modal">

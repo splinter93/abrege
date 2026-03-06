@@ -15,7 +15,7 @@ import { simpleLogger as logger } from "@/utils/logger";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 import "@/components/DossierLoadingStates.css";
-import { FileText, Upload, Image as ImageIcon, File, FileText as FileTextIcon, Video, Music, Archive, X } from "lucide-react";
+import { FileBox, FileText, Upload, Image as ImageIcon, File, FileText as FileTextIcon, Video, Music, Archive, X, Search, LayoutGrid, List, MoreVertical } from "lucide-react";
 import "@/styles/main.css";
 import "./index.css";
 import "./page.css";
@@ -60,7 +60,8 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     renameFile,
     filteredFiles,
     searchTerm,
-    viewMode: hookViewMode
+    viewMode,
+    setViewMode
   } = useFilesPage();
 
   // Gestionnaire d'erreur sécurisé
@@ -608,19 +609,24 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     setRenamingItemId(null);
   }, []);
 
-  // 🔧 OPTIMISATION: Mémoiser tous les calculs de stats
   const statsData = useMemo(() => {
     const fileCount = displayFiles.length;
-    const usedMB = quotaInfo ? Math.round(quotaInfo.usedBytes / (1024 * 1024)) : 0;
-    const usagePercentage = quotaInfo ? Math.round((quotaInfo.usedBytes / quotaInfo.quotaBytes) * 100) : 0;
-    
+    const totalBytes = displayFiles.reduce((acc, f) => acc + (f.size || 0), 0);
+    const totalMB = Math.round(totalBytes / (1024 * 1024));
     return {
       fileCount,
-      usedMB,
-      usagePercentage,
+      totalMB,
       fileCountLabel: `fichier${fileCount > 1 ? 's' : ''}`
     };
-  }, [displayFiles.length, quotaInfo]);
+  }, [displayFiles]);
+
+  const formatTotalSize = useCallback((bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }, []);
 
   // 🔧 OPTIMISATION: Mémoiser les formats supportés (statique)
   const supportedFormats = useMemo(() => {
@@ -649,74 +655,96 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
 
   return (
     <PageWithSidebarLayout>
-      {/* Titre de la page avec design uniforme */}
-      <UnifiedPageTitle
-          icon={FileText}
-          title="Mes Fichiers"
-          subtitle="Gérez et organisez vos documents"
-          stats={[
-            { number: statsData.fileCount, label: statsData.fileCountLabel },
-            { number: statsData.usedMB, label: 'MB' }
-          ]}
-        />
-
-        {/* Container glassmorphism principal */}
-        <motion.div 
-          className="files-glass-container"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-          >
-          {/* Header avec recherche et upload */}
-          <div className="files-glass-header">
-            <div className="files-search-section">
-              <SearchFiles
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                onFilterChange={setFilters}
-                onSortChange={setSortOptions}
-                placeholder="Rechercher des fichiers..."
-                disabled={loading}
-              />
-            </div>
-            
-            <div className="files-upload-section">
-              <button 
-                className="files-upload-btn"
-                onClick={handleUploadFile}
-                disabled={loading}
-              >
-                <div className="files-upload-icon">
-                  <Upload size={18} />
+      <div className="page-content-inner page-content-inner-files min-h-screen flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
+        {/* Header sticky Linear / Finder */}
+        <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-zinc-800/60 px-4 sm:px-6 lg:px-8 py-6">
+          <div className="max-w-screen-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+                  <FileBox className="w-6 h-6 text-zinc-400" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-semibold text-zinc-100">Mes Fichiers</h1>
+                  <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-400">
+                    {statsData.fileCount} {statsData.fileCountLabel}
+                    <span className="w-1 h-1 rounded-full bg-zinc-700" aria-hidden />
+                    {formatTotalSize(displayFiles.reduce((a, f) => a + (f.size || 0), 0))}
+                  </span>
+                </div>
               </div>
-                <span className="files-upload-text">Upload</span>
-              </button>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1 sm:min-w-[200px] sm:max-w-[280px]">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                  <input
+                    type="search"
+                    placeholder="Rechercher…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-zinc-900/40 border border-zinc-800/80 text-zinc-100 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-colors"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 rounded-lg border border-zinc-800/60 bg-zinc-900/50 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      title="Vue grille"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      title="Vue liste"
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleUploadFile}
+                    disabled={loading}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 disabled:opacity-50 transition-colors whitespace-nowrap"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
+        </header>
 
-          {/* Contenu des fichiers */}
-          <div className="files-glass-content">
-              {loading ? (
+        {/* Contenu principal */}
+        <main className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6 lg:p-8">
+          <div className="max-w-screen-2xl mx-auto w-full">
+            {loading ? (
+              <div className="flex items-center justify-center py-24">
                 <SimpleLoadingState message="Chargement" />
-              ) : error ? (
-              <div className="files-error-state">
-                <div className="files-error-icon">⚠️</div>
-                  <h3>Erreur de chargement</h3>
-                  <p>{error}</p>
-                </div>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="text-4xl mb-4">⚠️</div>
+                <h3 className="text-lg font-semibold text-zinc-100 mb-1">Erreur de chargement</h3>
+                <p className="text-sm text-zinc-500">{error}</p>
+              </div>
             ) : displayFiles.length === 0 ? (
-              <div className="files-empty-state">
-                <div className="files-empty-icon">📁</div>
-                <div className="files-empty-title">Aucun fichier</div>
-                <div className="files-empty-subtitle">
-                  {searchQuery || Object.keys(filters).length > 0 
-                    ? "Aucun fichier ne correspond à votre recherche" 
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="text-4xl mb-4">📁</div>
+                <h3 className="text-lg font-semibold text-zinc-100 mb-1">Aucun fichier</h3>
+                <p className="text-sm text-zinc-500 max-w-sm">
+                  {searchQuery || Object.keys(filters).length > 0
+                    ? "Aucun fichier ne correspond à votre recherche"
                     : "Vous n'avez pas encore uploadé de fichiers"}
-                </div>
-                </div>
-              ) : (
-                <>
-                <div className="files-grid-container">
+                </p>
+              </div>
+            ) : viewMode === 'grid' ? (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-x-4 gap-y-8">
                   {paginatedFiles.map((file, index) => (
                     <FileItemMemo
                       key={file.id}
@@ -729,29 +757,71 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                       onSetRenamingItemId={setRenamingItemId}
                       getFileIcon={getFileIcon}
                       formatFileSize={formatFileSize}
+                      viewMode="grid"
                     />
                   ))}
                 </div>
-                
-                {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="files-pagination">
+                  <div className="mt-8 flex items-center justify-center gap-4">
                     <button
-                      className="pagination-btn"
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                       disabled={currentPage === 1}
+                      className="px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-sm hover:bg-zinc-800/40 disabled:opacity-50"
                     >
                       ← Précédent
                     </button>
-                    
-                    <span className="pagination-info">
-                      Page {currentPage} sur {totalPages} ({displayFiles.length} fichiers)
+                    <span className="text-xs text-zinc-500 font-mono">
+                      Page {currentPage} / {totalPages} ({displayFiles.length} fichiers)
                     </span>
-                    
                     <button
-                      className="pagination-btn"
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                       disabled={currentPage === totalPages}
+                      className="px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-sm hover:bg-zinc-800/40 disabled:opacity-50"
+                    >
+                      Suivant →
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col border border-zinc-800/40 rounded-xl overflow-hidden divide-y divide-zinc-800/40">
+                  {paginatedFiles.map((file, index) => (
+                    <FileItemMemo
+                      key={file.id}
+                      file={file}
+                      index={index}
+                      renamingItemId={renamingItemId}
+                      onFileOpen={handleFileOpen}
+                      onFileRename={handleFileRename}
+                      onContextMenuItem={handleContextMenuItem}
+                      onSetRenamingItemId={setRenamingItemId}
+                      getFileIcon={getFileIcon}
+                      formatFileSize={formatFileSize}
+                      viewMode="list"
+                    />
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <div className="mt-6 flex items-center justify-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-sm hover:bg-zinc-800/40 disabled:opacity-50"
+                    >
+                      ← Précédent
+                    </button>
+                    <span className="text-xs text-zinc-500 font-mono">
+                      Page {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-sm hover:bg-zinc-800/40 disabled:opacity-50"
                     >
                       Suivant →
                     </button>
@@ -760,7 +830,8 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
               </>
             )}
           </div>
-        </motion.div>
+        </main>
+      </div>
 
         {/* Uploader modal */}
         <AnimatePresence>
@@ -861,17 +932,27 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   );
 }
 
-// 🔧 OPTIMISATION: Composant mémorisé pour les éléments de fichier
-const FileItemMemo = memo(({ 
-  file, 
-  index, 
-  renamingItemId, 
-  onFileOpen, 
-  onFileRename, 
-  onContextMenuItem, 
-  onSetRenamingItemId, 
-  getFileIcon, 
-  formatFileSize 
+function formatFileDate(createdAt: string | undefined): string {
+  if (!createdAt) return '—';
+  try {
+    const d = new Date(createdAt);
+    return isNaN(d.getTime()) ? '—' : d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch {
+    return '—';
+  }
+}
+
+const FileItemMemo = memo(({
+  file,
+  index,
+  renamingItemId,
+  onFileOpen,
+  onFileRename,
+  onContextMenuItem,
+  onSetRenamingItemId,
+  getFileIcon,
+  formatFileSize,
+  viewMode,
 }: {
   file: FileItem;
   index: number;
@@ -882,6 +963,7 @@ const FileItemMemo = memo(({
   onSetRenamingItemId: (id: string | null) => void;
   getFileIcon: (fileId: string, mimeType?: string) => React.ReactNode;
   formatFileSize: (bytes: number) => string;
+  viewMode: 'grid' | 'list';
 }) => {
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -905,6 +987,12 @@ const FileItemMemo = memo(({
     onContextMenuItem(e, file);
   }, [file, onContextMenuItem]);
 
+  const openOptionsMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onContextMenuItem(e, file);
+  }, [file, onContextMenuItem]);
+
   const handleFileOpen = useCallback(() => {
     onFileOpen(file);
   }, [file, onFileOpen]);
@@ -913,44 +1001,101 @@ const FileItemMemo = memo(({
     onFileRename(file.id, file.filename || '');
   }, [file.id, file.filename, onFileRename]);
 
+  const isImage = file.mime_type?.startsWith('image/');
+  const sizeStr = formatFileSize(file.size || 0);
+  const dateStr = formatFileDate(file.created_at);
+
+  if (viewMode === 'list') {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={handleFileOpen}
+        onDoubleClick={handleDoubleClick}
+        onContextMenu={handleContextMenu}
+        onKeyDown={(e) => { if (e.key === 'Enter') handleFileOpen(); }}
+        className="flex items-center gap-4 px-4 py-3 hover:bg-zinc-800/20 transition-colors cursor-pointer"
+      >
+        <div className="w-8 h-8 rounded-lg bg-zinc-900/20 border border-zinc-800/40 flex items-center justify-center shrink-0 overflow-hidden">
+          {isImage && file.url ? (
+            <img src={file.url} alt="" className="w-full h-full object-cover" loading="lazy" />
+          ) : (
+            <FileText className="w-4 h-4 text-zinc-400" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          {renamingItemId === file.id ? (
+            <input
+              type="text"
+              defaultValue={file.filename || ''}
+              onBlur={handleBlur}
+              onKeyDown={handleKeyDown}
+              onClick={handleClick}
+              autoFocus
+              className="w-full bg-zinc-800/40 border border-zinc-600 rounded px-2 py-1 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            />
+          ) : (
+            <span className="text-sm font-medium text-zinc-200 truncate block">{file.filename || 'Fichier sans nom'}</span>
+          )}
+        </div>
+        <span className="text-[10px] font-mono text-zinc-500 shrink-0 w-14 text-right">{sizeStr}</span>
+        <span className="text-[10px] font-mono text-zinc-500 shrink-0 w-20 text-right">{dateStr}</span>
+        <button
+          type="button"
+          onClick={openOptionsMenu}
+          className="p-1.5 rounded-md text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200 transition-colors shrink-0"
+          aria-label="Options"
+        >
+          <MoreVertical className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <motion.div
-      className="file-item-glass"
-      initial={{ opacity: 0, scale: 0.9 }}
+      className="group relative flex flex-col p-2 rounded-xl border border-transparent hover:bg-zinc-900/40 hover:border-zinc-800/60 transition-all duration-200 cursor-pointer"
+      initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ 
-        duration: 0.2, 
-        ease: "easeOut",
-        delay: Math.min(index * 0.02, 0.3) // Stagger limité
-      }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2, ease: 'easeOut', delay: Math.min(index * 0.02, 0.3) }}
       onClick={handleFileOpen}
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
     >
-      {file.mime_type?.startsWith('image/') ? (
-        <div className="file-image-preview-glass">
-          <img
-            src={file.url}
-            alt={file.filename || 'Aperçu'}
-            loading="lazy"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-            }}
-          />
-          <div className="file-icon-glass hidden">
-            {getFileIcon(file.id, file.mime_type)}
-          </div>
-        </div>
-      ) : (
-        <div className="file-icon-glass">
-          {getFileIcon(file.id, file.mime_type)}
-        </div>
-      )}
-      
-      <div className="file-name-glass">
+      <button
+        type="button"
+        onClick={openOptionsMenu}
+        className="absolute top-3 right-3 z-10 p-1.5 rounded-md bg-black/60 backdrop-blur-md text-zinc-300 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+        aria-label="Options"
+      >
+        <MoreVertical className="w-4 h-4" />
+      </button>
+
+      <div className="w-full aspect-square bg-zinc-900/20 rounded-lg border border-zinc-800/40 flex items-center justify-center overflow-hidden relative">
+        {isImage && file.url ? (
+          <>
+            <img
+              src={file.url}
+              alt={file.filename || ''}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.nextElementSibling;
+                if (fallback) (fallback as HTMLElement).classList.remove('hidden');
+              }}
+            />
+            <div className="absolute inset-0 hidden flex items-center justify-center bg-zinc-900/40" aria-hidden>
+              {getFileIcon(file.id, file.mime_type)}
+            </div>
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" aria-hidden />
+          </>
+        ) : (
+          <FileText className="w-10 h-10 text-zinc-400 fill-zinc-500/10 group-hover:scale-110 transition-transform duration-300" />
+        )}
+      </div>
+
+      <div className="text-center mt-3 px-1 min-w-0">
         {renamingItemId === file.id ? (
           <input
             type="text"
@@ -959,15 +1104,12 @@ const FileItemMemo = memo(({
             onKeyDown={handleKeyDown}
             onClick={handleClick}
             autoFocus
-            className="file-rename-input"
+            className="w-full bg-zinc-800/40 border border-zinc-600 rounded px-2 py-1 text-[12px] text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
           />
         ) : (
-          file.filename || 'Fichier sans nom'
+          <p className="text-[12px] font-medium text-zinc-200 group-hover:text-white truncate">{file.filename || 'Fichier sans nom'}</p>
         )}
-      </div>
-      
-      <div className="file-meta-glass">
-        {formatFileSize(file.size || 0)}
+        <p className="text-[10px] text-zinc-500 mt-0.5 font-mono">{sizeStr} · {dateStr}</p>
       </div>
     </motion.div>
   );
