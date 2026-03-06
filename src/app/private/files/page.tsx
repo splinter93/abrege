@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, memo } from "react";
+import { useState, useCallback, useEffect, useMemo, memo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { FileItem } from "@/types/files";
 import { useFilesPage } from "@/hooks/useFilesPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,7 +16,7 @@ import { simpleLogger as logger } from "@/utils/logger";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 import "@/components/DossierLoadingStates.css";
-import { FileBox, FileText, Upload, Image as ImageIcon, File, FileText as FileTextIcon, Video, Music, Archive, X, Search, LayoutGrid, List, MoreVertical, Filter } from "lucide-react";
+import { FileBox, FileText, Upload, Image as ImageIcon, File, FileText as FileTextIcon, Video, Music, Archive, X, Search, LayoutGrid, List, MoreVertical, Filter, Pencil, Eye, Trash2 } from "lucide-react";
 import "@/styles/main.css";
 import "./index.css";
 import "./page.css";
@@ -102,17 +103,17 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     setContextMenu(null);
   }, []);
 
-  // Fermer le menu contextuel si on clique ailleurs
+  // Fermer le menu contextuel si on clique en dehors
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (contextMenu) {
+      if (contextMenu && contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
         closeContextMenu();
       }
     };
 
     if (contextMenu) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [contextMenu, closeContextMenu]);
 
@@ -568,16 +569,25 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     }
   }, [selectedFiles]);
 
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
   const handleContextMenuItem = useCallback((e: React.MouseEvent, file: FileItem) => {
     e.preventDefault();
     e.stopPropagation();
-    
+    const menuWidth = 156;
+    const menuHeight = 132;
+    const padding = 8;
+    let x = e.clientX;
+    let y = e.clientY;
+    if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - padding;
+    if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - padding;
+    if (x < padding) x = padding;
+    if (y < padding) y = padding;
     setContextMenu({
       file,
-      x: e.clientX,
-      y: e.clientY
+      x,
+      y
     });
-    
     logger.dev('[FilesPage] Menu contextuel affiché pour:', file.filename);
   }, []);
 
@@ -892,45 +902,52 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
           )}
         </AnimatePresence>
 
-        {/* Menu contextuel optimisé */}
-        <AnimatePresence>
-          {contextMenu && (
+        {/* Menu contextuel (portal, position corrigée, style Linear) */}
+        {contextMenu &&
+          createPortal(
             <motion.div
+              ref={contextMenuRef}
               className="file-context-menu-react"
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
               style={{
                 position: 'fixed',
                 top: contextMenu.y,
                 left: contextMenu.x,
-                zIndex: 2000,
+                zIndex: 9999,
               }}
-              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
             >
-              <div className="context-menu-options">
+              <div className="file-context-menu-list">
                 <button
-                  className="context-menu-item"
+                  type="button"
+                  className="file-context-menu-btn"
                   onClick={() => handleContextMenuAction('rename', contextMenu.file)}
                 >
-                  ✏️ Renommer
+                  <Pencil className="file-context-menu-icon" />
+                  Renommer
                 </button>
                 <button
-                  className="context-menu-item"
+                  type="button"
+                  className="file-context-menu-btn"
                   onClick={() => handleContextMenuAction('open', contextMenu.file)}
                 >
-                  👁️ Ouvrir
+                  <Eye className="file-context-menu-icon" />
+                  Ouvrir
                 </button>
                 <button
-                  className="context-menu-item"
+                  type="button"
+                  className="file-context-menu-btn file-context-menu-btn-danger"
                   onClick={() => handleContextMenuAction('delete', contextMenu.file)}
                 >
-                  🗑️ Supprimer
+                  <Trash2 className="file-context-menu-icon" />
+                  Supprimer
                 </button>
               </div>
-            </motion.div>
+            </motion.div>,
+            document.body
           )}
-        </AnimatePresence>
     </PageWithSidebarLayout>
   );
 }
