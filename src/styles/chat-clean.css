@@ -544,17 +544,15 @@ body.chat-theme-glass,
   --blk-fg: var(--chat-text-secondary);
 }
 
-/* Sidebar Glass Mode - Glassmorphism - Même forme que les autres thèmes */
+/* Sidebar Glass Mode - collée au header, sans radius */
 body.chat-theme-glass .sidebar-ultra-clean,
 body.chat-theme-glass .unified-sidebar {
   background: var(--chat-glass-bg);
   backdrop-filter: var(--chat-glass-blur);
   -webkit-backdrop-filter: var(--chat-glass-blur);
   border: 1px solid var(--chat-glass-border);
-  border-top-right-radius: var(--chat-radius-2xl);
-  border-bottom-right-radius: var(--chat-radius-2xl);
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+  border-radius: 0 !important;
+  border-top: none;
 }
 
 /* Chat input Glass Mode - Glassmorphism - Même forme que les autres thèmes */
@@ -862,16 +860,17 @@ body.chat-theme-glass .chatgpt-header {
   pointer-events: auto;
 }
 
+/* Sidebar chat : bord gauche, du header jusqu'en bas, sans radius */
 .sidebar-ultra-clean {
   position: fixed;
-  top: 56px;
+  top: 56px; /* sous le header */
   left: 0;
-  height: calc(100vh - 56px - 24px);
+  height: calc(100vh - 56px);
   width: 250px;
-  /* Même surface que .chatgpt-input-area (variable) */
-  background: var(--chat-gradient-block);
-  border: var(--chat-surface-border);
-  border-radius: var(--chat-surface-radius);
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 0 !important;
+  border-top: none;
   box-shadow: none;
   transform: translateX(-250px);
   transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
@@ -881,7 +880,6 @@ body.chat-theme-glass .chatgpt-header {
   flex-direction: column;
   padding: 0;
   overflow: hidden;
-  margin-bottom: 0;
   will-change: transform;
   pointer-events: auto;
   opacity: 1;
@@ -892,11 +890,13 @@ body.chat-theme-glass .chatgpt-header {
   transform: translateX(0);
 }
 
+/* Même fond que .chatgpt-input-area */
 .sidebar-search-clean {
-  padding: 16px;
+  padding: 16px 20px;
   border-bottom: none;
   display: flex;
   align-items: center;
+  background: var(--chat-gradient-block);
 }
 
 .sidebar-search-clean > div {
@@ -906,19 +906,20 @@ body.chat-theme-glass .chatgpt-header {
 
 .sidebar-search-icon-clean {
   position: absolute;
-  left: 12px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--chat-text-secondary);
   pointer-events: none;
 }
 
+/* Fond creusé + radius pour la barre de recherche */
 .sidebar-search-input-clean {
   width: 100%;
-  padding: 7px 12px 7px 40px;
+  padding: 10px 16px 10px 40px;
   background: var(--sidebar-search-overlay);
   border: none;
-  border-radius: var(--chat-radius-lg);
+  border-radius: 1rem;
   color: var(--chat-text-primary);
   font-size: 14px;
   font-weight: var(--chat-weight-normal, 400);
@@ -927,17 +928,19 @@ body.chat-theme-glass .chatgpt-header {
 }
 
 .sidebar-search-input-clean::placeholder {
-  color: var(--chat-text-secondary); /* ✅ Même couleur que l'icône loupe */
+  color: var(--chat-text-secondary);
 }
 
 .sidebar-search-input-clean:focus {
   background: var(--sidebar-search-overlay-focus);
 }
 
+/* Même fond que .chatgpt-input-area (variable par thème) */
 .sidebar-content-clean {
   flex: 1;
   overflow-y: auto;
-  padding: var(--chat-space-lg);
+  padding: 16px 20px;
+  background: var(--chat-gradient-block);
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
 }
@@ -966,7 +969,7 @@ body.chat-theme-glass .chatgpt-header {
   color: var(--chat-text-secondary);
   line-height: 1;
   margin: 0;
-  padding-left: 12px; /* ✅ Alignement avec les items */
+  padding-left: 0; /* Alignement avec les items (items ont px-4) */
 }
 
 .sidebar-new-conversation-btn {
@@ -988,11 +991,12 @@ body.chat-theme-glass .chatgpt-header {
   color: var(--chat-text-primary);
 }
 
-/* Bouton "Voir plus" agents */
+/* Bouton "Voir plus" agents : même logique pilule */
 .sidebar-show-more-btn {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 16px;
   margin-top: 4px;
+  border-radius: 1rem;
   background: transparent;
   border: none;
   color: var(--chat-text-secondary);
@@ -1005,32 +1009,34 @@ body.chat-theme-glass .chatgpt-header {
 }
 
 .sidebar-show-more-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
   text-decoration: underline;
 }
 
+/* Pilules / bulles : rounded-2xl, px-4 py-2.5, épousent la rondeur de l'îlot */
 .sidebar-item-clean {
   display: flex;
   align-items: center;
   gap: var(--chat-space-md);
   font-weight: var(--chat-weight-normal, 425);
-  padding: 8px 12px;
-  border-radius: var(--chat-radius-md);
+  padding: 10px 16px; /* py-2.5 px-4 */
+  border-radius: 1rem; /* rounded-2xl */
   cursor: pointer;
   transition: all var(--chat-transition-fast);
   color: var(--chat-text-secondary);
   font-size: 14px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .sidebar-item-clean:hover {
-  background: var(--sidebar-item-hover);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--chat-text-primary);
 }
 
 .sidebar-item-clean.active {
-  background: var(--sidebar-item-active);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--chat-text-primary);
   font-weight: var(--chat-weight-normal, 425);
 }
@@ -1095,18 +1101,19 @@ body.chat-theme-glass .chatgpt-header {
   margin: 0;
 }
 
+/* Même fond que .chatgpt-input-area */
 .sidebar-user-clean {
-  padding: var(--chat-space-lg);
-  padding-bottom: 24px; /* ✅ Aligné avec le bas du chat input */
+  padding: 16px 20px 24px;
   border-top: none;
+  background: var(--chat-gradient-block);
 }
 
 .sidebar-user-item-clean {
   display: flex;
   align-items: center;
   gap: var(--chat-space-md);
-  padding: 10px 12px;
-  border-radius: var(--chat-radius-md);
+  padding: 10px 16px; /* py-2.5 px-4 */
+  border-radius: 1rem; /* rounded-2xl */
   cursor: pointer;
   transition: all var(--chat-transition-fast);
   width: 100%;
@@ -1118,7 +1125,7 @@ body.chat-theme-glass .chatgpt-header {
 }
 
 .sidebar-user-item-clean:hover {
-  background: var(--chat-overlay-subtle);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .sidebar-user-item-clean:active {
@@ -2701,14 +2708,13 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
     font-size: 16px !important; /* Évite le zoom sur iOS */
   }
   
-  /* Garde le même style qu'en desktop : 250px avec border-radius */
+  /* Garde le même style qu'en desktop */
   .sidebar-ultra-clean {
-    /* Hérite des styles desktop (250px, border-radius, etc.) */
-    transform: translateX(-250px) !important;  /* ✅ Cachée par défaut */
+    transform: translateX(-250px) !important;  /* Cachée par défaut */
   }
-  
+
   .sidebar-ultra-clean.visible {
-    transform: translateX(0) !important;  /* ✅ Visible avec son style */
+    transform: translateX(0) !important;
   }
   
   .sidebar-hover-zone {
