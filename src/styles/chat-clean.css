@@ -1107,9 +1107,9 @@ body.chat-theme-glass .chatgpt-header {
   margin: 0;
 }
 
-/* Même fond que le header / sidebar */
+/* Même fond que le header / sidebar — hauteur réduite, alignée sidebar principale (p-3, py-2 px-3) */
 .sidebar-user-clean {
-  padding: 16px 20px 24px;
+  padding: 12px 16px 12px;
   border-top: none;
   background: var(--chat-bg-primary);
 }
@@ -1118,8 +1118,8 @@ body.chat-theme-glass .chatgpt-header {
   display: flex;
   align-items: center;
   gap: var(--chat-space-md);
-  padding: 10px 16px; /* py-2.5 px-4 */
-  border-radius: 1rem; /* rounded-2xl */
+  padding: 8px 12px; /* py-2 px-3 — comme footer sidebar principale */
+  border-radius: 0.5rem; /* rounded-lg */
   cursor: pointer;
   transition: all var(--chat-transition-fast);
   width: 100%;
