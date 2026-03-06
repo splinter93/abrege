@@ -1072,7 +1072,7 @@ export default function ClasseursPage() {
   const activeTab = tabs.find((t) => t.id === activeClasseurId) ?? tabs[0];
 
   return (
-    <div className="classeurs-page-root flex h-full min-h-screen w-full min-w-0">
+    <div className="classeurs-page-root flex h-full min-h-full w-full min-w-0">
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
         <ClasseursHeader
           statsLabel={statsLabel}

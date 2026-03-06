@@ -189,15 +189,15 @@ export default function Sidebar() {
           <SidebarItem
             icon={TerminalSquare}
             label="My Prompts"
-            href="/ai/prompts"
-            active={pathname?.startsWith("/ai/prompts") ?? false}
+            href="/private/prompts"
+            active={pathname?.startsWith("/private/prompts") ?? false}
             onNavigate={onNavigate}
           />
           <SidebarItem
             icon={Users}
             label="TeamMates"
-            href="/private/teammates"
-            active={pathname?.startsWith("/private/teammates") ?? false}
+            href="/private/shared"
+            active={pathname?.startsWith("/private/shared") ?? false}
             onNavigate={onNavigate}
           />
           <SidebarItem
@@ -210,8 +210,8 @@ export default function Sidebar() {
           <SidebarItem
             icon={BookOpen}
             label="Documentation"
-            href="/docs"
-            active={pathname?.startsWith("/docs") ?? false}
+            href="/private/documentation"
+            active={pathname?.startsWith("/private/documentation") ?? false}
             onNavigate={onNavigate}
           />
         </div>

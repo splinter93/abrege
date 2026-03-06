@@ -117,7 +117,7 @@ function AgentsV2Content() {
 
   return (
     <PageWithSidebarLayout>
-      <div className="page-content-inner bg-[var(--color-bg-primary)] min-h-screen w-full max-w-none mx-0">
+      <div className="page-content-inner page-content-inner-agents bg-[var(--color-bg-primary)] min-h-full w-full max-w-none mx-0 flex flex-col">
         {/* Header sticky Linear */}
         <header className="sticky top-0 z-10 bg-[var(--color-bg-primary)]/80 backdrop-blur-xl border-b border-zinc-800/60">
           <div className="px-4 sm:px-6 lg:px-8 py-4">

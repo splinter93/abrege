@@ -153,10 +153,11 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-[600px] max-h-[90vh] flex flex-col rounded-2xl border border-zinc-800/60 bg-[var(--color-bg-primary)] shadow-xl"
+        className="w-full max-w-[600px] max-h-[90vh] flex flex-col rounded-2xl bg-[var(--color-bg-block)] shadow-xl"
+        style={{ border: 'var(--border-block)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-6 border-b border-zinc-800/60 shrink-0">
+        <div className="flex items-center justify-between p-6 shrink-0" style={{ borderBottom: 'var(--border-block)' }}>
           <h2 className="text-lg font-semibold text-zinc-100">
             {prompt ? 'Modifier le prompt' : 'Nouveau prompt'}
           </h2>

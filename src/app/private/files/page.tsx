@@ -666,7 +666,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
 
   return (
     <PageWithSidebarLayout>
-      <div className="page-content-inner page-content-inner-files min-h-screen flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
+      <div className="page-content-inner page-content-inner-files min-h-full flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
         {/* Header App : titre + pill | search + toggles h-8 + Upload */}
         <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-zinc-800/60 py-3 px-4 sm:px-6 lg:px-8 mb-10">
           <div className="max-w-screen-2xl mx-auto w-full">

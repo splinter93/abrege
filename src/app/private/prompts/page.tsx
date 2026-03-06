@@ -133,7 +133,7 @@ function PromptsPageContent() {
 
   return (
     <PageWithSidebarLayout>
-      <div className="page-content-inner bg-[var(--color-bg-primary)] min-h-screen w-full max-w-none mx-0">
+      <div className="page-content-inner page-content-inner-prompts bg-[var(--color-bg-primary)] min-h-full w-full max-w-none mx-0 flex flex-col">
         {/* Header sticky Linear (même style que Agents) */}
         <header className="sticky top-0 z-10 bg-[var(--color-bg-primary)]/80 backdrop-blur-xl border-b border-zinc-800/60">
           <div className="px-4 sm:px-6 lg:px-8 py-4">
@@ -150,8 +150,8 @@ function PromptsPageContent() {
                 </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <div className="relative flex-1 sm:min-w-[200px] sm:max-w-[260px]">
+              <div className="flex flex-row items-center gap-2 w-full sm:w-auto min-w-0">
+                <div className="relative flex-1 min-w-0 sm:min-w-[200px] sm:max-w-[260px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
                   <input
                     type="search"
@@ -161,37 +161,34 @@ function PromptsPageContent() {
                     className="w-full pl-9 pr-3 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-zinc-100 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-colors"
                   />
                 </div>
-
-                <div className="flex items-center gap-2">
-                  {!isMobile && (
-                    <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5">
-                      <button
-                        type="button"
-                        onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                        title="Vue grille"
-                      >
-                        <LayoutGrid className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                        title="Vue liste"
-                      >
-                        <List className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleCreate}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors whitespace-nowrap flex-1 sm:flex-none"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Nouveau prompt
-                  </button>
-                </div>
+                {!isMobile && (
+                  <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      title="Vue grille"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      title="Vue liste"
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleCreate}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors whitespace-nowrap shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  Nouveau prompt
+                </button>
               </div>
             </div>
           </div>
@@ -227,7 +224,7 @@ function PromptsPageContent() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col border border-zinc-800/40 rounded-xl overflow-hidden divide-y divide-zinc-800/40">
+            <div className="prompts-list-view flex flex-col rounded-xl overflow-hidden">
               {filteredPrompts.map(prompt => (
                 <PromptListItem
                   key={prompt.id}

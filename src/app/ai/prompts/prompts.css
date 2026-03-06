@@ -2,16 +2,15 @@
  * Styles pour la page de gestion des prompts (style Linear / Agents)
  */
 
-/* Page prompts : pleine largeur, collé à la sidebar */
-.page-content-area > .page-content-inner {
-  max-width: none !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  width: 100% !important;
+/* Page prompts : pleine largeur, sans padding parasite (bord droit, bas) */
+.page-content-area:has(.page-content-inner-prompts) {
+  padding: 0 !important;
 }
 
-.page-content-area {
-  padding-top: 0 !important;
+.page-content-area > .page-content-inner-prompts {
+  max-width: none !important;
+  margin: 0 !important;
+  width: 100% !important;
 }
 
 .prompts-container {
@@ -26,6 +25,14 @@
 
 .prompts-container * {
   font-family: inherit;
+}
+
+/* Vue liste : bordure bloc uniquement (variables sidebar) */
+.prompts-list-view {
+  border: var(--border-block);
+}
+.prompts-list-view > * + * {
+  border-top: var(--border-block);
 }
 
 .prompts-header-actions {

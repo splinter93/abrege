@@ -1,14 +1,11 @@
-/* Page agents : contenu pleine largeur, collé à la sidebar (annule max-width 1400px du layout unifié) */
-.page-content-area > .page-content-inner {
-  max-width: none !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  width: 100% !important;
+/* Page agents : pleine largeur, sans padding parasite (bord droit, bas) */
+.page-content-area:has(.page-content-inner-agents) {
+  padding: 0 !important;
 }
-
-/* Page agents : pas de padding en haut pour coller le header */
-.page-content-area {
-  padding-top: 0 !important;
+.page-content-area > .page-content-inner-agents {
+  max-width: none !important;
+  margin: 0 !important;
+  width: 100% !important;
 }
 
 .agents2-section {

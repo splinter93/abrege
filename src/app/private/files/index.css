@@ -115,15 +115,14 @@
   display: none;
 }
 
-/* Page fichiers : pleine largeur, collé à la sidebar */
+/* Page fichiers : pleine largeur, sans padding parasite (bord droit, bas) */
+.page-content-area:has(.page-content-inner-files) {
+  padding: 0 !important;
+}
 .page-content-area > .page-content-inner-files {
   max-width: none !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
+  margin: 0 !important;
   width: 100% !important;
-}
-.page-content-area:has(.page-content-inner-files) {
-  padding-top: 0 !important;
 }
 
 /* ==========================================================================

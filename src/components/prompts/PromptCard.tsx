@@ -23,25 +23,16 @@ const PromptCard: React.FC<PromptCardProps> = ({
   onToggle,
 }) => {
   const Icon = getIconComponent(prompt.icon);
-  const agent = agents.find(a => a.id === prompt.agent_id);
-  const agentDisplayName = agent?.display_name ?? agent?.name ?? (prompt.agent_id ? 'Agent' : 'Aucun agent');
   const templatePreview = (() => {
     const normalized = (prompt.prompt_template || '').replace(/\s+/g, ' ').trim();
     if (!normalized) return 'Template vide.';
     return normalized.length > 160 ? `${normalized.slice(0, 160).trim()}...` : normalized;
   })();
-  const contextLabel =
-    prompt.context === 'editor'
-      ? 'Éditeur'
-      : prompt.context === 'chat'
-        ? 'Chat'
-        : prompt.context === 'both'
-          ? 'Éditeur + Chat'
-          : null;
 
   return (
     <div
-      className={`group flex flex-col p-5 rounded-2xl border border-zinc-800/40 bg-zinc-900/10 hover:bg-zinc-800/20 hover:border-zinc-700/60 transition-all duration-300 cursor-pointer ${!prompt.is_active ? 'opacity-60' : ''}`}
+      className={`group flex flex-col p-5 rounded-2xl transition-all duration-300 cursor-pointer hover:bg-[var(--color-bg-hover)] ${!prompt.is_active ? 'opacity-60' : ''}`}
+      style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
       onClick={onEdit}
       role="button"
       tabIndex={0}
@@ -105,17 +96,6 @@ const PromptCard: React.FC<PromptCardProps> = ({
       <div className="flex flex-col gap-1.5 min-h-0 flex-1">
         <h3 className="text-base font-semibold text-zinc-100 truncate">{prompt.name}</h3>
         <p className="text-sm text-zinc-500 line-clamp-2 leading-relaxed">{templatePreview}</p>
-      </div>
-
-      <div className="mt-4 pt-4 border-t border-zinc-800/40 flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-full truncate">
-          {agentDisplayName}
-        </span>
-        {contextLabel && (
-          <span className="inline-flex items-center px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 text-[10px] text-zinc-500">
-            {contextLabel}
-          </span>
-        )}
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ const PromptListItem: React.FC<PromptListItemProps> = ({
 
   return (
     <div
-      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 hover:bg-zinc-800/20 transition-colors cursor-pointer"
+      className="flex flex-row items-center justify-between gap-3 sm:gap-4 p-4 hover:bg-zinc-800/20 transition-colors cursor-pointer min-h-[72px]"
       onClick={onEdit}
       role="button"
       tabIndex={0}
@@ -47,7 +47,7 @@ const PromptListItem: React.FC<PromptListItemProps> = ({
         }
       }}
     >
-      <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
         <div className="relative flex-shrink-0">
           <div className="w-10 h-10 rounded-full bg-zinc-800/80 border border-zinc-800/60 flex items-center justify-center text-zinc-300">
             <Icon size={20} />
@@ -59,18 +59,18 @@ const PromptListItem: React.FC<PromptListItemProps> = ({
             />
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-zinc-100 truncate">{prompt.name}</p>
-          <p className="text-xs text-zinc-500 truncate">
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <p className="font-semibold text-zinc-100 truncate" title={prompt.name}>{prompt.name}</p>
+          <p className="text-xs text-zinc-500 truncate" title={`${contextLabel ?? ''} · ${agentDisplayName}`}>
             {contextLabel && `${contextLabel} · `}
             {agentDisplayName}
           </p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-end sm:justify-between gap-2 sm:gap-4 flex-shrink-0">
+      <div className="flex items-center justify-end sm:justify-between gap-2 sm:gap-4 flex-shrink-0 flex-nowrap">
         {contextLabel && (
-          <span className="hidden sm:inline-flex px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 text-[10px] text-zinc-500">
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-[140px] truncate">
             {contextLabel}
           </span>
         )}

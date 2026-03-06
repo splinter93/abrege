@@ -191,7 +191,7 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
 
   return (
     <PageWithSidebarLayout>
-      <div className="page-content-inner page-content-inner-settings min-h-screen flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
+      <div className="page-content-inner page-content-inner-settings min-h-full flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
         {/* Header sticky Linear (même bloc titre que Fichiers) */}
         <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-zinc-800/60 px-4 sm:px-6 lg:px-8 py-6">
           <div className="max-w-screen-2xl mx-auto">
