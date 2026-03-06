@@ -14,6 +14,7 @@ const AgentListItem: React.FC<AgentListItemProps> = ({ agent, onEdit, onDelete, 
   const roleOrDesc =
     agent.description || agent.system_instructions || agent.category || 'Agent';
   const modelLabel = agent.model || 'Modèle non défini';
+  const modelDisplay = modelLabel.length > 24 ? `${modelLabel.slice(0, 21)}…` : modelLabel;
   const avatarUrl = agent.profile_picture;
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -60,10 +61,10 @@ const AgentListItem: React.FC<AgentListItemProps> = ({ agent, onEdit, onDelete, 
 
       {/* Right: model tag (caché mobile) + actions — ne pas passer à la ligne */}
       <div className="flex items-center justify-end sm:justify-between gap-2 sm:gap-4 flex-shrink-0 flex-nowrap">
-        <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-[140px] truncate">
-          {modelLabel}
+        <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-[140px] min-w-0 truncate" title={modelLabel}>
+          {modelDisplay}
         </span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <button
             type="button"
             title={agent.is_active ? 'Désactiver' : 'Activer'}
@@ -71,9 +72,9 @@ const AgentListItem: React.FC<AgentListItemProps> = ({ agent, onEdit, onDelete, 
               e.stopPropagation();
               onToggle();
             }}
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
+            className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
           >
-            <Power className={`w-4 h-4 ${agent.is_active ? 'text-emerald-500' : ''}`} />
+            <Power className={`w-3.5 h-3.5 ${agent.is_active ? 'text-emerald-500' : ''}`} />
           </button>
           <button
             type="button"
@@ -82,9 +83,9 @@ const AgentListItem: React.FC<AgentListItemProps> = ({ agent, onEdit, onDelete, 
               e.stopPropagation();
               onEdit();
             }}
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
+            className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
@@ -93,9 +94,9 @@ const AgentListItem: React.FC<AgentListItemProps> = ({ agent, onEdit, onDelete, 
               e.stopPropagation();
               onDelete();
             }}
-            className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-zinc-800/60 transition-colors"
+            className="p-1.5 rounded-md text-zinc-400 hover:text-red-400 hover:bg-zinc-800/60 transition-colors"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

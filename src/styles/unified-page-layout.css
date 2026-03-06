@@ -370,6 +370,10 @@
     margin-left: 0 !important;
     padding: 0 !important;
     gap: 0 !important;
+    /* Fond jusqu'en bas : même couleur que le reste de la page */
+    min-height: 100dvh;
+    min-height: 100vh;
+    background: var(--color-bg-primary);
   }
 
   /* Pas de push du contenu : sidebar en overlay drawer */

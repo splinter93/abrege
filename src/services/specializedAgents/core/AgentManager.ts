@@ -96,6 +96,16 @@ export class AgentManager {
         );
       }
 
+      if (!agent.is_active) {
+        logger.warn(`[AgentManager] ❌ Agent inactif: ${agentId}`, { traceId });
+        return this.responseBuilder.buildErrorResponse(
+          `Agent ${agent.display_name || agent.slug} is inactive`,
+          agentId,
+          Date.now() - startTime,
+          agent.model
+        );
+      }
+
       // 3. Validation du schéma d'entrée
       if (agent.input_schema) {
         const validation = SchemaValidator.validateInput(input, agent.input_schema);

@@ -145,7 +145,7 @@ export default function Sidebar() {
           />
           <SidebarItem
             icon={FolderKanban}
-            label="Mes Classeurs"
+            label="Notebooks"
             href="/private/dossiers"
             active={!!isClasseurs}
             onNavigate={onNavigate}

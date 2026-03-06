@@ -113,6 +113,10 @@
   /* Shorthand pratique : border des blocs */
   --border-block: 1px solid var(--color-border-block);
 
+  /* Cartes (agents, prompts, etc.) — alias sémantiques */
+  --surface-card: var(--color-bg-block);
+  --border-card: var(--border-block);
+
   --border-subtle: #2a2a2c;
   --border-medium: #3a3a3c;
   --border-strong: #4a4a4c;
@@ -192,6 +196,8 @@
   --color-border-block: rgba(0, 0, 0, 0.08);
   --border-block-width: 1px;
   --border-block: 1px solid var(--color-border-block);
+  --surface-card: var(--color-bg-block);
+  --border-card: var(--border-block);
 }
 
 /* ==========================================================================

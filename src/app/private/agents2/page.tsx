@@ -35,7 +35,7 @@ export default function AgentsV2Page() {
 function AgentsV2Content() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { agents, loading, error, deleteAgent } = useSpecializedAgents();
+  const { agents, loading, error, deleteAgent, updateAgent } = useSpecializedAgents();
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,6 +85,17 @@ function AgentsV2Content() {
       }
     },
     [deleteAgent]
+  );
+
+  const handleToggleAgent = useCallback(
+    async (agent: SpecializedAgentConfig) => {
+      try {
+        await updateAgent(agent.id, { is_active: !agent.is_active });
+      } catch (e) {
+        simpleLogger.error('[AgentsV2] Failed to toggle agent', e);
+      }
+    },
+    [updateAgent]
   );
 
   if (authLoading || !user?.id) {
@@ -201,7 +212,7 @@ function AgentsV2Content() {
                   key={agent.id}
                   agent={agent}
                   onEdit={() => handleOpenAgent(agent)}
-                  onToggle={() => {}}
+                  onToggle={() => handleToggleAgent(agent)}
                   onDelete={() => handleDeleteAgent(agent)}
                 />
               ))}
@@ -216,7 +227,7 @@ function AgentsV2Content() {
                   key={agent.id}
                   agent={agent}
                   onEdit={() => handleOpenAgent(agent)}
-                  onToggle={() => {}}
+                  onToggle={() => handleToggleAgent(agent)}
                   onDelete={() => handleDeleteAgent(agent)}
                 />
               ))}

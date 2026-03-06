@@ -128,7 +128,7 @@ function ClasseursHeader({
     <header className="flex w-full flex-col gap-4 border-b border-zinc-800/60 py-4 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight">Mes Classeurs</h1>
+          <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight">My Notebooks</h1>
           <span className="rounded-full border border-zinc-800/60 bg-zinc-900/50 px-2.5 py-0.5 text-xs font-medium text-zinc-500 whitespace-nowrap">
             {statsLabel}
           </span>
@@ -344,17 +344,6 @@ function ClasseursTabs({
             ))}
           </div>
         </SortableContext>
-        {onCreateTab && (
-          <button
-            type="button"
-            onClick={onCreateTab}
-            className="flex-shrink-0 rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800/50 hover:text-zinc-300"
-            title="Nouveau classeur"
-            aria-label="Nouveau classeur"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
-        )}
       </div>
       <DragOverlay>
         {draggedTab ? (
@@ -602,7 +591,7 @@ function ClasseursContent({
       <div className="flex min-w-0 items-center justify-between gap-4">
         <nav className="flex min-w-0 flex-wrap items-center gap-1 text-xs uppercase tracking-wider text-zinc-500 font-medium" aria-label="Fil d'Ariane">
           {contentBreadcrumb.length === 0 ? (
-            <span className="text-zinc-400">Mes Classeurs</span>
+            <span className="text-zinc-400">My Notebooks</span>
           ) : (
             contentBreadcrumb.map((seg, i) => (
               <span key={i} className="flex items-center gap-1">
@@ -825,7 +814,7 @@ export default function ClasseursPage() {
   const breadcrumbSegments = useMemo((): BreadcrumbSegment[] => {
     const segments: BreadcrumbSegment[] = [
       { label: "Workspace", onClick: handleGoToRoot },
-      { label: "Mes Classeurs", onClick: handleGoToRoot },
+      { label: "My Notebooks", onClick: handleGoToRoot },
     ];
     if (activeClasseur) {
       segments.push({

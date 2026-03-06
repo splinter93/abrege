@@ -55,11 +55,10 @@ export class AgentConfigService {
     }
 
     try {
-      // Construire la requête conditionnelle selon le type d'ID
+      // Construire la requête conditionnelle selon le type d'ID (pas de filtre is_active : update/patch/delete doivent trouver l'agent)
       let query = supabase
         .from('agents')
-        .select('*')
-        .eq('is_active', true);
+        .select('*');
 
       // Si c'est un UUID, chercher par ID, sinon par slug
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(agentId);

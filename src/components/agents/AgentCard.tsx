@@ -1,6 +1,6 @@
 import React from 'react';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
-import { Power, Edit2, Trash2 } from 'lucide-react';
+import { Power, PowerOff, Edit2, Trash2 } from 'lucide-react';
 
 interface AgentCardProps {
   agent: SpecializedAgentConfig;
@@ -16,7 +16,9 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle
     agent.system_instructions ||
     'Aucune description fournie pour cet agent.';
   const modelLabel = agent.model || 'Modèle non défini';
+  const modelDisplay = modelLabel.length > 24 ? `${modelLabel.slice(0, 21)}…` : modelLabel;
   const avatarUrl = agent.profile_picture;
+  const initials = (displayName || '?').slice(0, 2);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -27,83 +29,85 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle
 
   return (
     <div
-      className={`group flex flex-col p-5 rounded-2xl border border-solid bg-[var(--color-bg-block)] hover:bg-white/[0.04] transition-all duration-300 cursor-pointer ${!agent.is_active ? 'opacity-60' : ''}`}
-      style={{ borderColor: 'var(--color-border-block)', borderWidth: 'var(--border-block-width)' }}
+      className={`group relative flex flex-col bg-[var(--surface-card)] rounded-xl hover:border-white/[0.2] transition-all duration-300 overflow-hidden shadow-sm h-full cursor-pointer ${!agent.is_active ? 'opacity-60' : ''}`}
+      style={{ border: 'var(--border-card)' }}
       onClick={onEdit}
       role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
-      {/* Top: avatar + actions (actions visible on group-hover) */}
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="relative flex-shrink-0">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={displayName}
-              className="w-10 h-10 rounded-full object-cover border border-zinc-800/60"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-zinc-800/80 border border-zinc-800/60 flex items-center justify-center text-zinc-300 text-sm font-semibold uppercase">
-              {(displayName || '?').slice(0, 2)}
+      {/* 1. HEADER : Avatar + Nom + Actions (Hover) */}
+      <div className="flex items-start justify-between p-5 pb-3 bg-[var(--surface-card)]">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-10 h-10 rounded-full bg-neutral-800 border border-white/[0.1] flex items-center justify-center text-sm font-medium text-neutral-300 overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+              ) : (
+                initials
+              )}
             </div>
-          )}
-          {agent.is_active && (
-            <span
-              className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[var(--color-bg-primary)]"
-              title="Actif"
+            <div
+              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[var(--surface-card)] ${agent.is_active ? 'bg-emerald-500' : 'bg-neutral-600'}`}
+              title={agent.is_active ? 'Actif' : 'Inactif'}
             />
-          )}
+          </div>
+          <h3 className="text-[15px] font-semibold text-neutral-100 tracking-tight leading-none truncate">
+            {displayName}
+          </h3>
         </div>
 
-        <div className="flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
-          <button
-            type="button"
-            title={agent.is_active ? 'Désactiver' : 'Activer'}
-            onClick={e => {
-              e.stopPropagation();
-              onToggle();
-            }}
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
-          >
-            <Power className={`w-4 h-4 ${agent.is_active ? 'text-emerald-500' : ''}`} />
-          </button>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
           <button
             type="button"
             title="Modifier"
+            className="w-7 h-7 flex items-center justify-center rounded-md border bg-white/[0.03] border-white/[0.05] text-neutral-500 hover:bg-white/[0.08] hover:text-neutral-200 transition-all"
             onClick={e => {
               e.stopPropagation();
               onEdit();
             }}
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
             title="Supprimer"
+            className="w-7 h-7 flex items-center justify-center rounded-md border bg-white/[0.03] border-white/[0.05] text-neutral-500 hover:bg-white/[0.08] hover:text-rose-400 transition-all"
             onClick={e => {
               e.stopPropagation();
               onDelete();
             }}
-            className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-zinc-800/60 transition-colors"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Main: title + description */}
-      <div className="flex flex-col gap-1.5 min-h-0 flex-1">
-        <h3 className="text-base font-semibold text-zinc-100 truncate">{displayName}</h3>
-        <p className="text-sm text-zinc-500 line-clamp-2 leading-relaxed">{description}</p>
+      {/* 2. BODY : Description */}
+      <div className="px-5 pb-4 flex-1 min-h-0 bg-[var(--surface-card)]">
+        <p className="text-[13px] text-neutral-400 leading-relaxed line-clamp-2">{description}</p>
       </div>
 
-      {/* Footer: model tag (code style) */}
-      <div className="mt-4 pt-4 border-t border-zinc-800/40">
-        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-full truncate">
-          {modelLabel}
+      {/* 3. FOOTER : Modèle + Toggle Active (couleur sidebar) */}
+      <div className="px-5 py-3 border-t flex items-center justify-between mt-auto bg-[var(--color-bg-block)]" style={{ borderTop: 'var(--border-block)' }}>
+        <span className="inline-flex items-center px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-[75%] min-w-0 truncate" title={modelLabel}>
+          {modelDisplay}
         </span>
+        <button
+          type="button"
+          title={agent.is_active ? 'Désactiver' : 'Activer'}
+          className={`flex items-center justify-center w-7 h-7 rounded-md border transition-all shrink-0 ${
+            agent.is_active
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20'
+              : 'bg-neutral-800/60 border-neutral-600/80 text-neutral-500 hover:bg-neutral-700/60 hover:text-neutral-400'
+          }`}
+          onClick={e => {
+            e.stopPropagation();
+            onToggle();
+          }}
+        >
+          {agent.is_active ? <Power className="w-3.5 h-3.5" /> : <PowerOff className="w-3.5 h-3.5" />}
+        </button>
       </div>
     </div>
   );
