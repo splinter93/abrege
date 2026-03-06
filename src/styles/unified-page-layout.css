@@ -61,7 +61,7 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-xl) 0 !important; /* Pas de padding gauche : collé à la sidebar */
+  padding: var(--spacing-xl) 0 var(--spacing-xl) 0 !important; /* Pas de padding horizontal : contenu pleine largeur ; gauche collé à la sidebar */
   gap: var(--spacing-lg);
   position: relative;
   background: var(--color-bg-primary);
@@ -75,7 +75,7 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sidebar);
-  margin: calc(-1 * var(--spacing-xl)) calc(-1 * var(--spacing-xl)) var(--spacing-lg) calc(-1 * var(--spacing-xl));
+  margin: calc(-1 * var(--spacing-xl)) 0 var(--spacing-lg) calc(-1 * var(--spacing-xl));
   padding: var(--spacing-lg) var(--spacing-xl);
   background: var(--glass-bg-primary);
   border-bottom: 1px solid var(--glass-border-primary);
@@ -317,7 +317,7 @@
 
 @media (max-width: 1024px) {
   .page-content-area {
-    padding: var(--spacing-lg) !important;
+    padding: var(--spacing-lg) 0 var(--spacing-lg) 0 !important;
   }
   
   .page-title-container-glass {

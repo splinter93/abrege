@@ -661,6 +661,7 @@ body.chat-theme-glass .chatgpt-header {
   height: 56px;
   z-index: 1001;
   font-family: var(--font-chat-ui);
+  border-bottom: 1px solid rgba(39, 39, 42, 0.6); /* border-zinc-800/60 — aligné header page agent */
 }
 
 .chatgpt-header-left {
@@ -792,11 +793,12 @@ body.chat-theme-glass .chatgpt-header {
   font-family: var(--font-chat-ui);
 }
 
+/* Même couleur et hover que .chatgpt-reduce-btn-header */
 .chatgpt-sidebar-toggle-btn-header {
-  display: flex; /* ✅ Toujours visible (sidebar toggle permanent) */
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0; /* ✅ Pas de padding pour centrage parfait */
+  padding: 0;
   background: transparent;
   border: none;
   color: var(--chat-text-secondary);
@@ -805,14 +807,18 @@ body.chat-theme-glass .chatgpt-header {
   transition: all var(--chat-transition-fast);
   width: 36px;
   height: 36px;
-  flex-shrink: 0; /* ✅ Ne pas rétrécir */
+  flex-shrink: 0;
+}
+
+.chatgpt-sidebar-toggle-btn-header:hover {
+  background: var(--chat-overlay-hover);
+  color: var(--chat-text-primary);
 }
 
 .chatgpt-container.canva-active .chatgpt-header-left {
   margin-left: -7px;
 }
 
-/* ✅ Pas de hover, style simple */
 .chatgpt-sidebar-toggle-btn-header:focus,
 .chatgpt-sidebar-toggle-btn-header:focus-visible,
 .chatgpt-sidebar-toggle-btn-header:active {
@@ -860,15 +866,15 @@ body.chat-theme-glass .chatgpt-header {
   pointer-events: auto;
 }
 
-/* Sidebar chat : bord gauche, du header jusqu'en bas, sans radius */
+/* Sidebar chat : bord gauche, du header jusqu'en bas, sans radius — même fond que le header */
 .sidebar-ultra-clean {
   position: fixed;
   top: 56px; /* sous le header */
   left: 0;
   height: calc(100vh - 56px);
   width: 250px;
-  background: #141414;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: var(--chat-bg-primary);
+  border: 1px solid rgba(39, 39, 42, 0.6);
   border-radius: 0 !important;
   border-top: none;
   box-shadow: none;
@@ -890,13 +896,13 @@ body.chat-theme-glass .chatgpt-header {
   transform: translateX(0);
 }
 
-/* Même fond que .chatgpt-input-area */
+/* Même fond que le header / sidebar */
 .sidebar-search-clean {
   padding: 16px 20px;
   border-bottom: none;
   display: flex;
   align-items: center;
-  background: var(--chat-gradient-block);
+  background: var(--chat-bg-primary);
 }
 
 .sidebar-search-clean > div {
@@ -935,12 +941,12 @@ body.chat-theme-glass .chatgpt-header {
   background: var(--sidebar-search-overlay-focus);
 }
 
-/* Même fond que .chatgpt-input-area (variable par thème) */
+/* Même fond que le header / sidebar */
 .sidebar-content-clean {
   flex: 1;
   overflow-y: auto;
   padding: 16px 20px;
-  background: var(--chat-gradient-block);
+  background: var(--chat-bg-primary);
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
 }
@@ -1101,11 +1107,11 @@ body.chat-theme-glass .chatgpt-header {
   margin: 0;
 }
 
-/* Même fond que .chatgpt-input-area */
+/* Même fond que le header / sidebar */
 .sidebar-user-clean {
   padding: 16px 20px 24px;
   border-top: none;
-  background: var(--chat-gradient-block);
+  background: var(--chat-bg-primary);
 }
 
 .sidebar-user-item-clean {

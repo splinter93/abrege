@@ -67,7 +67,7 @@
   flex: 1;
   margin-left: var(--sidebar-width) !important; /* 220px : aligné sur la bordure droite de la sidebar */
   min-height: 100vh;
-  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-xl) 0 !important; /* Pas de padding gauche */
+  padding: var(--spacing-xl) 0 var(--spacing-xl) 0 !important; /* Pas de padding horizontal : contenu pleine largeur */
   background: var(--color-bg-primary);
   position: relative;
 }
@@ -94,8 +94,8 @@
 
 .page-content-inner {
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   position: relative;
   z-index: 1;
 }
@@ -540,7 +540,7 @@
 
 @media (max-width: 1024px) {
   .page-content-area {
-    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-lg) 0 !important;
+    padding: var(--spacing-lg) 0 var(--spacing-lg) 0 !important;
   }
   
   .page-title-content {
