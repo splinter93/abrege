@@ -216,8 +216,8 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {/* User settings — tout en bas */}
-      <footer className="mt-auto border-t border-white/[0.06] p-3">
+      {/* User settings — tout en bas (masqué sur mobile : avatar dans la top bar) */}
+      <footer className="mt-auto border-t border-white/[0.06] p-3 hidden md:block">
         <Link
           href="/private/settings"
           onClick={onNavigate}

@@ -1,12 +1,23 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import { Menu } from 'lucide-react';
 import { MainSidebarProvider, useMainSidebar } from '@/contexts/MainSidebarContext';
+import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/Sidebar';
-import MainSidebarToggleButton from '@/components/MainSidebarToggleButton';
 
 function PageWithSidebarLayoutInner({ children }: { children: React.ReactNode }) {
-  const { isOpen, isMobile, closeSidebar } = useMainSidebar();
+  const { isOpen, isMobile, closeSidebar, openSidebar } = useMainSidebar();
+  const { user } = useAuth();
+
+  const displayName =
+    (user?.user_metadata as { full_name?: string; name?: string } | undefined)?.full_name ||
+    (user?.user_metadata as { full_name?: string; name?: string } | undefined)?.name ||
+    user?.email?.split('@')[0] ||
+    'N';
+  const avatarUrl = (user?.user_metadata as { avatar_url?: string } | undefined)?.avatar_url;
+  const initial = (displayName || 'N').slice(0, 1).toUpperCase();
 
   return (
     <div className={`page-wrapper ${isMobile ? 'page-is-mobile' : ''}`}>
@@ -26,10 +37,34 @@ function PageWithSidebarLayoutInner({ children }: { children: React.ReactNode })
         <Sidebar />
       </aside>
       <main className="page-content-area">
-        <div className="page-mobile-sidebar-header">
-          <MainSidebarToggleButton />
+        {/* Mobile Top Bar — visible uniquement sur mobile */}
+        <div className="mobile-top-bar md:hidden flex items-center justify-between h-14 px-4 pt-[env(safe-area-inset-top,0px)] bg-[#0A0A0A]/90 backdrop-blur-md border-b border-white/[0.08] sticky top-0 z-50 shrink-0">
+          <button
+            type="button"
+            onClick={openSidebar}
+            className="p-2 -ml-2 text-neutral-400 hover:text-white transition-colors"
+            aria-label="Ouvrir le menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <span className="text-sm font-semibold text-neutral-200 tracking-tight">
+            Scrivia
+          </span>
+          <Link
+            href="/private/account"
+            className="w-7 h-7 rounded-full bg-neutral-800 border border-white/[0.1] flex items-center justify-center overflow-hidden shrink-0"
+            aria-label="Compte"
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-xs font-medium text-neutral-300">{initial}</span>
+            )}
+          </Link>
         </div>
-        {children}
+        <div className="flex-1 min-h-0 pt-0">
+          {children}
+        </div>
       </main>
     </div>
   );
