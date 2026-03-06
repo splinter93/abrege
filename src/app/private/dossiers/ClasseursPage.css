@@ -1,0 +1,29 @@
+/* ==========================================================================
+   CLASSEURS PAGE - Linear-style / no-scrollbar
+   ========================================================================== */
+
+/* Même background que la zone de contenu (Mes Fichiers, etc.) */
+.classeurs-page-root {
+  background-color: var(--color-bg-primary);
+}
+
+/* Manrope pour toute la page Classeurs (sidebar + contenu) */
+.classeurs-page-root,
+.classeurs-page-root * {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* La page Classeurs : pas de padding sur la zone de contenu (plein écran) */
+.page-content-area:has(.classeurs-page-root) {
+  padding: 0 !important;
+}
+
+/* Masquer la scrollbar native sur les zones scrollables (tabs, etc.) */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

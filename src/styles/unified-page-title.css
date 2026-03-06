@@ -38,7 +38,7 @@
   justify-content: center;
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #1e2026 0%, #252831 50%, #1e2026 100%);
+  background: linear-gradient(135deg, var(--color-bg-content) 0%, var(--surface-tertiary) 50%, var(--color-bg-content) 100%);
   border: none;
   border-radius: 20px;
   backdrop-filter: blur(22px);
@@ -50,7 +50,7 @@
   flex-shrink: 0;
   margin-top: 0;
   align-self: flex-start;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24);
+  box-shadow: var(--shadow-lg);
 }
 
 .unified-page-title-logo::before {
@@ -68,10 +68,10 @@
 }
 
 .unified-page-title-logo:hover {
-  background: linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%);
+  background: linear-gradient(135deg, var(--surface-tertiary) 0%, var(--color-bg-elevated) 50%, var(--surface-tertiary) 100%);
   color: rgba(255, 255, 255, 0.95);
   transform: translateY(-2px);
-  box-shadow: 0 20px 38px rgba(0, 0, 0, 0.26);
+  box-shadow: var(--shadow-xl);
 }
 
 /* ========================================
@@ -141,7 +141,7 @@
   font-size: 1.5rem;
   font-weight: 900;
   color: #ffffff;
-  font-family: var(--editor-font-family-headings);
+  font-family: var(--font-manrope-stack) !important;
   line-height: 1;
 }
 
@@ -151,27 +151,27 @@
   color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-family: var(--editor-font-family-headings);
+  font-family: var(--font-manrope-stack) !important;
   line-height: 1;
 }
 
-/* Titre principal - Surcharge le style global h1 */
+/* Titre principal - preset Manrope (éviter Geist) */
 .unified-page-title-container .unified-page-title-content .unified-page-title-section h1.unified-page-title-text {
   font-size: 2rem !important; /* Réduit de 2.5rem à 2rem (32px) */
   font-weight: 900 !important;
   color: var(--chat-text-primary, #e8eaed) !important;
   margin: 0 !important;
-  font-family: var(--editor-font-family-headings) !important;
+  font-family: var(--font-manrope-stack) !important;
   letter-spacing: -0.02em !important;
   line-height: 1.2 !important;
 }
 
-/* Sous-titre */
+/* Sous-titre - preset Manrope */
 .unified-page-title-container .unified-page-title-content .unified-page-title-section .unified-page-title-subtitle {
   font-size: 1.1rem !important;
   color: var(--chat-text-secondary, #a1a9b1) !important;
   margin: 0 !important;
-  font-family: var(--editor-font-family-headings) !important;
+  font-family: var(--font-manrope-stack) !important;
   font-weight: 400 !important;
   line-height: 1.4 !important;
 }
@@ -336,7 +336,7 @@
   font-size: 1.75rem;
   font-weight: 900;
   color: #ffffff;
-  font-family: var(--editor-font-family-headings);
+  font-family: var(--font-manrope-stack) !important;
   line-height: 1;
 }
 
@@ -346,7 +346,7 @@
   color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-family: var(--editor-font-family-headings);
+  font-family: var(--font-manrope-stack) !important;
   line-height: 1;
 }
 

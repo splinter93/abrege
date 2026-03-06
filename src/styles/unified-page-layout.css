@@ -15,8 +15,8 @@
 .page-wrapper {
   display: flex;
   min-height: 100vh;
-  background: var(--chat-bg-primary, #131313); /* ✅ Background du chat */
-  font-family: var(--font-chat-text, 'Figtree', 'Geist', -apple-system, sans-serif); /* ✅ Font du chat */
+  background: var(--color-bg-primary);
+  font-family: var(--font-chat-text, 'Manrope', -apple-system, sans-serif);
   position: relative;
 }
 
@@ -59,10 +59,10 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-xl) !important; /* Force le padding même en cas de conflit CSS */
+  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-xl) 0 !important; /* Pas de padding gauche : collé à la sidebar */
   gap: var(--spacing-lg);
   position: relative;
-  background: var(--chat-bg-primary, #131313); /* ✅ Background du chat */
+  background: var(--color-bg-primary);
 }
 
 /* ==========================================================================

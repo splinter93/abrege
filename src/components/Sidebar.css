@@ -1,0 +1,17 @@
+/* ==========================================================================
+   SIDEBAR - Linear / Vercel style (tokens design system)
+   ========================================================================== */
+
+.sidebar-root {
+  background-color: var(--surface-primary);
+}
+
+/* Masquer la scrollbar tout en gardant le scroll */
+.sidebar-nav-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sidebar-nav-scroll::-webkit-scrollbar {
+  display: none;
+}

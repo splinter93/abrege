@@ -30,7 +30,7 @@ export const CHAT_FONT_PRESETS: Record<ChatFontPresetId, ChatFontPreset> = {
   figtree: {
     id: 'figtree',
     label: 'Figtree',
-    family: `'Figtree', 'Geist', ${FALLBACK_STACK}`,
+    family: `'Figtree', 'Manrope', ${FALLBACK_STACK}`,
     sizeBase: '16px',
     weightNormal: 425,
     weightMedium: 600,
@@ -38,16 +38,17 @@ export const CHAT_FONT_PRESETS: Record<ChatFontPresetId, ChatFontPreset> = {
     weightBold: 800,
     weightExtrabold: 800,
   },
+  /* Geist retiré : redirigé vers Manrope (preset unique). */
   geist: {
     id: 'geist',
-    label: 'Geist',
-    family: `'Geist', ${FALLBACK_STACK}`,
-    sizeBase: '16px',
-    weightNormal: 425,
+    label: 'Manrope',
+    family: `'Manrope', ${FALLBACK_STACK}`,
+    sizeBase: '15px',
+    weightNormal: 525,
     weightMedium: 600,
     weightSemibold: 750,
     weightBold: 800,
-    weightExtrabold: 800,
+    weightExtrabold: 850,
   },
   inter: {
     id: 'inter',
@@ -100,15 +101,17 @@ export const CHAT_FONT_CSS_VARS = [
 
 /**
  * Applique un preset sur le document (root).
- * À appeler au changement de police et au chargement des préférences.
+ * Chat = toujours Manrope (ignorance du presetId pour forcer cohérence).
  */
-export function applyChatFontPreset(presetId: ChatFontPresetId): void {
+export function applyChatFontPreset(_presetId: ChatFontPresetId): void {
   if (typeof document === 'undefined') return;
-  const preset = CHAT_FONT_PRESETS[presetId];
+  const preset = CHAT_FONT_PRESETS.manrope;
   if (!preset) return;
 
   const root = document.documentElement;
   root.style.setProperty('--font-chat-base', preset.family);
+  root.style.setProperty('--font-chat-text', preset.family);
+  root.style.setProperty('--font-chat-ui', preset.family);
   root.style.setProperty('--chat-font-size-base', preset.sizeBase);
   root.style.setProperty('--chat-text-base', preset.sizeBase);
   root.style.setProperty('--chat-weight-normal', String(preset.weightNormal));
@@ -121,7 +124,7 @@ export function applyChatFontPreset(presetId: ChatFontPresetId): void {
 /** Mapping label (FontSelector / UI) → preset id pour l’éditeur */
 const FONT_LABEL_TO_PRESET_ID: Record<string, ChatFontPresetId> = {
   Figtree: 'figtree',
-  Geist: 'geist',
+  Geist: 'manrope', /* ancien choix Geist → Manrope */
   Inter: 'inter',
   'Noto Sans': 'noto-sans',
   Manrope: 'manrope',

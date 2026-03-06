@@ -2,20 +2,16 @@
 
 import React from 'react';
 import { MainSidebarProvider, useMainSidebar } from '@/contexts/MainSidebarContext';
-import UnifiedSidebar from '@/components/UnifiedSidebar';
+import Sidebar from '@/components/Sidebar';
 import MainSidebarToggleButton from '@/components/MainSidebarToggleButton';
 
 function PageWithSidebarLayoutInner({ children }: { children: React.ReactNode }) {
-  const { isOpen, isMobile, closeSidebar } = useMainSidebar();
+  const { isOpen, isMobile } = useMainSidebar();
 
   return (
     <div className={`page-wrapper ${isMobile ? 'page-is-mobile' : ''} ${isOpen && isMobile ? 'main-sidebar-open' : ''}`}>
       <aside className={`page-sidebar-fixed ${isOpen && isMobile ? 'mobile-visible' : ''}`}>
-        <UnifiedSidebar
-          isOpen={isOpen}
-          isDesktop={!isMobile}
-          onClose={closeSidebar}
-        />
+        <Sidebar />
       </aside>
       <main className="page-content-area">
         <div className="page-mobile-sidebar-header">

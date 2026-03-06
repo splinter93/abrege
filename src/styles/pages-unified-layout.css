@@ -15,10 +15,11 @@
 .page-wrapper {
   display: flex;
   min-height: 100vh;
-  background: var(--chat-bg-primary, #131313); /* ✅ Background du chat */
-  font-family: var(--font-chat-text, 'Figtree', 'Geist', -apple-system, sans-serif); /* ✅ Font du chat */
+  background: var(--color-bg-primary);
+  font-family: var(--font-chat-text, 'Manrope', -apple-system, sans-serif);
   position: relative;
   overflow-x: hidden;
+  padding-left: 0; /* Pas d'espace entre sidebar et contenu */
 }
 
 /* Effet de texture subtile */
@@ -61,14 +62,19 @@
   z-index: var(--glass-z-sidebar);
 }
 
-/* Zone de contenu principal */
+/* Zone de contenu principal - collé à la sidebar (220px), pas d'espace vide */
 .page-content-area {
   flex: 1;
-  margin-left: var(--sidebar-width);
+  margin-left: var(--sidebar-width) !important; /* 220px : aligné sur la bordure droite de la sidebar */
   min-height: 100vh;
-  padding: var(--spacing-xl) !important; /* Force le padding même en cas de conflit CSS */
-  background: var(--chat-bg-primary, #131313); /* ✅ Background du chat */
+  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-xl) 0 !important; /* Pas de padding gauche */
+  background: var(--color-bg-primary);
   position: relative;
+}
+
+/* Force l'alignement : main démarre exactement à 220px (largeur sidebar) */
+.page-wrapper > main.page-content-area {
+  margin-left: 220px !important;
 }
 
 .page-content-area::before {
@@ -534,7 +540,7 @@
 
 @media (max-width: 1024px) {
   .page-content-area {
-    padding: var(--spacing-lg) !important;
+    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-lg) 0 !important;
   }
   
   .page-title-content {
@@ -763,11 +769,11 @@
 
 .dark .page-wrapper {
   background: linear-gradient(135deg, 
-    #0a0a0c 0%, 
-    #1a1a1e 25%, 
-    #141418 50%, 
-    #1c1c20 75%, 
-    #0a0a0c 100%);
+    var(--color-bg-primary) 0%, 
+    var(--surface-tertiary) 25%, 
+    var(--color-bg-secondary) 50%, 
+    var(--surface-tertiary) 75%, 
+    var(--color-bg-primary) 100%);
 }
 
 .dark .page-wrapper::before {

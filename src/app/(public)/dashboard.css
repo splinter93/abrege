@@ -1,12 +1,91 @@
 /*
-  DASHBOARD DESIGN MODERNE - LAYOUT PARFAIT
-  ==========================================
-  Design unifié et professionnel pour le dashboard
-  Structure claire avec titres, séparateurs et espacements cohérents
+  DASHBOARD DESIGN MODERNE - STYLE LINEAR / VERCEL
+  =================================================
+  Fond #09090B, bordures subtiles, pas de blocs gris.
+  no-scrollbar + mask-fade pour le carrousel notes.
 */
 
+/* Carrousel notes : scroll horizontal sans barre visible */
+.dashboard-notes-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.dashboard-notes-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Fondre le bord droit du carrousel */
+.dashboard-notes-mask {
+  mask-image: linear-gradient(to right, black calc(100% - 48px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 48px), transparent 100%);
+}
+
+/* SearchBar + boutons nav : même style Linear (hauteur 36px, bordures zinc) */
+.dashboard-search-inline .search-bar-container {
+  min-width: 180px;
+  max-width: 240px;
+  height: 36px;
+}
+
+.dashboard-search-inline .search-bar-form {
+  height: 100%;
+}
+
+.dashboard-search-inline .search-bar-field {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 0.75rem 0 2.25rem;
+  font-size: 0.875rem;
+  font-family: 'Manrope', -apple-system, sans-serif;
+  color: rgb(212 212 216); /* zinc-300, comme ActionButton */
+  background: rgba(24, 24, 27, 0.3); /* bg-zinc-900/30 */
+  border: 1px solid rgba(39, 39, 42, 0.6); /* border-zinc-800/60 */
+  border-radius: 0.5rem; /* rounded-lg */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.dashboard-search-inline .search-bar-field::placeholder {
+  color: rgb(161 161 170); /* zinc-400 */
+}
+
+.dashboard-search-inline .search-bar-field:hover {
+  color: rgb(255 255 255);
+  background: rgba(39, 39, 42, 0.5); /* hover:bg-zinc-800/50 */
+  border-color: rgba(63, 63, 70, 0.6); /* hover:border-zinc-700 */
+}
+
+.dashboard-search-inline .search-bar-field:focus {
+  outline: none;
+  color: rgb(255 255 255);
+  border-color: rgba(63, 63, 70, 0.6); /* border-zinc-700 */
+  background: rgba(39, 39, 42, 0.5); /* bg-zinc-800/50 */
+  box-shadow: none;
+}
+
+.dashboard-search-inline .search-bar-icon {
+  left: 0.75rem;
+  color: rgb(113 113 122); /* zinc-500 */
+  width: 16px;
+  height: 16px;
+}
+
+/* Résultats dropdown : aligné au design */
+.dashboard-search-inline .search-bar-results {
+  background: rgba(24, 24, 27, 0.95);
+  border: 1px solid rgba(113, 113, 122, 0.6);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.dashboard-search-inline .search-bar-result-item:hover {
+  background: rgba(39, 39, 42, 0.6);
+  border-color: rgba(113, 113, 122, 0.4);
+}
+
 /* ========================================
-   STRUCTURE GÉNÉRALE DU DASHBOARD
+   STRUCTURE GÉNÉRALE DU DASHBOARD (legacy)
    ======================================== */
 
 .dashboard-section {
@@ -30,7 +109,7 @@
   font-weight: 700;
   color: var(--chat-text-primary, #e8eaed);
   margin: 0;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -135,7 +214,7 @@
   font-weight: 600;
   color: var(--chat-text-primary, #e8eaed);
   margin: 0 0 0.5rem 0;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -729,14 +808,14 @@
   font-weight: 600;
   color: var(--chat-text-primary, #e8eaed);
   margin: 0 0 0.25rem 0;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .action-content p {
   font-size: 14px;
   color: var(--chat-text-secondary, #a1a9b1);
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
 }
 
 /* ========================================

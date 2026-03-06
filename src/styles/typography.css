@@ -22,11 +22,10 @@
 /* ==========================================================================
    IMPORTS GOOGLE FONTS - POLICES OPTIMISÉES POUR LA PRODUCTION
    ========================================================================== */
-/* POLICES PRINCIPALES - Figtree + Inter + Geist + Manrope + Monospace */
+/* POLICES PRINCIPALES - Manrope partout (UI + chat). Geist retiré. Monospace pour le code. */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 
@@ -37,39 +36,42 @@
      ARCHITECTURE TYPOGRAPHIE - HIÉRARCHIE CLAIRE
      ========================================================================== */
   
+  /* === POLICE PAR DÉFAUT GLOBALE : MANROPE (preset) === */
+  --font-manrope-stack: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+
   /* === POLICE UI GLOBALE (Sidebar, Menus, Boutons) === */
-  --font-ui: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --font-base: var(--font-ui); /* Alias pour compatibilité */
+  --font-ui: var(--font-manrope-stack);
+  --font-base: var(--font-ui);
 
-  /* === POLICES ÉDITEUR === */
-  --font-editor-headings: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --font-editor-body: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; /* ✅ SYNCHRONIZED avec --font-chat-base (Sombre Doux) */
-  --editor-font-family: var(--font-ui); /* Alias */
-  --editor-font-family-headings: var(--font-editor-headings); /* Alias */
-  --editor-font-family-body: var(--font-editor-body); /* Alias */
+  /* === POLICES ÉDITEUR (Manrope + preset) === */
+  --font-editor-headings: var(--font-manrope-stack);
+  --font-editor-body: var(--font-manrope-stack);
+  --editor-font-family: var(--font-ui);
+  --editor-font-family-headings: var(--font-editor-headings);
+  --editor-font-family-body: var(--font-editor-body);
 
-  /* === POLICES CHAT === */
-  /* 🎯 Manrope par défaut (preset chat) ; surchargé par SettingsModal */
-  --font-chat-headings: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --font-chat-base: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; /* Défaut chat = Manrope */
-  --font-chat-ui: var(--font-chat-base); /* UI: header, sidebar, menus (fusionné par défaut) */
-  --font-chat-text: var(--font-chat-base); /* Messages: input, bubbles (fusionné par défaut) */
-  --font-chat-body: var(--font-chat-text); /* Alias compatibilité */
-  
-  /* Alias pour compatibilité avec l'ancien système */
-  --chat-font-family: var(--font-ui);
-  --chat-font-family-headings: var(--font-chat-headings);
+  /* === POLICES CHAT (Manrope + preset) === */
+  --font-chat-headings: var(--font-manrope-stack);
+  --font-chat-base: var(--font-manrope-stack);
+  --font-chat-ui: var(--font-chat-base);
+  --font-chat-text: var(--font-chat-base);
+  --font-chat-body: var(--font-chat-text);
+
+  /* Alias pour compatibilité - tout pointe vers Manrope (chat = Manrope uniquement) */
+  --chat-font-family: var(--font-manrope-stack);
+  --chat-font-family-headings: var(--font-manrope-stack);
   --chat-font-family-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   --chat-font-family-figtree: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --chat-font-family-manrope: var(--font-chat-headings);
-  --chat-font-family-geist: var(--font-chat-body);
-  --chat-font-family-base: var(--font-chat-body);
+  --chat-font-family-manrope: var(--font-manrope-stack);
+  --chat-font-family-geist: var(--font-manrope-stack);
+  --chat-font-family-base: var(--font-manrope-stack);
 
   /* Police monospace optimisée */
   --font-monospace: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', monospace;
 
-  /* FALLBACK GLOBAL FONT - Figtree comme police principale */
-  --font-main: var(--font-base, 'Figtree', 'Geist', -apple-system, sans-serif);
+  /* FALLBACK GLOBAL FONT - Manrope par défaut */
+  --font-main: var(--font-base);
+  --font-family-base: var(--font-manrope-stack);
 
   /* POLICES ÉDITEUR - Options utilisateur */
   --font-open-sans: 'Open Sans', sans-serif;
@@ -81,11 +83,11 @@
   --font-cormorant-garamond: 'Cormorant Garamond', serif;
 
   /* ==========================================================================
-     TAILLES HARMONISÉES - PREMIUM EDITOR
+     TAILLES HARMONISÉES - PREMIUM EDITOR (preset Manrope 15px)
      ========================================================================== */
   --editor-title-size: 2.625rem;      /* 42px - Titre principal title area */
-  --editor-body-size: 1rem;      /* 16px - taille de base de l'éditeur */
-  --editor-body-size-mobile: 1rem; /* 16px - taille mobile cohérente */
+  --editor-body-size: 15px;          /* 15px - preset Manrope (aligné chat) */
+  --editor-body-size-mobile: 15px;
   --editor-h1-size: 2.25rem;         /* 36px - Aligné avec chat */
 
   /* ==========================================================================
@@ -95,21 +97,21 @@
   --editor-header-image-height-mobile: 200px; /* Hauteur mobile optimisée */
 
   /* ==========================================================================
-     FONT-WEIGHTS CENTRALISÉS - PREMIUM EDITOR
+     FONT-WEIGHTS - PRESET MANROPE (525 / 600 / 750 / 800 / 850)
      ========================================================================== */
-  --editor-title-weight: 1000;     /* Poids titre principal title area */
-  --editor-h1-weight: 775;            /* Poids pour H1 - Égal au title area */
-  --editor-h2-weight: 500;            /* H2 */
-  --editor-h3-weight: 450;            /* H3 */
-  --editor-h4-weight: 400;            /* H4 */
-  --editor-h5-weight: 350;            /* H5 */
-  --editor-h6-weight: 350;            /* H6 */
-  --editor-body-weight: 400;          /* Poids pour le contenu principal */
-  --editor-strong-weight: 700;        /* Poids pour le texte en gras */
-  --editor-table-header-weight: 900;  /* Poids pour les en-têtes de tableau */
-  --editor-blockquote-weight: 600;    /* Poids pour les blockquotes */
-  --editor-code-weight: 500;          /* Poids pour le code inline */
-  --editor-checkbox-weight: 500;      /* Poids pour les checkboxes */
+  --editor-title-weight: 850;     /* preset Manrope extrabold */
+  --editor-h1-weight: 850;        /* preset Manrope extrabold */
+  --editor-h2-weight: 800;        /* preset Manrope bold */
+  --editor-h3-weight: 800;        /* preset Manrope bold */
+  --editor-h4-weight: 750;        /* preset Manrope semibold */
+  --editor-h5-weight: 600;       /* preset Manrope medium */
+  --editor-h6-weight: 600;        /* preset Manrope medium */
+  --editor-body-weight: 525;     /* preset Manrope normal */
+  --editor-strong-weight: 800;    /* preset Manrope bold */
+  --editor-table-header-weight: 850;
+  --editor-blockquote-weight: 600;
+  --editor-code-weight: 500;
+  --editor-checkbox-weight: 500;
   --editor-h2-size: 1.75rem;          /* 28px */
   --editor-h3-size: 1.5rem;           /* 24px */
   --editor-h4-size: 1.25rem;          /* 20px */
@@ -209,21 +211,21 @@
    STYLES TYPOGRAPHIQUES DU TITRE - TEXTAREA ET H1
    ========================================================================== */
 
-/* Typographie du titre textarea */
+/* Typographie du titre textarea - preset Manrope (éviter Geist résiduel) */
 .noteLayout-title textarea {
   font-size: var(--editor-title-size);
   font-weight: var(--editor-title-weight);
-  font-family: var(--editor-font-family-headings);
+  font-family: var(--font-manrope-stack) !important;
   color: var(--text-primary); /* ✅ Utilise la variable (Sombre Doux #B5BCC4) */
   letter-spacing: var(--editor-title-letter-spacing);
   line-height: var(--editor-title-line-height);
 }
 
-/* Typographie du titre H1 (non-textarea) */
+/* Typographie du titre H1 (non-textarea) - preset Manrope */
 .noteLayout-title h1 {
   font-size: var(--editor-title-size);
   font-weight: var(--editor-title-weight);
-  font-family: var(--editor-font-family-headings);
+  font-family: var(--font-manrope-stack) !important;
   color: var(--editor-text-color, var(--color-text-primary, #B5BCC4));
   letter-spacing: var(--editor-title-letter-spacing);
   line-height: var(--editor-title-line-height);
@@ -435,12 +437,12 @@
   color: var(--editor-text-color, var(--color-text-primary, #B5BCC4));
 }
 
-/* Titre dans la page publique (pas dans l'image) - typographie */
+/* Titre dans la page publique (pas dans l'image) - preset Manrope */
 .public-note-content-wrapper .noteLayout-title h1 {
   color: var(--editor-text-color, var(--color-text-primary, #B5BCC4));
   font-size: var(--editor-title-size);
   font-weight: var(--editor-h1-weight);
-  font-family: var(--editor-font-family-headings);
+  font-family: var(--font-manrope-stack) !important;
   line-height: 1.1;
 }
 
@@ -449,13 +451,13 @@
   color: var(--editor-text-color, var(--color-text-primary, #B5BCC4));
 }
 
-/* Titre dans l'image d'en-tête - typographie */
+/* Titre dans l'image d'en-tête - preset Manrope */
 .public-header-title h1 {
   color: white;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   font-size: var(--editor-title-size);
   font-weight: var(--editor-h1-weight);
-  font-family: var(--editor-font-family-headings);
+  font-family: var(--font-manrope-stack) !important;
 }
 
 /* ==========================================================================
