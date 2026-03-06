@@ -69,7 +69,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="chatgpt-sidebar-toggle-btn-header p-2 pl-[11px] -ml-2 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+          className="chatgpt-sidebar-toggle-btn-header p-2 pl-[16px] -ml-2 transition-colors disabled:opacity-50 disabled:pointer-events-none"
           aria-label={sidebarOpen ? "Fermer les conversations" : "Ouvrir les conversations"}
           title={sidebarOpen ? "Fermer les conversations" : "Ouvrir les conversations"}
           disabled={!isAuthenticated || authLoading}

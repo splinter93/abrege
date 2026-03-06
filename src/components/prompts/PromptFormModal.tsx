@@ -149,11 +149,11 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="prompt-modal-overlay-tw fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-[600px] max-h-[90vh] flex flex-col rounded-2xl bg-[var(--color-bg-block)] shadow-xl"
+        className="prompt-modal-tw w-full max-w-[600px] max-h-[90vh] flex flex-col rounded-2xl bg-[var(--color-bg-block)] shadow-xl"
         style={{ border: 'var(--border-block)' }}
         onClick={(e) => e.stopPropagation()}
       >

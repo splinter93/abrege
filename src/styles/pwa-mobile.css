@@ -58,6 +58,7 @@ html.capacitor-native.chat-page {
   /* Fallback 0px : si env() retourne 0 (overlaysWebView non actif ou non supporté),
      on ne pousse pas le header avec 24px arbitraires. */
   --capacitor-safe-top: env(safe-area-inset-top, 0px);
+  --capacitor-safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* 1. Container = padding-top : safe-area-top + hauteur header (56px).
@@ -129,10 +130,11 @@ html.capacitor-native.chat-page .chatgpt-input-container::before {
 }
 /* Input area : pas d’override Capacitor → même couleur que le web (#171a1e, chat-clean.css) */
 
-/* 6. Sidebar : décalée sous le header (safe-area-top + 56px header) */
+/* 6. Sidebar : décalée sous le header (safe-area-top + 56px header), descend jusqu'au bas */
 html.capacitor-native.chat-page .sidebar-ultra-clean {
   top: calc(56px + var(--capacitor-safe-top)) !important;
-  height: calc(100dvh - 56px - var(--capacitor-safe-top) - 24px) !important;
+  height: calc(100dvh - 56px - var(--capacitor-safe-top) - var(--capacitor-safe-bottom)) !important;
+  border-left: none !important; /* left:0 colle au bord — pas de bordure gauche visible */
 }
 
 /* Fallback: Page chat en viewport mobile (si JS capacitor-native pas encore chargé).

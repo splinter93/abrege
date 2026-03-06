@@ -550,10 +550,25 @@
 }
 
 @media (max-width: 768px) {
+  /* Overlay : pas de padding, pas de centering — la modale prend tout l'écran */
+  .prompt-modal-overlay-tw {
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+
+  /* Modale : pleine page, pas de radius, pas de max-height */
+  .prompt-modal-tw {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
+
   .prompt-modal {
     max-width: none;
     max-height: none;
-    height: 100vh;
+    height: 100dvh;
     border-radius: 0;
   }
 

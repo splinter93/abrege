@@ -668,13 +668,14 @@ body.chat-theme-glass .chatgpt-header {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-left: -12px; /* ✅ Décalé à gauche en desktop (pas de bouton sidebar) */
+  margin-left: -6px; /* Padding gauche augmenté (était -12px) */
 }
 
 .chatgpt-header-right {
   display: flex;
   align-items: center;
   gap: var(--chat-space-md);
+  margin-right: -8px; /* Padding droit augmenté (était -20px) */
 }
 
 .chatgpt-canva-btn-header {
