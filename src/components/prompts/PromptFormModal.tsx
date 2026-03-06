@@ -1,5 +1,5 @@
 /**
- * Modal de formulaire pour créer/éditer un prompt
+ * Modal de formulaire pour créer/éditer un prompt (style Linear / Agents)
  * @module components/prompts/PromptFormModal
  */
 
@@ -8,10 +8,13 @@ import type { EditorPrompt, EditorPromptCreateRequest } from '@/types/editorProm
 import type { Agent } from '@/types/chat';
 import IconPicker from './IconPicker';
 import { getIconComponent } from '@/utils/iconMapper';
-import { FiX, FiInfo } from 'react-icons/fi';
+import { X, Info } from 'lucide-react';
 import Tooltip from '@/components/Tooltip';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
-import './PromptFormModal.css';
+
+const inputClass =
+  'w-full px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/60 text-zinc-100 text-sm placeholder:text-zinc-500 focus:border-zinc-600 focus:bg-zinc-800/20 focus:outline-none transition-colors';
+const labelClass = 'text-xs font-medium text-zinc-400 block mb-1.5';
 
 interface PromptFormModalProps {
   prompt: EditorPrompt | null;
@@ -145,55 +148,59 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
     'Active le mode JSON pour supprimer les phrases parasites du LLM.\nExemples : "Voici la correction", "J\'ai reformulé".';
 
   return (
-    <div className="prompt-modal-overlay" onClick={onCancel}>
-      <div className="prompt-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="prompt-modal-header">
-          <h2 className="prompt-modal-title">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-[600px] max-h-[90vh] flex flex-col rounded-2xl border border-zinc-800/60 bg-[var(--color-bg-primary)] shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-6 border-b border-zinc-800/60 shrink-0">
+          <h2 className="text-lg font-semibold text-zinc-100">
             {prompt ? 'Modifier le prompt' : 'Nouveau prompt'}
           </h2>
           <button
-            className="prompt-modal-close"
-            onClick={onCancel}
             type="button"
+            onClick={onCancel}
+            className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100 transition-colors"
+            aria-label="Fermer"
           >
-            <FiX size={20} />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="prompt-modal-form">
-          <div className="prompt-form-row">
-            {/* Nom du prompt */}
-            <div className="prompt-form-group prompt-form-group--grow">
-              <label className="prompt-form-label" htmlFor="name">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-y-auto p-6 gap-6">
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
+            <div className="flex-1 min-w-0">
+              <label className={labelClass} htmlFor="name">
                 Nom du prompt *
               </label>
               <input
                 id="name"
                 type="text"
-                className={`prompt-form-input ${errors.name ? 'error' : ''}`}
+                className={`${inputClass} ${errors.name ? 'border-red-500/50 focus:border-red-500/70' : ''}`}
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 placeholder="Ex: Améliorer l'écriture"
                 maxLength={100}
               />
-              {errors.name && <span className="prompt-form-error">{errors.name}</span>}
+              {errors.name && <span className="mt-1 text-xs text-red-400">{errors.name}</span>}
             </div>
-
-            {/* Icône */}
-            <div className="prompt-form-group prompt-form-group--icon">
-              <label className="prompt-form-label" htmlFor="icon-selector">
+            <div className="sm:w-[130px] shrink-0">
+              <label className={labelClass} htmlFor="icon-selector">
                 Icône
               </label>
               <button
                 id="icon-selector"
                 type="button"
-                className={`prompt-icon-selector ${hasSelectedIcon ? 'prompt-icon-selector--icon' : 'prompt-icon-selector--empty'}`}
+                className="w-full min-h-[40px] px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/60 text-zinc-300 hover:bg-zinc-800/40 transition-colors flex items-center justify-center gap-2"
                 onClick={() => setIsIconPickerOpen(!isIconPickerOpen)}
               >
                 {hasSelectedIcon ? (
-                  <SelectedIcon size={20} />
+                  <SelectedIcon size={20} className="text-amber-400/90" />
                 ) : (
-                  <span className="prompt-icon-selector__placeholder">Choisir</span>
+                  <span className="text-xs text-zinc-500">Choisir</span>
                 )}
               </button>
               {isIconPickerOpen && (
@@ -209,15 +216,14 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
             </div>
           </div>
 
-          <div className="prompt-form-row prompt-form-row--top">
-            {/* Contexte */}
-            <div className="prompt-form-group prompt-form-group--grow">
-              <label className="prompt-form-label" htmlFor="context">
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
+            <div className="flex-1 min-w-0">
+              <label className={labelClass} htmlFor="context">
                 Contexte
               </label>
               <select
                 id="context"
-                className="prompt-form-select"
+                className={`${inputClass} cursor-pointer`}
                 value={formData.context}
                 onChange={(e) => handleChange('context', e.target.value)}
               >
@@ -226,22 +232,17 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
                 <option value="both">Éditeur & Chat</option>
               </select>
             </div>
-
-            {/* Agent */}
-            <div className="prompt-form-group prompt-form-group--agent">
-              <label className="prompt-form-label" htmlFor="agent_id">
+            <div className="flex-1 min-w-0">
+              <label className={labelClass} htmlFor="agent_id">
                 Agent spécialisé
               </label>
               <select
                 id="agent_id"
-                className="prompt-form-select"
+                className={`${inputClass} cursor-pointer`}
                 value={formData.agent_id ?? ''}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setFormData(prev => ({
-                    ...prev,
-                    agent_id: value ? value : null
-                  }));
+                  setFormData(prev => ({ ...prev, agent_id: value ? value : null }));
                   if (errors.agent_id) {
                     setErrors(prevErrors => {
                       const { agent_id, ...rest } = prevErrors;
@@ -266,125 +267,114 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
             </div>
           </div>
 
-          {/* Template du prompt */}
-          <div className="prompt-form-group">
-            <label className="prompt-form-label" htmlFor="prompt_template">
+          <div>
+            <label className={labelClass} htmlFor="prompt_template">
               Template du prompt *
             </label>
             <textarea
               id="prompt_template"
-              className={`prompt-form-textarea ${errors.prompt_template ? 'error' : ''}`}
+              className={`${inputClass} font-mono text-[13px] leading-relaxed min-h-[140px] resize-none ${errors.prompt_template ? 'border-red-500/50 focus:border-red-500/70' : ''}`}
               value={formData.prompt_template}
               onChange={(e) => handleChange('prompt_template', e.target.value)}
               placeholder="Exemple: Améliore ce texte : {selection}"
               rows={4}
             />
             {errors.prompt_template && (
-              <span className="prompt-form-error">{errors.prompt_template}</span>
+              <span className="mt-1 block text-xs text-red-400">{errors.prompt_template}</span>
             )}
-            <small className="prompt-form-hint">
-              Utilisez <code>{'{selection}'}</code> pour insérer le texte sélectionné
-            </small>
+            <p className="mt-1.5 text-xs text-zinc-500">
+              Utilisez <code className="px-1.5 py-0.5 rounded bg-zinc-800/80 text-zinc-400 font-mono text-[11px]">{'{selection}'}</code> pour insérer le texte sélectionné
+            </p>
 
-            <div className="prompt-placeholder-summary">
-              <div className="prompt-placeholder-summary__header">
-                <span className="prompt-placeholder-summary__title">Arguments détectés</span>
-                <span className="prompt-placeholder-summary__count">
+            <div className="mt-4 p-4 rounded-xl border border-zinc-800/40 bg-zinc-900/20 flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Arguments détectés</span>
+                <span className="min-w-[24px] h-6 px-1.5 rounded-md bg-zinc-800/60 text-zinc-400 text-xs font-medium flex items-center justify-center">
                   {placeholders.length}
                 </span>
               </div>
-
               {placeholders.length > 0 ? (
-                <ul className="prompt-placeholder-summary__list">
-                  {placeholders.map((placeholder) => (
-                    <li key={placeholder.name} className="prompt-placeholder-summary__item">
-                      <code>{`{${placeholder.name}}`}</code>
+                <ul className="flex flex-wrap gap-2">
+                  {placeholders.map((p) => (
+                    <li key={p.name}>
+                      <code className="px-2 py-0.5 rounded-md bg-zinc-800/60 font-mono text-[11px] text-zinc-400">{`{${p.name}}`}</code>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="prompt-placeholder-summary__empty">Aucun argument personnalisé.</p>
+                <p className="text-xs text-zinc-500">Aucun argument personnalisé.</p>
               )}
-
-              {reservedPlaceholders.some((placeholder) => placeholder.name === 'selection') && (
-                <p className="prompt-placeholder-summary__hint">
-                  {`{selection}`} est un placeholder réservé : il n’est disponible que pour les prompts de l’éditeur.
+              {reservedPlaceholders.some((p) => p.name === 'selection') && (
+                <p className="text-[11px] text-zinc-500 leading-snug">
+                  {`{selection}`} est réservé : disponible uniquement pour les prompts de l’éditeur.
                 </p>
               )}
             </div>
           </div>
 
-          {/* Mode d'insertion (uniquement pour editor) */}
           {(formData.context === 'editor' || formData.context === 'both') && (
-          <div className="prompt-form-group">
-            <label className="prompt-form-label" htmlFor="insertion_mode">
-              Mode d'insertion
-            </label>
-            <select
-              id="insertion_mode"
-              className="prompt-form-select"
-              value={formData.insertion_mode ?? ''}
-              onChange={(e) => handleChange('insertion_mode', e.target.value)}
-            >
-              <option value="replace">Remplacer la sélection</option>
-              <option value="append">Ajouter après la sélection</option>
-              <option value="prepend">Ajouter avant la sélection</option>
-            </select>
-          </div>
+            <div>
+              <label className={labelClass} htmlFor="insertion_mode">
+                Mode d&apos;insertion
+              </label>
+              <select
+                id="insertion_mode"
+                className={`${inputClass} cursor-pointer`}
+                value={formData.insertion_mode ?? ''}
+                onChange={(e) => handleChange('insertion_mode', e.target.value)}
+              >
+                <option value="replace">Remplacer la sélection</option>
+                <option value="append">Ajouter après la sélection</option>
+                <option value="prepend">Ajouter avant la sélection</option>
+              </select>
+            </div>
           )}
 
-          {/* Structured Output */}
-          <div className="prompt-form-group">
-            <div className="prompt-form-checkbox-row">
-              <label className="prompt-form-checkbox-wrapper">
-                <input
-                  type="checkbox"
-                  checked={formData.use_structured_output}
-                  onChange={(e) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      use_structured_output: e.target.checked,
-                      // Générer automatiquement le schéma quand activé
-                      output_schema: e.target.checked ? {
-                        type: 'object',
-                        properties: {
-                          content: {
-                            type: 'string',
-                            description: 'Le contenu demandé, sans introduction ni explication'
-                          }
-                        },
-                        required: ['content']
-                      } : undefined
-                    }));
-                  }}
-                />
-                <span className="prompt-form-checkbox-label">
-                  Strict Mode
-                </span>
-              </label>
-              <Tooltip text={strictModeTooltip}>
-                <button
-                  type="button"
-                  className="prompt-form-info-icon"
-                  aria-label="Informations Strict Mode"
-                >
-                  <FiInfo size={16} />
-                </button>
-              </Tooltip>
-            </div>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-3 cursor-pointer group/check">
+              <input
+                type="checkbox"
+                checked={formData.use_structured_output}
+                onChange={(e) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    use_structured_output: e.target.checked,
+                    output_schema: e.target.checked
+                      ? {
+                          type: 'object',
+                          properties: {
+                            content: {
+                              type: 'string',
+                              description: 'Le contenu demandé, sans introduction ni explication'
+                            }
+                          },
+                          required: ['content']
+                        }
+                      : undefined
+                  }));
+                }}
+                className="w-4 h-4 rounded border border-zinc-600 bg-zinc-900/50 text-white focus:ring-1 focus:ring-zinc-500 focus:border-zinc-500 cursor-pointer"
+              />
+              <span className="text-sm font-medium text-zinc-300 group-hover/check:text-zinc-100">Strict Mode</span>
+            </label>
+            <Tooltip text={strictModeTooltip}>
+              <button type="button" className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40 transition-colors" aria-label="Informations Strict Mode">
+                <Info className="w-4 h-4" />
+              </button>
+            </Tooltip>
           </div>
 
-          <div className="prompt-modal-footer">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800/60 shrink-0">
             <button
               type="button"
-              className="prompt-btn prompt-btn-secondary"
+              className="px-4 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-300 text-sm font-medium hover:bg-zinc-800/40 transition-colors"
               onClick={onCancel}
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="prompt-btn prompt-btn-primary"
+              className="px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors"
             >
               {prompt ? 'Enregistrer' : 'Créer'}
             </button>

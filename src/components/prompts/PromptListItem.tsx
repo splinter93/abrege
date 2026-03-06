@@ -1,5 +1,5 @@
 /**
- * Carte prompt éditeur (style Linear / Vercel, aligné AgentCard)
+ * Ligne prompt en vue liste (style Linear, aligné AgentListItem)
  */
 import React from 'react';
 import type { EditorPrompt } from '@/types/editorPrompts';
@@ -7,7 +7,7 @@ import type { Agent } from '@/types/chat';
 import { getIconComponent } from '@/utils/iconMapper';
 import { Power, Edit2, Trash2 } from 'lucide-react';
 
-interface PromptCardProps {
+interface PromptListItemProps {
   prompt: EditorPrompt;
   agents: Agent[];
   onEdit: () => void;
@@ -15,7 +15,7 @@ interface PromptCardProps {
   onToggle: () => void;
 }
 
-const PromptCard: React.FC<PromptCardProps> = ({
+const PromptListItem: React.FC<PromptListItemProps> = ({
   prompt,
   agents,
   onEdit,
@@ -25,11 +25,6 @@ const PromptCard: React.FC<PromptCardProps> = ({
   const Icon = getIconComponent(prompt.icon);
   const agent = agents.find(a => a.id === prompt.agent_id);
   const agentDisplayName = agent?.display_name ?? agent?.name ?? (prompt.agent_id ? 'Agent' : 'Aucun agent');
-  const templatePreview = (() => {
-    const normalized = (prompt.prompt_template || '').replace(/\s+/g, ' ').trim();
-    if (!normalized) return 'Template vide.';
-    return normalized.length > 160 ? `${normalized.slice(0, 160).trim()}...` : normalized;
-  })();
   const contextLabel =
     prompt.context === 'editor'
       ? 'Éditeur'
@@ -41,7 +36,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
 
   return (
     <div
-      className={`group flex flex-col p-5 rounded-2xl border border-zinc-800/40 bg-zinc-900/10 hover:bg-zinc-800/20 hover:border-zinc-700/60 transition-all duration-300 cursor-pointer ${!prompt.is_active ? 'opacity-60' : ''}`}
+      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 hover:bg-zinc-800/20 transition-colors cursor-pointer"
       onClick={onEdit}
       role="button"
       tabIndex={0}
@@ -52,7 +47,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
         }
       }}
     >
-      <div className="flex items-start justify-between gap-3 mb-4">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="relative flex-shrink-0">
           <div className="w-10 h-10 rounded-full bg-zinc-800/80 border border-zinc-800/60 flex items-center justify-center text-zinc-300">
             <Icon size={20} />
@@ -64,8 +59,22 @@ const PromptCard: React.FC<PromptCardProps> = ({
             />
           )}
         </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-zinc-100 truncate">{prompt.name}</p>
+          <p className="text-xs text-zinc-500 truncate">
+            {contextLabel && `${contextLabel} · `}
+            {agentDisplayName}
+          </p>
+        </div>
+      </div>
 
-        <div className="flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+      <div className="flex flex-wrap items-center justify-end sm:justify-between gap-2 sm:gap-4 flex-shrink-0">
+        {contextLabel && (
+          <span className="hidden sm:inline-flex px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 text-[10px] text-zinc-500">
+            {contextLabel}
+          </span>
+        )}
+        <div className="flex items-center gap-1">
           <button
             type="button"
             title={prompt.is_active ? 'Désactiver' : 'Activer'}
@@ -101,24 +110,8 @@ const PromptCard: React.FC<PromptCardProps> = ({
           </button>
         </div>
       </div>
-
-      <div className="flex flex-col gap-1.5 min-h-0 flex-1">
-        <h3 className="text-base font-semibold text-zinc-100 truncate">{prompt.name}</h3>
-        <p className="text-sm text-zinc-500 line-clamp-2 leading-relaxed">{templatePreview}</p>
-      </div>
-
-      <div className="mt-4 pt-4 border-t border-zinc-800/40 flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-full truncate">
-          {agentDisplayName}
-        </span>
-        {contextLabel && (
-          <span className="inline-flex items-center px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 text-[10px] text-zinc-500">
-            {contextLabel}
-          </span>
-        )}
-      </div>
     </div>
   );
 };
 
-export default PromptCard;
+export default PromptListItem;
