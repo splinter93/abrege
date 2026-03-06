@@ -49,6 +49,23 @@ interface ApiFile {
   created_at: string;
   size?: number;
   url?: string;
+  preview_url?: string;
+}
+
+/** True si l’URL pointe vraisemblablement vers une image (extension ou chemin). */
+function isImageUrl(url: string | undefined): boolean {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const u = new URL(url);
+    const path = u.pathname.toLowerCase();
+    const host = u.hostname.toLowerCase();
+    if (/\.(jpe?g|png|gif|webp|avif|svg|bmp)(\?|$)/i.test(path)) return true;
+    if (host.includes("unsplash.com") || host.includes("images.unsplash.com")) return true;
+    if (path.includes("/photo-") || path.includes("/photos/")) return true;
+    return false;
+  } catch {
+    return /\.(jpe?g|png|gif|webp|avif|svg|bmp)(\?|$)/i.test(url) || /unsplash\.com|\/photo-|\/photos\//i.test(url);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -90,7 +107,7 @@ function NoteCard({
   return (
     <Link
       href={`/private/note/${id}`}
-      className="group relative w-72 h-48 rounded-xl overflow-hidden border border-zinc-800/60 shrink-0 bg-zinc-900/20"
+      className="group relative w-72 h-48 rounded-xl overflow-hidden shrink-0 bg-zinc-900/20"
     >
       <img
         src={image}
@@ -130,34 +147,42 @@ function FileCard({
   onClick?: () => void;
 }) {
   const isFolder = type === "folder";
-  const isImage = type.startsWith("image/");
+  const looksLikeImage = isImageUrl(thumbnail || undefined) || (!!thumbnail && /^photo-/i.test(name));
+  const showImagePreview = !!thumbnail && looksLikeImage;
 
   return (
-    <button
-      type="button"
+    <div
       onClick={onClick}
-      className="group flex flex-col items-center aspect-square rounded-xl border border-zinc-800/40 bg-zinc-900/10 hover:bg-zinc-800/40 hover:border-zinc-700/60 transition-all overflow-hidden"
+      className="group flex flex-col gap-2 cursor-pointer w-32 sm:w-40 shrink-0"
     >
-      <div className="flex-1 w-full flex items-center justify-center p-4 min-h-0">
-        {thumbnail && isImage ? (
+      {/* 1. Conteneur de l'image (La Bounding Box Linear-Style) */}
+      <div className="relative aspect-square w-full rounded-xl bg-[#141414] border border-white/[0.05] overflow-hidden flex items-center justify-center">
+        {showImagePreview ? (
           <img
-            src={thumbnail}
+            src={thumbnail!}
             alt=""
-            className="w-full h-full object-cover rounded-md transition-transform duration-200 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
           />
         ) : isFolder ? (
-          <FolderOpen className="w-12 h-12 text-orange-500/80 shrink-0" strokeWidth={1.5} />
+          <FolderOpen className="w-10 h-10 text-orange-500/80 transition-transform duration-300 group-hover:scale-105" strokeWidth={1.5} />
         ) : type.startsWith("image/") ? (
-          <ImageIcon className="w-12 h-12 text-emerald-500/80 shrink-0" strokeWidth={1.5} />
+          <ImageIcon className="w-10 h-10 text-emerald-500/80 transition-transform duration-300 group-hover:scale-105" strokeWidth={1.5} />
         ) : (
-          <FileText className="w-12 h-12 text-zinc-500 shrink-0" strokeWidth={1.5} />
+          <FileText className="w-10 h-10 text-zinc-500 transition-transform duration-300 group-hover:scale-105" strokeWidth={1.5} />
         )}
       </div>
-      <div className="w-full text-center px-2 pb-3 pt-1">
-        <p className="text-[13px] text-zinc-200 truncate w-full">{name}</p>
-        <p className="text-[11px] text-zinc-500">{date}</p>
+
+      {/* 2. Métadonnées (Texte en dessous, centré) */}
+      <div className="flex flex-col px-1 items-center text-center min-w-0">
+        <span className="text-[13px] font-medium text-neutral-200 truncate w-full" title={name}>
+          {name}
+        </span>
+        <span className="text-[11px] text-neutral-500 mt-0.5 tracking-wide">
+          {date}
+        </span>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -405,15 +430,13 @@ function AuthenticatedHomeContent({
               Latest Notes
             </h2>
             <div className="flex items-center gap-4 min-w-0">
-              <div className="min-w-[160px] max-w-[220px] w-40 shrink-0">
-                <SearchBar
-                  placeholder="Rechercher..."
-                  onSearchResult={handleSearchResult}
-                  maxResults={10}
-                  searchTypes={["all"]}
-                  className="dashboard-search-inline"
-                />
-              </div>
+              <SearchBar
+                placeholder="Rechercher..."
+                onSearchResult={handleSearchResult}
+                maxResults={10}
+                searchTypes={["all"]}
+                className="dashboard-search-inline"
+              />
               <div className="flex items-center gap-3 shrink-0">
                 <button
                   type="button"
@@ -479,26 +502,26 @@ function AuthenticatedHomeContent({
               Voir tout
             </Link>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+          <div className="flex gap-4 overflow-x-auto pb-4 dashboard-notes-scroll dashboard-notes-mask">
             {loadingFiles && (
               <>
-                {Array.from({ length: 6 }).map((_, i) => (
+                {Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={i}
-                    className="aspect-square rounded-xl border border-zinc-800/40 bg-zinc-900/10 animate-pulse"
+                    className="w-32 sm:w-40 aspect-square rounded-xl border border-white/[0.05] bg-[#141414] animate-pulse shrink-0"
                   />
                 ))}
               </>
             )}
             {!loadingFiles && errorFiles && (
-              <div className="col-span-full py-8 text-center text-zinc-500 text-sm">
+              <div className="flex items-center justify-center w-72 h-32 sm:h-40 rounded-xl border border-zinc-800/60 bg-zinc-900/20 shrink-0 text-zinc-500 text-sm">
                 {errorFiles}
               </div>
             )}
             {!loadingFiles &&
               !errorFiles &&
               files.length === 0 && (
-                <div className="col-span-full py-8 text-center text-zinc-500 text-sm">
+                <div className="flex items-center justify-center w-72 h-32 sm:h-40 rounded-xl border border-zinc-800/60 bg-zinc-900/20 shrink-0 text-zinc-500 text-sm">
                   Aucun fichier récent
                 </div>
               )}
@@ -509,9 +532,7 @@ function AuthenticatedHomeContent({
                   name={file.filename}
                   type={file.type}
                   date={formatFileDate(file.created_at)}
-                  thumbnail={
-                    file.type.startsWith("image/") && file.url ? file.url : null
-                  }
+                  thumbnail={file.preview_url || file.url || null}
                   onClick={() => router.push("/private/files")}
                 />
               ))}

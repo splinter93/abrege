@@ -21,9 +21,10 @@
 }
 
 /* SearchBar + boutons nav : même style Linear (hauteur 36px, bordures zinc) */
-.dashboard-search-inline .search-bar-container {
-  min-width: 180px;
-  max-width: 240px;
+.search-bar-container.dashboard-search-inline {
+  flex: 1;
+  min-width: 140px;
+  max-width: 220px;
   height: 36px;
 }
 

@@ -119,15 +119,17 @@ export default function Sidebar() {
       aria-label="Navigation principale"
     >
       {/* En-tête : Logo + Nom */}
-      <header className="p-5">
-        <div className="flex items-center gap-3">
+      <header className="p-5 pb-3">
+        <div className="flex items-center gap-2.5">
           <div
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-800/50"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-white/10 bg-gradient-to-b from-white/10 to-white/5 shadow-sm"
             aria-hidden
           >
-            <Feather className="h-4 w-4 text-zinc-300" strokeWidth={1.75} />
+            <Feather className="h-4 w-4 text-white" strokeWidth={2} />
           </div>
-          <span className="font-sans text-[17px] font-semibold tracking-tight text-white/95 antialiased">Scrivia</span>
+          <span className="font-sans text-[18px] font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70 antialiased">
+            Scrivia
+          </span>
         </div>
       </header>
 
