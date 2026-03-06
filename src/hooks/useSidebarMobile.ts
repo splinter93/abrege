@@ -1,50 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-/**
- * Hook pour gérer l'état de la sidebar mobile
- * Gère l'ouverture/fermeture et la détection de la taille d'écran
- */
 const MOBILE_BREAKPOINT = 768;
 
 export const useSidebarMobile = () => {
+  // SSR-safe: commence à false pour éviter le flash burger sur desktop
+  const [isMobile, setIsMobile] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  // Premier rendu / SSR : on suppose mobile pour que la sidebar reste masquée (pas de flash)
-  const [isMobile, setIsMobile] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
-  // Détecter si on est sur mobile (après montage)
   useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT);
-    };
-
-    checkIsMobile();
-
-    // Écouter les changements de taille
-    window.addEventListener('resize', checkIsMobile);
-
-    return () => {
-      window.removeEventListener('resize', checkIsMobile);
-    };
+    setMounted(true);
+    const check = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Fermer la sidebar si on passe en desktop
+  // Fermer si on passe en desktop
   useEffect(() => {
-    if (!isMobile && isOpen) {
-      setIsOpen(false);
-    }
+    if (!isMobile && isOpen) setIsOpen(false);
   }, [isMobile, isOpen]);
 
-  const openSidebar = () => setIsOpen(true);
-  const closeSidebar = () => setIsOpen(false);
-  const toggleSidebar = () => setIsOpen(prev => !prev);
+  // Bloquer le scroll du body quand le drawer est ouvert
+  useEffect(() => {
+    if (!mounted) return;
+    document.body.style.overflow = isMobile && isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobile, isOpen, mounted]);
 
-  return {
-    isOpen,
-    isMobile,
-    openSidebar,
-    closeSidebar,
-    toggleSidebar
-  };
+  const openSidebar = useCallback(() => setIsOpen(true), []);
+  const closeSidebar = useCallback(() => setIsOpen(false), []);
+  const toggleSidebar = useCallback(() => setIsOpen(prev => !prev), []);
+
+  return { isOpen, isMobile, openSidebar, closeSidebar, toggleSidebar };
 };
 
 

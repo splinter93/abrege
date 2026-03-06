@@ -16,6 +16,7 @@ import AgentCard from '@/components/agents/AgentCard';
 import AgentListItem from '@/components/agents/AgentListItem';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { Bot, Search, LayoutGrid, List, Plus } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { simpleLogger } from '@/utils/logger';
 import '@/styles/main.css';
 import '@/app/private/agents_page_backup_legacy/agents.css';
@@ -38,6 +39,8 @@ function AgentsV2Content() {
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const isMobile = useIsMobile();
+  const effectiveViewMode = isMobile ? 'list' : viewMode;
 
   const sortedAgents = useMemo(
     () =>
@@ -143,33 +146,36 @@ function AgentsV2Content() {
                   />
                 </div>
 
-                <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5">
+                <div className="flex items-center gap-2">
+                  {!isMobile && (
+                    <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('grid')}
+                        className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        title="Vue grille"
+                      >
+                        <LayoutGrid className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('list')}
+                        className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        title="Vue liste"
+                      >
+                        <List className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                   <button
                     type="button"
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                    title="Vue grille"
+                    onClick={handleNewAgent}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors whitespace-nowrap flex-1 sm:flex-none"
                   >
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                    title="Vue liste"
-                  >
-                    <List className="w-4 h-4" />
+                    <Plus className="w-4 h-4" />
+                    Nouvel agent
                   </button>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleNewAgent}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors whitespace-nowrap"
-                >
-                  <Plus className="w-4 h-4" />
-                  Nouvel agent
-                </button>
               </div>
             </div>
           </div>
@@ -191,7 +197,7 @@ function AgentsV2Content() {
                 Créer un agent
               </button>
             </div>
-          ) : viewMode === 'grid' ? (
+          ) : effectiveViewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredAgents.map(agent => (
                 <AgentCard

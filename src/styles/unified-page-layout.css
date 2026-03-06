@@ -363,56 +363,92 @@
 }
 
 @media (max-width: 768px) {
-  /* Zéro marge/padding à gauche sur mobile (override sidebar-collapsible 56px) */
+  /* Zéro marge/padding à gauche sur mobile */
   .page-wrapper.page-is-mobile .page-content-area {
     margin-left: 0 !important;
-    padding-left: 0 !important;
-    padding-top: var(--spacing-md) !important;
-    padding-right: var(--spacing-md) !important;
-    padding-bottom: var(--spacing-md) !important;
-    transition: margin-left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    padding: var(--spacing-md) !important;
   }
 
-  /* Push du contenu quand la sidebar est ouverte (comme le chat) */
-  .page-wrapper.main-sidebar-open .page-content-area {
-    margin-left: 220px !important;
-    padding-left: var(--spacing-md) !important;
+  /* Pas de push du contenu : sidebar en overlay drawer */
+
+  .dashboard-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border: none;
+    cursor: pointer;
+    padding: 0;
   }
 
-  /* Sidebar complètement masquée sur mobile : le conteneur ET l’inner (position:fixed) */
-  .page-sidebar-fixed {
+  /* Drawer : forcer position fixed + z-index élevé (annule les overrides relative d'autres CSS) */
+  .page-sidebar-fixed.page-sidebar-drawer {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100dvh !important;
+    z-index: 1001 !important;
+    width: min(260px, 80vw) !important;
+    max-width: none !important;
     transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    pointer-events: none;
+    transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+    background: var(--surface-primary, #18181b) !important;
+    box-shadow: none;
+    border-right: 1px solid rgba(63, 63, 70, 0.5) !important;
+    overflow: hidden;
   }
 
-  .page-sidebar-fixed.mobile-visible {
-    pointer-events: auto;
+  .page-sidebar-fixed.page-sidebar-drawer.page-sidebar-drawer-open {
+    transform: translateX(0);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.4);
   }
 
-  /* .unified-sidebar est position:fixed donc ne suit pas le parent : on la translate aussi */
-  .page-sidebar-fixed:not(.mobile-visible) .unified-sidebar {
-    transform: translateX(-100%) !important;
+  /* Contenu sidebar : pleine largeur dans le drawer, pas de bordure dupliquée */
+  .page-sidebar-drawer .sidebar-root {
+    max-width: none !important;
+    width: 100% !important;
+    border-right: none !important;
+    height: 100dvh;
   }
 
-  .page-sidebar-fixed.mobile-visible .unified-sidebar {
-    transform: translateX(0) !important;
-  }
-
-  /* Barre mobile : bouton menu en haut à gauche (12px comme le chat) */
   .page-mobile-sidebar-header {
     display: flex;
     align-items: center;
-    padding: 10px 12px;
-    margin: calc(-1 * var(--spacing-md)) calc(-1 * var(--spacing-md)) 0 calc(-1 * var(--spacing-md));
-    min-height: 56px;
+    gap: 12px;
+    padding: 12px 16px;
+    min-height: 52px;
     width: 100%;
     box-sizing: border-box;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(63, 63, 70, 0.4);
+    background: var(--color-bg-primary);
   }
 
-  .page-mobile-sidebar-header .main-sidebar-toggle-btn {
-    margin-left: 0;
-    flex-shrink: 0;
+  .dashboard-sidebar-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    color: var(--text-secondary, #a1a1aa);
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .dashboard-sidebar-toggle-btn:hover {
+    color: var(--text-primary, #fafafa);
+    background: rgba(63, 63, 70, 0.5);
+  }
+
+  .dashboard-sidebar-toggle-btn:focus-visible {
+    outline: 2px solid rgba(82, 82, 91, 0.8);
+    outline-offset: 2px;
   }
 
   .page-title-container-glass {
