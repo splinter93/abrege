@@ -192,25 +192,39 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
   return (
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-settings min-h-full flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
-        {/* Header sticky Linear (même bloc titre que Fichiers) */}
-        <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-zinc-800/60 px-4 sm:px-6 lg:px-8 py-6">
-          <div className="max-w-screen-2xl mx-auto">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
-                <Settings className="w-6 h-6 text-zinc-400" />
+        {/* En-tête de contenu — optimisé mobile et desktop */}
+        <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
+          <div className="flex flex-col gap-3 mb-4 sm:mb-6 mt-0">
+            {/* Ligne 1 : Titre + Badge + Bouton */}
+            <div className="flex items-center justify-between w-full gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+                  <Settings className="w-5 h-5 text-zinc-400" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl md:text-2xl font-bold tracking-tight text-neutral-100">Réglages</h1>
+                  <span className="hidden sm:inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-400">
+                    {apiKeys.length} clé{apiKeys.length !== 1 ? 's' : ''} API
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-zinc-100">Réglages</h1>
-                <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-400">
-                  {apiKeys.length} clé{apiKeys.length !== 1 ? 's' : ''} API
-                </span>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateForm(!showCreateForm)}
+                  className="flex items-center gap-1.5 h-8 px-3 bg-white text-black hover:bg-neutral-200 rounded-md text-xs font-semibold transition-all shadow-sm shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Nouvelle clé</span>
+                  <span className="sm:hidden">Nouvelle</span>
+                </button>
               </div>
             </div>
           </div>
-        </header>
+        </div>
 
         {/* Contenu principal */}
-        <main className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto no-scrollbar pt-0 px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
           <div className="max-w-screen-2xl mx-auto w-full flex flex-col gap-8">
 
             {/* Section Clés API */}

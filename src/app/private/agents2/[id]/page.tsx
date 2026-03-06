@@ -433,7 +433,6 @@ function AgentDetailContent() {
   }
 
   const pageTitle = isNew ? 'Nouvel agent' : (editedAgent?.display_name || editedAgent?.name || 'Agent');
-  const agentIdBadge = selectedAgent ? (selectedAgent.slug || selectedAgent.id) : null;
   const displayAvatar =
     typeof editedAgent?.profile_picture === 'string' && (editedAgent?.profile_picture || '').trim().length > 0;
   const avatarFallback = (pageTitle || '?')
@@ -487,11 +486,6 @@ function AgentDetailContent() {
                   </div>
                   <div className="min-w-0 flex items-center gap-2">
                     <span className="text-zinc-100 font-medium truncate">{pageTitle}</span>
-                    {agentIdBadge && (
-                      <span className="px-2 py-0.5 rounded border border-zinc-800/80 bg-zinc-900/50 font-mono text-[10px] text-zinc-500 shrink-0">
-                        {agentIdBadge}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>

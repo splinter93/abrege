@@ -18,7 +18,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { EditorPrompt, EditorPromptCreateRequest } from '@/types/editorPrompts';
 import { simpleLogger as logger } from '@/utils/logger';
-import { Zap, Search, LayoutGrid, List, Plus } from 'lucide-react';
+import { Search, LayoutGrid, List, Plus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import '@/styles/main.css';
 import '@/app/ai/prompts/prompts.css';
@@ -134,35 +134,23 @@ function PromptsPageContent() {
   return (
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-prompts bg-[var(--color-bg-primary)] min-h-full w-full max-w-none mx-0 flex flex-col">
-        {/* Header sticky Linear (même style que Agents) */}
-        <header className="sticky top-0 z-10 bg-[var(--color-bg-primary)]/80 backdrop-blur-xl border-b border-zinc-800/60">
-          <div className="px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-zinc-400" />
+        {/* En-tête de contenu — optimisé mobile (2 lignes) et desktop */}
+        <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
+          <div className="flex flex-col gap-3 mb-4 sm:mb-6 mt-0">
+            {/* Ligne 1 : Titre + Badge + Toggles (desktop) + Bouton */}
+            <div className="flex items-center justify-between w-full gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight text-neutral-100 shrink-0">
                   Prompts
                 </h1>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="hidden sm:flex items-center h-6 px-2 rounded-full bg-white/[0.03] border border-white/[0.08] text-[11px] font-medium text-neutral-500 shrink-0">
                   {filteredPrompts.length} {filteredPrompts.length > 1 ? 'prompts' : 'prompt'}
                   {searchQuery.trim() ? '' : ` · ${activeCount} actifs`}
                 </span>
               </div>
-
-              <div className="flex flex-row items-center gap-2 w-full sm:w-auto min-w-0">
-                <div className="relative flex-1 min-w-0 sm:min-w-[200px] sm:max-w-[260px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-                  <input
-                    type="search"
-                    placeholder="Rechercher…"
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-zinc-100 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-colors"
-                  />
-                </div>
+              <div className="flex items-center gap-2 shrink-0">
                 {!isMobile && (
-                  <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5 shrink-0">
+                  <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5">
                     <button
                       type="button"
                       onClick={() => setViewMode('grid')}
@@ -184,17 +172,31 @@ function PromptsPageContent() {
                 <button
                   type="button"
                   onClick={handleCreate}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors whitespace-nowrap shrink-0"
+                  className="flex items-center gap-1.5 h-8 px-3 bg-white text-black hover:bg-neutral-200 rounded-md text-xs font-semibold transition-all shadow-sm"
                 >
-                  <Plus className="w-4 h-4" />
-                  Nouveau prompt
+                  <Plus className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Nouveau prompt</span>
+                  <span className="sm:hidden">Nouveau</span>
                 </button>
               </div>
             </div>
-          </div>
-        </header>
 
-        <div className="px-4 sm:px-6 lg:px-8 py-6">
+            {/* Ligne 2 : Barre de recherche (pleine largeur mobile, max-w-md desktop) */}
+            <div className="relative w-full md:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
+              <input
+                type="search"
+                placeholder="Rechercher…"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full h-10 rounded-xl pl-9 pr-4 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none focus:border-[var(--color-border-block)] transition-colors"
+                style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 sm:px-6 lg:px-8 pt-0 pb-6 sm:py-6">
           {filteredPrompts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="text-4xl mb-4">✨</div>

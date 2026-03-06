@@ -38,7 +38,7 @@ function PageWithSidebarLayoutInner({ children }: { children: React.ReactNode })
       </aside>
       <main className="page-content-area">
         {/* Mobile Top Bar — visible uniquement sur mobile */}
-        <div className="mobile-top-bar md:hidden flex items-center justify-between h-14 px-4 pt-[env(safe-area-inset-top,0px)] bg-[#0A0A0A]/90 backdrop-blur-md border-b border-white/[0.08] sticky top-0 z-50 shrink-0">
+        <div className="mobile-top-bar md:hidden flex items-center justify-between h-14 px-4 pt-[env(safe-area-inset-top,0px)] bg-[#0A0A0A]/90 backdrop-blur-md border-b sticky top-0 z-50 shrink-0" style={{ borderBottom: 'var(--border-block)' }}>
           <button
             type="button"
             onClick={openSidebar}

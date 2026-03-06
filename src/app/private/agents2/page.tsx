@@ -130,8 +130,8 @@ function AgentsV2Content() {
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-agents bg-[var(--color-bg-primary)] min-h-full w-full max-w-none mx-0 flex flex-col">
         {/* En-tête de contenu — optimisé mobile (2 lignes) et desktop */}
-        <div className="px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-2">
-          <div className="flex flex-col gap-4 mb-3 sm:mb-6 mt-2">
+        <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
+          <div className="flex flex-col gap-3 mb-4 sm:mb-6 mt-0">
             {/* Ligne 1 : Titre + Badge + Toggles (desktop) + Bouton */}
             <div className="flex items-center justify-between w-full gap-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -191,7 +191,7 @@ function AgentsV2Content() {
           </div>
         </div>
 
-        <div className="px-4 sm:px-6 lg:px-8 pt-3 pb-6 sm:py-6">
+        <div className="px-4 sm:px-6 lg:px-8 pt-0 pb-6 sm:py-6">
           {filteredAgents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="text-4xl mb-4">🤖</div>
