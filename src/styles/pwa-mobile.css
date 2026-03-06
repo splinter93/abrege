@@ -408,11 +408,11 @@ html.capacitor-native .page-mobile-sidebar-header {
   min-height: calc(52px + env(safe-area-inset-top, 0px)) !important;
 }
 
-/* Drawer : démarre sous la top bar (même calc que unified-page-layout) */
+/* Drawer : démarre sous la top bar (même calc que unified-page-layout), z-40 < top bar */
 html.capacitor-native .page-sidebar-fixed.page-sidebar-drawer {
   top: calc(56px + env(safe-area-inset-top, 0px)) !important;
   height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)) !important;
-  z-index: 60 !important;
+  z-index: 40 !important;
 }
 
 /* Safe area bottom : éviter que le contenu passe sous la barre de navigation Android */

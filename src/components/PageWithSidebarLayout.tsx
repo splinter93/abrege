@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Sidebar from '@/components/Sidebar';
 
 function PageWithSidebarLayoutInner({ children }: { children: React.ReactNode }) {
-  const { isOpen, isMobile, closeSidebar, openSidebar } = useMainSidebar();
+  const { isOpen, isMobile, closeSidebar, openSidebar, toggleSidebar } = useMainSidebar();
   const { user } = useAuth();
 
   const displayName =
@@ -31,17 +31,17 @@ function PageWithSidebarLayoutInner({ children }: { children: React.ReactNode })
         />
       )}
       {/* Mobile Top Bar — même niveau que la sidebar, hors du main */}
-      <div className="mobile-top-bar md:hidden flex items-center justify-between h-14 px-4 pt-[env(safe-area-inset-top,0px)] bg-[#0A0A0A] border-b shrink-0" style={{ borderBottom: 'var(--border-block)' }}>
+      <div className="mobile-top-bar md:hidden flex items-center justify-between h-14 px-4 pt-[env(safe-area-inset-top,0px)] bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-white/[0.08] shrink-0">
         <button
           type="button"
-          onClick={openSidebar}
+          onClick={toggleSidebar}
           className="p-2 -ml-2 text-neutral-400 hover:text-white transition-colors"
-          aria-label="Ouvrir le menu"
+          aria-label={isOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
         >
           <Menu className="w-5 h-5" />
         </button>
         <span className="text-sm font-semibold text-neutral-200 tracking-tight">
-          Scrivia
+          Scrivia App
         </span>
         <Link
           href="/private/account"
