@@ -127,7 +127,7 @@ function ClasseursHeader({
   onCreateNote: () => void;
 }) {
   return (
-    <header className="flex w-full flex-col gap-4 border-b border-zinc-800/60 py-4 px-8">
+    <header className="flex w-full flex-col gap-4 border-b border-zinc-800/60 py-4 px-4 sm:px-6 lg:px-8">
       <nav className="flex flex-wrap items-center gap-1 text-xs uppercase tracking-wider text-zinc-500 font-medium" aria-label="Fil d'Ariane">
         {breadcrumbSegments.length === 0 ? (
           <span>Workspace &gt; Mes Classeurs</span>
@@ -350,7 +350,7 @@ function ClasseursTabs({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex w-full items-center gap-2 overflow-x-auto no-scrollbar border-b border-zinc-800/60 px-8">
+      <div className="flex w-full items-center gap-2 overflow-x-auto no-scrollbar border-b border-zinc-800/60 px-4 sm:px-6 lg:px-8">
         <SortableContext items={tabs.map((t) => t.id)} strategy={horizontalListSortingStrategy}>
           <div className="flex min-w-0 flex-1 gap-8">
             {tabs.map((tab) => (
@@ -616,7 +616,7 @@ function ClasseursContent({
   }, [items, searchQuery]);
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden px-4 sm:px-8 py-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex min-w-0 items-center justify-between gap-4">
         <h2 className="truncate text-xl font-semibold text-white tracking-tight">{activeTabName}</h2>
         {!isMobileContent && (
@@ -1097,7 +1097,7 @@ export default function ClasseursPage() {
           />
           <div className="flex-1 overflow-y-auto no-scrollbar">
             {!activeClasseur && tabs.length === 0 && (
-              <div className="mx-8 mt-12 rounded-2xl border border-zinc-800/60 bg-zinc-900/20 px-6 py-20 text-center backdrop-blur-sm">
+              <div className="mx-4 sm:mx-6 lg:mx-8 mt-12 rounded-2xl border border-zinc-800/60 bg-zinc-900/20 px-6 py-20 text-center backdrop-blur-sm">
                 <BookMarked className="mx-auto h-12 w-12 text-zinc-700 mb-4" />
                 <p className="text-zinc-400 font-medium">Aucun classeur détecté.</p>
                 <p className="text-zinc-500 text-sm mt-1">Utilisez le menu <strong className="text-zinc-300">Nouveau</strong> pour commencer à organiser vos notes.</p>
