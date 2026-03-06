@@ -12,7 +12,7 @@ import { simpleLogger as logger } from "@/utils/logger";
 import type { Classeur } from "@/services/llm/types/apiV2Types";
 import SearchBar, { SearchResult } from "@/components/SearchBar";
 import {
-  Home,
+  Feather,
   Plus,
   Upload,
   MessageSquare,
@@ -383,7 +383,7 @@ function AuthenticatedHomeContent({
         {/* 1. Welcome */}
         <header className="flex flex-col items-center text-center">
           <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-900/80 border border-zinc-800/80 mb-4">
-            <Home className="w-6 h-6 text-zinc-400" />
+            <Feather className="w-6 h-6 text-zinc-400" strokeWidth={1.75} />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
             Welcome Home, {displayName}.
@@ -393,19 +393,19 @@ function AuthenticatedHomeContent({
 
         {/* 2. Quick Actions */}
         <section className="flex items-center justify-center gap-3 overflow-x-auto no-scrollbar -mx-2 px-2">
-          <ActionButton icon={Plus} label="Nouvelle note" onClick={handleCreateNote} />
-          <ActionButton icon={MessageSquare} label="Ouvrir le chat" onClick={() => router.push("/chat")} />
-          <ActionButton icon={Upload} label="Importer" onClick={handleImport} />
+          <ActionButton icon={Plus} label="New Note" onClick={handleCreateNote} />
+          <ActionButton icon={MessageSquare} label="Open Chat" onClick={() => router.push("/chat")} />
+          <ActionButton icon={Upload} label="Import" onClick={handleImport} />
         </section>
 
         {/* 3. Notes récentes */}
         <section className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+          <div className="flex items-center gap-4 flex-wrap">
+            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-wider shrink-0">
               Notes récentes
             </h2>
-            <div className="flex items-center gap-4">
-              <div className="flex-1 min-w-[180px] max-w-[240px]">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex-1 min-w-[140px] max-w-[220px]">
                 <SearchBar
                   placeholder="Rechercher..."
                   onSearchResult={handleSearchResult}
@@ -418,7 +418,7 @@ function AuthenticatedHomeContent({
                 type="button"
                 onClick={handleNotesPrev}
                 aria-label="Précédent"
-                className="flex items-center justify-center w-9 h-9 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all"
+                className="flex items-center justify-center w-9 h-9 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all shrink-0"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -426,7 +426,7 @@ function AuthenticatedHomeContent({
                 type="button"
                 onClick={handleNotesNext}
                 aria-label="Suivant"
-                className="flex items-center justify-center w-9 h-9 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all"
+                className="flex items-center justify-center w-9 h-9 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all shrink-0"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

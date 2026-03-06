@@ -115,7 +115,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`sidebar-root flex h-full min-h-screen w-full flex-shrink-0 flex-col ${isMobile ? '' : 'max-w-[16rem] border-r border-zinc-800/60'}`}
+      className={`sidebar-root flex h-full min-h-screen w-full flex-shrink-0 flex-col ${isMobile ? '' : 'sidebar-root--desktop max-w-[16rem]'}`}
       aria-label="Navigation principale"
     >
       {/* En-tête : Logo + Nom */}

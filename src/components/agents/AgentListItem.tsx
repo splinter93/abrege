@@ -25,14 +25,14 @@ const AgentListItem: React.FC<AgentListItemProps> = ({ agent, onEdit, onDelete, 
 
   return (
     <div
-      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 hover:bg-zinc-800/20 transition-colors cursor-pointer"
+      className="flex flex-row items-center justify-between gap-3 sm:gap-4 p-4 hover:bg-zinc-800/20 transition-colors cursor-pointer min-h-[72px]"
       onClick={onEdit}
       role="button"
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
-      {/* Left: avatar + name + role */}
-      <div className="flex items-center gap-3 min-w-0 flex-1">
+      {/* Left: avatar + name + role (truncate si trop long) */}
+      <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
         <div className="relative flex-shrink-0">
           {avatarUrl ? (
             <img
@@ -52,14 +52,14 @@ const AgentListItem: React.FC<AgentListItemProps> = ({ agent, onEdit, onDelete, 
             />
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-zinc-100 truncate">{displayName}</p>
-          <p className="text-xs text-zinc-500 truncate">{roleOrDesc}</p>
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <p className="font-semibold text-zinc-100 truncate" title={displayName}>{displayName}</p>
+          <p className="text-xs text-zinc-500 truncate" title={roleOrDesc}>{roleOrDesc}</p>
         </div>
       </div>
 
-      {/* Right: model tag + actions */}
-      <div className="flex flex-wrap items-center justify-end sm:justify-between gap-2 sm:gap-4 flex-shrink-0">
+      {/* Right: model tag (caché mobile) + actions — ne pas passer à la ligne */}
+      <div className="flex items-center justify-end sm:justify-between gap-2 sm:gap-4 flex-shrink-0 flex-nowrap">
         <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-[140px] truncate">
           {modelLabel}
         </span>

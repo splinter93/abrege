@@ -3,8 +3,13 @@
    ========================================================================== */
 
 .sidebar-root {
-  background-color: var(--surface-primary);
+  background-color: var(--color-bg-block);
   background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.01), transparent);
+}
+
+/* Bordure droite desktop (variable design system blocs) */
+.sidebar-root.sidebar-root--desktop {
+  border-right: var(--border-block);
 }
 
 .sidebar-item-active {

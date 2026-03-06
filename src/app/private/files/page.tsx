@@ -667,68 +667,68 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   return (
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-files min-h-screen flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
-        {/* Header aligné Classeurs : titre + badge | search + toggles + Upload */}
-        <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-zinc-800/60 py-4 px-4 sm:px-6 lg:px-8 mb-10">
+        {/* Header App : titre + pill | search + toggles h-8 + Upload */}
+        <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-zinc-800/60 py-3 px-4 sm:px-6 lg:px-8 mb-10">
           <div className="max-w-screen-2xl mx-auto w-full">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl sm:text-3xl font-bold text-white tracking-tight">Mes Fichiers</h1>
-              <span className="rounded-full border border-zinc-800/60 bg-zinc-900/50 px-2.5 py-0.5 text-xs font-medium text-zinc-500 whitespace-nowrap">
-                {statsData.fileCount} {statsData.fileCountLabel}
-                <span className="mx-1.5 text-zinc-600" aria-hidden>·</span>
-                {formatTotalSize(displayFiles.reduce((a, f) => a + (f.size || 0), 0))}
-              </span>
-            </div>
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="relative group flex-1 sm:flex-none min-w-0">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500 pointer-events-none" />
-                <input
-                  type="search"
-                  placeholder="Rechercher…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-9 w-full sm:w-64 pl-10 pr-3 rounded-lg border border-zinc-800/60 bg-zinc-900/50 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-0 focus:border-zinc-600 transition-colors"
-                />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <h1 className="text-lg sm:text-xl font-semibold text-white tracking-tight shrink-0">Mes Fichiers</h1>
+                <span className="rounded-full bg-zinc-800/50 border border-zinc-700/60 px-2.5 py-1 text-[11px] font-medium text-zinc-400 whitespace-nowrap shrink-0">
+                  {statsData.fileCount} {statsData.fileCountLabel}
+                  <span className="mx-1.5 text-zinc-500" aria-hidden>•</span>
+                  {formatTotalSize(displayFiles.reduce((a, f) => a + (f.size || 0), 0))}
+                </span>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="hidden sm:flex items-center gap-1 rounded-lg border border-zinc-800/60 bg-zinc-900/50 p-1">
+              <div className="flex items-center gap-2 w-full sm:w-auto sm:min-h-8">
+                <div className="relative flex-1 sm:flex-none min-w-0">
+                  <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                  <input
+                    type="search"
+                    placeholder="Rechercher…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-8 w-full sm:w-56 pl-8 pr-2.5 rounded-lg border border-zinc-800/60 bg-zinc-900/50 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-0 focus:border-zinc-600 transition-colors"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0 h-8">
                   <button
                     type="button"
-                    onClick={() => setViewMode('grid')}
-                    className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                    title="Vue grille"
+                    className="inline-flex items-center justify-center gap-1.5 h-8 w-8 sm:w-auto sm:px-3 rounded-lg border border-zinc-800/60 bg-zinc-900/50 text-zinc-200 text-sm font-medium hover:bg-zinc-800/50 hover:border-zinc-700 hover:text-zinc-100 transition-colors whitespace-nowrap"
+                    title="Filtre"
                   >
-                    <LayoutGrid className="w-4 h-4" />
+                    <Filter className="w-4 h-4 shrink-0" />
+                    <span className="hidden sm:inline">Filter</span>
                   </button>
+                  <div className="flex items-center gap-0.5 rounded-lg border border-zinc-800/60 bg-zinc-900/50 p-0.5 h-8">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      title="Vue grille"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      className={`h-7 w-7 flex items-center justify-center rounded-md transition-colors ${viewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      title="Vue liste"
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setViewMode('list')}
-                    className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                    title="Vue liste"
+                    onClick={handleUploadFile}
+                    disabled={loading}
+                    className="inline-flex items-center justify-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-lg bg-white text-black text-sm font-semibold hover:bg-zinc-200 disabled:opacity-50 transition-colors whitespace-nowrap"
                   >
-                    <List className="w-4 h-4" />
+                    <Upload className="w-4 h-4" />
+                    Upload
                   </button>
                 </div>
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center gap-2 px-3 py-2 sm:px-4 rounded-lg border border-zinc-800/60 bg-zinc-900/50 text-zinc-200 text-sm font-medium hover:bg-zinc-800/50 hover:border-zinc-700 hover:text-zinc-100 transition-colors whitespace-nowrap"
-                  title="Filtre"
-                >
-                  <Filter className="w-4 h-4" />
-                  Filter
-                </button>
-                <button
-                  type="button"
-                  onClick={handleUploadFile}
-                  disabled={loading}
-                  className="inline-flex items-center justify-center gap-2 px-3 py-2 sm:px-4 rounded-lg bg-white text-black text-sm font-semibold hover:bg-zinc-200 disabled:opacity-50 transition-colors whitespace-nowrap"
-                >
-                  <Upload className="w-4 h-4" />
-                  Upload
-                </button>
               </div>
             </div>
-          </div>
           </div>
         </header>
 

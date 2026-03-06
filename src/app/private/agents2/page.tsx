@@ -134,8 +134,8 @@ function AgentsV2Content() {
                 </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <div className="relative flex-1 sm:min-w-[200px] sm:max-w-[260px]">
+              <div className="flex flex-row items-center gap-2 w-full sm:w-auto min-w-0">
+                <div className="relative flex-1 min-w-0 sm:min-w-[200px] sm:max-w-[260px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
                   <input
                     type="search"
@@ -145,37 +145,34 @@ function AgentsV2Content() {
                     className="w-full pl-9 pr-3 py-2 rounded-lg bg-zinc-900/50 border border-zinc-800 text-zinc-100 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-colors"
                   />
                 </div>
-
-                <div className="flex items-center gap-2">
-                  {!isMobile && (
-                    <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5">
-                      <button
-                        type="button"
-                        onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                        title="Vue grille"
-                      >
-                        <LayoutGrid className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                        title="Vue liste"
-                      >
-                        <List className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleNewAgent}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors whitespace-nowrap flex-1 sm:flex-none"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Nouvel agent
-                  </button>
-                </div>
+                {!isMobile && (
+                  <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      title="Vue grille"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      title="Vue liste"
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleNewAgent}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors whitespace-nowrap shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  Nouvel agent
+                </button>
               </div>
             </div>
           </div>
@@ -210,7 +207,10 @@ function AgentsV2Content() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col border border-zinc-800/40 rounded-xl overflow-hidden divide-y divide-zinc-800/40">
+            <div
+              className="flex flex-col border border-solid rounded-xl overflow-hidden divide-y divide-[var(--color-border-block)]"
+              style={{ borderColor: 'var(--color-border-block)', borderWidth: 'var(--border-block-width)' }}
+            >
               {filteredAgents.map(agent => (
                 <AgentListItem
                   key={agent.id}

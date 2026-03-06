@@ -27,7 +27,8 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle
 
   return (
     <div
-      className={`group flex flex-col p-5 rounded-2xl border border-zinc-800/40 bg-zinc-900/10 hover:bg-zinc-800/20 hover:border-zinc-700/60 transition-all duration-300 cursor-pointer ${!agent.is_active ? 'opacity-60' : ''}`}
+      className={`group flex flex-col p-5 rounded-2xl border border-solid bg-[var(--color-bg-block)] hover:bg-white/[0.04] transition-all duration-300 cursor-pointer ${!agent.is_active ? 'opacity-60' : ''}`}
+      style={{ borderColor: 'var(--color-border-block)', borderWidth: 'var(--border-block-width)' }}
       onClick={onEdit}
       role="button"
       tabIndex={0}
