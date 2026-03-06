@@ -44,7 +44,6 @@ function SidebarItem({ icon: Icon, label, href, active = false, badge, onNavigat
             active ? "text-white" : "text-zinc-500 group-hover:text-zinc-300"
           }`}
           size={16}
-          strokeWidth={active ? 2 : 1.5}
         />
         <span
           className={`truncate text-sm tracking-tight transition-colors duration-300 ${
@@ -125,7 +124,7 @@ export default function Sidebar() {
             className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-white/10 bg-gradient-to-b from-white/10 to-white/5 shadow-sm"
             aria-hidden
           >
-            <Feather className="h-4 w-4 text-white" strokeWidth={2} />
+            <Feather className="h-4 w-4 text-white" />
           </div>
           <span className="font-sans text-[18px] font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70 antialiased">
             Scrivia
@@ -233,7 +232,7 @@ export default function Sidebar() {
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
             ) : (
-              <User className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+              <User className="h-4 w-4 text-zinc-400" />
             )}
           </div>
           <span className="min-w-0 truncate text-sm font-medium tracking-tight">
