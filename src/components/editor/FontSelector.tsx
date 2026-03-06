@@ -19,10 +19,9 @@ interface FontSelectorProps {
 }
 
 const FONTS: FontOption[] = [
-  // Sans-serif modernes
+  // Sans-serif modernes (Geist retiré → preset Manrope partout)
   { name: 'Noto Sans', label: 'Noto Sans', category: 'sans-serif' },
   { name: 'Inter', label: 'Inter', category: 'sans-serif' },
-  { name: 'Geist', label: 'Geist', category: 'sans-serif' },
   { name: 'Manrope', label: 'Manrope', category: 'sans-serif' },
   { name: 'Roboto', label: 'Roboto', category: 'sans-serif' },
   { name: 'Open Sans', label: 'Open Sans', category: 'sans-serif' },
@@ -47,7 +46,7 @@ const FONTS: FontOption[] = [
 ];
 
 const FontSelector: React.FC<FontSelectorProps> = ({
-  currentFont = 'Figtree',
+  currentFont = 'Manrope',
   onFontChange,
   disabled = false,
 }) => {

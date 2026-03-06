@@ -39,7 +39,7 @@ note-embed[data-display="compact"] {
   );
   border-radius: 999px;
   font-size: 0.95em; /* ✅ Légèrement plus petit que texte environnant */
-  font-family: var(--font-chat-text); /* ✅ Figtree */
+  font-family: var(--font-chat-text);
   color: var(--text-1, rgba(228, 228, 228, 0.92));
   cursor: pointer;
   transition: all 0.15s ease;

@@ -32,16 +32,13 @@ import { logApi } from './logger';
 export function sanitizeMarkdownContent(content: string): string {
   if (!content) return content;
 
-  // Détecter si des caractères HTML potentiellement dangereux sont présents
-  // On échappe si on trouve des balises HTML OU des caractères dangereux isolés
-  const hasHtmlChars = /<|>|&(?!(?:lt|gt|amp|quot|#039);)/.test(content);
-  
-  if (!hasHtmlChars) {
-    // Pas de caractères HTML, retourner tel quel
+  // N'échapper que si une vraie balise HTML est présente (< suivi d'une lettre, ex: <div, <script)
+  // Ne pas échapper ->, x < y, 2 > 1 ni & seul (évite de polluer les notes avec &gt; etc.)
+  const hasRawHtmlTag = /<[a-z]/i.test(content);
+  if (!hasRawHtmlTag) {
     return content;
   }
 
-  // ⚠️ HTML/caractères dangereux détectés → échapper automatiquement
   logApi.warn('⚠️ [SANITIZER] HTML brut détecté dans markdown_content, échappement automatique appliqué');
   
   // 🔒 ÉTAPE 1: Protéger les blocs de code ET les blockquotes markdown ET les embeds

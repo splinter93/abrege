@@ -382,7 +382,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
               wide_mode: apiNote.wide_mode ?? false,
               a4_mode: apiNote.a4_mode ?? false,
               slash_lang: apiNote.slash_lang ?? 'en',
-              font_family: apiNote.font_family ?? 'Figtree',
+              font_family: apiNote.font_family ?? 'Manrope',
               share_settings: apiNote.share_settings as FileSystemNote['share_settings'],
               is_canva_draft: true
             };
@@ -422,7 +422,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
           wide_mode: false,
           a4_mode: false,
           slash_lang: 'en',
-          font_family: 'Figtree',
+          font_family: 'Manrope',
           share_settings: undefined,
           is_canva_draft: true
         };
@@ -827,7 +827,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         wide_mode: note.wide_mode ?? false,
         a4_mode: note.a4_mode ?? false,
         slash_lang: note.slash_lang ?? 'en',
-        font_family: note.font_family ?? 'Figtree',
+        font_family: note.font_family ?? 'Manrope',
         share_settings: note.share_settings as FileSystemNote['share_settings'],
         is_canva_draft: true
       };

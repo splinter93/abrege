@@ -36,13 +36,13 @@
   -webkit-backdrop-filter: blur(20px);
   color: var(--chat-text-primary, #e8eaed);
   font-size: 14px;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   transition: all 0.3s ease;
 }
 
 .search-bar-field::placeholder {
   color: var(--chat-text-secondary, #a1a9b1);
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   font-size: 14px;
 }
 
@@ -180,7 +180,7 @@
   flex: 1;
   font-weight: 500;
   color: var(--chat-text-primary, #e8eaed);
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   font-size: 14px;
 }
 
@@ -190,7 +190,7 @@
   background: rgba(255, 255, 255, 0.15);
   padding: 0.125rem 0.375rem;
   border-radius: 12px;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .search-bar-result-excerpt {
@@ -198,14 +198,14 @@
   font-size: 12px;
   line-height: 1.4;
   margin-top: 0.25rem;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .search-bar-no-results {
   padding: 1rem;
   text-align: center;
   color: var(--chat-text-secondary, #a1a9b1);
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   font-size: 14px;
 }
 
@@ -217,7 +217,7 @@
 .search-bar-container.compact .search-bar-field {
   padding: 0.5rem 0.5rem 0.5rem 2rem;
   font-size: 14px;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .search-bar-container.compact .search-bar-icon {
@@ -238,7 +238,7 @@
 .search-bar-container.large .search-bar-field {
   padding: 1rem 1rem 1rem 3rem;
   font-size: 14px;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .search-bar-container.large .search-bar-icon {
@@ -264,7 +264,7 @@
   .search-bar-field {
     padding: 0.625rem 0.625rem 0.625rem 2.25rem;
     font-size: 14px;
-    font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+    font-family: 'Manrope', -apple-system, sans-serif;
   }
   
   .search-bar-icon {
@@ -282,7 +282,7 @@
   .search-bar-field {
     padding: 0.5rem 0.5rem 0.5rem 2rem;
     font-size: 14px;
-    font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+    font-family: 'Manrope', -apple-system, sans-serif;
   }
   
   .search-bar-icon {

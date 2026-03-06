@@ -15,19 +15,20 @@ interface UseChatScrollReturn {
   scrollToBottom: () => void;
 }
 
+/** Padding min (px) si le message user est plus grand que la zone visible */
+const PADDING_MIN_PX = 24;
+/** Marge sous le header pour que le message user ne remonte pas trop (px) */
+const MARGIN_BELOW_HEADER_PX = 48;
+
 /**
  * Hook pour le scroll auto avec padding temporaire
  * 
  * Fonctionnement :
  * - Scroll UNIQUEMENT quand un nouveau message USER arrive
  * - Ajoute un padding temporaire pour que le message user remonte sous le header
- * - Padding différent selon le layout : 75% chat normal, 65% mode canva
- * - Le padding reste en place (pas de timeout) pour éviter que le message redescende
- * 
- * Séparation claire :
- * - Chat normal : 75% viewport (comportement par défaut)
- * - Mode canva : 65% viewport (layout avec canva ouvert)
- * - Détection via .chatgpt-main--canva-open (classe sur chatgpt-main)
+ * - Mesure le dernier message user dans le DOM et calcule le padding pour qu'il
+ *   s'arrête exactement en haut de la zone visible (juste sous le header).
+ * - Plus de pourcentage viewport : même rendu sur mobile, tablette, desktop.
  */
 export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScrollReturn {
   const { autoScroll = true, messages = [], watchLayoutChanges = false, layoutTrigger } = options;
@@ -44,38 +45,25 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
   }, []);
 
   /**
-   * Scroll avec padding temporaire
-   * 
-   * Ajoute un padding inline pour que le message user remonte complètement
-   * en haut sous le header. Le padding reste en place pour éviter que le
-   * message redescende pendant que l'assistant stream sa réponse.
-   * 
-   * Padding selon le layout :
-   * - Chat normal : 75% viewport
-   * - Mode canva : 65% viewport (moins car moins d'espace disponible)
+   * Scroll avec padding pour que le message user s'arrête juste sous le header.
+   * On soustrait la hauteur du header pour ne pas placer le message sous la barre fixe.
    */
   const scrollToBottom = useCallback(() => {
     const container = getScrollContainer();
     if (!container) return;
-    
-    // Détecter mode canva : chercher .chatgpt-main--canva-open
-    // On cherche depuis le container vers le haut de l'arbre DOM
-    const chatMain = container.closest('.chatgpt-main') as HTMLElement;
-    const isCanvaLayout = chatMain?.classList.contains('chatgpt-main--canva-open') ?? false;
-    
-    // Calculer la hauteur effective du viewport (gère le clavier mobile)
-    const viewportHeight = window.innerHeight;
-    const visualViewport = typeof window !== 'undefined' && 'visualViewport' in window ? window.visualViewport : null;
-    const effectiveHeight = visualViewport?.height || viewportHeight;
-    
-    // Ratio de padding selon le layout
-    const paddingRatio = isCanvaLayout ? 0.76 : 0.81;
-    const tempPadding = Math.floor(effectiveHeight * paddingRatio);
-    
-    // Appliquer le padding temporaire
+
+    const clientHeight = container.clientHeight;
+    const userMessages = container.querySelectorAll('.chatgpt-message-user');
+    const lastUserMessage = userMessages.length > 0 ? (userMessages[userMessages.length - 1] as HTMLElement) : null;
+    const messageHeight = lastUserMessage?.offsetHeight ?? 0;
+
+    const header = container.closest('.chatgpt-main')?.querySelector('.chatgpt-header') as HTMLElement | null;
+    const headerHeight = header?.offsetHeight ?? 0;
+
+    const tempPadding = Math.max(PADDING_MIN_PX, clientHeight - messageHeight - headerHeight - MARGIN_BELOW_HEADER_PX);
+
     container.style.paddingBottom = `${tempPadding}px`;
-    
-    // Scroll au maximum avec le nouveau padding
+
     requestAnimationFrame(() => {
       const maxScroll = container.scrollHeight - container.clientHeight;
       container.scrollTo({

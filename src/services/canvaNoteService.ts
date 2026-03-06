@@ -159,7 +159,7 @@ export class CanvaNoteService {
           user_id: userId,
           slug,
           public_url: null, // Sera généré après avoir le noteId
-          font_family: 'Figtree',
+          font_family: 'Manrope',
           is_canva_draft: true // Flag pour exclure notes récentes
         })
         .select('id')

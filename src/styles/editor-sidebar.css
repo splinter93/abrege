@@ -465,7 +465,7 @@
   border-radius: 6px;
   transition: all 0.15s ease;
   font-size: 14px; /* ✅ Plus gros : 13px → 14px */
-  font-family: var(--font-chat-text); /* ✅ Figtree (même que chat) */
+  font-family: var(--font-chat-text);
   color: var(--chat-text-secondary);
   user-select: none;
   margin: 0 0 3px 0; /* ✅ Plus aéré : 3px entre items */
@@ -563,7 +563,7 @@
   padding: 32px 16px;
   color: var(--chat-text-tertiary);
   font-size: 13px;
-  font-family: var(--font-chat-text); /* ✅ Figtree */
+  font-family: var(--font-chat-text);
 }
 
 .editor-sidebar-error {
@@ -573,7 +573,7 @@
   border-radius: 8px;
   color: #ff3b30;
   font-size: 12px;
-  font-family: var(--font-chat-text); /* ✅ Figtree */
+  font-family: var(--font-chat-text);
   text-align: center;
 }
 
@@ -582,7 +582,7 @@
   text-align: center;
   color: var(--chat-text-tertiary);
   font-size: 12px;
-  font-family: var(--font-chat-text); /* ✅ Figtree */
+  font-family: var(--font-chat-text);
 }
 
 /* ========================================

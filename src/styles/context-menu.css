@@ -8,7 +8,7 @@
   padding: 6px !important;
   min-width: 140px !important;
   z-index: 1000 !important;
-  font-family: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   animation: contextMenuFadeIn 0.15s ease-out !important;
   overflow: visible !important;
 }

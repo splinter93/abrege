@@ -8,15 +8,18 @@ import {
   LayoutDashboard,
   FolderKanban,
   Files,
+  MessageSquare,
   Bot,
   TerminalSquare,
   Users,
   BookOpen,
   Settings,
   Trash2,
+  User,
 } from "lucide-react";
 
 import { useMainSidebarOptional } from "@/contexts/MainSidebarContext";
+import { useAuth } from "@/hooks/useAuth";
 import "./Sidebar.css";
 
 // ---------------------------------------------------------------------------
@@ -98,9 +101,17 @@ function SidebarSectionTitle({ children }: { children: React.ReactNode }) {
 export default function Sidebar() {
   const pathname = usePathname();
   const mainSidebar = useMainSidebarOptional();
+  const { user } = useAuth();
   const isMobile = mainSidebar?.isMobile ?? false;
   const isClasseurs = pathname?.startsWith("/private/dossiers");
   const onNavigate = isMobile ? mainSidebar?.closeSidebar : undefined;
+
+  const displayName =
+    (user?.user_metadata as { full_name?: string; name?: string } | undefined)?.full_name ||
+    (user?.user_metadata as { full_name?: string; name?: string } | undefined)?.name ||
+    user?.email?.split("@")[0] ||
+    "Account";
+  const avatarUrl = (user?.user_metadata as { avatar_url?: string } | undefined)?.avatar_url;
 
   return (
     <aside
@@ -145,6 +156,13 @@ export default function Sidebar() {
             active={pathname?.startsWith("/private/files") ?? false}
             onNavigate={onNavigate}
           />
+          <SidebarItem
+            icon={Trash2}
+            label="Corbeille"
+            href="/private/trash"
+            active={pathname?.startsWith("/private/trash") ?? false}
+            onNavigate={onNavigate}
+          />
         </div>
 
         {/* Séparateur Workspace */}
@@ -153,15 +171,22 @@ export default function Sidebar() {
         {/* Groupe 2 - Workspace */}
         <div className="space-y-0.5">
           <SidebarItem
+            icon={MessageSquare}
+            label="Chat"
+            href="/chat"
+            active={pathname?.startsWith("/chat") ?? false}
+            onNavigate={onNavigate}
+          />
+          <SidebarItem
             icon={Bot}
-            label="Agents v2"
+            label="My Agents"
             href="/private/agents2"
             active={pathname?.startsWith("/private/agents2") ?? false}
             onNavigate={onNavigate}
           />
           <SidebarItem
             icon={TerminalSquare}
-            label="Prompts"
+            label="My Prompts"
             href="/ai/prompts"
             active={pathname?.startsWith("/ai/prompts") ?? false}
             onNavigate={onNavigate}
@@ -174,6 +199,13 @@ export default function Sidebar() {
             onNavigate={onNavigate}
           />
           <SidebarItem
+            icon={Settings}
+            label="Paramètres"
+            href="/private/settings"
+            active={pathname?.startsWith("/private/settings") ?? false}
+            onNavigate={onNavigate}
+          />
+          <SidebarItem
             icon={BookOpen}
             label="Documentation"
             href="/docs"
@@ -183,22 +215,29 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {/* Footer */}
-      <footer className="space-y-1 border-t border-white/[0.04] p-4">
-        <SidebarItem
-          icon={Settings}
-          label="Paramètres"
+      {/* User settings — tout en bas */}
+      <footer className="mt-auto border-t border-white/[0.06] p-3">
+        <Link
           href="/private/settings"
-          active={pathname?.startsWith("/private/settings") ?? false}
-          onNavigate={onNavigate}
-        />
-        <SidebarItem
-          icon={Trash2}
-          label="Corbeille"
-          href="/private/trash"
-          active={pathname?.startsWith("/private/trash") ?? false}
-          onNavigate={onNavigate}
-        />
+          onClick={onNavigate}
+          className={`group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-200 ${
+            pathname?.startsWith("/private/settings")
+              ? "bg-white/[0.08] text-white"
+              : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
+          }`}
+          aria-current={pathname?.startsWith("/private/settings") ? "page" : undefined}
+        >
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700/80 bg-zinc-800/60">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <User className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+            )}
+          </div>
+          <span className="min-w-0 truncate text-sm font-medium tracking-tight">
+            {displayName}
+          </span>
+        </Link>
       </footer>
     </aside>
   );

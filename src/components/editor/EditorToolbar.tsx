@@ -41,7 +41,7 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   readonly = false,
   onImageClick,
   onFontChange,
-  currentFont = 'Figtree',
+  currentFont = 'Manrope',
   onTranscriptionComplete
 }) => {
   // ✅ DEBUG: Log synchrone pour vérifier si EditorToolbar est rendu

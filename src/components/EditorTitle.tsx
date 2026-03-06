@@ -55,7 +55,7 @@ const EditorTitle: React.FC<EditorTitleProps> = ({
         border: 'none',
         outline: 'none',
         color: 'var(--text-primary)',
-        fontFamily: 'Figtree, Geist, -apple-system, sans-serif',
+        fontFamily: 'Manrope, -apple-system, sans-serif',
         overflow: 'hidden',
         boxSizing: 'border-box',
         whiteSpace: 'normal',

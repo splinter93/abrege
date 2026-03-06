@@ -207,7 +207,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         header_image: validatedData.header_image,
         folder_id: folderId,
         classeur_id: classeurId,
-        font_family: 'Figtree',
+        font_family: 'Manrope',
         user_id: userId,
         slug,
         public_url: publicUrl,

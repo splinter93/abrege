@@ -3,8 +3,8 @@ import { applyEditorFontPreset, getEditorPresetId } from '@/constants/chatFontPr
 
 /**
  * Hook pour gérer le changement de police dans l'éditeur.
- * Si la police est un preset (Figtree, Geist, Inter, Noto Sans, Manrope), applique
- * family + taille + poids du preset. Sinon applique uniquement la family.
+ * Si la police est un preset (Figtree, Inter, Noto Sans, Manrope), applique
+ * family + taille + poids du preset. Geist → Manrope (preset unique).
  */
 export const useFontManager = (currentFont: string | null | undefined) => {
   
@@ -20,15 +20,15 @@ export const useFontManager = (currentFont: string | null | undefined) => {
       }
 
       const fontFamilyMap: Record<string, string> = {
-        'Noto Sans': "'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
+        'Noto Sans': "'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
         'Inter': "'Inter', sans-serif",
-        'Geist': "'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
+        'Geist': "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
         'Manrope': "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
         'Roboto': "'Roboto', sans-serif",
         'Open Sans': "'Open Sans', sans-serif",
         'Lato': "'Lato', sans-serif",
         'Poppins': "'Poppins', sans-serif",
-        'Figtree': "'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
+        'Figtree': "'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
         'Source Sans Pro': "'Source Sans 3', sans-serif",
         'Work Sans': "'Work Sans', sans-serif",
         'Ubuntu': "'Ubuntu', sans-serif",
@@ -42,7 +42,7 @@ export const useFontManager = (currentFont: string | null | undefined) => {
         'Fira Code': "'Fira Code', 'JetBrains Mono', 'Noto Sans Mono', 'SFMono-Regular', 'Menlo', 'Consolas', 'Monaco', 'Liberation Mono', monospace"
       };
 
-      const fontFamily = fontFamilyMap[fontName] || fontFamilyMap['Figtree'];
+      const fontFamily = fontFamilyMap[fontName] || fontFamilyMap['Manrope'];
       if (scope === 'all' || scope === 'headings') {
         document.documentElement.style.setProperty('--editor-font-family-headings', fontFamily);
       }

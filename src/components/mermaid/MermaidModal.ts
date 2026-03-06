@@ -395,7 +395,7 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
       if (svg) {
         // Lire la variable CSS --font-chat-text
         const computedStyle = getComputedStyle(document.documentElement);
-        const chatFont = computedStyle.getPropertyValue('--font-chat-text').trim() || 'Figtree, Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        const chatFont = computedStyle.getPropertyValue('--font-chat-text').trim() || 'Manrope, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         
         svg.setAttribute('style', `font-family: ${chatFont}; font-size: 18px;`);
         

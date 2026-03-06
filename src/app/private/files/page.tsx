@@ -15,7 +15,7 @@ import { simpleLogger as logger } from "@/utils/logger";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 import "@/components/DossierLoadingStates.css";
-import { FileBox, FileText, Upload, Image as ImageIcon, File, FileText as FileTextIcon, Video, Music, Archive, X, Search, LayoutGrid, List, MoreVertical } from "lucide-react";
+import { FileBox, FileText, Upload, Image as ImageIcon, File, FileText as FileTextIcon, Video, Music, Archive, X, Search, LayoutGrid, List, MoreVertical, Filter } from "lucide-react";
 import "@/styles/main.css";
 import "./index.css";
 import "./page.css";
@@ -658,7 +658,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-files min-h-screen flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
         {/* Header aligné Classeurs : titre + badge | search + toggles + Upload */}
-        <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-zinc-800/60 py-4 px-4 sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/90 backdrop-blur-xl border-b border-zinc-800/60 py-4 px-4 sm:px-6 lg:px-8 mb-10">
           <div className="max-w-screen-2xl mx-auto w-full">
             <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -701,6 +701,14 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                 </div>
                 <button
                   type="button"
+                  className="inline-flex items-center justify-center gap-2 px-3 py-2 sm:px-4 rounded-lg border border-zinc-800/60 bg-zinc-900/50 text-zinc-200 text-sm font-medium hover:bg-zinc-800/50 hover:border-zinc-700 hover:text-zinc-100 transition-colors whitespace-nowrap"
+                  title="Filtre"
+                >
+                  <Filter className="w-4 h-4" />
+                  Filter
+                </button>
+                <button
+                  type="button"
                   onClick={handleUploadFile}
                   disabled={loading}
                   className="inline-flex items-center justify-center gap-2 px-3 py-2 sm:px-4 rounded-lg bg-white text-black text-sm font-semibold hover:bg-zinc-200 disabled:opacity-50 transition-colors whitespace-nowrap"
@@ -715,7 +723,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
         </header>
 
         {/* Contenu principal */}
-        <main className="flex-1 overflow-y-auto no-scrollbar p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto no-scrollbar pt-2 px-4 pb-4 sm:pt-3 sm:px-6 sm:pb-6 lg:pt-4 lg:px-8 lg:pb-8">
           <div className="max-w-screen-2xl mx-auto w-full">
             {loading ? (
               <div className="flex items-center justify-center py-24">
@@ -1070,7 +1078,7 @@ const FileItemMemo = memo(({
 
   return (
     <motion.div
-      className="group relative flex flex-col p-2 rounded-xl border border-transparent hover:bg-zinc-900/40 hover:border-zinc-800/60 transition-all duration-200 cursor-pointer"
+      className="group flex flex-col gap-2 cursor-pointer"
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.2, ease: 'easeOut', delay: Math.min(index * 0.02, 0.3) }}
@@ -1078,22 +1086,14 @@ const FileItemMemo = memo(({
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
     >
-      <button
-        type="button"
-        onClick={openOptionsMenu}
-        className="absolute top-3 right-3 z-10 p-1.5 rounded-md bg-black/60 backdrop-blur-md text-zinc-300 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
-        aria-label="Options"
-      >
-        <MoreVertical className="w-4 h-4" />
-      </button>
-
-      <div className="w-full aspect-square bg-zinc-900/20 rounded-lg border border-zinc-800/40 flex items-center justify-center overflow-hidden relative">
+      {/* 1. Conteneur de l'image (Bounding Box Linear-Style) */}
+      <div className="relative aspect-square w-full rounded-xl bg-[#141414] border border-white/[0.05] overflow-hidden">
         {showImagePreview ? (
           <>
             <img
               src={imagePreviewUrl}
               alt={file.filename || ''}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -1101,17 +1101,28 @@ const FileItemMemo = memo(({
                 if (fallback) (fallback as HTMLElement).classList.remove('hidden');
               }}
             />
-            <div className="absolute inset-0 hidden flex items-center justify-center bg-zinc-900/40" aria-hidden>
+            <div className="absolute inset-0 hidden flex items-center justify-center bg-[#141414]" aria-hidden>
               {getFileIcon(file.id, file.mime_type)}
             </div>
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" aria-hidden />
           </>
         ) : (
-          <FileText className="w-10 h-10 text-zinc-400 fill-zinc-500/10 group-hover:scale-110 transition-transform duration-300" />
+          <div className="w-full h-full flex items-center justify-center">
+            <FileText className="w-10 h-10 text-zinc-400 fill-zinc-500/10 group-hover:scale-105 transition-transform duration-300" />
+          </div>
         )}
+        {/* Bouton Menu Kebab (Glassmorphism, visible au survol) */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); openOptionsMenu(e); }}
+          className="absolute top-2 right-2 w-7 h-7 bg-black/40 backdrop-blur-md border border-white/[0.1] rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-black/60 text-white z-10"
+          aria-label="Options"
+        >
+          <MoreVertical className="w-4 h-4" />
+        </button>
       </div>
 
-      <div className="text-center mt-3 px-1 min-w-0">
+      {/* 2. Métadonnées (Texte en dessous, centré) */}
+      <div className="flex flex-col px-1 min-w-0 items-center text-center">
         {renamingItemId === file.id ? (
           <input
             type="text"
@@ -1120,12 +1131,16 @@ const FileItemMemo = memo(({
             onKeyDown={handleKeyDown}
             onClick={handleClick}
             autoFocus
-            className="w-full bg-zinc-800/40 border border-zinc-600 rounded px-2 py-1 text-[12px] text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            className="w-full bg-zinc-800/40 border border-zinc-600 rounded px-2 py-1 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500 text-center"
           />
         ) : (
-          <p className="text-[12px] font-medium text-zinc-200 group-hover:text-white truncate">{file.filename || 'Fichier sans nom'}</p>
+          <span className="text-sm font-medium text-neutral-200 truncate w-full" title={file.filename || 'Fichier sans nom'}>
+            {file.filename || 'Fichier sans nom'}
+          </span>
         )}
-        <p className="text-[10px] text-zinc-500 mt-0.5 font-mono">{sizeStr} · {dateStr}</p>
+        <span className="text-[11px] text-neutral-500 mt-0.5 tracking-wide">
+          {sizeStr}
+        </span>
       </div>
     </motion.div>
   );

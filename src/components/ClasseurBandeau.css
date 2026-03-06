@@ -43,7 +43,7 @@
   cursor: pointer;
   transition: all var(--dossiers-transition-normal);
   white-space: nowrap;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   min-height: 44px;
   position: relative;
   overflow: hidden;

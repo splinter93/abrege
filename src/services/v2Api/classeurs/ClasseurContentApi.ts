@@ -60,10 +60,10 @@ export class ClasseurContentApi {
 
           const treeResult = await treeResponse.json();
           
-          if (treeResult.success && treeResult.tree) {
-            const dossiers = Array.isArray(treeResult.tree.folders) ? treeResult.tree.folders : [];
-            const notes = Array.isArray(treeResult.tree.notes) ? treeResult.tree.notes : [];
-            
+          // Utiliser les listes plates (folders, notes) pour le store, pas tree (nested)
+          if (treeResult.success) {
+            const dossiers = Array.isArray(treeResult.folders) ? treeResult.folders : [];
+            const notes = Array.isArray(treeResult.notes) ? treeResult.notes : [];
             dossiers.filter(isFolder).forEach((d: Folder) => allDossiers.push(d));
             notes.filter(isNote).forEach((n: Note) => allNotes.push(n));
           }

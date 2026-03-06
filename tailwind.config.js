@@ -60,16 +60,16 @@ module.exports = {
         'glass-border-focus': 'rgba(255, 255, 255, 0.25)',
       },
       
-      // Polices - Hiérarchisées
+      // Polices - Alignées sur typography.css (preset Manrope partout)
       fontFamily: {
-        'base': ['Noto Sans', 'sans-serif'],
-        'chat-text': ['Inter', 'sans-serif'],
-        'chat-headings': ['Noto Sans', 'sans-serif'],
+        'base': ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],
+        'chat-text': ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],
+        'chat-headings': ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         'chat-mono': ['JetBrains Mono', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'monospace'],
-        'editor-text': ['Inter', 'sans-serif'],
-        'editor-headings': ['Noto Sans', 'sans-serif'],
+        'editor-text': ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],
+        'editor-headings': ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         'editor-mono': ['JetBrains Mono', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'monospace'],
-        'sans': ['Figtree', 'sans-serif'],
+        'sans': ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       
       // Espacements

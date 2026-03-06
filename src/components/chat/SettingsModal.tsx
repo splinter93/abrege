@@ -164,15 +164,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
   }, []);
 
-  // Load preferences
+  // Load preferences (police chat = toujours Manrope, on n’applique plus de preset depuis ici)
   useEffect(() => {
-    const savedFont = localStorage.getItem('chat-font-preference') as ChatFontPresetId | null;
-    if (savedFont && savedFont in CHAT_FONT_PRESETS) {
-      setSelectedFont(savedFont);
-      applyChatFontPreset(savedFont);
-    } else {
-      applyChatFontPreset('manrope');
-    }
+    setSelectedFont('manrope');
+    localStorage.setItem('chat-font-preference', 'manrope');
 
     const savedPdfParser = localStorage.getItem('chat-pdf-parser-preference');
     if (savedPdfParser === 'railway' || savedPdfParser === 'mistral') {
@@ -202,12 +197,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     
   }, [currentSession, availableColorPalettes, darkenColor]);
 
-  const handleFontChange = (fontValue: string) => {
-    const presetId = fontValue as ChatFontPresetId;
-    if (!(presetId in CHAT_FONT_PRESETS)) return;
-    setSelectedFont(presetId);
-    localStorage.setItem('chat-font-preference', presetId);
-    applyChatFontPreset(presetId);
+  const handleFontChange = (_fontValue: string) => {
+    setSelectedFont('manrope');
+    localStorage.setItem('chat-font-preference', 'manrope');
+    applyChatFontPreset('manrope');
   };
 
   const handlePdfParserChange = (value: string) => {

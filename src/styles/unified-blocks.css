@@ -19,7 +19,7 @@
   --blk-pad-x: 16px;
   --blk-toolbar-h: 40px;
   --mono: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --sans: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --accent: #ff6b35;
 }
 
@@ -246,6 +246,37 @@ body.chat-theme-glass .chat-markdown .u-block {
   font-size: 14px;
   line-height: 1.8;
   color: var(--blk-fg) !important; /* Couleur code blocks - suit le thème */
+}
+
+/* ==========================================================================
+   HTML PREVIEW PANEL (chat – blocs html)
+   ========================================================================== */
+.chat-markdown .u-block--code .u-block__preview,
+.markdown-body .u-block--code .u-block__preview {
+  display: none;
+  flex-direction: column;
+  border-top: 1px solid var(--chat-surface-border, rgba(255, 255, 255, 0.08));
+  background: var(--blk-bg);
+  border-radius: 0 0 var(--blk-radius, var(--chat-surface-radius, 14px)) var(--blk-radius, var(--chat-surface-radius, 14px));
+  overflow: hidden;
+}
+.chat-markdown .u-block--code .u-block__preview.is-open,
+.markdown-body .u-block--code .u-block__preview.is-open {
+  display: flex;
+}
+.chat-markdown .u-block--code .html-preview-iframe,
+.markdown-body .u-block--code .html-preview-iframe {
+  width: 100%;
+  min-height: 320px;
+  height: 480px;
+  border: none;
+  background: #fff;
+  border-radius: 0 0 var(--blk-radius, var(--chat-surface-radius, 14px)) var(--blk-radius, var(--chat-surface-radius, 14px));
+}
+.chat-markdown .u-block--code .toolbar-btn.preview-btn.is-active,
+.markdown-body .u-block--code .toolbar-btn.preview-btn.is-active {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: var(--text-primary) !important;
 }
 
 /* ==========================================================================

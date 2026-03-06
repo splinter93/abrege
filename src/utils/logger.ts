@@ -41,8 +41,12 @@ class Logger {
 
   constructor() {
     this.isDevelopment = process.env.NODE_ENV === 'development';
-    // ✅ En prod : INFO (au lieu de ERROR uniquement) pour debug
-    this.logLevel = this.isDevelopment ? LogLevel.DEBUG : LogLevel.INFO;
+    // En dev : WARN par défaut pour éviter lenteur (centaines de logs + sérialisation). Mettre NEXT_PUBLIC_DEBUG_LOGS=1 pour DEBUG.
+    // En prod : INFO pour suivi minimal.
+    const verboseDev = typeof process.env.NEXT_PUBLIC_DEBUG_LOGS === 'string' && process.env.NEXT_PUBLIC_DEBUG_LOGS === '1';
+    this.logLevel = this.isDevelopment
+      ? (verboseDev ? LogLevel.DEBUG : LogLevel.WARN)
+      : LogLevel.INFO;
   }
 
   private formatMessage(entry: LogEntry): string {

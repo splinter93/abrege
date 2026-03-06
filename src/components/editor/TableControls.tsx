@@ -63,11 +63,10 @@ const TableControls: React.FC<TableControlsProps> = ({ editor, containerRef }) =
       }
 
       const rect = table.getBoundingClientRect();
-      const containerRect = containerRef.current.getBoundingClientRect();
 
       setPos({
-        top: rect.top - containerRect.top - 48,
-        left: rect.left - containerRect.left + rect.width / 2 - 72,
+        top: rect.top - 48,
+        left: rect.left + rect.width / 2 - 72,
       });
       setIsVisible(true);
     } catch (error) {

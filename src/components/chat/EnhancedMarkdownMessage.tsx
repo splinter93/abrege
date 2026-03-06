@@ -292,36 +292,114 @@ const TextBlock: React.FC<{ content: string; index: number }> = React.memo(({ co
       const codeBlock = button.closest('.u-block--code');
       const codeContent = codeBlock?.querySelector('pre code')?.textContent || '';
       const lang = (codeBlock as HTMLElement)?.dataset?.language || 'text';
+      const isHtml = lang === 'html' || lang === 'htm';
 
       const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
       if (newWindow) {
-        newWindow.document.write(`
+        if (isHtml) {
+          newWindow.document.write(codeContent);
+          newWindow.document.close();
+        } else {
+          newWindow.document.write(`
           <!DOCTYPE html>
           <html>
           <head>
             <title>Code - ${lang.toUpperCase()}</title>
             <style>
-              body { 
-                font-family: 'JetBrains Mono', monospace; 
-                background: #1a1a1a; 
-                color: #a0a0a0; 
-                margin: 0; 
-                padding: 20px; 
-                white-space: pre-wrap;
-                font-size: 14px;
-                line-height: 1.8;
-              }
+              body { font-family: 'JetBrains Mono', monospace; background: #1a1a1a; color: #a0a0a0; margin: 0; padding: 20px; white-space: pre-wrap; font-size: 14px; line-height: 1.8; }
             </style>
           </head>
-          <body>${codeContent}</body>
+          <body>${codeContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</body>
           </html>
         `);
-        newWindow.document.close();
+          newWindow.document.close();
+        }
       }
     };
 
     container.addEventListener('click', handleExpandClick);
     return () => container.removeEventListener('click', handleExpandClick);
+  }, [sanitizedHtml]);
+
+  // ✅ Preview HTML : listener sur document en capture pour capter le clic avant tout autre élément
+  useEffect(() => {
+    const handlePreviewClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const button = target.closest('[data-preview-btn]') as HTMLButtonElement | null;
+      if (!button) return;
+      if (!target.closest('.chat-markdown')) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation(); // un seul handler doit traiter (plusieurs TextBlock = plusieurs listeners sur document)
+
+      try {
+        // .u-block ou .u-block--code (la sanitization peut modifier les classes)
+        const codeBlock = button.closest('.u-block--code') || button.closest('.u-block');
+        if (!codeBlock) return;
+        const lang = ((codeBlock as HTMLElement)?.dataset?.language || '').toLowerCase();
+        if (lang !== 'html' && lang !== 'htm') return;
+
+        const codeEl = codeBlock.querySelector('pre code') || codeBlock.querySelector('.u-block__body code');
+        const codeContent = codeEl?.textContent || '';
+        const decoded = codeContent.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+
+        // Document HTML valide pour srcdoc (certains navigateurs exigent <html>)
+        const wrapHtml = (raw: string): string => {
+          const s = raw.trim();
+          if (/^<!DOCTYPE\s+html/i.test(s) || /^<html[\s>]/i.test(s)) return s;
+          return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${s}</body></html>`;
+        };
+
+        const setIframeContent = (iframe: HTMLIFrameElement, html: string) => {
+          try {
+            const wrapped = wrapHtml(html);
+            if (wrapped.length < 60000) {
+              iframe.srcdoc = wrapped;
+            } else {
+              const blob = new Blob([wrapped], { type: 'text/html' });
+              iframe.src = URL.createObjectURL(blob);
+            }
+          } catch {
+            iframe.srcdoc = wrapHtml(html.slice(0, 60000) + '\n\n<!-- Contenu tronqué -->');
+          }
+        };
+
+        let panel = codeBlock.querySelector('.u-block__preview') as HTMLElement | null;
+        if (panel) {
+          const wasOpen = panel.classList.toggle('is-open');
+          button.classList.toggle('is-active', wasOpen);
+          if (wasOpen) {
+            let iframe = panel.querySelector('iframe') as HTMLIFrameElement | null;
+            if (!iframe) {
+              iframe = document.createElement('iframe');
+              iframe.setAttribute('sandbox', 'allow-scripts');
+              iframe.className = 'html-preview-iframe';
+              iframe.title = 'Aperçu HTML';
+              setIframeContent(iframe, decoded);
+              panel.appendChild(iframe);
+            }
+          }
+          return;
+        }
+
+        panel = document.createElement('div');
+        panel.className = 'u-block__preview is-open';
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('sandbox', 'allow-scripts');
+        iframe.className = 'html-preview-iframe';
+        iframe.title = 'Aperçu HTML';
+        setIframeContent(iframe, decoded);
+        panel.appendChild(iframe);
+        codeBlock.appendChild(panel);
+        button.classList.add('is-active');
+      } catch (err) {
+        logger.error('Preview HTML click:', err);
+      }
+    };
+
+    document.addEventListener('click', handlePreviewClick, true);
+    return () => document.removeEventListener('click', handlePreviewClick, true);
   }, [sanitizedHtml]);
 
   return (

@@ -1478,19 +1478,18 @@ export class V2UnifiedApi {
           // 🚀 Utiliser l'ID du classeur pour l'endpoint tree
           const treeResult = await this.getClasseurTree(classeur.id);
           
-          // 🚀 Accumuler les dossiers et notes de ce classeur
-          if (treeResult.success && treeResult.tree) {
-            // 🚀 L'endpoint retourne { tree: { classeur, folders, notes } }
-          const dossiers = Array.isArray(treeResult.tree.folders) ? treeResult.tree.folders : [];
-          const notes = Array.isArray(treeResult.tree.notes) ? treeResult.tree.notes : [];
-            
+          // 🚀 Accumuler les dossiers et notes de ce classeur (utiliser les listes PLATES, pas tree)
+          // L'API retourne tree (nested pour affichage) + folders/notes (plats pour le store)
+          if (treeResult.success) {
+            const dossiers = Array.isArray(treeResult.folders) ? treeResult.folders : [];
+            const notes = Array.isArray(treeResult.notes) ? treeResult.notes : [];
+
             if (process.env.NODE_ENV === 'development') {
               logger.dev(`[V2UnifiedApi] 📁 ${dossiers.length} dossiers et ${notes.length} notes trouvés pour ${classeur.name}`);
             }
-            
-            // 🚀 Ajouter les dossiers et notes à nos collections accumulées
-          dossiers.filter(isFolder).forEach((d: Folder) => allDossiers.push(d));
-          notes.filter(isNote).forEach((n: Note) => allNotes.push(n));
+
+            dossiers.filter(isFolder).forEach((d: Folder) => allDossiers.push(d));
+            notes.filter(isNote).forEach((n: Note) => allNotes.push(n));
           }
         } catch (treeError) {
           logger.warn(`[V2UnifiedApi] ⚠️ Erreur chargement arbre classeur ${classeur.id} (${classeur.name}):`, treeError);

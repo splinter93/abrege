@@ -86,34 +86,35 @@ export function useAuth() {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
     let isInitialized = false;
-    
+
     const initializeAuth = async () => {
       try {
-        setLoading(true);
+        if (isMounted) setLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
-        
+
+        if (!isMounted) return;
         if (session?.user) {
           setUser(session.user);
         } else {
           setUser(null);
         }
-      } catch (error) {
-        setUser(null);
+      } catch {
+        if (isMounted) setUser(null);
       } finally {
-        setLoading(false);
-        isInitialized = true;
+        if (isMounted) {
+          setLoading(false);
+          isInitialized = true;
+        }
       }
     };
 
     initializeAuth();
 
-    // Écouter les changements d'authentification SEULEMENT après l'initialisation
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // Éviter les déclenchements pendant l'initialisation
-        if (!isInitialized) return;
-        
+      (event, session) => {
+        if (!isMounted || !isInitialized) return;
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user);
         } else if (event === 'SIGNED_OUT') {
@@ -123,6 +124,7 @@ export function useAuth() {
     );
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);

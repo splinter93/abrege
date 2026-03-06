@@ -234,7 +234,7 @@ ul[data-type="taskList"] .task-item-wrapper label input[type="checkbox"]:checked
   font-size: 14px !important;
   font-weight: 700 !important;
   line-height: 1 !important;
-  font-family: var(--font-chat-text, 'Inter', sans-serif) !important;
+  font-family: var(--font-chat-text, 'Manrope', -apple-system, sans-serif) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;

@@ -70,7 +70,7 @@
   }
 
   .input-textarea {
-    @apply bg-transparent border-none outline-none text-chat-text-primary text-base leading-normal resize-none py-2 max-h-[300px] min-h-6 font-chat-inter w-full h-auto overflow-y-auto transition-all duration-200 box-border relative z-10;
+    @apply bg-transparent border-none outline-none text-chat-text-primary text-base leading-normal resize-none py-2 max-h-[300px] min-h-6 font-chat-text w-full h-auto overflow-y-auto transition-all duration-200 box-border relative z-10;
   }
 
   /* ========================================

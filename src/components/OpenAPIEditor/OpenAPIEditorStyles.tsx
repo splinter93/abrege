@@ -14,7 +14,7 @@ export function OpenAPIEditorStyles() {
         min-height: 100vh;
         background: #0f0f0f;
         color: #f5f5f5;
-        font-family: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
         line-height: 1.6;
       }
 

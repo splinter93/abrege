@@ -58,7 +58,7 @@ export function useEditorUpdateFunctions(options: UseEditorUpdateFunctionsOption
   } = options;
 
   // Gestionnaire de police avec changement CSS automatique
-  const { changeFont } = useFontManager(note?.font_family || 'Figtree');
+  const { changeFont } = useFontManager(note?.font_family || 'Manrope');
   
   // Gestionnaire de mode large avec changement CSS automatique
   const { changeWideMode } = useWideModeManager(editorState.ui.fullWidth);
@@ -68,7 +68,7 @@ export function useEditorUpdateFunctions(options: UseEditorUpdateFunctionsOption
     noteId,
     userId,
     field: 'font_family',
-    currentValue: note?.font_family || 'Figtree',
+    currentValue: note?.font_family || 'Manrope',
     errorMessage: ERROR_MESSAGES.SAVE_FONT,
   });
 

@@ -39,7 +39,7 @@ function getPlaywrightStyles(hasHeaderImage: boolean): string {
       }
       
       html, body {
-        font-family: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
         font-size: 11pt;
         line-height: 1.5;
         color: #1a1a1a;
@@ -93,7 +93,7 @@ function getPlaywrightStyles(hasHeaderImage: boolean): string {
       }
       
       .markdown-body {
-        font-family: 'Figtree', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
         font-size: 11pt;
         line-height: 1.5;
         color: #1a1a1a;

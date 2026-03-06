@@ -143,6 +143,7 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 NOUVEAUX HOOKS CUSTOM (logique extraite)
   const streamingState = useStreamingState();
+  const fadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // 🎯 GESTION ERREURS STREAMING (utilise uiState)
   
@@ -154,7 +155,7 @@ const ChatFullscreenV2: React.FC = () => {
   // 🎯 HANDLERS CENTRALISÉS
   const { handleComplete, handleError, handleToolResult, handleToolExecutionComplete } = useChatHandlers({
     onComplete: async (fullContent, fullReasoning, toolCalls, toolResults, streamTimeline) => {
-      // ✅ Simple et propre : juste ajouter le message et reset le streaming
+      // 1. Ajouter le message DB dans l'historique (optimistic, avant de vider la timeline)
       const assistantMessage = {
         id: `msg-${Date.now()}-assistant`,
         role: 'assistant' as const,
@@ -171,6 +172,15 @@ const ChatFullscreenV2: React.FC = () => {
       // ✅ Clear l'erreur si succès
       uiState.setStreamError(null);
       
+      // 2. Fade-out de la timeline, puis reset → révèle le ChatMessage DB avec ses boutons
+      streamingState.setFading(true);
+      if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+      fadeTimeoutRef.current = setTimeout(() => {
+        fadeTimeoutRef.current = null;
+        streamingState.reset(); // vide streamingTimeline → StreamTimelineRenderer disparaît
+        // ChatMessage (isBeingStreamed=false désormais) s'affiche avec BubbleButtons
+      }, 150); // légèrement > durée CSS (100ms)
+      
       // ✅ Reset padding UNIQUEMENT si le message assistant dépasse (évite saccade si court)
       requestAnimationFrame(() => {
         const container = uiState.messagesContainerRef.current;
@@ -183,14 +193,10 @@ const ChatFullscreenV2: React.FC = () => {
         if (lastAssistant) {
           const messageHeight = lastAssistant.offsetHeight;
           const viewportHeight = window.innerHeight;
-          const threshold = viewportHeight * 0.6; // Si dépasse 50% du viewport
+          const threshold = viewportHeight * 0.6;
           
-          // Reset padding seulement si le message est long
           if (messageHeight > threshold) {
             container.style.paddingBottom = '';
-            logger.dev('[ChatFullscreenV2] ✅ Message long → padding reset');
-          } else {
-            logger.dev('[ChatFullscreenV2] ✅ Message court → padding gardé');
           }
         }
       });
@@ -275,6 +281,10 @@ const ChatFullscreenV2: React.FC = () => {
       // ✅ SOLUTION SIMPLE: Juste reset la timeline
       // Le message assistant est déjà dans infiniteMessages (ajouté par handleComplete)
       // Donc pas besoin de reload !
+      if (fadeTimeoutRef.current) {
+        clearTimeout(fadeTimeoutRef.current);
+        fadeTimeoutRef.current = null;
+      }
       streamingState.reset();
       
       // ✅ Clear l'erreur quand un nouveau message est envoyé

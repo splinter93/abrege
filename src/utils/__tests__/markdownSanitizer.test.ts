@@ -31,10 +31,19 @@ describe('Sanitization côté serveur', () => {
       expect(sanitizeMarkdownContent(input)).toBe(input);
     });
 
-    it('devrait échapper les caractères spéciaux dans l\'ordre correct', () => {
+    it('ne devrait pas échapper les caractères isolés sans balise (->, x < y)', () => {
       const input = 'Text with & < > " \' symbols';
-      const expected = 'Text with &amp; &lt; &gt; &quot; &#039; symbols';
-      expect(sanitizeMarkdownContent(input)).toBe(expected);
+      expect(sanitizeMarkdownContent(input)).toBe(input);
+    });
+
+    it('devrait échapper quand une vraie balise HTML est présente', () => {
+      const input = 'M+1 : Lancement public -> Focus <div>inject</div>';
+      const out = sanitizeMarkdownContent(input);
+      expect(out).toContain('&lt;div&gt;');
+    });
+
+    it('ne devrait pas échapper le texte avec -> ou < sans balise', () => {
+      expect(sanitizeMarkdownContent('M+1 : Lancement public -> Focus acquisition')).toBe('M+1 : Lancement public -> Focus acquisition');
     });
 
     it('devrait gérer les chaînes vides', () => {

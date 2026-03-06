@@ -324,7 +324,7 @@ export const defaultMermaidConfig: MermaidConfig = {
     darkTextColor: '#1f2020',
   },
   securityLevel: 'loose',
-  fontFamily: 'Figtree, Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', /* ✅ Cohérent avec --font-chat-text */
+  fontFamily: 'Manrope, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   fontSize: 18, /* ✅ Augmenté pour lisibilité */
   
   // Configuration Flowchart - Config par défaut Mermaid (minimal override)

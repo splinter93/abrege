@@ -164,7 +164,7 @@
 .dashboard-column-title,
 .quick-action-label,
 .drop-zone-title {
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -250,7 +250,7 @@
 }
 
 .dashboard-search-bar .search-bar-field::placeholder {
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   font-size: 14px;
 }
 

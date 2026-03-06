@@ -44,7 +44,7 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: #ffffff;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   order: 1;
 }
 
@@ -80,7 +80,7 @@
 .account-profile-label {
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.6);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -89,7 +89,7 @@
 .account-profile-value {
   font-size: 1rem;
   color: #ffffff;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   font-weight: 600;
 }
 
@@ -104,7 +104,7 @@
   color: #22c55e;
   font-size: 0.9rem;
   font-weight: 500;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .account-plan-icon {
@@ -200,7 +200,7 @@
   font-weight: 600;
   color: #ffffff;
   margin: 0;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -314,7 +314,7 @@
   color: #ffffff;
   font-size: 0.8rem;
   margin-right: 0.5rem;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .account-scopes-tags {
@@ -336,7 +336,7 @@
 .account-api-key-creation-date {
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.6);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
   white-space: nowrap;
   flex-shrink: 0;
   margin-top: 0.9rem;
@@ -373,13 +373,13 @@
   margin: 0 0 0.5rem 0;
   color: #ffffff;
   font-size: 1.2rem;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .account-empty-state p {
   margin: 0;
   line-height: 1.5;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Manrope', sans-serif;
 }
 
 @keyframes spin {
@@ -476,7 +476,7 @@
   color: #ffffff;
   font-weight: 500;
   font-size: 0.9rem;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .account-field-input {

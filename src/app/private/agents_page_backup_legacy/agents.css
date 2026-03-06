@@ -140,7 +140,7 @@
   font-weight: 600;
   color: #ffffff;
   margin: 0;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .btn-icon {
@@ -305,7 +305,7 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: 0.25rem;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .mcp-dropdown-url {
@@ -356,7 +356,7 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: 0.25rem;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .mcp-linked-desc {
@@ -478,7 +478,7 @@
   font-size: 1.7rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   padding: 0;
 }
 
@@ -800,7 +800,7 @@
   font-weight: 500;
   letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.75);
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   text-transform: uppercase;
 }
 
@@ -1160,7 +1160,7 @@
   font-size: 0.82rem;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.75);
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .agent-params-field__value {
@@ -1346,7 +1346,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .changes-indicator {
@@ -1388,7 +1388,7 @@
   cursor: pointer;
   transition: all 0.25s ease;
   border: none;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .btn-primary {
@@ -1532,7 +1532,7 @@
   margin: 0 0 1.1rem 0;
   padding-bottom: 0.85rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1573,7 +1573,7 @@
   letter-spacing: 0.01em;
   color: rgba(255, 255, 255, 0.75);
   margin-bottom: 0.45rem;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .field-value {
@@ -1836,7 +1836,7 @@
   font-weight: 600;
   color: #ffffff;
   margin: 0 0 0.5rem 0;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .empty-state p {
@@ -1947,7 +1947,7 @@
   font-weight: 600;
   color: #ffffff;
   margin: 0;
-  font-family: 'Figtree', 'Geist', -apple-system, sans-serif;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .modal-close {

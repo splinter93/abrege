@@ -102,7 +102,18 @@ export function createMarkdownIt() {
       `;
     }
     
-    // Code blocks normaux
+    // Code blocks normaux (bouton Preview uniquement pour HTML, insensible à la casse)
+    const langLower = lang.toLowerCase();
+    const isHtml = langLower === 'html' || langLower === 'htm';
+    const previewBtn = isHtml
+      ? `
+            <button class="toolbar-btn preview-btn" data-preview-btn="true" title="Aperçu du rendu HTML">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: block;">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>`
+      : '';
     return `
       <div class="u-block u-block--code" data-language="${lang}">
         <div class="u-block__toolbar">
@@ -121,6 +132,7 @@ export function createMarkdownIt() {
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
               </svg>
             </button>
+            ${previewBtn}
           </div>
         </div>
         <div class="u-block__body">

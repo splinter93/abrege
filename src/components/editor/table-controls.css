@@ -1,6 +1,6 @@
 .table-controls {
-  position: absolute;
-  z-index: 25;
+  position: fixed;
+  z-index: 100;
   display: inline-flex;
   flex-direction: column;
   gap: 6px;

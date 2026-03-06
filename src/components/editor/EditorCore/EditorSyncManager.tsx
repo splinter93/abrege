@@ -10,6 +10,7 @@ import { TIMEOUTS } from '@/utils/editorConstants';
 import { simpleLogger, LogCategory } from '@/utils/logger';
 import { getEditorMarkdown } from '@/utils/editorHelpers';
 import { preprocessEmbeds } from '@/utils/preprocessEmbeds';
+import { prepareMarkdownForEditor } from '@/utils/markdownSanitizer.client';
 
 export interface EditorSyncManagerProps {
   /** Instance de l'éditeur Tiptap */
@@ -144,9 +145,9 @@ export const EditorSyncManager: React.FC<EditorSyncManagerProps> = ({
     setTimeout(() => {
       if (!editor) return;
       
-      // ✅ Preprocesser {{embed:xyz}} → HTML pour que Tiptap puisse créer les nodes
-      // Le serializer addStorage() reconvertira en {{embed:xyz}} à la sauvegarde
-      const processedContent = preprocessEmbeds(storeContent || '');
+      // Dé-échapper les entités HTML (ex: -&gt; → ->) pour l’affichage, puis preprocess embeds
+      const forEditor = prepareMarkdownForEditor(storeContent || '');
+      const processedContent = preprocessEmbeds(forEditor);
 
       // 🔄 Si le contenu est vide mais Tiptap garde un paragraphe vide, le nettoyer
       if (!processedContent.trim()) {
