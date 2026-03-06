@@ -365,10 +365,11 @@
 }
 
 @media (max-width: 768px) {
-  /* Zéro marge/padding à gauche sur mobile */
+  /* Zéro marge/padding/gap sur mobile : header burger collé au contenu */
   .page-wrapper.page-is-mobile .page-content-area {
     margin-left: 0 !important;
-    padding: 0 !important; /* géré par page-mobile-sidebar-header + contenu lui-même */
+    padding: 0 !important;
+    gap: 0 !important;
   }
 
   /* Pas de push du contenu : sidebar en overlay drawer */

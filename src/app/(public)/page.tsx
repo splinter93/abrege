@@ -15,7 +15,6 @@ import {
   Home,
   Plus,
   Upload,
-  Youtube,
   MessageSquare,
   ChevronLeft,
   ChevronRight,
@@ -393,15 +392,10 @@ function AuthenticatedHomeContent({
         </header>
 
         {/* 2. Quick Actions */}
-        <section className="flex items-center gap-3 overflow-x-auto no-scrollbar -mx-2 px-2">
+        <section className="flex items-center justify-center gap-3 overflow-x-auto no-scrollbar -mx-2 px-2">
           <ActionButton icon={Plus} label="Nouvelle note" onClick={handleCreateNote} />
-          <ActionButton icon={Upload} label="Importer" onClick={handleImport} />
-          <ActionButton
-            icon={Youtube}
-            label="Résumé YouTube"
-            onClick={() => router.push("/youtube-summary")}
-          />
           <ActionButton icon={MessageSquare} label="Ouvrir le chat" onClick={() => router.push("/chat")} />
+          <ActionButton icon={Upload} label="Importer" onClick={handleImport} />
         </section>
 
         {/* 3. Notes récentes */}
