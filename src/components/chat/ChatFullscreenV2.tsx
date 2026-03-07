@@ -132,11 +132,11 @@ const ChatFullscreenV2: React.FC = () => {
   });
 
   // 🎯 SCROLL AUTOMATION (centralisé dans useChatScroll)
-  const { messagesEndRef, scrollToBottom } = useChatScroll({
-    autoScroll: true, // ✅ Scroll auto pour messages user uniquement
+  const { messagesEndRef, scrollToFollowStream } = useChatScroll({
+    autoScroll: true,
     messages: infiniteMessages,
-    watchLayoutChanges: isDesktop, // ✅ Détecter changements de layout (canva)
-    layoutTrigger: isCanvaOpen // ✅ Trigger quand canva s'ouvre/ferme
+    watchLayoutChanges: isDesktop,
+    layoutTrigger: isCanvaOpen
   });
 
   // 🎯 EFFECTS (extrait dans useChatFullscreenEffects)
@@ -181,25 +181,6 @@ const ChatFullscreenV2: React.FC = () => {
         // ChatMessage (isBeingStreamed=false désormais) s'affiche avec BubbleButtons
       }, 150); // légèrement > durée CSS (100ms)
       
-      // ✅ Reset padding UNIQUEMENT si le message assistant dépasse (évite saccade si court)
-      requestAnimationFrame(() => {
-        const container = uiState.messagesContainerRef.current;
-        if (!container) return;
-        
-        // Trouver le dernier message assistant dans le DOM
-        const assistantMessages = container.querySelectorAll('.chatgpt-message-assistant');
-        const lastAssistant = assistantMessages[assistantMessages.length - 1] as HTMLElement;
-        
-        if (lastAssistant) {
-          const messageHeight = lastAssistant.offsetHeight;
-          const viewportHeight = window.innerHeight;
-          const threshold = viewportHeight * 0.6;
-          
-          if (messageHeight > threshold) {
-            container.style.paddingBottom = '';
-          }
-        }
-      });
     },
     onError: (error) => {
       // ✅ Stocker l'erreur structurée pour affichage
@@ -225,7 +206,10 @@ const ChatFullscreenV2: React.FC = () => {
   
   const { sendMessage } = useChatResponse({
     useStreaming: true,
-    onStreamChunk: updateContent,
+    onStreamChunk: (chunk) => {
+      updateContent(chunk);
+      scrollToFollowStream();
+    },
     onStreamStart: startStreaming,
     onStreamEnd: endStreaming,
     onModelInfo: (info) => {
