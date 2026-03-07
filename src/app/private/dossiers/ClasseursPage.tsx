@@ -294,7 +294,7 @@ function ClasseursTabs({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto no-scrollbar">
+      <div className="flex min-w-0 shrink items-center gap-2 overflow-x-auto no-scrollbar">
         <SortableContext items={tabs.map((t) => t.id)} strategy={horizontalListSortingStrategy}>
           <div className="flex min-w-0 gap-1">
             {tabs.map((tab) => (
