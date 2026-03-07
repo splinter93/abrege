@@ -12,6 +12,7 @@ import {
   FolderOpen,
   Bot,
   Command,
+  SquareTerminal,
   Users,
   Settings,
   BookOpen,
@@ -163,7 +164,7 @@ export default function Sidebar() {
             onNavigate={onNavigate}
           />
           <SidebarItem
-            icon={Command}
+            icon={SquareTerminal}
             label="Prompts"
             href="/private/prompts"
             active={pathname?.startsWith("/private/prompts") ?? false}

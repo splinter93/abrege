@@ -93,7 +93,7 @@ export class DossierErrorBoundary extends Component<Props, State> {
       return (
         <div className="dossier-error-boundary">
           <div className="error-container">
-            <div className="error-icon">🚨</div>
+            <div className="error-icon" aria-hidden>—</div>
             <h1 className="error-title">Erreur inattendue</h1>
             <p className="error-message">
               Une erreur s&apos;est produite lors du chargement de la page des dossiers.
@@ -123,23 +123,26 @@ export class DossierErrorBoundary extends Component<Props, State> {
             )}
             
             <div className="error-actions">
-              <button 
-                className="error-btn primary" 
+              <button
+                type="button"
+                className="error-btn primary"
                 onClick={this.handleRetry}
               >
-                🔄 Réessayer
+                Réessayer
               </button>
-              <button 
-                className="error-btn secondary" 
+              <button
+                type="button"
+                className="error-btn secondary"
                 onClick={this.handleReportError}
               >
-                📊 Signaler l&apos;erreur
+                Signaler l&apos;erreur
               </button>
-              <button 
-                className="error-btn warning" 
+              <button
+                type="button"
+                className="error-btn warning"
                 onClick={() => window.location.reload()}
               >
-                💥 Recharger la page
+                Recharger la page
               </button>
             </div>
           </div>

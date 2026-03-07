@@ -69,11 +69,12 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                 <pre>{this.state.error.stack}</pre>
               </details>
             )}
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
               className="error-reload-btn"
             >
-              🔄 Rafraîchir la page
+              Rafraîchir la page
             </button>
           </div>
         </div>

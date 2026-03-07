@@ -104,7 +104,9 @@ function AgentsV2Content() {
   if (authLoading || !user?.id) {
     return (
       <PageWithSidebarLayout>
-        <SimpleLoadingState message="Chargement" />
+        <div className="page-content-inner page-content-inner-agents w-full max-w-none mx-0 bg-[var(--color-bg-primary)] min-h-full">
+          <SimpleLoadingState message="Chargement" />
+        </div>
       </PageWithSidebarLayout>
     );
   }
@@ -112,7 +114,9 @@ function AgentsV2Content() {
   if (loading) {
     return (
       <PageWithSidebarLayout>
-        <SimpleLoadingState message="Chargement des agents" />
+        <div className="page-content-inner page-content-inner-agents w-full max-w-none mx-0 bg-[var(--color-bg-primary)] min-h-full">
+          <SimpleLoadingState message="Chargement des agents" />
+        </div>
       </PageWithSidebarLayout>
     );
   }
@@ -120,9 +124,11 @@ function AgentsV2Content() {
   if (error) {
     return (
       <PageWithSidebarLayout>
-        <div className="min-h-[40vh] flex items-center justify-center px-4">
-          <div className="text-center">
-            <p className="text-zinc-400">Erreur: {error}</p>
+        <div className="page-content-inner page-content-inner-agents w-full max-w-none mx-0 bg-[var(--color-bg-primary)] min-h-full">
+          <div className="min-h-[40vh] flex items-center justify-center px-4">
+            <div className="text-center">
+              <p className="text-zinc-400">Erreur: {error}</p>
+            </div>
           </div>
         </div>
       </PageWithSidebarLayout>

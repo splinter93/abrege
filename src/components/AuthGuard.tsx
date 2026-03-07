@@ -36,13 +36,17 @@ export default function AuthGuard({
     }
   }, [user, loading, router, redirectTo]);
 
-  // Pas de loader ici, laissé à la page
   if (loading || isRedirecting) {
     if (fallback) {
       return <>{fallback}</>;
     }
-    
-    return null;
+    return (
+      <div className="auth-guard-fallback">
+        <p className="auth-guard-fallback-message">
+          {isRedirecting ? 'Redirection…' : 'Chargement…'}
+        </p>
+      </div>
+    );
   }
 
   // Si l'utilisateur n'est pas authentifié, ne rien afficher (redirection en cours)

@@ -161,4 +161,24 @@
   .page-loading .page-loading-spinner {
     border-color: rgba(156, 163, 175, 0.1);
   }
+}
+
+/* ==========================================================================
+   AUTH GUARD FALLBACK - Redirection / Chargement (aligné ErrorBoundary)
+   ========================================================================== */
+.auth-guard-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--color-bg-primary, #0a0a0a);
+  font-family: var(--font-chat-text, 'Manrope', -apple-system, sans-serif);
+}
+
+.auth-guard-fallback-message {
+  color: rgb(161 161 170);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
 } 
