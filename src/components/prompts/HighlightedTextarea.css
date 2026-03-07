@@ -105,3 +105,9 @@
 .highlighted-placeholder--arg {
   color: #f97316;               /* orange-500 */
 }
+
+/* @slug (mentions) → violet */
+.highlighted-placeholder--mention {
+  color: #a78bfa;               /* violet-400 */
+  font-weight: 500;
+}

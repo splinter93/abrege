@@ -64,6 +64,8 @@ export interface EditorPrompt {
   
   created_at: string;
   updated_at: string;
+  /** Notes mentionnées inline dans le template (métadonnées, non persistées en DB) */
+  mentions?: import('./noteMention').NoteMention[];
 }
 
 /**
@@ -81,6 +83,8 @@ export interface EditorPromptCreateRequest {
   insertion_mode?: InsertionMode | null;
   use_structured_output?: boolean;
   output_schema?: OutputSchema | null;
+  /** Notes mentionnées inline dans le template (légères, metadata uniquement) */
+  mentions?: import('./noteMention').NoteMention[];
 }
 
 /**
