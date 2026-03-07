@@ -7,14 +7,14 @@ import {
   Feather,
   ChevronsUpDown,
   LayoutDashboard,
-  FolderKanban,
-  Files,
   MessageSquare,
+  Book,
+  FolderOpen,
   Bot,
-  TerminalSquare,
+  Command,
   Users,
-  BookOpen,
   Settings,
+  BookOpen,
   Trash2,
   User,
 } from "lucide-react";
@@ -47,7 +47,7 @@ function SidebarItem({ icon: Icon, label, href, active = false, badge, onNavigat
           size={16}
         />
         <span
-          className={`truncate text-sm tracking-tight transition-colors duration-300 ${
+          className={`truncate text-sm font-medium tracking-tight transition-colors duration-300 ${
             active ? "font-semibold text-white" : "text-zinc-400 group-hover:text-zinc-200"
           }`}
         >
@@ -77,20 +77,6 @@ function SidebarItem({ icon: Icon, label, href, active = false, badge, onNavigat
     >
       {content}
     </Link>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Section separator
-// ---------------------------------------------------------------------------
-
-function SidebarSectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="pt-6 pb-2 px-3">
-      <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-600">
-        {children}
-      </p>
-    </div>
   );
 }
 
@@ -133,10 +119,10 @@ export default function Sidebar() {
         </div>
       </header>
 
-      {/* Navigation principale (scrollable) */}
-      <nav className="sidebar-nav-scroll flex-1 overflow-y-auto px-2 pb-4">
-        {/* Groupe 1 - Général */}
-        <div className="space-y-0.5">
+      {/* Navigation principale — 3 groupes séparés par bordures subtiles */}
+      <nav className="sidebar-nav-scroll flex-1 overflow-y-auto px-3 py-4 flex flex-col">
+        {/* Groupe 1 : Le Quotidien (actions principales) */}
+        <div className="flex flex-col gap-0.5 mb-4">
           <SidebarItem
             icon={LayoutDashboard}
             label="Dashboard"
@@ -145,33 +131,19 @@ export default function Sidebar() {
             onNavigate={onNavigate}
           />
           <SidebarItem
-            icon={FolderKanban}
+            icon={Book}
             label="Notebooks"
             href="/private/dossiers"
             active={!!isClasseurs}
             onNavigate={onNavigate}
           />
           <SidebarItem
-            icon={Files}
+            icon={FolderOpen}
             label="Mes Fichiers"
             href="/private/files"
             active={pathname?.startsWith("/private/files") ?? false}
             onNavigate={onNavigate}
           />
-          <SidebarItem
-            icon={Trash2}
-            label="Corbeille"
-            href="/private/trash"
-            active={pathname?.startsWith("/private/trash") ?? false}
-            onNavigate={onNavigate}
-          />
-        </div>
-
-        {/* Séparateur Workspace */}
-        <SidebarSectionTitle>Workspace</SidebarSectionTitle>
-
-        {/* Groupe 2 - Workspace */}
-        <div className="space-y-0.5">
           <SidebarItem
             icon={MessageSquare}
             label="Chat"
@@ -179,20 +151,28 @@ export default function Sidebar() {
             active={pathname?.startsWith("/chat") ?? false}
             onNavigate={onNavigate}
           />
+        </div>
+
+        {/* Groupe 2 : L'Intelligence (configuration IA) */}
+        <div className="flex flex-col gap-0.5 mb-4 pt-4 border-t border-white/[0.04]">
           <SidebarItem
             icon={Bot}
-            label="My Agents"
+            label="Agents"
             href="/private/agents2"
             active={pathname?.startsWith("/private/agents2") ?? false}
             onNavigate={onNavigate}
           />
           <SidebarItem
-            icon={TerminalSquare}
-            label="My Prompts"
+            icon={Command}
+            label="Prompts"
             href="/private/prompts"
             active={pathname?.startsWith("/private/prompts") ?? false}
             onNavigate={onNavigate}
           />
+        </div>
+
+        {/* Groupe 3 : Système & Administration */}
+        <div className="flex flex-col gap-0.5 pt-4 border-t border-white/[0.04]">
           <SidebarItem
             icon={Users}
             label="TeamMates"
@@ -212,6 +192,13 @@ export default function Sidebar() {
             label="Documentation"
             href="/private/documentation"
             active={pathname?.startsWith("/private/documentation") ?? false}
+            onNavigate={onNavigate}
+          />
+          <SidebarItem
+            icon={Trash2}
+            label="Corbeille"
+            href="/private/trash"
+            active={pathname?.startsWith("/private/trash") ?? false}
             onNavigate={onNavigate}
           />
         </div>
