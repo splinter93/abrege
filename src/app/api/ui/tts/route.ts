@@ -42,9 +42,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const text = rawText.length > MAX_TEXT_LENGTH
-      ? rawText.slice(0, MAX_TEXT_LENGTH - 3) + '...'
-      : rawText;
+    const truncated =
+      rawText.length > MAX_TEXT_LENGTH - 20
+        ? rawText.slice(0, MAX_TEXT_LENGTH - 20) + '...'
+        : rawText;
+    const text = `<fast>${truncated}</fast>`;
 
     const voiceId: XAITTSVoiceId =
       typeof body.voice_id === 'string' && isValidTTSVoice(body.voice_id)

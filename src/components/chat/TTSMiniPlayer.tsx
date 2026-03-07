@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, Square } from 'lucide-react';
+import { Volume2, Square, Play, Pause } from 'lucide-react';
 import { useTextToSpeechContextOptional } from '@/contexts/TextToSpeechContext';
 import './TTSMiniPlayer.css';
 
@@ -29,8 +29,8 @@ export default function TTSMiniPlayer() {
           <div className="tts-mini-player__icon">
             <Volume2 size={18} />
           </div>
-          <span className="tts-mini-player__label">Lecture en cours</span>
-          <div className="tts-mini-player__wave">
+          <span className="tts-mini-player__label">{tts.isPaused ? 'En pause' : 'Lecture en cours'}</span>
+          <div className={`tts-mini-player__wave ${tts.isPaused ? 'tts-mini-player__wave--paused' : ''}`}>
             <span />
             <span />
             <span />
@@ -39,7 +39,16 @@ export default function TTSMiniPlayer() {
           </div>
           <button
             type="button"
-            className="tts-mini-player__stop"
+            className="tts-mini-player__btn tts-mini-player__btn--play-pause"
+            onClick={tts.isPaused ? tts.resume : tts.pause}
+            title={tts.isPaused ? 'Reprendre' : 'Pause'}
+            aria-label={tts.isPaused ? 'Reprendre la lecture' : 'Mettre en pause'}
+          >
+            {tts.isPaused ? <Play size={16} /> : <Pause size={16} />}
+          </button>
+          <button
+            type="button"
+            className="tts-mini-player__btn tts-mini-player__btn--stop"
             onClick={tts.stop}
             title="Arrêter la lecture"
             aria-label="Arrêter la lecture"

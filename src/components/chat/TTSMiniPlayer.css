@@ -1,20 +1,29 @@
 /* ========================================
    TTS MINI PLAYER - Lecteur audio au-dessus du chat input
+   Même design que .chatgpt-input-area (bordure, radius, largeur)
    ======================================== */
 
 .tts-mini-player {
   flex-shrink: 0;
   overflow: hidden;
-  background: var(--chat-bg-secondary, rgba(255, 255, 255, 0.04));
-  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) 12px calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
 }
 
 .tts-mini-player__inner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
-  min-height: 44px;
+  gap: 12px;
+  width: 100%;
+  max-width: min(calc(0.5 * (var(--chat-container-width) - 2 * var(--chat-padding-horizontal))), 50%);
+  padding: 10px 16px;
+  min-height: 48px;
+  background: var(--chat-gradient-block);
+  border: var(--chat-surface-border);
+  border-radius: var(--chat-surface-radius);
+  box-sizing: border-box;
 }
 
 .tts-mini-player__icon {
@@ -53,27 +62,40 @@
 .tts-mini-player__wave span:nth-child(4) { animation-delay: 0.3s; }
 .tts-mini-player__wave span:nth-child(5) { animation-delay: 0.4s; }
 
+.tts-mini-player__wave--paused span {
+  animation-play-state: paused;
+}
+
 @keyframes tts-wave {
   0%, 100% { transform: scaleY(0.4); }
   50% { transform: scaleY(1); }
 }
 
-.tts-mini-player__stop {
-  margin-left: auto;
+.tts-mini-player__btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: none;
-  background: transparent;
+  background: var(--chat-overlay-hover, rgba(255, 255, 255, 0.06));
   color: var(--chat-text-secondary);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
 }
 
-.tts-mini-player__stop:hover {
-  background: var(--chat-overlay-hover, rgba(255, 255, 255, 0.08));
-  color: var(--chat-text-primary);
+.tts-mini-player__btn--play-pause {
+  margin-left: auto;
+}
+
+.tts-mini-player__btn--play-pause:hover {
+  background: var(--chat-accent-primary);
+  color: white;
+}
+
+.tts-mini-player__btn--stop:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
 }

@@ -8,7 +8,10 @@ import { normalizeTTSVoice } from '@/constants/ttsVoices';
 interface TextToSpeechContextValue {
   speak: (text: string, options?: { voiceId?: string; messageId?: string }) => Promise<void>;
   stop: () => void;
+  pause: () => void;
+  resume: () => void;
   isPlayingMessageId: string | null;
+  isPaused: boolean;
 }
 
 const TextToSpeechContext = createContext<TextToSpeechContextValue | null>(null);
@@ -21,6 +24,7 @@ interface TextToSpeechProviderProps {
 
 export function TextToSpeechProvider({ children, defaultVoiceId }: TextToSpeechProviderProps) {
   const [isPlayingMessageId, setIsPlayingMessageId] = useState<string | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const stop = useCallback(() => {
@@ -30,6 +34,21 @@ export function TextToSpeechProvider({ children, defaultVoiceId }: TextToSpeechP
       currentAudioRef.current = null;
     }
     setIsPlayingMessageId(null);
+    setIsPaused(false);
+  }, []);
+
+  const pause = useCallback(() => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      setIsPaused(true);
+    }
+  }, []);
+
+  const resume = useCallback(() => {
+    if (currentAudioRef.current) {
+      currentAudioRef.current.play().catch(() => {});
+      setIsPaused(false);
+    }
   }, []);
 
   const speak = useCallback(
@@ -43,6 +62,7 @@ export function TextToSpeechProvider({ children, defaultVoiceId }: TextToSpeechP
 
       try {
         setIsPlayingMessageId(messageId);
+        setIsPaused(false);
 
         let blob: Blob | null = getCachedBlob(trimmed, voiceId);
 
@@ -91,7 +111,7 @@ export function TextToSpeechProvider({ children, defaultVoiceId }: TextToSpeechP
   );
 
   return (
-    <TextToSpeechContext.Provider value={{ speak, stop, isPlayingMessageId }}>
+    <TextToSpeechContext.Provider value={{ speak, stop, pause, resume, isPlayingMessageId, isPaused }}>
       {children}
     </TextToSpeechContext.Provider>
   );
