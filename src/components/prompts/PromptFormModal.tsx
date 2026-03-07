@@ -300,7 +300,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               <div className="mt-1.5 flex items-center justify-between gap-4">
                 <p className="text-xs text-zinc-500">
                   Utilisez{' '}
-                  <code className="px-1.5 py-0.5 rounded bg-zinc-800/80 text-zinc-400 font-mono text-[11px]">
+                  <code className="px-1.5 py-0.5 rounded bg-zinc-800/80 text-orange-500 font-mono text-[11px]">
                     {'{selection}'}
                   </code>{' '}
                   pour insérer le texte sélectionné
@@ -347,30 +347,30 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               </div>
 
               {/* Arguments détectés */}
-              <div className="mt-4 p-4 rounded-xl border border-zinc-800/40 bg-zinc-900/20 flex flex-col gap-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
+              <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(63,63,70,0.4)', background: 'rgba(24,24,27,0.2)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Arguments détectés
                   </span>
-                  <span className="min-w-[24px] h-6 px-1.5 rounded-md bg-zinc-800/60 text-zinc-400 text-xs font-medium flex items-center justify-center">
+                  <span style={{ minWidth: '18px', height: '18px', padding: '0 4px', borderRadius: '4px', background: 'rgba(39,39,42,0.6)', color: '#a1a1aa', fontSize: '10px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                     {placeholders.length}
                   </span>
                 </div>
                 {placeholders.length > 0 ? (
-                  <ul className="flex flex-wrap gap-2">
+                  <ul style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', margin: 0, padding: 0, listStyle: 'none' }}>
                     {placeholders.map((p) => (
                       <li key={p.name}>
-                        <code className="px-2 py-0.5 rounded-md bg-zinc-800/60 font-mono text-[11px] text-zinc-400">
+                        <code style={{ padding: '1px 6px', borderRadius: '4px', background: 'rgba(39,39,42,0.6)', fontFamily: 'monospace', fontSize: '11px', color: '#f97316' }}>
                           {`{${p.name}}`}
                         </code>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-xs text-zinc-500">Aucun argument personnalisé.</p>
+                  <p style={{ fontSize: '11px', color: '#71717a', margin: 0 }}>Aucun argument personnalisé.</p>
                 )}
                 {reservedPlaceholders.some((p) => p.name === 'selection') && (
-                  <p className="text-[11px] text-zinc-500 leading-snug">
+                  <p style={{ fontSize: '10px', color: '#71717a', margin: 0, lineHeight: 1.4 }}>
                     {`{selection}`} est réservé : disponible uniquement pour les prompts de l&apos;éditeur.
                   </p>
                 )}

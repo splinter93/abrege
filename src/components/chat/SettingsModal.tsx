@@ -415,7 +415,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                     <button
                       key={item.id}
                       className={`settings-menu-item ${activeSection === item.id ? 'active' : ''}`}
-                      onClick={() => setActiveSection(item.id)}
+                      onClick={() => setActiveSection(item.id as SettingsSection)}
                     >
                       <span className="settings-menu-icon">{item.icon}</span>
                       <span className="settings-menu-label">{item.label}</span>
