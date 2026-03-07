@@ -136,10 +136,10 @@ function ClasseursHeader({
         <button
           type="button"
           onClick={onNouveauClick}
-          className="flex h-9 items-center gap-1.5 rounded-md bg-white px-4 text-sm font-medium text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200"
+          className="flex h-9 items-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200"
         >
-          <Plus className="h-4 w-4" />
           <span>Nouveau</span>
+          <ChevronDown className="h-4 w-4" />
         </button>
         {nouveauOpen && (
           <>

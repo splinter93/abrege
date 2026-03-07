@@ -26,6 +26,7 @@ import {
   Command,
   ArrowRight,
 } from "lucide-react";
+import { openImageModal } from "@/components/chat/ImageModal";
 import "./home.css";
 import "./dashboard.css";
 
@@ -535,16 +536,32 @@ function AuthenticatedHomeContent({
                 </div>
               )}
             {!loadingFiles &&
-              files.map((file, index) => (
-                <FileCard
-                  key={file.id || file.filename + index}
-                  name={file.filename}
-                  type={file.type}
-                  date={formatFileDate(file.created_at)}
-                  thumbnail={file.preview_url || file.url || null}
-                  onClick={() => router.push("/private/files")}
-                />
-              ))}
+              files.map((file, index) => {
+                const imageUrl = file.preview_url || file.url || null;
+                const isImage =
+                  imageUrl &&
+                  (file.type?.startsWith("image/") ||
+                    isImageUrl(imageUrl) ||
+                    /^photo-/i.test(file.filename || ""));
+                return (
+                  <FileCard
+                    key={file.id || file.filename + index}
+                    name={file.filename}
+                    type={file.type}
+                    date={formatFileDate(file.created_at)}
+                    thumbnail={imageUrl}
+                    onClick={
+                      isImage
+                        ? () =>
+                            openImageModal({
+                              src: imageUrl!,
+                              fileName: file.filename || "Image",
+                            })
+                        : () => router.push("/private/files")
+                    }
+                  />
+                );
+              })}
           </div>
         </section>
 

@@ -703,7 +703,10 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                 <Filter className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden sm:inline">Filter</span>
               </button>
-              <div className="hidden sm:flex items-center gap-1 rounded-xl p-0.5 shrink-0" style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}>
+              <div
+                className="flex shrink-0 items-center gap-1 rounded-xl p-0.5"
+                style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
+              >
                 <button
                   type="button"
                   onClick={() => setViewMode('grid')}
@@ -725,7 +728,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                 type="button"
                 onClick={handleUploadFile}
                 disabled={loading}
-                className="flex items-center gap-1.5 h-10 px-4 bg-white text-black hover:bg-neutral-200 rounded-xl text-xs font-semibold transition-all shadow-sm disabled:opacity-50"
+                className="flex h-9 items-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200 disabled:opacity-50 disabled:pointer-events-none"
               >
                 <Upload className="w-3.5 h-3.5" />
                 <span>Upload</span>

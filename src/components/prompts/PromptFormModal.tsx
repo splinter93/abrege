@@ -229,7 +229,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                  className="flex h-9 items-center justify-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200 disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {saving ? 'Enregistrement…' : (prompt ? 'Enregistrer' : 'Créer')}
                 </button>

@@ -147,11 +147,10 @@ function AgentsV2Content() {
                 <button
                   type="button"
                   onClick={handleNewAgent}
-                  className="flex items-center gap-1.5 h-8 px-3 bg-white text-black hover:bg-neutral-200 rounded-md text-xs font-semibold transition-all shadow-sm"
+                  className="flex h-9 items-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Nouvel agent</span>
-                  <span className="sm:hidden">Nouveau</span>
+                  <span>New Agent</span>
                 </button>
               </div>
             </div>
@@ -203,7 +202,7 @@ function AgentsV2Content() {
               <button
                 type="button"
                 onClick={handleNewAgent}
-                className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors"
+                className="flex h-9 items-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200"
               >
                 Créer un agent
               </button>

@@ -165,10 +165,10 @@ function PromptsPageContent() {
                 <button
                   type="button"
                   onClick={handleCreate}
-                  className="flex items-center gap-1.5 h-8 px-3 bg-white text-black hover:bg-neutral-200 rounded-md text-xs font-semibold transition-all shadow-sm"
+                  className="flex h-9 items-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Nouveau prompt</span>
+                  <span>New Prompt</span>
                 </button>
               </div>
             </div>
@@ -221,9 +221,9 @@ function PromptsPageContent() {
               <button
                 type="button"
                 onClick={handleCreate}
-                className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors"
+                className="flex h-9 items-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200"
               >
-                Créer un prompt
+                New Prompt
               </button>
             </div>
           ) : effectiveViewMode === 'grid' ? (
