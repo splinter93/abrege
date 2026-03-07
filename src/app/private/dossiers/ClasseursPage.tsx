@@ -209,20 +209,38 @@ function SortableTab({
     display: "inline-block",
   };
 
+  // Détecte si le drag entrant est un item natif (note/dossier) vs un drag dnd-kit (réordonnancement)
+  const isNativeDrag = (e: React.DragEvent) =>
+    e.dataTransfer.types.includes("application/json") ||
+    e.dataTransfer.types.includes("itemId");
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      onDragOver={(e) => { e.preventDefault(); onDragOver?.(e, tab); }}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => { e.preventDefault(); onDrop?.(e, tab); }}
+      onDragOver={(e) => {
+        if (!isNativeDrag(e)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        onDragOver?.(e, tab);
+      }}
+      onDragLeave={(e) => {
+        if (!isNativeDrag(e)) return;
+        onDragLeave?.(e);
+      }}
+      onDrop={(e) => {
+        if (!isNativeDrag(e)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        onDrop?.(e, tab);
+      }}
       className={`relative flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-sm font-medium transition-colors duration-200 rounded-md cursor-pointer ${
         isActive
           ? "bg-white/[0.08] text-white"
           : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]"
-      } ${isDragOver ? "bg-zinc-800/40" : ""}`}
+      } ${isDragOver ? "border border-orange-500/40 bg-orange-500/8" : ""}`}
     >
       <button
         type="button"
@@ -388,8 +406,8 @@ function ItemCard({
     <div
       className={`group relative flex min-h-[160px] cursor-pointer flex-col justify-between rounded-xl p-5 shadow-sm transition-all duration-300 ${
         isDropTarget
-          ? "border-orange-500/50 bg-orange-500/5 border"
-          : "classeurs-block classeurs-card hover:shadow-lg hover:shadow-black/20"
+          ? "border-orange-500/40 bg-orange-500/5 border"
+          : "classeurs-block classeurs-card hover:shadow-md hover:shadow-black/10"
       }`}
       role="button"
       tabIndex={0}
@@ -415,7 +433,7 @@ function ItemCard({
       onDrop={isFolder && onDropOnFolder ? (e) => { e.preventDefault(); e.stopPropagation(); onDropOnFolder(e, item.id); } : undefined}
     >
       <div className="flex items-start justify-between">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl border shadow-sm transition-transform duration-300 group-hover:scale-105 ${iconBoxClasses}`}>
+        <div className={`flex h-11 w-11 items-center justify-center rounded-xl border shadow-sm transition-transform duration-300 group-hover:scale-[1.02] ${iconBoxClasses}`}>
           <Icon className={`h-5 w-5 ${iconClasses}`} strokeWidth={1.5} />
         </div>
         
@@ -474,7 +492,7 @@ function ItemListRow({
   return (
     <div
       className={`group flex items-center justify-between rounded-md border px-3 py-2 transition-all duration-200 cursor-pointer ${
-        isDropTarget ? "border-orange-500/40 bg-orange-500/5" : "border-transparent hover:border-zinc-800/60"
+        isDropTarget ? "border-orange-500/35 bg-orange-500/5" : "border-transparent hover:border-zinc-800/50"
       }`}
       role="button"
       tabIndex={0}

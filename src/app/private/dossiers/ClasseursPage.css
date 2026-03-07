@@ -26,7 +26,7 @@
 }
 
 .classeurs-card.classeurs-block:hover {
-  background: var(--sidebar-item-hover, rgba(255, 255, 255, 0.07));
+  background: rgba(255, 255, 255, 0.04);
   border-color: var(--color-border-block);
 }
 
