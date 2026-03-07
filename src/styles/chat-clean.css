@@ -1924,8 +1924,8 @@ body.chat-theme-glass .chatgpt-messages > div {
   gap: 6px;
 }
 
-/* Animation uniquement opacity (pas de scale) pour garder les points stables et toujours en mouvement */
-@keyframes loading-dots-opacity {
+/* Animation uniquement opacity (pas de scale) — nom unique pour éviter conflits en prod */
+@keyframes chat-loading-dots-opacity {
   0%, 80%, 100% {
     opacity: 0.35;
   }
@@ -1934,22 +1934,32 @@ body.chat-theme-glass .chatgpt-messages > div {
   }
 }
 
-.chatgpt-message-loading-dot {
-  width: 8px;
-  height: 8px;
-  min-width: 8px;
-  min-height: 8px;
+/* Sélecteur spécifique + !important pour garantir rendu correct en prod (override éventuels conflits) */
+.chatgpt-message-assistant .chatgpt-message-loading .chatgpt-message-loading-dot {
+  width: 8px !important;
+  height: 8px !important;
+  min-width: 8px !important;
+  min-height: 8px !important;
+  flex-shrink: 0;
   background: var(--chat-text-secondary);
   border-radius: 50%;
-  animation: loading-dots-opacity 1.4s infinite ease-in-out;
+  animation: chat-loading-dots-opacity 1.4s infinite ease-in-out;
 }
 
-.chatgpt-message-loading-dot:nth-child(1) {
+.chatgpt-message-assistant .chatgpt-message-loading .chatgpt-message-loading-dot:nth-child(1) {
   animation-delay: -0.32s;
 }
 
-.chatgpt-message-loading-dot:nth-child(2) {
+.chatgpt-message-assistant .chatgpt-message-loading .chatgpt-message-loading-dot:nth-child(2) {
   animation-delay: -0.16s;
+}
+
+/* Fallback : si prefers-reduced-motion, points statiques (opacity moyenne) */
+@media (prefers-reduced-motion: reduce) {
+  .chatgpt-message-assistant .chatgpt-message-loading .chatgpt-message-loading-dot {
+    animation: none;
+    opacity: 0.6;
+  }
 }
 
 .chatgpt-message-actions {
