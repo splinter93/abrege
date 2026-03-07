@@ -15,7 +15,7 @@
 "use client";
 
 import React, { useEffect, useRef } from 'react';
-import { Search, MessageSquare, FileText, FolderOpen, Bot } from 'lucide-react';
+import { Search, MessageSquare, FileText, Book, FolderOpen, Bot, SquareTerminal } from 'lucide-react';
 import { useCommandPalette } from '@/hooks/useCommandPalette';
 import type { CommandPaletteOption, CommandPaletteShortcut } from '@/hooks/useCommandPalette';
 import './CommandPalette.css';
@@ -219,8 +219,9 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
  */
 function ShortcutButton({ shortcut }: { shortcut: CommandPaletteShortcut }) {
   const Icon = shortcut.icon === 'chat' ? MessageSquare
+    : shortcut.icon === 'book' ? Book
     : shortcut.icon === 'folder' ? FolderOpen
-    : shortcut.icon === 'prompt' ? FileText
+    : shortcut.icon === 'prompt' ? SquareTerminal
     : Bot;
   const iconColorClass = `command-palette-shortcut-icon-${shortcut.icon}`;
   return (

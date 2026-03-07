@@ -316,15 +316,21 @@ export function useCommandPalette(
   const shortcuts: CommandPaletteShortcut[] = useMemo(() => [
     {
       id: 'shortcut-chat',
-      title: 'Ouvrir le chat',
+      title: 'Chat',
       icon: 'chat',
       action: () => { router.push('/chat'); runAndClose(); }
     },
     {
       id: 'shortcut-classeurs',
       title: 'Notebooks',
-      icon: 'folder',
+      icon: 'book',
       action: () => { router.push('/private/dossiers'); runAndClose(); }
+    },
+    {
+      id: 'shortcut-files',
+      title: 'Files',
+      icon: 'folder',
+      action: () => { router.push('/private/files'); runAndClose(); }
     },
     {
       id: 'shortcut-agents',

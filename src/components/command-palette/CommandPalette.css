@@ -107,8 +107,12 @@
   color: #22c55e; /* vert */
 }
 
+.command-palette-shortcut-icon-book {
+  color: #3b82f6; /* bleu — Notebooks */
+}
+
 .command-palette-shortcut-icon-folder {
-  color: #3b82f6; /* bleu */
+  color: #0ea5e9; /* sky — Files */
 }
 
 .command-palette-shortcut-icon-bot {
@@ -208,7 +212,7 @@
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   transition: background-color 0.15s ease;
   gap: 12px;
@@ -216,15 +220,18 @@
 
 .command-palette-item:hover {
   background: var(--color-bg-content);
+  border-radius: 12px;
 }
 
 .command-palette-item:focus-visible {
   outline: none;
   box-shadow: inset 0 0 0 1px var(--chat-accent-primary, #f59e0b);
+  border-radius: 12px;
 }
 
 .command-palette-item-selected {
   background: var(--color-bg-content);
+  border-radius: 12px;
 }
 
 .command-palette-item-icon {
