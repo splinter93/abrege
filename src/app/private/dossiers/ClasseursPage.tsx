@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   List,
   MoreHorizontal,
+  MoreVertical,
   Plus,
   BookMarked,
   ChevronDown,
@@ -105,8 +106,6 @@ interface BreadcrumbSegment {
 
 function ClasseursHeader({
   statsLabel,
-  searchQuery,
-  onSearch,
   onNouveauClick,
   nouveauOpen,
   onNouveauClose,
@@ -115,8 +114,6 @@ function ClasseursHeader({
   onCreateNote,
 }: {
   statsLabel: string;
-  searchQuery: string;
-  onSearch: (q: string) => void;
   onNouveauClick: () => void;
   nouveauOpen: boolean;
   onNouveauClose: () => void;
@@ -125,88 +122,59 @@ function ClasseursHeader({
   onCreateNote: () => void;
 }) {
   return (
-    <header className="flex w-full flex-col gap-4 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
-      <div className="flex flex-col gap-3 mb-4 sm:mb-6 mt-0">
-        {/* Ligne 1 : Titre + Badge + Bouton */}
-        <div className="flex items-center justify-between w-full gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-neutral-100 shrink-0">My Notebooks</h1>
-            <span className="hidden sm:flex items-center h-6 px-2 rounded-full bg-white/[0.03] border border-white/[0.08] text-[11px] font-medium text-neutral-500 shrink-0">
-              {statsLabel}
-            </span>
-          </div>
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              onClick={onNouveauClick}
-              className="flex items-center gap-1.5 h-8 px-3 bg-white text-black hover:bg-neutral-200 rounded-md text-xs font-semibold transition-all shadow-sm"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Nouveau</span>
-              <span className="sm:hidden">Nouveau</span>
-              <ChevronDown className="h-3 w-3 opacity-50" />
-            </button>
-            {nouveauOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  aria-hidden
-                  onClick={onNouveauClose}
-                />
-                <div className="absolute right-0 top-full z-20 mt-2 min-w-[200px] rounded-xl border border-zinc-800/60 bg-zinc-950 p-1.5 shadow-2xl ring-1 ring-white/5">
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800/50 hover:text-white"
-                    onClick={() => {
-                      onCreateClasseur();
-                      onNouveauClose();
-                    }}
-                  >
-                    <BookMarked className="h-4 w-4" />
-                    Nouveau classeur
-                  </button>
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800/50 hover:text-white"
-                    onClick={() => {
-                      onCreateFolder();
-                      onNouveauClose();
-                    }}
-                  >
-                    <Folder className="h-4 w-4" />
-                    Nouveau dossier
-                  </button>
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800/50 hover:text-white"
-                    onClick={() => {
-                      onCreateNote();
-                      onNouveauClose();
-                    }}
-                  >
-                    <FileText className="h-4 w-4" />
-                    Nouvelle note
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Ligne 2 : Barre de recherche (pleine largeur mobile, max-w-md desktop) */}
-        <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
-          <input
-            type="search"
-            placeholder="Rechercher…"
-            value={searchQuery}
-            onChange={(e) => onSearch(e.target.value)}
-            className="w-full h-10 rounded-xl pl-9 pr-4 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none focus:border-[var(--color-border-block)] transition-colors"
-            style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
-          />
-        </div>
+    <div className="mb-10 mt-5 flex w-full items-start justify-between">
+      <div className="flex flex-col items-start">
+        <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-none tracking-tighter text-transparent">
+          Notebooks
+        </h1>
+        <p className="mt-2 text-sm font-medium tracking-wide text-neutral-500">
+          Gérez vos méthodologies, notes et documents de réflexion.
+        </p>
       </div>
-    </header>
+      <div className="relative shrink-0">
+        <button
+          type="button"
+          onClick={onNouveauClick}
+          className="flex h-8 items-center gap-1.5 rounded-md bg-white px-3 text-xs font-semibold text-black shadow-sm transition-all hover:bg-neutral-200"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Nouveau</span>
+          <span className="sm:hidden">Nouveau</span>
+          <ChevronDown className="h-3 w-3 opacity-50" />
+        </button>
+        {nouveauOpen && (
+          <>
+            <div className="fixed inset-0 z-10" aria-hidden onClick={onNouveauClose} />
+            <div className="absolute right-0 top-full z-20 mt-2 min-w-[200px] rounded-xl border border-zinc-800/60 bg-zinc-950 p-1.5 shadow-2xl ring-1 ring-white/5">
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800/50 hover:text-white"
+                onClick={() => { onCreateClasseur(); onNouveauClose(); }}
+              >
+                <BookMarked className="h-4 w-4" />
+                Nouveau classeur
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800/50 hover:text-white"
+                onClick={() => { onCreateFolder(); onNouveauClose(); }}
+              >
+                <Folder className="h-4 w-4" />
+                Nouveau dossier
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800/50 hover:text-white"
+                onClick={() => { onCreateNote(); onNouveauClose(); }}
+              >
+                <FileText className="h-4 w-4" />
+                Nouvelle note
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -331,9 +299,9 @@ function ClasseursTabs({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex w-full items-center gap-2 overflow-x-auto no-scrollbar border-b border-zinc-800/60 px-4 sm:px-6 lg:px-8">
+      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto no-scrollbar">
         <SortableContext items={tabs.map((t) => t.id)} strategy={horizontalListSortingStrategy}>
-          <div className="flex min-w-0 flex-1 gap-8">
+          <div className="flex min-w-0 gap-8">
             {tabs.map((tab) => (
               <SortableTab
                 key={tab.id}
@@ -366,7 +334,7 @@ function ClasseursTabs({
 // ---------------------------------------------------------------------------
 
 function getFolderIconClasses(color?: ClasseurItem["iconColor"]) {
-  const base = "transition-transform duration-200 group-hover:scale-105 ";
+  const base = "";
   switch (color) {
     case "orange":
       return base + "text-orange-500/80 fill-orange-500/10";
@@ -378,6 +346,21 @@ function getFolderIconClasses(color?: ClasseurItem["iconColor"]) {
       return base + "text-violet-500/80 fill-violet-500/10";
     default:
       return base + "text-zinc-400 fill-zinc-500/10";
+  }
+}
+
+function getFolderIconBoxClasses(color?: ClasseurItem["iconColor"]) {
+  switch (color) {
+    case "orange":
+      return "bg-orange-500/10 border-orange-500/20";
+    case "blue":
+      return "bg-blue-500/10 border-blue-500/20";
+    case "emerald":
+      return "bg-emerald-500/10 border-emerald-500/20";
+    case "violet":
+      return "bg-violet-500/10 border-violet-500/20";
+    default:
+      return "bg-white/[0.05] border-white/[0.1]";
   }
 }
 
@@ -406,13 +389,19 @@ function ItemCard({
   const iconClasses =
     item.type === "folder"
       ? getFolderIconClasses(item.iconColor)
-      : "text-zinc-400 fill-zinc-500/10 transition-transform duration-200 group-hover:scale-105";
+      : "text-zinc-400 fill-zinc-500/10";
+  const iconBoxClasses =
+    item.type === "folder"
+      ? getFolderIconBoxClasses(item.iconColor)
+      : "bg-white/[0.05] border-white/[0.1]";
   const isFolder = item.type === "folder";
 
   return (
     <div
-      className={`group relative flex aspect-square flex-col items-center justify-end rounded-xl border bg-zinc-900/10 p-4 transition-all duration-200 cursor-pointer ${
-        isDropTarget ? "border-zinc-600 bg-zinc-800/30 ring-1 ring-zinc-500" : "border-zinc-800/40 hover:border-zinc-700/60 hover:bg-zinc-900/20"
+      className={`group relative flex aspect-square cursor-pointer flex-col justify-between rounded-xl border p-4 shadow-sm transition-all duration-200 ${
+        isDropTarget
+          ? "border-zinc-500 bg-zinc-800/40 ring-1 ring-zinc-500"
+          : "border-white/[0.06] bg-[#141414] hover:bg-[#181818] hover:border-white/[0.12] hover:shadow-lg hover:shadow-black/20"
       }`}
       role="button"
       tabIndex={0}
@@ -437,23 +426,33 @@ function ItemCard({
       onDragLeave={isFolder ? () => onFolderDragLeave?.() : undefined}
       onDrop={isFolder && onDropOnFolder ? (e) => { e.preventDefault(); e.stopPropagation(); onDropOnFolder(e, item.id); } : undefined}
     >
-      <button
-        type="button"
-        className="absolute right-2 top-2 rounded p-1 opacity-0 transition-opacity duration-200 hover:bg-zinc-800/50 group-hover:opacity-100"
-        onClick={(e) => {
-          e.stopPropagation();
-          onOptions?.(e);
-        }}
-        aria-label="Options"
-      >
-        <MoreHorizontal className="h-4 w-4 text-zinc-400" />
-      </button>
-      <div className="absolute inset-0 flex flex-col items-center justify-center pb-12">
-        <Icon className={`h-12 w-12 ${iconClasses}`} strokeWidth={1.5} />
+      <div className="absolute right-3 top-3 z-10 opacity-0 transition-opacity group-hover:opacity-100">
+        <button
+          type="button"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-white/[0.1] hover:text-white"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOptions?.(e);
+          }}
+          aria-label="Options"
+        >
+          <MoreVertical className="h-4 w-4" />
+        </button>
       </div>
-      <div className="w-full min-w-0 text-center">
-        <p className="truncate text-sm font-medium text-zinc-100">{item.name}</p>
-        <p className="truncate text-xs text-zinc-500">{item.subtitle}</p>
+
+      <div className="flex flex-1 items-center justify-center mb-2">
+        <div className={`flex h-14 w-14 items-center justify-center rounded-2xl border shadow-sm transition-transform duration-300 group-hover:scale-105 ${iconBoxClasses}`}>
+          <Icon className={`h-7 w-7 ${iconClasses}`} strokeWidth={1.5} />
+        </div>
+      </div>
+
+      <div className="flex w-full flex-col text-center">
+        <h3 className="truncate text-sm font-semibold text-neutral-200 transition-colors group-hover:text-white">
+          {item.name}
+        </h3>
+        <p className="mt-0.5 text-[11px] font-medium text-neutral-500">
+          {item.subtitle}
+        </p>
       </div>
     </div>
   );
@@ -592,57 +591,29 @@ function ClasseursContent({
   );
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex min-w-0 items-center justify-between gap-4">
-        <nav className="flex min-w-0 flex-wrap items-center gap-1 text-xs uppercase tracking-wider text-zinc-500 font-medium" aria-label="Fil d'Ariane">
-          {contentBreadcrumb.length === 0 ? (
-            <span className="text-zinc-400">My Notebooks</span>
-          ) : (
-            contentBreadcrumb.map((seg, i) => (
-              <span key={i} className="flex items-center gap-1">
-                {i > 0 && <span className="text-zinc-700 mx-1">/</span>}
-                {seg.onClick ? (
-                  <button
-                    type="button"
-                    onClick={seg.onClick}
-                    className={`transition-colors hover:text-zinc-300 focus:outline-none ${i === 0 ? "uppercase" : ""}`}
-                  >
-                    {seg.label}
-                  </button>
-                ) : (
-                  <span className={`text-zinc-400 ${i === 0 ? "uppercase" : ""}`}>
-                    {seg.label}
-                  </span>
-                )}
-              </span>
-            ))
-          )}
-        </nav>
-        {!isMobileContent && (
-        <div className="flex rounded-lg border border-zinc-800/60 p-1 bg-zinc-900/30">
-          <button
-            type="button"
-            onClick={() => onViewModeChange("grid")}
-            className={`rounded-md p-1.5 transition-all ${
-              viewMode === "grid" ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
-            }`}
-            aria-pressed={viewMode === "grid"}
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onViewModeChange("list")}
-            className={`rounded-md p-1.5 transition-all ${
-              viewMode === "list" ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
-            }`}
-            aria-pressed={viewMode === "list"}
-          >
-            <List className="h-4 w-4" />
-          </button>
-        </div>
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden py-6">
+      <nav className="flex min-w-0 flex-wrap items-center gap-1 text-xs font-medium uppercase tracking-wider text-zinc-500" aria-label="Fil d'Ariane">
+        {contentBreadcrumb.length === 0 ? (
+          <span className="text-zinc-400">Notebooks</span>
+        ) : (
+          contentBreadcrumb.map((seg, i) => (
+            <span key={i} className="flex items-center gap-1">
+              {i > 0 && <span className="mx-1 text-zinc-700">/</span>}
+              {seg.onClick ? (
+                <button
+                  type="button"
+                  onClick={seg.onClick}
+                  className={`transition-colors hover:text-zinc-300 focus:outline-none ${i === 0 ? "uppercase" : ""}`}
+                >
+                  {seg.label}
+                </button>
+              ) : (
+                <span className={`text-zinc-400 ${i === 0 ? "uppercase" : ""}`}>{seg.label}</span>
+              )}
+            </span>
+          ))
         )}
-      </div>
+      </nav>
 
       {viewMode === "grid" ? (
         <div
@@ -1068,37 +1039,70 @@ export default function ClasseursPage() {
   return (
     <div className="classeurs-page-root flex h-full min-h-full w-full min-w-0">
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
-        <ClasseursHeader
-          statsLabel={statsLabel}
-          searchQuery={searchQuery}
-          onSearch={setSearchQuery}
-          onNouveauClick={() => setNouveauOpen((o) => !o)}
-          nouveauOpen={nouveauOpen}
-          onNouveauClose={() => setNouveauOpen(false)}
-          onCreateClasseur={handleCreateClasseurClick}
-          onCreateFolder={handleCreateFolderClick}
-          onCreateNote={handleCreateNoteClick}
-        />
-        <div className="flex w-full min-w-0 flex-1 flex-col overflow-hidden">
-          <ClasseursTabs
-            tabs={tabs}
-            activeId={activeClasseurId ?? ""}
-            onSelect={handleSelectTab}
-            onContextMenu={handleTabContextMenu}
-            onCreateTab={handleCreateClasseurClick}
-            onTabDragOver={handleTabDragOver}
-            onTabDragLeave={handleTabDragLeave}
-            onTabDrop={handleTabDrop}
-            dragOverTabId={dragOverTabId}
-            handleUpdateClasseurPositions={handleUpdateClasseurPositions}
-            classeursForReorder={classeurs}
+        <div className="mx-auto flex min-h-0 w-full max-w-[1200px] flex-1 flex-col px-4 sm:px-6 lg:px-8">
+          <ClasseursHeader
+            statsLabel={statsLabel}
+            onNouveauClick={() => setNouveauOpen((o) => !o)}
+            nouveauOpen={nouveauOpen}
+            onNouveauClose={() => setNouveauOpen(false)}
+            onCreateClasseur={handleCreateClasseurClick}
+            onCreateFolder={handleCreateFolderClick}
+            onCreateNote={handleCreateNoteClick}
           />
-          <div className="flex-1 overflow-y-auto no-scrollbar">
+
+          {/* Toolbar : onglets + recherche + vues sur une ligne */}
+          <div className="mb-6 flex w-full items-center gap-4 border-b border-white/[0.08] pb-4">
+            <ClasseursTabs
+              tabs={tabs}
+              activeId={activeClasseurId ?? ""}
+              onSelect={handleSelectTab}
+              onContextMenu={handleTabContextMenu}
+              onCreateTab={handleCreateClasseurClick}
+              onTabDragOver={handleTabDragOver}
+              onTabDragLeave={handleTabDragLeave}
+              onTabDrop={handleTabDrop}
+              dragOverTabId={dragOverTabId}
+              handleUpdateClasseurPositions={handleUpdateClasseurPositions}
+              classeursForReorder={classeurs}
+            />
+            <div className="relative hidden min-w-0 flex-1 max-w-[220px] sm:block">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500 pointer-events-none" />
+              <input
+                type="search"
+                placeholder="Rechercher…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 w-full rounded-lg border border-white/[0.08] bg-[#141414] pl-9 pr-3 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none transition-colors focus:border-white/[0.15]"
+              />
+            </div>
+            {!isMobile && (
+              <div className="flex shrink-0 rounded-lg border border-white/[0.08] bg-[#141414] p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  className={`rounded-md p-1.5 transition-all ${effectiveViewMode === "grid" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+                  aria-pressed={effectiveViewMode === "grid"}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className={`rounded-md p-1.5 transition-all ${effectiveViewMode === "list" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+                  aria-pressed={effectiveViewMode === "list"}
+                >
+                  <List className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
             {!activeClasseur && tabs.length === 0 && (
-              <div className="mx-4 sm:mx-6 lg:mx-8 mt-12 rounded-2xl border border-zinc-800/60 bg-zinc-900/20 px-6 py-20 text-center backdrop-blur-sm">
-                <BookMarked className="mx-auto h-12 w-12 text-zinc-700 mb-4" />
-                <p className="text-zinc-400 font-medium">Aucun classeur détecté.</p>
-                <p className="text-zinc-500 text-sm mt-1">Utilisez le menu <strong className="text-zinc-300">Nouveau</strong> pour commencer à organiser vos notes.</p>
+              <div className="mt-12 rounded-2xl border border-white/[0.08] bg-[#141414] px-6 py-20 text-center">
+                <BookMarked className="mx-auto mb-4 h-12 w-12 text-zinc-700" />
+                <p className="font-medium text-zinc-400">Aucun classeur détecté.</p>
+                <p className="mt-1 text-sm text-zinc-500">Utilisez le menu <strong className="text-zinc-300">Nouveau</strong> pour commencer à organiser vos notes.</p>
               </div>
             )}
             {activeClasseur && (
