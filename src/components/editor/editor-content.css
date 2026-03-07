@@ -7,6 +7,7 @@
 .editor-content-wrapper {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   margin: 0 auto;
   position: relative;
   overflow: visible; /* ✅ Permet drag handles en dehors */
@@ -16,6 +17,7 @@
   position: relative; /* ✅ Nécessaire pour les drag handles */
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   min-height: 100vh;
   background: none;
   border: none;
@@ -36,6 +38,7 @@
 .editor-content .ProseMirror {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   min-height: 100vh;
   background: none;
   border: none;
@@ -56,6 +59,7 @@
 .tiptap-editor-container {
   position: relative;
   width: 100%;
+  min-width: 0;
   overflow: visible; /* ✅ Permet drag handles à -75px */
 }
 

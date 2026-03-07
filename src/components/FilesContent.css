@@ -485,39 +485,37 @@
 
 .file-context-menu {
   position: fixed;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: var(--color-bg-block);
+  border: 1px solid var(--color-border-block);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   z-index: 10000;
   min-width: 160px;
-  padding: 4px 0;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 4px;
 }
 
-.context-menu-item {
-  padding: 8px 16px;
+.file-context-menu .context-menu-item {
+  padding: 8px 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
-  color: var(--text-primary);
-  transition: background-color 0.2s ease;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  transition: background-color 0.15s ease;
   border: none;
   background: none;
   width: 100%;
   text-align: left;
+  border-radius: 6px;
 }
 
-.context-menu-item:hover {
-  background-color: var(--hover-bg);
+.file-context-menu .context-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-.context-menu-item:active {
-  background-color: var(--accent-primary);
-  color: white;
+.file-context-menu .context-menu-item:active {
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ==========================================================================

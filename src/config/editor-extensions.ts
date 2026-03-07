@@ -121,8 +121,9 @@ export function createEditorExtensions(
         },
       }),
       
-      // ✅ Tables réactivées
+      // Tables : resizable désactivé (les colonnes se partagent l'espace via CSS table-layout: fixed)
       ScriviaTableKit.configure({
+        table: { resizable: false, cellMinWidth: 100 },
       }),
       
       // ✅ Images
@@ -234,6 +235,7 @@ export function createEditorExtensions(
         },
       }),
       ScriviaTableKit.configure({
+        table: { resizable: false, cellMinWidth: 100 },
       }),
       UnifiedCodeBlockExtension.configure({ 
         lowlight: lowlightInstance,

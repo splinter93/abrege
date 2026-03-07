@@ -38,24 +38,22 @@
 }
 
 .toc-container.expanded {
-  width: 270px; /* Plus compact: 300px → 270px */
-  background: var(--color-bg-secondary); /* ✅ Même couleur que la sidebar éditeur (#121416) */
-  border: 1.4px solid var(--border-subtle);
-  border-radius: 16px;
-  color: var(--editor-text-color);
+  width: 270px;
+  background-color: var(--color-bg-block);
+  border: 1px solid var(--color-border-block);
+  border-radius: 10px;
+  color: var(--color-text-primary);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0;
-  padding: 10px 14px; /* Plus compact: 14px 18px → 10px 14px */
-  padding-right: 10px; /* Plus compact: 12px → 10px */
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  padding: 10px 14px;
+  padding-right: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   max-height: 56vh;
   transform: none;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  min-width: 270px; /* Sync avec width */
+  min-width: 270px;
   margin-right: 8px;
 }
 

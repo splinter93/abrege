@@ -236,12 +236,15 @@ div.markdown-body ul[data-type="taskList"],
 /* Wrapper scrollable généré par Tiptap (.tableWrapper) */
 .ProseMirror .tableWrapper,
 .markdown-body .tableWrapper {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: visible;
-  margin: var(--md-table-margin) calc(-1 * var(--editor-padding-horizontal-desktop, 24px));
-  padding: 0 var(--editor-padding-horizontal-desktop, 24px);
+  /* Pas de margin négatif : on garde le tableau dans le flux normal du conteneur */
+  margin: var(--md-table-margin) 0;
+  padding: 0;
   border-radius: var(--blk-radius);
-  /* Scrollbar fine et discrète */
+  box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.12) transparent;
 }
@@ -269,18 +272,30 @@ div.markdown-body ul[data-type="taskList"],
 
 .ProseMirror table,
 .markdown-body table {
-  /* Taille naturelle → scroll horizontal plutôt que compression */
-  width: max-content;
-  min-width: 100%;
+  /* Le tableau prend toujours toute la largeur du wrapper (= largeur de l'éditeur).
+     table-layout: fixed + width: 100% : les colonnes se partagent l'espace dispo
+     proportionnellement aux min-width des col (colgroup de TableView), sans déborder.
+     Si l'utilisateur resize une colonne au-delà du total dispo, TableView pose
+     width: Xpx en inline → scroll horizontal s'active normalement. */
+  width: 100% !important;
+  min-width: 100% !important;
+  table-layout: fixed;
   border-collapse: separate; /* separate + border-spacing:0 = bordure nette comme les blocs code */
   border-spacing: 0;
-  /* margin géré par .tableWrapper */
   margin: 0;
-  background: var(--blk-bg); /* ✅ Surface variable (couleur + bordure) */
+  background: var(--blk-bg);
   border: var(--chat-surface-border);
   border-radius: var(--blk-radius);
   overflow: hidden;
-  filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Même brightness que code blocks */
+  filter: var(--code-brightness-filter, brightness(1.18));
+}
+
+/* Neutraliser les largeurs fixes px injectées par TableView dans les col du colgroup.
+   Avec table-layout: fixed, le browser distribue l'espace équitablement. */
+.ProseMirror .tableWrapper colgroup col,
+.markdown-body .tableWrapper colgroup col {
+  width: auto !important;
+  min-width: 0 !important;
 }
 
 /* Coins arrondis sur les cellules pour que le fond ne dépasse pas de la bordure */
@@ -355,6 +370,47 @@ div.markdown-body ul[data-type="taskList"],
 .ProseMirror tbody tr:hover,
 .markdown-body tbody tr:hover {
   background: rgba(255, 255, 255, 0.03);
+}
+
+/* =============================================================================
+   RESIZE DES COLONNES (plugin columnResizing de Tiptap)
+   ============================================================================= */
+
+/* Resize de colonnes désactivé (resizable: false) */
+
+/* =============================================================================
+   RESPONSIVE TABLEAUX
+   ============================================================================= */
+
+@media (max-width: 768px) {
+  .ProseMirror .tableWrapper,
+  .markdown-body .tableWrapper {
+    margin: var(--md-table-margin) -12px;
+    padding: 0 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ProseMirror th,
+  .markdown-body th {
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+  }
+
+  .ProseMirror td,
+  .markdown-body td {
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .ProseMirror th,
+  .markdown-body th,
+  .ProseMirror td,
+  .markdown-body td {
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+  }
 }
 
 /* =============================================================================

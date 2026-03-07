@@ -1,14 +1,14 @@
-/* Menu contextuel - Design simple et propre */
+/* Menu contextuel éditeur — design system (bloc / sidebar) */
 
 .context-menu {
-  background: var(--color-bg-secondary) !important;
-  border: 1.2px solid var(--border-subtle) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06) !important;
-  padding: 6px !important;
+  background-color: var(--color-bg-block) !important;
+  border: 1px solid var(--color-border-block) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  padding: 4px !important;
   min-width: 140px !important;
   z-index: 1000 !important;
-  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-family: 'Manrope', -apple-system, sans-serif !important;
   animation: contextMenuFadeIn 0.15s ease-out !important;
   overflow: visible !important;
 }
@@ -25,29 +25,29 @@
   align-items: center !important;
   justify-content: flex-start !important;
   gap: 10px !important;
-  padding: 10px 12px !important;
-  margin: 0 !important;
+  padding: 8px 12px !important;
+  margin: 0 4px !important;
   border: none !important;
   background: transparent !important;
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   cursor: pointer !important;
-  transition: background 150ms ease !important;
-  width: 100% !important;
+  transition: background 0.15s ease !important;
+  width: calc(100% - 8px) !important;
   font-size: 13px !important;
   font-weight: 500 !important;
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: var(--color-text-primary) !important;
   box-sizing: border-box !important;
   text-align: left !important;
   white-space: nowrap !important;
 }
 
 .context-menu-item:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
   transform: none !important;
 }
 
 .context-menu-item:active:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12) !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
   transform: none !important;
 }
 
@@ -63,7 +63,7 @@
   width: 16px !important;
   height: 16px !important;
   flex-shrink: 0 !important;
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: var(--color-text-primary) !important;
   margin: 0 !important;
   padding: 0 !important;
 }

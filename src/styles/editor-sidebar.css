@@ -24,20 +24,17 @@
 
 .editor-sidebar {
   position: fixed;
-  top: var(--editor-header-height, 44px); /* ✅ Dynamique: s'adapte au header */
+  top: var(--editor-header-height, 44px);
   left: 0;
-  height: calc(100vh - var(--editor-header-height, 44px)); /* ✅ Descend jusqu'en bas */
-  width: 280px; /* ✅ Élargie: 250px → 280px pour lisibilité */
-  /* ✅ Harmonisé avec background éditeur (#0e1012) - Légèrement plus clair pour distinction subtile */
-  background: var(--color-bg-secondary); /* #121416 - très proche du background principal */
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  height: calc(100vh - var(--editor-header-height, 44px));
+  width: 280px;
+  background-color: var(--color-bg-block);
+  border: 1px solid var(--color-border-block);
   border-left: none;
   border-top-right-radius: 16px;
   border-bottom-right-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transform: translateX(-280px); /* ✅ Caché par défaut (largeur sidebar) */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transform: translateX(-280px);
   transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
   z-index: 100;
   display: flex;
@@ -58,7 +55,7 @@
 
 .editor-sidebar-tabs {
   display: flex;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--color-border-block);
   padding: 12px 14px;
   gap: 8px;
 }
@@ -73,7 +70,7 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: 8px;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -82,14 +79,14 @@
 }
 
 .editor-sidebar-tab:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-primary);
+  background-color: rgba(255, 255, 255, 0.04);
 }
 
 .editor-sidebar-tab.active {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-border-block);
 }
 
 .editor-sidebar-tab svg {
@@ -186,7 +183,7 @@
 .editor-sidebar-file-item {
   padding: 10px 12px;
   cursor: pointer;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--color-border-block);
   display: flex;
   align-items: center;
   gap: 12px;

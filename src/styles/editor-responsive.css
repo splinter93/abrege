@@ -39,6 +39,7 @@
 .editor-content-inner {
   width: 100%;
   max-width: var(--editor-content-width); /* 800px par défaut, 1000px en wide mode */
+  min-width: 0; /* ✅ Permet au contenu (ex. tableaux) de respecter max-width au lieu de pousser */
   margin: 0 auto;
   padding: 0 var(--editor-padding-horizontal-desktop); /* Padding ici pour titre ET contenu */
   box-sizing: border-box;

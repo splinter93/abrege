@@ -53,25 +53,18 @@
   font-family: var(--fm-font);
   font-size: var(--fm-font-size);
   line-height: var(--fm-line-height);
-  color: var(--fm-text-primary);
-  
-  background: var(--color-bg-secondary); /* ✅ Même couleur que la sidebar éditeur (#121416) */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1.2px solid var(--border-subtle);
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  
-  /* Animation d'entrée */
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-block);
+  border: 1px solid var(--color-border-block);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   animation: floating-menu-enter var(--fm-duration) var(--fm-ease);
-  transition: 
-    box-shadow var(--fm-duration) var(--fm-ease),
-    transform var(--fm-duration) var(--fm-ease);
+  transition: box-shadow var(--fm-duration) var(--fm-ease), transform var(--fm-duration) var(--fm-ease);
 }
 
 .floating-menu-notion:hover {
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  border-color: var(--border-subtle);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border-color: var(--color-border-block);
 }
 
 /* =========================
@@ -91,33 +84,26 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  
   padding: 8px 10px;
   margin: 0;
   border: none;
   border-radius: 6px;
-  
-  background: var(--fm-button-bg);
-  color: var(--fm-text-primary);
-  
+  background: transparent;
+  color: var(--color-text-primary);
   font-family: var(--fm-font);
   font-size: 13px;
   font-weight: 500;
   line-height: 1.2;
-  
   cursor: pointer;
   user-select: none;
-  
   transition: all var(--fm-duration) var(--fm-ease);
-  
-  /* Éviter le débordement */
   white-space: nowrap;
   min-width: 0;
 }
 
 .floating-menu-button:hover {
-  background: var(--fm-button-bg-hover);
-  color: var(--fm-text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
 }
 
 .floating-menu-button:active {
@@ -210,7 +196,7 @@
 .separator {
   width: 1px;
   height: 20px;
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--color-border-block);
   margin: 0 4px;
 }
 

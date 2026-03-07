@@ -143,26 +143,28 @@
 
 
 /* ==========================================================================
-   MENU CONTEXTUEL FICHIERS — STYLE LINEAR
+   MENU CONTEXTUEL FICHIERS — design system (bloc / sidebar)
    ========================================================================== */
 
 .file-context-menu-react {
   min-width: 148px;
-  background: rgba(20, 20, 20, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background-color: var(--color-bg-block);
+  border: 1px solid var(--color-border-block);
   border-radius: 10px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   overflow: hidden;
-  padding: 4px 0;
+  padding: 4px;
 }
 
-.file-context-menu-list {
+.file-context-menu-list,
+.context-menu-options {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-.file-context-menu-btn {
+.file-context-menu-btn,
+.file-context-menu-react .context-menu-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -175,19 +177,20 @@
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-primary);
   text-align: left;
   white-space: nowrap;
   transition: background 0.15s ease;
-  margin: 0 4px;
 }
 
-.file-context-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+.file-context-menu-btn:hover,
+.file-context-menu-react .context-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-.file-context-menu-btn:active {
-  background: rgba(255, 255, 255, 0.08);
+.file-context-menu-btn:active,
+.file-context-menu-react .context-menu-item:active {
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 .file-context-menu-btn-danger:hover {
