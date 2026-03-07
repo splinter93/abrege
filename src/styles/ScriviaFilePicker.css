@@ -24,14 +24,11 @@
   }
 }
 
-/* File Picker Container */
+/* File Picker Container — même surface que chat input (variables) */
 .scrivia-file-picker {
-  background: linear-gradient(135deg, 
-    #1a1c23 0%, 
-    #252831 50%, 
-    #1a1c23 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: var(--chat-gradient-block, #1e2022);
+  border: var(--chat-surface-border, 1.5px solid rgba(255, 255, 255, 0.05));
+  border-radius: var(--chat-surface-radius, 16px);
   width: 90%;
   max-width: 900px;
   max-height: 85vh;
@@ -59,8 +56,8 @@
   align-items: center;
   gap: 16px;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--chat-border-soft, rgba(255, 255, 255, 0.08));
+  background: var(--chat-overlay-subtle, rgba(0, 0, 0, 0.2));
 }
 
 .scrivia-file-picker-nav {
@@ -87,7 +84,7 @@
 .scrivia-file-picker-view-controls {
   display: flex;
   gap: 4px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--chat-overlay-subtle, rgba(255, 255, 255, 0.05));
   border-radius: 6px;
   padding: 4px;
 }
@@ -106,12 +103,12 @@
 }
 
 .scrivia-file-picker-view-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--sidebar-item-hover, rgba(255, 255, 255, 0.1));
   color: var(--chat-text-primary, #e5e5e5);
 }
 
 .scrivia-file-picker-view-btn.active {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--sidebar-item-active, rgba(255, 255, 255, 0.15));
   color: var(--chat-text-primary, #e5e5e5);
 }
 
@@ -120,8 +117,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--chat-overlay-subtle, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--chat-border-subtle, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
   padding: 8px 12px;
   min-width: 200px;
@@ -129,8 +126,8 @@
 }
 
 .scrivia-file-picker-search:focus-within {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--chat-overlay-soft, rgba(255, 255, 255, 0.08));
+  border-color: var(--chat-border-subtle, rgba(255, 255, 255, 0.2));
 }
 
 .scrivia-file-picker-search svg {
@@ -368,8 +365,8 @@
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid var(--chat-border-soft, rgba(255, 255, 255, 0.08));
+  background: var(--chat-overlay-subtle, rgba(0, 0, 0, 0.2));
 }
 
 .scrivia-file-picker-btn-secondary,
@@ -394,14 +391,14 @@
 }
 
 .scrivia-file-picker-btn-primary {
-  background: rgba(59, 130, 246, 0.9);
-  color: white;
+  background: #ffffff;
+  color: #0a0a0a;
 }
 
 .scrivia-file-picker-btn-primary:hover:not(:disabled) {
-  background: rgba(59, 130, 246, 1);
+  background: #f5f5f5;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .scrivia-file-picker-btn-primary:disabled {
@@ -409,11 +406,22 @@
   cursor: not-allowed;
 }
 
-/* Responsive */
+/* Responsive — mobile / PWA : ne pas passer sous le header */
 @media (max-width: 768px) {
+  .scrivia-file-picker-overlay {
+    padding-top: calc(56px + env(safe-area-inset-top, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    align-items: flex-start;
+    justify-content: center;
+  }
+
   .scrivia-file-picker {
     width: 95%;
-    max-height: 90vh;
+    max-height: calc(100vh - 56px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
+    max-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
+    margin-top: 12px;
   }
 
   .scrivia-file-picker-grid.grid {

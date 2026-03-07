@@ -16,7 +16,7 @@
 - ✅ Nettoyé les `index.css` des pages (variables dupliquées supprimées)
 
 #### 3. **Harmonisation des Pages** ✅
-- ✅ **Toutes les pages** utilisent maintenant `UnifiedPageLayout`
+- ✅ **Toutes les pages** utilisent maintenant `PageWithSidebarLayout`
 - ✅ **Design glassmorphism uniforme** sur toutes les pages
 - ✅ **Structure de titre cohérente** avec `page-title-container-glass`
 - ✅ **Sections de contenu identiques** avec `content-section-glass`
@@ -90,7 +90,7 @@ src/styles/
 
 #### **Structure de Page Standardisée**
 ```tsx
-<UnifiedPageLayout className="page-[name]">
+<PageWithSidebarLayout className="page-[name]">
   {/* Titre de la page avec design glassmorphism uniforme */}
   <motion.div className="page-title-container-glass">
     <div className="page-title-content">
@@ -115,7 +115,7 @@ src/styles/
       {/* Contenu spécifique à la page */}
     </div>
   </motion.section>
-</UnifiedPageLayout>
+</PageWithSidebarLayout>
 ```
 
 ### 🎨 **Design System Unifié**

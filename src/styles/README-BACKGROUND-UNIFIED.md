@@ -36,7 +36,7 @@ J'ai appliqué le background moderne du dashboard à toutes les pages de la side
 
 #### Composants Améliorés
 - `src/components/Sidebar.tsx` - Sidebar avec animations Framer Motion
-- `src/components/UnifiedPageLayout.tsx` - Layout unifié réutilisable
+- `src/components/PageWithSidebarLayout.tsx` - Layout avec sidebar (Sidebar)
 
 #### Pages Mises à Jour
 - `src/app/private/dossiers/page.tsx` - Classe `page-dossiers`
@@ -148,9 +148,9 @@ J'ai appliqué le background moderne du dashboard à toutes les pages de la side
 ### Application des Classes
 ```tsx
 // Page avec background spécifique
-<UnifiedPageLayout className="page-dossiers">
+<PageWithSidebarLayout className="page-dossiers">
   {/* Contenu de la page */}
-</UnifiedPageLayout>
+</PageWithSidebarLayout>
 ```
 
 ### Personnalisation des Couleurs

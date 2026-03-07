@@ -372,6 +372,18 @@ body.chat-theme-grey .chatgpt-input-area {
   border: none;
 }
 
+/* ImageSourceModal — même surface que input en Grey */
+body.chat-theme-grey .image-source-modal {
+  background: var(--chat-gradient-input);
+  border: none;
+}
+
+/* ScriviaFilePicker — même surface que input en Grey */
+body.chat-theme-grey .scrivia-file-picker {
+  background: var(--chat-gradient-input);
+  border: none;
+}
+
 /* Bulle user : même style que l'input (variable, sans bordure en grey) */
 body.chat-theme-grey .chatgpt-message-bubble-user {
   background: var(--chat-gradient-input);
@@ -401,9 +413,8 @@ body.chat-theme-grey .chatgpt-main {
   background: transparent;
 }
 
-/* Sidebar et unified-sidebar - consolidé en un seul sélecteur */
-body.chat-theme-grey .sidebar-ultra-clean,
-body.chat-theme-grey .unified-sidebar {
+/* Sidebar chat */
+body.chat-theme-grey .sidebar-ultra-clean {
   background: #141618 !important; /* ✅ Légèrement plus clair que sidebar éditeur */
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
@@ -465,9 +476,8 @@ body.chat-theme-anthracite,
   --blk-fg: var(--chat-text-secondary); /* ✅ Texte des blocs = secondaire */
 }
 
-/* Sidebar anthracite - Gradient unifié */
-body.chat-theme-anthracite .sidebar-ultra-clean,
-body.chat-theme-anthracite .unified-sidebar {
+/* Sidebar anthracite */
+body.chat-theme-anthracite .sidebar-ultra-clean {
   background: #141618 !important; /* ✅ Légèrement plus clair que sidebar éditeur */
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
@@ -545,8 +555,7 @@ body.chat-theme-glass,
 }
 
 /* Sidebar Glass Mode - collée au header, sans radius */
-body.chat-theme-glass .sidebar-ultra-clean,
-body.chat-theme-glass .unified-sidebar {
+body.chat-theme-glass .sidebar-ultra-clean {
   background: var(--chat-glass-bg);
   backdrop-filter: var(--chat-glass-blur);
   -webkit-backdrop-filter: var(--chat-glass-blur);
@@ -563,6 +572,22 @@ body.chat-theme-glass .chatgpt-input-area {
   border: 1px solid var(--chat-glass-border);
   border-top: 1px solid var(--chat-glass-border);
   border-radius: var(--chat-radius-xl); /* Même border-radius que les autres thèmes */
+}
+
+/* ImageSourceModal — même surface que input en Glass Mode */
+body.chat-theme-glass .image-source-modal {
+  background: var(--chat-glass-bg);
+  backdrop-filter: var(--chat-glass-blur);
+  -webkit-backdrop-filter: var(--chat-glass-blur);
+  border: 1px solid var(--chat-glass-border);
+}
+
+/* ScriviaFilePicker — même surface que input en Glass Mode */
+body.chat-theme-glass .scrivia-file-picker {
+  background: var(--chat-glass-bg);
+  backdrop-filter: var(--chat-glass-blur);
+  -webkit-backdrop-filter: var(--chat-glass-blur);
+  border: 1px solid var(--chat-glass-border);
 }
 
 /* Messages user Glass Mode - Glassmorphism */

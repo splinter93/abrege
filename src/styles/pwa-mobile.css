@@ -455,6 +455,20 @@ html.capacitor-native .page-sidebar-fixed.page-sidebar-drawer {
   z-index: 40 !important;
 }
 
+/* ScriviaFilePicker : en Capacitor/PWA chat, ne pas passer sous le header */
+html.capacitor-native.chat-page .scrivia-file-picker-overlay {
+  padding-top: calc(56px + var(--capacitor-safe-top, env(safe-area-inset-top, 0px))) !important;
+  padding-bottom: var(--capacitor-safe-bottom, env(safe-area-inset-bottom, 0px)) !important;
+  padding-left: env(safe-area-inset-left, 0px) !important;
+  padding-right: env(safe-area-inset-right, 0px) !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+}
+html.capacitor-native.chat-page .scrivia-file-picker {
+  margin-top: 12px !important;
+  max-height: calc(100dvh - 56px - var(--capacitor-safe-top, env(safe-area-inset-top, 0px)) - var(--capacitor-safe-bottom, env(safe-area-inset-bottom, 0px)) - 24px) !important;
+}
+
 /* Safe area bottom : éviter que le contenu passe sous la barre de navigation Android */
 html.capacitor-native .page-content-area {
   padding-bottom: env(safe-area-inset-bottom, 0px) !important;

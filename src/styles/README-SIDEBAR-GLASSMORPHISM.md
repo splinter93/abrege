@@ -35,7 +35,7 @@ Cette amélioration apporte un design moderne et cohérent à la sidebar de Scri
 
 #### Composants
 - `src/components/Sidebar.tsx` - Sidebar améliorée avec animations
-- `src/components/UnifiedPageLayout.tsx` - Layout unifié pour toutes les pages
+- `src/components/PageWithSidebarLayout.tsx` - Layout avec sidebar
 
 #### Styles
 - `src/styles/sidebar-glassmorphism.css` - Styles glassmorphism pour la sidebar
@@ -119,11 +119,11 @@ Cette amélioration apporte un design moderne et cohérent à la sidebar de Scri
 
 ### Layout unifié
 ```tsx
-import UnifiedPageLayout from '@/components/UnifiedPageLayout';
+import PageWithSidebarLayout from '@/components/PageWithSidebarLayout';
 
 export default function MyPage() {
   return (
-    <UnifiedPageLayout>
+    <PageWithSidebarLayout>
       <div className="page-title-container-glass">
         <h1>Mon Titre</h1>
       </div>
@@ -132,7 +132,7 @@ export default function MyPage() {
           {/* Contenu de la page */}
         </div>
       </div>
-    </UnifiedPageLayout>
+    </PageWithSidebarLayout>
   );
 }
 ```
@@ -214,7 +214,7 @@ Chaque page peut avoir ses propres couleurs d'accent :
 ## 🐛 Résolution de problèmes
 
 ### Problèmes courants
-1. **Sidebar ne s'affiche pas** : Vérifier l'import de `UnifiedPageLayout`
+1. **Sidebar ne s'affiche pas** : Vérifier l'import de `PageWithSidebarLayout`
 2. **Animations saccadées** : Vérifier `prefers-reduced-motion`
 3. **Styles manquants** : Vérifier l'import de `main.css`
 

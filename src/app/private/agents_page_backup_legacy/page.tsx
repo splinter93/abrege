@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Suspense } from "react";
-import UnifiedSidebar from "@/components/UnifiedSidebar";
+import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
@@ -84,14 +84,9 @@ function AgentsPageContent({ embedded = false, initialAgentId }: AgentsPageConte
     return embedded ? (
       <SimpleLoadingState message="Chargement" />
     ) : (
-      <div className="page-wrapper">
-        <aside className="page-sidebar-fixed">
-          <UnifiedSidebar />
-        </aside>
-        <main className="page-content-area">
-          <SimpleLoadingState message="Chargement" />
-        </main>
-      </div>
+      <PageWithSidebarLayout>
+        <SimpleLoadingState message="Chargement" />
+      </PageWithSidebarLayout>
     );
   }
 
@@ -103,15 +98,8 @@ function AgentsPageContent({ embedded = false, initialAgentId }: AgentsPageConte
     router.push(`/chat?agent=${encodeURIComponent(slug)}`);
   };
 
-  const content = (
-    <div className={embedded ? 'agents-embedded-wrapper' : 'page-wrapper'}>
-      {!embedded && (
-      <aside className="page-sidebar-fixed">
-        <UnifiedSidebar />
-      </aside>
-      )}
-
-      <main className={`page-content-area ${embedded ? 'agents-embedded-content' : ''}`}>
+  const mainContent = (
+    <>
         {!embedded && (
         <div className="page-title-with-switcher">
           <UnifiedPageTitle
@@ -319,10 +307,23 @@ function AgentsPageContent({ embedded = false, initialAgentId }: AgentsPageConte
           )}
         </AnimatePresence>
         </div>
-      </main>
-    </div>
+    </>
   );
 
-  return content;
+  if (embedded) {
+    return (
+      <div className="agents-embedded-wrapper">
+        <main className="agents-embedded-content">
+          {mainContent}
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <PageWithSidebarLayout>
+      {mainContent}
+    </PageWithSidebarLayout>
+  );
 }
 
