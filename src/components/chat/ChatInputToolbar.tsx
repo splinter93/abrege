@@ -30,14 +30,18 @@ interface ChatInputToolbarProps {
   // File Menu props
   showFileMenu: boolean;
   showImageSourceModal: boolean;
+  showFileSourceModal: boolean;
   imagesCount: number;
   onToggleFileMenu: () => void;
   onLoadImageClick: () => void;
-  onLoadFile: () => void;
+  onLoadFileClick: () => void;
   onTakePhoto: () => void;
   onCloseImageModal: () => void;
+  onCloseFileModal: () => void;
   onBrowseComputer: () => void;
   onBrowseFiles: () => void;
+  onFileSelectComputer: () => void;
+  onFileSelectFiles: () => void;
   
   // WebSearch props
   showWebSearchMenu: boolean;
@@ -94,14 +98,18 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
   // File Menu
   showFileMenu,
   showImageSourceModal,
+  showFileSourceModal,
   imagesCount,
   onToggleFileMenu,
   onLoadImageClick,
-  onLoadFile,
+  onLoadFileClick,
   onTakePhoto,
   onCloseImageModal,
+  onCloseFileModal,
   onBrowseComputer,
   onBrowseFiles,
+  onFileSelectComputer,
+  onFileSelectFiles,
   
   // WebSearch
   showWebSearchMenu,
@@ -160,14 +168,18 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
       <FileMenu
         showFileMenu={showFileMenu}
         showImageSourceModal={showImageSourceModal}
+        showFileSourceModal={showFileSourceModal}
         imagesCount={imagesCount}
         onToggle={onToggleFileMenu}
         onLoadImageClick={onLoadImageClick}
-        onLoadFile={onLoadFile}
+        onLoadFileClick={onLoadFileClick}
         onTakePhoto={onTakePhoto}
         onCloseImageModal={onCloseImageModal}
+        onCloseFileModal={onCloseFileModal}
         onBrowseComputer={onBrowseComputer}
         onBrowseFiles={onBrowseFiles}
+        onFileSelectComputer={onFileSelectComputer}
+        onFileSelectFiles={onFileSelectFiles}
         disabled={disabled}
         loading={loading}
       />

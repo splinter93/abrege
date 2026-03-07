@@ -174,6 +174,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   
   // 🎯 État pour le file picker Scrivia
   const [showScriviaFilePicker, setShowScriviaFilePicker] = React.useState(false);
+  // 🎯 Modale "Charger un fichier" (même style que ImageSourceModal)
+  const [showFileSourceModal, setShowFileSourceModal] = React.useState(false);
   
   const defaultReasoningLevel = getReasoningLevelFromModel(currentAgentModel);
   
@@ -218,6 +220,22 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setShowImageSourceModal(false);
     setShowScriviaFilePicker(true);
   }, [handleBrowseFilesFromHook, setShowImageSourceModal]);
+
+  // Ouvrir la modale "Charger un fichier" (ferme le menu comme pour l'image)
+  const handleLoadFileClick = React.useCallback(() => {
+    closeMenu();
+    setShowFileSourceModal(true);
+  }, [closeMenu]);
+
+  const handleFileSourceComputer = React.useCallback(() => {
+    setShowFileSourceModal(false);
+    handleLoadFile();
+  }, [handleLoadFile]);
+
+  const handleFileSourceFiles = React.useCallback(() => {
+    setShowFileSourceModal(false);
+    setShowScriviaFilePicker(true);
+  }, []);
 
   // Handler pour sélectionner des images depuis Scrivia Files
   const handleSelectScriviaImages = React.useCallback(async (selectedImages: Array<{ url: string; fileName?: string }>) => {
@@ -517,10 +535,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onRemoveNote={handleRemoveNote}
         onNoteSearchQueryChange={setNoteSearchQuery}
         showFileMenu={showFileMenu} showImageSourceModal={showImageSourceModal}
+        showFileSourceModal={showFileSourceModal}
         imagesCount={images.length} onToggleFileMenu={() => toggleMenu('file')}
-        onLoadImageClick={handleLoadImageClick} onLoadFile={handleLoadFile}
+        onLoadImageClick={handleLoadImageClick} onLoadFileClick={handleLoadFileClick}
         onTakePhoto={handleTakePhoto} onCloseImageModal={() => setShowImageSourceModal(false)}
+        onCloseFileModal={() => setShowFileSourceModal(false)}
         onBrowseComputer={handleBrowseComputer} onBrowseFiles={handleBrowseFiles}
+        onFileSelectComputer={handleFileSourceComputer} onFileSelectFiles={handleFileSourceFiles}
         showWebSearchMenu={showWebSearchMenu} onToggleWebSearchMenu={() => toggleMenu('websearch')}
         onNewsSearch={handleNewsSearch} onBasicSearch={handleBasicSearch} onAdvancedSearch={handleAdvancedSearch}
         showReasoningMenu={showReasoningMenu} reasoningOverride={reasoningOverride}

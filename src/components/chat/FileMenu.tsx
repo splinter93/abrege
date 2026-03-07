@@ -14,16 +14,20 @@ interface FileMenuProps {
   // État
   showFileMenu: boolean;
   showImageSourceModal: boolean;
+  showFileSourceModal: boolean;
   imagesCount: number;
   
   // Actions
   onToggle: () => void;
   onLoadImageClick: () => void;
-  onLoadFile: () => void;
+  onLoadFileClick: () => void;
   onTakePhoto: () => void;
   onCloseImageModal: () => void;
+  onCloseFileModal: () => void;
   onBrowseComputer: () => void;
   onBrowseFiles: () => void;
+  onFileSelectComputer: () => void;
+  onFileSelectFiles: () => void;
   
   // UI state
   disabled?: boolean;
@@ -37,14 +41,18 @@ interface FileMenuProps {
 const FileMenu: React.FC<FileMenuProps> = ({
   showFileMenu,
   showImageSourceModal,
+  showFileSourceModal,
   imagesCount,
   onToggle,
   onLoadImageClick,
-  onLoadFile,
+  onLoadFileClick,
   onTakePhoto,
   onCloseImageModal,
+  onCloseFileModal,
   onBrowseComputer,
   onBrowseFiles,
+  onFileSelectComputer,
+  onFileSelectFiles,
   disabled = false,
   loading = false
 }) => {
@@ -73,7 +81,7 @@ const FileMenu: React.FC<FileMenuProps> = ({
             <ImageIcon size={16} />
             <span>Charger une image</span>
           </button>
-          <button className="chat-file-menu-item" onClick={onLoadFile}>
+          <button className="chat-file-menu-item" onClick={onLoadFileClick}>
             <Folder size={16} />
             <span>Charger un fichier</span>
           </button>
@@ -93,6 +101,19 @@ const FileMenu: React.FC<FileMenuProps> = ({
         onClose={onCloseImageModal}
         onSelectComputer={onBrowseComputer}
         onSelectFiles={onBrowseFiles}
+      />
+
+      {/* Modale "Charger un fichier" — même style (bordure/background chat input) */}
+      <ImageSourceModal
+        isOpen={showFileSourceModal}
+        onClose={onCloseFileModal}
+        onSelectComputer={onFileSelectComputer}
+        onSelectFiles={onFileSelectFiles}
+        title="Charger un fichier"
+        card1Title="Depuis mon ordinateur"
+        card1Subtitle="Parcourir vos fichiers locaux"
+        card2Title="Depuis mes Files"
+        card2Subtitle="Choisir dans vos fichiers uploadés"
       />
     </div>
   );
