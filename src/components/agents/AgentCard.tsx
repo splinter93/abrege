@@ -57,42 +57,6 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle
           </h3>
         </div>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-          <button
-            type="button"
-            title="Modifier"
-            className="w-7 h-7 flex items-center justify-center rounded-md border bg-white/[0.03] border-white/[0.05] text-neutral-500 hover:bg-white/[0.08] hover:text-neutral-200 transition-all"
-            onClick={e => {
-              e.stopPropagation();
-              onEdit();
-            }}
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            title="Supprimer"
-            className="w-7 h-7 flex items-center justify-center rounded-md border bg-white/[0.03] border-white/[0.05] text-neutral-500 hover:bg-white/[0.08] hover:text-rose-400 transition-all"
-            onClick={e => {
-              e.stopPropagation();
-              onDelete();
-            }}
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* 2. BODY : Description */}
-      <div className="px-5 pb-4 flex-1 min-h-0 bg-[var(--surface-card)]">
-        <p className="text-[13px] text-neutral-400 leading-relaxed line-clamp-2">{description}</p>
-      </div>
-
-      {/* 3. FOOTER : Modèle + Toggle Active (couleur sidebar) */}
-      <div className="px-5 py-3 border-t flex items-center justify-between mt-auto bg-[var(--color-bg-block)]" style={{ borderTop: 'var(--border-block)' }}>
-        <span className="inline-flex items-center px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-[75%] min-w-0 truncate" title={modelLabel}>
-          {modelDisplay}
-        </span>
         <button
           type="button"
           title={agent.is_active ? 'Désactiver' : 'Activer'}
@@ -108,6 +72,44 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle
         >
           {agent.is_active ? <Power className="w-3.5 h-3.5" /> : <PowerOff className="w-3.5 h-3.5" />}
         </button>
+      </div>
+
+      {/* 2. BODY : Description */}
+      <div className="px-5 pb-4 flex-1 min-h-0 bg-[var(--surface-card)]">
+        <p className="text-[13px] text-neutral-400 leading-relaxed line-clamp-2">{description}</p>
+      </div>
+
+      {/* 3. FOOTER : Modèle + Actions (Modifier / Supprimer au hover) */}
+      <div className="px-5 py-3 border-t flex items-center justify-between mt-auto bg-[var(--color-bg-block)]" style={{ borderTop: 'var(--border-block)' }}>
+        <span className="inline-flex items-center px-2 py-1 rounded-md bg-zinc-900/50 border border-zinc-800/80 font-mono text-[10px] text-zinc-400 max-w-[75%] min-w-0 truncate" title={modelLabel}>
+          {modelDisplay}
+        </span>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            type="button"
+            title="Modifier"
+            className="w-7 h-7 flex items-center justify-center rounded-md border text-neutral-500 hover:text-neutral-200 transition-all"
+            style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
+            onClick={e => {
+              e.stopPropagation();
+              onEdit();
+            }}
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            title="Supprimer"
+            className="w-7 h-7 flex items-center justify-center rounded-md border text-neutral-500 hover:text-rose-400 transition-all"
+            style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
+            onClick={e => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   );

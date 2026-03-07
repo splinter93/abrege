@@ -60,55 +60,6 @@ const PromptCard: React.FC<PromptCardProps> = ({
           </h3>
         </div>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-          <button
-            type="button"
-            title="Modifier"
-            className="w-7 h-7 flex items-center justify-center rounded-md border bg-white/[0.03] border-white/[0.05] text-neutral-500 hover:bg-white/[0.08] hover:text-neutral-200 transition-all"
-            onClick={e => {
-              e.stopPropagation();
-              onEdit();
-            }}
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            title="Supprimer"
-            className="w-7 h-7 flex items-center justify-center rounded-md border bg-white/[0.03] border-white/[0.05] text-neutral-500 hover:bg-white/[0.08] hover:text-rose-400 transition-all"
-            onClick={e => {
-              e.stopPropagation();
-              onDelete();
-            }}
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* 2. BODY : Aperçu du template */}
-      <div className="px-5 pb-4 flex-1 min-h-0">
-        <p className="text-[13px] text-neutral-400 leading-relaxed line-clamp-2">
-          {templatePreview}
-        </p>
-      </div>
-
-      {/* 3. FOOTER : Contexte à gauche + Toggle Active à droite */}
-      <div className="px-5 py-3 border-t border-white/[0.04] bg-white/[0.01] flex items-center justify-between mt-auto">
-        {(() => {
-          const ctx = prompt.context ?? 'editor';
-          const config = {
-            editor: { label: 'Éditeur', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-            chat:   { label: 'Chat',    color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20' },
-            both:   { label: 'Chat · Éditeur', color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
-          }[ctx] ?? { label: 'Éditeur', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' };
-          return (
-            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-semibold tracking-wide ${config.color} ${config.bg} ${config.border}`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80 shrink-0" />
-              {config.label}
-            </span>
-          );
-        })()}
         <button
           type="button"
           title={prompt.is_active ? 'Désactiver' : 'Activer'}
@@ -124,6 +75,57 @@ const PromptCard: React.FC<PromptCardProps> = ({
         >
           {prompt.is_active ? <Power className="w-3.5 h-3.5" /> : <PowerOff className="w-3.5 h-3.5" />}
         </button>
+      </div>
+
+      {/* 2. BODY : Aperçu du template */}
+      <div className="px-5 pb-4 flex-1 min-h-0">
+        <p className="text-[13px] text-neutral-400 leading-relaxed line-clamp-2">
+          {templatePreview}
+        </p>
+      </div>
+
+      {/* 3. FOOTER : Contexte à gauche + Actions (Modifier / Supprimer au hover) */}
+      <div className="px-5 py-3 border-t border-white/[0.04] bg-white/[0.01] flex items-center justify-between mt-auto">
+        {(() => {
+          const ctx = prompt.context ?? 'editor';
+          const config = {
+            editor: { label: 'Éditeur', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+            chat:   { label: 'Chat',    color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20' },
+            both:   { label: 'Chat · Éditeur', color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
+          }[ctx] ?? { label: 'Éditeur', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' };
+          return (
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-semibold tracking-wide ${config.color} ${config.bg} ${config.border}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80 shrink-0" />
+              {config.label}
+            </span>
+          );
+        })()}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            type="button"
+            title="Modifier"
+            className="w-7 h-7 flex items-center justify-center rounded-md border text-neutral-500 hover:text-neutral-200 transition-all"
+            style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
+            onClick={e => {
+              e.stopPropagation();
+              onEdit();
+            }}
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            title="Supprimer"
+            className="w-7 h-7 flex items-center justify-center rounded-md border text-neutral-500 hover:text-rose-400 transition-all"
+            style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
+            onClick={e => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   );
