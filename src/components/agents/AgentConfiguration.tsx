@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Image as ImageIcon, MessageCircle, ChevronDown } from 'lucide-react';
+import { X, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 
@@ -29,7 +29,6 @@ interface AgentConfigurationProps {
     field: K,
     value: SpecializedAgentConfig[K]
   ) => void;
-  onOpenChat: () => void;
 }
 
 export function AgentConfiguration({
@@ -44,7 +43,6 @@ export function AgentConfiguration({
   onCancel,
   onDelete,
   onUpdateField,
-  onOpenChat,
 }: AgentConfigurationProps) {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
 
@@ -106,7 +104,7 @@ export function AgentConfiguration({
 
   return (
     <>
-      <div className="space-y-10">
+      <div className="space-y-6">
         {/* Identité : avatar au-dessus, puis nom + description */}
         <section className="space-y-4">
           <div className="flex flex-col gap-4">
@@ -159,17 +157,6 @@ export function AgentConfiguration({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {selectedAgent && (
-              <button
-                type="button"
-                onClick={onOpenChat}
-                title="Accéder au chat"
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-sm hover:bg-zinc-800/20 hover:text-zinc-100 transition-colors"
-              >
-                <MessageCircle className="w-4 h-4" />
-                Chat
-              </button>
-            )}
             {hasChanges && (
               <button
                 type="button"
@@ -218,7 +205,7 @@ export function AgentConfiguration({
           </div>
           <textarea
             id="agent-system-instructions"
-            className={`${inputBase} font-mono text-[13px] leading-relaxed resize-none`}
+            className={`${inputBase} font-mono text-[13px] leading-relaxed resize-none text-zinc-400`}
             rows={12}
             value={editedAgent.system_instructions || ''}
             onChange={e => onUpdateField('system_instructions', e.target.value)}

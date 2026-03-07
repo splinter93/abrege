@@ -113,7 +113,6 @@ const AgentDetailsModal: React.FC<AgentDetailsModalProps> = ({ onClose }) => {
             onToggleFavorite={handleToggleFavorite}
             onSave={handleSaveEdit}
             onCancel={handleCancelEdit}
-          onOpenChat={() => {}}
             onDelete={() => setShowDeleteConfirm(true)}
             onUpdateField={updateField}
           />

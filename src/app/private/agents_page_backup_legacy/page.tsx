@@ -234,7 +234,6 @@ function AgentsPageContent({ embedded = false, initialAgentId }: AgentsPageConte
               onCancel={handleCancelEdit}
               onDelete={() => setShowDeleteConfirm(true)}
               onUpdateField={updateField}
-              onOpenChat={handleOpenChat}
             />
           </motion.div>
 

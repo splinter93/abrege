@@ -21,6 +21,7 @@ import { agentsService } from '@/services/agents/agentsService';
 import { mcpService } from '@/services/agents/mcpService';
 import { useCallables } from '@/hooks/useCallables';
 import { simpleLogger } from '@/utils/logger';
+import { supabase } from '@/supabaseClient';
 import { ArrowLeft, Power, PowerOff, SlidersHorizontal, Star, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useParamsPanelMobile } from '@/hooks/useParamsPanelMobile';
@@ -52,6 +53,8 @@ function AgentDetailContent() {
   const [savingAgent, setSavingAgent] = useState(false);
   const [hasLocalChanges, setHasLocalChanges] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [togglingFavorite, setTogglingFavorite] = useState(false);
 
   const [availableOpenApiSchemas, setAvailableOpenApiSchemas] = useState<OpenApiSchema[]>([]);
   const [linkedOpenApiSchemas, setLinkedOpenApiSchemas] = useState<AgentSchemaLink[]>([]);
@@ -246,6 +249,45 @@ function AgentDetailContent() {
       setHasLocalChanges(false);
     }
   }, [selectedAgent]);
+
+  // Sync isFavorite from user's favorite_agent_id (pour affichage + ouverture chat avec agent favori)
+  useEffect(() => {
+    if (!user?.id || !selectedAgent?.id) {
+      setIsFavorite(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('favorite_agent_id')
+        .eq('id', user.id)
+        .single();
+      if (cancelled || error) return;
+      setIsFavorite(data?.favorite_agent_id === selectedAgent.id);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, selectedAgent?.id]);
+
+  const handleToggleFavorite = useCallback(async () => {
+    if (!user?.id || !selectedAgent?.id || togglingFavorite) return;
+    setTogglingFavorite(true);
+    try {
+      const newFavoriteId = isFavorite ? null : selectedAgent.id;
+      const { error } = await supabase
+        .from('users')
+        .update({ favorite_agent_id: newFavoriteId })
+        .eq('id', user.id);
+      if (error) {
+        simpleLogger.error('[AgentDetail] Toggle favori', error);
+        return;
+      }
+      setIsFavorite(!isFavorite);
+      setSelectedAgent(prev => prev ? { ...prev, is_favorite: !isFavorite } : null);
+    } finally {
+      setTogglingFavorite(false);
+    }
+  }, [user?.id, selectedAgent?.id, isFavorite, togglingFavorite]);
 
   const handleFieldUpdate = useCallback(
     <K extends keyof SpecializedAgentConfig>(field: K, value: SpecializedAgentConfig[K]) => {
@@ -454,12 +496,11 @@ function AgentDetailContent() {
               <div className="flex items-center gap-3 min-w-0">
                 <Link
                   href="/private/agents2"
-                  className="flex items-center gap-2 text-zinc-400 hover:text-zinc-100 text-sm transition-colors shrink-0"
+                  className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700/60 transition-colors shrink-0 inline-flex items-center justify-center"
                   aria-label="Retour aux agents"
                 >
-                  <ArrowLeft className="w-4 h-4" /> Agents
+                  <ArrowLeft className="w-4 h-4" />
                 </Link>
-                <span className="w-px h-6 bg-zinc-800/80 shrink-0" aria-hidden />
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative shrink-0">
                     {displayAvatar && editedAgent?.profile_picture ? (
@@ -506,12 +547,13 @@ function AgentDetailContent() {
                 {selectedAgent && (
                   <button
                     type="button"
-                    onClick={() => {}}
-                    title={selectedAgent.is_favorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
-                    className={`p-2 rounded-lg border text-sm transition-colors ${selectedAgent.is_favorite ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : 'border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:bg-zinc-800/20 hover:text-zinc-100'}`}
-                    aria-label={selectedAgent.is_favorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
+                    onClick={handleToggleFavorite}
+                    disabled={togglingFavorite}
+                    title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori (utilisé à l\'ouverture du chat)'}
+                    className={`p-2 rounded-lg border text-sm transition-colors shrink-0 ${isFavorite ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : 'border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:bg-zinc-800/20 hover:text-zinc-100'} disabled:opacity-50 disabled:pointer-events-none`}
+                    aria-label={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
                   >
-                    <Star size={18} fill={selectedAgent.is_favorite ? 'currentColor' : 'none'} />
+                    <Star className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
                   </button>
                 )}
                 {paramsPanel.isMobile && (
@@ -573,19 +615,14 @@ function AgentDetailContent() {
                   selectedAgent={selectedAgent}
                   editedAgent={editedAgent}
                   hasChanges={hasLocalChanges}
-                  isFavorite={Boolean(selectedAgent?.is_favorite)}
-                  togglingFavorite={false}
+                  isFavorite={isFavorite}
+                  togglingFavorite={togglingFavorite}
                   loadingDetails={panelLoading}
-                  onToggleFavorite={() => {}}
+                  onToggleFavorite={handleToggleFavorite}
                   onSave={handleSaveAgent}
                   onCancel={handleCancelChanges}
                   onDelete={selectedAgent ? handleDeleteAgent : () => {}}
                   onUpdateField={handleFieldUpdate}
-                  onOpenChat={() => {
-                    if (!selectedAgent) return;
-                    const identifier = selectedAgent.slug || selectedAgent.id;
-                    router.push(`/chat?agent=${encodeURIComponent(identifier)}`);
-                  }}
                 />
               </div>
             </div>
