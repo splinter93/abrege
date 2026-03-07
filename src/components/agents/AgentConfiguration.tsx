@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Image as ImageIcon } from 'lucide-react';
+import { X, Image as ImageIcon, Power, PowerOff, Star, Pencil } from 'lucide-react';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { CustomSelect } from '@/components/ui/CustomSelect';
@@ -114,28 +114,62 @@ export function AgentConfiguration({
   return (
     <>
       <div className="space-y-6">
-        {/* Identité : avatar au-dessus, puis nom + description */}
+        {/* Identité : avatar + bandeau (Actif, Favori) puis nom + description */}
         <section className="space-y-3">
           <div className="flex flex-col gap-4">
-            <button
-              type="button"
-              onClick={() => setShowAvatarModal(true)}
-              aria-label="Voir et éditer l'avatar de l'agent"
-              className="section-block shrink-0 w-14 h-14 rounded-full overflow-hidden flex items-center justify-center text-zinc-400 text-sm font-medium hover:border-[var(--color-border-secondary)] transition-colors self-start"
-            >
-              {displayAvatarPreview ? (
-                <img
-                  src={editedAgent.profile_picture}
-                  alt={`Avatar de ${agentDisplayName}`}
-                  className="w-full h-full object-cover"
-                  onError={e => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              ) : (
-                <span>{avatarFallback}</span>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => setShowAvatarModal(true)}
+                aria-label="Voir et éditer l'avatar de l'agent"
+                className="section-block shrink-0 w-14 h-14 rounded-full overflow-hidden flex items-center justify-center text-zinc-400 text-sm font-medium hover:border-[var(--color-border-secondary)] transition-colors"
+              >
+                {displayAvatarPreview ? (
+                  <img
+                    src={editedAgent.profile_picture}
+                    alt={`Avatar de ${agentDisplayName}`}
+                    className="w-full h-full object-cover"
+                    onError={e => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <span>{avatarFallback}</span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAvatarModal(true)}
+                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40 transition-all border border-transparent hover:border-zinc-700/50"
+                aria-label="Changer l'image de l'avatar"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Changer d&apos;image
+              </button>
+              {selectedAgent && (
+                <div className="section-block flex items-center gap-2 rounded-xl px-3 py-2 border border-[var(--color-border-block)] bg-[var(--color-bg-block)] ml-auto shrink-0">
+                  <button
+                    type="button"
+                    onClick={onToggleFavorite}
+                    disabled={togglingFavorite}
+                    title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori (utilisé à l\'ouverture du chat)'}
+                    className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700/60 transition-colors shrink-0 disabled:opacity-50 disabled:pointer-events-none"
+                    aria-label={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
+                  >
+                    <Star className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateField('is_active', !editedAgent?.is_active)}
+                    title={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
+                    className={`p-2 rounded-lg border transition-colors shrink-0 ${editedAgent?.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20' : 'bg-zinc-800/60 border-zinc-600/80 text-zinc-500 hover:bg-zinc-700/60 hover:text-zinc-400'}`}
+                    aria-label={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
+                  >
+                    {editedAgent?.is_active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+                  </button>
+                </div>
               )}
-            </button>
+            </div>
             <div className="space-y-4 min-w-0">
               <div>
                 <label className={labelBase} htmlFor="agent-display-name">

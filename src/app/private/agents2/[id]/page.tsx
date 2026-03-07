@@ -22,7 +22,7 @@ import { mcpService } from '@/services/agents/mcpService';
 import { useCallables } from '@/hooks/useCallables';
 import { simpleLogger } from '@/utils/logger';
 import { supabase } from '@/supabaseClient';
-import { ArrowLeft, Power, PowerOff, SlidersHorizontal, Star, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Menu, SlidersHorizontal, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParamsPanelMobile } from '@/hooks/useParamsPanelMobile';
 import '@/styles/main.css';
@@ -536,29 +536,6 @@ function AgentDetailContent() {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {selectedAgent && (
-                  <button
-                    type="button"
-                    onClick={() => handleFieldUpdate('is_active', !editedAgent?.is_active)}
-                    title={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
-                    className={`p-2 rounded-lg border transition-colors shrink-0 ${editedAgent?.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20' : 'bg-zinc-800/60 border-zinc-600/80 text-zinc-500 hover:bg-zinc-700/60 hover:text-zinc-400'}`}
-                    aria-label={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
-                  >
-                    {editedAgent?.is_active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-                  </button>
-                )}
-                {selectedAgent && (
-                  <button
-                    type="button"
-                    onClick={handleToggleFavorite}
-                    disabled={togglingFavorite}
-                    title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori (utilisé à l\'ouverture du chat)'}
-                    className={`p-2 rounded-lg border text-sm transition-colors shrink-0 ${isFavorite ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : 'border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:bg-zinc-800/20 hover:text-zinc-100'} disabled:opacity-50 disabled:pointer-events-none`}
-                    aria-label={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
-                  >
-                    <Star className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
-                  </button>
-                )}
                 {paramsPanel.isMobile && (
                   <button
                     type="button"
@@ -634,21 +611,22 @@ function AgentDetailContent() {
             {/* Side panel droit — desktop fixe, mobile drawer depuis la droite */}
             <aside
               className={`agent-config-side-panel${paramsPanel.isMobile ? ' agent-config-side-panel--drawer' : ''}${paramsPanel.isMobile && paramsPanel.isOpen ? ' agent-config-side-panel--open' : ''}`}
-              aria-label="Paramètres (modèle, outils)"
+              aria-label="Parameters (model, tools)"
               aria-hidden={paramsPanel.isMobile && !paramsPanel.isOpen}
             >
-              {/* Header du drawer mobile : titre + fermer */}
+              {/* Header du drawer mobile : même style que mobile-top-bar (Menu à gauche) */}
               {paramsPanel.isMobile && (
-                <div className="relative flex items-center justify-center min-h-[52px] px-4 py-3 border-b border-zinc-800/60">
-                  <span className="text-sm font-semibold text-zinc-200">Paramètres</span>
+                <div className="flex items-center justify-between min-h-[52px] px-4 py-3">
                   <button
                     type="button"
                     onClick={paramsPanel.closePanel}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors"
+                    className="p-2 -ml-2 text-neutral-400 hover:text-white transition-colors"
                     aria-label="Fermer"
                   >
-                    <X className="w-4 h-4" />
+                    <Menu className="w-5 h-5" />
                   </button>
+                  <span className="text-sm font-semibold text-zinc-200 tracking-wide">PARAMETERS</span>
+                  <div className="w-9 shrink-0" aria-hidden />
                 </div>
               )}
               <div className="space-y-8 p-4 lg:p-0 lg:py-10 lg:px-4 overflow-y-auto h-full">
