@@ -135,12 +135,10 @@ function ClasseursHeader({
         <button
           type="button"
           onClick={onNouveauClick}
-          className="flex h-8 items-center gap-1.5 rounded-md bg-white px-3 text-xs font-semibold text-black shadow-sm transition-all hover:bg-neutral-200"
+          className="flex h-9 items-center gap-1.5 rounded-md bg-white px-4 text-sm font-medium text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200"
         >
-          <Plus className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Nouveau</span>
-          <span className="sm:hidden">Nouveau</span>
-          <ChevronDown className="h-3 w-3 opacity-50" />
+          <Plus className="h-4 w-4" />
+          <span>Nouveau</span>
         </button>
         {nouveauOpen && (
           <>
@@ -1061,15 +1059,15 @@ export default function ClasseursPage() {
               handleUpdateClasseurPositions={handleUpdateClasseurPositions}
               classeursForReorder={classeurs}
             />
-            <div className="ml-auto flex items-center gap-4">
-              <div className="relative hidden min-w-0 max-w-[220px] sm:block">
+            <div className="ml-auto flex items-center gap-2">
+              <div className="relative hidden sm:block">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500 pointer-events-none" />
                 <input
-                  type="search"
-                  placeholder="Rechercher…"
+                  type="text"
+                  placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-9 w-full rounded-lg border border-white/[0.08] bg-[#141414] pl-9 pr-3 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none transition-colors focus:border-white/[0.15]"
+                  className="h-8 w-48 rounded-md border border-white/[0.08] bg-[#141414] pl-9 pr-3 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none transition-all hover:border-white/[0.15] focus:border-white/[0.2] focus:bg-white/[0.05]"
                 />
               </div>
               {!isMobile && (
