@@ -407,10 +407,18 @@ function AuthenticatedHomeContent({
       <main className="w-full max-w-5xl mx-auto px-4 py-6 sm:px-8 sm:py-12 flex flex-col gap-8 sm:gap-12">
         {/* 1. Welcome */}
         <header className="flex flex-col items-center text-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-900/80 border border-zinc-800/80 mb-4">
-            <Feather className="w-6 h-6 text-zinc-400" strokeWidth={1.75} />
+          <div className="flex items-center justify-center w-[72px] h-[72px] rounded-2xl bg-zinc-900/80 border border-zinc-800/80 mb-4">
+            <svg width={0} height={0} aria-hidden className="absolute">
+              <defs>
+                <linearGradient id="home-header-icon-gradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="rgba(255,255,255,0.95)" />
+                  <stop offset="1" stopColor="rgba(255,255,255,0.65)" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <Feather className="w-9 h-9" stroke="url(#home-header-icon-gradient)" strokeWidth={1.75} />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+          <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent mb-2">
             Welcome Home, {displayName}.
           </h1>
           <p className="text-zinc-400 text-sm">Let&apos;s craft amazing work today.</p>
