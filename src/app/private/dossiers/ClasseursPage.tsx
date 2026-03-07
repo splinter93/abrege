@@ -431,6 +431,10 @@ function ItemCard({
       } : undefined}
       onDragLeave={isFolder ? () => onFolderDragLeave?.() : undefined}
       onDrop={isFolder && onDropOnFolder ? (e) => { e.preventDefault(); e.stopPropagation(); onDropOnFolder(e, item.id); } : undefined}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onOptions?.(e);
+      }}
     >
       <div className="flex items-start justify-between">
         <div className={`flex h-11 w-11 items-center justify-center rounded-xl border shadow-sm transition-transform duration-300 group-hover:scale-[1.02] ${iconBoxClasses}`}>
@@ -516,6 +520,10 @@ function ItemListRow({
       } : undefined}
       onDragLeave={isFolder ? () => onFolderDragLeave?.() : undefined}
       onDrop={isFolder && onDropOnFolder ? (e) => { e.preventDefault(); e.stopPropagation(); onDropOnFolder(e, item.id); } : undefined}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onOptions?.(e);
+      }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Icon className={`h-[18px] w-[18px] flex-shrink-0 ${iconClasses}`} strokeWidth={1.5} />

@@ -1,145 +1,68 @@
 /* ==========================================================================
-   SIMPLE CONTEXT MENU - DESIGN GLASSMORPHISM MODERNE
+   SIMPLE CONTEXT MENU
    ========================================================================== */
 
 .context-menu-container {
   position: fixed;
   z-index: 2000;
   min-width: 140px;
-  background: var(--surface-1, #1a1a1c);
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
-  padding: 8px 0;
-  color: var(--text-primary, #ffffff);
-  font-family: 'Manrope', -apple-system, Arial, sans-serif;
+  background-color: var(--color-bg-block);
+  border: 1px solid var(--color-border-block);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  padding: 4px;
+  font-family: 'Manrope', -apple-system, sans-serif;
   font-size: 13px;
-  font-weight: 400;
   user-select: none;
-  animation: fadeInMenu 0.2s ease-out;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  overflow: hidden;
+  animation: fadeInMenu 0.15s ease-out;
 }
 
 .context-menu-gradient {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.05) 0%, 
-    rgba(255, 255, 255, 0.01) 50%, 
-    rgba(255, 255, 255, 0.05) 100%);
-  opacity: 0.8;
-  pointer-events: none;
-  z-index: 1;
-  border-radius: 12px;
+  display: none;
 }
 
 .context-menu-item {
-  padding: 10px 16px;
-  cursor: pointer;
-  border: none;
-  background: none;
+  display: block;
   width: 100%;
-  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-text-primary);
   font-size: 13px;
   font-weight: 400;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  text-align: left;
+  cursor: pointer;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-  color: #ffffff;
-  margin: 2px 6px;
-  position: relative;
-  z-index: 2;
+  transition: background 0.15s ease;
 }
 
 .context-menu-item:hover {
-  background: var(--surface-hover, rgba(255, 255, 255, 0.08));
-  color: var(--text-primary, #ffffff);
-  transform: translateX(2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
 }
 
 .context-menu-item:active {
-  transform: translateX(1px) scale(0.98);
-  background: var(--surface-active, rgba(255, 255, 255, 0.12));
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 .context-menu-item-text {
   display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  position: relative;
-  z-index: 3;
 }
 
-/* Animation d'apparition */
-@keyframes fadeInMenu {
-  from { 
-    opacity: 0; 
-    transform: scale(0.92) translateY(-4px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: scale(1) translateY(0); 
-  }
-}
-
-/* Animation de disparition */
-@keyframes fadeOutMenu {
-  from { 
-    opacity: 1; 
-    transform: scale(1) translateY(0); 
-  }
-  to { 
-    opacity: 0; 
-    transform: scale(0.95) translateY(-2px); 
-  }
-}
-
-/* Responsive - Ajustements pour petits écrans */
-@media (max-width: 768px) {
-  .context-menu-container {
-    min-width: 120px;
-    font-size: 12px;
-    padding: 6px 0;
-  }
-  
-  .context-menu-item {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
-}
-
-/* Mode sombre - Ajustements supplémentaires */
-@media (prefers-color-scheme: dark) {
-  .context-menu-container {
-    background: rgba(10, 10, 10, 0.98);
-    border-color: rgba(255, 255, 255, 0.15);
-  }
-  
-  .context-menu-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-}
-
-/* Focus visible pour l'accessibilité */
-.context-menu-item:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.3);
-  outline-offset: 2px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-/* Séparateur optionnel entre les éléments */
 .context-menu-separator {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 4px 12px;
-  opacity: 0.6;
+  background-color: var(--color-border-block);
+  margin: 4px 0;
+}
+
+@keyframes fadeInMenu {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
