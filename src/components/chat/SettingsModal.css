@@ -99,12 +99,19 @@ body.chat-theme-light .settings-modal-close:hover {
 }
 
 /* ========================================
-   Modal Container (Two Columns)
+   Modal Container (Two Columns) — desktop
    ======================================== */
+
+.settings-desktop-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
 .settings-modal-container {
   display: flex;
-  height: 100%;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* ========================================
@@ -116,11 +123,26 @@ body.chat-theme-light .settings-modal-close:hover {
   min-width: 240px;
   background: rgba(0, 0, 0, 0.2);
   border-right: var(--chat-surface-border);
-  padding: 32px 12px 12px 12px; /* ✅ Plus d'espace en haut */
+  padding: 24px 12px 12px 12px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  gap: 20px; /* ✅ Plus d'espace entre les groupes */
+}
+
+.settings-menu-group {
+  display: flex;
+  flex-direction: column;
   gap: 4px;
+}
+
+.settings-menu-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--chat-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 12px 8px 12px;
 }
 
 /* Light Mode - Menu plus clair */
@@ -149,7 +171,7 @@ body.chat-theme-light .settings-menu {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: none;
   background: transparent;
   color: var(--chat-text-muted);
@@ -169,7 +191,7 @@ body.chat-theme-light .settings-menu {
 }
 
 .settings-menu-item.active {
-  background: rgba(255, 255, 255, 0.12); /* ✅ Juste plus lumineux */
+  background: rgba(255, 255, 255, 0.12);
   color: var(--chat-text-primary);
 }
 
@@ -187,6 +209,7 @@ body.chat-theme-light .settings-menu-item.active {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  width: 20px; /* ✅ Taille fixe pour alignement */
 }
 
 .settings-menu-label {
@@ -452,45 +475,290 @@ body.chat-theme-light .settings-option-card.active {
    Responsive
    ======================================== */
 
+/* Desktop : afficher layout desktop, masquer mobile */
+.settings-desktop-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.settings-mobile-layout {
+  display: none;
+}
+
 @media (max-width: 768px) {
+
+  /* Cacher le layout desktop, afficher mobile */
+  .settings-desktop-layout {
+    display: none;
+  }
+
+  .settings-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
   .settings-modal {
     max-width: 100%;
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
-  }
-
-  .settings-modal-container {
-    flex-direction: column;
-  }
-
-  .settings-menu {
     width: 100%;
-    min-width: 100%;
-    max-height: 200px;
-    border-right: none;
-    border-bottom: var(--chat-surface-border);
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 8px;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    overflow: hidden;
+    position: relative;
+    background: #000; /* Fond noir profond */
   }
 
-  .settings-menu-item {
-    min-width: 160px;
+  /* Layout mobile : deux vues en flex horizontal, overflow caché */
+  .settings-mobile-layout {
+    display: flex;
+    width: 200%;
+    height: 100%;
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .settings-content-area {
-    padding: 56px 20px 24px 20px; /* ✅ Espace en haut pour le bouton fermer */
+  .settings-mobile-layout--detail {
+    transform: translateX(-50%);
   }
 
-  .settings-modal-close {
-    top: 12px;
-    right: 12px;
+  /* Vue liste et vue détail : chacune occupe 50% du layout (= 100% de l'écran) */
+  .settings-mobile-list-view,
+  .settings-mobile-detail-view {
+    width: 50%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header mobile commun ── */
+  .settings-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 0 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+    position: relative; /* ✅ Pour centrer le titre */
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 10;
+  }
+
+  .settings-mobile-title {
+    position: absolute; /* ✅ Titre centré */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--chat-text-primary);
+    font-family: var(--font-chat-ui);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    max-width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .settings-mobile-close,
+  .settings-mobile-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--chat-text-primary);
+    cursor: pointer;
+    border-radius: 50%; /* Boutons ronds plus premium */
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .settings-mobile-close:active,
+  .settings-mobile-back:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .settings-mobile-header-spacer {
+    width: 36px;
+    flex-shrink: 0;
+  }
+
+  /* ── Scroll Area ── */
+  .settings-mobile-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 40px;
+    background: #000;
+  }
+
+  /* ── Profile Header ── */
+  .settings-mobile-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 32px 20px;
+    gap: 16px;
+  }
+
+  .settings-mobile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 600;
+    color: white;
+    box-shadow: 0 8px 24px rgba(168, 85, 247, 0.3);
+    overflow: hidden;
+  }
+
+  .settings-mobile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-cover: cover;
+  }
+
+  .settings-mobile-user-info {
+    text-align: center;
+  }
+
+  .settings-mobile-user-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .settings-mobile-user-email {
+    font-size: 14px;
+    color: var(--chat-text-muted);
+  }
+
+  .settings-mobile-profile-btn {
+    margin-top: 8px;
+    padding: 8px 20px;
+    border-radius: 20px;
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .settings-mobile-profile-btn:active {
+    background: #2a2a2a;
+    transform: scale(0.95);
+  }
+
+  /* ── Groupement Mobile ── */
+  .settings-mobile-group {
+    margin-bottom: 32px;
+  }
+
+  .settings-mobile-group-label {
+    padding: 0 24px 12px 24px; /* ✅ Un peu plus de padding latéral */
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--chat-text-muted);
+  }
+
+  .settings-mobile-group-content {
+    background: #111;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin: 0 16px; /* ✅ Ajout de marges latérales pour le bloc de groupe */
+    border-radius: 16px; /* ✅ Bords arrondis pour le bloc de groupe (Apple style) */
+    overflow: hidden;
+  }
+
+  .settings-mobile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 16px 20px;
+    border: none;
+    background: transparent;
+    color: white;
+    font-family: var(--font-chat-ui);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    position: relative;
+  }
+
+  .settings-mobile-menu-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 52px; /* ✅ Ajusté pour l'icône */
+    right: 20px; /* ✅ S'arrête avant le bord droit */
+    bottom: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .settings-mobile-menu-item:active {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .settings-mobile-menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    color: var(--chat-text-muted);
+    flex-shrink: 0;
+  }
+
+  .settings-mobile-menu-label {
+    flex: 1;
+  }
+
+  .settings-mobile-menu-chevron {
+    color: var(--chat-text-muted);
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+
+  /* ── Contenu détail ── */
+  .settings-mobile-content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 20px 40px 20px;
+    background: #000;
+  }
+
+  .settings-mobile-content-area .settings-content-title {
+    display: none; /* Évite doublon avec le titre du header */
+  }
+
+  .settings-mobile-content-area .settings-content-description {
+    margin-bottom: 24px;
   }
 
   .settings-options-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .settings-option-card {
+    padding: 16px;
+    border-radius: 12px;
+    background: #111;
+    border-color: rgba(255, 255, 255, 0.06);
   }
 }
 

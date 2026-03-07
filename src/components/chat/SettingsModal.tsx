@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, User, Bell, Palette, Link2, Calendar, Database, Lock, Users, UserCircle, Moon, Sun, Sparkles, Circle, Info, Flame, Snowflake, Zap, FileText } from 'lucide-react';
+import { X, ArrowLeft, ChevronRight, User, Bell, Palette, Link2, Calendar, Database, Lock, Users, UserCircle, Moon, Sun, Sparkles, Circle, Flame, Snowflake, Zap, FileText, Settings } from 'lucide-react';
 import { useTheme, type ChatTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/hooks/useAuth';
 import { useChatStore } from '@/store/useChatStore';
 import {
   CHAT_FONT_PRESETS,
@@ -34,8 +35,34 @@ interface MenuItem {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const [activeSection, setActiveSection] = useState<SettingsSection>('general');
-  
+  const [activeSection, setActiveSection] = useState<SettingsSection | null>(null);
+  const [isMobileDetail, setIsMobileDetail] = useState(false);
+  const { user } = useAuth();
+
+  const checkMobile = () => typeof window !== 'undefined' && window.innerWidth <= 768;
+
+  const handleSelectSection = (id: SettingsSection) => {
+    setActiveSection(id);
+    if (checkMobile()) setIsMobileDetail(true);
+  };
+
+  const handleMobileBack = () => {
+    setIsMobileDetail(false);
+    setActiveSection(null);
+  };
+
+  // Desktop : sélectionner 'general' par défaut
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!checkMobile()) {
+      setActiveSection(prev => prev ?? 'general');
+      setIsMobileDetail(false);
+    } else {
+      setActiveSection(null);
+      setIsMobileDetail(false);
+    }
+  }, [isOpen]);
+
   // Theme state
   const { theme, setTheme, availableThemes, mounted } = useTheme();
   const { currentSession, updateSession } = useChatStore();
@@ -164,7 +191,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
   }, []);
 
-  // Load preferences (police chat = toujours Manrope, on n’applique plus de preset depuis ici)
+  // Load preferences
   useEffect(() => {
     setSelectedFont('manrope');
     localStorage.setItem('chat-font-preference', 'manrope');
@@ -177,7 +204,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     const savedColors = localStorage.getItem('chat-color-preference');
     if (savedColors) {
       setSelectedColorPalette(savedColors);
-      // Appliquer la palette sauvegardée sur body avec !important
       const palette = availableColorPalettes.find(p => p.value === savedColors);
       if (palette) {
         Object.entries(palette.colors).forEach(([property, value]) => {
@@ -195,7 +221,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       }
     }
     
-  }, [currentSession, availableColorPalettes, darkenColor]);
+  }, [isOpen, availableColorPalettes, darkenColor]);
 
   const handleFontChange = (_fontValue: string) => {
     setSelectedFont('manrope');
@@ -215,7 +241,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     
     const palette = availableColorPalettes.find(p => p.value === paletteValue);
     if (palette) {
-      // Appliquer sur body au lieu de :root pour override les thèmes
       Object.entries(palette.colors).forEach(([property, value]) => {
         document.body.style.setProperty(property, value, 'important');
       });
@@ -233,8 +258,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  // handleHistoryLimitChange supprimé (fonctionnalité obsolète)
-
   // Theme icons mapping
   const themeIcons: Record<ChatTheme, React.ReactNode> = {
     dark: <Moon size={16} />,
@@ -246,29 +269,39 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const menuItems: MenuItem[] = [
-    { id: 'general', icon: <User size={18} />, label: 'General' },
-    { id: 'notifications', icon: <Bell size={18} />, label: 'Notifications' },
-    { id: 'personalization', icon: <Palette size={18} />, label: 'Personalization' },
-    { id: 'connectors', icon: <Link2 size={18} />, label: 'Apps & Connectors' },
-    { id: 'schedules', icon: <Calendar size={18} />, label: 'Schedules' },
-    { id: 'data', icon: <Database size={18} />, label: 'Data controls' },
-    { id: 'security', icon: <Lock size={18} />, label: 'Security' },
-    { id: 'parental', icon: <Users size={18} />, label: 'Parental controls' },
-    { id: 'account', icon: <UserCircle size={18} />, label: 'Account' },
+  const menuGroups = [
+    {
+      label: 'Mon Scrivia',
+      items: [
+        { id: 'general', icon: <Settings size={18} />, label: 'Général' },
+        { id: 'personalization', icon: <Palette size={18} />, label: 'Personnalisation' },
+        { id: 'notifications', icon: <Bell size={18} />, label: 'Notifications' },
+        { id: 'connectors', icon: <Link2 size={18} />, label: 'Apps & Connecteurs' },
+      ]
+    },
+    {
+      label: 'Compte',
+      items: [
+        { id: 'account', icon: <UserCircle size={18} />, label: 'Mon Compte' },
+        { id: 'security', icon: <Lock size={18} />, label: 'Sécurité' },
+        { id: 'data', icon: <Database size={18} />, label: 'Contrôle des données' },
+        { id: 'parental', icon: <Users size={18} />, label: 'Contrôle parental' },
+      ]
+    }
   ];
+
+  const allMenuItems = menuGroups.flatMap(g => g.items);
 
   const renderContent = () => {
     switch (activeSection) {
       case 'general':
         return (
           <div className="settings-content">
-            <h2 className="settings-content-title">General Settings</h2>
+            <h2 className="settings-content-title">Général</h2>
             <p className="settings-content-description">
-              Configure your general preferences and application behavior.
+              Configurez vos préférences générales et le comportement de l'application.
             </p>
 
-            {/* PDF Parser (chat) */}
             <div className="settings-field">
               <label className="settings-field-label">Parseur PDF</label>
               <CustomSelect
@@ -287,20 +320,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
           <div className="settings-content">
             <h2 className="settings-content-title">Notifications</h2>
             <p className="settings-content-description">
-              Manage your notification preferences.
+              Gérez vos préférences de notifications.
             </p>
-            {/* Content à ajouter */}
           </div>
         );
       case 'personalization':
         return (
           <div className="settings-content">
-            <h2 className="settings-content-title">Personalization</h2>
+            <h2 className="settings-content-title">Personnalisation</h2>
             <p className="settings-content-description">
-              Customize the appearance and behavior of your chat interface.
+              Personnalisez l'apparence et le comportement de votre interface.
             </p>
 
-            {/* Theme selector */}
             <div className="settings-field">
               <label className="settings-field-label">Thème d'affichage</label>
               <CustomSelect
@@ -315,7 +346,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               />
             </div>
 
-            {/* Font selector */}
             <div className="settings-field">
               <label className="settings-field-label">Police de caractères</label>
               <CustomSelect
@@ -328,7 +358,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               />
             </div>
 
-            {/* Color palette selector */}
             <div className="settings-field">
               <label className="settings-field-label">Palette de couleurs</label>
               <CustomSelect
@@ -341,60 +370,136 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 onChange={handleColorPaletteChange}
               />
             </div>
-
-            {/* history_limit supprimé - Messages gérés via pagination automatique */}
           </div>
         );
       case 'account':
         return (
           <div className="settings-content">
-            <h2 className="settings-content-title">Account</h2>
+            <h2 className="settings-content-title">Mon Compte</h2>
             <p className="settings-content-description">
-              Manage your account settings and preferences.
+              Gérez vos informations de compte et vos préférences.
             </p>
-            {/* Content à ajouter */}
           </div>
         );
       default:
         return (
           <div className="settings-content">
-            <h2 className="settings-content-title">{menuItems.find(m => m.id === activeSection)?.label}</h2>
+            <h2 className="settings-content-title">{allMenuItems.find(m => m.id === activeSection)?.label}</h2>
             <p className="settings-content-description">
-              Content coming soon...
+              Contenu à venir...
             </p>
           </div>
         );
     }
   };
 
+  const userDisplayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Utilisateur';
+  const userInitial = userDisplayName.charAt(0).toUpperCase();
+
   const modalContent = (
     <div className="settings-modal-overlay" onClick={onClose}>
       <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Bouton fermer */}
-        <button className="settings-modal-close" onClick={onClose} aria-label="Close settings">
-          <X size={20} />
-        </button>
 
-        <div className="settings-modal-container">
-          {/* Menu à gauche */}
-          <nav className="settings-menu">
-            {menuItems.map((item) => (
-              <button
-                key={item.id}
-                className={`settings-menu-item ${activeSection === item.id ? 'active' : ''}`}
-                onClick={() => setActiveSection(item.id)}
-              >
-                <span className="settings-menu-icon">{item.icon}</span>
-                <span className="settings-menu-label">{item.label}</span>
-              </button>
-            ))}
-          </nav>
-
-          {/* Contenu à droite */}
-          <div className="settings-content-area">
-            {renderContent()}
+        {/* ── DESKTOP : deux colonnes ── */}
+        <div className="settings-desktop-layout">
+          <button className="settings-modal-close" onClick={onClose} aria-label="Fermer">
+            <X size={20} />
+          </button>
+          <div className="settings-modal-container">
+            <nav className="settings-menu">
+              {menuGroups.map((group, idx) => (
+                <div key={idx} className="settings-menu-group">
+                  <div className="settings-menu-group-label">{group.label}</div>
+                  {group.items.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`settings-menu-item ${activeSection === item.id ? 'active' : ''}`}
+                      onClick={() => setActiveSection(item.id)}
+                    >
+                      <span className="settings-menu-icon">{item.icon}</span>
+                      <span className="settings-menu-label">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </nav>
+            <div className="settings-content-area">
+              {activeSection ? renderContent() : null}
+            </div>
           </div>
         </div>
+
+        {/* ── MOBILE : vue liste ── */}
+        <div className={`settings-mobile-layout${isMobileDetail ? ' settings-mobile-layout--detail' : ''}`}>
+
+          {/* Vue liste */}
+          <div className="settings-mobile-list-view">
+            <div className="settings-mobile-header">
+              <span className="settings-mobile-title">Paramètres</span>
+              <button className="settings-mobile-close" onClick={onClose} aria-label="Fermer">
+                <ArrowLeft size={20} />
+              </button>
+            </div>
+            
+            <div className="settings-mobile-scroll">
+              <div className="settings-mobile-profile">
+                <div className="settings-mobile-avatar">
+                  {user?.user_metadata?.avatar_url ? (
+                    <img src={user.user_metadata.avatar_url} alt="" />
+                  ) : (
+                    <span>{userInitial}</span>
+                  )}
+                </div>
+                <div className="settings-mobile-user-info">
+                  <div className="settings-mobile-user-name">{userDisplayName}</div>
+                  <div className="settings-mobile-user-email">{user?.email}</div>
+                </div>
+                <button className="settings-mobile-profile-btn" onClick={() => handleSelectSection('account')}>
+                  Modifier
+                </button>
+              </div>
+
+              <nav className="settings-mobile-menu">
+                {menuGroups.map((group, gIdx) => (
+                  <div key={gIdx} className="settings-mobile-group">
+                    <div className="settings-mobile-group-label">{group.label}</div>
+                    <div className="settings-mobile-group-content">
+                      {group.items.map((item) => (
+                        <button
+                          key={item.id}
+                          className="settings-mobile-menu-item"
+                          onClick={() => handleSelectSection(item.id as SettingsSection)}
+                        >
+                          <span className="settings-mobile-menu-icon">{item.icon}</span>
+                          <span className="settings-mobile-menu-label">{item.label}</span>
+                          <ChevronRight size={16} className="settings-mobile-menu-chevron" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </nav>
+            </div>
+          </div>
+
+          {/* Vue détail */}
+          <div className="settings-mobile-detail-view">
+            <div className="settings-mobile-header">
+              <button className="settings-mobile-back" onClick={handleMobileBack} aria-label="Retour">
+                <ArrowLeft size={20} />
+              </button>
+              <span className="settings-mobile-title">
+                {allMenuItems.find(m => m.id === activeSection)?.label ?? ''}
+              </span>
+              <div className="settings-mobile-header-spacer" />
+            </div>
+            <div className="settings-mobile-content-area">
+              {activeSection ? renderContent() : null}
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </div>
   );
