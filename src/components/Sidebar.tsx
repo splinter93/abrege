@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Feather,
+  ChevronsUpDown,
   LayoutDashboard,
   FolderKanban,
   Files,
@@ -117,18 +118,18 @@ export default function Sidebar() {
       className={`sidebar-root flex h-full min-h-screen w-full flex-shrink-0 flex-col ${isMobile ? '' : 'sidebar-root--desktop max-w-[16rem]'}`}
       aria-label="Navigation principale"
     >
-      {/* En-tête : Logo + Nom */}
-      <header className="p-5 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-white/10 bg-gradient-to-b from-white/10 to-white/5 shadow-sm"
-            aria-hidden
-          >
-            <Feather className="h-4 w-4 text-white" />
+      {/* Header Sidebar (Workspace Switcher) */}
+      <header className="h-14 px-3 flex items-center shrink-0 hover:bg-white/[0.03] cursor-pointer transition-colors group">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded-md bg-[#141414] border border-white/[0.1] shadow-sm flex items-center justify-center text-neutral-300 group-hover:text-white group-hover:border-white/[0.2] transition-colors">
+              <Feather className="w-3.5 h-3.5" />
+            </div>
+            <span className="text-[14px] font-medium tracking-tight text-neutral-200 group-hover:text-white transition-colors">
+              Scrivia
+            </span>
           </div>
-          <span className="font-sans text-[18px] font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70 antialiased">
-            Scrivia
-          </span>
+          <ChevronsUpDown className="w-4 h-4 text-neutral-600 group-hover:text-neutral-400 transition-colors shrink-0" />
         </div>
       </header>
 

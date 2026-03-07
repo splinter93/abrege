@@ -1,8 +1,8 @@
 'use client';
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { ChevronsUpDown } from 'lucide-react';
 import { supabase } from '@/supabaseClient';
 import { useActiveSidebarLink } from '@/hooks/useActiveSidebarLink';
 import { motion } from 'framer-motion';
@@ -196,35 +196,25 @@ const UnifiedSidebar: React.FC<UnifiedSidebarProps> = ({
         onMouseLeave={handleMouseLeave}
       >
       <div className="unified-sidebar-content">
-        {/* Logo Scrivia */}
-        <motion.div 
-          className="unified-sidebar-logo"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          {!isCollapsed && (
-            <Image
-              src="/logo-scrivia-white.png"
-              alt="Scrivia"
-              width={140}
-              height={45}
-              priority
-              className="unified-logo-image"
-            />
-          )}
-        {isCollapsed && (
-          <div className="unified-logo-icon">
-            <Feather
-              size={24}
-              className="unified-logo-icon-image"
-              color="var(--chat-text-primary, #e8eaed)"
-            />
+        {/* Header Sidebar (Workspace Switcher) */}
+        <div className="h-14 px-3 flex items-center shrink-0 hover:bg-white/[0.03] cursor-pointer transition-colors group">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded-md bg-[#141414] border border-white/[0.1] shadow-sm flex items-center justify-center text-neutral-300 group-hover:text-white group-hover:border-white/[0.2] transition-colors">
+                <Feather className="w-3.5 h-3.5" />
+              </div>
+              {!isCollapsed && (
+                <span className="text-[14px] font-medium tracking-tight text-neutral-200 group-hover:text-white transition-colors">
+                  Scrivia
+                </span>
+              )}
+            </div>
+            {!isCollapsed && (
+              <ChevronsUpDown className="w-4 h-4 text-neutral-600 group-hover:text-neutral-400 transition-colors shrink-0" />
+            )}
           </div>
-        )}
-        </motion.div>
+        </div>
 
-        
         {/* Navigation principale */}
         <motion.div 
           className="unified-sidebar-section unified-sidebar-nav-main"
