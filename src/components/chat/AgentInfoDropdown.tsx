@@ -99,9 +99,9 @@ const AgentInfoDropdown: React.FC<AgentInfoDropdownProps> = ({ agent, isOpen, on
           </div>
         ) : null}
 
-        {/* Lien configuration */}
+        {/* Lien configuration — slug prioritaire (API accepte id ou slug) */}
         <Link 
-          href="/agents" 
+          href={`/private/agents2/${agent.slug || agent.id}`}
           className="agent-dropdown-config-link"
           onClick={onClose}
         >
