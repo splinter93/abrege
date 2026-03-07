@@ -222,7 +222,7 @@ function SortableTab({
         isActive
           ? "bg-white/[0.08] text-white"
           : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]"
-      } ${isDragOver ? "bg-zinc-800/50 ring-1 ring-zinc-600" : ""}`}
+      } ${isDragOver ? "bg-zinc-800/40" : ""}`}
     >
       <button
         type="button"
@@ -388,7 +388,7 @@ function ItemCard({
     <div
       className={`group relative flex min-h-[160px] cursor-pointer flex-col justify-between rounded-xl p-5 shadow-sm transition-all duration-300 ${
         isDropTarget
-          ? "border-zinc-500 bg-zinc-800/40 ring-1 ring-zinc-500 border"
+          ? "border-orange-500/50 bg-orange-500/5 border"
           : "classeurs-block classeurs-card hover:shadow-lg hover:shadow-black/20"
       }`}
       role="button"
@@ -474,7 +474,7 @@ function ItemListRow({
   return (
     <div
       className={`group flex items-center justify-between rounded-md border px-3 py-2 transition-all duration-200 cursor-pointer ${
-        isDropTarget ? "border-zinc-600 bg-zinc-800/30" : "border-transparent hover:border-zinc-800/60"
+        isDropTarget ? "border-orange-500/40 bg-orange-500/5" : "border-transparent hover:border-zinc-800/60"
       }`}
       role="button"
       tabIndex={0}
@@ -646,9 +646,7 @@ function ClasseursContent({
 
       {viewMode === "grid" ? (
         <div
-          className={`grid w-full min-w-0 grid-cols-1 gap-4 rounded-xl transition-colors sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ${
-            isRootDropActive ? "ring-2 ring-zinc-500/50 bg-zinc-800/10" : ""
-          }`}
+          className="grid w-full min-w-0 grid-cols-1 gap-4 rounded-xl transition-colors sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
           onDragOver={onRootDragOver}
           onDragLeave={onRootDragLeave}
           onDrop={onRootDrop}
@@ -669,9 +667,7 @@ function ClasseursContent({
         </div>
       ) : (
         <div
-          className={`flex flex-col rounded-xl border border-zinc-800/60 bg-zinc-900/10 overflow-hidden transition-colors ${
-            isRootDropActive ? "ring-2 ring-zinc-500/50 bg-zinc-800/20" : ""
-          }`}
+          className="flex flex-col rounded-xl border border-zinc-800/60 bg-zinc-900/10 overflow-hidden transition-colors"
           onDragOver={onRootDragOver}
           onDragLeave={onRootDragLeave}
           onDrop={onRootDrop}

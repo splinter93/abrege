@@ -171,24 +171,24 @@ function AgentsV2Content() {
               </div>
               {!isMobile && (
                 <div
-                  className="flex items-center gap-1 rounded-lg p-0.5 shrink-0"
+                  className="flex shrink-0 items-center gap-1 rounded-xl p-0.5"
                   style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
                 >
                   <button
                     type="button"
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    className={`rounded-lg p-2 transition-all ${effectiveViewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
                     title="Vue grille"
                   >
-                    <LayoutGrid className="w-4 h-4" />
+                    <LayoutGrid className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    className={`rounded-lg p-2 transition-all ${effectiveViewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
                     title="Vue liste"
                   >
-                    <List className="w-4 h-4" />
+                    <List className="h-4 w-4" />
                   </button>
                 </div>
               )}
