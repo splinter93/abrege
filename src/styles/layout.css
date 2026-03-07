@@ -52,6 +52,11 @@
   background-color: var(--color-bg-primary) !important;
 }
 
+/* Conteneurs de contenu : couvrir toute la hauteur écran */
+.page-content-inner {
+  min-height: 100vh;
+}
+
 /* ==========================================================================
    SECTIONS DE CONTENU
    ========================================================================== */

@@ -5,6 +5,7 @@
 /* Même background que la zone de contenu (Mes Fichiers, etc.) */
 .classeurs-page-root {
   background-color: var(--color-bg-primary);
+  min-height: 100vh;
 }
 
 /* Manrope pour toute la page Classeurs (sidebar + contenu) */

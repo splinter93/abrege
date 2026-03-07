@@ -93,6 +93,7 @@ export interface ClasseurItem {
 interface ClasseurTab {
   id: string;
   name: string;
+  emoji?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -228,8 +229,9 @@ function SortableTab({
         type="button"
         onClick={() => onSelect(tab.id)}
         onContextMenu={(e) => onContextMenu?.(e, tab)}
-        className="block w-full text-left"
+        className="flex items-center gap-1.5 w-full text-left"
       >
+        {tab.emoji && <span className="text-base leading-none">{tab.emoji}</span>}
         {tab.name}
       </button>
     </div>
@@ -551,6 +553,7 @@ function ClasseursContent({
   isRootDropActive,
   onFolderDragOver,
   onFolderDragLeave,
+  onSearchChange,
 }: {
   breadcrumbSegments: BreadcrumbSegment[];
   items: ClasseurItem[];
@@ -568,6 +571,7 @@ function ClasseursContent({
   isRootDropActive: boolean;
   onFolderDragOver?: (folderId: string) => void;
   onFolderDragLeave?: () => void;
+  onSearchChange?: (q: string) => void;
 }) {
   const isMobileContent = useIsMobile();
   const filtered = useMemo(() => {
@@ -586,28 +590,68 @@ function ClasseursContent({
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden py-6">
-      <nav className="flex min-w-0 flex-wrap items-center gap-1 text-xs font-medium uppercase tracking-wider text-zinc-500" aria-label="Fil d'Ariane">
-        {contentBreadcrumb.length === 0 ? (
-          <span className="text-zinc-400">Notebooks</span>
-        ) : (
-          contentBreadcrumb.map((seg, i) => (
-            <span key={i} className="flex items-center gap-1">
-              {i > 0 && <span className="mx-1 text-zinc-700">/</span>}
-              {seg.onClick ? (
-                <button
-                  type="button"
-                  onClick={seg.onClick}
-                  className={`transition-colors hover:text-zinc-300 focus:outline-none ${i === 0 ? "uppercase" : ""}`}
-                >
-                  {seg.label}
-                </button>
-              ) : (
-                <span className={`text-zinc-400 ${i === 0 ? "uppercase" : ""}`}>{seg.label}</span>
-              )}
-            </span>
-          ))
-        )}
-      </nav>
+      {/* Breadcrumb à gauche + search + toggle à droite */}
+      <div className="flex items-center justify-between gap-4 min-w-0">
+        <nav className="flex min-w-0 flex-wrap items-center gap-1 text-xs font-medium uppercase tracking-wider text-zinc-500" aria-label="Fil d'Ariane">
+          {contentBreadcrumb.length === 0 ? (
+            <span className="text-zinc-400">Notebooks</span>
+          ) : (
+            contentBreadcrumb.map((seg, i) => (
+              <span key={i} className="flex items-center gap-1">
+                {i > 0 && <span className="mx-1 text-zinc-700">/</span>}
+                {seg.onClick ? (
+                  <button
+                    type="button"
+                    onClick={seg.onClick}
+                    className={`transition-colors hover:text-zinc-300 focus:outline-none ${i === 0 ? "uppercase" : ""}`}
+                  >
+                    {seg.label}
+                  </button>
+                ) : (
+                  <span className={`text-zinc-400 ${i === 0 ? "uppercase" : ""}`}>{seg.label}</span>
+                )}
+              </span>
+            ))
+          )}
+        </nav>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="relative hidden sm:block">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500 pointer-events-none" />
+            <input
+              type="search"
+              placeholder="Rechercher…"
+              value={searchQuery}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              className="h-10 w-52 rounded-xl pl-9 pr-4 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none focus:border-[var(--color-border-block)] transition-colors"
+              style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
+            />
+          </div>
+          {!isMobileContent && (
+            <div
+              className="flex shrink-0 items-center gap-1 rounded-xl p-0.5"
+              style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
+            >
+              <button
+                type="button"
+                onClick={() => onViewModeChange("grid")}
+                className={`rounded-lg p-2 transition-all ${viewMode === "grid" ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"}`}
+                aria-pressed={viewMode === "grid"}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onViewModeChange("list")}
+                className={`rounded-lg p-2 transition-all ${viewMode === "list" ? "bg-zinc-800 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"}`}
+                aria-pressed={viewMode === "list"}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {viewMode === "grid" ? (
         <div
@@ -777,7 +821,7 @@ export default function ClasseursPage() {
   const foldersMap = useFileSystemStore((s) => s.folders);
 
   const tabs: ClasseurTab[] = useMemo(
-    () => classeurs.map((c) => ({ id: c.id, name: c.name })),
+    () => classeurs.map((c) => ({ id: c.id, name: c.name, emoji: c.emoji })),
     [classeurs]
   );
 
@@ -1044,7 +1088,7 @@ export default function ClasseursPage() {
             onCreateNote={handleCreateNoteClick}
           />
 
-          {/* Toolbar : onglets + recherche + vues sur une ligne */}
+          {/* Toolbar : onglets uniquement */}
           <div className="mb-6 flex w-full items-center gap-4 border-b border-white/[0.08] pb-4">
             <div className="min-w-0 flex-1 overflow-hidden">
               <ClasseursTabs
@@ -1060,38 +1104,6 @@ export default function ClasseursPage() {
                 handleUpdateClasseurPositions={handleUpdateClasseurPositions}
                 classeursForReorder={classeurs}
               />
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="relative hidden sm:block">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500 pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder="Rechercher..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="classeurs-block h-8 w-48 rounded-md border pl-9 pr-3 text-sm text-neutral-200 placeholder:text-neutral-500 transition-all outline-none focus:ring-0 focus:ring-offset-0"
-                />
-              </div>
-              {!isMobile && (
-                <div className="classeurs-block flex shrink-0 rounded-lg p-1">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("grid")}
-                    className={`rounded-md p-1.5 transition-all ${effectiveViewMode === "grid" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
-                    aria-pressed={effectiveViewMode === "grid"}
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("list")}
-                    className={`rounded-md p-1.5 transition-all ${effectiveViewMode === "list" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
-                    aria-pressed={effectiveViewMode === "list"}
-                  >
-                    <List className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
             </div>
           </div>
 
@@ -1110,6 +1122,7 @@ export default function ClasseursPage() {
                 viewMode={effectiveViewMode}
                 onViewModeChange={setViewMode}
                 searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
                 onItemOpen={handleItemOpen}
                 onItemContextMenu={handleItemContextMenu}
                 onDragStartItem={() => {}}
