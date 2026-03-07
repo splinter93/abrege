@@ -220,7 +220,11 @@ function SortableTab({
       onDragOver={(e) => { e.preventDefault(); onDragOver?.(e, tab); }}
       onDragLeave={onDragLeave}
       onDrop={(e) => { e.preventDefault(); onDrop?.(e, tab); }}
-      className={`relative flex-shrink-0 whitespace-nowrap py-3 px-1 text-sm transition-colors duration-200 hover:text-zinc-200 rounded ${isDragOver ? "bg-zinc-800/50 ring-1 ring-zinc-600" : ""}`}
+      className={`relative flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-sm font-medium transition-colors duration-200 rounded-md cursor-pointer ${
+        isActive
+          ? "bg-white/[0.08] text-white"
+          : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]"
+      } ${isDragOver ? "bg-zinc-800/50 ring-1 ring-zinc-600" : ""}`}
     >
       <button
         type="button"
@@ -228,14 +232,7 @@ function SortableTab({
         onContextMenu={(e) => onContextMenu?.(e, tab)}
         className="block w-full text-left"
       >
-        {isActive ? (
-          <span className="text-white">{tab.name}</span>
-        ) : (
-          <span className="text-zinc-400">{tab.name}</span>
-        )}
-        {isActive && (
-          <span className="absolute bottom-0 left-0 h-px w-full bg-white" aria-hidden />
-        )}
+        {tab.name}
       </button>
     </div>
   );
@@ -301,7 +298,7 @@ function ClasseursTabs({
     >
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto no-scrollbar">
         <SortableContext items={tabs.map((t) => t.id)} strategy={horizontalListSortingStrategy}>
-          <div className="flex min-w-0 gap-8">
+          <div className="flex min-w-0 gap-1">
             {tabs.map((tab) => (
               <SortableTab
                 key={tab.id}
@@ -398,7 +395,7 @@ function ItemCard({
 
   return (
     <div
-      className={`group relative flex aspect-square cursor-pointer flex-col justify-between rounded-xl border p-4 shadow-sm transition-all duration-200 ${
+      className={`group relative flex min-h-[160px] cursor-pointer flex-col justify-between rounded-xl border p-5 shadow-sm transition-all duration-300 ${
         isDropTarget
           ? "border-zinc-500 bg-zinc-800/40 ring-1 ring-zinc-500"
           : "border-white/[0.06] bg-[#141414] hover:bg-[#181818] hover:border-white/[0.12] hover:shadow-lg hover:shadow-black/20"
@@ -426,10 +423,14 @@ function ItemCard({
       onDragLeave={isFolder ? () => onFolderDragLeave?.() : undefined}
       onDrop={isFolder && onDropOnFolder ? (e) => { e.preventDefault(); e.stopPropagation(); onDropOnFolder(e, item.id); } : undefined}
     >
-      <div className="absolute right-3 top-3 z-10 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="flex items-start justify-between">
+        <div className={`flex h-11 w-11 items-center justify-center rounded-xl border shadow-sm transition-transform duration-300 group-hover:scale-105 ${iconBoxClasses}`}>
+          <Icon className={`h-5 w-5 ${iconClasses}`} strokeWidth={1.5} />
+        </div>
+        
         <button
           type="button"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-500 transition-all hover:bg-white/[0.1] hover:text-white"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-500 opacity-0 transition-all hover:bg-white/[0.1] hover:text-white group-hover:opacity-100"
           onClick={(e) => {
             e.stopPropagation();
             onOptions?.(e);
@@ -440,17 +441,12 @@ function ItemCard({
         </button>
       </div>
 
-      <div className="flex flex-1 items-center justify-center mb-2">
-        <div className={`flex h-14 w-14 items-center justify-center rounded-2xl border shadow-sm transition-transform duration-300 group-hover:scale-105 ${iconBoxClasses}`}>
-          <Icon className={`h-7 w-7 ${iconClasses}`} strokeWidth={1.5} />
-        </div>
-      </div>
-
-      <div className="flex w-full flex-col text-center">
-        <h3 className="truncate text-sm font-semibold text-neutral-200 transition-colors group-hover:text-white">
+      <div className="mt-auto flex flex-col">
+        <h3 className="truncate text-[15px] font-semibold text-neutral-200 transition-colors group-hover:text-white">
           {item.name}
         </h3>
-        <p className="mt-0.5 text-[11px] font-medium text-neutral-500">
+        <p className="mt-1 flex items-center gap-1.5 text-[12px] font-medium text-neutral-500">
+          <FileText className="h-3.5 w-3.5" />
           {item.subtitle}
         </p>
       </div>
@@ -617,7 +613,7 @@ function ClasseursContent({
 
       {viewMode === "grid" ? (
         <div
-          className={`grid w-full min-w-0 grid-cols-2 gap-6 rounded-xl min-h-[200px] transition-colors sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 ${
+          className={`grid w-full min-w-0 grid-cols-1 gap-4 rounded-xl transition-colors sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ${
             isRootDropActive ? "ring-2 ring-zinc-500/50 bg-zinc-800/10" : ""
           }`}
           onDragOver={onRootDragOver}
