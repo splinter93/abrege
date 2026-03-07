@@ -170,7 +170,10 @@ function AgentsV2Content() {
                 />
               </div>
               {!isMobile && (
-                <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5 shrink-0">
+                <div
+                  className="flex items-center gap-1 rounded-lg p-0.5 shrink-0"
+                  style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
+                >
                   <button
                     type="button"
                     onClick={() => setViewMode('grid')}

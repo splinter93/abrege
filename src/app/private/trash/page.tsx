@@ -1,21 +1,26 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Archive, Clock, AlertCircle, FileText, Folder, RotateCcw, Trash, Trash2, RefreshCw, TrashIcon } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import type { AuthenticatedUser } from '@/types/dossiers';
-import type { TrashItem, TrashStatistics } from '@/types/supabase';
-import AuthGuard from '@/components/AuthGuard';
-import ErrorBoundary from '@/components/ErrorBoundary';
-import PageWithSidebarLayout from '@/components/PageWithSidebarLayout';
-import { useSecureErrorHandler } from '@/components/SecureErrorHandler';
-import { simpleLogger as logger } from '@/utils/logger';
-import UnifiedPageTitle from '@/components/UnifiedPageTitle';
-import DossierErrorBoundary from '@/components/DossierErrorBoundary';
-import { DossierLoadingState, DossierErrorState } from '@/components/DossierLoadingStates';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Archive,
+  Clock,
+  AlertCircle,
+  FileText,
+  Folder,
+  RotateCcw,
+  Trash2,
+  RefreshCw,
+} from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import type { AuthenticatedUser } from "@/types/dossiers";
+import type { TrashItem, TrashStatistics } from "@/types/supabase";
+import AuthGuard from "@/components/AuthGuard";
+import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
+import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
+import { simpleLogger as logger } from "@/utils/logger";
+import DossierErrorBoundary from "@/components/DossierErrorBoundary";
+import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 
-import "@/styles/main.css";
 import "./index.css";
 
 export default function TrashPage() {
@@ -30,186 +35,142 @@ export default function TrashPage() {
 
 function TrashPageContent() {
   const { user, loading: authLoading } = useAuth();
-  
-  // 🔧 FIX: Gérer le cas où l'utilisateur n'est pas encore chargé AVANT d'appeler les hooks
+
   if (authLoading || !user?.id) {
     return <DossierLoadingState type="initial" message="Vérification de l'authentification..." />;
   }
-  
-  // Maintenant on sait que user.id existe, on peut appeler tous les hooks en toute sécurité
+
   return <AuthenticatedTrashContent user={user} />;
 }
 
-// 🔧 FIX: Composant séparé pour éviter les problèmes d'ordre des hooks
 function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
-  // Gestionnaire d'erreur sécurisé - TOUJOURS en premier
   const { handleError } = useSecureErrorHandler({
-    context: 'TrashPage',
-    operation: 'gestion_corbeille',
-    userId: user.id
+    context: "TrashPage",
+    operation: "gestion_corbeille",
+    userId: user.id,
   });
-  
-  // État pour la gestion de la corbeille
+
   const [trashItems, setTrashItems] = useState<TrashItem[]>([]);
   const [statistics, setStatistics] = useState<TrashStatistics>({
     total: 0,
     notes: 0,
     folders: 0,
     classeurs: 0,
-    files: 0
+    files: 0,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [canRetry, setCanRetry] = useState(true);
 
-  // Fonction stable pour charger les éléments de la corbeille
   const loadTrashItems = useCallback(async () => {
     if (!user) return;
-    
     setLoading(true);
     setError(null);
-    
     try {
-      const { TrashService } = await import('@/services/trashService');
+      const { TrashService } = await import("@/services/trashService");
       const data = await TrashService.getTrashItems();
-      
       setTrashItems(data.items);
       setStatistics(data.statistics);
       setRetryCount(0);
       setCanRetry(true);
     } catch (err) {
-      logger.error('[TrashPage] Erreur chargement corbeille:', err);
-      handleError(err, 'chargement corbeille');
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
-      setRetryCount(prev => prev + 1);
+      logger.error("[TrashPage] Erreur chargement corbeille:", err);
+      handleError(err, "chargement corbeille");
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      setRetryCount((prev) => prev + 1);
       setCanRetry(retryCount < 3);
     } finally {
       setLoading(false);
     }
-  }, [user?.id, handleError, retryCount]); // Seulement quand l'ID de l'utilisateur change
+  }, [user?.id, handleError, retryCount]);
 
-  // Charger les données au montage du composant
   useEffect(() => {
-    if (user) {
-      loadTrashItems();
-    }
+    if (user) loadTrashItems();
   }, [user?.id, loadTrashItems]);
 
-  // Fonction de retry avec backoff
   const retryWithBackoff = useCallback(async () => {
     if (!canRetry) return;
-    
     const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
     await loadTrashItems();
   }, [canRetry, retryCount, loadTrashItems]);
 
-  // Fonction de refresh
-  const refreshData = useCallback(() => {
-    loadTrashItems();
-  }, [loadTrashItems]);
-
-  // Fonction de force reload
+  const refreshData = useCallback(() => loadTrashItems(), [loadTrashItems]);
   const forceReload = useCallback(() => {
     setRetryCount(0);
     setCanRetry(true);
     loadTrashItems();
   }, [loadTrashItems]);
 
-  // Fonctions de gestion
-  const handleRestore = useCallback(async (item: TrashItem) => {
-    logger.dev('[TrashPage] 🔄 RESTAURATION DÉBUT - Élément:', item);
-    logger.dev('[TrashPage] 🔄 RESTAURATION - Type:', item.type, 'ID:', item.id);
-    try {
-      logger.dev('[TrashPage] 🔄 RESTAURATION - Import TrashService...');
-      const { TrashService } = await import('@/services/trashService');
-      logger.dev('[TrashPage] 🔄 RESTAURATION - Appel TrashService.restoreItem...');
-      await TrashService.restoreItem(item.type, item.id);
-      
-      logger.dev('[TrashPage] ✅ RESTAURATION - Élément restauré avec succès');
-      // Recharger la liste après restauration
-      logger.dev('[TrashPage] 🔄 RESTAURATION - Rechargement de la liste...');
-      await loadTrashItems();
-      logger.dev('[TrashPage] ✅ RESTAURATION - Liste rechargée');
-    } catch (err) {
-      logger.error('[TrashPage] ❌ RESTAURATION - Erreur:', err);
-      handleError(err, 'restauration élément');
-      setError(err instanceof Error ? err.message : 'Erreur lors de la restauration');
-    }
-  }, [loadTrashItems, handleError]);
+  const handleRestore = useCallback(
+    async (item: TrashItem) => {
+      try {
+        const { TrashService } = await import("@/services/trashService");
+        await TrashService.restoreItem(item.type, item.id);
+        await loadTrashItems();
+      } catch (err) {
+        logger.error("[TrashPage] Restauration erreur:", err);
+        handleError(err, "restauration élément");
+        setError(err instanceof Error ? err.message : "Erreur lors de la restauration");
+      }
+    },
+    [loadTrashItems, handleError]
+  );
 
-  const handlePermanentDelete = useCallback(async (item: TrashItem) => {
-    logger.dev('[TrashPage] 🗑️ SUPPRESSION DÉBUT - Élément:', item);
-    logger.dev('[TrashPage] 🗑️ SUPPRESSION - Type:', item.type, 'ID:', item.id);
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer définitivement "${item.name}" ?`)) {
-      logger.dev('[TrashPage] ❌ SUPPRESSION - Annulée par l\'utilisateur');
-      return;
-    }
-
-    try {
-      logger.dev('[TrashPage] 🗑️ SUPPRESSION - Import TrashService...');
-      const { TrashService } = await import('@/services/trashService');
-      logger.dev('[TrashPage] 🗑️ SUPPRESSION - Appel TrashService.permanentlyDeleteItem...');
-      await TrashService.permanentlyDeleteItem(item.type, item.id);
-      
-      logger.dev('[TrashPage] ✅ SUPPRESSION - Élément supprimé définitivement avec succès');
-      // Recharger la liste après suppression
-      logger.dev('[TrashPage] 🗑️ SUPPRESSION - Rechargement de la liste...');
-      await loadTrashItems();
-      logger.dev('[TrashPage] ✅ SUPPRESSION - Liste rechargée');
-    } catch (err) {
-      logger.error('[TrashPage] ❌ SUPPRESSION - Erreur:', err);
-      handleError(err, 'suppression définitive');
-      setError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
-    }
-  }, [loadTrashItems, handleError]);
+  const handlePermanentDelete = useCallback(
+    async (item: TrashItem) => {
+      if (!confirm(`Supprimer définitivement « ${item.name} » ?`)) return;
+      try {
+        const { TrashService } = await import("@/services/trashService");
+        await TrashService.permanentlyDeleteItem(item.type, item.id);
+        await loadTrashItems();
+      } catch (err) {
+        logger.error("[TrashPage] Suppression erreur:", err);
+        handleError(err, "suppression définitive");
+        setError(err instanceof Error ? err.message : "Erreur lors de la suppression");
+      }
+    },
+    [loadTrashItems, handleError]
+  );
 
   const handleEmptyTrash = useCallback(async () => {
-    if (!confirm('Êtes-vous sûr de vouloir vider complètement la corbeille ? Cette action est irréversible.')) {
+    if (
+      !confirm(
+        "Vider toute la corbeille ? Cette action est irréversible."
+      )
+    )
       return;
-    }
-
     if (!user?.id) {
-      setError('Utilisateur non authentifié');
+      setError("Utilisateur non authentifié");
       return;
     }
-
     setLoading(true);
     setError(null);
-
     try {
-      logger.dev('[TrashPage] 🗑️ VIDAGE DÉBUT - Utilisateur:', user.id);
-      const { TrashService } = await import('@/services/trashService');
-      logger.dev('[TrashPage] 🗑️ VIDAGE - Appel TrashService.emptyTrash...');
+      const { TrashService } = await import("@/services/trashService");
       await TrashService.emptyTrash();
-      logger.dev('[TrashPage] ✅ VIDAGE - Corbeille vidée avec succès');
-      
-      // Vider la liste locale
       setTrashItems([]);
       setStatistics({
         total: 0,
         notes: 0,
         folders: 0,
         classeurs: 0,
-        files: 0
+        files: 0,
       });
-      logger.dev('[TrashPage] ✅ VIDAGE - État local mis à jour');
     } catch (err) {
-      logger.error('[TrashPage] ❌ VIDAGE - Erreur:', err);
-      handleError(err, 'vidage corbeille');
-      setError(err instanceof Error ? err.message : 'Erreur lors du vidage de la corbeille');
+      logger.error("[TrashPage] Vidage erreur:", err);
+      handleError(err, "vidage corbeille");
+      setError(err instanceof Error ? err.message : "Erreur lors du vidage");
     } finally {
       setLoading(false);
     }
   }, [handleError, user?.id]);
 
-  // Afficher l'état de chargement initial
   if (loading && trashItems.length === 0) {
-    return <DossierLoadingState type="initial" message="Chargement de la corbeille..." />;
+    return <DossierLoadingState type="initial" message="Chargement de la corbeille…" />;
   }
 
-  // Afficher l'état d'erreur
   if (error) {
     return (
       <DossierErrorState
@@ -225,200 +186,175 @@ function AuthenticatedTrashContent({ user }: { user: AuthenticatedUser }) {
 
   return (
     <PageWithSidebarLayout>
-      {/* Titre de la page avec design uniforme */}
-      <UnifiedPageTitle
-          icon={Trash2}
-          title="Corbeille"
-          subtitle="Gérez vos éléments supprimés et restaurez ce qui est important"
-          stats={[
-            { number: statistics.total, label: `élément${statistics.total > 1 ? 's' : ''}` },
-            { number: statistics.notes, label: 'notes' },
-            { number: statistics.folders, label: 'dossiers' }
-          ]}
-        />
-
-        {/* Container glassmorphism principal */}
-        <motion.div 
-          className="glassmorphism-container"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-        >
-          {/* Header avec séparateur */}
-          <div className="trash-container-header">
-            <div className="trash-header-left">
-              <h2 className="trash-header-title">Éléments supprimés récemment</h2>
-              <p className="trash-header-description">
-                Conservation automatique de 30 jours
+      <div className="page-content-inner page-content-inner-trash bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
+        <div className="px-4 sm:px-6 lg:px-8 pt-0 pb-6 sm:pb-6">
+          {/* En-tête — style commun (titre gradient + sous-titre + action) */}
+          <div className="mb-10 mt-5 sm:mt-8 flex w-full items-center justify-between">
+            <div className="flex flex-col items-start font-sans">
+              <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent">
+                Corbeille
+              </h1>
+              <p className="mt-2 hidden text-sm font-medium tracking-wide text-neutral-500 sm:block">
+                Éléments supprimés. Conservation 30 jours, restauration possible.
               </p>
             </div>
-            <div className="trash-header-right">
+            <div className="flex items-center gap-2 shrink-0">
               <button
-                className="trash-empty-button"
+                type="button"
                 onClick={handleEmptyTrash}
                 disabled={loading || trashItems.length === 0}
+                className="trash-empty-btn flex h-9 items-center gap-1.5 rounded-md px-4 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Vider la corbeille"
               >
-                {loading ? <RefreshCw size={16} className="animate-spin" /> : <Trash size={16} />}
-                <span>{loading ? 'Vidage en cours...' : 'Vider la corbeille'}</span>
+                {loading ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                <span>{loading ? "Vidage…" : "Vider la corbeille"}</span>
               </button>
             </div>
           </div>
-          <AnimatePresence mode="wait">
-            {trashItems.length === 0 ? (
-              <motion.div
-                key="empty"
-                className="trash-empty-state"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <div className="empty-state-icon">
-                  <Archive size={80} />
-                </div>
-                <h2 className="empty-state-title">Corbeille vide</h2>
-                <p className="empty-state-description">
-                  Aucun élément n'a été supprimé pour le moment.
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="content"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
 
-                {/* Grille des éléments de la corbeille */}
-                <div className="trash-grid-container">
-                  <div className="trash-grid">
-                    {trashItems.map((item) => (
-                      <TrashItemCard
-                        key={item.id}
-                        item={item}
-                        onRestore={handleRestore}
-                        onDelete={handlePermanentDelete}
-                      />
-                    ))}
+          {trashItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="trash-empty-icon mb-4 flex h-20 w-20 items-center justify-center rounded-2xl">
+                <Archive className="h-10 w-10 text-neutral-500" />
+              </div>
+              <h2 className="text-lg font-semibold text-zinc-100 mb-1">Corbeille vide</h2>
+              <p className="text-zinc-500 text-sm max-w-sm">
+                Aucun élément supprimé. Les éléments supprimés sont conservés 30 jours.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {trashItems.map((item) => (
+                  <TrashItemCard
+                    key={item.id}
+                    item={item}
+                    onRestore={handleRestore}
+                    onDelete={handlePermanentDelete}
+                  />
+                ))}
+              </div>
+
+              {/* Infos — cartes design system */}
+              <div className="trash-info-grid mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="trash-info-card flex items-start gap-3 rounded-xl p-4" style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-blue-400" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-neutral-200">Conservation 30 jours</h3>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Les éléments sont définitivement supprimés après 30 jours.
+                    </p>
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Informations sur la corbeille */}
-          <div className="trash-info-section">
-            <div className="info-card">
-              <div className="info-icon">
-                <Clock size={20} />
+                <div className="trash-info-card flex items-start gap-3 rounded-xl p-4" style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-amber-400" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+                    <AlertCircle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-neutral-200">Restauration</h3>
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Cliquez sur « Restaurer » pour remettre un élément à sa place.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="info-content">
-                <h3 className="info-title">Conservation automatique</h3>
-                <p className="info-text">
-                  Les éléments supprimés sont conservés pendant 30 jours avant d'être définitivement supprimés.
-                </p>
-              </div>
-            </div>
-            
-            <div className="info-card">
-              <div className="info-icon">
-                <AlertCircle size={20} />
-              </div>
-              <div className="info-content">
-                <h3 className="info-title">Restauration possible</h3>
-                <p className="info-text">
-                  Vous pouvez restaurer n'importe quel élément supprimé en cliquant sur le bouton "Restaurer".
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+            </>
+          )}
+        </div>
+      </div>
     </PageWithSidebarLayout>
   );
 }
 
-// Composant pour afficher un élément de la corbeille - Style identique aux dossiers/fichiers
-function TrashItemCard({ 
-  item, 
-  onRestore, 
-  onDelete 
-}: { 
-  item: TrashItem; 
-  onRestore: (item: TrashItem) => void; 
-  onDelete: (item: TrashItem) => void; 
+// ——— Carte élément corbeille (style classeurs : bloc + bordure variables)
+function TrashItemCard({
+  item,
+  onRestore,
+  onDelete,
+}: {
+  item: TrashItem;
+  onRestore: (item: TrashItem) => void;
+  onDelete: (item: TrashItem) => void;
 }) {
-  const getIcon = () => {
-    switch (item.type) {
-      case 'note':
-        return <FileText size={36} />;
-      case 'folder':
-        return <Folder size={36} />;
-      case 'classeur':
-        return <Archive size={36} />;
-      case 'file':
-        return <FileText size={36} />;
-      default:
-        return <FileText size={36} />;
-    }
-  };
+  const Icon =
+    item.type === "folder"
+      ? Folder
+      : item.type === "classeur"
+        ? Archive
+        : FileText;
 
-  const getIconClass = () => {
-    switch (item.type) {
-      case 'note':
-        return 'file-icon';
-      case 'folder':
-        return 'folder-icon';
-      case 'classeur':
-        return 'classeur-icon';
-      case 'file':
-        return 'file-icon';
-      default:
-        return 'file-icon';
-    }
-  };
+  const iconBoxClass =
+    item.type === "folder"
+      ? "bg-orange-500/10 border-orange-500/20 text-orange-500/90"
+      : item.type === "classeur"
+        ? "bg-violet-500/10 border-violet-500/20 text-violet-400"
+        : "bg-white/[0.05] border-white/[0.1] text-zinc-400";
 
-  const getDaysUntilExpiry = () => {
+  const daysLeft = (() => {
     const now = new Date();
-    const expiresAt = new Date(item.expires_at);
-    const diffTime = expiresAt.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
-  };
+    const exp = new Date(item.expires_at);
+    const d = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, d);
+  })();
 
-  const formatTimeRemaining = () => {
-    const days = getDaysUntilExpiry();
-    if (days === 0) {
-      return "Expire aujourd'hui";
-    } else if (days === 1) {
-      return "Expire demain";
-    } else {
-      return `${days} jours restants`;
-    }
-  };
+  const timeLabel =
+    daysLeft === 0
+      ? "Expire aujourd'hui"
+      : daysLeft === 1
+        ? "Expire demain"
+        : `${daysLeft} jours restants`;
 
   return (
-    <motion.div
-      className="fm-grid-item trash-item-simple"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.2 }}
+    <div
+      className="trash-card group relative flex min-h-[180px] flex-col rounded-xl p-5 transition-all duration-200"
+      style={{ backgroundColor: "var(--color-bg-block)", border: "var(--border-block)" }}
     >
-      {/* Icône avec style identique aux dossiers/fichiers */}
-      <div className={`fm-grid-item-icon ${getIconClass()}`}>
-        {getIcon()}
+      <div className="flex items-start justify-between">
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${iconBoxClass}`}
+        >
+          <Icon className="h-5 w-5" strokeWidth={1.5} />
+        </div>
       </div>
-
-      {/* Nom de l'élément */}
-      <div className="fm-grid-item-name">
-        {item.name}
+      <div className="mt-3 flex flex-1 flex-col min-h-0">
+        <h3 className="truncate text-[15px] font-semibold text-neutral-200 group-hover:text-white">
+          {item.name}
+        </h3>
+        <p className="mt-1 flex items-center gap-1.5 text-[12px] font-medium text-neutral-500">
+          <Clock className="h-3.5 w-3.5" />
+          {timeLabel}
+        </p>
       </div>
-
-      {/* Temps restant */}
-      <div className="trash-item-time-remaining">
-        <Clock size={14} />
-        {formatTimeRemaining()}
+      <div className="mt-4 flex items-center gap-2 border-t pt-3" style={{ borderColor: 'var(--color-border-block)' }}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRestore(item);
+          }}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-neutral-200 transition-colors hover:bg-white/5"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Restaurer
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(item);
+          }}
+          className="flex items-center justify-center gap-1.5 rounded-lg py-2 px-3 text-xs font-medium text-red-400/90 transition-colors hover:bg-red-500/10"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          Supprimer
+        </button>
       </div>
-    </motion.div>
+    </div>
   );
 }
