@@ -26,6 +26,20 @@
   color: var(--chat-accent-primary);
 }
 
+.voice-button.playing {
+  color: var(--chat-accent-primary);
+  animation: voice-pulse 1.2s ease-in-out infinite;
+}
+
+.voice-button.playing:hover {
+  color: var(--chat-accent-primary);
+}
+
+@keyframes voice-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 /* ========================================
    MENU KEBBAB DROPDOWN
    ======================================== */

@@ -12,6 +12,8 @@ import ReasoningDropdown from './ReasoningDropdown';
 import StreamTimelineRenderer from './StreamTimelineRenderer';
 import NotePreview from './NotePreview';
 import { simpleLogger as logger } from '@/utils/logger';
+import { useTextToSpeechContextOptional } from '@/contexts/TextToSpeechContext';
+import { stripMarkdownForTTS } from '@/utils/stripMarkdownForTTS';
 import './ReasoningDropdown.css';
 
 interface ChatMessageProps {
@@ -28,11 +30,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   message, 
   className, 
   isStreaming = false,
-  animateContent = false,
+  animateContent = false, // eslint-disable-line @typescript-eslint/no-unused-vars -- réservé pour usage futur
   messageIndex,
   onEdit,
   onRegenerate
 }) => {
+  const tts = useTextToSpeechContextOptional();
   const content = message?.content ?? '';
   const messageId = message?.id;
 
@@ -91,6 +94,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       fileName: fileName
     });
   };
+
+  const handleVoice = tts
+    ? () => {
+        const plain = stripMarkdownForTTS(content);
+        if (plain) tts.speak(plain, { messageId });
+      }
+    : () => logger.dev('Lecture vocale du message');
+  const isVoicePlaying = tts?.isPlayingMessageId === messageId;
 
   return (
     <div className={`chatgpt-message chatgpt-message-${role} ${className || ''}`}>
@@ -183,7 +194,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 logger.error('Failed to copy text: ', err);
               }
             }}
-            onVoice={() => logger.dev('Lecture vocale du message')}
+            onVoice={handleVoice}
+            isVoicePlaying={isVoicePlaying}
             onEdit={onEdit}
             onRegenerate={role === 'assistant' && messageId ? () => onRegenerate?.(messageId) : undefined}
             showVoiceButton={role === 'assistant'}

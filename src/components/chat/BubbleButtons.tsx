@@ -15,6 +15,7 @@ interface BubbleButtonsProps {
   showVoiceButton?: boolean;
   showEditButton?: boolean;
   showRegenerateButton?: boolean;
+  isVoicePlaying?: boolean;
   className?: string;
 }
 
@@ -29,6 +30,7 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
   showVoiceButton = false,
   showEditButton = false,
   showRegenerateButton = false,
+  isVoicePlaying = false,
   className = ''
 }) => {
   const [copied, setCopied] = React.useState(false);
@@ -82,10 +84,11 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
 
           {showVoiceButton && (
             <button
-              className="bubble-button voice-button"
+              className={`bubble-button voice-button ${isVoicePlaying ? 'playing' : ''}`}
               onClick={handleVoice}
-              title="Lire à haute voix"
-              aria-label="Lire le message à haute voix"
+              disabled={isVoicePlaying}
+              title={isVoicePlaying ? 'Lecture en cours...' : 'Lire à haute voix'}
+              aria-label={isVoicePlaying ? 'Lecture en cours' : 'Lire le message à haute voix'}
             >
               <Volume2 size={14} />
             </button>

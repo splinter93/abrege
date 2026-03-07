@@ -3,12 +3,7 @@ import { X, Image as ImageIcon, Power, PowerOff, Star, Pencil } from 'lucide-rea
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { CustomSelect } from '@/components/ui/CustomSelect';
-
-const TTS_VOICE_OPTIONS = [
-  { value: 'fr-female-aura', label: 'FR · Aura (F)' },
-  { value: 'fr-male-orion', label: 'FR · Orion (M)' },
-  { value: 'en-female-luna', label: 'EN · Luna (F)' },
-];
+import { TTS_VOICE_OPTIONS } from '@/constants/ttsVoices';
 
 const AGENT_KIND_OPTIONS = [
   { value: 'chat', label: 'Agent de Chat' },

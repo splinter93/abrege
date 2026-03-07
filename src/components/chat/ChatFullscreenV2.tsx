@@ -38,6 +38,8 @@ import { useAgents } from '@/hooks/useAgents';
 import ChatHeader from './ChatHeader';
 import ChatMessagesArea from './ChatMessagesArea';
 import ChatInputContainer from './ChatInputContainer';
+import TTSMiniPlayer from './TTSMiniPlayer';
+import { TextToSpeechProvider } from '@/contexts/TextToSpeechContext';
 import AuthRequiredModal from './AuthRequiredModal';
 import SidebarUltraClean from './SidebarUltraClean';
 import ChatCanvaPane from './ChatCanvaPane';
@@ -568,6 +570,7 @@ const ChatFullscreenV2: React.FC = () => {
         {/* Zone principale */}
         <div className={uiState.mainClassNames.join(' ')}>
               <div className="chatgpt-main-chat">
+                <TextToSpeechProvider defaultVoiceId={selectedAgent?.voice}>
                 <ChatMessagesArea
                   messages={effects.displayMessages}
                   isLoading={isLoadingMessages}
@@ -592,6 +595,7 @@ const ChatFullscreenV2: React.FC = () => {
                 />
 
                 <div className="chatgpt-chat-bottom">
+                  <TTSMiniPlayer />
                   <ChatInputContainer
                     onSend={uiActions.handleSendMessage}
                     loading={messageActions.isLoading}
@@ -606,6 +610,7 @@ const ChatFullscreenV2: React.FC = () => {
                   />
                   <footer className="chatgpt-chat-footer" aria-hidden="true" />
                 </div>
+                </TextToSpeechProvider>
               </div>
 
           {uiState.shouldRenderDesktopCanva && (

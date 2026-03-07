@@ -30,6 +30,8 @@ export interface Agent {
   capabilities?: string[] | Record<string, unknown>; // JSONB dans la base
   api_v2_capabilities?: string[];
   profile_picture?: string;
+  /** Voix xAI TTS (eve, ara, rex, sal, leo) */
+  voice?: string;
   created_at?: string;
   updated_at?: string;
 }
