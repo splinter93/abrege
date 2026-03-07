@@ -124,10 +124,10 @@ function ClasseursHeader({
   return (
     <div className="mb-10 mt-5 flex w-full items-start justify-between">
       <div className="flex flex-col items-start">
-        <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-none tracking-tighter text-transparent">
+        <h1 className="font-sans bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-none tracking-tighter text-transparent">
           Notebooks
         </h1>
-        <p className="mt-2 text-sm font-medium tracking-wide text-neutral-500">
+        <p className="mt-2 hidden text-sm font-medium tracking-wide text-neutral-500 sm:block">
           Gérez vos méthodologies, notes et documents de réflexion.
         </p>
       </div>
@@ -393,10 +393,10 @@ function ItemCard({
 
   return (
     <div
-      className={`group relative flex min-h-[160px] cursor-pointer flex-col justify-between rounded-xl border p-5 shadow-sm transition-all duration-300 ${
+      className={`group relative flex min-h-[160px] cursor-pointer flex-col justify-between rounded-xl p-5 shadow-sm transition-all duration-300 ${
         isDropTarget
-          ? "border-zinc-500 bg-zinc-800/40 ring-1 ring-zinc-500"
-          : "border-white/[0.06] bg-[#141414] hover:bg-[#181818] hover:border-white/[0.12] hover:shadow-lg hover:shadow-black/20"
+          ? "border-zinc-500 bg-zinc-800/40 ring-1 ring-zinc-500 border"
+          : "classeurs-block classeurs-card hover:shadow-lg hover:shadow-black/20"
       }`}
       role="button"
       tabIndex={0}
@@ -1069,11 +1069,11 @@ export default function ClasseursPage() {
                   placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 w-48 rounded-md border border-white/[0.08] bg-[#141414] pl-9 pr-3 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none transition-all hover:border-white/[0.15] focus:border-white/[0.2] focus:bg-white/[0.05]"
+                  className="classeurs-block h-8 w-48 rounded-md border pl-9 pr-3 text-sm text-neutral-200 placeholder:text-neutral-500 transition-all"
                 />
               </div>
               {!isMobile && (
-                <div className="flex shrink-0 rounded-lg border border-white/[0.08] bg-[#141414] p-1">
+                <div className="classeurs-block flex shrink-0 rounded-lg p-1">
                   <button
                     type="button"
                     onClick={() => setViewMode("grid")}

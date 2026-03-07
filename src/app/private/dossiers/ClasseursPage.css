@@ -18,6 +18,27 @@
   padding: 0 !important;
 }
 
+/* Blocs alignés sur la sidebar : fond + bordure (variables design system) */
+.classeurs-block {
+  background-color: var(--color-bg-block);
+  border: var(--border-block);
+}
+
+.classeurs-card.classeurs-block:hover {
+  background: var(--sidebar-item-hover, rgba(255, 255, 255, 0.07));
+  border-color: var(--color-border-block);
+}
+
+.classeurs-block input:hover {
+  border-color: var(--color-border-secondary);
+}
+
+.classeurs-block input:focus {
+  border-color: var(--color-border-focus);
+  background-color: var(--color-bg-content);
+  outline: none;
+}
+
 /* Masquer la scrollbar native sur les zones scrollables (tabs, etc.) */
 .no-scrollbar {
   -ms-overflow-style: none;
