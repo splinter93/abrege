@@ -1061,36 +1061,38 @@ export default function ClasseursPage() {
               handleUpdateClasseurPositions={handleUpdateClasseurPositions}
               classeursForReorder={classeurs}
             />
-            <div className="relative hidden min-w-0 flex-1 max-w-[220px] sm:block">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500 pointer-events-none" />
-              <input
-                type="search"
-                placeholder="Rechercher…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 w-full rounded-lg border border-white/[0.08] bg-[#141414] pl-9 pr-3 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none transition-colors focus:border-white/[0.15]"
-              />
-            </div>
-            {!isMobile && (
-              <div className="flex shrink-0 rounded-lg border border-white/[0.08] bg-[#141414] p-1">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("grid")}
-                  className={`rounded-md p-1.5 transition-all ${effectiveViewMode === "grid" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
-                  aria-pressed={effectiveViewMode === "grid"}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("list")}
-                  className={`rounded-md p-1.5 transition-all ${effectiveViewMode === "list" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
-                  aria-pressed={effectiveViewMode === "list"}
-                >
-                  <List className="h-4 w-4" />
-                </button>
+            <div className="ml-auto flex items-center gap-4">
+              <div className="relative hidden min-w-0 max-w-[220px] sm:block">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500 pointer-events-none" />
+                <input
+                  type="search"
+                  placeholder="Rechercher…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-white/[0.08] bg-[#141414] pl-9 pr-3 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none transition-colors focus:border-white/[0.15]"
+                />
               </div>
-            )}
+              {!isMobile && (
+                <div className="flex shrink-0 rounded-lg border border-white/[0.08] bg-[#141414] p-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("grid")}
+                    className={`rounded-md p-1.5 transition-all ${effectiveViewMode === "grid" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+                    aria-pressed={effectiveViewMode === "grid"}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("list")}
+                    className={`rounded-md p-1.5 transition-all ${effectiveViewMode === "list" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+                    aria-pressed={effectiveViewMode === "list"}
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
