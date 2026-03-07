@@ -17,6 +17,8 @@ function useCapacitorLayoutFix() {
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return;
 
+    let cleanup = () => {};
+
     (async () => {
       try {
         const { Capacitor } = await import('@capacitor/core');
@@ -27,8 +29,39 @@ function useCapacitorLayoutFix() {
         document.documentElement.classList.add(`platform-${platform}`);
 
         // ANDROID : Le manifest est en `adjustResize`. La webview se redimensionne nativement.
-        // Pas besoin de JS pour gérer le clavier. Le CSS s'adapte à la nouvelle hauteur.
+        // Mais Android peut encore "panner" le document quand le textarea prend le focus.
+        // On force donc le scroll racine à rester à 0 pour garder le header réellement fixe.
         if (platform === 'android') {
+          const { Keyboard } = await import('@capacitor/keyboard');
+
+          const resetRootScroll = () => {
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+          };
+
+          resetRootScroll();
+
+          const willShowHandle = await Keyboard.addListener('keyboardWillShow', resetRootScroll);
+          const didShowHandle = await Keyboard.addListener('keyboardDidShow', resetRootScroll);
+          const willHideHandle = await Keyboard.addListener('keyboardWillHide', resetRootScroll);
+          const didHideHandle = await Keyboard.addListener('keyboardDidHide', resetRootScroll);
+
+          const handleWindowResize = () => {
+            resetRootScroll();
+          };
+
+          window.addEventListener('resize', handleWindowResize);
+          window.visualViewport?.addEventListener('resize', handleWindowResize);
+
+          cleanup = () => {
+            willShowHandle.remove();
+            didShowHandle.remove();
+            willHideHandle.remove();
+            didHideHandle.remove();
+            window.removeEventListener('resize', handleWindowResize);
+            window.visualViewport?.removeEventListener('resize', handleWindowResize);
+          };
           return;
         }
 
@@ -40,18 +73,27 @@ function useCapacitorLayoutFix() {
           document.documentElement.style.setProperty('--keyboard-height', `${h}px`);
         };
 
-        await Keyboard.addListener('keyboardWillShow', (info) => {
+        const willShowHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
           setKeyboardHeight(info.keyboardHeight || 0);
         });
         
-        await Keyboard.addListener('keyboardWillHide', () => {
+        const willHideHandle = await Keyboard.addListener('keyboardWillHide', () => {
           setKeyboardHeight(0);
         });
+
+        cleanup = () => {
+          willShowHandle.remove();
+          willHideHandle.remove();
+        };
 
       } catch {
         // Capacitor non dispo ou erreur plugin
       }
     })();
+
+    return () => {
+      cleanup();
+    };
   }, []);
 }
 

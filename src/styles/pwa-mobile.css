@@ -61,6 +61,19 @@ html.capacitor-native.chat-page {
   --capacitor-safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Le document racine ne doit jamais scroller sur la page chat native.
+   Sinon Android peut "panner" tout le viewport quand le clavier focus le textarea,
+   ce qui fait remonter le header malgré son position:fixed. */
+html.capacitor-native.chat-page,
+html.capacitor-native.chat-page body {
+  position: fixed !important;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
 /* 1. Container = padding-top : safe-area-top + hauteur header (56px).
    STRATÉGIE FIXE : Header fixed pour ne pas scroller avec le clavier Android (adjustResize).
    Le container doit avoir un padding égal à la hauteur TOTALE du header (56px + safe-area). */

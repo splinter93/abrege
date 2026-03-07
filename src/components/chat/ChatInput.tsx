@@ -434,6 +434,39 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   }, [showNoteSelector, showMentionMenu, loadRecentNotes]);
 
+  // Sur mobile/tactile, on neutralise toute restauration de focus au montage
+  // pour éviter l'ouverture automatique du clavier à l'arrivée sur le chat.
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const isMobileLike = window.matchMedia('(pointer: coarse), (max-width: 1024px)').matches;
+    if (!isMobileLike) {
+      return;
+    }
+
+    const blurTextareaIfNeeded = () => {
+      const textarea = textareaRef.current;
+      if (!textarea) {
+        return;
+      }
+
+      if (document.activeElement === textarea) {
+        textarea.blur();
+      }
+    };
+
+    blurTextareaIfNeeded();
+    const immediateTimeout = window.setTimeout(blurTextareaIfNeeded, 0);
+    const delayedTimeout = window.setTimeout(blurTextareaIfNeeded, 180);
+
+    return () => {
+      window.clearTimeout(immediateTimeout);
+      window.clearTimeout(delayedTimeout);
+    };
+  }, [textareaRef]);
+
   return (
     <div 
       className={`chatgpt-input-area ${isDragging ? 'dragging' : ''}`}
