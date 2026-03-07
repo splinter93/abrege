@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, User, Settings } from 'lucide-react';
+import { Search, X, User, Settings, Bot, Trash2 } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
@@ -140,7 +140,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
         {/* Agents */}
         <div className="sidebar-section-clean">
           <div className="sidebar-section-header-clean">
-            <div className="sidebar-section-title-clean">Agents</div>
+            <div className="sidebar-section-title-clean text-[11px] font-bold uppercase tracking-widest mb-1.5">Agents</div>
           </div>
           {agentsLoading ? (
             <div className="sidebar-item-clean">
@@ -168,7 +168,9 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                           }}
                         />
                       ) : (
-                        "🤖"
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-500/20 text-blue-300 flex-shrink-0">
+                          <Bot size={16} />
+                        </span>
                       )}
                     </div>
                     <span>{agent.display_name || agent.name}</span>
@@ -191,16 +193,16 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
         {/* Sessions de chat */}
         <div className="sidebar-section-clean">
           <div className="sidebar-section-header-clean">
-            <div className="sidebar-section-title-clean">Conversations</div>
+            <div className="sidebar-section-title-clean text-[11px] font-bold uppercase tracking-widest mb-1.5">Conversations</div>
           </div>
           {filteredSessions.map((session: ChatSession) => (
-            <div key={session.id} className={`sidebar-conversation-item ${editingSessionId === session.id ? 'renaming' : ''}`}>
+            <div key={session.id} className={`sidebar-conversation-item group ${editingSessionId === session.id ? 'renaming' : ''}`}>
               <button
                 onClick={() => handleSelectSession(session)}
                 onDoubleClick={(e) => handleStartRename(session, e)}
                 className={`sidebar-item-clean ${currentSession?.id === session.id ? 'active' : ''}`}
               >
-                <div style={{ flex: 1, textAlign: 'left' }}>
+                <div className="flex-1 min-w-0 text-left">
                   {editingSessionId === session.id ? (
                     <input
                       type="text"
@@ -219,19 +221,16 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                       onClick={(e) => e.stopPropagation()}
                     />
                   ) : (
-                    <div className="sidebar-session-name" style={{ fontSize: '13px' }}>{session.name}</div>
+                    <span className="sidebar-session-name block truncate text-[13px]">{session.name}</span>
                   )}
                 </div>
               </button>
               <button
                 onClick={(e) => handleDeleteSession(session.id, e)}
-                className="sidebar-delete-btn"
+                className="sidebar-delete-btn opacity-0 group-hover:opacity-100"
                 title="Supprimer la conversation"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="3,6 5,6 21,6"></polyline>
-                  <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
-                </svg>
+                <Trash2 size={14} />
               </button>
             </div>
           ))}

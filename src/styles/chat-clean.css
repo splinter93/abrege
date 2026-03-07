@@ -1003,14 +1003,14 @@ body.chat-theme-glass .chatgpt-header {
 }
 
 .sidebar-section-title-clean {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--chat-text-secondary);
+  letter-spacing: 0.1em;
+  color: var(--chat-text-secondary); /* même que placeholder textarea */
   line-height: 1;
-  margin: 0;
-  padding-left: 0; /* Alignement avec les items (items ont px-4) */
+  margin: 0 0 6px 0; /* mb-1.5 */
+  padding-left: 0;
 }
 
 .sidebar-new-conversation-btn {
@@ -1096,6 +1096,14 @@ body.chat-theme-glass .chatgpt-header {
 .sidebar-item-icon-clean:has(.agent-avatar) {
   width: 24px;
   height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.sidebar-item-icon-clean:has(.agent-avatar) .agent-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .sidebar-agent-row {
