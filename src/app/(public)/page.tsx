@@ -394,29 +394,30 @@ function AuthenticatedHomeContent({
 
   return (
     <PageWithSidebarLayout>
-      <input
-        ref={fileInputRef}
-        id="file-input"
-        type="file"
-        className="hidden"
-        onChange={(e) => {
-          if (e.target.files?.length) logger.dev("[HomePage] Fichier:", e.target.files[0]);
-        }}
-      />
+      <div className="page-content-inner page-content-inner-home w-full max-w-none mx-0 bg-[var(--color-bg-primary)] min-h-full">
+        <input
+          ref={fileInputRef}
+          id="file-input"
+          type="file"
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files?.length) logger.dev("[HomePage] Fichier:", e.target.files[0]);
+          }}
+        />
 
-      <main className="w-full max-w-5xl mx-auto px-4 py-6 sm:px-8 sm:py-12 flex flex-col gap-8 sm:gap-12">
+        <main className="w-full max-w-screen-2xl mx-auto px-4 py-6 sm:px-8 sm:py-12 flex flex-col gap-8 sm:gap-12">
         {/* 1. Welcome */}
         <header className="flex flex-col items-center text-center">
-          <div className="flex items-center justify-center w-[72px] h-[72px] rounded-2xl bg-zinc-900/80 border border-zinc-800/80 mb-4">
+          <div className="flex items-center justify-center mb-4">
             <svg width={0} height={0} aria-hidden className="absolute">
               <defs>
                 <linearGradient id="home-header-icon-gradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="rgba(255,255,255,0.95)" />
-                  <stop offset="1" stopColor="rgba(255,255,255,0.65)" />
+                  <stop offset="0" stopColor="white" />
+                  <stop offset="1" stopColor="rgba(255,255,255,0.5)" />
                 </linearGradient>
               </defs>
             </svg>
-            <Feather className="w-9 h-9" stroke="url(#home-header-icon-gradient)" strokeWidth={1.75} />
+            <Feather className="w-[54px] h-[54px]" stroke="url(#home-header-icon-gradient)" strokeWidth={1.75} />
           </div>
           <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent mb-2">
             Welcome Home, {displayName}.
@@ -437,7 +438,7 @@ function AuthenticatedHomeContent({
             <h2 className="text-sm font-semibold text-zinc-400 tracking-wider shrink-0">
               Latest Notes
             </h2>
-            <div className="flex items-center gap-4 min-w-0">
+            <div className="flex items-center gap-4 min-w-0 justify-end">
               <SearchBar
                 placeholder="Rechercher..."
                 onSearchResult={handleSearchResult}
@@ -570,6 +571,7 @@ function AuthenticatedHomeContent({
           </div>
         </section>
       </main>
+      </div>
     </PageWithSidebarLayout>
   );
 }

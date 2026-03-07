@@ -5,6 +5,16 @@
   Le layout principal est géré par dashboard.css
 */
 
+/* Contenu jusqu'en haut : pas de padding sur la zone principale (aligné files, agents, etc.) */
+.page-content-area:has(.page-content-inner-home) {
+  padding: 0 !important;
+}
+.page-content-area > .page-content-inner-home {
+  max-width: none !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
 :root {
   --dashboard-space-xs: 0.5rem;
   --dashboard-space-sm: 1rem;
