@@ -169,27 +169,30 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             toastOptions={{
               duration: 4000,
               style: {
-                background: 'var(--surface-elevated, #1f2937)',
-                color: 'var(--text-primary, #f3f4f6)',
-                border: '1px solid var(--border-subtle, #374151)',
-                borderRadius: '12px',
-                padding: '14px 16px',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+                background: 'var(--color-bg-block)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-border-block)',
+                borderRadius: '10px',
+                padding: '12px 16px',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
                 maxWidth: '420px',
-                fontSize: '14px',
+                fontSize: '13px',
                 lineHeight: '1.5'
               },
               success: {
+                style: {
+                  color: 'var(--color-success)',
+                },
                 iconTheme: {
-                  primary: 'var(--success, #10b981)',
-                  secondary: 'var(--surface-elevated, #1f2937)'
+                  primary: 'var(--color-success)',  /* fond du cercle vert */
+                  secondary: '#fff'                 /* check blanc */
                 },
                 duration: 3000
               },
               error: {
                 iconTheme: {
-                  primary: 'var(--error, #ef4444)',
-                  secondary: 'var(--surface-elevated, #1f2937)'
+                  primary: 'var(--color-error)',
+                  secondary: 'var(--color-bg-block)'
                 },
                 duration: 5000
               }

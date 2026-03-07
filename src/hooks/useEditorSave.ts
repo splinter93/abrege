@@ -101,19 +101,9 @@ export default function useEditorSave({ onSave, editor }: UseEditorSaveOptions):
         await onSave({ title: newTitle, markdown_content, html_content, titleAlign: align });
         setLastSaved(new Date());
         
-        // Toast de succès simple
         toast.success('Saved', {
           duration: 2000,
-          icon: '✓',
           position: 'bottom-right',
-          style: {
-            background: 'rgba(34, 197, 94, 0.95)',
-            color: 'white',
-            fontWeight: 500,
-            fontSize: '14px',
-            padding: '8px 14px',
-            borderRadius: '8px',
-          },
         });
       } catch (e) {
         toast.error('Erreur lors de la sauvegarde');
