@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Filter, SortAsc, SortDesc } from 'lucide-react';
+import { Search, X, Filter, SortAsc, SortDesc, ChevronDown } from 'lucide-react';
 import './SearchFiles.css';
 
 export interface SearchFilesProps {
@@ -168,19 +168,24 @@ const SearchFiles: React.FC<SearchFilesProps> = ({
               {/* Filtre par type */}
               <div className="filter-group">
                 <label>Type de fichier</label>
-                <select
-                  value={filters.type || ''}
-                  onChange={(e) => handleFilterChange({ type: e.target.value || undefined })}
-                  className="filter-select"
-                >
-                  <option value="">Tous les types</option>
-                  <option value="image">Images</option>
-                  <option value="pdf">PDF</option>
-                  <option value="document">Documents</option>
-                  <option value="video">Vidéos</option>
-                  <option value="audio">Audio</option>
-                  <option value="archive">Archives</option>
-                </select>
+                <div className="filter-select-wrap">
+                  <select
+                    value={filters.type || ''}
+                    onChange={(e) => handleFilterChange({ type: e.target.value || undefined })}
+                    className="filter-select"
+                  >
+                    <option value="">Tous les types</option>
+                    <option value="image">Images</option>
+                    <option value="pdf">PDF</option>
+                    <option value="document">Documents</option>
+                    <option value="video">Vidéos</option>
+                    <option value="audio">Audio</option>
+                    <option value="archive">Archives</option>
+                  </select>
+                  <span className="filter-select-chevron" aria-hidden>
+                    <ChevronDown className="w-4 h-4" />
+                  </span>
+                </div>
               </div>
 
               {/* Tri */}

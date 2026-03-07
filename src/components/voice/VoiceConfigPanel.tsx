@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
 import type { XAIVoiceTool, XAIVoicePredefinedToolType } from '@/services/xai/types';
 import { parseOpenApiToVoiceTools } from '@/services/xai/utils/openApiToVoiceTools';
 import { logger, LogCategory } from '@/utils/logger';
@@ -208,30 +209,36 @@ export function VoiceConfigPanel({ onConfigChange }: VoiceConfigPanelProps) {
         <label style={{ display: 'block', marginBottom: '0.5rem', color: '#a3a3a3', fontSize: '0.875rem' }}>
           OpenAPI Schema
         </label>
-        <select
-          value={selectedSchemaId}
-          onChange={(e) => setSelectedSchemaId(e.target.value)}
-          disabled={openApiLoading}
-          style={{
-            width: '100%',
-            padding: '0.5rem',
-            background: '#131313',
-            border: '1px solid #2a2a2a',
-            borderRadius: '6px',
-            color: '#e5e5e5',
-            fontSize: '0.875rem',
-            cursor: openApiLoading ? 'wait' : 'pointer',
-            opacity: openApiLoading ? 0.6 : 1
-          }}
-        >
-          <option value="">Aucun schéma sélectionné</option>
-          {availableSchemas.map(schema => (
-            <option key={schema.id} value={schema.id}>
-              {schema.name} {schema.version ? `(v${schema.version})` : ''}
-              {schema.description ? ` - ${schema.description}` : ''}
-            </option>
-          ))}
-        </select>
+        <div style={{ position: 'relative' }}>
+          <select
+            value={selectedSchemaId}
+            onChange={(e) => setSelectedSchemaId(e.target.value)}
+            disabled={openApiLoading}
+            style={{
+              width: '100%',
+              padding: '0.5rem 2.25rem 0.5rem 0.5rem',
+              background: '#131313',
+              border: '1px solid #2a2a2a',
+              borderRadius: '6px',
+              color: '#e5e5e5',
+              fontSize: '0.875rem',
+              cursor: openApiLoading ? 'wait' : 'pointer',
+              opacity: openApiLoading ? 0.6 : 1,
+              appearance: 'none'
+            }}
+          >
+            <option value="">Aucun schéma sélectionné</option>
+            {availableSchemas.map(schema => (
+              <option key={schema.id} value={schema.id}>
+                {schema.name} {schema.version ? `(v${schema.version})` : ''}
+                {schema.description ? ` - ${schema.description}` : ''}
+              </option>
+            ))}
+          </select>
+          <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#737373' }} aria-hidden>
+            <ChevronDown size={16} />
+          </span>
+        </div>
         {openApiLoading && (
           <div style={{ marginTop: '0.5rem', padding: '0.5rem', color: '#a3a3a3', fontSize: '0.875rem' }}>
             Chargement du schéma...
@@ -254,23 +261,30 @@ export function VoiceConfigPanel({ onConfigChange }: VoiceConfigPanelProps) {
         <label style={{ display: 'block', marginBottom: '0.5rem', color: '#a3a3a3', fontSize: '0.875rem' }}>
           Tool Choice
         </label>
-        <select
-          value={toolChoice}
-          onChange={(e) => setToolChoice(e.target.value as 'auto' | 'none' | 'required')}
-          style={{
-            padding: '0.5rem',
-            background: '#131313',
-            border: '1px solid #2a2a2a',
-            borderRadius: '6px',
-            color: '#e5e5e5',
-            fontSize: '0.875rem',
-            cursor: 'pointer'
-          }}
-        >
-          <option value="auto">Auto</option>
-          <option value="none">None</option>
-          <option value="required">Required</option>
-        </select>
+        <div style={{ position: 'relative' }}>
+          <select
+            value={toolChoice}
+            onChange={(e) => setToolChoice(e.target.value as 'auto' | 'none' | 'required')}
+            style={{
+              width: '100%',
+              padding: '0.5rem 2.25rem 0.5rem 0.5rem',
+              background: '#131313',
+              border: '1px solid #2a2a2a',
+              borderRadius: '6px',
+              color: '#e5e5e5',
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              appearance: 'none'
+            }}
+          >
+            <option value="auto">Auto</option>
+            <option value="none">None</option>
+            <option value="required">Required</option>
+          </select>
+          <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#737373' }} aria-hidden>
+            <ChevronDown size={16} />
+          </span>
+        </div>
       </div>
     </div>
   );

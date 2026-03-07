@@ -8,6 +8,92 @@
   width: 100% !important;
 }
 
+/* Side panel droit page config agent (Modèle LLM, outils) */
+.agent-config-side-panel {
+  /* Desktop : panneau fixe collé à droite */
+  width: 360px;
+  flex-shrink: 0;
+  border-left: 1px solid rgba(39, 39, 42, 0.6);
+  background: var(--color-bg-primary);
+  position: sticky;
+  top: 4rem;
+  align-self: flex-start;
+  max-height: calc(100vh - 4rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.agent-config-side-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.agent-config-side-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.agent-config-side-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+.agent-config-side-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Mobile : drawer depuis la droite (< 1024px) */
+@media (max-width: 1023px) {
+  .agent-config-side-panel--drawer {
+    position: fixed !important;
+    top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    right: 0 !important;
+    left: auto !important;
+    height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)) !important;
+    width: min(340px, 88vw) !important;
+    max-width: none !important;
+    z-index: 40 !important;
+    transform: translateX(100%);
+    transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+    background: rgba(10, 10, 10, 0.97) !important;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: none;
+    overflow: hidden;
+    /* sticky / align-self non pertinents en fixed */
+    position: fixed;
+    align-self: auto;
+    max-height: none;
+  }
+
+  .agent-config-side-panel--drawer.agent-config-side-panel--open {
+    transform: translateX(0);
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Overlay sombre derrière le drawer paramètres */
+.agent-params-overlay {
+  position: fixed;
+  top: calc(56px + env(safe-area-inset-top, 0px));
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 35;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0;
+  animation: agentOverlayFadeIn 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+@keyframes agentOverlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 .agents2-section {
   display: flex;
   flex-direction: column;

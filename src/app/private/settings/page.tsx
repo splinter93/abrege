@@ -10,7 +10,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 import "@/components/DossierLoadingStates.css";
-import { Settings, Edit, Trash2, Plus } from "lucide-react";
+import { Settings, Edit, Trash2, Plus, ChevronDown } from "lucide-react";
 import "@/styles/main.css";
 import "@/styles/account.css";
 import "@/app/(public)/dashboard.css";
@@ -395,18 +395,28 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
                   <div className="account-preferences-grid">
                     <div className="account-field">
                       <label className="account-field-label">Langue</label>
-                      <select className="account-field-select">
-                        <option value="fr">Français</option>
-                        <option value="en">English</option>
-                      </select>
+                      <div className="account-field-select-wrap">
+                        <select className="account-field-select">
+                          <option value="fr">Français</option>
+                          <option value="en">English</option>
+                        </select>
+                        <span className="account-field-select-chevron" aria-hidden>
+                          <ChevronDown className="w-4 h-4" />
+                        </span>
+                      </div>
                     </div>
                     <div className="account-field">
                       <label className="account-field-label">Thème</label>
-                      <select className="account-field-select">
-                        <option value="light">Clair</option>
-                        <option value="dark">Sombre</option>
-                        <option value="auto">Automatique</option>
-                      </select>
+                      <div className="account-field-select-wrap">
+                        <select className="account-field-select">
+                          <option value="light">Clair</option>
+                          <option value="dark">Sombre</option>
+                          <option value="auto">Automatique</option>
+                        </select>
+                        <span className="account-field-select-chevron" aria-hidden>
+                          <ChevronDown className="w-4 h-4" />
+                        </span>
+                      </div>
                     </div>
                     <div className="account-field">
                       <label className="account-field-label">Notifications</label>

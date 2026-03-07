@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react';
+import { ChevronDown } from 'lucide-react';
 import './CreateSummaryForm.css';
 import { sendPayloadToSynesia } from '../actions/synesia';
 import { toast } from 'react-hot-toast';
@@ -68,31 +69,41 @@ const CreateSummaryForm: React.FC = () => {
             required
           />
           <div className="form-actions">
-            <select
-              className="content-type-select"
-              value={selectedClasseur}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedClasseur(e.target.value)}
-              disabled={isLoading || classeurs.length === 0}
-              required
-            >
-              <option value="" disabled>Choisir un classeur</option>
-              {classeurs.map(classeur => (
-                <option key={classeur.id} value={classeur.id}>
-                  {classeur.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className="content-type-select"
-              value={contentType}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) => setContentType(e.target.value)}
-              disabled={isLoading}
-            >
-              <option>YouTube</option>
-              <option>Podcast</option>
-              <option>Texte</option>
-              <option>PDF</option>
-            </select>
+            <div className="content-type-select-wrap">
+              <select
+                className="content-type-select"
+                value={selectedClasseur}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelectedClasseur(e.target.value)}
+                disabled={isLoading || classeurs.length === 0}
+                required
+              >
+                <option value="" disabled>Choisir un classeur</option>
+                {classeurs.map(classeur => (
+                  <option key={classeur.id} value={classeur.id}>
+                    {classeur.name}
+                  </option>
+                ))}
+              </select>
+              <span className="content-type-select-chevron" aria-hidden>
+                <ChevronDown size={16} />
+              </span>
+            </div>
+            <div className="content-type-select-wrap">
+              <select
+                className="content-type-select"
+                value={contentType}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => setContentType(e.target.value)}
+                disabled={isLoading}
+              >
+                <option>YouTube</option>
+                <option>Podcast</option>
+                <option>Texte</option>
+                <option>PDF</option>
+              </select>
+              <span className="content-type-select-chevron" aria-hidden>
+                <ChevronDown size={16} />
+              </span>
+            </div>
             <button type="submit" className="submit-button" disabled={isLoading || !selectedClasseur}>
               {isLoading ? 'En cours...' : 'Résumer !'}
             </button>

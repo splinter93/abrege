@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 import AgentConfiguration from '@/components/agents/AgentConfiguration';
 import AgentParameters from '@/components/agents/AgentParameters';
 import { useAgentEditor } from '@/hooks/useAgentEditor';
@@ -168,22 +169,28 @@ const AgentDetailsModal: React.FC<AgentDetailsModalProps> = ({ onClose }) => {
               </div>
               <div className="agent-modal-selector">
                 <label htmlFor="agent-selector">Agent</label>
-                <select
-                  id="agent-selector"
-                  value={selectedAgent?.id || ''}
-                  onChange={event => {
-                    const next = agents.find(agent => agent.id === event.target.value);
-                    if (next) {
-                      void handleSelectAgent(next);
-                    }
-                  }}
-                >
-                  {agents.map(agent => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.display_name || agent.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="agent-modal-select-wrap">
+                  <select
+                    id="agent-selector"
+                    className="agent-modal-select-with-chevron"
+                    value={selectedAgent?.id || ''}
+                    onChange={event => {
+                      const next = agents.find(agent => agent.id === event.target.value);
+                      if (next) {
+                        void handleSelectAgent(next);
+                      }
+                    }}
+                  >
+                    {agents.map(agent => (
+                      <option key={agent.id} value={agent.id}>
+                        {agent.display_name || agent.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="agent-modal-select-chevron" aria-hidden>
+                    <ChevronDown className="w-4 h-4" />
+                  </span>
+                </div>
               </div>
             </header>
 

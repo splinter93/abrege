@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { agentTemplateService, AgentTemplateConfig, RenderedTemplate } from '@/services/llm/agentTemplateService';
 
 interface AgentTemplateManagerProps {
@@ -193,14 +194,19 @@ export default function AgentTemplateManager({
               <label className="form-label">
                 🎯 Variante du modèle
               </label>
-              <select
-                className="form-select"
-                value={localConfig.model_variant || '120b'}
-                onChange={(e) => handleConfigChange('model_variant', e.target.value)}
-              >
-                <option value="120b">GPT OSS 120B (plus puissant)</option>
-                <option value="20b">GPT OSS 20B (plus rapide)</option>
-              </select>
+              <div className="relative">
+                <select
+                  className="form-select pr-10 appearance-none"
+                  value={localConfig.model_variant || '120b'}
+                  onChange={(e) => handleConfigChange('model_variant', e.target.value)}
+                >
+                  <option value="120b">GPT OSS 120B (plus puissant)</option>
+                  <option value="20b">GPT OSS 20B (plus rapide)</option>
+                </select>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" aria-hidden>
+                  <ChevronDown className="w-4 h-4" />
+                </span>
+              </div>
             </div>
 
             {/* Temperature */}
@@ -281,15 +287,20 @@ export default function AgentTemplateManager({
               <label className="form-label">
                 🧠 Niveau de raisonnement
               </label>
-              <select
-                className="form-select"
-                value={localConfig.reasoning_effort || 'low'}
-                onChange={(e) => handleConfigChange('reasoning_effort', e.target.value)}
-              >
-                <option value="low">Faible (rapide, moins précis)</option>
-                <option value="medium">Moyen (équilibré)</option>
-                <option value="high">Élevé (lent, plus précis)</option>
-              </select>
+              <div className="relative">
+                <select
+                  className="form-select pr-10 appearance-none"
+                  value={localConfig.reasoning_effort || 'low'}
+                  onChange={(e) => handleConfigChange('reasoning_effort', e.target.value)}
+                >
+                  <option value="low">Faible (rapide, moins précis)</option>
+                  <option value="medium">Moyen (équilibré)</option>
+                  <option value="high">Élevé (lent, plus précis)</option>
+                </select>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" aria-hidden>
+                  <ChevronDown className="w-4 h-4" />
+                </span>
+              </div>
             </div>
 
             {/* Stop sequences */}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { OpenAPITypes } from './OpenAPITypes';
 
 interface EndpointFormProps {
@@ -152,17 +153,23 @@ export function EndpointForm({ endpoint, onSave, onCancel }: EndpointFormProps) 
 
             <div className="endpoint-form-field">
               <label htmlFor="method">Méthode *</label>
-              <select
-                id="method"
-                value={formData.method}
-                onChange={(e) => setFormData(prev => ({ ...prev, method: e.target.value }))}
-              >
-                <option value="GET">GET</option>
-                <option value="POST">POST</option>
-                <option value="PUT">PUT</option>
-                <option value="PATCH">PATCH</option>
-                <option value="DELETE">DELETE</option>
-              </select>
+              <div className="endpoint-form-select-wrap">
+                <select
+                  id="method"
+                  value={formData.method}
+                  onChange={(e) => setFormData(prev => ({ ...prev, method: e.target.value }))}
+                  className="endpoint-form-select-with-chevron"
+                >
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="PATCH">PATCH</option>
+                  <option value="DELETE">DELETE</option>
+                </select>
+                <span className="endpoint-form-select-chevron" aria-hidden>
+                  <ChevronDown size={16} />
+                </span>
+              </div>
             </div>
           </div>
 

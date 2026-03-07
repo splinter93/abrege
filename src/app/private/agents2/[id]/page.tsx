@@ -21,8 +21,9 @@ import { agentsService } from '@/services/agents/agentsService';
 import { mcpService } from '@/services/agents/mcpService';
 import { useCallables } from '@/hooks/useCallables';
 import { simpleLogger } from '@/utils/logger';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Power, PowerOff, SlidersHorizontal, Star, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
+import { useParamsPanelMobile } from '@/hooks/useParamsPanelMobile';
 import '@/styles/main.css';
 import '@/app/private/agents_page_backup_legacy/agents.css';
 import '@/app/ai/agents2/agents2.css';
@@ -43,6 +44,7 @@ function AgentDetailContent() {
   const id = params?.id as string | undefined;
   const { user, loading: authLoading } = useAuth();
   const isNew = id === 'new';
+  const paramsPanel = useParamsPanelMobile();
 
   const [selectedAgent, setSelectedAgent] = useState<SpecializedAgentConfig | null>(null);
   const [editedAgent, setEditedAgent] = useState<Partial<SpecializedAgentConfig> | null>(null);
@@ -490,14 +492,59 @@ function AgentDetailContent() {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={handleSaveAgent}
-                  disabled={panelLoading}
-                  className="px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 disabled:opacity-50 disabled:pointer-events-none transition-colors"
-                >
-                  Enregistrer
-                </button>
+                {selectedAgent && (
+                  <button
+                    type="button"
+                    onClick={() => handleFieldUpdate('is_active', !editedAgent?.is_active)}
+                    title={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
+                    className={`p-2 rounded-lg border transition-colors shrink-0 ${editedAgent?.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20' : 'bg-zinc-800/60 border-zinc-600/80 text-zinc-500 hover:bg-zinc-700/60 hover:text-zinc-400'}`}
+                    aria-label={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
+                  >
+                    {editedAgent?.is_active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+                  </button>
+                )}
+                {selectedAgent && (
+                  <button
+                    type="button"
+                    onClick={() => {}}
+                    title={selectedAgent.is_favorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
+                    className={`p-2 rounded-lg border text-sm transition-colors ${selectedAgent.is_favorite ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : 'border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:bg-zinc-800/20 hover:text-zinc-100'}`}
+                    aria-label={selectedAgent.is_favorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
+                  >
+                    <Star size={18} fill={selectedAgent.is_favorite ? 'currentColor' : 'none'} />
+                  </button>
+                )}
+                {paramsPanel.isMobile && (
+                  <button
+                    type="button"
+                    onClick={paramsPanel.togglePanel}
+                    className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700/60 transition-colors"
+                    aria-label="Ouvrir les paramètres"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </button>
+                )}
+                {selectedAgent && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteAgent}
+                    title="Supprimer l'agent"
+                    className="p-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-red-400/80 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                    aria-label="Supprimer l'agent"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+                {hasLocalChanges && (
+                  <button
+                    type="button"
+                    onClick={handleSaveAgent}
+                    disabled={panelLoading}
+                    className="px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                  >
+                    Enregistrer
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -508,9 +555,20 @@ function AgentDetailContent() {
             <SimpleLoadingState message="Chargement de la configuration" />
           </div>
         ) : (
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-              <div className="lg:col-span-8 space-y-10">
+          <main className="w-full flex flex-col lg:flex-row min-w-0">
+            {/* Overlay mobile — ferme le drawer paramètres */}
+            {paramsPanel.isMobile && paramsPanel.isOpen && (
+              <button
+                type="button"
+                aria-label="Fermer les paramètres"
+                className="agent-params-overlay"
+                onClick={paramsPanel.closePanel}
+              />
+            )}
+
+            {/* Contenu principal centré à gauche */}
+            <div className="flex-1 min-w-0 py-10">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <AgentConfiguration
                   selectedAgent={selectedAgent}
                   editedAgent={editedAgent}
@@ -530,35 +588,55 @@ function AgentDetailContent() {
                   }}
                 />
               </div>
-              <div className="lg:col-span-4">
-                <div className="lg:sticky lg:top-28 space-y-8">
-                  <AgentParameters
-                    selectedAgent={selectedAgent}
-                    editedAgent={editedAgent}
-                    loadingDetails={panelLoading}
-                    openApiSchemas={availableOpenApiSchemas}
-                    agentOpenApiSchemas={linkedOpenApiSchemas}
-                    openApiLoading={toolsLoading}
-                    mcpServers={availableMcpServers}
-                    agentMcpServers={linkedMcpServers}
-                    mcpLoading={toolsLoading}
-                    availableCallables={availableCallables}
-                    agentCallables={agentCallables}
-                    callablesLoading={callablesLoading || toolsLoading}
-                    onLinkSchema={handleLinkSchema}
-                    onUnlinkSchema={handleUnlinkSchema}
-                    onLinkServer={handleLinkServer}
-                    onUnlinkServer={handleUnlinkServer}
-                    onLinkCallable={handleLinkCallable}
-                    onUnlinkCallable={handleUnlinkCallable}
-                    isSchemaLinked={isSchemaLinked}
-                    isServerLinked={isServerLinked}
-                    isCallableLinked={isCallableLinked}
-                    onUpdateField={handleFieldUpdate}
-                  />
-                </div>
-              </div>
             </div>
+
+            {/* Side panel droit — desktop fixe, mobile drawer depuis la droite */}
+            <aside
+              className={`agent-config-side-panel${paramsPanel.isMobile ? ' agent-config-side-panel--drawer' : ''}${paramsPanel.isMobile && paramsPanel.isOpen ? ' agent-config-side-panel--open' : ''}`}
+              aria-label="Paramètres (modèle, outils)"
+              aria-hidden={paramsPanel.isMobile && !paramsPanel.isOpen}
+            >
+              {/* Header du drawer mobile : titre + fermer */}
+              {paramsPanel.isMobile && (
+                <div className="relative flex items-center justify-center min-h-[52px] px-4 py-3 border-b border-zinc-800/60">
+                  <span className="text-sm font-semibold text-zinc-200">Paramètres</span>
+                  <button
+                    type="button"
+                    onClick={paramsPanel.closePanel}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors"
+                    aria-label="Fermer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              <div className="space-y-8 p-4 lg:p-0 lg:py-10 lg:px-4 overflow-y-auto h-full">
+                <AgentParameters
+                  selectedAgent={selectedAgent}
+                  editedAgent={editedAgent}
+                  loadingDetails={panelLoading}
+                  openApiSchemas={availableOpenApiSchemas}
+                  agentOpenApiSchemas={linkedOpenApiSchemas}
+                  openApiLoading={toolsLoading}
+                  mcpServers={availableMcpServers}
+                  agentMcpServers={linkedMcpServers}
+                  mcpLoading={toolsLoading}
+                  availableCallables={availableCallables}
+                  agentCallables={agentCallables}
+                  callablesLoading={callablesLoading || toolsLoading}
+                  onLinkSchema={handleLinkSchema}
+                  onUnlinkSchema={handleUnlinkSchema}
+                  onLinkServer={handleLinkServer}
+                  onUnlinkServer={handleUnlinkServer}
+                  onLinkCallable={handleLinkCallable}
+                  onUnlinkCallable={handleUnlinkCallable}
+                  isSchemaLinked={isSchemaLinked}
+                  isServerLinked={isServerLinked}
+                  isCallableLinked={isCallableLinked}
+                  onUpdateField={handleFieldUpdate}
+                />
+              </div>
+            </aside>
           </main>
         )}
       </div>

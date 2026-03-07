@@ -131,19 +131,25 @@ const CalloutNodeView: React.FC<CalloutNodeViewProps> = ({
         </div>
 
         <div className="callout-actions">
-          <select
-            className="callout-type-select"
-            value={type}
-            onChange={(e) => handleTypeChange(e.target.value)}
-            title="Changer le type"
-          >
-            <option value="info">ℹ️ Information</option>
-            <option value="warning">⚠️ Attention</option>
-            <option value="error">❌ Erreur</option>
-            <option value="success">✅ Succès</option>
-            <option value="note">📝 Note</option>
-            <option value="tip">💡 Conseil</option>
-          </select>
+          <div className="callout-type-select-wrap" style={{ position: 'relative' }}>
+            <select
+              className="callout-type-select"
+              value={type}
+              onChange={(e) => handleTypeChange(e.target.value)}
+              title="Changer le type"
+              style={{ paddingRight: '2rem', appearance: 'none' }}
+            >
+              <option value="info">ℹ️ Information</option>
+              <option value="warning">⚠️ Attention</option>
+              <option value="error">❌ Erreur</option>
+              <option value="success">✅ Succès</option>
+              <option value="note">📝 Note</option>
+              <option value="tip">💡 Conseil</option>
+            </select>
+            <span style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'currentColor', opacity: 0.7 }} aria-hidden>
+              <FiChevronDown size={14} />
+            </span>
+          </div>
 
           <button
             className="callout-edit-btn"

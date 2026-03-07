@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Star, Image as ImageIcon, MessageCircle } from 'lucide-react';
+import { X, Image as ImageIcon, MessageCircle, ChevronDown } from 'lucide-react';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 
@@ -107,14 +107,14 @@ export function AgentConfiguration({
   return (
     <>
       <div className="space-y-10">
-        {/* Identité : avatar + nom + description */}
+        {/* Identité : avatar au-dessus, puis nom + description */}
         <section className="space-y-4">
-          <div className="flex items-start gap-4">
+          <div className="flex flex-col gap-4">
             <button
               type="button"
               onClick={() => setShowAvatarModal(true)}
               aria-label="Voir et éditer l'avatar de l'agent"
-              className="shrink-0 w-14 h-14 rounded-full overflow-hidden border border-zinc-800/60 bg-zinc-900/30 flex items-center justify-center text-zinc-400 text-sm font-medium hover:border-zinc-600 transition-colors"
+              className="shrink-0 w-14 h-14 rounded-full overflow-hidden border border-zinc-800/60 bg-zinc-900/30 flex items-center justify-center text-zinc-400 text-sm font-medium hover:border-zinc-600 transition-colors self-start"
             >
               {displayAvatarPreview ? (
                 <img
@@ -129,7 +129,7 @@ export function AgentConfiguration({
                 <span>{avatarFallback}</span>
               )}
             </button>
-            <div className="flex-1 min-w-0 space-y-4">
+            <div className="space-y-4 min-w-0">
               <div>
                 <label className={labelBase} htmlFor="agent-display-name">
                   Nom d&apos;affichage
@@ -170,47 +170,15 @@ export function AgentConfiguration({
                 Chat
               </button>
             )}
-            {selectedAgent && (
-              <button
-                type="button"
-                onClick={onToggleFavorite}
-                disabled={togglingFavorite}
-                title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors ${isFavorite ? 'border-amber-500/30 bg-amber-500/10 text-amber-400' : 'border-zinc-800/60 bg-zinc-900/30 text-zinc-400 hover:bg-zinc-800/20 hover:text-zinc-100'}`}
-              >
-                <Star size={16} fill={isFavorite ? 'currentColor' : 'none'} />
-                Favori
-              </button>
-            )}
             {hasChanges && (
-              <>
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  disabled={loadingDetails}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-sm hover:bg-zinc-800/20 hover:text-zinc-100 transition-colors disabled:opacity-50"
-                >
-                  <X className="w-4 h-4" />
-                  Annuler
-                </button>
-                <button
-                  type="button"
-                  onClick={onSave}
-                  disabled={loadingDetails}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
-                >
-                  Enregistrer
-                </button>
-              </>
-            )}
-            {selectedAgent && (
               <button
                 type="button"
-                onClick={onDelete}
-                title="Supprimer l'agent"
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-red-400/80 text-sm hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                onClick={onCancel}
+                disabled={loadingDetails}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-sm hover:bg-zinc-800/20 hover:text-zinc-100 transition-colors disabled:opacity-50"
               >
-                Supprimer
+                <X className="w-4 h-4" />
+                Annuler
               </button>
             )}
           </div>
@@ -221,32 +189,21 @@ export function AgentConfiguration({
           <label className={labelBase} htmlFor="agent-kind">
             Type d&apos;agent
           </label>
-          <select
-            id="agent-kind"
-            className={`${inputBase} cursor-pointer`}
-            value={agentTypeValue}
-            onChange={e => handleAgentTypeChange(e.target.value as 'chat' | 'endpoint' | 'both')}
-          >
-            <option value="chat">Agent de Chat</option>
-            <option value="endpoint">Agent d&apos;Exécution</option>
-            <option value="both">Chat &amp; Exécution</option>
-          </select>
-        </section>
-
-        {/* Agent actif / Suspendu — bouton pleine largeur */}
-        <section>
-          <button
-            type="button"
-            onClick={() => onUpdateField('is_active', !editedAgent.is_active)}
-            aria-pressed={Boolean(editedAgent.is_active)}
-            className={`w-full py-3 px-4 rounded-xl border text-sm font-medium transition-colors ${
-              editedAgent.is_active
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/15'
-                : 'bg-zinc-900/30 border-zinc-800/60 text-zinc-500 hover:bg-zinc-800/30'
-            }`}
-          >
-            {editedAgent.is_active ? 'Agent actif' : 'Agent suspendu'}
-          </button>
+          <div className="relative">
+            <select
+              id="agent-kind"
+              className={`${inputBase} cursor-pointer pr-10 appearance-none`}
+              value={agentTypeValue}
+              onChange={e => handleAgentTypeChange(e.target.value as 'chat' | 'endpoint' | 'both')}
+            >
+              <option value="chat">Agent de Chat</option>
+              <option value="endpoint">Agent d&apos;Exécution</option>
+              <option value="both">Chat &amp; Exécution</option>
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500" aria-hidden>
+              <ChevronDown className="w-4 h-4" />
+            </span>
+          </div>
         </section>
 
         {/* Instructions système */}
@@ -289,18 +246,23 @@ export function AgentConfiguration({
           <label className={labelBase} htmlFor="agent-voice">
             Voix (TTS)
           </label>
-          <select
-            id="agent-voice"
-            className={`${inputBase} cursor-pointer`}
-            value={editedAgent.voice ?? ''}
-            onChange={e => onUpdateField('voice', e.target.value)}
-          >
-            {TTS_VOICE_OPTIONS.map(option => (
-              <option key={option.value || 'default'} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              id="agent-voice"
+              className={`${inputBase} cursor-pointer pr-10 appearance-none`}
+              value={editedAgent.voice ?? ''}
+              onChange={e => onUpdateField('voice', e.target.value)}
+            >
+              {TTS_VOICE_OPTIONS.map(option => (
+                <option key={option.value || 'default'} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500" aria-hidden>
+              <ChevronDown className="w-4 h-4" />
+            </span>
+          </div>
         </section>
       </div>
 

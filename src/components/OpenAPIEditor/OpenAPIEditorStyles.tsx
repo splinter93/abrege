@@ -615,6 +615,25 @@ export function OpenAPIEditorStyles() {
         border-color: #f87171;
       }
 
+      .endpoint-form-select-wrap {
+        position: relative;
+      }
+      .endpoint-form-select-wrap .endpoint-form-select-with-chevron {
+        padding-right: 2.25rem;
+        appearance: none;
+      }
+      .endpoint-form-select-chevron {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #737373;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
       .field-error {
         display: block;
         color: #f87171;

@@ -40,7 +40,8 @@
     "mcp:add": "tsx scripts/configure-agent-mcp.ts link",
     "mcp:remove": "tsx scripts/configure-agent-mcp.ts unlink",
     "cap:sync": "npx cap sync android",
-    "cap:sync:prod": "CAPACITOR_SERVER_URL=https://scrivia.app npx cap sync android",
+    "cap:sync:prod": "CAPACITOR_SERVER_URL=https://www.scrivia.app npx cap sync android",
+    "cap:build:prod": "npm run build && CAPACITOR_SERVER_URL=https://www.scrivia.app npx cap sync android",
     "cap:run:android": "npx cap run android",
     "cap:run:android:prod": "CAPACITOR_SERVER_URL=https://scrivia.app npx cap run android",
     "cap:open:android": "npx cap open android"

@@ -74,9 +74,10 @@ html.capacitor-native.chat-page body {
   overscroll-behavior: none;
 }
 
-/* 1. Container = padding-top : safe-area-top + hauteur header (56px).
-   STRATÉGIE FIXE : Header fixed pour ne pas scroller avec le clavier Android (adjustResize).
-   Le container doit avoir un padding égal à la hauteur TOTALE du header (56px + safe-area). */
+/* 1. Container = padding-top : hauteur totale du header natif.
+   Stratégie par défaut : header hors flux (utile sur iOS, où le clavier passe
+   par-dessus la WebView). Android est surchargé plus bas avec un header en flux,
+   plus robuste avec adjustResize. */
 html.capacitor-native.chat-page .chatgpt-container {
   padding-top: calc(56px + var(--capacitor-safe-top)) !important;
   padding-left: 0 !important;
@@ -94,8 +95,9 @@ html.platform-ios.capacitor-native.chat-page .chatgpt-container {
 
 /* 2. Overlay status bar : SUPPRIMÉ. */
 
-/* 3. Header FIXE : position:fixed pour rester ancré en haut même si le clavier scroll le view.
-   Hauteur = 56px + safe-area. Padding-top = safe-area ; padding-bottom à 0 pour éviter l’épaisseur en bas. */
+/* 3. Header natif par défaut : fixé en haut.
+   Hauteur = 56px + safe-area. Padding-top = safe-area ; padding-bottom à 0
+   pour éviter l’épaisseur en bas. */
 html.capacitor-native.chat-page .chatgpt-header {
   position: fixed !important;
   top: 0 !important;
@@ -107,6 +109,21 @@ html.capacitor-native.chat-page .chatgpt-header {
   z-index: 1001 !important;
   box-sizing: border-box !important;
   background: #000000 !important;
+}
+
+/* Android natif : adjustResize réduit déjà la WebView.
+   Garder le header en position fixed rend le layout sensible aux translations
+   du visual viewport quand le clavier s'ouvre. On le remet donc dans le flux
+   du shell flex ; seul le container racine reste fixed. */
+html.platform-android.capacitor-native.chat-page .chatgpt-container {
+  padding-top: 0 !important;
+}
+
+html.platform-android.capacitor-native.chat-page .chatgpt-header {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
 }
 
 /* 4. Content : le padding-top est géré par le container, donc 0 ici. */

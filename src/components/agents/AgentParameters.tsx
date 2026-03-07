@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, X, Info } from 'lucide-react';
+import { Plus, X, ChevronDown } from 'lucide-react';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
-import { GROQ_MODELS_BY_CATEGORY, getModelInfo } from '@/constants/groqModels';
+import { GROQ_MODELS_BY_CATEGORY } from '@/constants/groqModels';
 import type { McpServer, AgentMcpServerWithDetails } from '@/types/mcp';
 import type { AgentSchemaLink, OpenApiSchema } from '@/hooks/useOpenApiSchemas';
 import type { AgentCallableLink, CallableListItem } from '@/hooks/useCallables';
@@ -198,7 +198,6 @@ export function AgentParameters({
     await onUnlinkCallable(selectedAgent.id, callableId);
   };
 
-  const modelInfo = editedAgent.model ? getModelInfo(editedAgent.model) : null;
 
   return (
     <div className="space-y-8">
@@ -206,13 +205,13 @@ export function AgentParameters({
       <section className={boxBase}>
         <h3 className="text-sm font-semibold text-zinc-100 mb-4">Modèle LLM</h3>
         <div className="flex gap-2">
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 relative">
             <label className="sr-only" htmlFor="agent-model">
               Modèle LLM
             </label>
             <select
               id="agent-model"
-              className={`${inputBase} cursor-pointer`}
+              className={`${inputBase} cursor-pointer pr-10 appearance-none`}
               value={editedAgent.model || ''}
               onChange={e => onUpdateField('model', e.target.value)}
             >
@@ -227,16 +226,10 @@ export function AgentParameters({
                 </optgroup>
               ))}
             </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500" aria-hidden>
+              <ChevronDown className="w-4 h-4" />
+            </span>
           </div>
-          {modelInfo && (
-            <button
-              type="button"
-              className="shrink-0 p-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/30 transition-colors"
-              title={`${modelInfo.description}\nTarifs : ${modelInfo.pricing.input} input / ${modelInfo.pricing.output} output\nVitesses : ${modelInfo.speed} TPS`}
-            >
-              <Info className="w-4 h-4" />
-            </button>
-          )}
         </div>
       </section>
 

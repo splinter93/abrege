@@ -211,6 +211,25 @@
 }
 
 .account-field-input,
+.account-field-select-wrap {
+  position: relative;
+}
+.account-field-select-wrap .account-field-select {
+  padding-right: 2.25rem;
+  appearance: none;
+}
+.account-field-select-chevron {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .account-field-select {
   width: 100%;
   padding: 0.75rem;

@@ -36,6 +36,27 @@
   gap: 0.75rem;
 }
 
+.content-type-select-wrap {
+  position: relative;
+}
+
+.content-type-select-wrap .content-type-select {
+  padding-right: 2.25rem;
+  appearance: none;
+}
+
+.content-type-select-chevron {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #737373;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .content-type-select {
   background-color: #2a2a2a;
   color: var(--text-secondary);
