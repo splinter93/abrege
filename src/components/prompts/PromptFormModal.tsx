@@ -8,7 +8,8 @@ import type { EditorPrompt, EditorPromptCreateRequest } from '@/types/editorProm
 import type { Agent } from '@/types/chat';
 import IconPicker from './IconPicker';
 import { getIconComponent } from '@/utils/iconMapper';
-import { X, Info, ChevronDown } from 'lucide-react';
+import { X, Info } from 'lucide-react';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 import Tooltip from '@/components/Tooltip';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 
@@ -222,59 +223,43 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               <label className={labelClass} htmlFor="context">
                 Contexte
               </label>
-              <div className="relative">
-                <select
-                  id="context"
-                  className={`${inputClass} cursor-pointer pr-10 appearance-none`}
-                  value={formData.context}
-                  onChange={(e) => handleChange('context', e.target.value)}
-                >
-                  <option value="editor">Éditeur</option>
-                  <option value="chat">Chat</option>
-                  <option value="both">Éditeur & Chat</option>
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500" aria-hidden>
-                  <ChevronDown className="w-4 h-4" />
-                </span>
-              </div>
+              <CustomSelect
+                id="context"
+                value={formData.context}
+                options={[
+                  { value: 'editor', label: 'Éditeur' },
+                  { value: 'chat', label: 'Chat' },
+                  { value: 'both', label: 'Éditeur & Chat' }
+                ]}
+                onChange={val => handleChange('context', val as 'editor' | 'chat' | 'both')}
+              />
             </div>
             <div className="flex-1 min-w-0">
               <label className={labelClass} htmlFor="agent_id">
                 Agent spécialisé
               </label>
-              <div className="relative">
-                <select
-                  id="agent_id"
-                  className={`${inputClass} cursor-pointer pr-10 appearance-none`}
-                  value={formData.agent_id ?? ''}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setFormData(prev => ({ ...prev, agent_id: value ? value : null }));
-                    if (errors.agent_id) {
-                      setErrors(prevErrors => {
-                        const { agent_id, ...rest } = prevErrors;
-                        return rest;
-                      });
-                    }
-                  }}
-                >
-                  <option value="">Aucun agent</option>
-                  {agents
+              <CustomSelect
+                id="agent_id"
+                value={formData.agent_id ?? ''}
+                options={[
+                  { value: '', label: 'Aucun agent' },
+                  ...agents
                     .filter(a => a.is_active)
-                    .map(agent => {
-                      const model = agent.model || '';
-                      const providerIcon = model.includes('grok') ? '🤖' : '⚡';
-                      return (
-                        <option key={agent.id} value={agent.id}>
-                          {providerIcon} {agent.name}
-                        </option>
-                      );
-                    })}
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500" aria-hidden>
-                  <ChevronDown className="w-4 h-4" />
-                </span>
-              </div>
+                    .map(agent => ({
+                      value: agent.id,
+                      label: agent.name
+                    }))
+                ]}
+                onChange={val => {
+                  setFormData(prev => ({ ...prev, agent_id: val ? val : null }));
+                  if (errors.agent_id) {
+                    setErrors(prevErrors => {
+                      const { agent_id, ...rest } = prevErrors;
+                      return rest;
+                    });
+                  }
+                }}
+              />
             </div>
           </div>
 
@@ -328,21 +313,16 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               <label className={labelClass} htmlFor="insertion_mode">
                 Mode d&apos;insertion
               </label>
-              <div className="relative">
-                <select
-                  id="insertion_mode"
-                  className={`${inputClass} cursor-pointer pr-10 appearance-none`}
-                  value={formData.insertion_mode ?? ''}
-                  onChange={(e) => handleChange('insertion_mode', e.target.value)}
-                >
-                  <option value="replace">Remplacer la sélection</option>
-                  <option value="append">Ajouter après la sélection</option>
-                  <option value="prepend">Ajouter avant la sélection</option>
-                </select>
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500" aria-hidden>
-                  <ChevronDown className="w-4 h-4" />
-                </span>
-              </div>
+              <CustomSelect
+                id="insertion_mode"
+                value={formData.insertion_mode ?? ''}
+                options={[
+                  { value: 'replace', label: 'Remplacer la sélection' },
+                  { value: 'append', label: 'Ajouter après la sélection' },
+                  { value: 'prepend', label: 'Ajouter avant la sélection' }
+                ]}
+                onChange={val => handleChange('insertion_mode', val as 'replace' | 'append' | 'prepend')}
+              />
             </div>
           )}
 

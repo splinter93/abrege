@@ -137,15 +137,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    logger.info(`[Editor Prompts API] 📥 GET prompts pour user: ${userId}`);
+    const includeInactive = searchParams.get('include_inactive') === 'true';
+    logger.info(`[Editor Prompts API] 📥 GET prompts pour user: ${userId}, includeInactive: ${includeInactive}`);
 
-    // Récupérer les prompts de l'utilisateur ET les prompts par défaut (user_id = null)
-    const { data: prompts, error } = await supabase
+    let query = supabase
       .from('editor_prompts')
       .select('*')
       .or(`user_id.eq.${userId},user_id.is.null`)
-      .eq('is_active', true)
       .order('position', { ascending: true });
+    if (!includeInactive) {
+      query = query.eq('is_active', true);
+    }
+    const { data: prompts, error } = await query;
 
     if (error) {
       logger.error('[Editor Prompts API] ❌ Erreur récupération prompts:', error);

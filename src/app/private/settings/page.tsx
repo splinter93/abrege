@@ -15,6 +15,7 @@ import "@/styles/main.css";
 import "@/styles/account.css";
 import "@/app/(public)/dashboard.css";
 import "./settings.css";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 interface ApiKey {
   id: string;
@@ -73,6 +74,9 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
   ]);
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string>("");
   const [showNewKeyModal, setShowNewKeyModal] = useState(false);
+
+  const [language, setLanguage] = useState("fr");
+  const [theme, setTheme] = useState("dark");
 
   // Gestionnaire d'erreur sécurisé
   const { handleError } = useSecureErrorHandler({
@@ -395,28 +399,26 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
                   <div className="account-preferences-grid">
                     <div className="account-field">
                       <label className="account-field-label">Langue</label>
-                      <div className="account-field-select-wrap">
-                        <select className="account-field-select">
-                          <option value="fr">Français</option>
-                          <option value="en">English</option>
-                        </select>
-                        <span className="account-field-select-chevron" aria-hidden>
-                          <ChevronDown className="w-4 h-4" />
-                        </span>
-                      </div>
+                      <CustomSelect
+                        value={language}
+                        options={[
+                          { value: 'fr', label: 'Français' },
+                          { value: 'en', label: 'English' }
+                        ]}
+                        onChange={setLanguage}
+                      />
                     </div>
                     <div className="account-field">
                       <label className="account-field-label">Thème</label>
-                      <div className="account-field-select-wrap">
-                        <select className="account-field-select">
-                          <option value="light">Clair</option>
-                          <option value="dark">Sombre</option>
-                          <option value="auto">Automatique</option>
-                        </select>
-                        <span className="account-field-select-chevron" aria-hidden>
-                          <ChevronDown className="w-4 h-4" />
-                        </span>
-                      </div>
+                      <CustomSelect
+                        value={theme}
+                        options={[
+                          { value: 'light', label: 'Clair' },
+                          { value: 'dark', label: 'Sombre' },
+                          { value: 'auto', label: 'Automatique' }
+                        ]}
+                        onChange={setTheme}
+                      />
                     </div>
                     <div className="account-field">
                       <label className="account-field-label">Notifications</label>

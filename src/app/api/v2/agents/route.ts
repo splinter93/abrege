@@ -46,9 +46,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
 
     const userId = authResult.userId!;
+    const includeInactive = request.nextUrl.searchParams.get('includeInactive') === 'true';
 
-    // 🔍 Récupérer tous les agents disponibles
-    const agents = await agentManager.listAgents(userId);
+    // 🔍 Récupérer les agents (tous si includeInactive, sinon actifs uniquement)
+    const agents = await agentManager.listAgents(userId, includeInactive);
     
     const executionTime = Date.now() - startTime;
     

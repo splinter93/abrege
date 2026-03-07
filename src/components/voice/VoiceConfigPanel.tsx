@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import type { XAIVoiceTool, XAIVoicePredefinedToolType } from '@/services/xai/types';
 import { parseOpenApiToVoiceTools } from '@/services/xai/utils/openApiToVoiceTools';
 import { logger, LogCategory } from '@/utils/logger';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 
 /**
  * Type pour un schéma OpenAPI (liste)
@@ -209,36 +209,16 @@ export function VoiceConfigPanel({ onConfigChange }: VoiceConfigPanelProps) {
         <label style={{ display: 'block', marginBottom: '0.5rem', color: '#a3a3a3', fontSize: '0.875rem' }}>
           OpenAPI Schema
         </label>
-        <div style={{ position: 'relative' }}>
-          <select
-            value={selectedSchemaId}
-            onChange={(e) => setSelectedSchemaId(e.target.value)}
-            disabled={openApiLoading}
-            style={{
-              width: '100%',
-              padding: '0.5rem 2.25rem 0.5rem 0.5rem',
-              background: '#131313',
-              border: '1px solid #2a2a2a',
-              borderRadius: '6px',
-              color: '#e5e5e5',
-              fontSize: '0.875rem',
-              cursor: openApiLoading ? 'wait' : 'pointer',
-              opacity: openApiLoading ? 0.6 : 1,
-              appearance: 'none'
-            }}
-          >
-            <option value="">Aucun schéma sélectionné</option>
-            {availableSchemas.map(schema => (
-              <option key={schema.id} value={schema.id}>
-                {schema.name} {schema.version ? `(v${schema.version})` : ''}
-                {schema.description ? ` - ${schema.description}` : ''}
-              </option>
-            ))}
-          </select>
-          <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#737373' }} aria-hidden>
-            <ChevronDown size={16} />
-          </span>
-        </div>
+        <CustomSelect
+          value={selectedSchemaId}
+          options={availableSchemas.map(schema => ({
+            value: schema.id,
+            label: `${schema.name} ${schema.version ? `(v${schema.version})` : ''}${schema.description ? ` - ${schema.description}` : ''}`
+          }))}
+          onChange={(val) => setSelectedSchemaId(val)}
+          disabled={openApiLoading}
+          placeholder="Aucun schéma sélectionné"
+        />
         {openApiLoading && (
           <div style={{ marginTop: '0.5rem', padding: '0.5rem', color: '#a3a3a3', fontSize: '0.875rem' }}>
             Chargement du schéma...
@@ -261,30 +241,15 @@ export function VoiceConfigPanel({ onConfigChange }: VoiceConfigPanelProps) {
         <label style={{ display: 'block', marginBottom: '0.5rem', color: '#a3a3a3', fontSize: '0.875rem' }}>
           Tool Choice
         </label>
-        <div style={{ position: 'relative' }}>
-          <select
-            value={toolChoice}
-            onChange={(e) => setToolChoice(e.target.value as 'auto' | 'none' | 'required')}
-            style={{
-              width: '100%',
-              padding: '0.5rem 2.25rem 0.5rem 0.5rem',
-              background: '#131313',
-              border: '1px solid #2a2a2a',
-              borderRadius: '6px',
-              color: '#e5e5e5',
-              fontSize: '0.875rem',
-              cursor: 'pointer',
-              appearance: 'none'
-            }}
-          >
-            <option value="auto">Auto</option>
-            <option value="none">None</option>
-            <option value="required">Required</option>
-          </select>
-          <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#737373' }} aria-hidden>
-            <ChevronDown size={16} />
-          </span>
-        </div>
+        <CustomSelect
+          value={toolChoice}
+          options={[
+            { value: 'auto', label: 'Auto' },
+            { value: 'none', label: 'None' },
+            { value: 'required', label: 'Required' }
+          ]}
+          onChange={(val) => setToolChoice(val as 'auto' | 'none' | 'required')}
+        />
       </div>
     </div>
   );

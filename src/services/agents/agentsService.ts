@@ -120,13 +120,12 @@ export class AgentsService {
   }
 
   /**
-   * Liste tous les agents spécialisés
+   * Liste tous les agents spécialisés.
+   * @param includeInactive - si true, inclut les agents inactifs (pour la page de gestion)
    */
-  async listAgents(): Promise<SpecializedAgentConfig[]> {
-    const response = await this.apiRequest<ListAgentsResponse>(
-      this.baseUrl,
-      { method: 'GET' }
-    );
+  async listAgents(includeInactive = true): Promise<SpecializedAgentConfig[]> {
+    const url = includeInactive ? `${this.baseUrl}?includeInactive=true` : this.baseUrl;
+    const response = await this.apiRequest<ListAgentsResponse>(url, { method: 'GET' });
 
     if (!response.success || !response.data) {
       throw new Error('Échec de la récupération des agents');

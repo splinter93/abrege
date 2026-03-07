@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { X, Image as ImageIcon, ChevronDown } from 'lucide-react';
+import { X, Image as ImageIcon } from 'lucide-react';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 
 const TTS_VOICE_OPTIONS = [
-  { value: '', label: 'Sélectionner une voix' },
   { value: 'fr-female-aura', label: 'FR · Aura (F)' },
   { value: 'fr-male-orion', label: 'FR · Orion (M)' },
   { value: 'en-female-luna', label: 'EN · Luna (F)' },
+];
+
+const AGENT_KIND_OPTIONS = [
+  { value: 'chat', label: 'Agent de Chat' },
+  { value: 'endpoint', label: 'Agent d\'Exécution' },
+  { value: 'both', label: 'Chat & Exécution' },
 ];
 
 const inputBase =
@@ -106,7 +112,7 @@ export function AgentConfiguration({
     <>
       <div className="space-y-6">
         {/* Identité : avatar au-dessus, puis nom + description */}
-        <section className="space-y-4">
+        <section className="space-y-3">
           <div className="flex flex-col gap-4">
             <button
               type="button"
@@ -176,21 +182,12 @@ export function AgentConfiguration({
           <label className={labelBase} htmlFor="agent-kind">
             Type d&apos;agent
           </label>
-          <div className="relative">
-            <select
-              id="agent-kind"
-              className={`${inputBase} cursor-pointer pr-10 appearance-none`}
-              value={agentTypeValue}
-              onChange={e => handleAgentTypeChange(e.target.value as 'chat' | 'endpoint' | 'both')}
-            >
-              <option value="chat">Agent de Chat</option>
-              <option value="endpoint">Agent d&apos;Exécution</option>
-              <option value="both">Chat &amp; Exécution</option>
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500" aria-hidden>
-              <ChevronDown className="w-4 h-4" />
-            </span>
-          </div>
+          <CustomSelect
+            id="agent-kind"
+            value={agentTypeValue}
+            options={AGENT_KIND_OPTIONS}
+            onChange={val => handleAgentTypeChange(val as 'chat' | 'endpoint' | 'both')}
+          />
         </section>
 
         {/* Instructions système */}
@@ -233,23 +230,13 @@ export function AgentConfiguration({
           <label className={labelBase} htmlFor="agent-voice">
             Voix (TTS)
           </label>
-          <div className="relative">
-            <select
-              id="agent-voice"
-              className={`${inputBase} cursor-pointer pr-10 appearance-none`}
-              value={editedAgent.voice ?? ''}
-              onChange={e => onUpdateField('voice', e.target.value)}
-            >
-              {TTS_VOICE_OPTIONS.map(option => (
-                <option key={option.value || 'default'} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500" aria-hidden>
-              <ChevronDown className="w-4 h-4" />
-            </span>
-          </div>
+          <CustomSelect
+            id="agent-voice"
+            value={editedAgent.voice ?? ''}
+            options={TTS_VOICE_OPTIONS}
+            onChange={val => onUpdateField('voice', val)}
+            placeholder="Sélectionner une voix"
+          />
         </section>
       </div>
 

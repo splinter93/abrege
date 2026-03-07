@@ -220,19 +220,22 @@ export class AgentCRUDService {
   }
 
   /**
-   * Lister tous les agents spécialisés disponibles (tous types)
+   * Lister tous les agents spécialisés disponibles (tous types).
+   * @param includeInactive - si true, inclut les agents inactifs (pour la page de gestion)
    */
-  async listAgents(userId: string): Promise<SpecializedAgentConfig[]> {
+  async listAgents(userId: string, includeInactive = false): Promise<SpecializedAgentConfig[]> {
     try {
-      logger.dev(`[AgentCRUDService] 📋 Récupération liste des agents`, { userId });
+      logger.dev(`[AgentCRUDService] 📋 Récupération liste des agents`, { userId, includeInactive });
 
-      // Charger TOUS les agents actifs (chat + endpoint)
-      const { data: agents, error } = await supabase
+      let query = supabase
         .from('agents')
         .select('*')
-        .eq('is_active', true)
         .order('priority', { ascending: false })
         .order('created_at', { ascending: false });
+      if (!includeInactive) {
+        query = query.eq('is_active', true);
+      }
+      const { data: agents, error } = await query;
 
       if (error) {
         logger.error(`[AgentCRUDService] ❌ Erreur récupération liste agents:`, error);

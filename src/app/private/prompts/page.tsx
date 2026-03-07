@@ -35,7 +35,7 @@ export default function PromptsPage() {
 
 function PromptsPageContent() {
   const { user, loading: authLoading } = useAuth();
-  const { prompts, loading, error, createPrompt, updatePrompt, deletePrompt } = useEditorPrompts(user?.id);
+  const { prompts, loading, error, createPrompt, updatePrompt, deletePrompt } = useEditorPrompts(user?.id, { includeInactive: true });
   const { agents } = useAgents();
 
   const [isModalOpen, setIsModalOpen] = useState(false);

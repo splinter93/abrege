@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
 import AgentConfiguration from '@/components/agents/AgentConfiguration';
 import AgentParameters from '@/components/agents/AgentParameters';
 import { useAgentEditor } from '@/hooks/useAgentEditor';
+import { CustomSelect } from '@/components/ui/CustomSelect';
 import '@/app/private/agents_page_backup_legacy/agents.css';
 import './AgentDetailsModal.css';
 
@@ -147,6 +147,19 @@ const AgentDetailsModal: React.FC<AgentDetailsModalProps> = ({ onClose }) => {
     );
   };
 
+  const agentOptions = useMemo(() => 
+    agents.map(agent => ({
+      value: agent.id,
+      label: agent.display_name || agent.name
+    })), [agents]);
+
+  const handleAgentSelect = (agentId: string) => {
+    const next = agents.find(agent => agent.id === agentId);
+    if (next) {
+      void handleSelectAgent(next);
+    }
+  };
+
   return (
     <div className="agent-details-modal">
       <div className="agent-details-modal__backdrop" onClick={onClose} />
@@ -168,28 +181,13 @@ const AgentDetailsModal: React.FC<AgentDetailsModalProps> = ({ onClose }) => {
               </div>
               <div className="agent-modal-selector">
                 <label htmlFor="agent-selector">Agent</label>
-                <div className="agent-modal-select-wrap">
-                  <select
-                    id="agent-selector"
-                    className="agent-modal-select-with-chevron"
-                    value={selectedAgent?.id || ''}
-                    onChange={event => {
-                      const next = agents.find(agent => agent.id === event.target.value);
-                      if (next) {
-                        void handleSelectAgent(next);
-                      }
-                    }}
-                  >
-                    {agents.map(agent => (
-                      <option key={agent.id} value={agent.id}>
-                        {agent.display_name || agent.name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="agent-modal-select-chevron" aria-hidden>
-                    <ChevronDown className="w-4 h-4" />
-                  </span>
-                </div>
+                <CustomSelect
+                  id="agent-selector"
+                  value={selectedAgent?.id || ''}
+                  options={agentOptions}
+                  onChange={handleAgentSelect}
+                  placeholder="Sélectionner un agent"
+                />
               </div>
             </header>
 

@@ -22,12 +22,19 @@ interface UseEditorPromptsReturn {
   refresh: () => Promise<void>;
 }
 
+export interface UseEditorPromptsOptions {
+  /** Inclure les prompts inactifs (pour la page de gestion) */
+  includeInactive?: boolean;
+}
+
 /**
  * Hook pour gérer les prompts éditeur d'un utilisateur
  * @param userId - ID de l'utilisateur
+ * @param options - includeInactive: true pour la page prompts (voir tous les prompts)
  * @returns Prompts et fonctions CRUD
  */
-export function useEditorPrompts(userId: string | undefined): UseEditorPromptsReturn {
+export function useEditorPrompts(userId: string | undefined, options: UseEditorPromptsOptions = {}): UseEditorPromptsReturn {
+  const { includeInactive = false } = options;
   const [prompts, setPrompts] = useState<EditorPrompt[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,9 +52,10 @@ export function useEditorPrompts(userId: string | undefined): UseEditorPromptsRe
       setLoading(true);
       setError(null);
 
-      logger.info(`[useEditorPrompts] 📥 Récupération prompts pour user: ${userId}`);
+      const includeParam = includeInactive ? '&include_inactive=true' : '';
+      logger.info(`[useEditorPrompts] 📥 Récupération prompts pour user: ${userId}, includeInactive: ${includeInactive}`);
 
-      const response = await fetch(`/api/editor-prompts?user_id=${userId}`, {
+      const response = await fetch(`/api/editor-prompts?user_id=${userId}${includeParam}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -71,7 +79,7 @@ export function useEditorPrompts(userId: string | undefined): UseEditorPromptsRe
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, includeInactive]);
 
   /**
    * Créer un nouveau prompt

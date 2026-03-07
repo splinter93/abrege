@@ -78,10 +78,11 @@ export class SpecializedAgentManager {
   }
 
   /**
-   * Lister tous les agents spécialisés disponibles (tous types)
+   * Lister tous les agents spécialisés disponibles (tous types).
+   * @param includeInactive - si true, inclut les agents inactifs (pour la page de gestion)
    */
-  async listAgents(userId: string): Promise<SpecializedAgentConfig[]> {
-    return await this.crudService.listAgents(userId);
+  async listAgents(userId: string, includeInactive = false): Promise<SpecializedAgentConfig[]> {
+    return await this.crudService.listAgents(userId, includeInactive);
   }
 
   /**

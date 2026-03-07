@@ -423,10 +423,10 @@ export const LLM_MODELS = GROQ_MODELS;
  * Grouper les modèles par catégorie pour le menu déroulant
  */
 export const GROQ_MODELS_BY_CATEGORY = {
-  'DeepSeek ⚡': GROQ_MODELS.filter(m => m.category === 'deepseek'),
-  'Liminality (Synesia) ⭐': GROQ_MODELS.filter(m => m.category === 'liminality'),
-  'Cerebras ⚡': GROQ_MODELS.filter(m => m.provider === 'cerebras'),
-  'xAI Grok (Recommandé)': GROQ_MODELS.filter(m => m.category === 'xai'),
+  'DeepSeek': GROQ_MODELS.filter(m => m.category === 'deepseek'),
+  'Liminality (Synesia)': GROQ_MODELS.filter(m => m.category === 'liminality'),
+  'Cerebras': GROQ_MODELS.filter(m => m.provider === 'cerebras'),
+  'xAI Grok': GROQ_MODELS.filter(m => m.category === 'xai'),
   'GPT-OSS': GROQ_MODELS.filter(m => m.category === 'gpt-oss'),
   'Llama 4 (Multimodal)': GROQ_MODELS.filter(m => m.category === 'llama'),
   'Qwen3': GROQ_MODELS.filter(m => m.category === 'qwen'),
