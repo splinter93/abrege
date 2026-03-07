@@ -179,53 +179,43 @@ const ChatFullscreenV2: React.FC = () => {
     return clientMessageId;
   }, [upsertInfiniteMessage]);
 
-  const buildLiveStreamTimeline = useCallback((
-    timelineItems: typeof streamingState.streamingTimeline,
-    isStreaming: boolean
-  ): StreamTimeline | undefined => {
-    if (timelineItems.length === 0) {
-      return undefined;
-    }
+  // Ref stable vers startTime (ne change pas entre les renders)
+  const streamStartTimeForTimelineRef = useRef(0);
 
-    const startTime = streamingState.streamStartTime || pendingAssistantStartTimeRef.current || Date.now();
-
+  // Helper pur (pas un hook) : construit la StreamTimeline à partir des items refs.
+  // Appelé directement dans les callbacks — zéro setState, zéro useEffect.
+  const buildLiveTimeline = useCallback((isStreamingNow: boolean): StreamTimeline | undefined => {
+    const items = streamingState.streamingTimelineRef.current;
+    if (items.length === 0) return undefined;
+    const startTime = streamStartTimeForTimelineRef.current || pendingAssistantStartTimeRef.current || Date.now();
     return {
-      items: timelineItems,
+      items,
       startTime,
-      ...(isStreaming ? {} : { endTime: Date.now() })
+      ...(isStreamingNow ? {} : { endTime: Date.now() })
     };
-  }, [streamingState.streamStartTime, streamingState.streamingTimeline]);
+  }, [streamingState.streamingTimelineRef]);
 
-  useEffect(() => {
+  // Ref stable vers buildLiveTimeline
+  const buildLiveTimelineRef = useRef(buildLiveTimeline);
+  buildLiveTimelineRef.current = buildLiveTimeline;
+
+  // Met à jour le message optimiste directement depuis les callbacks (pas de useEffect).
+  // Les valeurs sont lues depuis les refs miroirs, mises à jour de façon synchrone dans useStreamingState.
+  const patchPendingAssistantMessage = useCallback((isStreamingNow: boolean) => {
     const clientMessageId = pendingAssistantClientMessageIdRef.current;
-    if (!clientMessageId) {
-      return;
-    }
-
-    const liveTimeline = buildLiveStreamTimeline(
-      streamingState.streamingTimeline,
-      streamingState.isStreaming
-    );
-
+    if (!clientMessageId) return;
+    const content = streamingState.streamingContentRef.current;
+    const liveTimeline = buildLiveTimelineRef.current(isStreamingNow);
     updateInfiniteMessageByClientId(clientMessageId, (message) => {
-      if (message.role !== 'assistant') {
-        return message;
-      }
-
+      if (message.role !== 'assistant') return message;
       return {
         ...message,
-        content: streamingState.streamingContent,
-        isStreaming: streamingState.isStreaming,
+        content,
+        isStreaming: isStreamingNow,
         ...(liveTimeline ? { stream_timeline: liveTimeline } : {})
       };
     });
-  }, [
-    buildLiveStreamTimeline,
-    streamingState.isStreaming,
-    streamingState.streamingContent,
-    streamingState.streamingTimeline,
-    updateInfiniteMessageByClientId
-  ]);
+  }, [streamingState.streamingContentRef, updateInfiniteMessageByClientId]);
   
   // 🎯 GESTION ERREURS STREAMING (utilise uiState)
   
@@ -323,10 +313,12 @@ const ChatFullscreenV2: React.FC = () => {
     onStreamChunk: (chunk) => {
       updateContent(chunk);
       scrollToFollowStream();
+      patchPendingAssistantMessage(true);
     },
     onStreamStart: () => {
       startStreaming();
       createPendingAssistantMessage();
+      streamStartTimeForTimelineRef.current = Date.now();
     },
     onStreamEnd: () => {
       endStreaming();
@@ -342,6 +334,8 @@ const ChatFullscreenV2: React.FC = () => {
         type: 'function' as const
       }));
       streamingState.addToolExecution(typedToolCalls, toolCount);
+      // Patch immédiat via refs (pas de useEffect)
+      patchPendingAssistantMessage(true);
     },
     onToolResult: (toolName, result, success, toolCallId) => {
       logger.dev('[ChatFullscreenV2] 🔧 onToolResult callback appelé:', {
@@ -353,7 +347,8 @@ const ChatFullscreenV2: React.FC = () => {
       
       if (toolCallId) {
         streamingState.updateToolResult(toolCallId, result, success);
-        } else {
+        patchPendingAssistantMessage(true);
+      } else {
         logger.warn('[ChatFullscreenV2] ⚠️ toolCallId manquant pour updateToolResult');
       }
       

@@ -1924,12 +1924,24 @@ body.chat-theme-glass .chatgpt-messages > div {
   gap: 6px;
 }
 
+/* Animation uniquement opacity (pas de scale) pour garder les points stables et toujours en mouvement */
+@keyframes loading-dots-opacity {
+  0%, 80%, 100% {
+    opacity: 0.35;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
 .chatgpt-message-loading-dot {
   width: 8px;
   height: 8px;
+  min-width: 8px;
+  min-height: 8px;
   background: var(--chat-text-secondary);
   border-radius: 50%;
-  animation: pulse 1.4s infinite ease-in-out;
+  animation: loading-dots-opacity 1.4s infinite ease-in-out;
 }
 
 .chatgpt-message-loading-dot:nth-child(1) {

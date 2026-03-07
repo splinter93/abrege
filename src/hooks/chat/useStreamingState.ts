@@ -10,6 +10,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
+import type { MutableRefObject } from 'react';
 import type { StreamTimelineItem } from '@/types/streamTimeline';
 import { simpleLogger as logger } from '@/utils/logger';
 
@@ -47,6 +48,10 @@ export interface UseStreamingStateReturn {
   streamingTimeline: StreamTimelineItem[];
   streamStartTime: number;
   currentToolCalls: ToolCall[];
+
+  // Refs miroirs (valeurs toujours à jour, sans déclencher de re-render)
+  streamingContentRef: MutableRefObject<string>;
+  streamingTimelineRef: MutableRefObject<StreamTimelineItem[]>;
   
   // Actions
   startStreaming: () => void;
@@ -79,6 +84,10 @@ export function useStreamingState(): UseStreamingStateReturn {
   const [streamStartTime, setStreamStartTime] = useState(0);
   const streamStartTimeRef = useRef(0); // ✅ FIX: Ref pour éviter dépendances dans updateContent
   const [currentToolCalls, setCurrentToolCalls] = useState<ToolCall[]>([]);
+
+  // Refs miroirs : valeurs toujours à jour sans causer de re-render
+  const streamingContentRef = useRef('');
+  const streamingTimelineRef = useRef<StreamTimelineItem[]>([]);
   
   // ✅ FIX: useRef pour currentRound (éviter stale closure)
   const currentRoundRef = useRef(0);
@@ -93,10 +102,12 @@ export function useStreamingState(): UseStreamingStateReturn {
     setIsStreaming(true);
     setIsFading(false); // ✅ Reset fading
     setStreamingContent('');
+    streamingContentRef.current = '';
     setCurrentRound(0);
     currentRoundRef.current = 0; // ✅ Réinitialiser le ref aussi
     setStreamingStateInternal('thinking');
     setStreamingTimeline([]);
+    streamingTimelineRef.current = [];
     setStreamStartTime(startTime);
     streamStartTimeRef.current = startTime; // ✅ Mettre à jour le ref aussi
     setCurrentToolCalls([]);
@@ -112,28 +123,28 @@ export function useStreamingState(): UseStreamingStateReturn {
    * @param chunk - Nouveau chunk de texte
    */
   const updateContent = useCallback((chunk: string) => {
-    setStreamingContent(prev => prev + chunk);
+    // Mettre à jour la ref immédiatement (synchrone) avant le setState batché
+    streamingContentRef.current = streamingContentRef.current + chunk;
+
+    setStreamingContent(streamingContentRef.current);
     
     // Mettre à jour la timeline
-    setStreamingTimeline(prev => {
-      const lastItem = prev[prev.length - 1];
-      const currentRoundValue = currentRoundRef.current; // ✅ Utiliser ref (valeur à jour)
-      const startTime = streamStartTimeRef.current; // ✅ Utiliser ref au lieu de state
-      
-      // Si le dernier élément est un texte du même round, fusionner
-      if (lastItem && lastItem.type === 'text' && lastItem.roundNumber === currentRoundValue) {
-        return [
-          ...prev.slice(0, -1),
-          {
-            ...lastItem,
-            content: (lastItem.content || '') + chunk
-          }
-        ];
-      }
-      
-      // Nouveau bloc de texte
-      return [
-        ...prev,
+    const lastItem = streamingTimelineRef.current[streamingTimelineRef.current.length - 1];
+    const currentRoundValue = currentRoundRef.current;
+    const startTime = streamStartTimeRef.current;
+
+    let nextTimeline: StreamTimelineItem[];
+    if (lastItem && lastItem.type === 'text' && lastItem.roundNumber === currentRoundValue) {
+      nextTimeline = [
+        ...streamingTimelineRef.current.slice(0, -1),
+        {
+          ...lastItem,
+          content: (lastItem.content || '') + chunk
+        }
+      ];
+    } else {
+      nextTimeline = [
+        ...streamingTimelineRef.current,
         {
           type: 'text' as const,
           content: chunk,
@@ -141,7 +152,11 @@ export function useStreamingState(): UseStreamingStateReturn {
           timestamp: Date.now() - startTime
         }
       ];
-    });
+    }
+
+    // Mettre à jour la ref immédiatement (synchrone) puis le state
+    streamingTimelineRef.current = nextTimeline;
+    setStreamingTimeline(nextTimeline);
   }, []); // ✅ FIX: Plus de dépendances - utilise uniquement des refs
 
   /**
@@ -163,7 +178,6 @@ export function useStreamingState(): UseStreamingStateReturn {
     setStreamingStateInternal('executing');
     setExecutingToolCount(toolCount);
     
-    // ✅ FIX: Incrémenter le ref ET le state
     const newRound = currentRoundRef.current + 1;
     currentRoundRef.current = newRound;
     setCurrentRound(newRound);
@@ -174,28 +188,17 @@ export function useStreamingState(): UseStreamingStateReturn {
       success: undefined
     })));
     
-    // ✅ RESTAURÉ: Ajouter à la timeline pour affichage en temps réel
-    // ✅ DÉDUPLICATION: Vérifier que les tool calls ne sont pas déjà dans la timeline
-    setStreamingTimeline(prevTimeline => {
-      // Extraire les IDs des tool calls existants dans la timeline
-      const existingToolCallIds = new Set(
-        prevTimeline
-          .filter(item => item.type === 'tool_execution')
-          .flatMap(item => item.toolCalls.map(tc => tc.id))
-      );
-      
-      // Filtrer les tool calls qui ne sont pas déjà présents
-      const newToolCalls = toolCalls.filter(tc => !existingToolCallIds.has(tc.id));
-      
-      // Si tous les tool calls sont déjà présents, ne pas ajouter de doublon
-      if (newToolCalls.length === 0) {
-        logger.dev('[useStreamingState] 🔧 Tool calls déjà présents dans timeline, skip duplication');
-        return prevTimeline;
-      }
-      
-      // Ajouter seulement les nouveaux tool calls
-      return [
-        ...prevTimeline,
+    // Déduplication basée sur la ref (synchrone)
+    const existingToolCallIds = new Set(
+      streamingTimelineRef.current
+        .filter(item => item.type === 'tool_execution')
+        .flatMap(item => item.toolCalls.map(tc => tc.id))
+    );
+    const newToolCalls = toolCalls.filter(tc => !existingToolCallIds.has(tc.id));
+
+    if (newToolCalls.length > 0) {
+      const next = [
+        ...streamingTimelineRef.current,
         {
           type: 'tool_execution' as const,
           toolCalls: newToolCalls.map(tc => ({
@@ -205,17 +208,22 @@ export function useStreamingState(): UseStreamingStateReturn {
           })),
           toolCount: newToolCalls.length,
           roundNumber: newRound,
-          timestamp: Date.now() - streamStartTime
+          timestamp: Date.now() - streamStartTimeRef.current
         }
       ];
-    });
+      // Mettre à jour la ref synchronement, puis le state
+      streamingTimelineRef.current = next;
+      setStreamingTimeline(next);
+    } else {
+      logger.dev('[useStreamingState] 🔧 Tool calls déjà présents dans timeline, skip duplication');
+    }
     
     logger.dev('[useStreamingState] 🔧 Tool execution ajoutée (avec déduplication):', {
       toolCount,
       round: newRound,
       toolNames: toolCalls.map(tc => tc.function.name)
     });
-  }, [streamStartTime]);
+  }, []);
 
   /**
    * Met à jour le résultat d'un tool call
@@ -238,36 +246,32 @@ export function useStreamingState(): UseStreamingStateReturn {
         : tc
     ));
     
-    // Mettre à jour dans la timeline
-    setStreamingTimeline(prev => {
-      const updated = prev.map(item => {
-        if (item.type === 'tool_execution' && item.toolCalls) {
-          return {
-            ...item,
-            toolCalls: item.toolCalls.map(tc => {
-              if (tc.id === toolCallId) {
-                return { ...tc, success, result: resultString };
-              }
-              return tc;
-            })
-          };
-        }
-        return item;
-      });
-      
-      logger.dev('[useStreamingState] ✅ Tool result mis à jour dans timeline:', {
-        toolCallId,
-        success,
-        resultPreview: resultString.substring(0, 100),
-        timelineItemsCount: updated.length,
-        toolExecutionBlocks: updated.filter(i => i.type === 'tool_execution').length,
-        toolCallsWithSuccess: updated
-          .filter(i => i.type === 'tool_execution')
-          .flatMap(i => i.toolCalls)
-          .filter(tc => tc.success !== undefined).length
-      });
-      
-      return updated;
+    // Mettre à jour dans la timeline (ref synchrone d'abord, puis state)
+    const updated = streamingTimelineRef.current.map(item => {
+      if (item.type === 'tool_execution' && item.toolCalls) {
+        return {
+          ...item,
+          toolCalls: item.toolCalls.map(tc =>
+            tc.id === toolCallId ? { ...tc, success, result: resultString } : tc
+          )
+        };
+      }
+      return item;
+    });
+
+    streamingTimelineRef.current = updated;
+    setStreamingTimeline(updated);
+
+    logger.dev('[useStreamingState] ✅ Tool result mis à jour dans timeline:', {
+      toolCallId,
+      success,
+      resultPreview: resultString.substring(0, 100),
+      timelineItemsCount: updated.length,
+      toolExecutionBlocks: updated.filter(i => i.type === 'tool_execution').length,
+      toolCallsWithSuccess: updated
+        .filter(i => i.type === 'tool_execution')
+        .flatMap(i => i.toolCalls)
+        .filter(tc => tc.success !== undefined).length
     });
   }, []);
 
@@ -298,6 +302,7 @@ export function useStreamingState(): UseStreamingStateReturn {
    */
   const reset = useCallback(() => {
     setStreamingContent('');
+    streamingContentRef.current = '';
     setIsStreaming(false);
     setIsFading(false); // ✅ Reset fading aussi
     setStreamingStateInternal('idle');
@@ -306,6 +311,7 @@ export function useStreamingState(): UseStreamingStateReturn {
     setCurrentRound(0);
     currentRoundRef.current = 0; // ✅ Réinitialiser le ref aussi
     setStreamingTimeline([]);
+    streamingTimelineRef.current = [];
     setStreamStartTime(0);
     setCurrentToolCalls([]);
     
@@ -324,6 +330,10 @@ export function useStreamingState(): UseStreamingStateReturn {
     streamingTimeline,
     streamStartTime,
     currentToolCalls,
+
+    // Refs miroirs
+    streamingContentRef,
+    streamingTimelineRef,
     
     // Actions
     startStreaming,

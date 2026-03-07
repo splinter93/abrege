@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
   ChatMessage as ChatMessageType, 
   isObservationMessage
@@ -33,15 +33,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   onEdit,
   onRegenerate
 }) => {
-  const [displayedContent, setDisplayedContent] = useState('');
-
   const content = message?.content ?? '';
   const messageId = message?.id;
-
-  // ✅ Hooks inconditionnels avant tout return conditionnel — règle des hooks React
-  useEffect(() => {
-    if (content) setDisplayedContent(content);
-  }, [content]);
 
   if (!message) {
     logger.warn('ChatMessage: message is undefined');
@@ -164,7 +157,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         )}
         
         {/* Indicateur de chargement */}
-        {isStreaming && !displayedContent && (
+        {isStreaming && !content && (
           <div className="chatgpt-message-loading" role="status" aria-label="Chargement en cours">
             <div className="chatgpt-message-loading-dots">
               <div className="chatgpt-message-loading-dot"></div>
