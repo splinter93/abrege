@@ -569,11 +569,11 @@ body.chat-theme-light .settings-option-card.active {
     justify-content: center;
     width: 36px;
     height: 36px;
-    border: none;
-    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
     color: var(--chat-text-primary);
     cursor: pointer;
-    border-radius: 50%; /* Boutons ronds plus premium */
+    border-radius: 12px;
     transition: all 0.2s ease;
     flex-shrink: 0;
   }
@@ -581,7 +581,8 @@ body.chat-theme-light .settings-option-card.active {
   .settings-mobile-close:active,
   .settings-mobile-back:active {
     transform: scale(0.9);
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.12);
   }
 
   .settings-mobile-header-spacer {

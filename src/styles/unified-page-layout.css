@@ -64,7 +64,8 @@
   padding: var(--spacing-xl) 0 var(--spacing-xl) 0 !important; /* Pas de padding horizontal : contenu pleine largeur ; gauche collé à la sidebar */
   gap: var(--spacing-lg);
   position: relative;
-  background: var(--color-bg-primary);
+  background: var(--color-bg-primary) !important;
+  background-color: var(--color-bg-primary) !important;
 }
 
 /* ==========================================================================

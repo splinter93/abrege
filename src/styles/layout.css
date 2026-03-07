@@ -33,15 +33,22 @@
   border-right: none;
 }
 
-/* Zone de contenu principal */
+/* Zone de contenu principal — fond toujours identique, partout */
 .page-content-area {
   flex: 1;
   margin-left: var(--sidebar-width);
   min-height: 100vh;
-  background: var(--color-bg-primary);
+  background: var(--color-bg-primary) !important;
+  background-color: var(--color-bg-primary) !important;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+}
+
+/* Enfant direct (wrapper pt-0) : même fond pour continuité visuelle */
+.page-content-area > div {
+  background: var(--color-bg-primary) !important;
+  background-color: var(--color-bg-primary) !important;
 }
 
 /* ==========================================================================
