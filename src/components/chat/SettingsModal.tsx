@@ -393,8 +393,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const userDisplayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Utilisateur';
-  const userInitial = userDisplayName.charAt(0).toUpperCase();
+  const userMeta = user?.user_metadata as { full_name?: string; name?: string; avatar_url?: string } | undefined;
+  const userDisplayName = userMeta?.full_name || userMeta?.name || user?.email?.split('@')[0] || 'Utilisateur';
+  const userInitial = (userDisplayName as string).charAt(0).toUpperCase();
 
   const modalContent = (
     <div className="settings-modal-overlay" onClick={onClose}>
@@ -444,8 +445,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             <div className="settings-mobile-scroll">
               <div className="settings-mobile-profile">
                 <div className="settings-mobile-avatar">
-                  {user?.user_metadata?.avatar_url ? (
-                    <img src={user.user_metadata.avatar_url} alt="" />
+                  {userMeta?.avatar_url ? (
+                    <img src={userMeta.avatar_url} alt="" />
                   ) : (
                     <span>{userInitial}</span>
                   )}

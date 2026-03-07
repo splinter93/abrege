@@ -13,6 +13,7 @@ import { ArrowLeft, Info } from 'lucide-react';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 import Tooltip from '@/components/Tooltip';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
+import HighlightedTextarea from './HighlightedTextarea';
 
 const inputClass =
   'w-full px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/60 text-zinc-100 text-sm placeholder:text-zinc-500 focus:border-zinc-600 focus:bg-zinc-800/20 focus:outline-none transition-colors';
@@ -143,7 +144,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
     'Active le mode JSON pour supprimer les phrases parasites du LLM.\nExemples : "Voici la correction", "J\'ai reformulé".';
 
   return (
-    <div className="page-content-inner bg-[var(--color-bg-primary)] w-full max-w-none mx-0 flex flex-col min-h-full">
+    <div className="page-content-inner page-content-inner-prompt-form bg-[var(--color-bg-primary)] w-full max-w-none mx-0 flex flex-col min-h-full">
 
       {/* ── Header sticky ── */}
       <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/80 backdrop-blur-xl border-b border-zinc-800/60 shrink-0">
@@ -285,24 +286,65 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               <label className={labelClass} htmlFor="prompt_template">
                 Template du prompt *
               </label>
-              <textarea
-                id="prompt_template"
-                className={`${inputClass} font-mono text-[13px] leading-relaxed min-h-[180px] resize-none ${errors.prompt_template ? 'border-red-500/50 focus:border-red-500/70' : ''}`}
-                value={formData.prompt_template}
-                onChange={(e) => handleChange('prompt_template', e.target.value)}
-                placeholder="Exemple: Améliore ce texte : {selection}"
-                rows={6}
-              />
+            <HighlightedTextarea
+              id="prompt_template"
+              value={formData.prompt_template}
+              onChange={(val) => handleChange('prompt_template', val)}
+              placeholder="Exemple: Améliore ce texte : {selection}"
+              rows={6}
+              hasError={!!errors.prompt_template}
+            />
               {errors.prompt_template && (
                 <span className="mt-1 block text-xs text-red-400">{errors.prompt_template}</span>
               )}
-              <p className="mt-1.5 text-xs text-zinc-500">
-                Utilisez{' '}
-                <code className="px-1.5 py-0.5 rounded bg-zinc-800/80 text-zinc-400 font-mono text-[11px]">
-                  {'{selection}'}
-                </code>{' '}
-                pour insérer le texte sélectionné
-              </p>
+              <div className="mt-1.5 flex items-center justify-between gap-4">
+                <p className="text-xs text-zinc-500">
+                  Utilisez{' '}
+                  <code className="px-1.5 py-0.5 rounded bg-zinc-800/80 text-zinc-400 font-mono text-[11px]">
+                    {'{selection}'}
+                  </code>{' '}
+                  pour insérer le texte sélectionné
+                </p>
+                <div className="flex items-center gap-2 shrink-0">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.use_structured_output}
+                      aria-label="Strict Mode"
+                      onChange={(e) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          use_structured_output: e.target.checked,
+                          output_schema: e.target.checked
+                            ? {
+                                type: 'object',
+                                properties: {
+                                  content: {
+                                    type: 'string',
+                                    description:
+                                      'Le contenu demandé, sans introduction ni explication',
+                                  },
+                                },
+                                required: ['content'],
+                              }
+                            : undefined,
+                        }));
+                      }}
+                      className="prompt-strict-checkbox"
+                    />
+                    <span className="text-sm font-medium text-zinc-400">Strict Mode</span>
+                  </label>
+                  <Tooltip text={strictModeTooltip}>
+                    <button
+                      type="button"
+                      className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40 transition-colors"
+                      aria-label="Informations Strict Mode"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </Tooltip>
+                </div>
+              </div>
 
               {/* Arguments détectés */}
               <div className="mt-4 p-4 rounded-xl border border-zinc-800/40 bg-zinc-900/20 flex flex-col gap-2">
@@ -355,48 +397,6 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
                 />
               </div>
             )}
-
-            {/* Strict Mode */}
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-3 cursor-pointer group/check">
-                <input
-                  type="checkbox"
-                  checked={formData.use_structured_output}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      use_structured_output: e.target.checked,
-                      output_schema: e.target.checked
-                        ? {
-                            type: 'object',
-                            properties: {
-                              content: {
-                                type: 'string',
-                                description:
-                                  'Le contenu demandé, sans introduction ni explication',
-                              },
-                            },
-                            required: ['content'],
-                          }
-                        : undefined,
-                    }));
-                  }}
-                  className="w-4 h-4 rounded border border-zinc-600 bg-zinc-900/50 text-white focus:ring-1 focus:ring-zinc-500 cursor-pointer"
-                />
-                <span className="text-sm font-medium text-zinc-300 group-hover/check:text-zinc-100">
-                  Strict Mode
-                </span>
-              </label>
-              <Tooltip text={strictModeTooltip}>
-                <button
-                  type="button"
-                  className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/40 transition-colors"
-                  aria-label="Informations Strict Mode"
-                >
-                  <Info className="w-4 h-4" />
-                </button>
-              </Tooltip>
-            </div>
 
           </form>
         </div>

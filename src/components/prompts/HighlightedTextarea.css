@@ -1,0 +1,107 @@
+/**
+ * Styles pour HighlightedTextarea
+ * Textarea transparent + div miroir superposés.
+ * Les deux doivent avoir exactement les mêmes dimensions / police / padding.
+ */
+
+/* ── Conteneur (même bordure que .input-block) ── */
+.highlighted-textarea-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: var(--border-block);
+  background-color: var(--color-bg-block);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  overflow: hidden;
+}
+
+.highlighted-textarea-wrapper:focus-within {
+  outline: none;
+  border-color: rgba(63, 63, 70, 0.55);  /* zinc-700 très discret */
+  background-color: var(--color-bg-block); /* pas de changement de fond au focus */
+}
+
+.highlighted-textarea-wrapper.highlighted-textarea-wrapper--error {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.highlighted-textarea-wrapper.highlighted-textarea-wrapper--error:focus-within {
+  border-color: rgba(239, 68, 68, 0.7);
+}
+
+/* ── Propriétés partagées textarea / miroir ── */
+.highlighted-textarea-mirror,
+.highlighted-textarea-input {
+  /* Doit être identique des deux côtés */
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-size: 0.8125rem;     /* text-[13px] */
+  line-height: 1.625;       /* leading-relaxed */
+  letter-spacing: 0;
+  tab-size: 2;
+  padding: 0.75rem 1rem;    /* plus d’air : haut/bas 12px, côtés 16px */
+  width: 100%;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ── Div miroir ── */
+.highlighted-textarea-mirror {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;             /* scroll sync manuel via JS */
+  color: var(--color-text-primary, #B5BCC4); /* même couleur que les inputs input-block */
+  user-select: none;
+  z-index: 1;
+  border: none;
+  background: transparent;
+  margin: 0;
+}
+
+/* ── Textarea transparent (par-dessus) — hauteur auto-resize via JS, min/max fixes ── */
+.highlighted-textarea-input {
+  position: relative;
+  z-index: 2;
+  background: transparent !important;
+  color: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  display: block;
+  overflow-y: auto;
+  caret-color: var(--color-text-primary, #B5BCC4);
+  min-height: 200px;   /* ~8 lignes ; JS peut agrandir */
+  max-height: 420px;   /* plafond avant scroll */
+  -webkit-text-fill-color: transparent;
+}
+
+.highlighted-textarea-input::placeholder {
+  color: rgba(161, 161, 170, 0.5); /* zinc-500/50 */
+}
+
+.highlighted-textarea-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ── Marques colorées ── */
+.highlighted-placeholder {
+  border-radius: 3px;
+  background: transparent;
+  font-weight: 500;
+}
+
+/* {selection} → ambre/jaune */
+.highlighted-placeholder--selection {
+  color: #fbbf24;               /* amber-400 */
+}
+
+/* {autresArguments} → orange */
+.highlighted-placeholder--arg {
+  color: #f97316;               /* orange-500 */
+}

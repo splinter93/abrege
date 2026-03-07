@@ -3,11 +3,13 @@
  */
 
 /* Page prompts : pleine largeur, sans padding parasite (bord droit, bas) */
-.page-content-area:has(.page-content-inner-prompts) {
+.page-content-area:has(.page-content-inner-prompts),
+.page-content-area:has(.page-content-inner-prompt-form) {
   padding: 0 !important;
 }
 
-.page-content-area > .page-content-inner-prompts {
+.page-content-area > .page-content-inner-prompts,
+.page-content-area > .page-content-inner-prompt-form {
   max-width: none !important;
   margin: 0 !important;
   width: 100% !important;
@@ -200,6 +202,43 @@
   .prompts-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Checkbox Strict Mode — design sobre */
+.prompt-strict-checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1px solid rgba(63, 63, 70, 0.8);
+  background: rgba(24, 24, 27, 0.6);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+}
+
+.prompt-strict-checkbox:hover {
+  border-color: rgba(82, 82, 91, 0.9);
+  background: rgba(39, 39, 42, 0.6);
+}
+
+.prompt-strict-checkbox:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25);
+}
+
+.prompt-strict-checkbox:checked {
+  background: rgba(251, 191, 36, 0.25);
+  border-color: rgba(251, 191, 36, 0.5);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+  background-size: 12px 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.prompt-strict-checkbox:checked:hover {
+  background-color: rgba(251, 191, 36, 0.35);
+  border-color: rgba(251, 191, 36, 0.6);
 }
 
 
