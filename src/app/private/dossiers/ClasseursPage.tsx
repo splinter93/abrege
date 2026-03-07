@@ -21,9 +21,8 @@ import {
   useSensor,
   useSensors,
   closestCenter,
-  DragOverlay,
-  DragStartEvent,
   DragEndEvent,
+  type Modifier,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -238,6 +237,12 @@ function SortableTab({
   );
 }
 
+// Contraint le drag à l'axe horizontal uniquement (évite la disparition sur mouvement vertical)
+const restrictToHorizontalAxis: Modifier = ({ transform }) => ({
+  ...transform,
+  y: 0,
+});
+
 function ClasseursTabs({
   tabs,
   activeId,
@@ -263,19 +268,12 @@ function ClasseursTabs({
   handleUpdateClasseurPositions: (reordered: Classeur[]) => void;
   classeursForReorder: Classeur[];
 }) {
-  const [draggedTab, setDraggedTab] = useState<ClasseurTab | null>(null);
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: DRAG_SENSOR_CONFIG.classeurs })
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
-
-  const handleDragStart = useCallback((e: DragStartEvent) => {
-    const tab = tabs.find((t) => t.id === e.active.id);
-    if (tab) setDraggedTab(tab);
-  }, [tabs]);
 
   const handleDragEnd = useCallback(
     (e: DragEndEvent) => {
-      setDraggedTab(null);
       const { active, over } = e;
       if (over && active.id !== over.id && classeursForReorder.length > 0) {
         const oldIndex = tabs.findIndex((t) => t.id === active.id);
@@ -293,7 +291,7 @@ function ClasseursTabs({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
+      modifiers={[restrictToHorizontalAxis]}
       onDragEnd={handleDragEnd}
     >
       <div className="flex min-w-0 shrink items-center gap-2 overflow-x-auto no-scrollbar">
@@ -315,13 +313,6 @@ function ClasseursTabs({
           </div>
         </SortableContext>
       </div>
-      <DragOverlay>
-        {draggedTab ? (
-          <div className="relative flex-shrink-0 whitespace-nowrap rounded-lg bg-zinc-900 border border-zinc-700 px-4 py-2 text-sm font-medium text-white shadow-2xl ring-1 ring-white/10">
-            {draggedTab.name}
-          </div>
-        ) : null}
-      </DragOverlay>
     </DndContext>
   );
 }
@@ -623,7 +614,7 @@ function ClasseursContent({
               placeholder="Rechercher…"
               value={searchQuery}
               onChange={(e) => onSearchChange?.(e.target.value)}
-              className="h-10 w-52 rounded-xl pl-9 pr-4 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none focus:border-[var(--color-border-block)] transition-colors"
+              className="h-10 w-72 rounded-xl pl-9 pr-4 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none focus:border-[var(--color-border-block)] transition-colors"
               style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
             />
           </div>
