@@ -44,7 +44,10 @@ function AgentsV2Content() {
 
   const sortedAgents = useMemo(
     () =>
-      [...agents].sort((a, b) => (a.display_name || a.name).localeCompare(b.display_name || b.name)),
+      [...agents].sort((a, b) => {
+        if (a.is_active !== b.is_active) return a.is_active ? -1 : 1;
+        return (a.display_name || a.name).localeCompare(b.display_name || b.name);
+      }),
     [agents]
   );
 
@@ -130,8 +133,8 @@ function AgentsV2Content() {
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-agents bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
         {/* En-tête de contenu — style Linear (titre gradient + sous-titre) */}
-        <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
-          <div className="mb-10 mt-5 flex w-full items-start justify-between">
+        <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-6 sm:pb-6">
+          <div className="mb-10 mt-5 sm:mt-8 flex w-full items-center justify-between">
             <div className="flex flex-col items-start font-sans">
               <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent">
                 Agents IA
@@ -141,26 +144,6 @@ function AgentsV2Content() {
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-                {!isMobile && (
-                  <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('grid')}
-                      className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                      title="Vue grille"
-                    >
-                      <LayoutGrid className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('list')}
-                      className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                      title="Vue liste"
-                    >
-                      <List className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
                 <button
                   type="button"
                   onClick={handleNewAgent}
@@ -173,21 +156,40 @@ function AgentsV2Content() {
               </div>
             </div>
 
-            {/* Ligne 2 : Barre de recherche (pleine largeur mobile, max-w-md desktop) */}
-            <div className="relative w-full md:max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
-              <input
-                type="search"
-                placeholder="Rechercher…"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full h-10 rounded-xl pl-9 pr-4 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none focus:border-[var(--color-border-block)] transition-colors"
-                style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
-              />
+            {/* Ligne 2 : Barre de recherche + toggle vue */}
+            <div className="flex items-center gap-3 w-full mb-6 justify-between">
+              <div className="relative flex-1 md:max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
+                <input
+                  type="search"
+                  placeholder="Rechercher…"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full h-10 rounded-xl pl-9 pr-4 text-sm text-neutral-200 placeholder:text-neutral-500 outline-none focus:border-[var(--color-border-block)] transition-colors"
+                  style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
+                />
+              </div>
+              {!isMobile && (
+                <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    title="Vue grille"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    title="Vue liste"
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
-
-        <div className="px-4 sm:px-6 lg:px-8 pt-0 pb-6 sm:py-6">
           {filteredAgents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="text-4xl mb-4">🤖</div>

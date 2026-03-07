@@ -669,7 +669,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
       <div className="page-content-inner page-content-inner-files w-full max-w-none mx-0 bg-[var(--color-bg-primary)]">
         {/* En-tête de contenu — style Linear (titre gradient + sous-titre) */}
         <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
-          <div className="mb-10 mt-5 flex w-full items-start justify-between">
+          <div className="mb-10 mt-5 sm:mt-8 flex w-full items-center justify-between">
             <div className="flex flex-col items-start font-sans">
               <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent">
                 Mes Fichiers

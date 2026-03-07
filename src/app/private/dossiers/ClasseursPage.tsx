@@ -122,7 +122,7 @@ function ClasseursHeader({
   onCreateNote: () => void;
 }) {
   return (
-    <div className="mb-10 mt-5 flex w-full items-start justify-between">
+    <div className="mb-10 mt-5 sm:mt-8 flex w-full items-center justify-between">
       <div className="flex flex-col items-start font-sans">
         <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent">
           Notebooks
