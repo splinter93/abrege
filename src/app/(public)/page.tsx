@@ -107,7 +107,7 @@ function NoteCard({
   return (
     <Link
       href={`/private/note/${id}`}
-      className="group relative w-72 h-48 rounded-xl overflow-hidden shrink-0 bg-zinc-900/20"
+      className="group relative w-52 h-36 sm:w-72 sm:h-48 rounded-xl overflow-hidden shrink-0 bg-zinc-900/20"
     >
       <img
         src={image}
@@ -462,17 +462,17 @@ function AuthenticatedHomeContent({
             className="flex gap-4 overflow-x-auto pb-4 dashboard-notes-scroll dashboard-notes-mask"
           >
             {loadingNotes && (
-              <div className="flex items-center justify-center w-72 h-48 rounded-xl border border-zinc-800/60 bg-zinc-900/20 shrink-0 text-zinc-500 text-sm">
+              <div className="flex items-center justify-center w-52 h-36 sm:w-72 sm:h-48 rounded-xl border border-zinc-800/60 bg-zinc-900/20 shrink-0 text-zinc-500 text-sm">
                 Chargement...
               </div>
             )}
             {!loadingNotes && errorNotes && (
-              <div className="flex items-center justify-center w-72 h-48 rounded-xl border border-zinc-800/60 bg-zinc-900/20 shrink-0 text-zinc-500 text-sm">
+              <div className="flex items-center justify-center w-52 h-36 sm:w-72 sm:h-48 rounded-xl border border-zinc-800/60 bg-zinc-900/20 shrink-0 text-zinc-500 text-sm">
                 {errorNotes}
               </div>
             )}
             {!loadingNotes && !errorNotes && notes.length === 0 && (
-              <div className="flex items-center justify-center w-72 h-48 rounded-xl border border-zinc-800/60 bg-zinc-900/20 shrink-0 text-zinc-500 text-sm">
+              <div className="flex items-center justify-center w-52 h-36 sm:w-72 sm:h-48 rounded-xl border border-zinc-800/60 bg-zinc-900/20 shrink-0 text-zinc-500 text-sm">
                 Aucune note récente
               </div>
             )}
