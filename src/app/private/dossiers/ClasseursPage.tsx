@@ -1046,20 +1046,22 @@ export default function ClasseursPage() {
 
           {/* Toolbar : onglets + recherche + vues sur une ligne */}
           <div className="mb-6 flex w-full items-center gap-4 border-b border-white/[0.08] pb-4">
-            <ClasseursTabs
-              tabs={tabs}
-              activeId={activeClasseurId ?? ""}
-              onSelect={handleSelectTab}
-              onContextMenu={handleTabContextMenu}
-              onCreateTab={handleCreateClasseurClick}
-              onTabDragOver={handleTabDragOver}
-              onTabDragLeave={handleTabDragLeave}
-              onTabDrop={handleTabDrop}
-              dragOverTabId={dragOverTabId}
-              handleUpdateClasseurPositions={handleUpdateClasseurPositions}
-              classeursForReorder={classeurs}
-            />
-            <div className="ml-auto flex items-center gap-2">
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <ClasseursTabs
+                tabs={tabs}
+                activeId={activeClasseurId ?? ""}
+                onSelect={handleSelectTab}
+                onContextMenu={handleTabContextMenu}
+                onCreateTab={handleCreateClasseurClick}
+                onTabDragOver={handleTabDragOver}
+                onTabDragLeave={handleTabDragLeave}
+                onTabDrop={handleTabDrop}
+                dragOverTabId={dragOverTabId}
+                handleUpdateClasseurPositions={handleUpdateClasseurPositions}
+                classeursForReorder={classeurs}
+              />
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
               <div className="relative hidden sm:block">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500 pointer-events-none" />
                 <input
