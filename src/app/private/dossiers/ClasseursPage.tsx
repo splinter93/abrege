@@ -123,8 +123,8 @@ function ClasseursHeader({
 }) {
   return (
     <div className="mb-10 mt-5 flex w-full items-start justify-between">
-      <div className="flex flex-col items-start">
-        <h1 className="font-sans bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-none tracking-tighter text-transparent">
+      <div className="flex flex-col items-start font-sans">
+        <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent">
           Notebooks
         </h1>
         <p className="mt-2 hidden text-sm font-medium tracking-wide text-neutral-500 sm:block">
@@ -383,11 +383,11 @@ function ItemCard({
   const Icon = item.type === "folder" ? Folder : FileText;
   const iconClasses =
     item.type === "folder"
-      ? getFolderIconClasses(item.iconColor)
+      ? getFolderIconClasses("orange")
       : "text-zinc-400 fill-zinc-500/10";
   const iconBoxClasses =
     item.type === "folder"
-      ? getFolderIconBoxClasses(item.iconColor)
+      ? getFolderIconBoxClasses("orange")
       : "bg-white/[0.05] border-white/[0.1]";
   const isFolder = item.type === "folder";
 
@@ -474,7 +474,7 @@ function ItemListRow({
   const Icon = item.type === "folder" ? Folder : FileText;
   const iconClasses =
     item.type === "folder"
-      ? getFolderIconClasses(item.iconColor)
+      ? getFolderIconClasses("orange")
       : "text-zinc-400 fill-zinc-500/10";
   const isFolder = item.type === "folder";
 
@@ -1069,7 +1069,7 @@ export default function ClasseursPage() {
                   placeholder="Rechercher..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="classeurs-block h-8 w-48 rounded-md border pl-9 pr-3 text-sm text-neutral-200 placeholder:text-neutral-500 transition-all"
+                  className="classeurs-block h-8 w-48 rounded-md border pl-9 pr-3 text-sm text-neutral-200 placeholder:text-neutral-500 transition-all outline-none focus:ring-0 focus:ring-offset-0"
                 />
               </div>
               {!isMobile && (

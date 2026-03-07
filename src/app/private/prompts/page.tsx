@@ -146,21 +146,18 @@ function PromptsPageContent() {
       ) : (
         /* ── Vue liste ── */
         <div className="page-content-inner page-content-inner-prompts bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
-          {/* En-tête de contenu — optimisé mobile (2 lignes) et desktop */}
+          {/* En-tête de contenu — style Linear (titre gradient + sous-titre) */}
           <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
-            <div className="flex flex-col gap-3 mb-4 sm:mb-6 mt-0">
-              {/* Ligne 1 : Titre + Badge + Toggles (desktop) + Bouton */}
-              <div className="flex items-center justify-between w-full gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <h1 className="text-xl md:text-2xl font-bold tracking-tight text-neutral-100 shrink-0">
-                    Prompts
-                  </h1>
-                  <span className="hidden sm:flex items-center h-6 px-2 rounded-full bg-white/[0.03] border border-white/[0.08] text-[11px] font-medium text-neutral-500 shrink-0">
-                    {filteredPrompts.length} {filteredPrompts.length > 1 ? 'prompts' : 'prompt'}
-                    {searchQuery.trim() ? '' : ` · ${activeCount} actifs`}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
+            <div className="mb-10 mt-5 flex w-full items-start justify-between">
+              <div className="flex flex-col items-start font-sans">
+                <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent">
+                  Prompts
+                </h1>
+                <p className="mt-2 hidden text-sm font-medium tracking-wide text-neutral-500 sm:block">
+                  Templates et prompts personnalisés pour l&apos;éditeur.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
                   {!isMobile && (
                     <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5">
                       <button
@@ -206,7 +203,6 @@ function PromptsPageContent() {
                 />
               </div>
             </div>
-          </div>
 
           <div className="px-4 sm:px-6 lg:px-8 pt-0 pb-6 sm:py-6">
             {filteredPrompts.length === 0 ? (

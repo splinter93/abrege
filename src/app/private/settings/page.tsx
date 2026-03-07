@@ -196,23 +196,18 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
   return (
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-settings min-h-full flex flex-col bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
-        {/* En-tête de contenu — optimisé mobile et desktop */}
+        {/* En-tête de contenu — style Linear (titre gradient + sous-titre) */}
         <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
-          <div className="flex flex-col gap-3 mb-4 sm:mb-6 mt-0">
-            {/* Ligne 1 : Titre + Badge + Bouton */}
-            <div className="flex items-center justify-between w-full gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
-                  <Settings className="w-5 h-5 text-zinc-400" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl md:text-2xl font-bold tracking-tight text-neutral-100">Réglages</h1>
-                  <span className="hidden sm:inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-400">
-                    {apiKeys.length} clé{apiKeys.length !== 1 ? 's' : ''} API
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
+          <div className="mb-10 mt-5 flex w-full items-start justify-between">
+            <div className="flex flex-col items-start font-sans">
+              <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent">
+                Paramètres
+              </h1>
+              <p className="mt-2 hidden text-sm font-medium tracking-wide text-neutral-500 sm:block">
+                Clés API, préférences et sécurité.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(!showCreateForm)}
@@ -223,7 +218,6 @@ function AuthenticatedSettingsContent({ user }: { user: { id: string; email?: st
                   <span className="sm:hidden">Nouvelle</span>
                 </button>
               </div>
-            </div>
           </div>
         </div>
 

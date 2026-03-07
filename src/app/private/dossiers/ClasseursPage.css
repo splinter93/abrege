@@ -34,9 +34,15 @@
 }
 
 .classeurs-block input:focus {
-  border-color: var(--color-border-focus);
+  border-color: var(--color-border-secondary);
   background-color: var(--color-bg-content);
   outline: none;
+  box-shadow: none;
+}
+
+.classeurs-block input:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 /* Masquer la scrollbar native sur les zones scrollables (tabs, etc.) */

@@ -18,6 +18,7 @@
   width: 100vw;
   background: var(--color-bg-primary);
   font-family: var(--font-chat-text, 'Manrope', -apple-system, sans-serif);
+  font-weight: 500; /* Aligné sidebar : textes normaux un peu plus marqués (medium) */
   position: relative;
 }
 

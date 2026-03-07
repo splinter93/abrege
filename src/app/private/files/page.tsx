@@ -667,20 +667,18 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   return (
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-files w-full max-w-none mx-0 bg-[var(--color-bg-primary)]">
-        {/* En-tête de contenu — optimisé mobile (2 lignes) et desktop */}
+        {/* En-tête de contenu — style Linear (titre gradient + sous-titre) */}
         <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
-          <div className="flex flex-col gap-3 mb-4 sm:mb-6 mt-0">
-            {/* Ligne 1 : Titre + Badge + Actions */}
-            <div className="flex items-center justify-between w-full gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <h1 className="text-xl md:text-2xl font-bold tracking-tight text-neutral-100 shrink-0">Mes Fichiers</h1>
-                <span className="hidden sm:flex items-center h-6 px-2 rounded-full bg-white/[0.03] border border-white/[0.08] text-[11px] font-medium text-neutral-500 shrink-0">
-                  {statsData.fileCount} {statsData.fileCountLabel}
-                  <span className="mx-1.5 text-zinc-500" aria-hidden>•</span>
-                  {formatTotalSize(displayFiles.reduce((a, f) => a + (f.size || 0), 0))}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
+          <div className="mb-10 mt-5 flex w-full items-start justify-between">
+            <div className="flex flex-col items-start font-sans">
+              <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent">
+                Mes Fichiers
+              </h1>
+              <p className="mt-2 hidden text-sm font-medium tracking-wide text-neutral-500 sm:block">
+                Vos fichiers et médias stockés dans le cloud.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md border border-zinc-800/60 bg-zinc-900/50 text-zinc-200 text-xs font-semibold hover:bg-zinc-800/50 hover:border-zinc-700 hover:text-zinc-100 transition-all shadow-sm"
@@ -733,7 +731,6 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
               />
             </div>
           </div>
-        </div>
 
         {/* Contenu principal */}
         <main className="pt-0 px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8">
