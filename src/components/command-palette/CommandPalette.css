@@ -28,13 +28,13 @@
   }
 }
 
-/* Même fond que .chatgpt-input-area (chat input) */
+/* Même fond et bordure que la sidebar (variables design system) */
 .command-palette-container {
   width: 100%;
   max-width: 600px;
-  background: var(--chat-gradient-block, var(--blk-bg, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)));
-  border: var(--chat-surface-border);
-  border-radius: var(--chat-surface-radius);
+  background: var(--color-bg-block);
+  border: var(--border-block);
+  border-radius: var(--chat-surface-radius, 12px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   overflow: hidden;
   animation: command-palette-slide-up 0.2s ease-out;
@@ -60,7 +60,7 @@
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  border-top: var(--chat-surface-border);
+  border-top: var(--border-block);
   flex-wrap: wrap;
   margin-top: auto;
   min-height: 48px;
@@ -75,8 +75,8 @@
   min-height: 36px;
   border: none;
   border-radius: var(--blk-radius, 8px);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--chat-text-primary, rgba(255, 255, 255, 0.9));
+  background: var(--color-bg-content);
+  color: var(--color-text-primary);
   font-size: 13px;
   font-weight: 500;
   font-family: inherit;
@@ -86,7 +86,7 @@
 }
 
 .command-palette-shortcut:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-bg-content);
 }
 
 .command-palette-shortcut:focus-visible {
@@ -128,7 +128,7 @@
   display: flex;
   align-items: center;
   padding: 16px;
-  border-bottom: var(--chat-surface-border);
+  border-bottom: var(--border-block);
 }
 
 .command-palette-search-icon {
@@ -215,7 +215,7 @@
 }
 
 .command-palette-item:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-bg-content);
 }
 
 .command-palette-item:focus-visible {
@@ -224,7 +224,7 @@
 }
 
 .command-palette-item-selected {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-bg-content);
 }
 
 .command-palette-item-icon {
@@ -264,7 +264,7 @@
   font-size: 11px;
   padding: 2px 8px;
   border-radius: var(--blk-radius, 4px);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-bg-content);
   color: var(--chat-text-secondary, rgba(255, 255, 255, 0.65));
   flex-shrink: 0;
 }
@@ -280,7 +280,7 @@
   display: flex;
   gap: 16px;
   padding: 12px 16px;
-  border-top: var(--chat-surface-border);
+  border-top: var(--border-block);
   font-size: 12px;
   color: var(--chat-text-secondary, var(--text-tertiary, #999));
 }
@@ -294,8 +294,8 @@
 .command-palette-hint-item kbd {
   padding: 2px 6px;
   border-radius: var(--blk-radius, 4px);
-  background: rgba(255, 255, 255, 0.06);
-  border: var(--chat-surface-border);
+  background: var(--color-bg-content);
+  border: var(--border-block);
   font-size: 11px;
   font-family: monospace;
   color: var(--chat-text-secondary, rgba(255, 255, 255, 0.65));

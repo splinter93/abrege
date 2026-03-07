@@ -322,19 +322,19 @@ export function useCommandPalette(
     },
     {
       id: 'shortcut-classeurs',
-      title: 'Mes classeurs',
+      title: 'Notebooks',
       icon: 'folder',
       action: () => { router.push('/private/dossiers'); runAndClose(); }
     },
     {
       id: 'shortcut-agents',
-      title: 'Mes Agents',
+      title: 'Agents',
       icon: 'bot',
       action: () => { router.push('/private/agents2'); runAndClose(); }
     },
     {
       id: 'shortcut-prompts',
-      title: 'Mes Prompts',
+      title: 'Prompts',
       icon: 'prompt',
       alignRight: true,
       action: () => { router.push('/private/prompts'); runAndClose(); }

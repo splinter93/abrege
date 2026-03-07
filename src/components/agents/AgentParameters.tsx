@@ -8,11 +8,12 @@ import type { AgentCallableLink, CallableListItem } from '@/hooks/useCallables';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 
 const inputBase =
-  'w-full px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/60 text-zinc-100 text-sm placeholder:text-zinc-500 focus:border-zinc-600 focus:bg-zinc-800/20 focus:outline-none transition-colors';
+  'input-block w-full px-3 py-2 rounded-lg text-sm placeholder:text-zinc-500 focus:outline-none transition-colors';
 const labelBase = 'text-xs font-medium text-zinc-400 block mb-1.5';
-const boxBase = 'p-6 rounded-2xl border border-zinc-800/40 bg-[var(--color-bg-primary)]';
+const boxBase = 'section-block p-6 rounded-2xl';
 
-/* Custom slider: track + fill + native input (value/onChange preserved) */
+/* Custom slider: track + fill + native input (value/onChange preserved).
+   Wrapper min-height ensures a proper touch target on mobile so the drawer scroll doesn't steal events. */
 function CustomSlider({
   id,
   label,
@@ -41,11 +42,17 @@ function CustomSlider({
         </label>
         <span className="font-mono text-xs text-zinc-500">{valueDisplay}</span>
       </div>
-      <div className="relative h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-zinc-300 hover:bg-white transition-colors pointer-events-none"
-          style={{ width: `${percent}%` }}
-        />
+      {/* min-h-[44px] touch target + touch-action: pan-y so horizontal drag = slider, vertical = scroll */}
+      <div
+        className="relative min-h-[44px] flex items-center w-full rounded-full"
+        style={{ touchAction: 'pan-y' }}
+      >
+        <div className="relative h-1.5 w-full rounded-full bg-zinc-800/80 overflow-hidden pointer-events-none">
+          <div
+            className="absolute inset-y-0 left-0 rounded-full bg-zinc-300 transition-colors"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
         <input
           id={id}
           type="range"
@@ -54,7 +61,7 @@ function CustomSlider({
           step={step}
           value={value}
           onChange={e => onChange(parseFloat(e.target.value))}
-          className="relative z-10 w-full h-full appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-zinc-300 [&::-webkit-slider-thumb]:hover:bg-white [&::-webkit-slider-thumb]:transition-colors [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-zinc-300 [&::-moz-range-thumb]:border-0"
+          className="absolute inset-0 w-full min-h-[44px] appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-zinc-300 [&::-webkit-slider-thumb]:hover:bg-white [&::-webkit-slider-thumb]:transition-colors [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-zinc-300 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-grab"
         />
       </div>
     </div>
@@ -72,7 +79,7 @@ function ToolItem({
   titleRemove: string;
 }) {
   return (
-    <div className="group flex items-center justify-between gap-2 p-2.5 rounded-lg border border-zinc-800/40 bg-zinc-900/20 hover:border-zinc-700/50 transition-colors">
+    <div className="section-block group flex items-center justify-between gap-2 p-2.5 rounded-lg hover:border-[var(--color-border-secondary)] transition-colors">
       <div className="min-w-0 truncate text-sm text-zinc-200">{children}</div>
       <button
         type="button"
@@ -259,7 +266,7 @@ export function AgentParameters({
             <button
               type="button"
               onClick={() => setShowOpenApiDropdown(v => !v)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-xs font-medium hover:bg-zinc-800/30 hover:text-zinc-200 transition-colors"
+              className="section-block inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-zinc-400 text-xs font-medium hover:bg-[var(--color-bg-content)] hover:text-zinc-200 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               Ajouter
@@ -274,7 +281,7 @@ export function AgentParameters({
                 <button
                   key={schema.id}
                   type="button"
-                  className="w-full text-left px-2.5 py-2 rounded-lg border border-zinc-800/40 bg-zinc-900/20 text-zinc-300 text-sm hover:bg-zinc-800/30 transition-colors"
+                  className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors"
                   onClick={() => handleLinkSchema(schema.id)}
                 >
                   {schema.name}
@@ -317,7 +324,7 @@ export function AgentParameters({
             <button
               type="button"
               onClick={() => setShowMcpDropdown(v => !v)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-xs font-medium hover:bg-zinc-800/30 hover:text-zinc-200 transition-colors"
+              className="section-block inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-zinc-400 text-xs font-medium hover:bg-[var(--color-bg-content)] hover:text-zinc-200 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               Ajouter
@@ -332,7 +339,7 @@ export function AgentParameters({
                 <button
                   key={server.id}
                   type="button"
-                  className="w-full text-left px-2.5 py-2 rounded-lg border border-zinc-800/40 bg-zinc-900/20 text-zinc-300 text-sm hover:bg-zinc-800/30 transition-colors"
+                  className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors"
                   onClick={() => handleLinkServer(server.id)}
                 >
                   {server.name}
@@ -376,7 +383,7 @@ export function AgentParameters({
               <button
                 type="button"
                 onClick={() => setShowCallablesDropdown(v => !v)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-xs font-medium hover:bg-zinc-800/30 hover:text-zinc-200 transition-colors"
+                className="section-block inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-zinc-400 text-xs font-medium hover:bg-[var(--color-bg-content)] hover:text-zinc-200 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Ajouter
@@ -391,7 +398,7 @@ export function AgentParameters({
                   <button
                     key={callable.id}
                     type="button"
-                    className="w-full text-left px-2.5 py-2 rounded-lg border border-zinc-800/40 bg-zinc-900/20 text-zinc-300 text-sm hover:bg-zinc-800/30 transition-colors"
+                    className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors"
                     onClick={() => handleLinkCallable(callable.id)}
                   >
                     <span>{callable.name}</span>
@@ -453,7 +460,7 @@ export function AgentParameters({
             <label className={labelBase} htmlFor="agent-version">
               Version
             </label>
-            <p id="agent-version" className="px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/60 text-zinc-500 text-sm font-mono">
+            <p id="agent-version" className="input-block px-3 py-2 rounded-lg text-zinc-500 text-sm font-mono">
               {selectedAgent?.version || '1.0.0'}
             </p>
           </div>

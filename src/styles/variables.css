@@ -276,3 +276,28 @@ body.dark {
   --md-chat-table-margin: 1.25rem;      /* 20px (vs 16px éditeur) */
 }
 
+/* ==========================================================================
+   CHAMPS & BLOCS (même rendu que sidebar — variables --color-bg-block / --border-block)
+   Utiliser ces classes pour inputs, textareas, sections encadrées (config agent, etc.)
+   ========================================================================== */
+.agent-field-block,
+.input-block {
+  background-color: var(--color-bg-block) !important;
+  border: var(--border-block) !important;
+  color: var(--color-text-primary);
+}
+.agent-field-block::placeholder,
+.input-block::placeholder {
+  color: var(--text-tertiary, #737373);
+}
+.agent-field-block:focus,
+.input-block:focus {
+  outline: none;
+  border-color: var(--color-border-secondary) !important;
+  background-color: var(--color-bg-content) !important;
+}
+.section-block {
+  background-color: var(--color-bg-block) !important;
+  border: var(--border-block) !important;
+}
+

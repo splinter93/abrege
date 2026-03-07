@@ -71,7 +71,10 @@ function AgentDetailContent() {
     unlinkCallable,
   } = useCallables(selectedAgent?.id);
 
-  const panelLoading = pageLoading || toolsLoading || savingAgent;
+  /** Chargement du contenu (première load ou outils) — affiche les spinners dans les panneaux */
+  const contentLoading = pageLoading || toolsLoading;
+  /** Désactive le bouton Enregistrer pendant save ou chargement */
+  const panelLoading = contentLoading || savingAgent;
 
   const fetchAllOpenApiSchemas = useCallback(async (): Promise<OpenApiSchema[]> => {
     const response = await fetch('/api/ui/openapi-schemas');
@@ -229,12 +232,11 @@ function AgentDetailContent() {
         }
       } else {
         const identifier = selectedAgent.slug || selectedAgent.id;
-        await agentsService.patchAgent(identifier, editedAgent);
-        const updatedAgent = await agentsService.getAgent(identifier);
+        const updatedAgent = await agentsService.patchAgent(identifier, editedAgent);
         setSelectedAgent(updatedAgent);
         setEditedAgent({ ...updatedAgent });
         setHasLocalChanges(false);
-        await loadAgentTools(updatedAgent.id);
+        /* Pas de loadAgentTools : les outils (OpenAPI, MCP, callables) n'ont pas changé */
       }
     } catch (error) {
       simpleLogger.error('[AgentDetail] Failed to save agent', error);
@@ -582,9 +584,9 @@ function AgentDetailContent() {
                     type="button"
                     onClick={handleSaveAgent}
                     disabled={panelLoading}
-                    className="px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                    className="px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 disabled:opacity-50 disabled:pointer-events-none transition-colors min-w-[7rem]"
                   >
-                    Enregistrer
+                    {savingAgent ? 'Enregistrement…' : 'Enregistrer'}
                   </button>
                 )}
               </div>
@@ -592,7 +594,7 @@ function AgentDetailContent() {
           </div>
         </header>
 
-        {panelLoading && !editedAgent ? (
+        {contentLoading && !editedAgent ? (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex justify-center">
             <SimpleLoadingState message="Chargement de la configuration" />
           </div>
@@ -617,7 +619,8 @@ function AgentDetailContent() {
                   hasChanges={hasLocalChanges}
                   isFavorite={isFavorite}
                   togglingFavorite={togglingFavorite}
-                  loadingDetails={panelLoading}
+                  loadingDetails={contentLoading}
+                  saving={savingAgent}
                   onToggleFavorite={handleToggleFavorite}
                   onSave={handleSaveAgent}
                   onCancel={handleCancelChanges}
@@ -651,7 +654,7 @@ function AgentDetailContent() {
                 <AgentParameters
                   selectedAgent={selectedAgent}
                   editedAgent={editedAgent}
-                  loadingDetails={panelLoading}
+                  loadingDetails={contentLoading}
                   openApiSchemas={availableOpenApiSchemas}
                   agentOpenApiSchemas={linkedOpenApiSchemas}
                   openApiLoading={toolsLoading}

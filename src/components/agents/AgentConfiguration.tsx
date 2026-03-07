@@ -17,7 +17,7 @@ const AGENT_KIND_OPTIONS = [
 ];
 
 const inputBase =
-  'w-full px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/60 text-zinc-100 text-sm placeholder:text-zinc-500 focus:border-zinc-600 focus:bg-zinc-800/20 focus:outline-none transition-colors';
+  'input-block w-full px-3 py-2 rounded-lg text-sm placeholder:text-zinc-500 focus:outline-none transition-colors';
 const labelBase = 'text-xs font-medium text-zinc-400 block mb-1.5';
 
 interface AgentConfigurationProps {
@@ -27,6 +27,8 @@ interface AgentConfigurationProps {
   isFavorite: boolean;
   togglingFavorite: boolean;
   loadingDetails: boolean;
+  /** True pendant l’enregistrement (bouton Annuler désactivé, pas de spinner plein écran) */
+  saving?: boolean;
   onToggleFavorite: () => void;
   onSave: () => void;
   onCancel: () => void;
@@ -44,6 +46,7 @@ export function AgentConfiguration({
   isFavorite,
   togglingFavorite,
   loadingDetails,
+  saving = false,
   onToggleFavorite,
   onSave,
   onCancel,
@@ -118,7 +121,7 @@ export function AgentConfiguration({
               type="button"
               onClick={() => setShowAvatarModal(true)}
               aria-label="Voir et éditer l'avatar de l'agent"
-              className="shrink-0 w-14 h-14 rounded-full overflow-hidden border border-zinc-800/60 bg-zinc-900/30 flex items-center justify-center text-zinc-400 text-sm font-medium hover:border-zinc-600 transition-colors self-start"
+              className="section-block shrink-0 w-14 h-14 rounded-full overflow-hidden flex items-center justify-center text-zinc-400 text-sm font-medium hover:border-[var(--color-border-secondary)] transition-colors self-start"
             >
               {displayAvatarPreview ? (
                 <img
@@ -167,8 +170,8 @@ export function AgentConfiguration({
               <button
                 type="button"
                 onClick={onCancel}
-                disabled={loadingDetails}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-400 text-sm hover:bg-zinc-800/20 hover:text-zinc-100 transition-colors disabled:opacity-50"
+                disabled={loadingDetails || saving}
+                className="section-block inline-flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 text-sm hover:bg-[var(--color-bg-content)] hover:text-zinc-100 transition-colors disabled:opacity-50"
               >
                 <X className="w-4 h-4" />
                 Annuler
@@ -248,7 +251,7 @@ export function AgentConfiguration({
           aria-modal="true"
           aria-labelledby="agent-avatar-modal-title"
         >
-          <div className="w-full max-w-md rounded-2xl border border-zinc-800/60 bg-[var(--color-bg-primary)] p-6 shadow-xl">
+          <div className="section-block w-full max-w-md rounded-2xl p-6 shadow-xl">
             <div className="flex items-center justify-between mb-6">
               <h3 id="agent-avatar-modal-title" className="text-base font-semibold text-zinc-100">
                 Avatar de l&apos;agent
@@ -257,14 +260,14 @@ export function AgentConfiguration({
                 type="button"
                 onClick={() => setShowAvatarModal(false)}
                 aria-label="Fermer"
-                className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40 transition-colors"
+                className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[var(--color-bg-content)] transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             <div className="space-y-6">
               <div className="flex justify-center">
-                <div className="w-24 h-24 rounded-full overflow-hidden border border-zinc-800/60 bg-zinc-900/30 flex items-center justify-center text-zinc-400 text-2xl font-medium">
+                <div className="section-block w-24 h-24 rounded-full overflow-hidden flex items-center justify-center text-zinc-400 text-2xl font-medium">
                   {displayAvatarPreview ? (
                     <img
                       src={editedAgent.profile_picture}

@@ -55,7 +55,7 @@ export function CustomSelect({
   };
 
   const inputBase =
-    'w-full px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/60 text-zinc-100 text-sm focus:border-zinc-600 focus:bg-zinc-800/20 transition-colors flex items-center justify-between cursor-pointer';
+    'input-block w-full px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between cursor-pointer';
 
   return (
     <div className={`relative w-full ${className}`} ref={containerRef}>
@@ -83,7 +83,7 @@ export function CustomSelect({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="absolute z-[100] mt-2 w-full max-h-[300px] overflow-y-auto rounded-xl border border-zinc-800 bg-[#0C0C0E] shadow-2xl backdrop-blur-xl p-1.5 space-y-0.5"
+            className="section-block absolute z-[100] mt-2 w-full max-h-[300px] overflow-y-auto rounded-xl shadow-2xl backdrop-blur-xl p-1.5 space-y-0.5"
             role="listbox"
           >
             {options.map(option => (
@@ -94,8 +94,8 @@ export function CustomSelect({
                 aria-selected={value === option.value}
                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center justify-between group ${
                   value === option.value 
-                    ? 'bg-zinc-800 text-white font-medium' 
-                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                    ? 'bg-[var(--color-bg-content)] text-white font-medium' 
+                    : 'text-zinc-400 hover:bg-[var(--color-bg-content)] hover:text-zinc-200'
                 }`}
                 onClick={() => handleSelect(option.value)}
               >
