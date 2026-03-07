@@ -4,6 +4,7 @@
  */
 
 import { SpecializedAgentConfig, CreateSpecializedAgentRequest } from '@/types/specializedAgents';
+import { supabase } from '@/supabaseClient';
 
 /**
  * Réponse de l'API pour la liste des agents
@@ -63,24 +64,13 @@ export class AgentsService {
   private readonly baseUrl = '/api/v2/agents';
   
   /**
-   * Récupère le token d'authentification depuis Supabase
+   * Récupère le token d'authentification depuis la session Supabase courante (singleton)
    */
   private async getAuthToken(): Promise<string> {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Configuration Supabase manquante (NEXT_PUBLIC_SUPABASE_URL ou NEXT_PUBLIC_SUPABASE_ANON_KEY)');
-    }
-    
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) {
       throw new Error('Aucune session active');
     }
-    
     return session.access_token;
   }
 

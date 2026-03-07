@@ -100,12 +100,13 @@ function AgentDetailContent() {
       }
       setToolsLoading(true);
       try {
-        const [allSchemas, linkedSchemas, linkedServers] = await Promise.all([
+        // Tout en parallèle — listMcpServers est indépendant, pas besoin de séquencer
+        const [allSchemas, linkedSchemas, linkedServers, allServers] = await Promise.all([
           fetchAllOpenApiSchemas(),
           fetchLinkedOpenApiSchemas(agentId),
           mcpService.getAgentMcpServers(agentId),
+          mcpService.listMcpServers(),
         ]);
-        const allServers = await mcpService.listMcpServers();
         setAvailableOpenApiSchemas(allSchemas);
         setLinkedOpenApiSchemas(linkedSchemas);
         setAvailableMcpServers(allServers);

@@ -225,7 +225,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               </label>
               <CustomSelect
                 id="context"
-                value={formData.context}
+                value={formData.context ?? 'editor'}
                 options={[
                   { value: 'editor', label: 'Éditeur' },
                   { value: 'chat', label: 'Chat' },
