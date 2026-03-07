@@ -39,6 +39,7 @@ import { useCrossClasseurDrag } from "@/hooks/useCrossClasseurDrag";
 import { useFileSystemStore } from "@/store/useFileSystemStore";
 import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 import SimpleContextMenu from "@/components/SimpleContextMenu";
+import ClasseurEditModal from "@/components/ClasseurEditModal";
 import type { Folder as UIFolder } from "@/components/types";
 import type { FileArticle } from "@/components/types";
 import { DRAG_SENSOR_CONFIG } from "@/constants/dragAndDropConfig";
@@ -751,6 +752,7 @@ export default function ClasseursPage() {
     y: number;
     tab: ClasseurTab;
   } | null>(null);
+  const [editModalClasseur, setEditModalClasseur] = useState<Classeur | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const {
@@ -764,6 +766,7 @@ export default function ClasseursPage() {
     handleCreateClasseur,
     handleRenameClasseur,
     handleDeleteClasseur,
+    handleUpdateClasseur,
     handleUpdateClasseurPositions,
     handleFolderOpen,
     handleGoBack,
@@ -1190,10 +1193,28 @@ export default function ClasseursPage() {
           y={contextMenuTab.y}
           visible
           options={[
+            {
+              label: "Editer",
+              onClick: () => {
+                const full = classeurs.find((c) => c.id === contextMenuTab.tab.id) ?? null;
+                setEditModalClasseur(full);
+                closeContextMenus();
+              },
+            },
             { label: "Renommer", onClick: () => handleTabRename(contextMenuTab.tab) },
             { label: "Supprimer", onClick: () => handleTabDelete(contextMenuTab.tab) },
           ]}
           onClose={closeContextMenus}
+        />
+      )}
+
+      {editModalClasseur && (
+        <ClasseurEditModal
+          classeur={editModalClasseur}
+          onSave={async (updates) => {
+            await handleUpdateClasseur(editModalClasseur.id, updates);
+          }}
+          onClose={() => setEditModalClasseur(null)}
         />
       )}
     </div>

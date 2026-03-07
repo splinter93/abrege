@@ -1,0 +1,210 @@
+.cem-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.cem-panel {
+  width: 100%;
+  max-width: 460px;
+  background: var(--color-bg-block);
+  border: 1px solid var(--color-border-block);
+  border-radius: 14px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cem-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cem-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.cem-close {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.4));
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.cem-close:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cem-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cem-label {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.4));
+}
+
+.cem-input {
+  width: 100%;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border-block);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  box-sizing: border-box;
+}
+
+.cem-input:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cem-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.cem-textarea {
+  width: 100%;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border-block);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  outline: none;
+  resize: none;
+  transition: border-color 0.15s, background 0.15s;
+  box-sizing: border-box;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.cem-textarea:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cem-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.cem-emoji-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cem-emoji-input {
+  width: 60px;
+  text-align: center;
+  font-size: 18px;
+  padding: 6px 8px;
+}
+
+.cem-emoji-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-height: 140px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;
+  padding-right: 6px;
+  border: 1px solid var(--color-border-block);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cem-emoji-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border-block);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 7px;
+  line-height: 1;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.cem-emoji-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.cem-emoji-btn--active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.cem-error {
+  font-size: 13px;
+  color: var(--color-error, #f87171);
+  margin: 0;
+}
+
+.cem-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.cem-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+.cem-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cem-btn--secondary {
+  background: transparent;
+  border-color: var(--color-border-block);
+  color: var(--color-text-primary);
+}
+
+.cem-btn--secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cem-btn--primary {
+  background: white;
+  border-color: transparent;
+  color: black;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
+.cem-btn--primary:hover:not(:disabled) {
+  background: rgb(229 229 229); /* neutral-200 */
+}
