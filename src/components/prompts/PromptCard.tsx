@@ -93,8 +93,22 @@ const PromptCard: React.FC<PromptCardProps> = ({
         </p>
       </div>
 
-      {/* 3. FOOTER : Toggle Active */}
-      <div className="px-5 py-3 border-t border-white/[0.04] bg-white/[0.01] flex items-center justify-end mt-auto">
+      {/* 3. FOOTER : Contexte à gauche + Toggle Active à droite */}
+      <div className="px-5 py-3 border-t border-white/[0.04] bg-white/[0.01] flex items-center justify-between mt-auto">
+        {(() => {
+          const ctx = prompt.context ?? 'editor';
+          const config = {
+            editor: { label: 'Éditeur', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+            chat:   { label: 'Chat',    color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20' },
+            both:   { label: 'Chat · Éditeur', color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
+          }[ctx] ?? { label: 'Éditeur', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' };
+          return (
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-semibold tracking-wide ${config.color} ${config.bg} ${config.border}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80 shrink-0" />
+              {config.label}
+            </span>
+          );
+        })()}
         <button
           type="button"
           title={prompt.is_active ? 'Désactiver' : 'Activer'}
