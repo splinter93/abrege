@@ -14,12 +14,10 @@ import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { ChatMessage as ChatMessageType, Agent } from '@/types/chat';
-import type { StreamTimelineItem } from '@/types/streamTimeline';
 import type { StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
 import ChatMessage from './ChatMessage';
 import ChatEmptyState from './ChatEmptyState';
 import MessageLoader from './MessageLoader';
-import StreamTimelineRenderer from './StreamTimelineRenderer';
 import AgentDeletedMessage from './AgentDeletedMessage';
 import { StreamErrorDisplay } from './StreamErrorDisplay';
 
@@ -32,9 +30,6 @@ export interface ChatMessagesAreaProps {
   isLoadingMore: boolean;
   hasMore: boolean;
   isStreaming: boolean;
-  isFading: boolean; // ✅ NOUVEAU: Pour transition fluide
-  streamingTimeline: StreamTimelineItem[];
-  streamStartTime: number;
   loading: boolean;
   shouldAnimateMessages: boolean;
   messagesVisible: boolean;
@@ -62,9 +57,6 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
   isLoadingMore,
   hasMore,
   isStreaming,
-  isFading, // ✅ NOUVEAU
-  streamingTimeline,
-  streamStartTime,
   loading,
   shouldAnimateMessages,
   messagesVisible,
@@ -84,6 +76,9 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
   // ✅ OPTIMISATION : Virtualisation si > 100 messages (conforme GUIDE-EXCELLENCE-CODE.md)
   const shouldVirtualize = messages.length > 100;
   const virtualizerRef = useRef<HTMLDivElement>(null);
+  const hasStreamingAssistant = messages.some(
+    (message) => message.role === 'assistant' && Boolean(message.isStreaming)
+  );
   
   const virtualizer = shouldVirtualize ? useVirtualizer({
     count: messages.length,
@@ -138,12 +133,6 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
               const fallbackKey = fallbackKeyParts.join('-');
               const messageKey = message.clientMessageId || message.id || fallbackKey;
 
-              // ✅ Masquer le dernier message assistant si streaming OU timeline active
-              const isLastAssistant = index === messages.length - 1 && message.role === 'assistant';
-              const isBeingStreamed = isLastAssistant && (isStreaming || streamingTimeline.length > 0);
-
-              if (isBeingStreamed) return null;
-
               return (
                 <div
                   key={messageKey}
@@ -162,7 +151,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
                     onEdit={onEditMessage}
                     onRegenerate={onRegenerateResponse}
                     animateContent={false}
-                    isStreaming={false}
+                    isStreaming={message.role === 'assistant' && Boolean(message.isStreaming)}
                   />
                 </div>
               );
@@ -178,67 +167,6 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
             }
             const fallbackKey = fallbackKeyParts.join('-');
             const messageKey = message.clientMessageId || message.id || fallbackKey;
-
-            const isLastAssistant = index === messages.length - 1 && message.role === 'assistant';
-            const isBeingStreamed = isLastAssistant && (isStreaming || streamingTimeline.length > 0);
-            const isCrossFading = isLastAssistant && isFading && streamingTimeline.length > 0;
-
-            // ✅ Pendant le stream actif (non-fading) : on n'affiche pas le ChatMessage
-            if (isBeingStreamed && !isCrossFading) return null;
-
-            // ✅ CROSS-FADE : quand isFading, ChatMessage et Timeline sont superposés
-            // dans un wrapper position:relative — la timeline disparaît pendant que ChatMessage apparaît
-            if (isCrossFading) {
-              return (
-                <div key={messageKey} style={{ position: 'relative' }}>
-                  {/* ChatMessage DB : fade-in pendant que la timeline fait fade-out */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.12, ease: 'easeIn' }}
-                  >
-                    <ChatMessage
-                      message={message}
-                      messageIndex={index}
-                      onEdit={onEditMessage}
-                      onRegenerate={onRegenerateResponse}
-                      animateContent={false}
-                      isStreaming={false}
-                    />
-                  </motion.div>
-                  {/* Timeline : position absolute par-dessus, fade-out */}
-                  <div
-                    className="chatgpt-message chatgpt-message-assistant streaming-fade-out"
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      pointerEvents: 'none',
-                      zIndex: 1
-                    }}
-                  >
-                    <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant">
-                      <StreamTimelineRenderer
-                        timeline={{
-                          items: streamingTimeline
-                            .filter((item): item is Extract<typeof item, { type: 'text' | 'tool_execution' }> =>
-                              item.type !== 'tool_result'
-                            )
-                            .map(item => {
-                              if (item.type === 'text') {
-                                return { type: 'text' as const, content: item.content || '', timestamp: item.timestamp, roundNumber: item.roundNumber };
-                              }
-                              return { type: 'tool_execution' as const, toolCalls: item.toolCalls || [], toolCount: item.toolCount || 0, timestamp: item.timestamp, roundNumber: item.roundNumber || 0 };
-                            }),
-                          startTime: streamStartTime,
-                          endTime: Date.now()
-                        }}
-                        isActiveStreaming={false}
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            }
 
             // ✅ Détecter si c'est un message nouvellement chargé (infinite scroll)
             const isNewlyLoaded = '_isNewlyLoaded' in message && message._isNewlyLoaded;
@@ -260,7 +188,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
                   onEdit={onEditMessage}
                   onRegenerate={onRegenerateResponse}
                   animateContent={false}
-                  isStreaming={false}
+                  isStreaming={message.role === 'assistant' && Boolean(message.isStreaming)}
                 />
               </motion.div>
             );
@@ -269,7 +197,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
         )}
 
         {/* Indicateur de saisie */}
-        {loading && (!isStreaming || streamingTimeline.length === 0) && messages.length > 0 && (
+        {loading && !hasStreamingAssistant && messages.length > 0 && (
           <div className="chatgpt-message chatgpt-message-assistant">
             <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant">
               <div className="chatgpt-message-content">
@@ -291,44 +219,6 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
                 error={streamError}
                 onRetry={onRetryMessage}
                 onDismiss={onDismissError}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* PENDANT ET APRÈS LE STREAMING : StreamTimelineRenderer */}
-        {/* ✅ Seulement si le dernier message n'est pas un assistant (cross-fade géré dans messages.map sinon) */}
-        {streamingTimeline.length > 0 && (messages.length === 0 || messages[messages.length - 1]?.role !== 'assistant') && (
-          <div className={`chatgpt-message chatgpt-message-assistant ${isFading ? 'streaming-fade-out' : ''}`}>
-            <div className="chatgpt-message-bubble chatgpt-message-bubble-assistant">
-              <StreamTimelineRenderer
-                timeline={{
-                  items: streamingTimeline
-                    .filter((item): item is Extract<typeof item, { type: 'text' | 'tool_execution' }> => 
-                      item.type !== 'tool_result'
-                    )
-                    .map(item => {
-                      if (item.type === 'text') {
-                        return {
-                          type: 'text' as const,
-                          content: item.content || '',
-                          timestamp: item.timestamp,
-                          roundNumber: item.roundNumber
-                        };
-                      } else {
-                        return {
-                          type: 'tool_execution' as const,
-                          toolCalls: item.toolCalls || [],
-                          toolCount: item.toolCount || 0,
-                          timestamp: item.timestamp,
-                          roundNumber: item.roundNumber || 0
-                        };
-                      }
-                    }),
-                  startTime: streamStartTime,
-                  endTime: Date.now()
-                }}
-                isActiveStreaming={isStreaming}
               />
             </div>
           </div>

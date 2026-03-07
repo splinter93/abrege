@@ -220,9 +220,23 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
       ? currLast.clientMessageId || currLast.id || currLast.timestamp || null
       : null;
     const assistantKey: string | null = rawKey == null ? null : String(rawKey);
+    const assistantTimeline = currLast?.role === 'assistant'
+      ? currLast.stream_timeline || currLast.streamTimeline
+      : undefined;
+    const finalizedAssistantSignature = currLast?.role === 'assistant' &&
+      assistantKey &&
+      !currLast.isStreaming
+      ? [
+          assistantKey,
+          typeof currLast.sequence_number === 'number' ? currLast.sequence_number : 'pending',
+          currLast.timestamp ? String(currLast.timestamp) : 'no-timestamp',
+          currLast.content.length,
+          assistantTimeline?.items.length || 0
+        ].join(':')
+      : null;
 
-    if (currLast?.role === 'assistant' && assistantKey && lastFinalizedAssistantKeyRef.current !== assistantKey) {
-      lastFinalizedAssistantKeyRef.current = assistantKey;
+    if (finalizedAssistantSignature && lastFinalizedAssistantKeyRef.current !== finalizedAssistantSignature) {
+      lastFinalizedAssistantKeyRef.current = finalizedAssistantSignature;
       // Après insertion du message assistant final, le layout peut encore évoluer
       // pendant quelques frames (cross-fade, markdown, mise en page). On resynchronise
       // plusieurs fois pour libérer le scroll si le contenu réel dépasse désormais.

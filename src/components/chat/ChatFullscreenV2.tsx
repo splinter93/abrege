@@ -20,8 +20,9 @@ import { useChatScroll } from '@/hooks/useChatScroll';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { useInfiniteMessages } from '@/hooks/useInfiniteMessages';
-import type { Agent } from '@/types/chat';
+import type { Agent, ChatMessage } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
+import type { StreamTimeline } from '@/types/streamTimeline';
 
 // 🎯 NOUVEAUX HOOKS (Phase 2)
 import { useStreamingState } from '@/hooks/chat/useStreamingState';
@@ -122,6 +123,9 @@ const ChatFullscreenV2: React.FC = () => {
     loadInitialMessages,
     loadMoreMessages,
     addMessage: addInfiniteMessage,
+    upsertMessage: upsertInfiniteMessage,
+    updateMessageByClientId: updateInfiniteMessageByClientId,
+    removeMessageByClientId,
     replaceMessages,
     clearMessages: clearInfiniteMessages
   } = useInfiniteMessages({
@@ -143,7 +147,85 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 NOUVEAUX HOOKS CUSTOM (logique extraite)
   const streamingState = useStreamingState();
-  const fadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingAssistantClientMessageIdRef = useRef<string | null>(null);
+  const pendingAssistantStartTimeRef = useRef<number>(0);
+  const infiniteMessagesRef = useRef<ChatMessage[]>(infiniteMessages);
+
+  useEffect(() => {
+    infiniteMessagesRef.current = infiniteMessages;
+  }, [infiniteMessages]);
+
+  const clearPendingAssistantTracking = useCallback(() => {
+    pendingAssistantClientMessageIdRef.current = null;
+    pendingAssistantStartTimeRef.current = 0;
+  }, []);
+
+  const createPendingAssistantMessage = useCallback(() => {
+    const clientMessageId = `assistant-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const startedAt = Date.now();
+
+    pendingAssistantClientMessageIdRef.current = clientMessageId;
+    pendingAssistantStartTimeRef.current = startedAt;
+
+    upsertInfiniteMessage({
+      id: `pending-${clientMessageId}`,
+      clientMessageId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(startedAt).toISOString(),
+      isStreaming: true
+    });
+
+    return clientMessageId;
+  }, [upsertInfiniteMessage]);
+
+  const buildLiveStreamTimeline = useCallback((
+    timelineItems: typeof streamingState.streamingTimeline,
+    isStreaming: boolean
+  ): StreamTimeline | undefined => {
+    if (timelineItems.length === 0) {
+      return undefined;
+    }
+
+    const startTime = streamingState.streamStartTime || pendingAssistantStartTimeRef.current || Date.now();
+
+    return {
+      items: timelineItems,
+      startTime,
+      ...(isStreaming ? {} : { endTime: Date.now() })
+    };
+  }, [streamingState.streamStartTime, streamingState.streamingTimeline]);
+
+  useEffect(() => {
+    const clientMessageId = pendingAssistantClientMessageIdRef.current;
+    if (!clientMessageId) {
+      return;
+    }
+
+    const liveTimeline = buildLiveStreamTimeline(
+      streamingState.streamingTimeline,
+      streamingState.isStreaming
+    );
+
+    updateInfiniteMessageByClientId(clientMessageId, (message) => {
+      if (message.role !== 'assistant') {
+        return message;
+      }
+
+      return {
+        ...message,
+        content: streamingState.streamingContent,
+        isStreaming: streamingState.isStreaming,
+        ...(liveTimeline ? { stream_timeline: liveTimeline } : {})
+      };
+    });
+  }, [
+    buildLiveStreamTimeline,
+    streamingState.isStreaming,
+    streamingState.streamingContent,
+    streamingState.streamingTimeline,
+    updateInfiniteMessageByClientId
+  ]);
   
   // 🎯 GESTION ERREURS STREAMING (utilise uiState)
   
@@ -154,42 +236,74 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 HANDLERS CENTRALISÉS
   const { handleComplete, handleError, handleToolResult, handleToolExecutionComplete } = useChatHandlers({
-    onComplete: async (fullContent, fullReasoning, toolCalls, toolResults, streamTimeline) => {
-      // 1. Ajouter le message DB dans l'historique (optimistic, avant de vider la timeline)
-      const assistantMessage = {
-        id: `msg-${Date.now()}-assistant`,
-        role: 'assistant' as const,
-        content: fullContent,
-        reasoning: fullReasoning,
-        tool_results: toolResults || [],
-        stream_timeline: streamTimeline,
-        timestamp: new Date().toISOString()
-      };
-      
-      addInfiniteMessage(assistantMessage);
-      streamingState.endStreaming();
-      
+    onComplete: async (
+      fullContent,
+      fullReasoning,
+      toolCalls,
+      toolResults,
+      streamTimeline,
+      persistedMessage
+    ) => {
+      const clientMessageId = pendingAssistantClientMessageIdRef.current;
+
+      if (clientMessageId) {
+        const finalMessage: ChatMessage = {
+          ...(persistedMessage ?? {
+            id: `msg-${Date.now()}-assistant`,
+            role: 'assistant' as const,
+            timestamp: new Date().toISOString()
+          }),
+          clientMessageId,
+          role: 'assistant',
+          content: fullContent,
+          reasoning: fullReasoning,
+          tool_results: toolResults || [],
+          ...(streamTimeline ? { stream_timeline: streamTimeline } : {}),
+          isStreaming: false
+        };
+
+        upsertInfiniteMessage(finalMessage);
+      }
+
+      clearPendingAssistantTracking();
+      streamingState.reset();
+
       // ✅ Clear l'erreur si succès
       uiState.setStreamError(null);
-      
-      // 2. Fade-out de la timeline, puis reset → révèle le ChatMessage DB avec ses boutons
-      streamingState.setFading(true);
-      if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
-      fadeTimeoutRef.current = setTimeout(() => {
-        fadeTimeoutRef.current = null;
-        streamingState.reset(); // vide streamingTimeline → StreamTimelineRenderer disparaît
-        // ChatMessage (isBeingStreamed=false désormais) s'affiche avec BubbleButtons
-      }, 150); // légèrement > durée CSS (100ms)
-      
     },
     onError: (error) => {
+      const clientMessageId = pendingAssistantClientMessageIdRef.current;
+      const pendingAssistantMessage = clientMessageId
+        ? infiniteMessagesRef.current.find(message => message.clientMessageId === clientMessageId)
+        : null;
+
+      if (clientMessageId) {
+        const hasVisibleContent = pendingAssistantMessage?.content?.trim().length;
+        const pendingTimeline = pendingAssistantMessage?.role === 'assistant'
+          ? pendingAssistantMessage.stream_timeline || pendingAssistantMessage.streamTimeline
+          : undefined;
+        const hasTimeline = Boolean(pendingTimeline && pendingTimeline.items.length > 0);
+
+        if (!hasVisibleContent && !hasTimeline) {
+          removeMessageByClientId(clientMessageId);
+        } else {
+          updateInfiniteMessageByClientId(clientMessageId, (message) => (
+            message.role === 'assistant'
+              ? { ...message, isStreaming: false }
+              : message
+          ));
+        }
+      }
+
+      clearPendingAssistantTracking();
+
       // ✅ Stocker l'erreur structurée pour affichage
       const errorDetails = typeof error === 'string' 
         ? { error, timestamp: Date.now() }
         : error;
       
       uiState.setStreamError(errorDetails);
-      streamingState.endStreaming();
+      streamingState.reset();
       
       logger.error('[ChatFullscreenV2] ❌ Erreur streaming reçue:', errorDetails);
       
@@ -210,8 +324,13 @@ const ChatFullscreenV2: React.FC = () => {
       updateContent(chunk);
       scrollToFollowStream();
     },
-    onStreamStart: startStreaming,
-    onStreamEnd: endStreaming,
+    onStreamStart: () => {
+      startStreaming();
+      createPendingAssistantMessage();
+    },
+    onStreamEnd: () => {
+      endStreaming();
+    },
     onModelInfo: (info) => {
       // Déferrer pour éviter "state update on unmounted component" si le stream envoie l'info avant la fin du montage
       queueMicrotask(() => setModelInfo(info));
@@ -262,13 +381,12 @@ const ChatFullscreenV2: React.FC = () => {
     replaceMessages,
     initialLoadLimit: INITIAL_MESSAGES_LIMIT,
     onBeforeSend: async () => {
-      // ✅ SOLUTION SIMPLE: Juste reset la timeline
-      // Le message assistant est déjà dans infiniteMessages (ajouté par handleComplete)
-      // Donc pas besoin de reload !
-      if (fadeTimeoutRef.current) {
-        clearTimeout(fadeTimeoutRef.current);
-        fadeTimeoutRef.current = null;
+      const pendingAssistantClientMessageId = pendingAssistantClientMessageIdRef.current;
+      if (pendingAssistantClientMessageId) {
+        removeMessageByClientId(pendingAssistantClientMessageId);
       }
+
+      clearPendingAssistantTracking();
       streamingState.reset();
       
       // ✅ Clear l'erreur quand un nouveau message est envoyé
@@ -347,6 +465,7 @@ const ChatFullscreenV2: React.FC = () => {
   useEffect(() => {
     // Réinitialiser l'erreur quand currentSession change
     uiState.setStreamError(null);
+    clearPendingAssistantTracking();
   }, [currentSession?.id, uiState.setStreamError]);
 
   // 🎯 HANDLERS UI (extrait dans useChatFullscreenUIActions)
@@ -460,9 +579,6 @@ const ChatFullscreenV2: React.FC = () => {
                   isLoadingMore={isLoadingMore}
                   hasMore={hasMore}
                   isStreaming={streamingState.isStreaming}
-                  isFading={streamingState.isFading}
-                  streamingTimeline={streamingState.streamingTimeline}
-                  streamStartTime={streamingState.streamStartTime}
                   loading={messageActions.isLoading}
                   shouldAnimateMessages={animations.shouldAnimateMessages}
                   messagesVisible={animations.messagesVisible}

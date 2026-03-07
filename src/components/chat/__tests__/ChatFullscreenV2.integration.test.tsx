@@ -166,6 +166,9 @@ const mockInfiniteMessages = {
   loadInitialMessages: vi.fn(),
   loadMoreMessages: vi.fn(),
   addMessage: vi.fn(),
+  upsertMessage: vi.fn(),
+  updateMessageByClientId: vi.fn(),
+  removeMessageByClientId: vi.fn(),
   replaceMessages: vi.fn(),
   clearMessages: vi.fn()
 };

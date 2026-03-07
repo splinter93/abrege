@@ -8,6 +8,7 @@ import { useChatStore } from '@/store/useChatStore';
 import { useAuthGuard } from './useAuthGuard';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { StreamTimeline } from '@/types/streamTimeline';
+import type { ChatMessage } from '@/types/chat';
 import type { StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
 
 /**
@@ -44,7 +45,14 @@ export interface ToolResult {
 }
 
 interface ChatHandlersOptions {
-  onComplete?: (fullContent: string, fullReasoning: string, toolCalls?: ToolCall[], toolResults?: ToolResult[], streamTimeline?: StreamTimeline) => void;
+  onComplete?: (
+    fullContent: string,
+    fullReasoning: string,
+    toolCalls?: ToolCall[],
+    toolResults?: ToolResult[],
+    streamTimeline?: StreamTimeline,
+    persistedMessage?: ChatMessage | null
+  ) => void | Promise<void>;
   onError?: (error: string | StreamErrorDetails) => void;
   onToolCalls?: (toolCalls: ToolCall[], toolName: string) => void;
   onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
@@ -224,13 +232,20 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
       contentLength: finalContent.length
     });
     
-    await addMessage(messageToAdd, { 
+    const persistedMessage = await addMessage(messageToAdd, {
       persist: true, 
       updateExisting: true
     });
     
     // ✅ CRITIQUE: Passer la cleanedTimeline enrichie (pas l'originale)
-    options.onComplete?.(fullContent, fullReasoning, toolCalls, toolResults, cleanedTimeline);
+    await options.onComplete?.(
+      fullContent,
+      fullReasoning,
+      toolCalls,
+      toolResults,
+      cleanedTimeline,
+      persistedMessage
+    );
   }, [requireAuth, addMessage, options]);
 
   const handleError = useCallback((error: string | StreamErrorDetails) => {

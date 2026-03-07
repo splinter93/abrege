@@ -143,7 +143,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
         {/* ✅ PRIORITÉ 1: Utiliser la timeline si disponible (capture l'ordre exact du stream) */}
         {hasStreamTimeline ? (
-          <StreamTimelineRenderer timeline={timeline!} />
+          <StreamTimelineRenderer timeline={timeline!} isActiveStreaming={Boolean(assistantMessage?.isStreaming)} />
         ) : (
           <>
             {/* Contenu - texte avec liens pour user, markdown pour assistant */}
@@ -165,19 +165,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         
         {/* Indicateur de chargement */}
         {isStreaming && !displayedContent && (
-          <div className="chatgpt-message-loading">
+          <div className="chatgpt-message-loading" role="status" aria-label="Chargement en cours">
             <div className="chatgpt-message-loading-dots">
               <div className="chatgpt-message-loading-dot"></div>
               <div className="chatgpt-message-loading-dot"></div>
               <div className="chatgpt-message-loading-dot"></div>
             </div>
-            <span>En cours de traitement...</span>
           </div>
         )}
       </div>
       
       {/* Boutons d'action */}
-      {content && (
+      {content && !(role === 'assistant' && assistantMessage?.isStreaming) && (
         <div className="chatgpt-message-actions">
           <BubbleButtons
             content={content}

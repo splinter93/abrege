@@ -38,8 +38,33 @@ interface UseInfiniteMessagesReturn {
   loadInitialMessages: () => Promise<void>;
   loadMoreMessages: () => Promise<void>;
   addMessage: (message: ChatMessage) => void;
+  upsertMessage: (message: ChatMessage) => void;
+  updateMessageByClientId: (
+    clientMessageId: string,
+    updater: (message: ChatMessage) => ChatMessage
+  ) => void;
+  removeMessageByClientId: (clientMessageId: string) => void;
   replaceMessages: (messages: ChatMessage[]) => void;
   clearMessages: () => void;
+}
+
+function getMessageIdentityKeys(message: ChatMessage): string[] {
+  const keys: string[] = [];
+
+  if (message.clientMessageId) {
+    keys.push(`client:${message.clientMessageId}`);
+  }
+  if (message.id) {
+    keys.push(`id:${message.id}`);
+  }
+  if (typeof message.sequence_number === 'number') {
+    keys.push(`seq:${message.sequence_number}`);
+  }
+  if (message.timestamp) {
+    keys.push(`ts:${String(message.timestamp)}`);
+  }
+
+  return keys;
 }
 
 export function useInfiniteMessages(
@@ -229,6 +254,49 @@ export function useInfiniteMessages(
   }, []);
 
   /**
+   * 🔄 Upsert d'un message via identité stable (client/id/sequence/timestamp)
+   */
+  const upsertMessage = useCallback((message: ChatMessage) => {
+    const incomingKeys = new Set(getMessageIdentityKeys(message));
+
+    setMessages(prev => {
+      const existingIndex = prev.findIndex(existing => {
+        const existingKeys = getMessageIdentityKeys(existing);
+        return existingKeys.some(key => incomingKeys.has(key));
+      });
+
+      if (existingIndex === -1) {
+        return [...prev, message];
+      }
+
+      const nextMessages = [...prev];
+      nextMessages[existingIndex] = message;
+      return nextMessages;
+    });
+  }, []);
+
+  /**
+   * ✏️ Mettre à jour un message existant par clientMessageId
+   */
+  const updateMessageByClientId = useCallback((
+    clientMessageId: string,
+    updater: (message: ChatMessage) => ChatMessage
+  ) => {
+    setMessages(prev => prev.map(message => (
+      message.clientMessageId === clientMessageId
+        ? updater(message)
+        : message
+    )));
+  }, []);
+
+  /**
+   * 🗑️ Supprimer un message local par clientMessageId
+   */
+  const removeMessageByClientId = useCallback((clientMessageId: string) => {
+    setMessages(prev => prev.filter(message => message.clientMessageId !== clientMessageId));
+  }, []);
+
+  /**
    * 🔄 Remplacer tous les messages (changement de session)
    */
   const replaceMessages = useCallback((newMessages: ChatMessage[]) => {
@@ -275,6 +343,9 @@ export function useInfiniteMessages(
     loadInitialMessages,
     loadMoreMessages,
     addMessage,
+    upsertMessage,
+    updateMessageByClientId,
+    removeMessageByClientId,
     replaceMessages,
     clearMessages
   };
