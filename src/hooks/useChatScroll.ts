@@ -216,9 +216,10 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
   useEffect(() => {
     if (!autoScroll || messages.length === 0) return;
     const currLast = messages[messages.length - 1];
-    const assistantKey = currLast
+    const rawKey = currLast
       ? currLast.clientMessageId || currLast.id || currLast.timestamp || null
       : null;
+    const assistantKey: string | null = rawKey == null ? null : String(rawKey);
 
     if (currLast?.role === 'assistant' && assistantKey && lastFinalizedAssistantKeyRef.current !== assistantKey) {
       lastFinalizedAssistantKeyRef.current = assistantKey;

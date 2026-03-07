@@ -46,7 +46,7 @@ export interface CommandPaletteOption {
 export interface CommandPaletteShortcut {
   id: string;
   title: string;
-  icon: 'chat' | 'folder' | 'bot' | 'prompt';
+  icon: 'chat' | 'book' | 'folder' | 'bot' | 'prompt';
   action: () => void;
   /** Aligner à droite dans le bandeau */
   alignRight?: boolean;
