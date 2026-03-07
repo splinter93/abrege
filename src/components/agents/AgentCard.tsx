@@ -52,7 +52,7 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onEdit, onDelete, onToggle
               title={agent.is_active ? 'Actif' : 'Inactif'}
             />
           </div>
-          <h3 className="text-[15px] font-semibold text-neutral-100 tracking-tight leading-none truncate">
+          <h3 className="text-[15px] font-semibold text-neutral-100 tracking-tight leading-tight truncate">
             {displayName}
           </h3>
         </div>

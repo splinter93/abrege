@@ -55,7 +55,7 @@ const PromptCard: React.FC<PromptCardProps> = ({
               title={prompt.is_active ? 'Actif' : 'Inactif'}
             />
           </div>
-          <h3 className="text-[15px] font-semibold text-neutral-100 tracking-tight leading-none truncate">
+          <h3 className="text-[15px] font-semibold text-neutral-100 tracking-tight leading-tight truncate">
             {prompt.name}
           </h3>
         </div>
