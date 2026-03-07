@@ -680,9 +680,9 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
             </div>
           </div>
 
-          {/* Ligne 2 : Recherche (rétrécit) + boutons sur une ligne */}
-          <div className="flex flex-row items-center gap-3 w-full mb-6 min-w-0">
-            <div className="relative flex-1 min-w-0 sm:max-w-md">
+          {/* Ligne 2 : Recherche (flex-1 avec max) + boutons shrink-0 à droite */}
+          <div className="flex flex-row items-center gap-3 w-full mb-6 justify-between">
+            <div className="relative flex-1 min-w-0 max-w-xl">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
               <input
                 type="search"
@@ -696,17 +696,17 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-md border border-zinc-800/60 bg-zinc-900/50 text-zinc-200 text-xs font-semibold hover:bg-zinc-800/50 hover:border-zinc-700 hover:text-zinc-100 transition-all shadow-sm"
+                className="inline-flex items-center justify-center gap-1.5 h-10 px-3 rounded-xl border border-zinc-800/60 bg-zinc-900/50 text-zinc-200 text-xs font-semibold hover:bg-zinc-800/50 hover:border-zinc-700 hover:text-zinc-100 transition-all shadow-sm"
                 title="Filtre"
               >
                 <Filter className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden sm:inline">Filter</span>
               </button>
-              <div className="hidden sm:flex items-center gap-1 rounded-lg p-0.5 shrink-0" style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}>
+              <div className="hidden sm:flex items-center gap-1 rounded-xl p-0.5 shrink-0" style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}>
                 <button
                   type="button"
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
                   title="Vue grille"
                 >
                   <LayoutGrid className="w-4 h-4" />
@@ -714,7 +714,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                 <button
                   type="button"
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
                   title="Vue liste"
                 >
                   <List className="w-4 h-4" />
@@ -724,7 +724,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
                 type="button"
                 onClick={handleUploadFile}
                 disabled={loading}
-                className="flex items-center gap-1.5 h-8 px-3 bg-white text-black hover:bg-neutral-200 rounded-md text-xs font-semibold transition-all shadow-sm disabled:opacity-50"
+                className="flex items-center gap-1.5 h-10 px-4 bg-white text-black hover:bg-neutral-200 rounded-xl text-xs font-semibold transition-all shadow-sm disabled:opacity-50"
               >
                 <Upload className="w-3.5 h-3.5" />
                 <span>Upload</span>

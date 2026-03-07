@@ -46,7 +46,11 @@ function PromptsPageContent() {
   const effectiveViewMode = isMobile ? 'list' : viewMode;
 
   const sortedPrompts = useMemo(
-    () => [...prompts].sort((a, b) => a.name.localeCompare(b.name)),
+    () =>
+      [...prompts].sort((a, b) => {
+        if (a.is_active !== b.is_active) return a.is_active ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      }),
     [prompts]
   );
 
@@ -147,7 +151,7 @@ function PromptsPageContent() {
         /* ── Vue liste ── */
         <div className="page-content-inner page-content-inner-prompts bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
           {/* En-tête de contenu — style Linear (titre gradient + sous-titre) */}
-          <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
+          <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-6 sm:pb-6">
             <div className="mb-10 mt-5 sm:mt-8 flex w-full items-center justify-between">
               <div className="flex flex-col items-start font-sans">
                 <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent">
@@ -158,40 +162,20 @@ function PromptsPageContent() {
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                  {!isMobile && (
-                    <div className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/50 p-0.5">
-                      <button
-                        type="button"
-                        onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                        title="Vue grille"
-                      >
-                        <LayoutGrid className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
-                        title="Vue liste"
-                      >
-                        <List className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleCreate}
-                    className="flex items-center gap-1.5 h-8 px-3 bg-white text-black hover:bg-neutral-200 rounded-md text-xs font-semibold transition-all shadow-sm"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Nouveau prompt</span>
-                    <span className="sm:hidden">Nouveau</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleCreate}
+                  className="flex items-center gap-1.5 h-8 px-3 bg-white text-black hover:bg-neutral-200 rounded-md text-xs font-semibold transition-all shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Nouveau prompt</span>
+                </button>
               </div>
+            </div>
 
-              {/* Ligne 2 : Barre de recherche */}
-              <div className="relative w-full md:max-w-md">
+            {/* Ligne 2 : Barre de recherche + toggle vue */}
+            <div className="flex items-center gap-3 w-full mb-6 justify-between">
+              <div className="relative flex-1 md:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
                 <input
                   type="search"
@@ -202,51 +186,73 @@ function PromptsPageContent() {
                   style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
                 />
               </div>
+              {!isMobile && (
+                <div
+                  className="flex items-center gap-1 rounded-lg p-0.5 shrink-0"
+                  style={{ backgroundColor: 'var(--color-bg-block)', border: 'var(--border-block)' }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'grid' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    title="Vue grille"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-md transition-colors ${effectiveViewMode === 'list' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    title="Vue liste"
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
-          <div className="px-4 sm:px-6 lg:px-8 pt-0 pb-6 sm:py-6">
-            {filteredPrompts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="text-4xl mb-4">✨</div>
-                <h3 className="text-lg font-semibold text-zinc-100 mb-1">Aucun prompt personnalisé</h3>
-                <p className="text-zinc-500 text-sm max-w-sm mb-6">
-                  Créez votre premier prompt pour enrichir l&apos;éditeur.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleCreate}
-                  className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors"
-                >
-                  Créer un prompt
-                </button>
-              </div>
-            ) : effectiveViewMode === 'grid' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredPrompts.map(prompt => (
-                  <PromptCard
-                    key={prompt.id}
-                    prompt={prompt}
-                    agents={agents}
-                    onEdit={() => handleEdit(prompt)}
-                    onDelete={() => handleDelete(prompt.id)}
-                    onToggle={() => handleToggle(prompt)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="prompts-list-view flex flex-col rounded-xl">
-                {filteredPrompts.map(prompt => (
-                  <PromptListItem
-                    key={prompt.id}
-                    prompt={prompt}
-                    agents={agents}
-                    onEdit={() => handleEdit(prompt)}
-                    onDelete={() => handleDelete(prompt.id)}
-                    onToggle={() => handleToggle(prompt)}
-                  />
-                ))}
-              </div>
-            )}
+          {filteredPrompts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="text-4xl mb-4">✨</div>
+              <h3 className="text-lg font-semibold text-zinc-100 mb-1">Aucun prompt personnalisé</h3>
+              <p className="text-zinc-500 text-sm max-w-sm mb-6">
+                Créez votre premier prompt pour enrichir l&apos;éditeur.
+              </p>
+              <button
+                type="button"
+                onClick={handleCreate}
+                className="px-5 py-2.5 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 transition-colors"
+              >
+                Créer un prompt
+              </button>
+            </div>
+          ) : effectiveViewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredPrompts.map(prompt => (
+                <PromptCard
+                  key={prompt.id}
+                  prompt={prompt}
+                  agents={agents}
+                  onEdit={() => handleEdit(prompt)}
+                  onDelete={() => handleDelete(prompt.id)}
+                  onToggle={() => handleToggle(prompt)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="prompts-list-view flex flex-col rounded-xl">
+              {filteredPrompts.map(prompt => (
+                <PromptListItem
+                  key={prompt.id}
+                  prompt={prompt}
+                  agents={agents}
+                  onEdit={() => handleEdit(prompt)}
+                  onDelete={() => handleDelete(prompt.id)}
+                  onToggle={() => handleToggle(prompt)}
+                />
+              ))}
+            </div>
+          )}
           </div>
         </div>
       )}
