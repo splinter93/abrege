@@ -4,7 +4,7 @@
  * @module components/prompts/PromptFormModal
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { EditorPrompt, EditorPromptCreateRequest } from '@/types/editorPrompts';
 import type { Agent } from '@/types/chat';
 import IconPicker from './IconPicker';
@@ -14,6 +14,8 @@ import { CustomSelect } from '@/components/ui/CustomSelect';
 import Tooltip from '@/components/Tooltip';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 import HighlightedTextarea from './HighlightedTextarea';
+import { useAuth } from '@/hooks/useAuth';
+import { usePromptTemplateMentions } from '@/hooks/usePromptTemplateMentions';
 
 const inputClass =
   'w-full px-3 py-2 rounded-lg bg-zinc-900/30 border border-zinc-800/60 text-zinc-100 text-sm placeholder:text-zinc-500 focus:border-zinc-600 focus:bg-zinc-800/20 focus:outline-none transition-colors';
@@ -32,6 +34,9 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
   onSave,
   onCancel,
 }) => {
+  const { getAccessToken } = useAuth();
+  const templateRef = useRef<HTMLTextAreaElement>(null);
+
   const [formData, setFormData] = useState<EditorPromptCreateRequest>({
     name: '',
     prompt_template: '',
@@ -45,6 +50,22 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+
+  const handleTemplateChange = React.useCallback((val: string) => {
+    setFormData((prev) => ({ ...prev, prompt_template: val }));
+    setErrors((prev) => {
+      if (!prev.prompt_template) return prev;
+      const { prompt_template, ...rest } = prev;
+      return rest;
+    });
+  }, []);
+
+  const mentionSystem = usePromptTemplateMentions({
+    value: formData.prompt_template,
+    onChange: handleTemplateChange,
+    textareaRef: templateRef,
+    getAccessToken,
+  });
 
   const placeholders = useMemo(
     () => parsePromptPlaceholders(formData.prompt_template),
@@ -70,8 +91,18 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
         insertion_mode: prompt.insertion_mode || 'replace',
         use_structured_output: prompt.use_structured_output || false,
       });
+      // Recharger les mentions du prompt existant (P0 fix)
+      mentionSystem.setMentions(prompt.mentions ?? []);
     }
-  }, [prompt]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prompt?.id]);
+
+  // Charger les notes récentes dès la première ouverture du mention menu
+  useEffect(() => {
+    if (mentionSystem.showMentionMenu) {
+      void mentionSystem.loadRecentNotes();
+    }
+  }, [mentionSystem.showMentionMenu, mentionSystem.loadRecentNotes]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -99,15 +130,28 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Séparer la logique save de la gestion d'événement pour un typage propre (P1 fix)
+  const handleSave = useCallback(async () => {
     if (!validate()) return;
     setSaving(true);
     try {
-      await onSave({ ...formData, agent_id: formData.agent_id ?? null });
+      await onSave({
+        ...formData,
+        agent_id: formData.agent_id ?? null,
+        // Toujours envoyer le tableau (P0 fix : undefined ambiguïté backend)
+        mentions: mentionSystem.mentions,
+      });
+      // Après save réussi : reset les mentions (état "sauvegardé")
+      mentionSystem.setMentions([]);
     } finally {
       setSaving(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, mentionSystem.mentions, onSave]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSave();
   };
 
   const handleChange = (field: keyof EditorPromptCreateRequest, value: string) => {
@@ -119,6 +163,13 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
         return next;
       });
     }
+    // Effacer l'erreur prompt_template quand le contexte change (P1 fix)
+    if (field === 'context' && errors.prompt_template) {
+      setErrors((prev) => {
+        const { prompt_template, ...rest } = prev;
+        return rest;
+      });
+    }
   };
 
   const SelectedIcon = getIconComponent(formData.icon);
@@ -128,6 +179,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
 
   // En création : dès qu'on a un nom ou un template, on considère qu'il y a des modifs
   // En édition : compare champ par champ avec l'état initial
+  // Les mentions sont trackées via le template (les @slug dedans) + le state mentions[]
   const hasChanges = !prompt
     ? formData.name.trim().length > 0 || formData.prompt_template.trim().length > 0
     : (
@@ -175,7 +227,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={handleSubmit as unknown as React.MouseEventHandler}
+                  onClick={handleSave}
                   disabled={saving}
                   className="px-4 py-2 rounded-lg bg-white text-black text-sm font-medium hover:bg-zinc-200 disabled:opacity-50 disabled:pointer-events-none transition-colors"
                 >
@@ -289,7 +341,18 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
             <HighlightedTextarea
               id="prompt_template"
               value={formData.prompt_template}
-              onChange={(val) => handleChange('prompt_template', val)}
+              onChange={mentionSystem.handleChange}
+              onKeyDown={mentionSystem.handleKeyDown}
+              textareaRef={templateRef}
+              mentions={mentionSystem.mentions}
+              showMentionMenu={mentionSystem.showMentionMenu}
+              mentionMenuPosition={mentionSystem.mentionMenuPosition}
+              mentionSearchQuery={mentionSystem.mentionSearchQuery}
+              recentNotes={mentionSystem.recentNotes}
+              searchedNotes={mentionSystem.searchedNotes}
+              isSearching={mentionSystem.isSearching}
+              onSelectNote={mentionSystem.handleSelectNote}
+              onCloseMentionMenu={mentionSystem.closeMentionMenu}
               placeholder="Exemple: Améliore ce texte : {selection}"
               rows={6}
               hasError={!!errors.prompt_template}
@@ -373,6 +436,31 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
                   <p style={{ fontSize: '10px', color: '#71717a', margin: 0, lineHeight: 1.4 }}>
                     {`{selection}`} est réservé : disponible uniquement pour les prompts de l&apos;éditeur.
                   </p>
+                )}
+              </div>
+
+              {/* Mentions détectées */}
+              <div style={{ marginTop: '6px', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(63,63,70,0.4)', background: 'rgba(24,24,27,0.2)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    Mentions détectées
+                  </span>
+                  <span style={{ minWidth: '18px', height: '18px', padding: '0 4px', borderRadius: '4px', background: 'rgba(39,39,42,0.6)', color: '#a1a1aa', fontSize: '10px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {mentionSystem.mentions.length}
+                  </span>
+                </div>
+                {mentionSystem.mentions.length > 0 ? (
+                  <ul style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', margin: 0, padding: 0, listStyle: 'none' }}>
+                    {mentionSystem.mentions.map((m) => (
+                      <li key={m.id}>
+                        <code style={{ padding: '1px 6px', borderRadius: '4px', background: 'rgba(39,39,42,0.6)', fontFamily: 'monospace', fontSize: '11px', color: '#a78bfa' }}>
+                          @{m.slug}
+                        </code>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p style={{ fontSize: '11px', color: '#71717a', margin: 0 }}>Aucune note mentionnée.</p>
                 )}
               </div>
             </div>

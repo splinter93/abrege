@@ -6,6 +6,7 @@
 import type { EditorPrompt } from '@/types/editorPrompts';
 import type { Agent } from '@/types/chat';
 import { simpleLogger as logger } from '@/utils/logger';
+import { MentionedNotesFormatter } from '@/services/llm/MentionedNotesFormatter';
 
 interface ExecutePromptResult {
   success: boolean;
@@ -129,6 +130,21 @@ export class EditorPromptExecutor {
         provider: 'groq'
       };
 
+      // Injecter les mentions si présentes (notes référencées dans le template)
+      if (prompt.mentions?.length) {
+        const formatter = MentionedNotesFormatter.getInstance();
+        const mentionsContext = formatter.buildContextMessage(prompt.mentions);
+        if (mentionsContext) {
+          requestPayload.message = mentionsContext + '\n\n' + requestPayload.message;
+          // N'injecter mentionedNotes que si le contexte textuel est effectivement présent
+          requestPayload.context.mentionedNotes = prompt.mentions;
+        }
+        logger.dev('[EditorPromptExecutor] 📌 Mentions injectées dans payload:', {
+          count: prompt.mentions.length,
+          hasContext: !!mentionsContext,
+        });
+      }
+
       // 🔧 NOUVEAU: Ajouter structured outputs si configuré
       if (prompt.use_structured_output && prompt.output_schema) {
         requestPayload.response_format = {
@@ -159,17 +175,21 @@ export class EditorPromptExecutor {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessage = errorData.error || errorData.message || 'Erreur lors de l\'appel à l\'API';
+        let errorMessage = `Erreur HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch {
+          // La réponse d'erreur n'est pas du JSON (ex : HTML Nginx, timeout) — on garde le message HTTP
+        }
         logger.error('[EditorPromptExecutor] ❌ Erreur API:', {
           status: response.status,
           statusText: response.statusText,
           error: errorMessage,
-          fullError: errorData
         });
         return {
           success: false,
-          error: `${errorMessage} (${response.status})`
+          error: `${errorMessage} (${response.status})`,
         };
       }
 
@@ -296,6 +316,21 @@ export class EditorPromptExecutor {
         contentLength: noteContext?.noteContent?.length
       });
 
+      // Injecter les mentions dans le message si présentes
+      let streamMessage = finalPrompt;
+      let mentionedNotesContext: typeof prompt.mentions | undefined;
+      if (prompt.mentions?.length) {
+        const formatter = MentionedNotesFormatter.getInstance();
+        const mentionsContext = formatter.buildContextMessage(prompt.mentions);
+        if (mentionsContext) {
+          streamMessage = mentionsContext + '\n\n' + finalPrompt;
+          mentionedNotesContext = prompt.mentions;
+          logger.dev('[EditorPromptExecutor] 📌 Mentions injectées (stream):', {
+            count: prompt.mentions.length,
+          });
+        }
+      }
+
       // ✅ FIX: Utiliser la route /stream pour le streaming SSE
       const response = await fetch('/api/chat/llm/stream', {
         method: 'POST',
@@ -304,7 +339,7 @@ export class EditorPromptExecutor {
           'Authorization': `Bearer ${userToken}`
         },
         body: JSON.stringify({
-          message: finalPrompt,
+          message: streamMessage,
           context: {
             type: 'editor_prompt',
             sessionId: tempSessionId,
@@ -312,21 +347,23 @@ export class EditorPromptExecutor {
             promptId: prompt.id,
             promptName: prompt.name,
             selectedText: selectedText.substring(0, 200),
-            // ✅ NOUVEAU : Ajouter notes attachées et UI context
             attachedNotes,
-            uiContext
+            uiContext,
+            ...(mentionedNotesContext ? { mentionedNotes: mentionedNotesContext } : {}),
           },
-          history: []
-          // Pas besoin de provider ni stream: la route /stream streame toujours
+          history: [],
         })
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        return {
-          success: false,
-          error: errorData.error || 'Erreur lors de l\'appel à l\'API'
-        };
+        let errorMsg = `Erreur HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorData.message || errorMsg;
+        } catch {
+          // Réponse non-JSON (HTML Nginx, timeout, etc.)
+        }
+        return { success: false, error: errorMsg };
       }
 
       // ✅ Parser le stream SSE avec StreamParser
