@@ -168,7 +168,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                           }}
                         />
                       ) : (
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-500/20 text-blue-300 flex-shrink-0">
+                        <span className="sidebar-agent-icon-placeholder">
                           <Bot size={16} />
                         </span>
                       )}
