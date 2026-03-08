@@ -50,19 +50,13 @@ import "./ClasseursPage.css";
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatRelativeTime(dateStr: string): string {
+function formatCreationDate(dateStr: string): string {
   const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffM = Math.floor(diffMs / 60000);
-  const diffH = Math.floor(diffMs / 3600000);
-  const diffD = Math.floor(diffMs / 86400000);
-  if (diffM < 1) return "À l'instant";
-  if (diffM < 60) return `Modifié il y a ${diffM} min`;
-  if (diffH < 24) return `Modifié il y a ${diffH} h`;
-  if (diffD === 1) return "Modifié hier";
-  if (diffD < 7) return `Modifié il y a ${diffD} j`;
-  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  return date.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 const FOLDER_COLORS: Array<"orange" | "blue" | "emerald" | "violet" | "neutral"> = [
@@ -934,14 +928,14 @@ export default function ClasseursPage() {
         id: f.id,
         type: "folder",
         name: f.name,
-        subtitle: count > 0 ? `${count} élément${count !== 1 ? "s" : ""}` : "Dossier",
+        subtitle: `${count} élément${count !== 1 ? "s" : ""}`,
         iconColor: folderColorByIndex(i),
       });
     });
     filteredFiles.forEach((file: FileArticle) => {
       const note = notesMap[file.id];
-      const subtitle = note?.updated_at
-        ? formatRelativeTime(note.updated_at)
+      const subtitle = note?.created_at
+        ? formatCreationDate(note.created_at)
         : "Note";
       result.push({
         id: file.id,
