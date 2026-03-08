@@ -7,12 +7,12 @@ import { TTSStreamingPlayer } from '@/utils/ttsStreamingPlayer';
 
 const DEFAULT_PROXY_URL = 'ws://localhost:3001/ws/xai-voice';
 
+// Next.js inlines NEXT_PUBLIC_* at build time — accès direct obligatoire
+const PROXY_BASE_URL = process.env.NEXT_PUBLIC_XAI_VOICE_PROXY_URL || DEFAULT_PROXY_URL;
+
 function getTTSWebSocketUrl(voiceId: string): string | null {
-  const base = typeof process !== 'undefined' && process.env.NEXT_PUBLIC_XAI_VOICE_PROXY_URL
-    ? process.env.NEXT_PUBLIC_XAI_VOICE_PROXY_URL
-    : DEFAULT_PROXY_URL;
   try {
-    const u = new URL(base);
+    const u = new URL(PROXY_BASE_URL);
     u.pathname = '/ws/xai-tts';
     u.search = `?voice=${encodeURIComponent(voiceId)}&codec=mp3&sample_rate=24000&bit_rate=128000`;
     return u.toString();
@@ -121,7 +121,7 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
       const voiceId = normalizeTTSVoice(options?.voiceId ?? defaultVoiceId);
       const messageId = options?.messageId ?? null;
       currentMessageIdRef.current = messageId;
-      setIsPlayingMessageId(messageId);
+      setIsPlayingMessageId(messageId ?? '__playing');
       setIsPaused(false);
 
       const ws = connect(voiceId);

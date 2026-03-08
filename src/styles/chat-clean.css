@@ -769,6 +769,16 @@ body.chat-theme-glass .chatgpt-header {
   object-fit: cover;
 }
 
+/* Placeholder icône agent dans header (même style que sidebar) */
+.chat-active-agent .sidebar-agent-icon-placeholder {
+  width: 30px;
+  height: 30px;
+}
+.chat-active-agent .sidebar-agent-icon-placeholder svg {
+  width: 16px;
+  height: 16px;
+}
+
 .agent-name {
   font-size: 15px; /* ✅ 15px */
   font-weight: 500;

@@ -66,7 +66,7 @@ export function TextToSpeechProvider({ children, defaultVoiceId, streamingMode =
       const messageId = options?.messageId ?? null;
 
       try {
-        setIsPlayingMessageId(messageId);
+        setIsPlayingMessageId(messageId ?? '__playing');
         setIsPaused(false);
 
         let blob: Blob | null = getCachedBlob(trimmed, voiceId);

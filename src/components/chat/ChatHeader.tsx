@@ -10,7 +10,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
+import { Menu, Bot } from 'lucide-react';
 import type { Agent } from '@/types/chat';
 import AgentInfoDropdown from './AgentInfoDropdown';
 import { ChatCanvasDropdown } from './ChatCanvasDropdown';
@@ -92,7 +92,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                   className="agent-icon agent-avatar-header"
                 />
               ) : (
-                <span className="agent-icon">🤖</span>
+                <span className="agent-icon sidebar-agent-icon-placeholder">
+                  <Bot size={16} />
+                </span>
               )}
               <span className="agent-name">{selectedAgent.display_name || selectedAgent.name}</span>
             </button>
