@@ -29,6 +29,26 @@
   height: 36px;
 }
 
+/* Responsive mobile : searchbar rétrécit, boutons Précédent/Suivant masqués (hidden sm:flex) */
+@media (max-width: 639px) {
+  .latest-notes-header {
+    gap: 0.75rem;
+  }
+  .latest-notes-toolbar {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .latest-notes-search {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .latest-notes-search .search-bar-container.dashboard-search-inline {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
 .dashboard-search-inline .search-bar-form {
   height: 100%;
 }

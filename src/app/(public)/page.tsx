@@ -435,19 +435,21 @@ function AuthenticatedHomeContent({
 
         {/* 3. Latest Notes */}
         <section className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center justify-between gap-4 flex-wrap latest-notes-header">
             <h2 className="text-sm font-semibold text-zinc-400 tracking-wider shrink-0">
               Latest Notes
             </h2>
-            <div className="flex items-center gap-4 min-w-0 justify-end">
-              <SearchBar
-                placeholder="Rechercher..."
-                onSearchResult={handleSearchResult}
-                maxResults={10}
-                searchTypes={["all"]}
-                className="dashboard-search-inline"
-              />
-              <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-4 min-w-0 justify-end latest-notes-toolbar">
+              <div className="min-w-0 flex-1 sm:flex-initial latest-notes-search">
+                <SearchBar
+                  placeholder="Rechercher..."
+                  onSearchResult={handleSearchResult}
+                  maxResults={10}
+                  searchTypes={["all"]}
+                  className="dashboard-search-inline"
+                />
+              </div>
+              <div className="hidden sm:flex items-center gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={handleNotesPrev}
