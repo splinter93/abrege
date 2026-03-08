@@ -7,7 +7,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Globe, CornerUpRight, Search, FileText, Zap, Target, Cpu } from 'react-feather';
-import { Lightbulb, Loader, Waves } from 'lucide-react';
+import { Lightbulb, Loader, AudioLines } from 'lucide-react';
 import AudioRecorder, { type AudioRecorderRef } from './AudioRecorder';
 import NoteSelector from './NoteSelector';
 import FileMenu from './FileMenu';
@@ -275,7 +275,6 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
         onError={onAudioError}
         onRecordingStateChange={setIsRecording}
         disabled={disabled}
-        enlarged={isVocalMode}
       />
       {onToggleVocalMode && (
         <button
@@ -286,7 +285,7 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
           aria-label={isVocalMode ? 'Désactiver le mode vocal' : 'Activer le mode vocal'}
           title={isVocalMode ? 'Mode vocal : désactiver' : 'Mode vocal : la réponse sera lue à voix haute'}
         >
-          <Waves size={18} />
+          <AudioLines size={18} />
         </button>
       )}
       

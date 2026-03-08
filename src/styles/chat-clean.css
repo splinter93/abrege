@@ -2322,13 +2322,6 @@ body.chat-theme-glass .chatgpt-messages > div {
   position: relative;
 }
 
-/* Mode vocal : micro agrandi (priorité à la parole) */
-.chatgpt-input-mic.chatgpt-input-mic--enlarged {
-  width: 48px;
-  height: 48px;
-  padding: 10px;
-}
-
 /* Bouton mode vocal (ondes) */
 .chatgpt-input-vocal-toggle.active {
   background: var(--chat-overlay-active);
