@@ -940,7 +940,7 @@ body.chat-theme-glass .chatgpt-header {
 /* Même fond que le header / sidebar */
 .sidebar-search-clean {
   flex-shrink: 0;
-  padding: 16px 20px;
+  padding: 16px 12px;
   border-bottom: none;
   display: flex;
   align-items: center;
@@ -988,7 +988,7 @@ body.chat-theme-glass .chatgpt-header {
   flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
-  padding: 16px 20px;
+  padding: 16px 12px 16px 12px;
   background: var(--chat-bg-primary);
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
@@ -1008,6 +1008,7 @@ body.chat-theme-glass .chatgpt-header {
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--chat-space-md);
+  padding-left: 16px; /* aligne avec l'icône des items (sidebar-item-clean px-4) */
 }
 
 .sidebar-section-title-clean {
