@@ -396,6 +396,10 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
 
   // --- RENOMMAGE ---
   const submitRename = useCallback(async (id: string, newName: string, type: 'folder' | 'file') => {
+    // Fermeture immédiate du mode renommage pour un retour visuel fluide
+    setRenamingItemId(null);
+    setRenamingType(null);
+
     try {
       if (process.env.NODE_ENV === 'development') {
         logger.dev('[UI] ✏️ Renommage item avec API optimisée...', { id, newName, type });
@@ -470,9 +474,6 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       }
       
       setError('Erreur lors du renommage.');
-    } finally {
-      setRenamingItemId(null);
-      setRenamingType(null);
     }
   }, [notes, folders, userId]);
 

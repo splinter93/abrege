@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import {
@@ -96,6 +97,8 @@ interface ClasseurTab {
 interface BreadcrumbSegment {
   label: string;
   onClick?: () => void;
+  /** folderId pour le drop : undefined = racine du classeur, string = dossier cible */
+  dropFolderId?: string | null;
 }
 
 function ClasseursHeader({
@@ -332,22 +335,32 @@ function ClasseursTabs({
       <div className="flex min-w-0 shrink items-center gap-2 overflow-x-auto no-scrollbar">
         <SortableContext items={tabs.map((t) => t.id)} strategy={horizontalListSortingStrategy}>
           <div className="flex min-w-0 gap-1">
-            {tabs.map((tab) => (
-              <SortableTab
-                key={tab.id}
-                tab={tab}
-                isActive={tab.id === activeId}
-                onSelect={onSelect}
-                onContextMenu={onContextMenu}
-                onDragOver={onTabDragOver}
-                onDragLeave={onTabDragLeave}
-                onDrop={onTabDrop}
-                isDragOver={dragOverTabId === tab.id}
-                isRenaming={renamingTabId === tab.id}
-                onRenameSubmit={(name) => onTabRenameSubmit?.(tab.id, name)}
-                onRenameCancel={onTabRenameCancel}
-              />
-            ))}
+            <AnimatePresence initial={false} mode="popLayout">
+              {tabs.map((tab) => (
+                <motion.div
+                  key={tab.id}
+                  initial={{ opacity: 0, scale: 0.9, width: 0 }}
+                  animate={{ opacity: 1, scale: 1, width: "auto" }}
+                  exit={{ opacity: 0, scale: 0.9, width: 0 }}
+                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <SortableTab
+                    tab={tab}
+                    isActive={tab.id === activeId}
+                    onSelect={onSelect}
+                    onContextMenu={onContextMenu}
+                    onDragOver={onTabDragOver}
+                    onDragLeave={onTabDragLeave}
+                    onDrop={onTabDrop}
+                    isDragOver={dragOverTabId === tab.id}
+                    isRenaming={renamingTabId === tab.id}
+                    onRenameSubmit={(name) => onTabRenameSubmit?.(tab.id, name)}
+                    onRenameCancel={onTabRenameCancel}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </SortableContext>
       </div>
@@ -427,41 +440,50 @@ function ItemCard({
       ? getFolderIconBoxClasses("orange")
       : "bg-white/[0.05] border-white/[0.1]";
   const isFolder = item.type === "folder";
+  const [isDragging, setIsDragging] = React.useState(false);
 
   return (
-    <div
-      className={`group relative flex min-h-[160px] cursor-pointer flex-col justify-between rounded-xl p-5 shadow-sm transition-all duration-300 ${
-        isDropTarget
-          ? "border-orange-500/40 bg-orange-500/5 border"
-          : "classeurs-block classeurs-card hover:shadow-md hover:shadow-black/10"
-      }`}
-      role="button"
-      tabIndex={0}
-      onClick={() => !isRenaming && onOpen()}
-      onKeyDown={(e) => e.key === "Enter" && !isRenaming && onOpen()}
-      draggable={!!onDragStart && !isRenaming}
-      onDragStart={(e) => {
-        if (onDragStart) {
-          e.dataTransfer.setData("itemId", item.id);
-          e.dataTransfer.setData("itemType", item.type);
-          e.dataTransfer.setData(DRAG_JSON, JSON.stringify({ id: item.id, type: item.type }));
-          e.dataTransfer.effectAllowed = "move";
-          onDragStart(e, item);
-        }
-      }}
-      onDragOver={isFolder && (onDropOnFolder || onFolderDragOver) ? (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        e.dataTransfer.dropEffect = "move";
-        onFolderDragOver?.(item.id);
-      } : undefined}
-      onDragLeave={isFolder ? () => onFolderDragLeave?.() : undefined}
-      onDrop={isFolder && onDropOnFolder ? (e) => { e.preventDefault(); e.stopPropagation(); onDropOnFolder(e, item.id); } : undefined}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        onOptions?.(e);
-      }}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
     >
+      <div
+        role="button"
+        tabIndex={0}
+        className={`group relative flex min-h-[160px] cursor-pointer flex-col justify-between rounded-xl p-5 shadow-sm transition-all duration-300 h-full ${
+          isDropTarget
+            ? "border-orange-500/40 bg-orange-500/5 border"
+            : "classeurs-block classeurs-card hover:shadow-md hover:shadow-black/10"
+        } ${isDragging ? "opacity-40 scale-[0.97]" : ""}`}
+        onClick={() => !isRenaming && onOpen()}
+        onKeyDown={(e) => e.key === "Enter" && !isRenaming && onOpen()}
+        draggable={!!onDragStart && !isRenaming}
+        onDragStart={(e) => {
+          setIsDragging(true);
+          if (onDragStart) {
+            e.dataTransfer.setData("itemId", item.id);
+            e.dataTransfer.setData("itemType", item.type);
+            e.dataTransfer.setData(DRAG_JSON, JSON.stringify({ id: item.id, type: item.type }));
+            e.dataTransfer.effectAllowed = "move";
+            onDragStart(e, item);
+          }
+        }}
+        onDragEnd={() => setIsDragging(false)}
+        onDragOver={isFolder && (onDropOnFolder || onFolderDragOver) ? (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.dataTransfer.dropEffect = "move";
+          onFolderDragOver?.(item.id);
+        } : undefined}
+        onDragLeave={isFolder ? () => onFolderDragLeave?.() : undefined}
+        onDrop={isFolder && onDropOnFolder ? (e) => { e.preventDefault(); e.stopPropagation(); onDropOnFolder(e, item.id); } : undefined}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onOptions?.(e);
+        }}
+      >
       <div className="flex items-start justify-between">
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border shadow-sm transition-transform duration-300 group-hover:scale-[1.02] ${iconBoxClasses}`}>
           <Icon className={`h-5 w-5 ${iconClasses}`} strokeWidth={1.5} />
@@ -487,7 +509,8 @@ function ItemCard({
           </h3>
         )}
       </div>
-    </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -522,39 +545,48 @@ function ItemListRow({
       ? getFolderIconClasses("orange")
       : "text-zinc-400 fill-zinc-500/10";
   const isFolder = item.type === "folder";
+  const [isDragging, setIsDragging] = React.useState(false);
 
   return (
-    <div
-      className={`group flex items-center justify-between rounded-md border px-3 py-2 transition-all duration-200 cursor-pointer ${
-        isDropTarget ? "border-orange-500/35 bg-orange-500/5" : "border-transparent hover:border-zinc-800/50"
-      }`}
-      role="button"
-      tabIndex={0}
-      onClick={() => !isRenaming && onOpen()}
-      onKeyDown={(e) => e.key === "Enter" && !isRenaming && onOpen()}
-      draggable={!!onDragStart && !isRenaming}
-      onDragStart={(e) => {
-        if (onDragStart) {
-          e.dataTransfer.setData("itemId", item.id);
-          e.dataTransfer.setData("itemType", item.type);
-          e.dataTransfer.setData(DRAG_JSON, JSON.stringify({ id: item.id, type: item.type }));
-          e.dataTransfer.effectAllowed = "move";
-          onDragStart(e, item);
-        }
-      }}
-      onDragOver={isFolder && (onDropOnFolder || onFolderDragOver) ? (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        e.dataTransfer.dropEffect = "move";
-        onFolderDragOver?.(item.id);
-      } : undefined}
-      onDragLeave={isFolder ? () => onFolderDragLeave?.() : undefined}
-      onDrop={isFolder && onDropOnFolder ? (e) => { e.preventDefault(); e.stopPropagation(); onDropOnFolder(e, item.id); } : undefined}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        onOptions?.(e);
-      }}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.12 }}
     >
+      <div
+        role="button"
+        tabIndex={0}
+        className={`group flex items-center justify-between rounded-md border px-3 py-2 transition-all duration-200 cursor-pointer ${
+          isDropTarget ? "border-orange-500/35 bg-orange-500/5" : "border-transparent hover:border-zinc-800/50"
+        } ${isDragging ? "opacity-40" : ""}`}
+        onClick={() => !isRenaming && onOpen()}
+        onKeyDown={(e) => e.key === "Enter" && !isRenaming && onOpen()}
+        draggable={!!onDragStart && !isRenaming}
+        onDragStart={(e) => {
+          setIsDragging(true);
+          if (onDragStart) {
+            e.dataTransfer.setData("itemId", item.id);
+            e.dataTransfer.setData("itemType", item.type);
+            e.dataTransfer.setData(DRAG_JSON, JSON.stringify({ id: item.id, type: item.type }));
+            e.dataTransfer.effectAllowed = "move";
+            onDragStart(e, item);
+          }
+        }}
+        onDragEnd={() => setIsDragging(false)}
+        onDragOver={isFolder && (onDropOnFolder || onFolderDragOver) ? (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.dataTransfer.dropEffect = "move";
+          onFolderDragOver?.(item.id);
+        } : undefined}
+        onDragLeave={isFolder ? () => onFolderDragLeave?.() : undefined}
+        onDrop={isFolder && onDropOnFolder ? (e) => { e.preventDefault(); e.stopPropagation(); onDropOnFolder(e, item.id); } : undefined}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onOptions?.(e);
+        }}
+      >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Icon className={`h-[18px] w-[18px] flex-shrink-0 ${iconClasses}`} strokeWidth={1.5} />
         {isRenaming && onRename && onCancelRename ? (
@@ -571,7 +603,8 @@ function ItemListRow({
         )}
       </div>
       <span className="text-xs text-zinc-500">{item.subtitle}</span>
-    </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -611,9 +644,8 @@ function ClasseursContent({
   onItemOpen: (item: ClasseurItem) => void;
   onItemContextMenu: (e: React.MouseEvent, item: ClasseurItem) => void;
   onDragStartItem?: (e: React.DragEvent, item: ClasseurItem) => void;
-  onDropOnFolder?: (e: React.DragEvent, folderId: string) => void;
-  dropTargetFolderId: string | null;
-  onRootDragOver?: (e: React.DragEvent) => void;
+  onDropOnFolder?: (e: React.DragEvent, folderId: string | null) => void;
+  dropTargetFolderId: string | null;  onRootDragOver?: (e: React.DragEvent) => void;
   onRootDragLeave?: () => void;
   onRootDrop?: (e: React.DragEvent) => void;
   isRootDropActive: boolean;
@@ -633,11 +665,13 @@ function ClasseursContent({
     );
   }, [items, searchQuery]);
 
-  /* Fil d'Ariane à partir du classeur uniquement (sans Workspace / Mes Classeurs) */
+  /* Fil d'Ariane complet pour la navigation par nesting (tous les niveaux cliquables) */
   const contentBreadcrumb = useMemo(
-    () => breadcrumbSegments.slice(2),
+    () => breadcrumbSegments,
     [breadcrumbSegments]
   );
+
+  const [breadcrumbDragOver, setBreadcrumbDragOver] = React.useState<number | null>(null);
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden py-6">
@@ -647,22 +681,40 @@ function ClasseursContent({
           {contentBreadcrumb.length === 0 ? (
             <span className="text-zinc-400">Notebooks</span>
           ) : (
-            contentBreadcrumb.map((seg, i) => (
-              <span key={i} className="flex items-center gap-1">
-                {i > 0 && <span className="mx-1 text-zinc-700">/</span>}
-                {seg.onClick ? (
-                  <button
-                    type="button"
-                    onClick={seg.onClick}
-                    className={`transition-colors hover:text-zinc-300 focus:outline-none ${i === 0 ? "uppercase" : ""}`}
-                  >
-                    {seg.label}
-                  </button>
-                ) : (
-                  <span className={`text-zinc-400 ${i === 0 ? "uppercase" : ""}`}>{seg.label}</span>
-                )}
-              </span>
-            ))
+            contentBreadcrumb.map((seg, i) => {
+              const isDropTarget = breadcrumbDragOver === i;
+              const dropHandlers = seg.dropFolderId !== undefined ? {
+                onDragOver: (e: React.DragEvent) => { e.preventDefault(); setBreadcrumbDragOver(i); },
+                onDragLeave: () => setBreadcrumbDragOver(null),
+                onDrop: (e: React.DragEvent) => {
+                  setBreadcrumbDragOver(null);
+                  onDropOnFolder?.(e, seg.dropFolderId as string);
+                },
+              } : {};
+              return (
+                <span key={i} className="flex items-center gap-1">
+                  {i > 0 && <span className="mx-1 text-zinc-700">/</span>}
+                  {seg.onClick ? (
+                    <button
+                      type="button"
+                      onClick={seg.onClick}
+                      className={`cursor-pointer rounded-lg px-1.5 py-0.5 transition-colors hover:text-zinc-300 focus:outline-none ${i === 0 ? "uppercase" : ""} ${isDropTarget ? "bg-orange-500/20 text-orange-400 text-[13px]" : ""}`}
+                      title={`Aller à ${seg.label}`}
+                      {...dropHandlers}
+                    >
+                      {seg.label}
+                    </button>
+                  ) : (
+                    <span
+                      className={`rounded-lg px-1.5 py-0.5 transition-colors ${i === 0 ? "uppercase" : ""} ${isDropTarget ? "bg-orange-500/20 text-orange-400 text-[13px]" : "text-zinc-400"}`}
+                      {...dropHandlers}
+                    >
+                      {seg.label}
+                    </span>
+                  )}
+                </span>
+              );
+            })
           )}
         </nav>
 
@@ -705,7 +757,11 @@ function ClasseursContent({
       </div>
 
       {viewMode === "grid" ? (
-        <div
+        <motion.div
+          key={contentBreadcrumb.map(s => s.label).join("/")}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.75, ease: [0.4, 0, 0.2, 1] }}
           className="grid w-full min-w-0 grid-cols-1 gap-4 rounded-xl transition-colors sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
           onDragOver={onRootDragOver}
           onDragLeave={onRootDragLeave}
@@ -727,9 +783,13 @@ function ClasseursContent({
               onCancelRename={onItemCancelRename}
             />
           ))}
-        </div>
+        </motion.div>
       ) : (
-        <div
+        <motion.div
+          key={contentBreadcrumb.map(s => s.label).join("/")}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.75, ease: [0.4, 0, 0.2, 1] }}
           className="flex flex-col rounded-xl border border-zinc-800/60 bg-zinc-900/10 overflow-hidden transition-colors"
           onDragOver={onRootDragOver}
           onDragLeave={onRootDragLeave}
@@ -751,7 +811,7 @@ function ClasseursContent({
               onCancelRename={onItemCancelRename}
             />
           ))}
-        </div>
+        </motion.div>
       )}
 
       {filtered.length === 0 && (
@@ -886,14 +946,12 @@ export default function ClasseursPage() {
   );
 
   const breadcrumbSegments = useMemo((): BreadcrumbSegment[] => {
-    const segments: BreadcrumbSegment[] = [
-      { label: "Workspace", onClick: handleGoToRoot },
-      { label: "My Notebooks", onClick: handleGoToRoot },
-    ];
+    const segments: BreadcrumbSegment[] = [];
     if (activeClasseur) {
       segments.push({
         label: activeClasseur.name,
-        onClick: folderPath.length === 0 ? undefined : handleGoToRoot,
+        onClick: currentFolderId ? handleGoToRoot : undefined,
+        dropFolderId: null, // drop sur Scrivia = racine du classeur
       });
     }
     folderPath.forEach((f, i) => {
@@ -901,10 +959,11 @@ export default function ClasseursPage() {
       segments.push({
         label: f.name,
         onClick: isLast ? undefined : () => handleGoToFolder(f.id),
+        dropFolderId: f.id,
       });
     });
     return segments;
-  }, [activeClasseur, folderPath, handleGoToRoot, handleGoToFolder]);
+  }, [activeClasseur, currentFolderId, folderPath, handleGoToRoot, handleGoToFolder]);
 
   const statsLabel = useMemo(() => {
     const fCount = filteredFolders.length;
@@ -1089,7 +1148,7 @@ export default function ClasseursPage() {
   );
 
   const handleDropOnFolder = useCallback(
-    (e: React.DragEvent, folderId: string) => {
+    (e: React.DragEvent, folderId: string | null) => {
       setDropTargetFolderId(null);
       let data: { id: string; type: "folder" | "file" } | null = null;
       try {
@@ -1099,11 +1158,11 @@ export default function ClasseursPage() {
         // ignore
       }
       if (data?.id && data?.type) {
-        handleDropItem(data.id, data.type, folderId);
+        moveItem(data.id, folderId, data.type);
         setRefreshKey((k) => k + 1);
       }
     },
-    [handleDropItem]
+    [moveItem]
   );
 
   const handleTabDragOver = useCallback((e: React.DragEvent, tab: ClasseurTab) => {

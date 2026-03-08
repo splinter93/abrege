@@ -21,7 +21,11 @@ const RenameInput: React.FC<RenameInputProps> = ({ initialValue, onSubmit, onCan
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (value.trim() !== '') onSubmit(value.trim());
+      if (value.trim() !== '') {
+        onSubmit(value.trim());
+      } else {
+        onCancel();
+      }
     } else if (e.key === 'Escape') {
       e.preventDefault();
       onCancel();
@@ -29,7 +33,11 @@ const RenameInput: React.FC<RenameInputProps> = ({ initialValue, onSubmit, onCan
   };
 
   const handleBlur = () => {
-    if (value.trim() !== '') onSubmit(value.trim());
+    if (value.trim() !== '') {
+      onSubmit(value.trim());
+    } else {
+      onCancel();
+    }
   };
 
   return (
