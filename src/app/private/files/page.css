@@ -264,51 +264,52 @@
 }
 
 /* ==========================================================================
-   MODALE D'UPLOAD
+   MODALE D'UPLOAD - Style Linear clean
    ========================================================================== */
 
 .uploader-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7) !important;
-  backdrop-filter: blur(16px);
+  inset: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: 20px;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
 }
 
 .uploader-modal-content {
-  background: var(--background-primary) !important;
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(20px);
   width: 100%;
-  max-width: 600px;
-  max-height: 80vh;
-  overflow: hidden;
+  max-width: 520px;
+  max-height: min(85vh, 600px);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg-block);
+  border: var(--border-block);
+  border-radius: 12px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
 }
 
 .uploader-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 24px 16px 24px;
-  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 1.25rem;
+  border-bottom: var(--border-block);
+  flex-shrink: 0;
 }
 
 .uploader-modal-title {
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: rgb(244 244 245); /* zinc-100 */
   margin: 0;
+  font-family: 'Manrope', -apple-system, sans-serif;
 }
 
 .uploader-modal-close {
@@ -320,32 +321,34 @@
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: var(--text-secondary);
+  color: rgb(161 161 170); /* zinc-400 */
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .uploader-modal-close:hover {
-  background: var(--background-secondary);
-  color: var(--text-primary);
+  background: rgba(63, 63, 70, 0.5);
+  color: rgb(244 244 245);
 }
 
 .uploader-modal-body {
-  padding: 24px;
+  padding: 1.25rem;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
 .uploader-modal-footer {
-  padding: 16px 24px 24px 24px;
-  border-top: 1px solid var(--border-color);
-  background: var(--background-secondary);
+  padding: 1rem 1.25rem;
+  border-top: var(--border-block);
+  background: rgba(39, 39, 42, 0.3);
+  flex-shrink: 0;
 }
 
 .uploader-modal-hint {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  margin: 0 0 8px 0;
+  font-size: 0.8125rem;
+  color: rgb(161 161 170); /* zinc-400 */
+  margin: 0 0 4px 0;
   line-height: 1.4;
 }
 
@@ -353,30 +356,26 @@
   margin-bottom: 0;
 }
 
-/* Responsive pour la modale */
-@media (max-width: 768px) {
+/* Responsive */
+@media (max-width: 640px) {
   .uploader-modal-overlay {
-    padding: 16px;
+    padding: 0.75rem;
+    align-items: center;
   }
   
   .uploader-modal-content {
-    max-width: 100%;
-    max-height: 90vh;
+    max-height: min(90vh, 90dvh);
   }
   
   .uploader-modal-header {
-    padding: 20px 20px 16px 20px;
-  }
-  
-  .uploader-modal-title {
-    font-size: 1.25rem;
+    padding: 0.875rem 1rem;
   }
   
   .uploader-modal-body {
-    padding: 20px;
+    padding: 1rem;
   }
   
   .uploader-modal-footer {
-    padding: 16px 20px 20px 20px;
+    padding: 0.875rem 1rem;
   }
 } 

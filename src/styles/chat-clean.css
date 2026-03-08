@@ -144,6 +144,7 @@
   --chat-surface-border-color: rgba(255, 255, 255, 0.05);
   --chat-surface-border-width: 1.5px;
   --chat-surface-border: var(--chat-surface-border-width) solid var(--chat-surface-border-color);
+  --chat-sidebar-border: 1px solid rgba(39, 39, 42, 0.6); /* Sidebar, modales Linear */
   --chat-surface-radius: 25px;
   --blk-radius: calc(var(--chat-surface-radius) - 4px); /* Exception : un peu moins pour code / mermaid / tableaux */
   
@@ -914,7 +915,7 @@ body.chat-theme-glass .chatgpt-header {
   height: calc(100vh - 56px);
   width: 250px;
   background: var(--chat-gradient-block);
-  border: 1px solid rgba(39, 39, 42, 0.6);
+  border: var(--chat-sidebar-border);
   border-radius: 0 !important;
   border-top: none;
   border-bottom: none;

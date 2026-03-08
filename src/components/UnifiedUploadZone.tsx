@@ -158,6 +158,12 @@ const UnifiedUploadZone: React.FC<UnifiedUploadZoneProps> = ({
         </form>
       )}
 
+      {showUrlInput && showDropZone && (
+        <div className="unified-upload-zone-or" aria-hidden="true">
+          OU
+        </div>
+      )}
+
       {/* Zone de drop */}
       {showDropZone && (
         <motion.div

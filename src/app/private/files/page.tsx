@@ -79,6 +79,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
   const [showUploader, setShowUploader] = useState(false);
+  const [uploaderModalExiting, setUploaderModalExiting] = useState(false);
   const [filters, setFilters] = useState<FileFilters>({});
   const [sortOptions, setSortOptions] = useState<FileSortOptions>({
     field: 'created_at',
@@ -639,31 +640,6 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }, []);
 
-  // 🔧 OPTIMISATION: Mémoiser les formats supportés (statique)
-  const supportedFormats = useMemo(() => {
-    const formats = STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES;
-    const simplified: string[] = [];
-    
-    // Grouper les formats par catégorie
-    const hasImages = formats.some(f => f.includes('image'));
-    const hasPdf = formats.some(f => f.includes('pdf'));
-    const hasText = formats.some(f => f.includes('text'));
-    const hasOffice = formats.some(f => f.includes('msword') || f.includes('openxml') || f.includes('excel') || f.includes('powerpoint'));
-    
-    if (hasImages) simplified.push('Images');
-    if (hasPdf) simplified.push('PDF');
-    if (hasText) simplified.push('Texte');
-    if (hasOffice) simplified.push('Office (Word, Excel, PowerPoint)');
-    
-    return simplified.join(', ');
-  }, []);
-
-  // 🔧 OPTIMISATION: Mémoiser la taille maximale (statique)
-  const maxFileSizeMB = useMemo(() => 
-    Math.round(STORAGE_CONFIG.FILE_LIMITS.MAX_FILE_SIZE / (1024 * 1024)),
-    []
-  );
-
   return (
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-files w-full max-w-none mx-0 bg-[var(--color-bg-primary)]">
@@ -852,61 +828,59 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
         </main>
       </div>
 
-        {/* Uploader modal */}
-        <AnimatePresence>
-          {showUploader && (
-            <motion.div
-              className="uploader-modal-overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowUploader(false)}
-            >
-              <motion.div
-                className="uploader-modal-content"
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Header de la modale */}
-                <div className="uploader-modal-header">
-                  <h2 className="uploader-modal-title">Upload de fichiers</h2>
-                  <button 
-                    className="uploader-modal-close"
-                    onClick={() => setShowUploader(false)}
-                    aria-label="Fermer"
+        {/* Uploader modal — portal dans body pour centrage viewport (évite transform ancestor) */}
+        {(showUploader || uploaderModalExiting) &&
+          createPortal(
+            <AnimatePresence onExitComplete={() => setUploaderModalExiting(false)}>
+              {showUploader && (
+                <motion.div
+                  key="uploader-modal"
+                  className="uploader-modal-overlay"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => {
+                    setShowUploader(false);
+                    setUploaderModalExiting(true);
+                  }}
+                >
+                  <motion.div
+                    className="uploader-modal-content"
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <X size={20} />
-                  </button>
-                </div>
-
-                {/* Contenu de la modale */}
-                <div className="uploader-modal-body">
-                  <UnifiedUploadZone
-                    placeholder="Coller l'URL du fichier à importer..."
-                    onFileSelect={handleFileSelect}
-                    onUrlSubmit={handleUrlSubmit}
-                    accept={STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES.join(',')}
-                    multiple={true}
-                    showUrlInput={true}
-                    showDropZone={true}
-                  />
-                </div>
-
-                {/* Footer de la modale */}
-                <div className="uploader-modal-footer">
-                  <p className="uploader-modal-hint">
-                    Formats supportés : {supportedFormats}
-                  </p>
-                  <p className="uploader-modal-hint">
-                    Taille maximale : {maxFileSizeMB} MB
-                  </p>
-                </div>
-              </motion.div>
-            </motion.div>
+                    <div className="uploader-modal-header">
+                      <h2 className="uploader-modal-title">Upload de fichiers</h2>
+                      <button
+                        className="uploader-modal-close"
+                        onClick={() => {
+                          setShowUploader(false);
+                          setUploaderModalExiting(true);
+                        }}
+                        aria-label="Fermer"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+                  <div className="uploader-modal-body">
+                    <UnifiedUploadZone
+                      placeholder="Coller l'URL du fichier à importer..."
+                      onFileSelect={handleFileSelect}
+                      onUrlSubmit={handleUrlSubmit}
+                      accept={STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES.join(',')}
+                      multiple={true}
+                      showUrlInput={true}
+                      showDropZone={true}
+                    />
+                  </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>,
+            document.body
           )}
-        </AnimatePresence>
 
         {/* Menu contextuel (portal, position corrigée, style Linear) */}
         {contextMenu &&

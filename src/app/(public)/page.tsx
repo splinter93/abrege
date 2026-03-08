@@ -423,7 +423,7 @@ function AuthenticatedHomeContent({
           <h1 className="bg-gradient-to-b from-white to-white/50 bg-clip-text text-[36px] font-bold leading-tight tracking-tighter text-transparent mb-2">
             Welcome Home, {displayName}.
           </h1>
-          <p className="text-zinc-400 text-sm">Let&apos;s craft amazing work today.</p>
+          <p className="text-zinc-400 text-[15px] font-medium">Let&apos;s craft amazing work today.</p>
         </header>
 
         {/* 2. Quick Actions */}

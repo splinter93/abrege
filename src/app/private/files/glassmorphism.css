@@ -533,39 +533,7 @@
   outline-offset: 2px;
 }
 
-/* ==========================================================================
-   MODAL UPLOADER
-   ========================================================================== */
-
-.uploader-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  padding: var(--spacing-xl);
-}
-
-.uploader-modal-content {
-  background: var(--glass-bg-primary);
-  border: var(--glass-border-primary);
-  border-radius: var(--glass-radius-lg);
-  backdrop-filter: var(--glass-backdrop-strong);
-  -webkit-backdrop-filter: var(--glass-backdrop-strong);
-  box-shadow: var(--glass-shadow-strong);
-  max-width: 500px;
-  width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
-  position: relative;
-}
+/* Modal uploader : style Linear clean défini dans page.css */
 
 /* Input de renommage */
 .file-rename-input {
