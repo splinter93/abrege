@@ -144,7 +144,7 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
         }
       });
       player.getAudio()?.play().catch((err) => {
-        logger.warn(LogCategory.AUDIO, '[useTTSStreaming] play() rejected (e.g. autoplay policy)', undefined, err instanceof Error ? err : new Error(String(err)));
+        logger.warn(LogCategory.AUDIO, '[useTTSStreaming] play() rejected (e.g. autoplay policy)', { error: err instanceof Error ? err : new Error(String(err)) });
       });
 
       const handleOpen = () => {
