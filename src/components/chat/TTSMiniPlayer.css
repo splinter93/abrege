@@ -99,3 +99,10 @@
   background: rgba(239, 68, 68, 0.15);
   color: #ef4444;
 }
+
+/* Mobile : le mini player prend toute la largeur de la zone chat (sidebar) */
+@media (max-width: 768px) {
+  .tts-mini-player__inner {
+    max-width: 100%;
+  }
+}
