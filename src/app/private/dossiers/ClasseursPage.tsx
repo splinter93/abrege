@@ -9,8 +9,6 @@ import {
   Search,
   LayoutGrid,
   List,
-  MoreHorizontal,
-  MoreVertical,
   Plus,
   BookMarked,
   ChevronDown,
@@ -40,6 +38,7 @@ import { useFileSystemStore } from "@/store/useFileSystemStore";
 import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 import SimpleContextMenu from "@/components/SimpleContextMenu";
 import ClasseurEditModal from "@/components/ClasseurEditModal";
+import RenameInput from "@/components/RenameInput";
 import type { Folder as UIFolder } from "@/components/types";
 import type { FileArticle } from "@/components/types";
 import { DRAG_SENSOR_CONFIG } from "@/constants/dragAndDropConfig";
@@ -190,6 +189,9 @@ function SortableTab({
   onDragLeave,
   onDrop,
   isDragOver,
+  isRenaming,
+  onRenameSubmit,
+  onRenameCancel,
 }: {
   tab: ClasseurTab;
   isActive: boolean;
@@ -199,6 +201,9 @@ function SortableTab({
   onDragLeave?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, tab: ClasseurTab) => void;
   isDragOver?: boolean;
+  isRenaming?: boolean;
+  onRenameSubmit?: (name: string) => void;
+  onRenameCancel?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: tab.id,
@@ -220,7 +225,7 @@ function SortableTab({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
+      {...(isRenaming ? {} : listeners)}
       onDragOver={(e) => {
         if (!isNativeDrag(e)) return;
         e.preventDefault();
@@ -243,15 +248,26 @@ function SortableTab({
           : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]"
       } ${isDragOver ? "border border-orange-500/40 bg-orange-500/8" : ""}`}
     >
-      <button
-        type="button"
-        onClick={() => onSelect(tab.id)}
-        onContextMenu={(e) => onContextMenu?.(e, tab)}
-        className="flex items-center gap-1.5 w-full text-left"
-      >
-        {tab.emoji && <span className="text-base leading-none">{tab.emoji}</span>}
-        {tab.name}
-      </button>
+      {isRenaming && onRenameSubmit && onRenameCancel ? (
+        <div className="min-w-[120px]" onClick={(e) => e.stopPropagation()}>
+          <RenameInput
+            initialValue={tab.name}
+            onSubmit={onRenameSubmit}
+            onCancel={onRenameCancel}
+            autoFocus
+          />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onSelect(tab.id)}
+          onContextMenu={(e) => onContextMenu?.(e, tab)}
+          className="flex items-center gap-1.5 w-full text-left"
+        >
+          {tab.emoji && <span className="text-base leading-none">{tab.emoji}</span>}
+          {tab.name}
+        </button>
+      )}
     </div>
   );
 }
@@ -274,6 +290,9 @@ function ClasseursTabs({
   dragOverTabId,
   handleUpdateClasseurPositions,
   classeursForReorder,
+  renamingTabId,
+  onTabRenameSubmit,
+  onTabRenameCancel,
 }: {
   tabs: ClasseurTab[];
   activeId: string;
@@ -286,6 +305,9 @@ function ClasseursTabs({
   dragOverTabId: string | null;
   handleUpdateClasseurPositions: (reordered: Classeur[]) => void;
   classeursForReorder: Classeur[];
+  renamingTabId?: string | null;
+  onTabRenameSubmit?: (tabId: string, newName: string) => void;
+  onTabRenameCancel?: () => void;
 }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
@@ -327,6 +349,9 @@ function ClasseursTabs({
                 onDragLeave={onTabDragLeave}
                 onDrop={onTabDrop}
                 isDragOver={dragOverTabId === tab.id}
+                isRenaming={renamingTabId === tab.id}
+                onRenameSubmit={(name) => onTabRenameSubmit?.(tab.id, name)}
+                onRenameCancel={onTabRenameCancel}
               />
             ))}
           </div>
@@ -382,6 +407,9 @@ function ItemCard({
   onFolderDragOver,
   onFolderDragLeave,
   isDropTarget,
+  isRenaming,
+  onRename,
+  onCancelRename,
 }: {
   item: ClasseurItem;
   onOpen: () => void;
@@ -391,6 +419,9 @@ function ItemCard({
   onFolderDragOver?: (folderId: string) => void;
   onFolderDragLeave?: () => void;
   isDropTarget?: boolean;
+  isRenaming?: boolean;
+  onRename?: (name: string) => void;
+  onCancelRename?: () => void;
 }) {
   const Icon = item.type === "folder" ? Folder : FileText;
   const iconClasses =
@@ -412,9 +443,9 @@ function ItemCard({
       }`}
       role="button"
       tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => e.key === "Enter" && onOpen()}
-      draggable={!!onDragStart}
+      onClick={() => !isRenaming && onOpen()}
+      onKeyDown={(e) => e.key === "Enter" && !isRenaming && onOpen()}
+      draggable={!!onDragStart && !isRenaming}
       onDragStart={(e) => {
         if (onDragStart) {
           e.dataTransfer.setData("itemId", item.id);
@@ -438,31 +469,29 @@ function ItemCard({
       }}
     >
       <div className="flex items-start justify-between">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl border shadow-sm transition-transform duration-300 group-hover:scale-[1.02] ${iconBoxClasses}`}>
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border shadow-sm transition-transform duration-300 group-hover:scale-[1.02] ${iconBoxClasses}`}>
           <Icon className={`h-5 w-5 ${iconClasses}`} strokeWidth={1.5} />
         </div>
-        
-        <button
-          type="button"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-neutral-500 opacity-0 transition-all hover:bg-white/[0.1] hover:text-white group-hover:opacity-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOptions?.(e);
-          }}
-          aria-label="Options"
-        >
-          <MoreVertical className="h-4 w-4" />
-        </button>
+        <p className="text-[12px] font-medium text-neutral-500 truncate">
+          {item.subtitle}
+        </p>
       </div>
 
       <div className="mt-auto flex flex-col">
-        <h3 className="truncate text-[15px] font-semibold text-neutral-200 transition-colors group-hover:text-white">
-          {item.name}
-        </h3>
-        <p className="mt-1 flex items-center gap-1.5 text-[12px] font-medium text-neutral-500">
-          <FileText className="h-3.5 w-3.5" />
-          {item.subtitle}
-        </p>
+        {isRenaming && onRename && onCancelRename ? (
+          <div className="w-full" onClick={(e) => e.stopPropagation()}>
+            <RenameInput
+              initialValue={item.name}
+              onSubmit={onRename}
+              onCancel={onCancelRename}
+              autoFocus
+            />
+          </div>
+        ) : (
+          <h3 className="truncate text-[15px] font-semibold text-neutral-200 transition-colors group-hover:text-white">
+            {item.name}
+          </h3>
+        )}
       </div>
     </div>
   );
@@ -477,6 +506,9 @@ function ItemListRow({
   onFolderDragOver,
   onFolderDragLeave,
   isDropTarget,
+  isRenaming,
+  onRename,
+  onCancelRename,
 }: {
   item: ClasseurItem;
   onOpen: () => void;
@@ -486,6 +518,9 @@ function ItemListRow({
   onFolderDragOver?: (folderId: string) => void;
   onFolderDragLeave?: () => void;
   isDropTarget?: boolean;
+  isRenaming?: boolean;
+  onRename?: (name: string) => void;
+  onCancelRename?: () => void;
 }) {
   const Icon = item.type === "folder" ? Folder : FileText;
   const iconClasses =
@@ -501,9 +536,9 @@ function ItemListRow({
       }`}
       role="button"
       tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => e.key === "Enter" && onOpen()}
-      draggable={!!onDragStart}
+      onClick={() => !isRenaming && onOpen()}
+      onKeyDown={(e) => e.key === "Enter" && !isRenaming && onOpen()}
+      draggable={!!onDragStart && !isRenaming}
       onDragStart={(e) => {
         if (onDragStart) {
           e.dataTransfer.setData("itemId", item.id);
@@ -528,22 +563,20 @@ function ItemListRow({
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Icon className={`h-[18px] w-[18px] flex-shrink-0 ${iconClasses}`} strokeWidth={1.5} />
-        <span className="truncate text-sm text-zinc-100">{item.name}</span>
+        {isRenaming && onRename && onCancelRename ? (
+          <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
+            <RenameInput
+              initialValue={item.name}
+              onSubmit={onRename}
+              onCancel={onCancelRename}
+              autoFocus
+            />
+          </div>
+        ) : (
+          <span className="truncate text-sm text-zinc-100">{item.name}</span>
+        )}
       </div>
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-zinc-500">{item.subtitle}</span>
-        <button
-          type="button"
-          className="rounded p-1 opacity-0 transition-opacity duration-200 hover:bg-zinc-800/50 group-hover:opacity-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOptions?.(e);
-          }}
-          aria-label="Options"
-        >
-          <MoreHorizontal className="h-4 w-4 text-zinc-400" />
-        </button>
-      </div>
+      <span className="text-xs text-zinc-500">{item.subtitle}</span>
     </div>
   );
 }
@@ -572,6 +605,9 @@ function ClasseursContent({
   onFolderDragOver,
   onFolderDragLeave,
   onSearchChange,
+  renamingItemId,
+  onItemRename,
+  onItemCancelRename,
 }: {
   breadcrumbSegments: BreadcrumbSegment[];
   items: ClasseurItem[];
@@ -590,6 +626,9 @@ function ClasseursContent({
   onFolderDragOver?: (folderId: string) => void;
   onFolderDragLeave?: () => void;
   onSearchChange?: (q: string) => void;
+  renamingItemId?: string | null;
+  onItemRename?: (id: string, newName: string, type: "folder" | "file") => void;
+  onItemCancelRename?: () => void;
 }) {
   const isMobileContent = useIsMobile();
   const filtered = useMemo(() => {
@@ -689,6 +728,9 @@ function ClasseursContent({
               onFolderDragOver={onFolderDragOver}
               onFolderDragLeave={onFolderDragLeave}
               isDropTarget={item.type === "folder" && dropTargetFolderId === item.id}
+              isRenaming={renamingItemId === item.id}
+              onRename={(name) => onItemRename?.(item.id, name, item.type)}
+              onCancelRename={onItemCancelRename}
             />
           ))}
         </div>
@@ -699,7 +741,7 @@ function ClasseursContent({
           onDragLeave={onRootDragLeave}
           onDrop={onRootDrop}
         >
-          {filtered.map((item, idx) => (
+          {filtered.map((item) => (
             <ItemListRow
               key={`${item.type}-${item.id}`}
               item={item}
@@ -710,6 +752,9 @@ function ClasseursContent({
               onFolderDragOver={onFolderDragOver}
               onFolderDragLeave={onFolderDragLeave}
               isDropTarget={item.type === "folder" && dropTargetFolderId === item.id}
+              isRenaming={renamingItemId === item.id}
+              onRename={(name) => onItemRename?.(item.id, name, item.type)}
+              onCancelRename={onItemCancelRename}
             />
           ))}
         </div>
@@ -752,6 +797,8 @@ export default function ClasseursPage() {
     y: number;
     tab: ClasseurTab;
   } | null>(null);
+  const [contextMenuArea, setContextMenuArea] = useState<{ x: number; y: number } | null>(null);
+  const [renamingTabId, setRenamingTabId] = useState<string | null>(null);
   const [editModalClasseur, setEditModalClasseur] = useState<Classeur | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -804,6 +851,9 @@ export default function ClasseursPage() {
     deleteFile,
     submitRename,
     moveItem,
+    renamingItemId,
+    startRename,
+    cancelRename,
   } = folderManager;
 
   const refreshNow = useCallback(() => setRefreshKey((k) => k + 1), []);
@@ -926,14 +976,17 @@ export default function ClasseursPage() {
 
   const handleItemContextMenu = useCallback((e: React.MouseEvent, item: ClasseurItem) => {
     e.preventDefault();
+    e.stopPropagation();
     setContextMenuItem({ x: e.clientX, y: e.clientY, item });
     setContextMenuTab(null);
+    setContextMenuArea(null);
   }, []);
 
   const handleTabContextMenu = useCallback((e: React.MouseEvent, tab: ClasseurTab) => {
     e.preventDefault();
     setContextMenuTab({ x: e.clientX, y: e.clientY, tab });
     setContextMenuItem(null);
+    setContextMenuArea(null);
   }, []);
 
   const handleCreateClasseurClick = useCallback(async () => {
@@ -968,17 +1021,22 @@ export default function ClasseursPage() {
   const closeContextMenus = useCallback(() => {
     setContextMenuItem(null);
     setContextMenuTab(null);
+    setContextMenuArea(null);
+  }, []);
+
+  const handleAreaContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenuArea({ x: e.clientX, y: e.clientY });
+    setContextMenuItem(null);
+    setContextMenuTab(null);
   }, []);
 
   const handleContextMenuRename = useCallback(
-    (id: string, type: "folder" | "file", currentName: string) => {
-      const newName = window.prompt("Nouveau nom", currentName);
-      if (newName?.trim()) {
-        submitRename(id, newName.trim(), type);
-        closeContextMenus();
-      }
+    (id: string, type: "folder" | "file") => {
+      closeContextMenus();
+      startRename(id, type);
     },
-    [submitRename, closeContextMenus]
+    [startRename, closeContextMenus]
   );
 
   const handleContextMenuDelete = useCallback(
@@ -996,18 +1054,24 @@ export default function ClasseursPage() {
   );
 
   const handleTabRename = useCallback(
-    async (tab: ClasseurTab) => {
-      const newName = window.prompt("Nouveau nom du classeur", tab.name);
-      if (newName?.trim()) {
-        try {
-          await handleRenameClasseur(tab.id, newName.trim());
-          closeContextMenus();
-        } catch {
-          // error handled by hook
-        }
+    (tab: ClasseurTab) => {
+      closeContextMenus();
+      setRenamingTabId(tab.id);
+    },
+    [closeContextMenus]
+  );
+
+  const handleTabRenameSubmit = useCallback(
+    async (tabId: string, newName: string) => {
+      try {
+        await handleRenameClasseur(tabId, newName.trim());
+        setRenamingTabId(null);
+        setRefreshKey((k) => k + 1);
+      } catch {
+        // error handled by hook
       }
     },
-    [handleRenameClasseur, closeContextMenus]
+    [handleRenameClasseur]
   );
 
   const handleTabDelete = useCallback(
@@ -1119,11 +1183,17 @@ export default function ClasseursPage() {
                 dragOverTabId={dragOverTabId}
                 handleUpdateClasseurPositions={handleUpdateClasseurPositions}
                 classeursForReorder={classeurs}
+                renamingTabId={renamingTabId}
+                onTabRenameSubmit={handleTabRenameSubmit}
+                onTabRenameCancel={() => setRenamingTabId(null)}
               />
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
+          <div
+            className="min-h-0 flex-1 overflow-y-auto no-scrollbar"
+            onContextMenu={handleAreaContextMenu}
+          >
             {!activeClasseur && tabs.length === 0 && (
               <div className="mt-12 rounded-2xl border border-white/[0.08] bg-[#141414] px-6 py-20 text-center">
                 <BookMarked className="mx-auto mb-4 h-12 w-12 text-zinc-700" />
@@ -1150,6 +1220,9 @@ export default function ClasseursPage() {
                 isRootDropActive={isRootDropActive}
                 onFolderDragOver={setDropTargetFolderId}
                 onFolderDragLeave={() => setDropTargetFolderId(null)}
+                renamingItemId={renamingItemId}
+                onItemRename={(id, newName, type) => { submitRename(id, newName, type); setRefreshKey((k) => k + 1); }}
+                onItemCancelRename={cancelRename}
               />
             )}
           </div>
@@ -1174,8 +1247,7 @@ export default function ClasseursPage() {
               onClick: () =>
                 handleContextMenuRename(
                   contextMenuItem.item.id,
-                  contextMenuItem.item.type,
-                  contextMenuItem.item.name
+                  contextMenuItem.item.type
                 ),
             },
             {
@@ -1204,6 +1276,43 @@ export default function ClasseursPage() {
             { label: "Renommer", onClick: () => handleTabRename(contextMenuTab.tab) },
             { label: "Supprimer", onClick: () => handleTabDelete(contextMenuTab.tab) },
           ]}
+          onClose={closeContextMenus}
+        />
+      )}
+
+      {contextMenuArea && (
+        <SimpleContextMenu
+          x={contextMenuArea.x}
+          y={contextMenuArea.y}
+          visible
+          options={
+            activeClasseur
+              ? [
+                  {
+                    label: "Editer le classeur",
+                    onClick: () => {
+                      const full = classeurs.find((c) => c.id === activeClasseur.id) ?? null;
+                      setEditModalClasseur(full);
+                      closeContextMenus();
+                    },
+                  },
+                  {
+                    label: "Nouveau dossier",
+                    onClick: () => {
+                      handleCreateFolderClick();
+                      closeContextMenus();
+                    },
+                  },
+                  {
+                    label: "Nouvelle note",
+                    onClick: () => {
+                      handleCreateNoteClick();
+                      closeContextMenus();
+                    },
+                  },
+                ]
+              : [{ label: "Nouveau classeur", onClick: () => { handleCreateClasseurClick(); closeContextMenus(); } }]
+          }
           onClose={closeContextMenus}
         />
       )}

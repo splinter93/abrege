@@ -34,8 +34,14 @@ const SimpleContextMenu: React.FC<SimpleContextMenuProps> = ({ x, y, visible, op
       {options.map((opt, i) => (
         <button
           key={i}
+          type="button"
           className="context-menu-item"
-          onClick={() => { opt.onClick(); onClose(); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            opt.onClick();
+            onClose();
+          }}
         >
           <span className="context-menu-item-text">{opt.label}</span>
         </button>
