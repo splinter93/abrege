@@ -53,6 +53,8 @@ interface ChatHandlersOptions {
     streamTimeline?: StreamTimeline,
     persistedMessage?: ChatMessage | null
   ) => void | Promise<void>;
+  /** Appelé avec le contenu final (texte lu) après persistance — ex. pour TTS mode vocal */
+  onMessageFinalContent?: (content: string) => void;
   onError?: (error: string | StreamErrorDetails) => void;
   onToolCalls?: (toolCalls: ToolCall[], toolName: string) => void;
   onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
@@ -128,6 +130,9 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
       logger.warn('[useChatHandlers] ⚠️ Contenu vide, pas de message à ajouter');
       return;
     }
+
+    // ✅ Mode vocal : déclencher le TTS immédiatement (avant persist) pour éviter tout blocage
+    options.onMessageFinalContent?.(finalContent);
       
     // ✅ NETTOYER + ENRICHIR la timeline
     const cleanedTimeline = streamTimeline ? {
@@ -236,7 +241,7 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
       persist: true, 
       updateExisting: true
     });
-    
+
     // ✅ CRITIQUE: Passer la cleanedTimeline enrichie (pas l'originale)
     await options.onComplete?.(
       fullContent,

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useRef } from 
 import { simpleLogger as logger } from '@/utils/logger';
 import { getCachedBlob, setCachedBlob } from '@/utils/ttsCache';
 import { normalizeTTSVoice } from '@/constants/ttsVoices';
+import { useTTSStreaming } from '@/hooks/useTTSStreaming';
 
 interface TextToSpeechContextValue {
   speak: (text: string, options?: { voiceId?: string; messageId?: string }) => Promise<void>;
@@ -20,12 +21,16 @@ interface TextToSpeechProviderProps {
   children: React.ReactNode;
   /** Voix par défaut (ex: agent.voice). Si invalide, fallback sur eve. */
   defaultVoiceId?: string;
+  /** Si true, utilise le TTS streaming (WebSocket) au lieu du REST. */
+  streamingMode?: boolean;
 }
 
-export function TextToSpeechProvider({ children, defaultVoiceId }: TextToSpeechProviderProps) {
+export function TextToSpeechProvider({ children, defaultVoiceId, streamingMode = false }: TextToSpeechProviderProps) {
   const [isPlayingMessageId, setIsPlayingMessageId] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const streaming = useTTSStreaming(defaultVoiceId);
 
   const stop = useCallback(() => {
     if (currentAudioRef.current) {
@@ -51,7 +56,7 @@ export function TextToSpeechProvider({ children, defaultVoiceId }: TextToSpeechP
     }
   }, []);
 
-  const speak = useCallback(
+  const speakRest = useCallback(
     async (text: string, options?: { voiceId?: string; messageId?: string }) => {
       const trimmed = text.trim();
       if (!trimmed) return;
@@ -110,8 +115,55 @@ export function TextToSpeechProvider({ children, defaultVoiceId }: TextToSpeechP
     [stop, defaultVoiceId]
   );
 
+  const speak = useCallback(
+    async (text: string, options?: { voiceId?: string; messageId?: string }): Promise<void> => {
+      if (streamingMode) {
+        streaming.speak(text, options);
+        return;
+      }
+      await speakRest(text, options);
+    },
+    [streamingMode, streaming.speak, speakRest]
+  );
+
+  const stopUnified = useCallback(() => {
+    if (streamingMode) {
+      streaming.stop();
+    } else {
+      stop();
+    }
+  }, [streamingMode, streaming.stop, stop]);
+
+  const pauseUnified = useCallback(() => {
+    if (streamingMode) {
+      streaming.pause();
+    } else {
+      pause();
+    }
+  }, [streamingMode, streaming.pause, pause]);
+
+  const resumeUnified = useCallback(() => {
+    if (streamingMode) {
+      streaming.resume();
+    } else {
+      resume();
+    }
+  }, [streamingMode, streaming.resume, resume]);
+
+  const isPlayingMessageIdUnified = streamingMode ? streaming.isPlayingMessageId : isPlayingMessageId;
+  const isPausedUnified = streamingMode ? streaming.isPaused : isPaused;
+
   return (
-    <TextToSpeechContext.Provider value={{ speak, stop, pause, resume, isPlayingMessageId, isPaused }}>
+    <TextToSpeechContext.Provider
+      value={{
+        speak,
+        stop: stopUnified,
+        pause: pauseUnified,
+        resume: resumeUnified,
+        isPlayingMessageId: isPlayingMessageIdUnified,
+        isPaused: isPausedUnified
+      }}
+    >
       {children}
     </TextToSpeechContext.Provider>
   );

@@ -11,6 +11,8 @@ interface AudioRecorderProps {
   onRecordingStateChange?: (isRecording: boolean) => void; // ✅ Callback pour notifier changement état
   disabled?: boolean;
   variant?: 'chat' | 'toolbar';
+  /** Mode vocal : bouton micro agrandi */
+  enlarged?: boolean;
 }
 
 // ✅ Interface pour exposer les méthodes via ref
@@ -32,7 +34,8 @@ const AudioRecorder = forwardRef<AudioRecorderRef, AudioRecorderProps>(({
   onError, 
   onRecordingStateChange,
   disabled = false,
-  variant = 'chat'
+  variant = 'chat',
+  enlarged = false
 }, ref) => {
   const [state, setState] = useState<RecordingState>({
     isRecording: false,
@@ -207,29 +210,30 @@ const AudioRecorder = forwardRef<AudioRecorderRef, AudioRecorderProps>(({
     onRecordingStateChange?.(state.isRecording);
   }, [state.isRecording, onRecordingStateChange]);
 
-  // Déterminer l'icône et la classe selon le variant
+  // Déterminer l'icône et la classe selon le variant (+ enlarged en mode vocal)
   const getButtonState = () => {
     const baseClass = variant === 'toolbar' ? 'toolbar-btn' : 'chatgpt-input-mic';
+    const enlargedClass = enlarged && variant === 'chat' ? ' chatgpt-input-mic--enlarged' : '';
     
     if (state.isProcessing) {
       return {
-        icon: <Loader size={18} className="animate-spin" />,
-        className: variant === 'toolbar' ? 'toolbar-btn processing' : 'chatgpt-input-mic-processing',
+        icon: <Loader size={enlarged ? 22 : 18} className="animate-spin" />,
+        className: (variant === 'toolbar' ? 'toolbar-btn processing' : 'chatgpt-input-mic-processing') + enlargedClass,
         title: 'Traitement en cours...'
       };
     }
     
     if (state.isRecording) {
       return {
-        icon: <Square size={18} />,
-        className: variant === 'toolbar' ? 'toolbar-btn recording' : 'chatgpt-input-mic-recording',
+        icon: <Square size={enlarged ? 22 : 18} />,
+        className: (variant === 'toolbar' ? 'toolbar-btn recording' : 'chatgpt-input-mic-recording') + enlargedClass,
         title: 'Cliquer pour arrêter'
       };
     }
     
     return {
-      icon: <Mic size={20} />,
-      className: baseClass,
+      icon: <Mic size={enlarged ? 24 : 20} />,
+      className: baseClass + enlargedClass,
       title: 'Cliquer pour enregistrer'
     };
   };

@@ -47,6 +47,9 @@ interface UseChatActionsOptions {
   // Menus (pour bloquer Enter)
   showMentionMenu?: boolean;
   showSlashMenu?: boolean;
+
+  /** Mode vocal : après transcription, envoyer directement sans mettre dans la zone de saisie */
+  vocalMode?: boolean;
 }
 
 /**
@@ -75,7 +78,8 @@ export function useChatActions({
   clearImages,
   showMentionMenu,
   showSlashMenu,
-  reasoningOverride
+  reasoningOverride,
+  vocalMode = false
 }: UseChatActionsOptions) {
   
   // ✅ Hook pour suppression atomique des mentions ET prompts
@@ -198,11 +202,27 @@ export function useChatActions({
 
   /**
    * Handler pour la transcription audio complétée
+   * En mode vocal : envoi direct du message (pas d'insertion dans la zone de saisie).
    */
   const handleTranscriptionComplete = useCallback((rawText: string) => {
     const text = rawText.trim();
     if (!text) {
       setAudioError(null);
+      return;
+    }
+
+    if (vocalMode) {
+      send(text, [], [], [], [], [], reasoningOverride ?? undefined).then((success) => {
+        if (success) {
+          setMessage('');
+          setSelectedNotes([]);
+          setMentions([]);
+          setUsedPrompts([]);
+          setCanvasSelections([]);
+          clearImages();
+          setAudioError(null);
+        }
+      });
       return;
     }
 
@@ -269,7 +289,7 @@ export function useChatActions({
       setAudioError(null);
       detectCommands(nextValue, nextValue.length);
     });
-  }, [textareaRef, setMessage, setAudioError, detectCommands, message]);
+  }, [vocalMode, send, reasoningOverride, setMessage, setSelectedNotes, setMentions, setUsedPrompts, setCanvasSelections, clearImages, setAudioError, textareaRef, detectCommands, message]);
 
   return {
     handleInputChange,

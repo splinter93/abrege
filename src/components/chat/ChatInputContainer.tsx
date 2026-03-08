@@ -5,8 +5,9 @@
  * Wrapper autour de ChatInput avec auth status
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import ChatInput from './ChatInput';
+import { useTextToSpeechContextOptional } from '@/contexts/TextToSpeechContext';
 import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { Note } from '@/services/chat/ChatContextBuilder';
 
@@ -32,11 +33,15 @@ export interface ChatInputContainerProps {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   selectedAgent: { name: string; display_name?: string } | null;
   keyboardInset?: number;
+  isVocalMode?: boolean;
+  onToggleVocalMode?: () => void;
 }
 
 /**
  * Container pour l'input du chat (auth gérée par AuthRequiredModal en non-connecté).
  */
+const VOCAL_MODE_SPEAK_EVENT = 'chat-vocal-mode-speak';
+
 const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
   onSend,
   loading,
@@ -47,8 +52,29 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
   onCancelEdit,
   textareaRef,
   selectedAgent,
-  keyboardInset = 0
+  keyboardInset = 0,
+  isVocalMode = false,
+  onToggleVocalMode
 }) => {
+  const tts = useTextToSpeechContextOptional();
+  const ttsRef = useRef(tts);
+  ttsRef.current = tts;
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ev = e as CustomEvent<{ text: string }>;
+      const text = ev.detail?.text?.trim();
+      if (!text) return;
+      const tts = ttsRef.current;
+      if (!tts) return;
+      queueMicrotask(() => {
+        tts.speak(text);
+      });
+    };
+    window.addEventListener(VOCAL_MODE_SPEAK_EVENT, handler);
+    return () => window.removeEventListener(VOCAL_MODE_SPEAK_EVENT, handler);
+  }, []);
+
   return (
     <div className="chatgpt-input-container" style={{ background: 'transparent' }}>
       <ChatInput
@@ -62,6 +88,8 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
         editingMessageId={editingMessageId}
         editingContent={editingContent}
         onCancelEdit={onCancelEdit}
+        isVocalMode={isVocalMode}
+        onToggleVocalMode={onToggleVocalMode}
       />
     </div>
   );

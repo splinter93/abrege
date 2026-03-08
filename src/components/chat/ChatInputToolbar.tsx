@@ -7,7 +7,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Globe, CornerUpRight, Search, FileText, Zap, Target, Cpu } from 'react-feather';
-import { Lightbulb, Loader } from 'lucide-react';
+import { Lightbulb, Loader, Waves } from 'lucide-react';
 import AudioRecorder, { type AudioRecorderRef } from './AudioRecorder';
 import NoteSelector from './NoteSelector';
 import FileMenu from './FileMenu';
@@ -67,6 +67,10 @@ interface ChatInputToolbarProps {
   // Send props
   onSend: () => void;
   canSend: boolean;
+
+  // Mode vocal (bouton ondes + micro agrandi)
+  isVocalMode?: boolean;
+  onToggleVocalMode?: () => void;
   
   // UI state
   disabled?: boolean;
@@ -135,7 +139,8 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
   // Send
   onSend,
   canSend,
-  
+  isVocalMode = false,
+  onToggleVocalMode,
   // UI state
   disabled = false,
   loading = false,
@@ -270,7 +275,20 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
         onError={onAudioError}
         onRecordingStateChange={setIsRecording}
         disabled={disabled}
+        enlarged={isVocalMode}
       />
+      {onToggleVocalMode && (
+        <button
+          type="button"
+          className={`chatgpt-input-vocal-toggle ${isVocalMode ? 'active' : ''}`}
+          onClick={onToggleVocalMode}
+          disabled={disabled || loading}
+          aria-label={isVocalMode ? 'Désactiver le mode vocal' : 'Activer le mode vocal'}
+          title={isVocalMode ? 'Mode vocal : désactiver' : 'Mode vocal : la réponse sera lue à voix haute'}
+        >
+          <Waves size={18} />
+        </button>
+      )}
       
       {isParsingPdf && (
         <span className="chatgpt-input-parsing-pdf" aria-live="polite">

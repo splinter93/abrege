@@ -2302,6 +2302,7 @@ body.chat-theme-glass .chatgpt-messages > div {
 .chatgpt-input-file,
 .chatgpt-input-speaker,
 .chatgpt-input-mic,
+.chatgpt-input-vocal-toggle,
 .chatgpt-input-web-search,
 .chatgpt-input-websearch,
 .chatgpt-input-reasoning {
@@ -2321,10 +2322,25 @@ body.chat-theme-glass .chatgpt-messages > div {
   position: relative;
 }
 
+/* Mode vocal : micro agrandi (priorité à la parole) */
+.chatgpt-input-mic.chatgpt-input-mic--enlarged {
+  width: 48px;
+  height: 48px;
+  padding: 10px;
+}
+
+/* Bouton mode vocal (ondes) */
+.chatgpt-input-vocal-toggle.active {
+  background: var(--chat-overlay-active);
+  color: var(--chat-accent-primary);
+  opacity: 1;
+}
+
 .chatgpt-input-mention:hover,
 .chatgpt-input-file:hover,
 .chatgpt-input-speaker:hover,
 .chatgpt-input-mic:hover,
+.chatgpt-input-vocal-toggle:hover,
 .chatgpt-input-web-search:hover,
 .chatgpt-input-websearch:hover,
 .chatgpt-input-reasoning:hover {

@@ -47,6 +47,8 @@ interface ChatInputProps {
   editingMessageId?: string | null;
   editingContent?: string;
   onCancelEdit?: () => void;
+  isVocalMode?: boolean;
+  onToggleVocalMode?: () => void;
 }
 
 // Helper: mapper modèle → niveau reasoning
@@ -79,7 +81,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   currentAgentModel,
   editingMessageId,
   editingContent,
-  onCancelEdit
+  onCancelEdit,
+  isVocalMode = false,
+  onToggleVocalMode
 }) => {
   // 🎯 Hooks auth & prompts
   const { getAccessToken, user } = useAuth();
@@ -326,7 +330,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
     clearImages,
     showMentionMenu, // ✅ Bloquer Enter si menu ouvert
     showSlashMenu, // ✅ Bloquer Enter si menu ouvert
-    reasoningOverride // ✅ NOUVEAU : Override reasoning
+    reasoningOverride, // ✅ NOUVEAU : Override reasoning
+    vocalMode: isVocalMode
   });
 
   // 🎯 Hook sélection notes - Mode MENTION (@ dans textarea)
@@ -550,6 +555,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         onAdvancedReasoning={handleAdvancedReasoning}
         onTranscriptionComplete={handleTranscriptionComplete} onAudioError={setAudioError}
         audioRecorderRef={audioRecorderRef}
+        isVocalMode={isVocalMode}
+        onToggleVocalMode={onToggleVocalMode}
         onSend={handleSend} canSend={(!!message.trim() || images.length > 0) && (images.length === 0 || images.every(img => isImageUrlUploaded(img.base64)))}
         disabled={disabled || isParsingPdf} loading={loading || isParsingPdf}
         isParsingPdf={isParsingPdf}

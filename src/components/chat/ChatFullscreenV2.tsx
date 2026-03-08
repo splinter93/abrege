@@ -51,6 +51,7 @@ import type { CanvaSession as CanvaSessionDB, ListCanvasResponse } from '@/types
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 import { applyChatFontPreset } from '@/constants/chatFontPresets';
+import { stripMarkdownForTTS } from '@/utils/stripMarkdownForTTS';
 
 import '@/styles/chat-clean.css';
 import '@/styles/sidebar-collapsible.css';
@@ -98,6 +99,11 @@ const ChatFullscreenV2: React.FC = () => {
     isDesktop,
     isCanvaOpen
   });
+
+  // Mode vocal : envoi direct après transcription + TTS auto à la fin du stream
+  const [isVocalMode, setVocalMode] = useState(false);
+  const isVocalModeRef = useRef(false);
+  isVocalModeRef.current = isVocalMode;
 
   const {
     payload: canvaContextPayload,
@@ -228,6 +234,8 @@ const ChatFullscreenV2: React.FC = () => {
 
   // 🎯 HANDLERS CENTRALISÉS
   const { handleComplete, handleError, handleToolResult, handleToolExecutionComplete } = useChatHandlers({
+    // TTS mode vocal : déclenché dans onStreamEnd (contenu depuis streamingContentRef), pas ici
+    onMessageFinalContent: undefined,
     onComplete: async (
       fullContent,
       fullReasoning,
@@ -323,6 +331,15 @@ const ChatFullscreenV2: React.FC = () => {
       streamStartTimeForTimelineRef.current = Date.now();
     },
     onStreamEnd: () => {
+      if (isVocalModeRef.current) {
+        const raw = streamingState.streamingContentRef.current?.trim() ?? '';
+        const text = raw ? stripMarkdownForTTS(raw).trim() : '';
+        if (text) {
+          queueMicrotask(() => {
+            window.dispatchEvent(new CustomEvent('chat-vocal-mode-speak', { detail: { text } }));
+          });
+        }
+      }
       endStreaming();
     },
     onModelInfo: (info) => {
@@ -570,7 +587,7 @@ const ChatFullscreenV2: React.FC = () => {
         {/* Zone principale */}
         <div className={uiState.mainClassNames.join(' ')}>
               <div className="chatgpt-main-chat">
-                <TextToSpeechProvider defaultVoiceId={selectedAgent?.voice}>
+                <TextToSpeechProvider defaultVoiceId={selectedAgent?.voice} streamingMode={isVocalMode}>
                 <ChatMessagesArea
                   messages={effects.displayMessages}
                   isLoading={isLoadingMessages}
@@ -607,6 +624,8 @@ const ChatFullscreenV2: React.FC = () => {
                     textareaRef={uiState.textareaRef}
                     selectedAgent={selectedAgent}
                     keyboardInset={uiState.keyboardInset}
+                    isVocalMode={isVocalMode}
+                    onToggleVocalMode={() => setVocalMode(v => !v)}
                   />
                   <footer className="chatgpt-chat-footer" aria-hidden="true" />
                 </div>

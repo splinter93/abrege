@@ -3,6 +3,8 @@
  * Conforme au GUIDE D'EXCELLENCE - TypeScript strict (pas de any)
  */
 
+import type WebSocket from 'ws';
+
 /**
  * État d'une connexion proxy
  */
@@ -90,5 +92,22 @@ export function isProxyConnectionMetadata(value: unknown): value is ProxyConnect
     typeof obj.lastActivity === 'number' &&
     typeof obj.state === 'string'
   );
+}
+
+/** État d'une connexion TTS proxy (streaming) */
+export type TTSProxyConnectionState =
+  | 'disconnected'
+  | 'connecting_xai'
+  | 'connected'
+  | 'error'
+  | 'closing';
+
+/** Connexion active TTS : client WS + xAI TTS WS, pas de messageQueue (one-way stream) */
+export interface ActiveTTSConnection {
+  connectionId: string;
+  clientWs: WebSocket;
+  xaiWs: WebSocket | null;
+  connectedAt: number;
+  state: TTSProxyConnectionState;
 }
 
