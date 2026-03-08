@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   Folder,
-  FileText,
   Search,
   LayoutGrid,
   List,
@@ -13,6 +12,7 @@ import {
   BookMarked,
   ChevronDown,
 } from "lucide-react";
+import { Feather } from "react-feather";
 import {
   DndContext,
   PointerSensor,
@@ -165,7 +165,7 @@ function ClasseursHeader({
                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800/50 hover:text-white"
                 onClick={() => { onCreateNote(); onNouveauClose(); }}
               >
-                <FileText className="h-4 w-4" />
+                <Feather className="h-4 w-4" />
                 Nouvelle note
               </button>
             </div>
@@ -423,7 +423,7 @@ function ItemCard({
   onRename?: (name: string) => void;
   onCancelRename?: () => void;
 }) {
-  const Icon = item.type === "folder" ? Folder : FileText;
+  const Icon = item.type === "folder" ? Folder : Feather;
   const iconClasses =
     item.type === "folder"
       ? getFolderIconClasses("orange")
@@ -522,7 +522,7 @@ function ItemListRow({
   onRename?: (name: string) => void;
   onCancelRename?: () => void;
 }) {
-  const Icon = item.type === "folder" ? Folder : FileText;
+  const Icon = item.type === "folder" ? Folder : Feather;
   const iconClasses =
     item.type === "folder"
       ? getFolderIconClasses("orange")
@@ -712,7 +712,7 @@ function ClasseursContent({
 
       {viewMode === "grid" ? (
         <div
-          className="grid w-full min-w-0 grid-cols-1 gap-4 rounded-xl transition-colors sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+          className="grid w-full min-w-0 grid-cols-1 gap-4 rounded-xl transition-colors sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
           onDragOver={onRootDragOver}
           onDragLeave={onRootDragLeave}
           onDrop={onRootDrop}
@@ -1155,9 +1155,11 @@ export default function ClasseursPage() {
   const activeTab = tabs.find((t) => t.id === activeClasseurId) ?? tabs[0];
 
   return (
-    <div className="classeurs-page-root flex h-full min-h-full w-full min-w-0">
+    <div className="page-content-inner page-content-inner-classeurs classeurs-page-root flex h-full min-h-full w-full max-w-none mx-0 min-w-0 bg-[var(--color-bg-primary)]">
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
-        <div className="mx-auto flex min-h-0 w-full max-w-[1200px] flex-1 flex-col px-4 sm:px-6 lg:px-8">
+        {/* En-tête — même structure que Fichiers (pt-4, max-w-screen-2xl) */}
+        <div className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-4 pb-0">
+          <div className="max-w-screen-2xl mx-auto w-full">
           <ClasseursHeader
             statsLabel={statsLabel}
             onNouveauClick={() => setNouveauOpen((o) => !o)}
@@ -1189,11 +1191,12 @@ export default function ClasseursPage() {
               />
             </div>
           </div>
+          </div>
+          </div>
 
-          <div
-            className="min-h-0 flex-1 overflow-y-auto no-scrollbar"
-            onContextMenu={handleAreaContextMenu}
-          >
+        {/* Contenu principal — même structure que Fichiers */}
+        <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar pt-0 px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8" onContextMenu={handleAreaContextMenu}>
+          <div className="max-w-screen-2xl mx-auto w-full">
             {!activeClasseur && tabs.length === 0 && (
               <div className="mt-12 rounded-2xl border border-white/[0.08] bg-[#141414] px-6 py-20 text-center">
                 <BookMarked className="mx-auto mb-4 h-12 w-12 text-zinc-700" />

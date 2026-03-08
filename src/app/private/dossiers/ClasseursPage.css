@@ -14,9 +14,14 @@
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
-/* La page Classeurs : pas de padding sur la zone de contenu (plein écran) */
-.page-content-area:has(.classeurs-page-root) {
+/* La page Classeurs : pas de padding sur la zone de contenu (plein écran), même structure que Fichiers */
+.page-content-area:has(.page-content-inner-classeurs) {
   padding: 0 !important;
+}
+.page-content-area > .page-content-inner-classeurs {
+  max-width: none !important;
+  margin: 0 !important;
+  width: 100% !important;
 }
 
 /* Blocs alignés sur la sidebar : fond + bordure (variables design system) */
