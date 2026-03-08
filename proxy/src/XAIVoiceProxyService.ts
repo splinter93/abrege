@@ -4,6 +4,7 @@
  * Conforme au GUIDE D'EXCELLENCE - Singleton, Error Handling, Logging
  */
 
+import * as http from 'http';
 import WebSocket from 'ws';
 import { WebSocketServer } from 'ws';
 // Import relatif depuis server/ vers src/
@@ -14,6 +15,7 @@ import type { ActiveConnection } from './connectionTypes';
 import { ConnectionManager } from './connectionManager';
 import { handleClientMessage, handleXAIMessage } from './messageHandlers';
 import { handleClientClose, handleXAIClose, handleClientError, handleXAIError } from './eventHandlers';
+import { XAITTSProxyHandler } from './XAITTSProxyHandler';
 
 /**
  * Service singleton pour gérer le proxy WebSocket XAI Voice
@@ -21,6 +23,8 @@ import { handleClientClose, handleXAIClose, handleClientError, handleXAIError } 
 export class XAIVoiceProxyService {
   private static instance: XAIVoiceProxyService | null = null;
   private wss: WebSocketServer | null = null;
+  private httpServer: http.Server | null = null;
+  private ttsHandler: XAITTSProxyHandler | null = null;
   private connectionManager: ConnectionManager;
   private config: XAIVoiceProxyConfig;
   private isRunning = false;
@@ -50,23 +54,46 @@ export class XAIVoiceProxyService {
     }
 
     try {
-      this.wss = new WebSocketServer({
-        port: this.config.port,
-        path: this.config.path || '/ws/xai-voice'
+      const voicePath = this.config.path || '/ws/xai-voice';
+
+      this.httpServer = http.createServer((_req, res) => {
+        res.writeHead(426, { 'Content-Type': 'text/plain' });
+        res.end('Upgrade required');
       });
 
+      this.wss = new WebSocketServer({ noServer: true });
       this.wss.on('connection', (clientWs: WebSocket) => {
         this.handleClientConnection(clientWs);
       });
-
       this.wss.on('error', (error: Error) => {
         logger.error(LogCategory.AUDIO, '[XAIVoiceProxyService] Erreur serveur WebSocket', undefined, error);
+      });
+
+      this.ttsHandler = new XAITTSProxyHandler(this.config);
+
+      this.httpServer.on('upgrade', (request, socket, head) => {
+        const path = request.url?.split('?')[0] || '';
+        if (path === voicePath) {
+          this.wss!.handleUpgrade(request, socket, head, (ws) => {
+            this.wss!.emit('connection', ws, request);
+          });
+        } else if (XAITTSProxyHandler.isTTSPath(request.url)) {
+          this.ttsHandler!.handleUpgrade(request, socket, head);
+        } else {
+          socket.destroy();
+        }
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        this.httpServer!.listen(this.config.port, () => resolve());
+        this.httpServer!.on('error', reject);
       });
 
       this.isRunning = true;
       logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] ✅ Serveur démarré', {
         port: this.config.port,
-        path: this.config.path || '/ws/xai-voice'
+        path: voicePath,
+        ttsPath: '/ws/xai-tts'
       });
     } catch (error) {
       const handled = ProxyErrorHandler.handleError(error, { operation: 'start' });
@@ -85,6 +112,9 @@ export class XAIVoiceProxyService {
 
     logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] Arrêt du serveur...');
 
+    this.ttsHandler?.closeAll(1001, 'Server shutting down');
+    this.ttsHandler = null;
+
     // Fermer toutes les connexions actives
     for (const [connectionId] of this.connectionManager.getAll()) {
       this.closeConnection(connectionId, 1001, 'Server shutting down');
@@ -92,16 +122,25 @@ export class XAIVoiceProxyService {
 
     // Fermer le serveur
     return new Promise<void>((resolve) => {
+      const done = () => {
+        this.isRunning = false;
+        this.wss = null;
+        this.httpServer = null;
+        logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] ✅ Serveur arrêté');
+        resolve();
+      };
       if (this.wss) {
         this.wss.close(() => {
-          this.isRunning = false;
-          this.wss = null;
-          logger.info(LogCategory.AUDIO, '[XAIVoiceProxyService] ✅ Serveur arrêté');
-          resolve();
+          if (this.httpServer) {
+            this.httpServer.close(() => done());
+          } else {
+            done();
+          }
         });
+      } else if (this.httpServer) {
+        this.httpServer.close(() => done());
       } else {
-        this.isRunning = false;
-        resolve();
+        done();
       }
     });
   }
