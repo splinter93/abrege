@@ -62,10 +62,10 @@
   z-index: var(--glass-z-sidebar);
 }
 
-/* Zone de contenu principal - collé à la sidebar (220px), pas d'espace vide */
+/* Zone de contenu principal - collé à la sidebar, pas d'espace vide */
 .page-content-area {
   flex: 1;
-  margin-left: var(--sidebar-width) !important; /* 220px : aligné sur la bordure droite de la sidebar */
+  margin-left: var(--sidebar-width) !important;
   min-height: 100vh;
   padding: var(--spacing-xl) 0 var(--spacing-xl) 0 !important; /* Pas de padding horizontal : contenu pleine largeur */
   background: var(--color-bg-primary) !important;
@@ -73,9 +73,9 @@
   position: relative;
 }
 
-/* Force l'alignement : main démarre exactement à 220px (largeur sidebar) */
+/* Force l'alignement : main démarre exactement à la largeur sidebar */
 .page-wrapper > main.page-content-area {
-  margin-left: 220px !important;
+  margin-left: var(--sidebar-width) !important;
 }
 
 .page-content-area::before {
