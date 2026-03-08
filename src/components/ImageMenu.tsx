@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiImage, FiUpload, FiLink, FiX, FiFile, FiAlertCircle } from 'react-icons/fi';
+import { FiUpload, FiLink, FiFile, FiAlertCircle } from 'react-icons/fi';
 import { uploadImageForNote } from '@/utils/fileUpload';
 import { isTemporaryCanvaNote } from '@/utils/editorHelpers';
 import { FILE_SIZE_LIMITS, ALLOWED_IMAGE_TYPES, ERROR_MESSAGES } from '@/constants/fileUpload';
+import UploadModal from '@/components/UploadModal';
 import './ImageMenu.css';
 
 interface ImageMenuProps {
@@ -20,34 +21,6 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const modalRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    
-    const handleClick = (e: MouseEvent) => {
-      // Ne fermer que si on clique sur le backdrop (pas sur le modal)
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    };
-    
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    
-    // Utiliser click au lieu de mousedown pour éviter les conflits
-    document.addEventListener('click', handleClick);
-    document.addEventListener('keydown', handleEsc, true);
-    
-    return () => {
-      document.removeEventListener('click', handleClick);
-      document.removeEventListener('keydown', handleEsc, true);
-    };
-  }, [open, onClose]);
 
   useEffect(() => { 
     setError(null); 
@@ -192,24 +165,9 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  if (!open) return null;
-
   return (
-    <div className="image-menu-backdrop">
-      <div className="image-menu-modal" ref={modalRef} onMouseDown={e => e.stopPropagation()}>
-        {/* Header avec titre et bouton de fermeture */}
-        <div className="image-menu-header">
-          <div className="image-menu-title">
-            <FiImage size={18} />
-            <span>Insérer une image</span>
-          </div>
-          <button className="image-menu-close" onClick={onClose} aria-label="Fermer">
-            <FiX size={16} />
-          </button>
-        </div>
-
-        {/* Contenu principal - un seul onglet */}
-        <div className="image-menu-content">
+    <UploadModal open={open} onClose={onClose} title="Insérer une image">
+      <div className="image-menu-content">
           {/* Barre d'URL en haut */}
           <div className="image-menu-url-section">
             <div className="image-menu-url-label">
@@ -237,8 +195,8 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
           </div>
 
           {/* Séparateur */}
-          <div className="image-menu-separator">
-            <span>ou</span>
+          <div className="image-menu-separator" aria-hidden="true">
+            OU
           </div>
 
           {/* Zone de drop en bas */}
@@ -288,7 +246,7 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
               )}
             </div>
 
-            {/* Boutons d'action */}
+            {/* Boutons d'action (quand fichier sélectionné) */}
             {file && (
               <div className="image-menu-actions">
                 <button 
@@ -323,8 +281,7 @@ const ImageMenu: React.FC<ImageMenuProps> = ({ open, onClose, onInsertImage, not
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </UploadModal>
   );
 };
 

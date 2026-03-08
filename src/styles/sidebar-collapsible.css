@@ -36,7 +36,7 @@
   font-size: 18px;
 }
 
-/* Contour avatar agent (placeholder) : bg-black/20, bordure contrastée */
+/* Contour avatar agent (placeholder) : gris translucide */
 .sidebar-agent-icon-placeholder {
   display: inline-flex;
   align-items: center;
@@ -44,8 +44,8 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #60a5fa; /* text-blue-400 */
   flex-shrink: 0;
   overflow: hidden;

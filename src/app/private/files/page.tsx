@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
 import SearchFiles, { FileFilters, FileSortOptions } from "@/components/SearchFiles";
 import UnifiedUploadZone from "@/components/UnifiedUploadZone";
+import UploadModal from "@/components/UploadModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
@@ -79,7 +80,6 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
   const [showUploader, setShowUploader] = useState(false);
-  const [uploaderModalExiting, setUploaderModalExiting] = useState(false);
   const [filters, setFilters] = useState<FileFilters>({});
   const [sortOptions, setSortOptions] = useState<FileSortOptions>({
     field: 'created_at',
@@ -828,59 +828,23 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
         </main>
       </div>
 
-        {/* Uploader modal — portal dans body pour centrage viewport (évite transform ancestor) */}
-        {(showUploader || uploaderModalExiting) &&
-          createPortal(
-            <AnimatePresence onExitComplete={() => setUploaderModalExiting(false)}>
-              {showUploader && (
-                <motion.div
-                  key="uploader-modal"
-                  className="uploader-modal-overlay"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  onClick={() => {
-                    setShowUploader(false);
-                    setUploaderModalExiting(true);
-                  }}
-                >
-                  <motion.div
-                    className="uploader-modal-content"
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="uploader-modal-header">
-                      <h2 className="uploader-modal-title">Upload de fichiers</h2>
-                      <button
-                        className="uploader-modal-close"
-                        onClick={() => {
-                          setShowUploader(false);
-                          setUploaderModalExiting(true);
-                        }}
-                        aria-label="Fermer"
-                      >
-                        <X size={20} />
-                      </button>
-                    </div>
-                  <div className="uploader-modal-body">
-                    <UnifiedUploadZone
-                      placeholder="Coller l'URL du fichier à importer..."
-                      onFileSelect={handleFileSelect}
-                      onUrlSubmit={handleUrlSubmit}
-                      accept={STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES.join(',')}
-                      multiple={true}
-                      showUrlInput={true}
-                      showDropZone={true}
-                    />
-                  </div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>,
-            document.body
-          )}
+        {/* Uploader modal — composant partagé (même style que ImageMenu éditeur) */}
+        <UploadModal
+          open={showUploader}
+          onClose={() => setShowUploader(false)}
+          title="Upload de fichiers"
+          useExitAnimation={true}
+        >
+          <UnifiedUploadZone
+            placeholder="Coller l'URL du fichier à importer..."
+            onFileSelect={handleFileSelect}
+            onUrlSubmit={handleUrlSubmit}
+            accept={STORAGE_CONFIG.FILE_LIMITS.ALLOWED_MIME_TYPES.join(',')}
+            multiple={true}
+            showUrlInput={true}
+            showDropZone={true}
+          />
+        </UploadModal>
 
         {/* Menu contextuel (portal, position corrigée, style Linear) */}
         {contextMenu &&

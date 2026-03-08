@@ -1,0 +1,115 @@
+/* ==========================================================================
+   UPLOAD MODAL - Style Linear clean (réutilisé : page Fichiers, ImageMenu éditeur)
+   ========================================================================== */
+
+.uploader-modal-overlay {
+  position: fixed;
+  inset: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
+}
+
+.uploader-modal-content {
+  width: 100%;
+  max-width: 520px;
+  max-height: min(85vh, 600px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-bg-block);
+  border: var(--border-block);
+  border-radius: 12px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+}
+
+.uploader-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: var(--border-block);
+  flex-shrink: 0;
+}
+
+.uploader-modal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(244 244 245);
+  margin: 0;
+  font-family: 'Manrope', -apple-system, sans-serif;
+}
+
+.uploader-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgb(161 161 170);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.uploader-modal-close:hover {
+  background: rgba(63, 63, 70, 0.5);
+  color: rgb(244 244 245);
+}
+
+.uploader-modal-body {
+  padding: 1.25rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.uploader-modal-footer {
+  padding: 1rem 1.25rem;
+  border-top: var(--border-block);
+  background: rgba(39, 39, 42, 0.3);
+  flex-shrink: 0;
+}
+
+.uploader-modal-hint {
+  font-size: 0.8125rem;
+  color: rgb(161 161 170);
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+}
+
+.uploader-modal-hint:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .uploader-modal-overlay {
+    padding: 0.75rem;
+    align-items: center;
+  }
+
+  .uploader-modal-content {
+    max-height: min(90vh, 90dvh);
+  }
+
+  .uploader-modal-header {
+    padding: 0.875rem 1rem;
+  }
+
+  .uploader-modal-body {
+    padding: 1rem;
+  }
+
+  .uploader-modal-footer {
+    padding: 0.875rem 1rem;
+  }
+}
