@@ -150,6 +150,24 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
   // ✅ État local pour tracking de l'enregistrement audio
   const [isRecording, setIsRecording] = useState(false);
 
+  // En mode vocal : clic sur le bouton orange = démarrer ou arrêter l'enregistrement (envoi direct après transcription)
+  const handleSendClick = React.useCallback(() => {
+    if (isVocalMode && audioRecorderRef?.current) {
+      if (audioRecorderRef.current.isRecording()) {
+        audioRecorderRef.current.stopRecording();
+      } else {
+        audioRecorderRef.current.startRecording();
+      }
+      return;
+    }
+    onSend();
+  }, [isVocalMode, audioRecorderRef, onSend]);
+
+  const sendDisabled = isVocalMode ? loading : (!canSend || loading || disabled || isRecording);
+  const sendTitle = isVocalMode
+    ? (isRecording ? 'Arrêter et envoyer' : 'Démarrer l\'enregistrement')
+    : (isRecording ? 'Enregistrement en cours...' : 'Envoyer le message');
+
   return (
     <div className="chatgpt-input-actions">
       {/* Bouton @ (Notes) */}
@@ -266,16 +284,8 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
           </div>
         )}
       </div>
-      
-      <div style={{ flex: 1 }}></div>
-      
-      <AudioRecorder 
-        ref={audioRecorderRef}
-        onTranscriptionComplete={onTranscriptionComplete}
-        onError={onAudioError}
-        onRecordingStateChange={setIsRecording}
-        disabled={disabled}
-      />
+
+      {/* Mode vocal (à côté de Reasoning, même style) */}
       {onToggleVocalMode && (
         <button
           type="button"
@@ -289,6 +299,19 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
         </button>
       )}
       
+      <div style={{ flex: 1 }}></div>
+      
+      {/* Micro : masqué en mode vocal (bouton orange = enregistrement), resté monté pour la ref */}
+      <div style={{ display: isVocalMode ? 'none' : undefined }}>
+        <AudioRecorder 
+          ref={audioRecorderRef}
+          onTranscriptionComplete={onTranscriptionComplete}
+          onError={onAudioError}
+          onRecordingStateChange={setIsRecording}
+          disabled={disabled}
+        />
+      </div>
+      
       {isParsingPdf && (
         <span className="chatgpt-input-parsing-pdf" aria-live="polite">
           Parsing PDF...
@@ -300,14 +323,25 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
         </span>
       )}
       <button 
-        onClick={onSend} 
-        disabled={!canSend || loading || disabled || isRecording}
-        className={`chatgpt-input-send ${loading ? 'loading' : ''}`}
-        aria-label="Envoyer le message"
-        title={isRecording ? 'Enregistrement en cours...' : 'Envoyer le message'}
+        onClick={handleSendClick} 
+        disabled={sendDisabled}
+        className={`chatgpt-input-send ${loading ? 'loading' : ''} ${isVocalMode ? 'vocal-active' : ''} ${isVocalMode && isRecording ? 'vocal-recording' : ''}`}
+        aria-label={isVocalMode ? (isRecording ? 'Arrêter et envoyer' : 'Démarrer l\'enregistrement') : 'Envoyer le message'}
+        title={sendTitle}
       >
         {loading ? (
           <Loader size={20} className="animate-spin" />
+        ) : isVocalMode ? (
+          isRecording ? (
+            <span className="chatgpt-input-send-vocal-waves" aria-hidden>
+              <span className="chatgpt-input-send-vocal-wave" />
+              <span className="chatgpt-input-send-vocal-wave" />
+              <span className="chatgpt-input-send-vocal-wave" />
+              <span className="chatgpt-input-send-vocal-wave" />
+            </span>
+          ) : (
+            <AudioLines size={20} />
+          )
         ) : (
           <CornerUpRight size={20} />
         )}
