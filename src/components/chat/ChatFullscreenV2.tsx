@@ -100,10 +100,11 @@ const ChatFullscreenV2: React.FC = () => {
     isCanvaOpen
   });
 
-  // Mode vocal : envoi direct après transcription + TTS auto à la fin du stream
+  // Mode vocal : envoi direct après transcription + TTS incrémental (phrase par phrase)
   const [isVocalMode, setVocalMode] = useState(false);
   const isVocalModeRef = useRef(false);
   isVocalModeRef.current = isVocalMode;
+  const ttsBufferRef = useRef('');
 
   const {
     payload: canvaContextPayload,
@@ -324,21 +325,42 @@ const ChatFullscreenV2: React.FC = () => {
       updateContent(chunk);
       scrollToFollowStream();
       patchPendingAssistantMessage(true);
+
+      if (isVocalModeRef.current) {
+        ttsBufferRef.current += chunk;
+        const sentenceEnd = /[.!?…]\s/;
+        let buf = ttsBufferRef.current;
+        let match = sentenceEnd.exec(buf);
+        while (match) {
+          const cutIndex = match.index + match[0].length;
+          const sentence = stripMarkdownForTTS(buf.slice(0, cutIndex)).trim();
+          buf = buf.slice(cutIndex);
+          if (sentence) {
+            window.dispatchEvent(new CustomEvent('chat-vocal-tts-push', { detail: { text: sentence } }));
+          }
+          match = sentenceEnd.exec(buf);
+        }
+        ttsBufferRef.current = buf;
+      }
     },
     onStreamStart: () => {
       startStreaming();
       createPendingAssistantMessage();
       streamStartTimeForTimelineRef.current = Date.now();
+
+      if (isVocalModeRef.current) {
+        ttsBufferRef.current = '';
+        window.dispatchEvent(new CustomEvent('chat-vocal-tts-start'));
+      }
     },
     onStreamEnd: () => {
       if (isVocalModeRef.current) {
-        const raw = streamingState.streamingContentRef.current?.trim() ?? '';
-        const text = raw ? stripMarkdownForTTS(raw).trim() : '';
-        if (text) {
-          queueMicrotask(() => {
-            window.dispatchEvent(new CustomEvent('chat-vocal-mode-speak', { detail: { text } }));
-          });
+        const remaining = stripMarkdownForTTS(ttsBufferRef.current).trim();
+        if (remaining) {
+          window.dispatchEvent(new CustomEvent('chat-vocal-tts-push', { detail: { text: remaining } }));
         }
+        ttsBufferRef.current = '';
+        window.dispatchEvent(new CustomEvent('chat-vocal-tts-end'));
       }
       endStreaming();
     },

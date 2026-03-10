@@ -40,6 +40,9 @@ export interface ChatInputContainerProps {
 /**
  * Container pour l'input du chat (auth gérée par AuthRequiredModal en non-connecté).
  */
+const VOCAL_TTS_START = 'chat-vocal-tts-start';
+const VOCAL_TTS_PUSH = 'chat-vocal-tts-push';
+const VOCAL_TTS_END = 'chat-vocal-tts-end';
 const VOCAL_MODE_SPEAK_EVENT = 'chat-vocal-mode-speak';
 
 const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
@@ -61,18 +64,27 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
   ttsRef.current = tts;
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      const ev = e as CustomEvent<{ text: string }>;
-      const text = ev.detail?.text?.trim();
-      if (!text) return;
-      const tts = ttsRef.current;
-      if (!tts) return;
-      queueMicrotask(() => {
-        tts.speak(text);
-      });
+    const onStart = () => ttsRef.current?.startStream();
+    const onPush = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text;
+      if (text) ttsRef.current?.pushText(text);
     };
-    window.addEventListener(VOCAL_MODE_SPEAK_EVENT, handler);
-    return () => window.removeEventListener(VOCAL_MODE_SPEAK_EVENT, handler);
+    const onEnd = () => ttsRef.current?.endStream();
+    const onSpeak = (e: Event) => {
+      const text = (e as CustomEvent<{ text: string }>).detail?.text?.trim();
+      if (text) ttsRef.current?.speak(text);
+    };
+
+    window.addEventListener(VOCAL_TTS_START, onStart);
+    window.addEventListener(VOCAL_TTS_PUSH, onPush);
+    window.addEventListener(VOCAL_TTS_END, onEnd);
+    window.addEventListener(VOCAL_MODE_SPEAK_EVENT, onSpeak);
+    return () => {
+      window.removeEventListener(VOCAL_TTS_START, onStart);
+      window.removeEventListener(VOCAL_TTS_PUSH, onPush);
+      window.removeEventListener(VOCAL_TTS_END, onEnd);
+      window.removeEventListener(VOCAL_MODE_SPEAK_EVENT, onSpeak);
+    };
   }, []);
 
   return (

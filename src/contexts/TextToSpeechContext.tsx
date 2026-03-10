@@ -8,6 +8,12 @@ import { useTTSStreaming } from '@/hooks/useTTSStreaming';
 
 interface TextToSpeechContextValue {
   speak: (text: string, options?: { voiceId?: string; messageId?: string }) => Promise<void>;
+  /** Incremental TTS: open connection (streaming mode only) */
+  startStream: (options?: { voiceId?: string; messageId?: string }) => void;
+  /** Incremental TTS: push a text segment */
+  pushText: (text: string) => void;
+  /** Incremental TTS: signal end of stream */
+  endStream: () => void;
   stop: () => void;
   pause: () => void;
   resume: () => void;
@@ -150,6 +156,8 @@ export function TextToSpeechProvider({ children, defaultVoiceId, streamingMode =
     }
   }, [streamingMode, streaming.resume, resume]);
 
+  const noop = useCallback(() => {}, []);
+
   const isPlayingMessageIdUnified = streamingMode ? streaming.isPlayingMessageId : isPlayingMessageId;
   const isPausedUnified = streamingMode ? streaming.isPaused : isPaused;
 
@@ -157,6 +165,9 @@ export function TextToSpeechProvider({ children, defaultVoiceId, streamingMode =
     <TextToSpeechContext.Provider
       value={{
         speak,
+        startStream: streamingMode ? streaming.startStream : noop,
+        pushText: streamingMode ? streaming.pushText : noop,
+        endStream: streamingMode ? streaming.endStream : noop,
         stop: stopUnified,
         pause: pauseUnified,
         resume: resumeUnified,
