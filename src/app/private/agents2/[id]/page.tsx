@@ -246,6 +246,17 @@ function AgentDetailContent() {
     }
   }, [selectedAgent, editedAgent, loadAgentTools, router]);
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        if (hasLocalChanges && !savingAgent) handleSaveAgent();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [hasLocalChanges, savingAgent, handleSaveAgent]);
+
   const handleCancelChanges = useCallback(() => {
     if (selectedAgent) {
       setEditedAgent({ ...selectedAgent });
