@@ -201,7 +201,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
       {/* ── Header sticky ── */}
       <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/80 backdrop-blur-xl border-b border-zinc-800/60 shrink-0">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-4">
+          <div className="flex items-center justify-between h-[50px] gap-4">
             {/* Gauche : retour + titre */}
             <div className="flex items-center gap-3 min-w-0">
               <button

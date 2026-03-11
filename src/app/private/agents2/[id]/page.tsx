@@ -495,7 +495,7 @@ function AgentDetailContent() {
         {/* Header sticky Linear */}
         <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/80 backdrop-blur-xl border-b border-zinc-800/60">
           <div className="w-full px-4">
-            <div className="flex items-center justify-between h-16 gap-4">
+            <div className="flex items-center justify-between h-[50px] gap-4">
               <div className="flex items-center gap-3 min-w-0">
                 <Link
                   href="/private/agents2"

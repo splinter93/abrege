@@ -106,8 +106,8 @@ export default function Sidebar() {
       aria-label="Navigation principale"
     >
       {/* Header Sidebar (Workspace Switcher) */}
-      <header className="h-14 px-3 flex items-center shrink-0 hover:bg-white/[0.03] cursor-pointer transition-colors group">
-        <div className="flex items-center justify-between w-full">
+      <header className="h-[50px] px-3 flex items-center shrink-0 hover:bg-white/[0.03] cursor-pointer transition-colors group">
+        <div className="flex items-center justify-between w-full px-3">
           <div className="flex items-center gap-2.5">
             <div className="w-6 h-6 rounded-md bg-[#141414] border border-white/[0.1] shadow-sm flex items-center justify-center text-neutral-300 group-hover:text-white group-hover:border-white/[0.2] transition-colors">
               <Feather className="w-3.5 h-3.5" />
