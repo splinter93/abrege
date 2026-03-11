@@ -117,7 +117,7 @@ export function AgentConfiguration({
                 type="button"
                 onClick={() => setShowAvatarModal(true)}
                 aria-label="Voir et éditer l'avatar de l'agent"
-                className="section-block shrink-0 w-14 h-14 rounded-full overflow-hidden flex items-center justify-center text-zinc-400 text-sm font-medium hover:border-[var(--color-border-secondary)] transition-colors"
+                className="group/avatar relative section-block shrink-0 w-14 h-14 rounded-full overflow-hidden flex items-center justify-center text-zinc-400 text-sm font-medium hover:border-[var(--color-border-secondary)] transition-colors"
               >
                 {displayAvatarPreview ? (
                   <img
@@ -129,83 +129,37 @@ export function AgentConfiguration({
                     }}
                   />
                 ) : (
-                  <span>{avatarFallback}</span>
+                  <span className="group-hover/avatar:opacity-0 transition-opacity">{avatarFallback}</span>
                 )}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAvatarModal(true)}
-                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/40 transition-all border border-transparent hover:border-zinc-700/50"
-                aria-label="Changer l'image de l'avatar"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Changer d&apos;image
-              </button>
-              {selectedAgent && (
-                <div className="section-block flex items-center gap-2 rounded-xl px-3 py-2 border border-[var(--color-border-block)] bg-[var(--color-bg-block)] ml-auto shrink-0">
-                  <button
-                    type="button"
-                    onClick={onToggleFavorite}
-                    disabled={togglingFavorite}
-                    title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori (utilisé à l\'ouverture du chat)'}
-                    className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700/60 transition-colors shrink-0 disabled:opacity-50 disabled:pointer-events-none"
-                    aria-label={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
-                  >
-                    <Star className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onUpdateField('is_active', !editedAgent?.is_active)}
-                    title={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
-                    className={`p-2 rounded-lg border transition-colors shrink-0 ${editedAgent?.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20' : 'bg-zinc-800/60 border-zinc-600/80 text-zinc-500 hover:bg-zinc-700/60 hover:text-zinc-400'}`}
-                    aria-label={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
-                  >
-                    {editedAgent?.is_active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-                  </button>
+                <div className="absolute inset-0 flex items-center justify-center bg-zinc-700/60 opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                  <Pencil className="w-4 h-4 text-zinc-100" />
                 </div>
-              )}
-            </div>
-            <div className="space-y-4 min-w-0">
-              <div>
-                <label className={labelBase} htmlFor="agent-display-name">
-                  Nom d&apos;affichage
-                </label>
-                <input
-                  id="agent-display-name"
-                  type="text"
-                  className={inputBase}
-                  value={editedAgent.display_name || ''}
-                  onChange={e => onUpdateField('display_name', e.target.value)}
-                  placeholder="Nom de l'agent"
-                />
-              </div>
-              <div>
-                <label className={labelBase} htmlFor="agent-description">
-                  Description
-                </label>
-                <input
-                  id="agent-description"
-                  type="text"
-                  className={inputBase}
-                  value={editedAgent.description || ''}
-                  onChange={e => onUpdateField('description', e.target.value)}
-                  placeholder="Décrivez rapidement le rôle de cet agent…"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {hasChanges && (
-              <button
-                type="button"
-                onClick={onCancel}
-                disabled={loadingDetails || saving}
-                className="section-block inline-flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 text-sm hover:bg-[var(--color-bg-content)] hover:text-zinc-100 transition-colors disabled:opacity-50"
-              >
-                <X className="w-4 h-4" />
-                Annuler
               </button>
-            )}
+              <div className="flex-1 min-w-0 space-y-0.5">
+                <div className="group/title relative rounded-md px-2 py-0.5 hover:bg-zinc-800/40 transition-colors">
+                  <input
+                    id="agent-display-name"
+                    type="text"
+                    value={editedAgent.display_name || ''}
+                    onChange={e => onUpdateField('display_name', e.target.value)}
+                    placeholder="Nom de l'agent"
+                    className="w-full bg-transparent text-lg font-semibold text-zinc-100 placeholder:text-zinc-600 border-none outline-none focus:ring-0 px-0 py-0.5 truncate hover:text-white transition-colors cursor-text"
+                  />
+                  <Pencil className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none" />
+                </div>
+                <div className="group/desc relative rounded-md px-2 py-0.5 hover:bg-zinc-800/40 transition-colors">
+                  <input
+                    id="agent-description"
+                    type="text"
+                    value={editedAgent.description || ''}
+                    onChange={e => onUpdateField('description', e.target.value)}
+                    placeholder="Décrivez rapidement le rôle de cet agent…"
+                    className="w-full bg-transparent text-sm text-zinc-500 placeholder:text-zinc-700 border-none outline-none focus:ring-0 px-0 py-0 truncate hover:text-zinc-400 transition-colors cursor-text"
+                  />
+                  <Pencil className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-600 opacity-0 group-hover/desc:opacity-100 transition-opacity pointer-events-none" />
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 

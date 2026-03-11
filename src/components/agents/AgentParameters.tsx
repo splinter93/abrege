@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { ModelSelector } from '@/components/ui/ModelSelector';
@@ -10,7 +10,7 @@ import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 const inputBase =
   'input-block w-full px-3 py-2 rounded-lg text-sm placeholder:text-zinc-500 focus:outline-none transition-colors';
 const labelBase = 'text-xs font-medium text-zinc-400 block mb-1.5';
-const boxBase = 'section-block p-6 rounded-2xl';
+const boxBase = 'section-block p-4 rounded-2xl';
 
 /* Custom slider: track + fill + native input (value/onChange preserved).
    Wrapper min-height ensures a proper touch target on mobile so the drawer scroll doesn't steal events. */
@@ -35,21 +35,20 @@ function CustomSlider({
 }) {
   const percent = max > min ? ((value - min) / (max - min)) * 100 : 0;
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <label className={labelBase} htmlFor={id}>
           {label}
         </label>
-        <span className="font-mono text-xs text-zinc-500">{valueDisplay}</span>
+        <span className="font-mono text-[11px] tabular-nums text-zinc-400 bg-zinc-800/60 px-2 py-0.5 rounded-md">{valueDisplay}</span>
       </div>
-      {/* min-h-[44px] touch target + touch-action: pan-y so horizontal drag = slider, vertical = scroll */}
       <div
-        className="relative min-h-[44px] flex items-center w-full rounded-full"
+        className="relative min-h-[36px] flex items-center w-full rounded-full group"
         style={{ touchAction: 'pan-y' }}
       >
-        <div className="relative h-1.5 w-full rounded-full bg-zinc-800/80 overflow-hidden pointer-events-none">
+        <div className="relative h-[6px] w-full rounded-full bg-zinc-800 overflow-hidden pointer-events-none ring-1 ring-inset ring-white/[0.04]">
           <div
-            className="absolute inset-y-0 left-0 rounded-full bg-zinc-300 transition-colors"
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-orange-800 to-amber-700 transition-all duration-150"
             style={{ width: `${percent}%` }}
           />
         </div>
@@ -61,7 +60,7 @@ function CustomSlider({
           step={step}
           value={value}
           onChange={e => onChange(parseFloat(e.target.value))}
-          className="absolute inset-0 w-full min-h-[44px] appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-zinc-300 [&::-webkit-slider-thumb]:hover:bg-white [&::-webkit-slider-thumb]:transition-colors [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-zinc-300 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-grab"
+          className="absolute inset-0 w-full min-h-[36px] appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-zinc-300 [&::-webkit-slider-thumb]:shadow-[0_0_0_2px_rgba(194,65,12,0.5),0_2px_8px_rgba(0,0,0,0.5)] [&::-webkit-slider-thumb]:hover:shadow-[0_0_0_3px_rgba(194,65,12,0.6),0_2px_10px_rgba(0,0,0,0.6)] [&::-webkit-slider-thumb]:transition-shadow [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-webkit-slider-thumb]:active:scale-110 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-zinc-300 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-[0_0_0_2px_rgba(194,65,12,0.5),0_2px_8px_rgba(0,0,0,0.5)] [&::-moz-range-thumb]:cursor-grab"
         />
       </div>
     </div>
@@ -152,6 +151,28 @@ export function AgentParameters({
   const [showMcpDropdown, setShowMcpDropdown] = useState(false);
   const [showCallablesDropdown, setShowCallablesDropdown] = useState(false);
 
+  const openApiRef = useRef<HTMLElement>(null);
+  const mcpRef = useRef<HTMLElement>(null);
+  const callablesRef = useRef<HTMLElement>(null);
+
+  const closeAllDropdowns = useCallback((e: MouseEvent) => {
+    if (showOpenApiDropdown && openApiRef.current && !openApiRef.current.contains(e.target as Node)) {
+      setShowOpenApiDropdown(false);
+    }
+    if (showMcpDropdown && mcpRef.current && !mcpRef.current.contains(e.target as Node)) {
+      setShowMcpDropdown(false);
+    }
+    if (showCallablesDropdown && callablesRef.current && !callablesRef.current.contains(e.target as Node)) {
+      setShowCallablesDropdown(false);
+    }
+  }, [showOpenApiDropdown, showMcpDropdown, showCallablesDropdown]);
+
+  useEffect(() => {
+    if (!showOpenApiDropdown && !showMcpDropdown && !showCallablesDropdown) return;
+    document.addEventListener('mousedown', closeAllDropdowns);
+    return () => document.removeEventListener('mousedown', closeAllDropdowns);
+  }, [closeAllDropdowns, showOpenApiDropdown, showMcpDropdown, showCallablesDropdown]);
+
   const isCreating = !selectedAgent && editedAgent !== null;
 
   if (loadingDetails) {
@@ -223,8 +244,8 @@ export function AgentParameters({
 
       {/* Réglages principaux : sliders */}
       <section className={boxBase}>
-        <h3 className="text-sm font-semibold text-zinc-100 mb-6">Réglages principaux</h3>
-        <div className="space-y-6">
+        <h3 className="text-sm font-semibold text-zinc-100 mb-3">Réglages principaux</h3>
+        <div className="space-y-4">
           <CustomSlider
             id="agent-temperature"
             label="Température"
@@ -259,7 +280,7 @@ export function AgentParameters({
       </section>
 
       {/* OpenAPI Tools */}
-      <section className={boxBase}>
+      <section ref={openApiRef} className={boxBase}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-zinc-100">OpenAPI Tools</h3>
           {!isCreating && (
@@ -317,7 +338,7 @@ export function AgentParameters({
       </section>
 
       {/* MCP Tools */}
-      <section className={boxBase}>
+      <section ref={mcpRef} className={boxBase}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-zinc-100">MCP Tools</h3>
           {!isCreating && (
@@ -376,7 +397,7 @@ export function AgentParameters({
 
       {/* Callables Synesia */}
       {onLinkCallable && onUnlinkCallable && (
-        <section className={boxBase}>
+        <section ref={callablesRef} className={boxBase}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-zinc-100">Callables Synesia</h3>
             {!isCreating && (

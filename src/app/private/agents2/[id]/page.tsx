@@ -22,7 +22,7 @@ import { mcpService } from '@/services/agents/mcpService';
 import { useCallables } from '@/hooks/useCallables';
 import { simpleLogger } from '@/utils/logger';
 import { supabase } from '@/supabaseClient';
-import { ArrowLeft, Menu, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { ArrowLeft, Menu, SlidersHorizontal, Trash2, Star, Power, PowerOff } from 'lucide-react';
 import Link from 'next/link';
 import { useParamsPanelMobile } from '@/hooks/useParamsPanelMobile';
 import '@/styles/main.css';
@@ -494,7 +494,7 @@ function AgentDetailContent() {
       <div className="page-content-inner page-content-inner-agents bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
         {/* Header sticky Linear */}
         <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/80 backdrop-blur-xl border-b border-zinc-800/60">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full px-4">
             <div className="flex items-center justify-between h-16 gap-4">
               <div className="flex items-center gap-3 min-w-0">
                 <Link
@@ -547,25 +547,56 @@ function AgentDetailContent() {
                   </button>
                 )}
                 {selectedAgent && (
-                  <button
-                    type="button"
-                    onClick={handleDeleteAgent}
-                    title="Supprimer l'agent"
-                    className="p-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-red-400/80 hover:bg-red-500/10 hover:text-red-400 transition-colors"
-                    aria-label="Supprimer l'agent"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleToggleFavorite}
+                      disabled={togglingFavorite}
+                      title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
+                      className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700/60 transition-colors shrink-0 disabled:opacity-50 disabled:pointer-events-none"
+                      aria-label={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
+                    >
+                      <Star className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFieldUpdate('is_active', !editedAgent?.is_active)}
+                      title={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
+                      className={`p-2 rounded-lg border transition-colors shrink-0 ${editedAgent?.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20' : 'bg-zinc-800/60 border-zinc-600/80 text-zinc-500 hover:bg-zinc-700/60 hover:text-zinc-400'}`}
+                      aria-label={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
+                    >
+                      {editedAgent?.is_active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeleteAgent}
+                      title="Supprimer l'agent"
+                      className="p-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-red-400/80 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                      aria-label="Supprimer l'agent"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </>
                 )}
                 {hasLocalChanges && (
-                  <button
-                    type="button"
-                    onClick={handleSaveAgent}
-                    disabled={panelLoading}
-                    className="flex h-9 items-center justify-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200 disabled:opacity-50 disabled:pointer-events-none min-w-[7rem]"
-                  >
-                    {savingAgent ? 'Enregistrement…' : 'Enregistrer'}
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleCancelChanges}
+                      disabled={panelLoading}
+                      className="flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-sm text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-50"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveAgent}
+                      disabled={panelLoading}
+                      className="flex h-9 items-center justify-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200 disabled:opacity-50 disabled:pointer-events-none min-w-[7rem]"
+                    >
+                      {savingAgent ? 'Enregistrement…' : 'Enregistrer'}
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -629,7 +660,8 @@ function AgentDetailContent() {
                   <div className="w-9 shrink-0" aria-hidden />
                 </div>
               )}
-              <div className="space-y-8 p-4 lg:p-0 lg:py-10 lg:px-4 overflow-y-auto h-full">
+              <div className="space-y-6 p-4 lg:p-0 lg:py-4 lg:px-4 overflow-y-auto h-full">
+                <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500 text-center">Configuration</h2>
                 <AgentParameters
                   selectedAgent={selectedAgent}
                   editedAgent={editedAgent}
