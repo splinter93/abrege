@@ -2237,7 +2237,7 @@ body.chat-theme-glass .chatgpt-messages > div {
   z-index: 1;
   width: 100%;
   max-width: min(calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)), 100%);
-  min-height: 120px;
+  min-height: 112px;
   background: var(--chat-gradient-block);
   border: var(--chat-surface-border);
   border-radius: var(--chat-surface-radius);
