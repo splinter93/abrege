@@ -207,7 +207,7 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
         loading={loading}
       />
 
-      {/* WebSearch avec menu contextuel */}
+      {/* WebSearch — masqué temporairement
       <div style={{ position: 'relative' }}>
         <button 
           className={`chatgpt-input-websearch ${showWebSearchMenu ? 'active' : ''}`}
@@ -217,8 +217,6 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
         >
           <Globe size={18} />
         </button>
-
-        {/* Menu contextuel WebSearch */}
         {showWebSearchMenu && (
           <div className="chat-websearch-menu">
             <div className="chat-menu-header">Search</div>
@@ -237,6 +235,7 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
           </div>
         )}
       </div>
+      */}
 
       {/* Reasoning avec menu contextuel */}
       <div style={{ position: 'relative' }}>

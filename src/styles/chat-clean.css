@@ -2237,6 +2237,7 @@ body.chat-theme-glass .chatgpt-messages > div {
   z-index: 1;
   width: 100%;
   max-width: min(calc(var(--chat-container-width) - 2 * var(--chat-padding-horizontal)), 100%);
+  min-height: 120px;
   background: var(--chat-gradient-block);
   border: var(--chat-surface-border);
   border-radius: var(--chat-surface-radius);
@@ -4421,9 +4422,10 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
 
 .chatgpt-input-textarea-wrapper {
   position: relative;
-  flex: 1; /* Prendre l'espace disponible */
+  flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 /* ========================================
