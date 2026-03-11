@@ -188,7 +188,7 @@ export function AgentConfiguration({
           </div>
           <textarea
             id="agent-system-instructions"
-            className={`${inputBase} font-mono text-[13px] leading-relaxed resize-none text-zinc-400`}
+            className="input-block w-full px-5 py-4 rounded-lg text-sm placeholder:text-zinc-500 focus:outline-none transition-colors font-mono text-[13px] leading-relaxed resize-none text-zinc-400"
             rows={12}
             value={editedAgent.system_instructions || ''}
             onChange={e => onUpdateField('system_instructions', e.target.value)}

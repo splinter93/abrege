@@ -172,7 +172,7 @@
    ======================================== */
 @media (max-width: 1300px) {
   :root {
-    /* Largeur max du contenu : ne dépasse jamais la vue (sidebar 250px + 2×24px) */
+    /* Largeur max du contenu : ne dépasse jamais la vue (sidebar 240px + 2×24px) */
     --chat-container-width: min(1000px, calc(100vw - 298px));
     /* Texte qui rétrécit progressivement (15px à 1300px → ~13px vers 900px) */
     --chat-font-size-base: clamp(13px, 2px + 1vw, 15px);
@@ -923,7 +923,7 @@ body.chat-theme-glass .chatgpt-header {
   top: 44px; /* sous le header */
   left: 0;
   height: calc(100vh - 44px);
-  width: 250px;
+  width: 240px;
   background: rgba(23, 26, 30, 0.35);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -932,7 +932,7 @@ body.chat-theme-glass .chatgpt-header {
   border-top: none;
   border-bottom: none;
   box-shadow: none;
-  transform: translateX(-250px);
+  transform: translateX(-240px);
   transition: transform 0.45s cubic-bezier(0.25, 0.1, 0.25, 1),
               opacity 0.45s cubic-bezier(0.25, 0.1, 0.25, 1);
   z-index: var(--chat-z-sidebar);
@@ -1124,8 +1124,8 @@ body.chat-theme-glass .chatgpt-header {
   height: 28px;
   border-radius: 50%;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
 }
 .sidebar-item-icon-clean:has(.agent-avatar) .agent-avatar {
   width: 100%;
@@ -1321,7 +1321,7 @@ body.chat-theme-glass .chatgpt-header {
 
 /* Quand la sidebar est ouverte, décaler le contenu */
 .chatgpt-content.sidebar-open {
-  margin-left: 250px;
+  margin-left: 240px;
 }
 
 /* Pas de breakpoint à 1023px : on garde le rétrécissement progressif (container + padding fluides).
@@ -1336,7 +1336,7 @@ body.chat-theme-glass .chatgpt-header {
 
   /* ✅ Décalage uniquement quand sidebar ouverte */
   .chatgpt-content.sidebar-open {
-    margin-left: 250px;
+    margin-left: 240px;
   }
 }
 
@@ -2881,10 +2881,13 @@ html.capacitor-native .chatgpt-message .bubble-buttons {
     font-size: 16px !important; /* Évite le zoom sur iOS */
   }
   
-  /* Mobile : sidebar en overlay au premier plan, pas de décalage du contenu */
+  /* Mobile : sidebar en overlay au premier plan, noir absolu, pas de décalage du contenu */
   .sidebar-ultra-clean {
-    transform: translateX(-250px) !important;
+    transform: translateX(-240px) !important;
     z-index: calc(var(--chat-z-sidebar) + 10) !important;
+    background: #000000 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .sidebar-ultra-clean.visible {

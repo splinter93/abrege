@@ -550,6 +550,15 @@ function AgentDetailContent() {
                   <>
                     <button
                       type="button"
+                      onClick={() => handleFieldUpdate('is_active', !editedAgent?.is_active)}
+                      title={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
+                      className={`p-2 rounded-lg border transition-colors shrink-0 ${editedAgent?.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20' : 'bg-zinc-800/60 border-zinc-600/80 text-zinc-500 hover:bg-zinc-700/60 hover:text-zinc-400'}`}
+                      aria-label={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
+                    >
+                      {editedAgent?.is_active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+                    </button>
+                    <button
+                      type="button"
                       onClick={handleToggleFavorite}
                       disabled={togglingFavorite}
                       title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
@@ -557,15 +566,6 @@ function AgentDetailContent() {
                       aria-label={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
                     >
                       <Star className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleFieldUpdate('is_active', !editedAgent?.is_active)}
-                      title={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
-                      className={`p-2 rounded-lg border transition-colors shrink-0 ${editedAgent?.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20' : 'bg-zinc-800/60 border-zinc-600/80 text-zinc-500 hover:bg-zinc-700/60 hover:text-zinc-400'}`}
-                      aria-label={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
-                    >
-                      {editedAgent?.is_active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
                     </button>
                     <button
                       type="button"

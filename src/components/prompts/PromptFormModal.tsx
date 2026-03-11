@@ -9,7 +9,7 @@ import type { EditorPrompt, EditorPromptCreateRequest } from '@/types/editorProm
 import type { Agent } from '@/types/chat';
 import IconPicker from './IconPicker';
 import { getIconComponent } from '@/utils/iconMapper';
-import { ArrowLeft, Info } from 'lucide-react';
+import { ArrowLeft, Info, Trash2, Power, PowerOff } from 'lucide-react';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 import Tooltip from '@/components/Tooltip';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
@@ -26,6 +26,8 @@ interface PromptFormModalProps {
   agents: Agent[];
   onSave: (data: EditorPromptCreateRequest) => void | Promise<void>;
   onCancel: () => void;
+  onDelete?: () => void;
+  onToggleActive?: () => void;
 }
 
 const PromptFormModal: React.FC<PromptFormModalProps> = ({
@@ -33,6 +35,8 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
   agents,
   onSave,
   onCancel,
+  onDelete,
+  onToggleActive,
 }) => {
   const { getAccessToken } = useAuth();
   const templateRef = useRef<HTMLTextAreaElement>(null);
@@ -175,6 +179,34 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
   const SelectedIcon = getIconComponent(formData.icon);
   const isDefaultIcon = !prompt && formData.icon === 'FiZap';
   const hasSelectedIcon = !isDefaultIcon;
+  const resetForm = useCallback(() => {
+    if (prompt) {
+      setFormData({
+        name: prompt.name,
+        prompt_template: prompt.prompt_template,
+        icon: prompt.icon,
+        context: prompt.context || 'editor',
+        agent_id: prompt.agent_id ?? null,
+        insertion_mode: prompt.insertion_mode || 'replace',
+        use_structured_output: prompt.use_structured_output || false,
+      });
+      mentionSystem.setMentions(prompt.mentions ?? []);
+    } else {
+      setFormData({
+        name: '',
+        prompt_template: '',
+        icon: 'FiZap',
+        context: 'editor',
+        agent_id: null,
+        insertion_mode: 'replace',
+        use_structured_output: false,
+      });
+      mentionSystem.setMentions([]);
+    }
+    setErrors({});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prompt]);
+
   const pageTitle = formData.name.trim() || (prompt ? prompt.name : 'Nouveau prompt');
 
   // En création : dès qu'on a un nom ou un template, on considère qu'il y a des modifs
@@ -215,26 +247,49 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
               <span className="text-zinc-100 font-medium truncate">{pageTitle}</span>
             </div>
 
-            {/* Droite : Annuler + Enregistrer — visibles uniquement si modif */}
-            {hasChanges && (
-              <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
+              {prompt && onToggleActive && (
                 <button
                   type="button"
-                  onClick={onCancel}
-                  className="px-4 py-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-zinc-300 text-sm font-medium hover:bg-zinc-800/40 transition-colors"
+                  onClick={onToggleActive}
+                  title={prompt.is_active ? 'Désactiver le prompt' : 'Activer le prompt'}
+                  className={`p-2 rounded-lg border transition-colors shrink-0 ${prompt.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20' : 'bg-zinc-800/60 border-zinc-600/80 text-zinc-500 hover:bg-zinc-700/60 hover:text-zinc-400'}`}
+                  aria-label={prompt.is_active ? 'Désactiver le prompt' : 'Activer le prompt'}
                 >
-                  Annuler
+                  {prompt.is_active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
                 </button>
+              )}
+              {prompt && onDelete && (
                 <button
                   type="button"
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex h-9 items-center justify-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200 disabled:opacity-50 disabled:pointer-events-none"
+                  onClick={onDelete}
+                  title="Supprimer le prompt"
+                  className="p-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-red-400/80 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                  aria-label="Supprimer le prompt"
                 >
-                  {saving ? 'Enregistrement…' : (prompt ? 'Enregistrer' : 'Créer')}
+                  <Trash2 className="w-4 h-4" />
                 </button>
-              </div>
-            )}
+              )}
+              {hasChanges && (
+                <>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-sm text-zinc-400 hover:text-zinc-100 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex h-9 items-center justify-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200 disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {saving ? 'Enregistrement…' : (prompt ? 'Enregistrer' : 'Créer')}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>

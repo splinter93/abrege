@@ -146,6 +146,14 @@ function PromptsPageContent() {
             setIsModalOpen(false);
             setEditingPrompt(null);
           }}
+          onDelete={editingPrompt ? () => {
+            handleDelete(editingPrompt.id);
+            setIsModalOpen(false);
+            setEditingPrompt(null);
+          } : undefined}
+          onToggleActive={editingPrompt ? () => {
+            handleToggle(editingPrompt);
+          } : undefined}
         />
       ) : (
         /* ── Vue liste ── */

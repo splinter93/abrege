@@ -164,7 +164,10 @@ html.capacitor-native.chat-page .chatgpt-input-container::before {
 html.capacitor-native.chat-page .sidebar-ultra-clean {
   top: calc(56px + var(--capacitor-safe-top)) !important;
   height: calc(100dvh - 56px - var(--capacitor-safe-top) - var(--capacitor-safe-bottom)) !important;
-  border-left: none !important; /* left:0 colle au bord — pas de bordure gauche visible */
+  border-left: none !important;
+  background: #000000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Fallback: Page chat en viewport mobile (si JS capacitor-native pas encore chargé).
