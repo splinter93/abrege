@@ -1936,15 +1936,16 @@ body.chat-theme-glass .chatgpt-messages > div {
 }
 
 .chatgpt-message-reasoning {
-  margin-bottom: 4px;
+  margin-bottom: 0;
   padding: 0;
   position: relative;
 }
 
 .chatgpt-message-loading {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  padding: var(--chat-space-md);
+  padding: 8px 0 4px 0;
+  max-width: fit-content;
 }
 
 .chatgpt-message-loading-dots {
@@ -1964,11 +1965,14 @@ body.chat-theme-glass .chatgpt-messages > div {
 
 /* Sélecteur spécifique + !important pour garantir rendu correct en prod (override éventuels conflits) */
 .chatgpt-message-assistant .chatgpt-message-loading .chatgpt-message-loading-dot {
-  width: 8px !important;
-  height: 8px !important;
-  min-width: 8px !important;
-  min-height: 8px !important;
+  width: 5px !important;
+  height: 5px !important;
+  min-width: 5px !important;
+  max-width: 5px !important;
+  min-height: 5px !important;
+  max-height: 5px !important;
   flex-shrink: 0;
+  flex-grow: 0;
   background: var(--chat-text-secondary);
   border-radius: 50%;
   animation: chat-loading-dots-opacity 1.4s infinite ease-in-out;
@@ -2603,8 +2607,12 @@ body.chat-theme-glass .chatgpt-messages > div {
 }
 
 .chat-typing-dot {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
+  min-width: 5px;
+  max-width: 5px;
+  min-height: 5px;
+  max-height: 5px;
   border-radius: 50%;
   background: var(--chat-text-secondary);
   animation: typingDot 1.4s ease-in-out infinite;
@@ -2621,11 +2629,9 @@ body.chat-theme-glass .chatgpt-messages > div {
 @keyframes typingDot {
   0%, 60%, 100% {
     opacity: 0.3;
-    transform: scale(0.8);
   }
   30% {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
