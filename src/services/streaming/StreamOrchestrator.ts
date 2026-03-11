@@ -212,9 +212,10 @@ export class StreamOrchestrator {
       case 'plan_update': {
         const payload = chunk.payload;
         if (!payload?.steps) break;
-        logger.dev('[StreamOrchestrator] 📋 Plan update reçu', payload);
-        this.timeline.addPlanEvent(payload);
-        callbacks.onPlanUpdate?.(payload);
+        const validPayload = { title: payload.title, steps: payload.steps };
+        logger.dev('[StreamOrchestrator] 📋 Plan update reçu', validPayload);
+        this.timeline.addPlanEvent(validPayload);
+        callbacks.onPlanUpdate?.(validPayload);
         break;
       }
 

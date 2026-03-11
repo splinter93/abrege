@@ -12,7 +12,7 @@ import { simpleLogger as logger } from '@/utils/logger';
  * Chunk SSE parsé
  */
 export interface StreamChunk {
-  type: 'start' | 'delta' | 'tool_execution' | 'tool_result' | 'assistant_round_complete' | 'done' | 'error';
+  type: 'start' | 'delta' | 'tool_execution' | 'tool_result' | 'assistant_round_complete' | 'plan_update' | 'done' | 'error';
   content?: string;
   reasoning?: string;
   tool_calls?: Array<{
@@ -45,6 +45,8 @@ export interface StreamChunk {
     wasOverridden: boolean;
     reasons: string[];
   };
+  // ✅ Payload pour plan_update (steps, title)
+  payload?: { title?: string; steps?: Array<{ id: string; content: string; status: string }> };
 }
 
 /**

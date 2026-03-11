@@ -1286,6 +1286,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
 
             // ✅ Créer l'executor OpenAPI (les tools MCP sont gérés nativement par Groq)
             const { OpenApiToolExecutor } = await import('@/services/llm/executors/OpenApiToolExecutor');
+            const { INTERNAL_TOOL_NAMES } = await import('@/services/llm/tools/internalTools');
             const openApiExecutor = new OpenApiToolExecutor('', openApiEndpoints);
             
             // ✅ Exécuter chaque tool call

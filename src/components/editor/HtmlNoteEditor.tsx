@@ -86,7 +86,7 @@ const HtmlNoteEditor: React.FC<HtmlNoteEditorProps> = ({
       </div>
       <div className="html-fullscreen-body">
         <HtmlNoteRenderer
-          htmlContent={rawContent}
+          htmlContent={rawContent ?? ''}
           showSource={showSource}
           hideToolbar
           fullscreen
