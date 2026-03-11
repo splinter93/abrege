@@ -39,6 +39,11 @@
 /* === STYLES MARKDOWN ÉDITEUR === */
 @import './editor-markdown.css';
 
+/* === NOTE TYPES (plan, html, qcm) === */
+@import './plan-note.css';
+@import './html-note.css';
+@import './qcm-note.css';
+
 /* === SYSTÈME UNIFIÉ (EN DERNIER pour override les blocs de code) === */
 @import './unified-blocks.css';
 @import './checkboxes.css';

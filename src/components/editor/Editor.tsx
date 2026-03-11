@@ -43,6 +43,8 @@ import { useEditorStreamListener } from '@/hooks/useEditorStreamListener';
 import { getEditorMarkdown } from '@/utils/editorHelpers';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
 import { useCanvasSelection } from '@/hooks/useCanvasSelection';
+import PlanNoteOverlay from './PlanNoteOverlay';
+import HtmlNoteEditor from './HtmlNoteEditor';
 
 interface EditorProps { 
   noteId: string; 
@@ -116,8 +118,12 @@ const Editor: React.FC<EditorProps> = ({
   // Sidebar Navigation - Pattern chat (hover zone + transform)
   const [sidebarVisible, setSidebarVisible] = React.useState(false);
 
-  // Mode readonly (pages publiques ou preview mode)
-  const isReadonly = readonly || editorState.ui.previewMode;
+  // Plan mode: read-only by default, togglable
+  const isPlanNote = note?.source_type === 'plan';
+  const [isPlanEditUnlocked, setIsPlanEditUnlocked] = React.useState(false);
+
+  // Mode readonly (pages publiques ou preview mode ou plan verrouillé)
+  const isReadonly = readonly || editorState.ui.previewMode || (isPlanNote && !isPlanEditUnlocked);
 
   // REFACTO: Tous les handlers extraits dans useEditorHandlers
   const handlers = useEditorHandlers({
@@ -140,6 +146,16 @@ const Editor: React.FC<EditorProps> = ({
     onEditorRef,
     onReady
   });
+
+  // Sync TipTap editable state (plan lock/unlock, prop readonly).
+  // Preview mode is excluded: EditorMainContent swaps to EditorPreview entirely,
+  // so calling setEditable would needlessly re-render TipTap and destroy Mermaid SVGs.
+  const editorShouldBeEditable = !readonly && !(isPlanNote && !isPlanEditUnlocked);
+  React.useEffect(() => {
+    if (editor) {
+      editor.setEditable(editorShouldBeEditable);
+    }
+  }, [editor, editorShouldBeEditable]);
 
   // ✅ NOTE : Détection automatique des sélections désactivée
   // L'ajout au chat se fait explicitement via le bouton "Add to chat" dans le menu flottant (FloatingMenuNotion)
@@ -398,13 +414,44 @@ const Editor: React.FC<EditorProps> = ({
     };
   }, [noteId]);
 
+  // Plan progress tracking
+  const planProgress = React.useMemo(() => {
+    if (!isPlanNote || !rawContent) return { completed: 0, total: 0 };
+    const checkboxes = rawContent.match(/- \[[ x]\]/g) || [];
+    const completed = (rawContent.match(/- \[x\]/g) || []).length;
+    return { completed, total: checkboxes.length };
+  }, [isPlanNote, rawContent]);
+
   if (!note) {
     return null;
+  }
+
+  // HTML notes: dedicated fullscreen layout
+  if (note.source_type === 'html') {
+    return (
+      <HtmlNoteEditor
+        noteId={note.id}
+        title={note.source_title}
+        rawContent={rawContent}
+        updateNote={updateNote}
+        onClose={onClose ?? (() => router.back())}
+      />
+    );
   }
 
   return (
     <EditorErrorBoundary>
       <EmbedDepthProvider>
+        {/* Plan Note overlay bar */}
+        {isPlanNote && (
+          <PlanNoteOverlay
+            isEditUnlocked={isPlanEditUnlocked}
+            onToggleEdit={() => setIsPlanEditUnlocked(prev => !prev)}
+            completedCount={planProgress.completed}
+            totalCount={planProgress.total}
+          />
+        )}
+
         {/* Sidebar Navigation - Pattern chat exact */}
       {!isReadonly && (
         <>
@@ -446,8 +493,29 @@ const Editor: React.FC<EditorProps> = ({
               handleShareSettingsChange={handleShareSettingsChange}
               publicUrl={note?.public_url || undefined}
               onClose={onClose ?? (() => router.back())}
+              currentTitle={editorState.document.title}
+              renderDocumentHeader={false}
             />
           )}
+          documentHeader={(
+            <EditorHeaderSection
+              editor={editor}
+              noteId={noteId}
+              userId={userId}
+              isReadonly={isReadonly}
+              editorState={editorState}
+              currentFont={note?.font_family || 'Manrope'}
+              kebabBtnRef={kebabBtnRef}
+              canEdit={canEdit}
+              handlers={handlersWithEditor}
+              handleShareSettingsChange={handleShareSettingsChange}
+              publicUrl={note?.public_url || undefined}
+              onClose={onClose ?? (() => router.back())}
+              currentTitle={editorState.document.title}
+              renderToolbar={false}
+            />
+          )}
+          a4Mode={editorState.ui.a4Mode}
           title={editorState.headerImage.titleInImage ? undefined : (
             <EditorTitle 
               value={editorState.document.title} 
@@ -477,6 +545,7 @@ const Editor: React.FC<EditorProps> = ({
               toolbarContext={toolbarContext}
               classeurId={note?.classeur_id ?? undefined}
               isContentReady={isContentReady}
+              sourceType={note?.source_type}
             />
           )}
         />

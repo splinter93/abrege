@@ -139,6 +139,11 @@
   --editor-content-width-normal: 800px;   /* default normal width */
   --editor-content-width-wide: 1000px;    /* wide mode width */
   --editor-content-width: var(--editor-content-width-normal); /* Par défaut */
+  --a4-page-width: 210mm;
+  --a4-page-height: 297mm;
+  --a4-page-margin-top: 18mm;
+  --a4-page-margin-bottom: 20mm;
+  --a4-page-margin-x: 18mm;
 
   /* ==========================================================================
      PADDINGS ET ESPACEMENTS TYPOGRAPHIQUES - PREMIUM

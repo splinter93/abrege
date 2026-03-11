@@ -8,8 +8,11 @@
 
 import React from 'react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
+import type { NoteSourceType } from '@/types/supabase';
 import EditorEditableContent from './EditorEditableContent';
 import EditorPreview from './EditorPreview';
+import HtmlNoteRenderer from './HtmlNoteRenderer';
+import QcmNoteRenderer from './QcmNoteRenderer';
 import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import type { EditorSlashCommand } from '@/components/EditorSlashMenu';
 
@@ -22,17 +25,15 @@ interface EditorMainContentProps {
   slashLang: 'fr' | 'en';
   onOpenImageMenu: () => void;
   onSlashInsert: (cmd: EditorSlashCommand) => void;
-  // Props pour contexte enrichi Ask AI
   noteId?: string;
   noteTitle?: string;
   noteContent?: string;
   noteSlug?: string;
   classeurId?: string;
   classeurName?: string;
-  /** Contexte de l'éditeur : 'editor' (normal) ou 'canvas' (mode canvas) */
   toolbarContext?: 'editor' | 'canvas';
-  // FIX React 18: Attendre que le contenu initial soit chargé
   isContentReady?: boolean;
+  sourceType?: NoteSourceType | null;
 }
 
 const EditorMainContent: React.FC<EditorMainContentProps> = ({
@@ -51,8 +52,17 @@ const EditorMainContent: React.FC<EditorMainContentProps> = ({
   classeurId,
   classeurName,
   toolbarContext = 'editor',
-  isContentReady = true
+  isContentReady = true,
+  sourceType
 }) => {
+  if (sourceType === 'html') {
+    return <HtmlNoteRenderer htmlContent={html || noteContent || ''} />;
+  }
+
+  if (sourceType === 'qcm') {
+    return <QcmNoteRenderer markdownContent={noteContent || ''} />;
+  }
+
   if (isReadonly) {
     return (
       <EditorPreview

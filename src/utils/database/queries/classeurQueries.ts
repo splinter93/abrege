@@ -143,7 +143,7 @@ export async function getClasseurTree(notebookId: string, userId: string, contex
     // Récupérer les notes du classeur
     const { data: notes, error: notesError } = await supabase
       .from('articles')
-      .select('id, source_title, slug, folder_id, position, created_at, updated_at')
+      .select('id, source_title, slug, folder_id, position, created_at, updated_at, source_type')
       .eq('classeur_id', classeurId)
       .eq('user_id', userId)
       .is('trashed_at', null)

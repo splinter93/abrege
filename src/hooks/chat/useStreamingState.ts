@@ -59,6 +59,7 @@ export interface UseStreamingStateReturn {
   setStreamingState: (state: StreamingStateType) => void;
   addToolExecution: (toolCalls: ToolCall[], toolCount: number) => void;
   updateToolResult: (toolCallId: string, result: unknown, success: boolean) => void;
+  addPlanEvent: (payload: { title?: string; steps: Array<{ id: string; content: string; status: string }> }) => void;
   endStreaming: () => void;
   setFading: (fading: boolean) => void; // ✅ NOUVEAU
   reset: () => void;
@@ -276,6 +277,24 @@ export function useStreamingState(): UseStreamingStateReturn {
   }, []);
 
   /**
+   * Ajoute un événement plan à la timeline
+   */
+  const addPlanEvent = useCallback((payload: { title?: string; steps: Array<{ id: string; content: string; status: string }> }) => {
+    const planItem: StreamTimelineItem = {
+      type: 'plan',
+      title: payload.title,
+      steps: payload.steps.map(s => ({
+        id: s.id,
+        content: s.content,
+        status: s.status as 'pending' | 'in_progress' | 'completed'
+      })),
+      timestamp: Date.now()
+    };
+    streamingTimelineRef.current = [...streamingTimelineRef.current, planItem];
+    setStreamingTimeline(prev => [...prev, planItem]);
+  }, []);
+
+  /**
    * Termine le streaming
    */
   const endStreaming = useCallback(() => {
@@ -341,6 +360,7 @@ export function useStreamingState(): UseStreamingStateReturn {
     setStreamingState,
     addToolExecution,
     updateToolResult,
+    addPlanEvent,
     endStreaming,
     setFading, // ✅ NOUVEAU
     reset

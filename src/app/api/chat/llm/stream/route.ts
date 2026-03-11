@@ -602,6 +602,10 @@ export async function POST(request: NextRequest) {
           }
         }
         
+        // ✅ Internal tools (plan_update, etc.) — exécutés localement
+        const { INTERNAL_TOOLS, INTERNAL_TOOL_NAMES } = await import('@/services/llm/tools/internalTools');
+        tools.push(...INTERNAL_TOOLS);
+
         const mcpCount = tools.filter(isMcpTool).length;
         const functionTools = tools.filter(isFunctionTool);
         const openApiCount = functionTools.length;
@@ -1290,6 +1294,49 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
               try {
                 logger.debug(LogCategory.API,`[Stream Route] 🔧 Exécution tool: ${toolCall.function.name}`);
                 
+                // ✅ Internal tools : exécutés localement sans HTTP
+                if (INTERNAL_TOOL_NAMES.has(toolCall.function.name)) {
+                  let args: Record<string, unknown>;
+                  try {
+                    args = JSON.parse(toolCall.function.arguments || '{}');
+                  } catch {
+                    args = { steps: [] };
+                    logger.warn(LogCategory.API, '[Stream Route] Invalid JSON in internal tool arguments', {
+                      toolName: toolCall.function.name,
+                      rawArgs: toolCall.function.arguments?.substring(0, 200),
+                    });
+                  }
+
+                  if (toolCall.function.name === '__plan_update') {
+                    sendSSE({
+                      type: 'plan_update',
+                      payload: args,
+                      toolCallId: toolCall.id,
+                      timestamp: Date.now()
+                    });
+                  }
+                  
+                  const result = 'Plan updated and displayed to user.';
+                  currentMessages.push({
+                    role: 'tool',
+                    tool_call_id: toolCall.id,
+                    name: toolCall.function.name,
+                    content: result,
+                    timestamp: new Date().toISOString()
+                  });
+                  
+                  sendSSE({
+                    type: 'tool_result',
+                    toolCallId: toolCall.id,
+                    toolName: toolCall.function.name,
+                    success: true,
+                    result,
+                    timestamp: Date.now(),
+                    isInternal: true
+                  });
+                  continue;
+                }
+
                 // ✅ Vérifier si c'est un tool OpenAPI (exécuté par nous)
                 // Les tools MCP sont exécutés nativement par Groq, on ne les touche pas
                 const isOpenApiTool = openApiToolNames.has(toolCall.function.name);

@@ -77,6 +77,42 @@ export const TOOL_CALL_INSTRUCTIONS = `
 🎯 **OMETS les paramètres optionnels plutôt que d'envoyer null**
 🎯 **Respecte le schéma exactement**
 🎯 **Utilise les bons types de données**
+
+## 📝 NOTE TYPES (source_type)
+
+When creating notes with \`createNote\`, you can specify a \`source_type\` to change how the note is rendered:
+
+| source_type | Description | Usage |
+|-------------|-------------|-------|
+| *(omit)* | Standard editable markdown note | Default behavior |
+| \`"plan"\` | Structured execution plan. Read-only by default in the editor. | Multi-step tasks, project plans |
+| \`"html"\` | Raw HTML rendered in a sandboxed iframe. | Dashboards, previews, artifacts |
+| \`"qcm"\` | Interactive quiz. Correct answers are marked \`[x]\`. | Questionnaires, evaluations |
+
+### Plan notes
+Use checkbox syntax with emojis for status:
+\`\`\`markdown
+- [ ] ⏳ Step pending
+- [ ] 🔄 Step in progress
+- [x] ✅ Step completed
+\`\`\`
+Update the note via \`updateNote\` as you progress through steps.
+
+### QCM notes
+Use H2 for questions and checkboxes for options. Mark correct answers with \`[x]\`:
+\`\`\`markdown
+## Question 1
+What is 2+2?
+
+- [ ] 3
+- [x] 4
+- [ ] 5
+\`\`\`
+
+### Plan update in chat
+Use the \`__plan_update\` tool to display a compact progress tracker directly in the chat. This is complementary to plan notes — use it for quick inline visibility.
+
+For complex tasks, create a \`"plan"\` note AND use \`__plan_update\` for inline progress.
 `;
 
 /**

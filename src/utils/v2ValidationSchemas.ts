@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
 import { logger, LogCategory } from '@/utils/logger';
+import { NOTE_SOURCE_TYPES } from '@/types/supabase';
 
 /** Détail d'erreur de validation (champ + message) pour réponses 422 et logs */
 export type ValidationErrorDetail = { field: string; message: string };
@@ -29,6 +30,7 @@ export const createNoteV2Schema = z.object({
     z.union([z.string().uuid('folder_id doit être un UUID valide'), z.null()]).optional()
   ),
   is_canva_draft: z.boolean().optional().default(false),
+  source_type: z.enum(NOTE_SOURCE_TYPES).optional(),
 });
 
 /**
@@ -49,6 +51,7 @@ export const updateNoteV2Schema = z.object({
   font_family: z.string().optional(),
   folder_id: z.string().uuid('folder_id doit être un UUID valide').nullable().optional(),
   description: z.string().max(500, 'description trop longue').optional(),
+  source_type: z.enum(NOTE_SOURCE_TYPES).optional(),
 });
 
 /**

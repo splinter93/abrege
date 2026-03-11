@@ -29,6 +29,9 @@ interface EditorHeaderSectionProps {
   handleShareSettingsChange: (settings: Partial<ShareSettings>) => Promise<void>;
   publicUrl?: string;
   onClose: () => void;
+  currentTitle?: string;
+  renderToolbar?: boolean;
+  renderDocumentHeader?: boolean;
 }
 
 const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
@@ -43,7 +46,10 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
   handlers,
   handleShareSettingsChange,
   publicUrl,
-  onClose
+  onClose,
+  currentTitle,
+  renderToolbar = true,
+  renderDocumentHeader = true,
 }) => {
   const handleToolbarTranscription = React.useCallback(
     (text: string) => {
@@ -94,47 +100,52 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
 
   return (
     <>
-      <EditorHeader
-        editor={isReadonly ? null : editor}
-        onClose={onClose}
-        onPreview={handlers.handlePreviewClick}
-        onMenuOpen={editorState.toggleKebabMenu}
-        onImageClick={() => editorState.setImageMenuOpen(true)}
-        onFontChange={handlers.handleFontChange}
-        currentFont={currentFont}
-        kebabBtnRef={kebabBtnRef}
-        readonly={isReadonly}
-        previewMode={editorState.ui.previewMode}
-        showToolbar={editorState.ui.showToolbar}
-        onTranscriptionComplete={handleToolbarTranscription}
-        canEdit={canEdit}
-        noteId={noteId}
-        kebabMenu={
-          editorState.menus.kebabOpen && (
-            <EditorKebabMenu
-              open={editorState.menus.kebabOpen}
-              position={editorState.menus.kebabPos}
-              onClose={() => editorState.setKebabOpen(false)}
-              a4Mode={editorState.ui.a4Mode}
-              setA4Mode={handlers.handleA4ModeChange}
-              slashLang={editorState.ui.slashLang}
-              setSlashLang={handlers.handleSlashLangChange}
-              fullWidth={editorState.ui.fullWidth}
-              setFullWidth={handlers.handleFullWidthChange}
-              showToolbar={editorState.ui.showToolbar}
-              toggleToolbar={editorState.toggleToolbar}
-              noteId={noteId}
-              currentShareSettings={editorState.shareSettings}
-              onShareSettingsChange={handleShareSettingsChange}
-              publicUrl={publicUrl}
-            />
-          )
-        }
-      />
+      {renderToolbar && (
+        <EditorHeader
+          editor={isReadonly ? null : editor}
+          onClose={onClose}
+          onPreview={handlers.handlePreviewClick}
+          onMenuOpen={editorState.toggleKebabMenu}
+          onImageClick={() => editorState.setImageMenuOpen(true)}
+          onFontChange={handlers.handleFontChange}
+          currentFont={currentFont}
+          kebabBtnRef={kebabBtnRef}
+          readonly={isReadonly}
+          previewMode={editorState.ui.previewMode}
+          showToolbar={editorState.ui.showToolbar}
+          onTranscriptionComplete={handleToolbarTranscription}
+          canEdit={canEdit}
+          noteId={noteId}
+          kebabMenu={
+            editorState.menus.kebabOpen && (
+              <EditorKebabMenu
+                open={editorState.menus.kebabOpen}
+                position={editorState.menus.kebabPos}
+                onClose={() => editorState.setKebabOpen(false)}
+                a4Mode={editorState.ui.a4Mode}
+                setA4Mode={handlers.handleA4ModeChange}
+                slashLang={editorState.ui.slashLang}
+                setSlashLang={handlers.handleSlashLangChange}
+                fullWidth={editorState.ui.fullWidth}
+                setFullWidth={handlers.handleFullWidthChange}
+                showToolbar={editorState.ui.showToolbar}
+                toggleToolbar={editorState.toggleToolbar}
+                noteId={noteId}
+                currentTitle={currentTitle}
+                currentHtmlContent={editor?.getHTML()}
+                currentFontFamily={currentFont}
+                currentShareSettings={editorState.shareSettings}
+                onShareSettingsChange={handleShareSettingsChange}
+                publicUrl={publicUrl}
+              />
+            )
+          }
+        />
+      )}
       
       {/* Add header image CTA */}
       {/* 🔧 FIX: Masquer en mode readonly (page publique) - aucun bouton de modification */}
-      {!editorState.headerImage.url && !editorState.ui.previewMode && !isReadonly && (
+      {renderDocumentHeader && !editorState.headerImage.url && !editorState.ui.previewMode && !isReadonly && (
         <div className="editor-add-header-image-row editor-add-image-center">
           <div
             className="editor-add-header-image"
@@ -182,43 +193,45 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
         </div>
       )}
       
-      <EditorHeaderImage
-        headerImageUrl={editorState.headerImage.url}
-        headerImageOffset={editorState.headerImage.offset}
-        headerImageBlur={editorState.headerImage.blur}
-        headerImageOverlay={editorState.headerImage.overlay}
-        headerTitleInImage={editorState.headerImage.titleInImage}
-        onHeaderChange={handlers.handleHeaderChange}
-        onHeaderOffsetChange={handlers.updateHeaderOffset}
-        onHeaderBlurChange={handlers.updateHeaderBlur}
-        onHeaderOverlayChange={handlers.updateHeaderOverlay}
-        onHeaderTitleInImageChange={handlers.updateTitleInImage}
-        imageMenuOpen={editorState.menus.imageMenuOpen}
-        onImageMenuOpen={() => editorState.setImageMenuOpen(true)}
-        onImageMenuClose={() => {
-          if (process.env.NODE_ENV === 'development') {
-            logger.debug(LogCategory.EDITOR, '[EditorHeaderSection] editorState.headerImage.url', {
-              url: editorState.headerImage.url?.substring(0, 100),
-              context: { noteId, operation: 'headerImageClose' }
-            });
+      {renderDocumentHeader && (
+        <EditorHeaderImage
+          headerImageUrl={editorState.headerImage.url}
+          headerImageOffset={editorState.headerImage.offset}
+          headerImageBlur={editorState.headerImage.blur}
+          headerImageOverlay={editorState.headerImage.overlay}
+          headerTitleInImage={editorState.headerImage.titleInImage}
+          onHeaderChange={handlers.handleHeaderChange}
+          onHeaderOffsetChange={handlers.updateHeaderOffset}
+          onHeaderBlurChange={handlers.updateHeaderBlur}
+          onHeaderOverlayChange={handlers.updateHeaderOverlay}
+          onHeaderTitleInImageChange={handlers.updateTitleInImage}
+          imageMenuOpen={editorState.menus.imageMenuOpen}
+          onImageMenuOpen={() => editorState.setImageMenuOpen(true)}
+          onImageMenuClose={() => {
+            if (process.env.NODE_ENV === 'development') {
+              logger.debug(LogCategory.EDITOR, '[EditorHeaderSection] editorState.headerImage.url', {
+                url: editorState.headerImage.url?.substring(0, 100),
+                context: { noteId, operation: 'headerImageClose' }
+              });
+            }
+            editorState.setImageMenuOpen(false);
+          }}
+          noteId={noteId}
+          userId={userId}
+          titleElement={
+            <EditorTitle 
+              value={editorState.document.title} 
+              onChange={editorState.setTitle} 
+              onBlur={handlers.handleTitleBlur} 
+              placeholder="Titre de la note..." 
+              disabled={isReadonly} 
+            />
           }
-          editorState.setImageMenuOpen(false);
-        }}
-        noteId={noteId}
-        userId={userId}
-        titleElement={
-          <EditorTitle 
-            value={editorState.document.title} 
-            onChange={editorState.setTitle} 
-            onBlur={handlers.handleTitleBlur} 
-            placeholder="Titre de la note..." 
-            disabled={isReadonly} 
-          />
-        }
-        previewMode={editorState.ui.previewMode}
-        readonly={isReadonly}
-        showToolbar={editorState.ui.showToolbar}
-      />
+          previewMode={editorState.ui.previewMode}
+          readonly={isReadonly}
+          showToolbar={editorState.ui.showToolbar}
+        />
+      )}
     </>
   );
 };

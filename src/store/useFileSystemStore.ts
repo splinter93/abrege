@@ -34,6 +34,7 @@ export interface Note {
     allow_comments?: boolean;
   };
   is_canva_draft?: boolean;
+  source_type?: import('@/types/supabase').NoteSourceType | null;
 }
 
 export interface Folder {

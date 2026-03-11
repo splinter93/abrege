@@ -1,0 +1,151 @@
+.a4-editor-stage {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 56px;
+}
+
+.a4-editor-stage__viewport {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.a4-editor-document {
+  width: var(--a4-page-width, 210mm);
+  min-height: var(--a4-page-height, 297mm);
+  position: relative;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+}
+
+.a4-editor-document__content {
+  position: relative;
+  z-index: 1;
+  padding: var(--a4-page-margin-top, 18mm) var(--a4-page-margin-x, 18mm) var(--a4-page-margin-bottom, 20mm);
+  background: #ffffff;
+  color: #111827;
+  --editor-text-color: #111827;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-tertiary: #6b7280;
+  --chat-text-primary: #111827;
+  --chat-text-secondary: #4b5563;
+  --color-bg-primary: #ffffff;
+  --color-bg-header: #ffffff;
+  --surface-1: #ffffff;
+  --surface-2: #f5f7fb;
+  --surface-3: #eef2f7;
+  --blk-bg: #f5f7fb;
+  --blk-fg: #111827;
+  --chat-surface-border: 1px solid #e5e7eb;
+  --border-subtle: #e5e7eb;
+  --border-medium: #d1d5db;
+  --code-brightness-filter: none;
+}
+
+.a4-editor-document__divider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.editor-layout.a4-mode {
+  background: #eef2f7 !important;
+}
+
+.editor-layout.a4-mode .editor-content-wrapper,
+.editor-layout.a4-mode .editor-content-inner,
+.editor-layout.a4-mode .noteLayout-title,
+.editor-layout.a4-mode .noteLayout-content,
+.editor-layout.a4-mode .editor-content,
+.editor-layout.a4-mode .tiptap-editor-container,
+.editor-layout.a4-mode .ProseMirror,
+.editor-layout.a4-mode .markdown-body {
+  width: 100%;
+  max-width: 100%;
+}
+
+.editor-layout.a4-mode .editor-content-inner {
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.editor-layout.a4-mode .editor-header-image,
+.editor-layout.a4-mode .editor-add-header-image-row {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.editor-layout.a4-mode .editor-add-header-image-row {
+  width: var(--a4-page-width, 210mm);
+  padding: 0;
+  background: #ffffff;
+}
+
+.editor-layout.a4-mode .editor-header-image {
+  width: calc(100% + (2 * var(--a4-page-margin-x, 18mm)) + 6px);
+  max-width: none;
+  margin-top: calc(-1 * var(--a4-page-margin-top, 18mm) - 3px);
+  margin-right: calc(-1 * var(--a4-page-margin-x, 18mm) - 3px);
+  margin-left: calc(-1 * var(--a4-page-margin-x, 18mm));
+  margin-bottom: 0;
+  box-shadow: none;
+}
+
+.editor-layout.a4-mode .noteLayout.imageOnly.noImage .noteLayout-title {
+  padding-top: 0;
+}
+
+.editor-layout.a4-mode .noteLayout.imageOnly .noteLayout-content,
+.editor-layout.a4-mode .noteLayout.imageWithTitle .noteLayout-content,
+.editor-layout.a4-mode .noteLayout.imageWithTitle.wide-mode .noteLayout-content {
+  padding-top: 0;
+}
+
+.editor-layout.a4-mode .noteLayout-content .editor-content {
+  padding-bottom: 0;
+}
+
+.editor-layout.a4-mode .editor-content-wrapper {
+  background: transparent;
+}
+
+.editor-layout.a4-mode .noteLayout-title textarea,
+.editor-layout.a4-mode .noteLayout-title h1,
+.editor-layout.a4-mode .markdown-body,
+.editor-layout.a4-mode .ProseMirror.editor-content,
+.editor-layout.a4-mode .editor-content li {
+  color: #111827 !important;
+}
+
+.editor-layout.a4-mode .ProseMirror a,
+.editor-layout.a4-mode .markdown-body a {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: #b45309;
+  text-decoration-color: #b45309;
+}
+
+.editor-layout.a4-mode .noteLayout-title {
+  background: #ffffff !important;
+}
+
+.editor-layout.a4-mode .noteLayout-content {
+  background: #ffffff !important;
+}
+
+.editor-layout.a4-mode .editor-header-image img,
+.editor-layout.a4-mode .editor-header-image-img {
+  position: absolute;
+  inset: -3px -3px 0 0;
+  width: calc(100% + 3px) !important;
+  height: calc(100% + 3px) !important;
+  max-width: none !important;
+}

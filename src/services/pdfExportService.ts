@@ -18,12 +18,19 @@ export interface PdfExportOptions {
   title: string;
   htmlContent: string;
   filename?: string;
+  fontFamily?: string | null;
   headerImage?: string | null;
+  headerImageOffset?: number | null;
+  headerImageBlur?: number | null;
+  headerImageOverlay?: number | null;
+  headerTitleInImage?: boolean;
 }
 
 export interface PdfExportResult {
   success: boolean;
   error?: string;
+  degraded?: boolean;
+  warning?: string;
 }
 
 /**
@@ -39,7 +46,17 @@ export async function exportNoteToPdf(
   options: PdfExportOptions
 ): Promise<PdfExportResult> {
   try {
-    const { title, htmlContent, filename = `${title || 'note'}.pdf`, headerImage } = options;
+    const {
+      title,
+      htmlContent,
+      filename = `${title || 'note'}.pdf`,
+      fontFamily,
+      headerImage,
+      headerImageOffset,
+      headerImageBlur,
+      headerImageOverlay,
+      headerTitleInImage,
+    } = options;
 
     // Validation du contenu
     if (!htmlContent || htmlContent.trim().length === 0) {
@@ -55,7 +72,12 @@ export async function exportNoteToPdf(
       title,
       htmlContent,
       filename,
-      headerImage
+      fontFamily,
+      headerImage,
+      headerImageOffset,
+      headerImageBlur,
+      headerImageOverlay,
+      headerTitleInImage,
     });
 
     if (playwrightResult.success) {
@@ -73,12 +95,23 @@ export async function exportNoteToPdf(
       htmlContent,
       title,
       filename,
-      headerImage
+      fontFamily,
+      headerImage,
+      headerImageOffset,
+      headerImageBlur,
+      headerImageOverlay,
+      headerTitleInImage,
     });
 
     if (html2canvasResult.success) {
-      logger.info('[pdfExportService] PDF généré via html2canvas avec succès');
-      return html2canvasResult;
+      logger.warn('[pdfExportService] PDF généré via fallback html2canvas (rendu dégradé)', {
+        note: 'Le texte est rasterisé et le rendu peut différer du mode A4 Playwright.'
+      });
+      return {
+        success: true,
+        degraded: true,
+        warning: 'Export réalisé via le fallback rasterisé. Le rendu peut être moins fidèle.',
+      };
     }
 
     // Les deux méthodes ont échoué

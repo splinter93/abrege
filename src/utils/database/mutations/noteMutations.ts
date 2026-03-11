@@ -103,7 +103,7 @@ export async function updateNote(ref: string, data: UpdateNoteData, userId: stri
     // Charger l'état courant
     const { data: currentNote, error: currentError } = await supabase
       .from('articles')
-      .select('id, slug, public_url, wide_mode, a4_mode, slash_lang, font_family, folder_id, description, source_title, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image')
+      .select('id, slug, public_url, wide_mode, a4_mode, slash_lang, font_family, folder_id, description, source_title, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, source_type')
       .eq('id', noteId)
       .eq('user_id', userId)
       .single();
@@ -129,7 +129,8 @@ export async function updateNote(ref: string, data: UpdateNoteData, userId: stri
         header_image_offset: currentNote.header_image_offset,
         header_image_blur: currentNote.header_image_blur,
         header_image_overlay: currentNote.header_image_overlay,
-        header_title_in_image: currentNote.header_title_in_image
+        header_title_in_image: currentNote.header_title_in_image,
+        source_type: currentNote.source_type
       },
       data,
       noteId,

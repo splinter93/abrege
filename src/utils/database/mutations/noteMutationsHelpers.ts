@@ -40,6 +40,7 @@ export async function prepareNoteUpdateData(
     header_image_blur: number | null;
     header_image_overlay: number | null;
     header_title_in_image: boolean | null;
+    source_type?: import('@/types/supabase').NoteSourceType | null;
   },
   data: UpdateNoteData,
   noteId: string,
@@ -92,9 +93,12 @@ export async function prepareNoteUpdateData(
     }
   }
   
-  // Sanitizer le contenu
+  // Sanitizer le contenu (skip pour les notes HTML qui stockent du HTML brut volontairement)
+  // Securite: utiliser UNIQUEMENT la valeur DB (trusted), jamais data.source_type (untrusted payload)
   if (data.markdown_content !== undefined) {
-    updateData.markdown_content = sanitizeMarkdownContent(data.markdown_content);
+    updateData.markdown_content = currentNote.source_type === 'html'
+      ? data.markdown_content
+      : sanitizeMarkdownContent(data.markdown_content);
   }
   if (data.html_content !== undefined) {
     updateData.html_content = sanitizeNoteEmbedHtml(data.html_content);
@@ -108,6 +112,7 @@ export async function prepareNoteUpdateData(
   if (data.header_image_blur !== undefined) updateData.header_image_blur = data.header_image_blur;
   if (data.header_image_overlay !== undefined) updateData.header_image_overlay = data.header_image_overlay;
   if (data.header_title_in_image !== undefined) updateData.header_title_in_image = data.header_title_in_image;
+  if (data.source_type !== undefined) updateData.source_type = data.source_type;
   if (data.wide_mode !== undefined) updateData.wide_mode = data.wide_mode;
   if (data.a4_mode !== undefined) updateData.a4_mode = data.a4_mode;
   if (data.slash_lang !== undefined) updateData.slash_lang = data.slash_lang;

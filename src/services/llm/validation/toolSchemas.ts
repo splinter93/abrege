@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { NOTE_SOURCE_TYPES } from '@/types/supabase';
 
 // ==================== NOTES ====================
 
@@ -12,7 +13,8 @@ export const createNoteSchema = z.object({
   markdown_content: z.string().optional(),
   notebook_id: z.string().uuid('notebook_id doit être un UUID valide'),
   folder_id: z.string().uuid('folder_id doit être un UUID valide').optional(),
-  header_image: z.string().url('header_image doit être une URL valide').optional()
+  header_image: z.string().url('header_image doit être une URL valide').optional(),
+  source_type: z.enum(NOTE_SOURCE_TYPES).optional()
 });
 
 export const getNoteSchema = z.object({
@@ -31,7 +33,8 @@ export const updateNoteSchema = z.object({
   header_image_overlay: z.number().min(0).max(5).optional(),
   a4_mode: z.boolean().optional(),
   wide_mode: z.boolean().optional(),
-  header_title_in_image: z.boolean().optional()
+  header_title_in_image: z.boolean().optional(),
+  source_type: z.enum(NOTE_SOURCE_TYPES).optional()
 });
 
 export const moveNoteSchema = z.object({

@@ -34,6 +34,7 @@ interface ClasseurWithContent {
     created_at: string;
     updated_at: string;
     slug?: string;
+    source_type?: import('@/types/supabase').NoteSourceType | null;
   }>;
 }
 
@@ -408,6 +409,7 @@ export class OptimizedClasseurService {
         updated_at: n.updated_at ?? new Date().toISOString(),
         slug: n.slug ?? '',
         visibility: n.visibility ?? undefined,
+        source_type: n.source_type ?? null,
       }))
     );
 
@@ -472,7 +474,7 @@ export class OptimizedClasseurService {
     return this.withRetry(async () => {
       const { data, error } = await supabase
         .from('articles')
-        .select('id, source_title, folder_id, created_at, updated_at, slug')
+        .select('id, source_title, folder_id, created_at, updated_at, slug, source_type')
         .eq('classeur_id', classeurId)
         .eq('is_in_trash', false) // 🔧 CORRECTION: Exclure les notes supprimées
         .order('created_at', { ascending: false });

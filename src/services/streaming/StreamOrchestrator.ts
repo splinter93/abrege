@@ -38,6 +38,7 @@ export interface StreamCallbacks {
   onToolCalls?: (toolCalls: ToolCall[], toolName: string) => void;
   onToolExecution?: (toolCount: number, toolCalls: ToolCall[]) => void;
   onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
+  onPlanUpdate?: (payload: { title?: string; steps: Array<{ id: string; content: string; status: string }> }) => void;
   onComplete?: (
     fullContent: string,
     fullReasoning: string,
@@ -46,7 +47,6 @@ export interface StreamCallbacks {
     streamTimeline?: StreamTimeline
   ) => void;
   onError?: (error: string | StreamErrorDetails) => void;
-  // ✅ NOUVEAU : Callback pour info modèle (debug)
   onModelInfo?: (modelInfo: {
     original: string;
     current: string;
@@ -208,6 +208,15 @@ export class StreamOrchestrator {
       case 'assistant_round_complete':
         this.processAssistantRoundComplete(chunk, callbacks);
         break;
+
+      case 'plan_update': {
+        const payload = chunk.payload;
+        if (!payload?.steps) break;
+        logger.dev('[StreamOrchestrator] 📋 Plan update reçu', payload);
+        this.timeline.addPlanEvent(payload);
+        callbacks.onPlanUpdate?.(payload);
+        break;
+      }
 
       case 'done':
         logger.dev('[StreamOrchestrator] 🏁 Stream [DONE]', {

@@ -60,6 +60,7 @@ export interface Note {
   updated_at: string;
   markdown_content?: string;
   html_content?: string;
+  source_type?: import('@/types/supabase').NoteSourceType | null;
 }
 
 export interface Classeur {
@@ -93,6 +94,7 @@ export interface CreateNoteRequest {
   folder_id?: string;
   markdown_content?: string;
   header_image?: string;
+  source_type?: import('@/types/supabase').NoteSourceType | null;
 }
 
 export interface UpdateNoteRequest {
@@ -101,6 +103,7 @@ export interface UpdateNoteRequest {
   html_content?: string;
   header_image?: string;
   folder_id?: string;
+  source_type?: import('@/types/supabase').NoteSourceType | null;
 }
 
 export interface CreateClasseurRequest {

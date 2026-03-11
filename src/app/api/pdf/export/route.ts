@@ -19,7 +19,12 @@ export const dynamic = 'force-dynamic';
 interface PdfExportRequest {
   title: string;
   htmlContent: string;
+  fontFamily?: string | null;
   headerImage?: string | null;
+  headerImageOffset?: number | null;
+  headerImageBlur?: number | null;
+  headerImageOverlay?: number | null;
+  headerTitleInImage?: boolean;
 }
 
 /**
@@ -48,7 +53,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // 📥 Récupérer le body
     const body: PdfExportRequest = await request.json();
-    const { title, htmlContent, headerImage } = body;
+    const {
+      title,
+      htmlContent,
+      fontFamily,
+      headerImage,
+      headerImageOffset,
+      headerImageBlur,
+      headerImageOverlay,
+      headerTitleInImage,
+    } = body;
 
     if (!htmlContent || htmlContent.trim().length === 0) {
       return NextResponse.json(
@@ -58,14 +72,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // ✅ Créer la page HTML complète
-    const fullHtml = createFullHtmlPage({ title, htmlContent, headerImage });
+    const fullHtml = createFullHtmlPage({
+      title,
+      htmlContent,
+      fontFamily,
+      headerImage,
+      headerImageOffset,
+      headerImageBlur,
+      headerImageOverlay,
+      headerTitleInImage,
+    });
     
     // ✅ Debug: Log du HTML généré (premiers 500 caractères)
     logApi.info('📄 HTML généré pour Playwright', {
       ...context,
       htmlLength: fullHtml.length,
       htmlPreview: fullHtml.substring(0, 500),
-      hasHeaderImage: !!headerImage
+      hasHeaderImage: !!headerImage,
+      fontFamily,
+      headerTitleInImage,
     });
     
     // ✅ Encoder en base64 pour créer un data URI
@@ -101,7 +126,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             left: '0mm'
           },
           waitFor: 'body[data-ready="true"]',
-          preferCSSPageSize: false,
+          preferCSSPageSize: true,
           displayHeaderFooter: false
         }
       })

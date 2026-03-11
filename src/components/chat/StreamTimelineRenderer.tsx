@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import type { StreamTimeline, StreamTimelineItem } from '@/types/streamTimeline';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import { StreamingIndicator } from './StreamingIndicator';
+import PlanStepList from './PlanStepList';
 import { simpleLogger as logger } from '@/utils/logger';
 
 interface StreamTimelineRendererProps {
@@ -93,9 +94,14 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
               </div>
             );
 
+          case 'plan':
+            return (
+              <div key={`plan-${index}`} className="stream-timeline-plan" style={{ marginTop: '8px', marginBottom: '8px' }}>
+                <PlanStepList title={item.title} steps={item.steps} />
+              </div>
+            );
+
           case 'tool_result':
-            // Les tool results sont affichés dans le bloc tool_execution
-            // On peut les skip ici ou les afficher séparément si nécessaire
             return null;
 
           default:

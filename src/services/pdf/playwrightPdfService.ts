@@ -13,7 +13,12 @@ export interface PlaywrightPdfOptions {
   title: string;
   htmlContent: string;
   filename?: string;
+  fontFamily?: string | null;
   headerImage?: string | null;
+  headerImageOffset?: number | null;
+  headerImageBlur?: number | null;
+  headerImageOverlay?: number | null;
+  headerTitleInImage?: boolean;
 }
 
 export interface PlaywrightPdfResult {
@@ -31,7 +36,17 @@ export async function generatePdfWithPlaywright(
   options: PlaywrightPdfOptions
 ): Promise<PlaywrightPdfResult> {
   try {
-    const { title, htmlContent, filename = `${options.title || 'note'}.pdf`, headerImage } = options;
+    const {
+      title,
+      htmlContent,
+      filename = `${options.title || 'note'}.pdf`,
+      fontFamily,
+      headerImage,
+      headerImageOffset,
+      headerImageBlur,
+      headerImageOverlay,
+      headerTitleInImage,
+    } = options;
 
     // Récupérer le token d'authentification
     const { supabase } = await import('@/supabaseClient');
@@ -54,7 +69,12 @@ export async function generatePdfWithPlaywright(
       body: JSON.stringify({
         title,
         htmlContent,
-        headerImage
+        fontFamily,
+        headerImage,
+        headerImageOffset,
+        headerImageBlur,
+        headerImageOverlay,
+        headerTitleInImage,
       })
     });
 
@@ -95,8 +115,8 @@ export async function generatePdfWithPlaywright(
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      // Ajouter un préfixe pour identifier que c'est Playwright
-      a.download = `[PLAYWRIGHT]_${filename.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+      const sanitizedFilename = filename.replace(/\.pdf$/i, '').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      a.download = `${sanitizedFilename}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

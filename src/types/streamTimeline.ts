@@ -50,12 +50,27 @@ export interface StreamToolResultEvent {
 }
 
 /**
+ * Événement de mise à jour d'un plan dans le stream
+ */
+export interface StreamPlanEvent {
+  type: 'plan';
+  title?: string;
+  steps: Array<{
+    id: string;
+    content: string;
+    status: 'pending' | 'in_progress' | 'completed';
+  }>;
+  timestamp: number;
+}
+
+/**
  * Union type pour tous les événements possibles
  */
 export type StreamTimelineItem = 
   | StreamTextEvent 
   | StreamToolExecutionEvent 
-  | StreamToolResultEvent;
+  | StreamToolResultEvent
+  | StreamPlanEvent;
 
 /**
  * Timeline complète d'un message streamed

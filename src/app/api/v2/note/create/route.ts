@@ -192,10 +192,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       });
     }
 
-    // 🛡️ SÉCURITÉ : Sanitizer le markdown pour empêcher les injections HTML
     // Accepter "content" comme alias de markdown_content (payloads externes / Synesia envoient souvent "content")
     const rawContent = validatedData.markdown_content || validatedData.content || '';
-    const safeMarkdown = sanitizeMarkdownContent(rawContent);
+    const safeMarkdown = validatedData.source_type === 'html'
+      ? rawContent
+      : sanitizeMarkdownContent(rawContent);
 
     // Créer la note directement dans la base de données
     const { data: note, error: createError } = await supabase
@@ -211,7 +212,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         user_id: userId,
         slug,
         public_url: publicUrl,
-        is_canva_draft: validatedData.is_canva_draft || false // ✅ NOUVEAU: Flag canva draft
+        is_canva_draft: validatedData.is_canva_draft || false,
+        ...(validatedData.source_type ? { source_type: validatedData.source_type } : {})
       })
       .select(`
         id,
@@ -225,7 +227,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         created_at,
         updated_at,
         markdown_content,
-        html_content
+        html_content,
+        source_type
       `)
       .single();
 

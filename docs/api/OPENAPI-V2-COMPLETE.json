@@ -116,6 +116,11 @@
                     "type": "boolean",
                     "default": false,
                     "description": "True pour un brouillon Canva (optionnel)"
+                  },
+                  "source_type": {
+                    "type": "string",
+                    "enum": ["markdown", "plan", "html", "qcm"],
+                    "description": "Type of note rendering. 'plan' = structured plan with checkboxes (read-only by default), 'html' = raw HTML rendering, 'qcm' = interactive questionnaire. Default is markdown."
                   }
                 },
                 "required": ["source_title"]
@@ -189,7 +194,12 @@
                   "slash_lang": {"type": "string", "enum": ["fr", "en"]},
                   "font_family": {"type": "string"},
                   "folder_id": {"type": "string", "format": "uuid", "nullable": true},
-                  "description": {"type": "string", "maxLength": 500}
+                  "description": {"type": "string", "maxLength": 500},
+                  "source_type": {
+                    "type": "string",
+                    "enum": ["markdown", "plan", "html", "qcm"],
+                    "description": "Type of note rendering. 'plan' = structured plan with checkboxes, 'html' = raw HTML, 'qcm' = interactive questionnaire."
+                  }
                 }
               }
             }

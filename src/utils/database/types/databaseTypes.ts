@@ -43,6 +43,8 @@ export interface CreateNoteData {
   folder_id?: string | null;
   /** Description de la note */
   description?: string;
+  /** Type de note : markdown (défaut), plan, html, qcm */
+  source_type?: import('@/types/supabase').NoteSourceType | null;
 }
 
 /**
@@ -81,6 +83,8 @@ export interface UpdateNoteData {
   classeur_id?: string | null;
   /** Est un brouillon canva (optionnel) */
   is_canva_draft?: boolean;
+  /** Type de note : markdown (défaut), plan, html, qcm */
+  source_type?: import('@/types/supabase').NoteSourceType | null;
 }
 
 /**

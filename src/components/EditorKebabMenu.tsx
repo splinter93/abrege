@@ -25,6 +25,9 @@ interface EditorKebabMenuProps {
   showToolbar: boolean;
   toggleToolbar: () => void;
   noteId: string;
+  currentTitle?: string;
+  currentHtmlContent?: string;
+  currentFontFamily?: string | null;
   currentShareSettings: ShareSettings;
   onShareSettingsChange: (settings: ShareSettingsUpdate) => Promise<void>;
   publicUrl?: string;
@@ -43,6 +46,9 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   showToolbar,
   toggleToolbar,
   noteId,
+  currentTitle,
+  currentHtmlContent,
+  currentFontFamily,
   currentShareSettings,
   onShareSettingsChange,
   publicUrl,
@@ -55,8 +61,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
 
   // Récupérer la note depuis le store
   const note = useFileSystemStore((state) => state.notes[noteId]);
-  // Utiliser directement html_content de la base de données (généré par Tiptap)
-  const htmlContent = note?.html_content || '';
+  const htmlContent = currentHtmlContent || note?.html_content || '';
   const currentClasseurId = note?.classeur_id || null;
 
   useEffect(() => {
@@ -135,7 +140,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       setIsExporting(true);
       onClose(); // Fermer le menu
 
-      const title = note?.source_title || 'Note';
+      const title = currentTitle || note?.source_title || 'Note';
       
       // ✅ Debug: Vérifier le contenu avant export
       if (process.env.NODE_ENV === 'development') {
@@ -160,13 +165,26 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
 
       const result = await exportNoteToPdf({
         title,
-        htmlContent: htmlContent,
+        htmlContent,
         filename: `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`,
-        headerImage: note?.header_image || null
+        fontFamily: currentFontFamily || note?.font_family || 'Manrope',
+        headerImage: note?.header_image || null,
+        headerImageOffset: note?.header_image_offset ?? 50,
+        headerImageBlur: note?.header_image_blur ?? 0,
+        headerImageOverlay: note?.header_image_overlay ?? 0,
+        headerTitleInImage: note?.header_title_in_image ?? false,
       });
 
       if (result.success) {
-        toast.success(slashLang === 'fr' ? 'PDF exporté avec succès' : 'PDF exported successfully');
+        if (result.degraded) {
+          toast.success(
+            slashLang === 'fr'
+              ? 'PDF exporté via un mode de secours, avec une fidélité visuelle réduite'
+              : 'PDF exported via fallback mode with reduced visual fidelity'
+          );
+        } else {
+          toast.success(slashLang === 'fr' ? 'PDF exporté avec succès' : 'PDF exported successfully');
+        }
       } else {
         toast.error(
           slashLang === 'fr' 
@@ -304,7 +322,6 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       icon: <A4Icon />,
       onClick: () => { setA4Mode(!a4Mode); },
       color: a4Mode ? '#10b981' : '#D4D4D4',
-      type: 'coming-soon' as const,
       showCopyButton: false,
     }
   ] as const;

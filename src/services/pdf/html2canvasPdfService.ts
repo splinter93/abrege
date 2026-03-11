@@ -12,14 +12,12 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { simpleLogger as logger } from '@/utils/logger';
 import { prepareElementForPdf } from '@/utils/pdf/prepareElementForPdf';
+import type { PrintA4DocumentOptions } from '@/utils/pdf/printA4Document';
 import { waitForImages } from '@/utils/pdf/waitForImages';
 import { addPaginationToPdf } from './pdfPaginationService';
 
-export interface Html2CanvasPdfOptions {
-  htmlContent: string;
-  title: string;
+export interface Html2CanvasPdfOptions extends PrintA4DocumentOptions {
   filename: string;
-  headerImage?: string | null;
 }
 
 export interface Html2CanvasPdfResult {
@@ -130,10 +128,10 @@ async function cleanupTempElement(element: HTMLElement): Promise<void> {
 export async function generatePdfWithHtml2Canvas(
   options: Html2CanvasPdfOptions
 ): Promise<Html2CanvasPdfResult> {
-  const { htmlContent, title, filename, headerImage } = options;
+  const { htmlContent, title, filename } = options;
   
   // Préparer l'élément DOM
-  const tempElement = prepareElementForPdf(htmlContent, title, headerImage);
+  const tempElement = prepareElementForPdf(options);
   
   // Positionner l'élément pour html2canvas
   positionElementForCapture(tempElement);
@@ -183,7 +181,7 @@ export async function generatePdfWithHtml2Canvas(
     
     // Capturer l'élément avec html2canvas
     const canvas = await html2canvas(tempElement, {
-      scale: 2,
+      scale: 3,
       useCORS: true,
       allowTaint: false,
       backgroundColor: '#ffffff',

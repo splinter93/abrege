@@ -150,7 +150,8 @@ export const useOptimizedNoteLoader = ({
         public_url: '',
         folder_id: metadata.folder_id ?? null,
         classeur_id: metadata.classeur_id ?? null,
-        position: 0
+        position: 0,
+        source_type: metadata.source_type ?? null,
       };
 
       // ✅ Ajouter/mettre à jour la note dans le store avec l'ID résolu

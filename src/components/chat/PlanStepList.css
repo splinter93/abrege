@@ -1,0 +1,79 @@
+.plan-step-list {
+  border: 1px solid var(--border-color, #e5e5e5);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 8px 0;
+  background: var(--bg-secondary, #fafafa);
+}
+
+.plan-step-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color, #e5e5e5);
+  background: var(--bg-tertiary, #f0f0f0);
+}
+
+.plan-step-list-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.plan-step-list-counter {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary, #888);
+}
+
+.plan-step-list-items {
+  padding: 6px 0;
+}
+
+.plan-step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-primary, #333);
+}
+
+.plan-step-item--completed .plan-step-text {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.plan-step-icon--pending {
+  color: var(--text-secondary, #aaa);
+}
+
+.plan-step-icon--active {
+  color: var(--accent-primary, #6366f1);
+}
+
+.plan-step-icon--done {
+  color: var(--color-success, #22c55e);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .plan-step-list {
+    border-color: var(--border-color, #333);
+    background: var(--bg-secondary, #1a1a1a);
+  }
+  .plan-step-list-header {
+    border-color: var(--border-color, #333);
+    background: var(--bg-tertiary, #222);
+  }
+}

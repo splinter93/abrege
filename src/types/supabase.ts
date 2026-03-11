@@ -1,5 +1,8 @@
 // Types générés Supabase (extrait)
 
+export const NOTE_SOURCE_TYPES = ['markdown', 'plan', 'html', 'qcm'] as const;
+export type NoteSourceType = (typeof NOTE_SOURCE_TYPES)[number];
+
 export type Article = {
   classeur_id: string | null;
   created_at: string | null;
@@ -21,7 +24,7 @@ export type Article = {
   public_url: string | null;
   slug: string | null;
   source_title: string;
-  source_type: string | null;
+  source_type: NoteSourceType | null;
   source_url: string | null;
   summary: string | null;
   tags: string[] | null;
@@ -87,7 +90,7 @@ export type SharedNote = {
   public_url: string | null;
   slug: string | null;
   source_title: string;
-  source_type: string | null;
+  source_type: NoteSourceType | null;
   source_url: string | null;
   summary: string | null;
   tags: string[] | null;

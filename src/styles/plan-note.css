@@ -1,0 +1,104 @@
+/* Plan Note Overlay - Barre de statut pour les notes de type 'plan' */
+
+.plan-note-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  background: var(--bg-secondary, #f5f5f5);
+  border-bottom: 1px solid var(--border-color, #e5e5e5);
+  font-size: 13px;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.plan-note-overlay-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.plan-note-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: var(--accent-primary, #6366f1);
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.plan-note-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary, #666);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.plan-note-progress-bar {
+  display: inline-block;
+  width: 60px;
+  height: 4px;
+  background: var(--bg-tertiary, #e0e0e0);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.plan-note-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--color-success, #22c55e);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.plan-note-edit-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #e5e5e5);
+  background: transparent;
+  color: var(--text-secondary, #666);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.plan-note-edit-toggle:hover {
+  background: var(--bg-hover, #f0f0f0);
+  color: var(--text-primary, #333);
+  border-color: var(--text-secondary, #999);
+}
+
+/* Lecture seule : fond subtil sur le contenu */
+.plan-note-readonly .noteLayout-content {
+  opacity: 0.95;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .plan-note-overlay {
+    background: var(--bg-secondary, #1e1e1e);
+    border-bottom-color: var(--border-color, #333);
+  }
+
+  .plan-note-edit-toggle {
+    border-color: var(--border-color, #444);
+    color: var(--text-secondary, #aaa);
+  }
+
+  .plan-note-edit-toggle:hover {
+    background: var(--bg-hover, #2a2a2a);
+    color: var(--text-primary, #eee);
+  }
+}

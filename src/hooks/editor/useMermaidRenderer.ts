@@ -8,23 +8,25 @@
  */
 
 import { useCallback } from 'react';
+import type { RefObject } from 'react';
 import { initializeMermaid } from '@/services/mermaid/mermaidConfig';
 import { normalizeMermaidContent } from '@/components/chat/mermaidService';
 import { logger, LogCategory } from '@/utils/logger';
 
 interface UseMermaidRendererOptions {
-  container: HTMLElement | null;
+  containerRef: RefObject<HTMLElement | null>;
   noteId?: string;
 }
 
 /**
  * Hook pour rendre les diagrammes Mermaid dans un conteneur
  */
-export function useMermaidRenderer({ container, noteId }: UseMermaidRendererOptions) {
+export function useMermaidRenderer({ containerRef, noteId }: UseMermaidRendererOptions) {
   const renderMermaidBlocks = useCallback(async (retryCount = 0): Promise<void> => {
     // FIX: Attendre que le DOM soit mis à jour après l'injection du HTML
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     
+    const container = containerRef.current;
     if (!container) return;
     
     const mermaidBlocks = container.querySelectorAll('.u-block--mermaid[data-mermaid="true"]');
@@ -101,12 +103,13 @@ export function useMermaidRenderer({ container, noteId }: UseMermaidRendererOpti
         body.innerHTML = `<pre><code>${mermaidContent}</code></pre>`;
       }
     }
-  }, [container, noteId]);
+  }, [containerRef, noteId]);
 
   const checkAndRenderMermaid = useCallback(async (retryCount = 0): Promise<void> => {
     // Attendre un peu pour que le HTML soit injecté
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     
+    const container = containerRef.current;
     if (!container) return;
     
     // Vérifier si des blocs existent déjà
@@ -164,7 +167,7 @@ export function useMermaidRenderer({ container, noteId }: UseMermaidRendererOpti
         await renderMermaidBlocks();
       }
     }
-  }, [container, noteId, renderMermaidBlocks]);
+  }, [containerRef, noteId, renderMermaidBlocks]);
 
   return {
     renderMermaidBlocks,

@@ -40,7 +40,7 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({
 
   // Hooks pour Mermaid et event listeners
   const { renderMermaidBlocks, checkAndRenderMermaid } = useMermaidRenderer({
-    container: containerRef.current,
+    containerRef,
     noteId
   });
 
@@ -48,154 +48,60 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({
     container: containerRef.current
   });
 
-  // Attacher les event listeners et rendre mermaid en readonly
+  // Rendre les blocs Mermaid et attacher les event listeners après chaque injection HTML
   useEffect(() => {
     if (!containerRef.current) return;
-    
     const container = containerRef.current;
-    
-    // CRITIQUE: Attendre que le HTML soit disponible (important pour pages publiques)
+
     if (!html || html.trim() === '' || html === '<div class="markdown-loading">Chargement...</div>') {
-      // HTML pas encore prêt, réessayer plus tard
-      return; // Le useEffect se re-déclenchera quand html changera (dépendance)
+      return;
     }
-    
-    // Vérifier que le HTML contient bien des blocs Mermaid avant de chercher dans le DOM
+
     const htmlContainsMermaid = html.includes('u-block--mermaid') && html.includes('data-mermaid="true"');
     if (!htmlContainsMermaid) {
-      // Pas de blocs Mermaid dans le HTML, rien à faire
+      setupEventListeners();
       return;
     }
-    
-    // DEBUG: Logger pour diagnostiquer les pages publiques
+
     if (process.env.NODE_ENV === 'development') {
-      logger.debug(LogCategory.EDITOR, '[EditorPreview] useEffect déclenché', {
-        hasHtml: !!html,
-        htmlLength: html?.length || 0,
-        htmlHash,
-        lastHash: lastHtmlHashRef.current,
-        hasContainer: !!container,
-        htmlContainsMermaid: html?.includes('u-block--mermaid') || false,
-        context: { noteId, operation: 'previewRender' }
+      logger.debug(LogCategory.EDITOR, '[EditorPreview] Rendu Mermaid déclenché', {
+        htmlLength: html.length,
+        noteId,
+        context: { operation: 'mermaidRender' }
       });
     }
-    
-    // Si le HTML n'a pas vraiment changé (même hash), juste vérifier les blocs Mermaid
-    if (htmlHash === lastHtmlHashRef.current && lastHtmlHashRef.current !== '') {
-      // HTML identique, vérifier si les blocs Mermaid sont toujours rendus
-      if (container) {
-        const mermaidBlocks = container.querySelectorAll('.u-block--mermaid[data-mermaid="true"]');
-        if (mermaidBlocks.length > 0) {
-          const needsRendering = Array.from(mermaidBlocks).some(block => {
-            const body = block.querySelector('.u-block__body') as HTMLElement;
-            if (!body) return true;
-            const svgContainer = body.querySelector('.mermaid-svg-container');
-            const hasValidSvg = svgContainer && svgContainer.innerHTML.trim() !== '' && svgContainer.querySelector('svg');
-            return !hasValidSvg;
-          });
-          
-          // Si des blocs sont vides, les re-rendre sans réinjecter le HTML
-          if (needsRendering) {
-            setTimeout(() => {
-              renderMermaidBlocks(0).then(() => {
-                setupEventListeners();
-              }).catch(() => {
-                setupEventListeners();
-              });
-            }, 100);
-          }
-        }
-      }
-      // Ne pas réinjecter le HTML si identique
-      return;
-    }
-    
-    // Mettre à jour la référence du hash
-    lastHtmlHashRef.current = htmlHash;
-    
-    // Exécuter immédiatement pour vérifier les blocs existants
-    checkAndRenderMermaid();
-    
-    // Utiliser MutationObserver pour détecter quand de nouveaux blocs sont ajoutés
+
+    // MutationObserver : déclenche le rendu dès que les blocs apparaissent dans le DOM
     const observer = new MutationObserver(() => {
-      // Vérifier si des blocs Mermaid ont été ajoutés
       const mermaidBlocks = container.querySelectorAll('.u-block--mermaid[data-mermaid="true"]');
-      if (mermaidBlocks.length > 0) {
-        // Vérifier si certains blocs ne sont pas encore rendus
-        const needsRendering = Array.from(mermaidBlocks).some(block => {
-          const body = block.querySelector('.u-block__body') as HTMLElement;
-          return body && !body.querySelector('.mermaid-svg-container');
-        });
-        
-        if (needsRendering) {
-          observer.disconnect();
-          renderMermaidBlocks().then(() => {
-            setTimeout(() => {
-              setupEventListeners();
-            }, 50);
-          }).catch(() => {
-            setupEventListeners();
-          });
-        }
+      const needsRendering = Array.from(mermaidBlocks).some(block => {
+        const body = block.querySelector('.u-block__body') as HTMLElement;
+        return body && !body.querySelector('.mermaid-svg-container');
+      });
+      if (needsRendering) {
+        observer.disconnect();
+        renderMermaidBlocks().then(() => setupEventListeners()).catch(() => setupEventListeners());
       }
     });
-    
-    // Observer les changements dans le conteneur
-    observer.observe(container, {
-      childList: true,
-      subtree: true
-    });
-    
-    // Fallback : exécuter aussi après plusieurs délais pour gérer les cas où le HTML est injecté plus tard
-    const timeoutId1 = setTimeout(() => {
-      checkAndRenderMermaid(0);
-    }, 200);
-    
-    const timeoutId2 = setTimeout(() => {
-      checkAndRenderMermaid(2);
-    }, 1000);
-    
-    const timeoutId3 = setTimeout(() => {
+    observer.observe(container, { childList: true, subtree: true });
+
+    // Appel immédiat : les blocs peuvent déjà être dans le DOM (injection synchrone)
+    checkAndRenderMermaid();
+
+    // Fallbacks pour les cas de rendu différé
+    const t1 = setTimeout(() => checkAndRenderMermaid(0), 300);
+    const t2 = setTimeout(() => {
       observer.disconnect();
-      checkAndRenderMermaid(4);
-    }, 3000);
-    
-    // Vérification périodique pour les cas où les blocs sont vidés après le rendu initial
-    const periodicCheck = setInterval(() => {
-      if (!container) {
-        clearInterval(periodicCheck);
-        return;
-      }
-      const mermaidBlocks = container.querySelectorAll('.u-block--mermaid[data-mermaid="true"]');
-      if (mermaidBlocks.length > 0) {
-        const needsRendering = Array.from(mermaidBlocks).some(block => {
-          const body = block.querySelector('.u-block__body') as HTMLElement;
-          if (!body) return false;
-          const svgContainer = body.querySelector('.mermaid-svg-container');
-          const hasValidSvg = svgContainer && svgContainer.innerHTML.trim() !== '' && svgContainer.querySelector('svg');
-          return !hasValidSvg;
-        });
-        if (needsRendering) {
-          // Appeler renderMermaidBlocks directement pour re-rendre les blocs vides
-          renderMermaidBlocks(0).then(() => {
-            setupEventListeners();
-          }).catch(() => {
-            setupEventListeners();
-          });
-        }
-      }
-    }, 2000); // Vérifier toutes les 2 secondes
-    
-    // Nettoyage au démontage
+      checkAndRenderMermaid(2);
+      setupEventListeners();
+    }, 1500);
+
     return () => {
       observer.disconnect();
-      clearTimeout(timeoutId1);
-      clearTimeout(timeoutId2);
-      clearTimeout(timeoutId3);
-      clearInterval(periodicCheck);
+      clearTimeout(t1);
+      clearTimeout(t2);
     };
-    
-  }, [html, containerRef, noteId, htmlHash, renderMermaidBlocks, checkAndRenderMermaid, setupEventListeners]);
+  }, [html, containerRef, noteId, renderMermaidBlocks, checkAndRenderMermaid, setupEventListeners]);
 
   // ✅ Gestionnaire de clic sur les images en mode preview
   useEffect(() => {
@@ -321,13 +227,23 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({
     });
   }, [html]);
 
+  // Injection impérative du HTML : on écrit dans le DOM directement pour que React
+  // ne puisse plus écraser les SVG Mermaid injectés après coup par dangerouslySetInnerHTML.
+  // On ne réinjecte que si le contenu a vraiment changé (guard sur htmlHash).
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !sanitizedHtml) return;
+    if (htmlHash === lastHtmlHashRef.current && lastHtmlHashRef.current !== '') return;
+    lastHtmlHashRef.current = htmlHash;
+    container.innerHTML = sanitizedHtml;
+  }, [sanitizedHtml, htmlHash, containerRef]);
+
   return (
     <>
+      {/* Le div est vide côté React — le contenu est injecté impérativement ci-dessus */}
       <div 
         ref={containerRef as React.RefObject<HTMLDivElement>}
         className="markdown-body editor-content-wrapper" 
-        key={`html-${htmlHash}`} // Clé basée sur le hash pour éviter réinjections inutiles
-        dangerouslySetInnerHTML={{ __html: sanitizedHtml }} 
       />
       {/* Hydrater les note embeds en mode preview */}
       <NoteEmbedHydrator

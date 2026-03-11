@@ -101,18 +101,18 @@ export async function GET(
     switch (fields) {
       case 'content':
         // Mode content : champs socle + contenu + rendu
-        selectFields = 'id, source_title, slug, public_url, header_image, markdown_content, created_at, updated_at';
+        selectFields = 'id, source_title, slug, public_url, header_image, markdown_content, created_at, updated_at, source_type';
         break;
       
       case 'metadata':
         // Mode metadata : champs socle + organisation + permissions
-        selectFields = 'id, source_title, slug, public_url, header_image, folder_id, classeur_id, created_at, updated_at, share_settings';
+        selectFields = 'id, source_title, slug, public_url, header_image, folder_id, classeur_id, created_at, updated_at, share_settings, source_type';
         break;
       
       case 'all':
       default:
         // Mode all : tout (champs socle inclus)
-        selectFields = 'id, source_title, slug, public_url, header_image, folder_id, classeur_id, created_at, updated_at, share_settings, markdown_content';
+        selectFields = 'id, source_title, slug, public_url, header_image, folder_id, classeur_id, created_at, updated_at, share_settings, markdown_content, source_type';
         break;
     }
 
@@ -153,6 +153,7 @@ export async function GET(
         responseNote = {
           ...baseFields,
           markdown_content: noteData.markdown_content,
+          source_type: noteData.source_type || null,
           created_at: noteData.created_at,
           updated_at: noteData.updated_at
         };
@@ -163,6 +164,7 @@ export async function GET(
           ...baseFields,
           folder_id: noteData.folder_id,
           classeur_id: noteData.classeur_id,
+          source_type: noteData.source_type || null,
           created_at: noteData.created_at,
           updated_at: noteData.updated_at,
           share_settings: noteData.share_settings
@@ -175,6 +177,7 @@ export async function GET(
           ...baseFields,
           folder_id: noteData.folder_id,
           classeur_id: noteData.classeur_id,
+          source_type: noteData.source_type || null,
           created_at: noteData.created_at,
           updated_at: noteData.updated_at,
           share_settings: noteData.share_settings,

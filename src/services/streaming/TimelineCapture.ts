@@ -125,6 +125,22 @@ export class TimelineCapture {
   }
 
   /**
+   * Ajoute un événement plan à la timeline
+   */
+  addPlanEvent(payload: { title?: string; steps: Array<{ id: string; content: string; status: string }> }): void {
+    this.items.push({
+      type: 'plan',
+      title: payload.title,
+      steps: payload.steps.map(s => ({
+        id: s.id,
+        content: s.content,
+        status: s.status as 'pending' | 'in_progress' | 'completed'
+      })),
+      timestamp: Date.now() - this.startTime
+    });
+  }
+
+  /**
    * Incrémente le numéro de round (après tool_execution)
    */
   incrementRound(): void {
