@@ -66,7 +66,7 @@ function CustomSlider({
       >
         <div className="relative h-[5px] w-full rounded-full bg-zinc-800 overflow-hidden pointer-events-none ring-1 ring-inset ring-white/[0.04]">
           <div
-            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-orange-800 to-amber-700 transition-all duration-150"
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-zinc-600 to-zinc-500 transition-all duration-150"
             style={{ width: `${percent}%` }}
           />
         </div>
@@ -78,7 +78,7 @@ function CustomSlider({
           step={step}
           value={value}
           onChange={e => onChange(parseFloat(e.target.value))}
-          className="absolute inset-0 w-full min-h-[32px] appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-600 [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(217,119,6,0.4)] [&::-webkit-slider-thumb]:hover:bg-amber-500 [&::-webkit-slider-thumb]:hover:shadow-[0_0_10px_rgba(217,119,6,0.5)] [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-webkit-slider-thumb]:active:scale-125 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-amber-600 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-[0_0_6px_rgba(217,119,6,0.4)] [&::-moz-range-thumb]:cursor-grab"
+          className="absolute inset-0 w-full min-h-[32px] appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-zinc-400 [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(161,161,170,0.3)] [&::-webkit-slider-thumb]:hover:bg-zinc-300 [&::-webkit-slider-thumb]:hover:shadow-[0_0_10px_rgba(161,161,170,0.4)] [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-webkit-slider-thumb]:active:scale-125 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-zinc-400 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-[0_0_6px_rgba(161,161,170,0.3)] [&::-moz-range-thumb]:cursor-grab"
         />
       </div>
     </div>

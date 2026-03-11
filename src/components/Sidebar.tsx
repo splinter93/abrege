@@ -206,11 +206,11 @@ export default function Sidebar() {
       </nav>
 
       {/* User settings — tout en bas (masqué sur mobile : avatar dans la top bar) */}
-      <footer className="mt-auto border-t border-white/[0.06] p-3 hidden md:block">
+      <footer className="mt-auto px-3 py-1.5 hidden md:block">
         <Link
           href="/private/settings"
           onClick={onNavigate}
-          className={`group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-200 ${
+          className={`group flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 transition-all duration-200 ${
             pathname?.startsWith("/private/settings")
               ? "bg-white/[0.08] text-white"
               : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
