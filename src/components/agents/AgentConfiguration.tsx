@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Image as ImageIcon, Power, PowerOff, Star, Pencil } from 'lucide-react';
+import { X, Image as ImageIcon, Power, PowerOff, Star, Pencil, FolderSearch } from 'lucide-react';
+import ScriviaFilePicker from '@/components/chat/ScriviaFilePicker';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { CustomSelect } from '@/components/ui/CustomSelect';
@@ -49,6 +50,7 @@ export function AgentConfiguration({
   onUpdateField,
 }: AgentConfigurationProps) {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [showFilePicker, setShowFilePicker] = useState(false);
 
   const isCreating = !selectedAgent && editedAgent !== null;
 
@@ -266,17 +268,38 @@ export function AgentConfiguration({
                 <label className={labelBase} htmlFor="agent-avatar-url">
                   URL de l&apos;image
                 </label>
-                <div className="relative">
-                  <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-                  <input
-                    id="agent-avatar-url"
-                    type="text"
-                    className={`${inputBase} pl-9`}
-                    value={editedAgent.profile_picture || ''}
-                    onChange={e => onUpdateField('profile_picture', e.target.value)}
-                    placeholder="https://example.com/avatar.png"
-                  />
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                    <input
+                      id="agent-avatar-url"
+                      type="text"
+                      className={`${inputBase} pl-9`}
+                      value={editedAgent.profile_picture || ''}
+                      onChange={e => onUpdateField('profile_picture', e.target.value)}
+                      placeholder="https://example.com/avatar.png"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowFilePicker(true)}
+                    title="Parcourir mes fichiers"
+                    className="section-block shrink-0 p-2.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40 transition-colors"
+                  >
+                    <FolderSearch className="w-4 h-4" />
+                  </button>
                 </div>
+                <ScriviaFilePicker
+                  isOpen={showFilePicker}
+                  onClose={() => setShowFilePicker(false)}
+                  onSelectImages={(images) => {
+                    if (images.length > 0) {
+                      onUpdateField('profile_picture', images[0].url);
+                    }
+                    setShowFilePicker(false);
+                  }}
+                  multiple={false}
+                />
               </div>
             </div>
           </div>
