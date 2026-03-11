@@ -35,18 +35,18 @@ function CustomSlider({
 }) {
   const percent = max > min ? ((value - min) / (max - min)) * 100 : 0;
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-0.5">
       <div className="flex items-center justify-between">
-        <label className={labelBase} htmlFor={id}>
+        <label className="text-[11px] font-medium text-zinc-500" htmlFor={id}>
           {label}
         </label>
-        <span className="font-mono text-[11px] tabular-nums text-zinc-400 bg-zinc-800/60 px-2 py-0.5 rounded-md">{valueDisplay}</span>
+        <span className="font-mono text-[10px] tabular-nums text-zinc-500">{valueDisplay}</span>
       </div>
       <div
-        className="relative min-h-[36px] flex items-center w-full rounded-full group"
+        className="relative min-h-[28px] flex items-center w-full rounded-full group"
         style={{ touchAction: 'pan-y' }}
       >
-        <div className="relative h-[6px] w-full rounded-full bg-zinc-800 overflow-hidden pointer-events-none ring-1 ring-inset ring-white/[0.04]">
+        <div className="relative h-[4px] w-full rounded-full bg-zinc-800 overflow-hidden pointer-events-none ring-1 ring-inset ring-white/[0.04]">
           <div
             className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-orange-800 to-amber-700 transition-all duration-150"
             style={{ width: `${percent}%` }}
@@ -60,7 +60,7 @@ function CustomSlider({
           step={step}
           value={value}
           onChange={e => onChange(parseFloat(e.target.value))}
-          className="absolute inset-0 w-full min-h-[36px] appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-zinc-300 [&::-webkit-slider-thumb]:shadow-[0_0_0_2px_rgba(194,65,12,0.5),0_2px_8px_rgba(0,0,0,0.5)] [&::-webkit-slider-thumb]:hover:shadow-[0_0_0_3px_rgba(194,65,12,0.6),0_2px_10px_rgba(0,0,0,0.6)] [&::-webkit-slider-thumb]:transition-shadow [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-webkit-slider-thumb]:active:scale-110 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-zinc-300 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-[0_0_0_2px_rgba(194,65,12,0.5),0_2px_8px_rgba(0,0,0,0.5)] [&::-moz-range-thumb]:cursor-grab"
+          className="absolute inset-0 w-full min-h-[28px] appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-600 [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(217,119,6,0.4)] [&::-webkit-slider-thumb]:hover:bg-amber-500 [&::-webkit-slider-thumb]:hover:shadow-[0_0_10px_rgba(217,119,6,0.5)] [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-webkit-slider-thumb]:active:scale-125 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-amber-600 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-[0_0_6px_rgba(217,119,6,0.4)] [&::-moz-range-thumb]:cursor-grab"
         />
       </div>
     </div>
@@ -244,8 +244,8 @@ export function AgentParameters({
 
       {/* Réglages principaux : sliders */}
       <section className={boxBase}>
-        <h3 className="text-sm font-semibold text-zinc-100 mb-3">Réglages principaux</h3>
-        <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-zinc-100 mb-2">Réglages principaux</h3>
+        <div className="space-y-2">
           <CustomSlider
             id="agent-temperature"
             label="Température"

@@ -504,28 +504,28 @@ function AgentDetailContent() {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </Link>
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                   <div className="relative shrink-0">
                     {displayAvatar && editedAgent?.profile_picture ? (
                       <img
                         src={editedAgent.profile_picture}
                         alt=""
-                        className="w-9 h-9 rounded-full object-cover border border-zinc-800/60"
+                        className="w-7 h-7 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-9 h-9 rounded-full bg-zinc-800/80 border border-zinc-800/60 flex items-center justify-center text-zinc-400 text-xs font-medium">
+                      <div className="w-7 h-7 rounded-full bg-zinc-800/80 flex items-center justify-center text-zinc-400 text-[10px] font-medium">
                         {avatarFallback}
                       </div>
                     )}
                     {editedAgent?.is_active && (
                       <span
-                        className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[var(--color-bg-primary)]"
+                        className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border-[1.5px] border-[var(--color-bg-primary)]"
                         title="Actif"
                       />
                     )}
                     {editedAgent && !editedAgent.is_active && (
                       <span
-                        className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-zinc-500 border-2 border-[var(--color-bg-primary)]"
+                        className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-zinc-500 border-[1.5px] border-[var(--color-bg-primary)]"
                         title="Suspendu"
                       />
                     )}
@@ -552,7 +552,7 @@ function AgentDetailContent() {
                       type="button"
                       onClick={() => handleFieldUpdate('is_active', !editedAgent?.is_active)}
                       title={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
-                      className={`p-2 rounded-lg border transition-colors shrink-0 ${editedAgent?.is_active ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20' : 'bg-zinc-800/60 border-zinc-600/80 text-zinc-500 hover:bg-zinc-700/60 hover:text-zinc-400'}`}
+                      className={`p-1.5 rounded-md transition-colors shrink-0 ${editedAgent?.is_active ? 'text-emerald-500 hover:text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'}`}
                       aria-label={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
                     >
                       {editedAgent?.is_active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
@@ -562,7 +562,7 @@ function AgentDetailContent() {
                       onClick={handleToggleFavorite}
                       disabled={togglingFavorite}
                       title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
-                      className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700/60 transition-colors shrink-0 disabled:opacity-50 disabled:pointer-events-none"
+                      className={`p-1.5 rounded-md transition-colors shrink-0 disabled:opacity-50 disabled:pointer-events-none ${isFavorite ? 'text-amber-400 hover:text-amber-300' : 'text-zinc-500 hover:text-zinc-300'}`}
                       aria-label={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
                     >
                       <Star className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
@@ -571,7 +571,7 @@ function AgentDetailContent() {
                       type="button"
                       onClick={handleDeleteAgent}
                       title="Supprimer l'agent"
-                      className="p-2 rounded-lg border border-zinc-800/60 bg-zinc-900/30 text-red-400/80 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                      className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 transition-colors"
                       aria-label="Supprimer l'agent"
                     >
                       <Trash2 className="w-4 h-4" />

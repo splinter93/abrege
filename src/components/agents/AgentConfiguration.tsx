@@ -119,7 +119,7 @@ export function AgentConfiguration({
                 type="button"
                 onClick={() => setShowAvatarModal(true)}
                 aria-label="Voir et éditer l'avatar de l'agent"
-                className="group/avatar relative section-block shrink-0 w-14 h-14 rounded-full overflow-hidden flex items-center justify-center text-zinc-400 text-sm font-medium hover:border-[var(--color-border-secondary)] transition-colors"
+                className="group/avatar relative section-block shrink-0 w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-zinc-400 text-base font-medium hover:border-[var(--color-border-secondary)] transition-colors"
               >
                 {displayAvatarPreview ? (
                   <img
@@ -137,29 +137,24 @@ export function AgentConfiguration({
                   <Pencil className="w-4 h-4 text-zinc-100" />
                 </div>
               </button>
-              <div className="flex-1 min-w-0 space-y-0.5">
-                <div className="group/title relative rounded-md px-2 py-0.5 hover:bg-zinc-800/40 transition-colors">
-                  <input
-                    id="agent-display-name"
-                    type="text"
-                    value={editedAgent.display_name || ''}
-                    onChange={e => onUpdateField('display_name', e.target.value)}
-                    placeholder="Nom de l'agent"
-                    className="w-full bg-transparent text-lg font-semibold text-zinc-100 placeholder:text-zinc-600 border-none outline-none focus:ring-0 px-0 py-0.5 truncate hover:text-white transition-colors cursor-text"
-                  />
-                  <Pencil className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 opacity-0 group-hover/title:opacity-100 transition-opacity pointer-events-none" />
-                </div>
-                <div className="group/desc relative rounded-md px-2 py-0.5 hover:bg-zinc-800/40 transition-colors">
-                  <input
-                    id="agent-description"
-                    type="text"
-                    value={editedAgent.description || ''}
-                    onChange={e => onUpdateField('description', e.target.value)}
-                    placeholder="Décrivez rapidement le rôle de cet agent…"
-                    className="w-full bg-transparent text-sm text-zinc-500 placeholder:text-zinc-700 border-none outline-none focus:ring-0 px-0 py-0 truncate hover:text-zinc-400 transition-colors cursor-text"
-                  />
-                  <Pencil className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-600 opacity-0 group-hover/desc:opacity-100 transition-opacity pointer-events-none" />
-                </div>
+              <div className="group/name flex-1 min-w-0 relative rounded-lg px-2 py-1 hover:bg-zinc-800/40 transition-colors">
+                <input
+                  id="agent-display-name"
+                  type="text"
+                  value={editedAgent.display_name || ''}
+                  onChange={e => onUpdateField('display_name', e.target.value)}
+                  placeholder="Nom de l'agent"
+                  className="w-full bg-transparent text-xl font-semibold text-zinc-100 placeholder:text-zinc-600 border-none outline-none focus:ring-0 px-0 py-0 truncate hover:text-white transition-colors cursor-text"
+                />
+                <input
+                  id="agent-description"
+                  type="text"
+                  value={editedAgent.description || ''}
+                  onChange={e => onUpdateField('description', e.target.value)}
+                  placeholder="Décrivez rapidement le rôle de cet agent…"
+                  className="w-full bg-transparent text-sm text-zinc-500 placeholder:text-zinc-700 border-none outline-none focus:ring-0 px-0 py-0 truncate hover:text-zinc-400 transition-colors cursor-text"
+                />
+                <Pencil className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 opacity-0 group-hover/name:opacity-100 transition-opacity pointer-events-none" />
               </div>
             </div>
           </div>
