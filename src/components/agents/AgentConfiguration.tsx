@@ -115,28 +115,34 @@ export function AgentConfiguration({
         <section className="space-y-3">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={() => setShowAvatarModal(true)}
-                aria-label="Voir et éditer l'avatar de l'agent"
-                className="group/avatar relative section-block shrink-0 w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-zinc-400 text-base font-medium hover:border-[var(--color-border-secondary)] transition-colors"
-              >
-                {displayAvatarPreview ? (
-                  <img
-                    src={editedAgent.profile_picture}
-                    alt={`Avatar de ${agentDisplayName}`}
-                    className="w-full h-full object-cover"
-                    onError={e => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <span className="group-hover/avatar:opacity-0 transition-opacity">{avatarFallback}</span>
-                )}
-                <div className="absolute inset-0 flex items-center justify-center bg-zinc-700/60 opacity-0 group-hover/avatar:opacity-100 transition-opacity">
-                  <Pencil className="w-4 h-4 text-zinc-100" />
-                </div>
-              </button>
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowAvatarModal(true)}
+                  aria-label="Voir et éditer l'avatar de l'agent"
+                  className="group/avatar relative section-block w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-zinc-400 text-base font-medium hover:border-[var(--color-border-secondary)] transition-colors"
+                >
+                  {displayAvatarPreview ? (
+                    <img
+                      src={editedAgent.profile_picture}
+                      alt={`Avatar de ${agentDisplayName}`}
+                      className="w-full h-full object-cover"
+                      onError={e => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <span className="group-hover/avatar:opacity-0 transition-opacity">{avatarFallback}</span>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-zinc-700/60 opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                    <Pencil className="w-4 h-4 text-zinc-100" />
+                  </div>
+                </button>
+                <span
+                  className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--color-bg-primary)] ${editedAgent.is_active ? 'bg-emerald-500' : 'bg-zinc-500'}`}
+                  title={editedAgent.is_active ? 'Actif' : 'Suspendu'}
+                />
+              </div>
               <div className="group/name flex-1 min-w-0 relative rounded-lg px-2 py-1 hover:bg-zinc-800/40 transition-colors">
                 <input
                   id="agent-display-name"

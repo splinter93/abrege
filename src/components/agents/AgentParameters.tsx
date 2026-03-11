@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Plus, X, Bot, Route, FileCode, Cloud, SquareFunction, Wrench, Link as LinkIcon } from 'lucide-react';
+import { Plus, X, Bot, Route, FileCode, Cloud, SquareFunction, Wrench, Link as LinkIcon, ChevronDown } from 'lucide-react';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { ModelSelector } from '@/components/ui/ModelSelector';
 import type { McpServer, AgentMcpServerWithDetails } from '@/types/mcp';
@@ -168,6 +168,7 @@ export function AgentParameters({
   const [showOpenApiDropdown, setShowOpenApiDropdown] = useState(false);
   const [showMcpDropdown, setShowMcpDropdown] = useState(false);
   const [showCallablesDropdown, setShowCallablesDropdown] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const openApiRef = useRef<HTMLElement>(null);
   const mcpRef = useRef<HTMLElement>(null);
@@ -477,31 +478,40 @@ export function AgentParameters({
         </section>
       )}
 
-      {/* Réglages avancés */}
+      {/* Réglages avancés (collapsible) */}
       <section className={boxBase}>
-        <h3 className="text-sm font-semibold text-zinc-100 mb-4">Réglages avancés</h3>
-        <div className="space-y-4">
-          <div>
-            <label className={labelBase} htmlFor="agent-priority">
-              Priorité
-            </label>
-            <input
-              id="agent-priority"
-              type="number"
-              className={inputBase}
-              value={editedAgent.priority ?? 0}
-              onChange={e => onUpdateField('priority', parseInt(e.target.value, 10) || 0)}
-            />
+        <button
+          type="button"
+          onClick={() => setAdvancedOpen(v => !v)}
+          className="w-full flex items-center justify-between text-sm font-semibold text-zinc-100"
+        >
+          Réglages avancés
+          <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-200 ${advancedOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {advancedOpen && (
+          <div className="space-y-4 mt-4">
+            <div>
+              <label className={labelBase} htmlFor="agent-priority">
+                Priorité
+              </label>
+              <input
+                id="agent-priority"
+                type="number"
+                className={inputBase}
+                value={editedAgent.priority ?? 0}
+                onChange={e => onUpdateField('priority', parseInt(e.target.value, 10) || 0)}
+              />
+            </div>
+            <div>
+              <label className={labelBase} htmlFor="agent-version">
+                Version
+              </label>
+              <p id="agent-version" className="input-block px-3 py-2 rounded-lg text-zinc-500 text-sm font-mono">
+                {selectedAgent?.version || '1.0.0'}
+              </p>
+            </div>
           </div>
-          <div>
-            <label className={labelBase} htmlFor="agent-version">
-              Version
-            </label>
-            <p id="agent-version" className="input-block px-3 py-2 rounded-lg text-zinc-500 text-sm font-mono">
-              {selectedAgent?.version || '1.0.0'}
-            </p>
-          </div>
-        </div>
+        )}
       </section>
     </div>
   );

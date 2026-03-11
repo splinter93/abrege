@@ -504,35 +504,8 @@ function AgentDetailContent() {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </Link>
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="relative shrink-0">
-                    {displayAvatar && editedAgent?.profile_picture ? (
-                      <img
-                        src={editedAgent.profile_picture}
-                        alt=""
-                        className="w-7 h-7 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-zinc-800/80 flex items-center justify-center text-zinc-400 text-[10px] font-medium">
-                        {avatarFallback}
-                      </div>
-                    )}
-                    {editedAgent?.is_active && (
-                      <span
-                        className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border-[1.5px] border-[var(--color-bg-primary)]"
-                        title="Actif"
-                      />
-                    )}
-                    {editedAgent && !editedAgent.is_active && (
-                      <span
-                        className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-zinc-500 border-[1.5px] border-[var(--color-bg-primary)]"
-                        title="Suspendu"
-                      />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex items-center gap-2">
-                    <span className="text-zinc-100 font-medium truncate">{pageTitle}</span>
-                  </div>
+                <div className="min-w-0 flex items-center gap-2">
+                  <span className="text-zinc-100 font-medium truncate">{pageTitle}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -661,7 +634,7 @@ function AgentDetailContent() {
                 </div>
               )}
               <div className="space-y-6 p-4 lg:p-0 lg:py-4 lg:px-4 overflow-y-auto h-full">
-                <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500 text-center">Configuration</h2>
+                <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500 text-center pt-2">Configuration</h2>
                 <AgentParameters
                   selectedAgent={selectedAgent}
                   editedAgent={editedAgent}
