@@ -45,12 +45,16 @@ interface UseChatResponseReturn {
     history?: ChatMessage[],
     token?: string
   ) => Promise<void>;
+  abort: () => void;
   reset: () => void;
 }
 
 export function useChatResponse(options: UseChatResponseOptions = {}): UseChatResponseReturn {
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingToolCalls, setPendingToolCalls] = useState<Set<string>>(new Set());
+
+  // AbortController for cancelling in-flight streaming requests
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // ✅ NOUVEAU: Service pour orchestrer le streaming
   const orchestratorRef = useRef<StreamOrchestrator | null>(null);
@@ -93,6 +97,11 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
 
       setIsProcessing(true);
 
+      // Cancel any previous in-flight request
+      abortControllerRef.current?.abort();
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       
       // Ajouter le token d'authentification si fourni
@@ -115,6 +124,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
             const fetchResponse = await fetch('/api/chat/llm/stream', {
               method: 'POST',
               headers,
+              signal: abortController.signal,
               body: JSON.stringify({
                 message,
                 context: {
@@ -166,17 +176,19 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           onToolResult,
           onComplete,
           onError,
-          onModelInfo: options.onModelInfo // ✅ NOUVEAU : Passer callback modelInfo
-        });
+          onModelInfo: options.onModelInfo
+        }, abortController.signal);
 
-        // ✅ Si le stream a échoué mais que l'erreur a déjà été traitée (onError déjà appelé),
-        // ne pas rappeler onError dans le catch block
+        // User-initiated abort: don't trigger error callbacks
+        if (streamResult.aborted) {
+          logger.dev('[useChatResponse] ⏹️ Stream aborted by user');
+          return;
+        }
+
         if (!streamResult.success && streamResult.errorAlreadyHandled) {
           return;
         }
 
-        // ✅ Si le stream a échoué mais que l'erreur n'a pas encore été traitée,
-        // appeler onError maintenant
         if (!streamResult.success && streamResult.error) {
           onError?.(streamResult.error);
           return;
@@ -404,25 +416,28 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         }
       }
     } catch (error) {
-      // ✅ Gestion d'erreur avec détection NetworkError
+      // User-initiated abort: silently swallow
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        logger.dev('[useChatResponse] ⏹️ Fetch aborted by user');
+        return;
+      }
+
       let errorMessage: string;
       let errorDetails: string | StreamErrorDetails | undefined;
       
       if (error instanceof Error) {
         const networkError = error as NetworkError;
         
-        // Si c'est une NetworkError après retry, enrichir le message
         if (networkError.isRecoverable !== undefined) {
           errorMessage = networkError.isRecoverable
             ? `Erreur réseau après plusieurs tentatives : ${networkError.message}`
             : networkError.message;
           
-          // Créer StreamErrorDetails si c'est une erreur de streaming
           if (networkError.statusCode) {
             errorDetails = {
               error: errorMessage,
               statusCode: networkError.statusCode,
-              errorCode: networkError.errorType, // StreamErrorDetails utilise errorCode, pas errorType
+              errorCode: networkError.errorType,
               timestamp: Date.now(),
               recoverable: networkError.isRecoverable
             };
@@ -445,16 +460,25 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         logger.error('[useChatResponse] ❌ Erreur:', { error: String(error) });
       }
       
-      // Appeler le callback d'erreur si disponible (avec détails si disponibles)
       if (errorDetails) {
         onError?.(errorDetails);
       } else {
         onError?.(errorMessage);
       }
     } finally {
+      abortControllerRef.current = null;
       setIsProcessing(false);
     }
   }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamEnd, onToolExecution, useStreaming, onAssistantRoundComplete]);
+
+  const abort = useCallback(() => {
+    if (abortControllerRef.current) {
+      logger.dev('[useChatResponse] ⏹️ User abort requested');
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsProcessing(false);
+  }, []);
 
   const reset = useCallback(() => {
     setIsProcessing(false);
@@ -464,6 +488,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
   return {
     isProcessing,
     sendMessage,
+    abort,
     reset
   };
 } 

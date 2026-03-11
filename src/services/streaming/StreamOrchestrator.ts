@@ -66,8 +66,8 @@ export interface StreamResult {
   toolResults: ToolResult[];
   timeline: StreamTimeline;
   error?: string;
-  // ✅ Flag pour indiquer que l'erreur a déjà été traitée (onError déjà appelé)
   errorAlreadyHandled?: boolean;
+  aborted?: boolean;
 }
 
 /**
@@ -100,7 +100,8 @@ export class StreamOrchestrator {
    */
   async processStream(
     response: Response,
-    callbacks: StreamCallbacks
+    callbacks: StreamCallbacks,
+    signal?: AbortSignal
   ): Promise<StreamResult> {
     try {
       if (!response.body) {
@@ -111,29 +112,50 @@ export class StreamOrchestrator {
 
       const reader = response.body.getReader();
 
-      while (true) {
-        const { done, value } = await reader.read();
+      try {
+        while (true) {
+          if (signal?.aborted) {
+            logger.dev('[StreamOrchestrator] ⏹️ Abort signal detected, cancelling reader');
+            await reader.cancel();
+            break;
+          }
 
-        if (done) {
-          logger.dev('[StreamOrchestrator] ✅ Stream terminé');
-          break;
+          const { done, value } = await reader.read();
+
+          if (done) {
+            logger.dev('[StreamOrchestrator] ✅ Stream terminé');
+            break;
+          }
+
+          const chunks = this.parser.parseChunk(value);
+
+          for (const chunk of chunks) {
+            await this.processChunk(chunk, callbacks);
+          }
         }
-
-        // Parser le chunk
-        const chunks = this.parser.parseChunk(value);
-
-        // Traiter chaque chunk parsé
-        for (const chunk of chunks) {
-          await this.processChunk(chunk, callbacks);
+      } catch (readError) {
+        // reader.read() throws if the fetch was aborted
+        if (signal?.aborted) {
+          logger.dev('[StreamOrchestrator] ⏹️ Stream aborted during read');
+        } else {
+          throw readError;
         }
+      }
+
+      // If aborted, return partial result without calling onComplete/onError
+      if (signal?.aborted) {
+        callbacks.onStreamEnd?.();
+        return {
+          ...this.buildFinalResult(),
+          success: false,
+          aborted: true
+        };
       }
 
       callbacks.onStreamEnd?.();
 
-      // Construire le résultat final
       const result = this.buildFinalResult();
 
-      // Appeler onComplete
       callbacks.onComplete?.(
         result.content,
         result.reasoning,
@@ -145,11 +167,20 @@ export class StreamOrchestrator {
       return result;
 
     } catch (error) {
+      // Abort errors bubble up as TypeError or DOMException — treat them like aborts
+      if (signal?.aborted) {
+        logger.dev('[StreamOrchestrator] ⏹️ Stream aborted (caught in outer try)');
+        callbacks.onStreamEnd?.();
+        return {
+          ...this.buildFinalResult(),
+          success: false,
+          aborted: true
+        };
+      }
+
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       logger.error('[StreamOrchestrator] ❌ Erreur streaming:', error);
       
-      // ✅ Si l'erreur vient du stream (déjà appelé dans processChunk), ne pas rappeler onError
-      // Sinon, c'est une erreur réseau/autre → créer un objet d'erreur basique
       const isStreamError = error instanceof Error && error.message.includes('Erreur stream');
       
       if (!isStreamError) {
@@ -159,8 +190,6 @@ export class StreamOrchestrator {
         });
       }
 
-      // ✅ Retourner un résultat avec success: false au lieu de throw
-      // Cela évite que useChatResponse rappelle onError (déjà appelé si isStreamError)
       return {
         success: false,
         content: '',
@@ -169,7 +198,6 @@ export class StreamOrchestrator {
         toolResults: [],
         timeline: this.timeline.getTimeline(),
         error: errorMessage,
-        // ✅ Flag pour indiquer que l'erreur a déjà été traitée
         errorAlreadyHandled: isStreamError
       };
     }

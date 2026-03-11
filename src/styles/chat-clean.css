@@ -2553,6 +2553,21 @@ body.chat-theme-glass .chatgpt-messages > div {
   transform: none;
 }
 
+/* Stop generation mode: enabled, clickable, square icon */
+.chatgpt-input-send.stop-mode {
+  background: linear-gradient(135deg, #ceced2 0%, #d8d8dc 50%, #ceced2 100%);
+  color: var(--chat-bg-primary);
+  cursor: pointer;
+  opacity: 1;
+}
+.chatgpt-input-send.stop-mode:hover {
+  background: linear-gradient(135deg, #d8d8dc 0%, #e0e0e3 50%, #d8d8dc 100%);
+  transform: scale(1.05);
+}
+.chatgpt-input-send.stop-mode:active {
+  transform: scale(0.95);
+}
+
 /* Bouton Envoyer en mode vocal : rond orange, icône blanche */
 .chatgpt-input-send.vocal-active {
   background: var(--chat-accent-primary);

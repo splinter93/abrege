@@ -44,10 +44,11 @@ export interface UseChatMessageActionsOptions {
     history?: ChatMessage[],
     token?: string
   ) => Promise<void>;
+  abortFn?: () => void;
   addInfiniteMessage: (msg: ChatMessage) => void;
   onEditingChange?: (editing: boolean) => void;
   requireAuth: () => boolean;
-  onBeforeSend?: () => Promise<void>; // ✅ NOUVEAU: Callback async avant envoi (reload + reset streaming)
+  onBeforeSend?: () => Promise<void>;
   replaceMessages: (messages: ChatMessage[]) => void;
   initialLoadLimit: number;
 }
@@ -61,9 +62,9 @@ export interface UseChatMessageActionsReturn {
     images?: ImageAttachment[],
     notes?: Note[],
     mentions?: Array<{ id: string; slug: string; title: string; description?: string; word_count?: number }>,
-    prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>, // ✅ NOUVEAU : Prompts metadata
-    canvasSelections?: CanvasSelection[], // ✅ NOUVEAU : Sélections du canvas
-    reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
+    prompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>,
+    canvasSelections?: CanvasSelection[],
+    reasoningOverride?: 'advanced' | 'general' | 'fast' | null
   ) => Promise<void>;
   
   editMessage: (options: {
@@ -75,7 +76,8 @@ export interface UseChatMessageActionsReturn {
     usedPrompts?: Array<{ id: string; slug: string; name: string; description?: string | null; context?: 'editor' | 'chat' | 'both'; agent_id?: string | null }>;
     messageIndex?: number;
   }) => Promise<void>;
-  
+
+  abortGeneration: () => void;
   isLoading: boolean;
   error: string | null;
   clearError: () => void;
@@ -97,6 +99,7 @@ export function useChatMessageActions(
     selectedAgent,
     llmContext,
     sendMessageFn,
+    abortFn,
     addInfiniteMessage,
     onEditingChange,
     requireAuth,
@@ -567,6 +570,11 @@ export function useChatMessageActions(
   /**
    * Efface l'erreur
    */
+  const abortGeneration = useCallback(() => {
+    abortFn?.();
+    setIsLoading(false);
+  }, [abortFn]);
+
   const clearError = useCallback(() => {
     setError(null);
   }, []);
@@ -574,6 +582,7 @@ export function useChatMessageActions(
   return {
     sendMessage,
     editMessage,
+    abortGeneration,
     isLoading,
     error,
     clearError

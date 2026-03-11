@@ -19,11 +19,12 @@ export interface ChatInputContainerProps {
     message: string | MessageContent,
     images?: ImageAttachment[],
     notes?: Note[],
-    mentions?: import('@/types/noteMention').NoteMention[], // ✅ Mentions légères
-    usedPrompts?: import('@/types/promptMention').PromptMention[], // ✅ NOUVEAU : Prompts utilisés
-    canvasSelections?: import('@/types/canvasSelection').CanvasSelection[], // ✅ NOUVEAU : Sélections du canvas
-    reasoningOverride?: 'advanced' | 'general' | 'fast' | null // ✅ NOUVEAU : Override reasoning
+    mentions?: import('@/types/noteMention').NoteMention[],
+    usedPrompts?: import('@/types/promptMention').PromptMention[],
+    canvasSelections?: import('@/types/canvasSelection').CanvasSelection[],
+    reasoningOverride?: 'advanced' | 'general' | 'fast' | null
   ) => void;
+  onStopGeneration?: () => void;
   loading: boolean;
   sessionId: string;
   currentAgentModel?: string;
@@ -43,10 +44,12 @@ export interface ChatInputContainerProps {
 const VOCAL_TTS_START = 'chat-vocal-tts-start';
 const VOCAL_TTS_PUSH = 'chat-vocal-tts-push';
 const VOCAL_TTS_END = 'chat-vocal-tts-end';
+const VOCAL_TTS_STOP = 'chat-vocal-tts-stop';
 const VOCAL_MODE_SPEAK_EVENT = 'chat-vocal-mode-speak';
 
 const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
   onSend,
+  onStopGeneration,
   loading,
   sessionId,
   currentAgentModel,
@@ -70,6 +73,7 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
       if (text) ttsRef.current?.pushText(text);
     };
     const onEnd = () => ttsRef.current?.endStream();
+    const onStop = () => ttsRef.current?.stop();
     const onSpeak = (e: Event) => {
       const text = (e as CustomEvent<{ text: string }>).detail?.text?.trim();
       if (text) ttsRef.current?.speak(text);
@@ -78,11 +82,13 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
     window.addEventListener(VOCAL_TTS_START, onStart);
     window.addEventListener(VOCAL_TTS_PUSH, onPush);
     window.addEventListener(VOCAL_TTS_END, onEnd);
+    window.addEventListener(VOCAL_TTS_STOP, onStop);
     window.addEventListener(VOCAL_MODE_SPEAK_EVENT, onSpeak);
     return () => {
       window.removeEventListener(VOCAL_TTS_START, onStart);
       window.removeEventListener(VOCAL_TTS_PUSH, onPush);
       window.removeEventListener(VOCAL_TTS_END, onEnd);
+      window.removeEventListener(VOCAL_TTS_STOP, onStop);
       window.removeEventListener(VOCAL_MODE_SPEAK_EVENT, onSpeak);
     };
   }, []);
@@ -91,6 +97,7 @@ const ChatInputContainer: React.FC<ChatInputContainerProps> = ({
     <div className="chatgpt-input-container" style={{ background: 'transparent' }}>
       <ChatInput
         onSend={onSend}
+        onStopGeneration={onStopGeneration}
         loading={loading}
         textareaRef={textareaRef}
         disabled={false}

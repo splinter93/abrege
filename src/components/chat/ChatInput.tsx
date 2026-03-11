@@ -38,6 +38,7 @@ import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 
 interface ChatInputProps {
   onSend: (message: string | MessageContent, images?: ImageAttachment[], notes?: NoteWithContent[], mentions?: import('@/types/noteMention').NoteMention[], usedPrompts?: import('@/types/promptMention').PromptMention[], canvasSelections?: import('@/types/canvasSelection').CanvasSelection[], reasoningOverride?: 'advanced' | 'general' | 'fast' | null) => void;
+  onStopGeneration?: () => void;
   loading: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   disabled?: boolean;
@@ -72,7 +73,8 @@ const getReasoningLevelFromModel = (model?: string): 'advanced' | 'general' | 'f
 };
 
 const ChatInput: React.FC<ChatInputProps> = ({ 
-  onSend, 
+  onSend,
+  onStopGeneration,
   loading, 
   textareaRef, 
   disabled = false, 
@@ -557,7 +559,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         audioRecorderRef={audioRecorderRef}
         isVocalMode={isVocalMode}
         onToggleVocalMode={onToggleVocalMode}
-        onSend={handleSend} canSend={(!!message.trim() || images.length > 0) && (images.length === 0 || images.every(img => isImageUrlUploaded(img.base64)))}
+        onSend={handleSend} onStopGeneration={onStopGeneration}
+        canSend={(!!message.trim() || images.length > 0) && (images.length === 0 || images.every(img => isImageUrlUploaded(img.base64)))}
         disabled={disabled || isParsingPdf} loading={loading || isParsingPdf}
         isParsingPdf={isParsingPdf}
         imagesUploading={images.length > 0 && images.some(img => !isImageUrlUploaded(img.base64))}

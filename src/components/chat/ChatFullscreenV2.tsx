@@ -319,7 +319,7 @@ const ChatFullscreenV2: React.FC = () => {
   // ✅ NOUVEAU : État pour info modèle (debug)
   const [modelInfo, setModelInfo] = useState<ModelDebugInfo | null>(null);
   
-  const { sendMessage } = useChatResponse({
+  const { sendMessage, abort: abortStream } = useChatResponse({
     useStreaming: true,
     onStreamChunk: (chunk) => {
       updateContent(chunk);
@@ -406,6 +406,7 @@ const ChatFullscreenV2: React.FC = () => {
     infiniteMessages,
     llmContext: llmContextWithCanva,
     sendMessageFn: sendMessage,
+    abortFn: abortStream,
     addInfiniteMessage,
     onEditingChange: (editing: boolean) => {
       if (!editing) {
@@ -432,6 +433,46 @@ const ChatFullscreenV2: React.FC = () => {
     }
   });
   
+  const handleStopGeneration = useCallback(() => {
+    logger.dev('[ChatFullscreenV2] ⏹️ Stop generation requested');
+
+    // Hard-stop TTS: kills WebSocket, clears sentence queue, stops audio playback immediately.
+    // Also clear the text buffer so the async onStreamEnd callback won't push leftover text.
+    if (isVocalModeRef.current) {
+      ttsBufferRef.current = '';
+      window.dispatchEvent(new CustomEvent('chat-vocal-tts-stop'));
+    }
+
+    messageActions.abortGeneration();
+
+    const partialContent = streamingState.streamingContentRef.current;
+    const clientMessageId = pendingAssistantClientMessageIdRef.current;
+
+    if (clientMessageId) {
+      if (partialContent.trim()) {
+        updateInfiniteMessageByClientId(clientMessageId, (msg) =>
+          msg.role === 'assistant'
+            ? { ...msg, content: partialContent, isStreaming: false }
+            : msg
+        );
+      } else {
+        removeMessageByClientId(clientMessageId);
+      }
+    }
+
+    clearPendingAssistantTracking();
+    streamingState.endStreaming();
+    streamingState.reset();
+    uiState.setStreamError(null);
+  }, [
+    messageActions,
+    streamingState,
+    updateInfiniteMessageByClientId,
+    removeMessageByClientId,
+    clearPendingAssistantTracking,
+    uiState
+  ]);
+
   // 🎯 UI ACTIONS (extrait dans hook)
   const allowSidebarHover = isDesktop && !isCanvaOpen;
   
@@ -637,6 +678,7 @@ const ChatFullscreenV2: React.FC = () => {
                   <TTSMiniPlayer />
                   <ChatInputContainer
                     onSend={uiActions.handleSendMessage}
+                    onStopGeneration={handleStopGeneration}
                     loading={messageActions.isLoading}
                     sessionId={currentSession?.id || 'temp'}
                     currentAgentModel={selectedAgent?.model}

@@ -7,7 +7,7 @@
 'use client';
 import React, { useState } from 'react';
 import { Globe, CornerUpRight, Search, FileText, Zap, Target, Cpu } from 'react-feather';
-import { Lightbulb, Loader, AudioLines } from 'lucide-react';
+import { Lightbulb, AudioLines, Square } from 'lucide-react';
 import AudioRecorder, { type AudioRecorderRef } from './AudioRecorder';
 import NoteSelector from './NoteSelector';
 import FileMenu from './FileMenu';
@@ -66,6 +66,7 @@ interface ChatInputToolbarProps {
   
   // Send props
   onSend: () => void;
+  onStopGeneration?: () => void;
   canSend: boolean;
 
   // Mode vocal (bouton ondes + micro agrandi)
@@ -138,6 +139,7 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
   
   // Send
   onSend,
+  onStopGeneration,
   canSend,
   isVocalMode = false,
   onToggleVocalMode,
@@ -150,8 +152,13 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
   // ✅ État local pour tracking de l'enregistrement audio
   const [isRecording, setIsRecording] = useState(false);
 
-  // En mode vocal : clic sur le bouton orange = démarrer ou arrêter l'enregistrement (envoi direct après transcription)
+  const isStopMode = loading && !!onStopGeneration;
+
   const handleSendClick = React.useCallback(() => {
+    if (isStopMode) {
+      onStopGeneration?.();
+      return;
+    }
     if (isVocalMode && audioRecorderRef?.current) {
       if (audioRecorderRef.current.isRecording()) {
         audioRecorderRef.current.stopRecording();
@@ -161,12 +168,19 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
       return;
     }
     onSend();
-  }, [isVocalMode, audioRecorderRef, onSend]);
+  }, [isStopMode, onStopGeneration, isVocalMode, audioRecorderRef, onSend]);
 
-  const sendDisabled = isVocalMode ? loading : (!canSend || loading || disabled || isRecording);
-  const sendTitle = isVocalMode
-    ? (isRecording ? 'Arrêter et envoyer' : 'Démarrer l\'enregistrement')
-    : (isRecording ? 'Enregistrement en cours...' : 'Envoyer le message');
+  const sendDisabled = isStopMode
+    ? false
+    : isVocalMode
+      ? loading
+      : (!canSend || loading || disabled || isRecording);
+
+  const sendTitle = isStopMode
+    ? 'Arrêter la génération'
+    : isVocalMode
+      ? (isRecording ? 'Arrêter et envoyer' : 'Démarrer l\'enregistrement')
+      : (isRecording ? 'Enregistrement en cours...' : 'Envoyer le message');
 
   return (
     <div className="chatgpt-input-actions">
@@ -324,12 +338,12 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
       <button 
         onClick={handleSendClick} 
         disabled={sendDisabled}
-        className={`chatgpt-input-send ${loading ? 'loading' : ''} ${isVocalMode ? 'vocal-active' : ''} ${isVocalMode && isRecording ? 'vocal-recording' : ''}`}
-        aria-label={isVocalMode ? (isRecording ? 'Arrêter et envoyer' : 'Démarrer l\'enregistrement') : 'Envoyer le message'}
+        className={`chatgpt-input-send ${isStopMode ? 'stop-mode' : ''} ${loading ? 'loading' : ''} ${isVocalMode ? 'vocal-active' : ''} ${isVocalMode && isRecording ? 'vocal-recording' : ''}`}
+        aria-label={isStopMode ? 'Arrêter la génération' : isVocalMode ? (isRecording ? 'Arrêter et envoyer' : 'Démarrer l\'enregistrement') : 'Envoyer le message'}
         title={sendTitle}
       >
-        {loading ? (
-          <Loader size={20} className="animate-spin" />
+        {isStopMode ? (
+          <Square size={16} fill="currentColor" />
         ) : isVocalMode ? (
           isRecording ? (
             <span className="chatgpt-input-send-vocal-waves" aria-hidden>
