@@ -16,9 +16,9 @@
   border-left: 1px solid rgba(39, 39, 42, 0.6);
   background: var(--color-bg-primary);
   position: sticky;
-  top: 4rem;
+  top: 50px;
   align-self: flex-start;
-  max-height: calc(100vh - 4rem);
+  max-height: calc(100vh - 50px);
   overflow: hidden;
   display: flex;
   flex-direction: column;

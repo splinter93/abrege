@@ -1,11 +1,29 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Bot, Route, FileCode, Cloud, SquareFunction, Wrench, Link as LinkIcon } from 'lucide-react';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { ModelSelector } from '@/components/ui/ModelSelector';
 import type { McpServer, AgentMcpServerWithDetails } from '@/types/mcp';
 import type { AgentSchemaLink, OpenApiSchema } from '@/hooks/useOpenApiSchemas';
 import type { AgentCallableLink, CallableListItem } from '@/hooks/useCallables';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
+
+const CALLABLE_TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
+  'agent':              { icon: Bot,            color: 'text-[rgb(73,121,184)]' },
+  'pipeline':           { icon: Route,          color: 'text-[rgb(184,175,73)]' },
+  'callable-pipeline':  { icon: Route,          color: 'text-[rgb(184,175,73)]' },
+  'script':             { icon: FileCode,       color: 'text-[rgb(200,100,100)]' },
+  'request':            { icon: Cloud,          color: 'text-[rgb(115,95,200)]' },
+  'function':           { icon: SquareFunction, color: 'text-[rgb(150,150,150)]' },
+  'internal-tool':      { icon: Wrench,         color: 'text-[rgb(150,150,150)]' },
+  'chain':              { icon: LinkIcon,       color: 'text-[rgb(150,150,150)]' },
+  'endpoint':           { icon: SquareFunction, color: 'text-[rgb(150,150,150)]' },
+};
+
+function CallableTypeIcon({ type }: { type: string }) {
+  const config = CALLABLE_TYPE_CONFIG[type] ?? { icon: Bot, color: 'text-zinc-500' };
+  const Icon = config.icon;
+  return <Icon className={`w-4 h-4 shrink-0 ${config.color}`} />;
+}
 
 const inputBase =
   'input-block w-full px-3 py-2 rounded-lg text-sm placeholder:text-zinc-500 focus:outline-none transition-colors';
@@ -35,18 +53,18 @@ function CustomSlider({
 }) {
   const percent = max > min ? ((value - min) / (max - min)) * 100 : 0;
   return (
-    <div className="space-y-0.5">
+    <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <label className="text-[11px] font-medium text-zinc-500" htmlFor={id}>
+        <label className="text-xs font-medium text-zinc-400" htmlFor={id}>
           {label}
         </label>
-        <span className="font-mono text-[10px] tabular-nums text-zinc-500">{valueDisplay}</span>
+        <span className="font-mono text-[11px] tabular-nums text-zinc-500">{valueDisplay}</span>
       </div>
       <div
-        className="relative min-h-[28px] flex items-center w-full rounded-full group"
+        className="relative min-h-[32px] flex items-center w-full rounded-full group"
         style={{ touchAction: 'pan-y' }}
       >
-        <div className="relative h-[4px] w-full rounded-full bg-zinc-800 overflow-hidden pointer-events-none ring-1 ring-inset ring-white/[0.04]">
+        <div className="relative h-[5px] w-full rounded-full bg-zinc-800 overflow-hidden pointer-events-none ring-1 ring-inset ring-white/[0.04]">
           <div
             className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-orange-800 to-amber-700 transition-all duration-150"
             style={{ width: `${percent}%` }}
@@ -60,7 +78,7 @@ function CustomSlider({
           step={step}
           value={value}
           onChange={e => onChange(parseFloat(e.target.value))}
-          className="absolute inset-0 w-full min-h-[28px] appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-600 [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(217,119,6,0.4)] [&::-webkit-slider-thumb]:hover:bg-amber-500 [&::-webkit-slider-thumb]:hover:shadow-[0_0_10px_rgba(217,119,6,0.5)] [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-webkit-slider-thumb]:active:scale-125 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-amber-600 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-[0_0_6px_rgba(217,119,6,0.4)] [&::-moz-range-thumb]:cursor-grab"
+          className="absolute inset-0 w-full min-h-[32px] appearance-none bg-transparent cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-600 [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(217,119,6,0.4)] [&::-webkit-slider-thumb]:hover:bg-amber-500 [&::-webkit-slider-thumb]:hover:shadow-[0_0_10px_rgba(217,119,6,0.5)] [&::-webkit-slider-thumb]:transition-all [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-webkit-slider-thumb]:active:scale-125 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-amber-600 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-[0_0_6px_rgba(217,119,6,0.4)] [&::-moz-range-thumb]:cursor-grab"
         />
       </div>
     </div>
@@ -244,7 +262,7 @@ export function AgentParameters({
 
       {/* Réglages principaux : sliders */}
       <section className={boxBase}>
-        <h3 className="text-sm font-semibold text-zinc-100 mb-2">Réglages principaux</h3>
+        <h3 className="text-sm font-semibold text-zinc-100 mb-3">Réglages principaux</h3>
         <div className="space-y-2">
           <CustomSlider
             id="agent-temperature"
@@ -316,8 +334,8 @@ export function AgentParameters({
         {isCreating ? (
           <p className="text-xs text-zinc-500">Les outils OpenAPI peuvent être configurés après la création de l&apos;agent.</p>
         ) : openApiLoading ? (
-          <div className="flex items-center gap-2 text-zinc-500 text-sm">
-            <span className="inline-block w-4 h-4 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
+          <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
+            <span className="inline-block w-3 h-3 rounded-full border-[1.5px] border-zinc-600 border-t-transparent animate-spin" />
             Chargement…
           </div>
         ) : agentOpenApiSchemas.length === 0 ? (
@@ -374,8 +392,8 @@ export function AgentParameters({
         {isCreating ? (
           <p className="text-xs text-zinc-500">Les outils MCP peuvent être configurés après la création de l&apos;agent.</p>
         ) : mcpLoading ? (
-          <div className="flex items-center gap-2 text-zinc-500 text-sm">
-            <span className="inline-block w-4 h-4 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
+          <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
+            <span className="inline-block w-3 h-3 rounded-full border-[1.5px] border-zinc-600 border-t-transparent animate-spin" />
             Chargement…
           </div>
         ) : agentMcpServers.length === 0 ? (
@@ -419,13 +437,11 @@ export function AgentParameters({
                   <button
                     key={callable.id}
                     type="button"
-                    className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors"
+                    className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors flex items-center gap-2"
                     onClick={() => handleLinkCallable(callable.id)}
                   >
-                    <span>{callable.name}</span>
-                    {callable.type && (
-                      <span className="ml-2 text-[10px] text-zinc-500 font-mono">{callable.type}</span>
-                    )}
+                    <CallableTypeIcon type={callable.type} />
+                    <span className="truncate">{callable.name}</span>
                   </button>
                 ))}
               {availableCallables.filter(callable => !isCallableLinked(callable.id)).length === 0 && (
@@ -436,8 +452,8 @@ export function AgentParameters({
           {isCreating ? (
             <p className="text-xs text-zinc-500">Les callables peuvent être configurés après la création de l&apos;agent.</p>
           ) : callablesLoading ? (
-            <div className="flex items-center gap-2 text-zinc-500 text-sm">
-              <span className="inline-block w-4 h-4 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin" />
+            <div className="flex items-center gap-1.5 text-zinc-500 text-xs">
+              <span className="inline-block w-3 h-3 rounded-full border-[1.5px] border-zinc-600 border-t-transparent animate-spin" />
               Chargement…
             </div>
           ) : agentCallables.length === 0 ? (
@@ -450,10 +466,10 @@ export function AgentParameters({
                   onRemove={() => handleUnlinkCallable(link.callable_id)}
                   titleRemove="Retirer ce callable"
                 >
-                  <span>{link.synesia_callable.name}</span>
-                  {link.synesia_callable.type && (
-                    <span className="ml-2 text-[10px] text-zinc-500 font-mono">{link.synesia_callable.type}</span>
-                  )}
+                  <span className="flex items-center gap-2">
+                    <CallableTypeIcon type={link.synesia_callable.type} />
+                    <span className="truncate">{link.synesia_callable.name}</span>
+                  </span>
                 </ToolItem>
               ))}
             </div>
