@@ -8,12 +8,50 @@ import { simpleLogger as logger } from "@/utils/logger";
 import { triggerPollingAfterClasseurAction, triggerPollingAfterFolderAction, triggerPollingAfterNoteAction } from "@/services/uiActionPolling";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
 
+function readUrlParam(key: string): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  return new URLSearchParams(window.location.search).get(key) ?? undefined;
+}
+
+function syncUrlParams(classeurId?: string, folderId?: string): void {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  if (classeurId) {
+    url.searchParams.set("classeur", classeurId);
+  } else {
+    url.searchParams.delete("classeur");
+  }
+  if (folderId) {
+    url.searchParams.set("folder", folderId);
+  } else {
+    url.searchParams.delete("folder");
+  }
+  window.history.replaceState(window.history.state, "", url.toString());
+}
+
 export function useDossiersPage(userId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [activeClasseurId, setActiveClasseurId] = useState<string | undefined>();
-  const [currentFolderId, setCurrentFolderId] = useState<string | undefined>();
+  const [activeClasseurId, setActiveClasseurIdRaw] = useState<string | undefined>(
+    () => readUrlParam("classeur")
+  );
+  const [currentFolderId, setCurrentFolderIdRaw] = useState<string | undefined>(
+    () => readUrlParam("folder")
+  );
+
+  const setActiveClasseurId = useCallback((id: string | undefined) => {
+    setActiveClasseurIdRaw(id);
+    syncUrlParams(id, undefined);
+  }, []);
+
+  const setCurrentFolderId = useCallback((id: string | undefined) => {
+    setCurrentFolderIdRaw(id);
+    setActiveClasseurIdRaw((prev) => {
+      syncUrlParams(prev, id);
+      return prev;
+    });
+  }, []);
   
   // 🔧 OPTIMISATION: Référence pour éviter les fuites mémoire
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -139,13 +177,15 @@ export function useDossiersPage(userId: string) {
     };
   }, [loadInitialData]);
   
-  // Auto-select the first classeur when available
+  // Auto-select first classeur if none active or URL references a deleted one
   useEffect(() => {
-    if (!activeClasseurId && classeursArray.length > 0) {
+    if (classeursArray.length === 0) return;
+    const isValid = activeClasseurId && classeursArray.some((c) => c.id === activeClasseurId);
+    if (!isValid) {
       setActiveClasseurId(classeursArray[0].id);
       setCurrentFolderId(undefined);
     }
-  }, [classeursArray, activeClasseurId]);
+  }, [classeursArray, activeClasseurId, setActiveClasseurId, setCurrentFolderId]);
 
   // 🔧 OPTIMISATION: Fonction de retry avec backoff exponentiel
   const retryWithBackoff = useCallback(async () => {
@@ -262,19 +302,19 @@ export function useDossiersPage(userId: string) {
 
   const handleFolderOpen = useCallback((folderId: string) => {
     setCurrentFolderId(folderId);
-  }, []);
+  }, [setCurrentFolderId]);
 
   const handleGoBack = useCallback(() => {
     setCurrentFolderId(undefined);
-  }, []);
+  }, [setCurrentFolderId]);
 
   const handleGoToRoot = useCallback(() => {
     setCurrentFolderId(undefined);
-  }, []);
+  }, [setCurrentFolderId]);
 
   const handleGoToFolder = useCallback((folderId: string) => {
     setCurrentFolderId(folderId);
-  }, []);
+  }, [setCurrentFolderId]);
 
   // Calculer le chemin des dossiers
   const folderPath = useMemo(() => {
