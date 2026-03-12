@@ -59,18 +59,45 @@
   background: #fff;
 }
 
-.html-note-source {
+/* Source overlay pattern: highlighted <pre> behind, transparent <textarea> on top */
+.html-note-source-wrapper {
+  position: relative;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.html-note-source-highlight {
+  position: absolute;
+  inset: 0;
   margin: 0;
   padding: 16px;
   overflow: auto;
-  background: var(--bg-tertiary, #1e1e1e);
-  color: var(--text-code, #d4d4d4);
-  font-family: 'Fira Code', 'Consolas', monospace;
+  background: var(--bg-tertiary, #111113);
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
   font-size: 13px;
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
+  tab-size: 2;
+  pointer-events: none;
+  color: var(--text-code, #d4d4d4);
+}
+
+.html-note-source {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 16px;
+  overflow: auto;
+  background: transparent;
+  color: transparent;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  caret-color: #f97316;
 }
 
 .html-note-source--editable {
@@ -80,7 +107,11 @@
   outline: none;
   resize: none;
   tab-size: 2;
-  caret-color: #f97316;
+  z-index: 1;
+}
+
+.html-note-source--overlay::selection {
+  background: rgba(249, 115, 22, 0.25);
 }
 
 /* Fullscreen variant — fills parent */
@@ -93,7 +124,7 @@
   height: 100%;
 }
 
-.html-note-renderer--fullscreen .html-note-source {
+.html-note-renderer--fullscreen .html-note-source-wrapper {
   height: 100%;
 }
 

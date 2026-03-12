@@ -1,19 +1,30 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Code2, Eye } from 'lucide-react';
+import lowlight from '@/utils/lowlightInstance';
+import { toHtml } from 'hast-util-to-html';
 
 interface HtmlNoteRendererProps {
   htmlContent: string;
   className?: string;
-  /** Controlled mode: parent manages source toggle */
   showSource?: boolean;
-  /** Hide the internal toolbar (when parent renders its own) */
   hideToolbar?: boolean;
-  /** Fill the entire available space (100% height) */
   fullscreen?: boolean;
-  /** Called when user edits the source */
   onContentChange?: (newContent: string) => void;
+}
+
+function highlightHtml(code: string): string {
+  try {
+    const lang = lowlight.registered('xml') ? 'xml' : null;
+    const tree = lang ? lowlight.highlight(lang, code) : lowlight.highlightAuto(code);
+    return toHtml(tree);
+  } catch {
+    return code
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
 }
 
 const HtmlNoteRenderer: React.FC<HtmlNoteRendererProps> = ({
@@ -27,6 +38,8 @@ const HtmlNoteRenderer: React.FC<HtmlNoteRendererProps> = ({
   const [internalShowSource, setInternalShowSource] = useState(false);
   const showSource = controlledShowSource ?? internalShowSource;
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const highlightRef = useRef<HTMLPreElement>(null);
 
   useEffect(() => {
     if (iframeRef.current && !fullscreen) {
@@ -45,6 +58,15 @@ const HtmlNoteRenderer: React.FC<HtmlNoteRendererProps> = ({
       return () => iframe.removeEventListener('load', handleResize);
     }
   }, [htmlContent, fullscreen]);
+
+  const handleScroll = () => {
+    if (textareaRef.current && highlightRef.current) {
+      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
+      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    }
+  };
+
+  const highlightedHtml = useMemo(() => highlightHtml(htmlContent), [htmlContent]);
 
   const isFullDocument = /^\s*<!doctype|^\s*<html/i.test(htmlContent);
 
@@ -83,13 +105,23 @@ const HtmlNoteRenderer: React.FC<HtmlNoteRendererProps> = ({
       )}
 
       {showSource ? (
-        <textarea
-          className="html-note-source html-note-source--editable"
-          value={htmlContent}
-          onChange={(e) => onContentChange?.(e.target.value)}
-          spellCheck={false}
-          readOnly={!onContentChange}
-        />
+        <div className="html-note-source-wrapper">
+          <pre
+            ref={highlightRef}
+            className="html-note-source-highlight hljs"
+            aria-hidden="true"
+            dangerouslySetInnerHTML={{ __html: highlightedHtml + '\n' }}
+          />
+          <textarea
+            ref={textareaRef}
+            className="html-note-source html-note-source--editable html-note-source--overlay"
+            value={htmlContent}
+            onChange={(e) => onContentChange?.(e.target.value)}
+            onScroll={handleScroll}
+            spellCheck={false}
+            readOnly={!onContentChange}
+          />
+        </div>
       ) : (
         <iframe
           ref={iframeRef}
