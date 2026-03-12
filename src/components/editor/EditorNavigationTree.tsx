@@ -368,45 +368,37 @@ const NoteTreeItem = React.memo(function NoteTreeItem({
   // ✅ Base 8px + offset par niveau pour décalage subtil vers la droite
   const paddingLeft = 8 + (level * 16);
 
-  /**
-   * Handler pour le début du drag
-   * Transfère le noteId via dataTransfer pour le drop dans l'éditeur
-   */
   const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    // Stocker le noteId dans le dataTransfer
     e.dataTransfer.setData('application/x-scrivia-note-id', note.id);
-    
-    // Type d'effet : copy (indique qu'on copie la note, pas qu'on la déplace)
     e.dataTransfer.effectAllowed = 'copy';
-    
-    // Ajouter classe pour feedback visuel
-    e.currentTarget.classList.add('dragging');
+    const row = e.currentTarget.closest('.editor-sidebar-note');
+    if (row) row.classList.add('dragging');
   }, [note.id]);
 
-  /**
-   * Handler pour la fin du drag
-   * Nettoie le feedback visuel
-   */
   const handleDragEnd = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.currentTarget.classList.remove('dragging');
+    const row = e.currentTarget.closest('.editor-sidebar-note');
+    if (row) row.classList.remove('dragging');
   }, []);
 
   return (
     <div
       className={`editor-sidebar-note ${isActive ? 'active' : ''}`}
-      onDoubleClick={() => onNoteClick(note.id)}
+      onClick={() => onNoteClick(note.id)}
       onContextMenu={onContextMenu && treeNoteToFileArticle ? (e) => onContextMenu(e, treeNoteToFileArticle(note)) : undefined}
-      draggable={true}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
       style={{ paddingLeft: `${paddingLeft}px` }}
     >
-      {/* Icône */}
-      <div className="editor-sidebar-icon">
-        <Feather size={17} />
+      {/* Icône = seule zone draggable (drag depuis l’icône, clic = sélection) */}
+      <div
+        className="editor-sidebar-note-drag-source"
+        draggable
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="editor-sidebar-icon">
+          <Feather size={17} />
+        </div>
       </div>
-      
-      {/* Titre */}
+
       <div className="editor-sidebar-item-title">
         {note.source_title || 'Sans titre'}
       </div>

@@ -48,32 +48,19 @@
   transform: translateX(0);
 }
 
-/* Contenu repoussé quand la sidebar est ouverte (comme le chat) */
-.editor-main-wrap {
-  width: 100%;
-  flex: 1;
-  min-width: 0;
-  transition: margin-left 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-
-.editor-main-wrap.editor-sidebar-open {
-  margin-left: 280px;
-}
-
-/* Header se décale quand sidebar ouverte */
-.editor-main-wrap.editor-sidebar-open .editor-header {
-  left: 280px;
-}
-
 /* ========================================
    ONGLETS
    ======================================== */
 
 .editor-sidebar-tabs {
   display: flex;
+  align-items: center;
+  height: var(--editor-header-height, 44px);
+  min-height: var(--editor-header-height, 44px);
   border-bottom: 1px solid var(--color-border-block);
-  padding: 12px 14px;
+  padding: 0 14px;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .editor-sidebar-tab {
@@ -82,10 +69,11 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 12px;
+  padding: 6px 12px;
+  height: 28px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 6px;
   color: var(--color-text-secondary);
   font-size: 13px;
   font-weight: 500;
@@ -114,21 +102,24 @@
    ======================================== */
 
 .editor-sidebar-search-clean {
-  padding: 12px 14px; /* ✅ Compact : 12px vertical, 14px horizontal */
-  border-bottom: none; /* ✅ Pas de divider */
+  min-height: 36px;
+  padding: 6px 14px;
+  border-bottom: none;
   display: flex;
   align-items: center;
-  gap: 8px; /* ✅ Espace entre recherche et bouton */
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .editor-sidebar-search-clean > div {
   position: relative;
   flex: 1;
+  min-width: 0;
 }
 
 .editor-sidebar-search-icon-clean {
   position: absolute;
-  left: 12px;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--chat-text-secondary);
@@ -137,15 +128,18 @@
 
 .editor-sidebar-search-input-clean {
   width: 100%;
-  padding: 8px 12px 8px 38px; /* ✅ Padding left pour icône */
+  height: 28px;
+  padding: 0 10px 0 32px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 8px; /* ✅ Même border-radius que classeur-selector-button */
+  border-radius: 6px;
   color: var(--chat-text-primary);
   font-size: 13px;
   font-family: var(--font-chat-text);
+  line-height: 1.3;
   outline: none;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .editor-sidebar-search-input-clean::placeholder {
@@ -165,12 +159,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  border-radius: 6px;
   color: var(--chat-text-primary);
   cursor: pointer;
   transition: all 0.15s ease;

@@ -115,8 +115,8 @@ const Editor: React.FC<EditorProps> = ({
   const slashMenuRef = React.useRef<EditorSlashMenuHandle | null>(null);
   const editorContainerRef = React.useRef<HTMLDivElement | null>(null);
 
+  // Sidebar Navigation - Pattern chat (hover zone + transform)
   const [sidebarVisible, setSidebarVisible] = React.useState(false);
-  const [sidebarContentVisible, setSidebarContentVisible] = React.useState(false);
 
   // Plan mode: read-only by default, togglable
   const isPlanNote = note?.source_type === 'plan';
@@ -440,9 +440,7 @@ const Editor: React.FC<EditorProps> = ({
           currentNoteId={noteId}
           currentClasseurId={note?.classeur_id}
           onNoteSelect={switchNote}
-          onVisibleChange={setSidebarContentVisible}
         />
-        <div className={sidebarContentVisible ? 'editor-main-wrap editor-sidebar-open' : 'editor-main-wrap'}>
         <HtmlNoteEditor
           noteId={note.id}
           title={note.source_title}
@@ -456,7 +454,6 @@ const Editor: React.FC<EditorProps> = ({
             }
           })}
         />
-        </div>
       </>
     );
   }
@@ -490,15 +487,15 @@ const Editor: React.FC<EditorProps> = ({
             currentNoteId={noteId}
             currentClasseurId={note?.classeur_id}
             onNoteSelect={switchNote}
-            onVisibleChange={setSidebarContentVisible}
           />
         </>
       )}
 
-        <div className={sidebarContentVisible ? 'editor-main-wrap editor-sidebar-open' : 'editor-main-wrap'}>
+        {/* Table des matières fixe */}
         <div className="editor-toc-fixed">
           <PublicTableOfContents headings={headings} containerRef={editorContainerRef} />
         </div>
+        
         <EditorLayout
           layoutClassName={editorState.headerImage.url ? (editorState.headerImage.titleInImage ? 'noteLayout imageWithTitle' : 'noteLayout imageOnly') : 'noteLayout imageOnly noImage'}
           header={(
@@ -518,7 +515,8 @@ const Editor: React.FC<EditorProps> = ({
               currentTitle={editorState.document.title}
               renderDocumentHeader={false}
             />
-          )}          documentHeader={(
+          )}
+          documentHeader={(
             <EditorHeaderSection
               editor={editor}
               noteId={noteId}
@@ -570,8 +568,7 @@ const Editor: React.FC<EditorProps> = ({
             />
           )}
         />
-        </div>
-
+        
         {/* Global ImageMenu for both header and content insertions */}
         {/* ✅ Afficher le menu d'image si ouvert ET (toolbar visible OU target = header) */}
         {(editorState.ui.showToolbar || editorState.menus.imageMenuTarget === 'header') && (

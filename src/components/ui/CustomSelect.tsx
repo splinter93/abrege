@@ -79,11 +79,11 @@ export function CustomSelect({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.98 }}
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="section-block absolute bottom-full left-0 right-0 z-[100] mb-2 w-full max-h-[300px] overflow-y-auto rounded-xl shadow-2xl backdrop-blur-xl p-1.5 space-y-0.5"
+            className="section-block absolute top-full left-0 right-0 z-[100] mt-2 w-full max-h-[300px] overflow-y-auto rounded-xl shadow-2xl backdrop-blur-xl p-1.5 space-y-0.5"
             role="listbox"
           >
             {options.map(option => (

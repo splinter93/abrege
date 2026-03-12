@@ -25,20 +25,21 @@ import '@/styles/editor-sidebar.css';
  */
 
 interface EditorSidebarProps {
+  /** Sidebar visible ou cachée */
   isVisible: boolean;
+  /** ID de la note actuellement ouverte */
   currentNoteId: string;
+  /** ID du classeur de la note actuelle */
   currentClasseurId?: string | null;
+  /** Callback pour switch vers une autre note */
   onNoteSelect: (noteId: string) => void;
-  /** Appelé quand la sidebar devient visible ou cachée (pour repousser le layout) */
-  onVisibleChange?: (visible: boolean) => void;
 }
 
 export default function EditorSidebar({
   isVisible,
   currentNoteId,
   currentClasseurId,
-  onNoteSelect,
-  onVisibleChange,
+  onNoteSelect
 }: EditorSidebarProps) {
   
   // État local du classeur sélectionné
@@ -79,11 +80,8 @@ export default function EditorSidebar({
     setSelectedClasseurId(classeurId);
   }, []);
 
+  // ✅ Sidebar visible si hover zone OU hover sidebar
   const shouldBeVisible = isVisible || isHovered;
-
-  React.useEffect(() => {
-    onVisibleChange?.(shouldBeVisible);
-  }, [shouldBeVisible, onVisibleChange]);
 
   return (
     <aside 
