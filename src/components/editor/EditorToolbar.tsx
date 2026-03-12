@@ -180,156 +180,151 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
     });
   }
 
+  const moreMenuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!showMoreMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMoreMenu]);
+
   return (
     <div className="editor-toolbar" data-debug-toolbar-content="visible">
-      {/* Undo/Redo */}
-      <button
-        className="tb-btn desktop-only"
-        onClick={undo}
-        disabled={!canUndo}
-        title="Annuler (Ctrl+Z)"
-      >
+      {/* Undo/Redo — desktop only */}
+      <button className="tb-btn desktop-only" onClick={undo} disabled={!canUndo} title="Annuler (Ctrl+Z)">
         <FiRotateCcw size={16} />
       </button>
-
-      <button
-        className="tb-btn desktop-only"
-        onClick={redo}
-        disabled={!canRedo}
-        title="Refaire (Ctrl+Y)"
-      >
+      <button className="tb-btn desktop-only" onClick={redo} disabled={!canRedo} title="Refaire (Ctrl+Y)">
         <FiRotateCw size={16} />
       </button>
-
       <div className="tb-divider desktop-only" />
 
-      {/* Font selector */}
-      <FontSelector
-        currentFont={currentFont}
-        onFontChange={onFontChange}
-        disabled={readonly}
-      />
-
+      {/* Font selector — always visible */}
+      <FontSelector currentFont={currentFont} onFontChange={onFontChange} disabled={readonly} />
       <div className="tb-divider" />
 
-      {/* Format de base */}
-      <button
-        className={`tb-btn ${isBold ? 'active' : ''}`}
-        onClick={toggleBold}
-        title="Gras (Ctrl+B)"
-      >
-        <FiBold size={16} />
-      </button>
-
-      <button
-        className={`tb-btn ${isItalic ? 'active' : ''}`}
-        onClick={toggleItalic}
-        title="Italique (Ctrl+I)"
-      >
-        <FiItalic size={16} />
-      </button>
-
-      <button
-        className={`tb-btn ${isUnderline ? 'active' : ''}`}
-        onClick={toggleUnderline}
-        title="Souligné (Ctrl+U)"
-      >
-        <FiUnderline size={16} />
-      </button>
-
-      <div className="tb-divider" />
-
-      {/* Heading dropdown */}
-      <div className="tb-dropdown">
-        <button
-          className={`tb-btn tb-btn-heading ${isH1 || isH2 || isH3 ? 'active' : ''}`}
-          onClick={() => setShowHeadingMenu(!showHeadingMenu)}
-          title="Format de titre"
-        >
-          <span className="tb-heading-label">{getCurrentHeading()}</span>
+      {/* Formatting group — hidden on mobile, shown in overflow */}
+      <div className="tb-collapse-group">
+        <button className={`tb-btn ${isBold ? 'active' : ''}`} onClick={toggleBold} title="Gras (Ctrl+B)">
+          <FiBold size={16} />
+        </button>
+        <button className={`tb-btn ${isItalic ? 'active' : ''}`} onClick={toggleItalic} title="Italique (Ctrl+I)">
+          <FiItalic size={16} />
+        </button>
+        <button className={`tb-btn ${isUnderline ? 'active' : ''}`} onClick={toggleUnderline} title="Souligné (Ctrl+U)">
+          <FiUnderline size={16} />
         </button>
 
-        {showHeadingMenu && (
-          <div className="tb-dropdown-menu">
-            <button className="tb-dropdown-item" onClick={setParagraph}>
-              Paragraphe
-            </button>
-            <button className="tb-dropdown-item" onClick={() => setHeading(1)}>
-              Titre 1
-            </button>
-            <button className="tb-dropdown-item" onClick={() => setHeading(2)}>
-              Titre 2
-            </button>
-            <button className="tb-dropdown-item" onClick={() => setHeading(3)}>
-              Titre 3
-            </button>
-          </div>
-        )}
+        <div className="tb-divider" />
+
+        <div className="tb-dropdown">
+          <button
+            className={`tb-btn tb-btn-heading ${isH1 || isH2 || isH3 ? 'active' : ''}`}
+            onClick={() => setShowHeadingMenu(!showHeadingMenu)}
+            title="Format de titre"
+          >
+            <span className="tb-heading-label">{getCurrentHeading()}</span>
+          </button>
+          {showHeadingMenu && (
+            <div className="tb-dropdown-menu">
+              <button className="tb-dropdown-item" onClick={setParagraph}>Paragraphe</button>
+              <button className="tb-dropdown-item" onClick={() => setHeading(1)}>Titre 1</button>
+              <button className="tb-dropdown-item" onClick={() => setHeading(2)}>Titre 2</button>
+              <button className="tb-dropdown-item" onClick={() => setHeading(3)}>Titre 3</button>
+            </div>
+          )}
+        </div>
+
+        <div className="tb-divider" />
+
+        <button className={`tb-btn ${isBulletList ? 'active' : ''}`} onClick={toggleBulletList} title="Liste à puces">
+          <FiList size={16} />
+        </button>
+        <button className={`tb-btn ${isOrderedList ? 'active' : ''}`} onClick={toggleOrderedList} title="Liste numérotée">
+          <MdFormatListNumbered size={18} />
+        </button>
       </div>
-
-      <div className="tb-divider" />
-
-      {/* Listes */}
-      <button
-        className={`tb-btn ${isBulletList ? 'active' : ''}`}
-        onClick={toggleBulletList}
-        title="Liste à puces"
-      >
-        <FiList size={16} />
-      </button>
-
-      <button
-        className={`tb-btn ${isOrderedList ? 'active' : ''}`}
-        onClick={toggleOrderedList}
-        title="Liste numérotée"
-      >
-        <MdFormatListNumbered size={18} />
-      </button>
 
       <div className="tb-divider desktop-only" />
 
-      {/* Insert (desktop only) */}
-      <button 
-        className={`tb-btn desktop-only ${isBlockquote ? 'active' : ''}`}
-        title="Citation" 
-        onClick={toggleBlockquote}
-      >
+      {/* Insert group — desktop only */}
+      <button className={`tb-btn desktop-only ${isBlockquote ? 'active' : ''}`} title="Citation" onClick={toggleBlockquote}>
         <BsChatQuote size={16} />
       </button>
-
       <button className="tb-btn desktop-only" title="Insérer un tableau" onClick={handleInsertTable}>
         <MdGridOn size={18} />
       </button>
-
       <button className="tb-btn desktop-only" title="Insérer une image" onClick={onImageClick}>
         <FiImage size={16} />
       </button>
-
       <div className="tb-audio-wrapper desktop-only">
-        <AudioRecorder
-          onTranscriptionComplete={handleAudioTranscription}
-          onError={handleAudioError}
-          variant="toolbar"
-        />
+        <AudioRecorder onTranscriptionComplete={handleAudioTranscription} onError={handleAudioError} variant="toolbar" />
       </div>
-
-      {audioError && (
-        <span className="tb-audio-error desktop-only" role="status">
-          {audioError}
-        </span>
-      )}
-
+      {audioError && <span className="tb-audio-error desktop-only" role="status">{audioError}</span>}
       <div className="tb-divider desktop-only" />
 
-      {/* AI (toujours visible) */}
+      {/* AI — always visible */}
       <button className="tb-btn tb-btn-ai" title="Assistant IA">
         <FiZap size={16} />
       </button>
 
-      {/* Menu overflow mobile */}
-      <button className="tb-btn mobile-only" title="Plus d'outils" onClick={() => setShowMoreMenu(!showMoreMenu)}>
-        <FiMoreVertical size={16} />
-      </button>
+      {/* Overflow "..." — mobile only */}
+      <div className="tb-overflow-wrapper mobile-only" ref={moreMenuRef}>
+        <button className="tb-btn" title="Plus d'outils" onClick={() => setShowMoreMenu(!showMoreMenu)}>
+          <FiMoreVertical size={16} />
+        </button>
+        {showMoreMenu && (
+          <div className="tb-overflow-menu">
+            <button className={`tb-overflow-item ${isBold ? 'active' : ''}`} onClick={() => { toggleBold(); setShowMoreMenu(false); }}>
+              <FiBold size={15} /> <span>Gras</span>
+            </button>
+            <button className={`tb-overflow-item ${isItalic ? 'active' : ''}`} onClick={() => { toggleItalic(); setShowMoreMenu(false); }}>
+              <FiItalic size={15} /> <span>Italique</span>
+            </button>
+            <button className={`tb-overflow-item ${isUnderline ? 'active' : ''}`} onClick={() => { toggleUnderline(); setShowMoreMenu(false); }}>
+              <FiUnderline size={15} /> <span>Souligné</span>
+            </button>
+            <div className="tb-overflow-divider" />
+            <button className="tb-overflow-item" onClick={() => { setParagraph(); setShowMoreMenu(false); }}>
+              <FiType size={15} /> <span>Paragraphe</span>
+            </button>
+            <button className={`tb-overflow-item ${isH1 ? 'active' : ''}`} onClick={() => { setHeading(1); setShowMoreMenu(false); }}>
+              <span className="tb-overflow-icon-text">H1</span> <span>Titre 1</span>
+            </button>
+            <button className={`tb-overflow-item ${isH2 ? 'active' : ''}`} onClick={() => { setHeading(2); setShowMoreMenu(false); }}>
+              <span className="tb-overflow-icon-text">H2</span> <span>Titre 2</span>
+            </button>
+            <button className={`tb-overflow-item ${isH3 ? 'active' : ''}`} onClick={() => { setHeading(3); setShowMoreMenu(false); }}>
+              <span className="tb-overflow-icon-text">H3</span> <span>Titre 3</span>
+            </button>
+            <div className="tb-overflow-divider" />
+            <button className={`tb-overflow-item ${isBulletList ? 'active' : ''}`} onClick={() => { toggleBulletList(); setShowMoreMenu(false); }}>
+              <FiList size={15} /> <span>Liste à puces</span>
+            </button>
+            <button className={`tb-overflow-item ${isOrderedList ? 'active' : ''}`} onClick={() => { toggleOrderedList(); setShowMoreMenu(false); }}>
+              <MdFormatListNumbered size={16} /> <span>Liste numérotée</span>
+            </button>
+            <div className="tb-overflow-divider" />
+            <button className={`tb-overflow-item ${isBlockquote ? 'active' : ''}`} onClick={() => { toggleBlockquote(); setShowMoreMenu(false); }}>
+              <BsChatQuote size={15} /> <span>Citation</span>
+            </button>
+            <button className="tb-overflow-item" onClick={() => { handleInsertTable(); setShowMoreMenu(false); }}>
+              <MdGridOn size={16} /> <span>Tableau</span>
+            </button>
+            <button className="tb-overflow-item" onClick={() => { onImageClick?.(); setShowMoreMenu(false); }}>
+              <FiImage size={15} /> <span>Image</span>
+            </button>
+            <button className="tb-overflow-item" onClick={() => { editor?.chain().focus().toggleCodeBlock().run(); setShowMoreMenu(false); }}>
+              <FiCode size={15} /> <span>Code</span>
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

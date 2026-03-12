@@ -423,10 +423,92 @@
 }
 
 /* =============================================================================
+   COLLAPSE GROUP — formatting buttons that collapse on mobile
+   ========================================================================== */
+
+.tb-collapse-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* =============================================================================
+   OVERFLOW MENU — mobile "..." dropdown
+   ========================================================================== */
+
+.tb-overflow-wrapper {
+  position: relative;
+}
+
+.tb-overflow-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 9999;
+  min-width: 200px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--menu-bg-gradient, rgba(24, 24, 28, 0.96));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  padding: 6px;
+}
+
+.tb-overflow-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.tb-overflow-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tb-overflow-item.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.tb-overflow-item svg {
+  flex-shrink: 0;
+}
+
+.tb-overflow-icon-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.tb-overflow-divider {
+  height: 1px;
+  margin: 4px 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* =============================================================================
    RESPONSIVE
    ========================================================================== */
 
-/* Desktop only */
 .desktop-only {
   display: flex;
 }
@@ -435,44 +517,46 @@
   display: none;
 }
 
-/* Mobile */
 @media (max-width: 768px) {
   .editor-toolbar {
     gap: 2px;
   }
-  
+
   .tb-btn {
     height: 28px;
     min-width: 28px;
     padding: 0 6px;
   }
-  
+
   .tb-divider {
     margin: 0 2px;
   }
-  
+
   .desktop-only {
     display: none !important;
   }
-  
+
   .mobile-only {
     display: flex !important;
   }
+
+  .tb-collapse-group {
+    display: none !important;
+  }
 }
 
-/* Mobile small */
 @media (max-width: 480px) {
   .tb-btn {
     height: 24px;
     min-width: 24px;
     padding: 0 4px;
   }
-  
+
   .tb-btn svg {
     width: 14px;
     height: 14px;
   }
-  
+
   .tb-heading-label {
     font-size: 12px;
   }
