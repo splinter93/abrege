@@ -239,11 +239,11 @@ function SortableTab({
         e.stopPropagation();
         onDrop?.(e, tab);
       }}
-      className={`relative flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-sm font-medium transition-colors duration-200 rounded-md cursor-pointer ${
+      className={`relative flex-shrink-0 whitespace-nowrap px-3 pb-3 pt-1 text-sm font-medium transition-colors duration-200 cursor-pointer border-b-2 -mb-px ${
         isActive
-          ? "bg-white/[0.08] text-white"
-          : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]"
-      } ${isDragOver ? "border border-orange-500/40 bg-orange-500/8" : ""}`}
+          ? "border-white text-white"
+          : "border-transparent text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
+      } ${isDragOver ? "border-orange-500/60 text-orange-300" : ""}`}
     >
       {isRenaming && onRenameSubmit && onRenameCancel ? (
         <div className="min-w-[120px]" onClick={(e) => e.stopPropagation()}>
@@ -1224,7 +1224,7 @@ export default function ClasseursPage() {
           />
 
           {/* Toolbar : onglets uniquement */}
-          <div className="mb-6 flex w-full items-center gap-4 border-b border-white/[0.08] pb-4">
+          <div className="mb-6 flex w-full items-center gap-4 border-b border-white/[0.08]">
             <div className="min-w-0 flex-1 overflow-hidden">
               <ClasseursTabs
                 tabs={tabs}
