@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Loader2, Plus, Folder, FileText } from 'lucide-react';
+import { Loader2, Folder, FileText } from 'lucide-react';
 import ClasseurSelector from './ClasseurSelector';
 import EditorNavigationTree from './EditorNavigationTree';
 import EditorSidebarSearchBar from './EditorSidebarSearchBar';
 import EditorSidebarFilesList from './EditorSidebarFilesList';
 import { useClasseurTree } from '@/hooks/editor/useClasseurTree';
-import { useCreateNote } from '@/hooks/editor/useCreateNote';
 import { simpleLogger as logger } from '@/utils/logger';
 import '@/styles/editor-sidebar.css';
 
@@ -69,12 +68,6 @@ export default function EditorSidebar({
     depth: 2
   });
 
-  // Hook création rapide de note
-  const { createNote, isCreating } = useCreateNote({
-    classeurId: selectedClasseurId || '',
-    defaultTitle: 'Nouvelle note'
-  });
-
   // Handler changement classeur
   const handleClasseurChange = useCallback((classeurId: string) => {
     setSelectedClasseurId(classeurId);
@@ -111,38 +104,15 @@ export default function EditorSidebar({
       <div className="editor-sidebar-content">
         {activeTab === 'classeurs' ? (
           <>
-            {/* Search Bar avec recherche de notes + bouton créer note */}
-            <div className="editor-sidebar-search-clean" style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+            <div className="editor-sidebar-search-clean">
+              <div>
                 <EditorSidebarSearchBar onNoteSelect={onNoteSelect} activeTab={activeTab} />
               </div>
-              {selectedClasseurId && (
-                <button
-                  className="editor-sidebar-create-note-btn"
-                  onClick={createNote}
-                  disabled={isCreating || !selectedClasseurId}
-                  title="Créer une nouvelle note"
-                  aria-label="Créer une nouvelle note"
-                  style={{ flexShrink: 0 }}
-                >
-                  {isCreating ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <Plus size={16} />
-                  )}
-                </button>
-              )}
             </div>
 
-            {/* Séparateur */}
-            <div style={{
-              height: '1px',
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 20%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.1) 80%, transparent 100%)',
-              margin: '8px 14px'
-            }} />
+            <div className="editor-sidebar-divider" />
 
-            {/* Classeur Selector */}
-            <div className="editor-sidebar-classeur-section" style={{ marginTop: '0', paddingTop: '8px' }}>
+            <div className="editor-sidebar-classeur-section">
               <ClasseurSelector
                 selectedClasseurId={selectedClasseurId}
                 onClasseurChange={handleClasseurChange}
@@ -182,12 +152,13 @@ export default function EditorSidebar({
           </>
         ) : (
           <>
-            {/* Search Bar avec recherche de fichiers pour l'onglet fichiers */}
-            <div className="editor-sidebar-search-clean" style={{ position: 'relative' }}>
-              <div style={{ position: 'relative', width: '100%' }}>
+            <div className="editor-sidebar-search-clean">
+              <div>
                 <EditorSidebarSearchBar onNoteSelect={onNoteSelect} activeTab={activeTab} />
               </div>
             </div>
+
+            <div className="editor-sidebar-divider" />
 
             <EditorSidebarFilesList onNoteSelect={onNoteSelect} />
           </>
