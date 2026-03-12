@@ -307,12 +307,11 @@
      Les paragraphes utilisent maintenant les variables unifiées --md-p-margin
      Cette règle causait des paddings parasites en mobile (1.25em au lieu de 0.5rem). */
 
-  /* Typo listes mobile - structure gérée par editor-markdown.css et chat-markdown.css */
   .editor-content li,
   .markdown-body li,
   .ProseMirror li {
-    font-size: 1rem; /* 16px sur mobile */
-    line-height: var(--editor-line-height-mobile); /* 1.65 */
+    font-size: var(--editor-body-size-mobile);
+    line-height: var(--editor-line-height-mobile);
   }
 }
 

@@ -200,7 +200,8 @@ div.markdown-body ul[data-type="taskList"],
 /* Items de liste normaux */
 .ProseMirror li:not([data-type="taskItem"]):not(.task-list-item),
 .markdown-body li:not(.task-list-item) {
-  display: list-item !important; /* ✅ FORCE display list-item */
+  display: list-item !important;
+  font-size: inherit !important;
   margin: var(--md-list-item-margin) 0;
   line-height: 1.75;
 }
@@ -208,6 +209,7 @@ div.markdown-body ul[data-type="taskList"],
 .ProseMirror li > p,
 .markdown-body li > p {
   margin: 0;
+  font-size: inherit !important;
 }
 
 /* Listes imbriquées */
