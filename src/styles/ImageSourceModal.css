@@ -24,10 +24,10 @@
   }
 }
 
-/* Modale — même surface que chat input (variables) */
+/* Modale — surface sombre cohérente avec le reste de l'app */
 .image-source-modal {
-  position: relative; /* Pour le positionnement absolu du bouton fermer */
-  background: var(--chat-gradient-block, #1e2022);
+  position: relative;
+  background: #111111;
   border: var(--chat-surface-border, 1.5px solid rgba(255, 255, 255, 0.05));
   border-radius: var(--chat-surface-radius, 16px);
   width: 90%;

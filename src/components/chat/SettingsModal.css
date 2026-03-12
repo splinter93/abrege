@@ -506,11 +506,24 @@ body.chat-theme-light .settings-option-card.active {
     border-radius: 0;
     overflow: hidden;
     position: relative;
-    background: #000; /* Fond noir profond */
+    background: #000000 !important;
   }
 
-  /* Layout mobile : deux vues en flex horizontal, overflow caché */
-  .settings-mobile-layout {
+  /* ── Header mobile commun ── */
+  .settings-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) 16px 0 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+    position: relative; /* ✅ Pour centrer le titre */
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 10;
+  }
     display: flex;
     width: 200%;
     height: 100%;
@@ -531,22 +544,7 @@ body.chat-theme-light .settings-option-card.active {
     overflow: hidden;
   }
 
-  /* ── Header mobile commun ── */
-  .settings-mobile-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 56px;
-    padding: 0 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    flex-shrink: 0;
-    position: relative; /* ✅ Pour centrer le titre */
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    z-index: 10;
-  }
-
+  /* ── Header mobile commun (safe area intégrée ci-dessus) ── */
   .settings-mobile-title {
     position: absolute; /* ✅ Titre centré */
     left: 50%;

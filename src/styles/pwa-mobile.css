@@ -49,6 +49,22 @@ html, body {
   box-sizing: border-box;
 }
 
+/* ── Capacitor natif — fond noir absolu GLOBAL ──────────────────────────────────────────────
+   Toutes les surfaces, toutes les pages. Déclenché dès que CapacitorInit pose html.capacitor-native.
+*/
+html.capacitor-native,
+html.capacitor-native body {
+  background: #000000 !important;
+  background-image: none !important;
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #000000;
+  --color-bg-header: #000000;
+  --color-bg-block: #111111;
+  --chat-bg-primary: #000000;
+  --chat-gradient-block: #111111;
+  --surface-background: #000000;
+}
+
 /* ── Capacitor Android natif (html.capacitor-native posée par CapacitorInit.tsx) ────────────
    Règles déclenchées par JS uniquement : 100% fiables, s'appliquent dès que l'app est en mode natif.
    Force le layout mobile "header fixe" quelle que soit la taille de l'écran.
@@ -169,6 +185,51 @@ html.capacitor-native.chat-page .sidebar-ultra-clean {
   -webkit-backdrop-filter: none !important;
 }
 
+/* 7. Éditeur (standalone + canva pane) : noir absolu + safe area sur le header.
+   Le header est sticky dans .editor-layout ; on ajoute un padding-top pour la barre de statut
+   et on force le background noir absolu partout. */
+html.capacitor-native .editor-layout,
+html.capacitor-native .editor-header,
+html.capacitor-native .noteLayout,
+html.capacitor-native .noteLayout-title,
+html.capacitor-native .noteLayout-content,
+html.capacitor-native .editor-content-wrapper {
+  background: #000000 !important;
+  background-color: #000000 !important;
+}
+
+html.capacitor-native .editor-header {
+  padding-top: env(safe-area-inset-top, 0px) !important;
+  height: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
+  min-height: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
+  box-sizing: border-box !important;
+}
+
+/* 8. Modales plein écran : safe area top + fond noir absolu */
+html.capacitor-native .settings-modal,
+html.capacitor-native .image-modal,
+html.capacitor-native .image-source-modal,
+html.capacitor-native .image-source-modal-overlay {
+  background: #000000 !important;
+}
+
+html.capacitor-native .image-modal {
+  padding-top: calc(60px + env(safe-area-inset-top, 0px)) !important;
+}
+
+html.capacitor-native .settings-modal {
+  padding-top: env(safe-area-inset-top, 0px) !important;
+}
+
+html.capacitor-native .settings-modal-header {
+  padding-top: env(safe-area-inset-top, 0px) !important;
+}
+
+/* Image source modal : petite modale centrée — pas de safe area top nécessaire */
+html.capacitor-native .image-source-modal {
+  background: #111111 !important;
+}
+
 /* Fallback: Page chat en viewport mobile (si JS capacitor-native pas encore chargé).
    Même stratégie que le bloc capacitor-native : flex layout, pas de position:fixed sur le header. */
 @media (max-width: 1024px) {
@@ -249,6 +310,24 @@ html.capacitor-native.chat-page .sidebar-ultra-clean {
     background: #000000 !important;
   }
 
+  /* Éditeur standalone PWA : noir absolu + safe area */
+  .editor-layout,
+  .editor-header,
+  .noteLayout,
+  .noteLayout-title,
+  .noteLayout-content,
+  .editor-content-wrapper {
+    background: #000000 !important;
+    background-color: #000000 !important;
+  }
+
+  .editor-header {
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    height: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
+    min-height: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
+    box-sizing: border-box !important;
+  }
+
   /* ── Chat page sur standalone (PWA installée, non Capacitor) ─────────────
      Même stratégie flex que le bloc capacitor-native. */
 
@@ -303,7 +382,7 @@ html.capacitor-native.chat-page .sidebar-ultra-clean {
   
   /* Barre de saisie : même style que web (Grok-like) sur PWA/Capacitor */
   .chatgpt-input-area {
-    background: #171a1e !important;
+    background: #000000 !important;
     border: 1.5px solid rgba(255, 255, 255, 0.05) !important;
     border-radius: 25px;
     box-shadow: none;
