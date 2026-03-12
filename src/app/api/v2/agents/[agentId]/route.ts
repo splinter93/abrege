@@ -297,6 +297,7 @@ export async function GET(
       system_instructions: agent.system_instructions,
       personality: agent.personality,
       voice: agent.voice,
+      tts_language: agent.tts_language,
       expertise: agent.expertise,
       input_schema: agent.input_schema,
       output_schema: agent.output_schema,
