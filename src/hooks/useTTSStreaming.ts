@@ -8,7 +8,6 @@ import { TTSStreamingPlayer } from '@/utils/ttsStreamingPlayer';
 const DEFAULT_PROXY_URL = 'ws://localhost:3001/ws/xai-voice';
 const PROXY_BASE_URL = process.env.NEXT_PUBLIC_XAI_VOICE_PROXY_URL || DEFAULT_PROXY_URL;
 
-/** Nombre de tentatives sur erreur WS avant abandon de la phrase */
 const MAX_WS_RETRIES = 1;
 
 function getTTSWebSocketUrl(voiceId: string): string | null {
@@ -32,22 +31,19 @@ function decodeBase64ToUint8Array(base64: string): Uint8Array {
 }
 
 /**
- * Slot pré-chargé pour la phrase suivante.
- * La WS est ouverte et les chunks MP3 sont accumulés en mémoire.
- * Quand la phrase courante finit de jouer, on injecte les chunks dans le player principal.
+ * Slot pré-chargé : WS ouverte vers xAI, chunks MP3 accumulés en mémoire.
+ * Quand la phrase courante finit de recevoir ses chunks (audio.done),
+ * on injecte instantanément les chunks du slot dans le player principal.
  */
 interface PrefetchedSlot {
   text: string;
   ws: WebSocket | null;
   chunks: Uint8Array[];
-  /** true dès que audio.done est reçu — tous les chunks sont disponibles */
   audioDone: boolean;
-  /** true si la WS a échoué → slot inutilisable, fallback direct */
   failed: boolean;
   error: Error | null;
-  /** Callbacks pour notifier la fin du prefetch */
-  onAudioDone: (() => void) | null;
-  onError: ((err: Error) => void) | null;
+  onReady: (() => void) | null;
+  onFail: ((err: Error) => void) | null;
 }
 
 export interface TTSStreamingReturn {
@@ -76,10 +72,7 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
   const stoppedRef = useRef(false);
   const endOfStreamCalledRef = useRef(false);
 
-  /** Slot de la phrase suivante pré-chargée */
   const prefetchRef = useRef<PrefetchedSlot | null>(null);
-
-  /** WS active de la phrase en cours de lecture (pour cleanup) */
   const activeWsRef = useRef<WebSocket | null>(null);
 
   // ─── Cleanup ─────────────────────────────────────────────────────────────
@@ -88,8 +81,8 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
     const slot = prefetchRef.current;
     if (!slot) return;
     prefetchRef.current = null;
-    slot.onAudioDone = null;
-    slot.onError = null;
+    slot.onReady = null;
+    slot.onFail = null;
     try { slot.ws?.close(1000, 'Cancelled'); } catch { /* ignore */ }
   }, []);
 
@@ -133,12 +126,8 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
     }
   }, []);
 
-  // ─── Prefetch ─────────────────────────────────────────────────────────────
+  // ─── Prefetch : accumule les chunks MP3 en mémoire ───────────────────────
 
-  /**
-   * Ouvre une WS xAI pour la phrase suivante et accumule les chunks MP3 en mémoire.
-   * Les chunks sont injectés dans le player principal dès que la phrase courante finit.
-   */
   const startPrefetch = useCallback((text: string, voiceId: string): PrefetchedSlot => {
     const slot: PrefetchedSlot = {
       text,
@@ -147,8 +136,8 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
       audioDone: false,
       failed: false,
       error: null,
-      onAudioDone: null,
-      onError: null,
+      onReady: null,
+      onFail: null,
     };
     prefetchRef.current = slot;
 
@@ -175,7 +164,7 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
     };
 
     ws.onmessage = (event: MessageEvent) => {
-      if (prefetchRef.current !== slot) return; // slot annulé
+      if (prefetchRef.current !== slot) return;
       let data: string;
       if (typeof event.data === 'string') {
         data = event.data;
@@ -191,11 +180,11 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
         } else if (msg.type === 'audio.done') {
           slot.audioDone = true;
           try { ws.close(1000, 'Done'); } catch { /* ignore */ }
-          slot.onAudioDone?.();
+          slot.onReady?.();
         } else if (msg.type === 'error') {
           slot.failed = true;
           slot.error = new Error(msg.message ?? 'TTS error');
-          slot.onError?.(slot.error);
+          slot.onFail?.(slot.error);
         }
       } catch { /* ignore non-JSON */ }
     };
@@ -205,63 +194,59 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
       if (!slot.audioDone && !slot.failed) {
         slot.failed = true;
         slot.error = new Error('WebSocket error');
-        slot.onError?.(slot.error);
+        slot.onFail?.(slot.error);
       }
     };
 
     ws.onclose = () => {
       if (prefetchRef.current !== slot) return;
-      // Close propre sans audio.done (ex: xAI ferme après done) → on considère ok
       if (!slot.failed && !slot.audioDone) {
         slot.audioDone = true;
-        slot.onAudioDone?.();
+        slot.onReady?.();
       }
     };
 
     return slot;
   }, []);
 
+  // ─── Injecter un slot dans le player principal ───────────────────────────
+
   /**
-   * Attend que le slot soit prêt (audio.done ou échec), puis injecte les chunks
-   * dans le player principal. Résout quand le player a terminé la lecture.
+   * Attend que le slot ait tous ses chunks (audio.done), puis les injecte
+   * dans le player principal. Ne ferme PAS le MediaSource (pas d'endOfStream).
    */
-  const playFromSlot = useCallback(
+  const injectSlot = useCallback(
     (slot: PrefetchedSlot, player: TTSStreamingPlayer): Promise<void> => {
       return new Promise((resolve, reject) => {
         if (stoppedRef.current) { resolve(); return; }
 
-        const inject = () => {
+        const flush = () => {
           if (stoppedRef.current) { resolve(); return; }
-          if (slot.failed) {
-            reject(slot.error ?? new Error('Prefetch failed'));
-            return;
-          }
-          // Injecter tous les chunks accumulés dans le player principal
+          if (slot.failed) { reject(slot.error ?? new Error('Prefetch failed')); return; }
           for (const chunk of slot.chunks) {
             player.appendChunk(chunk);
           }
-          slot.chunks = []; // libérer la mémoire
-          // Signaler la fin au player
-          try { player.endOfStream(); } catch { /* ignore */ }
+          slot.chunks = [];
           resolve();
         };
 
         if (slot.audioDone || slot.failed) {
-          inject();
+          flush();
         } else {
-          slot.onAudioDone = inject;
-          slot.onError = (err) => reject(err);
+          slot.onReady = flush;
+          slot.onFail = (err) => reject(err);
         }
       });
     },
     []
   );
 
-  // ─── Lecture directe (sans slot) ─────────────────────────────────────────
+  // ─── Lecture directe : pipe les chunks dans le player en temps réel ──────
 
   /**
-   * Lecture directe : ouvre une WS, pipe les chunks dans le player principal en temps réel.
-   * Utilisé pour la première phrase et comme fallback si le prefetch a échoué.
+   * Ouvre une WS, envoie le texte, pipe les chunks audio dans le player principal.
+   * Résout quand audio.done est reçu (le player a tous les chunks de cette phrase).
+   * NE ferme PAS le MediaSource — d'autres phrases peuvent suivre.
    */
   const speakSentenceDirect = useCallback(
     (text: string, player: TTSStreamingPlayer, voiceId: string, retryLeft = MAX_WS_RETRIES): Promise<void> => {
@@ -331,59 +316,41 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
     []
   );
 
-  // ─── Player principal : attend la fin de lecture audio ───────────────────
-
-  /**
-   * Attache les callbacks onEnded/onError au player existant et résout
-   * quand la lecture audio est terminée (après endOfStream()).
-   */
-  const waitForPlayerEnd = useCallback((player: TTSStreamingPlayer): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      player.setCallbacks({
-        onEnded: () => resolve(),
-        onError: (err) => reject(err),
-      });
-    });
-  }, []);
-
-  // ─── Queue processing avec pipelining ────────────────────────────────────
+  // ─── Queue : UN player pour tout le stream, phrases séquentielles ────────
 
   const processQueue = useCallback(async () => {
     if (isProcessingRef.current) return;
     isProcessingRef.current = true;
 
+    const player = playerRef.current;
+    if (!player) { isProcessingRef.current = false; return; }
     const voiceId = voiceIdRef.current;
 
     while (sentenceQueueRef.current.length > 0) {
       if (stoppedRef.current) break;
 
       const text = sentenceQueueRef.current.shift()!;
-      const player = playerRef.current;
-      if (!player) break;
+
+      // ── Prefetch la phrase d'après pendant qu'on traite celle-ci ──
+      const nextText = sentenceQueueRef.current[0];
+      if (nextText && !stoppedRef.current && !prefetchRef.current) {
+        startPrefetch(nextText, voiceId);
+      }
 
       try {
-        const existingSlot = prefetchRef.current;
-        const slotMatchesText = existingSlot && existingSlot.text === text && !existingSlot.failed;
-
-        // ── Lancer le prefetch de la phrase suivante AVANT de commencer la lecture ──
-        const nextText = sentenceQueueRef.current[0];
-        if (nextText && !stoppedRef.current && !prefetchRef.current) {
-          startPrefetch(nextText, voiceId);
-        }
-
-        if (slotMatchesText && existingSlot) {
-          // ── Slot disponible : injecter les chunks déjà reçus + attendre la fin ──
+        // Slot préchargé qui correspond à cette phrase ?
+        const slot = prefetchRef.current;
+        if (slot && slot.text === text && !slot.failed) {
           prefetchRef.current = null;
-          activeWsRef.current = existingSlot.ws;
-          await playFromSlot(existingSlot, player);
-          if (activeWsRef.current === existingSlot.ws) activeWsRef.current = null;
-          // playFromSlot a appelé endOfStream() → attendre la fin de lecture audio
-          await waitForPlayerEnd(player);
+          activeWsRef.current = slot.ws;
+          await injectSlot(slot, player);
+          if (activeWsRef.current === slot.ws) activeWsRef.current = null;
         } else {
-          // ── Pas de slot (première phrase ou prefetch raté) : lecture directe ──
+          // Pas de slot ou slot raté → lecture directe dans le même player
+          if (slot && slot.text === text && slot.failed) {
+            cancelPrefetch();
+          }
           await speakSentenceDirect(text, player, voiceId);
-          player.endOfStream();
-          await waitForPlayerEnd(player);
         }
       } catch (err) {
         if (stoppedRef.current) break;
@@ -394,36 +361,17 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
           err instanceof Error ? err : new Error(String(err))
         );
         cancelPrefetch();
-        // On continue avec la phrase suivante — pas d'abandon total du stream
         continue;
-      }
-
-      // Entre deux phrases : préparer un nouveau player pour la suivante
-      if (!stoppedRef.current && sentenceQueueRef.current.length > 0) {
-        const nextPlayer = new TTSStreamingPlayer();
-        playerRef.current = nextPlayer;
-        nextPlayer.start({
-          onEnded: () => { currentMessageIdRef.current = null; setIsPlayingMessageId(null); },
-          onError: (err) => {
-            logger.error(LogCategory.AUDIO, '[TTS] Player error', undefined, err instanceof Error ? err : new Error(String(err)));
-          }
-        });
-        nextPlayer.getAudio()?.play().catch(() => {});
-
-        // Si la phrase suivante n'a pas encore de slot, en démarrer un
-        const nextText = sentenceQueueRef.current[0];
-        if (nextText && !prefetchRef.current) {
-          startPrefetch(nextText, voiceId);
-        }
       }
     }
 
+    // Stream terminé ET queue vide → fermer le MediaSource
     if (!stoppedRef.current && streamEndedRef.current && sentenceQueueRef.current.length === 0) {
       safeEndOfStream();
     }
 
     isProcessingRef.current = false;
-  }, [startPrefetch, playFromSlot, speakSentenceDirect, waitForPlayerEnd, safeEndOfStream, cancelPrefetch]);
+  }, [startPrefetch, injectSlot, speakSentenceDirect, safeEndOfStream, cancelPrefetch]);
 
   // ─── API publique ─────────────────────────────────────────────────────────
 
@@ -497,13 +445,11 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
       if (!trimmed) return;
       sentenceQueueRef.current.push(trimmed);
 
-      // Prefetch immédiat si on est en train de lire la première phrase et que
-      // cette nouvelle phrase est la 2e dans la queue
+      // Prefetch immédiat si on traite déjà une phrase et que celle-ci est la prochaine
       if (
         !stoppedRef.current &&
         isProcessingRef.current &&
-        !prefetchRef.current &&
-        sentenceQueueRef.current.length >= 1
+        !prefetchRef.current
       ) {
         startPrefetch(trimmed, voiceIdRef.current);
       }
