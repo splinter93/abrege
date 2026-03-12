@@ -58,11 +58,13 @@ function buildXAITTSUrl(params: Record<string, string>): string {
   const codec = params.codec || DEFAULT_CODEC;
   const sampleRate = params.sample_rate || String(DEFAULT_SAMPLE_RATE);
   const bitRate = params.bit_rate || String(DEFAULT_BIT_RATE);
+  const language = params.language || 'en';
   const search = new URLSearchParams({
     voice,
     codec,
     sample_rate: sampleRate,
     bit_rate: bitRate,
+    language,
   });
   return `${XAI_TTS_WS_URL}?${search.toString()}`;
 }

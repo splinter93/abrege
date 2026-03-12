@@ -12,7 +12,7 @@ function getTTSWebSocketUrl(voiceId: string): string | null {
   try {
     const u = new URL(PROXY_BASE_URL);
     u.pathname = '/ws/xai-tts';
-    u.search = `?voice=${encodeURIComponent(voiceId)}&codec=mp3&sample_rate=24000&bit_rate=128000`;
+    u.search = `?voice=${encodeURIComponent(voiceId)}&codec=mp3&sample_rate=24000&bit_rate=128000&language=en`;
     return u.toString();
   } catch {
     return null;
