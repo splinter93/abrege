@@ -524,6 +524,9 @@ body.chat-theme-light .settings-option-card.active {
     -webkit-backdrop-filter: blur(20px);
     z-index: 10;
   }
+
+  /* Layout mobile : deux vues en flex horizontal, overflow caché */
+  .settings-mobile-layout {
     display: flex;
     width: 200%;
     height: 100%;
