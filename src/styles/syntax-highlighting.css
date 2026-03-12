@@ -108,11 +108,11 @@
 }
 
 .language-json .hljs-string {
-  color: #fb923c; /* orange-400 — strings chaudes */
+  color: #4ade80; /* green-400 — strings vertes */
 }
 
 .language-json .hljs-number {
-  color: #a78bfa; /* violet-400 */
+  color: #facc15; /* yellow-400 */
 }
 
 .language-json .hljs-literal,
