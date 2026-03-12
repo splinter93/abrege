@@ -173,7 +173,7 @@ function AgentDetailContent() {
     (base: SpecializedAgentConfig | null, draft: Partial<SpecializedAgentConfig> | null): boolean => {
       if (!base || !draft) return false;
       const fields: (keyof SpecializedAgentConfig)[] = [
-        'display_name', 'description', 'system_instructions', 'personality', 'voice',
+        'display_name', 'description', 'system_instructions', 'personality', 'voice', 'tts_language',
         'temperature', 'top_p', 'max_tokens', 'priority', 'is_chat_agent', 'is_endpoint_agent',
         'model', 'context_template', 'profile_picture',
       ];
@@ -215,6 +215,7 @@ function AgentDetailContent() {
         const additionalFields: Partial<SpecializedAgentConfig> = {};
         if (editedAgent.personality !== undefined) additionalFields.personality = editedAgent.personality;
         if (editedAgent.voice !== undefined) additionalFields.voice = editedAgent.voice;
+        if (editedAgent.tts_language !== undefined) additionalFields.tts_language = editedAgent.tts_language;
         if (Object.keys(additionalFields).length > 0) {
           const identifier = newAgent.slug || newAgent.id;
           await agentsService.patchAgent(identifier, additionalFields);
