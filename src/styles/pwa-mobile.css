@@ -205,6 +205,17 @@ html.capacitor-native .editor-header {
   box-sizing: border-box !important;
 }
 
+html.capacitor-native .html-fullscreen-header {
+  padding-top: env(safe-area-inset-top, 0px) !important;
+  height: calc(48px + env(safe-area-inset-top, 0px)) !important;
+  min-height: calc(48px + env(safe-area-inset-top, 0px)) !important;
+  box-sizing: border-box !important;
+}
+
+html.capacitor-native .html-fullscreen-view {
+  background: #000000 !important;
+}
+
 /* 8. Modales plein écran : safe area top + fond noir absolu */
 html.capacitor-native .settings-modal,
 html.capacitor-native .image-modal,
@@ -325,6 +336,13 @@ html.capacitor-native .image-source-modal {
     padding-top: env(safe-area-inset-top, 0px) !important;
     height: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
     min-height: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
+    box-sizing: border-box !important;
+  }
+
+  .html-fullscreen-header {
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    height: calc(48px + env(safe-area-inset-top, 0px)) !important;
+    min-height: calc(48px + env(safe-area-inset-top, 0px)) !important;
     box-sizing: border-box !important;
   }
 
