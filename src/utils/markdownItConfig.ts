@@ -5,7 +5,22 @@ import anchor from 'markdown-it-anchor';
 import { slugify } from './markdownTOC';
 import { markdownItNoteEmbed } from '@/extensions/markdown-it-note-embed';
 import { markdownItYouTubeEmbed } from '@/extensions/markdown-it-youtube-embed';
+import lowlight from '@/utils/lowlightInstance';
+import { toHtml } from 'hast-util-to-html';
 // import { markdownItCallouts } from './markdownItCallouts'; // ⚠️ DÉSACTIVÉ: Casse le parsing markdown
+
+function highlightCode(code: string, lang: string): string {
+  try {
+    if (lang && lang !== 'text' && lowlight.registered(lang)) {
+      const tree = lowlight.highlight(lang, code);
+      return toHtml(tree);
+    }
+    const tree = lowlight.highlightAuto(code);
+    return toHtml(tree);
+  } catch {
+    return '';
+  }
+}
 
 // Configuration markdown-it avec support GFM (tables) via plugin local
 export function createMarkdownIt() {
@@ -136,7 +151,7 @@ export function createMarkdownIt() {
           </div>
         </div>
         <div class="u-block__body">
-          <pre><code class="language-${lang}">${md.utils.escapeHtml(content)}</code></pre>
+          <pre><code class="language-${lang} hljs">${highlightCode(content, lang) || md.utils.escapeHtml(content)}</code></pre>
         </div>
       </div>
     `;

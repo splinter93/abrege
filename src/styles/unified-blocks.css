@@ -336,21 +336,14 @@ body.chat-theme-glass .chat-markdown .u-block {
   filter: none !important; /* Pas de brightness sur le pre interne */
 }
 
-/* Neutralisation COMPLÈTE de la coloration syntaxique pour un style épuré */
+/* Syntax highlighting — reset cosmétique (garder les couleurs hljs) */
 .ProseMirror .u-block--code pre code *,
 .markdown-body .u-block--code pre code *,
 .chat-markdown-content .u-block--code pre code *,
-.ProseMirror .u-block--code .hljs *,
-.markdown-body .u-block--code .hljs *,
-.chat-markdown-content .u-block--code .hljs * {
-  color: var(--blk-fg) !important; /* Couleur code blocks - suit le thème */
+.chat-markdown .u-block--code pre code * {
   background-color: transparent !important;
   text-decoration: none !important;
-  font-style: normal !important;
-  font-weight: normal !important;
   border-bottom: none !important;
-  text-underline-offset: unset !important;
-  text-decoration-thickness: unset !important;
   box-shadow: none !important;
   outline: none !important;
   background-image: none !important;

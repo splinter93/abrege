@@ -7,6 +7,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import { formatPathsInElement } from '@/utils/formatPaths';
+import lowlight from '@/utils/lowlightInstance';
+import { toHtml } from 'hast-util-to-html';
 
 interface MarkdownBlockRendererProps {
   html: string;
@@ -144,8 +146,18 @@ export const MarkdownBlockRenderer: React.FC<MarkdownBlockRendererProps> = ({
       const body = document.createElement('div');
       body.className = 'u-block__body';
       
+      const clonedCode = codeElement.cloneNode(true) as HTMLElement;
+      if (!clonedCode.querySelector('.hljs-keyword, .hljs-string, .hljs-comment')) {
+        try {
+          const raw = clonedCode.textContent || '';
+          const lang = language && lowlight.registered(language) ? language : null;
+          const tree = lang ? lowlight.highlight(lang, raw) : lowlight.highlightAuto(raw);
+          clonedCode.innerHTML = toHtml(tree);
+          clonedCode.classList.add('hljs');
+        } catch { /* fallback: keep plain text */ }
+      }
       const newPre = document.createElement('pre');
-      newPre.appendChild(codeElement.cloneNode(true));
+      newPre.appendChild(clonedCode);
       
       // Assembler
       body.appendChild(newPre);

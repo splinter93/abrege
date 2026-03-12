@@ -31,6 +31,9 @@
 /* Import des code blocks unifiés */
 @import '../styles/unified-blocks.css';
 
+/* Import de la coloration syntaxique (hljs classes) — APRÈS unified-blocks */
+@import '../styles/syntax-highlighting.css';
+
 /* Import des checkboxes unifiées */
 @import '../styles/checkboxes.css';
 
