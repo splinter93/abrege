@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { FiFeather } from 'react-icons/fi';
-import { Code2, Eye, X } from 'lucide-react';
+import { Code2, Eye, Copy, RefreshCw, X } from 'lucide-react';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { logger, LogCategory } from '@/utils/logger';
 import HtmlNoteRenderer from './HtmlNoteRenderer';
@@ -62,21 +62,41 @@ const HtmlNoteEditor: React.FC<HtmlNoteEditorProps> = ({
     <div className="html-fullscreen-view">
       <div className="html-fullscreen-header">
         <div className="html-fullscreen-header__left">
-          <FiFeather className="html-fullscreen-header__logo" />
-          <span className="html-fullscreen-header__title">{title}</span>
-          <span className="html-fullscreen-header__badge">HTML</span>
+          <span className="html-fullscreen-header__label">HTML</span>
+        </div>
+        <div className="html-fullscreen-header__center">
+          <div className="html-fullscreen-header__toggle">
+            <button
+              className={`html-fullscreen-header__toggle-btn ${showSource ? 'is-active' : ''}`}
+              onClick={() => setShowSource(true)}
+            >
+              Code
+            </button>
+            <button
+              className={`html-fullscreen-header__toggle-btn ${!showSource ? 'is-active' : ''}`}
+              onClick={() => setShowSource(false)}
+            >
+              Preview
+            </button>
+          </div>
         </div>
         <div className="html-fullscreen-header__right">
           <button
-            className="html-fullscreen-header__btn"
-            onClick={() => setShowSource(prev => !prev)}
-            title={showSource ? 'Aperçu' : 'Code source'}
+            className="html-fullscreen-header__icon-btn"
+            onClick={() => navigator.clipboard.writeText(rawContent ?? '')}
+            title="Copier le contenu"
           >
-            {showSource ? <Eye size={15} /> : <Code2 size={15} />}
-            {showSource ? 'Aperçu' : 'Source'}
+            <Copy size={15} />
           </button>
           <button
-            className="html-fullscreen-header__btn"
+            className="html-fullscreen-header__icon-btn"
+            onClick={() => setShowSource(s => !s)}
+            title="Rafraîchir"
+          >
+            <RefreshCw size={15} />
+          </button>
+          <button
+            className="html-fullscreen-header__icon-btn"
             onClick={onClose}
             title="Fermer"
           >
