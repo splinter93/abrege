@@ -426,22 +426,35 @@ const Editor: React.FC<EditorProps> = ({
     return null;
   }
 
-  // HTML notes: dedicated fullscreen layout
+  // HTML notes: dedicated fullscreen layout + sidebar
   if (note.source_type === 'html') {
     return (
-      <HtmlNoteEditor
-        noteId={note.id}
-        title={note.source_title}
-        rawContent={rawContent}
-        updateNote={updateNote}
-        onClose={onClose ?? (() => {
-          if (window.history.length > 1) {
-            router.back();
-          } else {
-            router.push('/');
-          }
-        })}
-      />
+      <>
+        <div
+          className="editor-sidebar-hover-zone"
+          onMouseEnter={() => setSidebarVisible(true)}
+          onMouseLeave={() => setSidebarVisible(false)}
+        />
+        <EditorSidebar
+          isVisible={sidebarVisible}
+          currentNoteId={noteId}
+          currentClasseurId={note?.classeur_id}
+          onNoteSelect={switchNote}
+        />
+        <HtmlNoteEditor
+          noteId={note.id}
+          title={note.source_title}
+          rawContent={rawContent}
+          updateNote={updateNote}
+          onClose={onClose ?? (() => {
+            if (window.history.length > 1) {
+              router.back();
+            } else {
+              router.push('/');
+            }
+          })}
+        />
+      </>
     );
   }
 
