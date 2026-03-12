@@ -165,6 +165,16 @@ const ChatFullscreenV2: React.FC = () => {
     infiniteMessagesRef.current = infiniteMessages;
   }, [infiniteMessages]);
 
+  // Sync selectedAgent avec la liste agents (ex: voix mise à jour dans config agent)
+  useEffect(() => {
+    if (!selectedAgentId || agents.length === 0) return;
+    const updated = agents.find((a) => a.id === selectedAgentId);
+    if (!updated) return;
+    if (!selectedAgent || updated.voice !== selectedAgent.voice) {
+      setSelectedAgent(updated);
+    }
+  }, [agents, selectedAgentId, selectedAgent, setSelectedAgent]);
+
   const clearPendingAssistantTracking = useCallback(() => {
     pendingAssistantClientMessageIdRef.current = null;
     pendingAssistantStartTimeRef.current = 0;
