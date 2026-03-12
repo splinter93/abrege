@@ -243,7 +243,7 @@ function SortableTab({
         isActive
           ? "border-white text-white"
           : "border-transparent text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
-      } ${isDragOver ? "border-orange-500/60 text-orange-300" : ""}`}
+      } ${isDragOver ? "!border-orange-600 !text-orange-400 bg-orange-950/30" : ""}`}
     >
       {isRenaming && onRenameSubmit && onRenameCancel ? (
         <div className="min-w-[120px]" onClick={(e) => e.stopPropagation()}>
