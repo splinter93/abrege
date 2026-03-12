@@ -167,7 +167,7 @@ export class XAITTSProxyHandler {
         try {
           parsed = JSON.parse(body) || {};
         } catch { /* ignore */ }
-        const msg = parsed?.error?.message ?? parsed?.message ?? body || res.statusMessage || 'Unknown';
+        const msg = (parsed?.error?.message ?? parsed?.message ?? body) || res.statusMessage || 'Unknown';
         logger.error(LogCategory.AUDIO, '[XAITTSProxyHandler] xAI 400 response body', {
           connectionId,
           statusCode: res.statusCode,
