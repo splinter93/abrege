@@ -434,7 +434,13 @@ const Editor: React.FC<EditorProps> = ({
         title={note.source_title}
         rawContent={rawContent}
         updateNote={updateNote}
-        onClose={onClose ?? (() => router.back())}
+        onClose={onClose ?? (() => {
+          if (window.history.length > 1) {
+            router.back();
+          } else {
+            router.push('/');
+          }
+        })}
       />
     );
   }
