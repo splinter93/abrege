@@ -208,20 +208,21 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
       <FontSelector currentFont={currentFont} onFontChange={onFontChange} disabled={readonly} />
       <div className="tb-divider" />
 
-      {/* Formatting group — hidden on mobile, shown in overflow */}
-      <div className="tb-collapse-group">
-        <button className={`tb-btn ${isBold ? 'active' : ''}`} onClick={toggleBold} title="Gras (Ctrl+B)">
-          <FiBold size={16} />
-        </button>
-        <button className={`tb-btn ${isItalic ? 'active' : ''}`} onClick={toggleItalic} title="Italique (Ctrl+I)">
-          <FiItalic size={16} />
-        </button>
-        <button className={`tb-btn ${isUnderline ? 'active' : ''}`} onClick={toggleUnderline} title="Souligné (Ctrl+U)">
-          <FiUnderline size={16} />
-        </button>
+      {/* B / I / U — always visible */}
+      <button className={`tb-btn ${isBold ? 'active' : ''}`} onClick={toggleBold} title="Gras (Ctrl+B)">
+        <FiBold size={16} />
+      </button>
+      <button className={`tb-btn ${isItalic ? 'active' : ''}`} onClick={toggleItalic} title="Italique (Ctrl+I)">
+        <FiItalic size={16} />
+      </button>
+      <button className={`tb-btn ${isUnderline ? 'active' : ''}`} onClick={toggleUnderline} title="Souligné (Ctrl+U)">
+        <FiUnderline size={16} />
+      </button>
 
-        <div className="tb-divider" />
+      <div className="tb-divider tb-collapse-secondary" />
 
+      {/* Heading + Listes — collapse on narrow screens */}
+      <div className="tb-collapse-secondary">
         <div className="tb-dropdown">
           <button
             className={`tb-btn tb-btn-heading ${isH1 || isH2 || isH3 ? 'active' : ''}`}
@@ -273,23 +274,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         <FiZap size={16} />
       </button>
 
-      {/* Overflow "..." — mobile only */}
-      <div className="tb-overflow-wrapper mobile-only" ref={moreMenuRef}>
+      {/* Overflow "..." — visible when secondary items are collapsed */}
+      <div className="tb-overflow-wrapper tb-show-when-collapsed" ref={moreMenuRef}>
         <button className="tb-btn" title="Plus d'outils" onClick={() => setShowMoreMenu(!showMoreMenu)}>
           <FiMoreVertical size={16} />
         </button>
         {showMoreMenu && (
           <div className="tb-overflow-menu">
-            <button className={`tb-overflow-item ${isBold ? 'active' : ''}`} onClick={() => { toggleBold(); setShowMoreMenu(false); }}>
-              <FiBold size={15} /> <span>Gras</span>
-            </button>
-            <button className={`tb-overflow-item ${isItalic ? 'active' : ''}`} onClick={() => { toggleItalic(); setShowMoreMenu(false); }}>
-              <FiItalic size={15} /> <span>Italique</span>
-            </button>
-            <button className={`tb-overflow-item ${isUnderline ? 'active' : ''}`} onClick={() => { toggleUnderline(); setShowMoreMenu(false); }}>
-              <FiUnderline size={15} /> <span>Souligné</span>
-            </button>
-            <div className="tb-overflow-divider" />
             <button className="tb-overflow-item" onClick={() => { setParagraph(); setShowMoreMenu(false); }}>
               <FiType size={15} /> <span>Paragraphe</span>
             </button>

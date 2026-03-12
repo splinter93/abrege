@@ -423,13 +423,17 @@
 }
 
 /* =============================================================================
-   COLLAPSE GROUP — formatting buttons that collapse on mobile
+   COLLAPSE GROUPS — progressive responsive
    ========================================================================== */
 
-.tb-collapse-group {
+.tb-collapse-secondary {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.tb-show-when-collapsed {
+  display: none;
 }
 
 /* =============================================================================
@@ -506,7 +510,9 @@
 }
 
 /* =============================================================================
-   RESPONSIVE
+   RESPONSIVE — progressive collapse via container queries
+   The editor can live in a narrow split pane, so viewport media queries
+   are insufficient. We use container queries on .editor-header__center.
    ========================================================================== */
 
 .desktop-only {
@@ -517,38 +523,39 @@
   display: none;
 }
 
-@media (max-width: 768px) {
+/* Container context on the toolbar wrapper */
+.editor-header__center {
+  container-type: inline-size;
+  container-name: toolbar-container;
+}
+
+/* Stage 1 (< 700px container): hide desktop-only inserts */
+@container toolbar-container (max-width: 700px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* Stage 2 (< 500px container): collapse heading + lists into overflow */
+@container toolbar-container (max-width: 500px) {
+  .tb-collapse-secondary {
+    display: none !important;
+  }
+
+  .tb-show-when-collapsed {
+    display: flex !important;
+  }
+}
+
+/* Stage 3 (< 360px container): tighter spacing */
+@container toolbar-container (max-width: 360px) {
   .editor-toolbar {
     gap: 2px;
   }
 
   .tb-btn {
-    height: 28px;
-    min-width: 28px;
-    padding: 0 6px;
-  }
-
-  .tb-divider {
-    margin: 0 2px;
-  }
-
-  .desktop-only {
-    display: none !important;
-  }
-
-  .mobile-only {
-    display: flex !important;
-  }
-
-  .tb-collapse-group {
-    display: none !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .tb-btn {
-    height: 24px;
-    min-width: 24px;
+    height: 26px;
+    min-width: 26px;
     padding: 0 4px;
   }
 
@@ -557,8 +564,44 @@
     height: 14px;
   }
 
-  .tb-heading-label {
-    font-size: 12px;
+  .tb-divider {
+    margin: 0 1px;
+  }
+}
+
+/* Fallback for browsers without container query support */
+@supports not (container-type: inline-size) {
+  @media (max-width: 768px) {
+    .desktop-only {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .tb-collapse-secondary {
+      display: none !important;
+    }
+
+    .tb-show-when-collapsed {
+      display: flex !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .editor-toolbar {
+      gap: 2px;
+    }
+
+    .tb-btn {
+      height: 26px;
+      min-width: 26px;
+      padding: 0 4px;
+    }
+
+    .tb-btn svg {
+      width: 14px;
+      height: 14px;
+    }
   }
 }
 
