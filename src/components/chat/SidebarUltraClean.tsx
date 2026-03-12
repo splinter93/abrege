@@ -34,7 +34,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const [isCreatingSession, setIsCreatingSession] = useState(false); // ✅ Bloquer clics pendant création
 
   // 🔄 Polling léger (simple et fiable, détecte auto-rename + nouvelles sessions)
-  useChatSessionsPolling({ enabled: true, intervalMs: 3000 }); // ✅ 3s = bon compromis
+  useChatSessionsPolling({ enabled: !!user, intervalMs: 3000 }); // ✅ Uniquement si connecté
 
   // Fonctions de gestion
   const handleSelectSession = (session: ChatSession) => {

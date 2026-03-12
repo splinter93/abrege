@@ -113,9 +113,12 @@ export function TextToSpeechProvider({ children, defaultVoiceId, streamingMode =
           audio.play().catch(reject);
         });
       } catch (e) {
-        logger.error(`[TTS] ${e instanceof Error ? e.message : 'Erreur'}`, e);
+        const msg = e instanceof Error ? e.message : 'Erreur';
+        logger.error(`[TTS] ${msg}`, e);
         setIsPlayingMessageId(null);
         currentAudioRef.current = null;
+        const { chatError } = await import('@/utils/chatToast');
+        chatError(msg);
       }
     },
     [stop, defaultVoiceId]

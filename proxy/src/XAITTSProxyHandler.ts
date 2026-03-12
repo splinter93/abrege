@@ -50,13 +50,22 @@ function parseQuery(url: string): Record<string, string> {
   return params;
 }
 
+const DEFAULT_LANGUAGE = 'en';
+
 function buildXAITTSUrl(params: Record<string, string>): string {
   const rawVoice = (params.voice || DEFAULT_VOICE).toLowerCase();
   const voice = VALID_VOICES.includes(rawVoice) ? rawVoice : DEFAULT_VOICE;
   const codec = params.codec || DEFAULT_CODEC;
   const sampleRate = params.sample_rate || String(DEFAULT_SAMPLE_RATE);
   const bitRate = params.bit_rate || String(DEFAULT_BIT_RATE);
-  const search = new URLSearchParams({ voice, codec, sample_rate: sampleRate, bit_rate: bitRate });
+  const language = params.language || DEFAULT_LANGUAGE;
+  const search = new URLSearchParams({
+    voice,
+    codec,
+    sample_rate: sampleRate,
+    bit_rate: bitRate,
+    language
+  });
   return `${XAI_TTS_WS_URL}?${search.toString()}`;
 }
 

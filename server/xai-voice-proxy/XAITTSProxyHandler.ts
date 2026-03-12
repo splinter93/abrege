@@ -40,12 +40,21 @@ function parseQuery(url: string): Record<string, string> {
   return params;
 }
 
+const DEFAULT_LANGUAGE = 'en';
+
 function buildTTSUrl(params: Record<string, string>): string {
   const voice = isValidTTSVoice(params.voice) ? params.voice.toLowerCase() : DEFAULT_VOICE;
   const codec = params.codec || DEFAULT_CODEC;
   const sampleRate = params.sample_rate || String(DEFAULT_SAMPLE_RATE);
   const bitRate = params.bit_rate || String(DEFAULT_BIT_RATE);
-  const search = new URLSearchParams({ voice, codec, sample_rate: sampleRate, bit_rate: bitRate });
+  const language = params.language || DEFAULT_LANGUAGE;
+  const search = new URLSearchParams({
+    voice,
+    codec,
+    sample_rate: sampleRate,
+    bit_rate: bitRate,
+    language
+  });
   return `${XAI_TTS_WS_URL}?${search.toString()}`;
 }
 
