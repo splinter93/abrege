@@ -218,62 +218,63 @@ body.dark {
    Modifier ICI et seulement ICI pour changer les espacements markdown.
    ========================================================================== */
 :root {
-  /* Titres - top / bottom */
-  --md-h1-margin-top: 1.125rem;    /* 18px */
-  --md-h1-margin-bottom: 0.75rem;  /* 12px */
-  --md-h2-margin-top: 1rem;        /* 16px */
-  --md-h2-margin-bottom: 0.625rem; /* 10px */
-  --md-h3-margin-top: 0.875rem;    /* 14px */
-  --md-h3-margin-bottom: 0.5rem;   /* 8px */
-  --md-h4-margin-top: 0.75rem;     /* 12px */
-  --md-h4-margin-bottom: 0.375rem; /* 6px */
-  --md-h5-margin-top: 0.625rem;    /* 10px */
-  --md-h5-margin-bottom: 0.375rem; /* 6px */
-  --md-h6-margin-top: 0.625rem;    /* 10px */
-  --md-h6-margin-bottom: 0.25rem;  /* 4px */
-  
-  /* Contenu */
-  --md-p-margin: 0.5rem;           /* 8px */
-  --md-img-margin-top: 1rem;       /* 16px - lecture/chat */
-  --md-img-margin-bottom: 1.125rem; /* 18px - lecture/chat */
-  --md-img-margin-top-edit: 0.25rem; /* 4px - override édition */
-  --md-img-margin-bottom-edit: 0.25rem; /* 4px - override édition */
-  --md-list-margin: 0.5rem;        /* 8px */
-  --md-list-item-margin: 0.25rem;  /* 4px */
-  --md-list-nested-margin: 0.125rem; /* 2px */
-  
-  /* Blocs */
-  --md-table-margin: 1rem;         /* 16px */
-  --md-blockquote-margin: 0.875rem; /* 14px */
-  --md-blockquote-padding: 0.625rem; /* 10px */
-  --md-hr-margin: 1.25rem;         /* 20px */
-  
+  /* ——— ÉDITEUR — Titres (top / bottom) ———
+     Ratio : top ≈ 0.85× taille titre, bottom ≈ 0.3× taille titre */
+  --md-h1-margin-top: 1rem;        /* 16px — avant h1 24px */
+  --md-h1-margin-bottom: 0.5rem;   /* 8px  — colle au contenu */
+  --md-h2-margin-top: 0.875rem;    /* 14px — avant h2 20px */
+  --md-h2-margin-bottom: 0.4375rem; /* 7px */
+  --md-h3-margin-top: 0.75rem;     /* 12px — avant h3 18px */
+  --md-h3-margin-bottom: 0.375rem; /* 6px */
+  --md-h4-margin-top: 0.625rem;    /* 10px */
+  --md-h4-margin-bottom: 0.3125rem; /* 5px */
+  --md-h5-margin-top: 0.5rem;      /* 8px */
+  --md-h5-margin-bottom: 0.25rem;  /* 4px */
+  --md-h6-margin-top: 0.5rem;      /* 8px */
+  --md-h6-margin-bottom: 0.1875rem; /* 3px */
+
+  /* ——— ÉDITEUR — Contenu ——— */
+  --md-p-margin: 0.625rem;         /* 10px — entre paragraphes */
+  --md-img-margin-top: 0.875rem;   /* 14px — au-dessus image */
+  --md-img-margin-bottom: 0.875rem; /* 14px — en dessous image */
+  --md-img-margin-top-edit: 0.25rem;   /* 4px — override ProseMirror */
+  --md-img-margin-bottom-edit: 0.25rem; /* 4px — override ProseMirror */
+  --md-list-margin: 0.5rem;        /* 8px — avant/après liste */
+  --md-list-item-margin: 0.1875rem; /* 3px — entre items */
+  --md-list-nested-margin: 0.125rem; /* 2px — listes imbriquées */
+
+  /* ——— ÉDITEUR — Blocs ——— */
+  --md-table-margin: 0.875rem;     /* 14px — avant/après tableau */
+  --md-blockquote-margin: 0.75rem; /* 12px — avant/après blockquote */
+  --md-blockquote-padding: 0.5rem; /* 8px  — padding interne haut/bas */
+  --md-hr-margin: 1rem;            /* 16px — séparateur */
+
   /* ==========================================================================
-     CHAT SPACING - STYLE CHATGPT (plus aéré)
+     CHAT SPACING — légèrement plus aéré que l'éditeur (+20% max)
      ========================================================================== */
-  
-  /* Titres chat - marges doublées pour plus d'espace */
-  --md-chat-h1-margin-top: 1.5rem;    /* 24px (vs 18px éditeur) */
-  --md-chat-h1-margin-bottom: 1rem;   /* 16px (vs 12px éditeur) */
-  --md-chat-h2-margin-top: 1.25rem;   /* 20px (vs 16px éditeur) */
-  --md-chat-h2-margin-bottom: 0.875rem; /* 14px (vs 10px éditeur) */
-  --md-chat-h3-margin-top: 1.125rem;  /* 18px (vs 14px éditeur) */
-  --md-chat-h3-margin-bottom: 0.75rem; /* 12px (vs 8px éditeur) */
-  --md-chat-h4-margin-top: 1rem;      /* 16px (vs 12px éditeur) */
-  --md-chat-h4-margin-bottom: 0.625rem; /* 10px (vs 6px éditeur) */
-  --md-chat-h5-margin-top: 0.875rem;  /* 14px (vs 10px éditeur) */
-  --md-chat-h5-margin-bottom: 0.5rem; /* 8px (vs 6px éditeur) */
-  --md-chat-h6-margin-top: 0.875rem;  /* 14px (vs 10px éditeur) */
-  --md-chat-h6-margin-bottom: 0.375rem; /* 6px (vs 4px éditeur) */
-  
-  /* Contenu chat - plus aéré */
-  --md-chat-p-margin: 1rem;           /* 16px (vs 8px éditeur) */
-  --md-chat-list-margin: 0.875rem;    /* 14px (vs 8px éditeur) */
-  --md-chat-list-item-margin: 0.375rem; /* 6px (vs 4px éditeur) */
-  
-  /* Blocs chat */
-  --md-chat-blockquote-margin: 1.25rem; /* 20px (vs 14px éditeur) */
-  --md-chat-table-margin: 1.25rem;      /* 20px (vs 16px éditeur) */
+
+  /* ——— CHAT — Titres ——— */
+  --md-chat-h1-margin-top: 1.125rem;  /* 18px */
+  --md-chat-h1-margin-bottom: 0.5rem; /* 8px */
+  --md-chat-h2-margin-top: 1rem;      /* 16px */
+  --md-chat-h2-margin-bottom: 0.4375rem; /* 7px */
+  --md-chat-h3-margin-top: 0.875rem;  /* 14px */
+  --md-chat-h3-margin-bottom: 0.375rem; /* 6px */
+  --md-chat-h4-margin-top: 0.75rem;   /* 12px */
+  --md-chat-h4-margin-bottom: 0.3125rem; /* 5px */
+  --md-chat-h5-margin-top: 0.625rem;  /* 10px */
+  --md-chat-h5-margin-bottom: 0.25rem; /* 4px */
+  --md-chat-h6-margin-top: 0.625rem;  /* 10px */
+  --md-chat-h6-margin-bottom: 0.1875rem; /* 3px */
+
+  /* ——— CHAT — Contenu ——— */
+  --md-chat-p-margin: 0.75rem;        /* 12px — légèrement plus aéré qu'éditeur */
+  --md-chat-list-margin: 0.625rem;    /* 10px */
+  --md-chat-list-item-margin: 0.25rem; /* 4px */
+
+  /* ——— CHAT — Blocs ——— */
+  --md-chat-blockquote-margin: 0.875rem; /* 14px */
+  --md-chat-table-margin: 0.875rem;      /* 14px — utilisé par chat-markdown.css */
 }
 
 /* ==========================================================================

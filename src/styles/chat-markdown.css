@@ -22,12 +22,12 @@
   --chat-text-sm: 0.875rem;
   --chat-text-base: 15px; /* Défaut chat = Manrope */
   --chat-text-lg: 1.0625rem;
-  --chat-text-xl: 1.1875rem;
-  --chat-text-2xl: 1.4375rem;
-  --chat-text-3xl: 1.8125rem;
-  --chat-text-4xl: 2.1875rem;
-  --chat-text-5xl: 2.8125rem;
-  --chat-text-6xl: 3.5625rem;
+  --chat-text-xl: 1.125rem;
+  --chat-text-2xl: 1.25rem;
+  --chat-text-3xl: 1.375rem;
+  --chat-text-4xl: 1.5rem;
+  --chat-text-5xl: 1.75rem;
+  --chat-text-6xl: 2rem;
   
   /* Line heights - Style ChatGPT (plus aéré) */
   --chat-leading-tight: 1.3;
@@ -89,7 +89,7 @@
 
 .chat-markdown h1 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
-  font-size: 2.25rem; /* 36px - Sweet spot blog premium */
+  font-size: 1.5rem; /* 24px - Aligné Notion/ChatGPT */
   font-weight: var(--chat-weight-extrabold);
   line-height: var(--chat-leading-tight);
   letter-spacing: var(--chat-tracking-tight);
@@ -99,7 +99,7 @@
 
 .chat-markdown h2 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
-  font-size: 1.75rem; /* 28px - Standard professionnel */
+  font-size: 1.25rem; /* 20px */
   font-weight: var(--chat-weight-bold);
   line-height: var(--chat-leading-tight);
   letter-spacing: var(--chat-tracking-tight);
@@ -109,7 +109,7 @@
 
 .chat-markdown h3 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
-  font-size: 1.5rem;  /* 24px - Aligné avec éditeur */
+  font-size: 1.125rem;  /* 18px */
   font-weight: var(--chat-weight-bold);
   line-height: var(--chat-leading-snug);
   letter-spacing: var(--chat-tracking-normal);
@@ -119,7 +119,7 @@
 
 .chat-markdown h4 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
-  font-size: 1.125rem;  /* 18px - Réduit de 10% */
+  font-size: 1rem;  /* 16px */
   font-weight: var(--chat-weight-semibold);
   line-height: var(--chat-leading-snug);
   letter-spacing: var(--chat-tracking-normal);
@@ -129,7 +129,7 @@
 
 .chat-markdown h5 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
-  font-size: 1rem;  /* 16px - Réduit de 10% */
+  font-size: 0.9375rem;  /* 15px */
   font-weight: var(--chat-weight-semibold);
   line-height: var(--chat-leading-normal);
   letter-spacing: var(--chat-tracking-normal);
@@ -139,7 +139,7 @@
 
 .chat-markdown h6 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
-  font-size: 0.875rem;  /* 14px - Réduit de 10% */
+  font-size: 0.875rem;  /* 14px */
   font-weight: var(--chat-weight-semibold);
   line-height: var(--chat-leading-normal);
   letter-spacing: var(--chat-tracking-wide);
@@ -278,8 +278,8 @@
   max-width: 100%; /* ✅ Ne jamais dépasser container */
   border-collapse: separate; /* separate + border-spacing:0 = bordure nette comme les blocs code */
   border-spacing: 0;
-  margin: 0.5rem 0 1rem 0; /* ✅ Moins au-dessus, pareil en dessous que code blocks */
-  background: var(--blk-bg); /* ✅ Surface variable (couleur + bordure + radius) */
+  margin: var(--md-chat-table-margin) 0;
+  background: var(--blk-bg); /* ✅ Surface variable (couleur + bordure) */
   border: var(--chat-surface-border);
   border-radius: var(--blk-radius); /* Exception : même radius que blocs code/mermaid */
   overflow: hidden;
@@ -362,7 +362,7 @@
 .chat-markdown .table-wrapper-chat {
   width: 100%;
   overflow-x: auto; /* ✅ Auto sur TOUS devices (évite dépassement) */
-  margin: 0.5rem 0 1rem 0; /* ✅ Moins au-dessus, pareil en dessous que code blocks */
+  margin: var(--md-chat-table-margin) 0;
   border: none;
   background: transparent;
   -webkit-overflow-scrolling: touch;
@@ -493,8 +493,8 @@
   max-width: 100%;
   height: auto;
   border-radius: var(--blk-radius, var(--chat-surface-radius, 14px)); /* Même radius que blocs code et tableaux */
-  margin-top: var(--md-img-margin-top); /* 16px - utilise la variable unifiée */
-  margin-bottom: 0; /* Pas de margin en bas */
+  margin-top: var(--md-img-margin-top);
+  margin-bottom: var(--md-img-margin-bottom);
   display: block;
 }
 

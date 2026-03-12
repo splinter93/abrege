@@ -18,6 +18,7 @@
   --blk-pad-y: 12px;
   --blk-pad-x: 16px;
   --blk-toolbar-h: 40px;
+  --blk-margin: 0.875rem; /* 14px — avant/après blocs code/mermaid */
   --mono: 'JetBrains Mono', 'Noto Sans Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --accent: #ff6b35;
@@ -35,7 +36,7 @@
   color: var(--blk-fg) ;
   border: var(--chat-surface-border, none) ;
   border-radius: var(--blk-radius, var(--chat-surface-radius, 14px)) ;
-  margin: 1rem 0 ;
+  margin: var(--blk-margin) 0 ;
   display: flex ;
   flex-direction: column ;
   /* ✅ PAS de overflow ici - géré individuellement sur toolbar et body */
@@ -402,7 +403,7 @@ body.chat-theme-glass .chat-markdown .u-block {
   color: var(--blk-fg);
   border: var(--chat-surface-border, none);
   border-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
-  margin: 16px 0;  /* ✅ Aligné avec code blocks (au lieu de 1.75rem) */
+  margin: var(--blk-margin) 0;
   box-shadow: none;
   overflow: hidden;
   display: flex;
@@ -613,7 +614,7 @@ body.chat-theme-glass .chat-markdown .u-block {
 /* Override chat-specific styles for code blocks - Hérite du style unifié */
 .chat-markdown .u-block--code {
   /* Hérite des styles .u-block génériques avec gradient */
-  margin: 16px 0 !important; /* Juste le margin spécifique au chat */
+  margin: var(--blk-margin) 0 !important;
 }
 
 .chat-markdown .u-block--code .u-block__body {
