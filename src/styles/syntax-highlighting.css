@@ -103,16 +103,16 @@
 
 /* --- JSON — couleurs vives & lisibles --- */
 .language-json .hljs-attr {
-  color: #7dd3fc; /* sky-300 — clés bien distinctes */
+  color: #facc15; /* yellow-400 — clés jaunes */
   font-weight: 600;
 }
 
 .language-json .hljs-string {
-  color: #4ade80; /* green-400 — strings vertes */
+  color: #22c55e; /* green-500 — strings vert foncé */
 }
 
 .language-json .hljs-number {
-  color: #facc15; /* yellow-400 */
+  color: #7dd3fc; /* sky-300 — nombres bleu clair */
 }
 
 .language-json .hljs-literal,
