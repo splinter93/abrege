@@ -664,7 +664,7 @@ const ChatFullscreenV2: React.FC = () => {
         {/* Zone principale */}
         <div className={uiState.mainClassNames.join(' ')}>
               <div className="chatgpt-main-chat">
-                <TextToSpeechProvider defaultVoiceId={selectedAgent?.voice} streamingMode={isVocalMode}>
+                <TextToSpeechProvider defaultVoiceId={selectedAgent?.voice} defaultLanguage={selectedAgent?.tts_language} streamingMode={isVocalMode}>
                 <ChatMessagesArea
                   messages={effects.displayMessages}
                   isLoading={isLoadingMessages}

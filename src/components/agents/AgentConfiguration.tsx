@@ -4,7 +4,7 @@ import ScriviaFilePicker from '@/components/chat/ScriviaFilePicker';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { CustomSelect } from '@/components/ui/CustomSelect';
-import { TTS_VOICE_OPTIONS } from '@/constants/ttsVoices';
+import { TTS_VOICE_OPTIONS, TTS_LANGUAGE_OPTIONS } from '@/constants/ttsVoices';
 
 const AGENT_KIND_OPTIONS = [
   { value: 'chat', label: 'Agent de Chat' },
@@ -214,18 +214,29 @@ export function AgentConfiguration({
           />
         </section>
 
-        {/* Voix TTS */}
+        {/* Voix TTS + Langue */}
         <section>
-          <label className={labelBase} htmlFor="agent-voice">
-            Voix (TTS)
-          </label>
-          <CustomSelect
-            id="agent-voice"
-            value={editedAgent.voice ?? ''}
-            options={TTS_VOICE_OPTIONS}
-            onChange={val => onUpdateField('voice', val)}
-            placeholder="Sélectionner une voix"
-          />
+          <label className={labelBase}>Voix & Langue (TTS)</label>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <CustomSelect
+                id="agent-voice"
+                value={editedAgent.voice ?? ''}
+                options={TTS_VOICE_OPTIONS}
+                onChange={val => onUpdateField('voice', val)}
+                placeholder="Voix"
+              />
+            </div>
+            <div className="flex-1">
+              <CustomSelect
+                id="agent-tts-language"
+                value={editedAgent.tts_language ?? 'en'}
+                options={TTS_LANGUAGE_OPTIONS}
+                onChange={val => onUpdateField('tts_language', val)}
+                placeholder="Langue"
+              />
+            </div>
+          </div>
         </section>
       </div>
 

@@ -32,6 +32,8 @@ export interface Agent {
   profile_picture?: string;
   /** Voix xAI TTS (eve, ara, rex, sal, leo) */
   voice?: string;
+  /** Langue TTS (code xAI : en, fr, de, etc.) — défaut 'en' */
+  tts_language?: string;
   created_at?: string;
   updated_at?: string;
 }

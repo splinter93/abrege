@@ -27,16 +27,18 @@ interface TextToSpeechProviderProps {
   children: React.ReactNode;
   /** Voix par défaut (ex: agent.voice). Si invalide, fallback sur eve. */
   defaultVoiceId?: string;
+  /** Langue TTS par défaut (ex: agent.tts_language). Défaut 'en'. */
+  defaultLanguage?: string;
   /** Si true, utilise le TTS streaming (WebSocket) au lieu du REST. */
   streamingMode?: boolean;
 }
 
-export function TextToSpeechProvider({ children, defaultVoiceId, streamingMode = false }: TextToSpeechProviderProps) {
+export function TextToSpeechProvider({ children, defaultVoiceId, defaultLanguage, streamingMode = false }: TextToSpeechProviderProps) {
   const [isPlayingMessageId, setIsPlayingMessageId] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  const streaming = useTTSStreaming(defaultVoiceId);
+  const streaming = useTTSStreaming(defaultVoiceId, defaultLanguage);
 
   const stop = useCallback(() => {
     if (currentAudioRef.current) {

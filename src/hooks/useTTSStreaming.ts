@@ -8,11 +8,11 @@ import { TTSStreamingPlayer } from '@/utils/ttsStreamingPlayer';
 const DEFAULT_PROXY_URL = 'ws://localhost:3001/ws/xai-voice';
 const PROXY_BASE_URL = process.env.NEXT_PUBLIC_XAI_VOICE_PROXY_URL || DEFAULT_PROXY_URL;
 
-function getTTSWebSocketUrl(voiceId: string): string | null {
+function getTTSWebSocketUrl(voiceId: string, language: string): string | null {
   try {
     const u = new URL(PROXY_BASE_URL);
     u.pathname = '/ws/xai-tts';
-    u.search = `?voice=${encodeURIComponent(voiceId)}&codec=mp3&sample_rate=24000&bit_rate=128000&language=en`;
+    u.search = `?voice=${encodeURIComponent(voiceId)}&codec=mp3&sample_rate=24000&bit_rate=128000&language=${encodeURIComponent(language)}`;
     return u.toString();
   } catch {
     return null;
@@ -52,7 +52,7 @@ export interface TTSStreamingReturn {
  *
  * Zéro queue, zéro buffering de phrases, zéro reconnexion WS entre les phrases.
  */
-export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
+export function useTTSStreaming(defaultVoiceId?: string, defaultLanguage?: string): TTSStreamingReturn {
   const [isPlayingMessageId, setIsPlayingMessageId] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -60,6 +60,7 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
   const wsRef = useRef<WebSocket | null>(null);
   const currentMessageIdRef = useRef<string | null>(null);
   const voiceIdRef = useRef<string>(normalizeTTSVoice(defaultVoiceId));
+  const languageRef = useRef<string>(defaultLanguage || 'en');
   const stoppedRef = useRef(false);
   const endOfStreamCalledRef = useRef(false);
   /** Messages text.delta / text.done reçus avant l'ouverture WS */
@@ -107,7 +108,7 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
   // ─── WebSocket : une seule connexion pour tout le stream ─────────────────
 
   const openWs = useCallback((voiceId: string, player: TTSStreamingPlayer): WebSocket | null => {
-    const url = getTTSWebSocketUrl(voiceId);
+    const url = getTTSWebSocketUrl(voiceId, languageRef.current);
     if (!url) return null;
 
     let ws: WebSocket;
@@ -259,6 +260,15 @@ export function useTTSStreaming(defaultVoiceId?: string): TTSStreamingReturn {
     }
     wsSend(JSON.stringify({ type: 'text.done' }));
   }, [safeEndOfStream, wsSend]);
+
+  // Sync refs quand les props par défaut changent (ex: changement d'agent)
+  useEffect(() => {
+    voiceIdRef.current = normalizeTTSVoice(defaultVoiceId);
+  }, [defaultVoiceId]);
+
+  useEffect(() => {
+    languageRef.current = defaultLanguage || 'en';
+  }, [defaultLanguage]);
 
   useEffect(() => {
     return () => { stop(); };
