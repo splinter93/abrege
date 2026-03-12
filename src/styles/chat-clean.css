@@ -1849,7 +1849,8 @@ body.chat-theme-glass .chatgpt-messages > div {
   animation: fadeInMessage 100ms ease-out;
 }
 
-.chatgpt-message-assistant + .chatgpt-message-user {
+.chatgpt-message-assistant + .chatgpt-message-user,
+.chatgpt-message-user + .chatgpt-message-assistant {
   margin-top: 14px;
 }
 
