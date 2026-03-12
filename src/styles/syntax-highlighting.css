@@ -125,6 +125,13 @@
   color: #475569; /* slate-600 */
 }
 
+/* --- Markdown — titres en rouge sombre --- */
+.language-markdown .hljs-section,
+.language-md .hljs-section {
+  color: #dc2626; /* red-600 */
+  font-weight: 700;
+}
+
 /* --- Suppression (diff) --- */
 .hljs-deletion {
   color: #fca5a5;
