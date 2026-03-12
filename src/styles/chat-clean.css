@@ -1849,6 +1849,10 @@ body.chat-theme-glass .chatgpt-messages > div {
   animation: fadeInMessage 100ms ease-out;
 }
 
+.chatgpt-message-assistant + .chatgpt-message-user {
+  margin-top: 14px;
+}
+
 .chatgpt-message-bubble {
   padding: var(--chat-space-lg);
   border-radius: var(--chat-radius-xl);
