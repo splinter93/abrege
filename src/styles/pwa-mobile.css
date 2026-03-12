@@ -185,6 +185,19 @@ html.capacitor-native.chat-page .sidebar-ultra-clean {
   -webkit-backdrop-filter: none !important;
 }
 
+/* Overlay status bar : toujours actif sur Capacitor (évite contenu sous la barre) */
+html.capacitor-native .pwa-status-bar-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: env(safe-area-inset-top, 0px) !important;
+  min-height: env(safe-area-inset-top, 0px) !important;
+  background: #000000 !important;
+  z-index: 99999 !important;
+  pointer-events: none !important;
+}
+
 /* 7. Éditeur (standalone + canva pane) : noir absolu + safe area sur le header.
    Le header est sticky dans .editor-layout ; on ajoute un padding-top pour la barre de statut
    et on force le background noir absolu partout. */
@@ -198,11 +211,26 @@ html.capacitor-native .editor-content-wrapper {
   background-color: #000000 !important;
 }
 
+/* Éditeur Capacitor : header avec safe area. Le __row reste en dessous. */
 html.capacitor-native .editor-header {
   padding-top: env(safe-area-inset-top, 0px) !important;
-  height: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
   min-height: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
   box-sizing: border-box !important;
+}
+
+html.capacitor-native .editor-header__row {
+  height: var(--editor-header-height, 44px) !important;
+  min-height: var(--editor-header-height, 44px) !important;
+}
+
+/* Sidebar éditeur : décalée sous le header (safe-area + hauteur) */
+html.capacitor-native .editor-sidebar-hover-zone {
+  top: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
+  height: calc(100dvh - var(--editor-header-height, 44px) - env(safe-area-inset-top, 0px)) !important;
+}
+
+html.capacitor-native .editor-sidebar {
+  top: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
 }
 
 html.capacitor-native .html-fullscreen-header {
@@ -334,7 +362,6 @@ html.capacitor-native .image-source-modal {
 
   .editor-header {
     padding-top: env(safe-area-inset-top, 0px) !important;
-    height: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
     min-height: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
     box-sizing: border-box !important;
   }

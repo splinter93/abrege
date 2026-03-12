@@ -78,10 +78,11 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
 
   return (
     <div className="editor-header">
-      {/* Logo à gauche - Plume avec dégradé gris */}
-      <div className="editor-header__logo">
+      <div className="editor-header__row">
+      {/* Logo à gauche - Plume = bouton Home vers le dashboard */}
+      <Link href="/dashboard" className="editor-header__logo" aria-label="Retour au dashboard">
         <FiFeather className="editor-header__logo-icon" />
-      </div>
+      </Link>
 
       {/* Toolbar au centre - cachée en mode preview ET si showToolbar = false */}
       {/* ✅ FIX: Ne rendre EditorToolbar que si editor existe (évite race condition) */}
@@ -330,6 +331,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             <FiX size={18} />
           </button>
         )}
+      </div>
       </div>
       
       {/* ✅ Menu kebab rendu dans le header pour suivre le sticky */}

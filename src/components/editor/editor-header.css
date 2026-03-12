@@ -13,10 +13,9 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: var(--editor-header-height, 44px); /* ✅ Variable CSS (fallback 44px) */
-  min-height: var(--editor-header-height, 44px); /* ✅ Force la hauteur minimale */
+  min-height: var(--editor-header-height, 44px);
   display: flex;
-  align-items: center; /* Centré verticalement */
+  flex-direction: column;
   justify-content: center;
   padding: 0 var(--editor-padding-horizontal-desktop);
   background: var(--color-bg-header); /* ✅ Variable au lieu de hardcodé */
@@ -24,8 +23,17 @@
   z-index: 100;
   box-sizing: border-box;
   transition: background 200ms ease, backdrop-filter 200ms ease; /* ✅ Transition fluide */
-  /* ✅ Pour que le menu kebab absolute se positionne correctement */
-  /* Note: on ne met PAS position: relative car sticky est déjà positionné */
+}
+
+/* Row interne : logo + toolbar + actions. Hauteur fixe pour centrage correct. */
+.editor-header__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--editor-header-height, 44px);
+  min-height: var(--editor-header-height, 44px);
+  flex-shrink: 0;
 }
 
 /* Header transparent quand toolbar masquée */
@@ -61,6 +69,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.editor-header__logo:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .editor-header__logo-icon {
@@ -178,9 +194,13 @@
 /* Mobile */
 @media (max-width: 768px) {
   .editor-header {
-    height: 48px; /* Hauteur fixe mobile */
-    min-height: 48px; /* Force la hauteur minimale mobile */
+    min-height: 48px;
     padding: 0 var(--editor-padding-horizontal-mobile);
+  }
+  
+  .editor-header__row {
+    height: 48px;
+    min-height: 48px;
   }
   
   /* Logo reste à 4px (défini ligne 42) */
