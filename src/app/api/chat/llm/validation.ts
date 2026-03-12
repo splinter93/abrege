@@ -96,7 +96,8 @@ const uiContextSchema = z.object({
   prompts: z.array(promptMentionSchema).optional(),
   canvasSelections: z.array(canvasSelectionSchema).optional(), // ✅ NOUVEAU : Sélections du canvas
   canva_context: z.unknown().optional(), // Structure complexe, validation partielle
-  reasoningOverride: z.enum(['advanced', 'general', 'fast']).nullable().optional() // ✅ NOUVEAU : Override reasoning
+  reasoningOverride: z.enum(['advanced', 'general', 'fast']).nullable().optional(), // Override reasoning
+  vocalMode: z.boolean().optional() // Mode vocal : injection instructions TTS (speech tags)
 }).passthrough(); // Autoriser champs additionnels pour extensibilité
 
 /**

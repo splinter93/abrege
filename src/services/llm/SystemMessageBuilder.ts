@@ -9,6 +9,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 import type { LLMContext } from '@/types/llmContext';
 import { contextInjectionService } from './context';
 import type { ExtendedLLMContext } from './context/types';
+import { TTS_VOICE_MODE_SYSTEM_PROMPT } from '@/constants/ttsVoiceModePrompt';
 
 export interface AgentSystemConfig {
   system_instructions?: string;
@@ -24,6 +25,8 @@ export interface SystemMessageContext {
   id: string;
   content?: string;
   provider?: string;
+  /** Mode vocal : si true, injecte les instructions TTS (speech tags) */
+  vocalMode?: boolean;
   [key: string]: unknown;
 }
 
@@ -54,12 +57,13 @@ export class SystemMessageBuilder {
 
   /**
    * Construit le message système complet pour un agent
-   * 
+   *
    * Processus:
    * 1. Instructions système personnalisées (ou fallback)
    * 2. Injection contexte UI via ContextInjectionService
    * 3. Template contextuel avec variables
    * 4. Personnalité (optionnel)
+   * 5. Mode vocal (TTS) — si vocalMode === true, injecte les instructions speech tags
    */
   buildSystemMessage(
     agentConfig: AgentSystemConfig,
@@ -155,6 +159,13 @@ export class SystemMessageBuilder {
         content += `\n\n## Personnalité\n${agentConfig.personality.trim()}`;
         hasPersonality = true;
         logger.dev(`[SystemMessageBuilder] 🎭 Personnalité ajoutée`);
+      }
+
+      // 5. Mode vocal (TTS) — instructions speech tags uniquement si vocalMode activé
+      const isVocalMode = context?.vocalMode === true;
+      if (isVocalMode) {
+        content += `\n\n---\n\n${TTS_VOICE_MODE_SYSTEM_PROMPT}`;
+        logger.dev(`[SystemMessageBuilder] 🎤 Instructions mode vocal (TTS) injectées`);
       }
 
       logger.dev(`[SystemMessageBuilder] ✅ Message système construit (${content.length} chars)`, {

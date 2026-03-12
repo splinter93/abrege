@@ -258,7 +258,8 @@ export async function POST(request: NextRequest) {
       systemMessageLength: systemMessage.length,
       contextMessagesCount: contextInjectionResult.contextMessages.length,
       providersApplied: contextInjectionResult.metadata.providersApplied,
-      agentName: finalAgentConfig?.name || 'default'
+      agentName: finalAgentConfig?.name || 'default',
+      vocalMode: uiContext?.vocalMode ?? false
     });
     
     // ✅ NOUVEAU : Remplacer prompts /slug par templates avant LLM

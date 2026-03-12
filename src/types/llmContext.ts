@@ -80,7 +80,10 @@ export interface LLMContext {
 
   // === CONTEXTE CANVA (optionnel) ===
   canva_context?: CanvaContextPayload;
-  
+
+  /** Mode vocal : si true, le message système inclut les instructions TTS (speech tags) */
+  vocalMode?: boolean;
+
   // === SESSION ENRICHIE (optionnel) ===
   session?: {
     message_count?: number;        // Nombre de messages dans cette session

@@ -119,9 +119,10 @@ const ChatFullscreenV2: React.FC = () => {
   const llmContextWithCanva = useMemo(() => {
     return {
       ...llmContext,
-      canva_context: canvaContextPayload
+      canva_context: canvaContextPayload,
+      vocalMode: isVocalMode
     };
-  }, [llmContext, canvaContextPayload]);
+  }, [llmContext, canvaContextPayload, isVocalMode]);
 
   // 🎯 INFINITE MESSAGES (lazy loading)
   const {
