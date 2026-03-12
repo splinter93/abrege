@@ -165,12 +165,16 @@ const ChatFullscreenV2: React.FC = () => {
     infiniteMessagesRef.current = infiniteMessages;
   }, [infiniteMessages]);
 
-  // Sync selectedAgent avec la liste agents (ex: voix mise à jour dans config agent)
+  // Sync selectedAgent avec la liste agents (ex: voix ou langue mise à jour dans config agent)
   useEffect(() => {
     if (!selectedAgentId || agents.length === 0) return;
     const updated = agents.find((a) => a.id === selectedAgentId);
     if (!updated) return;
-    if (!selectedAgent || updated.voice !== selectedAgent.voice) {
+    if (
+      !selectedAgent ||
+      updated.voice !== selectedAgent.voice ||
+      updated.tts_language !== selectedAgent.tts_language
+    ) {
       setSelectedAgent(updated);
     }
   }, [agents, selectedAgentId, selectedAgent, setSelectedAgent]);
