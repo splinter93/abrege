@@ -46,7 +46,7 @@
 .ProseMirror h2,
 .markdown-body h2 {
   font-family: var(--font-manrope-stack) !important;
-  font-size: 1.25rem;  /* 20px */
+  font-size: 1.3125rem;  /* 21px */
   font-weight: var(--editor-h2-weight);  /* ✅ Utilise variable - Moins gras que title/H1 */
   margin: var(--md-h2-margin-top) 0 var(--md-h2-margin-bottom) 0;
   line-height: 1.4;

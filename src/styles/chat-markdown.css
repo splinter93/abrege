@@ -99,7 +99,7 @@
 
 .chat-markdown h2 {
   font-family: var(--font-chat-text) !important;  /* ✅ Même police que le texte */
-  font-size: 1.25rem; /* 20px */
+  font-size: 1.3125rem; /* 21px */
   font-weight: var(--chat-weight-bold);
   line-height: var(--chat-leading-tight);
   letter-spacing: var(--chat-tracking-tight);
