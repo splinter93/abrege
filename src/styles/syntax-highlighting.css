@@ -48,8 +48,7 @@
 .hljs-title,
 .hljs-title\.function,
 .hljs-title\.class,
-.hljs-class,
-.hljs-section {
+.hljs-class {
   color: #93c5fd;
 }
 
@@ -127,7 +126,8 @@
 
 /* --- Markdown — titres en rouge sombre --- */
 .language-markdown .hljs-section,
-.language-md .hljs-section {
+.language-md .hljs-section,
+.hljs-section {
   color: #dc2626; /* red-600 */
   font-weight: 700;
 }
