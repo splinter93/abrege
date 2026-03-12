@@ -18,7 +18,7 @@ import { ProxyErrorHandler, ProxyConfigError } from './errorHandler';
  * Configuration du proxy depuis les variables d'environnement
  */
 function loadConfig(): XAIVoiceProxyConfig {
-  const xaiApiKey = process.env.XAI_API_KEY;
+  const xaiApiKey = (process.env.XAI_API_KEY || '').trim();
   if (!xaiApiKey) {
     throw new ProxyConfigError('XAI_API_KEY non configurée. Configurez XAI_API_KEY dans les variables d\'environnement.');
   }

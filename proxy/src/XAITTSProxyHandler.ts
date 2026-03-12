@@ -139,12 +139,43 @@ export class XAITTSProxyHandler {
       logger.info(LogCategory.AUDIO, '[XAITTSProxyHandler] Connection closed', { connectionId, code });
     };
 
+    const apiKey = (this.config.xaiApiKey || '').trim();
+    if (!apiKey) {
+      logger.error(LogCategory.AUDIO, '[XAITTSProxyHandler] XAI_API_KEY vide ou manquante', { connectionId });
+      try {
+        clientWs.send(JSON.stringify({ type: 'error', message: 'Proxy: XAI_API_KEY not configured' }));
+      } catch { /* ignore */ }
+      clientWs.close(1011, 'Config error');
+      this.sessionCount = Math.max(0, this.sessionCount - 1);
+      this.connections.delete(connectionId);
+      return;
+    }
+
     const xaiWs = new WebSocket(xaiUrl, {
       headers: {
-        Authorization: `Bearer ${this.config.xaiApiKey}`
+        Authorization: `Bearer ${apiKey}`
       }
     });
     conn.xaiWs = xaiWs;
+
+    xaiWs.on('unexpected-response', (req, res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk: Buffer) => chunks.push(chunk));
+      res.on('end', () => {
+        const body = Buffer.concat(chunks).toString('utf8');
+        let parsed: { error?: { message?: string }; message?: string } = {};
+        try {
+          parsed = JSON.parse(body) || {};
+        } catch { /* ignore */ }
+        const msg = parsed?.error?.message ?? parsed?.message ?? body || res.statusMessage || 'Unknown';
+        logger.error(LogCategory.AUDIO, '[XAITTSProxyHandler] xAI 400 response body', {
+          connectionId,
+          statusCode: res.statusCode,
+          xaiError: msg,
+          xaiUrlParams: { voice: params.voice, codec: params.codec }
+        });
+      });
+    });
 
     xaiWs.on('open', () => {
       conn.state = 'connected';
