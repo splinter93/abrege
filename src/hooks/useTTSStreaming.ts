@@ -129,7 +129,8 @@ export function useTTSStreaming(defaultVoiceId?: string, defaultLanguage?: strin
     };
 
     ws.onmessage = (event: MessageEvent) => {
-      if (stoppedRef.current) return;
+      // Ignorer les messages d'une WS remplacée ou après stop
+      if (stoppedRef.current || wsRef.current !== ws) return;
       let data: string;
       if (typeof event.data === 'string') {
         data = event.data;
@@ -151,13 +152,18 @@ export function useTTSStreaming(defaultVoiceId?: string, defaultLanguage?: strin
     };
 
     ws.onerror = () => {
-      logger.error(LogCategory.AUDIO, '[TTS] WebSocket error');
-      if (wsRef.current === ws) wsRef.current = null;
+      if (wsRef.current === ws) {
+        logger.error(LogCategory.AUDIO, '[TTS] WebSocket error');
+        wsRef.current = null;
+      }
     };
 
     ws.onclose = () => {
-      if (wsRef.current === ws) wsRef.current = null;
-      safeEndOfStream();
+      if (wsRef.current === ws) {
+        wsRef.current = null;
+        safeEndOfStream();
+      }
+      // Si wsRef pointe vers une autre WS, on ignore — c'est une vieille connexion
     };
 
     return ws;
