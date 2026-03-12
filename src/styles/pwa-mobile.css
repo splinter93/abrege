@@ -62,8 +62,9 @@ html.capacitor-native.chat-page {
 }
 
 /* Le document racine ne doit jamais scroller sur la page chat native.
-   Sinon Android peut "panner" tout le viewport quand le clavier focus le textarea,
-   ce qui fait remonter le header malgré son position:fixed. */
+   iOS : position:fixed bloque le pan du viewport.
+   Android : position:fixed CASSE adjustResize (empêche le redimensionnement WebView).
+             → Sur Android on utilise overflow:hidden seul. */
 html.capacitor-native.chat-page,
 html.capacitor-native.chat-page body {
   position: fixed !important;
@@ -72,6 +73,15 @@ html.capacitor-native.chat-page body {
   height: 100%;
   overflow: hidden !important;
   overscroll-behavior: none;
+}
+
+/* Android : annuler le position:fixed sur html/body.
+   adjustResize + overflow:hidden suffit : la WebView se réduit par le bas,
+   le header position:fixed reste en haut sans panner. */
+html.platform-android.capacitor-native.chat-page,
+html.platform-android.capacitor-native.chat-page body {
+  position: static !important;
+  inset: auto;
 }
 
 /* 1. Container = padding-top : hauteur totale du header natif.

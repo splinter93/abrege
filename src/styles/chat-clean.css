@@ -2714,9 +2714,14 @@ body.chat-theme-glass .chatgpt-messages > div {
   opacity: 1;
 }
 
-/* Capacitor : pas de hover fiable → boutons toujours visibles */
-html.capacitor-native .chatgpt-message .bubble-buttons {
+/* Capacitor : pas de hover fiable → boutons assistant toujours visibles.
+   Boutons user masqués par défaut (copy/edit = intentionnel → tap long ou futur menu). */
+html.capacitor-native .chatgpt-message-assistant .bubble-buttons {
   opacity: 1;
+}
+
+html.capacitor-native .chatgpt-message-user .bubble-buttons {
+  opacity: 0;
 }
 
 .chatgpt-message-user .bubble-buttons {
