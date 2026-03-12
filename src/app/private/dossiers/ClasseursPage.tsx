@@ -332,9 +332,9 @@ function ClasseursTabs({
       modifiers={[restrictToHorizontalAxis]}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex min-w-0 shrink items-center gap-2 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
         <SortableContext items={tabs.map((t) => t.id)} strategy={horizontalListSortingStrategy}>
-          <div className="flex min-w-0 gap-1">
+          <div className="flex gap-1">
             <AnimatePresence initial={false} mode="popLayout">
               {tabs.map((tab) => (
                 <motion.div
