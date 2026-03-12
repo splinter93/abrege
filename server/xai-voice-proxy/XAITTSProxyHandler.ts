@@ -120,8 +120,7 @@ export class XAITTSProxyHandler {
 
     const xaiWs = new WebSocket(xaiUrl, {
       headers: {
-        Authorization: `Bearer ${this.config.xaiApiKey}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${this.config.xaiApiKey}`
       }
     });
 

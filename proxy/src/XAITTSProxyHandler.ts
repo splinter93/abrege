@@ -16,7 +16,8 @@ const TTS_PATH = '/ws/xai-tts';
 const XAI_TTS_WS_URL = 'wss://api.x.ai/v1/tts';
 const MAX_TTS_SESSIONS = 50;
 
-const VALID_VOICES = ['eve', 'ara', 'ember', 'cove', 'orion', 'luna', 'stella'];
+/** xAI TTS WebSocket: only these 5 voices are supported. @see https://docs.x.ai/developers/model-capabilities/audio/text-to-speech */
+const VALID_VOICES = ['eve', 'ara', 'leo', 'rex', 'sal'] as const;
 
 const DEFAULT_VOICE = 'eve';
 const DEFAULT_CODEC = 'mp3';
@@ -140,8 +141,7 @@ export class XAITTSProxyHandler {
 
     const xaiWs = new WebSocket(xaiUrl, {
       headers: {
-        Authorization: `Bearer ${this.config.xaiApiKey}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${this.config.xaiApiKey}`
       }
     });
     conn.xaiWs = xaiWs;
@@ -168,7 +168,17 @@ export class XAITTSProxyHandler {
     });
 
     xaiWs.on('error', (err) => {
-      logger.error(LogCategory.AUDIO, '[XAITTSProxyHandler] xAI WS error', { connectionId, message: err.message }, err);
+      const errInfo: Record<string, unknown> = {
+        connectionId,
+        message: err.message,
+        xaiUrlParams: { voice: params.voice, codec: params.codec, sample_rate: params.sample_rate }
+      };
+      const req = (err as Error & { req?: { res?: { statusCode?: number; statusMessage?: string } } }).req;
+      if (req?.res) {
+        errInfo.httpStatus = req.res.statusCode;
+        errInfo.httpMessage = req.res.statusMessage;
+      }
+      logger.error(LogCategory.AUDIO, '[XAITTSProxyHandler] xAI WS error', errInfo, err);
       cleanup(1011, err.message);
     });
 
