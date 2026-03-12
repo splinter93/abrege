@@ -128,7 +128,7 @@
 .language-markdown .hljs-section,
 .language-md .hljs-section,
 .hljs-section {
-  color: #991b1b; /* red-800 */
+  color: #d97706; /* amber-600 — neutre, chaud sans être criard */
   font-weight: 700;
 }
 
