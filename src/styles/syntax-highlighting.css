@@ -101,6 +101,30 @@
   color: #fb923c;
 }
 
+/* --- JSON — couleurs vives & lisibles --- */
+.language-json .hljs-attr {
+  color: #7dd3fc; /* sky-300 — clés bien distinctes */
+  font-weight: 600;
+}
+
+.language-json .hljs-string {
+  color: #fb923c; /* orange-400 — strings chaudes */
+}
+
+.language-json .hljs-number {
+  color: #a78bfa; /* violet-400 */
+}
+
+.language-json .hljs-literal,
+.language-json .hljs-keyword {
+  color: #f472b6; /* pink — true/false/null */
+  font-weight: 600;
+}
+
+.language-json .hljs-punctuation {
+  color: #64748b; /* slate-500 — structure en retrait */
+}
+
 /* --- Suppression (diff) --- */
 .hljs-deletion {
   color: #fca5a5;
