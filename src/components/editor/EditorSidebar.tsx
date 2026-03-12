@@ -25,21 +25,20 @@ import '@/styles/editor-sidebar.css';
  */
 
 interface EditorSidebarProps {
-  /** Sidebar visible ou cachée */
   isVisible: boolean;
-  /** ID de la note actuellement ouverte */
   currentNoteId: string;
-  /** ID du classeur de la note actuelle */
   currentClasseurId?: string | null;
-  /** Callback pour switch vers une autre note */
   onNoteSelect: (noteId: string) => void;
+  /** Appelé quand la sidebar devient visible ou cachée (pour repousser le layout) */
+  onVisibleChange?: (visible: boolean) => void;
 }
 
 export default function EditorSidebar({
   isVisible,
   currentNoteId,
   currentClasseurId,
-  onNoteSelect
+  onNoteSelect,
+  onVisibleChange,
 }: EditorSidebarProps) {
   
   // État local du classeur sélectionné
@@ -80,8 +79,11 @@ export default function EditorSidebar({
     setSelectedClasseurId(classeurId);
   }, []);
 
-  // ✅ Sidebar visible si hover zone OU hover sidebar
   const shouldBeVisible = isVisible || isHovered;
+
+  React.useEffect(() => {
+    onVisibleChange?.(shouldBeVisible);
+  }, [shouldBeVisible, onVisibleChange]);
 
   return (
     <aside 
@@ -96,14 +98,14 @@ export default function EditorSidebar({
           onClick={() => setActiveTab('classeurs')}
         >
           <Folder size={16} />
-          <span>Mes Notes</span>
+          <span>Notes</span>
         </button>
         <button
           className={`editor-sidebar-tab ${activeTab === 'fichiers' ? 'active' : ''}`}
           onClick={() => setActiveTab('fichiers')}
         >
           <FileText size={16} />
-          <span>Mes fichiers</span>
+          <span>Files</span>
         </button>
       </div>
 

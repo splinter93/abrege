@@ -26,13 +26,13 @@
   position: fixed;
   top: var(--editor-header-height, 44px);
   left: 0;
-  height: calc(100vh - var(--editor-header-height, 44px));
+  bottom: 0;
+  height: auto;
   width: 280px;
-  background-color: var(--color-bg-block);
+  background-color: var(--color-bg-primary);
   border: 1px solid var(--color-border-block);
   border-left: none;
-  border-top-right-radius: 16px;
-  border-bottom-right-radius: 16px;
+  border-radius: 0;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   transform: translateX(-280px);
   transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -41,12 +41,28 @@
   flex-direction: column;
   padding: 0;
   overflow: hidden;
-  margin-bottom: 0;
 }
 
 /* ✅ Visible (translate 0) */
 .editor-sidebar.visible {
   transform: translateX(0);
+}
+
+/* Contenu repoussé quand la sidebar est ouverte (comme le chat) */
+.editor-main-wrap {
+  width: 100%;
+  flex: 1;
+  min-width: 0;
+  transition: margin-left 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.editor-main-wrap.editor-sidebar-open {
+  margin-left: 280px;
+}
+
+/* Header se décale quand sidebar ouverte */
+.editor-main-wrap.editor-sidebar-open .editor-header {
+  left: 280px;
 }
 
 /* ========================================
@@ -523,12 +539,25 @@
    DRAG & DROP FEEDBACK
    ======================================== */
 
-/* Curseur grab sur les notes (draggable) */
+/* Clic = sélection ; drag = uniquement depuis l’icône */
 .editor-sidebar-note {
-  cursor: grab;
+  cursor: pointer;
 }
 
-.editor-sidebar-note:active {
+/* Zone drag = icône + padding (min 36px) pour lancer le drag facilement */
+.editor-sidebar-note-drag-source {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  align-self: stretch;
+  margin: 0 -4px 0 0;
+  padding: 0 8px;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.editor-sidebar-note-drag-source:active {
   cursor: grabbing;
 }
 

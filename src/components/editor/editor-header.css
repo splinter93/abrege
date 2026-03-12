@@ -9,9 +9,10 @@
    ========================================================================== */
 
 .editor-header {
-  position: sticky;
+  position: fixed;
   top: 0;
   left: 0;
+  right: 0;
   width: 100%;
   height: var(--editor-header-height, 44px); /* ✅ Variable CSS (fallback 44px) */
   min-height: var(--editor-header-height, 44px); /* ✅ Force la hauteur minimale */
@@ -21,11 +22,9 @@
   padding: 0 var(--editor-padding-horizontal-desktop);
   background: var(--color-bg-header); /* ✅ Variable au lieu de hardcodé */
   border-bottom: 1px solid rgba(39, 39, 42, 0.6); /* aligné chat header (border-zinc-800/60) */
-  z-index: 100;
+  z-index: 200;
   box-sizing: border-box;
-  transition: background 200ms ease, backdrop-filter 200ms ease; /* ✅ Transition fluide */
-  /* ✅ Pour que le menu kebab absolute se positionne correctement */
-  /* Note: on ne met PAS position: relative car sticky est déjà positionné */
+  transition: background 200ms ease, backdrop-filter 200ms ease, left 0.4s cubic-bezier(0.25, 0.1, 0.25, 1); /* ✅ Transition fluide */
 }
 
 /* Header transparent quand toolbar masquée */

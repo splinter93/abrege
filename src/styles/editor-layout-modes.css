@@ -19,6 +19,7 @@
 /* Classe de base pour le layout */
 .noteLayout {
   width: 100%;
+  padding-top: var(--editor-header-height, 44px);
   transition: all var(--transition-normal);
   background: var(--color-bg-primary) !important;
   background-color: var(--color-bg-primary) !important;
