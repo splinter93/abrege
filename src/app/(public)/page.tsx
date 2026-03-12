@@ -121,7 +121,7 @@ function NoteCard({
           <Lock className="w-3.5 h-3.5 text-white/80" />
         </div>
       )}
-      <p className="absolute bottom-3 left-3 text-white text-sm font-medium">{title}</p>
+      <p className="absolute bottom-3 left-3 right-10 text-white text-sm font-medium line-clamp-2 leading-snug">{title}</p>
       <button
         type="button"
         className="absolute bottom-3 right-3 p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-opacity"
