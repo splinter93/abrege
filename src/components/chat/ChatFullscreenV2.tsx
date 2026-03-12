@@ -338,40 +338,21 @@ const ChatFullscreenV2: React.FC = () => {
       patchPendingAssistantMessage(true);
 
       if (isVocalModeRef.current) {
+        // Accumuler un petit buffer pour que stripMarkdownForTTS fonctionne
+        // correctement (les ** / __ peuvent être coupés entre deux tokens).
+        // On flush dès qu'on a un espace et >= 20 chars.
         ttsBufferRef.current += chunk;
-        // Découper sur ponctuation forte (.!?…) ou moyenne (;:—) suivie d'un espace,
-        // ou sur virgule + espace si le buffer dépasse le seuil minimal.
-        // Fallback : forcer une coupure si le buffer dépasse 120 chars sans ponctuation.
-        const SENTENCE_PATTERN = /[.!?…;:\u2014]\s/;
-        const COMMA_PATTERN = /,\s(?=[A-ZÀ-Ÿa-zà-ÿ])/;
-        const MAX_BUFFER_CHARS = 120;
-
+        const MIN_FLUSH = 20;
         let buf = ttsBufferRef.current;
-
-        const findCut = (s: string): number => {
-          const m1 = SENTENCE_PATTERN.exec(s);
-          const m2 = COMMA_PATTERN.exec(s);
-          // Prendre la coupe la plus tôt (ponctuation forte prioritaire)
-          if (m1 && m2) return Math.min(m1.index + m1[0].length, m2.index + m2[0].length);
-          if (m1) return m1.index + m1[0].length;
-          if (m2) return m2.index + m2[0].length;
-          // Fallback : buffer trop long → couper au dernier espace avant la limite
-          if (s.length >= MAX_BUFFER_CHARS) {
-            const sub = s.slice(0, MAX_BUFFER_CHARS);
-            const lastSpace = sub.lastIndexOf(' ');
-            if (lastSpace > 20) return lastSpace + 1;
+        if (buf.length >= MIN_FLUSH) {
+          const lastSpace = buf.lastIndexOf(' ');
+          if (lastSpace > 0) {
+            const toSend = stripMarkdownForTTS(buf.slice(0, lastSpace + 1));
+            buf = buf.slice(lastSpace + 1);
+            if (toSend) {
+              window.dispatchEvent(new CustomEvent('chat-vocal-tts-push', { detail: { text: toSend } }));
+            }
           }
-          return -1;
-        };
-
-        let cutIdx = findCut(buf);
-        while (cutIdx !== -1) {
-          const sentence = stripMarkdownForTTS(buf.slice(0, cutIdx)).trim();
-          buf = buf.slice(cutIdx);
-          if (sentence) {
-            window.dispatchEvent(new CustomEvent('chat-vocal-tts-push', { detail: { text: sentence } }));
-          }
-          cutIdx = findCut(buf);
         }
         ttsBufferRef.current = buf;
       }
