@@ -111,20 +111,9 @@ html.capacitor-native.chat-page .chatgpt-header {
   background: #000000 !important;
 }
 
-/* Android natif : adjustResize réduit déjà la WebView.
-   Garder le header en position fixed rend le layout sensible aux translations
-   du visual viewport quand le clavier s'ouvre. On le remet donc dans le flux
-   du shell flex ; seul le container racine reste fixed. */
-html.platform-android.capacitor-native.chat-page .chatgpt-container {
-  padding-top: 0 !important;
-}
-
-html.platform-android.capacitor-native.chat-page .chatgpt-header {
-  position: relative !important;
-  top: auto !important;
-  left: auto !important;
-  right: auto !important;
-}
+/* Android natif : header fixe identique à iOS.
+   adjustResize réduit la WebView par le bas → le header fixe reste en haut,
+   l'input reste visible au-dessus du clavier sans saccade. */
 
 /* 4. Content : le padding-top est géré par le container, donc 0 ici. */
 html.capacitor-native.chat-page .chatgpt-content {
