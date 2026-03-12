@@ -602,7 +602,7 @@ function ItemListRow({
           <span className="truncate text-sm text-zinc-100">{item.name}</span>
         )}
       </div>
-      <span className="text-xs text-zinc-500">{item.subtitle}</span>
+      <span className="flex-shrink-0 text-xs text-zinc-500 ml-2">{item.subtitle}</span>
       </div>
     </motion.div>
   );
