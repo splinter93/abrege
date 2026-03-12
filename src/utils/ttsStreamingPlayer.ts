@@ -101,6 +101,18 @@ export class TTSStreamingPlayer {
     }
   }
 
+  /**
+   * Remplace les callbacks après le start() (ex: pour waitForPlayerEnd dans le pipeline).
+   * N'affecte pas les callbacks audio déjà en place — seulement onEnded/onError.
+   */
+  setCallbacks(callbacks: TTSStreamingPlayerCallbacks): void {
+    this.callbacks = { ...this.callbacks, ...callbacks };
+    if (this.audio) {
+      this.audio.onended = () => this.callbacks.onEnded?.();
+      this.audio.onerror = () => this.callbacks.onError?.(new Error('Audio playback error'));
+    }
+  }
+
   getAudio(): HTMLAudioElement | null {
     return this.audio;
   }

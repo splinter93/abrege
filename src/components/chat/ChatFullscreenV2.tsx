@@ -339,17 +339,39 @@ const ChatFullscreenV2: React.FC = () => {
 
       if (isVocalModeRef.current) {
         ttsBufferRef.current += chunk;
-        const sentenceEnd = /[.!?…]\s/;
+        // Découper sur ponctuation forte (.!?…) ou moyenne (;:—) suivie d'un espace,
+        // ou sur virgule + espace si le buffer dépasse le seuil minimal.
+        // Fallback : forcer une coupure si le buffer dépasse 120 chars sans ponctuation.
+        const SENTENCE_PATTERN = /[.!?…;:\u2014]\s/;
+        const COMMA_PATTERN = /,\s(?=[A-ZÀ-Ÿa-zà-ÿ])/;
+        const MAX_BUFFER_CHARS = 120;
+
         let buf = ttsBufferRef.current;
-        let match = sentenceEnd.exec(buf);
-        while (match) {
-          const cutIndex = match.index + match[0].length;
-          const sentence = stripMarkdownForTTS(buf.slice(0, cutIndex)).trim();
-          buf = buf.slice(cutIndex);
+
+        const findCut = (s: string): number => {
+          const m1 = SENTENCE_PATTERN.exec(s);
+          const m2 = COMMA_PATTERN.exec(s);
+          // Prendre la coupe la plus tôt (ponctuation forte prioritaire)
+          if (m1 && m2) return Math.min(m1.index + m1[0].length, m2.index + m2[0].length);
+          if (m1) return m1.index + m1[0].length;
+          if (m2) return m2.index + m2[0].length;
+          // Fallback : buffer trop long → couper au dernier espace avant la limite
+          if (s.length >= MAX_BUFFER_CHARS) {
+            const sub = s.slice(0, MAX_BUFFER_CHARS);
+            const lastSpace = sub.lastIndexOf(' ');
+            if (lastSpace > 20) return lastSpace + 1;
+          }
+          return -1;
+        };
+
+        let cutIdx = findCut(buf);
+        while (cutIdx !== -1) {
+          const sentence = stripMarkdownForTTS(buf.slice(0, cutIdx)).trim();
+          buf = buf.slice(cutIdx);
           if (sentence) {
             window.dispatchEvent(new CustomEvent('chat-vocal-tts-push', { detail: { text: sentence } }));
           }
-          match = sentenceEnd.exec(buf);
+          cutIdx = findCut(buf);
         }
         ttsBufferRef.current = buf;
       }

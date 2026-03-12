@@ -30,6 +30,8 @@ interface ActiveTTSConnection {
   xaiWs: WebSocket | null;
   connectedAt: number;
   state: 'connecting_xai' | 'connected' | 'disconnected';
+  /** Messages reçus avant l'ouverture xAI — drainés à l'ouverture */
+  pendingMessages: string[];
 }
 
 function parseQuery(url: string): Record<string, string> {
@@ -117,7 +119,8 @@ export class XAITTSProxyHandler {
       clientWs,
       xaiWs: null,
       connectedAt: Date.now(),
-      state: 'connecting_xai'
+      state: 'connecting_xai',
+      pendingMessages: []
     };
     this.connections.set(connectionId, conn);
     this.sessionCount++;
@@ -189,6 +192,15 @@ export class XAITTSProxyHandler {
     xaiWs.on('open', () => {
       conn.state = 'connected';
       logger.info(LogCategory.AUDIO, '[XAITTSProxyHandler] xAI TTS connected', { connectionId });
+      // Drain messages reçus pendant le handshake xAI
+      const pending = conn.pendingMessages.splice(0);
+      for (const msg of pending) {
+        try {
+          if (xaiWs.readyState === WebSocket.OPEN) xaiWs.send(msg);
+        } catch (err) {
+          logger.error(LogCategory.AUDIO, '[XAITTSProxyHandler] Drain pending message error', { connectionId }, err instanceof Error ? err : new Error(String(err)));
+        }
+      }
     });
 
     xaiWs.on('message', (data: WebSocket.RawData) => {
@@ -227,12 +239,11 @@ export class XAITTSProxyHandler {
         const raw = typeof data === 'string' ? data : data.toString();
         if (xaiWs.readyState === WebSocket.OPEN) {
           xaiWs.send(raw);
-        } else {
-          // xAI WS pas encore ouverte : mettre en queue
-          xaiWs.once('open', () => {
-            if (xaiWs.readyState === WebSocket.OPEN) xaiWs.send(raw);
-          });
+        } else if (xaiWs.readyState === WebSocket.CONNECTING) {
+          // Queue tous les messages reçus pendant le handshake (pas juste le dernier)
+          conn.pendingMessages.push(raw);
         }
+        // CLOSING / CLOSED : on ignore silencieusement (cleanup déjà en cours)
       } catch (err) {
         logger.error(LogCategory.AUDIO, '[XAITTSProxyHandler] Relay client→xAI error', { connectionId }, err instanceof Error ? err : new Error(String(err)));
         cleanup(1011, 'Relay error');
