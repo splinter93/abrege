@@ -674,7 +674,7 @@ function ClasseursContent({
   const [breadcrumbDragOver, setBreadcrumbDragOver] = React.useState<number | null>(null);
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden py-6">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden pt-4 pb-6">
       {/* Breadcrumb à gauche + search + toggle à droite */}
       <div className="flex items-center justify-between gap-4 min-w-0">
         <nav className="flex min-w-0 flex-wrap items-center gap-1 text-xs font-medium uppercase tracking-wider text-zinc-500" aria-label="Fil d'Ariane">
