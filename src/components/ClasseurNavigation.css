@@ -213,6 +213,20 @@
   color: inherit;
 }
 
+/* Renommage inline — nom sur place, background + curseur */
+.classeur-tab-rename {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  min-width: 120px;
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.classeur-tab-rename .item-rename-input {
+  flex: 0 1 auto;
+}
+
 /* Styles pour le menu contextuel et emoji picker */
 .classeur-context-menu {
   position: fixed;

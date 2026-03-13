@@ -180,6 +180,33 @@
   color: inherit; /* Hérite toujours de la couleur du parent */
 }
 
+/* Bouton interne du pill (pour structure flex) */
+.classeur-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--dossiers-spacing-sm);
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+/* Renommage inline — nom sur place, background + curseur */
+.classeur-pill-rename {
+  display: flex;
+  align-items: center;
+  gap: var(--dossiers-spacing-sm);
+  width: 100%;
+}
+
+.classeur-pill-rename .item-rename-input {
+  flex: 0 1 auto;
+}
+
 /* ==========================================================================
    PILL D'AJOUT - GLASSMORPHISM
    ========================================================================== */

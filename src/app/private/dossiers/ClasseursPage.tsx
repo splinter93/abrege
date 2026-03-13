@@ -12,6 +12,7 @@ import {
   Plus,
   BookMarked,
   ChevronDown,
+  Settings,
 } from "lucide-react";
 import { Feather } from "react-feather";
 import {
@@ -39,6 +40,8 @@ import { useFileSystemStore } from "@/store/useFileSystemStore";
 import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 import SimpleContextMenu from "@/components/SimpleContextMenu";
 import ClasseurEditModal from "@/components/ClasseurEditModal";
+import { NotebookSettingsModal, NoteSidePanel, NoteModal } from "@/components/notebooks";
+import { useNotebookSettingsStore } from "@/store/useNotebookSettingsStore";
 import RenameInput from "@/components/RenameInput";
 import type { Folder as UIFolder } from "@/components/types";
 import type { FileArticle } from "@/components/types";
@@ -109,6 +112,7 @@ function ClasseursHeader({
   onCreateClasseur,
   onCreateFolder,
   onCreateNote,
+  onSettingsClick,
 }: {
   statsLabel: string;
   onNouveauClick: () => void;
@@ -117,6 +121,7 @@ function ClasseursHeader({
   onCreateClasseur: () => void;
   onCreateFolder: () => void;
   onCreateNote: () => void;
+  onSettingsClick: () => void;
 }) {
   return (
     <div className="mb-10 mt-5 sm:mt-8 flex w-full items-center justify-between">
@@ -128,7 +133,15 @@ function ClasseursHeader({
           Gérez vos méthodologies, notes et documents de réflexion.
         </p>
       </div>
-      <div className="relative shrink-0">
+      <div className="relative shrink-0 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onSettingsClick}
+          className="flex h-9 items-center justify-center w-9 rounded-md border border-white/10 bg-transparent text-zinc-400 transition-all hover:bg-white/5 hover:text-white"
+          aria-label="Paramètres"
+        >
+          <Settings className="h-4 w-4" />
+        </button>
         <button
           type="button"
           onClick={onNouveauClick}
@@ -246,12 +259,14 @@ function SortableTab({
       } ${isDragOver ? "!border-orange-600 !text-orange-400" : ""}`}
     >
       {isRenaming && onRenameSubmit && onRenameCancel ? (
-        <div className="min-w-[120px]" onClick={(e) => e.stopPropagation()}>
+        <div className="tab-rename-wrapper flex items-center gap-1.5 w-full text-left" onClick={(e) => e.stopPropagation()}>
+          {tab.emoji && <span className="text-base leading-none flex-shrink-0">{tab.emoji}</span>}
           <RenameInput
             initialValue={tab.name}
             onSubmit={onRenameSubmit}
             onCancel={onRenameCancel}
             autoFocus
+            variant="tab"
           />
         </div>
       ) : (
@@ -452,7 +467,7 @@ function ItemCard({
       <div
         role="button"
         tabIndex={0}
-        className={`group relative flex min-h-[160px] cursor-pointer flex-col justify-between rounded-xl p-5 shadow-sm transition-all duration-300 h-full ${
+        className={`group relative flex min-h-[160px] min-w-0 cursor-pointer flex-col justify-between rounded-xl p-5 shadow-sm transition-all duration-300 h-full ${
           isDropTarget
             ? "border-orange-500/40 bg-orange-500/5 border"
             : "classeurs-block classeurs-card hover:shadow-md hover:shadow-black/10"
@@ -493,14 +508,15 @@ function ItemCard({
         </p>
       </div>
 
-      <div className="mt-auto flex flex-col">
+      <div className="mt-auto flex min-w-0 flex-col">
         {isRenaming && onRename && onCancelRename ? (
-          <div className="w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="min-w-0 text-[15px] font-semibold" onClick={(e) => e.stopPropagation()}>
             <RenameInput
               initialValue={item.name}
               onSubmit={onRename}
               onCancel={onCancelRename}
               autoFocus
+              variant="item"
             />
           </div>
         ) : (
@@ -590,16 +606,17 @@ function ItemListRow({
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Icon className={`h-[18px] w-[18px] flex-shrink-0 ${iconClasses}`} strokeWidth={1.5} />
         {isRenaming && onRename && onCancelRename ? (
-          <div className="min-w-0 flex-1" onClick={(e) => e.stopPropagation()}>
+          <div className="min-w-0 flex-1 text-sm" onClick={(e) => e.stopPropagation()}>
             <RenameInput
               initialValue={item.name}
               onSubmit={onRename}
               onCancel={onCancelRename}
               autoFocus
+              variant="item-list"
             />
           </div>
         ) : (
-          <span className="truncate text-sm text-zinc-100">{item.name}</span>
+          <span className="min-w-0 flex-1 truncate text-sm text-zinc-100">{item.name}</span>
         )}
       </div>
       <span className="flex-shrink-0 text-xs text-zinc-500 ml-4">{item.subtitle}</span>
@@ -855,6 +872,9 @@ export default function ClasseursPage() {
   const [renamingTabId, setRenamingTabId] = useState<string | null>(null);
   const [editModalClasseur, setEditModalClasseur] = useState<Classeur | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [openNoteRef, setOpenNoteRef] = useState<string | null>(null);
+  const noteOpeningMode = useNotebookSettingsStore((s) => s.noteOpeningMode);
 
   const {
     loading: pageLoading,
@@ -1015,16 +1035,29 @@ export default function ClasseursPage() {
     [setActiveClasseurId, setCurrentFolderId]
   );
 
+  const handleOpenNote = useCallback(
+    (noteRef: string) => {
+      if (noteOpeningMode === "normal") {
+        router.push(`/private/note/${noteRef}`);
+      } else {
+        setOpenNoteRef(noteRef);
+      }
+    },
+    [noteOpeningMode, router]
+  );
+
+  const handleCloseNotePanel = useCallback(() => setOpenNoteRef(null), []);
+
   const handleItemOpen = useCallback(
     (item: ClasseurItem) => {
       if (item.type === "folder") {
         handleFolderOpen(item.id);
       } else {
         const slug = item.slug || item.id;
-        router.push(`/private/note/${slug}`);
+        handleOpenNote(slug);
       }
     },
-    [handleFolderOpen, router]
+    [handleFolderOpen, handleOpenNote]
   );
 
   const handleItemContextMenu = useCallback((e: React.MouseEvent, item: ClasseurItem) => {
@@ -1043,16 +1076,17 @@ export default function ClasseursPage() {
   }, []);
 
   const handleCreateClasseurClick = useCallback(async () => {
-    const name = window.prompt("Nom du classeur", "Nouveau classeur");
-    if (name?.trim()) {
-      try {
-        await handleCreateClasseur(name.trim(), "📁");
-        setRefreshKey((k) => k + 1);
-      } catch {
-        // error already handled by hook
+    try {
+      const newClasseur = await handleCreateClasseur("Nouveau classeur", "📁");
+      setRefreshKey((k) => k + 1);
+      if (newClasseur) {
+        setActiveClasseurId(newClasseur.id);
+        setTimeout(() => setRenamingTabId(newClasseur.id), 100);
       }
+    } catch {
+      // error already handled by hook
     }
-  }, [handleCreateClasseur]);
+  }, [handleCreateClasseur, setActiveClasseurId]);
 
   const handleCreateFolderClick = useCallback(async () => {
     const created = await createFolder("Nouveau dossier");
@@ -1064,9 +1098,10 @@ export default function ClasseursPage() {
     const created = await createFile(defaultName, currentFolderId ?? null);
     if (created) {
       setRefreshKey((k) => k + 1);
-      router.push(`/private/note/${created.id}`);
+      const ref = created.slug || created.id;
+      handleOpenNote(ref);
     }
-  }, [createFile, currentFolderId, router]);
+  }, [createFile, currentFolderId, handleOpenNote]);
 
   const closeContextMenus = useCallback(() => {
     setContextMenuItem(null);
@@ -1113,12 +1148,11 @@ export default function ClasseursPage() {
 
   const handleTabRenameSubmit = useCallback(
     async (tabId: string, newName: string) => {
+      setRenamingTabId(null); // Ferme immédiatement (validation optimiste)
       try {
         await handleRenameClasseur(tabId, newName.trim());
-        setRenamingTabId(null);
-        setRefreshKey((k) => k + 1);
       } catch {
-        // error handled by hook
+        // Rollback déjà fait dans le hook
       }
     },
     [handleRenameClasseur]
@@ -1218,6 +1252,7 @@ export default function ClasseursPage() {
             onCreateClasseur={handleCreateClasseurClick}
             onCreateFolder={handleCreateFolderClick}
             onCreateNote={handleCreateNoteClick}
+            onSettingsClick={() => setSettingsOpen(true)}
           />
 
           {/* Toolbar : onglets uniquement */}
@@ -1377,6 +1412,25 @@ export default function ClasseursPage() {
             await handleUpdateClasseur(editModalClasseur.id, updates);
           }}
           onClose={() => setEditModalClasseur(null)}
+        />
+      )}
+
+      <NotebookSettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
+
+      {noteOpeningMode === "side-panel" && (
+        <NoteSidePanel
+          noteRef={openNoteRef}
+          onClose={handleCloseNotePanel}
+        />
+      )}
+
+      {noteOpeningMode === "modal" && (
+        <NoteModal
+          noteRef={openNoteRef}
+          onClose={handleCloseNotePanel}
         />
       )}
     </div>

@@ -231,17 +231,24 @@ export function useDossiersPage(userId: string) {
   }, [userId, dossierService]);
 
   const handleRenameClasseur = useCallback(async (id: string, newName: string) => {
+    const store = useFileSystemStore.getState();
+    const oldName = store.classeurs[id]?.name;
+
+    // 1. Mise à jour optimiste
+    store.updateClasseur(id, { name: newName });
+    logger.dev('[useDossiersPage] 🚀 Renommage optimiste:', { id, newName });
+
     try {
-      logger.dev('[useDossiersPage] 🔄 Renommage classeur via service:', { id, newName });
-      
       const updatedClasseur = await dossierService.updateClasseur(id, {
         name: newName
       }, userId);
-      
       logger.dev('[useDossiersPage] ✅ Classeur renommé avec succès:', id);
       return updatedClasseur;
     } catch (error) {
-      logger.error('[useDossiersPage] ❌ Erreur renommage classeur:', error);
+      logger.error('[useDossiersPage] ❌ Erreur renommage - rollback:', error);
+      if (oldName != null) {
+        store.updateClasseur(id, { name: oldName });
+      }
       throw error;
     }
   }, [userId, dossierService]);

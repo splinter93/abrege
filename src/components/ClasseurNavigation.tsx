@@ -2,6 +2,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import SimpleContextMenu from "./SimpleContextMenu";
 import ColorPalette from "./ColorPalette";
+import RenameInput from "./RenameInput";
 import "./ClasseurNavigation.css";
 import {
   DndContext,
@@ -44,9 +45,12 @@ interface SortableTabProps {
   onSelectClasseur: (id: string) => void;
   onContextMenu: (e: React.MouseEvent<HTMLButtonElement>, classeur: Classeur) => void;
   isOverlay?: boolean;
+  isRenaming?: boolean;
+  onRenameSubmit?: (name: string) => void;
+  onRenameCancel?: () => void;
 }
 
-function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isOverlay }: SortableTabProps) {
+function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isOverlay, isRenaming, onRenameSubmit, onRenameCancel }: SortableTabProps) {
   const {
     attributes,
     listeners,
@@ -84,28 +88,41 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isOv
         setNodeRef(node);
         droppable.setNodeRef(node);
       }}
-      className={`motion-tab-wrapper${isDragging ? ' dragged' : ''}${(droppable.isOver && !isDragging) ? ' drag-over-target' : ''}`}
+      className={`motion-tab-wrapper${isDragging ? ' dragged' : ''}${(droppable.isOver && !isDragging) ? ' drag-over-target' : ''}${isRenaming ? ' is-renaming' : ''}`}
       onDragOver={e => e.preventDefault()}
       onDrop={handleDrop}
       style={style}
-      {...attributes}
-      {...listeners}
+      {...(isRenaming ? {} : attributes)}
+      {...(isRenaming ? {} : listeners)}
     >
-      <button
-        className={`classeur-tab classeur-tab-button${isActive ? " active" : ""}`}
-        onClick={() => onSelectClasseur(classeur.id)}
-        onContextMenu={(e) => onContextMenu(e, classeur)}
-      >
-        <span
-          className="classeur-emoji"
-          tabIndex={0}
-          role="button"
-          aria-label="Changer l'emoji"
+      {isRenaming && onRenameSubmit && onRenameCancel ? (
+        <div className="classeur-tab-rename" onClick={(e) => e.stopPropagation()}>
+          <span className="classeur-emoji">{classeur.emoji && classeur.emoji.trim() !== "" ? classeur.emoji : "📁"}</span>
+          <RenameInput
+            initialValue={classeur.name}
+            onSubmit={onRenameSubmit}
+            onCancel={onRenameCancel}
+            autoFocus
+            variant="tab"
+          />
+        </div>
+      ) : (
+        <button
+          className={`classeur-tab classeur-tab-button${isActive ? " active" : ""}`}
+          onClick={() => onSelectClasseur(classeur.id)}
+          onContextMenu={(e) => onContextMenu(e, classeur)}
         >
-          {classeur.emoji && classeur.emoji.trim() !== "" ? classeur.emoji : "📁"}
-        </span>
-        <span className="classeur-name-text">{classeur.name}</span>
-      </button>
+          <span
+            className="classeur-emoji"
+            tabIndex={0}
+            role="button"
+            aria-label="Changer l'emoji"
+          >
+            {classeur.emoji && classeur.emoji.trim() !== "" ? classeur.emoji : "📁"}
+          </span>
+          <span className="classeur-name-text">{classeur.name}</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -135,6 +152,7 @@ const ClasseurNavigation: React.FC<ClasseurNavigationProps> = ({
   const deeplinks = process.env.NEXT_PUBLIC_DEEPLINKS === '1';
   
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; item: Classeur | null }>({ visible: false, x: 0, y: 0, item: null });
+  const [renamingClasseurId, setRenamingClasseurId] = useState<string | null>(null);
   const [isColorPickerVisible, setColorPickerVisible] = useState(false);
   const [emojiPicker, setEmojiPicker] = useState<{ visible: boolean; classeur: Classeur | null }>({ visible: false, classeur: null });
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -177,13 +195,24 @@ const ClasseurNavigation: React.FC<ClasseurNavigationProps> = ({
   
   const handleRename = () => {
     if (contextMenu.item) {
-      const newName = prompt("Nouveau nom du classeur :", contextMenu.item.name);
-      if (newName && newName.trim() !== "") {
-        onRenameClasseur(contextMenu.item.id, newName.trim());
-      }
+      setRenamingClasseurId(contextMenu.item.id);
     }
     closeContextMenu();
   };
+
+  const handleRenameSubmit = useCallback(
+    (name: string) => {
+      if (renamingClasseurId) {
+        onRenameClasseur(renamingClasseurId, name);
+      }
+      setRenamingClasseurId(null);
+    },
+    [renamingClasseurId, onRenameClasseur]
+  );
+
+  const handleRenameCancel = useCallback(() => {
+    setRenamingClasseurId(null);
+  }, []);
   
   const handleDelete = () => {
     if (contextMenu.item) {
@@ -251,6 +280,9 @@ const ClasseurNavigation: React.FC<ClasseurNavigationProps> = ({
                 isActive={activeClasseurId === classeur.id}
                 onSelectClasseur={handleSelectClasseur}
                 onContextMenu={handleContextMenu}
+                isRenaming={renamingClasseurId === classeur.id}
+                onRenameSubmit={handleRenameSubmit}
+                onRenameCancel={handleRenameCancel}
               />
             ))}
           </SortableContext>
@@ -262,6 +294,7 @@ const ClasseurNavigation: React.FC<ClasseurNavigationProps> = ({
                 onSelectClasseur={handleSelectClasseur}
                 onContextMenu={handleContextMenu}
                 isOverlay={true}
+                isRenaming={false}
               />
             ) : null}
           </DragOverlay>

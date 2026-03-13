@@ -4,6 +4,7 @@ import { FileArticle } from './types';
 import { FileIcon } from './CustomIcons';
 import { motion } from 'framer-motion';
 import { fileItemVariants, fileItemTransition } from './FolderAnimation';
+import RenameInput from './RenameInput';
 
 interface FileItemProps {
   file: FileArticle;
@@ -16,57 +17,7 @@ interface FileItemProps {
 }
 
 const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename, onCancelRename, onContextMenu, onStartRenameClick }) => {
-  const [inputValue, setInputValue] = React.useState(file.source_title);
-  const inputRef = React.useRef<HTMLTextAreaElement>(null);
   const lastWasRightClick = React.useRef(false);
-
-  React.useEffect(() => {
-    if (isRenaming) {
-      setInputValue(file.source_title);
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-          // Sélectionner tout le texte pour permettre remplacement immédiat
-          const length = inputRef.current.value.length;
-          inputRef.current.setSelectionRange(0, length);
-          // Ajuster la hauteur automatiquement
-          inputRef.current.style.height = 'auto';
-          inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
-        }
-      }, 0);
-    }
-  }, [isRenaming, file.source_title]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputValue(e.target.value);
-    // Ajuster la hauteur automatiquement
-    e.target.style.height = 'auto';
-    e.target.style.height = `${e.target.scrollHeight}px`;
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      // Enter seul (sans Shift) pour valider le renommage
-      // Shift+Enter permet le saut de ligne si besoin
-      e.preventDefault();
-      if (onRename && inputValue.trim() && inputValue !== file.source_title) {
-        onRename(inputValue.trim(), 'file');
-      } else if (onCancelRename) {
-        onCancelRename();
-      }
-    } else if (e.key === 'Escape' && onCancelRename) {
-      e.preventDefault();
-      onCancelRename();
-    }
-  };
-
-  const handleInputBlur = () => {
-    if (onRename && inputValue.trim() && inputValue !== file.source_title) {
-      onRename(inputValue.trim(), 'file');
-    } else if (onCancelRename) {
-      onCancelRename();
-    }
-  };
 
   return (
     <div
@@ -120,19 +71,16 @@ const FileItem: React.FC<FileItemProps> = ({ file, onOpen, isRenaming, onRename,
         <div className="file-icon">
           <FileIcon size={36} />
         </div>
-        {isRenaming ? (
-          <textarea
-            ref={inputRef}
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyDown={handleInputKeyDown}
-            onBlur={handleInputBlur}
-            className="fm-rename-input"
-            autoFocus
-            spellCheck={false}
-            onClick={e => e.stopPropagation()}
-            rows={1}
-          />
+        {isRenaming && onRename && onCancelRename ? (
+          <div className="fm-rename-wrap" onClick={e => e.stopPropagation()}>
+            <RenameInput
+              initialValue={file.source_title}
+              onSubmit={(name) => onRename(name, 'file')}
+              onCancel={onCancelRename}
+              autoFocus
+              variant="item"
+            />
+          </div>
         ) : (
           <span
             className="fm-item-name"

@@ -1,0 +1,129 @@
+.notebook-settings-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
+}
+
+.notebook-settings-modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-bg-primary);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.notebook-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.notebook-settings-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgb(244 244 245);
+  margin: 0;
+}
+
+.notebook-settings-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgb(161 161 170);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.notebook-settings-close:hover {
+  background: rgba(63, 63, 70, 0.5);
+  color: rgb(244 244 245);
+}
+
+.notebook-settings-body {
+  padding: 1.25rem;
+}
+
+.notebook-settings-modes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notebook-settings-mode {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  background: rgba(39, 39, 42, 0.4);
+  border: 1px solid rgba(63, 63, 70, 0.5);
+  border-radius: 10px;
+  color: rgb(244 244 245);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+  outline: none;
+}
+
+.notebook-settings-mode:focus-visible {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.notebook-settings-mode:hover {
+  background: rgba(63, 63, 70, 0.35);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.notebook-settings-mode.active {
+  background: rgba(63, 63, 70, 0.4);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.notebook-settings-mode-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: rgb(161 161 170);
+}
+
+.notebook-settings-mode.active .notebook-settings-mode-icon {
+  color: rgb(212 212 216);
+}
+
+.notebook-settings-mode-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.notebook-settings-mode-label {
+  font-weight: 500;
+}
+
+.notebook-settings-mode-desc {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgb(113 113 122);
+}

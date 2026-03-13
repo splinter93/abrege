@@ -7,6 +7,7 @@ import { DRAG_SENSOR_CONFIG, DRAG_ANIMATION_CONFIG } from "@/constants/dragAndDr
 import SimpleContextMenu from "./SimpleContextMenu";
 import TrashConfirmationModal from "./TrashConfirmationModal";
 import SortableClasseurItem from "./SortableClasseurItem";
+import RenameInput from "./RenameInput";
 import "./ClasseurBandeau.css";
 import "./TrashConfirmationModal.css";
 
@@ -54,6 +55,7 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
    */
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isExternalDrag, setIsExternalDrag] = useState(false);
+  const [renamingClasseurId, setRenamingClasseurId] = useState<string | null>(null);
 
   /**
    * Modifier personnalisé pour centrer l'élément draggé sur le curseur
@@ -150,14 +152,25 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
   };
   
   const handleRename = () => {
-    if (contextMenu.item && onRenameClasseur) {
-      const newName = prompt("Nouveau nom du classeur :", contextMenu.item.name);
-      if (newName && newName.trim() !== "") {
-        onRenameClasseur(contextMenu.item.id, newName.trim());
-      }
+    if (contextMenu.item) {
+      setRenamingClasseurId(contextMenu.item.id);
     }
     closeContextMenu();
   };
+
+  const handleRenameSubmit = useCallback(
+    (name: string) => {
+      if (renamingClasseurId && onRenameClasseur) {
+        onRenameClasseur(renamingClasseurId, name);
+      }
+      setRenamingClasseurId(null);
+    },
+    [renamingClasseurId, onRenameClasseur]
+  );
+
+  const handleRenameCancel = useCallback(() => {
+    setRenamingClasseurId(null);
+  }, []);
   
   const handleDelete = () => {
     if (contextMenu.item) {
@@ -274,11 +287,14 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
                 classeur={classeur}
                 isActive={activeClasseurId === classeur.id}
                 isDragOver={dragOverClasseurId === classeur.id}
+                isRenaming={renamingClasseurId === classeur.id}
                 onSelect={onSelectClasseur}
                 onContextMenu={handleContextMenu}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
+                onRenameSubmit={handleRenameSubmit}
+                onRenameCancel={handleRenameCancel}
               />
             ))}
           </SortableContext>
@@ -308,22 +324,43 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
       ) : (
         // Rendu simple sans DndContext pour les drags externes
         <div className="bandeau-content">
-          {classeurs.map((classeur) => (
-            <button
-              key={classeur.id}
-              className={`classeur-pill ${activeClasseurId === classeur.id ? 'active' : ''} ${dragOverClasseurId === classeur.id ? 'drag-over' : ''}`}
-              onClick={() => onSelectClasseur(classeur.id)}
-              onContextMenu={(e) => handleContextMenu(e, classeur)}
-              onDragOver={(e) => handleDragOver(e, classeur)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, classeur)}
-            >
-              <span className={`classeur-emoji ${dragOverClasseurId === classeur.id ? 'drag-over' : ''}`}>
-                {classeur.emoji && classeur.emoji.trim() !== "" ? classeur.emoji : "📁"}
-              </span>
-              <span className="classeur-name">{classeur.name}</span>
-            </button>
-          ))}
+          {classeurs.map((classeur) => {
+            const isRenaming = renamingClasseurId === classeur.id;
+            return (
+              <div
+                key={classeur.id}
+                className={`classeur-pill ${activeClasseurId === classeur.id ? 'active' : ''} ${dragOverClasseurId === classeur.id ? 'drag-over' : ''} ${isRenaming ? 'is-renaming' : ''}`}
+                onDragOver={(e) => handleDragOver(e, classeur)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, classeur)}
+              >
+                {isRenaming ? (
+                  <div className="classeur-pill-rename" onClick={(e) => e.stopPropagation()}>
+                    <span className="classeur-emoji">{classeur.emoji || '📁'}</span>
+                    <RenameInput
+                      initialValue={classeur.name}
+                      onSubmit={handleRenameSubmit}
+                      onCancel={handleRenameCancel}
+                      autoFocus
+                      variant="pill"
+                    />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="classeur-pill-btn"
+                    onClick={() => onSelectClasseur(classeur.id)}
+                    onContextMenu={(e) => handleContextMenu(e, classeur)}
+                  >
+                    <span className={`classeur-emoji ${dragOverClasseurId === classeur.id ? 'drag-over' : ''}`}>
+                      {classeur.emoji && classeur.emoji.trim() !== "" ? classeur.emoji : "📁"}
+                    </span>
+                    <span className="classeur-name">{classeur.name}</span>
+                  </button>
+                )}
+              </div>
+            );
+          })}
           
           <button className="classeur-pill add-classeur" onClick={onCreateClasseur}>
             <span className="add-icon">+</span>

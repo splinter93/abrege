@@ -232,8 +232,15 @@
 }
 
 /* ==========================================================================
-   INPUTS DE RENOMMAGE - DESIGN ÉPURÉ
+   INPUTS DE RENOMMAGE - DESIGN ÉPURÉ (RenameInput variant="item")
    ========================================================================== */
+
+.fm-rename-wrap {
+  width: 100%;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
 
 .fm-grid-item input,
 .fm-grid-item textarea,

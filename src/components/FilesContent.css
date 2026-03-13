@@ -423,6 +423,8 @@
 .rename-input-container {
   position: relative;
   width: 100%;
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 .rename-input {

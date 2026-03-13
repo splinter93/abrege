@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useFilesPage } from '@/hooks/useFilesPage';
 import { FileItem } from '@/types/files';
 import { simpleLogger as logger } from '@/utils/logger';
+import RenameInput from '@/components/RenameInput';
 import '@/styles/editor-sidebar.css';
 import '@/app/private/files/page.css';
 
@@ -242,40 +243,20 @@ export default function EditorSidebarFilesList({ onNoteSelect }: EditorSidebarFi
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             {renamingItemId === file.id ? (
-              <input
-                type="text"
-                defaultValue={file.filename}
-                autoFocus
-                onBlur={async (e) => {
-                  const newName = e.target.value.trim();
-                  if (newName && newName !== file.filename) {
-                    try {
-                      await renameFile(file.id, newName);
-                      await fetchFiles(); // Rafraîchir la liste
-                    } catch (error) {
-                      logger.error('[EditorSidebarFilesList] Erreur renommage fichier:', error);
-                    }
-                  }
+              <RenameInput
+                initialValue={file.filename || ''}
+                onSubmit={async (name) => {
                   setRenamingItemId(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.currentTarget.blur();
-                  } else if (e.key === 'Escape') {
-                    setRenamingItemId(null);
+                  try {
+                    await renameFile(file.id, name);
+                    await fetchFiles();
+                  } catch (error) {
+                    logger.error('[EditorSidebarFilesList] Erreur renommage fichier:', error);
                   }
                 }}
-                style={{
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: 'var(--text-primary)',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  width: '100%',
-                  outline: 'none'
-                }}
+                onCancel={() => setRenamingItemId(null)}
+                autoFocus
+                variant="item"
               />
             ) : (
               <div style={{ 

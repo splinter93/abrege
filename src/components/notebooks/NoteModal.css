@@ -1,0 +1,86 @@
+.note-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
+  animation: noteModalOverlayIn 0.2s ease-out;
+}
+
+@keyframes noteModalOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.note-modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  background: var(--color-bg-primary, #0e1012);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: noteModalContentIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes noteModalContentIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.note-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.note-modal-body::-webkit-scrollbar {
+  display: none;
+}
+
+/* Masquer les scrollbars de l'éditeur dans la modal */
+.note-modal-body .editor-content-wrapper,
+.note-modal-body .editor-content-inner {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.note-modal-body .editor-content-wrapper::-webkit-scrollbar,
+.note-modal-body .editor-content-inner::-webkit-scrollbar {
+  display: none;
+}
+
+/* Header et background identiques à la page normale */
+.note-modal-body .editor-header,
+.note-modal-body .noteLayout-header {
+  background: var(--color-bg-header) !important;
+  background-color: var(--color-bg-header) !important;
+  border-bottom: 1px solid rgba(39, 39, 42, 0.6);
+}
+
+.note-modal-body .editor-layout,
+.note-modal-body .noteLayout,
+.note-modal-body .noteLayout-title,
+.note-modal-body .noteLayout-content,
+.note-modal-body .editor-content-wrapper,
+.note-modal-body .editor-content-inner {
+  background: var(--color-bg-primary) !important;
+  background-color: var(--color-bg-primary) !important;
+}

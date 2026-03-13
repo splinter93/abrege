@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FileItem } from '@/types/files';
 import ImageModal from './ImageModal';
 import DropZone from './DropZone';
+import RenameInput from './RenameInput';
 import './FilesContent.css';
 import './FolderGridItems.css';
 import { 
@@ -287,35 +288,14 @@ const FilesContent: React.FC<FilesContentProps> = ({
                 <div className="file-info">
                   <div className="file-name">
                     {renamingItemId === file.id ? (
-                      <div className="rename-input-container">
-                        <input
-                          type="text"
-                          className="rename-input"
-                          defaultValue={file.filename || ''}
-                          onBlur={(e) => onFileRename(file.id, e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              onFileRename(file.id, e.currentTarget.value);
-                            } else if (e.key === 'Escape') {
-                              onCancelRename?.();
-                            }
-                          }}
-                          onClick={(e) => e.stopPropagation()}
+                      <div className="rename-input-container" onClick={(e) => e.stopPropagation()}>
+                        <RenameInput
+                          initialValue={file.filename || ''}
+                          onSubmit={(name) => onFileRename(file.id, name)}
+                          onCancel={onCancelRename || (() => {})}
                           autoFocus
-                          style={{
-                            width: '100%',
-                            padding: '4px 8px',
-                            border: '2px solid var(--accent-primary)',
-                            borderRadius: '4px',
-                            fontSize: '14px',
-                            backgroundColor: 'var(--bg-primary)',
-                            color: 'var(--text-primary)',
-                            outline: 'none'
-                          }}
+                          variant="item"
                         />
-                        <div className="rename-hint">
-                          Appuyez sur Entrée pour confirmer, Échap pour annuler
-                        </div>
                       </div>
                     ) : (
                       <div 
@@ -375,35 +355,14 @@ const FilesContent: React.FC<FilesContentProps> = ({
               <div className="file-info">
                 <div className="file-name">
                   {renamingItemId === file.id ? (
-                    <div className="rename-input-container">
-                      <input
-                        type="text"
-                        className="rename-input"
-                        defaultValue={file.filename || ''}
-                        onBlur={(e) => onFileRename(file.id, e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            onFileRename(file.id, e.currentTarget.value);
-                          } else if (e.key === 'Escape') {
-                            onCancelRename?.();
-                          }
-                        }}
-                        onClick={(e) => e.stopPropagation()}
+                    <div className="rename-input-container" onClick={(e) => e.stopPropagation()}>
+                      <RenameInput
+                        initialValue={file.filename || ''}
+                        onSubmit={(name) => onFileRename(file.id, name)}
+                        onCancel={onCancelRename || (() => {})}
                         autoFocus
-                        style={{
-                          width: '100%',
-                          padding: '4px 8px',
-                          border: '2px solid var(--accent-primary)',
-                          borderRadius: '4px',
-                          fontSize: '14px',
-                          backgroundColor: 'var(--bg-primary)',
-                          color: 'var(--text-primary)',
-                          outline: 'none'
-                        }}
+                        variant="item"
                       />
-                      <div className="rename-hint">
-                        Appuyez sur Entrée pour confirmer, Échap pour annuler
-                      </div>
                     </div>
                   ) : (
                     <div 

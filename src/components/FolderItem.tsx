@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Folder } from './types';
 import { FolderIcon } from './CustomIcons';
 import { folderItemVariants, folderItemTransition } from './FolderAnimation';
+import RenameInput from './RenameInput';
 
 interface FolderItemProps {
   folder: Folder;
@@ -17,58 +18,8 @@ interface FolderItemProps {
 }
 
 const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onRename, onCancelRename, onContextMenu, onDropItem, onStartRenameClick }) => {
-  const [inputValue, setInputValue] = React.useState(folder.name);
-  const inputRef = React.useRef<HTMLTextAreaElement>(null);
   const [isDragOver, setIsDragOver] = React.useState(false);
   const lastWasRightClick = React.useRef(false);
-
-  React.useEffect(() => {
-    if (isRenaming) {
-      setInputValue(folder.name);
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-          // Sélectionner tout le texte pour permettre remplacement immédiat
-          const length = inputRef.current.value.length;
-          inputRef.current.setSelectionRange(0, length);
-          // Ajuster la hauteur automatiquement
-          inputRef.current.style.height = 'auto';
-          inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
-        }
-      }, 0);
-    }
-  }, [isRenaming, folder.name]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputValue(e.target.value);
-    // Ajuster la hauteur automatiquement
-    e.target.style.height = 'auto';
-    e.target.style.height = `${e.target.scrollHeight}px`;
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      // Enter seul (sans Shift) pour valider le renommage
-      // Shift+Enter permet le saut de ligne si besoin
-      e.preventDefault();
-      if (onRename && inputValue.trim() && inputValue !== folder.name) {
-        onRename(inputValue.trim(), 'folder');
-      } else if (onCancelRename) {
-        onCancelRename();
-      }
-    } else if (e.key === 'Escape' && onCancelRename) {
-      e.preventDefault();
-      onCancelRename();
-    }
-  };
-
-  const handleInputBlur = () => {
-    if (onRename && inputValue.trim() && inputValue !== folder.name) {
-      onRename(inputValue.trim(), 'folder');
-    } else if (onCancelRename) {
-      onCancelRename();
-    }
-  };
 
   return (
     <div
@@ -139,19 +90,16 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder, onOpen, isRenaming, onR
         <div className="folder-icon">
           <FolderIcon size={36} />
         </div>
-        {isRenaming ? (
-          <textarea
-            ref={inputRef}
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyDown={handleInputKeyDown}
-            onBlur={handleInputBlur}
-            className="fm-rename-input"
-            autoFocus
-            spellCheck={false}
-            onClick={e => e.stopPropagation()}
-            rows={1}
-          />
+        {isRenaming && onRename && onCancelRename ? (
+          <div className="fm-rename-wrap" onClick={e => e.stopPropagation()}>
+            <RenameInput
+              initialValue={folder.name}
+              onSubmit={(name) => onRename(name, 'folder')}
+              onCancel={onCancelRename}
+              autoFocus
+              variant="item"
+            />
+          </div>
         ) : (
           <span
             className="fm-item-name"

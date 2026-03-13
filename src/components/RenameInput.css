@@ -1,0 +1,122 @@
+/* RenameInput — styles partagés pour le renommage inline */
+
+.item-rename-input-wrap--sized {
+  display: inline-block;
+  position: relative;
+  min-width: 1ch;
+}
+
+.item-rename-input-wrap--sized .item-rename-input-ghost {
+  visibility: hidden;
+  white-space: pre;
+  font: inherit;
+  padding: 0 4px;
+  display: block;
+  min-height: 1.2em;
+}
+
+.item-rename-input-wrap--sized .item-rename-input {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Item variant — pas de ghost, largeur fixe = container, zéro mouvement (grille) */
+.item-rename-input-wrap--fixed {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.item-rename-input-wrap--fixed .item-rename-input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.item-rename-input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-border-block, rgba(255, 255, 255, 0.1));
+  border-radius: 6px;
+  color: var(--color-text-primary, rgb(244 244 245));
+  padding: 6px 12px;
+  font-size: 14px;
+  width: 100%;
+  min-width: 80px;
+  outline: none;
+}
+
+.item-rename-input:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.item-rename-input:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+  outline: none;
+}
+
+/* Variante onglet — nom sur place, background + curseur */
+.item-rename-input--tab {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 6px;
+  padding: 0 4px;
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
+
+.item-rename-input--tab:focus {
+  box-shadow: none;
+}
+
+/* Variante pill — nom sur place, background + curseur */
+.item-rename-input--pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 6px;
+  padding: 0 4px;
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
+
+.item-rename-input--pill:focus {
+  box-shadow: none;
+}
+
+/* Variante item — dossiers et notes (liste + grille), zéro mouvement */
+.item-rename-input--item {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 6px;
+  padding: 0 4px;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+  color: inherit;
+  outline: none;
+}
+
+.item-rename-input--item:focus {
+  box-shadow: none;
+}
+
+/* Override grille — champ propre avec radius (tous contextes) */
+.fm-grid-item .item-rename-input--item,
+.fm-rename-wrap .item-rename-input--item,
+.file-grid-item .item-rename-input--item,
+.classeurs-block .item-rename-input--item,
+.classeurs-card .item-rename-input--item {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: 6px !important;
+  border: none !important;
+}
