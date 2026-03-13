@@ -11,9 +11,9 @@ interface SortableClasseurItemProps {
   isRenaming?: boolean;
   onSelect?: (classeurId: string) => void;
   onContextMenu?: (event: React.MouseEvent<HTMLButtonElement>, classeur: Classeur) => void;
-  onDragOver?: (event: React.DragEvent<HTMLButtonElement>, classeur: Classeur) => void;
-  onDragLeave?: (event: React.DragEvent<HTMLButtonElement>) => void;
-  onDrop?: (event: React.DragEvent<HTMLButtonElement>, classeur: Classeur) => void;
+  onDragOver?: (event: React.DragEvent<HTMLDivElement>, classeur: Classeur) => void;
+  onDragLeave?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDrop?: (event: React.DragEvent<HTMLDivElement>, classeur: Classeur) => void;
   onRenameSubmit?: (name: string) => void;
   onRenameCancel?: () => void;
 }
