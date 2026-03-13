@@ -1,187 +1,161 @@
 /* ==========================================================================
-   IMAGE MENU - Même style que UploadModal / UnifiedUploadZone (Linear clean)
+   IMAGE MENU - Design propre avec onglets
    ========================================================================== */
 
-.image-menu-content {
+.image-menu {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
+  min-width: 320px;
 }
 
-/* URL section — aligné sur url-input-container */
-.image-menu-url-section {
-  width: 100%;
+/* Onglets */
+.image-menu-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(39, 39, 42, 0.4);
+  border-radius: 10px;
 }
 
-.image-menu-url-label {
+.image-menu-tab {
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  margin-bottom: 8px;
-  color: rgb(113 113 122);
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgb(161 161 170);
   font-size: 13px;
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.image-menu-url-label svg {
-  color: rgb(113 113 122);
+.image-menu-tab:hover {
+  color: rgb(244 244 245);
+  background: rgba(63, 63, 70, 0.3);
 }
 
+.image-menu-tab.active {
+  background: rgba(63, 63, 70, 0.6);
+  color: rgb(244 244 245);
+}
+
+/* Panneau de contenu */
+.image-menu-panel {
+  min-height: 140px;
+}
+
+.image-menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.image-menu-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgb(161 161 170);
+}
+
+/* URL */
 .image-menu-url-row {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
   align-items: center;
-  background: rgba(39, 39, 42, 0.3);
-  border: var(--border-block);
+}
+
+.image-menu-input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  background: rgba(39, 39, 42, 0.5);
+  border: 1px solid rgba(63, 63, 70, 0.6);
   border-radius: 8px;
-  padding: 0.5rem 0.75rem;
+  color: rgb(244 244 245);
+  font-size: 14px;
+  outline: none;
   transition: border-color 0.15s, background 0.15s;
 }
 
-.image-menu-url-row:focus-within {
-  background: rgba(39, 39, 42, 0.5);
-  border-color: var(--color-border-block);
-}
-
-.image-menu-url-input {
-  flex: 1;
-  min-width: 0;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: rgb(244 244 245);
-  font-size: 14px;
-  padding: 0.25rem 0;
-}
-
-.image-menu-url-input::placeholder {
-  color: rgb(161 161 170);
-}
-
-.image-menu-url-row .image-menu-btn.primary {
-  flex-shrink: 0;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  background: rgba(63, 63, 70, 0.5);
-  border: none;
-  color: rgb(161 161 170);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.image-menu-url-row .image-menu-btn.primary:hover:not(:disabled) {
-  background: rgba(63, 63, 70, 0.7);
-  color: rgb(244 244 245);
-}
-
-.image-menu-url-row .image-menu-btn.primary:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Séparateur — aligné sur unified-upload-zone-or */
-.image-menu-separator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 0;
-  font-size: 12px;
-  font-weight: 600;
+.image-menu-input::placeholder {
   color: rgb(113 113 122);
-  letter-spacing: 0.05em;
 }
 
-/* Zone de drop — aligné sur drop-zone */
-.image-menu-upload-section {
-  width: 100%;
+.image-menu-input:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(39, 39, 42, 0.7);
 }
 
-.image-menu-upload-zone {
+/* Dropzone */
+.image-menu-dropzone {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100px;
-  padding: 1.25rem;
+  min-height: 140px;
+  padding: 24px;
   background: rgba(39, 39, 42, 0.3);
-  border: 1px dashed var(--color-border-block);
-  border-radius: 8px;
-  transition: all 0.15s ease;
+  border: 2px dashed rgba(99, 102, 241, 0.3);
+  border-radius: 12px;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.image-menu-upload-zone:hover {
+.image-menu-dropzone:hover {
   background: rgba(39, 39, 42, 0.5);
-  border-color: var(--color-border-block);
+  border-color: rgba(99, 102, 241, 0.5);
 }
 
-.image-menu-upload-zone.dragover {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.5);
+.image-menu-dropzone.dragover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.6);
   border-style: solid;
 }
 
-.image-menu-upload-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: rgba(63, 63, 70, 0.4);
-  color: rgb(161 161 170);
-  margin-bottom: 0.5rem;
+.image-menu-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.image-menu-upload-text {
+.image-menu-dropzone-icon {
+  color: rgb(161 161 170);
+  margin-bottom: 8px;
+}
+
+.image-menu-dropzone-text {
   font-size: 14px;
   font-weight: 500;
   color: rgb(244 244 245);
-  margin: 0 0 0.25rem 0;
+  margin-bottom: 4px;
 }
 
-.image-menu-upload-hint {
-  font-size: 13px;
-  color: rgb(161 161 170);
-  margin: 0;
+.image-menu-dropzone-hint {
+  font-size: 12px;
+  color: rgb(113 113 122);
 }
 
-/* Fichier sélectionné */
-.image-menu-file-selected {
+.image-menu-file-preview {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(39, 39, 42, 0.5);
-  border: var(--border-block);
-  border-radius: 8px;
-}
-
-.image-menu-file-icon {
-  width: 28px;
-  height: 28px;
-  background: rgba(63, 63, 70, 0.5);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgb(161 161 170);
-}
-
-.image-menu-file-info {
-  flex: 1;
-  min-width: 0;
+  gap: 4px;
 }
 
 .image-menu-file-name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: rgb(244 244 245);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: center;
+  word-break: break-all;
 }
 
 .image-menu-file-size {
@@ -189,18 +163,51 @@
   color: rgb(161 161 170);
 }
 
-/* Actions */
+/* Mes fichiers */
+.image-menu-files-desc {
+  font-size: 13px;
+  color: rgb(161 161 170);
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.image-menu-browse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 48px;
+  padding: 0 20px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  color: rgb(165 180 252);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.image-menu-browse-btn:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+/* Boutons */
 .image-menu-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .image-menu-btn {
   flex: 1;
-  padding: 0.5rem 1rem;
-  border: var(--border-block);
-  border-radius: 6px;
-  background: rgba(39, 39, 42, 0.3);
+  height: 40px;
+  padding: 0 16px;
+  background: rgba(39, 39, 42, 0.5);
+  border: 1px solid rgba(63, 63, 70, 0.6);
+  border-radius: 8px;
   color: rgb(244 244 245);
   font-size: 14px;
   font-weight: 500;
@@ -209,37 +216,24 @@
 }
 
 .image-menu-btn:hover {
-  background: rgba(63, 63, 70, 0.5);
+  background: rgba(63, 63, 70, 0.6);
 }
 
-.image-menu-btn.primary {
-  background: rgba(63, 63, 70, 0.5);
-  border-color: transparent;
+.image-menu-btn-primary {
+  background: rgba(99, 102, 241, 0.4);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: rgb(224 231 255);
 }
 
-.image-menu-btn.primary:hover:not(:disabled) {
-  background: rgba(63, 63, 70, 0.7);
+.image-menu-btn-primary:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.5);
+  border-color: rgba(99, 102, 241, 0.6);
 }
 
-.image-menu-btn:disabled {
-  opacity: 0.4;
+.image-menu-btn:disabled,
+.image-menu-btn-primary:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
-}
-
-.image-menu-spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: imageMenuSpin 1s linear infinite;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-
-@keyframes imageMenuSpin {
-  to { transform: rotate(360deg); }
 }
 
 /* Erreur */
@@ -247,10 +241,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0.5rem 0.75rem;
+  padding: 12px 14px;
   background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.25);
   border-radius: 8px;
-  color: #fca5a5;
+  color: rgb(252 165 165);
   font-size: 13px;
+}
+
+.image-menu-error svg {
+  flex-shrink: 0;
 }

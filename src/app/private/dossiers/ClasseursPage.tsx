@@ -1055,11 +1055,8 @@ export default function ClasseursPage() {
   }, [handleCreateClasseur]);
 
   const handleCreateFolderClick = useCallback(async () => {
-    const name = window.prompt("Nom du dossier", "Nouveau dossier");
-    if (name?.trim()) {
-      const created = await createFolder(name.trim());
-      if (created) setRefreshKey((k) => k + 1);
-    }
+    const created = await createFolder("Nouveau dossier");
+    if (created) setRefreshKey((k) => k + 1);
   }, [createFolder]);
 
   const handleCreateNoteClick = useCallback(async () => {
