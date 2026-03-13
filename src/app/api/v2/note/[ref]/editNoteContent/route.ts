@@ -19,7 +19,6 @@ import { ContentApplier, calculateETag, generateDiff } from '@/utils/contentAppl
 import { updateArticleInsight } from '@/utils/insightUpdater';
 import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
 import { contentStreamer } from '@/services/contentStreamer';
-import { streamBroadcastService } from '@/services/streamBroadcastService';
 import type { ContentOperation } from '@/utils/contentApplyUtils';
 
 // Force Node.js runtime
@@ -265,29 +264,14 @@ export async function POST(
 
     // 🌊 STREAMING AUTOMATIQUE si canva ouvert
     if (shouldStream) {
-      // ✅ AUDIT: Vérifier les listeners AVANT de streamer
-      const listenerCount = streamBroadcastService.getListenerCount(noteId);
-      
-      logApi.info('[editNoteContent] 🌊 Starting stream', {
+      logApi.info('[editNoteContent] Starting stream via Supabase', {
         ...context,
         noteId,
-        listenerCount,
         oldLength: currentNote.markdown_content.length,
         newLength: safeContent.length
       });
 
-      if (listenerCount === 0) {
-        logApi.warn('[editNoteContent] ⚠️ NO LISTENERS - stream will not be delivered', {
-          ...context,
-          noteId
-        });
-      }
-
       try {
-        // Stream le résultat progressivement (non bloquant)
-        // ⚠️ IMPORTANT : Si canva ouvert, on stream LOCALEMENT uniquement
-        // La sauvegarde DB se fera via l'auto-save du canva (toutes les 2s)
-        // ✅ FIX: Passer les résultats d'opérations pour extraction précise du contenu
         await contentStreamer.streamContent(
           noteId,
           currentNote.markdown_content,
@@ -296,30 +280,36 @@ export async function POST(
           {
             chunkSize: 80,
             delayMs: 15,
-            position: undefined // Détecté automatiquement depuis ops
+            position: undefined
           },
-          result.results // ✅ Passer les résultats avec ranges pour extraction précise
-        ).catch((streamError) => {
-          // Erreur de streaming non bloquante
-          logApi.warn('[editNoteContent] Streaming failed (non-blocking)', {
-            ...context,
-            noteId,
-            error: streamError instanceof Error ? streamError.message : 'Unknown error'
-          });
-        });
-
-        // ✅ Canva ouvert : pas de sauvegarde DB immédiate
-        // Le contenu sera sauvegardé via l'auto-save du canva (ChatCanvaPane, toutes les 2s)
-        logApi.info('[editNoteContent] Streaming local activé, sauvegarde DB via auto-save', {
+          result.results
+        );
+        logApi.info('[editNoteContent] Streaming completed, save via canva auto-save', {
           ...context,
           noteId
         });
       } catch (streamError) {
-        logApi.warn('[editNoteContent] Streaming exception (non-blocking)', {
+        // Fallback : sauvegarder en DB si le stream échoue (ex. Supabase indisponible)
+        logApi.warn('[editNoteContent] Stream failed, fallback to DB save', {
           ...context,
           noteId,
           error: streamError instanceof Error ? streamError.message : 'Unknown error'
         });
+        const { error: updateError } = await supabase
+          .from('articles')
+          .update({
+            markdown_content: safeContent,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', noteId)
+          .eq('user_id', userId);
+        if (updateError) {
+          logApi.error('[editNoteContent] Fallback DB save failed', {
+            ...context,
+            noteId,
+            error: updateError.message
+          });
+        }
       }
     } else {
       // 💾 Canva fermé : sauvegarde DB normale (comme content:apply)

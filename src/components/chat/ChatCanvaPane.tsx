@@ -22,8 +22,7 @@ import { hasMarkdownStorage } from '@/types/editor';
 import Editor from '@/components/editor/Editor';
 import { hashString } from '@/utils/editorHelpers';
 import { useRealtime } from '@/hooks/useRealtime';
-// ✅ Réactivé : écoute les chunks de editNoteContent via ops:listen
-import { useNoteStreamListener } from '@/hooks/useNoteStreamListener';
+import { supabase } from '@/supabaseClient';
 import { useCanvasStreamOps } from '@/hooks/useCanvasStreamOps';
 
 interface ChatCanvaPaneProps {
@@ -46,7 +45,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
   const editorRef = useRef<EditorWithMarkdown | null>(null);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedHashRef = useRef<number | null>(null);
-  const eventSourceRef = useRef<EventSource | null>(null); // ✅ Ref pour EventSource
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Resize handle state
   const [isDragging, setIsDragging] = useState(false);
@@ -247,150 +246,73 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
     insertionStartPosRef.current = null;
   }, [session?.id]);
 
-  // ✅ STREAMING SSE : EventSource directement dans ChatCanvaPane
+  // ✅ STREAMING : Supabase Realtime Broadcast (editNoteContent chunks)
   useEffect(() => {
-    // ✅ FIX: Attendre que l'éditeur soit prêt ET que la session soit disponible
     if (!session || !session.noteId || !isEditorReady) {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
       return;
     }
 
     const noteId = session.noteId;
+    const channelName = `note-stream:${noteId}`;
 
-    // ✅ FIX: Ne pas recréer si déjà connecté
-    if (eventSourceRef.current && eventSourceRef.current.readyState === EventSource.OPEN) {
-      return;
-    }
+    const channel = supabase.channel(channelName, {
+      config: { broadcast: { self: false } }
+    });
 
-    // Cleanup de la connexion précédente si elle existe
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
-
-    // Récupérer le token
-    const getToken = () => {
-      try {
-        const supabaseAuth = localStorage.getItem('sb-localhost-auth-token');
-        if (supabaseAuth) {
-          const parsed = JSON.parse(supabaseAuth);
-          return parsed.access_token;
+    channel
+      .on('broadcast', { event: 'start' }, () => {
+        logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Stream START received', { noteId });
+        setIsEventSourceConnected(true);
+        if (session?.id) {
+          startStreaming(session.id);
         }
-        const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
-        for (const key of keys) {
-          const data = JSON.parse(localStorage.getItem(key) || '{}');
-          if (data.access_token) return data.access_token;
-        }
-      } catch (error) {
-        logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Failed to get token', error);
-      }
-      return null;
-    };
-
-    const token = getToken();
-    if (!token) {
-      logger.error(LogCategory.EDITOR, '[ChatCanvaPane] No auth token available', { noteId });
-      return;
-    }
-
-    // ✅ TEST: Utiliser ops-listen au lieu de ops:listen (problème de routing Next.js avec :)
-    const url = `/api/v2/canvas/${noteId}/ops-listen?token=${encodeURIComponent(token)}`;
-    logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Creating EventSource', { 
-      noteId, 
-      url: url.replace(/token=[^&]+/, 'token=***'),
-      isEditorReady,
-      hasSession: !!session,
-      sessionId: session?.id
-    });
-    logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Creating EventSource', { noteId, url: url.replace(/token=[^&]+/, 'token=***') });
-    const eventSource = new EventSource(url);
-    eventSourceRef.current = eventSource;
-    logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] EventSource created', { 
-      noteId, 
-      readyState: eventSource.readyState,
-      url: eventSource.url.replace(/token=[^&]+/, 'token=***'),
-      sessionId: session?.id
-    });
-
-    eventSource.onopen = () => {
-      setIsEventSourceConnected(true);
-      logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] EventSource opened', {
-        noteId,
-        readyState: eventSource.readyState,
-        url: eventSource.url.replace(/token=[^&]+/, 'token=***'),
-        sessionId: session?.id
-      });
-      logger.info(LogCategory.EDITOR, '[ChatCanvaPane] ✅ EventSource opened', { noteId, readyState: eventSource.readyState });
-    };
-
-    // ✅ Écouter l'événement 'start' pour confirmer que le stream démarre
-    eventSource.addEventListener('start', (event: MessageEvent) => {
-      logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Stream START event received', {
-        noteId,
-        data: event.data,
-        sessionId: session?.id
-      });
-      logger.info(LogCategory.EDITOR, '[ChatCanvaPane] ✅ Stream START event received', { noteId });
-    });
-
-    eventSource.addEventListener('chunk', (event: MessageEvent) => {
-      try {
-        const parsed = JSON.parse(event.data);
-        if (parsed.type === 'chunk' && typeof parsed.data === 'string') {
+      })
+      .on('broadcast', { event: 'chunk' }, (payload: { payload?: { data?: string } }) => {
+        const data = payload?.payload?.data;
+        if (typeof data === 'string') {
           logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Chunk received', {
             noteId,
-            chunkLength: parsed.data.length,
-            chunkPreview: parsed.data.substring(0, 50),
+            chunkLength: data.length,
             sessionId: session?.id
           });
-          handleStreamChunk(parsed.data);
+          handleStreamChunk(data);
         }
-      } catch (error) {
-        logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Failed to parse chunk', error);
-      }
-    });
-
-    eventSource.addEventListener('end', () => {
-      logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Stream END event received', { noteId, sessionId: session?.id });
-      handleStreamEnd();
-    });
-
-    eventSource.onerror = (error) => {
-      setIsEventSourceConnected(false);
-      const readyStateText = eventSource.readyState === 0 ? 'CONNECTING' : eventSource.readyState === 1 ? 'OPEN' : 'CLOSED';
-      logger.error(LogCategory.EDITOR, '[ChatCanvaPane] EventSource error', {
-        noteId,
-        readyState: eventSource.readyState,
-        readyStateText,
-        url: eventSource.url.replace(/token=[^&]+/, 'token=***'),
-        error: error instanceof Error ? error.message : String(error),
-        sessionId: session?.id
+      })
+      .on('broadcast', { event: 'end' }, () => {
+        logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Stream END received', { noteId, sessionId: session?.id });
+        handleStreamEnd();
+        if (session?.id) {
+          endStreaming(session.id);
+        }
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setIsEventSourceConnected(true);
+          logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Supabase channel subscribed', { noteId, channelName });
+        } else if (status === 'CHANNEL_ERROR') {
+          setIsEventSourceConnected(false);
+          logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Supabase channel error', { noteId });
+        }
       });
-      
-      // Si CLOSED, l'EventSource a échoué complètement
-      if (eventSource.readyState === EventSource.CLOSED) {
-        logger.error(LogCategory.EDITOR, '[ChatCanvaPane] EventSource closed', {
-          noteId,
-          url: eventSource.url.replace(/token=[^&]+/, 'token=***'),
-          sessionId: session?.id,
-          reason: 'connection failed'
-        });
-        logger.warn(LogCategory.EDITOR, '[ChatCanvaPane] EventSource closed, will recreate', { noteId });
-        eventSourceRef.current = null;
-      }
-    };
+
+    channelRef.current = channel;
+    const sessionIdForCleanup = session?.id;
 
     return () => {
       setIsEventSourceConnected(false);
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
+      if (sessionIdForCleanup) {
+        endStreaming(sessionIdForCleanup);
+      }
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
-  }, [session?.noteId, activeCanvaId, isEditorReady]); // ✅ Attendre que l'éditeur soit prêt
+  }, [session?.noteId, session?.id, activeCanvaId, isEditorReady, endStreaming]);
 
   // 🔄 Canvas streaming ops (local-first)
   const { sendOp, isConnected: isOpsConnected, lastServerVersion } = useCanvasStreamOps(

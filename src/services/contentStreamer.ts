@@ -1,10 +1,10 @@
 /**
  * 🌊 Content Streamer Service
- * 
+ *
  * Service pour streamer le contenu progressivement vers les clients
- * via StreamBroadcastService. Découpe intelligemment le contenu en chunks
+ * via Supabase Realtime Broadcast. Découpe intelligemment le contenu en chunks
  * et gère la position d'insertion.
- * 
+ *
  * Architecture:
  * - Découpage intelligent par mots/phrases
  * - Respect des limites de mots
@@ -13,7 +13,7 @@
  */
 
 import { logApi } from '@/utils/logger';
-import { streamBroadcastService, type StreamEvent } from '@/services/streamBroadcastService';
+import { sendStreamEvent } from '@/services/supabaseRealtimeBroadcast';
 import type { ContentOperation } from '@/utils/contentApplyUtils';
 
 /**
@@ -209,7 +209,6 @@ class ContentStreamer {
     options?: StreamOptions,
     opResults?: Array<{ id: string; range_before?: { start: number; end: number }; range_after?: { start: number; end: number } }>
   ): Promise<void> {
-    console.log('🔍 [ContentStreamer] streamContent called', { noteId, oldLength: oldContent.length, newLength: newContent.length, timestamp: Date.now() });
     const chunkSize = options?.chunkSize ?? 80;
     const delayMs = options?.delayMs ?? 15;
     const position = options?.position ?? this.detectPosition(ops);
@@ -240,20 +239,20 @@ class ContentStreamer {
         return;
       }
 
-      // ✅ AUDIT: Vérifier les listeners AVANT de streamer
-      const listenerCountBefore = streamBroadcastService.getListenerCount(noteId);
-      logApi.info('[ContentStreamer] Streaming chunks', {
+      logApi.info('[ContentStreamer] Streaming chunks via Supabase', {
         noteId,
         chunksCount: chunks.length,
         totalLength: addedContent.length,
-        listenerCount: listenerCountBefore
+        position
       });
 
-      if (listenerCountBefore === 0) {
-        logApi.warn('[ContentStreamer] ⚠️ NO LISTENERS REGISTERED - chunks will not be delivered', {
-          noteId,
-          chunksCount: chunks.length
+      // Signal de début (clients reset state)
+      const startSent = await sendStreamEvent(noteId, 'start', {
+        timestamp: Date.now(),
+        metadata: { source: 'editNoteContent' }
       });
+      if (!startSent) {
+        throw new Error('Supabase Realtime broadcast failed on start signal');
       }
 
       // Stream chaque chunk avec délai
@@ -261,20 +260,15 @@ class ContentStreamer {
         const chunk = chunks[i];
         const isLast = i === chunks.length - 1;
 
-        // ✅ AUDIT: Logger chaque broadcast
-        const listenerCount = streamBroadcastService.getListenerCount(noteId);
         if (i === 0) {
-          logApi.info('[ContentStreamer] 📡 Broadcasting first chunk', {
+          logApi.info('[ContentStreamer] Broadcasting first chunk', {
             noteId,
             chunkLength: chunk.length,
-            listenerCount,
             position
           });
         }
 
-        // Broadcast le chunk
-        const deliveredCount = await streamBroadcastService.broadcast(noteId, {
-          type: 'chunk',
+        const sent = await sendStreamEvent(noteId, 'chunk', {
           data: chunk,
           position,
           metadata: {
@@ -282,15 +276,8 @@ class ContentStreamer {
             source: 'editNoteContent'
           }
         });
-
-        // ✅ AUDIT: Vérifier que le chunk a été livré
-        if (deliveredCount === 0 && listenerCount > 0) {
-          logApi.error('[ContentStreamer] ❌ Chunk broadcasted but NOT delivered to any listener', {
-            noteId,
-            chunkIndex: i,
-            listenerCount,
-            chunkLength: chunk.length
-          });
+        if (!sent && i === 0) {
+          throw new Error('Supabase Realtime broadcast failed on first chunk');
         }
 
         // Délai entre chunks (sauf le dernier)
@@ -300,20 +287,19 @@ class ContentStreamer {
       }
 
       // Signal de fin
-      const endListenerCount = streamBroadcastService.getListenerCount(noteId);
-      const endDeliveredCount = await streamBroadcastService.broadcast(noteId, {
-        type: 'end',
-          metadata: {
-            timestamp: Date.now(),
-            source: 'editNoteContent'
-          }
+      const endSent = await sendStreamEvent(noteId, 'end', {
+        metadata: {
+          timestamp: Date.now(),
+          source: 'editNoteContent'
+        }
       });
+      if (!endSent) {
+        throw new Error('Supabase Realtime broadcast failed on end signal');
+      }
 
       logApi.info('[ContentStreamer] Stream completed', {
         noteId,
-        chunksCount: chunks.length,
-        listenerCount: endListenerCount,
-        endDeliveredCount
+        chunksCount: chunks.length
       });
 
     } catch (error) {
@@ -324,20 +310,14 @@ class ContentStreamer {
       });
 
       // Broadcast erreur (non bloquant)
-      try {
-        await streamBroadcastService.broadcast(noteId, {
-          type: 'error',
-          metadata: {
-            timestamp: Date.now(),
-            source: 'editNoteContent'
-          }
-        });
-      } catch (broadcastError) {
-        logApi.error('[ContentStreamer] Failed to broadcast error', {
-          noteId,
-          error: broadcastError instanceof Error ? broadcastError.message : 'Unknown'
-        });
-      }
+      await sendStreamEvent(noteId, 'error', {
+        metadata: {
+          timestamp: Date.now(),
+          source: 'editNoteContent',
+          error: errorMessage
+        }
+      });
+      throw error; // Rethrow pour que editNoteContent puisse faire fallback DB
     }
   }
 }

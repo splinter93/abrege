@@ -25,7 +25,7 @@ import { contentApplyV2Schema, validatePayload, createValidationErrorResponse } 
 import { ContentApplier, calculateETag, generateDiff } from '@/utils/contentApplyUtils';
 import { updateArticleInsight } from '@/utils/insightUpdater';
 import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
-import { streamBroadcastService } from '@/services/streamBroadcastService';
+import { sendStreamEvent } from '@/services/supabaseRealtimeBroadcast';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -229,39 +229,25 @@ export async function POST(
       response.data.content = result.content;
     }
 
-    // 🔔 NOTIFICATION SSE : Notifier les clients que le contenu a été mis à jour
+    // 🔔 NOTIFICATION : Notifier les clients que le contenu a été mis à jour via Supabase Realtime
     // useEditorStreamListener écoute cet événement et recharge le contenu depuis l'API
-    // Cela permet d'afficher les mises à jour batch (applyContentOperations) sans perturber la frappe
-    try {
-      const listenerCount = await streamBroadcastService.broadcast(noteId, {
-        type: 'content_updated',
-        data: JSON.stringify({
-          note_id: noteId,
-          etag: response.data.etag,
-          ops_count: ops.length,
-          char_diff: result.charDiff
-        }),
-        metadata: {
-          source: 'content:apply',
-          timestamp: Date.now()
-        }
-      });
-      if (listenerCount === 0) {
-        logApi.warn(`⚠️ Aucun listener SSE pour note ${noteId} - les clients ne recevront pas l'événement content_updated`, {
-          ...context,
-          listenerCount,
-          opsCount: ops.length
-        });
-      } else {
-        logApi.info(`📡 Notification SSE envoyée pour note ${noteId}`, {
-          ...context,
-          listenerCount,
-          opsCount: ops.length
-        });
+    const notifySent = await sendStreamEvent(noteId, 'content_updated', {
+      note_id: noteId,
+      etag: response.data.etag,
+      ops_count: ops.length,
+      char_diff: result.charDiff,
+      metadata: {
+        source: 'content:apply',
+        timestamp: Date.now()
       }
-    } catch (sseError) {
-      // Ne pas faire échouer la requête si la notification SSE échoue
-      logApi.warn('⚠️ Erreur lors de la notification SSE (non bloquant)', { ...context, error: sseError });
+    });
+    if (notifySent) {
+      logApi.info(`📡 Notification content_updated envoyée pour note ${noteId}`, {
+        ...context,
+        opsCount: ops.length
+      });
+    } else {
+      logApi.warn('⚠️ Notification content_updated non envoyée (Supabase indisponible)', context);
     }
 
     // Ajouter les headers de réponse

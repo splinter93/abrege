@@ -294,7 +294,7 @@ export class ApiV2HttpClient {
   }
 
   async applyContentOperations(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
-    return this.makeRequest(`/note/${ref}/content:apply`, 'POST', params, userToken);
+    return this.makeRequest(`/note/${ref}/editNoteContent`, 'POST', params, userToken);
   }
 
   async getNoteTOC(ref: string, userToken: string): Promise<unknown> {
