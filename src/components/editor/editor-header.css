@@ -17,7 +17,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 0 var(--editor-padding-horizontal-desktop);
+  padding: 0;
   background: var(--color-bg-header); /* ✅ Variable au lieu de hardcodé */
   border-bottom: 1px solid rgba(39, 39, 42, 0.6); /* aligné chat header (border-zinc-800/60) */
   z-index: 100;
@@ -62,10 +62,10 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
-  backdrop-filter: blur(10px); /* Blur pour rester lisible sur contenu */
-  -webkit-backdrop-filter: blur(10px);
-  padding: 4px 8px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,6 +73,8 @@
   color: inherit;
   cursor: pointer;
   transition: background 0.15s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .editor-header__logo:hover {
@@ -80,8 +82,8 @@
 }
 
 .editor-header__logo-icon {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   /* Dégradé gris : couleur de base gris clair avec effet dégradé via ombre */
   color: #9ca3af; /* Gris clair (slate-400) - éclairci */
   transition: all 0.2s ease;
@@ -127,7 +129,7 @@
   z-index: 2;
   backdrop-filter: blur(10px); /* Blur pour rester lisible sur contenu */
   -webkit-backdrop-filter: blur(10px);
-  padding: 4px 8px;
+  padding: 4px 0 4px 8px;
   border-radius: 8px;
 }
 
@@ -186,25 +188,20 @@
   .editor-header-new {
     padding: 0 var(--editor-padding-horizontal-tablet);
   }
-  
-  /* Logo reste à 4px (défini ligne 42) */
-  /* Actions restent à 10px (défini ligne 73) */
 }
 
 /* Mobile */
 @media (max-width: 768px) {
   .editor-header {
     min-height: 48px;
-    padding: 0 var(--editor-padding-horizontal-mobile);
+    padding: 0;
   }
+
   
   .editor-header__row {
     height: 48px;
     min-height: 48px;
   }
-  
-  /* Logo reste à 4px (défini ligne 42) */
-  /* Actions restent à 10px (défini ligne 73) */
   
   .editor-header__actions {
     gap: 2px;
@@ -214,16 +211,24 @@
     width: 28px;
     height: 28px;
   }
+
+  .editor-header__logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .editor-header__logo-icon {
+    width: 14px;
+    height: 14px;
+  }
 }
 
 /* Mobile small */
 @media (max-width: 480px) {
   .editor-header {
-    padding: 0 var(--editor-padding-horizontal-mobile-sm);
+    padding: 0;
   }
-  
-  /* Logo reste à 4px (défini ligne 42) */
-  /* Actions restent à 10px (défini ligne 73) */
+
 }
 
  

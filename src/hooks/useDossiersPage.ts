@@ -247,17 +247,47 @@ export function useDossiersPage(userId: string) {
   }, [userId, dossierService]);
 
   const handleDeleteClasseur = useCallback(async (id: string) => {
+    const store = useFileSystemStore.getState();
+    const classeurToRestore = store.classeurs[id];
+    const originalClasseurs = { ...store.classeurs };
+    const originalFolders = { ...store.folders };
+    const originalNotes = { ...store.notes };
+
+    // 1. Mise à jour optimiste : retirer immédiatement du store
+    logger.dev('[useDossiersPage] 🚀 Suppression optimiste du classeur:', id);
+    const remainingFolders = Object.values(originalFolders).filter(
+      (f) => f.classeur_id !== id
+    );
+    const remainingNotes = Object.values(originalNotes).filter(
+      (n) => n.classeur_id !== id
+    );
+    store.removeClasseur(id);
+    store.setFolders(remainingFolders);
+    store.setNotes(remainingNotes);
+
+    // Si on supprime le classeur actif, basculer sur un autre
+    if (activeClasseurId === id) {
+      const remaining = Object.values(originalClasseurs).filter((c) => c.id !== id);
+      const nextId = remaining[0]?.id ?? undefined;
+      setActiveClasseurId(nextId);
+      setCurrentFolderId(undefined);
+    }
+
     try {
-      logger.dev('[useDossiersPage] 🗑️ Suppression classeur via service:', id);
-      
       await dossierService.deleteClasseur(id, userId);
-      
       logger.dev('[useDossiersPage] ✅ Classeur supprimé avec succès:', id);
     } catch (error) {
-      logger.error('[useDossiersPage] ❌ Erreur suppression classeur:', error);
+      logger.error('[useDossiersPage] ❌ Erreur suppression - rollback:', error);
+      // Rollback : restaurer l'état précédent
+      store.setClasseurs(Object.values(originalClasseurs));
+      store.setFolders(Object.values(originalFolders));
+      store.setNotes(Object.values(originalNotes));
+      if (activeClasseurId === id && classeurToRestore) {
+        setActiveClasseurId(id);
+      }
       throw error;
     }
-  }, [userId, dossierService]);
+  }, [userId, dossierService, activeClasseurId, setActiveClasseurId, setCurrentFolderId]);
 
   const handleUpdateClasseur = useCallback(async (id: string, updates: Partial<Classeur>) => {
     try {
