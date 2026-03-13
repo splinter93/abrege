@@ -1,8 +1,9 @@
 /**
- * EDITOR RESPONSIVE - Paddings uniformes alignés avec chat
+ * EDITOR RESPONSIVE - Progressif
  * ========================================================
- * Container principal de l'éditeur avec padding responsive
- * Desktop: 24px | Tablet: 16px | Mobile: 12px | Mobile-sm: 8px
+ * - Padding latéral : clamp() pour réduction lente (24px → 16px).
+ * - À partir de 950px : le contenu (max-width) rétrécit avant le padding.
+ * - Wide mode : idem à 950px pour cohérence.
  */
 
 /* ==========================================================================
@@ -35,56 +36,35 @@
   box-sizing: border-box;
 }
 
-/* Container intérieur - 800px (ou 1000px en wide mode) centré */
+/* Container intérieur - 800px (ou 1000px wide) ; padding progressif via variable */
 .editor-content-inner {
   width: 100%;
-  max-width: var(--editor-content-width); /* 800px par défaut, 1000px en wide mode */
-  min-width: 0; /* ✅ Permet au contenu (ex. tableaux) de respecter max-width au lieu de pousser */
+  max-width: var(--editor-content-width);
+  min-width: 0;
   margin: 0 auto;
-  padding: 0 var(--editor-padding-horizontal-desktop); /* Padding ici pour titre ET contenu */
+  padding: 0 var(--editor-padding-horizontal); /* Progressif : clamp(16px, 1.2vw + 21px, 24px) */
   box-sizing: border-box;
-  overflow: visible; /* ✅ Permet drag handles à -75px (word-wrap gère le texte) */
-  word-wrap: break-word; /* ✅ Force le wrap des mots longs */
-  overflow-wrap: break-word; /* ✅ Force le wrap moderne */
+  overflow: visible;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN
+   RESPONSIVE - Contenu qui rétrécit à partir de 950px (avant le padding)
    ========================================================================== */
 
-/* En dessous de 1100px - Container fluide UNIQUEMENT en wide mode */
-/* Le mode normal (800px) garde sa largeur fixe jusqu'à 850px */
+/* À partir de 950px : la colonne contenu prend au plus 100%, donc elle rétrécit en premier */
+@media (max-width: 950px) {
+  .editor-content-inner,
+  .noteLayout.wide-mode .editor-content-inner {
+    max-width: min(var(--editor-content-width), 100%);
+  }
+}
+
+/* Legacy : wide mode fluide plus tôt si besoin (optionnel, 950px suffit pour les deux) */
 @media (max-width: 1100px) {
   .noteLayout.wide-mode .editor-content-inner {
-    max-width: 100%;
-  }
-}
-
-/* En dessous de 850px - Tous les modes deviennent fluides */
-@media (max-width: 850px) {
-  .editor-content-inner {
-    max-width: 100%;
-  }
-}
-
-/* Tablette (≤ 1024px) */
-@media (max-width: 1024px) {
-  .editor-content-inner {
-    padding: 0 var(--editor-padding-horizontal-tablet);
-  }
-}
-
-/* Mobile (≤ 768px) */
-@media (max-width: 768px) {
-  .editor-content-inner {
-    padding: 0 var(--editor-padding-horizontal-mobile);
-  }
-}
-
-/* Mobile small (≤ 480px) */
-@media (max-width: 480px) {
-  .editor-content-inner {
-    padding: 0 var(--editor-padding-horizontal-mobile-sm);
+    max-width: min(var(--editor-content-width), 100%);
   }
 }
 

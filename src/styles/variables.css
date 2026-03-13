@@ -154,13 +154,15 @@
   --surface-3: #212121;
 
   /* ========================================
-     PADDINGS RESPONSIVE (alignés avec chat)
+     PADDINGS RESPONSIVE - Progressif (la note rétrécit avant le padding)
      ======================================== */
-  
+  /* Valeur fluide : reste à 24px longtemps, puis baisse doucement (min 16px) */
+  --editor-padding-horizontal: clamp(16px, 1.2vw + 21px, 24px);
+  /* Legacy / fallback pour composants qui ciblent un breakpoint précis */
   --editor-padding-horizontal-desktop: 24px;
-  --editor-padding-horizontal-tablet: 28px;
-  --editor-padding-horizontal-mobile: 24px;
-  --editor-padding-horizontal-mobile-sm: 20px;
+  --editor-padding-horizontal-tablet: 24px;
+  --editor-padding-horizontal-mobile: 22px;
+  --editor-padding-horizontal-mobile-sm: 18px;
   
   /* Max-width éditeur (aligné avec chat) */
   --editor-content-max-width: 1000px;

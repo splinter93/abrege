@@ -84,3 +84,9 @@
   background: var(--color-bg-primary) !important;
   background-color: var(--color-bg-primary) !important;
 }
+
+/* Image header en 200px dans la modale */
+.note-modal-body .editor-header-image {
+  height: 200px;
+  min-height: 200px;
+}

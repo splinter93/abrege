@@ -180,14 +180,10 @@
 }
 
 /* =============================================================================
-   RESPONSIVE
+   RESPONSIVE - Padding progressif aligné éditeur
    ========================================================================== */
-
-/* Tablet */
-@media (max-width: 1024px) {
-  .editor-header-new {
-    padding: 0 var(--editor-padding-horizontal-tablet);
-  }
+.editor-header-new {
+  padding: 0 var(--editor-padding-horizontal); /* Même progression que .editor-content-inner */
 }
 
 /* Mobile */
