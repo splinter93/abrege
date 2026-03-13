@@ -1,0 +1,107 @@
+/**
+ * Styles pour le chat en mode widget (panneau flottant)
+ * Identique au chat normal (padding, scroll, dégradé) mais sans sidebar
+ */
+
+/* Layout, couleurs et variables — identiques à la sidebar principale */
+.chatgpt-container--widget {
+  top: auto;
+  left: auto;
+  right: 24px;
+  bottom: 24px;
+  width: 520px;
+  height: 640px;
+  max-height: 85vh;
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  background-color: var(--color-bg-block);
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.01), transparent);
+  border: var(--border-block);
+  --chat-container-width: 100%;
+  --chat-padding-horizontal: 24px;
+}
+
+/* Masquer la sidebar */
+.chatgpt-container--widget .chatgpt-content > div:first-child {
+  display: none;
+}
+
+/* Masquer le bouton burger (toggle sidebar) dans le header */
+.chatgpt-container--widget .chatgpt-sidebar-toggle-btn-header {
+  display: none;
+}
+
+/* Boutons fermer et agrandir : même hauteur que la zone agent (photo + nom) */
+.chatgpt-container--widget .chatgpt-reduce-btn-header {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+}
+
+.chatgpt-container--widget .chatgpt-reduce-btn-header svg {
+  width: 18px;
+  height: 18px;
+}
+
+.chatgpt-container--widget .chatgpt-content.sidebar-open {
+  margin-left: 0;
+}
+
+/* Centrage horizontal : annuler le padding-right asymétrique du desktop */
+.chatgpt-container--widget .chatgpt-main--desktop {
+  padding-right: 0;
+}
+
+.chatgpt-container--widget .chatgpt-main-chat {
+  align-items: stretch;
+  width: 100%;
+}
+
+.chatgpt-container--widget .chatgpt-messages-container {
+  width: 100%;
+}
+
+.chatgpt-container--widget .chatgpt-messages {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.chatgpt-container--widget .chatgpt-chat-bottom {
+  width: 100%;
+  align-items: stretch;
+}
+
+.chatgpt-container--widget .chatgpt-input-container {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Padding messages : identique au chat normal (24px horizontal) */
+.chatgpt-container--widget .chatgpt-messages {
+  padding: var(--chat-space-xl) calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) var(--chat-space-xl) calc(var(--chat-padding-horizontal) + var(--chat-safe-left)) !important;
+}
+
+/* Padding input : identique au chat normal (24px horizontal) */
+.chatgpt-container--widget .chatgpt-input-container {
+  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-left)) !important;
+}
+
+/* Input area : même largeur que la zone messages (alignement parfait) */
+.chatgpt-container--widget .chatgpt-input-area {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* pointer-events pour permettre le scroll à travers le chat-bottom */
+.chatgpt-container--widget .chatgpt-chat-bottom {
+  pointer-events: none;
+}
+
+.chatgpt-container--widget .chatgpt-input-container,
+.chatgpt-container--widget .chatgpt-input-area,
+.chatgpt-container--widget .tts-mini-player {
+  pointer-events: auto;
+}

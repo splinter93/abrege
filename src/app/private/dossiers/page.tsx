@@ -14,6 +14,8 @@ import "@/components/DossierErrorBoundary.css";
 import "@/components/DossierLoadingStates.css";
 
 import ClasseursPage from "./ClasseursPage";
+import ChatWidgetFab from "@/components/chat/ChatWidgetFab";
+import ChatWidgetRoot from "@/components/chat/ChatWidgetRoot";
 
 export default function DossiersPage() {
   return (
@@ -45,6 +47,8 @@ function AuthenticatedDossiersContent(_props: { user: AuthenticatedUser }) {
   return (
     <PageWithSidebarLayout>
       <ClasseursPage />
+      <ChatWidgetFab />
+      <ChatWidgetRoot />
     </PageWithSidebarLayout>
   );
 } 

@@ -54,9 +54,15 @@ import { applyChatFontPreset } from '@/constants/chatFontPresets';
 import { stripMarkdownForTTS } from '@/utils/stripMarkdownForTTS';
 
 import '@/styles/chat-clean.css';
+import '@/styles/chat-widget.css';
 import '@/styles/sidebar-collapsible.css';
 
-const ChatFullscreenV2: React.FC = () => {
+export interface ChatFullscreenV2Props {
+  variant?: 'fullscreen' | 'widget';
+  onClose?: () => void;
+}
+
+const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscreen', onClose }) => {
   // 🎯 HOOKS EXISTANTS (groupés pour lisibilité)
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const { requireAuth, user, loading: authLoading, isAuthenticated } = useAuthGuard();
@@ -492,7 +498,7 @@ const ChatFullscreenV2: React.FC = () => {
   ]);
 
   // 🎯 UI ACTIONS (extrait dans hook)
-  const allowSidebarHover = isDesktop && !isCanvaOpen;
+  const allowSidebarHover = isDesktop && !isCanvaOpen && variant !== 'widget';
   
   const uiActions = useChatFullscreenUIActions({
     requireAuth,
@@ -581,10 +587,12 @@ const ChatFullscreenV2: React.FC = () => {
   }, []);
 
   // Noir absolu sur mobile : classe sur <html> pour que le CSS puisse forcer html/body (variables + fond)
+  // En mode widget, ne pas ajouter chat-page pour éviter d'affecter la page hôte
   useEffect(() => {
+    if (variant === 'widget') return;
     document.documentElement.classList.add('chat-page');
     return () => document.documentElement.classList.remove('chat-page');
-  }, []);
+  }, [variant]);
 
   // 🎯 KEYBOARD SCROLL — géré directement dans useChatFullscreenUIState.ts
   // (handler synchrone keyboardWillShow / visualViewport, avant la CSS transition)
@@ -600,7 +608,7 @@ const ChatFullscreenV2: React.FC = () => {
 
   return (
       <div
-        className={`chatgpt-container ${(isDesktop && isCanvaOpen) ? 'canva-active' : ''}`}
+        className={`chatgpt-container ${(isDesktop && isCanvaOpen) ? 'canva-active' : ''} ${variant === 'widget' ? 'chatgpt-container--widget' : ''}`}
       >
       <ChatHeader
         sidebarOpen={uiState.sidebarOpen}
@@ -618,6 +626,7 @@ const ChatFullscreenV2: React.FC = () => {
         onSelectCanva={uiActions.handleSelectCanva}
         onCloseCanva={uiActions.handleCloseCanva}
         canOpenCanva={isDesktop}
+        onCloseWidget={variant === 'widget' ? onClose : undefined}
       />
 
       {/* Zone hover invisible sidebar */}

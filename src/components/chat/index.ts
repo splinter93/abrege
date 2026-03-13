@@ -1,5 +1,7 @@
 // Composants de base
 export { default as ChatFullscreenV2 } from './ChatFullscreenV2';
+export { default as ChatWidgetFab } from './ChatWidgetFab';
+export { default as ChatWidgetRoot } from './ChatWidgetRoot';
 // ChatModeToggle supprimé
 // ChatSidebar supprimé - utilise SidebarUltraClean
 export { default as ChatInput } from './ChatInput';

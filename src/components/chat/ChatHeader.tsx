@@ -10,7 +10,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Menu, Bot } from 'lucide-react';
+import { Menu, Bot, X } from 'lucide-react';
 import type { Agent } from '@/types/chat';
 import AgentInfoDropdown from './AgentInfoDropdown';
 import { ChatCanvasDropdown } from './ChatCanvasDropdown';
@@ -35,6 +35,7 @@ export interface ChatHeaderProps {
   onSelectCanva?: (canvaId: string, noteId: string) => void;
   onCloseCanva?: (canvaId: string, options?: { delete?: boolean }) => void | Promise<void>;
   canOpenCanva?: boolean;
+  onCloseWidget?: () => void;
 }
 
 /**
@@ -56,7 +57,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   onOpenNewCanva,
   onSelectCanva,
   onCloseCanva,
-  canOpenCanva = true
+  canOpenCanva = true,
+  onCloseWidget
 }) => {
   // ✅ Realtime canva : hook monté ici pour rester actif toute la durée de vie du chat
   // (ChatHeader reste monté, contrairement au dropdown qui peut se fermer)
@@ -117,7 +119,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       </div>
 
       <div className="chatgpt-header-right">
-        {canOpenCanva && onOpenNewCanva && onSelectCanva && onCloseCanva && (
+        {!onCloseWidget && canOpenCanva && onOpenNewCanva && onSelectCanva && onCloseCanva && (
           <ChatCanvasDropdown
             chatSessionId={chatSessionId}
             activeCanvaId={activeCanvaId}
@@ -128,29 +130,65 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             disabled={!isAuthenticated || authLoading}
           />
         )}
-        {/* Bouton réduire */}
-        <Link
-          href="/"
-          className="chatgpt-reduce-btn-header"
-          aria-label="Réduire le chat"
-          title="Réduire le chat"
-        >
-          <svg 
-            width="20" 
-            height="20" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
+        {onCloseWidget ? (
+          <>
+            <Link
+              href="/private/chat"
+              className="chatgpt-reduce-btn-header"
+              aria-label="Agrandir le chat"
+              title="Agrandir le chat"
+              onClick={() => onCloseWidget()}
+            >
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <polyline points="4 14 10 14 10 20"></polyline>
+                <polyline points="20 10 14 10 14 4"></polyline>
+                <line x1="14" y1="10" x2="21" y2="3"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+            </Link>
+            <button
+              type="button"
+              onClick={onCloseWidget}
+              className="chatgpt-reduce-btn-header"
+              aria-label="Fermer le chat"
+              title="Fermer le chat"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </>
+        ) : (
+          <Link
+            href="/"
+            className="chatgpt-reduce-btn-header"
+            aria-label="Réduire le chat"
+            title="Réduire le chat"
           >
-            <polyline points="4 14 10 14 10 20"></polyline>
-            <polyline points="20 10 14 10 14 4"></polyline>
-            <line x1="14" y1="10" x2="21" y2="3"></line>
-            <line x1="3" y1="21" x2="10" y2="14"></line>
-          </svg>
-        </Link>
+            <svg 
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <polyline points="4 14 10 14 10 20"></polyline>
+              <polyline points="20 10 14 10 14 4"></polyline>
+              <line x1="14" y1="10" x2="21" y2="3"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </Link>
+        )}
       </div>
     </div>
   );
