@@ -70,10 +70,15 @@
   }
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   color: var(--color-text-primary, #d0d0d0);
   background: var(--color-bg-primary, #121212);
   height: 100vh;
+  overflow-x: hidden;
 }
 
 @media (prefers-color-scheme: dark) {

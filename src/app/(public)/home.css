@@ -13,6 +13,9 @@
   max-width: none !important;
   margin: 0 !important;
   width: 100% !important;
+  min-width: 0 !important; /* Permet le resize correct */
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 :root {
@@ -57,8 +60,15 @@
    LAYOUT CENTRÉ
    ======================================== */
 
+/* Contenu principal home : resize fluide */
+.page-content-inner-home main {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
 .main-dashboard {
   width: 100%;
+  min-width: 0;
   display: flex;
   justify-content: center;
   padding: 0 var(--dashboard-space-md) var(--dashboard-space-xxl);
@@ -67,11 +77,13 @@
 
 .dashboard-center-stack {
   width: 100%;
+  min-width: 0;
   max-width: 1320px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--dashboard-space-xl);
+  box-sizing: border-box;
 }
 
 .dashboard-section.centered {
@@ -417,6 +429,10 @@
 /* Espacement sous titres : géré par .dashboard-section.centered ci-dessus */
 
 @media (max-width: 768px) {
+  .main-dashboard {
+    padding: 0 var(--dashboard-space-sm) var(--dashboard-space-xl);
+  }
+
   .dashboard-center-stack {
     gap: var(--dashboard-space-md, 1.5rem);
   }
@@ -437,6 +453,10 @@
 }
 
 @media (max-width: 480px) {
+  .main-dashboard {
+    padding: 0 var(--dashboard-space-xs) var(--dashboard-space-lg);
+  }
+
   .quick-actions-grid {
     gap: 0.35rem;
   }

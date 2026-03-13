@@ -15,11 +15,14 @@
 .page-wrapper {
   display: flex;
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
+  max-width: 100vw;
   background: var(--color-bg-primary);
   font-family: var(--font-chat-text, 'Manrope', -apple-system, sans-serif);
   font-weight: 500; /* Aligné sidebar : textes normaux un peu plus marqués (medium) */
   position: relative;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Sidebar fixe pour toutes les pages */
@@ -39,11 +42,13 @@
   flex: 1;
   margin-left: var(--sidebar-width);
   min-height: 100vh;
+  min-width: 0; /* Permet au flex child de shrink correctement */
   background: var(--color-bg-primary) !important;
   background-color: var(--color-bg-primary) !important;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Enfant direct (wrapper pt-0) : même fond pour continuité visuelle */

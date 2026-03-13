@@ -15,11 +15,14 @@
 .page-wrapper {
   display: flex;
   min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
   background: var(--color-bg-primary);
   font-family: var(--font-chat-text, 'Manrope', -apple-system, sans-serif);
   position: relative;
   overflow-x: hidden;
   padding-left: 0; /* Pas d'espace entre sidebar et contenu */
+  box-sizing: border-box;
 }
 
 /* Effet de texture subtile */
@@ -67,10 +70,13 @@
   flex: 1;
   margin-left: var(--sidebar-width) !important;
   min-height: 100vh;
+  min-width: 0; /* Permet au flex child de shrink et resize correctement */
   padding: var(--spacing-xl) 0 var(--spacing-xl) 0 !important; /* Pas de padding horizontal : contenu pleine largeur */
   background: var(--color-bg-primary) !important;
   background-color: var(--color-bg-primary) !important;
   position: relative;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Force l'alignement : main démarre exactement à la largeur sidebar */
@@ -96,9 +102,11 @@
 .page-content-inner {
   width: 100%;
   max-width: none;
+  min-width: 0; /* Permet au contenu de shrink correctement */
   margin: 0;
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
 }
 
 /* ==========================================================================

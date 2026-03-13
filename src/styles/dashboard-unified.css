@@ -430,6 +430,20 @@
    RESPONSIVE DESIGN DASHBOARD
    ========================================================================== */
 
+/* Tablette large */
+@media (max-width: 1200px) {
+  .dashboard-container {
+    padding: var(--dashboard-space-lg);
+    gap: var(--dashboard-space-lg);
+  }
+  
+  .dashboard-stats-grid,
+  .dashboard-actions-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--dashboard-space-md);
+  }
+}
+
 /* Tablette */
 @media (max-width: 1024px) {
   .dashboard-container {
@@ -439,7 +453,7 @@
   
   .dashboard-stats-grid,
   .dashboard-actions-grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: var(--dashboard-space-md);
   }
   
@@ -505,12 +519,21 @@
   .dashboard-container {
     padding: var(--dashboard-space-sm);
     gap: var(--dashboard-space-sm);
+    padding-left: var(--dashboard-space-md);
+    padding-right: var(--dashboard-space-md);
+  }
+  
+  .dashboard-stats-grid,
+  .dashboard-actions-grid {
+    grid-template-columns: 1fr;
+    gap: var(--dashboard-space-sm);
   }
   
   .dashboard-stat-card,
   .dashboard-action-card {
     padding: var(--dashboard-space-sm);
     gap: var(--dashboard-space-sm);
+    min-width: 0; /* Permet le shrink */
   }
   
   .dashboard-stat-icon,
