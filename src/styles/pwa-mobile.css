@@ -162,6 +162,9 @@ html.capacitor-native.chat-page .chatgpt-messages-container,
 html.capacitor-native.chat-page .chatgpt-messages-container::before {
   background: #000000 !important;
 }
+html.capacitor-native.chat-page .chatgpt-container {
+  --chat-input-fade-bg: #000000;
+}
 /* chat-bottom + input-container toujours transparent */
 html.capacitor-native.chat-page .chatgpt-chat-bottom,
 html.capacitor-native.chat-page .chatgpt-input-container,
@@ -329,6 +332,7 @@ html.capacitor-native .image-source-modal {
   
   .chatgpt-container {
     background: #000000 !important;
+    --chat-input-fade-bg: #000000;
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
     box-sizing: border-box;
@@ -624,6 +628,9 @@ html.capacitor-native .page-mobile-sidebar-header {
   body:has(.chatgpt-container) .chatgpt-messages-container {
     background: #000000 !important;
   }
+  body:has(.chatgpt-container) .chatgpt-container {
+    --chat-input-fade-bg: #000000;
+  }
   body:has(.chatgpt-container) .chatgpt-chat-bottom {
     background: transparent !important;
   }
@@ -650,6 +657,9 @@ html.capacitor-native .page-mobile-sidebar-header {
   html.chat-page:not(.capacitor-native) .chatgpt-messages-container,
   html.chat-page:not(.capacitor-native) .chatgpt-messages-container::before {
     background: #000000 !important;
+  }
+  html.chat-page:not(.capacitor-native) .chatgpt-container {
+    --chat-input-fade-bg: #000000;
   }
   html.chat-page:not(.capacitor-native) .chatgpt-chat-bottom {
     background: transparent !important;
