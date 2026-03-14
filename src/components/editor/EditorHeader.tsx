@@ -5,7 +5,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { FiEye, FiMoreHorizontal, FiX, FiEdit2, FiFeather } from 'react-icons/fi';
+import { FiEye, FiMoreHorizontal, FiX, FiEdit2, FiFeather, FiMaximize2, FiChevronsLeft } from 'react-icons/fi';
 import EditorToolbar from './EditorToolbar';
 import type { FullEditorInstance } from '@/types/editor';
 import type { ToolbarDebugInfo } from '@/types/editor';
@@ -44,6 +44,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   showToolbar = true,
   canEdit = true,
   noteId,
+  layoutMode = 'full',
   kebabMenu,
   onTranscriptionComplete
 }) => {
@@ -79,10 +80,32 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   return (
     <div className="editor-header">
       <div className="editor-header__row">
-      {/* Logo à gauche - Plume = bouton Home vers le dashboard */}
-      <Link href="/dashboard" className="editor-header__logo" aria-label="Retour au dashboard">
-        <FiFeather className="editor-header__logo-icon" />
-      </Link>
+      {/* Logo à gauche : plume (dashboard) ou chevrons + agrandir (side-panel) */}
+      {layoutMode === 'side-panel' && noteId ? (
+        <div className="editor-header__left-actions">
+          <button
+            type="button"
+            className="editor-header__logo"
+            onClick={onClose}
+            aria-label="Fermer l'onglet"
+            title="Fermer l'onglet"
+          >
+            <FiChevronsLeft className="editor-header__logo-icon" />
+          </button>
+          <Link
+            href={`/private/note/${noteId}`}
+            className="editor-header__logo"
+            aria-label="Ouvrir en pleine page"
+            title="Ouvrir en pleine page"
+          >
+            <FiMaximize2 className="editor-header__logo-icon" />
+          </Link>
+        </div>
+      ) : (
+        <Link href="/dashboard" className="editor-header__logo" aria-label="Retour au dashboard">
+          <FiFeather className="editor-header__logo-icon" />
+        </Link>
+      )}
 
       {/* Toolbar au centre - cachée en mode preview ET si showToolbar = false */}
       {/* ✅ FIX: Ne rendre EditorToolbar que si editor existe (évite race condition) */}
@@ -320,8 +343,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
           </button>
         )}
         
-        {/* 🔧 FIX: Bouton fermer masqué en mode readonly (page publique) */}
-        {!readonly && (
+        {/* 🔧 FIX: Bouton fermer masqué en mode readonly (page publique) et en side-panel (chevrons à gauche) */}
+        {!readonly && layoutMode !== 'side-panel' && (
           <button
             className="header-action-btn"
             onClick={onClose}

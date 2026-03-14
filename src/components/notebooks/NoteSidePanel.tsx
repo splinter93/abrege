@@ -105,7 +105,7 @@ export default function NoteSidePanel({ noteRef, onClose }: NoteSidePanelProps) 
           aria-label="Redimensionner le panneau"
         />
         <div className="note-side-panel-content">
-          <NoteViewer noteRef={noteRef} onClose={onClose} />
+          <NoteViewer noteRef={noteRef} onClose={onClose} layoutMode="side-panel" />
         </div>
       </aside>
     </>,

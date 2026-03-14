@@ -66,6 +66,10 @@
   overflow-y: auto;
 }
 
+.note-side-panel-content .editor-header {
+  border-bottom: none;
+}
+
 /* Afficher l’image header dans le panneau (même layout que la page note) */
 .note-side-panel-content .editor-header-image {
   display: block;

@@ -13,13 +13,14 @@ const Editor = React.lazy(() =>
 interface NoteViewerProps {
   noteRef: string;
   onClose?: () => void;
+  layoutMode?: 'full' | 'side-panel' | 'modal';
 }
 
 /**
  * Wrapper réutilisable : charge la note et affiche l'éditeur.
  * Utilisé par NoteSidePanel, NoteModal et la page note classique.
  */
-export default function NoteViewer({ noteRef, onClose }: NoteViewerProps) {
+export default function NoteViewer({ noteRef, onClose, layoutMode = 'full' }: NoteViewerProps) {
   const { user } = useAuth();
   const { note, loading, error } = useOptimizedNoteLoader({
     noteRef,
@@ -61,7 +62,7 @@ export default function NoteViewer({ noteRef, onClose }: NoteViewerProps) {
 
   return (
     <Suspense fallback={<SimpleLoadingState message="Chargement" />}>
-      <Editor noteId={resolvedNoteId} onClose={onClose} />
+      <Editor noteId={resolvedNoteId} onClose={onClose} layoutMode={layoutMode} />
     </Suspense>
   );
 }

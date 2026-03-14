@@ -56,6 +56,30 @@
    LOGO (gauche, position absolute) - Plume avec dégradé gris
    ========================================================================== */
 
+/* Side-panel : groupe chevrons + agrandir à gauche */
+.editor-header__left-actions {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editor-header__left-actions .editor-header__logo {
+  position: static;
+  transform: none;
+  width: 28px;
+  height: 28px;
+}
+
+.editor-header__left-actions .editor-header__logo-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .editor-header__logo {
   position: absolute;
   left: 4px; /* Fixe à 4px du bord gauche, ne bouge jamais */

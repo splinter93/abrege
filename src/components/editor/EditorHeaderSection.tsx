@@ -32,6 +32,7 @@ interface EditorHeaderSectionProps {
   currentTitle?: string;
   renderToolbar?: boolean;
   renderDocumentHeader?: boolean;
+  layoutMode?: 'full' | 'side-panel' | 'modal';
 }
 
 const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
@@ -50,6 +51,7 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
   currentTitle,
   renderToolbar = true,
   renderDocumentHeader = true,
+  layoutMode = 'full',
 }) => {
   const handleToolbarTranscription = React.useCallback(
     (text: string) => {
@@ -116,6 +118,7 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
           onTranscriptionComplete={handleToolbarTranscription}
           canEdit={canEdit}
           noteId={noteId}
+          layoutMode={layoutMode}
           kebabMenu={
             editorState.menus.kebabOpen && (
               <EditorKebabMenu

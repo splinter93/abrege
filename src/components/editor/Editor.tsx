@@ -56,6 +56,7 @@ interface EditorProps {
   onReady?: () => void;
   forceShowToolbar?: boolean; // Force la toolbar visible (pour canvas)
   toolbarContext?: 'editor' | 'canvas'; // Contexte pour séparer localStorage
+  layoutMode?: 'full' | 'side-panel' | 'modal'; // Mode side-panel : bouton agrandir à la place de la plume
 }
 
 const Editor: React.FC<EditorProps> = ({ 
@@ -67,7 +68,8 @@ const Editor: React.FC<EditorProps> = ({
   onEditorRef, 
   onReady, 
   forceShowToolbar, 
-  toolbarContext = 'editor' 
+  toolbarContext = 'editor',
+  layoutMode = 'full'
 }) => {
   // DEBUG: Log pour diagnostiquer
   React.useEffect(() => {
@@ -514,6 +516,7 @@ const Editor: React.FC<EditorProps> = ({
               onClose={onClose ?? (() => router.back())}
               currentTitle={editorState.document.title}
               renderDocumentHeader={false}
+              layoutMode={layoutMode}
             />
           )}
           documentHeader={(
@@ -532,6 +535,7 @@ const Editor: React.FC<EditorProps> = ({
               onClose={onClose ?? (() => router.back())}
               currentTitle={editorState.document.title}
               renderToolbar={false}
+              layoutMode={layoutMode}
             />
           )}
           a4Mode={editorState.ui.a4Mode}
