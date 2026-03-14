@@ -64,11 +64,13 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
-  
+  const [isCopyConfirmed, setIsCopyConfirmed] = useState(false);
+
   const renderIdRef = useRef<string>('');
   const abortControllerRef = useRef<AbortController | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const copyConfirmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const {
     timeout = 10000
@@ -214,6 +216,10 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
         clearTimeout(copyTimeoutRef.current);
         copyTimeoutRef.current = null;
       }
+      if (copyConfirmTimeoutRef.current) {
+        clearTimeout(copyConfirmTimeoutRef.current);
+        copyConfirmTimeoutRef.current = null;
+      }
     };
   }, []);
   
@@ -234,33 +240,35 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
             {/* Note: La toolbar du renderer est plus simple que celle de l'éditeur */}
             {showCopy && isRendered && (
               <button
-                className="toolbar-btn"
-                title="Copier le code"
-                onClick={async (event) => {
+                type="button"
+                className={`toolbar-btn copy-btn ${isCopyConfirmed ? 'copied' : ''}`}
+                title={isCopyConfirmed ? 'Copié !' : 'Copier le code'}
+                onClick={async () => {
+                  if (copyConfirmTimeoutRef.current) {
+                    clearTimeout(copyConfirmTimeoutRef.current);
+                  }
                   try {
                     await navigator.clipboard.writeText(content);
-                    // Animation de confirmation visuelle
-                    const button = event.currentTarget as HTMLButtonElement;
-                    const originalHTML = button.innerHTML;
-                    button.innerHTML = `
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    `;
-                    button.classList.add('copied');
-                    setTimeout(() => {
-                      button.innerHTML = originalHTML;
-                      button.classList.remove('copied');
+                    setIsCopyConfirmed(true);
+                    copyConfirmTimeoutRef.current = setTimeout(() => {
+                      setIsCopyConfirmed(false);
+                      copyConfirmTimeoutRef.current = null;
                     }, 2000);
                   } catch (err) {
                     console.error('Erreur lors de la copie:', err);
                   }
                 }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
+                {isCopyConfirmed ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                )}
               </button>
             )}
             {showExpand && isRendered && (

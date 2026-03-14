@@ -330,7 +330,7 @@
 
 /* Ligne sous l’en-tête = même bordure que le contour (sur fond sombre) */
 .chat-markdown tbody tr:first-child td {
-  border-top: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06)) !important;
+  border-top: var(--chat-code-block-border, var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06))) !important;
 }
 
 .chat-markdown thead {
@@ -370,13 +370,13 @@
   background: transparent; /* td gère le fond */
 }
 
-/* Wrapper tableau : bordure = chat input (variable garantie par chat-clean sur .chat-markdown) */
+/* Wrapper tableau : même bordure éclaircie que blocs code/mermaid (--chat-code-block-border) */
 .chat-markdown .table-wrapper-chat {
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   margin: var(--md-chat-table-margin) 0;
-  border: var(--chat-input-border, 1.2px solid rgba(255, 255, 255, 0.06)) !important;
+  border: var(--chat-code-block-border, var(--chat-input-border, 1.2px solid rgba(255, 255, 255, 0.06))) !important;
   border-radius: 12px;
   background: transparent;
   -webkit-overflow-scrolling: touch;

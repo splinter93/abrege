@@ -174,6 +174,14 @@
 .chat-markdown,
 .enhanced-markdown-message {
   --chat-input-border: 1.2px solid rgba(255, 255, 255, 0.06);
+  /* Bordure blocs code / mermaid / tableaux = un peu plus claire que l'input */
+  --chat-code-block-border: 1.2px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Blocs code/mermaid en chat : aucun filtre, bordure éclaircie */
+.chat-markdown .u-block {
+  filter: none !important;
+  border: var(--chat-code-block-border) !important;
 }
 
 /* Fade derrière l'input : même couleur que le fond de la page (surchargé en mobile si fond #000) */
@@ -877,8 +885,12 @@ body.chat-theme-glass .chatgpt-header {
 }
 
 .chatgpt-sidebar-toggle-btn-header:hover {
-  background: var(--chat-overlay-hover);
+  background: transparent;
   color: var(--chat-text-primary);
+}
+.chatgpt-sidebar-toggle-btn-header:hover svg {
+  color: var(--chat-text-primary);
+  filter: brightness(1.15);
 }
 
 .chatgpt-container.canva-active .chatgpt-header-left {

@@ -206,7 +206,7 @@ export const useOptimizedNoteLoader = ({
           const storeAfterUpdate = useFileSystemStore.getState();
           const noteAfterUpdate = storeAfterUpdate.notes[resolvedId];
           
-          console.log('[useOptimizedNoteLoader] ✅ Contenu mis à jour dans le store', {
+          simpleLogger.dev('[useOptimizedNoteLoader] ✅ Contenu mis à jour dans le store', {
             resolvedId,
             contentLength: updatedNoteData.markdown_content?.length || 0,
             wasInStore,
@@ -342,4 +342,73 @@ export const useOptimizedNoteLoader = ({
     refreshNote,
     preloadRelatedNotes
   };
-}; 
+};
+
+const prefetchRecentlyDone = new Map<string, number>();
+const PREFETCH_COOLDOWN_MS = 8000;
+
+/**
+ * Précharge une note dans le store (pour ouverture pleine page plus rapide au clic).
+ * À appeler au survol d'un lien vers une note (ex: mode normal sur ClasseursPage).
+ * Limite les appels répétés (cooldown par note) pour éviter de surcharger l'API.
+ */
+export async function prefetchNoteForNavigation(noteRef: string): Promise<void> {
+  const key = noteRef.trim();
+  if (!key) return;
+  const now = Date.now();
+  if ((prefetchRecentlyDone.get(key) ?? 0) + PREFETCH_COOLDOWN_MS > now) return;
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+    if (!userId) return;
+
+    const store = useFileSystemStore.getState();
+    const metadata = await retryWithBackoff(
+      () => optimizedNoteService.getNoteMetadata(noteRef, userId),
+      { maxRetries: 1, baseDelay: 300 }
+    );
+    const resolvedId = metadata.id;
+    if (store.notes[resolvedId]?.markdown_content !== undefined) return;
+
+    const content = await noteConcurrencyManager.getOrCreateLoadingPromise(
+      `note_content_${resolvedId}_${userId}`,
+      () =>
+        retryWithBackoff(
+          () => optimizedNoteService.getNoteContent(resolvedId, userId),
+          { maxRetries: 1, baseDelay: 500 }
+        )
+    );
+
+    const noteData: Note = {
+      id: resolvedId,
+      source_title: metadata.source_title || 'Untitled',
+      markdown_content: content.markdown_content,
+      html_content: content.html_content || '',
+      header_image: metadata.header_image || null,
+      header_image_offset: metadata.header_image_offset ?? 50,
+      header_image_blur: metadata.header_image_blur ?? 0,
+      header_image_overlay: metadata.header_image_overlay ?? 0,
+      header_title_in_image: metadata.header_title_in_image ?? false,
+      wide_mode: metadata.wide_mode || false,
+      font_family: metadata.font_family ?? undefined,
+      updated_at: metadata.updated_at,
+      created_at: metadata.created_at || new Date().toISOString(),
+      slug: metadata.slug || resolvedId,
+      public_url: '',
+      folder_id: metadata.folder_id ?? null,
+      classeur_id: metadata.classeur_id ?? null,
+      position: 0,
+      source_type: metadata.source_type ?? null,
+    };
+
+    if (useFileSystemStore.getState().notes[resolvedId]) {
+      useFileSystemStore.getState().updateNote(resolvedId, noteData);
+    } else {
+      useFileSystemStore.getState().addNote(noteData);
+    }
+    prefetchRecentlyDone.set(key, now);
+    prefetchRecentlyDone.set(resolvedId, now);
+  } catch {
+    // Prefetch silencieux en prod
+  }
+} 

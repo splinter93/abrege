@@ -42,6 +42,7 @@ import SimpleContextMenu from "@/components/SimpleContextMenu";
 import ClasseurEditModal from "@/components/ClasseurEditModal";
 import { NotebookSettingsModal, NoteSidePanel, NoteModal } from "@/components/notebooks";
 import { useNotebookSettingsStore } from "@/store/useNotebookSettingsStore";
+import { prefetchNoteForNavigation } from "@/hooks/useOptimizedNoteLoader";
 import RenameInput from "@/components/RenameInput";
 import type { Folder as UIFolder } from "@/components/types";
 import type { FileArticle } from "@/components/types";
@@ -423,6 +424,7 @@ const DRAG_JSON = "application/json";
 function ItemCard({
   item,
   onOpen,
+  onMouseEnter,
   onOptions,
   onDragStart,
   onDropOnFolder,
@@ -435,6 +437,7 @@ function ItemCard({
 }: {
   item: ClasseurItem;
   onOpen: () => void;
+  onMouseEnter?: () => void;
   onOptions?: (e: React.MouseEvent) => void;
   onDragStart?: (e: React.DragEvent, item: ClasseurItem) => void;
   onDropOnFolder?: (e: React.DragEvent, folderId: string) => void;
@@ -474,6 +477,7 @@ function ItemCard({
         } ${isDragging ? "opacity-40 scale-[0.97]" : ""}`}
         onClick={() => !isRenaming && onOpen()}
         onKeyDown={(e) => e.key === "Enter" && !isRenaming && onOpen()}
+        onMouseEnter={onMouseEnter}
         draggable={!!onDragStart && !isRenaming}
         onDragStart={(e) => {
           setIsDragging(true);
@@ -533,6 +537,7 @@ function ItemCard({
 function ItemListRow({
   item,
   onOpen,
+  onMouseEnter,
   onOptions,
   onDragStart,
   onDropOnFolder,
@@ -545,6 +550,7 @@ function ItemListRow({
 }: {
   item: ClasseurItem;
   onOpen: () => void;
+  onMouseEnter?: () => void;
   onOptions?: (e: React.MouseEvent) => void;
   onDragStart?: (e: React.DragEvent, item: ClasseurItem) => void;
   onDropOnFolder?: (e: React.DragEvent, folderId: string) => void;
@@ -578,6 +584,7 @@ function ItemListRow({
         } ${isDragging ? "opacity-40" : ""}`}
         onClick={() => !isRenaming && onOpen()}
         onKeyDown={(e) => e.key === "Enter" && !isRenaming && onOpen()}
+        onMouseEnter={onMouseEnter}
         draggable={!!onDragStart && !isRenaming}
         onDragStart={(e) => {
           setIsDragging(true);
@@ -638,6 +645,7 @@ function ClasseursContent({
   onViewModeChange,
   searchQuery,
   onItemOpen,
+  onItemMouseEnter,
   onItemContextMenu,
   onDragStartItem,
   onDropOnFolder,
@@ -659,6 +667,7 @@ function ClasseursContent({
   onViewModeChange: (mode: ViewMode) => void;
   searchQuery: string;
   onItemOpen: (item: ClasseurItem) => void;
+  onItemMouseEnter?: (item: ClasseurItem) => void;
   onItemContextMenu: (e: React.MouseEvent, item: ClasseurItem) => void;
   onDragStartItem?: (e: React.DragEvent, item: ClasseurItem) => void;
   onDropOnFolder?: (e: React.DragEvent, folderId: string | null) => void;
@@ -789,6 +798,7 @@ function ClasseursContent({
               key={`${item.type}-${item.id}`}
               item={item}
               onOpen={() => onItemOpen(item)}
+              onMouseEnter={() => onItemMouseEnter?.(item)}
               onOptions={(e) => onItemContextMenu(e, item)}
               onDragStart={onDragStartItem}
               onDropOnFolder={onDropOnFolder}
@@ -817,6 +827,7 @@ function ClasseursContent({
               key={`${item.type}-${item.id}`}
               item={item}
               onOpen={() => onItemOpen(item)}
+              onMouseEnter={() => onItemMouseEnter?.(item)}
               onOptions={(e) => onItemContextMenu(e, item)}
               onDragStart={onDragStartItem}
               onDropOnFolder={onDropOnFolder}
@@ -1053,11 +1064,21 @@ export default function ClasseursPage() {
       if (item.type === "folder") {
         handleFolderOpen(item.id);
       } else {
-        const slug = item.slug || item.id;
-        handleOpenNote(slug);
+        // En mode normal : URL avec id pour affichage instantané si note déjà en store (prefetch)
+        const ref = noteOpeningMode === "normal" ? item.id : (item.slug || item.id);
+        handleOpenNote(ref);
       }
     },
-    [handleFolderOpen, handleOpenNote]
+    [handleFolderOpen, handleOpenNote, noteOpeningMode]
+  );
+
+  const handleItemMouseEnter = useCallback(
+    (item: ClasseurItem) => {
+      if (noteOpeningMode === "normal" && item.type === "file") {
+        prefetchNoteForNavigation(item.id);
+      }
+    },
+    [noteOpeningMode]
   );
 
   const handleItemContextMenu = useCallback((e: React.MouseEvent, item: ClasseurItem) => {
@@ -1298,6 +1319,7 @@ export default function ClasseursPage() {
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
                 onItemOpen={handleItemOpen}
+                onItemMouseEnter={handleItemMouseEnter}
                 onItemContextMenu={handleItemContextMenu}
                 onDragStartItem={() => {}}
                 onDropOnFolder={handleDropOnFolder}

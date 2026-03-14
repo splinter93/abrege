@@ -177,6 +177,23 @@ body.chat-theme-glass .chat-markdown .u-block {
   color: #22c55e ;
 }
 
+/* Check vert : path + polyline (icône copié) */
+.ProseMirror .toolbar-btn.copied svg,
+.markdown-body .toolbar-btn.copied svg,
+.chat-markdown-content .toolbar-btn.copied svg,
+.chat-markdown .toolbar-btn.copied svg,
+.unified-block-toolbar .toolbar-btn.copied svg,
+.toolbar-btn.copy-btn.copied svg,
+.toolbar-btn.mermaid-copy-btn.copied svg {
+  color: #22c55e !important;
+}
+.chat-markdown .toolbar-btn.copied svg path,
+.chat-markdown .toolbar-btn.copied svg polyline,
+.toolbar-btn.copy-btn.copied svg path,
+.toolbar-btn.copy-btn.copied svg polyline {
+  stroke: #22c55e !important;
+}
+
 /* Force l'affichage des icônes SVG dans les boutons */
 .ProseMirror .toolbar-btn svg,
 .markdown-body .toolbar-btn svg,
@@ -604,12 +621,12 @@ body.chat-theme-glass .chat-markdown .u-block {
    CHAT SPECIFIC OVERRIDES - CHATGPT-LEVEL INTEGRATION
    ========================================================================== */
 
-/* Même bordure que chat input partout — sélecteur renforcé pour garantir application */
+/* Bordure code blocks = --chat-code-block-border (éclaircie) si définie, sinon --chat-input-border */
 .chat-markdown .u-block.u-block--code,
 .chat-markdown .u-block--code {
   margin: var(--blk-margin) 0 !important;
   background: transparent !important;
-  border: var(--chat-input-border, 1.2px solid rgba(255, 255, 255, 0.06)) !important;
+  border: var(--chat-code-block-border, var(--chat-input-border, 1.2px solid rgba(255, 255, 255, 0.06))) !important;
   border-radius: 12px !important; /* rounded-xl */
   overflow: hidden !important;
   filter: none !important;
@@ -624,7 +641,7 @@ body.chat-theme-glass .chat-markdown .u-block {
   justify-content: space-between !important;
 }
 .chat-markdown .u-block--code .u-block__body {
-  border-top: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06)) !important;
+  border-top: var(--chat-code-block-border, var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06))) !important;
   padding: 16px !important;
   flex: 1 !important;
   min-height: 0 !important;
@@ -662,12 +679,12 @@ body.chat-theme-glass .chat-markdown .u-block {
   line-height: 1.8 !important;
 }
 
-/* Mermaid : tout comme code block (contour, en-tête, body) — sélecteur renforcé */
+/* Mermaid : même bordure éclaircie que code block (--chat-code-block-border) */
 .chat-markdown .u-block.u-block--mermaid,
 .chat-markdown .u-block--mermaid {
   margin: var(--blk-margin) 0 !important;
   background: transparent !important;
-  border: var(--chat-input-border, 1.2px solid rgba(255, 255, 255, 0.06)) !important;
+  border: var(--chat-code-block-border, var(--chat-input-border, 1.2px solid rgba(255, 255, 255, 0.06))) !important;
   border-radius: 12px !important;
   overflow: hidden !important;
   filter: none !important;
@@ -686,7 +703,7 @@ body.chat-theme-glass .chat-markdown .u-block {
   padding: 0 !important;
 }
 .chat-markdown .u-block--mermaid .u-block__body {
-  border-top: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06)) !important;
+  border-top: var(--chat-code-block-border, var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06))) !important;
   padding: 16px !important;
   background: linear-gradient(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.08)), var(--chat-bg-primary, #0e1012) !important;
   min-height: 100px !important;
