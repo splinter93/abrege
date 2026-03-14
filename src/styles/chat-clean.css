@@ -377,8 +377,8 @@ body.chat-theme-grey .chatgpt-input-area {
 }
 
 body.chat-theme-grey .chatgpt-input-area:focus-within {
-  background: linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06)), var(--chat-bg-primary, #0e1012);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)), var(--chat-bg-primary, #0e1012);
+  border-color: rgba(255, 255, 255, 0.10);
 }
 
 /* ImageSourceModal — même surface que input en Grey */
@@ -585,8 +585,8 @@ body.chat-theme-glass .chatgpt-input-area {
 }
 
 body.chat-theme-glass .chatgpt-input-area:focus-within {
-  background: linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06)), var(--chat-bg-primary, #0e1012);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)), var(--chat-bg-primary, #0e1012);
+  border-color: rgba(255, 255, 255, 0.10);
 }
 
 /* ImageSourceModal — même surface que input en Glass Mode */
@@ -2276,8 +2276,8 @@ body.chat-theme-glass .chatgpt-messages > div {
 }
 
 .chatgpt-input-area:focus-within {
-  background: linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06)), var(--chat-bg-primary, #0e1012);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)), var(--chat-bg-primary, #0e1012);
+  border-color: rgba(255, 255, 255, 0.10);
 }
 
 /* État drag & drop */

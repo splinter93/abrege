@@ -434,8 +434,8 @@ html.capacitor-native .image-source-modal {
     transition: background 0.2s ease, border-color 0.2s ease;
   }
   .chatgpt-input-area:focus-within {
-    background: linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06)), var(--chat-bg-primary, #0e1012) !important;
-    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)), var(--chat-bg-primary, #0e1012) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
   }
   /* Pas de gradient sur le container (thème glass) = pas de bande marron */
   .chatgpt-container::before {
