@@ -1358,6 +1358,7 @@ body.chat-theme-glass .chatgpt-header {
   position: relative;
   margin-left: 0;
   transition: margin-left 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  background: var(--chat-bg-primary);
 }
 
 /* Quand la sidebar est ouverte, décaler le contenu */
@@ -1406,6 +1407,7 @@ body.chat-theme-glass .chatgpt-header {
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  background: var(--chat-bg-primary);
 }
 
 .chatgpt-main--desktop {
@@ -1428,6 +1430,7 @@ body.chat-theme-glass .chatgpt-header {
   min-height: 0;
   position: relative;
   padding-bottom: 0;
+  background: var(--chat-bg-primary);
 }
 
 .chatgpt-canva-pane-wrapper {
