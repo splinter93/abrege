@@ -7,6 +7,7 @@ import { markdownItNoteEmbed } from '@/extensions/markdown-it-note-embed';
 import { markdownItYouTubeEmbed } from '@/extensions/markdown-it-youtube-embed';
 import lowlight from '@/utils/lowlightInstance';
 import { toHtml } from 'hast-util-to-html';
+import { getCodeBlockLanguageLabel } from '@/utils/codeBlockLanguageLabels';
 // import { markdownItCallouts } from './markdownItCallouts'; // ⚠️ DÉSACTIVÉ: Casse le parsing markdown
 
 function highlightCode(code: string, lang: string): string {
@@ -86,15 +87,15 @@ export function createMarkdownIt() {
     const token = tokens[idx];
     const content = token.content;
     const lang = token.info.trim() || 'text';
-    const langUpper = lang.toUpperCase();
-    
+    const langLabel = getCodeBlockLanguageLabel(lang);
+
     // Mermaid : structure spéciale avec data-mermaid pour le rendu
-    if (lang === 'mermaid') {
+    if (lang.toLowerCase() === 'mermaid') {
       return `
         <div class="u-block u-block--mermaid" data-mermaid="true">
           <div class="u-block__toolbar">
             <div class="toolbar-left">
-              <span class="toolbar-label">MERMAID</span>
+              <span class="toolbar-label">Mermaid</span>
             </div>
             <div class="toolbar-right">
               <button class="toolbar-btn copy-btn" title="Copier le code Mermaid">
@@ -133,7 +134,7 @@ export function createMarkdownIt() {
       <div class="u-block u-block--code" data-language="${lang}">
         <div class="u-block__toolbar">
           <div class="toolbar-left">
-            <span class="toolbar-label">${langUpper}</span>
+            <span class="toolbar-label">${langLabel}</span>
           </div>
           <div class="toolbar-right">
             <button class="toolbar-btn copy-btn" title="Copier le code" data-content="${md.utils.escapeHtml(content).replace(/"/g, '&quot;')}">

@@ -112,7 +112,6 @@ body.chat-theme-glass .chat-markdown .u-block {
   font-size: 14px;
   font-weight: 700;
   color: var(--blk-muted);
-  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -471,7 +470,6 @@ body.chat-theme-glass .chat-markdown .u-block {
   font-size: 14px;
   font-weight: 700;
   color: var(--blk-muted);
-  text-transform: uppercase;
   letter-spacing: 0.5px;
   flex-shrink: 0; /* ✅ Titre toujours visible en responsive */
 }

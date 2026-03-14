@@ -1,11 +1,10 @@
 import { Node } from '@tiptap/pm/model';
 import type { Editor } from '@tiptap/react';
 
-// NOTE: La liste complète des langages n'est plus nécessaire ici car le sélecteur est supprimé.
-// On garde une fonction pour formatter le label au cas où.
+import { getCodeBlockLanguageLabel } from '@/utils/codeBlockLanguageLabels';
+
 function formatLanguageLabel(language: string | null | undefined): string {
-  if (!language || language === 'plaintext') return 'TEXT';
-  return language.toUpperCase();
+  return getCodeBlockLanguageLabel(language);
 }
 
 export function createCodeBlockToolbar(node: Node, getPos: () => number, editor: Editor) {

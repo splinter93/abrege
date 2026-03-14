@@ -9,6 +9,7 @@ import React, { useEffect, useRef } from 'react';
 import { formatPathsInElement } from '@/utils/formatPaths';
 import lowlight from '@/utils/lowlightInstance';
 import { toHtml } from 'hast-util-to-html';
+import { getCodeBlockLanguageLabel } from '@/utils/codeBlockLanguageLabels';
 
 interface MarkdownBlockRendererProps {
   html: string;
@@ -59,7 +60,7 @@ export const MarkdownBlockRenderer: React.FC<MarkdownBlockRendererProps> = ({
       
       // Détecter le langage
       const language = codeElement.className.match(/language-(\w+)/)?.[1] || '';
-      const languageDisplay = (language || 'Code').toUpperCase(); // Majuscule
+      const languageDisplay = getCodeBlockLanguageLabel(language || 'text');
       
       // Label de langue
       const languageLabel = document.createElement('span');

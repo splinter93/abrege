@@ -227,7 +227,7 @@ const MermaidRenderer: React.FC<MermaidRendererProps> = ({
     openMermaidModal(content);
   }, [content]);
 
-  const diagramType = getMermaidDiagramType(content).toUpperCase(); // MAJUSCULE
+  const diagramType = getMermaidDiagramType(content);
 
   return (
     <div className={`u-block u-block--mermaid ${className}`}>
