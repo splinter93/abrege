@@ -273,16 +273,16 @@
    TABLEAUX
    ============================================================================= */
 
-/* Tableaux : même design que blocs code (radius, header, bordure) */
+/* Tableaux : bordure externe = même que chat input (sur le wrapper) */
 .chat-markdown table {
   width: 100%;
   max-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin: var(--md-chat-table-margin) 0;
+  margin: 0;
   background: transparent;
-  border: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06));
-  border-radius: 12px; /* rounded-xl, comme code blocks */
+  border: none;
+  border-radius: 0;
   overflow: hidden;
   filter: none;
   table-layout: auto;
@@ -370,15 +370,17 @@
   background: transparent; /* td gère le fond */
 }
 
-/* Wrapper tableau scroll horizontal */
+/* Wrapper tableau : bordure = chat input (variable garantie par chat-clean sur .chat-markdown) */
 .chat-markdown .table-wrapper-chat {
   width: 100%;
-  overflow-x: auto; /* ✅ Auto sur TOUS devices (évite dépassement) */
+  overflow-x: auto;
+  overflow-y: hidden;
   margin: var(--md-chat-table-margin) 0;
-  border: none;
+  border: var(--chat-input-border, 1.2px solid rgba(255, 255, 255, 0.06)) !important;
+  border-radius: 12px;
   background: transparent;
   -webkit-overflow-scrolling: touch;
-  max-width: 100%; /* ✅ Force respect largeur container */
+  max-width: 100%;
 }
 
 .chat-markdown .table-wrapper-chat::-webkit-scrollbar {

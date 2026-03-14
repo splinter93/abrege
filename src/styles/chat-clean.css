@@ -136,15 +136,16 @@
      • Couleur (fond) : --chat-gradient-block (définie par thème plus bas :
        .chat-theme-dark, .chat-theme-grey, etc.). Utilisée partout via
        --blk-bg ou directement.
-     • Bordure : --chat-surface-border-color + --chat-surface-border-width.
-       --chat-surface-border en dérive (border + box-shadow tableaux).
+     • Bordure contour (input, bulles, blocs code/mermaid, tableaux, code inline, checkbox) :
+       --chat-input-border — source unique, utilisée partout dans unified-blocks.css et chat-markdown.css.
+     • Bordure surface : --chat-surface-border (dérivée de --chat-surface-border-color/width).
      • Radius : --chat-surface-radius (input, sidebar, bulles). Exception :
        --blk-radius = un peu moins, pour blocs code, mermaid et tableaux uniquement.
      ======================================== */
   --chat-surface-border-color: rgba(255, 255, 255, 0.05);
   --chat-surface-border-width: 1.5px;
   --chat-surface-border: var(--chat-surface-border-width) solid var(--chat-surface-border-color);
-  --chat-input-border: 1px solid rgba(255, 255, 255, 0.06); /* input, blocs code, mermaid, tableaux */
+  --chat-input-border: 1.2px solid rgba(255, 255, 255, 0.06); /* contour unique : input, bulle user, tableau, code block, mermaid, code inline, checkbox */
   --chat-sidebar-border: 1px solid rgba(39, 39, 42, 0.6); /* Sidebar, modales Linear */
   --chat-surface-radius: 18px; /* Proche des cartes dashboard (rounded-xl 12px) */
   --blk-radius: 18px; /* Même radius que input/bulles pour cohérence */
@@ -165,6 +166,14 @@
      CODE & TABLES BRIGHTNESS FILTER
      ======================================== */
   --code-brightness-filter: none; /* ✅ Pas de filtre par défaut - gradient suffit */
+}
+
+/* Réappliquer la variable sur le conteneur chat pour garantir la portée (code blocks, tableaux) */
+.chatgpt-container,
+.chatgpt-main-chat,
+.chat-markdown,
+.enhanced-markdown-message {
+  --chat-input-border: 1.2px solid rgba(255, 255, 255, 0.06);
 }
 
 /* ========================================
@@ -396,7 +405,7 @@ body.chat-theme-grey .scrivia-file-picker {
 /* Bulle user : transparences pour harmonie */
 body.chat-theme-grey .chatgpt-message-bubble-user {
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: var(--chat-input-border);
   border-radius: 16px;
 }
 
@@ -610,7 +619,7 @@ body.chat-theme-glass .chatgpt-message-bubble-user {
   background: rgba(255, 255, 255, 0.04);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: var(--chat-input-border);
   border-radius: 16px;
 }
 
@@ -1888,7 +1897,7 @@ body.chat-theme-glass .chatgpt-messages > div {
 /* Harmonisation couleurs - transparences pour fusion avec le fond */
 .chatgpt-message-bubble-user {
   background: rgba(255, 255, 255, 0.04); /* bg-white/[0.04] - surélevé */
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: var(--chat-input-border);
   border-radius: 16px; /* rounded-2xl */
   color: rgb(229 229 231); /* neutral-200 */
   max-width: 70%;
