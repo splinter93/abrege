@@ -957,16 +957,16 @@ body.chat-theme-glass .chatgpt-header {
   pointer-events: auto;
 }
 
-/* Sidebar chat : même bordure que le header (border-bottom) */
+/* Sidebar chat : même fond que la page + overlay qui éclaircit légèrement */
 .sidebar-ultra-clean {
   position: fixed;
   top: 44px; /* sous le header */
   left: 0;
   height: calc(100vh - 44px);
   width: 240px;
-  background: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)), var(--chat-bg-primary, #0e1012);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: linear-gradient(rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.01)), var(--chat-bg-primary, #0e1012);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-right: var(--chat-sidebar-border);
   border-radius: 0 !important;
   border-top: none;
@@ -1411,7 +1411,8 @@ body.chat-theme-glass .chatgpt-header {
 .chatgpt-main--desktop {
   flex-direction: row;
   gap: 0; /* ✅ Pas de padding entre chat et éditeur */
-  padding-right: 24px; /* ✅ Padding à droite conservé */
+  padding-left: 24px;
+  padding-right: 24px;
   align-items: stretch;
 }
 
