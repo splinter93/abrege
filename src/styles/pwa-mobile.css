@@ -60,7 +60,7 @@ html.capacitor-native body {
   --color-bg-secondary: #000000;
   --color-bg-header: #000000;
   --color-bg-block: #111111;
-  --chat-bg-primary: #000000;
+  /* --chat-bg-primary non écrasé : input et blocs chat gardent les couleurs du thème */
   --chat-gradient-block: #111111;
   --surface-background: #000000;
 }
@@ -151,8 +151,7 @@ html.capacitor-native.chat-page,
 html.capacitor-native.chat-page body {
   background: #000000 !important;
   background-image: none !important;
-  --color-bg-primary: #000000;
-  --chat-bg-primary: #000000;
+  /* --chat-bg-primary inchangé : input et blocs gardent les couleurs du thème */
 }
 html.capacitor-native.chat-page .chatgpt-container,
 html.capacitor-native.chat-page .chatgpt-main,
@@ -304,10 +303,7 @@ html.capacitor-native .image-source-modal {
 
 /* PWA standalone : fond noir complet partout, safe area incluse, sans bordure (Android/iOS) */
 @media (display-mode: standalone) {
-  :root {
-    --color-bg-primary: #000000;
-    --chat-bg-primary: #000000;
-  }
+  /* Fond noir par background explicite sur les éléments ; --chat-bg-primary inchangé pour input/blocs */
   html {
     background: #000000 !important;
     background-image: none !important;
@@ -615,8 +611,7 @@ html.capacitor-native .page-mobile-sidebar-header {
 /* ── PWA mobile (display-mode: standalone, non Capacitor) : fond noir + touch device ──── */
 @media (hover: none) and (pointer: coarse) {
   body:has(.chatgpt-container) {
-    --color-bg-primary: #000000;
-    --chat-bg-primary: #000000;
+    /* Fond page noir uniquement ; input et blocs gardent --chat-bg-primary du thème */
     background: #000000 !important;
     background-image: none !important;
   }
@@ -643,8 +638,7 @@ html.capacitor-native .page-mobile-sidebar-header {
 @media (max-width: 768px) {
   html.chat-page:not(.capacitor-native),
   html.chat-page:not(.capacitor-native) body {
-    --color-bg-primary: #000000;
-    --chat-bg-primary: #000000;
+    /* Ne pas toucher --chat-bg-primary / --color-bg-primary : input et blocs gardent leurs couleurs */
     background: #000000 !important;
     background-image: none !important;
   }
