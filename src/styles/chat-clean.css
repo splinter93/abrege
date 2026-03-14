@@ -146,7 +146,7 @@
   --chat-surface-border-width: 1.5px;
   --chat-surface-border: var(--chat-surface-border-width) solid var(--chat-surface-border-color);
   --chat-input-border: 1.2px solid rgba(255, 255, 255, 0.06); /* contour unique : input, bulle user, tableau, code block, mermaid, code inline, checkbox */
-  --chat-sidebar-border: 1px solid rgba(39, 39, 42, 0.6); /* Sidebar, modales Linear */
+  --chat-sidebar-border: 1px solid rgba(39, 39, 42, 0.45); /* Header bottom + sidebar right, assombrit moins */
   --chat-surface-radius: 18px; /* Proche des cartes dashboard (rounded-xl 12px) */
   --blk-radius: 18px; /* Même radius que input/bulles pour cohérence */
   
@@ -577,7 +577,7 @@ body.chat-theme-glass .sidebar-ultra-clean {
   background: rgba(255, 255, 255, 0.04) !important;
   backdrop-filter: var(--chat-glass-blur);
   -webkit-backdrop-filter: var(--chat-glass-blur);
-  border-right: var(--chat-input-border);
+  border-right: var(--chat-sidebar-border);
   border-radius: 0 !important;
   border-top: none;
 }
@@ -710,7 +710,7 @@ body.chat-theme-glass .chatgpt-header {
   height: 44px;
   z-index: 1001;
   font-family: var(--font-chat-ui);
-  border-bottom: 1px solid rgba(39, 39, 42, 0.6); /* border-zinc-800/60 — aligné header page agent */
+  border-bottom: var(--chat-sidebar-border);
 }
 
 .chatgpt-header-left {
@@ -940,7 +940,7 @@ body.chat-theme-glass .chatgpt-header {
   pointer-events: auto;
 }
 
-/* Sidebar chat : même bordure que chat input */
+/* Sidebar chat : même bordure que le header (border-bottom) */
 .sidebar-ultra-clean {
   position: fixed;
   top: 44px; /* sous le header */
@@ -950,7 +950,7 @@ body.chat-theme-glass .chatgpt-header {
   background: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)), var(--chat-bg-primary, #0e1012);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border-right: var(--chat-input-border);
+  border-right: var(--chat-sidebar-border);
   border-radius: 0 !important;
   border-top: none;
   border-bottom: none;
@@ -2944,8 +2944,10 @@ html.capacitor-native .chatgpt-message-user .bubble-buttons {
     font-size: 16px !important; /* Évite le zoom sur iOS */
   }
   
-  /* Mobile : sidebar en overlay au premier plan, noir absolu, pas de décalage du contenu */
+  /* Mobile : sidebar juste sous le header (56px + safe-top), sans chevauchement */
   .sidebar-ultra-clean {
+    top: calc(56px + var(--chat-safe-top)) !important;
+    height: calc(100dvh - 56px - var(--chat-safe-top) - var(--chat-safe-bottom, 0px)) !important;
     transform: translateX(-240px) !important;
     z-index: calc(var(--chat-z-sidebar) + 10) !important;
     background: #000000 !important;
