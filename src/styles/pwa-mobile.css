@@ -429,7 +429,7 @@ html.capacitor-native .image-source-modal {
   .chatgpt-input-area {
     background: #000000 !important;
     border: 1.5px solid rgba(255, 255, 255, 0.05) !important;
-    border-radius: 25px;
+    border-radius: var(--chat-surface-radius, 18px);
     box-shadow: none;
   }
   /* Pas de gradient sur le container (thème glass) = pas de bande marron */

@@ -145,8 +145,8 @@
   --chat-surface-border-width: 1.5px;
   --chat-surface-border: var(--chat-surface-border-width) solid var(--chat-surface-border-color);
   --chat-sidebar-border: 1px solid rgba(39, 39, 42, 0.6); /* Sidebar, modales Linear */
-  --chat-surface-radius: 25px;
-  --blk-radius: calc(var(--chat-surface-radius) - 4px); /* Exception : un peu moins pour code / mermaid / tableaux */
+  --chat-surface-radius: 18px; /* Proche des cartes dashboard (rounded-xl 12px) */
+  --blk-radius: 18px; /* Même radius que input/bulles pour cohérence */
   
   /* ========================================
      TRANSITIONS
@@ -572,7 +572,7 @@ body.chat-theme-glass .chatgpt-input-area {
   -webkit-backdrop-filter: var(--chat-glass-blur);
   border: 1px solid var(--chat-glass-border);
   border-top: 1px solid var(--chat-glass-border);
-  border-radius: var(--chat-radius-xl); /* Même border-radius que les autres thèmes */
+  border-radius: var(--chat-surface-radius);
 }
 
 /* ImageSourceModal — même surface que input en Glass Mode */
@@ -1856,7 +1856,7 @@ body.chat-theme-glass .chatgpt-messages > div {
 
 .chatgpt-message-bubble {
   padding: var(--chat-space-lg);
-  border-radius: var(--chat-radius-xl);
+  border-radius: var(--chat-surface-radius);
   font-size: var(--chat-font-size-base);
   line-height: var(--chat-line-height-relaxed);
   font-family: var(--font-chat-text);
