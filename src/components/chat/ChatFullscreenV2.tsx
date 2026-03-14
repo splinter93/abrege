@@ -108,6 +108,11 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
 
   // Mode vocal : envoi direct après transcription + TTS incrémental (phrase par phrase)
   const [isVocalMode, setVocalMode] = useState(false);
+
+  // Widget : sélection d'agent → création nouvelle conversation
+  const handleWidgetSelectAgent = useCallback(async (agent: Agent) => {
+    await createSession('Nouvelle conversation', agent.id);
+  }, [createSession]);
   const isVocalModeRef = useRef(false);
   isVocalModeRef.current = isVocalMode;
   const ttsBufferRef = useRef('');
@@ -627,6 +632,10 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
         onCloseCanva={uiActions.handleCloseCanva}
         canOpenCanva={isDesktop}
         onCloseWidget={variant === 'widget' ? onClose : undefined}
+        isWidget={variant === 'widget'}
+        agents={variant === 'widget' ? agents : undefined}
+        agentsLoading={variant === 'widget' ? agentsLoading : undefined}
+        onSelectAgent={variant === 'widget' ? handleWidgetSelectAgent : undefined}
       />
 
       {/* Zone hover invisible sidebar */}

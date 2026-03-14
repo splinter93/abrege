@@ -1,0 +1,117 @@
+/* Agent Selector Dropdown - Widget chat */
+
+.agent-selector-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 998;
+  background: transparent;
+}
+
+.agent-selector-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 200px;
+  max-width: 280px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--chat-gradient-block);
+  border: var(--chat-surface-border);
+  border-radius: var(--chat-surface-radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  padding: 8px;
+  z-index: 999;
+  animation: agentSelectorSlideDown 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes agentSelectorSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.agent-selector-menu-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--chat-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 10px 8px;
+  margin-bottom: 4px;
+  font-family: var(--font-chat-ui);
+}
+
+.agent-selector-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-family: var(--font-chat-ui);
+  text-align: left;
+}
+
+.agent-selector-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.agent-selector-item--selected {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.agent-selector-item--selected:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.agent-selector-item--loading,
+.agent-selector-item--empty {
+  cursor: default;
+  color: var(--chat-text-muted);
+  font-size: 13px;
+}
+
+.agent-selector-item--loading:hover,
+.agent-selector-item--empty:hover {
+  background: transparent;
+}
+
+.agent-selector-item-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.agent-selector-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.agent-selector-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--chat-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

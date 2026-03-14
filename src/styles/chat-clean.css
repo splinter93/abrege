@@ -789,6 +789,13 @@ body.chat-theme-glass .chatgpt-header {
   border-radius: 8px;
 }
 
+/* Widget : sélecteur avec chevron */
+.chat-active-agent--selector .agent-selector-chevron {
+  margin-left: 2px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
 .agent-icon {
   display: flex;
   align-items: center;

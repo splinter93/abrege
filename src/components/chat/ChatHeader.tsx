@@ -8,11 +8,12 @@
  * - Reduce button
  */
 
-import React from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
-import { Menu, Bot, X } from 'lucide-react';
+import { Menu, Bot, X, ChevronDown } from 'lucide-react';
 import type { Agent } from '@/types/chat';
 import AgentInfoDropdown from './AgentInfoDropdown';
+import AgentSelectorDropdown from './AgentSelectorDropdown';
 import { ChatCanvasDropdown } from './ChatCanvasDropdown';
 import { useCanvaRealtime } from '@/hooks/chat/useCanvaRealtime';
 
@@ -36,6 +37,11 @@ export interface ChatHeaderProps {
   onCloseCanva?: (canvaId: string, options?: { delete?: boolean }) => void | Promise<void>;
   canOpenCanva?: boolean;
   onCloseWidget?: () => void;
+  /** Mode widget : sélecteur d'agent au lieu du dropdown info */
+  isWidget?: boolean;
+  agents?: Agent[];
+  agentsLoading?: boolean;
+  onSelectAgent?: (agent: Agent) => void;
 }
 
 /**
@@ -58,11 +64,19 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   onSelectCanva,
   onCloseCanva,
   canOpenCanva = true,
-  onCloseWidget
+  onCloseWidget,
+  isWidget = false,
+  agents = [],
+  agentsLoading = false,
+  onSelectAgent
 }) => {
+  const agentButtonRef = useRef<HTMLButtonElement>(null);
+
   // ✅ Realtime canva : hook monté ici pour rester actif toute la durée de vie du chat
   // (ChatHeader reste monté, contrairement au dropdown qui peut se fermer)
   useCanvaRealtime(chatSessionId, true);
+
+  const showAgentSelector = isWidget && onSelectAgent;
 
   return (
     <div className="chatgpt-header">
@@ -79,15 +93,18 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Agent actif ou agent introuvable */}
-        {selectedAgent ? (
+        {/* Agent actif : sélecteur (widget) ou bouton info (fullscreen) */}
+        {(selectedAgent || (showAgentSelector && !agentNotFound)) ? (
           <div className="chat-active-agent-wrapper" style={{ position: 'relative' }}>
             <button
-              className="chat-active-agent"
+              ref={agentButtonRef}
+              className={`chat-active-agent ${showAgentSelector ? 'chat-active-agent--selector' : ''}`}
               onClick={onToggleAgentDropdown}
-              aria-label="Informations de l'agent"
+              aria-label={showAgentSelector ? "Choisir un agent" : "Informations de l'agent"}
+              aria-expanded={showAgentSelector ? agentDropdownOpen : undefined}
+              aria-haspopup={showAgentSelector ? 'listbox' : undefined}
             >
-              {selectedAgent.profile_picture ? (
+              {selectedAgent?.profile_picture ? (
                 <img
                   src={selectedAgent.profile_picture}
                   alt={selectedAgent.display_name || selectedAgent.name}
@@ -98,15 +115,31 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                   <Bot size={16} />
                 </span>
               )}
-              <span className="agent-name">{selectedAgent.display_name || selectedAgent.name}</span>
+              <span className="agent-name">
+                {selectedAgent ? (selectedAgent.display_name || selectedAgent.name) : 'Choisir un agent'}
+              </span>
+              {showAgentSelector && (
+                <ChevronDown className="agent-selector-chevron" size={14} />
+              )}
             </button>
 
-            {/* Dropdown d'info agent */}
-            <AgentInfoDropdown
-              agent={selectedAgent}
-              isOpen={agentDropdownOpen}
-              onClose={() => onToggleAgentDropdown()}
-            />
+            {showAgentSelector ? (
+              <AgentSelectorDropdown
+                selectedAgent={selectedAgent}
+                agents={agents}
+                loading={agentsLoading}
+                isOpen={agentDropdownOpen}
+                onToggle={onToggleAgentDropdown}
+                onSelectAgent={onSelectAgent}
+                anchorRef={agentButtonRef}
+              />
+            ) : selectedAgent ? (
+              <AgentInfoDropdown
+                agent={selectedAgent}
+                isOpen={agentDropdownOpen}
+                onClose={() => onToggleAgentDropdown()}
+              />
+            ) : null}
           </div>
         ) : agentNotFound ? (
           <div className="chat-active-agent-wrapper">
