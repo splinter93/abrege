@@ -604,33 +604,49 @@ body.chat-theme-glass .chat-markdown .u-block {
    CHAT SPECIFIC OVERRIDES - CHATGPT-LEVEL INTEGRATION
    ========================================================================== */
 
-/* Override chat-specific styles for code blocks - Hérite du style unifié */
+/* Même bordure que chat input partout */
 .chat-markdown .u-block--code {
-  /* Hérite des styles .u-block génériques avec gradient */
   margin: var(--blk-margin) 0 !important;
+  background: transparent !important;
+  border: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06)) !important;
+  border-radius: 12px !important; /* rounded-xl */
+  overflow: hidden !important;
+  filter: none !important;
+}
+
+.chat-markdown .u-block--code .u-block__toolbar {
+  background: rgba(255, 255, 255, 0.04) !important; /* surélevé */
+  border-bottom: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06)) !important;
+  padding: 8px 12px !important; /* moins de padding horizontal */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+.chat-markdown .u-block--code .u-block__toolbar .toolbar-right {
+  padding: 0 !important;
 }
 
 .chat-markdown .u-block--code .u-block__body {
-  padding: 16px 20px !important;
+  padding: 16px !important; /* p-4 */
   flex: 1 !important;
   min-height: 0 !important;
   overflow: auto !important;
   font-family: var(--mono) !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   line-height: 1.8 !important;
-  background: transparent !important;
-  color: var(--blk-fg) !important;
+  background: linear-gradient(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.12)), var(--chat-bg-primary, #0e1012) !important; /* fond app légèrement assombri */
+  color: rgb(212 212 216) !important; /* text-neutral-300 */
 }
 
 .chat-markdown .u-block--code pre {
   background: transparent !important;
-  color: var(--blk-fg) !important;
+  color: inherit !important;
   border: none !important;
   border-radius: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
   font-family: var(--mono) !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   line-height: 1.8 !important;
   overflow-x: auto !important;
   white-space: pre !important;
@@ -639,10 +655,37 @@ body.chat-theme-glass .chat-markdown .u-block {
 .chat-markdown .u-block--code pre code {
   background: none !important;
   padding: 0 !important;
-  color: var(--blk-fg) !important;
+  color: inherit !important;
   font-family: var(--mono) !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   line-height: 1.8 !important;
+}
+
+/* Mermaid : tout comme code block (contour, en-tête, body) */
+.chat-markdown .u-block--mermaid {
+  margin: var(--blk-margin) 0 !important;
+  background: transparent !important;
+  border: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06)) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  filter: none !important;
+}
+.chat-markdown .u-block--mermaid .u-block__toolbar {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-bottom: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06)) !important;
+  border-radius: 0 !important; /* comme code block, pas de radius sur l’en-tête */
+  padding: 8px 12px !important; /* moins de padding horizontal */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+.chat-markdown .u-block--mermaid .u-block__toolbar .toolbar-right {
+  padding: 0 !important;
+}
+.chat-markdown .u-block--mermaid .u-block__body {
+  padding: 16px !important;
+  background: linear-gradient(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.12)), var(--chat-bg-primary, #0e1012) !important;
+  min-height: 100px !important;
 }
 
 /* Mermaid blocks integration */

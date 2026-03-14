@@ -197,15 +197,15 @@
    ============================================================================= */
 
 .chat-markdown code:not(pre code) {
-  background: var(--blk-bg); /* ✅ Surface variable (couleur + bordure) */
-  border: var(--chat-surface-border);
+  background: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)), var(--chat-bg-primary, #0e1012);
+  border: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06));
   border-radius: var(--chat-radius-md, 0.25rem); /* radius proportionné à l’inline */
   padding: 0.15rem 0.375rem; /* vertical réduit pour moins serrer quand 2 codes sur 2 lignes */
   font-family: var(--mono, var(--font-monospace)); /* ✅ Même police que les blocs de code */
   font-size: 0.85em; /* ✅ Légère réduction vs texte */
   color: var(--blk-fg); /* ✅ Texte gris comme code blocks */
   font-weight: 500; /* ✅ Aligné visuellement avec les blocs de code */
-  filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Même brightness */
+  filter: none;
 }
 
 /* =============================================================================
@@ -273,52 +273,64 @@
    TABLEAUX
    ============================================================================= */
 
+/* Tableaux : même design que blocs code (radius, header, bordure) */
 .chat-markdown table {
   width: 100%;
-  max-width: 100%; /* ✅ Ne jamais dépasser container */
-  border-collapse: separate; /* separate + border-spacing:0 = bordure nette comme les blocs code */
+  max-width: 100%;
+  border-collapse: separate;
   border-spacing: 0;
   margin: var(--md-chat-table-margin) 0;
-  background: var(--blk-bg); /* ✅ Surface variable (couleur + bordure) */
-  border: var(--chat-surface-border);
-  border-radius: var(--blk-radius); /* Exception : même radius que blocs code/mermaid */
+  background: transparent;
+  border: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06));
+  border-radius: 12px; /* rounded-xl, comme code blocks */
   overflow: hidden;
-  filter: var(--code-brightness-filter, brightness(1.18)); /* ✅ Même brightness que code blocks */
-  table-layout: auto; /* ✅ Layout automatique pour colonnes adaptatives */
+  filter: none;
+  table-layout: auto;
 }
 
-/* Coins arrondis sur les cellules pour que le fond ne dépasse pas de la bordure */
+/* Coins arrondis */
 .chat-markdown thead tr:first-child th:first-child {
-  border-top-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-top-left-radius: 12px;
 }
 .chat-markdown thead tr:first-child th:last-child {
-  border-top-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-top-right-radius: 12px;
 }
 .chat-markdown tbody tr:last-child td:first-child {
-  border-bottom-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-bottom-left-radius: 12px;
 }
 .chat-markdown tbody tr:last-child td:last-child {
-  border-bottom-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-bottom-right-radius: 12px;
 }
-/* Tableau sans thead : première ligne = tbody, arrondir le haut */
+/* Pas de radius sur la 1re ligne tbody (bordure sous l’en-tête doit rester droite) */
 .chat-markdown tbody tr:first-child td:first-child {
-  border-top-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-top-left-radius: 0;
 }
 .chat-markdown tbody tr:first-child td:last-child {
-  border-top-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-top-right-radius: 0;
 }
 
+/* Header : 40px, pas de border-bottom (ligne portée par la 1re ligne tbody) */
 .chat-markdown th {
-  padding: 12px 16px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+  line-height: 40px !important;
+  vertical-align: middle !important;
   text-align: left !important;
-  font-weight: var(--chat-weight-semibold) !important; /* ✅ En-tête en gras */
-  font-size: var(--chat-text-base) !important; /* ✅ Même taille que le texte du chat */
+  font-weight: var(--chat-weight-semibold) !important;
+  font-size: var(--chat-text-base) !important;
   color: var(--chat-text-primary, #e4e4e7) !important;
-  background: transparent !important;
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.04) !important; /* ✅ Ligne ultra-fine */
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-bottom: none !important;
   font-family: var(--font-chat-text) !important;
-  white-space: normal !important; /* ✅ Permet wrap (évite dépassement headers longs) */
-  word-break: break-word !important; /* ✅ Casse mots très longs */
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+/* Ligne sous l’en-tête = même bordure que le contour (sur fond sombre) */
+.chat-markdown tbody tr:first-child td {
+  border-top: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06)) !important;
 }
 
 .chat-markdown thead {
@@ -326,13 +338,13 @@
 }
 
 .chat-markdown thead th {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.04) !important;
 }
 
 .chat-markdown td {
   padding: 10px 16px !important;
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.03) !important; /* ✅ Ligne ultra-fine */
-  background: transparent !important; /* ✅ Lignes transparentes */
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.03) !important;
+  background: transparent !important;
   color: var(--chat-text-primary, #e4e4e7) !important; /* ✅ Même couleur que le texte du chat */
   font-size: var(--chat-text-base) !important; /* ✅ Même taille que le texte du chat */
   font-weight: var(--chat-weight-normal) !important; /* ✅ Même poids que le texte du chat */

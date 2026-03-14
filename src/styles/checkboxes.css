@@ -136,13 +136,13 @@ ul[data-type="taskList"] li::marker,
   float: none !important;
   position: relative !important;
   
-  /* Styles visuels - surface variable (couleur + bordure + radius) */
+  /* Styles visuels - même couleur et bordure que chat input */
   appearance: none !important;
   -webkit-appearance: none !important;
-  border: var(--chat-surface-border, 1.5px solid rgba(255,255,255,0.05)) !important;
-  border-radius: 6px !important; /* Légèrement moins que --chat-radius-md pour les checkboxes */
-  background: var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)) !important;
-  filter: var(--code-brightness-filter, brightness(1.18)) !important;
+  border: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06)) !important;
+  border-radius: 6px !important;
+  background: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)), var(--chat-bg-primary, #0e1012) !important;
+  filter: none !important;
   cursor: pointer !important;
   box-shadow: none !important;
   outline: none !important;
@@ -179,13 +179,13 @@ ul[data-type="taskList"] .task-item-wrapper > label > input[type="checkbox"] {
   float: none !important;
   position: relative !important;
   
-  /* Styles visuels - surface variable (couleur + bordure + radius) */
+  /* Styles visuels - même couleur et bordure que chat input */
   appearance: none !important;
   -webkit-appearance: none !important;
-  border: var(--chat-surface-border, 1.5px solid rgba(255,255,255,0.05)) !important;
-  border-radius: 6px !important; /* Légèrement moins que --chat-radius-md pour les checkboxes */
-  background: var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)) !important;
-  filter: var(--code-brightness-filter, brightness(1.18)) !important;
+  border: var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06)) !important;
+  border-radius: 6px !important;
+  background: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)), var(--chat-bg-primary, #0e1012) !important;
+  filter: none !important;
   cursor: pointer !important;
   box-shadow: none !important;
   outline: none !important;

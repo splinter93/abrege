@@ -425,12 +425,17 @@ html.capacitor-native .image-source-modal {
   
   /* Pas d’override input en PWA : même padding / div que le mode normal (chat-clean.css) */
   
-  /* Barre de saisie : même style que web (Grok-like) sur PWA/Capacitor */
+  /* Barre de saisie : fond app + overlay blanc (PWA/Capacitor) */
   .chatgpt-input-area {
-    background: #000000 !important;
-    border: 1.5px solid rgba(255, 255, 255, 0.05) !important;
-    border-radius: var(--chat-surface-radius, 18px);
+    background: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)), var(--chat-bg-primary, #0e1012) !important;
+    border: var(--chat-input-border) !important;
+    border-radius: 16px;
     box-shadow: none;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .chatgpt-input-area:focus-within {
+    background: linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06)), var(--chat-bg-primary, #0e1012) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
   }
   /* Pas de gradient sur le container (thème glass) = pas de bande marron */
   .chatgpt-container::before {
