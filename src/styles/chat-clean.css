@@ -1354,6 +1354,7 @@ body.chat-theme-glass .chatgpt-header {
 .chatgpt-content {
   display: flex;
   flex: 1;
+  min-height: 0; /* Permet au flex de transmettre la hauteur correctement */
   overflow: hidden;
   position: relative;
   margin-left: 0;
@@ -1419,7 +1420,13 @@ body.chat-theme-glass .chatgpt-header {
 }
 
 .chatgpt-main--canva-open {
-  /* Hook pour états spécifiques (scroll, padding) */
+  align-items: center;
+  height: calc(100vh - 44px); /* Hauteur fixe = viewport sous le header pour que le centrage ait un effet */
+  max-height: calc(100vh - 44px);
+  padding-left: 0;
+}
+.chatgpt-main--canva-open .chatgpt-main-chat {
+  align-self: stretch;
 }
 
 .chatgpt-main-chat {
@@ -1441,7 +1448,6 @@ body.chat-theme-glass .chatgpt-header {
   .chatgpt-canva-pane-wrapper {
     display: flex;
     flex-direction: column;
-    height: 100%;
     flex: 0 0 0;
     width: 0;
     overflow: hidden;
@@ -1454,8 +1460,12 @@ body.chat-theme-glass .chatgpt-header {
 
   .chatgpt-canva-pane-wrapper--open {
     flex: 0 0 auto;
+    align-self: center;
+    height: auto; /* Sizes to content (pane), allows vertical centering */
     pointer-events: auto;
     transition-delay: 0s;
+    margin-top: auto;
+    margin-bottom: auto;
   }
 
   .chatgpt-canva-pane-wrapper--closed {
@@ -1464,7 +1474,7 @@ body.chat-theme-glass .chatgpt-header {
     transition-delay: 0.18s; /* Laisser l'animation interne se terminer */
   }
   .chatgpt-canva-pane-wrapper__inner {
-    height: 100%;
+    height: auto;
     opacity: 0;
     transform: scale(0.98);
     transition:
@@ -1579,12 +1589,13 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   position: relative;
   background: var(--color-bg-primary);
   border: 2px solid rgba(255, 255, 255, 0.05);
-  border-radius: 18px;
-  padding: 0;
+  border-radius: 16px; /* Même radius que chatgpt-input-area */
+  padding: 0 0 20px 0;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  min-height: calc(100vh - 80px);
-  max-height: calc(100vh - 80px);
+  /* 44px header + 20px margin-top + 20px margin-bottom = 84px */
+  min-height: calc(100vh - 84px);
+  max-height: calc(100vh - 84px);
   overflow: clip; /* ✅ FIX: clip au lieu de hidden pour ne pas casser sticky */
   margin-bottom: 0;
 }
@@ -2083,7 +2094,7 @@ body.chat-theme-glass .chatgpt-messages > div {
 
 .chatgpt-chat-footer {
   flex-shrink: 0;
-  min-height: 24px;
+  min-height: 20px;
   padding-bottom: var(--chat-safe-bottom);
   background: var(--chat-bg-primary);
 }
@@ -2101,7 +2112,7 @@ body.chat-theme-glass .chatgpt-messages > div {
 
 .chatgpt-main--canva-open .chatgpt-input-container {
   justify-content: center;
-  padding: var(--chat-safe-top) calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
+  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
 }
 
 .chatgpt-main--canva-open .chatgpt-input-area {
