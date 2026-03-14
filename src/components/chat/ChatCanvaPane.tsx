@@ -290,12 +290,14 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
         }
       })
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
+        if (status === 'SUBSCRIBED' || status === 'joined') {
           setIsEventSourceConnected(true);
-          logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Supabase channel subscribed', { noteId, channelName });
+          logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Supabase channel subscribed', { noteId, channelName, status });
         } else if (status === 'CHANNEL_ERROR') {
           setIsEventSourceConnected(false);
           logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Supabase channel error', { noteId });
+        } else {
+          logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Channel status', { status, noteId });
         }
       });
 

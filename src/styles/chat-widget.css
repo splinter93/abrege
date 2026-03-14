@@ -19,7 +19,7 @@
   background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.01), transparent);
   border: var(--border-block);
   --chat-container-width: 100%;
-  --chat-padding-horizontal: 24px;
+  --chat-padding-horizontal: 12px;
 }
 
 /* Masquer la sidebar */
@@ -48,9 +48,10 @@
   margin-left: 0;
 }
 
-/* Centrage horizontal : annuler le padding-right asymétrique du desktop */
+/* Centrage horizontal : padding symétrique (chat et input centrés) */
 .chatgpt-container--widget .chatgpt-main--desktop {
-  padding-right: 0;
+  padding-left: var(--chat-padding-horizontal);
+  padding-right: var(--chat-padding-horizontal);
 }
 
 .chatgpt-container--widget .chatgpt-main-chat {
