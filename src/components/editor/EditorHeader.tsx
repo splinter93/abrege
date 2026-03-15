@@ -26,7 +26,7 @@ interface EditorHeaderProps {
   showToolbar?: boolean;
   canEdit?: boolean; // Si l'user peut éditer (pour afficher le lien vers l'éditeur)
   noteId?: string; // ID de la note pour le lien vers l'éditeur
-  layoutMode?: 'full' | 'side-panel';
+  layoutMode?: 'full' | 'side-panel' | 'modal';
   kebabMenu?: React.ReactNode; // ✅ Menu kebab rendu dans le header
   onTranscriptionComplete?: (text: string) => void;
 }
