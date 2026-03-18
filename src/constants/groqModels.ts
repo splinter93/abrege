@@ -387,6 +387,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: false
   },
   {
+    id: 'openrouter/minimax-m2.7',
+    name: 'MiniMax M2.7',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 204800,
+    maxOutput: 8192,
+    speed: 550,
+    pricing: { input: 'Variable', output: 'Variable' },
+    description: 'MiniMax M2.7 via OpenRouter (Liminality)',
+    recommended: false
+  },
+  {
     id: 'openrouter/qwen3-vl-30b-a3b-instruct',
     name: 'Qwen3 VL 30B A3B Instruct',
     category: 'liminality',
