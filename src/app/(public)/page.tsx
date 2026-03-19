@@ -27,6 +27,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { openImageModal } from "@/components/chat/ImageModal";
+import SimpleContextMenu from "@/components/SimpleContextMenu";
 import "./home.css";
 import "./dashboard.css";
 
@@ -99,17 +100,16 @@ function NoteCard({
   title,
   image,
   isPrivate,
+  onContextMenu,
 }: {
   id: string;
   title: string;
   image: string;
   isPrivate: boolean;
+  onContextMenu?: (e: React.MouseEvent) => void;
 }) {
-  return (
-    <Link
-      href={`/private/note/${id}`}
-      className="group relative w-52 h-36 sm:w-72 sm:h-48 rounded-xl overflow-hidden shrink-0 bg-zinc-900/20"
-    >
+  const content = (
+    <>
       <img
         src={image}
         alt=""
@@ -130,6 +130,31 @@ function NoteCard({
       >
         <MoreHorizontal className="w-4 h-4 text-white/80" />
       </button>
+    </>
+  );
+
+  const cardClass = "group relative w-52 h-36 sm:w-72 sm:h-48 rounded-xl overflow-hidden shrink-0 bg-zinc-900/20";
+
+  if (onContextMenu) {
+    return (
+      <div
+        className={cardClass}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onContextMenu(e);
+        }}
+      >
+        <Link href={`/private/note/${id}`} className="block absolute inset-0 z-[1]">
+          {content}
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <Link href={`/private/note/${id}`} className={cardClass}>
+      {content}
     </Link>
   );
 }
@@ -250,6 +275,12 @@ function AuthenticatedHomeContent({
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [errorNotes, setErrorNotes] = useState<string | null>(null);
   const [errorFiles, setErrorFiles] = useState<string | null>(null);
+  const [noteContextMenu, setNoteContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    note: ApiNote | null;
+  }>({ visible: false, x: 0, y: 0, note: null });
 
   const displayName = user.username || user.email?.split("@")[0] || "User";
 
@@ -286,6 +317,16 @@ function AuthenticatedHomeContent({
     };
     loadNotes();
   }, [getAccessToken]);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && noteContextMenu.visible) {
+        setNoteContextMenu((c) => ({ ...c, visible: false }));
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [noteContextMenu.visible]);
 
   useEffect(() => {
     const loadFiles = async () => {
@@ -393,6 +434,97 @@ function AuthenticatedHomeContent({
     setCommandValue("");
   }, [commandValue, router]);
 
+  const handleContextMenuNote = useCallback((e: React.MouseEvent, note: ApiNote) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setNoteContextMenu({ visible: true, x: e.clientX, y: e.clientY, note });
+  }, []);
+
+  const closeNoteContextMenu = useCallback(() => {
+    setNoteContextMenu({ visible: false, x: 0, y: 0, note: null });
+  }, []);
+
+  /** Handlers du menu contextuel des cartes notes (alignés sur notebooks / NotesCarouselNotion) */
+  const handleOpenNote = useCallback(() => {
+    if (noteContextMenu.note) router.push(`/private/note/${noteContextMenu.note.id}`);
+    closeNoteContextMenu();
+  }, [noteContextMenu.note, router, closeNoteContextMenu]);
+
+  const handleRenameNote = useCallback(async () => {
+    const note = noteContextMenu.note;
+    if (!note) return;
+    const newName = window.prompt("Nouveau titre de la note :", note.source_title);
+    if (!newName?.trim()) {
+      closeNoteContextMenu();
+      return;
+    }
+    try {
+      const token = await getAccessToken();
+      if (!token) return;
+      const res = await fetch(`/api/v2/note/${note.id}/update`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "X-Client-Type": "dashboard",
+        },
+        body: JSON.stringify({ source_title: newName.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Erreur renommage");
+      }
+      setNotes((prev) =>
+        prev.map((n) => (n.id === note.id ? { ...n, source_title: newName.trim() } : n))
+      );
+    } catch (err) {
+      logger.error("[HomePage] Erreur renommage note:", err);
+      handleError(err, "renommage note");
+    }
+    closeNoteContextMenu();
+  }, [noteContextMenu.note, getAccessToken, closeNoteContextMenu, handleError]);
+
+  const handleDeleteNote = useCallback(async () => {
+    const note = noteContextMenu.note;
+    if (!note) return;
+    if (!window.confirm(`Supprimer la note « ${note.source_title } » ?`)) {
+      closeNoteContextMenu();
+      return;
+    }
+    try {
+      const token = await getAccessToken();
+      if (!token) return;
+      const res = await fetch(`/api/v2/delete/note/${note.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "X-Client-Type": "dashboard",
+        },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Erreur suppression");
+      }
+      setNotes((prev) => prev.filter((n) => n.id !== note.id));
+    } catch (err) {
+      logger.error("[HomePage] Erreur suppression note:", err);
+      handleError(err, "suppression note");
+    }
+    closeNoteContextMenu();
+  }, [noteContextMenu.note, getAccessToken, closeNoteContextMenu, handleError]);
+
+  const handleCopyNoteId = useCallback(async () => {
+    if (noteContextMenu.note) {
+      try {
+        await navigator.clipboard.writeText(noteContextMenu.note.id);
+      } catch (err) {
+        logger.error("[HomePage] Copie ID:", err);
+      }
+    }
+    closeNoteContextMenu();
+  }, [noteContextMenu.note, closeNoteContextMenu]);
+
   return (
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-home w-full max-w-none mx-0 bg-[var(--color-bg-primary)] min-h-full">
@@ -496,9 +628,22 @@ function AuthenticatedHomeContent({
                   title={note.source_title}
                   image={note.header_image || DEFAULT_NOTE_IMAGE}
                   isPrivate={note.share_settings?.visibility === "private"}
+                  onContextMenu={(e) => handleContextMenuNote(e, note)}
                 />
               ))}
           </div>
+          <SimpleContextMenu
+            visible={noteContextMenu.visible}
+            x={noteContextMenu.x}
+            y={noteContextMenu.y}
+            options={[
+              { label: "Ouvrir", onClick: handleOpenNote },
+              { label: "Renommer", onClick: handleRenameNote },
+              { label: "Copier l'ID", onClick: handleCopyNoteId },
+              { label: "Supprimer", onClick: handleDeleteNote },
+            ]}
+            onClose={closeNoteContextMenu}
+          />
         </section>
 
         {/* 4. Latest Files */}
