@@ -464,3 +464,119 @@
   }
 }
 
+/* Modal de confirmation suppression agent — compacte */
+.agent-delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.agent-delete-modal {
+  width: 100%;
+  max-width: 360px;
+  background: var(--color-bg-block, #18181b);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.agent-delete-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.agent-delete-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.agent-delete-modal-title {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.agent-delete-modal-close {
+  padding: 4px;
+  border-radius: 6px;
+  color: #71717a;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.agent-delete-modal-close:hover:not(:disabled) {
+  color: #d4d4d8;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.agent-delete-modal-body {
+  padding: 16px;
+}
+
+.agent-delete-modal-message {
+  margin: 0;
+  font-size: 13px;
+  color: #a1a1aa;
+}
+
+.agent-delete-modal-footer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 16px;
+  justify-content: flex-end;
+}
+
+.agent-delete-modal-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.agent-delete-modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.agent-delete-modal-btn-cancel {
+  background: rgba(255, 255, 255, 0.06);
+  color: #d4d4d8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.agent-delete-modal-btn-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.agent-delete-modal-btn-danger {
+  background: #dc2626;
+  color: white;
+}
+
+.agent-delete-modal-btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+

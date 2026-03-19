@@ -119,26 +119,22 @@ export class AgentCRUDService {
   }
 
   /**
-   * Supprimer un agent spécialisé
+   * Supprimer un agent spécialisé définitivement (hard delete)
+   * Les FK agent_mcp_servers et agent_callables sont en CASCADE, editor_prompts en SET NULL
    */
   async deleteAgent(agentId: string, traceId: string): Promise<boolean> {
     try {
-      logger.dev(`[AgentCRUDService] 🗑️ Suppression agent ${agentId}`, { traceId });
+      logger.dev(`[AgentCRUDService] 🗑️ Suppression définitive agent ${agentId}`, { traceId });
 
-      // Vérifier que l'agent existe
       const existingAgent = await this.agentConfigService.getAgentByIdOrSlug(agentId);
       if (!existingAgent) {
         logger.warn(`[AgentCRUDService] ❌ Agent ${agentId} non trouvé`);
         return false;
       }
 
-      // Supprimer de la base (soft delete en désactivant)
       const { error } = await supabase
         .from('agents')
-        .update({ 
-          is_active: false,
-          updated_at: new Date().toISOString()
-        })
+        .delete()
         .eq('id', existingAgent.id);
 
       if (error) {
@@ -146,13 +142,11 @@ export class AgentCRUDService {
         throw new Error(`Erreur base de données: ${error.message}`);
       }
 
-      // Invalider le cache
       this.agentConfigService.invalidateAgentCache(agentId);
 
-      logger.dev(`[AgentCRUDService] ✅ Agent ${agentId} supprimé (désactivé)`, { traceId });
+      logger.dev(`[AgentCRUDService] ✅ Agent ${agentId} supprimé définitivement`, { traceId });
 
       return true;
-
     } catch (error) {
       logger.error(`[AgentCRUDService] ❌ Erreur suppression agent ${agentId}:`, error);
       throw error;

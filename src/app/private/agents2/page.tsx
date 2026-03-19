@@ -6,6 +6,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useSpecializedAgents } from '@/hooks/useSpecializedAgents';
 import PageWithSidebarLayout from '@/components/PageWithSidebarLayout';
@@ -15,7 +16,7 @@ import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import AgentCard from '@/components/agents/AgentCard';
 import AgentListItem from '@/components/agents/AgentListItem';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
-import { Search, LayoutGrid, List, Plus } from 'lucide-react';
+import { Search, LayoutGrid, List, Plus, X, Trash2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { simpleLogger } from '@/utils/logger';
 import '@/styles/main.css';
@@ -39,6 +40,8 @@ function AgentsV2Content() {
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [agentToDelete, setAgentToDelete] = useState<SpecializedAgentConfig | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const isMobile = useIsMobile();
   const effectiveViewMode = isMobile ? 'list' : viewMode;
 
@@ -77,18 +80,26 @@ function AgentsV2Content() {
     router.push('/private/agents2/new');
   }, [router]);
 
-  const handleDeleteAgent = useCallback(
-    async (agent: SpecializedAgentConfig) => {
-      const name = agent.display_name || agent.name || 'cet agent';
-      if (!window.confirm(`Supprimer l'agent « ${name} » ?`)) return;
-      try {
-        await deleteAgent(agent.id);
-      } catch (e) {
-        simpleLogger.error('[AgentsV2] Failed to delete agent', e);
-      }
-    },
-    [deleteAgent]
-  );
+  const handleDeleteClick = useCallback((agent: SpecializedAgentConfig) => {
+    setAgentToDelete(agent);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!agentToDelete) return;
+    setDeleting(true);
+    try {
+      await deleteAgent(agentToDelete.id);
+      setAgentToDelete(null);
+    } catch (e) {
+      simpleLogger.error('[AgentsV2] Failed to delete agent', e);
+    } finally {
+      setDeleting(false);
+    }
+  }, [agentToDelete, deleteAgent]);
+
+  const handleDeleteCancel = useCallback(() => {
+    if (!deleting) setAgentToDelete(null);
+  }, [deleting]);
 
   const handleToggleAgent = useCallback(
     async (agent: SpecializedAgentConfig) => {
@@ -228,7 +239,7 @@ function AgentsV2Content() {
                   agent={agent}
                   onEdit={() => handleOpenAgent(agent)}
                   onToggle={() => handleToggleAgent(agent)}
-                  onDelete={() => handleDeleteAgent(agent)}
+                  onDelete={() => handleDeleteClick(agent)}
                 />
               ))}
             </div>
@@ -243,7 +254,7 @@ function AgentsV2Content() {
                   agent={agent}
                   onEdit={() => handleOpenAgent(agent)}
                   onToggle={() => handleToggleAgent(agent)}
-                  onDelete={() => handleDeleteAgent(agent)}
+                  onDelete={() => handleDeleteClick(agent)}
                 />
               ))}
             </div>
@@ -251,6 +262,66 @@ function AgentsV2Content() {
             </div>
           </div>
         </div>
+
+        {/* Modal de confirmation de suppression définitive */}
+        <AnimatePresence>
+          {agentToDelete && (
+            <motion.div
+              className="agent-delete-modal-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={handleDeleteCancel}
+            >
+              <motion.div
+                className="agent-delete-modal"
+                initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="agent-delete-modal-header">
+                  <div className="agent-delete-modal-icon">
+                    <Trash2 className="w-4 h-4" />
+                  </div>
+                  <h3 className="agent-delete-modal-title">
+                    Supprimer {agentToDelete.display_name || agentToDelete.name} ?
+                  </h3>
+                  <button
+                    type="button"
+                    className="agent-delete-modal-close"
+                    onClick={handleDeleteCancel}
+                    disabled={deleting}
+                    aria-label="Fermer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="agent-delete-modal-body">
+                  <p className="agent-delete-modal-message">Cette action est irréversible.</p>
+                </div>
+                <div className="agent-delete-modal-footer">
+                  <button
+                    type="button"
+                    className="agent-delete-modal-btn agent-delete-modal-btn-cancel"
+                    onClick={handleDeleteCancel}
+                    disabled={deleting}
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    className="agent-delete-modal-btn agent-delete-modal-btn-danger"
+                    onClick={() => void handleDeleteConfirm()}
+                    disabled={deleting}
+                  >
+                    {deleting ? 'Suppression…' : 'Supprimer'}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
     </PageWithSidebarLayout>
   );
 }
