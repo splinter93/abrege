@@ -7,6 +7,7 @@ import { ToolCall, ToolResult } from '../types/apiV2Types';
 import { ApiV2HttpClient } from '../clients/ApiV2HttpClient';
 import { simpleLogger as logger } from '@/utils/logger';
 import { validateToolArgs } from '../validation/toolSchemas';
+import { parseToolArgumentsSafe } from '../schemas';
 
 /**
  * Type pour les handlers de tools
@@ -201,8 +202,8 @@ export class ApiV2ToolExecutor {
    */
   private parseArguments(argumentsStr: string, toolName: string): Record<string, unknown> {
     try {
-      // 1. Parser le JSON
-      const parsed = JSON.parse(argumentsStr || '{}');
+      // 1. Parser le JSON (robuste aux concaténations du stream)
+      const parsed = parseToolArgumentsSafe(argumentsStr || '{}');
       
       // 2. Nettoyer les paramètres null
       const cleaned = this.cleanNullParameters(parsed);

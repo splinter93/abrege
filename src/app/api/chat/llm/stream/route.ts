@@ -944,7 +944,27 @@ export async function POST(request: NextRequest) {
                       }
                       // ✅ Accumuler les arguments (peuvent venir en plusieurs chunks)
                       if (tc.function?.arguments) {
-                        existing.function.arguments += tc.function.arguments;
+                        const existingArgs = existing.function.arguments;
+                        const newFragment = tc.function.arguments;
+                        let skipDuplicate = false;
+                        if (newFragment === existingArgs || newFragment.trim() === existingArgs.trim()) {
+                          skipDuplicate = true;
+                        } else if (newFragment.trim().startsWith('{')) {
+                          try {
+                            const existingObj = JSON.parse(existingArgs);
+                            if (existingObj && typeof existingObj === 'object' && !Array.isArray(existingObj)) {
+                              const newObj = JSON.parse(newFragment.trim());
+                              if (newObj && typeof newObj === 'object' && !Array.isArray(newObj) && JSON.stringify(newObj) === JSON.stringify(existingObj)) {
+                                skipDuplicate = true;
+                              }
+                            }
+                          } catch {
+                            // existing pas un seul objet (ex. déjà concaténé), on accumule
+                          }
+                        }
+                        if (!skipDuplicate) {
+                          existing.function.arguments += newFragment;
+                        }
                       }
                     }
                   }

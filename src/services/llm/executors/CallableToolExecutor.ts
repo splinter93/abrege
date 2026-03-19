@@ -10,6 +10,7 @@ import { ToolCall, ToolResult } from '../types/apiV2Types';
 import { simpleLogger as logger } from '@/utils/logger';
 import { TOOL_CALL_LIMITS } from '../config/constants';
 import { getLLMConfig } from '../config';
+import { parseToolArgumentsSafe } from '../schemas';
 
 /**
  * Requête d'exécution d'un callable
@@ -340,8 +341,8 @@ export class CallableToolExecutor {
         throw new Error(`Arguments doivent être une chaîne JSON, reçu: ${typeof argumentsStr}`);
       }
 
-      const parsed = JSON.parse(argumentsStr || '{}');
-      
+      const parsed = parseToolArgumentsSafe(argumentsStr || '{}');
+
       // Validation que c'est bien un objet
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
         throw new Error(`Arguments doivent être un objet JSON, reçu: ${typeof parsed}`);

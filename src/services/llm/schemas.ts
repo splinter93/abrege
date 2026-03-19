@@ -199,16 +199,61 @@ export const validateToolCalls = (toolCalls: unknown[]): { isValid: boolean; err
   };
 };
 
+/**
+ * Parse les arguments d'un tool call de façon robuste.
+ * Gère les cas où l'API renvoie le même JSON concaténé plusieurs fois
+ * (ex: {"ref":"Alteria"}{"ref":"Alteria"}...) en ne gardant que le premier objet.
+ */
+export function parseToolArgumentsSafe(raw: string): Record<string, unknown> {
+  const str = (raw ?? '').trim();
+  if (!str) return {};
+
+  let parseError: Error | null = null;
+  try {
+    const parsed = JSON.parse(str);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
+  } catch (e) {
+    parseError = e instanceof Error ? e : new Error(String(e));
+  }
+
+  if (!str.includes('}{')) {
+    throw parseError ?? new Error(`Arguments JSON invalides: chaîne non parseable`);
+  }
+
+  // Extraire le premier objet complet (du premier { au } équilibré)
+  let depth = 0;
+  let end = -1;
+  const start = str.indexOf('{');
+  if (start === -1) throw new Error(`Arguments JSON invalides: aucun objet trouvé`);
+
+  for (let i = start; i < str.length; i++) {
+    if (str[i] === '{') depth++;
+    else if (str[i] === '}') {
+      depth--;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+
+  if (end === -1) throw new Error(`Arguments JSON invalides: objet non fermé`);
+  const firstJson = str.slice(start, end + 1);
+  const parsed = JSON.parse(firstJson);
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed as Record<string, unknown>;
+  throw new Error(`Arguments JSON invalides: premier objet invalide`);
+}
+
 // 🎯 Validation des arguments JSON
 export const validateToolArguments = (argumentsStr: string): { isValid: boolean; parsed: unknown; error?: string } => {
   try {
-    const parsed = JSON.parse(argumentsStr);
+    const parsed = parseToolArgumentsSafe(argumentsStr);
     return { isValid: true, parsed };
   } catch (error) {
-    return { 
-      isValid: false, 
-      parsed: null, 
-      error: `Arguments JSON invalides: ${error instanceof Error ? error.message : 'Erreur inconnue'}` 
+    return {
+      isValid: false,
+      parsed: null,
+      error: `Arguments JSON invalides: ${error instanceof Error ? error.message : 'Erreur inconnue'}`
     };
   }
 };
