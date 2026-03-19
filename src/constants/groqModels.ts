@@ -283,6 +283,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: true
   },
   {
+    id: 'openrouter/mimo-v2-pro',
+    name: 'Xiaomi MiMo-V2-Pro',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 1048576,
+    maxOutput: 131072,
+    speed: 500,
+    pricing: { input: '$1.00', output: '$3.00' },
+    description: 'Xiaomi MiMo-V2-Pro via OpenRouter, contexte 1M, reasoning et outils',
+    recommended: false
+  },
+  {
     id: 'openrouter/kimi-k2-thinking',
     name: 'Kimi K2 Thinking',
     category: 'liminality',

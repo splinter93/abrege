@@ -97,6 +97,7 @@ const LIMINALITY_INFO: ProviderInfo = {
   },
   supportedModels: [
     'openrouter/mimo-v2-flash',
+    'openrouter/mimo-v2-pro',
     'openrouter/glm-5',
     'fireworks/glm-5',
     'openrouter/kimi-k2-thinking',
