@@ -60,6 +60,14 @@ const MarkdownPasteHandler = Extension.create<Options>({
         key,
         props: {
           handlePaste: (view, event) => {
+            // Ne pas intercepter le paste à l'intérieur d'un code block : garder le texte brut
+            const { $from } = view.state.selection;
+            for (let d = $from.depth; d > 0; d--) {
+              if ($from.node(d).type.name === 'codeBlock') {
+                return false;
+              }
+            }
+
             logger.dev('[MarkdownPasteHandler] 🚨 PASTE EVENT INTERCEPTÉ !');
 
             const data = (event as ClipboardEvent).clipboardData;
