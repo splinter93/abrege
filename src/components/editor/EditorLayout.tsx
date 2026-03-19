@@ -51,7 +51,9 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({
   return (
     <div className={`editor-layout editor-flex-column editor-full-width editor-full-height editor-bg-surface-1 ${rootClass}${a4Mode ? ' a4-mode' : ''}`}>
       {header}
-      {a4Mode ? <A4PaginatedEditor>{documentContent}</A4PaginatedEditor> : documentContent}
+      <div className="editor-layout__body">
+        {a4Mode ? <A4PaginatedEditor>{documentContent}</A4PaginatedEditor> : documentContent}
+      </div>
       {footer}
     </div>
   );

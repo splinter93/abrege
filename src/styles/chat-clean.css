@@ -168,11 +168,14 @@
   --code-brightness-filter: none; /* ✅ Pas de filtre par défaut - gradient suffit */
 }
 
-/* Réappliquer la variable sur le conteneur chat pour garantir la portée (code blocks, tableaux) */
+/* Réappliquer la variable sur le conteneur chat ET éditeur pour garantir la portée (code blocks, tableaux) */
 .chatgpt-container,
 .chatgpt-main-chat,
 .chat-markdown,
-.enhanced-markdown-message {
+.enhanced-markdown-message,
+.editor-content-wrapper,
+.noteLayout-content,
+.ProseMirror {
   --chat-input-border: 1.2px solid rgba(255, 255, 255, 0.06);
   /* Bordure blocs code / mermaid / tableaux = un peu plus claire que l'input */
   --chat-code-block-border: 1.2px solid rgba(255, 255, 255, 0.08);
@@ -717,7 +720,7 @@ body.chat-theme-glass .chatgpt-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--chat-space-md) var(--chat-space-xl);
+  padding: var(--chat-space-md) var(--chat-space-md);
   background: var(--chat-bg-primary);
   flex-shrink: 0;
   height: 44px;

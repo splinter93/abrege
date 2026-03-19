@@ -63,11 +63,42 @@
 .note-side-panel-content {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-side-panel-content > * {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Table des matières : masquée en side panel (sinon énorme bloc au-dessus du header) */
+.note-side-panel-content .editor-toc-fixed {
+  display: none;
+}
+
+/* Header fixe : le scroll est dans .editor-layout__body, pas sur tout le contenu */
+.note-side-panel-content .editor-layout {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .note-side-panel-content .editor-header {
+  flex-shrink: 0;
   border-bottom: none;
+}
+
+.note-side-panel-content .editor-layout__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* Afficher l’image header dans le panneau (même layout que la page note) */
