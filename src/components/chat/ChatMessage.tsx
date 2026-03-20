@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   ChatMessage as ChatMessageType, 
   isObservationMessage
@@ -38,6 +38,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const tts = useTextToSpeechContextOptional();
   const content = message?.content ?? '';
   const messageId = message?.id;
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [needsTruncation, setNeedsTruncation] = useState(false);
+  const userContentRef = useRef<HTMLDivElement>(null);
 
   if (!message) {
     logger.warn('ChatMessage: message is undefined');
@@ -103,6 +106,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     : () => logger.dev('Lecture vocale du message');
   const isVoicePlaying = tts?.isPlayingMessageId === messageId;
 
+  // Détecte si le message user dépasse 5 lignes (après rendu)
+  useEffect(() => {
+    if (role !== 'user' || !userContentRef.current) return;
+    const el = userContentRef.current;
+    setNeedsTruncation(el.scrollHeight > el.clientHeight + 2);
+  }, [content, role]);
+
   return (
     <div className={`chatgpt-message chatgpt-message-${role} ${className || ''}`}>
       {/* Images attachées (messages user uniquement) - au-dessus de la bulle */}
@@ -154,15 +164,35 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             {content && (
               <div className="chatgpt-message-content">
                 {role === 'user' ? (
-                  <UserMessageText 
-                    content={content}
-                    mentions={userMessage?.mentions}
-                    prompts={userMessage?.prompts}
-                  />
+                  <div
+                    className={`user-message-expandable${isExpanded ? ' user-message-expandable--open' : ''}`}
+                  >
+                    <div
+                      ref={userContentRef}
+                      className={`user-message-expandable__content${!isExpanded ? ' user-message-expandable__content--clamped' : ''}`}
+                    >
+                      <UserMessageText 
+                        content={content}
+                        mentions={userMessage?.mentions}
+                        prompts={userMessage?.prompts}
+                      />
+                    </div>
+                    {needsTruncation && (
+                      <button
+                        className={`user-message-expand-btn${isExpanded ? ' user-message-expand-btn--open' : ''}`}
+                        onClick={() => setIsExpanded(v => !v)}
+                        aria-label={isExpanded ? 'Réduire le message' : 'Afficher tout le message'}
+                        type="button"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                          <path d="M2.5 5L7 9.5L11.5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 ) : (
                   <EnhancedMarkdownMessage content={content} />
-                )}
-              </div>
+                )}              </div>
             )}
           </>
         )}

@@ -1958,6 +1958,51 @@ body.chat-theme-glass .chatgpt-messages > div {
   filter: brightness(1.05);
 }
 
+/* ── Expand / collapse messages user longs ─────────────────────────────── */
+.user-message-expandable {
+  position: relative;
+}
+
+.user-message-expandable__content--clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
+}
+
+.user-message-expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  bottom: -10px;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--chat-bg-primary, #0e1012);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  z-index: 1;
+}
+
+.user-message-expand-btn:hover {
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.user-message-expand-btn svg {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  flex-shrink: 0;
+}
+
+.user-message-expand-btn--open svg {
+  transform: rotate(180deg);
+}
+
 /* Images attachées dans les messages user - au-dessus de la bulle */
 .chatgpt-message-images {
   display: flex;
