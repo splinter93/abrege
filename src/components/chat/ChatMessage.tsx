@@ -164,9 +164,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             {content && (
               <div className="chatgpt-message-content">
                 {role === 'user' ? (
-                  <div
-                    className={`user-message-expandable${isExpanded ? ' user-message-expandable--open' : ''}`}
-                  >
+                  <div className="user-message-expandable">
                     <div
                       ref={userContentRef}
                       className={`user-message-expandable__content${!isExpanded ? ' user-message-expandable__content--clamped' : ''}`}
@@ -177,18 +175,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                         prompts={userMessage?.prompts}
                       />
                     </div>
-                    {needsTruncation && (
-                      <button
-                        className={`user-message-expand-btn${isExpanded ? ' user-message-expand-btn--open' : ''}`}
-                        onClick={() => setIsExpanded(v => !v)}
-                        aria-label={isExpanded ? 'Réduire le message' : 'Afficher tout le message'}
-                        type="button"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-                          <path d="M2.5 5L7 9.5L11.5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </button>
-                    )}
                   </div>
                 ) : (
                   <EnhancedMarkdownMessage content={content} />
@@ -212,6 +198,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       {/* Boutons d'action */}
       {content && !(role === 'assistant' && assistantMessage?.isStreaming) && (
         <div className="chatgpt-message-actions">
+          {/* Chevron expand/collapse — à gauche des actions, messages user longs uniquement */}
+          {role === 'user' && needsTruncation && (
+            <button
+              className={`user-message-expand-btn${isExpanded ? ' user-message-expand-btn--open' : ''}`}
+              onClick={() => setIsExpanded(v => !v)}
+              aria-label={isExpanded ? 'Réduire le message' : 'Afficher tout le message'}
+              type="button"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                <path d="M2.5 5L7 9.5L11.5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
           <BubbleButtons
             content={content}
             messageId={messageId}

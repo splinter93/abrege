@@ -1974,19 +1974,16 @@ body.chat-theme-glass .chatgpt-messages > div {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  bottom: -10px;
-  right: 0;
+  flex-shrink: 0;
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--chat-bg-primary, #0e1012);
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.45);
   cursor: pointer;
   padding: 0;
   transition: color 0.15s ease, border-color 0.15s ease;
-  z-index: 1;
 }
 
 .user-message-expand-btn:hover {
