@@ -76,6 +76,8 @@ export function useRealtime({
   const unsubscribeEventRef = useRef<(() => void) | null>(null);
   const isInitializingRef = useRef(false);
   const initTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // ✅ Timer de recovery : après toutes reconnexions échouées, reset isInitialized pour retry
+  const recoveryTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Refs pour les callbacks pour éviter les re-créations
   const onEventRef = useRef(onEvent);
@@ -168,6 +170,26 @@ export function useRealtime({
         });
         setState(newState);
         onStateChangeRef.current?.(newState);
+
+        // ✅ Recovery : si le service est définitivement déconnecté avec erreur
+        // (toutes les tentatives de reconnexion ont échoué), on reset isInitialized
+        // après un délai pour permettre une nouvelle tentative d'initialisation.
+        // La visibilité / focus déclenche déjà un retry dans RealtimeService,
+        // mais si l'utilisateur reste sur l'onglet, rien ne relance. Ce timer est le filet.
+        if (!newState.isConnected && !newState.isConnecting && newState.error) {
+          if (!recoveryTimerRef.current) {
+            recoveryTimerRef.current = setTimeout(() => {
+              recoveryTimerRef.current = null;
+              setIsInitialized(false); // Déclenche une nouvelle tentative d'init via useEffect
+            }, 15000); // 15s avant de réessayer
+          }
+        } else if (newState.isConnected) {
+          // Connexion rétablie : annuler le timer de recovery
+          if (recoveryTimerRef.current) {
+            clearTimeout(recoveryTimerRef.current);
+            recoveryTimerRef.current = null;
+          }
+        }
       });
 
       // S'abonner aux événements
@@ -251,6 +273,11 @@ export function useRealtime({
         initTimeoutRef.current = null;
       }
       
+      if (recoveryTimerRef.current) {
+        clearTimeout(recoveryTimerRef.current);
+        recoveryTimerRef.current = null;
+      }
+
       if (unsubscribeStateRef.current) {
         unsubscribeStateRef.current();
         unsubscribeStateRef.current = null;

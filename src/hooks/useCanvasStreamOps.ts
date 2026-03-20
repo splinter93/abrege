@@ -12,6 +12,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { logger, LogCategory } from '@/utils/logger';
+import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 
 // ============================================================================
 // TYPES
@@ -115,23 +116,14 @@ export function useCanvasStreamOps(
   }, [onAck, onConflict, onError]);
 
   /**
-   * Récupérer le token JWT
+   * Récupérer le token JWT via le singleton Supabase (robuste, pas de dépendance à localStorage)
    */
   const getAuthToken = useCallback(async (): Promise<string | null> => {
     try {
-      const supabaseAuth = localStorage.getItem('sb-localhost-auth-token');
-      if (supabaseAuth) {
-        const parsed = JSON.parse(supabaseAuth);
-        if (parsed.access_token) {
-          return parsed.access_token;
-        }
-      }
-      const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
-      for (const key of keys) {
-        const data = JSON.parse(localStorage.getItem(key) || '{}');
-        if (data.access_token) {
-          return data.access_token;
-        }
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        return session.access_token;
       }
     } catch (e) {
       logger.error(LogCategory.EDITOR, '[useCanvasStreamOps] Failed to get auth token', e);

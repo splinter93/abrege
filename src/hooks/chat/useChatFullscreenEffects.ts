@@ -225,10 +225,14 @@ export function useChatFullscreenEffects(
     // ✅ Vérifier aussi que le canva actif appartient à la session actuelle
     if (isCanvaOpen && activeCanvaId) {
       const activeCanva = canvaSessions[activeCanvaId];
-      // Si le canva actif appartient à la session actuelle, ne rien faire
-      if (activeCanva && activeCanva.chatSessionId === currentSession.id) {
-      return;
+      // ✅ BUG1 FIX: Si le canvas ouvert appartient à une AUTRE session, le close effect
+      // est en train de le fermer. On attend que isCanvaOpen passe à false (dépendance)
+      // avant de tenter l'auto-activation de la nouvelle session. Évite la double activation.
+      if (!activeCanva || activeCanva.chatSessionId !== currentSession.id) {
+        return;
       }
+      // Canvas déjà actif pour la session courante → rien à faire
+      return;
     }
 
     let isMounted = true;

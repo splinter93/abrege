@@ -102,6 +102,13 @@ export function useCanvaContextPayload({
       return;
     }
 
+    // ✅ BUG4 FIX: N'activer le polling que si le canvas est ouvert.
+    // Quand le canvas est fermé, on a déjà les données locales (Zustand) — inutile de
+    // taper l'API toutes les 15s. Le fetch initial ci-dessus suffit.
+    if (!isCanvaPaneOpen) {
+      return;
+    }
+
     const interval = setInterval(() => {
       fetchRemoteSessions();
     }, refreshIntervalMs);
@@ -109,7 +116,7 @@ export function useCanvaContextPayload({
     return () => {
       clearInterval(interval);
     };
-  }, [chatSessionId, fetchRemoteSessions, refreshIntervalMs]);
+  }, [chatSessionId, isCanvaPaneOpen, fetchRemoteSessions, refreshIntervalMs]);
 
   const mapRemoteSession = useCallback(
     (session: RemoteCanvaSession): CanvaContextSession => {

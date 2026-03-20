@@ -53,6 +53,15 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
   const startWidthRef = useRef(width);
   const [isEditorReady, setIsEditorReady] = useState(false);
   const [isEventSourceConnected, setIsEventSourceConnected] = useState(false);
+
+  // ✅ Reconnect automatique du channel broadcast note-stream
+  // channelRetryKey force un re-run du useEffect qui recrée le channel
+  const [channelRetryKey, setChannelRetryKey] = useState(0);
+  const channelReconnectAttemptsRef = useRef(0);
+  const channelReconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const MAX_STREAM_RECONNECT = 5;
+  // Suivi du noteId précédent pour reset du compteur lors d'un changement de note
+  const prevChannelNoteIdRef = useRef<string | undefined>(undefined);
   const editorLayoutRef = useRef<HTMLElement | null>(null);
   const headerRef = useRef<HTMLElement | null>(null);
   
@@ -279,6 +288,18 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       return;
     }
 
+    // Annuler tout timer de reconnexion en cours (nouveau noteId = nouveau départ)
+    if (channelReconnectTimerRef.current) {
+      clearTimeout(channelReconnectTimerRef.current);
+      channelReconnectTimerRef.current = null;
+    }
+    // ✅ Reset du compteur de reconnexion sur changement de note.
+    // Ne PAS reset si c'est un retry pour la même note (channelRetryKey change sans noteId change).
+    if (session.noteId !== prevChannelNoteIdRef.current) {
+      channelReconnectAttemptsRef.current = 0;
+      prevChannelNoteIdRef.current = session.noteId;
+    }
+
     const noteId = session.noteId;
     const channelName = `note-stream:${noteId}`;
 
@@ -332,10 +353,36 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setIsEventSourceConnected(true);
+          // ✅ Connexion établie : reset du compteur de reconnexion
+          channelReconnectAttemptsRef.current = 0;
+          if (channelReconnectTimerRef.current) {
+            clearTimeout(channelReconnectTimerRef.current);
+            channelReconnectTimerRef.current = null;
+          }
           logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Supabase channel subscribed', { noteId, channelName });
-        } else if (status === 'CHANNEL_ERROR') {
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           setIsEventSourceConnected(false);
-          logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Supabase channel error', { noteId });
+          logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Supabase channel error', { noteId, status });
+
+          // ✅ Reconnexion automatique avec backoff exponentiel (max 5 tentatives)
+          // Seuls CHANNEL_ERROR et TIMED_OUT déclenchent une reconnexion.
+          // CLOSED = fermeture intentionnelle (cleanup), pas de retry.
+          if (channelReconnectAttemptsRef.current < MAX_STREAM_RECONNECT) {
+            channelReconnectAttemptsRef.current += 1;
+            const delayMs = Math.min(1000 * Math.pow(2, channelReconnectAttemptsRef.current - 1), 30000);
+            logger.warn(LogCategory.EDITOR, '[ChatCanvaPane] Scheduling channel reconnect', {
+              noteId,
+              attempt: channelReconnectAttemptsRef.current,
+              delayMs
+            });
+            channelReconnectTimerRef.current = setTimeout(() => {
+              channelReconnectTimerRef.current = null;
+              // Incrémenter channelRetryKey force un re-run du useEffect → channel recréé
+              setChannelRetryKey(k => k + 1);
+            }, delayMs);
+          } else {
+            logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Stream channel: max reconnect attempts reached', { noteId });
+          }
         } else {
           logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Channel status', { status, noteId });
         }
@@ -346,6 +393,11 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
 
     return () => {
       setIsEventSourceConnected(false);
+      // Annuler le timer de reconnexion pour éviter un re-run après unmount
+      if (channelReconnectTimerRef.current) {
+        clearTimeout(channelReconnectTimerRef.current);
+        channelReconnectTimerRef.current = null;
+      }
       if (sessionIdForCleanup) {
         endStreaming(sessionIdForCleanup);
       }
@@ -354,7 +406,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
         channelRef.current = null;
       }
     };
-  }, [session?.noteId, session?.id, activeCanvaId, endStreaming]);
+  }, [session?.noteId, session?.id, activeCanvaId, endStreaming, channelRetryKey]);
 
   // 🔄 Canvas streaming ops (local-first)
   const { sendOp, isConnected: isOpsConnected, lastServerVersion } = useCanvasStreamOps(
@@ -509,7 +561,8 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
 
   /**
    * Récupérer ref de l'éditeur TipTap
-   * Si des chunks ont été mis en buffer avant que l'éditeur soit prêt, on les insère à la fin du doc.
+   * Si des chunks ont été mis en buffer avant que l'éditeur soit prêt, on les flush
+   * via handleStreamChunk pour respecter streamModeRef et éviter le double flush.
    */
   const handleEditorRef = useCallback((editor: EditorWithMarkdown | null) => {
     editorRef.current = editor;
@@ -518,20 +571,17 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       return;
     }
 
-    // ✅ Flush du buffer de stream (chunks reçus avant que l'éditeur soit disponible)
+    // ✅ BUG2 FIX: Flush via handleStreamChunk (qui lit streamBufferBeforeReadyRef)
+    // handleStreamChunk détecte que l'éditeur est prêt (editorRef.current) et vide
+    // le buffer. On n'insère PAS ici directement pour éviter le double-insertion.
     const buffered = streamBufferBeforeReadyRef.current;
     if (buffered.length > 0) {
-      streamBufferBeforeReadyRef.current = '';
-      try {
-        const docSize = editor.state.doc.content.size;
-        editor.chain().focus(docSize).insertContent({ type: 'text', text: buffered }).run();
-        logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Flushed buffered stream on editor ref', {
-          length: buffered.length,
-          sessionId: session?.id
-        });
-      } catch (error) {
-        logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Failed to flush buffered stream', error);
-      }
+      // handleStreamChunk s'occupe de vider le buffer et insérer au bon endroit
+      handleStreamChunk('');
+      logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Triggered buffer flush via handleStreamChunk on editor ref', {
+        bufferedLength: buffered.length,
+        sessionId: session?.id
+      });
     }
 
     let hasText = false;
@@ -547,7 +597,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       if (!editorRef.current) return;
       editorRef.current.commands.focus('start');
     });
-  }, [session?.id]);
+  }, [session?.id, handleStreamChunk]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // ✅ RESIZE HANDLE

@@ -17,10 +17,11 @@
  * - Intégration avec streamBuffer du store
  */
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { logger, LogCategory } from '@/utils/logger';
 import type { StreamEvent } from '@/services/streamBroadcastService';
+import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 
 interface UseNoteStreamListenerOptions {
   /**
@@ -188,29 +189,11 @@ export function useNoteStreamListener(
 
     // Fonction async pour initialiser la connexion
     const initializeConnection = async () => {
-      // Récupérer le token d'authentification
-      const getToken = () => {
-        try {
-          // Essayer de récupérer le token depuis le localStorage Supabase
-          const supabaseAuth = localStorage.getItem('sb-localhost-auth-token');
-          if (supabaseAuth) {
-            const parsed = JSON.parse(supabaseAuth);
-            return parsed.access_token;
-          }
-          // Fallback: chercher dans d'autres clés possibles
-          const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
-          for (const key of keys) {
-            const data = JSON.parse(localStorage.getItem(key) || '{}');
-            if (data.access_token) return data.access_token;
-          }
-        } catch (error) {
-          logger.error(LogCategory.EDITOR, '[useNoteStreamListener] Failed to get token', error);
-        }
-        return null;
-      };
+      // Récupérer le token via le singleton Supabase (robuste, pas de dépendance à localStorage)
+      const supabase = getSupabaseClient();
+      const { data: { session: authSession } } = await supabase.auth.getSession();
+      const token = authSession?.access_token ?? null;
 
-      // Créer la connexion EventSource avec le token
-      const token = getToken();
       if (!token) {
         logger.error(LogCategory.EDITOR, '[useNoteStreamListener] No auth token available', { noteId });
         return null;
