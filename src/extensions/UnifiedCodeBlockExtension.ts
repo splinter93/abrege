@@ -4,6 +4,7 @@
  */
 
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { Plugin } from '@tiptap/pm/state';
 import { Node } from '@tiptap/pm/model';
 import { openMermaidModal } from '@/components/mermaid/MermaidModal';
 import { normalizeMermaidContent } from '@/components/chat/mermaidService';
@@ -87,6 +88,12 @@ const UnifiedCodeBlockExtension = CodeBlockLowlight.extend({
     };
   },
 
+  addProseMirrorPlugins() {
+    type ParentPm = (() => Plugin[]) | undefined;
+    const parentFn = (this as { parent?: ParentPm }).parent;
+    return typeof parentFn === 'function' ? parentFn() : [];
+  },
+
   onDestroy() {
     // ✅ Nettoyer TOUS les SVG Mermaid orphelins du DOM (erreurs qui restent collées)
     cleanupMermaidSVGs();
@@ -132,13 +139,35 @@ function createMermaidNodeView(node: Node, getPos: () => number, editor: NodeVie
 // STANDARD CODE BLOCK NODE VIEW
 // =================================================================
 
+/**
+ * Texte du bloc code : document ProseMirror (source de vérité), puis repli DOM.
+ * Évite le contenu vide / désynchronisé quand la toolbar est cliquée depuis une zone contenteditable.
+ */
+function getCodeBlockPlainText(
+  editor: NodeViewProps['editor'],
+  getPos: () => number,
+  codeEl: HTMLElement
+): string {
+  try {
+    const pos = getPos();
+    if (typeof pos === 'number' && pos >= 0) {
+      const { doc } = editor.view.state;
+      const $pos = doc.resolve(pos);
+      const after = $pos.nodeAfter;
+      if (after?.type.name === 'codeBlock') {
+        return after.textContent;
+      }
+    }
+  } catch {
+    // ignored — fallback DOM
+  }
+  return codeEl.textContent ?? '';
+}
+
 function createCodeBlockNodeView(node: Node, getPos: () => number, editor: NodeViewProps['editor']) {
   const container = document.createElement('div');
   // Utilisation des nouvelles classes unifiées
   container.className = 'u-block u-block--code';
-
-  const toolbar = createCodeBlockToolbar(node, getPos, editor);
-  container.appendChild(toolbar);
 
   const body = document.createElement('div');
   body.className = 'u-block__body';
@@ -154,6 +183,11 @@ function createCodeBlockNodeView(node: Node, getPos: () => number, editor: NodeV
 
   pre.appendChild(code);
   body.appendChild(pre);
+
+  const getCodeText = (): string => getCodeBlockPlainText(editor, getPos, code);
+
+  const toolbar = createCodeBlockToolbar(node, getPos, editor, getCodeText);
+  container.appendChild(toolbar);
   container.appendChild(body);
 
   return {
@@ -166,8 +200,9 @@ function createCodeBlockNodeView(node: Node, getPos: () => number, editor: NodeV
       // La langue a peut-être changé
       if (updatedNode.attrs.language !== node.attrs.language) {
         // Mettre à jour la toolbar si la langue change
-        const newToolbar = createCodeBlockToolbar(updatedNode, getPos, editor);
-        const oldToolbar = container.querySelector('.unified-toolbar');
+        const getCodeTextUpdate = (): string => getCodeBlockPlainText(editor, getPos, code);
+        const newToolbar = createCodeBlockToolbar(updatedNode, getPos, editor, getCodeTextUpdate);
+        const oldToolbar = container.querySelector('.u-block__toolbar');
         if (oldToolbar && newToolbar) {
           container.replaceChild(newToolbar, oldToolbar);
         }
@@ -209,6 +244,8 @@ function createMermaidToolbar(node: Node, getPos: NodeViewProps['getPos'], edito
   const toolbar = document.createElement('div');
   // Classes de la toolbar unifiée
   toolbar.className = 'u-block__toolbar';
+  toolbar.setAttribute('contenteditable', 'false');
+  toolbar.setAttribute('spellcheck', 'false');
   
   // Type de diagramme à gauche
   const leftContainer = document.createElement('div');

@@ -7,9 +7,21 @@ function formatLanguageLabel(language: string | null | undefined): string {
   return getCodeBlockLanguageLabel(language);
 }
 
-export function createCodeBlockToolbar(node: Node, getPos: () => number, editor: Editor) {
+/**
+ * @param getCodeText Texte réel du bloc : doit lire le DOM du contentDOM (pas node.textContent :
+ * le nœud ProseMirror en fermeture est souvent vide / obsolète tant que le contenu n’est que dans l’éditeur).
+ */
+export function createCodeBlockToolbar(
+  node: Node,
+  getPos: () => number,
+  editor: Editor,
+  getCodeText: () => string
+) {
   const toolbar = document.createElement('div');
   toolbar.className = 'u-block__toolbar';
+  // Îlot hors édition : sinon ProseMirror (contenteditable) mange les clics sur les boutons
+  toolbar.setAttribute('contenteditable', 'false');
+  toolbar.setAttribute('spellcheck', 'false');
 
   // --- Conteneur gauche (Label du langage) ---
   const leftContainer = document.createElement('div');
@@ -23,8 +35,8 @@ export function createCodeBlockToolbar(node: Node, getPos: () => number, editor:
   // --- Conteneur droite (boutons) ---
   const rightContainer = document.createElement('div');
   rightContainer.className = 'toolbar-right';
-  const copyButton = createCopyButton(node);
-  const expandButton = createExpandButton(node);
+  const copyButton = createCopyButton(getCodeText);
+  const expandButton = createExpandButton(getCodeText, node.attrs.language);
   rightContainer.appendChild(copyButton);
   rightContainer.appendChild(expandButton);
 
@@ -35,45 +47,73 @@ export function createCodeBlockToolbar(node: Node, getPos: () => number, editor:
   return toolbar;
 }
 
-function createCopyButton(node: Node) {
-    const copyButton = document.createElement('button');
-    copyButton.className = 'toolbar-btn copy-btn';
-    copyButton.title = 'Copier le code';
-    
-    const iconSVG = `
+const DEFAULT_CODE_COPY_ICON_SVG = `
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
       </svg>
     `;
+
+function runCopyFeedback(copyButton: HTMLButtonElement, iconSVG: string, text: string): void {
+  const copiedIconSVG = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    `;
+
+  // Feedback immédiat — ne pas attendre la résolution du presse-papiers
+  copyButton.innerHTML = copiedIconSVG;
+  copyButton.classList.add('copied');
+  copyButton.title = 'Copié !';
+
+  const t = copyButton.dataset.copyResetTimeout;
+  if (t) window.clearTimeout(Number(t));
+
+  if (text) {
+    void navigator.clipboard.writeText(text).catch(() => { /* silencieux */ });
+  }
+
+  const id = window.setTimeout(() => {
+    copyButton.innerHTML = iconSVG;
+    copyButton.classList.remove('copied');
+    copyButton.title = 'Copier le code';
+    delete copyButton.dataset.copyResetTimeout;
+  }, 2000);
+  copyButton.dataset.copyResetTimeout = String(id);
+}
+
+function createCopyButton(getCodeText: () => string) {
+    const copyButton = document.createElement('button');
+    copyButton.type = 'button';
+    copyButton.className = 'toolbar-btn copy-btn';
+    copyButton.title = 'Copier le code';
+    
+    const iconSVG = DEFAULT_CODE_COPY_ICON_SVG;
     copyButton.innerHTML = iconSVG;
 
-    let copyTimeout: NodeJS.Timeout | null = null;
-  
-    copyButton.addEventListener('click', () => {
-      navigator.clipboard.writeText(node.textContent).then(() => {
-        const copiedIconSVG = `
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        `;
-        copyButton.innerHTML = copiedIconSVG;
-        copyButton.classList.add('copied');
-        
-        if (copyTimeout) clearTimeout(copyTimeout);
-        
-        copyTimeout = setTimeout(() => {
-          copyButton.innerHTML = iconSVG;
-          copyButton.classList.remove('copied');
-        }, 2000);
-      });
+    // ProseMirror (contentDOM présent) peut appeler preventDefault() sur mousedown
+    // ce qui bloque click. mouseup lui se déclenche toujours, y compris après preventDefault().
+    // On utilise mouseup au lieu de click, exactement comme Mermaid utilise click
+    // (Mermaid n'a pas de contentDOM donc PM ne preventDefault pas).
+    copyButton.addEventListener('mousedown', (e) => {
+      // Empêcher PM de déplacer le curseur dans le code quand on vise la toolbar
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    copyButton.addEventListener('mouseup', (e) => {
+      if ((e as MouseEvent).button !== 0) return;
+      e.stopPropagation();
+      const text = getCodeText();
+      runCopyFeedback(copyButton, iconSVG, text);
     });
 
     return copyButton;
 }
 
-function createExpandButton(node: Node) {
+function createExpandButton(getCodeText: () => string, language: string | null) {
     const expandButton = document.createElement('button');
+    expandButton.type = 'button';
     expandButton.className = 'toolbar-btn expand-btn';
     expandButton.title = 'Agrandir le code';
     
@@ -84,16 +124,22 @@ function createExpandButton(node: Node) {
     `;
     expandButton.innerHTML = expandIconSVG;
 
-    expandButton.addEventListener('click', () => {
-      // Ouvrir le code dans une modal ou un nouvel onglet
-      const codeContent = node.textContent;
+    expandButton.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    expandButton.addEventListener('mouseup', (e) => {
+      if ((e as MouseEvent).button !== 0) return;
+      e.stopPropagation();
+      const codeContent = getCodeText();
       const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
       if (newWindow) {
         newWindow.document.write(`
           <!DOCTYPE html>
           <html>
           <head>
-            <title>Code - ${node.attrs.language || 'TEXT'}</title>
+            <title>Code - ${(language || 'text').toUpperCase()}</title>
             <style>
               body { 
                 font-family: 'JetBrains Mono', monospace; 
