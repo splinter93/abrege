@@ -1219,23 +1219,31 @@ export class V2UnifiedApi {
   }
 
   /**
-   * Ajouter du contenu à une note
+   * Ajouter du contenu à une note (append à la fin via content:apply)
    */
   async addContentToNote(ref: string, content: string) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[V2UnifiedApi] ➕ Ajout contenu note unifié V2');
     }
-    
+
     try {
-      // ✅ 1. Nettoyer et valider l'ID
       const cleanRef = this.cleanAndValidateId(ref, 'note');
-      
-      // 🚀 2. Appel vers l'endpoint API V2
       const headers = await this.getAuthHeaders();
-              const response = await fetch(this.buildUrl(`/api/v2/note/${cleanRef}/insert-content`), {
+
+      const ops = [
+        {
+          id: `insert-${Date.now()}`,
+          action: 'insert',
+          target: { type: 'anchor', anchor: { name: 'doc_end' } },
+          where: 'at',
+          content
+        }
+      ];
+
+      const response = await fetch(this.buildUrl(`/api/v2/note/${cleanRef}/content:apply`), {
         method: 'POST',
         headers,
-        body: JSON.stringify({ content })
+        body: JSON.stringify({ ops, return: 'content' })
       });
 
       if (!response.ok) {
@@ -1244,10 +1252,12 @@ export class V2UnifiedApi {
       }
 
       const result = await response.json();
-      
-      // 🚀 Mise à jour directe de Zustand (instantanée)
-      const store = useFileSystemStore.getState();
-      store.updateNote(cleanRef, { markdown_content: result.note.markdown_content });
+      const newContent = result?.data?.content;
+
+      if (typeof newContent === 'string') {
+        const store = useFileSystemStore.getState();
+        store.updateNote(cleanRef, { markdown_content: newContent });
+      }
       
       // 🎯 Déclencher le polling ciblé pour la mise à jour
       try {

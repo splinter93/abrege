@@ -15,21 +15,31 @@ export class NoteContentApi {
   }
 
   /**
-   * Ajouter du contenu à une note
+   * Ajouter du contenu à une note via content:apply (append à la fin)
    */
   async addContentToNote(ref: string, content: string) {
     if (process.env.NODE_ENV === 'development') {
       logger.dev('[NoteContentApi] ➕ Ajout contenu note');
     }
-    
+
     try {
       const cleanRef = this.apiClient.cleanAndValidateId(ref, 'note');
-      
       const headers = await this.apiClient.getAuthHeaders();
-      const response = await fetch(this.apiClient.buildUrl(`/api/v2/note/${cleanRef}/insert-content`), {
+
+      const ops = [
+        {
+          id: `insert-${Date.now()}`,
+          action: 'insert',
+          target: { type: 'anchor', anchor: { name: 'doc_end' } },
+          where: 'at',
+          content
+        }
+      ];
+
+      const response = await fetch(this.apiClient.buildUrl(`/api/v2/note/${cleanRef}/content:apply`), {
         method: 'POST',
         headers,
-        body: JSON.stringify({ content })
+        body: JSON.stringify({ ops, return: 'content' })
       });
 
       if (!response.ok) {
@@ -38,9 +48,12 @@ export class NoteContentApi {
       }
 
       const result = await response.json();
-      
-      const store = useFileSystemStore.getState();
-      store.updateNote(cleanRef, { markdown_content: result.note.markdown_content });
+      const newContent = result?.data?.content;
+
+      if (typeof newContent === 'string') {
+        const store = useFileSystemStore.getState();
+        store.updateNote(cleanRef, { markdown_content: newContent });
+      }
       
       // Déclencher le polling ciblé
       try {

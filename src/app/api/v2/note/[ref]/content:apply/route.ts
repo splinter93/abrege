@@ -17,35 +17,26 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
 import { contentApplyV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
-import { ContentApplier, calculateETag, generateDiff } from '@/utils/contentApplyUtils';
+import {
+  ContentApplier,
+  calculateETag,
+  generateDiff,
+  validateETag,
+  isCanvaOpen,
+  CONTENT_APPLY_ERRORS
+} from '@/utils/contentApplyUtils';
 import { updateArticleInsight } from '@/utils/insightUpdater';
 import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
 import { sendStreamEvent } from '@/services/supabaseRealtimeBroadcast';
+import { contentStreamer } from '@/services/contentStreamer';
+import type { ContentOperation } from '@/utils/contentApplyUtils';
 
-// ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-
-// ============================================================================
-// ERROR CODES
-// ============================================================================
-
-const CONTENT_APPLY_ERRORS = {
-  TARGET_NOT_FOUND: { code: 'TARGET_NOT_FOUND', status: 404 },
-  AMBIGUOUS_MATCH: { code: 'AMBIGUOUS_MATCH', status: 409 },
-  REGEX_COMPILE_ERROR: { code: 'REGEX_COMPILE_ERROR', status: 400 },
-  REGEX_TIMEOUT: { code: 'REGEX_TIMEOUT', status: 408 },
-  PRECONDITION_FAILED: { code: 'PRECONDITION_FAILED', status: 412 },
-  PARTIAL_APPLY: { code: 'PARTIAL_APPLY', status: 207 },
-  CONTENT_TOO_LARGE: { code: 'CONTENT_TOO_LARGE', status: 413 },
-  INVALID_OPERATION: { code: 'INVALID_OPERATION', status: 400 }
-} as const;
 
 // ============================================================================
 // MAIN ENDPOINT
@@ -80,7 +71,7 @@ export async function POST(
     }
 
     const userId = authResult.userId!;
-  const userToken = extractTokenFromRequest(request);
+    const userToken = extractTokenFromRequest(request);
     const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // 🔍 Résoudre la référence (UUID ou slug)
@@ -102,7 +93,7 @@ export async function POST(
       return createValidationErrorResponse(validationResult, context);
     }
 
-    const { ops, transaction, conflict_strategy, return: returnType, idempotency_key } = validationResult.data;
+    const { ops, return: returnType, transaction } = validationResult.data;
     
     // ✅ SIMPLIFICATION: dry_run supprimé (inutile et confus)
     // Si besoin de preview: utiliser return: "diff" et annuler manuellement
@@ -169,13 +160,39 @@ export async function POST(
     
     // 🔧 Appliquer les opérations de contenu (avec contenu sanitizé)
     const applier = new ContentApplier(currentNote.markdown_content);
-    const result = await applier.applyOperations(sanitizedOps);
+    const result = await applier.applyOperations(sanitizedOps, { transaction });
 
-    // 🛡️ Le contenu est déjà sanitizé (chaque op a été sanitizée ligne 150)
-    // Pas besoin de re-sanitizer ici (causerait un double échappement)
     const safeContent = result.content;
-    
-    // 💾 Sauvegarder les modifications
+
+    // 🌊 Détecter si canva ouvert → streaming automatique vers le client
+    const shouldStream = await isCanvaOpen(supabase, noteId, userId);
+    logApi.info(`[content:apply] Canva status: ${shouldStream ? 'open (streaming enabled)' : 'closed'}`, {
+      ...context,
+      noteId,
+      shouldStream
+    });
+
+    if (shouldStream) {
+      try {
+        await contentStreamer.streamContent(
+          noteId,
+          currentNote.markdown_content,
+          safeContent,
+          sanitizedOps,
+          { chunkSize: 80, delayMs: 15 },
+          result.results
+        );
+        logApi.info('[content:apply] Streaming completed', { ...context, noteId });
+      } catch (streamError) {
+        logApi.warn('[content:apply] Stream failed, continuing with DB save', {
+          ...context,
+          noteId,
+          error: streamError instanceof Error ? streamError.message : 'Unknown error'
+        });
+      }
+    }
+
+    // 💾 Toujours sauvegarder en DB (garantit fraîcheur pour appels LLM enchaînés)
     const { data: updatedNote, error: updateError } = await supabase
       .from('articles')
       .update({
@@ -195,8 +212,6 @@ export async function POST(
       );
     }
 
-    // 🎯 Le polling ciblé est maintenant géré côté client par V2UnifiedApi
-
     // 📊 Mettre à jour les insights si nécessaire
     try {
       await updateArticleInsight(noteId);
@@ -214,7 +229,9 @@ export async function POST(
         content: undefined as string | undefined,
         note_id: noteId,
         ops_results: result.results,
-        etag: calculateETag(result.content)
+        etag: calculateETag(result.content),
+        streaming_enabled: shouldStream,
+        saved_to_db: true
       },
       meta: {
         char_diff: result.charDiff,
@@ -307,65 +324,5 @@ export async function POST(
       },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
-  }
-}
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-/**
- * Valide l'ETag ou la version de la note
- */
-async function validateETag(
-  supabase: SupabaseClient,
-  noteId: string,
-  ifMatch?: string | null,
-  xNoteVersion?: string | null
-): Promise<{ valid: boolean; etag?: string; message?: string }> {
-  try {
-    // Récupérer la version actuelle de la note
-    const { data: note, error } = await supabase
-      .from('articles')
-      .select('updated_at, markdown_content')
-      .eq('id', noteId)
-      .single();
-
-    if (error || !note) {
-      return { valid: false, message: 'Note non trouvée' };
-    }
-
-    const currentETag = calculateETag(note.markdown_content);
-    
-    // Vérifier l'ETag
-    if (ifMatch && ifMatch !== currentETag) {
-      return { 
-        valid: false, 
-        etag: currentETag, 
-        message: `ETag mismatch: expected ${ifMatch}, got ${currentETag}` 
-      };
-    }
-
-    // Vérifier la version (simplifiée)
-    if (xNoteVersion) {
-      const version = parseInt(xNoteVersion);
-      if (isNaN(version)) {
-        return { valid: false, message: 'Version invalide' };
-      }
-      const currentVersion = new Date(note.updated_at).getTime();
-      if (version !== currentVersion) {
-        return { 
-          valid: false, 
-          etag: currentETag, 
-          message: `Version mismatch: expected ${version}, got ${currentVersion}` 
-        };
-      }
-    }
-
-    return { valid: true, etag: currentETag };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    logApi.error('❌ Erreur validation ETag', { error: errorMessage, noteId });
-    return { valid: false, message: 'Erreur lors de la validation' };
   }
 }

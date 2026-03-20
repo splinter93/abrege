@@ -290,11 +290,21 @@ export class ApiV2HttpClient {
   }
 
   async insertNoteContent(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
-    return this.makeRequest(`/note/${ref}/insert-content`, 'POST', params, userToken);
+    const content = typeof params.content === 'string' ? params.content : '';
+    const ops = [
+      {
+        id: `insert-${Date.now()}`,
+        action: 'insert',
+        target: { type: 'anchor' as const, anchor: { name: 'doc_end' as const } },
+        where: 'at' as const,
+        content
+      }
+    ];
+    return this.makeRequest(`/note/${ref}/content:apply`, 'POST', { ops }, userToken);
   }
 
   async applyContentOperations(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
-    return this.makeRequest(`/note/${ref}/editNoteContent`, 'POST', params, userToken);
+    return this.makeRequest(`/note/${ref}/content:apply`, 'POST', params, userToken);
   }
 
   async getNoteTOC(ref: string, userToken: string): Promise<unknown> {

@@ -417,22 +417,30 @@ export class LLMApi {
   }
 
   /**
-   * Ajouter du contenu à une note via API LLM (supporte UUID ou slug)
-   * @param noteRef - UUID ou slug de la note
-   * @param content - Contenu à ajouter
+   * Ajouter du contenu à une note via content:apply (append à la fin)
    */
   async addContent(noteRef: string, content: string) {
     const startTime = Date.now();
     const context = { operation: 'v2_llm_note_add_content', component: 'LLMApi', noteRef };
-    
-    logger.info(LogCategory.API,`🚀 Début ajout contenu note LLM ${noteRef}`, context);
-    
+
+    logger.info(LogCategory.API, '🚀 Début ajout contenu note LLM', context);
+
     try {
       const headers = await this.getAuthHeaders();
-              const response = await fetch(`/api/v2/note/${noteRef}/insert-content`, {
+      const ops = [
+        {
+          id: `insert-${Date.now()}`,
+          action: 'insert',
+          target: { type: 'anchor', anchor: { name: 'doc_end' } },
+          where: 'at',
+          content
+        }
+      ];
+
+      const response = await fetch(`/api/v2/note/${noteRef}/content:apply`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ content })
+        body: JSON.stringify({ ops })
       });
 
       if (!response.ok) {
@@ -443,31 +451,39 @@ export class LLMApi {
       }
 
       const result = await response.json();
-      const apiTime = Date.now() - startTime;
-      logger.info(LogCategory.API,`✅ Contenu ajouté en ${apiTime}ms`, context);
-
+      logger.info(LogCategory.API, `✅ Contenu ajouté en ${Date.now() - startTime}ms`, context);
       return result;
     } catch (error) {
-      logger.error(LogCategory.API,`❌ Erreur ajout contenu note LLM: ${error}`, context);
+      logger.error(LogCategory.API, '❌ Erreur ajout contenu note LLM', context);
       throw error;
     }
   }
 
   /**
-   * Ajouter du contenu à une section spécifique via API LLM
+   * Ajouter du contenu à une section spécifique via content:apply (cible heading par path/slug)
    */
   async addToSection(noteId: string, sectionId: string, content: string) {
     const startTime = Date.now();
-    const context = { operation: 'v2_llm_note_add_to_section', component: 'LLMApi' };
-    
-    logger.info(LogCategory.API,`🚀 Début ajout section LLM ${noteId}`, context);
-    
+    const context = { operation: 'v2_llm_note_add_to_section', component: 'LLMApi', noteId };
+
+    logger.info(LogCategory.API, '🚀 Début ajout section LLM', context);
+
     try {
       const headers = await this.getAuthHeaders();
-              const response = await fetch(`/api/v2/note/${noteId}/insert-content`, {
+      const ops = [
+        {
+          id: `insert-${Date.now()}`,
+          action: 'insert',
+          target: { type: 'heading', heading: { path: [sectionId] } },
+          where: 'inside_end',
+          content
+        }
+      ];
+
+      const response = await fetch(`/api/v2/note/${noteId}/content:apply`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ sectionId, content })
+        body: JSON.stringify({ ops })
       });
 
       if (!response.ok) {
@@ -478,12 +494,10 @@ export class LLMApi {
       }
 
       const result = await response.json();
-      const apiTime = Date.now() - startTime;
-      logger.info(LogCategory.API,`✅ Section LLM ajoutée en ${apiTime}ms`, context);
-
+      logger.info(LogCategory.API, `✅ Section LLM ajoutée en ${Date.now() - startTime}ms`, context);
       return result;
     } catch (error) {
-      logger.error(LogCategory.API,`❌ Erreur ajout section LLM: ${error}`, context);
+      logger.error(LogCategory.API, '❌ Erreur ajout section LLM', context);
       throw error;
     }
   }
