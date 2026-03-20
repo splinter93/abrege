@@ -106,6 +106,11 @@ export async function updateFolder(ref: string, data: UpdateFolderData, userId: 
     if (data.name) updateData.name = data.name;
     if (data.parent_id !== undefined) updateData.parent_id = data.parent_id;
 
+    // Guard : rien à mettre à jour
+    if (Object.keys(updateData).length === 0) {
+      return { success: true, data: currentFolder };
+    }
+
     // Mise à jour automatique du slug si le nom change
     if (data.name && data.name !== currentFolder.name) {
       try {
@@ -119,6 +124,9 @@ export async function updateFolder(ref: string, data: UpdateFolderData, userId: 
         updateData.slug = newSlug;
       } catch (error) {
         logApi.error(`❌ Erreur mise à jour slug: ${error}`);
+        // Fallback : slug avec timestamp garanti unique
+        const fallbackSlug = `${data.name.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 100)}-${Date.now().toString(36)}`;
+        updateData.slug = fallbackSlug;
       }
     }
 
@@ -136,14 +144,29 @@ export async function updateFolder(ref: string, data: UpdateFolderData, userId: 
       }
     }
 
-    // Mettre à jour le dossier
-    const { data: folder, error: updateError } = await supabase
+    // Mettre à jour le dossier — en cas de race condition sur le slug (23505), fallback timestamp
+    let { data: folder, error: updateError } = await supabase
       .from('folders')
       .update(updateData)
       .eq('id', folderId)
       .eq('user_id', userId)
       .select()
       .single();
+
+    if (updateError?.code === '23505' && updateData.slug) {
+      // Race condition : slug pris entre la vérification et l'écriture → on force un slug unique
+      const uniqueSlug = `${String(updateData.slug).slice(0, 100)}-${Date.now().toString(36)}`;
+      logApi.info(`⚠️ Slug collision détectée, retry avec slug unique: ${uniqueSlug}`, context);
+      const retryResult = await supabase
+        .from('folders')
+        .update({ ...updateData, slug: uniqueSlug })
+        .eq('id', folderId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+      folder = retryResult.data;
+      updateError = retryResult.error;
+    }
 
     if (updateError) {
       throw new Error(`Erreur mise à jour dossier: ${updateError.message}`);

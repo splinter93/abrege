@@ -64,9 +64,9 @@ export async function PUT(
 
   } catch (err: unknown) {
     const error = err as Error;
-    logApi.info(`❌ Erreur serveur: ${error}`, context);
+    logApi.error(`❌ Erreur serveur mise à jour dossier ${ref}: ${error?.message}`, context);
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { error: `Erreur serveur: ${error?.message ?? 'Erreur inconnue'}` },
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

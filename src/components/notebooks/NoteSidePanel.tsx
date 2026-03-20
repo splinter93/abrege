@@ -30,10 +30,33 @@ interface NoteSidePanelProps {
 export default function NoteSidePanel({ noteRef, onClose }: NoteSidePanelProps) {
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  // Garde la dernière ref active pendant l'animation de fermeture
+  const activeNoteRef = useRef<string | null>(noteRef);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
-    setWidth(getStoredWidth());
+    if (noteRef) {
+      activeNoteRef.current = noteRef;
+      setIsClosing(false);
+      setWidth(getStoredWidth());
+    } else {
+      // noteRef est devenu null (parent a confirmé la fermeture) → reset pour unmount propre
+      setIsClosing(false);
+    }
   }, [noteRef]);
+
+  // Déclenche l'animation de fermeture puis appelle onClose
+  const triggerClose = useCallback(() => {
+    setIsClosing(true);
+  }, []);
+
+  const handleAnimationEnd = useCallback((e: React.AnimationEvent<HTMLElement>) => {
+    if (isClosing && e.animationName === 'notePanelSlideOut') {
+      onCloseRef.current();
+    }
+  }, [isClosing]);
 
   const widthRef = useRef(width);
   widthRef.current = width;
@@ -69,11 +92,11 @@ export default function NoteSidePanel({ noteRef, onClose }: NoteSidePanelProps) 
   useEffect(() => {
     if (!noteRef) return;
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') triggerClose();
     };
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
-  }, [noteRef, onClose]);
+  }, [noteRef, triggerClose]);
 
   useEffect(() => {
     if (!noteRef) return;
@@ -84,11 +107,19 @@ export default function NoteSidePanel({ noteRef, onClose }: NoteSidePanelProps) 
     };
   }, [noteRef]);
 
-  if (!noteRef) return null;
+  if (!noteRef && !isClosing) return null;
+
+  const currentNoteRef = noteRef ?? activeNoteRef.current;
+  if (!currentNoteRef) return null;
 
   return createPortal(
     <>
-      <div className="note-side-panel-backdrop" onClick={onClose} aria-hidden />
+      <div
+        className="note-side-panel-backdrop"
+        onClick={triggerClose}
+        aria-hidden
+        data-closing={isClosing || undefined}
+      />
       <aside
         className="note-side-panel"
         style={{ width }}
@@ -96,6 +127,8 @@ export default function NoteSidePanel({ noteRef, onClose }: NoteSidePanelProps) 
         aria-modal="true"
         aria-label="Note en panneau latéral"
         data-resizing={isResizing || undefined}
+        data-closing={isClosing || undefined}
+        onAnimationEnd={handleAnimationEnd}
       >
         <div
           className="note-side-panel-resize-handle"
@@ -105,7 +138,7 @@ export default function NoteSidePanel({ noteRef, onClose }: NoteSidePanelProps) 
           aria-label="Redimensionner le panneau"
         />
         <div className="note-side-panel-content">
-          <NoteViewer noteRef={noteRef} onClose={onClose} layoutMode="side-panel" />
+          <NoteViewer noteRef={currentNoteRef} onClose={triggerClose} layoutMode="side-panel" />
         </div>
       </aside>
     </>,
