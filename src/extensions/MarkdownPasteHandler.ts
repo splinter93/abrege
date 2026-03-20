@@ -100,6 +100,11 @@ const MarkdownPasteHandler = Extension.create<Options>({
                 const wrap = document.createElement('div');
                 wrap.innerHTML = html;
 
+                // Les toolbars générés par markdown-it ne sont pas des nœuds ProseMirror :
+                // ProseMirror les extrait comme du texte brut, ce qui produit "JSON" ou "Mermaid"
+                // au-dessus du bloc. On les supprime avant parsing.
+                wrap.querySelectorAll('.u-block__toolbar').forEach(el => el.remove());
+
                 const schema = view.state.schema;
                 const parser = ProseMirrorDOMParser.fromSchema(schema);
                 // parseSlice → évite de recréer un doc complet, parfait pour remplacer la sélection
