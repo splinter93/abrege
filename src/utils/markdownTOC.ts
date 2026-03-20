@@ -188,6 +188,55 @@ export function eraseSection(markdown: string, section: string): string {
   return before + (after ? '\n' + after : '');
 }
 
+/**
+ * Extrait le contenu d'une section identifiée par son slug ou son titre.
+ * Retourne le heading + le corps jusqu'au prochain heading de même niveau ou supérieur.
+ * Retourne null si la section n'est pas trouvée.
+ */
+export function extractSectionBody(
+  markdown: string,
+  slugOrTitle: string
+): {
+  title: string;
+  slug: string;
+  level: number;
+  heading_line: string;
+  body: string;
+  char_count: number;
+} | null {
+  if (!slugOrTitle) return null;
+
+  const toc = extractTOCWithSlugs(markdown);
+  const idx = toc.findIndex(t => t.slug === slugOrTitle || t.title === slugOrTitle);
+  if (idx === -1) return null;
+
+  const target = toc[idx];
+  const lines = markdown.split('\n');
+  const headingLineIdx = target.line - 1; // 0-indexed
+
+  // Trouver la fin de la section (prochain heading de même niveau ou supérieur)
+  let sectionEnd = lines.length;
+  for (let i = target.line; i < lines.length; i++) {
+    const match = lines[i].match(/^(#{1,6})\s+/);
+    if (match && match[1].length <= target.level) {
+      sectionEnd = i;
+      break;
+    }
+  }
+
+  const heading_line = lines[headingLineIdx];
+  const body = lines.slice(headingLineIdx + 1, sectionEnd).join('\n').trim();
+
+  return {
+    title: target.title,
+    slug: target.slug,
+    level: target.level,
+    heading_line,
+    body,
+    char_count: body.length
+  };
+}
+
 // Ajout d'un commentaire pour indiquer la nécessité d'un .d.ts si le problème persiste
 // Si TS ne résout pas les types, créer src/utils/markdownTOC.d.ts
 // declare module './markdownTOC'; 

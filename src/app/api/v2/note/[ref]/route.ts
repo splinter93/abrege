@@ -4,6 +4,7 @@ import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFr
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { noteEmbedCacheService } from '@/services/cache/NoteEmbedCacheService';
 import { metricsCollector } from '@/services/monitoring/MetricsCollector';
+import { extractSectionBody, extractTOCWithSlugs } from '@/utils/markdownTOC';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -46,6 +47,10 @@ export async function GET(
   // Récupérer le paramètre fields pour déterminer ce qui doit être retourné
   const { searchParams } = new URL(request.url);
   const fields = searchParams.get('fields') || 'all'; // all, content, metadata
+  const sectionSlug = searchParams.get('section') || null; // slug ou titre de section
+
+  // Si section demandée, on a besoin de markdown_content dans tous les cas
+  const effectiveFields = sectionSlug ? 'content' : fields;
 
   try {
     // 🔧 CORRECTION: Utiliser V2ResourceResolver comme l'endpoint content
@@ -62,7 +67,7 @@ export async function GET(
     const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // ✅ Cache Note Embed : Vérifier le cache si mode 'content' ou 'all'
-    if (fields === 'content' || fields === 'all') {
+    if (effectiveFields === 'content' || effectiveFields === 'all') {
       const cachedEmbed = await noteEmbedCacheService.get(noteId);
       if (cachedEmbed) {
         // Vérifier que la note n'a pas été modifiée depuis le cache
@@ -98,7 +103,7 @@ export async function GET(
     let selectFields: string;
     let responseNote: unknown;
 
-    switch (fields) {
+    switch (effectiveFields) {
       case 'content':
         // Mode content : champs socle + contenu + rendu
         selectFields = 'id, source_title, slug, public_url, header_image, markdown_content, created_at, updated_at, source_type';
@@ -148,7 +153,7 @@ export async function GET(
       header_image: noteData.header_image
     };
     
-    switch (fields) {
+    switch (effectiveFields) {
       case 'content':
         responseNote = {
           ...baseFields,
@@ -186,8 +191,56 @@ export async function GET(
         break;
     }
 
+    // ─── Mode section : extraction d'une section précise ───────────────────
+    if (sectionSlug) {
+      const markdown = noteData.markdown_content as string | null;
+
+      if (!markdown) {
+        return NextResponse.json(
+          { error: 'La note ne contient pas de contenu markdown' },
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const section = extractSectionBody(markdown, sectionSlug);
+
+      if (!section) {
+        const available = extractTOCWithSlugs(markdown).map(t => ({
+          title: t.title,
+          slug: t.slug,
+          level: t.level
+        }));
+        return NextResponse.json(
+          {
+            error: `Section "${sectionSlug}" introuvable`,
+            available_sections: available
+          },
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const apiTime = Date.now() - startTime;
+      logger.info(LogCategory.API, `✅ Section extraite avec succès`, {
+        ...context,
+        duration: apiTime,
+        sectionSlug,
+        charCount: section.char_count
+      });
+
+      success = true;
+      return NextResponse.json({
+        success: true,
+        note: {
+          id: noteData.id,
+          title: noteData.source_title,
+          updated_at: noteData.updated_at
+        },
+        section
+      });
+    }
+
     // ✅ Cache Note Embed : Mettre en cache si mode 'content' ou 'all' avec html_content
-    if ((fields === 'content' || fields === 'all') && noteData.html_content) {
+    if ((effectiveFields === 'content' || effectiveFields === 'all') && noteData.html_content) {
       try {
         await noteEmbedCacheService.set(noteId, {
           noteId,
@@ -216,7 +269,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       note: responseNote,
-      mode: fields
+      mode: effectiveFields
     });
 
   } catch (err: unknown) {
