@@ -94,7 +94,7 @@ export function useFilesPage() {
           .from('files')
           .select('size')
           .eq('user_id', user.id)
-          .eq('is_deleted', false);
+          .is('deleted_at', null);
 
         if (filesError) {
           logger.warn(`⚠️ Erreur calcul usage: ${filesError.message}`, { userId: user.id });
@@ -129,12 +129,12 @@ export function useFilesPage() {
         return;
       }
 
-      // Récupérer les fichiers
+      // Récupérer les fichiers (deleted_at IS NULL = non supprimés)
       const { data: filesData, error: filesError } = await supabase
         .from('files')
         .select('*')
         .eq('user_id', user.id)
-        .eq('is_deleted', false)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (filesError) {
