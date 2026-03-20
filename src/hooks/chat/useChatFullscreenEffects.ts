@@ -419,8 +419,32 @@ export function useChatFullscreenEffects(
     currentSession?.id,
     infiniteMessages,
     animations.messagesVisible,
+    animations.displayedSessionId,
+    animations.triggerFadeIn,
     isLoadingMessages,
-    animations,
+    uiState.messagesContainerRef
+  ]);
+
+  // Empty state : session vide (0 messages), rendre visible directement
+  useEffect(() => {
+    if (
+      currentSession?.id &&
+      infiniteMessages.length === 0 &&
+      !isLoadingMessages &&
+      !animations.messagesVisible
+    ) {
+      animations.triggerFadeIn(
+        currentSession.id,
+        [],
+        uiState.messagesContainerRef
+      );
+    }
+  }, [
+    currentSession?.id,
+    infiniteMessages.length,
+    isLoadingMessages,
+    animations.messagesVisible,
+    animations.triggerFadeIn,
     uiState.messagesContainerRef
   ]);
 
