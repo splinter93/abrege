@@ -67,7 +67,8 @@ export async function GET(
     const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
     // ✅ Cache Note Embed : Vérifier le cache si mode 'content' ou 'all'
-    if (effectiveFields === 'content' || effectiveFields === 'all') {
+    // Ne pas court-circuiter si une section précise est demandée
+    if (!sectionSlug && (effectiveFields === 'content' || effectiveFields === 'all')) {
       const cachedEmbed = await noteEmbedCacheService.get(noteId);
       if (cachedEmbed) {
         // Vérifier que la note n'a pas été modifiée depuis le cache
