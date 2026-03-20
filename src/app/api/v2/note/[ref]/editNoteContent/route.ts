@@ -271,45 +271,46 @@ export async function POST(
         newLength: safeContent.length
       });
 
+      let streamSucceeded = false;
       try {
         await contentStreamer.streamContent(
           noteId,
           currentNote.markdown_content,
           safeContent,
           sanitizedOps,
-          {
-            chunkSize: 80,
-            delayMs: 15,
-            position: undefined
-          },
+          { chunkSize: 80, delayMs: 15 },
           result.results
         );
-        logApi.info('[editNoteContent] Streaming completed, save via canva auto-save', {
-          ...context,
-          noteId
-        });
+        streamSucceeded = true;
+        logApi.info('[editNoteContent] Streaming completed', { ...context, noteId });
       } catch (streamError) {
-        // Fallback : sauvegarder en DB si le stream échoue (ex. Supabase indisponible)
         logApi.warn('[editNoteContent] Stream failed, fallback to DB save', {
           ...context,
           noteId,
           error: streamError instanceof Error ? streamError.message : 'Unknown error'
         });
-        const { error: updateError } = await supabase
-          .from('articles')
-          .update({
-            markdown_content: safeContent,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', noteId)
-          .eq('user_id', userId);
-        if (updateError) {
-          logApi.error('[editNoteContent] Fallback DB save failed', {
-            ...context,
-            noteId,
-            error: updateError.message
-          });
-        }
+      }
+
+      // ✅ Toujours sauvegarder en DB : garantit que le prochain appel LLM lit du contenu frais
+      // et que la note est persistée même si l'auto-save du canevas n'a pas encore tourné
+      const { error: streamSaveError } = await supabase
+        .from('articles')
+        .update({
+          markdown_content: safeContent,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', noteId)
+        .eq('user_id', userId);
+
+      if (streamSaveError) {
+        logApi.error('[editNoteContent] DB save after stream failed', {
+          ...context,
+          noteId,
+          error: streamSaveError.message,
+          streamSucceeded
+        });
+      } else {
+        logApi.info('[editNoteContent] DB save after stream OK', { ...context, noteId, streamSucceeded });
       }
     } else {
       // 💾 Canva fermé : sauvegarde DB normale (comme content:apply)

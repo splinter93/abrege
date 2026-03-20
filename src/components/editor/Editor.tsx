@@ -358,13 +358,12 @@ const Editor: React.FC<EditorProps> = ({
   });
 
   // ✅ Streaming LLM - Écoute les streams SSE pour les mises à jour LLM
-  // ✅ FIX: Réactivé avec le bon endpoint (/api/v2/canvas/{noteId}/ops:listen)
-  // Remplace EditorSyncManager pour les mises à jour en temps réel
-  // ✅ FIX: Activer dès que l'éditeur existe (même si contenu pas encore chargé)
+  // ✅ Désactivé dans le canevas chat : ChatCanvaPane a son propre abonnement note-stream et insertion
+  // (évite double abonnement et double insertion sur le même canal)
   useEditorStreamListener(noteId, editor, {
-    enabled: !isReadonly && !!editor, // ✅ FIX: Activer dès que l'éditeur existe (pas besoin d'attendre isContentReady)
-    debug: true, // ✅ DEBUG: Activer pour diagnostiquer le streaming
-    defaultPosition: 'cursor' // Insérer au niveau du curseur
+    enabled: !isReadonly && !!editor && toolbarContext !== 'canvas',
+    debug: toolbarContext !== 'canvas',
+    defaultPosition: 'cursor'
   });
 
   // Realtime Integration - Désactivé en mode readonly (pages publiques)

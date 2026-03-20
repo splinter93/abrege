@@ -150,8 +150,12 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
    */
   const accumulatedContentRef = useRef<string>('');
   const insertionStartPosRef = useRef<number | null>(null);
-  
-  // ✅ Callback pour insertion directe (comme Ask AI)
+  // ✅ Buffer des chunks reçus avant que l'éditeur soit prêt (flush à l'arrivée de l'éditeur)
+  const streamBufferBeforeReadyRef = useRef<string>('');
+  // ✅ Mode du stream en cours : 'full_replace' = vider le doc, puis reconstruire
+  const streamModeRef = useRef<'full_replace' | null>(null);
+
+  // ✅ Callback pour insertion directe — supporte full_replace et buffer pre-ready
   const handleStreamChunk = useCallback((chunk: string) => {
     logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] handleStreamChunk called', {
       hasEditor: !!editorRef.current,
@@ -161,48 +165,54 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       chunkPreview: chunk.substring(0, 50)
     });
 
-    if (!editorRef.current || !session?.id) {
-      logger.warn(LogCategory.EDITOR, '[ChatCanvaPane] handleStreamChunk skipped', {
-        hasEditor: !!editorRef.current,
-        hasSession: !!session,
-        sessionId: session?.id
+    if (!session?.id) {
+      logger.warn(LogCategory.EDITOR, '[ChatCanvaPane] handleStreamChunk skipped (no session)', { sessionId: session?.id });
+      return;
+    }
+
+    // ✅ Éditeur pas encore prêt : mettre en buffer et ne pas insérer
+    if (!editorRef.current) {
+      streamBufferBeforeReadyRef.current += chunk;
+      logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Chunk buffered (editor not ready)', {
+        bufferedLength: streamBufferBeforeReadyRef.current.length
       });
       return;
     }
 
+    // ✅ Flush le buffer éventuel au premier chunk avec éditeur prêt
+    if (streamBufferBeforeReadyRef.current.length > 0) {
+      chunk = streamBufferBeforeReadyRef.current + chunk;
+      streamBufferBeforeReadyRef.current = '';
+      logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Flushed buffered chunks', { chunkLength: chunk.length });
+    }
+
     // ✅ Initialiser la position d'insertion au premier chunk
     if (insertionStartPosRef.current === null) {
-      const docSize = editorRef.current.state.doc.content.size;
-      insertionStartPosRef.current = docSize;
+      if (streamModeRef.current === 'full_replace') {
+        // full_replace : on reconstruit depuis le début
+        insertionStartPosRef.current = 0;
+      } else {
+        // Mode legacy (append) : insérer à la fin du document
+        insertionStartPosRef.current = editorRef.current.state.doc.content.size;
+      }
       accumulatedContentRef.current = '';
       logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Initialized insertion position', {
-        docSize,
+        pos: insertionStartPosRef.current,
+        mode: streamModeRef.current,
         sessionId: session.id
       });
     }
 
-    // ✅ Accumuler le contenu (comme Ask AI)
     accumulatedContentRef.current += chunk;
 
-    // ✅ Insérer le contenu accumulé (comme Ask AI)
-    // Utiliser la même logique que usePromptExecution
     const startPos = insertionStartPosRef.current;
-    const currentLength = editorRef.current.state.doc.textBetween(
-      startPos,
-      editorRef.current.state.doc.content.size
-    ).length;
-    const endPos = startPos + Math.min(
-      accumulatedContentRef.current.length,
-      currentLength + chunk.length
-    );
+    const docSize = editorRef.current.state.doc.content.size;
+    const toPos = Math.min(startPos + accumulatedContentRef.current.length, docSize);
 
     try {
       editorRef.current.chain()
         .focus()
-        .setTextSelection({ 
-          from: startPos, 
-          to: Math.min(endPos, editorRef.current.state.doc.content.size) 
-        })
+        .setTextSelection({ from: startPos, to: toPos })
         .deleteSelection()
         .focus(startPos)
         .insertContent({ type: 'text', text: accumulatedContentRef.current })
@@ -213,7 +223,17 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
   }, [session?.id]);
 
   const handleStreamEnd = useCallback(() => {
-    if (!editorRef.current || !session?.id) {
+    if (!session?.id) return;
+
+    // ✅ Si éditeur pas encore prêt, le buffer sera perdu (stream terminé) ; endStreaming appelé par le callback du canal
+    if (!editorRef.current) {
+      if (streamBufferBeforeReadyRef.current.length > 0) {
+        logger.warn(LogCategory.EDITOR, '[ChatCanvaPane] Stream end with buffered chunks but no editor', {
+          bufferedLength: streamBufferBeforeReadyRef.current.length
+        });
+        streamBufferBeforeReadyRef.current = '';
+      }
+      streamModeRef.current = null;
       return;
     }
 
@@ -244,11 +264,14 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
 
     accumulatedContentRef.current = '';
     insertionStartPosRef.current = null;
+    streamModeRef.current = null;
   }, [session?.id]);
 
   // ✅ STREAMING : Supabase Realtime Broadcast (editNoteContent chunks)
+  // S'abonner dès qu'on a noteId (sans attendre isEditorReady) pour ne pas manquer start/chunk/end
+  // Les chunks reçus avant éditeur prêt sont mis en buffer (streamBufferBeforeReadyRef) et flush au premier chunk avec éditeur
   useEffect(() => {
-    if (!session || !session.noteId || !isEditorReady) {
+    if (!session || !session.noteId) {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
@@ -264,8 +287,25 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
     });
 
     channel
-      .on('broadcast', { event: 'start' }, () => {
-        logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Stream START received', { noteId });
+      .on('broadcast', { event: 'start' }, (payload: { payload?: { mode?: string } }) => {
+        const mode = payload?.payload?.mode;
+        logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Stream START received', { noteId, mode });
+
+        // ✅ full_replace : on vide l'éditeur avant de reconstruire chunk par chunk
+        streamModeRef.current = mode === 'full_replace' ? 'full_replace' : null;
+        accumulatedContentRef.current = '';
+        insertionStartPosRef.current = null;
+        streamBufferBeforeReadyRef.current = '';
+
+        if (streamModeRef.current === 'full_replace' && editorRef.current) {
+          try {
+            editorRef.current.commands.clearContent();
+            logger.debug(LogCategory.EDITOR, '[ChatCanvaPane] Editor cleared for full_replace', { noteId });
+          } catch (error) {
+            logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Failed to clear editor on start', error);
+          }
+        }
+
         setIsEventSourceConnected(true);
         if (session?.id) {
           startStreaming(session.id);
@@ -314,7 +354,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
         channelRef.current = null;
       }
     };
-  }, [session?.noteId, session?.id, activeCanvaId, isEditorReady, endStreaming]);
+  }, [session?.noteId, session?.id, activeCanvaId, endStreaming]);
 
   // 🔄 Canvas streaming ops (local-first)
   const { sendOp, isConnected: isOpsConnected, lastServerVersion } = useCanvasStreamOps(
@@ -469,12 +509,29 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
 
   /**
    * Récupérer ref de l'éditeur TipTap
+   * Si des chunks ont été mis en buffer avant que l'éditeur soit prêt, on les insère à la fin du doc.
    */
   const handleEditorRef = useCallback((editor: EditorWithMarkdown | null) => {
     editorRef.current = editor;
 
     if (!editor) {
       return;
+    }
+
+    // ✅ Flush du buffer de stream (chunks reçus avant que l'éditeur soit disponible)
+    const buffered = streamBufferBeforeReadyRef.current;
+    if (buffered.length > 0) {
+      streamBufferBeforeReadyRef.current = '';
+      try {
+        const docSize = editor.state.doc.content.size;
+        editor.chain().focus(docSize).insertContent({ type: 'text', text: buffered }).run();
+        logger.info(LogCategory.EDITOR, '[ChatCanvaPane] Flushed buffered stream on editor ref', {
+          length: buffered.length,
+          sessionId: session?.id
+        });
+      } catch (error) {
+        logger.error(LogCategory.EDITOR, '[ChatCanvaPane] Failed to flush buffered stream', error);
+      }
     }
 
     let hasText = false;
@@ -490,7 +547,7 @@ const ChatCanvaPane: React.FC<ChatCanvaPaneProps> = ({
       if (!editorRef.current) return;
       editorRef.current.commands.focus('start');
     });
-  }, []);
+  }, [session?.id]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // ✅ RESIZE HANDLE
