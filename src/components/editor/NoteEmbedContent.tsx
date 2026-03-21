@@ -32,13 +32,79 @@ const NoteEmbedContent: React.FC<NoteEmbedContentProps> = ({
   const normalizedNoteRef = (noteRef || '').trim();
   const isNoteRefValid = normalizedNoteRef.length > 0;
 
-  if (!isNoteRefValid) {
-    return null;
-  }
-
   const normalizedDisplay: NoteEmbedDisplayStyle = ['card', 'inline', 'compact'].includes(display)
     ? display
     : 'inline';
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // HOOKS — tous déclarés ici, avant tout early return (Rules of Hooks)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  const { isMaxDepthReached } = useEmbedDepth();
+
+  // Fetch uniquement en mode card et si la ref est valide
+  const isCardMode = normalizedDisplay === 'card';
+  const { note, loading, error } = useNoteEmbedMetadata({
+    noteRef: normalizedNoteRef,
+    depth: embedDepth,
+    enabled: isNoteRefValid && isCardMode && !isMaxDepthReached()
+  });
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!note) return;
+    const url = note.public_url || `/private/note/${note.id}`;
+    if (standalone) {
+      window.location.href = url;
+    } else {
+      window.open(url, '_blank');
+    }
+  }, [note, standalone]);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  // ✅ SÉCURITÉ: Sanitizer le HTML avant injection — guard sur note null
+  const sanitizedHtml = useMemo(() => {
+    if (!note?.html_content) return '';
+    if (typeof window === 'undefined') {
+      return note.html_content; // SSR: pas de sanitization nécessaire
+    }
+    return DOMPurify.sanitize(note.html_content, {
+      ALLOWED_TAGS: [
+        'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+        'blockquote', 'q', 'cite',
+        'code', 'pre', 'kbd', 'samp', 'var',
+        'a', 'img', 'figure', 'figcaption',
+        'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
+        'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
+        'hr', 'br',
+        'input', 'label',
+        'note-embed', 'youtube-embed'
+      ],
+      ALLOWED_ATTR: [
+        'href', 'src', 'alt', 'title', 'class', 'id', 'style',
+        'data-language', 'data-content', 'data-index', 'data-mermaid', 'data-mermaid-content',
+        'colspan', 'rowspan', 'scope', 'headers',
+        'width', 'height', 'align', 'valign',
+        'type', 'checked', 'disabled'
+      ],
+      ALLOW_DATA_ATTR: true,
+      ALLOW_UNKNOWN_PROTOCOLS: false
+    });
+  }, [note?.html_content]);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // EARLY RETURNS — après tous les hooks
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  if (!isNoteRefValid) {
+    return null;
+  }
 
   if (normalizedDisplay === 'inline' || normalizedDisplay === 'compact') {
     return (
@@ -51,47 +117,6 @@ const NoteEmbedContent: React.FC<NoteEmbedContentProps> = ({
       </div>
     );
   }
-
-  const { depth: contextDepth, isMaxDepthReached } = useEmbedDepth();
-  
-  // Fetch metadata avec cache
-  const { note, loading, error } = useNoteEmbedMetadata({
-    noteRef: normalizedNoteRef,
-    depth: embedDepth,
-    enabled: !isMaxDepthReached()
-  });
-
-  /**
-   * Navigation vers la note au click
-   */
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    if (!note) return;
-
-    // Navigation vers l'URL publique ou éditeur privé
-    const url = note.public_url || `/private/note/${note.id}`;
-    
-    // ✅ En mode standalone (preview), utiliser window.location au lieu de useRouter
-    if (standalone) {
-      window.location.href = url;
-    } else {
-      // En mode édition avec Tiptap, on ne peut pas naviguer (useRouter n'est pas dispo ici non plus)
-      // Juste ouvrir dans un nouvel onglet
-      window.open(url, '_blank');
-    }
-  }, [note, standalone]);
-
-  /**
-   * Menu contextuel au clic droit (mode preview seulement)
-   */
-  const handleContextMenu = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // En mode preview, juste empêcher le menu navigateur
-    // (pas de menu contextuel Scrivia en mode readonly)
-  }, []);
 
   // Wrapper conditionnel
   const Wrapper = standalone ? 'div' : React.Fragment;
@@ -163,38 +188,6 @@ const NoteEmbedContent: React.FC<NoteEmbedContentProps> = ({
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // RENDER - Success (contenu complet de la note)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  // ✅ SÉCURITÉ: Sanitizer le HTML avant injection (conformité GUIDE-EXCELLENCE-CODE.md)
-  const sanitizedHtml = useMemo(() => {
-    if (!note.html_content) return '';
-    if (typeof window === 'undefined') {
-      return note.html_content; // SSR: pas de sanitization nécessaire
-    }
-    return DOMPurify.sanitize(note.html_content, {
-      ALLOWED_TAGS: [
-        'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'ul', 'ol', 'li', 'dl', 'dt', 'dd',
-        'blockquote', 'q', 'cite',
-        'code', 'pre', 'kbd', 'samp', 'var',
-        'a', 'img', 'figure', 'figcaption',
-        'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
-        'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
-        'hr', 'br',
-        'input', 'label',
-        'note-embed', 'youtube-embed'
-      ],
-      ALLOWED_ATTR: [
-        'href', 'src', 'alt', 'title', 'class', 'id', 'style',
-        'data-language', 'data-content', 'data-index', 'data-mermaid', 'data-mermaid-content',
-        'colspan', 'rowspan', 'scope', 'headers',
-        'width', 'height', 'align', 'valign',
-        'type', 'checked', 'disabled'
-      ],
-      ALLOW_DATA_ATTR: true,
-      ALLOW_UNKNOWN_PROTOCOLS: false
-    });
-  }, [note.html_content]);
 
   return (
     <Wrapper {...wrapperProps}>

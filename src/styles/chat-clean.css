@@ -1970,28 +1970,43 @@ body.chat-theme-glass .chatgpt-messages > div {
   overflow: hidden;
 }
 
+/* Même style que .bubble-button (copier / éditer) */
 .user-message-expand-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.45);
-  cursor: pointer;
+  width: 24px;
+  height: 24px;
   padding: 0;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--chat-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  outline: none;
 }
 
 .user-message-expand-btn:hover {
-  color: rgba(255, 255, 255, 0.85);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--chat-text-primary);
+}
+
+.user-message-expand-btn:focus,
+.user-message-expand-btn:focus-visible {
+  outline: none;
+  color: var(--chat-text-primary);
+}
+
+.user-message-expand-btn:active {
+  transform: scale(0.9);
 }
 
 .user-message-expand-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.2;
   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   flex-shrink: 0;
 }

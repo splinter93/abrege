@@ -10,7 +10,7 @@
 
 import React, { useRef } from 'react';
 import Link from 'next/link';
-import { Menu, Bot, X, ChevronDown } from 'lucide-react';
+import { Menu, Bot, X, ChevronDown, Minimize2 } from 'lucide-react';
 import type { Agent } from '@/types/chat';
 import AgentInfoDropdown from './AgentInfoDropdown';
 import AgentSelectorDropdown from './AgentSelectorDropdown';
@@ -205,21 +205,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             aria-label="Réduire le chat"
             title="Réduire le chat"
           >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <polyline points="4 14 10 14 10 20"></polyline>
-              <polyline points="20 10 14 10 14 4"></polyline>
-              <line x1="14" y1="10" x2="21" y2="3"></line>
-              <line x1="3" y1="21" x2="10" y2="14"></line>
-            </svg>
+            <Minimize2 className="w-5 h-5" />
           </Link>
         )}
       </div>

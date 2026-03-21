@@ -39,12 +39,14 @@ vi.mock('ws', () => {
   // Wrapper pour permettre à vi.mocked() de fonctionner
   const MockWebSocketServerFn = vi.fn(MockWebSocketServer);
   
-  const mockWs = vi.fn();
-  mockWs.Server = MockWebSocketServerFn;
-  mockWs.CONNECTING = 0;
-  mockWs.OPEN = 1;
-  mockWs.CLOSING = 2;
-  mockWs.CLOSED = 3;
+  // Object.assign pour ajouter les constantes statiques sans erreur TypeScript
+  const mockWs = Object.assign(vi.fn(), {
+    Server: MockWebSocketServerFn,
+    CONNECTING: 0 as const,
+    OPEN: 1 as const,
+    CLOSING: 2 as const,
+    CLOSED: 3 as const,
+  });
   
   return { 
     default: mockWs,
@@ -97,11 +99,9 @@ describe('XAIVoiceProxyService', () => {
       // Act
       await service.start();
 
-      // Assert
-      expect(mockWebSocketServer).toHaveBeenCalledWith({
-        port: config.port,
-        path: config.path
-      });
+      // Assert: l'implémentation utilise noServer:true + HTTP upgrade handler
+      // (WebSocketServer est appelé deux fois: une pour voice, une pour TTS)
+      expect(mockWebSocketServer).toHaveBeenCalledWith({ noServer: true });
       expect(service.isServerRunning()).toBe(true);
     });
 

@@ -107,7 +107,8 @@ describe('SessionTitleGenerator', () => {
 
       expect(result.success).toBe(true);
       expect(result.title).toBe('Comment apprendre TypeScript');
-      expect(result.executionTime).toBeGreaterThan(0);
+      // executionTime est >= 0 : Date.now() avec un mock synchrone peut retourner 0
+      expect(result.executionTime).toBeGreaterThanOrEqual(0);
       expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
@@ -221,26 +222,35 @@ describe('SessionTitleGenerator', () => {
     });
 
     it('should handle timeout', async () => {
-      // Mock fetch qui ne répond jamais (simule timeout)
-      (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(() => 
-        new Promise((_resolve, reject) => {
-          // Simuler AbortError après 11s (après le timeout de 10s)
-          setTimeout(() => {
-            const abortError = new Error('The operation was aborted');
-            abortError.name = 'AbortError';
-            reject(abortError);
-          }, 11000);
-        })
+      vi.useFakeTimers();
+
+      // Mock fetch qui écoute l'AbortSignal et rejette dès que le signal est aborted
+      (global.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
+        (_url: string, options?: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            options?.signal?.addEventListener('abort', () => {
+              const abortError = new Error('The operation was aborted');
+              abortError.name = 'AbortError';
+              reject(abortError);
+            });
+          })
       );
 
-      const result = await generator.generateTitle({
+      const promise = generator.generateTitle({
         sessionId: 'test-session-id',
         userMessage: 'Test message'
       });
 
+      // Avancer les timers au-delà du timeout interne (10s) pour déclencher l'abort
+      await vi.advanceTimersByTimeAsync(11000);
+
+      const result = await promise;
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Timeout');
-    }, 15000); // Timeout de 15s pour ce test
+
+      vi.useRealTimers();
+    });
 
     it('should handle empty response from API', async () => {
       (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({

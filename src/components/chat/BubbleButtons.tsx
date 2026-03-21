@@ -17,6 +17,8 @@ interface BubbleButtonsProps {
   showRegenerateButton?: boolean;
   isVoicePlaying?: boolean;
   className?: string;
+  /** Rendu au début du container (ex: bouton expand message user), visible au hover comme les autres */
+  prependAction?: React.ReactNode;
 }
 
 const BubbleButtons: React.FC<BubbleButtonsProps> = ({
@@ -31,7 +33,8 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
   showEditButton = false,
   showRegenerateButton = false,
   isVoicePlaying = false,
-  className = ''
+  className = '',
+  prependAction
 }) => {
   const [copied, setCopied] = React.useState(false);
 
@@ -62,6 +65,7 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
     <>
       <div className={`bubble-buttons ${className}`}>
         <div className="bubble-buttons-container">
+          {prependAction}
           <button
             className={`bubble-button copy-button ${copied ? 'copied' : ''}`}
             onClick={handleCopy}

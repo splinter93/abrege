@@ -87,26 +87,6 @@ export const CopyButtonPropsSchema = z.object({
   className: z.string().optional()
 });
 
-/**
- * Schéma de validation pour les props du composant ToolCallMessage
- */
-export const ToolCallMessagePropsSchema = z.object({
-  toolCalls: z.array(z.object({
-    id: z.string(),
-    type: z.literal('function'),
-    function: z.object({
-      name: z.string(),
-      arguments: z.string()
-    })
-  })),
-  toolResults: z.array(z.object({
-    tool_call_id: z.string(),
-    name: z.string(),
-    content: z.string(),
-    success: z.boolean().optional()
-  })).optional(),
-  className: z.string().optional()
-});
 
 /**
  * Schéma de validation pour les props du composant LoadingSpinner

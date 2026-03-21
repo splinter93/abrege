@@ -134,6 +134,7 @@ describe('NetworkRetryService', () => {
         initialDelay: 100,
         operationName: 'test-operation'
       });
+      promise.catch(() => {}); // supprime le warning unhandled rejection
 
       await vi.advanceTimersByTimeAsync(300);
 
@@ -172,13 +173,19 @@ describe('NetworkRetryService', () => {
         backoffMultiplier: 2,
         operationName: 'test-operation'
       });
+      // Supprime le warning "unhandled rejection" : la promesse rejette après
+      // le 3e retry avant que expect().rejects ait pu s'attacher
+      promise.catch(() => {});
 
       // Tentative 1 → échec → attendre 100ms
+      // Les microtasks (Promise) ne sont pas bloquées par les fake timers : flush via await chain
       await vi.advanceTimersByTimeAsync(100);
+      await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
       expect(fn).toHaveBeenCalledTimes(2);
 
       // Tentative 2 → échec → attendre 200ms (100 * 2^1)
       await vi.advanceTimersByTimeAsync(200);
+      await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
       expect(fn).toHaveBeenCalledTimes(3);
 
       // Tentative 3 → échec → fin (pas de délai après dernière tentative)

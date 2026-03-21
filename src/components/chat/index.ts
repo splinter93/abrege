@@ -11,7 +11,7 @@ export { default as ChatInput } from './ChatInput';
 export { default as EnhancedMarkdownMessage } from './EnhancedMarkdownMessage';
 export { default as MermaidRenderer } from '@/components/mermaid/MermaidRenderer';
 // OptimizedMessage supprimé
-export { default as ToolCallMessage } from './ToolCallMessage';
+// ToolCallMessage supprimé — remplacé par StreamTimelineRenderer
 // ToolCallDebugger supprimé
 
 // Composants d'interface

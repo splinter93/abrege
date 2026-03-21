@@ -19,7 +19,6 @@ import { useNoteEmbedMetadata } from '@/hooks/useNoteEmbedMetadata';
 import { useEmbedDepth } from '@/contexts/EmbedDepthContext';
 import { MAX_EMBED_DEPTH, type NoteEmbedDisplayStyle } from '@/types/noteEmbed';
 import { useRouter } from 'next/navigation';
-import { simpleLogger as logger } from '@/utils/logger';
 import NoteEmbedInline from './NoteEmbedInline';
 import '@/styles/note-embed.css';
 
@@ -29,7 +28,7 @@ interface NoteEmbedViewProps extends NodeViewProps {
 
 const NoteEmbedViewComponent: React.FC<NoteEmbedViewProps> = ({ node, getPos }) => {
   const router = useRouter();
-  const { depth: contextDepth, isMaxDepthReached } = useEmbedDepth();
+  const { isMaxDepthReached } = useEmbedDepth();
   
   const noteRef = node.attrs.noteRef as string;
   const noteTitle = node.attrs.noteTitle as string | null | undefined;
@@ -38,9 +37,76 @@ const NoteEmbedViewComponent: React.FC<NoteEmbedViewProps> = ({ node, getPos }) 
   const normalizedDisplay: NoteEmbedDisplayStyle = ['card', 'inline', 'compact'].includes(displayAttr)
     ? displayAttr
     : 'inline';
- 
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // ROUTING - Style inline (mention)
+  // HOOKS — tous déclarés ici, avant tout early return (Rules of Hooks)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  const isCardMode = normalizedDisplay === 'card';
+
+  // Fetch uniquement en mode card
+  const { note, loading, error } = useNoteEmbedMetadata({
+    noteRef,
+    depth: embedDepth,
+    enabled: isCardMode && !isMaxDepthReached()
+  });
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!note) return;
+    const url = note.public_url || `/private/note/${note.id}`;
+    router.push(url);
+  }, [note, router]);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const pos = typeof getPos === 'function' ? getPos() : 0;
+    const customEvent = new CustomEvent('tiptap-context-menu', {
+      detail: {
+        coords: { x: e.clientX, y: e.clientY },
+        nodeType: 'noteEmbed',
+        hasSelection: false,
+        position: pos
+      }
+    });
+    document.dispatchEvent(customEvent);
+  }, [getPos]);
+
+  // ✅ SÉCURITÉ: Sanitizer le HTML avant injection — guard sur note null
+  const sanitizedHtml = useMemo(() => {
+    if (!note?.html_content) return '';
+    if (typeof window === 'undefined') {
+      return note.html_content; // SSR: pas de sanitization nécessaire
+    }
+    return DOMPurify.sanitize(note.html_content, {
+      ALLOWED_TAGS: [
+        'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+        'blockquote', 'q', 'cite',
+        'code', 'pre', 'kbd', 'samp', 'var',
+        'a', 'img', 'figure', 'figcaption',
+        'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
+        'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
+        'hr', 'br',
+        'input', 'label',
+        'note-embed', 'youtube-embed'
+      ],
+      ALLOWED_ATTR: [
+        'href', 'src', 'alt', 'title', 'class', 'id', 'style',
+        'data-language', 'data-content', 'data-index', 'data-mermaid', 'data-mermaid-content',
+        'colspan', 'rowspan', 'scope', 'headers',
+        'width', 'height', 'align', 'valign',
+        'type', 'checked', 'disabled'
+      ],
+      ALLOW_DATA_ATTR: true,
+      ALLOW_UNKNOWN_PROTOCOLS: false
+    });
+  }, [note?.html_content]);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ROUTING - Style inline (mention) — après tous les hooks
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   
   if (normalizedDisplay === 'inline' || normalizedDisplay === 'compact') {
@@ -57,54 +123,7 @@ const NoteEmbedViewComponent: React.FC<NoteEmbedViewProps> = ({ node, getPos }) 
   }
   
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // STYLE CARD (Default)
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  
-  // Fetch metadata avec cache
-  const { note, loading, error } = useNoteEmbedMetadata({
-    noteRef,
-    depth: embedDepth,
-    enabled: !isMaxDepthReached()
-  });
-
-  /**
-   * Navigation vers la note au click
-   */
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    if (!note) return;
-
-    // Navigation vers l'URL publique ou éditeur privé
-    const url = note.public_url || `/private/note/${note.id}`;
-    router.push(url);
-  }, [note, noteRef, embedDepth, router]);
-
-  /**
-   * Menu contextuel au clic droit
-   */
-  const handleContextMenu = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // ✅ Récupérer la position réelle du node dans le document
-    const pos = typeof getPos === 'function' ? getPos() : 0;
-    
-    // Déclencher l'événement custom pour ouvrir le menu contextuel Scrivia
-    const customEvent = new CustomEvent('tiptap-context-menu', {
-      detail: {
-        coords: { x: e.clientX, y: e.clientY },
-        nodeType: 'noteEmbed',
-        hasSelection: false,
-        position: pos
-      }
-    });
-    
-    document.dispatchEvent(customEvent);
-  }, [getPos]);
-
-  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // RENDER - Profondeur max atteinte
+  // RENDER CARD - Profondeur max atteinte
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   if (embedDepth >= MAX_EMBED_DEPTH || isMaxDepthReached()) {
@@ -176,43 +195,6 @@ const NoteEmbedViewComponent: React.FC<NoteEmbedViewProps> = ({ node, getPos }) 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // RENDER - Success (contenu complet de la note)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  // Truncate contenu si trop long (perf)
-  const contentPreview = note.markdown_content.length > 2000
-    ? note.markdown_content.substring(0, 2000) + '\n\n...'
-    : note.markdown_content;
-
-  // ✅ SÉCURITÉ: Sanitizer le HTML avant injection (conformité GUIDE-EXCELLENCE-CODE.md)
-  const sanitizedHtml = useMemo(() => {
-    if (!note.html_content) return '';
-    if (typeof window === 'undefined') {
-      return note.html_content; // SSR: pas de sanitization nécessaire
-    }
-    return DOMPurify.sanitize(note.html_content, {
-      ALLOWED_TAGS: [
-        'p', 'br', 'strong', 'em', 'u', 'b', 'i', 's', 'del', 'ins',
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'ul', 'ol', 'li', 'dl', 'dt', 'dd',
-        'blockquote', 'q', 'cite',
-        'code', 'pre', 'kbd', 'samp', 'var',
-        'a', 'img', 'figure', 'figcaption',
-        'div', 'span', 'section', 'article', 'aside', 'header', 'footer',
-        'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption',
-        'hr', 'br',
-        'input', 'label',
-        'note-embed', 'youtube-embed'
-      ],
-      ALLOWED_ATTR: [
-        'href', 'src', 'alt', 'title', 'class', 'id', 'style',
-        'data-language', 'data-content', 'data-index', 'data-mermaid', 'data-mermaid-content',
-        'colspan', 'rowspan', 'scope', 'headers',
-        'width', 'height', 'align', 'valign',
-        'type', 'checked', 'disabled'
-      ],
-      ALLOW_DATA_ATTR: true,
-      ALLOW_UNKNOWN_PROTOCOLS: false
-    });
-  }, [note.html_content]);
 
   return (
     <NodeViewWrapper 

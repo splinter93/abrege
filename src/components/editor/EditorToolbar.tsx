@@ -156,34 +156,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
     setAudioError(error);
   }, []);
 
-  if (!editor || readonly) {
-    // ✅ DEBUG: Log si EditorToolbar retourne null
-    if (process.env.NODE_ENV === 'development') {
-      logger.warn(LogCategory.EDITOR, '[EditorToolbar] ❌ Returning null', {
-        hasEditor: !!editor,
-        readonly,
-        reason: !editor ? 'no editor' : 'readonly',
-        timestamp: Date.now(),
-        context: { operation: 'toolbarReturnNull' }
-      });
-    }
-    return null;
-  }
-
-  // ✅ DEBUG: Log avant le return pour confirmer qu'on retourne le JSX
-  if (process.env.NODE_ENV === 'development') {
-    logger.debug(LogCategory.EDITOR, '[EditorToolbar] ✅ Returning JSX', {
-      hasEditor: !!editor,
-      readonly,
-      timestamp: Date.now(),
-      context: { operation: 'toolbarReturnJSX' }
-    });
-  }
-
   const moreMenuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
-    if (!showMoreMenu) return;
+    if (!editor || readonly || !showMoreMenu) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
         setShowMoreMenu(false);
@@ -191,7 +167,11 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMoreMenu]);
+  }, [showMoreMenu, editor, readonly]);
+
+  if (!editor || readonly) {
+    return null;
+  }
 
   return (
     <div className="editor-toolbar" data-debug-toolbar-content="visible">
