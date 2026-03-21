@@ -178,7 +178,9 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
                 e.preventDefault();
                 const { publicUrl } = await uploadImageForNote(image, noteId);
                 handlers.handleHeaderChange(publicUrl);
-              } catch {}
+              } catch {
+                /* drop image en-tête annulé — ignoré */
+              }
             }}
           >
             <button

@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Sanitize: remove control chars, limit length (xAI 422 = invalid format)
+    // eslint-disable-next-line no-control-regex -- suppression volontaire des caractères de contrôle ISO pour l’API TTS
     const sanitized = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
     const text =
       sanitized.length > MAX_TEXT_LENGTH - 20

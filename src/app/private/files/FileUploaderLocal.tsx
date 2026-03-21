@@ -155,69 +155,64 @@ const FileUploaderLocal: React.FC<FileUploaderLocalProps> = ({
   // ========================================
 
   const uploadFile = async (file: File, upload: UploadProgress) => {
-    try {
-      // 1. Récupérer le token d'authentification
-      const accessToken = await getAccessToken();
-      
-      if (!accessToken) {
-        throw new Error('Session d\'authentification expirée. Veuillez vous reconnecter.');
-      }
+    // 1. Récupérer le token d'authentification
+    const accessToken = await getAccessToken();
 
-      // 2. Initier l'upload avec le token d'authentification
-      const uploadResponse = await fetch('/api/ui/files/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-          folderId: folderId || undefined,
-        }),
-      });
-
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
-        throw new Error(errorData.error || 'Erreur lors de l\'initiation de l\'upload');
-      }
-
-      const uploadData = await uploadResponse.json();
-
-      // 3. Upload vers S3
-      const s3Response = await fetch(uploadData.uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': file.type,
-        },
-        body: file,
-      });
-
-      if (!s3Response.ok) {
-        throw new Error('Erreur lors de l\'upload vers S3');
-      }
-
-      // 4. Marquer comme terminé
-      setUploads(prev => prev.map(u => 
-        u.fileId === upload.fileId 
-          ? { ...u, status: 'complete', progress: 100 }
-          : u
-      ));
-
-      // 5. Notifier le composant parent
-      if (uploadData.file) {
-        onUploadComplete(uploadData.file);
-      }
-
-      // 6. Nettoyer après un délai
-      setTimeout(() => {
-        setUploads(prev => prev.filter(u => u.fileId !== upload.fileId));
-      }, 3000);
-
-    } catch (error) {
-      throw error;
+    if (!accessToken) {
+      throw new Error('Session d\'authentification expirée. Veuillez vous reconnecter.');
     }
+
+    // 2. Initier l'upload avec le token d'authentification
+    const uploadResponse = await fetch('/api/ui/files/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+        folderId: folderId || undefined,
+      }),
+    });
+
+    if (!uploadResponse.ok) {
+      const errorData = await uploadResponse.json();
+      throw new Error(errorData.error || 'Erreur lors de l\'initiation de l\'upload');
+    }
+
+    const uploadData = await uploadResponse.json();
+
+    // 3. Upload vers S3
+    const s3Response = await fetch(uploadData.uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type,
+      },
+      body: file,
+    });
+
+    if (!s3Response.ok) {
+      throw new Error('Erreur lors de l\'upload vers S3');
+    }
+
+    // 4. Marquer comme terminé
+    setUploads(prev => prev.map(u =>
+      u.fileId === upload.fileId
+        ? { ...u, status: 'complete', progress: 100 }
+        : u
+    ));
+
+    // 5. Notifier le composant parent
+    if (uploadData.file) {
+      onUploadComplete(uploadData.file);
+    }
+
+    // 6. Nettoyer après un délai
+    setTimeout(() => {
+      setUploads(prev => prev.filter(u => u.fileId !== upload.fileId));
+    }, 3000);
   };
 
   // ========================================

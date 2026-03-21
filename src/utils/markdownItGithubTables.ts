@@ -44,7 +44,7 @@ export default function markdownItGithubTables(md: MarkdownIt): void {
 
     // Vérifier la ligne de séparation
     const separatorLine = lines[1];
-    if (!separatorLine.match(/^\|[\s\-\:]+\|$/)) return false;
+    if (!separatorLine.match(/^\|[\s\-:]+\|$/)) return false;
 
     if (silent) return true;
 

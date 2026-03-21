@@ -58,7 +58,7 @@ export const EditorContextMenuContainer: React.FC<EditorContextMenuContainerProp
           });
           break;
 
-        case 'duplicate':
+        case 'duplicate': {
           // Dupliquer le bloc actuel
           const pos = editorState.contextMenu.nodePosition;
           const nodeType = editorState.contextMenu.nodeType;
@@ -85,6 +85,7 @@ export const EditorContextMenuContainer: React.FC<EditorContextMenuContainerProp
             logger.error(LogCategory.EDITOR, 'Erreur duplication:', err);
           }
           break;
+        }
 
         case 'delete':
           // Supprimer le contenu sélectionné ou le bloc

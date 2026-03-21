@@ -368,7 +368,7 @@ export function useNoteStreamListener(
             }
             break;
 
-          case 'error':
+          case 'error': {
             // Erreur serveur
             const errorMsg = data.data || 'Unknown error';
             logger.error(LogCategory.EDITOR, '[useNoteStreamListener] Server error', {
@@ -376,9 +376,10 @@ export function useNoteStreamListener(
               error: errorMsg
             });
 
-            const error = new Error(`Stream error: ${errorMsg}`);
-            onErrorRef.current?.(error);
+            const streamError = new Error(`Stream error: ${errorMsg}`);
+            onErrorRef.current?.(streamError);
             break;
+          }
 
           default:
             logger.warn(LogCategory.EDITOR, '[useNoteStreamListener] Unknown event type', {

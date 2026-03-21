@@ -15,7 +15,7 @@ import {
 } from './printA4Document';
 import { getPrintA4DocumentCss } from './printA4Theme';
 
-export interface PreparePdfElementOptions extends PrintA4DocumentOptions {}
+export type PreparePdfElementOptions = PrintA4DocumentOptions;
 
 function createContainer(): HTMLElement {
   const container = document.createElement('div');

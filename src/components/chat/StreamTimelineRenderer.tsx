@@ -60,7 +60,7 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
               </div>
             );
 
-          case 'tool_execution':
+          case 'tool_execution': {
             // ✅ NOUVEAU: Les résultats sont maintenant DANS les toolCalls (tc.success)
             // Plus besoin de chercher les tool_result séparés (virés de la timeline)
             
@@ -93,6 +93,7 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
                 />
               </div>
             );
+          }
 
           case 'plan':
             return (

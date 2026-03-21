@@ -2,6 +2,7 @@
  * Types TypeScript pour l'éditeur OpenAPI
  * Définit la structure des schémas OpenAPI et des endpoints
  */
+/* eslint-disable @typescript-eslint/no-namespace -- regroupement OpenAPIEditor (refactor imports = hors batch 1) */
 
 export namespace OpenAPITypes {
   /**

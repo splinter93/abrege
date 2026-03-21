@@ -65,7 +65,7 @@ export class AgentExecutor {
     logger.info(`[AgentExecutor] 🔍 Détection multimodale: ${isMultimodal}, payload: ${!!groqPayload}`, { 
       traceId, 
       model: agent.model,
-      hasImage: !!(input.image || input.imageUrl || input.image_url) ? 'yes' : 'no',
+      hasImage: (input.image || input.imageUrl || input.image_url) ? 'yes' : 'no',
       inputKeys: Object.keys(input)
     });
     

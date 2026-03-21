@@ -80,12 +80,13 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
     (message) => message.role === 'assistant' && Boolean(message.isStreaming)
   );
   
-  const virtualizer = shouldVirtualize ? useVirtualizer({
-    count: messages.length,
+  // Toujours appeler useVirtualizer (Rules of Hooks) — count: 0 si pas de virtualisation
+  const virtualizer = useVirtualizer({
+    count: shouldVirtualize ? messages.length : 0,
     getScrollElement: () => containerRef.current,
     estimateSize: () => 120, // Hauteur estimée par message
     overscan: 5
-  }) : null;
+  });
 
   return (
     <div
@@ -112,7 +113,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
         )}
 
         {/* Messages list - Virtualisée si > 100 messages */}
-        {shouldVirtualize && virtualizer ? (
+        {shouldVirtualize ? (
           <div
             ref={virtualizerRef}
             style={{

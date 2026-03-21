@@ -189,19 +189,6 @@ function AuthPageContent() {
                   : (isSignUp ? 'Rejoignez Scrivia pour organiser vos connaissances' : 'Accédez à votre Espace Scrivia')}
               </p>
 
-            {/* Debug masqué pour un design plus propre */}
-            {process.env.NODE_ENV === 'development' && false && (
-              <div className="debug-info">
-                <strong>Debug OAuth:</strong><br />
-                client_id: {clientId}<br />
-                redirect_uri: {redirectUri}<br />
-                response_type: {responseType}<br />
-                scope: {scope}<br />
-                state: {state}<br />
-                isExternalOAuth: {isExternalOAuth ? 'true' : 'false'}
-              </div>
-            )}
-
             {isExternalOAuth && (
               <div className="auth-oauth-info">
                 <p><strong>Application :</strong> {clientId}</p>

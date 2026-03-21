@@ -117,7 +117,7 @@ class Logger {
       };
     
     switch (level) {
-      case LogLevel.ERROR:
+      case LogLevel.ERROR: {
         const errorData = data && typeof data === 'object' && Object.keys(data).length > 0 ? serializeData(data) : undefined;
         const errorObj = error && error instanceof Error ? error : undefined;
         const serializedError = error && !(error instanceof Error) ? serializeData(error) : undefined;
@@ -137,6 +137,7 @@ class Logger {
           console.error(formattedMessage);
         }
         break;
+      }
       case LogLevel.WARN:
         console.warn(formattedMessage, data ? serializeData(data) : '');
         break;

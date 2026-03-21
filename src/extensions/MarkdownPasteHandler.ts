@@ -27,7 +27,7 @@ function looksLikeMarkdown(text: string): boolean {
     /(^|\n)>\s+\S/,                   // > quote
     /(^|\n)```[\s\S]*?```/,           // ``` code block
     /\*\*[^*\n]+?\*\*/,               // **bold**
-    /(?:^|[^\*])\*[^*\n]+?\*(?:$|[^\*])/, // *italic* (evite le greedy)
+    /(?:^|[^*])\*[^*\n]+?\*(?:$|[^*])/, // *italic* (evite le greedy)
     /\[([^\]]+)\]\(([^)]+)\)/,        // [link](url)
     /!\[([^\]]*)\]\(([^)]+)\)/,       // ![img](src)
     /(^|\n)\|.+\|/,                   // table row

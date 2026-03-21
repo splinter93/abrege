@@ -10,7 +10,7 @@ import {
   type PrintA4DocumentOptions,
 } from './printA4Document';
 
-export interface HtmlPageOptions extends PrintA4DocumentOptions {}
+export type HtmlPageOptions = PrintA4DocumentOptions;
 
 export function createFullHtmlPage(options: HtmlPageOptions): string {
   return createPrintA4HtmlDocument(options);

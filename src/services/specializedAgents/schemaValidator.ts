@@ -284,12 +284,13 @@ export class SchemaValidator {
     warnings: string[]
   ): void {
     switch (format) {
-      case 'email':
+      case 'email': {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(value)) {
           errors.push(`${path}: format email invalide`);
         }
         break;
+      }
       case 'uri':
         try {
           new URL(value);
@@ -297,24 +298,27 @@ export class SchemaValidator {
           errors.push(`${path}: format URI invalide`);
         }
         break;
-      case 'uuid':
+      case 'uuid': {
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (!uuidRegex.test(value)) {
           errors.push(`${path}: format UUID invalide`);
         }
         break;
-      case 'date':
+      }
+      case 'date': {
         const date = new Date(value);
         if (isNaN(date.getTime())) {
           errors.push(`${path}: format date invalide`);
         }
         break;
-      case 'date-time':
+      }
+      case 'date-time': {
         const dateTime = new Date(value);
         if (isNaN(dateTime.getTime())) {
           errors.push(`${path}: format date-time invalide`);
         }
         break;
+      }
       default:
         warnings.push(`${path}: format "${format}" non reconnu, validation ignorée`);
     }

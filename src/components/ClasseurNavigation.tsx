@@ -79,7 +79,9 @@ function SortableTab({ classeur, isActive, onSelectClasseur, onContextMenu, isOv
           detail: { classeurId: classeur.id, itemId: data.id, itemType: data.type }
         }));
       }
-    } catch {}
+    } catch {
+      /* JSON drag payload invalide — ignoré */
+    }
   }, [classeur.id]);
   
   return (
@@ -156,10 +158,6 @@ const ClasseurNavigation: React.FC<ClasseurNavigationProps> = ({
   const [isColorPickerVisible, setColorPickerVisible] = useState(false);
   const [emojiPicker, setEmojiPicker] = useState<{ visible: boolean; classeur: Classeur | null }>({ visible: false, classeur: null });
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    console.debug('[EFFECT] useEffect triggered in ClasseurTabs (DnD Ready)', {});
-  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })

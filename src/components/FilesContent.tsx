@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { FileItem } from '@/types/files';
 import ImageModal from './ImageModal';
@@ -124,8 +124,62 @@ const FilesContent: React.FC<FilesContentProps> = ({
     currentIndex: 0,
   });
 
-  // Robustesse : toujours un tableau pour éviter les erreurs React
-  const safeFiles = Array.isArray(files) ? files : [];
+  const safeFiles = useMemo(() => (Array.isArray(files) ? files : []), [files]);
+
+  const handleFileClick = useCallback((file: FileItem) => {
+    if (file.mime_type?.startsWith('image/')) {
+      const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
+      const currentIndex = imageFiles.findIndex(f => f.id === file.id);
+      setImageModal({
+        isOpen: true,
+        imageUrl: file.url,
+        imageName: file.filename || 'Image',
+        currentIndex,
+      });
+    } else {
+      onFileOpen(file);
+    }
+  }, [safeFiles, onFileOpen]);
+
+  const handleFileDoubleClick = useCallback((file: FileItem) => {
+    onFileRename(file.id, file.filename);
+  }, [onFileRename]);
+
+  const handleCloseImageModal = useCallback(() => {
+    setImageModal(prev => ({ ...prev, isOpen: false }));
+  }, []);
+
+  const handleOpenImageInNewTab = useCallback(() => {
+    window.open(imageModal.imageUrl, '_blank');
+  }, [imageModal.imageUrl]);
+
+  const handlePreviousImage = useCallback(() => {
+    const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
+    if (imageFiles.length === 0) return;
+    const newIndex = imageModal.currentIndex > 0 ? imageModal.currentIndex - 1 : imageFiles.length - 1;
+    const newFile = imageFiles[newIndex];
+    if (!newFile) return;
+    setImageModal({
+      isOpen: true,
+      imageUrl: newFile.url,
+      imageName: newFile.filename || 'Image',
+      currentIndex: newIndex,
+    });
+  }, [safeFiles, imageModal.currentIndex]);
+
+  const handleNextImage = useCallback(() => {
+    const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
+    if (imageFiles.length === 0) return;
+    const newIndex = imageModal.currentIndex < imageFiles.length - 1 ? imageModal.currentIndex + 1 : 0;
+    const newFile = imageFiles[newIndex];
+    if (!newFile) return;
+    setImageModal({
+      isOpen: true,
+      imageUrl: newFile.url,
+      imageName: newFile.filename || 'Image',
+      currentIndex: newIndex,
+    });
+  }, [safeFiles, imageModal.currentIndex]);
 
   if (loading) {
     return (
@@ -173,60 +227,6 @@ const FilesContent: React.FC<FilesContentProps> = ({
       )
     );
   }
-
-  const handleFileClick = useCallback((file: FileItem) => {
-    // Si c'est une image, ouvrir la modal
-    if (file.mime_type?.startsWith('image/')) {
-      const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
-      const currentIndex = imageFiles.findIndex(f => f.id === file.id);
-      setImageModal({
-        isOpen: true,
-        imageUrl: file.url,
-        imageName: file.filename || 'Image',
-        currentIndex,
-      });
-    } else {
-      // Pour les autres types de fichiers, utiliser le comportement par défaut
-      onFileOpen(file);
-    }
-  }, [safeFiles, onFileOpen]);
-
-  const handleFileDoubleClick = useCallback((file: FileItem) => {
-    // Double-clic : commencer le renommage
-    onFileRename(file.id, file.filename);
-  }, [onFileRename]);
-
-  const handleCloseImageModal = useCallback(() => {
-    setImageModal(prev => ({ ...prev, isOpen: false }));
-  }, []);
-
-  const handleOpenImageInNewTab = useCallback(() => {
-    window.open(imageModal.imageUrl, '_blank');
-  }, [imageModal.imageUrl]);
-
-  const handlePreviousImage = useCallback(() => {
-    const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
-    const newIndex = imageModal.currentIndex > 0 ? imageModal.currentIndex - 1 : imageFiles.length - 1;
-    const newFile = imageFiles[newIndex];
-    setImageModal({
-      isOpen: true,
-      imageUrl: newFile.url,
-      imageName: newFile.filename || 'Image',
-      currentIndex: newIndex,
-    });
-  }, [safeFiles, imageModal.currentIndex]);
-
-  const handleNextImage = useCallback(() => {
-    const imageFiles = safeFiles.filter(f => f.mime_type?.startsWith('image/'));
-    const newIndex = imageModal.currentIndex < imageFiles.length - 1 ? imageModal.currentIndex + 1 : 0;
-    const newFile = imageFiles[newIndex];
-    setImageModal({
-      isOpen: true,
-      imageUrl: newFile.url,
-      imageName: newFile.filename || 'Image',
-      currentIndex: newIndex,
-    });
-  }, [safeFiles, imageModal.currentIndex]);
 
   return (
     <motion.div 

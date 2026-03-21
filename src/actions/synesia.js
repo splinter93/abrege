@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { optimizedApi } from '../services/optimizedApi';
+import { simpleLogger as logger } from '../utils/logger';
 
 const SYNESIA_API_URL = 'https://api.synesia.app/webhooks/a416f2c7-3ebd-4bc7-8979-70f7e1ad572f?wait=true';
 
@@ -34,14 +35,23 @@ export const sendPayloadToSynesia = async ({ url, type, classeurId }) => {
     return newArticle.note;
 
   } catch (error) {
-    console.error("Erreur lors de la création de l'article avant l'envoi à Synesia :", error);
+    logger.error(
+      "Erreur lors de la création de l'article avant l'envoi à Synesia",
+      error
+    );
     throw error;
   }
 };
 
 export const sendTextToSynesia = async (text) => {
+  // process fourni par Node / Next.js (runtime serveur)
+  // eslint-disable-next-line no-undef -- process.env en actions Next.js
+  const apiKey = process.env.SYNESIA_API_KEY;
+  if (!apiKey) {
+    throw new Error('SYNESIA_API_KEY manquante — définir la variable dans .env');
+  }
   const payload = {
-    apiKey: SYNESIA_API_KEY,
+    apiKey,
     text: text,
   };
 

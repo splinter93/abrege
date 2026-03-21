@@ -217,17 +217,20 @@ export class LiminalityToolsAdapter {
       case 'callable':
         return !!(tool as LiminalityCallableTool).callable_id;
       
-      case 'knowledge':
+      case 'knowledge': {
         const kt = tool as LiminalityKnowledgeTool;
         return !!(kt.knowledge_id && kt.name && kt.description);
+      }
       
-      case 'mcp':
+      case 'mcp': {
         const mt = tool as LiminalityMCPTool;
         return !!(mt.server_label && mt.server_url);
+      }
       
-      case 'custom':
+      case 'custom': {
         const ct = tool as LiminalityCustomTool;
         return !!(ct.name && ct.parameters);
+      }
       
       case 'openapi':
       case 'kit':

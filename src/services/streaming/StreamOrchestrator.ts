@@ -256,7 +256,7 @@ export class StreamOrchestrator {
         });
         break;
 
-      case 'error':
+      case 'error': {
         // ✅ Construire objet d'erreur enrichi depuis le chunk SSE
         const errorDetails: StreamErrorDetails = {
           error: chunk.error || 'Erreur stream inconnue',
@@ -276,6 +276,7 @@ export class StreamOrchestrator {
         
         // Throw pour interrompre le stream
         throw new Error(chunk.error || 'Erreur stream');
+      }
     }
   }
 

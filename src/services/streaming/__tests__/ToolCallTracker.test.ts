@@ -37,13 +37,13 @@ describe('ToolCallTracker', () => {
 
       tracker.addToolCall({
         id: 'tc1',
-        function: { arguments: ':\"test\"}' }
+        function: { arguments: ':"test"}' }
       });
 
       const toolCalls = tracker.getAllToolCalls();
 
       expect(toolCalls).toHaveLength(1);
-      expect(toolCalls[0].function.arguments).toBe('{"q":\"test\"}');
+      expect(toolCalls[0].function.arguments).toBe('{"q":"test"}');
     });
 
     it('should track multiple distinct tool calls', () => {

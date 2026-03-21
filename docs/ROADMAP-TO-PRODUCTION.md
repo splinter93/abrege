@@ -21,7 +21,7 @@ Depuis l'audit de janvier 2026, des régressions sont apparues et la dette techn
 | Zone | Score | Statut |
 |------|-------|--------|
 | Qualité TypeScript | 6/10 | ⚠️ Dégradé |
-| ESLint / Code quality | 4/10 | 🔴 194 erreurs restantes (était 232) |
+| ESLint / Code quality | 4/10 | 🔴 184 erreurs restantes (était 232 ; batch ESLint 0 : −10) |
 | Tests | 7/10 | ✅ 601/601 passent (était 600/601) |
 | Sécurité | 8/10 | ✅ Routes debug supprimées |
 | Architecture Chat | 8/10 | ✅ Hooks corrigés, logger.dev supprimé |
@@ -108,11 +108,16 @@ Cause probable pour `NetworkRetryService` : la sérialisation d'erreur `{ status
 
 ---
 
-### B4 — 232 erreurs ESLint dans le code de production
+### B4 — Erreurs ESLint dans le code de production (suivi : [ESLINT-CORRECTION-ROADMAP.md](./ESLINT-CORRECTION-ROADMAP.md))
 
 **Sévérité : CRITIQUE.**
 
-Résultat `npm run lint` :
+Dernière mesure `npm run lint` (après batch 1) :
+```
+✖ 1154 problems (140 errors, 1014 warnings)
+```
+
+Mesure historique de référence :
 ```
 ✖ 1256 problems (232 errors, 1024 warnings)
 ```
@@ -139,7 +144,7 @@ Fichiers API avec `console.log` en production (extrait) :
 - `src/app/api/test-prod/route.ts`
 - Et ~20 autres
 
-**Statut :** 🔄 En cours — 232 → **194 erreurs** (−38). Les 22 violations `react-hooks/rules-of-hooks` sont éliminées. Reste principalement les `no-console` dans les routes API.
+**Statut :** 🔄 En cours — 232 → **184 erreurs** (batch hooks −38, batch ESLint 0 −10). Les violations `react-hooks/rules-of-hooks` en prod sont éliminées. Reste principalement les `no-console` dans les routes API et utils.
 
 ---
 
@@ -600,7 +605,7 @@ Un rate limiter en mémoire dans un environnement serverless est une illusion de
 | B1 | Hooks conditionnels — 6 fichiers | 🔴 CRITIQUE | ✅ Corrigé | 21/03/2026 |
 | B2 | `/api/debug-chatgpt` sans auth | 🔴 CRITIQUE | ✅ Corrigé | 21/03/2026 |
 | B3 | 3 fichiers de test en échec | 🔴 CRITIQUE | ✅ Corrigé | 21/03/2026 |
-| B4 | 232 → 194 erreurs ESLint | 🔴 CRITIQUE | 🔄 En cours | — |
+| B4 | 232 → **140** erreurs ESLint | 🔴 CRITIQUE | 🔄 En cours | batch 0–1 ESLint 20–21/03 |
 | I1 | ClasseursPage.tsx 1460 lignes | 🟠 IMPORTANT | ❌ Ouvert | — |
 | I2 | Fichiers massifs services | 🟠 IMPORTANT | ❌ Ouvert | — |
 | I3 | Copy logic dupliquée | 🟠 IMPORTANT | ❌ Ouvert | — |
@@ -626,7 +631,7 @@ L'application sera considérée **prête pour une mise en production professionn
 - [x] **0 violation `react-hooks/rules-of-hooks`** dans les fichiers de production ✅ 21/03/2026
 - [x] **0 endpoint debug** accessible sans authentification en production ✅ 21/03/2026
 - [x] **601/601 tests individuels passent** ✅ 21/03/2026 (2 fichiers pré-existants en erreur de mock → voir I7)
-- [ ] **0 erreur ESLint** — 194 restantes (était 232)
+- [ ] **0 erreur ESLint** — 184 restantes (était 232)
 - [ ] **4 tests E2E bloquants** dans la CI/CD
 - [ ] **`ClasseursPage.tsx` < 500 lignes** (ou décomposé en modules)
 - [ ] **`stream/route.ts` < 500 lignes** (ou décomposé en modules)

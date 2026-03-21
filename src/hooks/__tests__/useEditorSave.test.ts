@@ -19,7 +19,7 @@ describe('useEditorSave - Image spacing fix', () => {
     
     // 🔧 FIX COMPLET: Ajouter des sauts de ligne entre images et éléments markdown de bloc
     content = content.replace(
-      /(\!\[.*?\]\(.*?\))(\s*)(?=[#>*\-`]|\d+\.)/gm,
+      /(!\[.*?\]\(.*?\))(\s*)(?=[#>*\-`]|\d+\.)/gm,
       (_match, image, whitespace) => {
         const lineBreaks = (whitespace.match(/\n/g) || []).length;
         if (lineBreaks < 2) {

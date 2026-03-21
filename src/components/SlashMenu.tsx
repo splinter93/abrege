@@ -172,7 +172,7 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
           return;
         }
       }
-      anchorRef.current?.closeMenu && anchorRef.current.closeMenu();
+      anchorRef.current?.closeMenu?.();
     };
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
@@ -196,7 +196,7 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
     } else if (e.key === 'Escape') {
       setSearch('');
       e.preventDefault();
-      anchorRef.current?.closeMenu && anchorRef.current.closeMenu();
+      anchorRef.current?.closeMenu?.();
     }
   }, [open, filtered, selectedIndex, onSelect, setSearch, anchorRef]);
 
@@ -205,7 +205,7 @@ const SlashMenu: React.FC<SlashMenuProps> = ({ open, search, setSearch, onSelect
   }, [setSearch]);
 
   const handleBlur = useCallback(() => {
-    anchorRef.current?.closeMenu && anchorRef.current.closeMenu();
+    anchorRef.current?.closeMenu?.();
   }, [anchorRef]);
 
   const handleItemClick = useCallback((cmd: SlashCommand) => {

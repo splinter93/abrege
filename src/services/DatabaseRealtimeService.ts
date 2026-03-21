@@ -339,7 +339,7 @@ export class DatabaseRealtimeService {
           timestamp: Date.now()
         };
 
-      case 'UPDATE':
+      case 'UPDATE': {
         if (!newRecord || typeof newRecord !== 'object') {
           logger.warn(LogCategory.EDITOR, '[DatabaseRealtime] Record UPDATE invalide:', newRecord);
           return null;
@@ -411,8 +411,9 @@ export class DatabaseRealtimeService {
           payload: newRecord,
           timestamp: Date.now()
         };
+      }
 
-      case 'DELETE':
+      case 'DELETE': {
         if (!oldRecord || typeof oldRecord !== 'object') {
           logger.warn(LogCategory.EDITOR, '[DatabaseRealtime] Record DELETE invalide:', oldRecord);
           return null;
@@ -424,6 +425,7 @@ export class DatabaseRealtimeService {
           payload: { id: deletedArticle.id },
           timestamp: Date.now()
         };
+      }
 
       default:
         return null;

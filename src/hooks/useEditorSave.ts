@@ -79,7 +79,7 @@ export default function useEditorSave({ onSave, editor }: UseEditorSaveOptions):
       // Gère: titres (#), blockquotes (>), listes (-, *, 1.), code blocks (```), lignes horizontales (---)
       // Utilise un lookahead pour détecter les éléments de bloc sans les capturer
       markdown_content = markdown_content.replace(
-        /(\!\[.*?\]\(.*?\))(\s*)(?=[#>*\-`]|\d+\.)/gm,
+        /(!\[.*?\]\(.*?\))(\s*)(?=[#>*\-`]|\d+\.)/gm,
         (_match, image, whitespace) => {
           // Compter les sauts de ligne existants
           const lineBreaks = (whitespace.match(/\n/g) || []).length;

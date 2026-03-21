@@ -255,7 +255,9 @@ export function useEditorEffects({
             editor.chain().focus().setImage({ src: publicUrl }).run();
           }
         }
-      } catch {}
+      } catch {
+        /* drop image dans l’éditeur — erreur non bloquante */
+      }
     };
 
     const onDragOver = (e: DragEvent) => {

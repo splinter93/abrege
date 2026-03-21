@@ -903,7 +903,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
           }
           break;
           
-        case 'mcp_call':
+        case 'mcp_call': {
           // Exécution d'un tool MCP
           // ✅ WORKAROUND HARMONY: Nettoyer les suffixes <|channel|>xxx si présents
           const cleanedName = (item.name || '').replace(/<\|channel\|>\w+$/i, '');
@@ -928,6 +928,7 @@ export class GroqProvider extends BaseProvider implements LLMProvider {
             }
           });
           break;
+        }
           
         case 'message':
           // Message final de l'assistant

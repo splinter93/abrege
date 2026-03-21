@@ -173,7 +173,9 @@ const EditorHeaderImage: React.FC<EditorHeaderImageProps> = ({
       e.preventDefault();
       const { publicUrl } = await uploadImageForNote(image, noteId);
       onHeaderChange(publicUrl);
-    } catch {}
+    } catch {
+      /* drop / upload image en-tête annulé ou erreur — ignoré côté UI */
+    }
   };
 
   const headerBtnStyle: React.CSSProperties = {
