@@ -110,12 +110,13 @@ const FolderContent: React.FC<FolderContentProps> = ({
     ...safeFiles.map(f => ({ ...f, type: 'file' as const }))
   ], [safeFolders, safeFiles]);
   
-  const virtualizer = shouldVirtualize ? useVirtualizer({
-    count: allItems.length,
+  // Toujours appeler useVirtualizer (Rules of Hooks) — count: 0 si pas de virtualisation
+  const virtualizer = useVirtualizer({
+    count: shouldVirtualize ? allItems.length : 0,
     getScrollElement: () => virtualizerRef.current,
-    estimateSize: () => 60, // Hauteur estimée par item
-    overscan: 5
-  }) : null;
+    estimateSize: () => 60,
+    overscan: 5,
+  });
 
   if (loading) {
     return (
@@ -200,7 +201,7 @@ const FolderContent: React.FC<FolderContentProps> = ({
             <div className="folder-empty-subtitle">Create your first folder or note using the toolbar.</div>
           </div>
         )
-      ) : shouldVirtualize && virtualizer ? (
+      ) : shouldVirtualize ? (
         /* Virtualized list mode */
         <div
           ref={virtualizerRef}

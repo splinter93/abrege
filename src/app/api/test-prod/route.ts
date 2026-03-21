@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logApi } from '@/utils/logger';
 
 /**
  * Endpoint de test ultra simple pour diagnostiquer Vercel
@@ -6,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   const timestamp = new Date().toISOString();
   
-  console.log('🔍 [TEST-PROD] Endpoint appelé à', timestamp);
+  logApi.debug('🔍 [TEST-PROD] GET appelé', { timestamp });
   
   return NextResponse.json({
     success: true,
@@ -28,9 +29,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const headers = Object.fromEntries(request.headers.entries());
     
-    console.log('🔍 [TEST-PROD] POST appelé à', timestamp);
-    console.log('🔍 [TEST-PROD] Headers:', headers);
-    console.log('🔍 [TEST-PROD] Body:', body);
+    logApi.debug('🔍 [TEST-PROD] POST appelé', {
+      timestamp,
+      headerKeys: Object.keys(headers),
+      bodyKeys: body && typeof body === 'object' && !Array.isArray(body) ? Object.keys(body as object) : [],
+    });
     
     return NextResponse.json({
       success: true,
@@ -47,7 +50,7 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('🔍 [TEST-PROD] Erreur:', error);
+    logApi.error('🔍 [TEST-PROD] Erreur', error);
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',

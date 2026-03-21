@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { applyEditorFontPreset, getEditorPresetId } from '@/constants/chatFontPresets';
+import { simpleLogger } from '@/utils/logger';
 
 /**
  * Hook pour gérer le changement de police dans l'éditeur.
@@ -14,7 +15,7 @@ export const useFontManager = (currentFont: string | null | undefined) => {
       if (presetId) {
         applyEditorFontPreset(presetId);
         if (process.env.NODE_ENV === 'development') {
-          console.log(`[FontManager] 🎨 Preset éditeur appliqué: ${fontName}`);
+          simpleLogger.dev(`[FontManager] 🎨 Preset éditeur appliqué: ${fontName}`);
         }
         return;
       }
@@ -50,10 +51,10 @@ export const useFontManager = (currentFont: string | null | undefined) => {
         document.documentElement.style.setProperty('--editor-font-family-body', fontFamily);
       }
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[FontManager] 🎨 Police changée: ${fontName} (${scope})`);
+        simpleLogger.dev(`[FontManager] 🎨 Police changée: ${fontName} (${scope})`);
       }
     } catch (error) {
-      console.error('[FontManager] ❌ Erreur lors du changement de police:', error);
+      simpleLogger.error('[FontManager] ❌ Erreur lors du changement de police', error);
     }
   }, []);
 

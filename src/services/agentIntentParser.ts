@@ -1,4 +1,4 @@
-// import.*logger.*from '@/utils/logger';
+import { simpleLogger } from '@/utils/logger';
 
 interface IntentMatch {
   action: string;
@@ -165,8 +165,8 @@ export class AgentIntentParser {
    * Parse une intention API v2 à partir d'un message en langage naturel
    */
   parseApiV2Intent(message: string, capabilities: string[]): IntentMatch | null {
-    console.log('[IntentParser] 🔍 Analyse du message:', message);
-    console.log('[IntentParser] 🎯 Capacités disponibles:', capabilities);
+    simpleLogger.dev('[IntentParser] 🔍 Analyse du message:', message);
+    simpleLogger.dev('[IntentParser] 🎯 Capacités disponibles:', capabilities);
 
     let bestMatch: IntentMatch | null = null;
     let highestConfidence = 0;
@@ -175,21 +175,21 @@ export class AgentIntentParser {
     for (const capability of capabilities) {
       const patterns = this.intentPatterns.get(capability);
       if (!patterns) {
-        console.log(`[IntentParser] ⚠️ Pas de patterns pour ${capability}`);
+        simpleLogger.dev(`[IntentParser] ⚠️ Pas de patterns pour ${capability}`);
         continue;
       }
 
-      console.log(`[IntentParser] 🔍 Test de ${capability} avec ${patterns.length} patterns`);
+      simpleLogger.dev(`[IntentParser] 🔍 Test de ${capability} avec ${patterns.length} patterns`);
       
       for (const pattern of patterns) {
-        console.log(`[IntentParser] 🧪 Test pattern: ${pattern.source}`);
+        simpleLogger.dev(`[IntentParser] 🧪 Test pattern: ${pattern.source}`);
         const match = message.match(pattern);
-        console.log(`[IntentParser] 📊 Match result:`, match);
+        simpleLogger.dev('[IntentParser] 📊 Match result:', match);
         
         if (match) {
           const confidence = this.calculateConfidence(message, pattern, match);
           
-          console.log(`[IntentParser] ✅ Match trouvé pour ${capability}:`, {
+          simpleLogger.dev(`[IntentParser] ✅ Match trouvé pour ${capability}:`, {
             pattern: pattern.source,
             confidence,
             extractedData: this.extractData(capability, message)
@@ -209,13 +209,13 @@ export class AgentIntentParser {
     }
 
     if (bestMatch) {
-      console.log('[IntentParser] 🎯 Intention détectée:', {
+      simpleLogger.dev('[IntentParser] 🎯 Intention détectée:', {
         action: bestMatch.action,
         confidence: bestMatch.confidence,
         extractedData: bestMatch.extractedData
       });
     } else {
-      console.log('[IntentParser] ❌ Aucune intention détectée');
+      simpleLogger.dev('[IntentParser] ❌ Aucune intention détectée');
     }
 
     return bestMatch;

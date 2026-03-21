@@ -112,9 +112,9 @@ Cause probable pour `NetworkRetryService` : la sérialisation d'erreur `{ status
 
 **Sévérité : CRITIQUE.**
 
-Dernière mesure `npm run lint` (après batch 1) :
+Dernière mesure `npm run lint` (après batch 3) :
 ```
-✖ 1154 problems (140 errors, 1014 warnings)
+✖ 1061 problems (50 errors, 1011 warnings)
 ```
 
 Mesure historique de référence :
@@ -605,7 +605,7 @@ Un rate limiter en mémoire dans un environnement serverless est une illusion de
 | B1 | Hooks conditionnels — 6 fichiers | 🔴 CRITIQUE | ✅ Corrigé | 21/03/2026 |
 | B2 | `/api/debug-chatgpt` sans auth | 🔴 CRITIQUE | ✅ Corrigé | 21/03/2026 |
 | B3 | 3 fichiers de test en échec | 🔴 CRITIQUE | ✅ Corrigé | 21/03/2026 |
-| B4 | 232 → **95** erreurs ESLint | 🔴 CRITIQUE | 🔄 En cours | batch 0–2 ESLint 20/03 |
+| B4 | 232 → **50** erreurs ESLint | 🔴 CRITIQUE | 🔄 En cours | batch 0–3 ESLint 20/03 |
 | I1 | ClasseursPage.tsx 1460 lignes | 🟠 IMPORTANT | ❌ Ouvert | — |
 | I2 | Fichiers massifs services | 🟠 IMPORTANT | ❌ Ouvert | — |
 | I3 | Copy logic dupliquée | 🟠 IMPORTANT | ❌ Ouvert | — |

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import { s3Service } from '@/services/s3Service';
+import { logApi } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -41,9 +42,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Fichier non trouvé' }, { status: 404 });
   }
 
-  // Debug: log all cookies to see what's available
   const allCookies = request.cookies.getAll();
-  console.log('🔍 [DEBUG] All cookies:', allCookies.map(c => ({ name: c.name, value: c.value?.substring(0, 20) + '...' })));
+  logApi.debug('🔍 [public-file] Cookies présents', {
+    names: allCookies.map((c) => c.name),
+    count: allCookies.length,
+  });
 
   // Optional auth: if requester is the owner, allow access regardless of publish state
   let requesterId: string | null = null;
@@ -52,7 +55,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const authHeader = request.headers.get('Authorization');
   if (authHeader?.startsWith('Bearer ')) {
     token = authHeader.substring(7);
-    console.log('🔍 [DEBUG] Using Authorization header token');
+    logApi.debug('🔍 [public-file] Token via Authorization header');
   }
   
   // Fallback to Supabase access token cookie for browser image requests
@@ -63,7 +66,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       const cookie = request.cookies.get(name);
       if (cookie?.value) {
         token = cookie.value;
-        console.log('🔍 [DEBUG] Using cookie token from:', name);
+        logApi.debug('🔍 [public-file] Token via cookie', { cookieName: name });
         break;
       }
     }
@@ -73,20 +76,26 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     try {
       const { data: { user }, error } = await supabaseAuth.auth.getUser(token);
       if (error) {
-        console.log('🔍 [DEBUG] Auth error:', error.message);
+        logApi.debug('🔍 [public-file] Auth error', { message: error.message });
       } else if (user) {
         requesterId = user.id;
-        console.log('🔍 [DEBUG] Authenticated user:', user.id);
+        logApi.debug('🔍 [public-file] Utilisateur authentifié', { userId: user.id });
       }
     } catch (err) {
-      console.log('🔍 [DEBUG] Auth exception:', err);
+      logApi.debug('🔍 [public-file] Auth exception', {
+        message: err instanceof Error ? err.message : String(err),
+      });
     }
   } else {
-    console.log('🔍 [DEBUG] No token found');
+    logApi.debug('🔍 [public-file] Aucun token');
   }
 
   const isOwner = requesterId && (requesterId === file.user_id || requesterId === file.owner_id);
-  console.log('🔍 [DEBUG] File owner:', file.user_id, 'Requester:', requesterId, 'IsOwner:', isOwner);
+  logApi.debug('🔍 [public-file] Propriété fichier', {
+    fileUserId: file.user_id,
+    requesterId,
+    isOwner,
+  });
   
   let isPublic = false;
 
@@ -100,16 +109,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         .eq('id', file.note_id)
         .maybeSingle();
       isPublic = note?.visibility !== 'private';
-      console.log('🔍 [DEBUG] Note visibility:', note?.visibility, 'IsPublic:', isPublic);
+      logApi.debug('🔍 [public-file] Visibilité note', {
+        visibility: note?.visibility,
+        isPublic,
+      });
     }
   }
 
   if (!isOwner && !isPublic) {
-    console.log('🔍 [DEBUG] Access denied - not owner and not public');
+    logApi.debug('🔍 [public-file] Accès refusé (non propriétaire et non public)');
     return NextResponse.json({ error: 'Accès interdit' }, { status: 403 });
   }
 
-  console.log('🔍 [DEBUG] Access granted, redirecting to S3');
+  logApi.debug('🔍 [public-file] Accès OK, redirection S3');
   
   // Short-lived signed GET from S3
   if (!file.s3_key) {

@@ -9,6 +9,7 @@ import { FiFeather } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
 import { FaGithub, FaApple } from 'react-icons/fa';
 import { supabase } from '@/supabaseClient';
+import { simpleLogger } from '@/utils/logger';
 import './auth.css';
 
 function AuthPageContent() {
@@ -47,7 +48,7 @@ function AuthPageContent() {
 
           // ✅ CORRECTION : Flux ChatGPT → attente de connexion manuelle
           if (isExternalOAuth && clientId && redirectUri && !didRunExternalCallbackRef.current) {
-            console.log('🔍 [Auth] Flux OAuth ChatGPT détecté, attente de connexion manuelle');
+            simpleLogger.dev('🔍 [Auth] Flux OAuth ChatGPT détecté, attente de connexion manuelle');
             didRunExternalCallbackRef.current = true;
             
             // ✅ Détecter les actions ChatGPT
@@ -89,7 +90,7 @@ function AuthPageContent() {
           setCurrentSession(null);
         }
       } catch (e) {
-        console.error('Erreur vérification session:', e);
+        simpleLogger.error('Erreur vérification session', e);
         setSessionStatus('Erreur lors de la vérification de session');
         setCurrentSession(null);
       }
@@ -143,7 +144,7 @@ function AuthPageContent() {
     try {
       await signInWithOAuth(provider);
     } catch (e) {
-      console.error('Erreur connexion OAuth:', e);
+      simpleLogger.error('Erreur connexion OAuth', e);
       setError('Erreur lors de la connexion OAuth');
     }
   };
@@ -151,7 +152,7 @@ function AuthPageContent() {
   // ✅ NOUVEAU : Fonction de redirection manuelle pour gérer l'ancienne action ID
   const handleManualOAuthRedirect = () => {
     if (isExternalOAuth && clientId && redirectUri) {
-      console.log('🔍 [Auth] Redirection manuelle vers callback OAuth');
+      simpleLogger.dev('🔍 [Auth] Redirection manuelle vers callback OAuth');
       
       // Stocker les paramètres OAuth
       const oauthParams = {

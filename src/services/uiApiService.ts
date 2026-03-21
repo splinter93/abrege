@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { simpleLogger } from '@/utils/logger';
 
 // Types pour l'API UI
 export interface UIApiResponse<T = unknown> {
@@ -121,7 +122,7 @@ export class UIApiService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error(`[UI API] Erreur lors de la requête ${endpoint}:`, error);
+      simpleLogger.error(`[UI API] Erreur lors de la requête ${endpoint}`, error);
       throw error;
     }
   }
@@ -486,7 +487,7 @@ export class UIApiService {
    */
   async cleanup(): Promise<void> {
     // TODO: Implémenter le nettoyage des ressources temporaires
-    console.log('[UI API] Nettoyage des ressources temporaires');
+    simpleLogger.dev('[UI API] Nettoyage des ressources temporaires');
   }
 }
 

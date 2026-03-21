@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
+import { logApi } from '@/utils/logger';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -12,7 +13,7 @@ const supabaseService = createClient(supabaseUrl, supabaseServiceKey);
 export async function GET(req: NextRequest): Promise<Response> {
   const logs: string[] = [];
   const log = (msg: string) => {
-    console.log(msg);
+    logApi.debug(msg);
     logs.push(msg);
   };
 

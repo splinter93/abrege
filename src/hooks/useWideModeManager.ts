@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { simpleLogger } from '@/utils/logger';
 
 /**
  * Hook pour gérer le changement de wide_mode dans l'éditeur
@@ -14,11 +15,11 @@ export const useWideModeManager = (isWideMode: boolean | null | undefined) => {
       document.documentElement.style.setProperty('--editor-content-width', newWidth);
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[WideModeManager] 📏 Mode large changé: ${wideMode ? 'ON' : 'OFF'} → ${newWidth}`);
+        simpleLogger.dev(`[WideModeManager] 📏 Mode large changé: ${wideMode ? 'ON' : 'OFF'} → ${newWidth}`);
       }
       
     } catch (error) {
-      console.error('[WideModeManager] ❌ Erreur lors du changement de mode large:', error);
+      simpleLogger.error('[WideModeManager] ❌ Erreur lors du changement de mode large', error);
     }
   }, []);
 

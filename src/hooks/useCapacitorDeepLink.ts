@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { supabase } from '@/supabaseClient';
+import { simpleLogger } from '@/utils/logger';
 
 /**
  * Gère le retour OAuth sur Capacitor Android.
@@ -63,7 +64,7 @@ export function useCapacitorDeepLink() {
           if (!url.startsWith('scrivia://callback')) return;
           if (processedUrls.has(url)) return;
           processedUrls.add(url);
-          console.log('[DeepLink] Traitement URL:', url.slice(0, 100));
+          simpleLogger.dev('[DeepLink] Traitement URL:', url.slice(0, 100));
 
           try {
             const { Browser } = await import('@capacitor/browser');
@@ -75,7 +76,7 @@ export function useCapacitorDeepLink() {
           try {
             urlObj = new URL(normalized);
           } catch (e) {
-            console.error('[DeepLink] URL invalide:', url, e);
+            simpleLogger.error('[DeepLink] URL invalide', e);
             return;
           }
 
@@ -86,25 +87,25 @@ export function useCapacitorDeepLink() {
           const refreshToken = hash?.get('refresh_token');
 
           if (errorParam) {
-            console.error('[DeepLink] Erreur OAuth:', errorParam);
+            simpleLogger.error('[DeepLink] Erreur OAuth', new Error(String(errorParam)));
             window.location.assign(`/auth?error=${encodeURIComponent(errorParam)}`);
             return;
           }
 
           if (code) {
-            console.log('[DeepLink] Code PKCE reçu, exchange…');
+            simpleLogger.dev('[DeepLink] Code PKCE reçu, exchange…');
             pendingRedirectToChat = true;
             const { error } = await supabase.auth.exchangeCodeForSession(code);
             if (error) {
               pendingRedirectToChat = false;
-              console.error('[DeepLink] exchangeCodeForSession échoué:', error.message);
+              simpleLogger.error('[DeepLink] exchangeCodeForSession échoué', error);
               window.location.assign('/auth?error=session_expired');
             }
             return;
           }
 
           if (accessToken && refreshToken) {
-            console.log('[DeepLink] Tokens implicit, setSession…');
+            simpleLogger.dev('[DeepLink] Tokens implicit, setSession…');
             pendingRedirectToChat = true;
             const { error } = await supabase.auth.setSession({
               access_token: accessToken,
@@ -112,13 +113,13 @@ export function useCapacitorDeepLink() {
             });
             if (error) {
               pendingRedirectToChat = false;
-              console.error('[DeepLink] setSession échoué:', error.message);
+              simpleLogger.error('[DeepLink] setSession échoué', error);
               window.location.assign('/auth?error=session_error');
             }
             return;
           }
 
-          console.warn('[DeepLink] URL sans code ni tokens:', url.slice(0, 100));
+          simpleLogger.warn('[DeepLink] URL sans code ni tokens:', url.slice(0, 100));
         };
 
         // ── Mécanisme principal : handler global injecté depuis MainActivity.java ──
@@ -126,13 +127,13 @@ export function useCapacitorDeepLink() {
         if (window.__scriviaDeepLinkPending) {
           const pending = window.__scriviaDeepLinkPending;
           delete window.__scriviaDeepLinkPending;
-          console.log('[DeepLink] URL pending trouvée:', pending.slice(0, 80));
+          simpleLogger.dev('[DeepLink] URL pending trouvée:', pending.slice(0, 80));
           await processCallbackUrl(pending);
         }
 
         // Exposer le handler pour les deep links futurs
         window.__scriviaDeepLink = (url: string) => {
-          console.log('[DeepLink] Handler global appelé:', url.slice(0, 80));
+          simpleLogger.dev('[DeepLink] Handler global appelé:', url.slice(0, 80));
           processCallbackUrl(url);
         };
 
@@ -145,7 +146,7 @@ export function useCapacitorDeepLink() {
           try {
             const launch = await App.getLaunchUrl();
             if (launch?.url?.startsWith('scrivia://callback')) {
-              console.log('[DeepLink] getLaunchUrl() trouvé:', launch.url.slice(0, 80));
+              simpleLogger.dev('[DeepLink] getLaunchUrl() trouvé:', launch.url.slice(0, 80));
               await processCallbackUrl(launch.url);
             }
           } catch { /* ignore, bridge peut ne pas être prêt */ }
@@ -154,7 +155,7 @@ export function useCapacitorDeepLink() {
           const handle = await App.addListener('appUrlOpen', async ({ url }) => {
             await processCallbackUrl(url);
           });
-          console.log('[DeepLink] addListener Capacitor enregistré.');
+          simpleLogger.dev('[DeepLink] addListener Capacitor enregistré.');
 
           const onVisibility = async () => {
             if (document.visibilityState !== 'visible') return;
@@ -174,9 +175,9 @@ export function useCapacitorDeepLink() {
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           if (msg.includes('not implemented') || msg.includes('UNIMPLEMENTED')) {
-            console.log('[DeepLink] Bridge Capacitor non disponible (remote URL) — mécanisme principal actif.');
+            simpleLogger.dev('[DeepLink] Bridge Capacitor non disponible (remote URL) — mécanisme principal actif.');
           } else {
-            console.error('[DeepLink] Erreur bridge secondaire:', e);
+            simpleLogger.error('[DeepLink] Erreur bridge secondaire', e);
           }
 
           // Même sans bridge : écouter visibilitychange pour attraper le retour depuis Chrome
@@ -190,7 +191,7 @@ export function useCapacitorDeepLink() {
         }
 
       } catch (e) {
-        console.error('[DeepLink] Erreur init:', e);
+        simpleLogger.error('[DeepLink] Erreur init', e);
       }
     })();
 

@@ -54,9 +54,7 @@ export class ErrorHandler {
     };
 
     if (process.env.NODE_ENV === 'development') {
-      console.group(`🚨 Erreur API - ${context.operation}`);
-      logger.error('Détails:', errorInfo);
-      console.groupEnd();
+      logger.dev(`🚨 Erreur API - ${context.operation}`, errorInfo);
     } else {
       // En production, on pourrait envoyer à un service de monitoring
       logger.error(`[ERROR] ${context.operation}:`, safeError?.message || 'Erreur inconnue');

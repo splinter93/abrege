@@ -95,7 +95,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       
       if (bucket && region) {
         publicUrl = buildS3ObjectUrl(bucket, region, fileRecord.s3_key);
-        console.log('🔗 [GET-URL] URL S3 construite:', {
+        logApi.debug('🔗 [GET-URL] URL S3 construite', {
           bucket,
           region,
           key: fileRecord.s3_key,
@@ -114,11 +114,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     } else if (fileRecord.storage_type === 'external') {
       // URL externe, utiliser directement l'URL de la base
       publicUrl = fileRecord.url;
-      console.log('🔗 [GET-URL] URL externe utilisée:', publicUrl);
+      logApi.debug('🔗 [GET-URL] URL externe utilisée', { publicUrl });
     } else {
       // Fallback pour compatibilité
       publicUrl = fileRecord.url;
-      console.log('⚠️ [GET-URL] Fallback vers URL de la base:', publicUrl);
+      logApi.debug('⚠️ [GET-URL] Fallback vers URL de la base', { publicUrl });
     }
 
     // ========================================
