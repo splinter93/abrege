@@ -3,8 +3,8 @@ import { Search, X, User, Settings, Bot, Trash2 } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';
-import { useChatSessionsPolling } from '@/hooks/chat/useChatSessionsPolling'; // ✅ Simple et fiable
-// import { useChatSessionsRealtime } from '@/hooks/chat/useChatSessionsRealtime'; // ❌ Re-renders infinis
+import { useChatSessionsRealtime } from '@/hooks/chat/useChatSessionsRealtime';
+import { useChatSessionsPolling } from '@/hooks/chat/useChatSessionsPolling';
 import SettingsModal from './SettingsModal';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { Agent, ChatSession } from '@/types/chat';
@@ -33,8 +33,10 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false); // ✅ Bloquer clics pendant création
 
-  // 🔄 Polling léger (simple et fiable, détecte auto-rename + nouvelles sessions)
-  useChatSessionsPolling({ enabled: !!user, intervalMs: 3000 }); // ✅ Uniquement si connecté
+  // Realtime Supabase pour les sessions chat (insert/update/delete instantanés)
+  useChatSessionsRealtime(user?.id);
+  // Polling de secours à 30s : filet de sécurité si le realtime décroche
+  useChatSessionsPolling({ enabled: !!user, intervalMs: 30000 });
 
   // Fonctions de gestion
   const handleSelectSession = (session: ChatSession) => {

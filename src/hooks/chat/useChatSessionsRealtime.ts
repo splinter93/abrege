@@ -1,11 +1,11 @@
 /**
- * Hook pour synchronisation temps-réel des sessions via Supabase Realtime
- * 
- * ✅ Remplace le polling (plus de race conditions)
- * ✅ Updates instantanées (< 50ms)
- * ✅ UX fluide et prévisible
- * 
- * @conformsTo GUIDE-EXCELLENCE-CODE.md
+ * Hook de synchronisation temps-réel des sessions chat via Supabase Realtime.
+ *
+ * Corrections v2 :
+ * - Stale closure corrigé : lecture du store via getState() dans le handler
+ * - Reconnexion robuste : backoff exponentiel sur CHANNEL_ERROR / TIMED_OUT
+ * - Circuit breaker avec cooldown 5min (évite la boucle reconnexion infinie)
+ * - Cleanup propre : supabase.removeChannel() au lieu de unsubscribe() seul
  */
 
 import { useEffect, useRef } from 'react';
@@ -21,177 +21,281 @@ interface RealtimeSessionPayload {
   old: ChatSession;
 }
 
-/**
- * Hook de synchronisation temps-réel des sessions
- */
+const MAX_RECONNECT_ATTEMPTS = 10;
+const CIRCUIT_BREAKER_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+
 export function useChatSessionsRealtime(userId: string | null | undefined) {
   const channelRef = useRef<RealtimeChannel | null>(null);
-  
-  // ✅ OPTIMISATION: Selectors spécifiques pour éviter re-renders
-  const sessions = useChatStore((state) => state.sessions);
-  const setSessions = useChatStore((state) => state.setSessions);
-  const currentSession = useChatStore((state) => state.currentSession);
-  const setCurrentSession = useChatStore((state) => state.setCurrentSession);
-  const deletingSessions = useChatStore((state) => state.deletingSessions);
-
-  // 🔍 DEBUG CRITIQUE: Log TOUJOURS au démarrage du hook (pour voir s'il se monte)
-  logger.dev('[useChatSessionsRealtime] Hook called', {
-    userId: userId || 'undefined',
-    userIdType: typeof userId,
-    hasUserId: !!userId
-  });
-
-  // 🔍 DEBUG: Log chaque fois que le hook se monte/update
-  useEffect(() => {
-    logger.dev('[useChatSessionsRealtime] useEffect triggered', {
-      userId: userId || 'undefined',
-      hasUserId: !!userId
-    });
-    logger.info('[Realtime] 🔄 Hook useChatSessionsRealtime monté/update', { 
-      userId: userId || 'undefined',
-      hasUserId: !!userId,
-      channelExists: !!channelRef.current
-    });
-  }, [userId]);
+  const resubscribeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const healthcheckTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const authUnsubscribeRef = useRef<(() => void) | null>(null);
+  const resubscribeAttemptRef = useRef(0);
+  const resubInProgressRef = useRef(false);
+  const circuitBreakerRef = useRef(false);
+  const circuitBreakerOpenAtRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Pas d'user → pas de sync
-    if (!userId) {
-      logger.warn('[Realtime] ⏸️ Pas d\'userId, realtime désactivé', { 
-        userIdType: typeof userId,
-        userIdValue: userId 
-      });
-      return;
-    }
+    if (!userId) return;
 
-    logger.info('[Realtime] 🔌 Initialisation subscription chat_sessions', { userId });
-
-    // Créer channel Realtime
     const supabase = getSupabaseClient();
-    const channel = supabase
-      .channel(`chat_sessions:${userId}`)
-      .on<ChatSession>(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'chat_sessions',
-          filter: `user_id=eq.${userId}`
-        },
-        (payload) => {
-          handleRealtimeChange(payload as unknown as RealtimeSessionPayload);
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          logger.info('[Realtime] ✅ Abonné aux changements chat_sessions', { userId });
-        } else if (status === 'CHANNEL_ERROR') {
-          logger.error('[Realtime] ❌ Erreur subscription', { userId });
-        } else if (status === 'TIMED_OUT') {
-          logger.warn('[Realtime] ⏱️ Timeout subscription, retry auto...', { userId });
-        } else {
-          logger.dev('[Realtime] 📊 Status subscription:', { status, userId });
-        }
+    let isCancelled = false;
+
+    const clearResubTimer = () => {
+      if (resubscribeTimerRef.current) {
+        clearTimeout(resubscribeTimerRef.current);
+        resubscribeTimerRef.current = null;
+      }
+    };
+
+    const handleRealtimeChange = (payload: RealtimeSessionPayload) => {
+      const { eventType, new: newRecord, old: oldRecord } = payload;
+
+      logger.info('[ChatSessionsRealtime] 📡 Changement détecté', {
+        eventType,
+        sessionId: newRecord?.id || oldRecord?.id,
       });
 
-    channelRef.current = channel;
+      // Lecture fraîche du store à chaque événement (évite stale closure)
+      const {
+        sessions,
+        setSessions,
+        currentSession,
+        setCurrentSession,
+        deletingSessions: deletingIds,
+      } = useChatStore.getState();
 
-    // Cleanup: unsubscribe
-    return () => {
-      logger.dev('[Realtime] 🔌 Désinscription chat_sessions');
-      channel.unsubscribe();
-      channelRef.current = null;
-    };
-  }, [userId]);
-
-  /**
-   * Gérer un changement Realtime
-   */
-  function handleRealtimeChange(payload: RealtimeSessionPayload) {
-    const { eventType, new: newRecord, old: oldRecord } = payload;
-
-    logger.info('[Realtime] 📡 Changement détecté', {
-      eventType,
-      sessionId: newRecord?.id || oldRecord?.id,
-      sessionName: newRecord?.name || oldRecord?.name,
-      oldName: oldRecord?.name,
-      payload: JSON.stringify(payload).substring(0, 200) // Preview
-    });
-
-    // ✅ FILTRER les sessions en cours de suppression optimiste
-    const deletingIds = useChatStore.getState().deletingSessions;
-
-    switch (eventType) {
-      case 'INSERT': {
-        // Nouvelle session créée (peut-être depuis un autre onglet)
-        if (!deletingIds.has(newRecord.id)) {
-          const updatedSessions = [newRecord, ...sessions];
-          setSessions(updatedSessions);
-          
-          logger.info('[Realtime] ➕ Session ajoutée', {
-            sessionId: newRecord.id,
-            name: newRecord.name
-          });
+      switch (eventType) {
+        case 'INSERT': {
+          if (!deletingIds.has(newRecord.id)) {
+            setSessions([newRecord, ...sessions]);
+            logger.info('[ChatSessionsRealtime] ➕ Session ajoutée', {
+              sessionId: newRecord.id,
+              name: newRecord.name,
+            });
+          }
+          break;
         }
-        break;
-      }
 
-      case 'UPDATE': {
-        // Session modifiée (rename, auto-rename, metadata...)
-        if (deletingIds.has(newRecord.id)) {
-          // Ignorer les updates sur sessions en cours de suppression
-          logger.dev('[Realtime] ⏭️ Update ignoré (session en cours de suppression)', {
-            sessionId: newRecord.id
+        case 'UPDATE': {
+          if (deletingIds.has(newRecord.id)) break;
+
+          setSessions(sessions.map((s) =>
+            s.id === newRecord.id ? { ...s, ...newRecord } : s
+          ));
+
+          if (currentSession?.id === newRecord.id) {
+            setCurrentSession({ ...currentSession, ...newRecord });
+          }
+
+          logger.info('[ChatSessionsRealtime] ✏️ Session mise à jour', {
+            sessionId: newRecord.id,
+            nameChange:
+              oldRecord?.name !== newRecord.name
+                ? `${oldRecord?.name} → ${newRecord.name}`
+                : undefined,
           });
           break;
         }
 
-        const updatedSessions = sessions.map((s) =>
-          s.id === newRecord.id ? { ...s, ...newRecord } : s
-        );
-        setSessions(updatedSessions);
+        case 'DELETE': {
+          const updated = sessions.filter((s) => s.id !== oldRecord.id);
+          setSessions(updated);
 
-        // Si session active, update aussi currentSession
-        if (currentSession?.id === newRecord.id) {
-          setCurrentSession({ ...currentSession, ...newRecord });
+          if (currentSession?.id === oldRecord.id) {
+            setCurrentSession(updated[0] ?? null);
+          }
+
+          logger.info('[ChatSessionsRealtime] 🗑️ Session supprimée', {
+            sessionId: oldRecord.id,
+          });
+          break;
         }
+      }
+    };
 
-        logger.info('[Realtime] ✏️ Session mise à jour', {
-          sessionId: newRecord.id,
-          changes: {
-            name: oldRecord?.name !== newRecord.name ? `${oldRecord?.name} → ${newRecord.name}` : undefined,
-            is_active: oldRecord?.is_active !== newRecord.is_active ? newRecord.is_active : undefined
+    const subscribe = async () => {
+      const {
+        data: { session },
+        error: authError,
+      } = await supabase.auth.getSession();
+
+      if (isCancelled) return;
+
+      if (authError || !session?.access_token || !session?.user?.id) {
+        logger.error('[ChatSessionsRealtime] ❌ Auth invalide, realtime désactivé', {
+          userId,
+          authError: authError?.message,
+        });
+        return;
+      }
+
+      const channelName = `chat_sessions:${userId}`;
+      const channel = supabase
+        .channel(channelName)
+        .on<ChatSession>(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'chat_sessions',
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload) => {
+            handleRealtimeChange(payload as unknown as RealtimeSessionPayload);
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            resubscribeAttemptRef.current = 0;
+            circuitBreakerRef.current = false;
+            circuitBreakerOpenAtRef.current = null;
+            clearResubTimer();
+            logger.info('[ChatSessionsRealtime] ✅ Abonné à chat_sessions', { userId });
+            return;
+          }
+
+          if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') && !isCancelled && !circuitBreakerRef.current) {
+            const nextAttempt = resubscribeAttemptRef.current + 1;
+
+            if (nextAttempt > MAX_RECONNECT_ATTEMPTS) {
+              circuitBreakerRef.current = true;
+              circuitBreakerOpenAtRef.current = Date.now();
+              logger.error('[ChatSessionsRealtime] 🛑 Circuit breaker activé', {
+                userId,
+                attempts: nextAttempt - 1,
+                cooldownMs: CIRCUIT_BREAKER_COOLDOWN_MS,
+              });
+              return;
+            }
+
+            resubscribeAttemptRef.current = nextAttempt;
+            if (resubInProgressRef.current) return;
+            resubInProgressRef.current = true;
+
+            const delayMs = Math.min(10000, 500 * Math.pow(2, nextAttempt - 1));
+            logger.warn('[ChatSessionsRealtime] 🔄 Reconnexion', {
+              userId,
+              status,
+              attempt: nextAttempt,
+              delayMs,
+            });
+            clearResubTimer();
+            resubscribeTimerRef.current = setTimeout(() => {
+              if (!isCancelled && !circuitBreakerRef.current) {
+                Promise.resolve()
+                  .then(() => {
+                    if (channelRef.current) supabase.removeChannel(channelRef.current);
+                  })
+                  .catch(() => undefined)
+                  .then(() => {
+                    channelRef.current = null;
+                    return subscribe();
+                  })
+                  .catch((err) => {
+                    logger.error('[ChatSessionsRealtime] ❌ Resubscribe échoué', {
+                      error: err instanceof Error ? err.message : String(err),
+                    });
+                  })
+                  .finally(() => {
+                    resubInProgressRef.current = false;
+                  });
+              }
+            }, delayMs);
           }
         });
-        break;
+
+      if (!isCancelled) {
+        channelRef.current = channel;
+      } else {
+        supabase.removeChannel(channel);
+      }
+    };
+
+    subscribe();
+
+    // Healthcheck : resubscribe si canal absent ou non connecté.
+    // Respecte le circuit breaker avec cooldown CIRCUIT_BREAKER_COOLDOWN_MS.
+    healthcheckTimerRef.current = setInterval(() => {
+      if (isCancelled) return;
+
+      if (circuitBreakerRef.current) {
+        const openAt = circuitBreakerOpenAtRef.current;
+        const elapsed = openAt !== null ? Date.now() - openAt : 0;
+        if (elapsed < CIRCUIT_BREAKER_COOLDOWN_MS) return;
+        circuitBreakerRef.current = false;
+        circuitBreakerOpenAtRef.current = null;
+        resubscribeAttemptRef.current = 0;
+        logger.info('[ChatSessionsRealtime] 🩺 Cooldown terminé, reprise', { userId });
       }
 
-      case 'DELETE': {
-        // Session supprimée (soft delete is_active=false filtré par RLS)
-        const updatedSessions = sessions.filter((s) => s.id !== oldRecord.id);
-        setSessions(updatedSessions);
+      if (resubInProgressRef.current) return;
 
-        // Si session active supprimée, basculer
-        if (currentSession?.id === oldRecord.id) {
-          const nextSession = updatedSessions[0] || null;
-          setCurrentSession(nextSession);
-          
-          logger.info('[Realtime] 🔄 Session active supprimée, basculement auto', {
-            fromSessionId: oldRecord.id,
-            toSessionId: nextSession?.id
-          });
-        }
+      const channelState = channelRef.current?.state;
+      const isHealthy = channelRef.current && channelState === 'joined';
 
-        logger.info('[Realtime] 🗑️ Session supprimée', {
-          sessionId: oldRecord.id
+      if (!channelRef.current || !isHealthy) {
+        logger.warn('[ChatSessionsRealtime] 🩺 Healthcheck resubscribe', {
+          userId,
+          channelState,
         });
-        break;
+        clearResubTimer();
+        resubscribeAttemptRef.current = 0;
+        resubInProgressRef.current = true;
+        if (channelRef.current) {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
+        subscribe().finally(() => {
+          resubInProgressRef.current = false;
+        });
       }
-    }
-  }
+    }, 60 * 1000);
+
+    // Resubscribe sur SIGNED_IN si le canal n'est pas connecté.
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (isCancelled) return;
+      if (event === 'SIGNED_IN') {
+        const channelState = channelRef.current?.state;
+        if (channelState === 'joined') return;
+        if (resubInProgressRef.current) return;
+        logger.info('[ChatSessionsRealtime] 🔄 SIGNED_IN - resubscription', { userId });
+        resubscribeAttemptRef.current = 0;
+        circuitBreakerRef.current = false;
+        circuitBreakerOpenAtRef.current = null;
+        resubInProgressRef.current = true;
+        if (channelRef.current) {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
+        subscribe().finally(() => {
+          resubInProgressRef.current = false;
+        });
+      }
+    });
+    authUnsubscribeRef.current = authListener?.subscription.unsubscribe ?? null;
+
+    return () => {
+      isCancelled = true;
+      clearResubTimer();
+      resubInProgressRef.current = false;
+      if (healthcheckTimerRef.current) {
+        clearInterval(healthcheckTimerRef.current);
+        healthcheckTimerRef.current = null;
+      }
+      if (authUnsubscribeRef.current) {
+        authUnsubscribeRef.current();
+        authUnsubscribeRef.current = null;
+      }
+      if (channelRef.current) {
+        const toRemove = channelRef.current;
+        channelRef.current = null;
+        supabase.removeChannel(toRemove);
+        logger.info('[ChatSessionsRealtime] 🔌 Désinscrit', { userId });
+      }
+    };
+  }, [userId]);
 
   return {
-    isConnected: channelRef.current?.state === 'joined'
+    isConnected: channelRef.current?.state === 'joined',
   };
 }
-
