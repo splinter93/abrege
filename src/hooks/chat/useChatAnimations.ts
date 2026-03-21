@@ -178,7 +178,10 @@ export function useChatAnimations(
           const messagesContainer = container.querySelector('.chatgpt-messages') as HTMLElement | null;
           if (messagesContainer) {
             messagesContainerElement = messagesContainer;
-            previousMessagesPaddingBottom = messagesContainer.style.paddingBottom;
+            // Ce padding est posé uniquement par notre code d'animation — jamais par du CSS externe.
+            // Utiliser '' comme valeur de restauration évite de capturer '40px' laissé par
+            // une animation précédente (race condition fast-fetch entre deux sessions).
+            previousMessagesPaddingBottom = '';
             messagesContainer.style.paddingBottom = '40px';
           }
 
