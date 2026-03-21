@@ -81,4 +81,55 @@ Document de référence listant les **problèmes identifiés** sur le chat par r
 
 ---
 
-*Document généré à partir de l’audit du chat (comparaison aux meilleurs chats IA du marché). Dernière mise à jour : mars 2025.*
+---
+
+## 7. Bloquants production — audit mars 2026
+
+Audit complet effectué le 21 mars 2026. Résultat et suivi dans [`docs/ADVANCED-CHAT-PRODUCTION-2026.md`](ADVANCED-CHAT-PRODUCTION-2026.md).
+
+### Corrigés (commit `5e54d4ce`, 21 mars 2026)
+
+| ID | Problème | Correction |
+|----|----------|-----------|
+| **C1** | `FinalMessagePersistenceService` appelait un stub `addMessageWithToken` qui ne persistait rien | Rebranché sur `HistoryManager.getInstance().addMessage()` (SERVICE_ROLE, atomique) ; stub remplacé par une erreur explicite |
+| **C2** | Aucune subscription Realtime sur `chat_messages` — sync multi-onglet/multi-device cassée | Nouveau hook `useChatMessagesRealtime` (circuit-breaker + backoff) monté dans `ChatFullscreenV2` ; migration `REPLICA IDENTITY FULL` + `supabase_realtime` publication appliquée |
+| **C3** | URL Railway codée en dur dans `LiminalityProvider` — risque d’outage sans alerte | `DEFAULT_CONFIG.baseUrl` lit `process.env.LIMINALITY_BASE_URL` + fallback conservé + warning one-shot si absent |
+| **C4** | Erreur Groq 500 masquée en `success: true` — client persistait une réponse générique comme vraie IA | Retourne `{ success: false, errorCode: 'PROVIDER_UNAVAILABLE' }` HTTP 200 ; toast UI, rien en base |
+
+### À corriger — TypeScript hauts (Phase 1)
+
+Détail complet dans [`ADVANCED-CHAT-PRODUCTION-2026.md`](ADVANCED-CHAT-PRODUCTION-2026.md).
+
+| ID | Fichier | Problème |
+|----|---------|----------|
+| T1 | `stream/route.ts` | Double cast `supabase as unknown as SupabaseClient<...>` à chaque appel auth |
+| T2 | `stream/route.ts` | Cast provider pour `callWithMessagesStream(callables?)` absent de `BaseProvider` |
+| T3 | `stream/route.ts` | Mutation de propriétés custom sur un array `Tool[]` |
+| T4 | `stream/route.ts` | `catch {}` vide — parse errors JSON swallowées silencieusement |
+| T6 | `stream/helpers.ts` | `unknown` casté sans validation runtime |
+| T7 | `llm/route.ts` | `history as unknown as ChatMessage[]` — mismatch Zod/type |
+| T8 | `llm/route.ts` | `!` sur `Partial<AgentConfig>` et `string | undefined` |
+| T9 | `ui/chat-sessions/route.ts` | `process.env.SUPABASE_ANON_KEY!` sans guard |
+| T10 | `ui/chat-sessions/route.ts` | `let body` — `any` implicite |
+
+### À corriger — Architecture (Phase 2)
+
+| ID | Problème |
+|----|----------|
+| A1 | `ToolCall` défini dans 11 fichiers — source unique absente |
+| A2 | Pas d’`AbortSignal.timeout` sur le fetch streaming Liminality |
+| A3 | Rollback UI absent si persist DB échoue |
+| A4 | `loading` jamais positionné dans les actions async du store |
+| A5 | `updateSession` swallow les erreurs sans feedback utilisateur |
+| A6 | Écriture en deux phases non atomique dans `HistoryManager` (JSONB) |
+| A8 | `alreadyExecuted` / `result` injectés sur `ToolCall` sans type |
+| A10 | `DEFAULT_AGENT_SCOPES` dupliqué dans `route.ts` et `helpers.ts` |
+| A11 | SSE parse errors silencieusement skippées dans tous les providers |
+
+### À supprimer — dès que Liminality couvre tous les cas
+
+`groq.ts` (1616L) + `xai.ts` (1135L) + `xai-native.ts` (1219L) + `api/chat/llm/route.ts` (486L) = **~4 456 lignes** de dette supprimées d’un coup.
+
+---
+
+*Document généré à partir de l’audit du chat (comparaison aux meilleurs chats IA du marché). Dernière mise à jour : 21 mars 2026.*
