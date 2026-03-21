@@ -6,6 +6,8 @@
   margin: 8px 0;
   /* Fond porté par le header + la zone items (items plus transparente) */
   background: transparent;
+  /* Vert complétion : légèrement plus foncé que --color-success (#22c55e) */
+  --plan-step-success: #16a34a;
 }
 
 .plan-step-list-header {
@@ -54,12 +56,12 @@
   gap: 5px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-success, #22c55e);
+  color: var(--plan-step-success);
 }
 
 .plan-step-list-completed-icon {
   flex-shrink: 0;
-  color: var(--color-success, #22c55e);
+  color: var(--plan-step-success);
 }
 
 .plan-step-list-counter {
@@ -70,7 +72,7 @@
 
 .plan-step-list-counter--complete {
   font-weight: 600;
-  color: var(--color-success, #22c55e);
+  color: var(--plan-step-success);
 }
 
 .plan-step-list-items {
@@ -106,7 +108,7 @@
 }
 
 .plan-step-icon--done {
-  color: var(--color-success, #22c55e);
+  color: var(--plan-step-success);
 }
 
 @keyframes spin {
