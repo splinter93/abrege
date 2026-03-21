@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+/* eslint-disable no-console -- script CLI : sortie stdout intentionnelle */
 
 /**
  * Script d'audit complet pour vérifier tous les tools LLM

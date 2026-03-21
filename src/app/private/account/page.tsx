@@ -7,6 +7,7 @@ import AuthGuard from "@/components/AuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import { User, Edit, Trash2 } from "lucide-react";
+import { simpleLogger } from "@/utils/logger";
 import "@/styles/main.css";
 import "@/app/(public)/dashboard.css";
 import "./account.css";
@@ -67,7 +68,7 @@ export default function AccountPage() {
       setCopied(keyId);
       setTimeout(() => setCopied(null), 2000);
     } catch (err) {
-      console.error('Erreur lors de la copie:', err);
+      simpleLogger.error('Erreur lors de la copie', err);
     }
   };
 
@@ -78,7 +79,7 @@ export default function AccountPage() {
   const handleCreateNewKey = () => {
     if (newKeyName.trim()) {
       // Logique pour créer une nouvelle clé
-      console.log('Création d\'une nouvelle clé:', newKeyName);
+      simpleLogger.dev('Création d\'une nouvelle clé: ' + newKeyName);
       setNewKeyName("");
       setShowCreateKey(false);
     }
@@ -86,7 +87,7 @@ export default function AccountPage() {
 
   const handleDeleteKey = (keyId: string) => {
     // Logique pour supprimer une clé
-    console.log('Suppression de la clé:', keyId);
+    simpleLogger.dev('Suppression de la clé: ' + keyId);
   };
 
   return (
