@@ -1598,7 +1598,7 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   flex-direction: column;
   position: relative;
   background: var(--color-bg-primary);
-  border: 2px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px; /* Même radius que chatgpt-input-area */
   padding: 0 0 20px 0;
   backdrop-filter: blur(18px);

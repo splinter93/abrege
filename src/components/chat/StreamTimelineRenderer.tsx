@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import type { StreamTimeline, StreamTimelineItem } from '@/types/streamTimeline';
+import type { StreamTimeline } from '@/types/streamTimeline';
 import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import { StreamingIndicator } from './StreamingIndicator';
 import PlanStepList from './PlanStepList';
@@ -95,7 +95,6 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
                   }))}
                   isExpanded={expandedBlocks.has(index)}
                   onToggle={() => toggleBlock(index)}
-                  mcp_server={item.mcp_server}
                 />
               </div>
             );

@@ -205,7 +205,7 @@ export type LiminalityInternalToolEventType = 'internal_tool.start' | 'internal_
 /**
  * Chunk émis par le provider pour internal_tool.start (début d'exécution callable).
  * La route le traduit en assistant_round_complete pour l'affichage chat.
- * Pour les outils MCP, Synesia envoie mcp_server (server_label) pour badge UI.
+ * Pour les outils MCP, Synesia envoie mcp_server (server_label).
  */
 export interface InternalToolStartChunk {
   type: 'internal_tool.start';
@@ -284,7 +284,7 @@ export interface LiminalityStreamEvent {
   arguments?: Record<string, unknown>;
   /** internal_tool.done : résultat du callable */
   result?: unknown;
-  /** internal_tool.* (MCP) : server_label du serveur MCP pour badge UI (doc §10). */
+  /** internal_tool.* (MCP) : server_label du serveur MCP (doc §10). */
   mcp_server?: string;
   messages?: Array<{
     role: string;

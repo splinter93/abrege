@@ -50,7 +50,7 @@ export class TimelineCapture {
    * Ajoute un événement tool_execution à la timeline
    * @param toolCalls - Tool calls à exécuter
    * @param toolCount - Nombre de tools
-   * @param mcp_server - Si présent : server_label MCP (Liminality) pour badge UI
+   * @param mcp_server - Si présent : server_label MCP (Liminality), stocké sur l’item timeline
    */
   addToolExecutionEvent(toolCalls: ToolCall[], toolCount: number, mcp_server?: string): void {
     // ✅ DÉDUPLICATION: Extraire les IDs des tool calls déjà présents dans la timeline
@@ -104,7 +104,7 @@ export class TimelineCapture {
    * @param toolName - Nom du tool
    * @param result - Résultat
    * @param success - Succès ou échec
-   * @param mcp_server - Si présent : server_label MCP pour badge UI
+   * @param mcp_server - Si présent : server_label MCP sur l’item tool_result
    */
   addToolResultEvent(
     toolCallId: string,
