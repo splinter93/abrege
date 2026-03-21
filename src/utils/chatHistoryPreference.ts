@@ -5,10 +5,10 @@ export const HISTORY_MIN = 20;
 export const HISTORY_MAX = 80;
 
 export const HISTORY_PRESETS = [
-  { value: 20, label: 'Léger', description: '~10 échanges' },
-  { value: 40, label: 'Équilibré', description: '~20 échanges (défaut)' },
-  { value: 60, label: 'Détaillé', description: '~30 échanges' },
-  { value: 80, label: 'Exhaustif', description: '~40 échanges' },
+  { value: 20, label: 'Léger', description: '20 messages' },
+  { value: 40, label: 'Équilibré', description: '40 messages (défaut)' },
+  { value: 60, label: 'Détaillé', description: '60 messages' },
+  { value: 80, label: 'Exhaustif', description: '80 messages' },
 ] as const;
 
 /**
