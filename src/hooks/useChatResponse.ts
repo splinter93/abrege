@@ -25,6 +25,10 @@ interface UseChatResponseOptions {
   onStreamStart?: () => void;
   onStreamEnd?: () => void;
   onToolExecution?: (toolCount: number, toolCalls: ToolCall[]) => void;
+  onPlanUpdate?: (payload: {
+    title?: string;
+    steps: Array<{ id: string; content: string; status: string }>;
+  }) => void;
   useStreaming?: boolean;
   onAssistantRoundComplete?: (content: string, toolCalls: ToolCall[]) => void;
   // ✅ NOUVEAU : Callback pour info modèle (debug)
@@ -74,6 +78,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
     onStreamStart,
     onStreamEnd,
     onToolExecution,
+    onPlanUpdate,
     useStreaming = false,
     onAssistantRoundComplete,
   } = options;
@@ -176,7 +181,8 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           onToolResult,
           onComplete,
           onError,
-          onModelInfo: options.onModelInfo
+          onModelInfo: options.onModelInfo,
+          onPlanUpdate
         }, abortController.signal);
 
         // User-initiated abort: don't trigger error callbacks
@@ -469,7 +475,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
       abortControllerRef.current = null;
       setIsProcessing(false);
     }
-  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamEnd, onToolExecution, useStreaming, onAssistantRoundComplete]);
+  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamEnd, onToolExecution, onPlanUpdate, useStreaming, onAssistantRoundComplete]);
 
   const abort = useCallback(() => {
     if (abortControllerRef.current) {

@@ -407,6 +407,10 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
       // Patch immédiat via refs (pas de useEffect)
       patchPendingAssistantMessage(true);
     },
+    onPlanUpdate: (payload) => {
+      streamingState.addPlanEvent(payload);
+      patchPendingAssistantMessage(true);
+    },
     onToolResult: (toolName, result, success, toolCallId) => {
       logger.dev('[ChatFullscreenV2] 🔧 onToolResult callback appelé:', {
         toolName,

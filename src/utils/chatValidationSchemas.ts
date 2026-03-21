@@ -41,6 +41,18 @@ export const streamTimelineItemSchema = z.union([
     result: z.unknown(), // Unknown data (peut être n'importe quoi)
     success: z.boolean(),
     timestamp: z.number()
+  }),
+  z.object({
+    type: z.literal('plan'),
+    title: z.string().optional(),
+    steps: z.array(
+      z.object({
+        id: z.string(),
+        content: z.string(),
+        status: z.enum(['pending', 'in_progress', 'completed'])
+      })
+    ),
+    timestamp: z.number()
   })
 ]);
 
