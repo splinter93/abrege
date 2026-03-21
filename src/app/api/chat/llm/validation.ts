@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import type { ChatMessage } from '@/types/chat';
 
 /**
  * Schéma pour les métadonnées de note (lightweight)
@@ -101,25 +102,46 @@ const uiContextSchema = z.object({
 }).passthrough(); // Autoriser champs additionnels pour extensibilité
 
 /**
- * Schéma pour l'historique (messages simples)
+ * Schéma pour l'historique (messages simples) — normalise null → undefined, produit ChatMessage
  */
-const chatMessageSchema = z.object({
-  id: z.string().optional(),
-  role: z.enum(['system', 'user', 'assistant', 'tool']),
-  content: z.union([z.string(), z.null()]),
-  tool_calls: z.array(z.object({
-    id: z.string(),
-    type: z.literal('function').optional(),
-    function: z.object({
-      name: z.string(),
-      arguments: z.string()
-    })
-  })).nullable().optional(), // ✅ Accepte null ET undefined (DB peut retourner null)
-  tool_call_id: z.string().nullable().optional(), // ✅ Accepte null ET undefined
-  name: z.string().nullable().optional(), // ✅ Accepte null ET undefined
-  timestamp: z.string().optional(),
-  channel: z.string().optional()
-});
+const chatMessageSchema = z
+  .object({
+    id: z.string().optional(),
+    role: z.enum(['system', 'user', 'assistant', 'tool']),
+    content: z.union([z.string(), z.null()]).transform((v) => v ?? ''),
+    tool_calls: z
+      .array(
+        z.object({
+          id: z.string(),
+          type: z.literal('function').optional(),
+          function: z.object({
+            name: z.string(),
+            arguments: z.string(),
+          }),
+        })
+      )
+      .nullable()
+      .optional()
+      .transform((v) => (v === null ? undefined : v)),
+    tool_call_id: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => (v === null ? undefined : v)),
+    name: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => (v === null ? undefined : v)),
+    timestamp: z.string().optional(),
+    channel: z.string().optional(),
+  })
+  .transform(
+    (data): ChatMessage =>
+      ({
+        ...data,
+      }) as ChatMessage
+  );
 
 /**
  * Schéma pour le body de /api/chat/llm

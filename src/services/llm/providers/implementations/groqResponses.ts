@@ -186,6 +186,26 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
     }
   }
 
+  async callWithMessages(
+    _messages: ChatMessage[],
+    _tools: Tool[],
+    _callables?: string[]
+  ): Promise<unknown> {
+    throw new Error(
+      'GroqResponsesProvider ne supporte pas callWithMessages — utiliser call()'
+    );
+  }
+
+  async *callWithMessagesStream(
+    _messages: ChatMessage[],
+    _tools: Tool[],
+    _callables?: string[]
+  ): AsyncGenerator<unknown> {
+    throw new Error(
+      'GroqResponsesProvider ne supporte pas le streaming — utiliser call()'
+    );
+  }
+
   /**
    * Prépare les messages pour la conversion vers l'API Responses
    * 

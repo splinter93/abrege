@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 import { simpleLogger as logger } from '@/utils/logger';
 
 // Configuration Supabase - Vérification différée pour éviter les erreurs de build
@@ -13,6 +14,19 @@ const getSupabaseConfig = () => {
 
   return { supabaseUrl, supabaseKey };
 };
+
+const getSupabaseAnonKey = (): string => {
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!key) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY manquante');
+  }
+  return key;
+};
+
+const createSessionBodySchema = z.object({
+  name: z.string().min(1).optional().default('Nouvelle conversation'),
+  agent_id: z.string().uuid().nullable().optional().default(null),
+});
 
 // Fonction pour créer le client admin
 const createSupabaseAdmin = () => {
@@ -71,11 +85,10 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Maintenant parser le JSON
-    let body;
+    let rawBody: unknown;
     try {
-      body = await request.json();
-      logger.dev('[Chat Sessions API] 📋 Body brut reçu:', body);
+      rawBody = await request.json();
+      logger.dev('[Chat Sessions API] 📋 Body brut reçu:', rawBody);
     } catch (error) {
       logger.error('[Chat Sessions API] ❌ Erreur parsing JSON:', error);
       return NextResponse.json(
@@ -83,14 +96,24 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
-    const { name = 'Nouvelle conversation', agent_id = null } = body;
+
+    const parsedBody = createSessionBodySchema.safeParse(rawBody);
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        {
+          error: 'Payload invalide',
+          details: parsedBody.error.flatten().fieldErrors,
+        },
+        { status: 400 }
+      );
+    }
+    const { name, agent_id } = parsedBody.data;
 
     logger.dev('[Chat Sessions API] 📋 Données reçues:', { name, agent_id });
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
     const { supabaseUrl } = getSupabaseConfig();
-    const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    const userClient = createClient(supabaseUrl, getSupabaseAnonKey(), {
       global: {
         headers: {
           Authorization: `Bearer ${userToken}`
@@ -201,7 +224,7 @@ export async function GET(request: NextRequest) {
 
     // Créer un client avec le contexte d'authentification de l'utilisateur
     const { supabaseUrl } = getSupabaseConfig();
-    const userClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    const userClient = createClient(supabaseUrl, getSupabaseAnonKey(), {
       global: {
         headers: {
           Authorization: `Bearer ${userToken}`

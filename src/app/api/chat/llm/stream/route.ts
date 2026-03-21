@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import { logger, LogCategory } from '@/utils/logger';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
 import { createClient } from '@supabase/supabase-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { GroqProvider } from '@/services/llm/providers/implementations/groq';
 import type { ChatMessage } from '@/types/chat';
 import { hasToolCalls } from '@/types/chat';
@@ -17,6 +16,7 @@ import type {
   InternalToolErrorChunk
 } from '@/services/llm/types/liminalityTypes';
 import { llmStreamRequestSchema } from '../validation';
+import type { LLMProvider } from '@/services/llm/types';
 import { dynamicChatRateLimiter } from '@/services/dynamicRateLimiter';
 import {
   validateAndExtractUserId,
@@ -42,6 +42,13 @@ const supabase = createClient(
   SERVER_ENV.supabase.url,
   SERVER_ENV.supabase.serviceRoleKey
 );
+
+/** Métadonnées tools (callables) séparées du tableau `Tool[]` pour éviter les mutations ad hoc. */
+interface StreamToolsContext {
+  tools: Tool[];
+  synesiaCallables?: string[];
+  callableMapping?: Map<string, string>;
+}
 
 /**
  * ✅ Route API Streaming pour LLM (Groq ou xAI)
@@ -95,10 +102,7 @@ export async function POST(request: NextRequest) {
     sessionId = context.sessionId;
 
     // ✅ Valider le JWT et extraire userId
-    const userIdResult = await validateAndExtractUserId(
-      userToken,
-      supabase as unknown as SupabaseClient<unknown, { PostgrestVersion: string }, never, never, { PostgrestVersion: string }>
-    );
+    const userIdResult = await validateAndExtractUserId(userToken, supabase);
     
     if (!userIdResult.success) {
       return new Response(
@@ -149,7 +153,7 @@ export async function POST(request: NextRequest) {
       agentId,
       providerName,
       agentConfig,
-      supabase as unknown as SupabaseClient<unknown, { PostgrestVersion: string }, never, never, { PostgrestVersion: string }>
+      supabase
     );
 
     // ✅ Sélectionner le provider selon la config agent (Groq ou xAI)
@@ -472,7 +476,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ✅ CRITIQUE : Créer le provider APRÈS l'override (pour utiliser les bons paramètres)
-    let provider;
+    let provider: LLMProvider;
     if (providerType === 'xai') {
       // ✅ Utiliser XAINativeProvider pour support MCP complet
       const { XAINativeProvider } = await import('@/services/llm/providers/implementations/xai-native');
@@ -529,6 +533,10 @@ export async function POST(request: NextRequest) {
 
     // ✅ Charger les tools (OpenAPI + MCP) ET les endpoints
     let tools: Tool[] = [];
+    const toolsMeta: {
+      synesiaCallables?: string[];
+      callableMapping?: Map<string, string>;
+    } = {};
     let openApiEndpoints = new Map<string, OpenApiEndpoint>();
     
     // 🔥 LOG CRITIQUE : Vérifier si context.agentId existe
@@ -594,9 +602,9 @@ export async function POST(request: NextRequest) {
             count: synesiaCallableIds.length
           });
           
-          // ✅ Pour Liminality : stocker les IDs pour utilisation native
+          // ✅ Pour Liminality : IDs callables passés au provider ; sinon conversion en FunctionTool
           if (providerType === 'liminality') {
-            (tools as Tool[] & { _synesiaCallables?: string[] })._synesiaCallables = synesiaCallableIds;
+            toolsMeta.synesiaCallables = synesiaCallableIds;
           } else {
             // ✅ Pour les autres providers : convertir en FunctionTool
             const { CallableToolsAdapter } = await import('@/services/llm/providers/adapters/CallableToolsAdapter');
@@ -605,8 +613,7 @@ export async function POST(request: NextRequest) {
             if (callableTools.length > 0) {
               tools.push(...callableTools);
               
-              // Stocker le mapping pour utilisation dans l'exécution
-              (tools as Tool[] & { _callableMapping?: Map<string, string> })._callableMapping = callableMapping;
+              toolsMeta.callableMapping = callableMapping;
               
               logger.info(LogCategory.API, `[Stream Route] ✅ ${callableTools.length} callables convertis en tools pour provider ${providerType}`);
             }
@@ -620,7 +627,7 @@ export async function POST(request: NextRequest) {
         const mcpCount = tools.filter(isMcpTool).length;
         const functionTools = tools.filter(isFunctionTool);
         const openApiCount = functionTools.length;
-        const callableMapping = (tools as Tool[] & { _callableMapping?: Map<string, string> })._callableMapping;
+        const callableMapping = toolsMeta.callableMapping;
         const callableCount = callableMapping ? callableMapping.size : 0;
         
         logger.info(LogCategory.API, `[Stream Route] ✅ MCP - Tools chargés`, {
@@ -647,6 +654,16 @@ export async function POST(request: NextRequest) {
     } else {
       logger.warn(LogCategory.API, `[Stream Route] ⚠️ PAS de context.agentId → 0 tools chargés`);
     }
+
+    const toolsCtx: StreamToolsContext = {
+      tools,
+      ...(toolsMeta.synesiaCallables !== undefined
+        ? { synesiaCallables: toolsMeta.synesiaCallables }
+        : {}),
+      ...(toolsMeta.callableMapping !== undefined
+        ? { callableMapping: toolsMeta.callableMapping }
+        : {}),
+    };
 
     // ✅ Créer le ReadableStream pour SSE avec gestion tool calls
     const stream = new ReadableStream({
@@ -713,18 +730,18 @@ export async function POST(request: NextRequest) {
           let forcedFinalRound = false;
           
           // ✅ Séparer les tools MCP (exécutés par Groq nativement) des OpenAPI (exécutés par nous)
-          const mcpTools = tools.filter(isMcpTool);
-          const openApiTools = tools.filter(isFunctionTool);
+          const mcpTools = toolsCtx.tools.filter(isMcpTool);
+          const openApiTools = toolsCtx.tools.filter(isFunctionTool);
           
           // ✅ Créer une Map des tool names OpenAPI → pour routing d'exécution
           const openApiToolNames = new Set(openApiTools.map(t => t.function.name));
           
           // ✅ Récupérer le mapping des callables si disponible
-          const callableMapping = (tools as Tool[] & { _callableMapping?: Map<string, string> })._callableMapping;
+          const callableMapping = toolsCtx.callableMapping;
           const callableToolNames = callableMapping ? new Set(callableMapping.keys()) : new Set<string>();
           
           logger.debug(LogCategory.API,`[Stream Route] 🗺️ Tools séparés:`, {
-            totalTools: tools.length,
+            totalTools: toolsCtx.tools.length,
             mcpCount: mcpTools.length,
             openApiCount: openApiTools.length,
             callableCount: callableToolNames.size,
@@ -784,14 +801,11 @@ export async function POST(request: NextRequest) {
                 messagesCount: currentMessages.length
               });
               
-              // Extraire les callables si disponibles (pour Liminality uniquement)
-              const synesiaCallables = (tools as Tool[] & { _synesiaCallables?: string[] })._synesiaCallables;
-              
-              // Appeler le provider (avec callables pour Liminality)
-              const streamCall = providerType === 'liminality' && synesiaCallables
-                ? (provider as { callWithMessagesStream: (messages: ChatMessage[], tools: Tool[], callables?: string[]) => AsyncGenerator<unknown> })
-                    .callWithMessagesStream(currentMessages, tools, synesiaCallables)
-                : provider.callWithMessagesStream(currentMessages, tools);
+              const streamCall = provider.callWithMessagesStream(
+                currentMessages,
+                toolsCtx.tools,
+                providerType === 'liminality' ? toolsCtx.synesiaCallables : undefined
+              );
               
               for await (const chunk of streamCall) {
                 // ✅ Vérifier si c'est un chunk d'erreur du provider
@@ -968,8 +982,12 @@ export async function POST(request: NextRequest) {
                                 skipDuplicate = true;
                               }
                             }
-                          } catch {
-                            // existing pas un seul objet (ex. déjà concaténé), on accumule
+                          } catch (_e) {
+                            logger.debug(
+                              LogCategory.API,
+                              '[Stream Route] JSON args parse skip — fragment accumulé',
+                              { fragmentPrefix: newFragment?.slice(0, 40) }
+                            );
                           }
                         }
                         if (!skipDuplicate) {
@@ -1244,8 +1262,8 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                 timestamp: Date.now()
               });
               
-              // ✅ Forcer tools = [] et activer le flag de recovery
-              tools = [];
+              // ✅ Forcer tools vides et activer le flag de recovery
+              toolsCtx.tools = [];
               forcedFinalRound = true;
               // On continue la boucle pour que le LLM réponde
               continue;
@@ -1550,11 +1568,11 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
               logger.warn(LogCategory.API, `[Stream Route] ⚠️ Limite de ${maxRounds} rounds atteinte, relance finale forcée sans nouveaux tool calls`);
               
               try {
-                // Pas de callables dans le round final (forcer réponse)
-                const finalResponse = providerType === 'liminality'
-                  ? await (provider as { callWithMessages: (messages: ChatMessage[], tools: Tool[], callables?: string[]) => Promise<unknown> })
-                      .callWithMessages(currentMessages, [], undefined)
-                  : await provider.callWithMessages(currentMessages, []);
+                const finalResponse = await provider.callWithMessages(
+                  currentMessages,
+                  [],
+                  undefined
+                );
 
                 // Type guard pour finalResponse
                 if (finalResponse && typeof finalResponse === 'object') {

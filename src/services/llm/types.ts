@@ -1,10 +1,14 @@
 import type { ChatMessage as CoreChatMessage } from '@/types/chat';
+import type { Tool } from './types/strictTypes';
 
 export interface LLMProvider {
   name: string;
   id: string;
   call(message: string, context: AppContext, history: ChatMessage[]): Promise<unknown>;
   isAvailable(): boolean;
+  /** Liminality passe `callables` en 3e argument ; les autres providers l'ignorent. */
+  callWithMessages(messages: ChatMessage[], tools: Tool[], callables?: string[]): Promise<unknown>;
+  callWithMessagesStream(messages: ChatMessage[], tools: Tool[], callables?: string[]): AsyncGenerator<unknown>;
 }
 
 export interface AppContext {

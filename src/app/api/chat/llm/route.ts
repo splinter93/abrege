@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
   let success = false;
   // Extraire les variables en dehors du try pour qu'elles soient accessibles dans le catch
   let sessionId: string | undefined;
-  let userToken: string | undefined;
   let message: string | null = null;
   let context: LLMRequest['context'] | null = null;
   let history: ChatMessage[] = [];
@@ -44,8 +43,21 @@ export async function POST(request: NextRequest) {
   let provider: string | undefined;
   
   try {
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      logger.error(LogCategory.API, `[LLM Route] ❌ Token manquant ou invalide`, {
+        hasHeader: !!authHeader,
+        headerValue: authHeader ? 'Present but invalid format' : 'Missing',
+      });
+      return NextResponse.json(
+        { error: "Token d'authentification manquant ou invalide" },
+        { status: 401 }
+      );
+    }
+    const userToken = authHeader.replace('Bearer ', '');
+
     const body = await request.json();
-    
+
     // ✅ Validation Zod stricte
     const validation = llmRequestSchema.safeParse(body);
     
@@ -71,25 +83,9 @@ export async function POST(request: NextRequest) {
 
     message = requestMessage;
     context = requestContext;
-    history = requestHistory as unknown as ChatMessage[];
+    history = requestHistory;
     provider = requestProvider;
 
-    // Extraire le token d'authentification depuis le header Authorization
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      logger.error(LogCategory.API, `[LLM Route] ❌ Token manquant ou invalide`, {
-        hasHeader: !!authHeader,
-        headerValue: authHeader ? 'Present but invalid format' : 'Missing'
-      });
-      return NextResponse.json(
-        { error: 'Token d\'authentification manquant ou invalide' },
-        { status: 401 }
-      );
-    }
-    
-    userToken = authHeader.replace('Bearer ', '');
-    
     // Valider le JWT et EXTRAIRE le userId pour éviter l'expiration
     let userId: string;
     
@@ -281,8 +277,8 @@ export async function POST(request: NextRequest) {
     // Configuration par défaut si aucun agent n'est trouvé
     const finalAgentConfig: AgentConfig = resolvedAgentConfig ? {
       ...resolvedAgentConfig,
-      id: resolvedAgentConfig.id!,
-      name: resolvedAgentConfig.name!,
+      id: resolvedAgentConfig.id ?? 'fallback-agent',
+      name: resolvedAgentConfig.name ?? 'Assistant',
       model: resolvedAgentConfig.model || 'openai/gpt-oss-20b',
       temperature: resolvedAgentConfig.temperature ?? 0.7,
       max_tokens: resolvedAgentConfig.max_tokens ?? 4000,
@@ -383,7 +379,7 @@ export async function POST(request: NextRequest) {
       },
       sessionHistory: sanitizedHistory,
       agentConfig: finalAgentConfig,
-      userToken: userToken!,
+      userToken,
       sessionId
     });
 
@@ -442,7 +438,8 @@ export async function POST(request: NextRequest) {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       sessionId: sessionId || 'unknown',
-      message: message?.substring(0, 100) + '...',
+      message:
+        message != null ? `${message.substring(0, 100)}...` : '(null)',
       hasContext: !!context,
       hasHistory: !!history
     });

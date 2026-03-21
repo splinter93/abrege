@@ -4,8 +4,18 @@
  */
 
 import { simpleLogger as logger } from '@/utils/logger';
-import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AgentConfig } from '@/services/llm/types/agentTypes';
+
+function isAgentConfig(v: unknown): v is AgentConfig {
+  if (v === null || typeof v !== 'object') return false;
+  const o = v as Record<string, unknown>;
+  return (
+    typeof o.id === 'string' &&
+    typeof o.name === 'string' &&
+    typeof o.model === 'string'
+  );
+}
 
 const DEFAULT_AGENT_SCOPES = [
   'notes:read', 'notes:write', 'notes:create', 'notes:update', 'notes:delete',
@@ -21,7 +31,7 @@ const DEFAULT_AGENT_SCOPES = [
  */
 export async function validateAndExtractUserId(
   userToken: string,
-  supabase: ReturnType<typeof createClient>
+  supabase: SupabaseClient
 ): Promise<{ success: true; userId: string } | { success: false; error: string }> {
   try {
     // ✅ JWT OBLIGATOIRE : on rejette tout token non signé
@@ -51,10 +61,17 @@ export async function resolveAgent(
   agentId: string | undefined,
   providerName: string | undefined,
   providedAgentConfig: unknown,
-  supabase: ReturnType<typeof createClient>
+  supabase: SupabaseClient
 ): Promise<AgentConfig | null> {
-  let finalAgentConfig = providedAgentConfig as AgentConfig | null;
-  
+  let finalAgentConfig: AgentConfig | null = isAgentConfig(providedAgentConfig)
+    ? providedAgentConfig
+    : null;
+  if (providedAgentConfig != null && !isAgentConfig(providedAgentConfig)) {
+    logger.warn(
+      '[Stream Helpers] agentConfig fourni dans le body mais ignoré (structure invalide — id, name, model requis)'
+    );
+  }
+
   try {
     // 1) Priorité à l'agent explicitement sélectionné
     if (agentId) {
