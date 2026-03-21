@@ -11,6 +11,12 @@ import {
 } from '@/constants/chatFontPresets';
 import CustomSelect from './CustomSelect';
 import './SettingsModal.css';
+import {
+  HISTORY_PREF_KEY,
+  HISTORY_DEFAULT,
+  HISTORY_PRESETS,
+  setMaxHistoryMessages,
+} from '@/utils/chatHistoryPreference';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -72,6 +78,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [selectedColorPalette, setSelectedColorPalette] = useState<string>('soft-dark');
   // PDF Parser (General) : railway = Hybrid Parser v4, mistral = Mistral OCR
   const [selectedPdfParser, setSelectedPdfParser] = useState<string>('railway');
+  // Mémoire de conversation (Général)
+  const [maxHistory, setMaxHistory] = useState<number>(HISTORY_DEFAULT);
 
   // Color palettes
   const availableColorPalettes = [
@@ -201,6 +209,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       setSelectedPdfParser(savedPdfParser);
     }
 
+    const savedMaxHistory = localStorage.getItem(HISTORY_PREF_KEY);
+    if (savedMaxHistory) {
+      const n = parseInt(savedMaxHistory, 10);
+      if (!isNaN(n)) setMaxHistory(n);
+    }
+
     const savedColors = localStorage.getItem('chat-color-preference');
     if (savedColors) {
       setSelectedColorPalette(savedColors);
@@ -233,6 +247,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     if (value !== 'railway' && value !== 'mistral') return;
     setSelectedPdfParser(value);
     localStorage.setItem('chat-pdf-parser-preference', value);
+  };
+
+  const handleMaxHistoryChange = (value: string) => {
+    const n = parseInt(value, 10);
+    if (isNaN(n)) return;
+    setMaxHistory(n);
+    setMaxHistoryMessages(n);
   };
 
   const handleColorPaletteChange = (paletteValue: string) => {
@@ -311,6 +332,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                   { value: 'mistral', label: 'Mistral OCR', icon: <FileText size={16} /> },
                 ]}
                 onChange={handlePdfParserChange}
+              />
+            </div>
+
+            <div className="settings-field">
+              <label className="settings-field-label">Mémoire de conversation</label>
+              <p className="settings-field-description">
+                Nombre de messages de l'historique envoyés à l'IA à chaque échange.
+                Plus élevé = meilleure continuité, légèrement plus lent.
+              </p>
+              <CustomSelect
+                value={String(maxHistory)}
+                options={HISTORY_PRESETS.map(p => ({
+                  value: String(p.value),
+                  label: `${p.label} — ${p.description}`,
+                }))}
+                onChange={handleMaxHistoryChange}
               />
             </div>
           </div>

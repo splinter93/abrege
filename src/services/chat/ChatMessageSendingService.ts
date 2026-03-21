@@ -11,6 +11,7 @@
  */
 
 import { tokenManager } from '@/utils/tokenManager';
+import { getMaxHistoryMessages } from '@/utils/chatHistoryPreference';
 import { chatContextBuilder, type Note } from './ChatContextBuilder';
 import type { Agent, ChatMessage, ChatSession } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
@@ -75,7 +76,7 @@ export class AuthError extends Error {
  */
 export class ChatMessageSendingService {
   private static instance: ChatMessageSendingService;
-  private readonly DEFAULT_MAX_HISTORY = 50; // ✅ Augmenté de 30 à 50 pour conversations avec tools
+  private readonly DEFAULT_MAX_HISTORY = 50; // fallback statique si getMaxHistoryMessages non dispo
 
   private constructor() {}
 
@@ -120,7 +121,7 @@ export class ChatMessageSendingService {
       selectedAgent,
       infiniteMessages,
       llmContext,
-      maxHistoryForLLM = this.DEFAULT_MAX_HISTORY
+      maxHistoryForLLM = getMaxHistoryMessages()
     } = options;
 
     try {

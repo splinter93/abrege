@@ -139,7 +139,9 @@ export const llmStreamRequestSchema = z.object({
   context: uiContextSchema,
   history: z.array(chatMessageSchema),
   agentConfig: z.unknown().optional(), // AgentConfig complexe, validation partielle
-  skipAddingUserMessage: z.boolean().optional().default(false)
+  skipAddingUserMessage: z.boolean().optional().default(false),
+  /** Nombre max de messages d'historique entrant (préférence utilisateur, 10–100). */
+  maxHistoryMessages: z.number().int().min(10).max(100).optional()
 }).refine(
   (data) => {
     // Si skipAddingUserMessage est false, message est requis

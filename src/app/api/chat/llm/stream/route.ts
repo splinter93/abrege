@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { message, context, history, agentConfig, skipAddingUserMessage } = validation.data;
+    const { message, context, history, agentConfig, skipAddingUserMessage, maxHistoryMessages } = validation.data;
 
     // 🎨 Extraire le noteId du contexte canva (si présent)
     const noteId = context.canva_context && typeof context.canva_context === 'object' && 'activeNote' in context.canva_context 
@@ -374,7 +374,7 @@ export async function POST(request: NextRequest) {
         content: msg.content ?? '',
         timestamp: msg.timestamp ?? new Date().toISOString()
       })) as ChatMessage[],
-      MAX_HISTORY_MESSAGES
+      maxHistoryMessages ?? MAX_HISTORY_MESSAGES
     );
 
     // ✅ Extraire les images du format multi-modal si présent

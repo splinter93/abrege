@@ -291,6 +291,14 @@ body.chat-theme-light .settings-menu-item.active {
   font-family: var(--font-chat-ui);
 }
 
+.settings-field-description {
+  font-size: 12px;
+  color: var(--chat-text-muted);
+  margin: -6px 0 10px;
+  line-height: 1.5;
+  font-family: var(--font-chat-ui);
+}
+
 .settings-field-label-group .settings-field-label {
   margin-bottom: 0; /* ✅ Pas de double espacement dans les groupes */
 }
