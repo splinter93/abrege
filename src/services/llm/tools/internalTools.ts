@@ -9,7 +9,7 @@ export const PLAN_UPDATE_TOOL: FunctionTool = {
   type: 'function',
   function: {
     name: '__plan_update',
-    description: 'Display or update a compact execution plan in the chat. Use for visual progress tracking during multi-step tasks.',
+    description: 'REQUIRED for multi-step tasks. Declare the full plan before starting (all steps pending), mark each step in_progress before executing it, and completed immediately after. Never start step N+1 without marking step N completed. Never skip or reorder steps without updating the plan first.',
     parameters: {
       type: 'object',
       properties: {

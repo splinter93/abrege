@@ -217,6 +217,7 @@ export async function POST(request: NextRequest) {
     // ✅ Construire le system message (instructions agent + contexte UI via ContextInjectionService)
     const { SystemMessageBuilder } = await import('@/services/llm/SystemMessageBuilder');
     const { contextInjectionService } = await import('@/services/llm/context');
+    const { addToolCallInstructions } = await import('@/services/llm/toolCallInstructions');
     const systemMessageBuilder = SystemMessageBuilder.getInstance();
     
     // Construire ExtendedLLMContext pour ContextInjectionService (pour context messages uniquement)
@@ -244,8 +245,9 @@ export async function POST(request: NextRequest) {
       }
     );
     
-    const systemMessage = systemMessageResult.content;
-    
+    // Injecter les instructions tool calls (règles JSON + contrat plan) — activé sur tous les agents
+    const systemMessage = addToolCallInstructions(systemMessageResult.content);
+
     // Injecter les context messages (notes, mentions) via ContextInjectionService
     // Note: SystemMessageBuilder a déjà injecté le contexte UI dans le system message
     // Ici on récupère uniquement les MessageContextProviders (notes, mentions)
@@ -1329,8 +1331,10 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                     });
                   }
 
+                  let result = 'Plan updated and displayed to user.';
+
                   if (toolCall.function.name === '__plan_update') {
-                    const steps = args.steps;
+                    const steps = args.steps as Array<{ id: string; content: string; status: string }> | undefined;
                     if (Array.isArray(steps) && steps.length > 0) {
                       sendSSE({
                         type: 'plan_update',
@@ -1338,14 +1342,32 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                         toolCallId: toolCall.id,
                         timestamp: Date.now()
                       });
+
+                      // Build a rich feedback string so the LLM stays anchored in its progress
+                      const total = steps.length;
+                      const completedCount = steps.filter(s => s.status === 'completed').length;
+                      const inProgressStep = steps.find(s => s.status === 'in_progress');
+                      const pendingSteps = steps.filter(s => s.status === 'pending');
+
+                      const parts: string[] = [`Plan updated (${completedCount}/${total} done).`];
+                      if (inProgressStep) {
+                        parts.push(`In progress: "${inProgressStep.content}".`);
+                      }
+                      if (pendingSteps.length > 0) {
+                        parts.push(`Remaining: ${pendingSteps.map(s => `"${s.content}"`).join(', ')}.`);
+                      }
+                      if (completedCount === total) {
+                        parts.push('All steps completed — you may now deliver the final response.');
+                      } else {
+                        parts.push('Continue: mark each step completed before moving to the next.');
+                      }
+                      result = parts.join(' ');
                     } else {
                       logger.warn(LogCategory.API, '[Stream Route] __plan_update skipped: empty or invalid steps', {
                         toolCallId: toolCall.id
                       });
                     }
                   }
-                  
-                  const result = 'Plan updated and displayed to user.';
                   currentMessages.push({
                     role: 'tool',
                     tool_call_id: toolCall.id,

@@ -109,10 +109,39 @@ What is 2+2?
 - [ ] 5
 \`\`\`
 
-### Plan update in chat
-Use the \`__plan_update\` tool to display a compact progress tracker directly in the chat. This is complementary to plan notes — use it for quick inline visibility.
+### Plan update in chat — BINDING CONTRACT
 
-For complex tasks, create a \`"plan"\` note AND use \`__plan_update\` for inline progress.
+For any multi-step task, you are **bound** to the following 4-rule protocol. No deviation.
+
+**Rule 1 — Declare the plan first (before any other action)**
+Before executing any step, call \`__plan_update\` once with ALL steps set to \`pending\`.
+This declares your work contract with the user.
+
+**Rule 2 — Mark each step \`in_progress\` before executing it**
+Immediately before starting a step, call \`__plan_update\` to set that step to \`in_progress\`.
+The user must always see what you are doing right now.
+
+**Rule 3 — Mark each step \`completed\` before moving to the next**
+After finishing a step (tools executed, result obtained), call \`__plan_update\` to mark it \`completed\`.
+Never start step N+1 without having marked step N as \`completed\`.
+
+**Rule 4 — Never skip or reorder steps silently**
+If you must skip or reorder a step, call \`__plan_update\` to reflect the updated plan,
+then briefly explain the change in text before continuing.
+
+**Lifecycle example (3-step task):**
+\`\`\`
+1. __plan_update → [step1: pending, step2: pending, step3: pending]           ← declare
+2. __plan_update → [step1: in_progress, step2: pending, step3: pending]       ← before step 1
+3. (execute step 1 actions)
+4. __plan_update → [step1: completed, step2: in_progress, step3: pending]     ← done + next
+5. (execute step 2 actions)
+6. __plan_update → [step1: completed, step2: completed, step3: in_progress]
+7. (execute step 3 actions)
+8. __plan_update → [step1: completed, step2: completed, step3: completed]     ← all done
+\`\`\`
+
+For complex tasks, also create a \`"plan"\` note AND use \`__plan_update\` for inline progress.
 `;
 
 /**
