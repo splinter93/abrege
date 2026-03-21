@@ -63,6 +63,10 @@ export function useChatAnimations(
   // Ref pour éviter les triggers multiples
   const animationInProgressRef = useRef(false);
 
+  // Token d'annulation : chaque triggerFadeIn capture son token au démarrage.
+  // resetAnimation() incrémente le token, invalidant tous les callbacks en vol.
+  const animationTokenRef = useRef(0);
+
   /**
    * Déclenche le fade-in des messages avec scroll automation
    * 
@@ -90,9 +94,16 @@ export function useChatAnimations(
 
     animationInProgressRef.current = true;
 
+    // Capturer un token unique pour cette invocation.
+    // resetAnimation() incrémente animationTokenRef, ce qui invalide ce token
+    // et arrête tous les setTimeout/rAF déjà schedulés sans avoir à les tracker.
+    const myToken = ++animationTokenRef.current;
+    const isCancelled = () => animationTokenRef.current !== myToken;
+
     logger.dev('[useChatAnimations] 🎬 Démarrage fade-in:', {
       sessionId,
-      messagesCount: messages.length
+      messagesCount: messages.length,
+      token: myToken
     });
 
     let fallbackTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -113,17 +124,19 @@ export function useChatAnimations(
     };
 
     const finalizeWithAnimation = () => {
-      if (!animationInProgressRef.current) {
+      if (isCancelled()) {
         restorePadding();
         return;
       }
 
       clearFallback();
       requestAnimationFrame(() => {
+        if (isCancelled()) { restorePadding(); return; }
         setMessagesVisible(true);
         setShouldAnimateMessages(true);
 
         setTimeout(() => {
+          if (isCancelled()) return;
           setShouldAnimateMessages(false);
           animationInProgressRef.current = false;
           // ✅ Padding déjà restauré avant fade-in, pas besoin de le refaire ici
@@ -132,6 +145,7 @@ export function useChatAnimations(
     };
 
     const finalizeWithoutAnimation = () => {
+      if (isCancelled()) return;
       clearFallback();
       restorePadding();
       setMessagesVisible(true);
@@ -144,13 +158,16 @@ export function useChatAnimations(
       setMessagesVisible(false);
 
       fallbackTimeout = setTimeout(() => {
+        if (isCancelled()) return;
         logger.warn('[useChatAnimations] ⚠️ Fallback fade-in déclenché (rAF suspendu)');
         finalizeWithoutAnimation();
       }, 1200);
 
       // 🎯 ÉTAPE 2 : Attendre render + scroll instantané
       requestAnimationFrame(() => {
+        if (isCancelled()) { clearFallback(); return; }
         requestAnimationFrame(() => {
+          if (isCancelled()) { clearFallback(); return; }
           const container = containerRef.current;
           if (!container) {
             logger.warn('[useChatAnimations] ⚠️ Container ref null');
@@ -172,7 +189,8 @@ export function useChatAnimations(
           logger.dev('[useChatAnimations] 📍 Scroll initial:', {
             scrollTop: container.scrollTop,
             scrollHeight: container.scrollHeight,
-            clientHeight: container.clientHeight
+            clientHeight: container.clientHeight,
+            token: myToken
           });
 
           // 🎯 ÉTAPE 3 : Attendre stabilisation du layout (images, mermaid, etc.)
@@ -183,6 +201,12 @@ export function useChatAnimations(
           const retryInterval = 200; // Vérifier toutes les 200ms
 
           const checkAndScroll = () => {
+            // Arrêt immédiat si la session a changé entre deux retries
+            if (isCancelled()) {
+              restorePadding();
+              return;
+            }
+
             const currentScrollHeight = container.scrollHeight;
             const newMaxScrollTop = currentScrollHeight - container.clientHeight;
             const finalScrollTop = Math.max(0, newMaxScrollTop);
@@ -194,7 +218,8 @@ export function useChatAnimations(
               retryCount,
               scrollTop: finalScrollTop,
               scrollHeight: currentScrollHeight,
-              heightChanged: currentScrollHeight !== previousScrollHeight
+              heightChanged: currentScrollHeight !== previousScrollHeight,
+              token: myToken
             });
 
             // Si la hauteur n'a pas changé depuis le dernier retry OU qu'on a atteint le max
@@ -205,6 +230,7 @@ export function useChatAnimations(
 
               // 🎯 ÉTAPE 4 : Recaler le scroll après restauration du padding
               requestAnimationFrame(() => {
+                if (isCancelled()) return;
                 const scrollAfterPaddingRestore = container.scrollHeight - container.clientHeight;
                 container.scrollTop = Math.max(0, scrollAfterPaddingRestore);
 
@@ -232,7 +258,7 @@ export function useChatAnimations(
 
     setDisplayedSessionId(sessionId);
 
-    logger.dev('[useChatAnimations] ✅ Fade-in configuré');
+    logger.dev('[useChatAnimations] ✅ Fade-in configuré', { token: myToken });
   }, []);
 
   /**
@@ -240,12 +266,15 @@ export function useChatAnimations(
    * Appelé lors du changement de session
    */
   const resetAnimation = useCallback(() => {
+    // Invalider tous les callbacks en vol en incrémentant le token.
+    // Tout setTimeout/rAF qui capture isCancelled() s'arrêtera dès son prochain tick.
+    animationTokenRef.current++;
+    animationInProgressRef.current = false;
     setShouldAnimateMessages(false);
     setMessagesVisible(false);
     setDisplayedSessionId(null);
-    animationInProgressRef.current = false;
 
-    logger.dev('[useChatAnimations] 🔄 Animation réinitialisée');
+    logger.dev('[useChatAnimations] 🔄 Animation réinitialisée (token invalidé)');
   }, []);
 
   return {
