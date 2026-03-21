@@ -59,7 +59,11 @@ export interface UseStreamingStateReturn {
   setStreamingState: (state: StreamingStateType) => void;
   addToolExecution: (toolCalls: ToolCall[], toolCount: number) => void;
   updateToolResult: (toolCallId: string, result: unknown, success: boolean) => void;
-  addPlanEvent: (payload: { title?: string; steps: Array<{ id: string; content: string; status: string }> }) => void;
+  addPlanEvent: (payload: {
+    title?: string;
+    steps: Array<{ id: string; content: string; status: string }>;
+    toolCallId?: string;
+  }) => void;
   endStreaming: () => void;
   setFading: (fading: boolean) => void; // ✅ NOUVEAU
   reset: () => void;
@@ -277,22 +281,47 @@ export function useStreamingState(): UseStreamingStateReturn {
   }, []);
 
   /**
-   * Ajoute un événement plan à la timeline
+   * Met à jour le dernier bloc plan en live (Cursor-like) ou en ajoute un.
    */
-  const addPlanEvent = useCallback((payload: { title?: string; steps: Array<{ id: string; content: string; status: string }> }) => {
-    const planItem: StreamTimelineItem = {
-      type: 'plan',
-      title: payload.title,
-      steps: payload.steps.map(s => ({
-        id: s.id,
-        content: s.content,
-        status: s.status as 'pending' | 'in_progress' | 'completed'
-      })),
-      timestamp: Date.now()
-    };
-    streamingTimelineRef.current = [...streamingTimelineRef.current, planItem];
-    setStreamingTimeline(prev => [...prev, planItem]);
-  }, []);
+  const addPlanEvent = useCallback(
+    (payload: {
+      title?: string;
+      steps: Array<{ id: string; content: string; status: string }>;
+      toolCallId?: string;
+    }) => {
+      if (!payload.steps?.length) return;
+
+      const planItem: StreamTimelineItem = {
+        type: 'plan',
+        title: payload.title,
+        steps: payload.steps.map(s => ({
+          id: s.id,
+          content: s.content,
+          status: s.status as 'pending' | 'in_progress' | 'completed'
+        })),
+        timestamp: Date.now(),
+        ...(payload.toolCallId !== undefined && { toolCallId: payload.toolCallId })
+      };
+
+      const replaceLastPlan = (items: StreamTimelineItem[]): StreamTimelineItem[] => {
+        for (let i = items.length - 1; i >= 0; i--) {
+          if (items[i].type === 'plan') {
+            const next = [...items];
+            next[i] = planItem;
+            return next;
+          }
+        }
+        return [...items, planItem];
+      };
+
+      setStreamingTimeline(prev => {
+        const next = replaceLastPlan(prev);
+        streamingTimelineRef.current = next;
+        return next;
+      });
+    },
+    []
+  );
 
   /**
    * Termine le streaming

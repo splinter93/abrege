@@ -61,6 +61,8 @@ export interface StreamPlanEvent {
     status: 'pending' | 'in_progress' | 'completed';
   }>;
   timestamp: number;
+  /** Dernier tool_call_id __plan_update (debug / clé React stable) */
+  toolCallId?: string;
 }
 
 /**

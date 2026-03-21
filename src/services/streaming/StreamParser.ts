@@ -28,6 +28,8 @@ export interface StreamChunk {
   toolCallId?: string;
   result?: unknown;
   success?: boolean;
+  /** Tool interne (ex. __plan_update) — ne pas dupliquer dans la timeline tool_execution */
+  isInternal?: boolean;
   finishReason?: string;
   // ✅ Champs pour les erreurs enrichies
   error?: string;

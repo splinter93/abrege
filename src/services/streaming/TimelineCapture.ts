@@ -7,7 +7,7 @@
  */
 
 import { simpleLogger as logger } from '@/utils/logger';
-import type { StreamTimeline, StreamTimelineItem } from '@/types/streamTimeline';
+import type { StreamPlanEvent, StreamTimeline, StreamTimelineItem } from '@/types/streamTimeline';
 import type { ToolCall } from '@/hooks/useChatHandlers';
 
 /**
@@ -125,10 +125,15 @@ export class TimelineCapture {
   }
 
   /**
-   * Ajoute un événement plan à la timeline
+   * Met à jour le dernier bloc plan du message (comportement type Cursor) ou en ajoute un.
+   * Deux plans distincts dans un même tour : le second remplace l’affichage du premier.
    */
-  addPlanEvent(payload: { title?: string; steps: Array<{ id: string; content: string; status: string }> }): void {
-    this.items.push({
+  addPlanEvent(payload: {
+    title?: string;
+    steps: Array<{ id: string; content: string; status: string }>;
+    toolCallId?: string;
+  }): void {
+    const newPlan: StreamPlanEvent = {
       type: 'plan',
       title: payload.title,
       steps: payload.steps.map(s => ({
@@ -136,8 +141,17 @@ export class TimelineCapture {
         content: s.content,
         status: s.status as 'pending' | 'in_progress' | 'completed'
       })),
-      timestamp: Date.now() - this.startTime
-    });
+      timestamp: Date.now() - this.startTime,
+      ...(payload.toolCallId !== undefined && { toolCallId: payload.toolCallId })
+    };
+
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      if (this.items[i].type === 'plan') {
+        this.items[i] = newPlan;
+        return;
+      }
+    }
+    this.items.push(newPlan);
   }
 
   /**

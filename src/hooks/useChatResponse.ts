@@ -28,6 +28,7 @@ interface UseChatResponseOptions {
   onPlanUpdate?: (payload: {
     title?: string;
     steps: Array<{ id: string; content: string; status: string }>;
+    toolCallId?: string;
   }) => void;
   useStreaming?: boolean;
   onAssistantRoundComplete?: (content: string, toolCalls: ToolCall[]) => void;
@@ -79,6 +80,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
     onStreamEnd,
     onToolExecution,
     onPlanUpdate,
+    onModelInfo,
     useStreaming = false,
     onAssistantRoundComplete,
   } = options;
@@ -181,7 +183,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
           onToolResult,
           onComplete,
           onError,
-          onModelInfo: options.onModelInfo,
+          onModelInfo,
           onPlanUpdate
         }, abortController.signal);
 
@@ -475,7 +477,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
       abortControllerRef.current = null;
       setIsProcessing(false);
     }
-  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamEnd, onToolExecution, onPlanUpdate, useStreaming, onAssistantRoundComplete]);
+  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamEnd, onToolExecution, onPlanUpdate, onModelInfo, useStreaming, onAssistantRoundComplete]);
 
   const abort = useCallback(() => {
     if (abortControllerRef.current) {

@@ -1330,12 +1330,19 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                   }
 
                   if (toolCall.function.name === '__plan_update') {
-                    sendSSE({
-                      type: 'plan_update',
-                      payload: args,
-                      toolCallId: toolCall.id,
-                      timestamp: Date.now()
-                    });
+                    const steps = args.steps;
+                    if (Array.isArray(steps) && steps.length > 0) {
+                      sendSSE({
+                        type: 'plan_update',
+                        payload: args,
+                        toolCallId: toolCall.id,
+                        timestamp: Date.now()
+                      });
+                    } else {
+                      logger.warn(LogCategory.API, '[Stream Route] __plan_update skipped: empty or invalid steps', {
+                        toolCallId: toolCall.id
+                      });
+                    }
                   }
                   
                   const result = 'Plan updated and displayed to user.';

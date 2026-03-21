@@ -13,6 +13,7 @@ import { TimelineCapture } from './TimelineCapture';
 import { XmlToolCallParser } from './XmlToolCallParser';
 import type { ToolCall, ToolResult } from '@/hooks/useChatHandlers';
 import type { StreamTimeline } from '@/types/streamTimeline';
+import { INTERNAL_TOOL_NAMES } from '@/services/llm/tools/internalTools';
 
 /**
  * Erreur de streaming enrichie
@@ -38,7 +39,11 @@ export interface StreamCallbacks {
   onToolCalls?: (toolCalls: ToolCall[], toolName: string) => void;
   onToolExecution?: (toolCount: number, toolCalls: ToolCall[]) => void;
   onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
-  onPlanUpdate?: (payload: { title?: string; steps: Array<{ id: string; content: string; status: string }> }) => void;
+  onPlanUpdate?: (payload: {
+    title?: string;
+    steps: Array<{ id: string; content: string; status: string }>;
+    toolCallId?: string;
+  }) => void;
   onComplete?: (
     fullContent: string,
     fullReasoning: string,
@@ -239,8 +244,12 @@ export class StreamOrchestrator {
 
       case 'plan_update': {
         const payload = chunk.payload;
-        if (!payload?.steps) break;
-        const validPayload = { title: payload.title, steps: payload.steps };
+        if (!payload?.steps?.length) break;
+        const validPayload = {
+          title: payload.title,
+          steps: payload.steps,
+          ...(chunk.toolCallId !== undefined && { toolCallId: chunk.toolCallId })
+        };
         logger.dev('[StreamOrchestrator] 📋 Plan update reçu', validPayload);
         this.timeline.addPlanEvent(validPayload);
         callbacks.onPlanUpdate?.(validPayload);
@@ -364,21 +373,30 @@ export class StreamOrchestrator {
   ): void {
     logger.dev(`[StreamOrchestrator] 🔧 Exécution de ${chunk.toolCount || 0} tools...`);
 
-    // Notifier les nouveaux tool calls (onToolCalls)
+    // Notifier les nouveaux tool calls (onToolCalls) — exclure les internes (plan déjà géré par plan_update)
     const toolCallsToNotify = this.toolTracker.getNewToolCallsForNotification();
     if (toolCallsToNotify.length > 0) {
-      callbacks.onToolCalls?.(toolCallsToNotify, 'stream');
+      const forOnToolCalls = toolCallsToNotify.filter(
+        tc => !INTERNAL_TOOL_NAMES.has(tc.function.name)
+      );
+      if (forOnToolCalls.length > 0) {
+        callbacks.onToolCalls?.(forOnToolCalls, 'stream');
+      }
       this.toolTracker.markNotified(toolCallsToNotify);
     }
 
-    // Notifier pour exécution (onToolExecution)
+    // Exécution : masquer les tools internes (__plan_update) dans la timeline — le plan a son bloc dédié
     const newToolCallsForExecution = this.toolTracker.getNewToolCallsForExecution();
     if (newToolCallsForExecution.length > 0) {
-      callbacks.onToolExecution?.(chunk.toolCount || 0, newToolCallsForExecution);
       this.toolTracker.markExecutionNotified(newToolCallsForExecution);
 
-      // Ajouter à la timeline
-      this.timeline.addToolExecutionEvent(newToolCallsForExecution, chunk.toolCount || 0);
+      const visibleForUi = newToolCallsForExecution.filter(
+        tc => !INTERNAL_TOOL_NAMES.has(tc.function.name)
+      );
+      if (visibleForUi.length > 0) {
+        callbacks.onToolExecution?.(visibleForUi.length, visibleForUi);
+        this.timeline.addToolExecutionEvent(visibleForUi, visibleForUi.length);
+      }
     }
 
     // Passer au prochain round
@@ -391,7 +409,14 @@ export class StreamOrchestrator {
    * Traite un chunk tool_result
    */
   private processToolResultChunk(
-    chunk: { toolName?: string; toolCallId?: string; result?: unknown; success?: boolean; mcp_server?: string },
+    chunk: {
+      toolName?: string;
+      toolCallId?: string;
+      result?: unknown;
+      success?: boolean;
+      mcp_server?: string;
+      isInternal?: boolean;
+    },
     callbacks: StreamCallbacks
   ): void {
     logger.dev(`[StreamOrchestrator] ✅ Tool result: ${chunk.toolName}${chunk.mcp_server ? ` (MCP: ${chunk.mcp_server})` : ''}`);
@@ -405,22 +430,26 @@ export class StreamOrchestrator {
 
     this.allToolResults.push(toolResult);
 
-    // Ajouter à la timeline (avec mcp_server si présent pour badge UI)
-    this.timeline.addToolResultEvent(
-      toolResult.tool_call_id,
-      toolResult.name,
-      chunk.result,
-      toolResult.success,
-      chunk.mcp_server
-    );
+    const isInternal = Boolean(chunk.isInternal);
 
-    // Notifier
-    callbacks.onToolResult?.(
-      chunk.toolName || '',
-      chunk.result,
-      chunk.success || false,
-      chunk.toolCallId
-    );
+    if (!isInternal) {
+      this.timeline.addToolResultEvent(
+        toolResult.tool_call_id,
+        toolResult.name,
+        chunk.result,
+        toolResult.success,
+        chunk.mcp_server
+      );
+    }
+
+    if (!isInternal) {
+      callbacks.onToolResult?.(
+        chunk.toolName || '',
+        chunk.result,
+        chunk.success || false,
+        chunk.toolCallId
+      );
+    }
   }
 
   /**
@@ -463,15 +492,20 @@ export class StreamOrchestrator {
       // Si oui, ne pas les notifier à nouveau pour éviter la duplication
       const toolCallsForTimeline = this.toolTracker.getNewToolCallsForExecution();
       if (toolCallsForTimeline.length > 0) {
-        // ✅ FIX: Seulement notifier si pas déjà notifiés
-        // Les tool calls déjà notifiés dans processToolExecutionChunk ne doivent pas être notifiés à nouveau
-        callbacks.onToolExecution?.(toolCallsForTimeline.length, toolCallsForTimeline);
         this.toolTracker.markExecutionNotified(toolCallsForTimeline);
-        
-        // Ajouter à la timeline (avec mcp_server si présent pour badge MCP)
-        this.timeline.addToolExecutionEvent(toolCallsForTimeline, toolCallsForTimeline.length, chunk.mcp_server);
-        
-        logger.dev(`[StreamOrchestrator] ✅ ${toolCallsForTimeline.length} tool call(s) ajouté(s) à la timeline ET notifié au hook`);
+
+        const visibleForUi = toolCallsForTimeline.filter(
+          tc => !INTERNAL_TOOL_NAMES.has(tc.function.name)
+        );
+        if (visibleForUi.length > 0) {
+          callbacks.onToolExecution?.(visibleForUi.length, visibleForUi);
+          this.timeline.addToolExecutionEvent(visibleForUi, visibleForUi.length, chunk.mcp_server);
+          logger.dev(
+            `[StreamOrchestrator] ✅ ${visibleForUi.length} tool call(s) ajouté(s) à la timeline ET notifié au hook`
+          );
+        } else {
+          logger.dev('[StreamOrchestrator] ⏭️ Round MCP / complet : uniquement tools internes, pas de bloc tool_execution UI');
+        }
       } else {
         // ✅ FIX: Si tous les tool calls ont déjà été notifiés, ne pas les notifier à nouveau
         logger.dev(`[StreamOrchestrator] ⏭️ Tool calls déjà notifiés, skip duplication`);

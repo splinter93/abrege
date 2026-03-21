@@ -52,7 +52,8 @@ export const streamTimelineItemSchema = z.union([
         status: z.enum(['pending', 'in_progress', 'completed'])
       })
     ),
-    timestamp: z.number()
+    timestamp: z.number(),
+    toolCallId: z.string().optional()
   })
 ]);
 

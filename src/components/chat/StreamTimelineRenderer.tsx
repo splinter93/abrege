@@ -5,6 +5,7 @@ import EnhancedMarkdownMessage from './EnhancedMarkdownMessage';
 import { StreamingIndicator } from './StreamingIndicator';
 import PlanStepList from './PlanStepList';
 import { simpleLogger as logger } from '@/utils/logger';
+import { INTERNAL_TOOL_NAMES } from '@/services/llm/tools/internalTools';
 
 interface StreamTimelineRendererProps {
   timeline: StreamTimeline;
@@ -61,6 +62,11 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
             );
 
           case 'tool_execution': {
+            // Tools internes (__plan_update) : pas de bloc StreamingIndicator (plan déjà affiché via type plan)
+            if (item.toolCalls.every(tc => INTERNAL_TOOL_NAMES.has(tc.function.name))) {
+              return null;
+            }
+
             // ✅ NOUVEAU: Les résultats sont maintenant DANS les toolCalls (tc.success)
             // Plus besoin de chercher les tool_result séparés (virés de la timeline)
             
@@ -97,7 +103,11 @@ const StreamTimelineRenderer: React.FC<StreamTimelineRendererProps> = React.memo
 
           case 'plan':
             return (
-              <div key={`plan-${index}`} className="stream-timeline-plan" style={{ marginTop: '8px', marginBottom: '8px' }}>
+              <div
+                key={`plan-${item.toolCallId ?? index}`}
+                className="stream-timeline-plan"
+                style={{ marginTop: '8px', marginBottom: '8px' }}
+              >
                 <PlanStepList title={item.title} steps={item.steps} />
               </div>
             );
