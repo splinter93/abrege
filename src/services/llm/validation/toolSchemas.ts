@@ -277,7 +277,10 @@ export const applyContentOperationsSchema = z.object({
         name: z.enum(['doc_start', 'doc_end', 'after_toc', 'before_first_heading'])
       }).optional()
     }),
-    where: z.enum(['before', 'after', 'inside_start', 'inside_end', 'at', 'replace_match']),
+    where: z
+      .enum(['before', 'after', 'inside_start', 'inside_end', 'at', 'replace_match'])
+      .optional()
+      .describe('Optionnel pour replace/delete. Défaut at.'),
     content: z.string().max(100000).optional(),
     options: z.object({
       surround_with_blank_lines: z.number().int().min(0).max(3).optional(),
@@ -288,8 +291,7 @@ export const applyContentOperationsSchema = z.object({
   dry_run: z.boolean().optional(),
   transaction: z.enum(['all_or_nothing', 'best_effort']).optional(),
   conflict_strategy: z.enum(['fail', 'skip']).optional(),
-  return: z.enum(['content', 'diff', 'none']).optional(),
-  idempotency_key: z.string().uuid().optional()
+  return: z.enum(['content', 'diff', 'none']).optional()
 });
 
 // ==================== MAP DE TOUS LES SCHÉMAS ====================

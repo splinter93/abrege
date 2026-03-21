@@ -246,9 +246,14 @@ export const contentApplyV2Schema = z.object({
         })
       }).optional()
     }),
-    where: z.enum(['before', 'after', 'inside_start', 'inside_end', 'at', 'replace_match'], {
-      errorMap: () => ({ message: 'Position doit être before, after, inside_start, inside_end, at ou replace_match' })
-    }),
+    where: z
+      .enum(['before', 'after', 'inside_start', 'inside_end', 'at', 'replace_match'], {
+        errorMap: () => ({
+          message: 'Position doit être before, after, inside_start, inside_end, at ou replace_match'
+        })
+      })
+      .optional()
+      .describe('Optionnel pour replace/delete (ignoré). Défaut at pour insert/upsert_section.'),
     content: z.string().max(100000, 'Contenu trop long').optional(),
     options: z.object({
       ensure_heading: z.boolean().optional(),
@@ -259,8 +264,7 @@ export const contentApplyV2Schema = z.object({
   // dry_run supprimé : inutile et confus (utilisez return: "diff" pour preview)
   transaction: z.enum(['all_or_nothing', 'best_effort']).default('all_or_nothing'),
   conflict_strategy: z.enum(['fail', 'skip']).default('fail'),
-  return: z.enum(['content', 'diff', 'none']).default('diff'),
-  idempotency_key: z.string().uuid('Clé d\'idempotence doit être un UUID valide').optional()
+  return: z.enum(['content', 'diff', 'none']).default('diff')
 });
 
 /**

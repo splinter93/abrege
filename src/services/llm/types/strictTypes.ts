@@ -251,7 +251,7 @@ export interface ContentOperation {
       name: 'doc_start' | 'doc_end' | 'after_toc' | 'before_first_heading';
     };
   };
-  where: 'before' | 'after' | 'inside_start' | 'inside_end' | 'at' | 'replace_match';
+  where?: 'before' | 'after' | 'inside_start' | 'inside_end' | 'at' | 'replace_match';
   content?: string;
   options?: {
     surround_with_blank_lines?: number;
@@ -265,7 +265,6 @@ export interface ApplyContentOperationsParams {
   transaction?: 'all_or_nothing' | 'best_effort';
   conflict_strategy?: 'fail' | 'skip';
   return?: 'content' | 'diff' | 'none';
-  idempotency_key?: string;
 }
 
 export interface ShareSettingsParams {

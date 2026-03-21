@@ -17,7 +17,7 @@ export interface ContentOperation {
   target: {
     type: 'heading' | 'regex' | 'position' | 'anchor';
     heading?: {
-      path: string[];
+      path?: string[];
       level?: number;
       heading_id?: string;
     };
@@ -34,7 +34,7 @@ export interface ContentOperation {
       name: 'doc_start' | 'doc_end' | 'after_toc' | 'before_first_heading';
     };
   };
-  where: 'before' | 'after' | 'inside_start' | 'inside_end' | 'at' | 'replace_match';
+  where?: 'before' | 'after' | 'inside_start' | 'inside_end' | 'at' | 'replace_match';
   content?: string;
   options?: {
     ensure_heading?: boolean;
@@ -347,12 +347,20 @@ export class ContentApplier {
 
       const headingRegex = new RegExp(headingPattern, 'gm');
       let match;
+      const slugCount: Record<string, number> = {};
 
       while ((match = headingRegex.exec(content)) !== null) {
         const headingText = match[1].trim();
-        const generatedSlug = slugify(headingText);
+        const baseSlug = slugify(headingText);
+        let dedupedSlug: string;
+        if (slugCount[baseSlug] !== undefined) {
+          dedupedSlug = `${baseSlug}-${++slugCount[baseSlug]}`;
+        } else {
+          slugCount[baseSlug] = 0;
+          dedupedSlug = baseSlug;
+        }
 
-        if (generatedSlug === heading_id) {
+        if (dedupedSlug === heading_id) {
           const start = match.index;
           const end = start + match[0].length;
           return {
@@ -375,8 +383,8 @@ export class ContentApplier {
         ? `^#{${level}}\\s+${this.escapeRegExp(targetTitle)}.*$`
         : `^#{1,6}\\s+${this.escapeRegExp(targetTitle)}.*$`;
 
-      const regex = new RegExp(pattern, 'm');
-      const match = content.match(regex);
+      const pathRegex = new RegExp(pattern, 'm');
+      const match = pathRegex.exec(content);
 
       if (!match) {
         if (allowEmpty) {
@@ -386,7 +394,7 @@ export class ContentApplier {
         return null;
       }
 
-      const start = content.indexOf(match[0]);
+      const start = match.index;
       const end = start + match[0].length;
 
       return {
@@ -409,7 +417,11 @@ export class ContentApplier {
     matches: string[];
     ranges: Array<{ start: number; end: number }>;
   } | null> {
-    const { pattern, flags = '', nth } = regex;
+    const { pattern, nth } = regex;
+    let flags = regex.flags ?? '';
+    if ((pattern.includes('^') || pattern.includes('$')) && !flags.includes('m')) {
+      flags += 'm';
+    }
 
     if (pattern.length > MAX_REGEX_PATTERN_LENGTH) {
       throw new Error('REGEX_COMPILE_ERROR: Pattern trop long');
@@ -639,7 +651,8 @@ export class ContentApplier {
     match: string,
     range: { start: number; end: number }
   ): { newContent: string } {
-    const { action, where, options } = op;
+    const { action, options } = op;
+    const where = op.where ?? 'at';
     // FIX6: appliquer les options sur le contenu avant insertion
     const newContent = this.applyContentOptions(op.content ?? '', options);
 

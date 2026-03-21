@@ -185,8 +185,8 @@ export interface ContentOperation {
   action: 'insert' | 'replace' | 'delete' | 'upsert_section';
   /** Cible de l'opération */
   target: unknown;
-  /** Condition WHERE */
-  where: string;
+  /** Condition WHERE (optionnel ; défaut côté applier : at) */
+  where?: string;
   /** Contenu à insérer/remplacer (optionnel) */
   content?: string;
   /** Options supplémentaires (optionnel) */

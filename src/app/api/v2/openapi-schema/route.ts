@@ -991,7 +991,7 @@ function getExistingEndpoints(): Record<string, unknown> {
                         where: { 
                           type: 'string', 
                           enum: ['before', 'after', 'inside_start', 'inside_end', 'at', 'replace_match'],
-                          description: 'Position relative à la cible'
+                          description: 'Position relative à la cible (optionnel pour replace/delete ; défaut at)'
                         },
                         content: { 
                           type: 'string', 
@@ -1011,7 +1011,7 @@ function getExistingEndpoints(): Record<string, unknown> {
                           }
                         }
                       },
-                      required: ['id', 'action', 'target', 'where']
+                      required: ['id', 'action', 'target']
                     },
                     minItems: 1,
                     maxItems: 50
@@ -1038,11 +1038,6 @@ function getExistingEndpoints(): Record<string, unknown> {
                     enum: ['content', 'diff', 'none'],
                     default: 'diff',
                     description: 'Type de retour'
-                  },
-                  idempotency_key: { 
-                    type: 'string', 
-                    format: 'uuid',
-                    description: 'Clé d\'idempotence'
                   }
                 },
                 required: ['ops']
