@@ -179,6 +179,14 @@
   --chat-input-border: 1.2px solid rgba(255, 255, 255, 0.06);
   /* Bordure blocs code / mermaid / tableaux = un peu plus claire que l'input */
   --chat-code-block-border: 1.2px solid rgba(255, 255, 255, 0.08);
+  /* Même recette que l’ancien plan-step-list-items (32 %), sur le jeton surface du thème chat */
+  --chat-embedded-surface-bg: color-mix(
+    in srgb,
+    var(--chat-bg-secondary, var(--bg-secondary, #fafafa)) 32%,
+    transparent
+  );
+  /* Barre d’outils bloc code (chat) — réutilisée pour l’en-tête des tableaux markdown */
+  --chat-code-toolbar-bg: rgba(255, 255, 255, 0.04);
 }
 
 /* Blocs code/mermaid en chat : aucun filtre, bordure éclaircie */

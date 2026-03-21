@@ -660,7 +660,7 @@ body.chat-theme-glass .chat-markdown .u-block {
 }
 
 .chat-markdown .u-block--code .u-block__toolbar {
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: var(--chat-code-toolbar-bg, rgba(255, 255, 255, 0.04)) !important;
   border-bottom: none !important;
   box-sizing: border-box !important;
   height: 40px !important;
@@ -680,8 +680,11 @@ body.chat-theme-glass .chat-markdown .u-block {
   font-family: var(--mono) !important;
   font-size: 13px !important;
   line-height: 1.8 !important;
-  background: linear-gradient(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.08)), var(--chat-bg-primary, #0e1012) !important;
-  color: rgb(212 212 216) !important;
+  background: var(
+    --chat-embedded-surface-bg,
+    color-mix(in srgb, var(--chat-bg-secondary, var(--bg-secondary, #fafafa)) 32%, transparent)
+  ) !important;
+  color: var(--chat-text-primary, rgb(212 212 216)) !important;
 }
 .chat-markdown .u-block--code .u-block__toolbar .toolbar-right {
   padding: 0 !important;

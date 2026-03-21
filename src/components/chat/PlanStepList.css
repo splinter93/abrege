@@ -75,8 +75,11 @@
 
 .plan-step-list-items {
   padding: 6px 0;
-  /* Fond du contenu du plan : même teinte que --bg-secondary mais plus transparent */
-  background: color-mix(in srgb, var(--bg-secondary, #fafafa) 38%, transparent);
+  /* Aligné sur --chat-embedded-surface-bg (chat-clean.css) */
+  background: var(
+    --chat-embedded-surface-bg,
+    color-mix(in srgb, var(--chat-bg-secondary, var(--bg-secondary, #fafafa)) 32%, transparent)
+  );
 }
 
 .plan-step-item {
@@ -117,6 +120,9 @@
 
 @media (prefers-color-scheme: dark) {
   .plan-step-list-items {
-    background: color-mix(in srgb, var(--bg-secondary, #1a1a1a) 38%, transparent);
+    background: var(
+      --chat-embedded-surface-bg,
+      color-mix(in srgb, var(--chat-bg-secondary, var(--bg-secondary, #1a1a1a)) 32%, transparent)
+    );
   }
 }
