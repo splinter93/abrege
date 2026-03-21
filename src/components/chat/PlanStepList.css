@@ -1,9 +1,11 @@
 .plan-step-list {
-  border: 1px solid var(--border-color, #e5e5e5);
+  /* Aligné sur .chatgpt-input-area : --chat-input-border (épaisseur + couleur) */
+  border: var(--chat-input-border, 1.2px solid rgba(255, 255, 255, 0.06));
   border-radius: 10px;
   overflow: hidden;
   margin: 8px 0;
-  background: var(--bg-secondary, #fafafa);
+  /* Fond porté par le header + la zone items (items plus transparente) */
+  background: transparent;
 }
 
 .plan-step-list-header {
@@ -11,24 +13,30 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border-color, #e5e5e5);
-  background: var(--bg-tertiary, #f0f0f0);
+  /* Légèrement plus discret que le contour (--chat-input-border ≈ 0.06) */
+  border-bottom: 1.2px solid rgba(255, 255, 255, 0.03);
+  /* Même surface que .chatgpt-input-area (chat-clean.css) */
+  background: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)),
+    var(--chat-bg-primary, #0e1012);
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .plan-step-list-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary, #333);
+  color: var(--chat-text-primary, inherit);
 }
 
 .plan-step-list-counter {
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-secondary, #888);
+  color: var(--chat-text-secondary, inherit);
 }
 
 .plan-step-list-items {
   padding: 6px 0;
+  /* Fond du contenu du plan : même teinte que --bg-secondary mais plus transparent */
+  background: color-mix(in srgb, var(--bg-secondary, #fafafa) 38%, transparent);
 }
 
 .plan-step-item {
@@ -68,12 +76,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .plan-step-list {
-    border-color: var(--border-color, #333);
-    background: var(--bg-secondary, #1a1a1a);
-  }
-  .plan-step-list-header {
-    border-color: var(--border-color, #333);
-    background: var(--bg-tertiary, #222);
+  .plan-step-list-items {
+    background: color-mix(in srgb, var(--bg-secondary, #1a1a1a) 38%, transparent);
   }
 }
