@@ -3,6 +3,8 @@
  * Désactive Redis en développement pour éviter les erreurs de connexion
  */
 
+import { simpleLogger } from '@/utils/logger';
+
 export interface CacheEnvironmentConfig {
   redis: {
     enabled: boolean;
@@ -62,12 +64,12 @@ export function getCacheConfig(): CacheEnvironmentConfig {
  * Logger de configuration du cache
  */
 export function logCacheConfig(config: CacheEnvironmentConfig): void {
-  console.log('[CacheConfig] 🔧 Configuration du cache:');
-  console.log(`[CacheConfig]   Redis: ${config.redis.enabled ? '✅ Activé' : '❌ Désactivé'}`);
+  simpleLogger.dev('[CacheConfig] 🔧 Configuration du cache:');
+  simpleLogger.dev(`[CacheConfig]   Redis: ${config.redis.enabled ? '✅ Activé' : '❌ Désactivé'}`);
   if (config.redis.enabled) {
-    console.log(`[CacheConfig]   Redis Host: ${config.redis.host}:${config.redis.port}`);
+    simpleLogger.dev(`[CacheConfig]   Redis Host: ${config.redis.host}:${config.redis.port}`);
   }
-  console.log(`[CacheConfig]   Memory: ${config.memory.enabled ? '✅ Activé' : '❌ Désactivé'}`);
-  console.log(`[CacheConfig]   Memory Max Size: ${config.memory.maxSize}`);
-  console.log(`[CacheConfig]   Environment: ${process.env.NODE_ENV || 'development'}`);
+  simpleLogger.dev(`[CacheConfig]   Memory: ${config.memory.enabled ? '✅ Activé' : '❌ Désactivé'}`);
+  simpleLogger.dev(`[CacheConfig]   Memory Max Size: ${config.memory.maxSize}`);
+  simpleLogger.dev(`[CacheConfig]   Environment: ${process.env.NODE_ENV || 'development'}`);
 }

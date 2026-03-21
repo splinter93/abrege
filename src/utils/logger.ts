@@ -2,6 +2,7 @@
  * Système de logging professionnel pour l'éditeur
  * Configurable par environnement et niveau de log
  */
+/* eslint-disable no-console -- sink unique : seul module autorisé à écrire sur console (niveaux error/warn/info/debug/trace) */
 
 import * as Sentry from '@sentry/nextjs';
 

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Folder, FileArticle, ContextMenuState } from '../components/types';
+import { simpleLogger } from '@/utils/logger';
 
 interface UseContextMenuManagerProps {
   onFolderOpen: (folder: Folder) => void;
@@ -92,9 +93,9 @@ export const useContextMenuManager = ({
     try {
       await navigator.clipboard.writeText(contextMenuState.item.id);
       // Optionnel : afficher un toast de confirmation
-      console.log('✅ ID copié:', contextMenuState.item.id);
+      simpleLogger.dev('✅ ID copié:', contextMenuState.item.id);
     } catch (err) {
-      console.error('❌ Erreur lors de la copie de l\'ID:', err);
+      simpleLogger.error('❌ Erreur lors de la copie de l\'ID', err);
     }
     closeContextMenu();
   }, [contextMenuState.item]);

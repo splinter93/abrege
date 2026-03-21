@@ -7,6 +7,7 @@ import LogoScrivia from '@/components/LogoScrivia';
 import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiCheck } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
 import ShareMenu from './ShareMenu';
+import { simpleLogger } from '@/utils/logger';
 
 const Header: React.FC = () => {
   // const { t } = useLanguageContext();
@@ -60,7 +61,7 @@ const Header: React.FC = () => {
       icon: <FiMinimize2 size={18} />,
       onClick: () => {
         // Logique pour quitter le plein écran
-        console.log('Quitter plein écran');
+        simpleLogger.dev('Quitter plein écran');
       },
       color: '#D4D4D4'
     },
@@ -70,7 +71,7 @@ const Header: React.FC = () => {
       icon: <FiMoreHorizontal size={18} />,
       onClick: () => {
         // Logique pour l'historique des messages
-        console.log('Historique des messages');
+        simpleLogger.dev('Historique des messages');
       },
       color: '#D4D4D4'
     },
@@ -80,7 +81,7 @@ const Header: React.FC = () => {
       icon: <FiMoreHorizontal size={18} />,
       onClick: () => {
         // Logique pour afficher les détails du modèle
-        console.log('Détails du modèle');
+        simpleLogger.dev('Détails du modèle');
       },
       color: '#D4D4D4'
     },
@@ -90,7 +91,7 @@ const Header: React.FC = () => {
       icon: <FiMoreHorizontal size={18} />,
       onClick: () => {
         // Logique pour afficher les détails du provider
-        console.log('Détails du provider');
+        simpleLogger.dev('Détails du provider');
       },
       color: '#D4D4D4'
     }

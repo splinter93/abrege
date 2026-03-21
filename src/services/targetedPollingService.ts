@@ -51,8 +51,7 @@ class TargetedPollingService {
       throw new Error('Token utilisateur invalide');
     }
     this.userToken = userToken;
-    console.log('[TargetedPolling] ✅ Service initialisé avec token:', !!userToken);
-    logger.dev('[TargetedPolling] ✅ Service initialisé');
+    logger.dev('[TargetedPolling] ✅ Service initialisé', { hasToken: true });
   }
 
   /**

@@ -218,7 +218,7 @@ npm test                      # → 601/601 passent
 
 ## Critère de clôture (item B4)
 
-- [ ] `npm run lint` retourne **0 erreur** (les warnings sont acceptables)
+- [x] `npm run lint` retourne **0 erreur** (les warnings sont acceptables)
 - [ ] `npm test` retourne **601/601**
 - [ ] Mettre à jour le tableau de suivi dans [ROADMAP-TO-PRODUCTION.md](./ROADMAP-TO-PRODUCTION.md) : B4 → ✅ Corrigé
 
@@ -232,6 +232,7 @@ npm test                      # → 601/601 passent
 | **1** | 2026-03-20 | 184 → **140** (−44) | `no-case-declarations` : blocs `{ }` sur les `case` concernés (logger, streaming, LLM, hooks, menus, `StreamTimelineRenderer`, `DatabaseRealtimeService`, `groq`, `schemaValidator`, etc.). `no-empty` : `catch` documentés. `no-useless-escape` : regex/strings (`MarkdownPasteHandler`, `useEditorSave`, tests). `@typescript-eslint/no-unused-expressions` : `SlashMenu` → `closeMenu?.()`. `no-useless-catch` : `FileUploaderLocal`. `no-control-regex` : `tts/route` (disable-next-line justifié). `no-namespace` : `OpenAPITypes.ts` (disable fichier + note refactor). `no-extra-boolean-cast` : `AgentExecutor`. `no-empty-object-type` : `htmlPageBuilder`, `prepareElementForPdf` → `type` alias. Suppression `console.debug` dans `ClasseurNavigation`. `auth/page` : bloc debug mort retiré. |
 | **2** | 2026-03-20 | 140 → **95** (−45) | Suppression code mort : `ContextMenuDemo`, `DropZoneDemo` (+css), `StoreDebugger`, `LinkDebugger`. `audit-all-tools.ts` : `eslint-disable no-console` (script CLI). `account/page.tsx` : `simpleLogger.dev/error` à la place des `console.log/error`. |
 | **3** | 2026-03-20 | 95 → **50** (−45) | Routes API : `logApi` (`public-note-test`, `get-url`, `public/file/[ref]`, `test-prod`). Services/hooks : `simpleLogger` (`errorHandler`, `agentIntentParser`, `uiApiService`, `useCapacitorDeepLink`, `useFontManager`, `useWideModeManager`). `auth/page.tsx` : `simpleLogger`. `FolderContent.tsx` : `useVirtualizer` inconditionnel (`count: 0` si pas de liste virtualisée). |
+| **4** | 2026-03-20 | 50 → **0** (−50) | `no-console` : composants (`ClasseurBandeau`, `Header`, `MarkdownBlockRenderer`, `RecentActivityCard`), hooks (`useContextMenuManager`, `useOptimizedMemo`), services (`CacheConfig`, `OptimizedTimeouts`, `targetedPollingService`), store (`useFileSystemStore`), utils (`concurrencyManager`, `editorHelpers`, `folderSyncUtils`, `retryUtils`). `logger.ts` : `eslint-disable no-console` fichier (sink unique). |
 
 ---
 

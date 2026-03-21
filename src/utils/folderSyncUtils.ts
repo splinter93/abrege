@@ -4,6 +4,7 @@
  */
 
 import { useFileSystemStore } from '@/store/useFileSystemStore';
+import { simpleLogger } from '@/utils/logger';
 
 /**
  * Met à jour récursivement tous les dossiers enfants dans le store Zustand
@@ -75,8 +76,7 @@ export const syncFolderHierarchy = (folderId: string, targetClasseurId: string) 
   const notesCount = updateChildNotesInStore(folderId, targetClasseurId);
   
   if (process.env.NODE_ENV === 'development') {
-    // Utiliser console.log pour éviter les imports async dans une fonction sync
-    console.log(`[FolderSyncUtils] ✅ Synchronisation terminée: ${notesCount} notes mises à jour`);
+    simpleLogger.dev(`[FolderSyncUtils] ✅ Synchronisation terminée: ${notesCount} notes mises à jour`);
   }
   
   return notesCount;

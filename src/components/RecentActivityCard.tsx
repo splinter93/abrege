@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { FileText, Clock, User, Globe, Lock, Link as LinkIcon, Calendar, Eye } from 'lucide-react';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
+import { simpleLogger } from '@/utils/logger';
 
 interface RecentNote {
   id: string;
@@ -49,7 +50,7 @@ export default function RecentActivityCard({
         // Récupérer le token d'authentification
         const token = await getAccessToken();
         if (!token) {
-          console.log('🔧 Dashboard: Token d\'authentification non disponible, utilisation du fallback');
+          simpleLogger.dev('🔧 Dashboard: Token d\'authentification non disponible, utilisation du fallback');
           setError('Token d\'authentification non disponible');
           onError?.(); // Appeler le callback d'erreur pour afficher le fallback
           return;
@@ -59,7 +60,7 @@ export default function RecentActivityCard({
         if (limit) params.append('limit', limit.toString());
         if (username) params.append('username', username);
         
-        console.log('🔧 Dashboard: Appel API notes récentes avec token');
+        simpleLogger.dev('🔧 Dashboard: Appel API notes récentes avec token');
         const response = await fetch(`/api/v2/note/recent?${params}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -69,22 +70,22 @@ export default function RecentActivityCard({
         
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('🔧 Dashboard: Erreur API', response.status, errorText);
+          simpleLogger.error('🔧 Dashboard: Erreur API', new Error(`${response.status}: ${errorText}`));
           throw new Error(`Erreur API: ${response.status} - ${errorText}`);
         }
         
         const data = await response.json();
-        console.log('🔧 Dashboard: Réponse API reçue', data);
+        simpleLogger.dev('🔧 Dashboard: Réponse API reçue', data);
         
         if (data.success && data.notes) {
           setNotes(data.notes);
-          console.log(`🔧 Dashboard: ${data.notes.length} notes chargées`);
+          simpleLogger.dev(`🔧 Dashboard: ${data.notes.length} notes chargées`);
         } else {
           throw new Error(data.error || 'Format de réponse invalide');
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'An error occurred';
-        console.error('🔧 Dashboard: Erreur lors du chargement des notes récentes:', err);
+        simpleLogger.error('🔧 Dashboard: Erreur lors du chargement des notes récentes', err);
         setError(errorMessage);
         onError?.(); // Appeler le callback d'erreur pour afficher le fallback
       } finally {

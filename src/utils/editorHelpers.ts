@@ -3,6 +3,8 @@
  * Fonctions extraites de Editor.tsx pour améliorer la réutilisabilité et la testabilité
  */
 
+import { simpleLogger } from '@/utils/logger';
+
 /**
  * Fonction utilitaire debounce optimisée pour les performances
  * 
@@ -223,15 +225,13 @@ export function getEditorMarkdown(editor: { storage?: unknown; getJSON?: () => u
     }
     
     // 🔧 FALLBACK: Extension Markdown désactivée, conversion manuelle
-    console.log('⚠️ [getEditorMarkdown] Extension Markdown non disponible, utilisation du fallback');
+    simpleLogger.dev('⚠️ [getEditorMarkdown] Extension Markdown non disponible, utilisation du fallback');
     return convertHTMLtoMarkdown(editor);
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      // Type-safe logging - pas de console.warn en production
       if (typeof error === 'object' && error !== null) {
-        const errorMessage = 'message' in error ? String(error.message) : 'Unknown error';
-        // Utiliser un logger si disponible, sinon ignorer silencieusement
-        globalThis.console?.warn?.('Failed to get markdown from editor:', errorMessage);
+        const errorMessage = 'message' in error ? String((error as Error).message) : 'Unknown error';
+        simpleLogger.warn('Failed to get markdown from editor:', errorMessage);
       }
     }
     return '';

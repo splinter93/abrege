@@ -3,6 +3,8 @@
  * Améliore les performances et évite les conditions de course
  */
 
+import { simpleLogger } from '@/utils/logger';
+
 export interface LoadingPromise {
   promise: Promise<unknown>;
   timestamp: number;
@@ -39,18 +41,18 @@ export class ConcurrencyManager {
     // Vérifier si une promesse existe déjà et n'est pas expirée
     const existing = this.loadingPromises.get(key);
     if (existing && !this.isExpired(existing, finalMaxAge) && !existing.aborted) {
-      console.log(`[ConcurrencyManager] 🔄 Réutilisation promesse existante pour: ${key}`);
+      simpleLogger.dev(`[ConcurrencyManager] 🔄 Réutilisation promesse existante pour: ${key}`);
       return existing.promise as Promise<R>;
     }
     
     // Créer une nouvelle promesse
-    console.log(`[ConcurrencyManager] ➕ Création nouvelle promesse pour: ${key}`);
+    simpleLogger.dev(`[ConcurrencyManager] ➕ Création nouvelle promesse pour: ${key}`);
     
     const promise = loader().finally(() => {
       // Nettoyer après résolution
       setTimeout(() => {
         this.loadingPromises.delete(key);
-        console.log(`[ConcurrencyManager] 🗑️ Promesse nettoyée pour: ${key}`);
+        simpleLogger.dev(`[ConcurrencyManager] 🗑️ Promesse nettoyée pour: ${key}`);
       }, 1000); // Délai pour éviter les suppressions trop rapides
     });
     
@@ -64,7 +66,7 @@ export class ConcurrencyManager {
     if (options.abortSignal) {
       options.abortSignal.addEventListener('abort', () => {
         loadingPromise.aborted = true;
-        console.log(`[ConcurrencyManager] ⏹️ Promesse annulée pour: ${key}`);
+        simpleLogger.dev(`[ConcurrencyManager] ⏹️ Promesse annulée pour: ${key}`);
       });
     }
     
@@ -88,7 +90,7 @@ export class ConcurrencyManager {
     if (loadingPromise) {
       loadingPromise.aborted = true;
       this.loadingPromises.delete(key);
-      console.log(`[ConcurrencyManager] ⏹️ Promesse annulée manuellement pour: ${key}`);
+      simpleLogger.dev(`[ConcurrencyManager] ⏹️ Promesse annulée manuellement pour: ${key}`);
       return true;
     }
     return false;
@@ -101,7 +103,7 @@ export class ConcurrencyManager {
     for (const [key] of this.loadingPromises) {
       this.abort(key);
     }
-    console.log('[ConcurrencyManager] ⏹️ Toutes les promesses annulées');
+    simpleLogger.dev('[ConcurrencyManager] ⏹️ Toutes les promesses annulées');
   }
   
   /**
@@ -118,7 +120,7 @@ export class ConcurrencyManager {
     }
     
     if (cleanedCount > 0) {
-      console.log(`[ConcurrencyManager] 🧹 Nettoyage: ${cleanedCount} promesses expirées supprimées`);
+      simpleLogger.dev(`[ConcurrencyManager] 🧹 Nettoyage: ${cleanedCount} promesses expirées supprimées`);
     }
   }
   

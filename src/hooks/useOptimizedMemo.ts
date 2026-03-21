@@ -5,6 +5,7 @@
 
 import { useMemo, useCallback, useRef, useEffect } from 'react';
 import type { MemoizationConfig, PerformanceMetrics } from '@/types/quality';
+import { simpleLogger } from '@/utils/logger';
 
 // ========================================
 // HOOK PRINCIPAL D'OPTIMISATION
@@ -236,13 +237,13 @@ export function useMemoDebug<T>(
     lastRenderRef.current = Date.now();
     
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[useMemoDebug] ${label} - Rendu #${renderCountRef.current}`);
+      simpleLogger.dev(`[useMemoDebug] ${label} - Rendu #${renderCountRef.current}`);
     }
   });
 
   return useMemo(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[useMemoDebug] ${label} - Calcul de la valeur`);
+      simpleLogger.dev(`[useMemoDebug] ${label} - Calcul de la valeur`);
     }
     return factory();
   }, deps);

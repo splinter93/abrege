@@ -10,6 +10,7 @@ import { formatPathsInElement } from '@/utils/formatPaths';
 import lowlight from '@/utils/lowlightInstance';
 import { toHtml } from 'hast-util-to-html';
 import { getCodeBlockLanguageLabel } from '@/utils/codeBlockLanguageLabels';
+import { simpleLogger } from '@/utils/logger';
 
 interface MarkdownBlockRendererProps {
   html: string;
@@ -28,7 +29,7 @@ export const MarkdownBlockRenderer: React.FC<MarkdownBlockRendererProps> = ({
     // Transformer tous les blocs de code <pre><code> en structure avec toolbar unifiée
     const codeBlocks = containerRef.current.querySelectorAll('pre code');
     
-    console.log(`[MarkdownBlockRenderer] Transformation de ${codeBlocks.length} bloc(s) de code`);
+    simpleLogger.dev(`[MarkdownBlockRenderer] Transformation de ${codeBlocks.length} bloc(s) de code`);
     
     codeBlocks.forEach((codeElement, index) => {
       const preElement = codeElement.parentElement;
@@ -36,12 +37,12 @@ export const MarkdownBlockRenderer: React.FC<MarkdownBlockRendererProps> = ({
       
       // Vérifier si déjà transformé
       if (preElement.closest('.u-block') || preElement.hasAttribute('data-processed')) {
-        console.log(`[MarkdownBlockRenderer] Bloc ${index} déjà transformé, skip`);
+        simpleLogger.dev(`[MarkdownBlockRenderer] Bloc ${index} déjà transformé, skip`);
         return;
       }
       
       preElement.setAttribute('data-processed', 'true');
-      console.log(`[MarkdownBlockRenderer] ✅ Transformation du bloc ${index}`);
+      simpleLogger.dev(`[MarkdownBlockRenderer] ✅ Transformation du bloc ${index}`);
 
       // Créer la structure unifiée
       const container = document.createElement('div');
@@ -88,7 +89,7 @@ export const MarkdownBlockRenderer: React.FC<MarkdownBlockRendererProps> = ({
             copyBtn.classList.remove('copied');
           }, 2000);
         } catch (err) {
-          console.error('Erreur copie:', err);
+          simpleLogger.error('Erreur copie', err);
         }
       });
       

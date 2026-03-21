@@ -3,6 +3,8 @@
  * Timeouts adaptatifs basés sur le type d'opération et les conditions
  */
 
+import { simpleLogger } from '@/utils/logger';
+
 export interface TimeoutConfig {
   toolCalls: {
     single: number;      // Timeout pour un tool call individuel
@@ -361,7 +363,7 @@ export class OptimizedTimeouts {
   resetAdaptiveTimeouts(): void {
     this.adaptiveTimeouts.clear();
     this.performanceHistory.clear();
-    console.log('[OptimizedTimeouts] 🔄 Adaptive timeouts reset');
+    simpleLogger.dev('[OptimizedTimeouts] 🔄 Adaptive timeouts reset');
   }
 
   /**
@@ -369,7 +371,7 @@ export class OptimizedTimeouts {
    */
   updateConfig(newConfig: Partial<AdaptiveTimeoutConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    console.log('[OptimizedTimeouts] ⚙️ Configuration updated');
+    simpleLogger.dev('[OptimizedTimeouts] ⚙️ Configuration updated');
   }
 
   /**

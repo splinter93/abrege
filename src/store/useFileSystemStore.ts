@@ -203,9 +203,8 @@ export const useFileSystemStore = create<FileSystemState>()((set) => ({
     const targetClasseurId = classeur_id || state.notes[id]?.classeur_id;
     
     if (process.env.NODE_ENV === 'development') {
-      // Logger au lieu de console.log pour production
-      console.log('[Store] 🔄 moveNote:', { id, folder_id, classeur_id, targetClasseurId });
-      console.log('[Store] 📝 Note avant:', state.notes[id]);
+      logger.debug(LogCategory.EDITOR, '[Store] 🔄 moveNote', { id, folder_id, classeur_id, targetClasseurId });
+      logger.debug(LogCategory.EDITOR, '[Store] 📝 Note avant', state.notes[id]);
     }
     
     const updatedNote = { 
@@ -215,7 +214,7 @@ export const useFileSystemStore = create<FileSystemState>()((set) => ({
     };
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Store] 📝 Note après:', updatedNote);
+      logger.debug(LogCategory.EDITOR, '[Store] 📝 Note après', updatedNote);
     }
     
     return {
@@ -270,8 +269,8 @@ export const useFileSystemStore = create<FileSystemState>()((set) => ({
     const targetClasseurId = classeur_id || state.folders[id]?.classeur_id;
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Store] 🔄 moveFolder:', { id, parent_id, classeur_id, targetClasseurId });
-      console.log('[Store] 📁 Dossier avant:', state.folders[id]);
+      logger.debug(LogCategory.EDITOR, '[Store] 🔄 moveFolder', { id, parent_id, classeur_id, targetClasseurId });
+      logger.debug(LogCategory.EDITOR, '[Store] 📁 Dossier avant', state.folders[id]);
     }
     
     const updatedFolder = { 
@@ -281,7 +280,7 @@ export const useFileSystemStore = create<FileSystemState>()((set) => ({
     };
     
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Store] 📁 Dossier après:', updatedFolder);
+      logger.debug(LogCategory.EDITOR, '[Store] 📁 Dossier après', updatedFolder);
     }
     
     return {

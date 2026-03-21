@@ -3,6 +3,8 @@
  * Améliore la robustesse des appels API et des opérations réseau
  */
 
+import { simpleLogger } from '@/utils/logger';
+
 export interface RetryConfig {
   maxRetries: number;
   baseDelay: number;
@@ -52,7 +54,7 @@ export async function retryWithBackoff<T>(
         ? delay * (0.5 + Math.random() * 0.5)
         : delay;
       
-      console.log(`[RetryUtils] 🔄 Tentative ${attempt + 1}/${finalConfig.maxRetries + 1} échouée, retry dans ${jitteredDelay.toFixed(0)}ms:`, lastError.message);
+      simpleLogger.dev(`[RetryUtils] 🔄 Tentative ${attempt + 1}/${finalConfig.maxRetries + 1} échouée, retry dans ${jitteredDelay.toFixed(0)}ms:`, lastError.message);
       
       await new Promise(resolve => setTimeout(resolve, jitteredDelay));
     }
@@ -95,7 +97,7 @@ export async function retryWithCondition<T>(
         ? delay * (0.5 + Math.random() * 0.5)
         : delay;
       
-      console.log(`[RetryUtils] 🔄 Retry conditionnel ${attempt + 1}/${finalConfig.maxRetries + 1} dans ${jitteredDelay.toFixed(0)}ms:`, lastError.message);
+      simpleLogger.dev(`[RetryUtils] 🔄 Retry conditionnel ${attempt + 1}/${finalConfig.maxRetries + 1} dans ${jitteredDelay.toFixed(0)}ms:`, lastError.message);
       
       await new Promise(resolve => setTimeout(resolve, jitteredDelay));
     }
@@ -185,7 +187,7 @@ export class CircuitBreaker {
   private reset(): void {
     this.failureCount = 0;
     this.lastFailureTime = 0;
-    console.log('[CircuitBreaker] 🔄 Circuit reset automatique');
+    simpleLogger.dev('[CircuitBreaker] 🔄 Circuit reset automatique');
   }
   
   getStatus(): { isOpen: boolean; failureCount: number; timeUntilReset: number } {

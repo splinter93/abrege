@@ -10,6 +10,7 @@ import SortableClasseurItem from "./SortableClasseurItem";
 import RenameInput from "./RenameInput";
 import "./ClasseurBandeau.css";
 import "./TrashConfirmationModal.css";
+import { simpleLogger } from "@/utils/logger";
 
 export interface Classeur {
   id: string;
@@ -82,7 +83,7 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
       const isDndKitDrag = target.hasAttribute('data-dnd-kit-draggable');
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[ClasseurBandeau] 🎯 Drag start détecté:', {
+        simpleLogger.dev('[ClasseurBandeau] 🎯 Drag start détecté:', {
           target: target.tagName,
           classes: target.className,
           isClasseurDrag: !!isClasseurDrag,
@@ -94,12 +95,12 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
       // Si c'est un drag de note/dossier (externe), activer le mode externe
       if (isFolderItem && !isDndKitDrag) {
         if (process.env.NODE_ENV === 'development') {
-          console.log('[ClasseurBandeau] 🎯 Drag externe détecté - isExternalDrag = true');
+          simpleLogger.dev('[ClasseurBandeau] 🎯 Drag externe détecté - isExternalDrag = true');
         }
         setIsExternalDrag(true);
       } else if (isClasseurDrag || isDndKitDrag) {
         if (process.env.NODE_ENV === 'development') {
-          console.log('[ClasseurBandeau] 🎯 Drag classeur détecté - isExternalDrag = false');
+          simpleLogger.dev('[ClasseurBandeau] 🎯 Drag classeur détecté - isExternalDrag = false');
         }
         setIsExternalDrag(false);
       }
@@ -107,7 +108,7 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
 
     const handleDragEnd = () => {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[ClasseurBandeau] 🎯 Drag end - isExternalDrag = false');
+        simpleLogger.dev('[ClasseurBandeau] 🎯 Drag end - isExternalDrag = false');
       }
       setIsExternalDrag(false);
     };
@@ -261,7 +262,7 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
 
   // Debug log pour l'état (développement seulement)
   if (process.env.NODE_ENV === 'development') {
-    console.log('[ClasseurBandeau] isExternalDrag:', isExternalDrag);
+    simpleLogger.dev('[ClasseurBandeau] isExternalDrag:', isExternalDrag);
   }
 
   return (
@@ -272,7 +273,7 @@ const ClasseurBandeau: React.FC<ClasseurBandeauProps> = ({
           collisionDetection={closestCenter}
           onDragStart={(event: DragStartEvent) => {
             if (process.env.NODE_ENV === 'development') {
-              console.log('[ClasseurBandeau] 🎯 DndKit drag start:', event.active.id);
+              simpleLogger.dev('[ClasseurBandeau] 🎯 DndKit drag start:', event.active.id);
             }
             setActiveId(event.active.id as string);
           }}
