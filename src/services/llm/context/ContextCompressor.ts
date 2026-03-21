@@ -1,5 +1,62 @@
-import type { ChatMessage } from '@/types/chat';
+import type { ChatMessage, ToolMessage } from '@/types/chat';
 import { hasToolCalls } from '@/types/chat';
+
+/**
+ * Retire en fin de préfixe les assistants avec tool_calls non suivis de messages tool dans ce même préfixe
+ * (sinon plusieurs providers rejettent la requête).
+ */
+function trimTrailingIncompleteAssistantToolCalls(messages: ChatMessage[]): ChatMessage[] {
+  const out = [...messages];
+  while (out.length > 0) {
+    const last = out[out.length - 1];
+    if (last.role === 'assistant' && hasToolCalls(last)) {
+      out.pop();
+      continue;
+    }
+    break;
+  }
+  return out;
+}
+
+/**
+ * Retire en tête de suffixe les tool orphelins et les blocs assistant(tool_calls) incomplets
+ * (lorsque la troncature a supprimé les tool results du milieu).
+ */
+function trimLeadingInvalidToolSequence(messages: ChatMessage[]): ChatMessage[] {
+  const out = [...messages];
+  while (out.length > 0) {
+    const first = out[0];
+    if (first.role === 'tool') {
+      out.shift();
+      continue;
+    }
+    if (first.role === 'assistant' && hasToolCalls(first)) {
+      const calls = first.tool_calls;
+      if (out.length < 1 + calls.length) {
+        out.shift();
+        continue;
+      }
+      let valid = true;
+      for (let i = 0; i < calls.length; i++) {
+        const next = out[1 + i];
+        if (
+          !next ||
+          next.role !== 'tool' ||
+          (next as ToolMessage).tool_call_id !== calls[i].id
+        ) {
+          valid = false;
+          break;
+        }
+      }
+      if (!valid) {
+        out.shift();
+        continue;
+      }
+    }
+    break;
+  }
+  return out;
+}
 
 /** ~20 échanges user/assistant */
 export const MAX_HISTORY_MESSAGES = 40;
@@ -54,8 +111,9 @@ export function compressToolResults(
     if (content.length <= threshold) {
       continue;
     }
-    const success = 'success' in msg ? msg.success : undefined;
-    msg.content = `[Result compressed — success: ${String(success ?? 'unknown')}, length: ${content.length} chars]`;
+    const success = msg.role === 'tool' ? (msg as ToolMessage).success : undefined;
+    const originalLen = content.length;
+    msg.content = `[Result compressed — success: ${String(success ?? 'unknown')}, length: ${originalLen} chars]`;
   }
 }
 
@@ -67,7 +125,7 @@ export function truncateHistory(
   maxMessages: number = MAX_HISTORY_MESSAGES
 ): ChatMessage[] {
   if (messages.length <= maxMessages) {
-    return messages;
+    return messages.slice();
   }
 
   const headCount = 3;
@@ -77,9 +135,14 @@ export function truncateHistory(
   }
 
   const tailCount = maxMessages - headCount - syntheticCount;
-  const head = messages.slice(0, headCount);
-  const tail = messages.slice(-tailCount);
-  const omitted = messages.length - headCount - tailCount;
+  let head = trimTrailingIncompleteAssistantToolCalls(messages.slice(0, headCount));
+  let tail = trimLeadingInvalidToolSequence(messages.slice(-tailCount));
+
+  if (head.length === 0 || tail.length === 0) {
+    return messages.slice(-maxMessages);
+  }
+
+  const omitted = messages.length - head.length - tail.length;
 
   const synthetic: ChatMessage = {
     role: 'system',
