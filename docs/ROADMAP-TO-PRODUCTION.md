@@ -12,7 +12,7 @@
 
 Depuis l'audit de janvier 2026, des régressions sont apparues et la dette technique a augmenté sur les zones critiques. Le verdict « prêt » de janvier était valable pour 3 clients en MVP contrôlé. Pour une vraie mise en production scalable et robuste, des blockers actifs doivent être réglés.
 
-**Score actuel : 7.5/10** (vs 6.5/10 au 20 mars — B1 + B2 + B3 + I4 + D3 résolus le 21 mars)
+**Score actuel : 7.8/10** (vs 6.5/10 au 20 mars — B1 + B2 + B3 + B4 + I4 + D3 résolus ; B4 ESLint **0 erreur** le 20/03)
 
 ---
 
@@ -21,8 +21,8 @@ Depuis l'audit de janvier 2026, des régressions sont apparues et la dette techn
 | Zone | Score | Statut |
 |------|-------|--------|
 | Qualité TypeScript | 6/10 | ⚠️ Dégradé |
-| ESLint / Code quality | 4/10 | 🔴 184 erreurs restantes (était 232 ; batch ESLint 0 : −10) |
-| Tests | 7/10 | ✅ 601/601 passent (était 600/601) |
+| ESLint / Code quality | 8/10 | ✅ **0 erreur** (`npm run lint`) — ~1011 **warnings** restants (chantier qualité continu) |
+| Tests | 7/10 | ✅ 601/601 passent ; ⚠️ 2 fichiers en échec de **chargement** (I7 / `lowlightInstance`) |
 | Sécurité | 8/10 | ✅ Routes debug supprimées |
 | Architecture Chat | 8/10 | ✅ Hooks corrigés, logger.dev supprimé |
 | Architecture Éditeur | 7.5/10 | ✅ Hooks corrigés (EditorToolbar, NoteEmbed×2, HeaderImage) |
@@ -38,7 +38,7 @@ Depuis l'audit de janvier 2026, des régressions sont apparues et la dette techn
 
 **Sévérité : CRITIQUE. Peut provoquer des crashes silencieux et un comportement imprévisible.**
 
-ESLint remonte **22 violations `react-hooks/rules-of-hooks`** dans des fichiers de production :
+**Historique audit 20/03 :** ESLint remontait **22 violations `react-hooks/rules-of-hooks`** dans des fichiers de production (corrigé le 21/03 — B1) :
 
 | Fichier | Note |
 |---------|------|
@@ -85,7 +85,7 @@ Ou supprimer ces fichiers si non utilisés en développement actif.
 
 L'audit de janvier déclarait 594/594 tests passés. Aujourd'hui : **3 fichiers en échec, 1 test failed** sur 601 (52 fichiers de test).
 
-Résultat actuel :
+Résultat au moment de l’audit (corrigé depuis) :
 ```
 Test Files  3 failed | 49 passed (52)
 Tests       1 failed | 600 passed (601)
@@ -100,7 +100,7 @@ Cause probable pour `NetworkRetryService` : la sérialisation d'erreur `{ status
 
 **Correction :** Identifier et corriger les mocks cassés + adapter les assertions aux nouveaux types.
 
-**Statut :** ✅ Corrigé le 21/03/2026 — 601/601 tests passent, 0 test individuel en échec.
+**Statut :** ✅ Corrigé le 21/03/2026 — **601/601 tests** s’exécutent avec succès ; **2 fichiers** échouent encore au **chargement** de module (`lowlightInstance` / mock — voir I7), non comptés dans les 601.
 - `NetworkRetryService.test.ts` : flush microtasks via `await Promise.resolve()×3` + `promise.catch(() => {})` pour les unhandled rejections
 - `SessionTitleGenerator.test.ts` : assertion `>= 0` + fake timers avec AbortSignal pour le test timeout
 - `server.test.ts` : mock WebSocket via `Object.assign` (TypeScript fix) + assertion `{ noServer: true }` alignée sur l'implémentation actuelle
@@ -110,41 +110,23 @@ Cause probable pour `NetworkRetryService` : la sérialisation d'erreur `{ status
 
 ### B4 — Erreurs ESLint dans le code de production (suivi : [ESLINT-CORRECTION-ROADMAP.md](./ESLINT-CORRECTION-ROADMAP.md))
 
-**Sévérité : CRITIQUE.**
+**Sévérité :** était **CRITIQUE** — **levé.**
 
-Dernière mesure `npm run lint` (après batch 4) :
+**Dernière mesure `npm run lint` (batch 0 → 4, 20/03/2026) :**
 ```
 ✖ 1011 problems (0 errors, 1011 warnings)
 ```
 
-Mesure historique de référence :
+**Mesure historique (audit initial) :**
 ```
 ✖ 1256 problems (232 errors, 1024 warnings)
 ```
 
-Répartition des erreurs par catégorie :
+**Traitement :** plan en 5 batchs documenté dans `ESLINT-CORRECTION-ROADMAP.md` — crashes (`synesia.js`, hooks), comportement indéfini (`no-case-declarations`, regex, etc.), démos supprimées, `logApi` / `simpleLogger` sur API et services, puis utils / store / composants + `eslint-disable` fichier sur `logger.ts` (sink console).
 
-| Règle | Type | Gravité |
-|-------|------|---------|
-| `react-hooks/rules-of-hooks` | 22 erreurs | Crash potentiel |
-| `no-console` dans API routes prod | ~50 erreurs | Fuite de logs/secrets |
-| `no-empty` — blocs `catch {}` vides | Plusieurs | Erreurs silencieuses |
-| `no-useless-catch` | Quelques-uns | Code mort |
-| `no-constant-binary-expression` | Quelques-uns | Logique morte |
-| `no-case-declarations` | 4 erreurs | Comportement non défini en JS |
-| `no-undef` dans `synesia.js` | 3 erreurs | Crash runtime garanti |
-| `@typescript-eslint/no-unused-expressions` | 3 erreurs | Code sans effet |
+**Prochain pas qualité (hors B4) :** réduire les **~1011 warnings** (deps hooks, unused vars, `no-img-element`, etc.) et garder **0 erreur** en gate CI.
 
-Fichiers API avec `console.log` en production (extrait) :
-- `src/app/api/chat/llm/stream/route.ts`
-- `src/app/api/ui/files/get-url/route.ts`
-- `src/app/api/ui/files/upload/route.ts`
-- `src/app/api/debug-chatgpt/route.ts`
-- `src/app/api/debug-tool-call/route.ts`
-- `src/app/api/test-prod/route.ts`
-- Et ~20 autres
-
-**Statut :** 🔄 En cours — 232 → **184 erreurs** (batch hooks −38, batch ESLint 0 −10). Les violations `react-hooks/rules-of-hooks` en prod sont éliminées. Reste principalement les `no-console` dans les routes API et utils.
+**Statut :** ✅ **Corrigé** — **232 → 0 erreur ESLint** (batches 0–4, 20–21/03/2026).
 
 ---
 
@@ -432,7 +414,7 @@ L'authentification ne supporte pas la double authentification. Acceptable en MVP
 2. **Tests `useEditorEffects.test.ts`** cassés — multiples erreurs TypeScript sur les types de hooks
 3. **`lowlightInstance.ts`** : `simpleLogger.dev` appelé en module-level → mock incomplet dans les tests Editor (2 fichiers en erreur de chargement)
 4. **9 fichiers CSS distincts** pour l'éditeur sans point d'entrée clair (voir I6)
-5. **`EditorPreview.tsx`** avec `console.log` (erreur ESLint)
+5. **`EditorPreview.tsx`** — plus de `console.*` constaté dans les deux chemins (`components/` et `components/editor/`) ; couvert par **B4** (0 erreur ESLint)
 
 ---
 
@@ -465,12 +447,12 @@ L'authentification ne supporte pas la double authentification. Acceptable en MVP
 
 | Vecteur | Sévérité | Statut |
 |---------|----------|--------|
-| `/api/debug-chatgpt` sans auth → log tokens | 🔴 CRITIQUE | ❌ Non corrigé |
-| `/api/debug-tool-call` — console.log en prod | 🟠 ÉLEVÉ | ❌ Non corrigé |
+| `/api/debug-chatgpt` sans auth → log tokens | 🔴 CRITIQUE | ✅ Routes supprimées (21/03) |
+| `/api/debug-tool-call` — console.log en prod | 🟠 ÉLEVÉ | ✅ Route supprimée (21/03) |
 | Rate limiting mémoire (multi-instance inefficace) | 🟠 ÉLEVÉ | ⚠️ Connu, non corrigé |
 | 2FA absent | 🟡 MOYEN | ⚠️ Acceptable MVP |
 | Backup DB non confirmé | 🟡 MOYEN | ⚠️ À vérifier |
-| Tokens JWT exposés dans logs Vercel | 🟠 ÉLEVÉ | ❌ Via debug-chatgpt |
+| Tokens JWT exposés dans logs Vercel | 🟠 ÉLEVÉ | ✅ Réduit — routes debug supprimées ; API → `logApi` / pas de `console.log` brut (batch ESLint) |
 | `npm audit` | ✅ 0 vulnérabilités | ✅ OK |
 | RLS Supabase | Activé | ✅ OK |
 | CORS | Configuré | ✅ OK |
@@ -486,7 +468,7 @@ Pour prétendre au niveau GAFAM / top marché, voici les écarts fondamentaux :
 
 ### 1. Qualité code : 0 erreur ESLint est le standard
 
-232 erreurs ESLint en production. Un codebase professionnel a **zéro erreur ESLint**. C'est non-négociable dans un contexte GAFAM. Les leaders du marché ont des pipelines qui rejettent tout commit introduisant une erreur de lint.
+**Atteint sur les erreurs (20/03/2026) :** `npm run lint` → **0 erreur**. Il reste **~1011 warnings** à traiter pour alignement « industrie ». Les pipelines GAFAM rejettent en général tout commit qui introduit une **erreur** de lint ; la phase suivante est de durcir sur les warnings ciblés (hooks, sécurité).
 
 ### 2. Couverture de tests : ~10-15% vs 70-80% industrie
 
@@ -544,8 +526,8 @@ Un rate limiter en mémoire dans un environnement serverless est une illusion de
 
 | # | Action | Fichier(s) | Effort | Statut |
 |---|--------|-----------|--------|--------|
-| 8 | Nettoyer les `no-console` dans les API routes actives | ~20 fichiers API | 3h | ❌ Ouvert |
-| 9 | Corriger les `no-empty` (catch vides) | À identifier via lint | 1h | ❌ Ouvert |
+| 8 | Nettoyer les `no-console` (API, services, utils, composants) | Voir [ESLINT-CORRECTION-ROADMAP.md](./ESLINT-CORRECTION-ROADMAP.md) batch 3–4 | 3h | ✅ Fait — **0 erreur** ESLint |
+| 9 | Corriger les `no-empty` / qualité batch 1 | Divers | 1h | ✅ Fait (roadmap ESLint batch 1) |
 | ~~10~~ | ~~Supprimer ToolCallMessage.tsx~~ | — | — | ✅ Fait en avance |
 | 11 | Déduplicer la logique copier (ChatMessage → BubbleButtons) | `ChatMessage.tsx`, `BubbleButtons.tsx` | 1h | ❌ Ouvert |
 | 12 | Supprimer les fichiers CSS `.backup`, `.old`, `.new` | `src/styles/` | 30 min | ❌ Ouvert |
@@ -631,7 +613,7 @@ L'application sera considérée **prête pour une mise en production professionn
 - [x] **0 violation `react-hooks/rules-of-hooks`** dans les fichiers de production ✅ 21/03/2026
 - [x] **0 endpoint debug** accessible sans authentification en production ✅ 21/03/2026
 - [x] **601/601 tests individuels passent** ✅ 21/03/2026 (2 fichiers pré-existants en erreur de mock → voir I7)
-- [ ] **0 erreur ESLint** — 184 restantes (était 232)
+- [x] **0 erreur ESLint** ✅ 20/03/2026 — batches 0–4 ([ESLINT-CORRECTION-ROADMAP.md](./ESLINT-CORRECTION-ROADMAP.md)) ; ~1011 **warnings** restants
 - [ ] **4 tests E2E bloquants** dans la CI/CD
 - [ ] **`ClasseursPage.tsx` < 500 lignes** (ou décomposé en modules)
 - [ ] **`stream/route.ts` < 500 lignes** (ou décomposé en modules)
@@ -643,5 +625,6 @@ L'application sera considérée **prête pour une mise en production professionn
 
 *Document créé le 20 mars 2026 — Données mesurées sur codebase live.*  
 *Mis à jour le 21 mars 2026 — Semaine 1 terminée : B1, B2, B3, I4, D3 résolus. Score 6.5 → 7.5/10.*  
+*Mis à jour le 20 mars 2026 — **B4 fermé** : 0 erreur ESLint (batches 0–4), ~1011 warnings ; tableau sécurité aligné (routes debug supprimées).*  
 *À mettre à jour à chaque correction d'item.*  
 *Référence : audit janvier 2026 dans `AUDIT-PRODUCTION-BRUTAL-2025-12-27.md`*
