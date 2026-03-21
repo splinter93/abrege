@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Circle, Loader2, CheckCircle2 } from 'lucide-react';
+import { Circle, Loader2, CheckCircle2, ListOrdered } from 'lucide-react';
 import './PlanStepList.css';
 
 interface PlanStep {
@@ -28,7 +28,10 @@ const PlanStepList: React.FC<PlanStepListProps> = ({ title, steps }) => {
     <div className="plan-step-list">
       {title && (
         <div className="plan-step-list-header">
-          <span className="plan-step-list-title">{title}</span>
+          <div className="plan-step-list-title-group">
+            <ListOrdered size={16} className="plan-step-list-title-icon" aria-hidden />
+            <span className="plan-step-list-title">{title}</span>
+          </div>
           <span className="plan-step-list-counter">{completed}/{steps.length}</span>
         </div>
       )}

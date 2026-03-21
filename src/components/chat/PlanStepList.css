@@ -21,10 +21,24 @@
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
+.plan-step-list-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.plan-step-list-title-icon {
+  flex-shrink: 0;
+  color: var(--chat-text-secondary, inherit);
+  opacity: 0.9;
+}
+
 .plan-step-list-title {
   font-size: 13px;
   font-weight: 600;
   color: var(--chat-text-primary, inherit);
+  min-width: 0;
 }
 
 .plan-step-list-counter {
