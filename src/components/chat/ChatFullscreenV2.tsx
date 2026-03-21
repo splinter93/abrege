@@ -20,6 +20,7 @@ import { useChatScroll } from '@/hooks/useChatScroll';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { useInfiniteMessages } from '@/hooks/useInfiniteMessages';
+import { useChatMessagesRealtime } from '@/hooks/chat/useChatMessagesRealtime';
 import type { Agent, ChatMessage } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { StreamTimeline } from '@/types/streamTimeline';
@@ -147,6 +148,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     upsertMessage: upsertInfiniteMessage,
     updateMessageByClientId: updateInfiniteMessageByClientId,
     removeMessageByClientId,
+    removeMessageById: removeInfiniteMessageById,
     replaceMessages,
     clearMessages: clearInfiniteMessages
   } = useInfiniteMessages({
@@ -155,6 +157,12 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     loadMoreLimit: 20,
     enabled: !!currentSession?.id
   });
+
+  useChatMessagesRealtime(
+    currentSession?.id ?? null,
+    upsertInfiniteMessage,
+    removeInfiniteMessageById
+  );
 
   // 🎯 SCROLL AUTOMATION (centralisé dans useChatScroll)
   const { messagesEndRef, scrollToFollowStream } = useChatScroll({

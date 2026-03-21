@@ -1,18 +1,20 @@
 import { simpleLogger as logger } from '@/utils/logger';
 import type { ChatMessage, AssistantMessage } from '@/types/chat';
 import type { ToolCall, ToolResult } from '../types/agentTypes';
+import { HistoryManager } from '@/services/chat/HistoryManager';
 
 /**
- * Service pour persister les messages finaux (utilisateur et assistant) à la fin d'un round.
- * S'assure que le contexte complet de la conversation est sauvegardé.
+ * Persiste les messages finaux côté serveur via HistoryManager (SERVICE_ROLE, atomique).
+ * Ne passe plus par chatSessionService.addMessageWithToken (stub supprimé).
  */
 export class FinalMessagePersistenceService {
   private sessionId: string;
-  private userToken: string;
 
-  constructor(sessionId: string, userToken: string) {
+  /**
+   * @param _userToken — conservé pour compatibilité d’API ; la persistance utilise le service role.
+   */
+  constructor(sessionId: string, _userToken: string) {
     this.sessionId = sessionId;
-    this.userToken = userToken;
   }
 
   /**
@@ -30,7 +32,6 @@ export class FinalMessagePersistenceService {
     logger.dev('[FinalMessagePersistence] 🚀 Persistance des messages finaux...');
 
     try {
-      // 1. Persister le message utilisateur
       const userMessage: Omit<ChatMessage, 'id'> = {
         role: 'user',
         content: userMessageContent,
@@ -39,7 +40,6 @@ export class FinalMessagePersistenceService {
       await this.persistMessage(userMessage);
       logger.dev('[FinalMessagePersistence] ✅ Message utilisateur persisté');
 
-      // 2. Persister la réponse de l'assistant
       const assistantMessage: AssistantMessage = {
         role: 'assistant',
         content: assistantResponse.content || '',
@@ -47,35 +47,27 @@ export class FinalMessagePersistenceService {
         tool_calls: assistantResponse.tool_calls,
         tool_results: assistantResponse.tool_results,
         timestamp: new Date().toISOString(),
-        name: 'assistant'
+        name: 'assistant',
       };
       await this.persistMessage(assistantMessage as Omit<ChatMessage, 'id'>);
-      logger.info(`[FinalMessagePersistence] ✅ Réponse assistant persistée (contenu: ${assistantMessage.content?.length || 0} chars)`);
-
+      logger.info(
+        `[FinalMessagePersistence] ✅ Réponse assistant persistée (contenu: ${assistantMessage.content?.length || 0} chars)`
+      );
     } catch (error) {
-      logger.error('[FinalMessagePersistence] ❌ Erreur lors de la persistance des messages finaux', error);
+      logger.error(
+        '[FinalMessagePersistence] ❌ Erreur lors de la persistance des messages finaux',
+        error
+      );
       // Ne pas throw pour ne pas casser le flow principal
     }
   }
 
-  /**
-   * Méthode générique pour persister un message via l'API interne.
-   */
   private async persistMessage(message: Omit<ChatMessage, 'id'>): Promise<void> {
-    try {
-      const { chatSessionService } = await import('../../chatSessionService');
-      
-      const result = await chatSessionService.addMessageWithToken(this.sessionId, message, this.userToken);
-
-      if (!result.success) {
-        logger.warn(`[FinalMessagePersistence] ⚠️ Échec de la persistance du message (${message.role})`, { error: result.error });
-      }
-    } catch (error) {
-      logger.error(`[FinalMessagePersistence] ❌ Erreur API lors de la persistance du message (${message.role})`, error);
-      throw error; // Lancer pour que le bloc appelant puisse gérer
-    }
+    const historyManager = HistoryManager.getInstance();
+    const { timestamp: _ts, sequence_number: _sn, ...forDb } = message as ChatMessage;
+    await historyManager.addMessage(
+      this.sessionId,
+      forDb as Parameters<HistoryManager['addMessage']>[1]
+    );
   }
 }
-
-
-

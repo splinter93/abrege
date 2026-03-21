@@ -44,6 +44,8 @@ interface UseInfiniteMessagesReturn {
     updater: (message: ChatMessage) => ChatMessage
   ) => void;
   removeMessageByClientId: (clientMessageId: string) => void;
+  /** Retire un message par id serveur (ex. DELETE Realtime) */
+  removeMessageById: (messageId: string) => void;
   replaceMessages: (messages: ChatMessage[]) => void;
   clearMessages: () => void;
 }
@@ -296,6 +298,10 @@ export function useInfiniteMessages(
     setMessages(prev => prev.filter(message => message.clientMessageId !== clientMessageId));
   }, []);
 
+  const removeMessageById = useCallback((messageId: string) => {
+    setMessages(prev => prev.filter(message => message.id !== messageId));
+  }, []);
+
   /**
    * 🔄 Remplacer tous les messages (changement de session)
    */
@@ -346,6 +352,7 @@ export function useInfiniteMessages(
     upsertMessage,
     updateMessageByClientId,
     removeMessageByClientId,
+    removeMessageById,
     replaceMessages,
     clearMessages
   };

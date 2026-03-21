@@ -447,21 +447,20 @@ export async function POST(request: NextRequest) {
       hasHistory: !!history
     });
 
-    // 🔧 Gestion spéciale des erreurs Groq 500 - on fournit une réponse de fallback
+    // Groq 500 : erreur explicite — ne pas persister une fausse réponse IA (HTTP 200 évite le retry réseau dans useChatResponse)
     if (error instanceof Error && error.message.includes('Groq API error: 500')) {
-      logger.warn(LogCategory.API, `[LLM Route] ⚠️ Erreur Groq 500 détectée, fourniture d'une réponse de fallback`);
-      
-      success = true; // ✅ On considère comme succès pour permettre la persistance
-      return NextResponse.json({
-        success: true, // ✅ On considère comme succès pour permettre la persistance
-        content: "Je comprends votre demande. Malheureusement, je rencontre actuellement des difficultés techniques temporaires qui m'empêchent de traiter votre requête de manière optimale. Votre message a bien été enregistré et je pourrai y répondre plus en détail une fois ces problèmes résolus. En attendant, n'hésitez pas à reformuler votre question ou à essayer une approche différente.",
-        reasoning: "Service Groq temporairement indisponible - réponse de fallback intelligente fournie pour maintenir l'expérience utilisateur",
-        tool_calls: [],
-        tool_results: [],
-        sessionId: sessionId || 'unknown',
-        status: 200,
-        isFallback: true // Marqueur pour identifier les réponses de fallback
-      });
+      logger.warn(LogCategory.API, `[LLM Route] ⚠️ Erreur Groq 500 — retour erreur client (pas de fallback masqué en succès)`);
+      return NextResponse.json(
+        {
+          success: false,
+          errorCode: 'PROVIDER_UNAVAILABLE',
+          error:
+            'Le service LLM est temporairement indisponible. Veuillez réessayer dans quelques instants.',
+          isFallback: true,
+          sessionId: sessionId || 'unknown',
+        },
+        { status: 200 }
+      );
     }
 
     return NextResponse.json(

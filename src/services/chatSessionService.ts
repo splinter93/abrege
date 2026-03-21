@@ -475,13 +475,18 @@ export class ChatSessionService {
     }
   }
 
-  // ✅ Compatibilité legacy : stub pour addMessageWithToken (routes JSONB supprimées)
+  /**
+   * @deprecated Supprimé — ne persistait rien. Côté serveur : `HistoryManager.getInstance().addMessage()`.
+   * Côté client : `POST /api/chat/sessions/:sessionId/messages/add` avec Bearer.
+   */
   async addMessageWithToken(
     _sessionId: string,
     _message: Omit<ChatMessage, 'id'>,
     _token: string
   ): Promise<{ success: boolean; error?: string }> {
-    return { success: true };
+    throw new Error(
+      'chatSessionService.addMessageWithToken est supprimé. Utiliser HistoryManager.getInstance().addMessage(sessionId, message) côté serveur, ou POST /api/chat/sessions/:id/messages/add depuis le client.'
+    );
   }
 }
 

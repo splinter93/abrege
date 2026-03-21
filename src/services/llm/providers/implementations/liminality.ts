@@ -33,6 +33,8 @@ import type {
   InternalToolErrorChunk
 } from '../../types/liminalityTypes';
 
+let warnedMissingLiminalityBaseUrl = false;
+
 /** Limites API Synesia pour metadata.imageInputs (doc LLM Exec vision) */
 const MAX_IMAGE_INPUTS = 10;
 const MAX_IMAGE_INPUT_LENGTH = 5_000_000;
@@ -121,7 +123,8 @@ const LIMINALITY_INFO: ProviderInfo = {
  */
 const DEFAULT_CONFIG: LiminalityProviderConfig = {
   apiKey: process.env.LIMINALITY_API_KEY || '',
-  baseUrl: 'https://origins-server.up.railway.app',
+  baseUrl:
+    process.env.LIMINALITY_BASE_URL || 'https://origins-server.up.railway.app',
   timeout: 120000, // 120s (2 minutes) - permet tool calls longs et orchestration
   model: 'gpt-4o-mini',
   temperature: 0.7,
@@ -154,6 +157,13 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
   constructor(customConfig?: Partial<LiminalityProviderConfig>) {
     super();
     this.config = { ...DEFAULT_CONFIG, ...customConfig };
+
+    if (!process.env.LIMINALITY_BASE_URL && !warnedMissingLiminalityBaseUrl) {
+      warnedMissingLiminalityBaseUrl = true;
+      logger.warn(
+        '[LiminalityProvider] LIMINALITY_BASE_URL non défini — fallback Railway utilisé'
+      );
+    }
     
     // 🔍 DEBUG: Vérifier la clé API
     if (!this.config.apiKey) {

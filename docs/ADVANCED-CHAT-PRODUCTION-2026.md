@@ -97,9 +97,8 @@ async addMessageWithToken(
 `FinalMessagePersistenceService` appelle ce stub — tous les messages qui passent par lui **sont silencieusement perdus**.
 
 **Actions :**
-- [ ] Identifier tous les chemins qui invoquent `FinalMessagePersistenceService`
-- [ ] Remplacer `addMessageWithToken` par un appel réel à `sessionSyncService.addMessageAndSync()`
-- [ ] Supprimer le stub ou le marquer explicitement `@deprecated` avec une erreur en dev
+- [x] Aucun appelant en prod ; `FinalMessagePersistenceService` utilise `HistoryManager.getInstance().addMessage()`
+- [x] `addMessageWithToken` lève une erreur explicite (plus de faux `success: true`)
 
 ---
 
@@ -114,10 +113,9 @@ async addMessageWithToken(
 Conséquence : un message reçu depuis un autre onglet, appareil, ou via API directe **n'est jamais pushé vers l'UI active**. Le seul moyen de voir les messages d'une autre session est un rechargement complet.
 
 **Actions :**
-- [ ] Créer un hook `useChatMessagesRealtime(sessionId)` qui subscribe au canal `chat_messages:session_id=eq.{sessionId}`
-- [ ] Monter ce hook dans `ChatFullscreenV2` quand `currentSession` change
-- [ ] Penser au cleanup (`supabase.removeChannel`) à chaque changement de session
-- [ ] Tester : ouvrir deux onglets sur la même session, envoyer un message depuis l'un, vérifier réception dans l'autre
+- [x] Hook `useChatMessagesRealtime` + montage dans `ChatFullscreenV2` (`upsert` + `removeMessageById` pour DELETE)
+- [x] Migration `20260321120000_enable_realtime_chat_messages.sql` (REPLICA IDENTITY + publication `supabase_realtime`)
+- [ ] Tester manuellement deux onglets après `supabase db push`
 
 ---
 
@@ -133,10 +131,8 @@ baseUrl: 'https://origins-server.up.railway.app', // ← hardcodé
 Si Railway change d'URL ou si on migre l'infra, l'application tombe sans alerte.
 
 **Actions :**
-- [ ] Ajouter `LIMINALITY_BASE_URL` dans `.env.local` et `.env.production`
-- [ ] Remplacer par `process.env.LIMINALITY_BASE_URL || 'https://origins-server.up.railway.app'`
-- [ ] Ajouter une vérification au démarrage : si `LIMINALITY_BASE_URL` est absent, logger un warning critique
-- [ ] Documenter la variable dans `README.md` ou dans un `.env.example`
+- [x] `DEFAULT_CONFIG.baseUrl` via `process.env.LIMINALITY_BASE_URL` + fallback Railway + warning log une fois si absent
+- [x] Déjà documenté dans `env.example` (`LIMINALITY_BASE_URL`)
 
 ---
 
@@ -153,10 +149,7 @@ return NextResponse.json({ success: true, isFallback: true, content: 'Une erreur
 Le client croit que la réponse est légitime, la persiste en base, et l'utilisateur voit un message générique sans savoir qu'une erreur s'est produite.
 
 **Actions :**
-- [ ] Changer en `success: false` avec `errorCode: 'PROVIDER_ERROR'`
-- [ ] Côté client, intercepter `isFallback: true` ou `success: false` pour afficher un toast d'erreur
-- [ ] Ne pas persister en base une réponse de fallback générique
-- [ ] Note : cette route non-streaming est de toute façon candidate à la suppression quand Liminality couvre tout
+- [x] `success: false`, `errorCode: 'PROVIDER_UNAVAILABLE'`, HTTP 200 (évite retry `useChatResponse`) — `useChatResponse` lève déjà sur `data.error`
 
 ---
 
