@@ -27,6 +27,11 @@ import {
 } from './helpers';
 import { streamBroadcastService } from '@/services/streamBroadcastService';
 import { metricsCollector } from '@/services/monitoring/MetricsCollector';
+import {
+  compressToolResults,
+  MAX_HISTORY_MESSAGES,
+  truncateHistory
+} from '@/services/llm/context/ContextCompressor';
 
 // Force Node.js runtime for streaming
 export const runtime = 'nodejs';
@@ -362,12 +367,15 @@ export async function POST(request: NextRequest) {
     
     // ✅ Construire le tableau de messages avec contextes injectés AVANT user message
     // Conversion type-safe via mapper
-    const sanitizedHistory = history.map((msg, index) => ({
-      ...msg,
-      id: msg.id ?? `history-${index}`,
-      content: msg.content ?? '',
-      timestamp: msg.timestamp ?? new Date().toISOString()
-    })) as ChatMessage[];
+    const sanitizedHistory = truncateHistory(
+      history.map((msg, index) => ({
+        ...msg,
+        id: msg.id ?? `history-${index}`,
+        content: msg.content ?? '',
+        timestamp: msg.timestamp ?? new Date().toISOString()
+      })) as ChatMessage[],
+      MAX_HISTORY_MESSAGES
+    );
 
     // ✅ Extraire les images du format multi-modal si présent
     let userMessageImages: Array<{ url: string; fileName?: string }> | undefined;
@@ -1605,6 +1613,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             }
 
             // Continuer la boucle pour relancer le LLM avec les résultats
+            compressToolResults(currentMessages);
             logger.debug(LogCategory.API,`[Stream Route] 🔄 Relance du LLM avec ${currentMessages.length} messages`);
           }
 
