@@ -9,6 +9,7 @@ import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 import { AgentConfigService } from './AgentConfigService';
 import { AgentConfigValidator } from '../validation/AgentConfigValidator';
 import { SlugHelper } from './SlugHelper';
+import { omitNonPersistedAgentFields } from './agentPersistence';
 
 // Configuration Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -70,10 +71,10 @@ export class AgentUpdateService {
       }
 
       // Préparer les données de mise à jour
-      const updatePayload = {
+      const updatePayload = omitNonPersistedAgentFields({
         ...updateData,
         updated_at: new Date().toISOString()
-      };
+      });
 
       // Mettre à jour en base
       const { data: updatedAgent, error } = await supabase
@@ -198,10 +199,14 @@ export class AgentUpdateService {
         mergedData.priority = parseInt(String(mergedData.priority), 10) ?? 10;
       }
 
+      const persistPayload = omitNonPersistedAgentFields(
+        mergedData as Record<string, unknown>
+      );
+
       // Mettre à jour en base
       const { data: updatedAgent, error } = await supabase
         .from('agents')
-        .update(mergedData)
+        .update(persistPayload)
         .eq('id', existingAgent.id)
         .select()
         .single();

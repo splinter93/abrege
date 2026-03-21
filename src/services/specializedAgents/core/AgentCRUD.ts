@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { simpleLogger as logger } from '@/utils/logger';
 import { SchemaValidator } from '../schemaValidator';
 import { AgentConfig } from './AgentConfig';
+import { omitNonPersistedAgentFields } from './agentPersistence';
 import type { 
   SpecializedAgentConfig, 
   CreateSpecializedAgentRequest, 
@@ -230,10 +231,10 @@ export class AgentCRUD {
         updateData.slug = newSlug;
       }
 
-      const updatePayload = {
+      const updatePayload = omitNonPersistedAgentFields({
         ...updateData,
         updated_at: new Date().toISOString()
-      };
+      });
 
       const { data: updatedAgent, error } = await supabase
         .from('agents')
@@ -319,9 +320,13 @@ export class AgentCRUD {
         updated_at: new Date().toISOString()
       };
 
+      const persistPayload = omitNonPersistedAgentFields(
+        mergedData as Record<string, unknown>
+      );
+
       const { data: updatedAgent, error } = await supabase
         .from('agents')
-        .update(mergedData)
+        .update(persistPayload)
         .eq('id', existingAgent.id)
         .select()
         .single();

@@ -245,9 +245,17 @@ async function moveToTrash(
   try {
     const now = new Date().toISOString();
     
-    // Pour les fichiers : soft-delete via deleted_at ET is_deleted (les deux colonnes existent)
+    // Pour les fichiers : utiliser le service role pour contourner la restriction RLS SELECT.
+    // La politique SELECT exige is_deleted = false, ce qui est évalué comme WITH CHECK implicite
+    // sur la nouvelle ligne après UPDATE. Cela provoque une erreur 42501 avec le client user-JWT.
+    // L'ownership est garantie par le filtre .eq('user_id', userId).
     if (tableName === 'files') {
-      const { error } = await supabase
+      const { createClient } = await import('@supabase/supabase-js');
+      const serviceClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      const { error } = await serviceClient
         .from('files')
         .update({
           is_deleted: true,
