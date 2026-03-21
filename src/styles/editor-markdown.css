@@ -241,12 +241,14 @@ div.markdown-body ul[data-type="taskList"],
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
-  overflow-y: visible;
-  /* Pas de margin négatif : on garde le tableau dans le flux normal du conteneur */
+  overflow-y: hidden;
   margin: var(--md-table-margin) 0;
   padding: 0;
-  border-radius: var(--blk-radius);
+  border: none;
+  border-radius: 12px;
+  background: transparent;
   box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.12) transparent;
 }
@@ -274,22 +276,20 @@ div.markdown-body ul[data-type="taskList"],
 
 .ProseMirror table,
 .markdown-body table {
-  /* Le tableau prend toujours toute la largeur du wrapper (= largeur de l'éditeur).
-     table-layout: fixed + width: 100% : les colonnes se partagent l'espace dispo
-     proportionnellement aux min-width des col (colgroup de TableView), sans déborder.
-     Si l'utilisateur resize une colonne au-delà du total dispo, TableView pose
-     width: Xpx en inline → scroll horizontal s'active normalement. */
-  width: 100% !important;
-  min-width: 100% !important;
-  table-layout: fixed;
-  border-collapse: separate; /* separate + border-spacing:0 = bordure nette comme les blocs code */
+  width: 100%;
+  max-width: 100%;
+  table-layout: auto;
+  border-collapse: separate;
   border-spacing: 0;
   margin: 0;
-  background: var(--blk-bg);
-  border: var(--chat-surface-border);
-  border-radius: var(--blk-radius);
+  background: var(
+    --chat-embedded-surface-bg,
+    color-mix(in srgb, var(--chat-bg-secondary, var(--bg-secondary, #fafafa)) 32%, transparent)
+  );
+  border: var(--chat-code-block-border, 1.2px solid rgba(255, 255, 255, 0.08)) !important;
+  border-radius: 12px;
   overflow: hidden;
-  filter: var(--code-brightness-filter, brightness(1.18));
+  filter: none;
 }
 
 /* Neutraliser les largeurs fixes px injectées par TableView dans les col du colgroup.
@@ -303,40 +303,47 @@ div.markdown-body ul[data-type="taskList"],
 /* Coins arrondis sur les cellules pour que le fond ne dépasse pas de la bordure */
 .ProseMirror thead tr:first-child th:first-child,
 .markdown-body thead tr:first-child th:first-child {
-  border-top-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-top-left-radius: 12px;
 }
 .ProseMirror thead tr:first-child th:last-child,
 .markdown-body thead tr:first-child th:last-child {
-  border-top-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-top-right-radius: 12px;
 }
 .ProseMirror tbody tr:last-child td:first-child,
 .markdown-body tbody tr:last-child td:first-child {
-  border-bottom-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-bottom-left-radius: 12px;
 }
 .ProseMirror tbody tr:last-child td:last-child,
 .markdown-body tbody tr:last-child td:last-child {
-  border-bottom-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-bottom-right-radius: 12px;
 }
-/* Tableau sans thead : première ligne = tbody, arrondir le haut */
+/* Pas de radius sur la 1re ligne tbody (bordure sous l'en-tête doit rester droite) */
 .ProseMirror tbody tr:first-child td:first-child,
 .markdown-body tbody tr:first-child td:first-child {
-  border-top-left-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-top-left-radius: 0;
 }
 .ProseMirror tbody tr:first-child td:last-child,
 .markdown-body tbody tr:first-child td:last-child {
-  border-top-right-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
+  border-top-right-radius: 0;
 }
 
 .ProseMirror th,
 .markdown-body th {
-  padding: 12px 16px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
+  line-height: 40px !important;
+  vertical-align: middle !important;
   text-align: left !important;
   font-weight: 600 !important;
   color: var(--chat-text-primary, #e4e4e7) !important;
-  background: transparent !important;
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.04) !important; /* ✅ Ligne ultra-fine */
+  background: var(--chat-code-toolbar-bg, rgba(255, 255, 255, 0.04)) !important;
+  border-bottom: none !important;
   font-size: var(--editor-body-size, 15.5px) !important;
   font-family: var(--editor-font-family-body) !important;
+  white-space: normal !important;
+  word-break: break-word !important;
 }
 
 .ProseMirror thead,
@@ -346,16 +353,27 @@ div.markdown-body ul[data-type="taskList"],
 
 .ProseMirror thead th,
 .markdown-body thead th {
-  background: transparent;
+  background: var(--chat-code-toolbar-bg, rgba(255, 255, 255, 0.04)) !important;
+}
+
+.ProseMirror tbody tr:first-child td,
+.markdown-body tbody tr:first-child td {
+  border-top: var(--chat-code-block-border, var(--chat-input-border, 1px solid rgba(255, 255, 255, 0.06))) !important;
 }
 
 .ProseMirror td,
 .markdown-body td {
   padding: 10px 16px !important;
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.03) !important; /* ✅ Ligne ultra-fine */
-  color: var(--chat-text-secondary, #a1a1aa) !important;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.03) !important;
+  background: var(
+    --chat-embedded-surface-bg,
+    color-mix(in srgb, var(--chat-bg-secondary, var(--bg-secondary, #fafafa)) 32%, transparent)
+  ) !important;
+  color: var(--chat-text-primary, #e4e4e7) !important;
   font-size: var(--editor-body-size, 15.5px) !important;
   font-family: var(--editor-font-family-body) !important;
+  white-space: normal !important;
+  word-break: break-word !important;
 }
 
 /* Dernière ligne du tableau : pas de border-bottom sur les cellules = pas de doublon avec la bordure du table */
@@ -369,9 +387,21 @@ div.markdown-body ul[data-type="taskList"],
   border-bottom: none !important;
 }
 
+.ProseMirror tbody tr:hover td,
+.markdown-body tbody tr:hover td {
+  background: color-mix(
+    in srgb,
+    var(--chat-text-primary, #e4e4e7) 5%,
+    var(
+      --chat-embedded-surface-bg,
+      color-mix(in srgb, var(--chat-bg-secondary, var(--bg-secondary, #fafafa)) 32%, transparent)
+    )
+  ) !important;
+}
+
 .ProseMirror tbody tr:hover,
 .markdown-body tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
 }
 
 /* =============================================================================
@@ -389,12 +419,14 @@ div.markdown-body ul[data-type="taskList"],
   .markdown-body .tableWrapper {
     margin: var(--md-table-margin) -12px;
     padding: 0 12px;
-    -webkit-overflow-scrolling: touch;
   }
 
   .ProseMirror th,
   .markdown-body th {
-    padding: 8px 10px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    line-height: 36px !important;
+    padding: 0 10px !important;
     font-size: 13px !important;
   }
 
