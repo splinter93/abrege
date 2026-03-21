@@ -33,7 +33,6 @@ export interface GroqModelInfo {
 }
 
 export const GROQ_MODELS: GroqModelInfo[] = [
-  // GPT-OSS Models - Recommandés pour la production
   {
     id: 'openai/gpt-oss-20b',
     name: 'GPT-OSS 20B 128k',
@@ -58,48 +57,6 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     description: 'Le plus puissant, excellent pour les tâches complexes',
     recommended: true
   },
-  
-  // Llama 4 Models (Multimodal)
-  {
-    id: 'meta-llama/llama-4-scout-17b-16e-instruct',
-    name: 'Llama 4 Scout (17Bx16E) 128k',
-    category: 'llama',
-    provider: 'groq', // ✅ CRITIQUE : Défini pour auto-détection provider après override
-    capabilities: ['text', 'images', 'function_calling', 'tool_use', 'json_mode'],
-    contextWindow: 131072,
-    maxOutput: 8192,
-    speed: 594,
-    pricing: { input: '$0.11', output: '$0.34' },
-    description: 'Multimodal avec 16 experts, raisonnement et analyse d\'images',
-    recommended: true
-  },
-  {
-    id: 'meta-llama/llama-4-maverick-17b-128e-instruct',
-    name: 'Llama 4 Maverick (17Bx128E) 128k',
-    category: 'llama',
-    provider: 'groq', // ✅ CRITIQUE : Défini pour auto-détection provider après override
-    capabilities: ['text', 'images', 'function_calling', 'tool_use', 'json_mode'],
-    contextWindow: 131072,
-    maxOutput: 8192,
-    speed: 562,
-    pricing: { input: '$0.20', output: '$0.60' },
-    description: 'Multimodal avec 128 experts, images complexes et contexte long'
-  },
-  
-  // Qwen3
-  {
-    id: 'qwen/qwen3-32b',
-    name: 'Qwen3 32B 131k',
-    category: 'qwen',
-    capabilities: ['text', 'function_calling', 'streaming'],
-    contextWindow: 131072,
-    maxOutput: 8192,
-    speed: 662,
-    pricing: { input: '$0.29', output: '$0.59' },
-    description: 'Très rapide (662 TPS), excellent rapport qualité/prix'
-  },
-  
-  // Kimi K2
   {
     id: 'moonshotai/kimi-k2-instruct-0905',
     name: 'Kimi K2-0905 1T 256k',
@@ -110,21 +67,6 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     speed: 200,
     pricing: { input: '$1.00', output: '$3.00' },
     description: 'Contexte ultra-long (256k), structured outputs, prompt caching'
-  },
-  
-  // xAI Grok Models
-  {
-    id: 'grok-4-1-fast-non-reasoning',
-    name: 'Grok 4.1 Fast (Instant)',
-    category: 'xai',
-    provider: 'xai',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
-    contextWindow: 2000000,
-    maxOutput: 8000,
-    speed: 800,
-    pricing: { input: '$0.20', output: '$0.50' },
-    description: 'Réponses instantanées avec la nouvelle génération Grok 4.1',
-    recommended: true
   },
   {
     id: 'grok-4-1-fast-reasoning',
@@ -140,79 +82,41 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: true
   },
   {
-    id: 'grok-4-fast-reasoning',
-    name: 'Grok 4 Fast Reasoning (Legacy)',
-    category: 'xai',
-    provider: 'xai',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning'],
-    contextWindow: 131072,
-    maxOutput: 8000,
-    speed: 700,
-    pricing: { input: '$0.20', output: '$0.50' },
-    description: 'Reasoning avancé (legacy, migré vers 4.1)'
-  },
-  {
-    id: 'grok-beta',
-    name: 'Grok Beta 128k',
-    category: 'xai',
-    provider: 'xai',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
-    contextWindow: 131072,
-    maxOutput: 8000,
-    speed: 750,
-    pricing: { input: '$0.20', output: '$0.50' },
-    description: 'Version beta avec les dernières fonctionnalités'
-  },
-  {
-    id: 'grok-vision-beta',
-    name: 'Grok Vision Beta 128k',
-    category: 'xai',
-    provider: 'xai',
-    capabilities: ['text', 'images', 'function_calling', 'streaming', 'structured_output'],
-    contextWindow: 131072,
-    maxOutput: 8000,
-    speed: 650,
-    pricing: { input: '$0.20', output: '$0.50' },
-    description: 'Multimodal avec analyse avancée d\'images (beta)'
-  },
-  {
-    id: 'grok-4.20-multi-agent-experimental-beta-0304',
-    name: 'Grok 4.20 Multi-Agent (Experimental)',
-    category: 'xai',
-    provider: 'xai',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'multi_agent'],
-    contextWindow: 2000000,
-    maxOutput: 8000,
-    speed: 480,
-    pricing: { input: '$2.00', output: '$6.00' },
-    description: 'Multi-agent experimental, 2M context, 4M tpm, 480 rpm'
-  },
-  {
-    id: 'grok-4.20-experimental-beta-0304-reasoning',
-    name: 'Grok 4.20 Reasoning (Experimental)',
+    id: 'grok-4.20-0309-reasoning',
+    name: 'Grok 4.20 0309 Reasoning',
     category: 'xai',
     provider: 'xai',
     capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning', 'images'],
     contextWindow: 2000000,
     maxOutput: 8000,
-    speed: 480,
+    speed: 500,
     pricing: { input: '$2.00', output: '$6.00' },
-    description: 'Reasoning experimental, 2M context, 4M tpm, 480 rpm'
+    description: 'Grok 4.20 (build 0309), contexte 2M, 4M tpm, 607 rpm — reasoning et images'
   },
   {
-    id: 'grok-4.20-experimental-beta-0304-non-reasoning',
-    name: 'Grok 4.20 Fast (Experimental)',
+    id: 'grok-4.20-0309-non-reasoning',
+    name: 'Grok 4.20 0309 Fast',
     category: 'xai',
     provider: 'xai',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output'],
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'images'],
     contextWindow: 2000000,
     maxOutput: 8000,
-    speed: 480,
+    speed: 500,
     pricing: { input: '$2.00', output: '$6.00' },
-    description: 'Non-reasoning experimental, 2M context, 4M tpm, 480 rpm'
+    description: 'Grok 4.20 (build 0309) sans reasoning, 2M contexte, 4M tpm, 607 rpm'
   },
-  
-  // DeepSeek Models - Provider direct DeepSeek
+  {
+    id: 'grok-4.20-multi-agent-0309',
+    name: 'Grok 4.20 Multi-Agent 0309',
+    category: 'xai',
+    provider: 'xai',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'multi_agent'],
+    contextWindow: 2000000,
+    maxOutput: 8000,
+    speed: 500,
+    pricing: { input: '$2.00', output: '$6.00' },
+    description: 'Multi-agent Grok 4.20 (0309), 2M contexte, 4M tpm, 607 rpm'
+  },
   {
     id: 'deepseek-chat',
     name: 'DeepSeek Chat V3.2',
@@ -239,36 +143,6 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     description: 'DeepSeek V3.2 avec thinking mode (reasoning avancé), idéal pour tâches complexes',
     recommended: true
   },
-  
-  // Cerebras Models
-  {
-    id: 'zai-glm-4.7',
-    name: 'Z.ai GLM 4.7 (Cerebras)',
-    category: 'other',
-    provider: 'cerebras',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning'],
-    contextWindow: 131000,
-    maxOutput: 40000,
-    speed: 1000,
-    pricing: { input: '$2.25', output: '$2.75' },
-    description: 'Z.ai GLM 4.7 via Cerebras - Reasoning avancé, tool calling, structured outputs',
-    recommended: true
-  },
-  {
-    id: 'gpt-oss-120b',
-    name: 'GPT-OSS 120B (Cerebras)',
-    category: 'other',
-    provider: 'cerebras',
-    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning'],
-    contextWindow: 131000,
-    maxOutput: 40000,
-    speed: 3000,
-    pricing: { input: '$0.35', output: '$0.75' },
-    description: 'OpenAI GPT OSS 120B via Cerebras - Très rapide (~3000 tokens/sec), reasoning contrôlable',
-    recommended: false
-  },
-  
-  // OpenRouter Models via Liminality
   {
     id: 'openrouter/mimo-v2-flash',
     name: 'MiMo-V2-Flash',
@@ -293,19 +167,6 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     speed: 500,
     pricing: { input: '$1.00', output: '$3.00' },
     description: 'Xiaomi MiMo-V2-Pro via OpenRouter, contexte 1M, reasoning et outils',
-    recommended: false
-  },
-  {
-    id: 'openrouter/kimi-k2-thinking',
-    name: 'Kimi K2 Thinking',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
-    contextWindow: 262144,
-    maxOutput: 8192,
-    speed: 500,
-    pricing: { input: '$0.40', output: '$1.75' },
-    description: 'MoonshotAI Kimi K2 Thinking via OpenRouter, contexte ultra-long (262K)',
     recommended: false
   },
   {
@@ -335,32 +196,6 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: false
   },
   {
-    id: 'openrouter/glm-4.7',
-    name: 'GLM 4.7',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
-    contextWindow: 202752,
-    maxOutput: 8192,
-    speed: 600,
-    pricing: { input: '$0.40', output: '$1.50' },
-    description: 'Z.AI GLM 4.7 via OpenRouter avec reasoning et outils avancés',
-    recommended: false
-  },
-  {
-    id: 'openrouter/glm-5',
-    name: 'GLM 5',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
-    contextWindow: 128000,
-    maxOutput: 8192,
-    speed: 600,
-    pricing: { input: '$0.40', output: '$1.50' },
-    description: 'Z.AI GLM 5 via OpenRouter avec reasoning et outils avancés',
-    recommended: false
-  },
-  {
     id: 'fireworks/glm-5',
     name: 'GLM 5 Fireworks',
     category: 'liminality',
@@ -385,19 +220,6 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     pricing: { input: '$0.50', output: '$3.00' },
     description: 'Google Gemini 3 Flash Preview via OpenRouter, multimodal avec contexte 1M',
     recommended: true
-  },
-  {
-    id: 'openrouter/minimax-m2.1',
-    name: 'MiniMax M2.1',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
-    contextWindow: 204800,
-    maxOutput: 8192,
-    speed: 550,
-    pricing: { input: '$0.30', output: '$1.20' },
-    description: 'MiniMax M2.1 via OpenRouter avec reasoning et outils',
-    recommended: false
   },
   {
     id: 'openrouter/minimax-m2.7',
@@ -445,19 +267,23 @@ export const GROQ_MODELS: GroqModelInfo[] = [
  */
 export const LLM_MODELS = GROQ_MODELS;
 
+const GROQ_MODELS_BY_CATEGORY_ENTRIES: [string, GroqModelInfo[]][] = [
+  ['DeepSeek', GROQ_MODELS.filter(m => m.category === 'deepseek')],
+  ['Liminality (Synesia)', GROQ_MODELS.filter(m => m.category === 'liminality')],
+  ['Cerebras', GROQ_MODELS.filter(m => m.provider === 'cerebras')],
+  ['xAI Grok', GROQ_MODELS.filter(m => m.category === 'xai')],
+  ['GPT-OSS', GROQ_MODELS.filter(m => m.category === 'gpt-oss')],
+  ['Llama 4 (Multimodal)', GROQ_MODELS.filter(m => m.category === 'llama')],
+  ['Qwen3', GROQ_MODELS.filter(m => m.category === 'qwen')],
+  ['Kimi K2', GROQ_MODELS.filter(m => m.category === 'other' && m.provider !== 'cerebras')],
+];
+
 /**
- * Grouper les modèles par catégorie pour le menu déroulant
+ * Grouper les modèles par catégorie pour le menu déroulant (catégories vides omises)
  */
-export const GROQ_MODELS_BY_CATEGORY = {
-  'DeepSeek': GROQ_MODELS.filter(m => m.category === 'deepseek'),
-  'Liminality (Synesia)': GROQ_MODELS.filter(m => m.category === 'liminality'),
-  'Cerebras': GROQ_MODELS.filter(m => m.provider === 'cerebras'),
-  'xAI Grok': GROQ_MODELS.filter(m => m.category === 'xai'),
-  'GPT-OSS': GROQ_MODELS.filter(m => m.category === 'gpt-oss'),
-  'Llama 4 (Multimodal)': GROQ_MODELS.filter(m => m.category === 'llama'),
-  'Qwen3': GROQ_MODELS.filter(m => m.category === 'qwen'),
-  'Kimi K2': GROQ_MODELS.filter(m => m.category === 'other' && m.provider !== 'cerebras'),
-};
+export const GROQ_MODELS_BY_CATEGORY = Object.fromEntries(
+  GROQ_MODELS_BY_CATEGORY_ENTRIES.filter(([, models]) => models.length > 0)
+) as Record<string, GroqModelInfo[]>;
 
 /**
  * Obtenir les informations d'un modèle

@@ -132,7 +132,10 @@ const XAI_NATIVE_INFO: ProviderInfo = {
     'grok-vision-beta',
     'grok-4.20-multi-agent-experimental-beta-0304',
     'grok-4.20-experimental-beta-0304-reasoning',
-    'grok-4.20-experimental-beta-0304-non-reasoning'
+    'grok-4.20-experimental-beta-0304-non-reasoning',
+    'grok-4.20-0309-reasoning',
+    'grok-4.20-0309-non-reasoning',
+    'grok-4.20-multi-agent-0309'
   ],
   pricing: {
     input: '$0.20/1M tokens',

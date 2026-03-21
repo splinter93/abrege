@@ -33,7 +33,7 @@ describe('ReasoningOverrideRule', () => {
 
     it('devrait retourner true si reasoningOverride présent', () => {
       const context: ModelOverrideContext = {
-        originalModel: 'grok-4-1-fast-non-reasoning',
+        originalModel: 'grok-4-1-fast-reasoning',
         provider: 'xai',
         hasImages: false,
         reasoningOverride: 'advanced',
@@ -45,9 +45,9 @@ describe('ReasoningOverrideRule', () => {
   });
 
   describe('apply', () => {
-    it('devrait mapper advanced → grok-beta pour xAI', () => {
+    it('devrait mapper advanced → grok-4-1-fast-reasoning pour xAI', () => {
       const context: ModelOverrideContext = {
-        originalModel: 'grok-4-1-fast-non-reasoning',
+        originalModel: 'grok-4-1-fast-reasoning',
         provider: 'xai',
         hasImages: false,
         reasoningOverride: 'advanced',
@@ -56,7 +56,7 @@ describe('ReasoningOverrideRule', () => {
 
       const result = rule.apply(context);
 
-      expect(result.model).toBe('grok-beta');
+      expect(result.model).toBe('grok-4-1-fast-reasoning');
       expect(result.wasOverridden).toBe(true);
       expect(result.reason).toContain('advanced');
       
@@ -66,7 +66,7 @@ describe('ReasoningOverrideRule', () => {
 
     it('devrait mapper general → grok-4-1-fast-reasoning pour xAI', () => {
       const context: ModelOverrideContext = {
-        originalModel: 'grok-4-1-fast-non-reasoning',
+        originalModel: 'grok-4-1-fast-reasoning',
         provider: 'xai',
         hasImages: false,
         reasoningOverride: 'general',
@@ -83,7 +83,7 @@ describe('ReasoningOverrideRule', () => {
       expect(result.paramsOverride).toBeUndefined();
     });
 
-    it('devrait mapper fast → grok-4-1-fast-non-reasoning pour xAI', () => {
+    it('devrait mapper fast → grok-4-1-fast-reasoning pour xAI', () => {
       const context: ModelOverrideContext = {
         originalModel: 'grok-4-1-fast-reasoning',
         provider: 'xai',
@@ -94,7 +94,7 @@ describe('ReasoningOverrideRule', () => {
 
       const result = rule.apply(context);
 
-      expect(result.model).toBe('grok-4-1-fast-non-reasoning');
+      expect(result.model).toBe('grok-4-1-fast-reasoning');
       expect(result.wasOverridden).toBe(true);
       expect(result.reason).toContain('fast');
       
@@ -119,7 +119,7 @@ describe('ReasoningOverrideRule', () => {
 
     it('devrait override température pour advanced (max 0.5)', () => {
       const context: ModelOverrideContext = {
-        originalModel: 'grok-4-1-fast-non-reasoning',
+        originalModel: 'grok-4-1-fast-reasoning',
         provider: 'xai',
         hasImages: false,
         reasoningOverride: 'advanced',

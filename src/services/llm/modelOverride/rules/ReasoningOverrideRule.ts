@@ -4,7 +4,7 @@
  * Logique :
  * - Si reasoningOverride === null → pas d'override
  * - Sinon → mapping par provider :
- *   - xAI : advanced → grok-4-0709, general → grok-4-1-fast-reasoning, fast → grok-4-1-fast-non-reasoning
+ *   - xAI : tous les niveaux → grok-4-1-fast-reasoning (seul modèle xAI proposé dans l'app) ; params (temp.) différencient advanced / fast
  *   - Autres providers : logique à définir selon besoins futurs
  * 
  * Optionnel : override des paramètres (temperature plus basse pour advanced, plus haute pour fast)
@@ -25,13 +25,13 @@ interface ReasoningModelMap {
 /**
  * Maps de modèles par provider
  */
+const XAI_REASONING_MODEL = 'grok-4-1-fast-reasoning';
+
 const REASONING_MODELS: Record<string, ReasoningModelMap> = {
   xai: {
-    // Note: grok-4-0709 n'existe pas encore dans la liste, utiliser grok-beta comme fallback
-    // TODO: Mettre à jour quand grok-4-0709 sera disponible
-    advanced: 'grok-beta', // Fallback temporaire (à remplacer par grok-4-0709 quand disponible)
-    general: 'grok-4-1-fast-reasoning',
-    fast: 'grok-4-1-fast-non-reasoning'
+    advanced: XAI_REASONING_MODEL,
+    general: XAI_REASONING_MODEL,
+    fast: XAI_REASONING_MODEL
   }
   // Autres providers : à ajouter selon besoins futurs
   // groq: { ... },

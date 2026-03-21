@@ -19,7 +19,7 @@ vi.mock('@/constants/groqModels', () => ({
     const models: Record<string, { capabilities: string[] }> = {
       'openai/gpt-oss-20b': { capabilities: ['text', 'function_calling'] },
       'openai/gpt-oss-120b': { capabilities: ['text', 'function_calling'] },
-      'meta-llama/llama-4-maverick-17b-128e-instruct': { capabilities: ['text', 'images', 'function_calling'] },
+      'openrouter/kimi-k2.5': { capabilities: ['text', 'images', 'function_calling'] },
       'openrouter/qwen3-vl-30b-a3b-instruct': { capabilities: ['text', 'images', 'function_calling'] }
     };
     return models[modelId] || undefined;
@@ -60,8 +60,8 @@ describe('ImageSupportRule', () => {
 
     it('devrait retourner false si modèle supporte déjà les images', () => {
       const context: ModelOverrideContext = {
-        originalModel: 'meta-llama/llama-4-maverick-17b-128e-instruct',
-        provider: 'groq',
+        originalModel: 'openrouter/kimi-k2.5',
+        provider: 'liminality',
         hasImages: true,
         reasoningOverride: null,
         originalParams: {}

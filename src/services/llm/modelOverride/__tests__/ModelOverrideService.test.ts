@@ -22,9 +22,8 @@ vi.mock('@/constants/groqModels', () => ({
       'openai/gpt-oss-20b': { provider: 'groq', capabilities: [] }, // Pas de support images
       'openai/gpt-oss-120b': { provider: 'groq', capabilities: [] },
       'openrouter/qwen3-vl-30b-a3b-instruct': { provider: 'liminality', capabilities: ['images'] }, // Fallback vision
-      'meta-llama/llama-4-maverick-17b-128e-instruct': { provider: 'groq', capabilities: [] },
-      'grok-4-1-fast-non-reasoning': { provider: 'xai', capabilities: [] },
-      'grok-beta': { provider: 'xai', capabilities: [] },
+      'openrouter/kimi-k2.5': { provider: 'liminality', capabilities: [] },
+      'grok-4-1-fast-reasoning': { provider: 'xai', capabilities: [] },
       'liminality-model': { provider: 'liminality', capabilities: [] }
     };
     return models[modelId] || undefined;
@@ -104,7 +103,7 @@ describe('ModelOverrideService', () => {
       service.registerRule(new ReasoningOverrideRule());
 
       const context: ModelOverrideContext = {
-        originalModel: 'grok-4-1-fast-non-reasoning',
+        originalModel: 'grok-4-1-fast-reasoning',
         provider: 'xai',
         hasImages: false,
         reasoningOverride: 'advanced',
@@ -113,7 +112,7 @@ describe('ModelOverrideService', () => {
 
       const result = service.resolveModelAndParams(context);
 
-      expect(result.model).toBe('grok-beta');
+      expect(result.model).toBe('grok-4-1-fast-reasoning');
       expect(result.reasons).toHaveLength(1);
       expect(result.reasons[0]).toContain('advanced');
     });
