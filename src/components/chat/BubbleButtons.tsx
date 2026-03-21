@@ -8,7 +8,6 @@ interface BubbleButtonsProps {
   content: string;
   messageId?: string;
   messageIndex?: number;
-  onCopy?: () => void;
   onVoice?: () => void;
   onEdit?: (messageId: string, content: string, index: number) => void;
   onRegenerate?: () => void;
@@ -25,7 +24,6 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
   content,
   messageId,
   messageIndex,
-  onCopy,
   onVoice,
   onEdit,
   onRegenerate,
@@ -42,8 +40,7 @@ const BubbleButtons: React.FC<BubbleButtonsProps> = ({
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
-      onCopy?.();
-      
+
       // Reset the copied state after 2 seconds
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {

@@ -193,14 +193,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 <Minimize2 size={14} aria-hidden />
               </button>
             ) : undefined}
-            onCopy={async () => {
-              try {
-                await navigator.clipboard.writeText(content);
-                // Optionnel: feedback visuel
-              } catch (err) {
-                logger.error('Failed to copy text: ', err);
-              }
-            }}
             onVoice={handleVoice}
             isVoicePlaying={isVoicePlaying}
             onEdit={onEdit}

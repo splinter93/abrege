@@ -12,6 +12,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import Editor from '../Editor';
+import { EditorErrorBoundary } from '../EditorErrorBoundary';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 
 // Setup variables d'environnement
@@ -113,14 +114,14 @@ vi.mock('@/hooks/editor/useEditorHandlers', () => ({
     handleSave: vi.fn().mockResolvedValue(undefined),
     handleSlashCommandInsert: vi.fn(),
     handleImageInsert: vi.fn(),
-    updateA4Mode: vi.fn(),
-    updateFullWidth: vi.fn(),
-    updateSlashLang: vi.fn(),
-    updateFontFamily: vi.fn(),
-    updateHeaderImage: vi.fn(),
-    updateHeaderImageOffset: vi.fn(),
-    updateHeaderImageBlur: vi.fn(),
-    updateHeaderImageOverlay: vi.fn(),
+    updateFontInDb: vi.fn(),
+    handleFontChange: vi.fn(),
+    handleA4ModeChange: vi.fn(),
+    handleSlashLangChange: vi.fn(),
+    handleFullWidthChange: vi.fn(),
+    updateHeaderOffset: vi.fn(),
+    updateHeaderBlur: vi.fn(),
+    updateHeaderOverlay: vi.fn(),
     updateTitleInImage: vi.fn(),
   }),
 }));
@@ -285,18 +286,16 @@ describe('[Integration] Editor Flow Complet', () => {
     });
 
     it('should handle error boundary', async () => {
-      // Simuler une erreur dans un composant enfant
       const ThrowError = () => {
         throw new Error('Test error');
       };
 
       const { container } = render(
-        <Editor noteId="test-note-id">
+        <EditorErrorBoundary>
           <ThrowError />
-        </Editor>
+        </EditorErrorBoundary>
       );
 
-      // L'error boundary devrait capturer l'erreur
       await waitFor(() => {
         expect(container).toBeDefined();
       });

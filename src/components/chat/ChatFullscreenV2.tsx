@@ -525,6 +525,10 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     activeCanvaId
   });
 
+  const handleToggleAgentDropdown = useCallback(() => {
+    uiState.setAgentDropdownOpen(!uiState.agentDropdownOpen);
+  }, [uiState.agentDropdownOpen, uiState.setAgentDropdownOpen]);
+
   // 🎯 SYNC AGENT avec session
   useSyncAgentWithSession({
     currentSession,
@@ -621,7 +625,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
         selectedAgent={selectedAgent}
         agentNotFound={agentNotFound}
         agentDropdownOpen={uiState.agentDropdownOpen}
-        onToggleAgentDropdown={() => uiState.setAgentDropdownOpen(!uiState.agentDropdownOpen)}
+        onToggleAgentDropdown={handleToggleAgentDropdown}
         isAuthenticated={isAuthenticated}
         authLoading={authLoading}
         chatSessionId={currentSession?.id || null}

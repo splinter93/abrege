@@ -12,7 +12,7 @@
 
 Depuis l'audit de janvier 2026, des régressions sont apparues et la dette technique a augmenté sur les zones critiques. Le verdict « prêt » de janvier était valable pour 3 clients en MVP contrôlé. Pour une vraie mise en production scalable et robuste, des blockers actifs doivent être réglés.
 
-**Score actuel : 7.8/10** (vs 6.5/10 au 20 mars — B1 + B2 + B3 + B4 + I4 + D3 résolus ; B4 ESLint **0 erreur** le 20/03)
+**Score actuel : 7.9/10** (vs 6.5/10 au 20 mars — B1 + B2 + B3 + B4 + I4 + D3 + Semaine 2 items 11–16 + D4/D5/D6 + I7/lowlight ; B4 ESLint **0 erreur** le 20/03)
 
 ---
 
@@ -21,8 +21,8 @@ Depuis l'audit de janvier 2026, des régressions sont apparues et la dette techn
 | Zone | Score | Statut |
 |------|-------|--------|
 | Qualité TypeScript | 6/10 | ⚠️ Dégradé |
-| ESLint / Code quality | 8/10 | ✅ **0 erreur** (`npm run lint`) — ~1011 **warnings** restants (chantier qualité continu) |
-| Tests | 7/10 | ✅ 601/601 passent ; ⚠️ 2 fichiers en échec de **chargement** (I7 / `lowlightInstance`) |
+| ESLint / Code quality | 8/10 | ✅ **0 erreur** (`npm run lint`) — ~1010 **warnings** restants (chantier qualité continu) |
+| Tests | 7.5/10 | ✅ **620/620** tests, **52** fichiers ; mock global `lowlightInstance` + alignement TS des tests intégration (21/03) |
 | Sécurité | 8/10 | ✅ Routes debug supprimées |
 | Architecture Chat | 8/10 | ✅ Hooks corrigés, logger.dev supprimé |
 | Architecture Éditeur | 7.5/10 | ✅ Hooks corrigés (EditorToolbar, NoteEmbed×2, HeaderImage) |
@@ -100,11 +100,11 @@ Cause probable pour `NetworkRetryService` : la sérialisation d'erreur `{ status
 
 **Correction :** Identifier et corriger les mocks cassés + adapter les assertions aux nouveaux types.
 
-**Statut :** ✅ Corrigé le 21/03/2026 — **601/601 tests** s’exécutent avec succès ; **2 fichiers** échouent encore au **chargement** de module (`lowlightInstance` / mock — voir I7), non comptés dans les 601.
+**Statut :** ✅ Corrigé le 21/03/2026 — **620/620 tests** (52 fichiers) ; mock global `@/utils/lowlightInstance` dans `tests/setup.ts` + déphasage TS des tests corrigé (voir I7).
 - `NetworkRetryService.test.ts` : flush microtasks via `await Promise.resolve()×3` + `promise.catch(() => {})` pour les unhandled rejections
 - `SessionTitleGenerator.test.ts` : assertion `>= 0` + fake timers avec AbortSignal pour le test timeout
 - `server.test.ts` : mock WebSocket via `Object.assign` (TypeScript fix) + assertion `{ noServer: true }` alignée sur l'implémentation actuelle
-- 2 fichiers pré-existants restent en erreur au chargement de module (`Editor.test.tsx`, `integration-editor-flow.test.tsx`) — cause : `simpleLogger.dev` en module-level dans `lowlightInstance.ts`, mock incomplet → voir I7
+- ~~2 fichiers en erreur de chargement (`lowlightInstance`)~~ → **levé** : `vi.mock('@/utils/lowlightInstance')` dans [`tests/setup.ts`](../tests/setup.ts) (21/03/2026)
 
 ---
 
@@ -114,7 +114,7 @@ Cause probable pour `NetworkRetryService` : la sérialisation d'erreur `{ status
 
 **Dernière mesure `npm run lint` (batch 0 → 4, 20/03/2026) :**
 ```
-✖ 1011 problems (0 errors, 1011 warnings)
+✖ 1010 problems (0 errors, 1010 warnings)
 ```
 
 **Mesure historique (audit initial) :**
@@ -197,7 +197,7 @@ onCopy={async () => {
 
 **Correction :** Supprimer la prop `onCopy` de `ChatMessage` — laisser `BubbleButtons` seul maître de cette logique.
 
-**Statut :** ❌ Non corrigé
+**Statut :** ✅ Corrigé le 21/03/2026 — prop `onCopy` retirée ; `BubbleButtons` seul responsable du clipboard.
 
 ---
 
@@ -236,15 +236,10 @@ Le rate limiter (`src/services/rateLimiter.ts`, `src/middleware-utils/rateLimit.
 
 ### I6 — CSS : chaos total (80+ fichiers, backups pollués)
 
-Le dossier `src/styles/` contient **80+ fichiers CSS** dont des fichiers obsolètes :
+Le dossier `src/styles/` contient encore **beaucoup** de fichiers CSS ; les **6** fichiers stale listés ci-dessous ont été **supprimés** le 21/03/2026 :
 
 ```
-variables.css.backup
-variables.css.new
-variables.css.old
-design-system.css.backup
-design-system.css.new
-design-system.css.old
+(variables/design-system).css.backup|.old|.new — supprimés
 ```
 
 Fichiers CSS distincts pour l'éditeur seul : `editor.css`, `editor-bundle.css`, `editor-content.css`, `editor-header.css`, `editor-toolbar.css`, `editor-utilities.css`, `editor-responsive.css`, `editor-layout-modes.css`, `editor-sidebar.css` — **9 fichiers** sans point d'entrée unifié.
@@ -256,7 +251,7 @@ Aucun design system cohérent ne peut être maintenu dans ces conditions. Les va
 2. Consolider les variables CSS dans `variables.css` unique
 3. Créer un index CSS `src/styles/index.css` qui importe dans l'ordre
 
-**Statut :** ❌ Non corrigé
+**Statut :** ⚠️ Partiel — **étape 1** (suppression `.backup` / `.old` / `.new`) ✅ 21/03/2026 ; **étapes 2–3** (consolidation variables + index CSS) ❌ ouvert.
 
 ---
 
@@ -277,9 +272,9 @@ Les tests TypeScript ont des erreurs qui révèlent un déphasage entre les type
 - `UseEditorHandlersReturn` n'a pas `updateA4Mode`
 - `kebabBtnRef.current` typé `null` au lieu de `HTMLButtonElement`
 
-Ces erreurs indiquent que des types ont évolué sans que les tests aient été mis à jour — les tests ne testent donc plus le vrai contrat de l'API.
+Ces écarts ont été **alignés** le 21/03/2026 : factories `ChatSession` / `ImageAttachment`, mock `ChatMessagesArea`, `mockMessageActions.error` typé, `EditorErrorBoundary` pour le test erreur, mocks `UseEditorHandlersReturn` / `EditorState` à jour, refs typées dans `useEditorEffects.test.ts`.
 
-**Statut :** ❌ Non corrigé
+**Statut :** ✅ Corrigé (fichiers ciblés) + mock **`lowlightInstance`** global pour chargement Vitest.
 
 ---
 
@@ -323,25 +318,19 @@ Les commentaires dans `ChatMessage.tsx` indiquent que `ToolCallMessage` est "rem
 
 ### D4 — `supabaseClient.js` : fichier JavaScript pur dans un projet TypeScript
 
-`src/supabaseClient.js` — zéro type safety sur le client Supabase exposé par ce fichier.
-
-**Correction :** Migrer vers `supabaseClient.ts` avec les types `@supabase/supabase-js`.
+**Statut :** ✅ Corrigé le 21/03/2026 — `src/supabaseClient.ts` (`export const supabase: SupabaseClient`) ; `.js` supprimé.
 
 ---
 
 ### D5 — `SystemMessageBuilder.ts.backup` : fichier backup actif dans le projet
 
-`src/services/llm/SystemMessageBuilder.ts.backup` est un fichier `.ts.backup` contenant du code TypeScript. Selon le glob du `tsconfig.json`, il peut être inclus dans la compilation et les résultats de recherche.
-
-**Correction :** Supprimer ce fichier ou le déplacer hors de `src/`.
+**Statut :** ✅ Supprimé le 21/03/2026.
 
 ---
 
 ### D6 — `ChatHeader` sans `React.memo`
 
-`ChatHeader.tsx` est re-rendu à chaque changement d'état du parent `ChatFullscreenV2`, même si ses props n'ont pas changé. Or `ChatFullscreenV2` a de nombreux états internes qui changent fréquemment pendant le streaming.
-
-**Correction :** Wrapper `ChatHeader` avec `React.memo` + vérifier que les callbacks passés en props sont mémoïsés (`useCallback`).
+**Statut :** ✅ Corrigé le 21/03/2026 — `React.memo` + `handleToggleAgentDropdown` stabilisé (`useCallback` dans `ChatFullscreenV2`).
 
 ---
 
@@ -381,10 +370,10 @@ L'authentification ne supporte pas la double authentification. Acceptable en MVP
 
 ### ❌ Reste à corriger
 
-1. **Copy logic dupliquée** entre `BubbleButtons` et `ChatMessage` (voir I3)
-2. **`ChatHeader` sans `React.memo`** — re-render inutile à chaque keystroke (voir D6)
+1. ~~**Copy logic dupliquée**~~ → ✅ I3 (21/03)
+2. ~~**`ChatHeader` sans `React.memo`**~~ → ✅ D6 (21/03)
 3. **Race condition double-envoi non testée** — `runExclusive` présent mais non couvert (voir D1)
-4. **Tests d'intégration `ChatFullscreenV2` cassés** — déphasage de types (voir I7)
+4. ~~**Tests d'intégration `ChatFullscreenV2` / types**~~ → ✅ I7 (21/03)
 
 ---
 
@@ -410,11 +399,9 @@ L'authentification ne supporte pas la double authentification. Acceptable en MVP
 
 ### ❌ Reste à corriger
 
-1. **Tests d'intégration `integration-editor-flow.test.tsx`** cassés — types déphasés (voir I7)
-2. **Tests `useEditorEffects.test.ts`** cassés — multiples erreurs TypeScript sur les types de hooks
-3. **`lowlightInstance.ts`** : `simpleLogger.dev` appelé en module-level → mock incomplet dans les tests Editor (2 fichiers en erreur de chargement)
-4. **9 fichiers CSS distincts** pour l'éditeur sans point d'entrée clair (voir I6)
-5. **`EditorPreview.tsx`** — plus de `console.*` constaté dans les deux chemins (`components/` et `components/editor/`) ; couvert par **B4** (0 erreur ESLint)
+1. ~~**Tests d'intégration / `useEditorEffects` / lowlight**~~ → ✅ I7 + mock global (21/03)
+2. **9 fichiers CSS distincts** pour l'éditeur sans point d'entrée clair (voir I6)
+3. **`EditorPreview.tsx`** — plus de `console.*` constaté dans les deux chemins (`components/` et `components/editor/`) ; couvert par **B4** (0 erreur ESLint)
 
 ---
 
@@ -522,19 +509,19 @@ Un rate limiter en mémoire dans un environnement serverless est une illusion de
 
 ---
 
-### 🟠 SEMAINE 2 — QUALITÉ CODE (en cours)
+### ✅ SEMAINE 2 — QUALITÉ CODE — TERMINÉE (21/03/2026)
 
 | # | Action | Fichier(s) | Effort | Statut |
 |---|--------|-----------|--------|--------|
 | 8 | Nettoyer les `no-console` (API, services, utils, composants) | Voir [ESLINT-CORRECTION-ROADMAP.md](./ESLINT-CORRECTION-ROADMAP.md) batch 3–4 | 3h | ✅ Fait — **0 erreur** ESLint |
 | 9 | Corriger les `no-empty` / qualité batch 1 | Divers | 1h | ✅ Fait (roadmap ESLint batch 1) |
 | ~~10~~ | ~~Supprimer ToolCallMessage.tsx~~ | — | — | ✅ Fait en avance |
-| 11 | Déduplicer la logique copier (ChatMessage → BubbleButtons) | `ChatMessage.tsx`, `BubbleButtons.tsx` | 1h | ❌ Ouvert |
-| 12 | Supprimer les fichiers CSS `.backup`, `.old`, `.new` | `src/styles/` | 30 min | ❌ Ouvert |
-| 13 | Supprimer `SystemMessageBuilder.ts.backup` | `src/services/llm/` | 5 min | ❌ Ouvert |
-| 14 | Migrer `supabaseClient.js` → `.ts` | `src/supabaseClient.js` | 1h | ❌ Ouvert |
-| 15 | Ajouter `React.memo` à `ChatHeader` | `ChatHeader.tsx` | 30 min | ❌ Ouvert |
-| 16 | Corriger les erreurs TypeScript dans les tests (déphasage types) | `ChatFullscreenV2.integration.test.tsx`, `useEditorEffects.test.ts` | 3h | ❌ Ouvert |
+| 11 | Déduplicer la logique copier (ChatMessage → BubbleButtons) | `ChatMessage.tsx`, `BubbleButtons.tsx` | 1h | ✅ Fait |
+| 12 | Supprimer les fichiers CSS `.backup`, `.old`, `.new` | `src/styles/` (6 fichiers) | 30 min | ✅ Fait |
+| 13 | Supprimer `SystemMessageBuilder.ts.backup` | `src/services/llm/` | 5 min | ✅ Fait |
+| 14 | Migrer `supabaseClient.js` → `.ts` | `src/supabaseClient.ts` | 1h | ✅ Fait |
+| 15 | Ajouter `React.memo` à `ChatHeader` | `ChatHeader.tsx`, `ChatFullscreenV2.tsx` | 30 min | ✅ Fait |
+| 16 | Corriger les erreurs TypeScript dans les tests (déphasage types) | `ChatFullscreenV2.integration.test.tsx`, `useEditorEffects.test.ts`, `integration-editor-flow.test.tsx`, `tests/setup.ts` | 3h | ✅ Fait |
 
 **Total estimé : ~1 jour (item 10 déjà fait)**
 
@@ -590,17 +577,17 @@ Un rate limiter en mémoire dans un environnement serverless est une illusion de
 | B4 | 232 → **0** erreur ESLint | 🔴 CRITIQUE | ✅ Corrigé | batch 0–4 ESLint 20/03 |
 | I1 | ClasseursPage.tsx 1460 lignes | 🟠 IMPORTANT | ❌ Ouvert | — |
 | I2 | Fichiers massifs services | 🟠 IMPORTANT | ❌ Ouvert | — |
-| I3 | Copy logic dupliquée | 🟠 IMPORTANT | ❌ Ouvert | — |
+| I3 | Copy logic dupliquée | 🟠 IMPORTANT | ✅ Corrigé | 21/03/2026 |
 | I4 | logger.dev en boucle rendu | 🟠 IMPORTANT | ✅ Corrigé | 21/03/2026 |
 | I5 | Rate limiter mémoire | 🟠 IMPORTANT | ⚠️ Connu | — |
-| I6 | CSS chaos 80+ fichiers | 🟠 IMPORTANT | ❌ Ouvert | — |
-| I7 | Erreurs TS dans les tests | 🟠 IMPORTANT | ❌ Ouvert | — |
+| I6 | CSS chaos 80+ fichiers | 🟠 IMPORTANT | ⚠️ Partiel | backups suppr. 21/03 |
+| I7 | Erreurs TS dans les tests + lowlight Vitest | 🟠 IMPORTANT | ✅ Corrigé | 21/03/2026 |
 | D1 | Tests bas niveau absents | 🟡 DETTE | ❌ Ouvert | — |
 | D2 | E2E non bloquant | 🟡 DETTE | ❌ Ouvert | — |
 | D3 | ToolCallMessage zombie | 🟡 DETTE | ✅ Corrigé | 21/03/2026 |
-| D4 | supabaseClient.js non typé | 🟡 DETTE | ❌ Ouvert | — |
-| D5 | SystemMessageBuilder.ts.backup | 🟡 DETTE | ❌ Ouvert | — |
-| D6 | ChatHeader sans React.memo | 🟡 DETTE | ❌ Ouvert | — |
+| D4 | supabaseClient → `.ts` | 🟡 DETTE | ✅ Corrigé | 21/03/2026 |
+| D5 | SystemMessageBuilder.ts.backup | 🟡 DETTE | ✅ Corrigé | 21/03/2026 |
+| D6 | ChatHeader sans React.memo | 🟡 DETTE | ✅ Corrigé | 21/03/2026 |
 | D7 | Backup DB non configuré | 🟡 DETTE | ⚠️ À vérifier | — |
 | D8 | 2FA absent | 🟡 DETTE | ⚠️ Post-MVP | — |
 
@@ -612,12 +599,12 @@ L'application sera considérée **prête pour une mise en production professionn
 
 - [x] **0 violation `react-hooks/rules-of-hooks`** dans les fichiers de production ✅ 21/03/2026
 - [x] **0 endpoint debug** accessible sans authentification en production ✅ 21/03/2026
-- [x] **601/601 tests individuels passent** ✅ 21/03/2026 (2 fichiers pré-existants en erreur de mock → voir I7)
-- [x] **0 erreur ESLint** ✅ 20/03/2026 — batches 0–4 ([ESLINT-CORRECTION-ROADMAP.md](./ESLINT-CORRECTION-ROADMAP.md)) ; ~1011 **warnings** restants
+- [x] **620/620 tests individuels passent** (52 fichiers) ✅ 21/03/2026 — mock `lowlightInstance` + TS tests
+- [x] **0 erreur ESLint** ✅ 20/03/2026 — batches 0–4 ([ESLINT-CORRECTION-ROADMAP.md](./ESLINT-CORRECTION-ROADMAP.md)) ; ~1010 **warnings** restants
 - [ ] **4 tests E2E bloquants** dans la CI/CD
 - [ ] **`ClasseursPage.tsx` < 500 lignes** (ou décomposé en modules)
 - [ ] **`stream/route.ts` < 500 lignes** (ou décomposé en modules)
-- [ ] **Fichiers CSS backup supprimés**
+- [x] **Fichiers CSS `.backup` / `.old` / `.new` supprimés** (6 fichiers `src/styles/`) ✅ 21/03/2026 — consolidation design system / index CSS : voir I6
 - [ ] **Rate limiter Redis** actif
 - [ ] **SLA définis et alertes Sentry** configurées
 
@@ -626,5 +613,6 @@ L'application sera considérée **prête pour une mise en production professionn
 *Document créé le 20 mars 2026 — Données mesurées sur codebase live.*  
 *Mis à jour le 21 mars 2026 — Semaine 1 terminée : B1, B2, B3, I4, D3 résolus. Score 6.5 → 7.5/10.*  
 *Mis à jour le 20 mars 2026 — **B4 fermé** : 0 erreur ESLint (batches 0–4), ~1011 warnings ; tableau sécurité aligné (routes debug supprimées).*  
+*Mis à jour le 21 mars 2026 — **Semaine 2 terminée** : I3, D4–D6, items 12–13 (nettoyage), 14–16 (TS tests + lowlight mock), `React.memo` ChatHeader, `supabaseClient.ts`.*  
 *À mettre à jour à chaque correction d'item.*  
 *Référence : audit janvier 2026 dans `AUDIT-PRODUCTION-BRUTAL-2025-12-27.md`*

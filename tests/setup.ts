@@ -8,6 +8,16 @@ import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 
+// lowlight ESM + simpleLogger au chargement du module : mock global pour éviter les échecs de chargement Vitest
+vi.mock('@/utils/lowlightInstance', () => ({
+  default: {
+    highlight: vi.fn(() => ({ type: 'root', children: [] })),
+    highlightAuto: vi.fn(() => ({ type: 'root', children: [] })),
+    registered: vi.fn(() => true),
+    listLanguages: vi.fn(() => []),
+  },
+}));
+
 // Cleanup après chaque test
 afterEach(() => {
   cleanup();

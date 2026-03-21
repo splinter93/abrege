@@ -215,7 +215,7 @@ const mockMessageActions = {
   sendMessage: vi.fn().mockResolvedValue(undefined),
   editMessage: vi.fn().mockResolvedValue(undefined),
   isLoading: false,
-  error: null,
+  error: null as string | null,
   clearError: vi.fn()
 };
 
@@ -248,16 +248,23 @@ vi.mock('../ChatHeader', () => ({
 vi.mock('../ChatMessagesArea', () => ({
   default: ({ messages, onEditMessage }: { messages: ChatMessage[]; onEditMessage?: (id: string, content: string, index: number) => void }) => (
     <div data-testid="chat-messages-area">
-      {messages.map((msg, idx) => (
-        <div key={msg.id} data-testid={`message-${msg.id}`}>
-          {msg.content}
-          {onEditMessage && (
-            <button onClick={() => onEditMessage(msg.id, msg.content as string, idx)} data-testid={`edit-${msg.id}`}>
-              Edit
-            </button>
-          )}
-        </div>
-      ))}
+      {messages.map((msg, idx) => {
+        const messageKey = msg.id ?? `idx-${idx}`;
+        return (
+          <div key={messageKey} data-testid={`message-${messageKey}`}>
+            {msg.content}
+            {onEditMessage && (
+              <button
+                type="button"
+                onClick={() => onEditMessage(messageKey, msg.content as string, idx)}
+                data-testid={`edit-${messageKey}`}
+              >
+                Edit
+              </button>
+            )}
+          </div>
+        );
+      })}
     </div>
   )
 }));
@@ -304,6 +311,37 @@ vi.mock('@/utils/chatToast', () => ({
   chatSuccess: vi.fn()
 }));
 
+function createMockChatSession(overrides: Partial<ChatSession> = {}): ChatSession {
+  const now = new Date().toISOString();
+  return {
+    id: 'session-1',
+    user_id: 'user-1',
+    name: 'Test Session',
+    agent_id: 'agent-1',
+    is_active: true,
+    metadata: {},
+    created_at: now,
+    updated_at: now,
+    last_message_at: null,
+    is_empty: false,
+    ...overrides,
+  };
+}
+
+function createMockImageAttachment(): ImageAttachment {
+  const file = new File(['x'], 'test.png', { type: 'image/png' });
+  return {
+    id: 'img-1',
+    file,
+    previewUrl: 'blob:http://localhost/mock',
+    base64: 'data:image/png;base64,dGVzdA==',
+    fileName: 'test.png',
+    mimeType: 'image/png',
+    size: 1,
+    addedAt: Date.now(),
+  };
+}
+
 describe('[Integration] ChatFullscreenV2', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -342,14 +380,7 @@ describe('[Integration] ChatFullscreenV2', () => {
     });
 
     it('should auto-select last session if available', async () => {
-      const mockSession: ChatSession = {
-        id: 'session-1',
-        name: 'Test Session',
-        agent_id: 'agent-1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_empty: false
-      };
+      const mockSession = createMockChatSession();
       
       // Setup mock pour retourner les sessions
       const originalSelector = vi.fn((selector?: (state: typeof mockChatStore) => unknown) => {
@@ -379,14 +410,7 @@ describe('[Integration] ChatFullscreenV2', () => {
 
   describe('Envoi message', () => {
     it('should send message when send button clicked', async () => {
-      const mockSession: ChatSession = {
-        id: 'session-1',
-        name: 'Test Session',
-        agent_id: 'agent-1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_empty: false
-      };
+      const mockSession = createMockChatSession();
       
       mockChatStore.currentSession = mockSession;
       mockChatStore.selectedAgent = { id: 'agent-1', name: 'Test Agent', model: 'gpt-4' } as Agent;
@@ -409,14 +433,7 @@ describe('[Integration] ChatFullscreenV2', () => {
     });
 
     it('should handle message with images', async () => {
-      const mockSession: ChatSession = {
-        id: 'session-1',
-        name: 'Test Session',
-        agent_id: 'agent-1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_empty: false
-      };
+      const mockSession = createMockChatSession();
       
       mockChatStore.currentSession = mockSession;
       mockChatStore.selectedAgent = { id: 'agent-1', name: 'Test Agent', model: 'gpt-4' } as Agent;
@@ -424,9 +441,7 @@ describe('[Integration] ChatFullscreenV2', () => {
       render(<ChatFullscreenV2 />);
       
       // Simuler envoi avec images (via mockMessageActions.sendMessage)
-      const images: ImageAttachment[] = [
-        { base64: 'data:image/png;base64,test', fileName: 'test.png' }
-      ];
+      const images: ImageAttachment[] = [createMockImageAttachment()];
       
       await act(async () => {
         await mockMessageActions.sendMessage('Test message', images);
@@ -438,14 +453,7 @@ describe('[Integration] ChatFullscreenV2', () => {
 
   describe('Édition message', () => {
     it('should enter edit mode when edit button clicked', async () => {
-      const mockSession: ChatSession = {
-        id: 'session-1',
-        name: 'Test Session',
-        agent_id: 'agent-1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_empty: false
-      };
+      const mockSession = createMockChatSession();
       
       const mockMessage: ChatMessage = {
         id: 'msg-1',
@@ -474,14 +482,7 @@ describe('[Integration] ChatFullscreenV2', () => {
     });
 
     it('should send edited message', async () => {
-      const mockSession: ChatSession = {
-        id: 'session-1',
-        name: 'Test Session',
-        agent_id: 'agent-1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_empty: false
-      };
+      const mockSession = createMockChatSession();
       
       mockChatStore.currentSession = mockSession;
       mockChatStore.editingMessage = {
@@ -505,23 +506,8 @@ describe('[Integration] ChatFullscreenV2', () => {
 
   describe('Changement session', () => {
     it('should clear messages when session changes', async () => {
-      const session1: ChatSession = {
-        id: 'session-1',
-        name: 'Session 1',
-        agent_id: 'agent-1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_empty: false
-      };
-      
-      const session2: ChatSession = {
-        id: 'session-2',
-        name: 'Session 2',
-        agent_id: 'agent-1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_empty: false
-      };
+      const session1 = createMockChatSession({ id: 'session-1', name: 'Session 1' });
+      const session2 = createMockChatSession({ id: 'session-2', name: 'Session 2' });
       
       mockChatStore.currentSession = session1;
       mockInfiniteMessages.messages = [
@@ -545,14 +531,7 @@ describe('[Integration] ChatFullscreenV2', () => {
 
   describe('Canva management', () => {
     it('should open canva when button clicked', async () => {
-      const mockSession: ChatSession = {
-        id: 'session-1',
-        name: 'Test Session',
-        agent_id: 'agent-1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_empty: false
-      };
+      const mockSession = createMockChatSession();
       
       mockChatStore.currentSession = mockSession;
       mockCanvaStore.openCanva.mockResolvedValue({
@@ -603,14 +582,7 @@ describe('[Integration] ChatFullscreenV2', () => {
 
   describe('Erreurs streaming', () => {
     it('should render without crashing when sendMessage can fail', async () => {
-      const mockSession: ChatSession = {
-        id: 'session-1',
-        name: 'Test Session',
-        agent_id: 'agent-1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_empty: false
-      };
+      const mockSession = createMockChatSession();
       
       mockChatStore.currentSession = mockSession;
       

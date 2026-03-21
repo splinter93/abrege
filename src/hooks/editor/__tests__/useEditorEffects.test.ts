@@ -8,8 +8,10 @@
  * - Intégration avec useEditorSyncEffects et useEditorSaveEffects
  */
 
+import React from 'react';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
+import { getDefaultShareSettings } from '@/types/sharing';
 import { useEditorEffects } from '../useEditorEffects';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import type { EditorState } from '../useEditorState';
@@ -114,12 +116,18 @@ describe('[useEditorEffects] Hook', () => {
   } as unknown as TiptapEditor;
 
   const mockEditorState: EditorState = {
-    document: { title: 'Test Title', noteLoaded: true },
+    document: { title: 'Test Title', noteLoaded: true, forceTOCUpdate: 0 },
     headerImage: { url: null, offset: 0, blur: 0, overlay: 0, titleInImage: false },
     menus: { imageMenuOpen: false, imageMenuTarget: 'content', kebabOpen: false, kebabPos: { top: 0, left: 0 } },
     ui: { previewMode: false, a4Mode: false, fullWidth: false, slashLang: 'en', showToolbar: true },
-    contextMenu: { open: false, position: { x: 0, y: 0 }, nodeType: '', hasSelection: false, nodePosition: 0 },
-    shareSettings: { visibility: 'private' },
+    contextMenu: {
+      isOpen: false,
+      position: { x: 0, y: 0 },
+      nodeType: '',
+      hasSelection: false,
+      nodePosition: 0,
+    },
+    shareSettings: getDefaultShareSettings(),
     internal: { isUpdatingFromStore: false },
     setTitle: vi.fn(),
     setNoteLoaded: vi.fn(),
@@ -156,14 +164,14 @@ describe('[useEditorEffects] Hook', () => {
     handleSave: vi.fn(),
     handleSlashCommandInsert: vi.fn(),
     handleImageInsert: vi.fn(),
-    updateA4Mode: vi.fn(),
-    updateFullWidth: vi.fn(),
-    updateSlashLang: vi.fn(),
-    updateFontFamily: vi.fn(),
-    updateHeaderImage: vi.fn(),
-    updateHeaderImageOffset: vi.fn(),
-    updateHeaderImageBlur: vi.fn(),
-    updateHeaderImageOverlay: vi.fn(),
+    updateFontInDb: vi.fn(),
+    handleFontChange: vi.fn(),
+    handleA4ModeChange: vi.fn(),
+    handleSlashLangChange: vi.fn(),
+    handleFullWidthChange: vi.fn(),
+    updateHeaderOffset: vi.fn(),
+    updateHeaderBlur: vi.fn(),
+    updateHeaderOverlay: vi.fn(),
     updateTitleInImage: vi.fn(),
   };
 
@@ -182,8 +190,8 @@ describe('[useEditorEffects] Hook', () => {
     content: '# Test content',
     isReadonly: false,
     editorState: mockEditorState,
-    kebabBtnRef: { current: null },
-    slashMenuRef: { current: null },
+    kebabBtnRef: React.createRef<HTMLButtonElement>() as React.RefObject<HTMLButtonElement>,
+    slashMenuRef: { current: null } as React.RefObject<import('@/components/EditorSlashMenu').EditorSlashMenuHandle | null>,
     handlers: mockHandlers,
   };
 

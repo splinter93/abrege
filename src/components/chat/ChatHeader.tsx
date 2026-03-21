@@ -48,7 +48,7 @@ export interface ChatHeaderProps {
  * Header du chat
  * Affiche les contrôles principaux (sidebar, agent, reduce)
  */
-const ChatHeader: React.FC<ChatHeaderProps> = ({
+const ChatHeaderComponent: React.FC<ChatHeaderProps> = ({
   sidebarOpen,
   onToggleSidebar,
   selectedAgent,
@@ -212,6 +212,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     </div>
   );
 };
+
+ChatHeaderComponent.displayName = 'ChatHeader';
+
+const ChatHeader = React.memo(ChatHeaderComponent);
 
 export default ChatHeader;
 
