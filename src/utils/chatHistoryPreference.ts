@@ -1,13 +1,13 @@
 export const HISTORY_PREF_KEY = 'chat-max-history-messages';
 
-export const HISTORY_DEFAULT = 40;
+export const HISTORY_DEFAULT = 60;
 export const HISTORY_MIN = 20;
 export const HISTORY_MAX = 80;
 
 export const HISTORY_PRESETS = [
   { value: 20, label: 'Léger', description: '20 messages' },
-  { value: 40, label: 'Équilibré', description: '40 messages (défaut)' },
-  { value: 60, label: 'Détaillé', description: '60 messages' },
+  { value: 40, label: 'Équilibré', description: '40 messages' },
+  { value: 60, label: 'Détaillé', description: '60 messages (défaut)' },
   { value: 80, label: 'Exhaustif', description: '80 messages' },
 ] as const;
 

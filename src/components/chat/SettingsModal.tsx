@@ -78,7 +78,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [selectedColorPalette, setSelectedColorPalette] = useState<string>('soft-dark');
   // PDF Parser (General) : railway = Hybrid Parser v4, mistral = Mistral OCR
   const [selectedPdfParser, setSelectedPdfParser] = useState<string>('railway');
-  // Mémoire de conversation (Général)
+  // Mémoire de conversation (Général) — default 60
   const [maxHistory, setMaxHistory] = useState<number>(HISTORY_DEFAULT);
 
   // Color palettes
