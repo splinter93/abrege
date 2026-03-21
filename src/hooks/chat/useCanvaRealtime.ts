@@ -208,13 +208,22 @@ export function useCanvaRealtime(chatSessionId: string | null, enabled = true) {
 
               // ✅ Si status='open', activer automatiquement le canva
               if (newCanva.status === 'open' && newCanva.note_id) {
+                // Guard : si ce canva est déjà le canva actif (ouvert par openCanva() dans le même
+                // contexte), ignorer — évite la double activation INSERT + openCanva() qui cause
+                // des états intermédiaires isCanvaOpen:false pendant le streaming.
+                const { activeCanvaId: currentActiveId, isCanvaOpen: currentIsOpen, switchCanva } = useCanvaStore.getState();
+                if (currentActiveId === canvaId && currentIsOpen) {
+                  logger.info(LogCategory.EDITOR, '[CanvaRealtime] ⏭️ INSERT ignored — canva already active (opened locally)', {
+                    canvaId
+                  });
+                  break;
+                }
+
                 logger.info(LogCategory.EDITOR, '[CanvaRealtime] 🔄 Auto-activating canva (status=open)', {
                   canvaId,
                   noteId: newCanva.note_id
                 });
                 
-                // Activer le canva (switchCanva charge la note et active le pane)
-                const { switchCanva } = useCanvaStore.getState();
                 switchCanva(canvaId, newCanva.note_id).catch((error) => {
                   logger.error(LogCategory.EDITOR, '[CanvaRealtime] ❌ Failed to auto-activate canva', {
                     canvaId,
