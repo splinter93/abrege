@@ -28,7 +28,7 @@ import type { CanvasSelection } from '@/types/canvasSelection';
 import { simpleLogger as logger } from '@/utils/logger';
 import { tokenManager } from '@/utils/tokenManager';
 import { filterPromptsInMessage } from '@/utils/promptPlaceholders';
-import { chatOperationLock } from '@/services/chat/ChatOperationLock';
+import { chatOperationLock, OperationTimeoutError } from '@/services/chat/ChatOperationLock';
 
   /**
    * Options du hook
@@ -409,8 +409,8 @@ export function useChatMessageActions(
       setIsLoading(false);
     }
       },
-      { 
-        timeout: 60000, // 60s timeout
+      {
+        timeout: 300000, // 5 min — covers long agentic runs (web search + multi-round canvas edits)
         operationName: 'sendMessage'
       }
     );
@@ -537,8 +537,13 @@ export function useChatMessageActions(
       logger.dev('[useChatMessageActions] ✅ Message édité renvoyé (flow normal)');
 
     } catch (err) {
-      messagesRef.current = historySnapshot;
-      replaceMessages(historySnapshot);
+      // A lock timeout means the LLM stream is still running in the background —
+      // rolling back to historySnapshot (pre-edit state) would wipe streamed messages.
+      // Skip the rollback and let the stream complete naturally.
+      if (!(err instanceof OperationTimeoutError)) {
+        messagesRef.current = historySnapshot;
+        replaceMessages(historySnapshot);
+      }
 
       const errorMessage = err instanceof Error ? err.message : 'Erreur édition message';
       setError(errorMessage);
