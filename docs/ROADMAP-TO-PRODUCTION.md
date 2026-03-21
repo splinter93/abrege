@@ -20,7 +20,7 @@ Depuis l'audit de janvier 2026, des régressions sont apparues et la dette techn
 
 | Zone | Score | Statut |
 |------|-------|--------|
-| Qualité TypeScript | 6/10 | ⚠️ Dégradé |
+| Qualité TypeScript | 7.5/10 | ✅ `npm run typecheck` + **`npm run typecheck:full`** (`tsc` racine) → **0 erreur** ; snippets `docs/**/*.ts` exclus du tsconfig racine |
 | ESLint / Code quality | 8/10 | ✅ **0 erreur** (`npm run lint`) — ~1010 **warnings** restants (chantier qualité continu) |
 | Tests | 7.5/10 | ✅ **620/620** tests, **52** fichiers ; mock global `lowlightInstance` + alignement TS des tests intégration (21/03) |
 | Sécurité | 8/10 | ✅ Routes debug supprimées |
@@ -614,5 +614,6 @@ L'application sera considérée **prête pour une mise en production professionn
 *Mis à jour le 21 mars 2026 — Semaine 1 terminée : B1, B2, B3, I4, D3 résolus. Score 6.5 → 7.5/10.*  
 *Mis à jour le 20 mars 2026 — **B4 fermé** : 0 erreur ESLint (batches 0–4), ~1011 warnings ; tableau sécurité aligné (routes debug supprimées).*  
 *Mis à jour le 21 mars 2026 — **Semaine 2 terminée** : I3, D4–D6, items 12–13 (nettoyage), 14–16 (TS tests + lowlight mock), `React.memo` ChatHeader, `supabaseClient.ts`.*  
+*Mis à jour le 21 mars 2026 — **TypeScript** : `typecheck:full` (`tsc` racine) à 0 erreur ; exclusion `docs/**/*.ts` ; correctifs Capacitor Keyboard, proxy TTS, tests services/chat/monitoring/voice.*  
 *À mettre à jour à chaque correction d'item.*  
 *Référence : audit janvier 2026 dans `AUDIT-PRODUCTION-BRUTAL-2025-12-27.md`*

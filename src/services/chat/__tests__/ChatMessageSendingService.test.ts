@@ -11,7 +11,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ChatMessageSendingService, ValidationError, AuthError } from '../ChatMessageSendingService';
-import type { ChatMessage, ChatSession, Agent } from '@/types/chat';
+import type { ChatMessage, ChatSession, Agent, UserMessage } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { LLMContext } from '@/types/llmContext';
 
@@ -38,32 +38,59 @@ describe('[ChatMessageSendingService]', () => {
   const mockUserId = 'test-user-456';
   const mockToken = 'mock-jwt-token';
 
+  const now = new Date().toISOString();
   const mockSession: ChatSession = {
     id: mockSessionId,
     user_id: mockUserId,
-    title: 'Test Session',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    name: 'Test Session',
+    agent_id: 'agent-123',
+    is_active: true,
+    metadata: {},
+    created_at: now,
+    updated_at: now,
+    last_message_at: null,
   };
 
   const mockAgent: Agent = {
     id: 'agent-123',
+    slug: 'test-agent',
     name: 'Test Agent',
     description: 'Test agent description',
-    system_prompt: 'You are a helpful assistant',
+    system_instructions: 'You are a helpful assistant',
     model: 'gpt-4',
     temperature: 0.7,
     max_tokens: 2000,
-    user_id: mockUserId,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    created_at: now,
+    updated_at: now,
   };
 
   const mockLLMContext: LLMContext = {
-    device: 'desktop',
-    browser: 'chrome',
-    os: 'macos'
+    sessionId: mockSessionId,
+    agentId: mockAgent.id,
+    time: {
+      local: 'Lun 1 janv., 12h00',
+      timezone: 'Europe/Paris',
+      timestamp: now,
+    },
+    user: { name: 'Test User', locale: 'fr' },
+    page: { type: 'chat', path: '/private/chat' },
+    device: { type: 'desktop', platform: 'macOS' },
   };
+
+  function createMockImageAttachment(overrides: Partial<ImageAttachment> = {}): ImageAttachment {
+    const file = new File(['x'], 'test.png', { type: 'image/png' });
+    return {
+      id: 'img-1',
+      file,
+      previewUrl: 'blob:mock',
+      base64: 'data:image/png;base64,iVBORw0KGgoAAAANS',
+      fileName: 'test.png',
+      mimeType: 'image/png',
+      size: 1,
+      addedAt: Date.now(),
+      ...overrides,
+    };
+  }
 
   const mockMessages: ChatMessage[] = [
     {
@@ -92,14 +119,20 @@ describe('[ChatMessageSendingService]', () => {
     // Mock tokenManager par défaut (succès)
     vi.mocked(tokenManager.getValidToken).mockResolvedValue({
       isValid: true,
-      token: mockToken
+      token: mockToken,
+      wasRefreshed: false,
     });
-    
-    // Mock chatContextBuilder par défaut (succès)
+
     vi.mocked(chatContextBuilder.build).mockReturnValue({
-      type: 'chat',
+      type: 'chat_session',
+      id: mockSessionId,
+      name: 'Chat Scrivia',
       sessionId: mockSessionId,
-      agentId: mockAgent.id
+      agentId: mockAgent.id,
+      uiContext: {
+        ...mockLLMContext,
+        sessionId: mockSessionId,
+      },
     });
   });
 
@@ -130,13 +163,7 @@ describe('[ChatMessageSendingService]', () => {
     });
 
     it('devrait valider message avec images', async () => {
-      const images: ImageAttachment[] = [
-        {
-          base64: 'data:image/png;base64,iVBORw0KGgoAAAANS',
-          fileName: 'test.png',
-          mimeType: 'image/png'
-        }
-      ];
+      const images: ImageAttachment[] = [createMockImageAttachment()];
 
       const result = await service.prepare({
         message: '',
@@ -150,8 +177,9 @@ describe('[ChatMessageSendingService]', () => {
 
       expect(result.success).toBe(true);
       expect(result.tempMessage).toBeDefined();
-      expect(result.tempMessage?.attachedImages).toBeDefined();
-      expect(result.tempMessage?.attachedImages?.length).toBe(1);
+      const userMsg = result.tempMessage as UserMessage;
+      expect(userMsg.attachedImages).toBeDefined();
+      expect(userMsg.attachedImages?.length).toBe(1);
     });
 
     it('devrait rejeter message vide sans images', async () => {
@@ -213,8 +241,9 @@ describe('[ChatMessageSendingService]', () => {
     it('devrait gérer erreur token auth', async () => {
       vi.mocked(tokenManager.getValidToken).mockResolvedValue({
         isValid: false,
-        token: null,
-        error: 'Token expired'
+        token: '',
+        wasRefreshed: false,
+        error: 'Token expired',
       });
 
       const result = await service.prepare({
@@ -269,9 +298,10 @@ describe('[ChatMessageSendingService]', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.tempMessage?.attachedNotes).toBeDefined();
-      expect(result.tempMessage?.attachedNotes?.length).toBe(1);
-      expect(result.tempMessage?.attachedNotes?.[0].id).toBe('note-1');
+      const userMsg = result.tempMessage as UserMessage;
+      expect(userMsg.attachedNotes).toBeDefined();
+      expect(userMsg.attachedNotes?.length).toBe(1);
+      expect(userMsg.attachedNotes?.[0].id).toBe('note-1');
     });
 
     it('devrait gérer MessageContent (array multi-modal)', async () => {
@@ -311,11 +341,7 @@ describe('[ChatMessageSendingService]', () => {
 
     it('devrait accepter message avec images', () => {
       const images: ImageAttachment[] = [
-        {
-          base64: 'data:image/png;base64,test',
-          fileName: 'test.png',
-          mimeType: 'image/png'
-        }
+        createMockImageAttachment({ base64: 'data:image/png;base64,test' }),
       ];
 
       const result = service.prepare({

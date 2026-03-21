@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AlertManager } from '../AlertManager';
+import { AlertManager, type AlertType } from '../AlertManager';
 import { metricsCollector } from '../MetricsCollector';
 
 // Mock MetricsCollector
@@ -51,7 +51,7 @@ global.fetch = vi.fn();
 
 describe('AlertManager', () => {
   let manager: AlertManager;
-  const mockMetricsCollector = metricsCollector as {
+  const mockMetricsCollector = metricsCollector as unknown as {
     getErrorRateStats: ReturnType<typeof vi.fn>;
     getLatencyStats: ReturnType<typeof vi.fn>;
     getRateLimitStats: ReturnType<typeof vi.fn>;
@@ -812,12 +812,12 @@ describe('AlertManager', () => {
       vi.setSystemTime(now);
 
       // Envoyer des alertes de types différents pour éviter l'anti-spam
-      const alertTypes: Array<{ type: 'error_rate_high' | 'latency_p95_high' | 'rate_limit_high' | 'db_query_slow' | 'cache_hit_rate_low' }> = [
+      const alertTypes: AlertType[] = [
         'error_rate_high',
         'latency_p95_high',
         'rate_limit_high',
         'db_query_slow',
-        'cache_hit_rate_low'
+        'cache_hit_rate_low',
       ];
 
       for (let i = 0; i < 5; i++) {

@@ -10,7 +10,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import WebSocket from 'ws';
 import { XAIVoiceProxyService } from '../XAIVoiceProxyService';
-import { XAIVoiceProxyConfig } from '../types';
+import type { XAIVoiceProxyConfig, ProxyConnectionState } from '../types';
+
+/** Constantes WebSocket (évite la dépendance au mock `ws` pour les littéraux de type) */
+const WS_CONNECTING = 0;
+const WS_OPEN = 1;
 
 // Mock logger
 vi.mock('../../src/utils/logger', () => ({
@@ -27,7 +31,7 @@ vi.mock('../../src/utils/logger', () => ({
 
 // Mock WebSocket
 const mockXAIWs = {
-  readyState: WebSocket.CONNECTING,
+  readyState: WS_CONNECTING,
   send: vi.fn(),
   close: vi.fn(),
   terminate: vi.fn(),
@@ -35,13 +39,17 @@ const mockXAIWs = {
 };
 
 vi.mock('ws', () => {
-  const mockWs = vi.fn().mockImplementation(() => mockXAIWs);
-  mockWs.Server = vi.fn();
-  mockWs.CONNECTING = 0;
-  mockWs.OPEN = 1;
-  mockWs.CLOSING = 2;
-  mockWs.CLOSED = 3;
-  return { default: mockWs, WebSocketServer: vi.fn() };
+  const MockWs = vi.fn(() => mockXAIWs);
+  return {
+    default: Object.assign(MockWs, {
+      Server: vi.fn(),
+      CONNECTING: 0,
+      OPEN: 1,
+      CLOSING: 2,
+      CLOSED: 3,
+    }),
+    WebSocketServer: vi.fn(),
+  };
 });
 
 describe('Connection Management (via XAIVoiceProxyService)', () => {
@@ -63,7 +71,7 @@ describe('Connection Management (via XAIVoiceProxyService)', () => {
     service = XAIVoiceProxyService.getInstance(config);
     
     // Reset mocks
-    mockXAIWs.readyState = WebSocket.CONNECTING;
+    mockXAIWs.readyState = WS_CONNECTING;
     mockXAIWs.send.mockClear();
     mockXAIWs.close.mockClear();
     mockXAIWs.terminate.mockClear();
@@ -115,13 +123,13 @@ describe('Connection Management (via XAIVoiceProxyService)', () => {
       // La logique de queue est dans handleClientMessage (lignes 507-517)
       // Si xaiWs n'est pas OPEN, message est mis en queue
       const connection = {
-        clientWs: { readyState: WebSocket.OPEN } as WebSocket,
+        clientWs: { readyState: WS_OPEN } as WebSocket,
         xaiWs: null as WebSocket | null,
         metadata: {
           connectionId: 'test-conn',
           connectedAt: Date.now(),
           lastActivity: Date.now(),
-          state: 'connecting_xai' as const,
+          state: 'connecting_xai' as ProxyConnectionState,
         },
         messageQueue: [] as string[],
         audioChunkCount: 0,
@@ -130,7 +138,7 @@ describe('Connection Management (via XAIVoiceProxyService)', () => {
       // Act: Simuler message reçu avant XAI prêt
       const message = JSON.stringify({ type: 'session.update', session: {} });
       // Dans le code réel, si xaiWs n'est pas OPEN, message est mis en queue (ligne 507-517)
-      if (!connection.xaiWs || connection.xaiWs.readyState !== WebSocket.OPEN) {
+      if (!connection.xaiWs || connection.xaiWs.readyState !== WS_OPEN) {
         connection.messageQueue.push(message);
       }
 
@@ -142,19 +150,19 @@ describe('Connection Management (via XAIVoiceProxyService)', () => {
     it('devrait envoyer messages de la queue après connexion XAI établie', () => {
       // Arrange
       const connection = {
-        clientWs: { readyState: WebSocket.OPEN } as WebSocket,
+        clientWs: { readyState: WS_OPEN } as WebSocket,
         xaiWs: mockXAIWs as unknown as WebSocket,
         metadata: {
           connectionId: 'test-conn',
           connectedAt: Date.now(),
           lastActivity: Date.now(),
-          state: 'connected' as const,
+          state: 'connected' as ProxyConnectionState,
         },
         messageQueue: ['message1', 'message2'] as string[],
         audioChunkCount: 0,
       };
 
-      mockXAIWs.readyState = WebSocket.OPEN;
+      mockXAIWs.readyState = WS_OPEN;
 
       // Act: Simuler connexion XAI établie (ligne 255-274)
       if (connection.messageQueue.length > 0) {
@@ -179,12 +187,12 @@ describe('Connection Management (via XAIVoiceProxyService)', () => {
       const mockPingInterval = setInterval(() => {}, 1000);
       const connection = {
         clientWs: {
-          readyState: WebSocket.OPEN,
+          readyState: WS_OPEN,
           close: vi.fn(),
           terminate: vi.fn(),
         } as unknown as WebSocket,
         xaiWs: {
-          readyState: WebSocket.OPEN,
+          readyState: WS_OPEN,
           close: vi.fn(),
           terminate: vi.fn(),
         } as unknown as WebSocket,
@@ -192,7 +200,7 @@ describe('Connection Management (via XAIVoiceProxyService)', () => {
           connectionId,
           connectedAt: Date.now(),
           lastActivity: Date.now(),
-          state: 'connected' as const,
+          state: 'connected' as ProxyConnectionState,
         },
         pingInterval: mockPingInterval,
         messageQueue: [],
@@ -212,16 +220,16 @@ describe('Connection Management (via XAIVoiceProxyService)', () => {
       }
 
       // Fermer WebSockets
-      if (connection.xaiWs && connection.xaiWs.readyState === WebSocket.OPEN) {
+      if (connection.xaiWs && connection.xaiWs.readyState === WS_OPEN) {
         connection.xaiWs.close(closeCode, reason);
       }
-      if (connection.clientWs.readyState === WebSocket.OPEN) {
+      if (connection.clientWs.readyState === WS_OPEN) {
         connection.clientWs.close(closeCode, reason);
       }
 
       // Retirer de Map
       connections.delete(connectionId);
-      connection.metadata.state = 'disconnected';
+      connection.metadata.state = 'disconnected' as ProxyConnectionState;
 
       // Assert
       expect(connection.xaiWs.close).toHaveBeenCalledWith(closeCode, reason);

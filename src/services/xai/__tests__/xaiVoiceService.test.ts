@@ -76,7 +76,7 @@ class MockWebSocket {
   }
 
   getCloseCalls(): Array<[number?, string?]> {
-    return this.closeSpy.mock.calls;
+    return this.closeSpy.mock.calls as Array<[number?, string?]>;
   }
 
   reset(): void {

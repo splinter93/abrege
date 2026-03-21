@@ -56,7 +56,7 @@ async function testMcpCallCounting() {
         'x-api-key': MCP_API_KEY
       },
       require_approval: 'never',
-      allowed_tools: null,
+      allowed_tools: undefined,
       name: 'synesia-agentz'
     }
   ];

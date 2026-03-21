@@ -117,6 +117,11 @@ import { historyManager } from '../HistoryManager';
 import { supabase } from '@/supabaseClient';
 import type { ChatMessage } from '@/types/chat';
 
+/** Le mock Vitest ajoute `reset` (absent du vrai singleton) pour isoler les tests */
+function resetHistoryMock(): void {
+  (historyManager as unknown as { reset: () => void }).reset();
+}
+
 /**
  * Tests unitaires pour HistoryManager
  * 
@@ -138,7 +143,7 @@ describe('HistoryManager', () => {
 
   beforeEach(async () => {
     // Réinitialiser le mock historyManager
-    historyManager.reset();
+    resetHistoryMock();
     
     // Créer un user de test (ou utiliser un existant)
     testUserId = 'test-user-' + Date.now();
@@ -160,7 +165,7 @@ describe('HistoryManager', () => {
 
   afterEach(async () => {
     // Réinitialiser le mock historyManager
-    historyManager.reset();
+    resetHistoryMock();
     
     // Cleanup: Supprimer la session (CASCADE supprime les messages)
     await supabase

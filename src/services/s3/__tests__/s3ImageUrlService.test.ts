@@ -30,7 +30,7 @@ describe('S3ImageUrlService', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     const module = await import('@/services/s3Service');
-    s3Service = module.s3Service;
+    s3Service = module.s3Service as unknown as { generateGetUrl: ReturnType<typeof vi.fn> };
   });
 
   describe('convertS3UrlsToPresigned', () => {

@@ -163,9 +163,10 @@ describe('[useEditorState] Hook', () => {
 
     it('should initialize with provided initialShareSettings', () => {
       const shareSettings: ShareSettings = {
-        visibility: 'public',
-        allowComments: true,
-        allowEdit: false,
+        visibility: 'link-public',
+        invited_users: [],
+        allow_edit: false,
+        allow_comments: true,
       };
       const { result } = renderHook(() =>
         useEditorState({ initialShareSettings: shareSettings })
@@ -290,9 +291,10 @@ describe('[useEditorState] Hook', () => {
       const { result } = renderHook(() => useEditorState());
 
       const newSettings: ShareSettings = {
-        visibility: 'public',
-        allowComments: true,
-        allowEdit: true,
+        visibility: 'link-public',
+        invited_users: [],
+        allow_edit: true,
+        allow_comments: true,
       };
 
       act(() => {

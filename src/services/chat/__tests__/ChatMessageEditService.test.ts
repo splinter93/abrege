@@ -31,31 +31,43 @@ describe('[ChatMessageEditService]', () => {
   const mockUserId = 'test-user-456';
   const mockToken = 'mock-jwt-token';
 
+  const now = new Date().toISOString();
   const mockSession: ChatSession = {
     id: mockSessionId,
     user_id: mockUserId,
-    title: 'Test Session',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    name: 'Test Session',
+    agent_id: 'agent-123',
+    is_active: true,
+    metadata: {},
+    created_at: now,
+    updated_at: now,
+    last_message_at: null,
   };
 
   const mockAgent: Agent = {
     id: 'agent-123',
+    slug: 'test-agent',
     name: 'Test Agent',
     description: 'Test agent description',
-    system_prompt: 'You are a helpful assistant',
+    system_instructions: 'You are a helpful assistant',
     model: 'gpt-4',
     temperature: 0.7,
     max_tokens: 2000,
-    user_id: mockUserId,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    created_at: now,
+    updated_at: now,
   };
 
   const mockLLMContext: LLMContext = {
-    device: 'desktop',
-    browser: 'chrome',
-    os: 'macos'
+    sessionId: mockSessionId,
+    agentId: mockAgent.id,
+    time: {
+      local: 'Lun 1 janv., 12h00',
+      timezone: 'Europe/Paris',
+      timestamp: now,
+    },
+    user: { name: 'Test User', locale: 'fr' },
+    page: { type: 'chat', path: '/private/chat' },
+    device: { type: 'desktop', platform: 'macOS' },
   };
 
   const createMockMessages = (count: number): ChatMessage[] => {
@@ -78,7 +90,8 @@ describe('[ChatMessageEditService]', () => {
     // Mock tokenManager par défaut (succès)
     vi.mocked(tokenManager.getValidToken).mockResolvedValue({
       isValid: true,
-      token: mockToken
+      token: mockToken,
+      wasRefreshed: false,
     });
     
     // Mock fetch par défaut (succès)
@@ -234,8 +247,9 @@ describe('[ChatMessageEditService]', () => {
     it('devrait gérer erreur token auth', async () => {
       vi.mocked(tokenManager.getValidToken).mockResolvedValue({
         isValid: false,
-        token: null,
-        error: 'Token expired'
+        token: '',
+        wasRefreshed: false,
+        error: 'Token expired',
       });
 
       const messages = createMockMessages(5);

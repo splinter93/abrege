@@ -14,6 +14,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useEditorHandlers } from '../useEditorHandlers';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import type { EditorState } from '../useEditorState';
+import { getDefaultShareSettings } from '@/types/sharing';
 
 // Mock dépendances
 vi.mock('@/services/V2UnifiedApi', () => ({
@@ -49,14 +50,14 @@ vi.mock('@/hooks/useEditorSave', () => ({
 
 vi.mock('../useEditorUpdateFunctions', () => ({
   useEditorUpdateFunctions: () => ({
-    updateA4Mode: vi.fn(),
-    updateFullWidth: vi.fn(),
-    updateSlashLang: vi.fn(),
-    updateFontFamily: vi.fn(),
-    updateHeaderImage: vi.fn(),
-    updateHeaderImageOffset: vi.fn(),
-    updateHeaderImageBlur: vi.fn(),
-    updateHeaderImageOverlay: vi.fn(),
+    updateFontInDb: vi.fn(),
+    handleFontChange: vi.fn(),
+    handleA4ModeChange: vi.fn(),
+    handleSlashLangChange: vi.fn(),
+    handleFullWidthChange: vi.fn(),
+    updateHeaderOffset: vi.fn(),
+    updateHeaderBlur: vi.fn(),
+    updateHeaderOverlay: vi.fn(),
     updateTitleInImage: vi.fn(),
   }),
 }));
@@ -87,12 +88,18 @@ describe('[useEditorHandlers] Hook', () => {
   } as unknown as TiptapEditor;
 
   const mockEditorState: EditorState = {
-    document: { title: 'Test Title', noteLoaded: true },
+    document: { title: 'Test Title', noteLoaded: true, forceTOCUpdate: 0 },
     headerImage: { url: null, offset: 0, blur: 0, overlay: 0, titleInImage: false },
     menus: { imageMenuOpen: false, imageMenuTarget: 'content', kebabOpen: false, kebabPos: { top: 0, left: 0 } },
     ui: { previewMode: false, a4Mode: false, fullWidth: false, slashLang: 'en', showToolbar: true },
-    contextMenu: { open: false, position: { x: 0, y: 0 }, nodeType: '', hasSelection: false, nodePosition: 0 },
-    shareSettings: { visibility: 'private' },
+    contextMenu: {
+      isOpen: false,
+      position: { x: 0, y: 0 },
+      nodeType: '',
+      hasSelection: false,
+      nodePosition: 0,
+    },
+    shareSettings: getDefaultShareSettings(),
     internal: { isUpdatingFromStore: false },
     setTitle: vi.fn(),
     setNoteLoaded: vi.fn(),
@@ -315,22 +322,22 @@ describe('[useEditorHandlers] Hook', () => {
   });
 
   describe('Update Functions', () => {
-    it('should have updateA4Mode function', () => {
+    it('should have handleA4ModeChange function', () => {
       const { result } = renderHook(() => useEditorHandlers(defaultOptions));
 
-      expect(typeof result.current.updateA4Mode).toBe('function');
+      expect(typeof result.current.handleA4ModeChange).toBe('function');
     });
 
-    it('should have updateFullWidth function', () => {
+    it('should have handleFullWidthChange function', () => {
       const { result } = renderHook(() => useEditorHandlers(defaultOptions));
 
-      expect(typeof result.current.updateFullWidth).toBe('function');
+      expect(typeof result.current.handleFullWidthChange).toBe('function');
     });
 
-    it('should have updateSlashLang function', () => {
+    it('should have handleSlashLangChange function', () => {
       const { result } = renderHook(() => useEditorHandlers(defaultOptions));
 
-      expect(typeof result.current.updateSlashLang).toBe('function');
+      expect(typeof result.current.handleSlashLangChange).toBe('function');
     });
   });
 });

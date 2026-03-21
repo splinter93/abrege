@@ -72,8 +72,8 @@ describe('/api/metrics', () => {
     // Importer les mocks
     const metricsModule = await import('@/services/monitoring/MetricsCollector');
     const alertModule = await import('@/services/monitoring/AlertManager');
-    mockMetricsCollector = metricsModule.metricsCollector as typeof mockMetricsCollector;
-    mockAlertManager = alertModule.alertManager as typeof mockAlertManager;
+    mockMetricsCollector = metricsModule.metricsCollector as unknown as typeof mockMetricsCollector;
+    mockAlertManager = alertModule.alertManager as unknown as typeof mockAlertManager;
     
     mockRequest = new NextRequest('http://localhost:3000/api/metrics');
 

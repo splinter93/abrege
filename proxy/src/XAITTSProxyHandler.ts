@@ -34,6 +34,10 @@ interface ActiveTTSConnection {
   pendingMessages: string[];
 }
 
+function isValidVoice(v: string): v is (typeof VALID_VOICES)[number] {
+  return (VALID_VOICES as readonly string[]).includes(v);
+}
+
 function parseQuery(url: string): Record<string, string> {
   const q = url.indexOf('?');
   if (q === -1) return {};
@@ -54,7 +58,7 @@ function parseQuery(url: string): Record<string, string> {
 
 function buildXAITTSUrl(params: Record<string, string>): string {
   const rawVoice = (params.voice || DEFAULT_VOICE).toLowerCase();
-  const voice = VALID_VOICES.includes(rawVoice) ? rawVoice : DEFAULT_VOICE;
+  const voice = isValidVoice(rawVoice) ? rawVoice : DEFAULT_VOICE;
   const codec = params.codec || DEFAULT_CODEC;
   const sampleRate = params.sample_rate || String(DEFAULT_SAMPLE_RATE);
   const bitRate = params.bit_rate || String(DEFAULT_BIT_RATE);

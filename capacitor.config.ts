@@ -2,6 +2,7 @@
 /// <reference types="@capacitor/status-bar" />
 
 import type { CapacitorConfig } from '@capacitor/cli';
+import { KeyboardStyle } from '@capacitor/keyboard';
 
 /**
  * Config Capacitor — App mobile Scrivia (Android).
@@ -45,7 +46,7 @@ const config: CapacitorConfig = {
     // - Android : "Native" (défaut) + adjustResize (manifest) -> la webview se redimensionne nativement.
     // - iOS : "None" (défaut) -> le clavier passe par-dessus -> géré via JS (CapacitorInit) + CSS.
     Keyboard: {
-      style: 'DARK',
+      style: KeyboardStyle.Dark,
       // Pas de resize forcé (car on n'est plus en mode overlay/fullscreen strict sur Android)
       resizeOnFullScreen: false,
     },
