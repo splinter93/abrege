@@ -135,8 +135,8 @@ export function truncateHistory(
   }
 
   const tailCount = maxMessages - headCount - syntheticCount;
-  let head = trimTrailingIncompleteAssistantToolCalls(messages.slice(0, headCount));
-  let tail = trimLeadingInvalidToolSequence(messages.slice(-tailCount));
+  const head = trimTrailingIncompleteAssistantToolCalls(messages.slice(0, headCount));
+  const tail = trimLeadingInvalidToolSequence(messages.slice(-tailCount));
 
   if (head.length === 0 || tail.length === 0) {
     return messages.slice(-maxMessages);
