@@ -145,7 +145,7 @@ export const GROQ_MODELS: GroqModelInfo[] = [
   },
   {
     id: 'openrouter/mimo-v2-flash',
-    name: 'MiMo-V2-Flash',
+    name: 'Xiaomi MiMo-V2-Flash',
     category: 'liminality',
     provider: 'liminality',
     capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
@@ -171,7 +171,7 @@ export const GROQ_MODELS: GroqModelInfo[] = [
   },
   {
     id: 'openrouter/kimi-k2.5',
-    name: 'Kimi K2.5 Thinking',
+    name: 'Kimi K2.5',
     category: 'liminality',
     provider: 'liminality',
     capabilities: ['text', 'images', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
@@ -184,7 +184,7 @@ export const GROQ_MODELS: GroqModelInfo[] = [
   },
   {
     id: 'fireworks/kimi-k2p5',
-    name: 'Kimi K2.5 P (Fireworks)',
+    name: 'Kimi K2.5(Fireworks)',
     category: 'liminality',
     provider: 'liminality',
     capabilities: ['text', 'images', 'function_calling', 'reasoning', 'streaming', 'structured_output'],

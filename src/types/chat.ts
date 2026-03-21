@@ -19,7 +19,6 @@ export interface Agent {
   provider?: string;
   system_instructions?: string;
   context_template?: string;
-  personality?: string;
   expertise?: string[];
   temperature?: number;
   max_tokens?: number;

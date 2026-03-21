@@ -188,7 +188,6 @@ Scrivia est une plateforme de gestion de connaissances et d'écriture qui combin
 - `max_tokens` (INTEGER, DEFAULT 4000)
 - `system_instructions` (TEXT)
 - `context_template` (TEXT)
-- `personality` (TEXT)
 - `expertise` (TEXT[])
 - `capabilities` (JSONB)
 - `api_config` (JSONB)

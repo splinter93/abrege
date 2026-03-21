@@ -19,7 +19,6 @@ export interface AgentConfig {
   parallel_tool_calls?: boolean;
   system_instructions?: string;
   context_template?: string;
-  personality?: string;
   expertise?: string[];
   capabilities?: string[]; // Legacy
   api_v2_capabilities?: string[];

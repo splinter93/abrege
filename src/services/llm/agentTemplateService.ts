@@ -10,10 +10,8 @@ export interface AgentTemplateConfig {
   // Instructions et comportement
   system_instructions?: string;
   context_template?: string;
-  personality?: string;
-  expertise?: string[];
   
-  // Capacités
+  // Capacités (tool routing — ne pas injecter en texte dans le system message)
   capabilities?: string[];
   api_v2_capabilities?: string[];
   
@@ -50,9 +48,6 @@ export interface RenderedTemplate {
   content: string;
   hasCustomInstructions: boolean;
   hasContextTemplate: boolean;
-  hasPersonality: boolean;
-  hasExpertise: boolean;
-  hasCapabilities: boolean;
   hasApiV2Capabilities: boolean;
   hasUIContext: boolean;
 }
@@ -83,9 +78,6 @@ export class AgentTemplateService {
     let content = '';
     let hasCustomInstructions = false;
     let hasContextTemplate = false;
-    let hasPersonality = false;
-    let hasExpertise = false;
-    let hasCapabilities = false;
     let hasApiV2Capabilities = false;
     let hasUIContext = false;
 
@@ -122,57 +114,18 @@ export class AgentTemplateService {
     if (contextResult.contextSection) {
       content = `${content}\n\n${contextResult.contextSection}`;
       hasUIContext = true;
-      
-      // ✅ SIMPLIFIÉ : Logs réduits
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev(`[AgentTemplate] 🖥️ Contexte UI injecté`);
-      }
+      logger.dev(`[AgentTemplate] 🖥️ Contexte UI injecté`);
     }
 
-    // 4. Personnalité
-    if (agentConfig.personality) {
-      content += `\n\n## Personnalité\n${agentConfig.personality}`;
-      hasPersonality = true;
-      logger.dev(`[AgentTemplate] 🎭 Personnalité ajoutée`);
-    }
-
-    // 5. Domaines d'expertise
-    if (agentConfig.expertise && agentConfig.expertise.length > 0) {
-      const expertiseList = agentConfig.expertise.filter(e => e?.trim()).join(', ');
-      if (expertiseList) {
-        content += `\n\n## Domaines d'expertise\n${expertiseList}`;
-        hasExpertise = true;
-        logger.dev(`[AgentTemplate] 🎓 Expertise ajoutée`);
-      }
-    }
-
-    // 6. Capacités
-    if (agentConfig.capabilities && agentConfig.capabilities.length > 0) {
-      const capabilitiesList = agentConfig.capabilities.filter(c => c?.trim()).join(', ');
-      if (capabilitiesList) {
-        content += `\n\n## Capacités\n${capabilitiesList}`;
-        hasCapabilities = true;
-        logger.dev(`[AgentTemplate] 🔧 Capacités ajoutées`);
-      }
-    }
-
-    // 7. Capacités API v2
+    // 4. Capacités API v2 (tracking uniquement — pas d'injection en texte)
     if (agentConfig.api_v2_capabilities && agentConfig.api_v2_capabilities.length > 0) {
-      const apiCapabilitiesList = agentConfig.api_v2_capabilities.filter(c => c?.trim()).join(', ');
-      if (apiCapabilitiesList) {
-        content += `\n\n## Capacités API v2\n${apiCapabilitiesList}`;
-        hasApiV2Capabilities = true;
-        logger.dev(`[AgentTemplate] 🚀 Capacités API v2 ajoutées`);
-      }
+      hasApiV2Capabilities = true;
     }
 
     logger.dev(`[AgentTemplate] ✅ Template complet rendu (${content.length} chars)`, {
       hasCustomInstructions,
       hasContextTemplate,
       hasUIContext,
-      hasPersonality,
-      hasExpertise,
-      hasCapabilities,
       hasApiV2Capabilities
     });
 
@@ -180,9 +133,6 @@ export class AgentTemplateService {
       content: content.trim(),
       hasCustomInstructions,
       hasContextTemplate,
-      hasPersonality,
-      hasExpertise,
-      hasCapabilities,
       hasApiV2Capabilities,
       hasUIContext
     };
@@ -199,11 +149,7 @@ export class AgentTemplateService {
     let content = '';
     let hasCustomInstructions = false;
     let hasContextTemplate = false;
-    let hasPersonality = false;
-    let hasExpertise = false;
-    let hasCapabilities = false;
     let hasApiV2Capabilities = false;
-    let hasUIContext = false;
 
     // 1. Instructions système personnalisées
     const primaryInstructions = agentConfig.system_instructions?.trim();
@@ -228,44 +174,16 @@ export class AgentTemplateService {
       }
     }
 
-    // 3. Personnalité
-    if (agentConfig.personality) {
-      content += `\n\n## Personnalité\n${agentConfig.personality}`;
-      hasPersonality = true;
-      logger.dev(`[AgentTemplate] 🎭 Personnalité ajoutée`);
-    }
-
-    // 4. Domaines d'expertise
-    if (agentConfig.expertise && Array.isArray(agentConfig.expertise) && agentConfig.expertise.length > 0) {
-      content += `\n\n## Domaines d'expertise\n${agentConfig.expertise.join(', ')}`;
-      hasExpertise = true;
-      logger.dev(`[AgentTemplate] 🧠 Expertise ajoutée: ${agentConfig.expertise.join(', ')}`);
-    }
-
-    // 5. Capacités spéciales
-    if (agentConfig.capabilities && Array.isArray(agentConfig.capabilities) && agentConfig.capabilities.length > 0) {
-      content += `\n\n## Capacités spéciales\n${agentConfig.capabilities.join(', ')}`;
-      hasCapabilities = true;
-      logger.dev(`[AgentTemplate] 🚀 Capacités ajoutées: ${agentConfig.capabilities.join(', ')}`);
-    }
-
-    // 6. Capacités API v2
+    // 3. Capacités API v2 (tracking uniquement — pas d'injection en texte)
     if (agentConfig.api_v2_capabilities && Array.isArray(agentConfig.api_v2_capabilities) && agentConfig.api_v2_capabilities.length > 0) {
       hasApiV2Capabilities = true;
       logger.dev(`[AgentTemplate] 🔧 Capacités API v2 détectées: ${agentConfig.api_v2_capabilities.length} outils`);
-      
-      // 🔧 PLUS BESOIN D'INSTRUCTIONS D'AUTH - Le système gère ça automatiquement
-      // Les agents utilisent maintenant les services internes directement
-      // Plus d'appels HTTP, plus d'erreurs 401, plus de bypass tokens
     }
 
     return {
       content,
       hasCustomInstructions,
       hasContextTemplate,
-      hasPersonality,
-      hasExpertise,
-      hasCapabilities,
       hasApiV2Capabilities,
       hasUIContext: false
     };
@@ -323,18 +241,6 @@ export class AgentTemplateService {
 
     if (agentConfig.context_template) {
       summary.push(`✅ Template contextuel: ${agentConfig.context_template.length} caractères`);
-    }
-
-    if (agentConfig.personality) {
-      summary.push(`✅ Personnalité: ${agentConfig.personality.length} caractères`);
-    }
-
-    if (agentConfig.expertise?.length) {
-      summary.push(`✅ Expertise: ${agentConfig.expertise.length} domaines`);
-    }
-
-    if (agentConfig.capabilities?.length) {
-      summary.push(`✅ Capacités: ${agentConfig.capabilities.length} spécialités`);
     }
 
     if (agentConfig.api_v2_capabilities?.length) {

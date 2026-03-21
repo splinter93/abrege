@@ -120,54 +120,6 @@ export default function AgentTemplateManager({
             />
           </div>
 
-          {/* Personnalité */}
-          <div className="form-group">
-            <label className="form-label">
-              🎭 Personnalité
-            </label>
-            <textarea
-              className="form-textarea"
-              value={localConfig.personality || ''}
-              onChange={(e) => handleConfigChange('personality', e.target.value)}
-              placeholder="Décrivez la personnalité de votre agent..."
-              rows={3}
-            />
-          </div>
-
-          {/* Expertise */}
-          <div className="form-group">
-            <label className="form-label">
-              🧠 Domaines d'expertise
-              <span className="text-sm text-gray-500 ml-2">
-                (Séparés par des virgules)
-              </span>
-            </label>
-            <input
-              type="text"
-              className="form-input"
-              value={Array.isArray(localConfig.expertise) ? localConfig.expertise.join(', ') : ''}
-              onChange={(e) => handleArrayChange('expertise', e.target.value)}
-              placeholder="IA, Machine Learning, Développement web..."
-            />
-          </div>
-
-          {/* Capacités */}
-          <div className="form-group">
-            <label className="form-label">
-              🚀 Capacités spéciales
-              <span className="text-sm text-gray-500 ml-2">
-                (Séparées par des virgules)
-              </span>
-            </label>
-            <input
-              type="text"
-              className="form-input"
-              value={Array.isArray(localConfig.capabilities) ? localConfig.capabilities.join(', ') : ''}
-              onChange={(e) => handleArrayChange('capabilities', e.target.value)}
-              placeholder="Analyse de données, Génération de code..."
-            />
-          </div>
-
           {/* Capacités API v2 */}
           <div className="form-group">
             <label className="form-label">
@@ -362,18 +314,6 @@ export default function AgentTemplateManager({
               <div className="stat-item">
                 <span className="stat-label">Template contextuel:</span>
                 <span className="stat-value">{preview.hasContextTemplate ? '✅' : '❌'}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Personnalité:</span>
-                <span className="stat-value">{preview.hasPersonality ? '✅' : '❌'}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Expertise:</span>
-                <span className="stat-value">{preview.hasExpertise ? '✅' : '❌'}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Capacités:</span>
-                <span className="stat-value">{preview.hasCapabilities ? '✅' : '❌'}</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">API v2:</span>

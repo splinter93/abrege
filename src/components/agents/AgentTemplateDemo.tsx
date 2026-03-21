@@ -13,9 +13,7 @@ export default function AgentTemplateDemo() {
   const [agentConfig, setAgentConfig] = useState<AgentTemplateConfig>({
     system_instructions: 'Tu es un assistant spécialisé dans la gestion de notes et d\'organisation personnelle.',
     context_template: 'Contexte: {type} - {name} (ID: {id})\nContenu: {content}',
-    personality: 'Tu es organisé, méthodique et toujours prêt à aider avec des conseils pratiques.',
-    expertise: ['Organisation personnelle', 'Gestion de notes', 'Productivité'],
-    capabilities: ['Création de notes', 'Organisation de classeurs', 'Recherche intelligente'],
+    capabilities: ['text', 'function_calling'],
     api_v2_capabilities: ['create_note', 'list_classeurs', 'search_notes'],
     // Nouveaux paramètres LLM configurables
     model_variant: '120b',
@@ -204,24 +202,6 @@ export default function AgentTemplateDemo() {
                 </span>
                 <span className="text-sm text-gray-700">
                   Template contextuel: {agentConfig.context_template ? 'Configuré' : 'Non configuré'}
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <span className={agentConfig.personality ? 'text-green-500' : 'text-gray-400'}>
-                  {agentConfig.personality ? '✅' : '❌'}
-                </span>
-                <span className="text-sm text-gray-700">
-                  Personnalité: {agentConfig.personality ? 'Configurée' : 'Non configurée'}
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <span className={agentConfig.expertise?.length ? 'text-green-500' : 'text-gray-400'}>
-                  {agentConfig.expertise?.length ? '✅' : '❌'}
-                </span>
-                <span className="text-sm text-gray-700">
-                  Expertise: {agentConfig.expertise?.length || 0} domaines
                 </span>
               </div>
               

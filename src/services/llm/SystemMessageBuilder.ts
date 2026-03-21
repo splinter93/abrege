@@ -14,9 +14,6 @@ import { TTS_VOICE_MODE_SYSTEM_PROMPT } from '@/constants/ttsVoiceModePrompt';
 export interface AgentSystemConfig {
   system_instructions?: string;
   context_template?: string;
-  personality?: string;
-  expertise?: string[];
-  capabilities?: string[];
 }
 
 export interface SystemMessageContext {
@@ -34,9 +31,6 @@ export interface SystemMessageResult {
   content: string;
   hasCustomInstructions: boolean;
   hasContextTemplate: boolean;
-  hasPersonality: boolean;
-  hasExpertise: boolean;
-  hasCapabilities: boolean;
 }
 
 /**
@@ -61,9 +55,8 @@ export class SystemMessageBuilder {
    * Processus:
    * 1. Instructions système personnalisées (ou fallback)
    * 2. Injection contexte UI via ContextInjectionService
-   * 3. Template contextuel avec variables
-   * 4. Personnalité (optionnel)
-   * 5. Mode vocal (TTS) — si vocalMode === true, injecte les instructions speech tags
+   * 3. Template contextuel avec variables {{variable}}
+   * 4. Mode vocal (TTS) — si vocalMode === true, injecte les instructions speech tags
    */
   buildSystemMessage(
     agentConfig: AgentSystemConfig,
@@ -73,9 +66,6 @@ export class SystemMessageBuilder {
     let content = '';
     let hasCustomInstructions = false;
     let hasContextTemplate = false;
-    let hasPersonality = false;
-    let hasExpertise = false;
-    let hasCapabilities = false;
 
     try {
       // 1. Instructions système personnalisées (priorité haute)
@@ -154,14 +144,7 @@ export class SystemMessageBuilder {
         }
       }
 
-      // 4. Personnalité (optionnel)
-      if (agentConfig.personality?.trim()) {
-        content += `\n\n## Personnalité\n${agentConfig.personality.trim()}`;
-        hasPersonality = true;
-        logger.dev(`[SystemMessageBuilder] 🎭 Personnalité ajoutée`);
-      }
-
-      // 5. Mode vocal (TTS) — instructions speech tags uniquement si vocalMode activé
+      // 4. Mode vocal (TTS) — instructions speech tags uniquement si vocalMode activé
       const isVocalMode = context?.vocalMode === true;
       if (isVocalMode) {
         content += `\n\n---\n\n${TTS_VOICE_MODE_SYSTEM_PROMPT}`;
@@ -170,17 +153,13 @@ export class SystemMessageBuilder {
 
       logger.dev(`[SystemMessageBuilder] ✅ Message système construit (${content.length} chars)`, {
         hasCustomInstructions,
-        hasContextTemplate,
-        hasPersonality
+        hasContextTemplate
       });
 
       return {
         content: content.trim(),
         hasCustomInstructions,
-        hasContextTemplate,
-        hasPersonality,
-        hasExpertise: false, // Supprimé (redondant)
-        hasCapabilities: false // Supprimé (redondant)
+        hasContextTemplate
       };
 
     } catch (error) {
@@ -190,10 +169,7 @@ export class SystemMessageBuilder {
       return {
         content: fallbackTemplate,
         hasCustomInstructions: false,
-        hasContextTemplate: false,
-        hasPersonality: false,
-        hasExpertise: false,
-        hasCapabilities: false
+        hasContextTemplate: false
       };
     }
   }
@@ -256,16 +232,6 @@ export class SystemMessageBuilder {
     if (agentConfig.context_template?.trim()) {
       parts.push(`Template: ${agentConfig.context_template.trim().substring(0, 30)}...`);
     }
-    if (agentConfig.personality?.trim()) {
-      parts.push(`Personnalité: ${agentConfig.personality.trim().substring(0, 30)}...`);
-    }
-    if (agentConfig.expertise?.length) {
-      parts.push(`Expertise: ${agentConfig.expertise.length} domaines`);
-    }
-    if (agentConfig.capabilities?.length) {
-      parts.push(`Capacités: ${agentConfig.capabilities.length} items`);
-    }
-
     return parts.length > 0 ? parts.join(' | ') : 'Configuration par défaut';
   }
 }

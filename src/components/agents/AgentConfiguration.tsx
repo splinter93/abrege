@@ -199,21 +199,6 @@ export function AgentConfiguration({
           />
         </section>
 
-        {/* Personnalité */}
-        <section>
-          <label className={labelBase} htmlFor="agent-personality">
-            Personnalité
-          </label>
-          <textarea
-            id="agent-personality"
-            className={`${inputBase} resize-none`}
-            rows={3}
-            value={editedAgent.personality || ''}
-            onChange={e => onUpdateField('personality', e.target.value)}
-            placeholder="Ex: Pragmatique, empathique, spécialisé finance..."
-          />
-        </section>
-
         {/* Voix TTS + Langue */}
         <section>
           <label className={labelBase}>Voix & Langue (TTS)</label>
