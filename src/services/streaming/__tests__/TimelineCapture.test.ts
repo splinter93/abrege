@@ -39,6 +39,25 @@ describe('TimelineCapture.addPlanEvent', () => {
     }
   });
 
+  it('preserves title when a follow-up update omits title (execution steps)', () => {
+    const cap = new TimelineCapture();
+    cap.addPlanEvent({
+      title: 'Benchmark LLM Mars 2026',
+      steps: [{ id: 'a', content: 'A', status: 'pending' }],
+      toolCallId: 'call-1'
+    });
+    cap.addPlanEvent({
+      steps: [{ id: 'a', content: 'A', status: 'in_progress' }],
+      toolCallId: 'call-2'
+    });
+    const { items } = cap.getTimeline();
+    expect(items).toHaveLength(1);
+    if (items[0].type === 'plan') {
+      expect(items[0].title).toBe('Benchmark LLM Mars 2026');
+      expect(items[0].steps[0].status).toBe('in_progress');
+    }
+  });
+
   it('appends plan after text then replaces that plan only', () => {
     const cap = new TimelineCapture();
     cap.addTextEvent('hello');

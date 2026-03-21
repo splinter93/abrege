@@ -133,9 +133,14 @@ export class TimelineCapture {
     steps: Array<{ id: string; content: string; status: string }>;
     toolCallId?: string;
   }): void {
-    const newPlan: StreamPlanEvent = {
+    const incomingTitle =
+      typeof payload.title === 'string' && payload.title.trim() !== ''
+        ? payload.title.trim()
+        : undefined;
+
+    const buildPlan = (title: string | undefined): StreamPlanEvent => ({
       type: 'plan',
-      title: payload.title,
+      title,
       steps: payload.steps.map(s => ({
         id: s.id,
         content: s.content,
@@ -143,15 +148,16 @@ export class TimelineCapture {
       })),
       timestamp: Date.now() - this.startTime,
       ...(payload.toolCallId !== undefined && { toolCallId: payload.toolCallId })
-    };
+    });
 
     for (let i = this.items.length - 1; i >= 0; i--) {
       if (this.items[i].type === 'plan') {
-        this.items[i] = newPlan;
+        const prev = this.items[i] as StreamPlanEvent;
+        this.items[i] = buildPlan(incomingTitle ?? prev.title);
         return;
       }
     }
-    this.items.push(newPlan);
+    this.items.push(buildPlan(incomingTitle));
   }
 
   /**

@@ -41,10 +41,36 @@
   min-width: 0;
 }
 
+.plan-step-list-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.plan-step-list-completed-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-success, #22c55e);
+}
+
+.plan-step-list-completed-icon {
+  flex-shrink: 0;
+  color: var(--color-success, #22c55e);
+}
+
 .plan-step-list-counter {
   font-size: 12px;
   font-weight: 500;
   color: var(--chat-text-secondary, inherit);
+}
+
+.plan-step-list-counter--complete {
+  font-weight: 600;
+  color: var(--color-success, #22c55e);
 }
 
 .plan-step-list-items {

@@ -291,26 +291,44 @@ export function useStreamingState(): UseStreamingStateReturn {
     }) => {
       if (!payload.steps?.length) return;
 
-      const planItem: StreamTimelineItem = {
-        type: 'plan',
-        title: payload.title,
-        steps: payload.steps.map(s => ({
-          id: s.id,
-          content: s.content,
-          status: s.status as 'pending' | 'in_progress' | 'completed'
-        })),
-        timestamp: Date.now(),
-        ...(payload.toolCallId !== undefined && { toolCallId: payload.toolCallId })
-      };
+      const incomingTitle =
+        typeof payload.title === 'string' && payload.title.trim() !== ''
+          ? payload.title.trim()
+          : undefined;
 
       const replaceLastPlan = (items: StreamTimelineItem[]): StreamTimelineItem[] => {
         for (let i = items.length - 1; i >= 0; i--) {
           if (items[i].type === 'plan') {
+            const prev = items[i];
+            const mergedTitle =
+              incomingTitle ?? (prev.type === 'plan' ? prev.title : undefined);
+            const planItem: StreamTimelineItem = {
+              type: 'plan',
+              title: mergedTitle,
+              steps: payload.steps.map(s => ({
+                id: s.id,
+                content: s.content,
+                status: s.status as 'pending' | 'in_progress' | 'completed'
+              })),
+              timestamp: Date.now(),
+              ...(payload.toolCallId !== undefined && { toolCallId: payload.toolCallId })
+            };
             const next = [...items];
             next[i] = planItem;
             return next;
           }
         }
+        const planItem: StreamTimelineItem = {
+          type: 'plan',
+          title: incomingTitle,
+          steps: payload.steps.map(s => ({
+            id: s.id,
+            content: s.content,
+            status: s.status as 'pending' | 'in_progress' | 'completed'
+          })),
+          timestamp: Date.now(),
+          ...(payload.toolCallId !== undefined && { toolCallId: payload.toolCallId })
+        };
         return [...items, planItem];
       };
 
