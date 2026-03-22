@@ -786,6 +786,10 @@ export async function POST(request: NextRequest) {
             const toolCallsMap = new Map<string, ToolCall>(); // Accumuler par ID pour gérer les chunks
             let finishReason: string | null = null;
             
+            // ✅ Liminality callables : IDs déjà traités via internal_tool.start/done.
+            // Permet d'ignorer les mêmes tool_calls qui apparaissent ensuite dans l'event 'done'.
+            const liminalityInternalToolIds = new Set<string>();
+            
             // ✅ NOUVEAU : Stocker les mcp_calls pour les afficher dans la timeline
             let currentRoundMcpCalls: Array<{ server_label: string; name: string; arguments: Record<string, unknown>; output?: unknown }> = [];
 
@@ -833,6 +837,9 @@ export async function POST(request: NextRequest) {
                       toolCallId: startChunk.tool_call_id.substring(0, 8),
                       ...(startChunk.mcp_server && { mcp_server: startChunk.mcp_server })
                     });
+                    // Mémoriser l'ID : le même tool_call_id apparaîtra ensuite dans l'event 'done'
+                    // de Liminality → on l'ignorera pour éviter un doublon assistant_round_complete.
+                    liminalityInternalToolIds.add(startChunk.tool_call_id);
                     sendSSE({
                       type: 'assistant_round_complete',
                       content: '',
@@ -856,6 +863,8 @@ export async function POST(request: NextRequest) {
                       name: doneChunk.name,
                       ...(doneChunk.mcp_server && { mcp_server: doneChunk.mcp_server })
                     });
+                    // Garantir que l'ID est bien mémorisé même si .done arrive avant .start (rare mais possible)
+                    liminalityInternalToolIds.add(doneChunk.tool_call_id);
                     sendSSE({
                       type: 'tool_result',
                       toolCallId: doneChunk.tool_call_id,
@@ -927,6 +936,16 @@ export async function POST(request: NextRequest) {
                         hasArgs: !!tc.function?.arguments
                       });
                       continue; // ⚠️ Attendre le chunk suivant avec l'ID
+                    }
+                    
+                    // ✅ Liminality : ignorer les tool_calls déjà traités via internal_tool.start/done.
+                    // L'event 'done' de Synesia répète les callables exécutés nativement → doublon.
+                    if (liminalityInternalToolIds.has(tc.id)) {
+                      logger.debug(LogCategory.API, `[Stream Route] ⏭️ SKIP tool call Liminality déjà traité via internal_tool.*`, {
+                        id: tc.id,
+                        name: tc.function?.name
+                      });
+                      continue;
                     }
                     
                     // Extension custom pour MCP tools (alreadyExecuted, result)
