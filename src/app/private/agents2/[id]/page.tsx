@@ -4,7 +4,7 @@
  */
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import PageWithSidebarLayout from '@/components/PageWithSidebarLayout';
@@ -53,7 +53,10 @@ function AgentDetailContent() {
   const [editedAgent, setEditedAgent] = useState<Partial<SpecializedAgentConfig> | null>(null);
   const [pageLoading, setPageLoading] = useState(!isNew);
   const [savingAgent, setSavingAgent] = useState(false);
-  const [hasLocalChanges, setHasLocalChanges] = useState(false);
+  /** Agent existant : dérivé de edited vs selected (évite race React 18 sur setState). Nouvel agent : tout champ modifié. */
+  const [newAgentDirty, setNewAgentDirty] = useState(false);
+  const editedAgentRef = useRef<Partial<SpecializedAgentConfig> | null>(null);
+  editedAgentRef.current = editedAgent;
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [togglingFavorite, setTogglingFavorite] = useState(false);
@@ -141,6 +144,7 @@ function AgentDetailContent() {
         });
         setPageLoading(false);
         setLoadError(null);
+        setNewAgentDirty(false);
       }
       return;
     }
@@ -154,7 +158,7 @@ function AgentDetailContent() {
         if (cancelled) return;
         setSelectedAgent(fullAgent);
         setEditedAgent({ ...fullAgent });
-        setHasLocalChanges(false);
+        setNewAgentDirty(false);
         return loadAgentTools(fullAgent.id);
       })
       .catch(fetchError => {
@@ -189,6 +193,14 @@ function AgentDetailContent() {
     },
     []
   );
+
+  const hasLocalChanges = useMemo(() => {
+    if (!editedAgent) return false;
+    if (selectedAgent) {
+      return hasAgentChanges(selectedAgent, editedAgent);
+    }
+    return newAgentDirty;
+  }, [selectedAgent, editedAgent, hasAgentChanges, newAgentDirty]);
 
   const handleSaveAgent = useCallback(async () => {
     if (!editedAgent) return;
@@ -228,13 +240,13 @@ function AgentDetailContent() {
           const finalAgent = await agentsService.getAgent(identifier);
           setSelectedAgent(finalAgent);
           setEditedAgent({ ...finalAgent });
-          setHasLocalChanges(false);
+          setNewAgentDirty(false);
           await loadAgentTools(finalAgent.id);
           router.replace(`/private/agents2/${finalAgent.id}`);
         } else {
           setSelectedAgent(newAgent);
           setEditedAgent({ ...newAgent });
-          setHasLocalChanges(false);
+          setNewAgentDirty(false);
           await loadAgentTools(newAgent.id);
           router.replace(`/private/agents2/${newAgent.id}`);
         }
@@ -243,7 +255,7 @@ function AgentDetailContent() {
         const updatedAgent = await agentsService.patchAgent(identifier, editedAgent);
         setSelectedAgent(updatedAgent);
         setEditedAgent({ ...updatedAgent });
-        setHasLocalChanges(false);
+        setNewAgentDirty(false);
         /* Pas de loadAgentTools : les outils (OpenAPI, MCP, callables) n'ont pas changé */
       }
     } catch (error) {
@@ -267,7 +279,7 @@ function AgentDetailContent() {
   const handleCancelChanges = useCallback(() => {
     if (selectedAgent) {
       setEditedAgent({ ...selectedAgent });
-      setHasLocalChanges(false);
+      setNewAgentDirty(false);
     }
   }, [selectedAgent]);
 
@@ -312,36 +324,26 @@ function AgentDetailContent() {
 
   const handleFieldUpdate = useCallback(
     <K extends keyof SpecializedAgentConfig>(field: K, value: SpecializedAgentConfig[K]) => {
-      let computedNext: Partial<SpecializedAgentConfig> | null = null;
-      let skipUpdate = false;
+      const prevDraft = editedAgentRef.current;
 
-      setEditedAgent(prev => {
-        const base = prev ?? {};
-
-        if (
-          field === 'system_instructions_mentions' &&
-          prev !== null &&
-          areNoteMentionListsEqual(base.system_instructions_mentions, value as NoteMention[] | undefined)
-        ) {
-          skipUpdate = true;
-          return prev;
-        }
-
-        computedNext = { ...base, [field]: value };
-        return computedNext;
-      });
-
-      if (skipUpdate) {
+      if (
+        field === 'system_instructions_mentions' &&
+        prevDraft != null &&
+        areNoteMentionListsEqual(prevDraft.system_instructions_mentions, value as NoteMention[] | undefined)
+      ) {
         return;
       }
 
-      if (selectedAgent && computedNext) {
-        setHasLocalChanges(hasAgentChanges(selectedAgent, computedNext));
-      } else if (!selectedAgent) {
-        setHasLocalChanges(true);
+      setEditedAgent(prev => {
+        const base = prev ?? {};
+        return { ...base, [field]: value };
+      });
+
+      if (!selectedAgent) {
+        setNewAgentDirty(true);
       }
     },
-    [hasAgentChanges, selectedAgent]
+    [selectedAgent]
   );
 
   const handleLinkSchema = useCallback(
