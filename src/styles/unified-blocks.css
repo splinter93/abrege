@@ -657,6 +657,10 @@ body.chat-theme-glass .chat-markdown .u-block {
   border-radius: 12px !important; /* rounded-xl */
   overflow: hidden !important;
   filter: none !important;
+  /* Confinement dans la largeur du message — évite tout débordement horizontal */
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .chat-markdown .u-block--code .u-block__toolbar {
@@ -676,7 +680,10 @@ body.chat-theme-glass .chat-markdown .u-block {
   padding: 16px !important;
   flex: 1 !important;
   min-height: 0 !important;
-  overflow: auto !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
   font-family: var(--mono) !important;
   font-size: 13px !important;
   line-height: 1.8 !important;

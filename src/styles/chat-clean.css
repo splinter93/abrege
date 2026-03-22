@@ -2089,7 +2089,9 @@ body.chat-theme-glass .chatgpt-messages > div {
   flex-direction: column;
   align-items: flex-start;
   min-height: 0;
-  contain: layout style;
+  width: 100%;
+  min-width: 0;
+  /* contain: layout style retiré — bloque le recalcul de la largeur des blocs code enfants */
 }
 
 .chatgpt-assistant-anchor--streaming {
