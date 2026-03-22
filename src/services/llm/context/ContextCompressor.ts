@@ -2,6 +2,14 @@ import type { ChatMessage, ToolMessage } from '@/types/chat';
 import { hasToolCalls } from '@/types/chat';
 
 /**
+ * Inserted in place of compressed internal tool results (e.g. __plan_update).
+ * Worded so the LLM understands the status was recorded and it should continue
+ * without re-declaring the plan.
+ */
+export const INTERNAL_TOOL_COMPRESSED_MARKER =
+  '[Plan update acknowledged — step status was recorded. Content omitted from context to save tokens. Continue with the next step.]';
+
+/**
  * Retire en fin de préfixe les assistants avec tool_calls non suivis de messages tool dans ce même préfixe
  * (sinon plusieurs providers rejettent la requête).
  */
@@ -89,10 +97,14 @@ function findToolCompressCutoffIndex(messages: ChatMessage[]): number | null {
 /**
  * Remplace in-place le contenu des vieux tool results volumineux par un résumé court.
  * Les tool results des {@link RECENT_ROUNDS_PROTECTED} derniers rounds ne sont pas modifiés.
+ *
+ * @param alwaysCompressToolNames — noms d'outils dont l'historique est toujours compressé
+ *   avant le cutoff (seuil 0), ex. `__plan_update` pour limiter l'accumulation de feedbacks courts.
  */
 export function compressToolResults(
   messages: ChatMessage[],
-  threshold: number = TOOL_RESULT_THRESHOLD
+  threshold: number = TOOL_RESULT_THRESHOLD,
+  alwaysCompressToolNames: ReadonlySet<string> = new Set()
 ): void {
   const cutoff = findToolCompressCutoffIndex(messages);
   if (cutoff === null) {
@@ -107,11 +119,21 @@ export function compressToolResults(
     if (msg.role !== 'tool') {
       continue;
     }
+    const toolMsg = msg as ToolMessage;
     const content = msg.content ?? '';
+
+    if (alwaysCompressToolNames.has(toolMsg.name)) {
+      if (content === INTERNAL_TOOL_COMPRESSED_MARKER) {
+        continue;
+      }
+      msg.content = INTERNAL_TOOL_COMPRESSED_MARKER;
+      continue;
+    }
+
     if (content.length <= threshold) {
       continue;
     }
-    const success = msg.role === 'tool' ? (msg as ToolMessage).success : undefined;
+    const success = toolMsg.success;
     const originalLen = content.length;
     msg.content = `[Result compressed — success: ${String(success ?? 'unknown')}, length: ${originalLen} chars]`;
   }

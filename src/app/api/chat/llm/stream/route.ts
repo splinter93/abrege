@@ -10,6 +10,7 @@ import type { OpenApiEndpoint } from '@/services/llm/executors/OpenApiToolExecut
 import type { Tool, McpTool } from '@/services/llm/types/strictTypes';
 import type { ToolCall } from '@/services/llm/types/strictTypes';
 import { isMcpTool, isFunctionTool } from '@/services/llm/types/strictTypes';
+import { INTERNAL_TOOL_NAMES } from '@/services/llm/tools/internalTools';
 import type {
   InternalToolStartChunk,
   InternalToolDoneChunk,
@@ -30,6 +31,7 @@ import { metricsCollector } from '@/services/monitoring/MetricsCollector';
 import {
   compressToolResults,
   MAX_HISTORY_MESSAGES,
+  TOOL_RESULT_THRESHOLD,
   truncateHistory
 } from '@/services/llm/context/ContextCompressor';
 import { resolveAgentSystemInstructionNotes } from '@/services/llm/AgentMentionResolver';
@@ -268,8 +270,8 @@ export async function POST(request: NextRequest) {
       }
     );
     
-    // Injecter les instructions tool calls (règles JSON + contrat plan) — activé sur tous les agents
-    const systemMessage = addToolCallInstructions(systemMessageResult.content);
+    // Instructions tool calls + contrat plan : injectées après chargement des tools si __plan_update est disponible
+    const systemMessageBase = systemMessageResult.content;
 
     // Injecter les context messages (notes, mentions) via ContextInjectionService
     // Note: SystemMessageBuilder a déjà injecté le contexte UI dans le system message
@@ -280,7 +282,7 @@ export async function POST(request: NextRequest) {
     );
     
     logger.debug(LogCategory.API, '[Stream Route] 📝 Messages construits:', {
-      systemMessageLength: systemMessage.length,
+      systemMessageBaseLength: systemMessageBase.length,
       contextMessagesCount: contextInjectionResult.contextMessages.length,
       providersApplied: contextInjectionResult.metadata.providersApplied,
       agentName: finalAgentConfig?.name || 'default',
@@ -508,43 +510,6 @@ export async function POST(request: NextRequest) {
       provider = new GroqProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
     }
 
-    const messages: ChatMessage[] = ([
-      {
-        role: 'system',
-        content: systemMessage,
-        timestamp: new Date().toISOString()
-      },
-      ...sanitizedHistory,
-      // Injecter context messages (notes, mentions) via ContextInjectionService
-      ...contextInjectionResult.contextMessages,
-      // N'ajouter le message user que si pas en mode skip (avec images extraites)
-      ...(skipAddingUserMessage ? [] : [{
-        role: 'user' as const,
-        content: userMessageText,
-        timestamp: new Date().toISOString(),
-        ...(userMessageImages && userMessageImages.length > 0 && { attachedImages: userMessageImages })
-      }])
-    ]) as ChatMessage[];
-
-    // ✅ DEBUG : Logger les messages avant envoi au provider (surtout pour debug override)
-    const lastUserMessage = messages.filter(m => m.role === 'user').pop();
-    logger.info(LogCategory.API, '[Stream Route] 📋 Messages construits pour le provider', {
-      totalMessages: messages.length,
-      historyLength: sanitizedHistory.length,
-      hasUserMessage: !skipAddingUserMessage,
-      userMessageText: userMessageText.substring(0, 100) + (userMessageText.length > 100 ? '...' : ''),
-      userMessageHasImages: !!(userMessageImages && userMessageImages.length > 0),
-      userMessageImageCount: userMessageImages?.length || 0,
-      provider: providerType,
-      model: model,
-      messagesRoles: messages.map(m => m.role),
-      lastMessageRole: messages[messages.length - 1]?.role,
-      lastMessageHasImages: !!(messages[messages.length - 1] && 'attachedImages' in messages[messages.length - 1] && (messages[messages.length - 1] as { attachedImages?: unknown[] }).attachedImages?.length),
-      // ✅ CRITIQUE : Vérifier si le dernier message user a bien attachedImages
-      lastUserMessageHasAttachedImages: !!(lastUserMessage && 'attachedImages' in lastUserMessage && (lastUserMessage as { attachedImages?: unknown[] }).attachedImages?.length),
-      lastUserMessageAttachedImagesCount: lastUserMessage && 'attachedImages' in lastUserMessage ? ((lastUserMessage as { attachedImages?: unknown[] }).attachedImages?.length || 0) : 0
-    });
-
     // ✅ Charger les tools (OpenAPI + MCP) ET les endpoints
     let tools: Tool[] = [];
     const toolsMeta: {
@@ -635,7 +600,7 @@ export async function POST(request: NextRequest) {
         }
         
         // ✅ Internal tools (plan_update, etc.) — exécutés localement
-        const { INTERNAL_TOOLS, INTERNAL_TOOL_NAMES } = await import('@/services/llm/tools/internalTools');
+        const { INTERNAL_TOOLS } = await import('@/services/llm/tools/internalTools');
         tools.push(...INTERNAL_TOOLS);
 
         const mcpCount = tools.filter(isMcpTool).length;
@@ -668,6 +633,46 @@ export async function POST(request: NextRequest) {
     } else {
       logger.warn(LogCategory.API, `[Stream Route] ⚠️ PAS de context.agentId → 0 tools chargés`);
     }
+
+    const hasPlanTool = tools.some((t) => isFunctionTool(t) && t.function?.name === '__plan_update');
+    const systemMessage = hasPlanTool
+      ? addToolCallInstructions(systemMessageBase)
+      : systemMessageBase;
+
+    const messages: ChatMessage[] = ([
+      {
+        role: 'system',
+        content: systemMessage,
+        timestamp: new Date().toISOString()
+      },
+      ...sanitizedHistory,
+      ...contextInjectionResult.contextMessages,
+      ...(skipAddingUserMessage ? [] : [{
+        role: 'user' as const,
+        content: userMessageText,
+        timestamp: new Date().toISOString(),
+        ...(userMessageImages && userMessageImages.length > 0 && { attachedImages: userMessageImages })
+      }])
+    ]) as ChatMessage[];
+
+    const lastUserMessageForLog = messages.filter(m => m.role === 'user').pop();
+    logger.info(LogCategory.API, '[Stream Route] 📋 Messages construits pour le provider', {
+      totalMessages: messages.length,
+      historyLength: sanitizedHistory.length,
+      hasUserMessage: !skipAddingUserMessage,
+      hasPlanToolInstructions: hasPlanTool,
+      systemMessageLength: systemMessage.length,
+      userMessageText: userMessageText.substring(0, 100) + (userMessageText.length > 100 ? '...' : ''),
+      userMessageHasImages: !!(userMessageImages && userMessageImages.length > 0),
+      userMessageImageCount: userMessageImages?.length || 0,
+      provider: providerType,
+      model: model,
+      messagesRoles: messages.map(m => m.role),
+      lastMessageRole: messages[messages.length - 1]?.role,
+      lastMessageHasImages: !!(messages[messages.length - 1] && 'attachedImages' in messages[messages.length - 1] && (messages[messages.length - 1] as { attachedImages?: unknown[] }).attachedImages?.length),
+      lastUserMessageHasAttachedImages: !!(lastUserMessageForLog && 'attachedImages' in lastUserMessageForLog && (lastUserMessageForLog as { attachedImages?: unknown[] }).attachedImages?.length),
+      lastUserMessageAttachedImagesCount: lastUserMessageForLog && 'attachedImages' in lastUserMessageForLog ? ((lastUserMessageForLog as { attachedImages?: unknown[] }).attachedImages?.length || 0) : 0
+    });
 
     const toolsCtx: StreamToolsContext = {
       tools,
@@ -819,9 +824,10 @@ export async function POST(request: NextRequest) {
                 messagesCount: currentMessages.length
               });
               
+              const roundTools = forcedFinalRound ? [] : toolsCtx.tools;
               const streamCall = provider.callWithMessagesStream(
                 currentMessages,
-                toolsCtx.tools,
+                roundTools,
                 providerType === 'liminality' ? toolsCtx.synesiaCallables : undefined
               );
               
@@ -1295,8 +1301,6 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                 timestamp: Date.now()
               });
               
-              // ✅ Forcer tools vides et activer le flag de recovery
-              toolsCtx.tools = [];
               forcedFinalRound = true;
               // On continue la boucle pour que le LLM réponde
               continue;
@@ -1391,8 +1395,11 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                   }
 
                   let result = 'Plan updated and displayed to user.';
+                  let internalToolSuccess = true;
 
                   if (toolCall.function.name === '__plan_update') {
+                    const truncateStepContent = (s: string, max = 60): string =>
+                      s.length > max ? `${s.slice(0, max)}…` : s;
                     const steps = args.steps as Array<{ id: string; content: string; status: string }> | undefined;
                     if (Array.isArray(steps) && steps.length > 0) {
                       sendSSE({
@@ -1410,10 +1417,12 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
 
                       const parts: string[] = [`Plan updated (${completedCount}/${total} done).`];
                       if (inProgressStep) {
-                        parts.push(`In progress: "${inProgressStep.content}".`);
+                        parts.push(`In progress: "${truncateStepContent(String(inProgressStep.content ?? ''))}".`);
                       }
                       if (pendingSteps.length > 0) {
-                        parts.push(`Remaining: ${pendingSteps.map(s => `"${s.content}"`).join(', ')}.`);
+                        parts.push(
+                          `Remaining: ${pendingSteps.map(s => `"${truncateStepContent(String(s.content ?? ''))}"`).join(', ')}.`
+                        );
                       }
                       if (completedCount === total) {
                         parts.push('All steps completed — you may now deliver the final response.');
@@ -1422,6 +1431,9 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                       }
                       result = parts.join(' ');
                     } else {
+                      result =
+                        'Error: __plan_update requires at least one step. Declare your steps before executing.';
+                      internalToolSuccess = false;
                       logger.warn(LogCategory.API, '[Stream Route] __plan_update skipped: empty or invalid steps', {
                         toolCallId: toolCall.id
                       });
@@ -1439,7 +1451,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                     type: 'tool_result',
                     toolCallId: toolCall.id,
                     toolName: toolCall.function.name,
-                    success: true,
+                    success: internalToolSuccess,
                     result,
                     timestamp: Date.now(),
                     isInternal: true
@@ -1664,7 +1676,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             }
 
             // Continuer la boucle pour relancer le LLM avec les résultats
-            compressToolResults(currentMessages);
+            compressToolResults(currentMessages, TOOL_RESULT_THRESHOLD, INTERNAL_TOOL_NAMES);
             logger.debug(LogCategory.API,`[Stream Route] 🔄 Relance du LLM avec ${currentMessages.length} messages`);
           }
 

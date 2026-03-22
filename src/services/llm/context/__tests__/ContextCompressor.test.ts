@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { ChatMessage } from '@/types/chat';
 import { hasToolCalls } from '@/types/chat';
-import { compressToolResults, truncateHistory } from '../ContextCompressor';
+import {
+  compressToolResults,
+  INTERNAL_TOOL_COMPRESSED_MARKER,
+  truncateHistory
+} from '../ContextCompressor';
 
 function user(content: string): ChatMessage {
   return { role: 'user', content };
@@ -105,5 +109,25 @@ describe('compressToolResults', () => {
     expect(t0.tool_call_id).toBe('t0');
     expect(t0.name).toBe('fn');
     expect(t3.content).toBe(big);
+  });
+
+  it('compresses __plan_update tool results before cutoff regardless of length', () => {
+    const planFeedback = 'Plan updated (1/3 done). In progress: "x".';
+    const msgs: ChatMessage[] = [
+      assistantToolCalls('as0', ['t0']),
+      tool('t0', '__plan_update', planFeedback, true),
+      assistantToolCalls('as1', ['t1']),
+      tool('t1', '__plan_update', planFeedback, true),
+      assistantToolCalls('as2', ['t2']),
+      tool('t2', '__plan_update', planFeedback, true),
+      assistantToolCalls('as3', ['t3']),
+      tool('t3', '__plan_update', planFeedback, true)
+    ];
+    const planNames = new Set(['__plan_update']);
+    compressToolResults(msgs, 800, planNames);
+    const t0 = msgs[1] as { content: string };
+    const t3 = msgs[7] as { content: string };
+    expect(t0.content).toBe(INTERNAL_TOOL_COMPRESSED_MARKER);
+    expect(t3.content).toBe(planFeedback);
   });
 });

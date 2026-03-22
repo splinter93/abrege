@@ -1,158 +1,124 @@
 /**
- * Instructions spécifiques pour la génération de tool calls propres
- * À ajouter au system message des agents
+ * Instructions injectées dans le system message de chaque agent disposant de tools.
+ * Couvre : hygiene JSON des tool calls + protocole d'exécution des plans.
  */
 
 export const TOOL_CALL_INSTRUCTIONS = `
 
-## 🛠️ RÈGLES CRITIQUES POUR LES TOOL CALLS
+---
 
-### 1. Paramètres optionnels
-**IMPORTANT:** N'inclus JAMAIS un paramètre si sa valeur est \`null\`, \`undefined\` ou vide.
+## TOOL CALL RULES
 
-❌ MAUVAIS :
+### JSON parameters — strict hygiene
+
+- Only include parameters that are defined in the tool schema.
+- **Never** include a parameter whose value is \`null\`, \`undefined\`, or empty.
+- Omit optional parameters you don't have a value for — don't send null.
+- Respect exact types: number as number, string as string, boolean as true/false, array as [].
+
+**Bad:**
 \`\`\`json
-{
-  "team_id": "123",
-  "date_created_gt": null,
-  "date_updated_lt": null,
-  "archived": false
-}
+{ "team_id": "123", "date_gt": null, "archived": false }
 \`\`\`
 
-✅ BON :
+**Good:**
 \`\`\`json
-{
-  "team_id": "123"
-}
+{ "team_id": "123" }
 \`\`\`
 
-### 2. Respect du schéma
-- N'utilise QUE les paramètres définis dans le schéma du tool
-- Ne pas inventer de nouveaux paramètres
-- Respecte les types exacts (number, string, boolean, array)
+---
 
-### 3. Paramètres requis vs optionnels
-- Les paramètres **requis** doivent toujours être fournis
-- Les paramètres **optionnels** ne doivent être inclus que si tu as une valeur réelle
-- Si tu ne connais pas la valeur d'un paramètre optionnel, OMETS-LE complètement
+## NOTE SOURCE TYPES
 
-### 4. Types de données
-- **number**: Utilise un nombre, jamais null ou une string
-- **string**: Utilise une string, jamais null (omets le paramètre)
-- **boolean**: Utilise true/false, jamais null
-- **array**: Utilise [] si vide, jamais null
+When creating notes with \`createNote\`, use \`source_type\` to control rendering:
 
-### Exemples corrects :
+| source_type | Renders as | Use for |
+|---|---|---|
+| *(omit)* | Editable markdown | Default |
+| \`"plan"\` | Read-only execution plan | Multi-step tasks |
+| \`"html"\` | Sandboxed HTML iframe | Dashboards, visual artifacts |
+| \`"qcm"\` | Interactive quiz | Questionnaires |
 
-**Recherche simple :**
-\`\`\`json
-{
-  "team_id": "90151720827",
-  "page": 0
-}
-\`\`\`
-
-**Recherche avec filtres :**
-\`\`\`json
-{
-  "team_id": "90151720827",
-  "page": 0,
-  "statuses": ["in_progress", "pending"],
-  "assignees": ["user123"]
-}
-\`\`\`
-
-**Recherche par dates (seulement si tu connais les valeurs) :**
-\`\`\`json
-{
-  "team_id": "90151720827",
-  "page": 0,
-  "date_created_gt": 1704067200000,
-  "due_date_lt": 1709337600000
-}
-\`\`\`
-
-### Résumé
-🎯 **OMETS les paramètres optionnels plutôt que d'envoyer null**
-🎯 **Respecte le schéma exactement**
-🎯 **Utilise les bons types de données**
-
-## 📝 NOTE TYPES (source_type)
-
-When creating notes with \`createNote\`, you can specify a \`source_type\` to change how the note is rendered:
-
-| source_type | Description | Usage |
-|-------------|-------------|-------|
-| *(omit)* | Standard editable markdown note | Default behavior |
-| \`"plan"\` | Structured execution plan. Read-only by default in the editor. | Multi-step tasks, project plans |
-| \`"html"\` | Raw HTML rendered in a sandboxed iframe. | Dashboards, previews, artifacts |
-| \`"qcm"\` | Interactive quiz. Correct answers are marked \`[x]\`. | Questionnaires, evaluations |
-
-### Plan notes
-Use checkbox syntax with emojis for status:
+**Plan note syntax:**
 \`\`\`markdown
-- [ ] ⏳ Step pending
+- [ ] ⏳ Pending step
 - [ ] 🔄 Step in progress
-- [x] ✅ Step completed
-\`\`\`
-Update the note via \`updateNote\` as you progress through steps.
-
-### QCM notes
-Use H2 for questions and checkboxes for options. Mark correct answers with \`[x]\`:
-\`\`\`markdown
-## Question 1
-What is 2+2?
-
-- [ ] 3
-- [x] 4
-- [ ] 5
+- [x] ✅ Completed step
 \`\`\`
 
-### Plan update in chat — BINDING CONTRACT
+---
 
-For any multi-step task, you are **bound** to the following 4-rule protocol. No deviation.
+## PLAN EXECUTION PROTOCOL
 
-**Rule 1 — Declare the plan first (before any other action)**
-Before executing any step, call \`__plan_update\` once with ALL steps set to \`pending\`.
-This declares your work contract with the user.
+Use \`__plan_update\` to show the user your progress on any multi-step task.
 
-**Rule 2 — Mark each step \`in_progress\` before executing it**
-Immediately before starting a step, call \`__plan_update\` to set that step to \`in_progress\`.
-The user must always see what you are doing right now.
+### The strict execution order — memorize this
 
-**Rule 3 — Mark each step \`completed\` before moving to the next**
-After finishing a step (tools executed, result obtained), call \`__plan_update\` to mark it \`completed\`.
-Never start step N+1 without having marked step N as \`completed\`.
+For **every** step, follow this exact sequence:
 
-**Rule 4 — Never skip or reorder steps silently**
-If you must skip or reorder a step, call \`__plan_update\` to reflect the updated plan,
-then briefly explain the change in text before continuing.
-
-**Lifecycle example (3-step task):**
 \`\`\`
-1. __plan_update → [step1: pending, step2: pending, step3: pending]           ← declare
-2. __plan_update → [step1: in_progress, step2: pending, step3: pending]       ← before step 1
-3. (execute step 1 actions)
-4. __plan_update → [step1: completed, step2: in_progress, step3: pending]     ← done + next
-5. (execute step 2 actions)
-6. __plan_update → [step1: completed, step2: completed, step3: in_progress]
-7. (execute step 3 actions)
-8. __plan_update → [step1: completed, step2: completed, step3: completed]     ← all done
+1. __plan_update  →  mark step as "in_progress"
+2. call tool(s)   →  execute the step (no commentary yet)
+3. __plan_update  →  mark step as "completed"
+4. write text     →  describe what you found / what you did
+5. repeat for next step
 \`\`\`
 
-For complex tasks, also create a \`"plan"\` note AND use \`__plan_update\` for inline progress.
+**This order is non-negotiable.** The tool call MUST come after the in_progress update, and your analysis MUST come after the completed update.
+
+### The 4 rules
+
+**Rule 1 — Declare the full plan before doing anything**
+At the very start, call \`__plan_update\` once with every step set to \`pending\`.
+This is the only time you set all steps to pending. **Never reset the plan after this.**
+
+**Rule 2 — Mark a step \`in_progress\` BEFORE calling any tool for that step**
+This is mandatory, with no exceptions. If you call a tool without having marked the step \`in_progress\` first, you are violating the contract.
+
+**Rule 3 — Mark a step \`completed\` BEFORE writing your analysis**
+After the tool returns a result, immediately call \`__plan_update\` to mark it \`completed\`.
+Only then write your commentary or analysis for that step.
+Never start the next step without marking the current one \`completed\`.
+
+**Rule 4 — Never pre-write results you don't have yet**
+Do not write "I found X" or "The API returns Y" before you have called the tool and received its output.
+Write your analysis only after the tool result is in your context.
+
+### Lifecycle example — 3-step task
+
+\`\`\`
+__plan_update  →  [step1: pending,     step2: pending,     step3: pending]    ← declare once
+__plan_update  →  [step1: in_progress, step2: pending,     step3: pending]    ← before step 1 tools
+(call tools for step 1)
+__plan_update  →  [step1: completed,   step2: pending,     step3: pending]    ← after step 1 result
+(write analysis of step 1 results)
+
+__plan_update  →  [step1: completed,   step2: in_progress, step3: pending]    ← before step 2 tools
+(call tools for step 2)
+__plan_update  →  [step1: completed,   step2: completed,   step3: pending]    ← after step 2 result
+(write analysis of step 2 results)
+
+__plan_update  →  [step1: completed,   step2: completed,   step3: in_progress] ← before step 3 tools
+(call tools for step 3)
+__plan_update  →  [step1: completed,   step2: completed,   step3: completed]  ← done
+(write final summary)
+\`\`\`
+
+### What to never do
+
+- **Never** call a tool without having marked the step \`in_progress\` first.
+- **Never** write analysis text before calling the tool.
+- **Never** reset steps that are already \`completed\` back to \`pending\`.
+- **Never** silently skip or reorder steps. If you must, call \`__plan_update\` to reflect it and explain why.
 `;
 
 /**
- * Ajoute les instructions de tool calls au system message
+ * Ajoute les instructions de tool calls au system message.
+ * Idempotent — n'injecte pas deux fois si déjà présent.
  */
 export function addToolCallInstructions(systemMessage: string): string {
-  // Ne pas ajouter deux fois
-  if (systemMessage.includes('RÈGLES CRITIQUES POUR LES TOOL CALLS')) {
+  if (systemMessage.includes('TOOL CALL RULES')) {
     return systemMessage;
   }
-  
   return systemMessage + '\n\n' + TOOL_CALL_INSTRUCTIONS;
 }
-
