@@ -56,8 +56,12 @@ function getMessageIdentityKeys(message: ChatMessage): string[] {
   if (message.clientMessageId) {
     keys.push(`client:${message.clientMessageId}`);
   }
-  if (message.id) {
+  if (message.id && !message.id.startsWith('temp-') && !message.id.startsWith('pending-')) {
     keys.push(`id:${message.id}`);
+  }
+  // operation_id est présent sur les messages user (optimistic ET DB) → clé de dédup cross-tab
+  if (message.operation_id) {
+    keys.push(`op:${message.operation_id}`);
   }
   if (typeof message.sequence_number === 'number') {
     keys.push(`seq:${message.sequence_number}`);
@@ -256,24 +260,34 @@ export function useInfiniteMessages(
   }, []);
 
   /**
-   * 🔄 Upsert d'un message via identité stable (client/id/sequence/timestamp)
+   * 🔄 Upsert d'un message via identité stable (client/id/operation_id/sequence/timestamp).
+   *
+   * Supprime TOUTES les entrées partageant une clé avec le message entrant, puis insère
+   * à la position du premier match. Cela évite les doublons même en cas de race condition
+   * entre l'optimistic update, useChatMessagesRealtime et le callback onComplete.
    */
   const upsertMessage = useCallback((message: ChatMessage) => {
     const incomingKeys = new Set(getMessageIdentityKeys(message));
 
     setMessages(prev => {
-      const existingIndex = prev.findIndex(existing => {
-        const existingKeys = getMessageIdentityKeys(existing);
-        return existingKeys.some(key => incomingKeys.has(key));
-      });
+      const matchingIndices: number[] = [];
+      for (let i = 0; i < prev.length; i++) {
+        const existingKeys = getMessageIdentityKeys(prev[i]);
+        if (existingKeys.some(key => incomingKeys.has(key))) {
+          matchingIndices.push(i);
+        }
+      }
 
-      if (existingIndex === -1) {
+      if (matchingIndices.length === 0) {
         return [...prev, message];
       }
 
-      const nextMessages = [...prev];
-      nextMessages[existingIndex] = message;
-      return nextMessages;
+      // Remplace à la position du premier match, supprime les doublons éventuels.
+      const firstIdx = matchingIndices[0];
+      const matchSet = new Set(matchingIndices);
+      return prev
+        .map((msg, i) => (i === firstIdx ? message : msg))
+        .filter((_, i) => i === firstIdx || !matchSet.has(i));
     });
   }, []);
 

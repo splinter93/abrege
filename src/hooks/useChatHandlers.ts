@@ -59,6 +59,8 @@ interface ChatHandlersOptions {
   onToolCalls?: (toolCalls: ToolCall[], toolName: string) => void;
   onToolResult?: (toolName: string, result: unknown, success: boolean, toolCallId?: string) => void;
   onToolExecutionComplete?: (toolResults: ToolResult[]) => void;
+  /** Retourne l'operation_id de la bulle assistant en cours — pour déduplication Realtime echo */
+  getAssistantOperationId?: () => string | null;
 }
 
 interface ChatHandlersReturn {
@@ -211,6 +213,7 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
     // ✅ FIX BUG RÉPÉTITION: Ne PAS persister tool_calls sur message final
     // Les tool_calls ont déjà été exécutés et leurs résultats sont dans tool_results
     // Si on persiste tool_calls, le LLM les voit au prochain message et les ré-exécute
+    const assistantOperationId = options.getAssistantOperationId?.() ?? undefined;
     const messageToAdd = {
       role: 'assistant' as const,
       content: finalContent,
@@ -218,7 +221,8 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
       // tool_calls: undefined, // ❌ Ne pas persister (déjà résolus)
       tool_results: toolResults || [], // ✅ Garder seulement les résultats
       stream_timeline: cleanedTimeline, // ✅ Timeline nettoyée (sans tool_result individuels)
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      ...(assistantOperationId ? { operation_id: assistantOperationId } : {})
     };
 
     logger.dev('[useChatHandlers] 📝 Ajout du message final complet avec timeline enrichie:', {

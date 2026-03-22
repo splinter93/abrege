@@ -158,12 +158,6 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     enabled: !!currentSession?.id
   });
 
-  useChatMessagesRealtime(
-    currentSession?.id ?? null,
-    upsertInfiniteMessage,
-    removeInfiniteMessageById
-  );
-
   // 🎯 SCROLL AUTOMATION (centralisé dans useChatScroll)
   const { messagesEndRef, scrollToFollowStream } = useChatScroll({
     autoScroll: true,
@@ -177,12 +171,21 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
   // 🎯 NOUVEAUX HOOKS CUSTOM (logique extraite)
   const streamingState = useStreamingState();
   const pendingAssistantClientMessageIdRef = useRef<string | null>(null);
+  const pendingAssistantOperationIdRef = useRef<string | null>(null);
   const pendingAssistantStartTimeRef = useRef<number>(0);
   const infiniteMessagesRef = useRef<ChatMessage[]>(infiniteMessages);
 
   useEffect(() => {
     infiniteMessagesRef.current = infiniteMessages;
   }, [infiniteMessages]);
+
+  // Realtime sync messages — déclaré après infiniteMessagesRef pour pouvoir passer getLocalMessages
+  useChatMessagesRealtime(
+    currentSession?.id ?? null,
+    upsertInfiniteMessage,
+    removeInfiniteMessageById,
+    () => infiniteMessagesRef.current
+  );
 
   // Sync selectedAgent avec la liste agents (ex: voix ou langue mise à jour dans config agent)
   useEffect(() => {
@@ -200,19 +203,23 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
 
   const clearPendingAssistantTracking = useCallback(() => {
     pendingAssistantClientMessageIdRef.current = null;
+    pendingAssistantOperationIdRef.current = null;
     pendingAssistantStartTimeRef.current = 0;
   }, []);
 
   const createPendingAssistantMessage = useCallback(() => {
     const clientMessageId = `assistant-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const operationId = crypto.randomUUID();
     const startedAt = Date.now();
 
     pendingAssistantClientMessageIdRef.current = clientMessageId;
+    pendingAssistantOperationIdRef.current = operationId;
     pendingAssistantStartTimeRef.current = startedAt;
 
     upsertInfiniteMessage({
       id: `pending-${clientMessageId}`,
       clientMessageId,
+      operation_id: operationId, // ✅ Clé de dédup : permet à upsertMessage de matcher le Realtime echo
       role: 'assistant',
       content: '',
       timestamp: new Date(startedAt).toISOString(),
@@ -271,6 +278,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
   const { handleComplete, handleError, handleToolResult, handleToolExecutionComplete } = useChatHandlers({
     // TTS mode vocal : déclenché dans onStreamEnd (contenu depuis streamingContentRef), pas ici
     onMessageFinalContent: undefined,
+    getAssistantOperationId: () => pendingAssistantOperationIdRef.current,
     onComplete: async (
       fullContent,
       fullReasoning,
@@ -282,6 +290,8 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
       const clientMessageId = pendingAssistantClientMessageIdRef.current;
 
       if (clientMessageId) {
+        const assistantOpId =
+          persistedMessage?.operation_id ?? pendingAssistantOperationIdRef.current ?? undefined;
         const finalMessage: ChatMessage = {
           ...(persistedMessage ?? {
             id: `msg-${Date.now()}-assistant`,
@@ -289,6 +299,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
             timestamp: new Date().toISOString()
           }),
           clientMessageId,
+          ...(assistantOpId ? { operation_id: assistantOpId } : {}),
           role: 'assistant',
           content: fullContent,
           reasoning: fullReasoning,
@@ -297,7 +308,19 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
           isStreaming: false
         };
 
-        upsertInfiniteMessage(finalMessage);
+        const hasPendingBubble = infiniteMessagesRef.current.some(
+          (message) => message.clientMessageId === clientMessageId
+        );
+
+        if (hasPendingBubble) {
+          updateInfiniteMessageByClientId(clientMessageId, (message) => (
+            message.role === 'assistant'
+              ? { ...message, ...finalMessage, clientMessageId, isStreaming: false }
+              : message
+          ));
+        } else {
+          upsertInfiniteMessage(finalMessage);
+        }
       }
 
       clearPendingAssistantTracking();

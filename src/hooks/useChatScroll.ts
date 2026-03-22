@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import type { ChatMessage } from '@/types/chat';
 
 interface UseChatScrollOptions {
@@ -36,11 +36,13 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const prevMessagesRef = useRef(messages);
   const prevLayoutTriggerRef = useRef(layoutTrigger);
-  const lastFinalizedAssistantKeyRef = useRef<string | null>(null);
   const isScrollingProgrammaticallyRef = useRef(false);
   const scrollAnimationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const streamAnchorScrollTopRef = useRef<number | null>(null);
   const bottomSpacerHeightRef = useRef(0);
+  /** Offset contenu du dernier assistant (timeline / markdown) pendant le stream — compensation fin de stream */
+  const assistantStreamAnchorYRef = useRef<number | null>(null);
+  const prevLastAssistantWasStreamingRef = useRef(false);
 
   const getScrollContainer = useCallback((): HTMLElement | null => {
     return (
@@ -103,6 +105,58 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
 
     return getFollowScrollTop(container);
   }, [getFollowScrollTop, updateBottomSpacerForAnchor]);
+
+  /**
+   * Fin de stream : layout (reasoning, markdown final, actions). On compense scrollTop pour que
+   * le corps du message (ancre data-chat-stream-anchor) reste visuellement stable.
+   */
+  useLayoutEffect(() => {
+    if (!autoScroll || messages.length === 0) return;
+
+    const container = getScrollContainer();
+    if (!container) return;
+
+    const last = messages[messages.length - 1];
+    const assistants = container.querySelectorAll('.chatgpt-message-assistant');
+    const lastAssistant = assistants[assistants.length - 1] as HTMLElement | undefined;
+    const anchor = lastAssistant?.querySelector<HTMLElement>('[data-chat-stream-anchor]') ?? null;
+
+    const contentY = (el: HTMLElement) =>
+      el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+
+    if (last?.role !== 'assistant') {
+      assistantStreamAnchorYRef.current = null;
+      prevLastAssistantWasStreamingRef.current = false;
+      return;
+    }
+
+    const streaming = Boolean(last.isStreaming);
+
+    if (streaming) {
+      if (anchor) {
+        assistantStreamAnchorYRef.current = contentY(anchor);
+      }
+      prevLastAssistantWasStreamingRef.current = true;
+      return;
+    }
+
+    const wasStreaming = prevLastAssistantWasStreamingRef.current;
+    prevLastAssistantWasStreamingRef.current = false;
+
+    if (wasStreaming && anchor && assistantStreamAnchorYRef.current != null) {
+      const yAfter = contentY(anchor);
+      const delta = yAfter - assistantStreamAnchorYRef.current;
+      if (Math.abs(delta) > 0.5) {
+        isScrollingProgrammaticallyRef.current = true;
+        container.scrollTop += delta;
+        requestAnimationFrame(() => {
+          isScrollingProgrammaticallyRef.current = false;
+        });
+      }
+    }
+
+    assistantStreamAnchorYRef.current = null;
+  }, [messages, autoScroll, getScrollContainer]);
 
   // Détecter le scroll manuel de l'utilisateur
   useEffect(() => {
@@ -214,65 +268,8 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
   }, [messages, autoScroll, scrollToUserMessage]);
 
   useEffect(() => {
-    if (!autoScroll || messages.length === 0) return;
-    const currLast = messages[messages.length - 1];
-    const rawKey = currLast
-      ? currLast.clientMessageId || currLast.id || currLast.timestamp || null
-      : null;
-    const assistantKey: string | null = rawKey == null ? null : String(rawKey);
-    const assistantTimeline = currLast?.role === 'assistant'
-      ? currLast.stream_timeline || currLast.streamTimeline
-      : undefined;
-    const finalizedAssistantSignature = currLast?.role === 'assistant' &&
-      assistantKey &&
-      !currLast.isStreaming
-      ? [
-          assistantKey,
-          typeof currLast.sequence_number === 'number' ? currLast.sequence_number : 'pending',
-          currLast.timestamp ? String(currLast.timestamp) : 'no-timestamp',
-          currLast.content.length,
-          assistantTimeline?.items.length || 0
-        ].join(':')
-      : null;
-
-    if (finalizedAssistantSignature && lastFinalizedAssistantKeyRef.current !== finalizedAssistantSignature) {
-      lastFinalizedAssistantKeyRef.current = finalizedAssistantSignature;
-      // Après insertion du message assistant final, le layout peut encore évoluer
-      // pendant quelques frames (cross-fade, markdown, mise en page). On resynchronise
-      // plusieurs fois pour libérer le scroll si le contenu réel dépasse désormais.
-      let retries = 0;
-      const maxRetries = 6;
-      const syncFinalAssistantLayout = () => {
-        const container = getScrollContainer();
-        if (!container) {
-          setBottomSpacerHeight(0);
-          return;
-        }
-
-        isScrollingProgrammaticallyRef.current = true;
-        const maxAllowedScrollTop = refreshFollowBounds(container);
-        if (container.scrollTop > maxAllowedScrollTop) {
-          container.scrollTop = maxAllowedScrollTop;
-        }
-
-        requestAnimationFrame(() => {
-          isScrollingProgrammaticallyRef.current = false;
-        });
-        
-        if (bottomSpacerHeightRef.current > 0 && retries < maxRetries) {
-          retries += 1;
-          setTimeout(syncFinalAssistantLayout, 50);
-        }
-      };
-
-      requestAnimationFrame(syncFinalAssistantLayout);
-    }
-  }, [messages, autoScroll, getScrollContainer, refreshFollowBounds, setBottomSpacerHeight]);
-
-  useEffect(() => {
     if (messages.length > 0) return;
     streamAnchorScrollTopRef.current = null;
-    lastFinalizedAssistantKeyRef.current = null;
     setBottomSpacerHeight(0);
   }, [messages.length, setBottomSpacerHeight]);
 

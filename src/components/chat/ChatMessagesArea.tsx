@@ -5,13 +5,12 @@
  * Contient:
  * - Empty state
  * - Loader infinite scroll
- * - Messages list avec AnimatePresence
+ * - Liste messages sans AnimatePresence (évite flash doublon à la sortie d’élément)
  * - Typing indicator
  * - Streaming timeline
  */
 
 import React, { useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { ChatMessage as ChatMessageType, Agent } from '@/types/chat';
 import type { StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
@@ -45,6 +44,20 @@ export interface ChatMessagesAreaProps {
   containerRef: React.RefObject<HTMLDivElement | null>;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   keyboardInset?: number;
+}
+
+/** Clé stable : operation_id d’abord (bulle optimiste + DB alignées), évite remount / exit flash */
+function getChatMessageReactKey(message: ChatMessageType, index: number): string {
+  if (message.operation_id) {
+    return `op:${message.operation_id}`;
+  }
+  if (message.clientMessageId) {
+    return `c:${message.clientMessageId}`;
+  }
+  if (message.id) {
+    return `i:${message.id}`;
+  }
+  return `x:${message.role}:${index}:${String(message.timestamp ?? '')}`;
 }
 
 /**
@@ -126,13 +139,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
               const message = messages[virtualItem.index];
               const index = virtualItem.index;
               
-              // ✅ Clé unique garantie
-              const fallbackKeyParts = [message.role, message.timestamp, index];
-              if (message.role === 'tool' && 'tool_call_id' in message) {
-                fallbackKeyParts.push(message.tool_call_id || 'unknown');
-              }
-              const fallbackKey = fallbackKeyParts.join('-');
-              const messageKey = message.clientMessageId || message.id || fallbackKey;
+              const messageKey = getChatMessageReactKey(message, index);
 
               return (
                 <div
@@ -159,29 +166,15 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
             })}
           </div>
         ) : (
-          <AnimatePresence mode="sync">
+          <div className="chatgpt-messages-static-list">
             {messages.map((message, index) => {
-            // ✅ Clé unique garantie
-            const fallbackKeyParts = [message.role, message.timestamp, index];
-            if (message.role === 'tool' && 'tool_call_id' in message) {
-              fallbackKeyParts.push(message.tool_call_id || 'unknown');
-            }
-            const fallbackKey = fallbackKeyParts.join('-');
-            const messageKey = message.clientMessageId || message.id || fallbackKey;
-
-            // ✅ Détecter si c'est un message nouvellement chargé (infinite scroll)
+            const messageKey = getChatMessageReactKey(message, index);
             const isNewlyLoaded = '_isNewlyLoaded' in message && message._isNewlyLoaded;
 
             return (
-              <motion.div
+              <div
                 key={messageKey}
-                initial={isNewlyLoaded ? { opacity: 0, y: 8 } : false}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{
-                  duration: isNewlyLoaded ? 0.4 : 0.2,
-                  ease: [0.16, 1, 0.3, 1]
-                }}
+                className={isNewlyLoaded ? 'chatgpt-message-row chatgpt-message-row--enter' : 'chatgpt-message-row'}
               >
                 <ChatMessage
                   message={message}
@@ -191,10 +184,10 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
                   animateContent={false}
                   isStreaming={message.role === 'assistant' && Boolean(message.isStreaming)}
                 />
-              </motion.div>
+              </div>
             );
           })}
-        </AnimatePresence>
+          </div>
         )}
 
         {/* Indicateur de saisie */}

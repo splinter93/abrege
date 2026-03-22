@@ -94,6 +94,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     : () => logger.dev('Lecture vocale du message');
   const isVoicePlaying = tts?.isPlayingMessageId === messageId;
 
+  const assistantStreaming = role === 'assistant' && Boolean(assistantMessage?.isStreaming);
+  const showAssistantLoadingDots =
+    assistantStreaming && !hasStreamTimeline && !content.trim();
+
   return (
     <div className={`chatgpt-message chatgpt-message-${role} ${className || ''}`}>
       {/* Images attachées (messages user uniquement) - au-dessus de la bulle */}
@@ -128,57 +132,91 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         )}
 
 
-        {/* Reasoning dropdown - affiché AVANT le contenu */}
+        {/* Reasoning : toujours dans le flux quand présent — invisible pendant le stream pour réserver la hauteur
+            (évite saut quand le reasoning arrive en fin de stream). */}
         {reasoning && (
-          <ReasoningDropdown 
-            reasoning={reasoning}
-            className="chatgpt-message-reasoning"
-          />
+          <div
+            className="chatgpt-message-reasoning-slot"
+            style={
+              role === 'assistant' && assistantMessage?.isStreaming
+                ? { visibility: 'hidden', pointerEvents: 'none' }
+                : undefined
+            }
+            aria-hidden={role === 'assistant' && Boolean(assistantMessage?.isStreaming)}
+          >
+            <ReasoningDropdown
+              reasoning={reasoning}
+              className="chatgpt-message-reasoning"
+            />
+          </div>
         )}
 
-        {/* ✅ PRIORITÉ 1: Utiliser la timeline si disponible (capture l'ordre exact du stream) */}
-        {hasStreamTimeline ? (
-          <StreamTimelineRenderer timeline={timeline!} isActiveStreaming={Boolean(assistantMessage?.isStreaming)} />
+        {role === 'assistant' ? (
+          /* Un seul bloc ancré : évite saut quand loading → timeline (ancre absente puis présente) */
+          <div
+            data-chat-stream-anchor=""
+            className={`chatgpt-assistant-anchor${assistantStreaming ? ' chatgpt-assistant-anchor--streaming' : ''}`}
+          >
+            {hasStreamTimeline ? (
+              <StreamTimelineRenderer
+                timeline={timeline!}
+                isActiveStreaming={Boolean(assistantMessage?.isStreaming)}
+              />
+            ) : content ? (
+              <div className="chatgpt-message-content">
+                <EnhancedMarkdownMessage content={content} />
+              </div>
+            ) : null}
+            {showAssistantLoadingDots ? (
+              <div className="chatgpt-message-loading" role="status" aria-label="Chargement en cours">
+                <div className="chatgpt-message-loading-dots">
+                  <div className="chatgpt-message-loading-dot"></div>
+                  <div className="chatgpt-message-loading-dot"></div>
+                  <div className="chatgpt-message-loading-dot"></div>
+                </div>
+              </div>
+            ) : null}
+          </div>
         ) : (
           <>
-            {/* Contenu - texte avec liens pour user, markdown pour assistant */}
-            {content && (
+            {content ? (
               <div className="chatgpt-message-content">
-                {role === 'user' ? (
-                  <div className="user-message-expandable">
-                    <div
-                      ref={userContentRef}
-                      className={`user-message-expandable__content${!isExpanded ? ' user-message-expandable__content--clamped' : ''}`}
-                    >
-                      <UserMessageText 
-                        content={content}
-                        mentions={userMessage?.mentions}
-                        prompts={userMessage?.prompts}
-                      />
-                    </div>
+                <div className="user-message-expandable">
+                  <div
+                    ref={userContentRef}
+                    className={`user-message-expandable__content${!isExpanded ? ' user-message-expandable__content--clamped' : ''}`}
+                  >
+                    <UserMessageText
+                      content={content}
+                      mentions={userMessage?.mentions}
+                      prompts={userMessage?.prompts}
+                    />
                   </div>
-                ) : (
-                  <EnhancedMarkdownMessage content={content} />
-                )}              </div>
-            )}
+                </div>
+              </div>
+            ) : null}
+            {isStreaming && !content ? (
+              <div className="chatgpt-message-loading" role="status" aria-label="Chargement en cours">
+                <div className="chatgpt-message-loading-dots">
+                  <div className="chatgpt-message-loading-dot"></div>
+                  <div className="chatgpt-message-loading-dot"></div>
+                  <div className="chatgpt-message-loading-dot"></div>
+                </div>
+              </div>
+            ) : null}
           </>
-        )}
-        
-        {/* Indicateur de chargement */}
-        {isStreaming && !content && (
-          <div className="chatgpt-message-loading" role="status" aria-label="Chargement en cours">
-            <div className="chatgpt-message-loading-dots">
-              <div className="chatgpt-message-loading-dot"></div>
-              <div className="chatgpt-message-loading-dot"></div>
-              <div className="chatgpt-message-loading-dot"></div>
-            </div>
-          </div>
         )}
       </div>
       
-      {/* Boutons d'action */}
-      {content && !(role === 'assistant' && assistantMessage?.isStreaming) && (
-        <div className="chatgpt-message-actions">
+      {/* Boutons d'action — toujours rendus quand content existe pour éviter tout layout-shift.
+          Invisibles pendant le streaming pour ne pas polluer l'UX, mais la hauteur est préservée. */}
+      {content && (
+        <div
+          className="chatgpt-message-actions"
+          style={role === 'assistant' && assistantMessage?.isStreaming
+            ? { visibility: 'hidden', pointerEvents: 'none' }
+            : undefined}
+        >
           <BubbleButtons
             content={content}
             messageId={messageId}

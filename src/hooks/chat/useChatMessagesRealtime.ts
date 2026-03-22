@@ -33,18 +33,40 @@ function mapDbRowToChatMessage(row: Record<string, unknown>): ChatMessage | null
   if (row.canvas_selections != null) {
     mapped.canvasSelections = row.canvas_selections;
   }
+  // Realtime peut renvoyer UUID typé — normaliser pour matcher l’état local
+  if (row.operation_id != null && row.operation_id !== '') {
+    mapped.operation_id =
+      typeof row.operation_id === 'string' ? row.operation_id : String(row.operation_id);
+  }
   return mapped as unknown as ChatMessage;
+}
+
+/**
+ * Echo Realtime du même onglet : tant qu'une bulle assistant optimiste existe
+ * (`pending-*` ou streaming), l'INSERT Postgres est redondant avec onComplete / upsert.
+ */
+function shouldIgnoreAssistantInsertEcho(localMessages: ChatMessage[]): boolean {
+  return localMessages.some((message) => {
+    if (message.role !== 'assistant') return false;
+    const id = typeof message.id === 'string' ? message.id : '';
+    if (id.startsWith('pending-')) return true;
+    return message.isStreaming === true && typeof message.clientMessageId === 'string';
+  });
 }
 
 export function useChatMessagesRealtime(
   sessionId: string | null,
   upsertMessage: (msg: ChatMessage) => void,
-  removeMessageById: (id: string) => void
+  removeMessageById: (id: string) => void,
+  /** Snapshot courant des messages locaux — permet de sauter les INSERT déjà présents (même tab) */
+  getLocalMessages: () => ChatMessage[]
 ): void {
   const upsertRef = useRef(upsertMessage);
   const removeRef = useRef(removeMessageById);
+  const getLocalMessagesRef = useRef(getLocalMessages);
   upsertRef.current = upsertMessage;
   removeRef.current = removeMessageById;
+  getLocalMessagesRef.current = getLocalMessages;
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const resubscribeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -92,6 +114,42 @@ export function useChatMessagesRealtime(
           eventType,
         });
         return;
+      }
+
+      // INSERT : ne jamais ré-appliquer un message déjà représenté localement (évite flash doublon).
+      // Les UPDATE passent pour sync cross-tab / enrichissements.
+      if (eventType === 'INSERT' && mapped.id) {
+        const localMessages = getLocalMessagesRef.current();
+        const alreadyPresent = localMessages.some(m => m.id === mapped.id);
+        if (alreadyPresent) {
+          logger.debug('[ChatMessagesRealtime] ⏭️ INSERT ignoré — déjà dans état local', {
+            sessionId,
+            messageId: mapped.id,
+          });
+          return;
+        }
+
+        const incomingOp =
+          typeof mapped.operation_id === 'string' && mapped.operation_id.length > 0
+            ? mapped.operation_id
+            : null;
+        // Même operation_id = même envoi (user ou assistant) — echo du tab courant
+        if (incomingOp && localMessages.some(m => m.operation_id === incomingOp)) {
+          logger.debug('[ChatMessagesRealtime] ⏭️ INSERT ignoré — operation_id déjà local', {
+            sessionId,
+            messageId: mapped.id,
+            operationId: incomingOp,
+          });
+          return;
+        }
+
+        if (mapped.role === 'assistant' && !incomingOp && shouldIgnoreAssistantInsertEcho(localMessages)) {
+          logger.debug('[ChatMessagesRealtime] ⏭️ INSERT assistant ignoré — sans operation_id, bulle pending/stream', {
+            sessionId,
+            messageId: mapped.id,
+          });
+          return;
+        }
       }
 
       upsertRef.current(mapped);

@@ -200,7 +200,8 @@ export class HistoryManager {
         p_attached_notes: attachedNotes,
         p_mentions: mentions || null,
         p_prompts: prompts || null,
-        p_canvas_selections: canvasSelections || null // ✅ NOUVEAU : Sélections du canvas
+        p_canvas_selections: canvasSelections || null,
+        p_operation_id: message.operation_id || null // ✅ Déduplication Realtime echo
       });
 
       if (error) {

@@ -72,7 +72,9 @@ const messageSchema = z.object({
     startPos: z.number().int().nonnegative().optional(),
     endPos: z.number().int().nonnegative().optional(),
     timestamp: z.string()
-  })).optional()
+  })).optional(),
+  /** Idempotence + dédup bulle optimiste ↔ echo Realtime (assistant / user) */
+  operation_id: z.string().uuid().optional()
 });
 
 export async function POST(

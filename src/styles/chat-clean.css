@@ -2083,6 +2083,19 @@ body.chat-theme-glass .chatgpt-messages > div {
   position: relative;
 }
 
+/* Corps assistant stream : ancre unique (scroll) + hauteur minimale stable (évite micro-décalage loading → contenu) */
+.chatgpt-assistant-anchor {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 0;
+  contain: layout style;
+}
+
+.chatgpt-assistant-anchor--streaming {
+  min-height: 44px;
+}
+
 .chatgpt-message-loading {
   display: inline-flex;
   align-items: center;
