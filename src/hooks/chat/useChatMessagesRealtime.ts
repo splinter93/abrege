@@ -122,7 +122,7 @@ export function useChatMessagesRealtime(
         const localMessages = getLocalMessagesRef.current();
         const alreadyPresent = localMessages.some(m => m.id === mapped.id);
         if (alreadyPresent) {
-          logger.debug('[ChatMessagesRealtime] ⏭️ INSERT ignoré — déjà dans état local', {
+          logger.dev('[ChatMessagesRealtime] ⏭️ INSERT ignoré — déjà dans état local', {
             sessionId,
             messageId: mapped.id,
           });
@@ -135,7 +135,7 @@ export function useChatMessagesRealtime(
             : null;
         // Même operation_id = même envoi (user ou assistant) — echo du tab courant
         if (incomingOp && localMessages.some(m => m.operation_id === incomingOp)) {
-          logger.debug('[ChatMessagesRealtime] ⏭️ INSERT ignoré — operation_id déjà local', {
+          logger.dev('[ChatMessagesRealtime] ⏭️ INSERT ignoré — operation_id déjà local', {
             sessionId,
             messageId: mapped.id,
             operationId: incomingOp,
@@ -144,7 +144,7 @@ export function useChatMessagesRealtime(
         }
 
         if (mapped.role === 'assistant' && !incomingOp && shouldIgnoreAssistantInsertEcho(localMessages)) {
-          logger.debug('[ChatMessagesRealtime] ⏭️ INSERT assistant ignoré — sans operation_id, bulle pending/stream', {
+          logger.dev('[ChatMessagesRealtime] ⏭️ INSERT assistant ignoré — sans operation_id, bulle pending/stream', {
             sessionId,
             messageId: mapped.id,
           });
