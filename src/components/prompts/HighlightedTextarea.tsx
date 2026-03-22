@@ -2,7 +2,7 @@
  * Textarea avec coloration syntaxique des placeholders {…} et mentions @slug.
  * - {selection} → ambre
  * - {autreArg}  → orange
- * - @slug       → violet
+ * - @slug       → orange (mentions connues)
  *
  * Technique : textarea transparent superposé sur un div miroir qui rend
  * le texte avec des <mark> colorés. Le div miroir doit avoir exactement

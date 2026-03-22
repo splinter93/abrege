@@ -20,6 +20,8 @@ interface UsePromptTemplateMentionsOptions {
   onChange: (value: string) => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   getAccessToken: () => Promise<string | null>;
+  /** État initial (ex. agent / prompt chargé depuis l’API) — évite un premier render avec mentions vides */
+  initialMentions?: NoteMention[];
 }
 
 interface UsePromptTemplateMentionsResult {
@@ -44,8 +46,9 @@ export function usePromptTemplateMentions({
   onChange,
   textareaRef,
   getAccessToken,
+  initialMentions,
 }: UsePromptTemplateMentionsOptions): UsePromptTemplateMentionsResult {
-  const [mentions, setMentions] = useState<NoteMention[]>([]);
+  const [mentions, setMentions] = useState<NoteMention[]>(() => initialMentions ?? []);
   const [showMentionMenu, setShowMentionMenu] = useState(false);
   // Position fixed (viewport coords) pour le portal
   const [mentionMenuPosition, setMentionMenuPosition] = useState<{ top: number; left: number } | null>(null);

@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
-import { SpecializedAgentError } from '@/types/specializedAgents';
+import { SpecializedAgentError, type SpecializedAgentConfig } from '@/types/specializedAgents';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -295,6 +295,11 @@ export async function GET(
       provider: agent.provider,
       profile_picture: agent.profile_picture,
       system_instructions: agent.system_instructions,
+      system_instructions_mentions: Array.isArray(
+        (agent as SpecializedAgentConfig).system_instructions_mentions
+      )
+        ? (agent as SpecializedAgentConfig).system_instructions_mentions
+        : [],
       voice: agent.voice,
       tts_language: agent.tts_language,
       expertise: agent.expertise,

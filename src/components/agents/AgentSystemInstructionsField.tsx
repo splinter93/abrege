@@ -10,6 +10,7 @@ import type { NoteMention } from '@/types/noteMention';
 import { useAuth } from '@/hooks/useAuth';
 import { usePromptTemplateMentions } from '@/hooks/usePromptTemplateMentions';
 import HighlightedTextarea from '@/components/prompts/HighlightedTextarea';
+import { areNoteMentionListsEqual } from '@/utils/noteMentionListsEqual';
 
 /** Le wrapper HighlightedTextarea applique déjà bordure / fond (voir HighlightedTextarea.css). */
 const WRAPPER_CLASS = 'w-full';
@@ -44,6 +45,7 @@ export function AgentSystemInstructionsField({
     onChange,
     textareaRef,
     getAccessToken,
+    initialMentions,
   });
 
   const {
@@ -73,9 +75,13 @@ export function AgentSystemInstructionsField({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- éviter les resets à chaque render si le parent recrée le tableau
   }, [slugsKey, setMentions]);
 
+  /** Ne notifier le parent que si l’état local diverge des props (évite [] au mount + écrasement async). */
   useEffect(() => {
+    if (areNoteMentionListsEqual(mentions, initialMentions)) {
+      return;
+    }
     onMentionsChangeRef.current(mentions);
-  }, [mentions]);
+  }, [mentions, initialMentions]);
 
   useEffect(() => {
     if (showMentionMenu) {
