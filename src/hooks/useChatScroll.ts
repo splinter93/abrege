@@ -252,7 +252,7 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     scrollToUserMessage();
   }, [scrollToUserMessage]);
 
-  // Autoscroll UNIQUEMENT pour nouveaux messages user
+  // Autoscroll : chargement initial OU nouveau message user
   useEffect(() => {
     if (!autoScroll || messages.length === 0) return;
 
@@ -261,11 +261,33 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     const hasNewMessage = messages.length !== prevMessages.length;
     prevMessagesRef.current = messages;
 
+    // Chargement initial (0 → N messages, ex. refresh) : scroll instantané en bas.
+    // Double-rAF pour attendre le premier rendu DOM ; re-check à 400ms pour
+    // les images/code blocks qui pourraient allonger le contenu après coup.
+    if (prevMessages.length === 0 && messages.length > 0) {
+      const scrollToEnd = () => {
+        const container = getScrollContainer();
+        if (!container) return;
+        isScrollingProgrammaticallyRef.current = true;
+        streamAnchorScrollTopRef.current = null;
+        setBottomSpacerHeight(0);
+        container.scrollTop = container.scrollHeight;
+        requestAnimationFrame(() => {
+          isScrollingProgrammaticallyRef.current = false;
+        });
+      };
+
+      requestAnimationFrame(() => requestAnimationFrame(scrollToEnd));
+      // Second pass au cas où du contenu se charge après (images, highlights, etc.)
+      const tid = setTimeout(scrollToEnd, 400);
+      return () => clearTimeout(tid);
+    }
+
     if (hasNewMessage && currLast?.role === 'user') {
       // Délai pour laisser le DOM se mettre à jour
       setTimeout(() => scrollToUserMessage(), 100);
     }
-  }, [messages, autoScroll, scrollToUserMessage]);
+  }, [messages, autoScroll, scrollToUserMessage, getScrollContainer, setBottomSpacerHeight]);
 
   useEffect(() => {
     if (messages.length > 0) return;
