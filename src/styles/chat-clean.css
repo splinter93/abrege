@@ -2087,11 +2087,14 @@ body.chat-theme-glass .chatgpt-messages > div {
 .chatgpt-assistant-anchor {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  /* align-items: stretch (défaut) — les enfants héritent des 100% du parent.
+     Ne pas mettre flex-start : les enfants prennent sinon leur largeur de contenu,
+     ce qui fait déborder les blocs code jusqu'au viewport. */
+  align-items: stretch;
   min-height: 0;
   width: 100%;
   min-width: 0;
-  /* contain: layout style retiré — bloque le recalcul de la largeur des blocs code enfants */
+  overflow: hidden;
 }
 
 .chatgpt-assistant-anchor--streaming {
