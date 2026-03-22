@@ -115,6 +115,8 @@ const AgentDetailsModal: React.FC<AgentDetailsModalProps> = ({ onClose }) => {
             onCancel={handleCancelEdit}
             onDelete={() => setShowDeleteConfirm(true)}
             onUpdateField={updateField}
+            systemInstructionsMentions={editedAgent?.system_instructions_mentions}
+            onMentionsChange={m => updateField('system_instructions_mentions', m)}
           />
         </motion.div>
 

@@ -3,6 +3,8 @@ import { X, Image as ImageIcon, Power, PowerOff, Star, Pencil, FolderSearch } fr
 import ScriviaFilePicker from '@/components/chat/ScriviaFilePicker';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
+import type { NoteMention } from '@/types/noteMention';
+import { AgentSystemInstructionsField } from '@/components/agents/AgentSystemInstructionsField';
 import { CustomSelect } from '@/components/ui/CustomSelect';
 import { TTS_VOICE_OPTIONS, TTS_LANGUAGE_OPTIONS } from '@/constants/ttsVoices';
 
@@ -33,6 +35,8 @@ interface AgentConfigurationProps {
     field: K,
     value: SpecializedAgentConfig[K]
   ) => void;
+  systemInstructionsMentions?: NoteMention[];
+  onMentionsChange: (mentions: NoteMention[]) => void;
 }
 
 export function AgentConfiguration({
@@ -48,6 +52,8 @@ export function AgentConfiguration({
   onCancel,
   onDelete,
   onUpdateField,
+  systemInstructionsMentions,
+  onMentionsChange,
 }: AgentConfigurationProps) {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showFilePicker, setShowFilePicker] = useState(false);
@@ -189,13 +195,13 @@ export function AgentConfiguration({
               <span className="text-[10px] font-medium text-amber-400/80">Modifié</span>
             )}
           </div>
-          <textarea
+          <AgentSystemInstructionsField
             id="agent-system-instructions"
-            className="input-block w-full px-5 py-4 rounded-lg text-sm placeholder:text-zinc-500 focus:outline-none transition-colors font-mono text-[13px] leading-relaxed resize-none text-zinc-400"
-            rows={12}
             value={editedAgent.system_instructions || ''}
-            onChange={e => onUpdateField('system_instructions', e.target.value)}
-            placeholder="Définissez précisément le comportement, la voix, les contraintes et les objectifs de l'agent."
+            initialMentions={systemInstructionsMentions}
+            onChange={val => onUpdateField('system_instructions', val)}
+            onMentionsChange={onMentionsChange}
+            rows={12}
           />
         </section>
 

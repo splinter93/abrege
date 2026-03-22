@@ -6,6 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/supabaseClient';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';
+import type { NoteMention } from '@/types/noteMention';
+import { areNoteMentionListsEqual } from '@/utils/noteMentionListsEqual';
 
 export interface UseAgentEditorOptions {
   initialAgentId?: string | null;
@@ -219,26 +221,40 @@ export function useAgentEditor(options: UseAgentEditorOptions = {}): UseAgentEdi
 
   const updateField = useCallback(
     <K extends keyof SpecializedAgentConfig>(field: K, value: SpecializedAgentConfig[K]) => {
+      let shouldMarkDirty = true;
       setEditedAgent(prev => {
         if (!prev) return null;
-        
+
+        if (
+          field === 'system_instructions_mentions' &&
+          areNoteMentionListsEqual(
+            prev.system_instructions_mentions,
+            value as NoteMention[] | undefined
+          )
+        ) {
+          shouldMarkDirty = false;
+          return prev;
+        }
+
         // Si le champ modifié est 'model', mettre à jour automatiquement le 'provider'
         if (field === 'model' && typeof value === 'string') {
           const { getModelInfo } = require('@/constants/groqModels');
           const modelInfo = getModelInfo(value);
           const newProvider = modelInfo?.provider || 'groq'; // Fallback vers 'groq'
-          
+
           logger.dev('[useAgentEditor] 🔄 Mise à jour automatique du provider:', {
             model: value,
-            provider: newProvider
+            provider: newProvider,
           });
-          
+
           return { ...prev, [field]: value, provider: newProvider };
         }
-        
+
         return { ...prev, [field]: value };
       });
-      setHasChanges(true);
+      if (shouldMarkDirty) {
+        setHasChanges(true);
+      }
     },
     []
   );

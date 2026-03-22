@@ -7,12 +7,14 @@
 
 import { simpleLogger as logger } from '@/utils/logger';
 import type { LLMContext } from '@/types/llmContext';
+import type { NoteMention } from '@/types/noteMention';
 import { contextInjectionService } from './context';
 import type { ExtendedLLMContext } from './context/types';
 import { TTS_VOICE_MODE_SYSTEM_PROMPT } from '@/constants/ttsVoiceModePrompt';
 
 export interface AgentSystemConfig {
   system_instructions?: string;
+  system_instructions_mentions?: NoteMention[];
   context_template?: string;
 }
 

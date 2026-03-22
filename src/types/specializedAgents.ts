@@ -4,6 +4,7 @@
  */
 
 import { Agent } from './chat';
+import type { NoteMention } from './noteMention';
 
 /**
  * Configuration d'un agent spécialisé
@@ -26,6 +27,8 @@ export interface SpecializedAgentConfig extends Agent {
   api_config?: Record<string, unknown> | null;
   is_favorite?: boolean;
   category?: string;
+  /** Mentions @slug dans system_instructions — résolues côté serveur au moment du chat */
+  system_instructions_mentions?: NoteMention[];
 }
 
 /**

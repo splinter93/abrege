@@ -15,6 +15,8 @@ import AgentConfiguration from '@/components/agents/AgentConfiguration';
 import AgentParameters from '@/components/agents/AgentParameters';
 import UnifiedPageTitle from '@/components/UnifiedPageTitle';
 import type { SpecializedAgentConfig, CreateSpecializedAgentRequest } from '@/types/specializedAgents';
+import type { NoteMention } from '@/types/noteMention';
+import { areNoteMentionListsEqual } from '@/utils/noteMentionListsEqual';
 import type { OpenApiSchema, AgentSchemaLink } from '@/hooks/useOpenApiSchemas';
 import type { McpServer, AgentMcpServerWithDetails } from '@/types/mcp';
 import { agentsService } from '@/services/agents/agentsService';
@@ -172,13 +174,16 @@ function AgentDetailContent() {
     (base: SpecializedAgentConfig | null, draft: Partial<SpecializedAgentConfig> | null): boolean => {
       if (!base || !draft) return false;
       const fields: (keyof SpecializedAgentConfig)[] = [
-        'display_name', 'description', 'system_instructions', 'voice', 'tts_language',
+        'display_name', 'description', 'system_instructions', 'system_instructions_mentions', 'voice', 'tts_language',
         'temperature', 'top_p', 'max_tokens', 'priority', 'is_chat_agent', 'is_endpoint_agent',
         'model', 'context_template', 'profile_picture',
       ];
       return fields.some(field => {
         const draftValue = draft[field];
         const baseValue = base[field];
+        if (field === 'system_instructions_mentions') {
+          return JSON.stringify(draftValue ?? []) !== JSON.stringify(baseValue ?? []);
+        }
         return draftValue !== undefined && draftValue !== baseValue;
       });
     },
@@ -214,6 +219,9 @@ function AgentDetailContent() {
         const additionalFields: Partial<SpecializedAgentConfig> = {};
         if (editedAgent.voice !== undefined) additionalFields.voice = editedAgent.voice;
         if (editedAgent.tts_language !== undefined) additionalFields.tts_language = editedAgent.tts_language;
+        if (editedAgent.system_instructions_mentions !== undefined) {
+          additionalFields.system_instructions_mentions = editedAgent.system_instructions_mentions;
+        }
         if (Object.keys(additionalFields).length > 0) {
           const identifier = newAgent.slug || newAgent.id;
           await agentsService.patchAgent(identifier, additionalFields);
@@ -304,12 +312,34 @@ function AgentDetailContent() {
 
   const handleFieldUpdate = useCallback(
     <K extends keyof SpecializedAgentConfig>(field: K, value: SpecializedAgentConfig[K]) => {
+      let computedNext: Partial<SpecializedAgentConfig> | null = null;
+      let skipUpdate = false;
+
       setEditedAgent(prev => {
-        const next = { ...(prev ?? {}), [field]: value };
-        if (selectedAgent) setHasLocalChanges(hasAgentChanges(selectedAgent, next));
-        else setHasLocalChanges(true);
-        return next;
+        const base = prev ?? {};
+
+        if (
+          field === 'system_instructions_mentions' &&
+          prev !== null &&
+          areNoteMentionListsEqual(base.system_instructions_mentions, value as NoteMention[] | undefined)
+        ) {
+          skipUpdate = true;
+          return prev;
+        }
+
+        computedNext = { ...base, [field]: value };
+        return computedNext;
       });
+
+      if (skipUpdate) {
+        return;
+      }
+
+      if (selectedAgent && computedNext) {
+        setHasLocalChanges(hasAgentChanges(selectedAgent, computedNext));
+      } else if (!selectedAgent) {
+        setHasLocalChanges(true);
+      }
     },
     [hasAgentChanges, selectedAgent]
   );
@@ -618,6 +648,8 @@ function AgentDetailContent() {
                   onCancel={handleCancelChanges}
                   onDelete={selectedAgent ? handleDeleteAgent : () => {}}
                   onUpdateField={handleFieldUpdate}
+                  systemInstructionsMentions={editedAgent?.system_instructions_mentions}
+                  onMentionsChange={m => handleFieldUpdate('system_instructions_mentions', m)}
                 />
               </div>
             </div>

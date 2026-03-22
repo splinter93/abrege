@@ -4,6 +4,7 @@
  */
 
 import type { MessageContent } from '@/types/image';
+import type { NoteMention } from '@/types/noteMention';
 
 export interface AgentConfig {
   id: string;
@@ -18,6 +19,8 @@ export interface AgentConfig {
   service_tier?: string;
   parallel_tool_calls?: boolean;
   system_instructions?: string;
+  /** Métadonnées des notes @mentionnées dans system_instructions (table agents, colonne JSONB) */
+  system_instructions_mentions?: NoteMention[];
   context_template?: string;
   expertise?: string[];
   capabilities?: string[]; // Legacy

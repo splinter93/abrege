@@ -32,6 +32,7 @@ import {
   MAX_HISTORY_MESSAGES,
   truncateHistory
 } from '@/services/llm/context/ContextCompressor';
+import { resolveAgentSystemInstructionNotes } from '@/services/llm/AgentMentionResolver';
 
 // Force Node.js runtime for streaming
 export const runtime = 'nodejs';
@@ -240,10 +241,23 @@ export async function POST(request: NextRequest) {
       canvasSelections: context.canvasSelections
     } as import('@/services/llm/context/types').ExtendedLLMContext;
     
+    const agentConfigForSystem =
+      finalAgentConfig &&
+      Array.isArray(finalAgentConfig.system_instructions_mentions) &&
+      finalAgentConfig.system_instructions_mentions.length > 0
+        ? {
+            ...finalAgentConfig,
+            system_instructions: resolveAgentSystemInstructionNotes(
+              finalAgentConfig.system_instructions ?? '',
+              finalAgentConfig.system_instructions_mentions
+            ),
+          }
+        : finalAgentConfig || {};
+
     // Construire le system message (instructions agent + contexte UI)
     // SystemMessageBuilder utilise déjà ContextInjectionService pour le contexte UI
     const systemMessageResult = systemMessageBuilder.buildSystemMessage(
-      finalAgentConfig || {},
+      agentConfigForSystem,
       {
         type: context.type || 'chat_session',
         name: context.name || 'Chat',
