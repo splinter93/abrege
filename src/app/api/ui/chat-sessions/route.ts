@@ -234,14 +234,28 @@ export async function GET(request: NextRequest) {
 
     // Récupérer les sessions de l'utilisateur avec le contexte utilisateur
     logger.dev('[Chat Sessions API] 🔍 Récupération sessions pour utilisateur:', userId);
-    
+
+    const rawLimit = request.nextUrl.searchParams.get('limit');
+    const parsedLimit = rawLimit ? parseInt(rawLimit, 10) : 100;
+    const pageLimit = Number.isFinite(parsedLimit)
+      ? Math.min(Math.max(parsedLimit, 1), 200)
+      : 100;
+    const beforeDate = request.nextUrl.searchParams.get('before_date');
+
     // Messages chargés séparément via /api/chat/sessions/:id/messages/recent
-    const { data: sessions, error } = await userClient
+    let query = userClient
       .from('chat_sessions')
-      .select('id, name, agent_id, is_active, is_empty, created_at, updated_at, last_message_at, metadata')
+      .select('id, name, agent_id, is_active, is_empty, created_at, updated_at, last_message_at, metadata, user_id')
       .eq('user_id', userId)
       .eq('is_active', true)
-      .order('last_message_at', { ascending: false, nullsFirst: false });
+      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .limit(pageLimit + 1);
+
+    if (beforeDate) {
+      query = query.lt('last_message_at', beforeDate);
+    }
+
+    const { data: sessionsRaw, error } = await query;
 
     if (error) {
       logger.error('[Chat Sessions API] ❌ Erreur récupération sessions:', error);
@@ -251,14 +265,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Sessions sans thread/history_limit (chargement messages via useInfiniteMessages)
-    const sessionsMetadata = sessions;
+    const rows = sessionsRaw ?? [];
+    const hasMore = rows.length > pageLimit;
+    const sessionsMetadata = hasMore ? rows.slice(0, pageLimit) : rows;
 
-    logger.dev('[Chat Sessions API] ✅ Sessions récupérées (métadonnées only):', sessionsMetadata.length);
+    logger.dev('[Chat Sessions API] ✅ Sessions récupérées (métadonnées only):', {
+      count: sessionsMetadata.length,
+      hasMore,
+    });
 
     return NextResponse.json({
       success: true,
       data: sessionsMetadata,
+      hasMore,
       message: 'Sessions récupérées avec succès'
     });
 

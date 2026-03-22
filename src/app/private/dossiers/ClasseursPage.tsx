@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -547,6 +548,7 @@ function ItemListRow({
   isRenaming,
   onRename,
   onCancelRename,
+  virtualized = false,
 }: {
   item: ClasseurItem;
   onOpen: () => void;
@@ -560,6 +562,8 @@ function ItemListRow({
   isRenaming?: boolean;
   onRename?: (name: string) => void;
   onCancelRename?: () => void;
+  /** Liste virtualisée : pas de motion.div pour éviter coût par ligne */
+  virtualized?: boolean;
 }) {
   const Icon = item.type === "folder" ? Folder : Feather;
   const iconClasses =
@@ -569,47 +573,41 @@ function ItemListRow({
   const isFolder = item.type === "folder";
   const [isDragging, setIsDragging] = React.useState(false);
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.12 }}
+  const rowInner = (
+    <div
+      role="button"
+      tabIndex={0}
+      className={`group flex items-center justify-between rounded-md border px-3 py-2 transition-all duration-200 cursor-pointer ${
+        isDropTarget ? "border-orange-500/35 bg-orange-500/5" : "border-transparent hover:border-zinc-800/50"
+      } ${isDragging ? "opacity-40" : ""}`}
+      onClick={() => !isRenaming && onOpen()}
+      onKeyDown={(e) => e.key === "Enter" && !isRenaming && onOpen()}
+      onMouseEnter={onMouseEnter}
+      draggable={!!onDragStart && !isRenaming}
+      onDragStart={(e) => {
+        setIsDragging(true);
+        if (onDragStart) {
+          e.dataTransfer.setData("itemId", item.id);
+          e.dataTransfer.setData("itemType", item.type);
+          e.dataTransfer.setData(DRAG_JSON, JSON.stringify({ id: item.id, type: item.type }));
+          e.dataTransfer.effectAllowed = "move";
+          onDragStart(e, item);
+        }
+      }}
+      onDragEnd={() => setIsDragging(false)}
+      onDragOver={isFolder && (onDropOnFolder || onFolderDragOver) ? (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = "move";
+        onFolderDragOver?.(item.id);
+      } : undefined}
+      onDragLeave={isFolder ? () => onFolderDragLeave?.() : undefined}
+      onDrop={isFolder && onDropOnFolder ? (e) => { e.preventDefault(); e.stopPropagation(); onDropOnFolder(e, item.id); } : undefined}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onOptions?.(e);
+      }}
     >
-      <div
-        role="button"
-        tabIndex={0}
-        className={`group flex items-center justify-between rounded-md border px-3 py-2 transition-all duration-200 cursor-pointer ${
-          isDropTarget ? "border-orange-500/35 bg-orange-500/5" : "border-transparent hover:border-zinc-800/50"
-        } ${isDragging ? "opacity-40" : ""}`}
-        onClick={() => !isRenaming && onOpen()}
-        onKeyDown={(e) => e.key === "Enter" && !isRenaming && onOpen()}
-        onMouseEnter={onMouseEnter}
-        draggable={!!onDragStart && !isRenaming}
-        onDragStart={(e) => {
-          setIsDragging(true);
-          if (onDragStart) {
-            e.dataTransfer.setData("itemId", item.id);
-            e.dataTransfer.setData("itemType", item.type);
-            e.dataTransfer.setData(DRAG_JSON, JSON.stringify({ id: item.id, type: item.type }));
-            e.dataTransfer.effectAllowed = "move";
-            onDragStart(e, item);
-          }
-        }}
-        onDragEnd={() => setIsDragging(false)}
-        onDragOver={isFolder && (onDropOnFolder || onFolderDragOver) ? (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          e.dataTransfer.dropEffect = "move";
-          onFolderDragOver?.(item.id);
-        } : undefined}
-        onDragLeave={isFolder ? () => onFolderDragLeave?.() : undefined}
-        onDrop={isFolder && onDropOnFolder ? (e) => { e.preventDefault(); e.stopPropagation(); onDropOnFolder(e, item.id); } : undefined}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          onOptions?.(e);
-        }}
-      >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Icon className={`h-[18px] w-[18px] flex-shrink-0 ${iconClasses}`} strokeWidth={1.5} />
         {isRenaming && onRename && onCancelRename ? (
@@ -627,7 +625,21 @@ function ItemListRow({
         )}
       </div>
       <span className="flex-shrink-0 text-xs text-zinc-500 ml-4">{item.subtitle}</span>
-      </div>
+    </div>
+  );
+
+  if (virtualized) {
+    return rowInner;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.12 }}
+    >
+      {rowInner}
     </motion.div>
   );
 }
@@ -698,6 +710,14 @@ function ClasseursContent({
   );
 
   const [breadcrumbDragOver, setBreadcrumbDragOver] = React.useState<number | null>(null);
+  const listScrollRef = useRef<HTMLDivElement>(null);
+  const shouldVirtualizeList = viewMode === "list" && filtered.length > 50;
+  const rowVirtualizer = useVirtualizer({
+    count: shouldVirtualizeList ? filtered.length : 0,
+    getScrollElement: () => listScrollRef.current,
+    estimateSize: () => 52,
+    overscan: 8,
+  });
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden pt-4 pb-6">
@@ -817,28 +837,76 @@ function ClasseursContent({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.75, ease: [0.4, 0, 0.2, 1] }}
-          className="flex flex-col rounded-xl border border-zinc-800/60 bg-zinc-900/10 overflow-hidden transition-colors"
+          className="flex min-h-0 flex-1 flex-col rounded-xl border border-zinc-800/60 bg-zinc-900/10 overflow-hidden transition-colors"
           onDragOver={onRootDragOver}
           onDragLeave={onRootDragLeave}
           onDrop={onRootDrop}
         >
-          {filtered.map((item) => (
-            <ItemListRow
-              key={`${item.type}-${item.id}`}
-              item={item}
-              onOpen={() => onItemOpen(item)}
-              onMouseEnter={() => onItemMouseEnter?.(item)}
-              onOptions={(e) => onItemContextMenu(e, item)}
-              onDragStart={onDragStartItem}
-              onDropOnFolder={onDropOnFolder}
-              onFolderDragOver={onFolderDragOver}
-              onFolderDragLeave={onFolderDragLeave}
-              isDropTarget={item.type === "folder" && dropTargetFolderId === item.id}
-              isRenaming={renamingItemId === item.id}
-              onRename={(name) => onItemRename?.(item.id, name, item.type)}
-              onCancelRename={onItemCancelRename}
-            />
-          ))}
+          <div
+            ref={listScrollRef}
+            className="min-h-0 max-h-[min(75vh,800px)] flex-1 overflow-y-auto"
+          >
+            {shouldVirtualizeList ? (
+              <div
+                style={{
+                  height: `${rowVirtualizer.getTotalSize()}px`,
+                  width: "100%",
+                  position: "relative",
+                }}
+              >
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const item = filtered[virtualRow.index];
+                  return (
+                    <div
+                      key={`${item.type}-${item.id}`}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: `${virtualRow.size}px`,
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                    >
+                      <ItemListRow
+                        virtualized
+                        item={item}
+                        onOpen={() => onItemOpen(item)}
+                        onMouseEnter={() => onItemMouseEnter?.(item)}
+                        onOptions={(e) => onItemContextMenu(e, item)}
+                        onDragStart={onDragStartItem}
+                        onDropOnFolder={onDropOnFolder}
+                        onFolderDragOver={onFolderDragOver}
+                        onFolderDragLeave={onFolderDragLeave}
+                        isDropTarget={item.type === "folder" && dropTargetFolderId === item.id}
+                        isRenaming={renamingItemId === item.id}
+                        onRename={(name) => onItemRename?.(item.id, name, item.type)}
+                        onCancelRename={onItemCancelRename}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              filtered.map((item) => (
+                <ItemListRow
+                  key={`${item.type}-${item.id}`}
+                  item={item}
+                  onOpen={() => onItemOpen(item)}
+                  onMouseEnter={() => onItemMouseEnter?.(item)}
+                  onOptions={(e) => onItemContextMenu(e, item)}
+                  onDragStart={onDragStartItem}
+                  onDropOnFolder={onDropOnFolder}
+                  onFolderDragOver={onFolderDragOver}
+                  onFolderDragLeave={onFolderDragLeave}
+                  isDropTarget={item.type === "folder" && dropTargetFolderId === item.id}
+                  isRenaming={renamingItemId === item.id}
+                  onRename={(name) => onItemRename?.(item.id, name, item.type)}
+                  onCancelRename={onItemCancelRename}
+                />
+              ))
+            )}
+          </div>
         </motion.div>
       )}
 

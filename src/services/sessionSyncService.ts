@@ -48,42 +48,82 @@ export class SessionSyncService {
   /**
    * 🔄 Synchroniser les sessions depuis la DB vers le store
    */
+  /** Mappe une ligne API / DB vers ChatSession (champs optionnels tolérés). */
+  private mapSessionRow(session: Partial<ChatSession> & Pick<ChatSession, 'id'>): ChatSession {
+    return {
+      id: session.id,
+      user_id: session.user_id ?? '',
+      name: session.name ?? '',
+      agent_id: session.agent_id ?? null,
+      is_active: session.is_active ?? true,
+      is_empty: session.is_empty ?? true,
+      metadata: session.metadata ?? {},
+      created_at: session.created_at ?? new Date().toISOString(),
+      updated_at: session.updated_at ?? new Date().toISOString(),
+      last_message_at: session.last_message_at ?? null,
+    };
+  }
+
   async syncSessionsFromDB(): Promise<{
     success: boolean;
     sessions?: ChatSession[];
+    hasMore?: boolean;
     error?: string;
   }> {
     try {
       const response = await this.chatSessionService.getSessions();
-      
+
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Erreur récupération sessions');
       }
 
-      // Conversion avec valeurs par défaut pour les champs requis
-      const convertedSessions: ChatSession[] = response.data.map((session) => ({
-        id: session.id,
-        user_id: session.user_id ?? '',
-        name: session.name ?? '',
-        agent_id: session.agent_id ?? null,
-        is_active: session.is_active ?? true,
-        is_empty: session.is_empty ?? true,
-        metadata: session.metadata ?? {},
-        created_at: session.created_at ?? new Date().toISOString(),
-        updated_at: session.updated_at ?? new Date().toISOString(),
-        last_message_at: session.last_message_at ?? null,
-      }));
-      
+      const convertedSessions: ChatSession[] = response.data.map((s) => this.mapSessionRow(s));
+
       return {
         success: true,
-        sessions: convertedSessions
+        sessions: convertedSessions,
+        hasMore: response.hasMore ?? false,
       };
-
     } catch (error) {
       logger.error('[SessionSync] ❌ Erreur synchronisation:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Erreur inconnue'
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
+      };
+    }
+  }
+
+  /**
+   * Page suivante de sessions (plus anciennes), curseur = last_message_at de la dernière session chargée.
+   */
+  async loadOlderSessionsFromDB(beforeDate: string): Promise<{
+    success: boolean;
+    sessions?: ChatSession[];
+    hasMore?: boolean;
+    error?: string;
+  }> {
+    try {
+      const response = await this.chatSessionService.getSessions({
+        before_date: beforeDate,
+        limit: 100,
+      });
+
+      if (!response.success || !response.data) {
+        throw new Error(response.error || 'Erreur récupération sessions');
+      }
+
+      const convertedSessions: ChatSession[] = response.data.map((s) => this.mapSessionRow(s));
+
+      return {
+        success: true,
+        sessions: convertedSessions,
+        hasMore: response.hasMore ?? false,
+      };
+    } catch (error) {
+      logger.error('[SessionSync] ❌ Erreur loadOlderSessions:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
       };
     }
   }

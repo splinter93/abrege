@@ -257,6 +257,8 @@ export interface ChatSessionResponse {
 export interface ChatSessionsListResponse {
   success: boolean;
   data?: ChatSession[];
+  /** Vrai s’il existe une page plus ancienne (pagination par curseur last_message_at) */
+  hasMore?: boolean;
   error?: string;
   pagination?: {
     total: number;

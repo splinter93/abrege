@@ -1059,12 +1059,61 @@ body.chat-theme-glass .chatgpt-header {
 .sidebar-content-clean {
   flex: 1 1 0;
   min-height: 0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding: 12px 12px 12px 12px;
   background: transparent;
   color: var(--chat-text-primary);
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Ancien scroll unique : la zone scrollable est désormais .sidebar-conversations-virtual-scroll */
+.sidebar-conversations-scroll-host {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-conversations-virtual-scroll {
+  flex: 1 1 0;
+  min-height: 80px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sidebar-conversations-virtual-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar-load-more-btn {
+  flex-shrink: 0;
+  margin-top: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--chat-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-load-more-btn:hover:not(:disabled) {
+  color: var(--chat-text-primary);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sidebar-load-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Scrollbar sidebar invisible */

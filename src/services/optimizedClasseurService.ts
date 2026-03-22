@@ -3,6 +3,11 @@ import { simpleLogger } from '@/utils/logger';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { Classeur, Folder, Note } from '@/store/useFileSystemStore';
 
+/** Plafonds requête — évite timeouts / saturation mémoire (pagination complète = roadmap) */
+const MAX_CLASSEURS = 50;
+const MAX_FOLDERS_PER_CLASSEUR = 200;
+const MAX_NOTES_PER_CLASSEUR = 300;
+
 // ==========================================================================
 // TYPES
 // ==========================================================================
@@ -287,7 +292,8 @@ export class OptimizedClasseurService {
       .select('id, name, description, emoji, position, slug, created_at, updated_at')
       .eq('user_id', userId)
       .eq('is_in_trash', false) // 🔧 CORRECTION: Exclure les classeurs en corbeille
-      .order('position', { ascending: true });
+      .order('position', { ascending: true })
+      .limit(MAX_CLASSEURS);
 
     if (classeursError) {
       throw new Error(`Erreur récupération classeurs: ${classeursError.message}`);
@@ -295,6 +301,11 @@ export class OptimizedClasseurService {
 
     const classeursTime = Date.now() - classeursStart;
     simpleLogger.dev(`[OptimizedClasseurService] ✅ ${classeurs?.length || 0} classeurs récupérés en ${classeursTime}ms`);
+    if (classeurs && classeurs.length >= MAX_CLASSEURS) {
+      simpleLogger.warn(
+        `[OptimizedClasseurService] ⚠️ Plafond classeurs (${MAX_CLASSEURS}) atteint — d’autres classeurs peuvent être absents de l’UI`
+      );
+    }
 
     if (!classeurs || classeurs.length === 0) {
       // 🔧 OPTIMISATION: Mettre à jour le store même si aucun classeur
@@ -454,14 +465,21 @@ export class OptimizedClasseurService {
         .select('id, name, position, parent_id, created_at')
         .eq('classeur_id', classeurId)
         .eq('is_in_trash', false) // 🔧 CORRECTION: Exclure les dossiers supprimés
-        .order('position', { ascending: true });
+        .order('position', { ascending: true })
+        .limit(MAX_FOLDERS_PER_CLASSEUR);
 
       if (error) {
         throw new Error(`Erreur dossiers classeur ${classeurId}: ${error.message}`);
       }
 
-      simpleLogger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} dossiers récupérés pour classeur ${classeurId}`);
-      return data || [];
+      const rows = data || [];
+      if (rows.length >= MAX_FOLDERS_PER_CLASSEUR) {
+        simpleLogger.warn(
+          `[OptimizedClasseurService] ⚠️ Plafond dossiers (${MAX_FOLDERS_PER_CLASSEUR}) pour classeur ${classeurId}`
+        );
+      }
+      simpleLogger.dev(`[OptimizedClasseurService] ✅ ${rows.length} dossiers récupérés pour classeur ${classeurId}`);
+      return rows;
     }, `Récupération dossiers classeur ${classeurId}`);
   }
 
@@ -477,14 +495,21 @@ export class OptimizedClasseurService {
         .select('id, source_title, folder_id, created_at, updated_at, slug, source_type')
         .eq('classeur_id', classeurId)
         .eq('is_in_trash', false) // 🔧 CORRECTION: Exclure les notes supprimées
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(MAX_NOTES_PER_CLASSEUR);
 
       if (error) {
         throw new Error(`Erreur notes classeur ${classeurId}: ${error.message}`);
       }
 
-      simpleLogger.dev(`[OptimizedClasseurService] ✅ ${data?.length || 0} notes récupérées pour classeur ${classeurId}`);
-      return data || [];
+      const rows = data || [];
+      if (rows.length >= MAX_NOTES_PER_CLASSEUR) {
+        simpleLogger.warn(
+          `[OptimizedClasseurService] ⚠️ Plafond notes (${MAX_NOTES_PER_CLASSEUR}) pour classeur ${classeurId}`
+        );
+      }
+      simpleLogger.dev(`[OptimizedClasseurService] ✅ ${rows.length} notes récupérées pour classeur ${classeurId}`);
+      return rows;
     }, `Récupération notes classeur ${classeurId}`);
   }
 

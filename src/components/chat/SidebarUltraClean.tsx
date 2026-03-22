@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, X, User, Settings, Bot, Trash2 } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,7 +24,18 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   onForceClose
 }) => {
   const { user, signOut } = useAuth();
-  const { sessions, currentSession, selectedAgent, createSession, setCurrentSession, setSelectedAgent, deleteSession, updateSession } = useChatStore();
+  const {
+    sessions,
+    currentSession,
+    selectedAgent,
+    createSession,
+    setCurrentSession,
+    setSelectedAgent,
+    deleteSession,
+    updateSession,
+    hasMoreSessions,
+    loadMoreSessions,
+  } = useChatStore();
   const { agents, loading: agentsLoading } = useAgents();
   const [searchQuery, setSearchQuery] = useState('');
   const [agentsOpen, setAgentsOpen] = useState(true);
@@ -32,6 +44,8 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const [editingName, setEditingName] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false); // ✅ Bloquer clics pendant création
+  const [loadingMoreSessions, setLoadingMoreSessions] = useState(false);
+  const convScrollRef = useRef<HTMLDivElement>(null);
 
   // Realtime Supabase pour les sessions chat (insert/update/delete instantanés)
   useChatSessionsRealtime(user?.id);
@@ -116,9 +130,71 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   // Filtrage des sessions : exclure les vides + recherche
   const filteredSessions = sessions
     .filter((session: ChatSession) => !session.is_empty) // 🔥 Masquer conversations vides
-    .filter((session: ChatSession) => 
+    .filter((session: ChatSession) =>
       session.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+  const shouldVirtualizeConversations = filteredSessions.length > 20;
+  const conversationVirtualizer = useVirtualizer({
+    count: shouldVirtualizeConversations ? filteredSessions.length : 0,
+    getScrollElement: () => convScrollRef.current,
+    estimateSize: () => 44,
+    overscan: 8,
+  });
+
+  const handleLoadMoreSessions = useCallback(async () => {
+    if (loadingMoreSessions || !hasMoreSessions) return;
+    setLoadingMoreSessions(true);
+    try {
+      await loadMoreSessions();
+    } finally {
+      setLoadingMoreSessions(false);
+    }
+  }, [hasMoreSessions, loadMoreSessions, loadingMoreSessions]);
+
+  const renderConversationRow = (session: ChatSession) => (
+    <div
+      className={`sidebar-conversation-item group ${editingSessionId === session.id ? 'renaming' : ''}`}
+    >
+      <button
+        type="button"
+        onClick={() => handleSelectSession(session)}
+        onDoubleClick={(e) => handleStartRename(session, e)}
+        className={`sidebar-item-clean ${currentSession?.id === session.id ? 'active' : ''}`}
+      >
+        <div className="flex-1 min-w-0 text-left">
+          {editingSessionId === session.id ? (
+            <input
+              type="text"
+              value={editingName}
+              onChange={(e) => setEditingName(e.target.value)}
+              onBlur={() => handleRenameSubmit(session.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleRenameSubmit(session.id);
+                } else if (e.key === 'Escape') {
+                  handleRenameCancel();
+                }
+              }}
+              autoFocus={'ontouchstart' in window || navigator.maxTouchPoints > 0 ? false : true}
+              className="sidebar-rename-input"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <span className="sidebar-session-name block truncate text-[13px]">{session.name}</span>
+          )}
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={(e) => handleDeleteSession(session.id, e)}
+        className="sidebar-delete-btn opacity-0 group-hover:opacity-100"
+        title="Supprimer la conversation"
+      >
+        <Trash2 size={14} />
+      </button>
+    </div>
+  );
 
   return (
     <div className={`sidebar-ultra-clean ${isDesktop ? 'desktop' : 'mobile'} ${isOpen ? 'visible' : ''}`}>
@@ -137,10 +213,10 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
         </div>
       </div>
 
-      {/* Contenu principal */}
+      {/* Contenu principal : agents fixes, conversations scroll + virtualisées */}
       <div className="sidebar-content-clean">
         {/* Agents */}
-        <div className="sidebar-section-clean">
+        <div className="sidebar-section-clean shrink-0">
           <div className="sidebar-section-header-clean">
             <div className="sidebar-section-title-clean text-[11px] font-bold uppercase tracking-widest mb-1.5">Agents</div>
           </div>
@@ -193,49 +269,56 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
         </div>
 
         {/* Sessions de chat */}
-        <div className="sidebar-section-clean">
-          <div className="sidebar-section-header-clean">
-            <div className="sidebar-section-title-clean text-[11px] font-bold uppercase tracking-widest mb-1.5">Conversations</div>
-          </div>
-          {filteredSessions.map((session: ChatSession) => (
-            <div key={session.id} className={`sidebar-conversation-item group ${editingSessionId === session.id ? 'renaming' : ''}`}>
-              <button
-                onClick={() => handleSelectSession(session)}
-                onDoubleClick={(e) => handleStartRename(session, e)}
-                className={`sidebar-item-clean ${currentSession?.id === session.id ? 'active' : ''}`}
-              >
-                <div className="flex-1 min-w-0 text-left">
-                  {editingSessionId === session.id ? (
-                    <input
-                      type="text"
-                      value={editingName}
-                      onChange={(e) => setEditingName(e.target.value)}
-                      onBlur={() => handleRenameSubmit(session.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleRenameSubmit(session.id);
-                        } else if (e.key === 'Escape') {
-                          handleRenameCancel();
-                        }
-                      }}
-                      autoFocus={'ontouchstart' in window || navigator.maxTouchPoints > 0 ? false : true}
-                      className="sidebar-rename-input"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  ) : (
-                    <span className="sidebar-session-name block truncate text-[13px]">{session.name}</span>
-                  )}
-                </div>
-              </button>
-              <button
-                onClick={(e) => handleDeleteSession(session.id, e)}
-                className="sidebar-delete-btn opacity-0 group-hover:opacity-100"
-                title="Supprimer la conversation"
-              >
-                <Trash2 size={14} />
-              </button>
+        <div className="sidebar-section-clean sidebar-conversations-scroll-host min-h-0">
+          <div className="sidebar-section-header-clean shrink-0">
+            <div className="sidebar-section-title-clean text-[11px] font-bold uppercase tracking-widest mb-1.5">
+              Conversations
             </div>
-          ))}
+          </div>
+          <div ref={convScrollRef} className="sidebar-conversations-virtual-scroll">
+            {shouldVirtualizeConversations ? (
+              <div
+                style={{
+                  height: `${conversationVirtualizer.getTotalSize()}px`,
+                  width: '100%',
+                  position: 'relative',
+                }}
+              >
+                {conversationVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const session = filteredSessions[virtualRow.index];
+                  return (
+                    <div
+                      key={session.id}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: `${virtualRow.size}px`,
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                    >
+                      {renderConversationRow(session)}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              filteredSessions.map((session: ChatSession) => (
+                <React.Fragment key={session.id}>{renderConversationRow(session)}</React.Fragment>
+              ))
+            )}
+          </div>
+          {hasMoreSessions && (
+            <button
+              type="button"
+              className="sidebar-load-more-btn"
+              onClick={() => void handleLoadMoreSessions()}
+              disabled={loadingMoreSessions}
+            >
+              {loadingMoreSessions ? 'Chargement…' : 'Voir les conversations plus anciennes'}
+            </button>
+          )}
         </div>
       </div>
 

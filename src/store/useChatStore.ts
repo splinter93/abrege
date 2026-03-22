@@ -16,7 +16,9 @@ interface ChatStore {
   error: string | null;
   editingMessage: EditingState | null;
   deletingSessions: Set<string>; // ✅ Sessions en cours de suppression (optimiste)
-  
+  /** Pagination sidebar : d’autres sessions existent au-delà de la page chargée */
+  hasMoreSessions: boolean;
+
   // 🔄 Actions de base
   setSessions: (sessions: ChatSession[]) => void;
   setCurrentSession: (session: ChatSession | null) => void;
@@ -35,6 +37,7 @@ interface ChatStore {
   
   // ⚡ Actions avec fonctionnalités essentielles
   syncSessions: () => Promise<void>;
+  loadMoreSessions: () => Promise<void>;
   createSession: (name?: string, agentId?: string | null) => Promise<ChatSession | null>; // ✅ Retourne session créée
   addMessage: (message: Omit<ChatMessage, 'id'>, options?: { persist?: boolean; updateExisting?: boolean }) => Promise<ChatMessage | null>;
   deleteSession: (sessionId: string) => Promise<void>;
@@ -55,6 +58,7 @@ export const useChatStore = create<ChatStore>()(
       error: null,
       editingMessage: null,
       deletingSessions: new Set<string>(), // ✅ Sessions en cours de suppression
+      hasMoreSessions: false,
 
       // 🔄 Actions de base
       setSessions: (sessions: ChatSession[]) => set({ sessions }),
@@ -105,12 +109,47 @@ export const useChatStore = create<ChatStore>()(
             // ✅ FILTRER les sessions en cours de suppression (optimiste)
             const deletingIds = get().deletingSessions;
             const filteredSessions = result.sessions.filter(s => !deletingIds.has(s.id));
-            
-            get().setSessions(filteredSessions);
+
+            set({
+              sessions: filteredSessions,
+              hasMoreSessions: result.hasMore ?? false,
+            });
             // ✅ AUTO-SELECT géré dans ChatFullscreenV2 (pas ici, séparation responsabilités)
           }
         } catch (error) {
           logger.error('[ChatStore] Erreur syncSessions:', error);
+        }
+      },
+
+      loadMoreSessions: async () => {
+        const { sessions, hasMoreSessions } = get();
+        if (!hasMoreSessions || sessions.length === 0) {
+          return;
+        }
+        const last = sessions[sessions.length - 1];
+        const beforeDate = last?.last_message_at;
+        if (!beforeDate) {
+          logger.warn('[ChatStore] loadMoreSessions: pas de last_message_at sur la dernière session');
+          return;
+        }
+        try {
+          const result = await sessionSyncService.loadOlderSessionsFromDB(beforeDate);
+          if (!result.success || !result.sessions?.length) {
+            if (result.success) {
+              set({ hasMoreSessions: result.hasMore ?? false });
+            }
+            return;
+          }
+          const deletingIds = get().deletingSessions;
+          const filtered = result.sessions.filter(s => !deletingIds.has(s.id));
+          const existingIds = new Set(sessions.map(s => s.id));
+          const appended = filtered.filter(s => !existingIds.has(s.id));
+          set({
+            sessions: [...sessions, ...appended],
+            hasMoreSessions: result.hasMore ?? false,
+          });
+        } catch (error) {
+          logger.error('[ChatStore] Erreur loadMoreSessions:', error);
         }
       },
 

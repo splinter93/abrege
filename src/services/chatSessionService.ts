@@ -41,10 +41,14 @@ export class ChatSessionService {
     limit?: number;
     offset?: number;
     search?: string;
+    /** ISO timestamp — sessions plus anciennes que ce last_message_at */
+    before_date?: string;
   }): Promise<ChatSessionsListResponse> {
     try {
-      // 1) Vérifier si on peut utiliser le cache récent
-      const cached = shouldUseSessionsCache() ? getCachedSessions() : null;
+      const isPaginatedFollowUp = Boolean(filters?.before_date);
+
+      // 1) Vérifier si on peut utiliser le cache récent (première page uniquement)
+      const cached = !isPaginatedFollowUp && shouldUseSessionsCache() ? getCachedSessions() : null;
       if (cached && !filters) {
         logger.debug(LogCategory.API, '[ChatSessionService] ♻️ Sessions depuis le cache (TTL 5s)');
         return cached;
@@ -52,7 +56,7 @@ export class ChatSessionService {
 
       // 2) Dédupliquer les appels concurrents : si une requête est déjà en cours, on la réutilise
       const inFlight = getInFlightSessionsPromise();
-      if (inFlight && !filters) {
+      if (inFlight && !isPaginatedFollowUp && !filters) {
         logger.debug(LogCategory.API, '[ChatSessionService] ⏳ Requête sessions déjà en cours, réutilisation de la promesse');
         return inFlight;
       }
@@ -80,6 +84,9 @@ export class ChatSessionService {
       }
       if (filters?.search) {
         params.append('search', filters.search);
+      }
+      if (filters?.before_date) {
+        params.append('before_date', filters.before_date);
       }
 
       const fetchPromise = (async () => {
@@ -132,23 +139,22 @@ export class ChatSessionService {
         throw new Error(data.error || `Erreur lors de la récupération des sessions (${response.status})`);
       }
 
-        // Mettre en cache uniquement les appels "simples" (sans filtres)
-        if (!filters) {
+        // Mettre en cache uniquement la première page (sans before_date)
+        if (!isPaginatedFollowUp && !filters) {
           setSessionsCache(data);
         }
 
       return data;
       })();
 
-      // Si pas de filtres, on stocke la promesse en cours pour dédupliquer
-      if (!filters) {
+      // Dédupliquer uniquement la première page sans filtres
+      if (!isPaginatedFollowUp && !filters) {
         setInFlightSessionsPromise(fetchPromise);
       }
 
       const result = await fetchPromise;
 
-      if (!filters) {
-        // Nettoyer la promesse en cours après résolution
+      if (!isPaginatedFollowUp && !filters) {
         setInFlightSessionsPromise(null);
       }
 
