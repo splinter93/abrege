@@ -8,6 +8,13 @@ interface UseChatScrollOptions {
   watchLayoutChanges?: boolean;
   /** Dépendance qui change quand le layout change (ex: isCanvaOpen) */
   layoutTrigger?: boolean;
+  /**
+   * ID de la session/conversation en cours.
+   * Quand il change, le hook traite le prochain lot de messages comme un
+   * chargement initial et scroll en bas — empêche scrollToUserMessage
+   * de se déclencher sur le changement de conversation.
+   */
+  sessionId?: string | null;
 }
 
 interface UseChatScrollReturn {
@@ -31,11 +38,13 @@ const USER_SCROLL_SETTLE_MS = 320;
  * 3. Scroll manuel → reste libre pour revoir l'historique ou descendre lire la suite.
  */
 export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScrollReturn {
-  const { autoScroll = true, messages = [], watchLayoutChanges = false, layoutTrigger } = options;
+  const { autoScroll = true, messages = [], watchLayoutChanges = false, layoutTrigger, sessionId } = options;
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const prevMessagesRef = useRef(messages);
   const prevLayoutTriggerRef = useRef(layoutTrigger);
+  // Sentinel pour détecter les changements de conversation (undefined = premier montage)
+  const prevSessionIdRef = useRef<string | null | undefined>(undefined);
   const isScrollingProgrammaticallyRef = useRef(false);
   const scrollAnimationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const streamAnchorScrollTopRef = useRef<number | null>(null);
@@ -252,25 +261,35 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     scrollToUserMessage();
   }, [scrollToUserMessage]);
 
-  // Autoscroll : chargement initial OU nouveau message user
+  // Autoscroll : chargement initial, changement de conversation, ou nouveau message user
   useEffect(() => {
     if (!autoScroll || messages.length === 0) return;
 
     const prevMessages = prevMessagesRef.current;
+    const prevSessionId = prevSessionIdRef.current;
     const currLast = messages[messages.length - 1];
     const hasNewMessage = messages.length !== prevMessages.length;
-    prevMessagesRef.current = messages;
 
-    // Chargement initial (0 → N messages, ex. refresh) : scroll instantané en bas.
-    // Double-rAF pour attendre le premier rendu DOM ; re-check à 400ms pour
-    // les images/code blocks qui pourraient allonger le contenu après coup.
-    if (prevMessages.length === 0 && messages.length > 0) {
+    // Mettre à jour les refs avant tout branchement
+    prevMessagesRef.current = messages;
+    prevSessionIdRef.current = sessionId ?? null;
+
+    // Changement de conversation : sessionId a changé depuis le dernier rendu
+    // (prevSessionId === undefined → premier montage, pas un vrai changement)
+    const sessionChanged =
+      prevSessionId !== undefined && prevSessionId !== (sessionId ?? null);
+
+    // Chargement initial (0 → N messages) OU changement de conversation :
+    // scroll instantané en bas, sans scrollToUserMessage.
+    if ((prevMessages.length === 0 && messages.length > 0) || sessionChanged) {
+      // Réinitialiser l'ancre de stream pour la nouvelle session
+      streamAnchorScrollTopRef.current = null;
+      setBottomSpacerHeight(0);
+
       const scrollToEnd = () => {
         const container = getScrollContainer();
         if (!container) return;
         isScrollingProgrammaticallyRef.current = true;
-        streamAnchorScrollTopRef.current = null;
-        setBottomSpacerHeight(0);
         container.scrollTop = container.scrollHeight;
         requestAnimationFrame(() => {
           isScrollingProgrammaticallyRef.current = false;
@@ -287,7 +306,7 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
       // Délai pour laisser le DOM se mettre à jour
       setTimeout(() => scrollToUserMessage(), 100);
     }
-  }, [messages, autoScroll, scrollToUserMessage, getScrollContainer, setBottomSpacerHeight]);
+  }, [messages, sessionId, autoScroll, scrollToUserMessage, getScrollContainer, setBottomSpacerHeight]);
 
   useEffect(() => {
     if (messages.length > 0) return;

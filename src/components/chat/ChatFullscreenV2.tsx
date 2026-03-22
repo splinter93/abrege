@@ -163,7 +163,8 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     autoScroll: true,
     messages: infiniteMessages,
     watchLayoutChanges: isDesktop,
-    layoutTrigger: isCanvaOpen
+    layoutTrigger: isCanvaOpen,
+    sessionId: currentSession?.id ?? null,
   });
 
   // 🎯 EFFECTS (extrait dans useChatFullscreenEffects)
