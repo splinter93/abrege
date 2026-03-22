@@ -96,21 +96,27 @@ Audit complet effectué le 21 mars 2026. Résultat et suivi dans [`docs/ADVANCED
 | **C3** | URL Railway codée en dur dans `LiminalityProvider` — risque d’outage sans alerte | `DEFAULT_CONFIG.baseUrl` lit `process.env.LIMINALITY_BASE_URL` + fallback conservé + warning one-shot si absent |
 | **C4** | Erreur Groq 500 masquée en `success: true` — client persistait une réponse générique comme vraie IA | Retourne `{ success: false, errorCode: 'PROVIDER_UNAVAILABLE' }` HTTP 200 ; toast UI, rien en base |
 
-### À corriger — TypeScript hauts (Phase 1)
+### Corrigés — fiabilité chat / UX (après C1–C4, mars 2026)
 
-Détail complet dans [`ADVANCED-CHAT-PRODUCTION-2026.md`](ADVANCED-CHAT-PRODUCTION-2026.md).
+| Sujet | Correction |
+|-------|------------|
+| **Doublons user / assistant** | `operation_id` bout en bout (optimistic → API → `add_message_atomic` + migration) ; dédup Realtime ; clés React stables ; timeline sans double |
+| **Saccades scroll fin de stream** | Ancre unique `data-chat-stream-anchor`, compensation `useLayoutEffect`, retrait animations listes agressives |
+| **Code blocks hors largeur** | `.chatgpt-assistant-anchor` (stretch, pas `contain` bloquant) + contraintes `.u-block--code` |
+| **Scroll au refresh** | Chargement initial `0 → N` messages : scroll bas (double rAF + re-passe 400 ms) dans `useChatScroll` |
+| **Doublon callable Liminality** | `internal_tool.start/done` puis même `tool_call` dans l’event `done` → ignoré dans `toolCallsMap` (`liminalityInternalToolIds`) |
+| **Logger** | `logger.debug` → `logger.dev` où `simpleLogger` ne fournit pas `debug` (build Vercel) |
 
-| ID | Fichier | Problème |
-|----|---------|----------|
-| T1 | `stream/route.ts` | Double cast `supabase as unknown as SupabaseClient<...>` à chaque appel auth |
-| T2 | `stream/route.ts` | Cast provider pour `callWithMessagesStream(callables?)` absent de `BaseProvider` |
-| T3 | `stream/route.ts` | Mutation de propriétés custom sur un array `Tool[]` |
-| T4 | `stream/route.ts` | `catch {}` vide — parse errors JSON swallowées silencieusement |
-| T6 | `stream/helpers.ts` | `unknown` casté sans validation runtime |
-| T7 | `llm/route.ts` | `history as unknown as ChatMessage[]` — mismatch Zod/type |
-| T8 | `llm/route.ts` | `!` sur `Partial<AgentConfig>` et `string | undefined` |
-| T9 | `ui/chat-sessions/route.ts` | `process.env.SUPABASE_ANON_KEY!` sans guard |
-| T10 | `ui/chat-sessions/route.ts` | `let body` — `any` implicite |
+### Corrigés — TypeScript hauts (Phase 1, mars 2026)
+
+Les **9 points TypeScript** listés dans le plan d’audit ont été traités (casts Supabase/provider, `Tool[]`, `catch` avec log, validation Zod/helpers, `llm/route`, guards env + typage `body` sur `ui/chat-sessions`). Détail historique : [`ADVANCED-CHAT-PRODUCTION-2026.md`](ADVANCED-CHAT-PRODUCTION-2026.md).
+
+| ID | Statut |
+|----|--------|
+| T1–T4 | `stream/route.ts` — nettoyé / typé |
+| T6 | `stream/helpers.ts` — validation runtime |
+| T7–T8 | `llm/route.ts` — alignement types |
+| T9–T10 | `ui/chat-sessions/route.ts` — guards + typage `body` |
 
 ### À corriger — Architecture (Phase 2)
 
@@ -132,4 +138,18 @@ Détail complet dans [`ADVANCED-CHAT-PRODUCTION-2026.md`](ADVANCED-CHAT-PRODUCTI
 
 ---
 
-*Document généré à partir de l’audit du chat (comparaison aux meilleurs chats IA du marché). Dernière mise à jour : 21 mars 2026.*
+*Document généré à partir de l’audit du chat (comparaison aux meilleurs chats IA du marché). Dernière mise à jour : 22 mars 2026.*
+
+---
+
+## 8. Où on en est (synthèse)
+
+| Zone | État |
+|------|------|
+| **Bloquants prod §7 (C1–C4)** | ✅ Faits |
+| **Phase 1 TypeScript (T1–T10)** | ✅ Traitée |
+| **Fiabilité temps réel / scroll / callables** | ✅ Gros chantiers stabilisés (voir tableau « Corrigés — fiabilité ») |
+| **Phase 2 architecture (A1–A11)** | ⏳ Encore ouverte — consolidation types outils, timeouts fetch, rollback persist, etc. |
+| **§1–6 (ErrorBoundary, 429 UI, mobile `keyboardInset`, a11y, refacto `ChatFullscreenV2`, tests erreurs)** | ⏳ Roadmap produit / polish inchangée — priorité §6 : ErrorBoundary + 429 |
+
+**Prochaine valeur rapide** : ErrorBoundary chat + affichage rate limit 429 (déjà listés en tête de la synthèse §6).
