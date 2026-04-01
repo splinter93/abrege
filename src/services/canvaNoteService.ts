@@ -109,6 +109,49 @@ export class CanvaNoteService {
       let targetClasseurId = options?.classeurId ?? null;
       let targetFolderId = options?.folderId ?? null;
 
+      // Rejeter classeur / dossier inexistants ou hors compte (ex. LLM avec mauvais UUID) — évite FK 500
+      if (targetClasseurId) {
+        const { data: ownedClasseur } = await client
+          .from('classeurs')
+          .select('id')
+          .eq('id', targetClasseurId)
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (!ownedClasseur) {
+          logger.warn(
+            LogCategory.EDITOR,
+            '[CanvaNoteService] classeur_id invalide ou non autorisé — repli Quicknotes',
+            { requestedClasseurId: targetClasseurId }
+          );
+          targetClasseurId = null;
+          targetFolderId = null;
+        }
+      }
+
+      if (targetFolderId) {
+        const { data: folderRow } = await client
+          .from('folders')
+          .select('id, classeur_id')
+          .eq('id', targetFolderId)
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (!folderRow) {
+          logger.warn(LogCategory.EDITOR, '[CanvaNoteService] folder_id invalide, ignoré', {
+            targetFolderId
+          });
+          targetFolderId = null;
+        } else if (targetClasseurId && folderRow.classeur_id !== targetClasseurId) {
+          logger.warn(LogCategory.EDITOR, '[CanvaNoteService] folder_id hors du classeur demandé, ignoré', {
+            targetFolderId,
+            expectedClasseurId: targetClasseurId,
+            folderClasseurId: folderRow.classeur_id
+          });
+          targetFolderId = null;
+        } else if (!targetClasseurId) {
+          targetClasseurId = folderRow.classeur_id as string;
+        }
+      }
+
       // Si aucun classeur spécifié, utiliser Quicknotes > dossier Canvas
       if (!targetClasseurId && !targetFolderId) {
         try {
