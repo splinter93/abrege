@@ -260,6 +260,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     description: 'Qwen3.5 397B A17B via OpenRouter, vision et analyse d\'images',
     recommended: false
   },
+  {
+    id: 'openrouter/qwen3.6-plus-free',
+    name: 'Qwen 3.6 Plus (Free)',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 131072,
+    maxOutput: 8192,
+    speed: 450,
+    pricing: { input: '$0.00', output: '$0.00' },
+    description: 'Qwen 3.6 Plus (gratuit) via OpenRouter sur Liminality',
+    recommended: false
+  },
 ];
 
 /**
