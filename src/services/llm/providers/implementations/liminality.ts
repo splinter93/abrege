@@ -111,7 +111,7 @@ const LIMINALITY_INFO: ProviderInfo = {
     'openrouter/minimax-m2.7',
     'openrouter/qwen3-vl-30b-a3b-instruct',
     'openrouter/qwen3.5-397b-a17b',
-    'openrouter/qwen3.6-plus-free'
+    'openrouter/qwen3.6-plus'
   ],
   pricing: {
     input: 'Variable (depends on underlying model)',
