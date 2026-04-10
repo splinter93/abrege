@@ -1,18 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FiFeather } from 'react-icons/fi';
+import { Feather } from 'lucide-react';
 
 const SPLASH_DONE_KEY = 'scrivia_splash_done';
 const FADE_DURATION = 350; // ms
 
 /**
- * PWA Splash Screen - Client-only pour éviter hydration error.
- * Affiche la plume + "Scrivia" 800ms au premier chargement sur mobile/PWA.
- * Fade-out réel avant démontage (l'ancien `return null` coupait l'animation).
+ * PWA / Capacitor — splash au premier chargement (mobile ou standalone).
+ * Icône plume seule, même trait que la home (dégradé stroke), sans texte ni encadré.
  */
 export default function PWASplash() {
-  // `show` = monté dans le DOM ; `opacity` = valeur CSS
   const [show, setShow] = useState(false);
   const [opacity, setOpacity] = useState(1);
 
@@ -26,9 +24,7 @@ export default function PWASplash() {
     setShow(true);
 
     const hide = setTimeout(() => {
-      // Lance le fade-out CSS
       setOpacity(0);
-      // Démonte après la fin de l'animation
       setTimeout(() => setShow(false), FADE_DURATION);
       try { sessionStorage.setItem(SPLASH_DONE_KEY, '1'); } catch { /* noop */ }
     }, 800);
@@ -45,59 +41,28 @@ export default function PWASplash() {
         inset: 0,
         background: '#000000',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 20,
         zIndex: 99999,
         opacity,
         transition: `opacity ${FADE_DURATION}ms ease`,
         pointerEvents: opacity === 1 ? 'auto' : 'none',
       }}
     >
-      {/* Plume avec dégradé identique au logo header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 72,
-          height: 72,
-          borderRadius: 18,
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.08)',
-        }}
-      >
-        <svg width="0" height="0" style={{ position: 'absolute' }}>
-          <defs>
-            <linearGradient id="splash-feather-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#e2e2e2" />
-              <stop offset="100%" stopColor="#8a8a8a" />
-            </linearGradient>
-          </defs>
-        </svg>
-        <FiFeather
-          size={36}
-          style={{ stroke: 'url(#splash-feather-grad)' }}
-        />
-      </div>
-
-      {/* Nom de l'app */}
-      <span
-        style={{
-          fontFamily: "'Manrope', -apple-system, sans-serif",
-          fontSize: 22,
-          fontWeight: 600,
-          letterSpacing: '-0.01em',
-          background: 'linear-gradient(135deg, #e2e2e2 0%, #8a8a8a 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-        }}
-      >
-        Scrivia
-      </span>
+      <svg width={0} height={0} aria-hidden className="absolute">
+        <defs>
+          <linearGradient id="pwa-splash-feather-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="white" />
+            <stop offset="1" stopColor="rgba(255,255,255,0.5)" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <Feather
+        className="h-[96px] w-[96px] shrink-0"
+        stroke="url(#pwa-splash-feather-gradient)"
+        strokeWidth={1.75}
+        aria-hidden
+      />
     </div>
   );
 }
-
