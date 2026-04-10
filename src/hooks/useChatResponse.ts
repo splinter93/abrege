@@ -24,6 +24,8 @@ interface UseChatResponseOptions {
   // Callbacks pour streaming
   onStreamChunk?: (content: string) => void;
   onStreamStart?: () => void;
+  /** UUID serveur (chunk SSE start) — même operation_id que la persistance serveur */
+  onStreamInit?: (operationId: string) => void;
   onStreamEnd?: () => void;
   onToolExecution?: (toolCount: number, toolCalls: ToolCall[]) => void;
   onPlanUpdate?: (payload: {
@@ -78,6 +80,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
     onToolExecutionComplete,
     onStreamChunk,
     onStreamStart,
+    onStreamInit,
     onStreamEnd,
     onToolExecution,
     onPlanUpdate,
@@ -178,6 +181,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
         
         const streamResult = await orchestrator.processStream(response, {
           onStreamStart,
+          onStreamInit,
           onStreamChunk,
           onStreamEnd,
           onToolCalls,
@@ -479,7 +483,7 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
       abortControllerRef.current = null;
       setIsProcessing(false);
     }
-  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamEnd, onToolExecution, onPlanUpdate, onModelInfo, useStreaming, onAssistantRoundComplete]);
+  }, [onComplete, onError, onToolCalls, onToolResult, onToolExecutionComplete, onStreamChunk, onStreamStart, onStreamInit, onStreamEnd, onToolExecution, onPlanUpdate, onModelInfo, useStreaming, onAssistantRoundComplete]);
 
   const abort = useCallback(() => {
     if (abortControllerRef.current) {

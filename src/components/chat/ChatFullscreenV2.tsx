@@ -414,6 +414,15 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
         window.dispatchEvent(new CustomEvent('chat-vocal-tts-start'));
       }
     },
+    onStreamInit: (operationId) => {
+      pendingAssistantOperationIdRef.current = operationId;
+      const cmid = pendingAssistantClientMessageIdRef.current;
+      if (cmid) {
+        updateInfiniteMessageByClientId(cmid, (message) =>
+          message.role === 'assistant' ? { ...message, operation_id: operationId } : message
+        );
+      }
+    },
     onStreamEnd: () => {
       if (isVocalModeRef.current) {
         const remaining = stripMarkdownForTTS(ttsBufferRef.current).trim();
@@ -607,12 +616,16 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
 
   // 🎯 UI STATE (déjà extrait dans useChatFullscreenUIState)
 
-  // ✅ Reset l'erreur quand la session change (sécurité supplémentaire)
+  // ✅ Cloisonnement par session : abort + reset complet quand la session change
+  // Le stream serveur continue et persiste de son côté via server-side persistence
   useEffect(() => {
-    // Réinitialiser l'erreur quand currentSession change
     uiState.setStreamError(null);
     clearPendingAssistantTracking();
-  }, [currentSession?.id, uiState.setStreamError]);
+    // Couper le stream SSE client de l'ancienne session (server persiste indépendamment)
+    abortStream();
+    streamingState.reset();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSession?.id]);
 
   // 🎯 HANDLERS UI (extrait dans useChatFullscreenUIActions)
   useEffect(() => {

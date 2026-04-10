@@ -34,6 +34,8 @@ export interface StreamErrorDetails {
  */
 export interface StreamCallbacks {
   onStreamStart?: () => void;
+  /** UUID serveur (chunk start) — aligner operation_id client pour dédup avec persist serveur */
+  onStreamInit?: (operationId: string) => void;
   onStreamChunk?: (content: string) => void;
   onStreamEnd?: () => void;
   onToolCalls?: (toolCalls: ToolCall[], toolName: string) => void;
@@ -220,6 +222,9 @@ export class StreamOrchestrator {
     switch (chunk.type) {
       case 'start':
         logger.dev('[StreamOrchestrator] 🚀 Stream démarré');
+        if (chunk.operationId && typeof chunk.operationId === 'string') {
+          callbacks.onStreamInit?.(chunk.operationId);
+        }
         // ✅ NOUVEAU : Capturer modelInfo si présent
         if (chunk.modelInfo) {
           callbacks.onModelInfo?.(chunk.modelInfo);

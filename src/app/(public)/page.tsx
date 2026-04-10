@@ -561,7 +561,7 @@ function AuthenticatedHomeContent({
         {/* 2. Quick Actions */}
         <section className="flex items-center justify-center gap-3 overflow-x-auto no-scrollbar -mx-2 px-2">
           <ActionButton icon={Plus} label="New Note" onClick={handleCreateNote} />
-          <ActionButton icon={MessageSquare} label="Open Chat" onClick={() => router.push("/chat")} />
+          <ActionButton icon={MessageSquare} label="Chat" onClick={() => router.push("/chat")} />
           <ActionButton icon={Upload} label="Import" onClick={handleImport} />
         </section>
 

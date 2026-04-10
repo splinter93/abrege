@@ -206,10 +206,10 @@ export function AgentConfiguration({
         </section>
 
         {/* Voix TTS + Langue */}
-        <section>
+        <section className="min-w-0">
           <label className={labelBase}>Voix & Langue (TTS)</label>
-          <div className="flex gap-3">
-            <div className="flex-1">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-stretch">
+            <div className="min-w-0 w-full sm:flex-1">
               <CustomSelect
                 id="agent-voice"
                 value={editedAgent.voice ?? ''}
@@ -218,7 +218,7 @@ export function AgentConfiguration({
                 placeholder="Voix"
               />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 w-full sm:flex-1">
               <CustomSelect
                 id="agent-tts-language"
                 value={editedAgent.tts_language ?? 'en'}

@@ -441,6 +441,29 @@ html.capacitor-native .image-source-modal {
   .chatgpt-container::before {
     display: none !important;
   }
+
+  /* Dashboard (PageWithSidebarLayout) : barre « Scrivia App » = noir absolu, comme le header chat natif */
+  .mobile-top-bar {
+    background: #000000 !important;
+    background-color: #000000 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Drawer latéral : même noir que la top bar (mobile dashboard PWA) */
+  .page-wrapper.page-is-mobile .page-sidebar-fixed.page-sidebar-drawer {
+    background: #000000 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .page-wrapper.page-is-mobile .page-sidebar-drawer .sidebar-root {
+    background-color: #000000 !important;
+    background-image: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 }
 
 /* ========================================
@@ -567,11 +590,23 @@ button, a, input, textarea, select {
    On doit décaler le header burger + le drawer pour qu'ils ne passent pas sous la barre native.
 */
 
-/* Top bar mobile : forcer hauteur totale 56px + safe-area (évite header tout fin en WebView) */
+/* Top bar mobile : hauteur 56px + safe-area + noir absolu (aligné chat / status bar) */
 html.capacitor-native .mobile-top-bar {
   min-height: calc(56px + env(safe-area-inset-top, 0px)) !important;
   height: calc(56px + env(safe-area-inset-top, 0px)) !important;
   box-sizing: border-box !important;
+  background: #000000 !important;
+  background-color: #000000 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.capacitor-native .page-sidebar-drawer .sidebar-root {
+  background-color: #000000 !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 html.capacitor-native .page-mobile-sidebar-header {
@@ -579,11 +614,14 @@ html.capacitor-native .page-mobile-sidebar-header {
   min-height: calc(52px + env(safe-area-inset-top, 0px)) !important;
 }
 
-/* Drawer : démarre sous la top bar (même calc que unified-page-layout), z-40 < top bar */
+/* Drawer : sous la top bar + noir absolu (même coque que la barre burger) */
 html.capacitor-native .page-sidebar-fixed.page-sidebar-drawer {
   top: calc(56px + env(safe-area-inset-top, 0px)) !important;
   height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)) !important;
   z-index: 40 !important;
+  background: #000000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* ScriviaFilePicker : en Capacitor/PWA chat, ne pas passer sous le header */

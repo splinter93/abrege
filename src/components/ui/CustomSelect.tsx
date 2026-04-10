@@ -62,17 +62,17 @@ export function CustomSelect({
       <button
         id={id}
         type="button"
-        className={`${inputBase} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`${inputBase} min-w-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        <span className="truncate">
+        <span className="min-w-0 flex-1 truncate text-left">
           {selectedOption ? selectedOption.label : <span className="text-zinc-500">{placeholder}</span>}
         </span>
-        <ChevronDown 
-          className={`w-4 h-4 text-zinc-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 

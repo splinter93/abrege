@@ -47,6 +47,8 @@ export interface StreamChunk {
     wasOverridden: boolean;
     reasons: string[];
   };
+  /** UUID serveur pour dédup persist assistant (add_message_atomic) */
+  operationId?: string;
   // ✅ Payload pour plan_update (steps, title)
   payload?: { title?: string; steps?: Array<{ id: string; content: string; status: string }> };
 }

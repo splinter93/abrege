@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { logger, LogCategory } from '@/utils/logger';
 import { parsePromptPlaceholders } from '@/utils/promptPlaceholders';
@@ -724,11 +725,15 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode(chunk));
           };
 
+          // UUID partagé serveur/client pour dédup add_message_atomic (persist serveur + client)
+          const serverOperationId = randomUUID();
+
           // Envoyer un chunk de début avec info modèle (pour debug)
           const wasOverridden = overrideResult.model !== overrideResult.originalModel || overrideResult.reasons.length > 0;
           sendSSE({
             type: 'start',
             sessionId,
+            operationId: serverOperationId,
             timestamp: Date.now(),
             model: {
               original: overrideResult.originalModel,
@@ -1680,22 +1685,87 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             logger.debug(LogCategory.API,`[Stream Route] 🔄 Relance du LLM avec ${currentMessages.length} messages`);
           }
 
-          // Envoyer un chunk de fin
-          sendSSE({
-            type: 'done',
-            rounds: roundCount,
-            timestamp: Date.now()
-          });
+          // Persistance serveur : survit au refresh / navigation / fermeture d'onglet (client peut se déconnecter avant done)
+          if (sessionId) {
+            const finalAssistant = [...currentMessages]
+              .reverse()
+              .find((m): m is ChatMessage => m.role === 'assistant');
+            const textContent = finalAssistant?.content
+              ? extractTextFromContent(finalAssistant.content)
+              : '';
+            if (textContent.trim()) {
+              try {
+                const { data: ownedSession } = await supabase
+                  .from('chat_sessions')
+                  .select('id')
+                  .eq('id', sessionId)
+                  .eq('user_id', userId)
+                  .maybeSingle();
 
-          // 🎨 Signaler la fin du streaming au canevas
-          if (noteId) {
-            streamBroadcastService.broadcast(noteId, {
-              type: 'end'
+                if (!ownedSession) {
+                  logger.warn(LogCategory.API, '[Stream Route] ⚠️ Server persist skipped: session missing or not owned', {
+                    sessionId
+                  });
+                } else {
+                  const { historyManager } = await import('@/services/chat/HistoryManager');
+                  const reasoning =
+                    finalAssistant &&
+                    'reasoning' in finalAssistant &&
+                    typeof finalAssistant.reasoning === 'string'
+                      ? finalAssistant.reasoning
+                      : undefined;
+                  await historyManager.addMessage(sessionId, {
+                    role: 'assistant',
+                    content: textContent,
+                    ...(reasoning ? { reasoning } : {}),
+                    operation_id: serverOperationId
+                  });
+                }
+              } catch (persistErr) {
+                logger.error(
+                  LogCategory.API,
+                  '[Stream Route] ⚠️ Server persist failed (client fallback)',
+                  { sessionId },
+                  persistErr instanceof Error ? persistErr : undefined
+                );
+              }
+            }
+          }
+
+          // Chunk done + fermeture : peuvent échouer si le client a déjà coupé la connexion (persist serveur déjà faite au-dessus)
+          try {
+            sendSSE({
+              type: 'done',
+              rounds: roundCount,
+              timestamp: Date.now()
+            });
+          } catch (doneErr) {
+            logger.warn(LogCategory.API, '[Stream Route] ⚠️ Chunk done non envoyé (client souvent déconnecté)', {
+              sessionId,
+              message: doneErr instanceof Error ? doneErr.message : String(doneErr)
             });
           }
 
+          // 🎨 Signaler la fin du streaming au canevas
+          if (noteId) {
+            try {
+              streamBroadcastService.broadcast(noteId, {
+                type: 'end'
+              });
+            } catch (broadcastErr) {
+              logger.warn(LogCategory.API, '[Stream Route] ⚠️ broadcast canva end échoué', {
+                noteId,
+                message: broadcastErr instanceof Error ? broadcastErr.message : String(broadcastErr)
+              });
+            }
+          }
+
           logger.info(LogCategory.API, '[Stream Route] ✅ Stream terminé avec succès');
-          controller.close();
+          try {
+            controller.close();
+          } catch {
+            /* stream déjà fermé côté client */
+          }
 
         } catch (error) {
           // ✅ Détecter si c'est un timeout
@@ -1736,9 +1806,19 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
             })
           };
           
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorChunk)}\n\n`));
-          
-          controller.close();
+          try {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorChunk)}\n\n`));
+          } catch (enqueueErr) {
+            logger.warn(LogCategory.API, '[Stream Route] ⚠️ Error chunk not sent (client likely disconnected)', {
+              sessionId,
+              message: enqueueErr instanceof Error ? enqueueErr.message : String(enqueueErr)
+            });
+          }
+          try {
+            controller.close();
+          } catch {
+            /* déjà fermé ou stream invalide */
+          }
         }
       }
     });

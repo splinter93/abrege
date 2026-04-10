@@ -522,6 +522,8 @@ function AgentDetailContent() {
   }
 
   const pageTitle = isNew ? 'Nouvel agent' : (editedAgent?.display_name || editedAgent?.name || 'Agent');
+  const showHeaderRightCluster =
+    paramsPanel.isMobile || Boolean(selectedAgent || hasLocalChanges);
   const displayAvatar =
     typeof editedAgent?.profile_picture === 'string' && (editedAgent?.profile_picture || '').trim().length > 0;
   const avatarFallback = (pageTitle || '?')
@@ -534,86 +536,88 @@ function AgentDetailContent() {
   return (
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-agents bg-[var(--color-bg-primary)] w-full max-w-none mx-0">
-        {/* Header sticky Linear */}
-        <header className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/80 backdrop-blur-xl border-b border-zinc-800/60">
-          <div className="w-full px-4">
-            <div className="flex items-center justify-between h-[50px] gap-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <Link
-                  href="/private/agents2"
-                  className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700/60 transition-colors shrink-0 inline-flex items-center justify-center"
-                  aria-label="Retour aux agents"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </Link>
-                <div className="min-w-0 flex items-center gap-2">
-                  <span className="text-zinc-100 font-medium truncate">{pageTitle}</span>
+        {/* Header sticky : une seule ligne ; actions à droite avec scroll horizontal si besoin (< lg) */}
+        <header className="sticky top-0 z-20 border-b border-zinc-800/60 bg-[var(--color-bg-primary)]/95 backdrop-blur-xl supports-[backdrop-filter]:bg-[var(--color-bg-primary)]/80">
+          <div className="w-full px-3 sm:px-4">
+            <div className="flex min-h-[48px] w-full items-center gap-2 py-2 lg:h-[52px] lg:py-0">
+              <Link
+                href="/private/agents2"
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-zinc-800/50 bg-zinc-900/40 text-zinc-400 transition-colors hover:border-zinc-700/50 hover:text-zinc-100 lg:size-9 lg:p-0"
+                aria-label="Retour aux agents"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+              <div className="min-w-0 flex-1 basis-0">
+                <span className="block truncate text-[15px] font-semibold leading-snug text-zinc-100 lg:text-base lg:font-medium">
+                  {pageTitle}
+                </span>
+              </div>
+              {showHeaderRightCluster && (
+                <div className="flex max-w-[min(58vw,280px)] shrink-0 flex-nowrap items-center justify-end gap-1 overflow-x-auto overscroll-x-contain no-scrollbar sm:max-w-[min(72vw,320px)] sm:gap-1.5 lg:max-w-none lg:gap-2">
+                  {paramsPanel.isMobile && (
+                    <button
+                      type="button"
+                      onClick={paramsPanel.togglePanel}
+                      className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-zinc-800/50 bg-zinc-900/40 text-zinc-300 transition-colors hover:border-zinc-700/50 hover:text-white lg:hidden"
+                      aria-label="Ouvrir les paramètres"
+                    >
+                      <SlidersHorizontal className="h-4 w-4" />
+                    </button>
+                  )}
+                  {selectedAgent && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleFieldUpdate('is_active', !editedAgent?.is_active)}
+                        title={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
+                        className={`inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-transparent transition-colors lg:size-9 lg:border-0 lg:p-0 ${editedAgent?.is_active ? 'text-emerald-500 hover:bg-zinc-800/40 hover:text-emerald-400' : 'text-zinc-500 hover:bg-zinc-800/40 hover:text-zinc-300'}`}
+                        aria-label={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
+                      >
+                        {editedAgent?.is_active ? <Power className="h-4 w-4" /> : <PowerOff className="h-4 w-4" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleToggleFavorite}
+                        disabled={togglingFavorite}
+                        title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
+                        className={`inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-transparent transition-colors disabled:pointer-events-none disabled:opacity-50 lg:size-9 lg:border-0 lg:p-0 ${isFavorite ? 'text-amber-400 hover:bg-zinc-800/40 hover:text-amber-300' : 'text-zinc-500 hover:bg-zinc-800/40 hover:text-zinc-300'}`}
+                        aria-label={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
+                      >
+                        <Star className="h-4 w-4" fill={isFavorite ? 'currentColor' : 'none'} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDeleteAgent}
+                        title="Supprimer l'agent"
+                        className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-transparent text-zinc-500 transition-colors hover:bg-zinc-800/40 hover:text-red-400 lg:size-9 lg:border-0 lg:p-0"
+                        aria-label="Supprimer l'agent"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
+                  {hasLocalChanges && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleCancelChanges}
+                        disabled={panelLoading}
+                        className="flex h-10 shrink-0 items-center justify-center rounded-lg px-3 text-sm text-zinc-400 transition-colors hover:bg-zinc-800/50 hover:text-zinc-100 disabled:opacity-50 lg:h-9"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveAgent}
+                        disabled={panelLoading}
+                        className="flex h-10 min-w-[6.5rem] shrink-0 items-center justify-center rounded-lg bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200 disabled:pointer-events-none disabled:opacity-50 lg:h-9 lg:min-w-[7rem]"
+                      >
+                        {savingAgent ? 'Enregistrement…' : 'Enregistrer'}
+                      </button>
+                    </>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {paramsPanel.isMobile && (
-                  <button
-                    type="button"
-                    onClick={paramsPanel.togglePanel}
-                    className="p-2 rounded-lg bg-zinc-900/60 border border-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700/60 transition-colors"
-                    aria-label="Ouvrir les paramètres"
-                  >
-                    <SlidersHorizontal className="w-4 h-4" />
-                  </button>
-                )}
-                {selectedAgent && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => handleFieldUpdate('is_active', !editedAgent?.is_active)}
-                      title={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
-                      className={`p-1.5 rounded-md transition-colors shrink-0 ${editedAgent?.is_active ? 'text-emerald-500 hover:text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'}`}
-                      aria-label={editedAgent?.is_active ? 'Désactiver l\'agent' : 'Activer l\'agent'}
-                    >
-                      {editedAgent?.is_active ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleToggleFavorite}
-                      disabled={togglingFavorite}
-                      title={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
-                      className={`p-1.5 rounded-md transition-colors shrink-0 disabled:opacity-50 disabled:pointer-events-none ${isFavorite ? 'text-amber-400 hover:text-amber-300' : 'text-zinc-500 hover:text-zinc-300'}`}
-                      aria-label={isFavorite ? 'Retirer des favoris' : 'Définir comme agent favori'}
-                    >
-                      <Star className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDeleteAgent}
-                      title="Supprimer l'agent"
-                      className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 transition-colors"
-                      aria-label="Supprimer l'agent"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </>
-                )}
-                {hasLocalChanges && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleCancelChanges}
-                      disabled={panelLoading}
-                      className="flex h-9 items-center justify-center gap-1.5 rounded-md px-3 text-sm text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-50"
-                    >
-                      Annuler
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSaveAgent}
-                      disabled={panelLoading}
-                      className="flex h-9 items-center justify-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200 disabled:opacity-50 disabled:pointer-events-none min-w-[7rem]"
-                    >
-                      {savingAgent ? 'Enregistrement…' : 'Enregistrer'}
-                    </button>
-                  </>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </header>

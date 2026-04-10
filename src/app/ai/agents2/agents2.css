@@ -1,3 +1,12 @@
+/* Scroll horizontal discret (barre d’actions header agent mobile) */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Page agents : pleine largeur, sans padding parasite (bord droit, bas) */
 .page-content-area:has(.page-content-inner-agents) {
   padding: 0 !important;
