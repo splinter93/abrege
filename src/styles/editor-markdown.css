@@ -274,6 +274,18 @@ div.markdown-body ul[data-type="taskList"],
   background: rgba(255,255,255,0.22);
 }
 
+/* Marges uniquement si <table> racine (sans .tableWrapper) — sinon margin:0 sur le wrapper */
+.ProseMirror .tableWrapper > table,
+.markdown-body .tableWrapper > table {
+  margin: 0;
+}
+
+.ProseMirror > table,
+.markdown-body > table {
+  margin-top: var(--md-table-margin);
+  margin-bottom: var(--md-table-margin);
+}
+
 .ProseMirror table,
 .markdown-body table {
   width: 100%;
@@ -281,7 +293,6 @@ div.markdown-body ul[data-type="taskList"],
   table-layout: auto;
   border-collapse: separate;
   border-spacing: 0;
-  margin: 0;
   background: var(
     --chat-embedded-surface-bg,
     color-mix(in srgb, var(--chat-bg-secondary, var(--bg-secondary, #fafafa)) 32%, transparent)
@@ -329,11 +340,11 @@ div.markdown-body ul[data-type="taskList"],
 
 .ProseMirror th,
 .markdown-body th {
-  height: 40px !important;
-  min-height: 40px !important;
-  padding: 0 16px !important;
+  min-height: var(--md-table-header-min-height) !important;
+  height: auto !important;
+  padding: var(--md-table-header-padding-y) var(--md-table-cell-padding-x) !important;
   box-sizing: border-box !important;
-  line-height: 40px !important;
+  line-height: var(--editor-line-height-base, 1.5) !important;
   vertical-align: middle !important;
   text-align: left !important;
   font-weight: 600 !important;
@@ -363,7 +374,7 @@ div.markdown-body ul[data-type="taskList"],
 
 .ProseMirror td,
 .markdown-body td {
-  padding: 10px 16px !important;
+  padding: var(--md-table-cell-padding-y) var(--md-table-cell-padding-x) !important;
   border-bottom: 0.5px solid rgba(255, 255, 255, 0.03) !important;
   background: var(
     --chat-embedded-surface-bg,
@@ -417,22 +428,25 @@ div.markdown-body ul[data-type="taskList"],
 @media (max-width: 768px) {
   .ProseMirror .tableWrapper,
   .markdown-body .tableWrapper {
-    margin: var(--md-table-margin) -12px;
+    margin-top: var(--md-table-margin);
+    margin-right: -12px;
+    margin-bottom: var(--md-table-margin);
+    margin-left: -12px;
     padding: 0 12px;
   }
 
   .ProseMirror th,
   .markdown-body th {
-    height: 36px !important;
-    min-height: 36px !important;
-    line-height: 36px !important;
-    padding: 0 10px !important;
+    min-height: 2.25rem !important;
+    height: auto !important;
+    line-height: 1.45 !important;
+    padding: 0.5rem 0.75rem !important;
     font-size: 13px !important;
   }
 
   .ProseMirror td,
   .markdown-body td {
-    padding: 8px 10px !important;
+    padding: 0.5rem 0.75rem !important;
     font-size: 13px !important;
   }
 }

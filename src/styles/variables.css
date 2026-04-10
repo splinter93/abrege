@@ -245,8 +245,13 @@ body.dark {
   --md-list-item-margin: 0.1875rem; /* 3px — entre items */
   --md-list-nested-margin: 0.125rem; /* 2px — listes imbriquées */
 
-  /* ——— ÉDITEUR — Blocs ——— */
-  --md-table-margin: 0.875rem;     /* 14px — avant/après tableau */
+  /* ——— ÉDITEUR — Tableaux (même espace au-dessus et en dessous du bloc) ——— */
+  --md-table-margin: 1rem; /* avant / après le tableau (symétrique) */
+  /* Cellules */
+  --md-table-cell-padding-y: 0.75rem;   /* 12px */
+  --md-table-cell-padding-x: 1.125rem; /* 18px */
+  --md-table-header-padding-y: 0.625rem; /* 10px */
+  --md-table-header-min-height: 2.75rem; /* 44px — ligne d’en-tête */
   --md-blockquote-margin: 0.75rem; /* 12px — avant/après blockquote */
   --md-blockquote-padding: 0.5rem; /* 8px  — padding interne haut/bas */
   --md-hr-margin: 1rem;            /* 16px — séparateur */
