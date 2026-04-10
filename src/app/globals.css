@@ -72,6 +72,8 @@
 
 html {
   overflow-x: hidden;
+  /* Réserve la gouttière scrollbar dès le chargement → élimine le flash/saut au layout initial */
+  scrollbar-gutter: stable;
 }
 
 body {

@@ -1,74 +1,102 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { FiFeather } from 'react-icons/fi';
 
 const SPLASH_DONE_KEY = 'scrivia_splash_done';
+const FADE_DURATION = 350; // ms
 
 /**
  * PWA Splash Screen - Client-only pour éviter hydration error.
- * Affiche le logo 800ms au premier chargement sur mobile/PWA.
- * Ne se réaffiche pas au retour dans l'app (sessionStorage) pour éviter
- * le flash de splash à chaque resume quand la page n'a pas rechargé.
+ * Affiche la plume + "Scrivia" 800ms au premier chargement sur mobile/PWA.
+ * Fade-out réel avant démontage (l'ancien `return null` coupait l'animation).
  */
 export default function PWASplash() {
-  const [visible, setVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  // `show` = monté dans le DOM ; `opacity` = valeur CSS
+  const [show, setShow] = useState(false);
+  const [opacity, setOpacity] = useState(1);
 
   useEffect(() => {
-    const checkMobile = () => {
-      const isSmallScreen = window.innerWidth < 768;
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      setIsMobile(isSmallScreen || isStandalone);
-    };
-    checkMobile();
+    const isSmallScreen = window.innerWidth < 768;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    if (!isSmallScreen && !isStandalone) return;
 
-    if (typeof window === 'undefined') return;
-    if (sessionStorage.getItem(SPLASH_DONE_KEY)) {
-      setVisible(false);
-      return;
-    }
+    if (sessionStorage.getItem(SPLASH_DONE_KEY)) return;
 
-    const timer = setTimeout(() => {
-      setVisible(false);
-      try {
-        sessionStorage.setItem(SPLASH_DONE_KEY, '1');
-      } catch {
-        // ignore
-      }
+    setShow(true);
+
+    const hide = setTimeout(() => {
+      // Lance le fade-out CSS
+      setOpacity(0);
+      // Démonte après la fin de l'animation
+      setTimeout(() => setShow(false), FADE_DURATION);
+      try { sessionStorage.setItem(SPLASH_DONE_KEY, '1'); } catch { /* noop */ }
     }, 800);
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(hide);
   }, []);
 
-  if (!visible || !isMobile) return null;
+  if (!show) return null;
 
   return (
     <div
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100vh',
+        inset: 0,
         background: '#000000',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: 20,
         zIndex: 99999,
-        opacity: visible ? 1 : 0,
-        transition: 'opacity 0.3s ease',
-        pointerEvents: visible ? 'auto' : 'none'
+        opacity,
+        transition: `opacity ${FADE_DURATION}ms ease`,
+        pointerEvents: opacity === 1 ? 'auto' : 'none',
       }}
     >
-      <img
-        src="/logo-scrivia-white.png"
-        alt="Scrivia"
+      {/* Plume avec dégradé identique au logo header */}
+      <div
         style={{
-          width: '200px',
-          height: '200px',
-          objectFit: 'contain'
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 72,
+          height: 72,
+          borderRadius: 18,
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
         }}
-      />
+      >
+        <svg width="0" height="0" style={{ position: 'absolute' }}>
+          <defs>
+            <linearGradient id="splash-feather-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#e2e2e2" />
+              <stop offset="100%" stopColor="#8a8a8a" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <FiFeather
+          size={36}
+          style={{ stroke: 'url(#splash-feather-grad)' }}
+        />
+      </div>
+
+      {/* Nom de l'app */}
+      <span
+        style={{
+          fontFamily: "'Manrope', -apple-system, sans-serif",
+          fontSize: 22,
+          fontWeight: 600,
+          letterSpacing: '-0.01em',
+          background: 'linear-gradient(135deg, #e2e2e2 0%, #8a8a8a 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+        }}
+      >
+        Scrivia
+      </span>
     </div>
   );
 }
