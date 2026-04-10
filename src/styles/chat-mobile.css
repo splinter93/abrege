@@ -53,8 +53,8 @@
 /* ========== TOUCH OPTIMIZATIONS ========== */
 
 @media (hover: none) and (pointer: coarse) {
-  /* Exclure .bubble-button : mêmes dimensions qu’en mode web (24px), pas de zone 44px */
-  button:not(.bubble-button),
+  /* Exclure bulles + header éditeur : dimensions définies dans editor-header.css */
+  button:not(.bubble-button):not(.header-action-btn):not(.editor-header__logo),
   .clickable,
   .chat-button,
   .tool-call-toggle,
@@ -63,7 +63,10 @@
     min-width: 44px;
   }
   .chat-input-textarea { -webkit-tap-highlight-color: transparent; }
-  a { padding: 4px 0; }
+  /* Ne pas décaler le logo / liens du header éditeur */
+  a:not(.editor-header__logo) {
+    padding: 4px 0;
+  }
   .chat-messages-area::-webkit-scrollbar { display: none; }
   select { appearance: auto; -webkit-appearance: auto; }
 }

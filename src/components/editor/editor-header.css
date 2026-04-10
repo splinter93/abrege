@@ -9,6 +9,10 @@
    ========================================================================== */
 
 .editor-header {
+  /* Même hit / taille d’icône partout (desktop + responsive) — évite saut au breakpoint */
+  --editor-header-icon-hit: 32px;
+  --editor-header-icon-size: 20px;
+
   position: sticky;
   top: 0;
   left: 0;
@@ -71,13 +75,16 @@
 .editor-header__left-actions .editor-header__logo {
   position: static;
   transform: none;
-  width: 28px;
-  height: 28px;
+  width: var(--editor-header-icon-hit);
+  height: var(--editor-header-icon-hit);
+  min-width: var(--editor-header-icon-hit);
+  min-height: var(--editor-header-icon-hit);
+  box-sizing: border-box;
 }
 
 .editor-header__left-actions .editor-header__logo-icon {
-  width: 18px;
-  height: 18px;
+  width: var(--editor-header-icon-size);
+  height: var(--editor-header-icon-size);
 }
 
 .editor-header__logo {
@@ -86,8 +93,10 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
-  width: 32px;
-  height: 32px;
+  width: var(--editor-header-icon-hit);
+  height: var(--editor-header-icon-hit);
+  min-width: var(--editor-header-icon-hit);
+  min-height: var(--editor-header-icon-hit);
   padding: 0;
   border-radius: 6px;
   display: flex;
@@ -99,6 +108,8 @@
   transition: background 0.15s ease;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .editor-header__logo:hover {
@@ -106,21 +117,19 @@
 }
 
 .editor-header__logo-icon {
-  width: 22px;
-  height: 22px;
-  /* Dégradé gris : couleur de base gris clair avec effet dégradé via ombre */
-  color: #9ca3af; /* Gris clair (slate-400) - éclairci */
-  transition: all 0.2s ease;
-  /* Effet dégradé via multiple drop-shadows pour créer une profondeur grise plus claire */
-  filter: drop-shadow(0 1px 1px rgba(156, 163, 175, 0.4)) 
-          drop-shadow(0 0 2px rgba(107, 114, 128, 0.3));
+  width: var(--editor-header-icon-size);
+  height: var(--editor-header-icon-size);
+  flex-shrink: 0;
+  color: #9ca3af;
+  transition: color 0.2s ease, filter 0.2s ease;
+  filter: drop-shadow(0 1px 1px rgba(156, 163, 175, 0.4))
+    drop-shadow(0 0 2px rgba(107, 114, 128, 0.3));
 }
 
 .editor-header__logo-icon:hover {
-  color: #d1d5db; /* Gris très clair au hover (slate-300) */
-  filter: drop-shadow(0 2px 3px rgba(209, 213, 219, 0.5)) 
-          drop-shadow(0 0 4px rgba(156, 163, 175, 0.4));
-  transform: scale(1.05);
+  color: #d1d5db;
+  filter: drop-shadow(0 2px 3px rgba(209, 213, 219, 0.5))
+    drop-shadow(0 0 4px rgba(156, 163, 175, 0.4));
 }
 
 /* =============================================================================
@@ -153,24 +162,34 @@
   z-index: 2;
   backdrop-filter: blur(10px); /* Blur pour rester lisible sur contenu */
   -webkit-backdrop-filter: blur(10px);
-  padding: 4px 0 4px 8px;
+  padding: 0 0 0 8px;
   border-radius: 8px;
+  flex-shrink: 0;
 }
 
 .header-action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: var(--editor-header-icon-hit);
+  height: var(--editor-header-icon-hit);
+  min-width: var(--editor-header-icon-hit);
+  min-height: var(--editor-header-icon-hit);
+  box-sizing: border-box;
   border: none;
   border-radius: 6px;
   background: transparent;
   color: #9ca3af; /* Gris neutre */
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
   flex-shrink: 0;
   position: relative; /* ✅ Pour que le menu kebab absolute se positionne correctement */
+}
+
+.header-action-btn svg {
+  width: var(--editor-header-icon-size);
+  height: var(--editor-header-icon-size);
+  flex-shrink: 0;
 }
 
 .header-action-btn:hover {
@@ -179,7 +198,7 @@
 }
 
 .header-action-btn:active {
-  transform: scale(0.95);
+  opacity: 0.88;
 }
 
 .header-action-btn.active {
@@ -210,45 +229,21 @@
   padding: 0 var(--editor-padding-horizontal); /* Même progression que .editor-content-inner */
 }
 
-/* Mobile */
+/* Mobile : même hauteur de ligne et mêmes icônes que desktop (pas de saut visuel au resize) */
 @media (max-width: 768px) {
   .editor-header {
-    min-height: 48px;
     padding: 0;
   }
 
-  
-  .editor-header__row {
-    height: 48px;
-    min-height: 48px;
-  }
-  
   .editor-header__actions {
-    gap: 2px;
-  }
-  
-  .header-action-btn {
-    width: 28px;
-    height: 28px;
-  }
-
-  .editor-header__logo {
-    width: 28px;
-    height: 28px;
-  }
-
-  .editor-header__logo-icon {
-    width: 14px;
-    height: 14px;
+    gap: 4px;
   }
 }
 
-/* Mobile small */
 @media (max-width: 480px) {
   .editor-header {
     padding: 0;
   }
-
 }
 
  

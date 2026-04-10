@@ -258,12 +258,16 @@ html.capacitor-native .image-modal {
   padding-top: calc(60px + env(safe-area-inset-top, 0px)) !important;
 }
 
-html.capacitor-native .settings-modal {
+/* Pas de padding-top sur la modale : .settings-mobile-header gère la safe area
+   comme .mobile-top-bar (évite double inset → barre « Paramètres » trop basse). */
+html.capacitor-native .settings-mobile-header {
+  box-sizing: border-box !important;
+  min-height: calc(56px + env(safe-area-inset-top, 0px)) !important;
+  height: calc(56px + env(safe-area-inset-top, 0px)) !important;
   padding-top: env(safe-area-inset-top, 0px) !important;
-}
-
-html.capacitor-native .settings-modal-header {
-  padding-top: env(safe-area-inset-top, 0px) !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  padding-bottom: 0 !important;
 }
 
 /* Image source modal : petite modale centrée — pas de safe area top nécessaire */

@@ -308,17 +308,17 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
                 <React.Fragment key={session.id}>{renderConversationRow(session)}</React.Fragment>
               ))
             )}
+            {hasMoreSessions ? (
+              <button
+                type="button"
+                className="sidebar-load-more-btn"
+                onClick={() => void handleLoadMoreSessions()}
+                disabled={loadingMoreSessions}
+              >
+                {loadingMoreSessions ? 'Chargement…' : 'Voir les conversations plus anciennes'}
+              </button>
+            ) : null}
           </div>
-          {hasMoreSessions && (
-            <button
-              type="button"
-              className="sidebar-load-more-btn"
-              onClick={() => void handleLoadMoreSessions()}
-              disabled={loadingMoreSessions}
-            >
-              {loadingMoreSessions ? 'Chargement…' : 'Voir les conversations plus anciennes'}
-            </button>
-          )}
         </div>
       </div>
 
