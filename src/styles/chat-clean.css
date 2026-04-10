@@ -1573,7 +1573,8 @@ body.chat-theme-glass .chatgpt-header {
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--chat-bg-primary);
-  padding-bottom: 120px; /* 🎯 Padding normal */
+  /* Espace sous le dernier message : hauteur zone input (~) ; safe-area bas = .chatgpt-chat-footer uniquement (évite double comptage mobile) */
+  padding-bottom: 120px;
   position: relative; /* Pour le centrage absolu de l'empty state */
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
@@ -3086,11 +3087,8 @@ html.capacitor-native .chatgpt-message-user .bubble-buttons {
     box-sizing: border-box;
   }
   
-  .chatgpt-messages-container {
-    padding-bottom: calc(120px + var(--chat-safe-bottom)); /* 🎯 Même offset qu'en desktop (120px) + safe area */
-    /* Pas de padding-top ici : le fade ::before reste 5px en haut, sans s'allonger */
-  }
-  
+  /* padding-bottom du scroll : identique au desktop (120px) — pas de + safe-bottom ici */
+
   /* Fade en haut : hauteur fixe, ne doit pas bouger sous 1023px */
   .chatgpt-messages-container::before {
     height: 5px;
