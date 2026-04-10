@@ -39,7 +39,6 @@
 
 /* ========== 768px : pas de layout mobile ici ==========
    Rétrécissement = chat-clean.css (1023px, 900px, 1300px).
-   Noir absolu = pwa-mobile.css @media (max-width: 768px).
    On ne change ni position fixed, ni paddings, ni max-width messages. */
 
 /* ========== TABLET (769px - 1024px) ========== */
@@ -54,7 +53,12 @@
 /* ========== TOUCH OPTIMIZATIONS ========== */
 
 @media (hover: none) and (pointer: coarse) {
-  button, .clickable, .chat-button, .tool-call-toggle, .reasoning-toggle {
+  /* Exclure .bubble-button : mêmes dimensions qu’en mode web (24px), pas de zone 44px */
+  button:not(.bubble-button),
+  .clickable,
+  .chat-button,
+  .tool-call-toggle,
+  .reasoning-toggle {
     min-height: 44px;
     min-width: 44px;
   }
