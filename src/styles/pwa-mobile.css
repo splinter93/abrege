@@ -78,9 +78,7 @@ html.capacitor-native.chat-page {
 }
 
 /* Le document racine ne doit jamais scroller sur la page chat native.
-   iOS : position:fixed bloque le pan du viewport.
-   Android : position:fixed CASSE adjustResize (empêche le redimensionnement WebView).
-             → Sur Android on utilise overflow:hidden seul. */
+   iOS + Android (adjustNothing) : position:fixed bloque le pan du viewport. */
 html.capacitor-native.chat-page,
 html.capacitor-native.chat-page body {
   position: fixed !important;
@@ -91,31 +89,27 @@ html.capacitor-native.chat-page body {
   overscroll-behavior: none;
 }
 
-/* Android : annuler le position:fixed sur html/body.
-   adjustResize + overflow:hidden suffit : la WebView se réduit par le bas,
-   le header position:fixed reste en haut sans panner. */
-html.platform-android.capacitor-native.chat-page,
-html.platform-android.capacitor-native.chat-page body {
-  position: static !important;
-  inset: auto;
-}
-
-/* 1. Container = padding-top : hauteur totale du header natif.
-   Stratégie par défaut : header hors flux (utile sur iOS, où le clavier passe
-   par-dessus la WebView). Android est surchargé plus bas avec un header en flux,
-   plus robuste avec adjustResize. */
+/* 1. Container = padding-top : hauteur totale du header natif. */
 html.capacitor-native.chat-page .chatgpt-container {
   padding-top: calc(56px + var(--capacitor-safe-top)) !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
-  bottom: 0 !important; /* Défaut Android : viewport resize, bottom reste 0 */
+  bottom: 0 !important;
 }
 
 /* iOS ONLY : KeyboardResize.None -> le clavier passe par dessus.
-   On doit réduire la hauteur manuellement via bottom + var(--keyboard-height). */
+   Réduire la hauteur du container via bottom + var(--keyboard-height). */
 html.platform-ios.capacitor-native.chat-page .chatgpt-container {
   bottom: var(--keyboard-height, 0px) !important;
   transition: bottom 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  will-change: bottom;
+}
+
+/* Android (adjustNothing) : seul le chat-bottom remonte avec le clavier.
+   Le container reste plein écran, les messages ne bougent pas. */
+html.platform-android.capacitor-native.chat-page .chatgpt-chat-bottom {
+  bottom: var(--keyboard-height, 0px);
+  transition: bottom 280ms cubic-bezier(0.4, 0, 0.2, 1);
   will-change: bottom;
 }
 
@@ -137,9 +131,7 @@ html.capacitor-native.chat-page .chatgpt-header {
   background: #000000 !important;
 }
 
-/* Android natif : header fixe identique à iOS.
-   adjustResize réduit la WebView par le bas → le header fixe reste en haut,
-   l'input reste visible au-dessus du clavier sans saccade. */
+/* Android natif : header fixe identique à iOS (position:fixed, z-index 1001). */
 
 /* 4. Content : le padding-top est géré par le container, donc 0 ici. */
 html.capacitor-native.chat-page .chatgpt-content {

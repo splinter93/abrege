@@ -661,8 +661,8 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
   // 🎯 Layout (utilise uiState)
 
   // 🎯 RENDU (100% déclaratif avec composants extraits)
-  // adjustResize gère le viewport → pas besoin d'injecter --keyboard-inset en CSS.
-  // keyboardInset reste utile côté JS (scroll-to-bottom, etc.) mais pas pour le positionnement.
+  // Android : adjustNothing + CSS transition sur chatgpt-chat-bottom via --keyboard-height.
+  // keyboardInset : utilisé uniquement pour le scroll-to-bottom (useChatFullscreenUIState).
 
   return (
       <div

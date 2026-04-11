@@ -9,9 +9,11 @@ import { useCapacitorDeepLink } from '@/hooks/useCapacitorDeepLink';
  * Responsabilités :
  *  1. Ajoute `html.capacitor-native` + `platform-ios`/`platform-android`.
  *  2. Gère le clavier spécifiquement par plateforme :
- *     - Android : RIEN (laisser `adjustResize` natif faire le travail).
- *     - iOS : Détecte `keyboardWillShow` → injecte `--keyboard-height` pour
- *       compenser le clavier qui passe par-dessus la webview (KeyboardResize.None).
+ *     - Android (adjustNothing) : keyboardDidShow/keyboardDidHide → injecte
+ *       `--keyboard-height` pour décaler uniquement `.chatgpt-chat-bottom` via CSS.
+ *       Le container et les messages restent immobiles (clavier en overlay).
+ *     - iOS (KeyboardResize.None) : keyboardWillShow/keyboardWillHide → injecte
+ *       `--keyboard-height` pour réduire la hauteur du container via `bottom`.
  */
 function useCapacitorLayoutFix() {
   useLayoutEffect(() => {
@@ -28,29 +30,37 @@ function useCapacitorLayoutFix() {
         document.documentElement.classList.add('capacitor-native');
         document.documentElement.classList.add(`platform-${platform}`);
 
-        // ANDROID : adjustResize + header fixe CSS (pwa-mobile.css) gèrent le layout.
-        // Pas de resetRootScroll : il peut masquer l'input ou créer des saccades.
-        // Le scroll-to-bottom est géré dans useChatFullscreenUIState.
-        if (platform === 'android') {
-          return;
-        }
-
-        // iOS : Le clavier passe par-dessus (KeyboardResize.None).
-        // On doit réduire la hauteur du container manuellement via CSS + var.
         const { Keyboard } = await import('@capacitor/keyboard');
-        
+
         const setKeyboardHeight = (h: number) => {
           document.documentElement.style.setProperty('--keyboard-height', `${h}px`);
         };
 
+        if (platform === 'android') {
+          // adjustNothing : le clavier overlay le contenu sans redimensionner le WebView.
+          // On écoute keyboardDidShow (plus fiable sur Android) pour décaler uniquement
+          // chatgpt-chat-bottom via --keyboard-height (voir pwa-mobile.css).
+          const didShowHandle = await Keyboard.addListener('keyboardDidShow', (info) => {
+            setKeyboardHeight(info.keyboardHeight || 0);
+          });
+          const didHideHandle = await Keyboard.addListener('keyboardDidHide', () => {
+            setKeyboardHeight(0);
+          });
+          cleanup = () => {
+            didShowHandle.remove();
+            didHideHandle.remove();
+          };
+          return;
+        }
+
+        // iOS : Le clavier passe par-dessus (KeyboardResize.None).
+        // On réduit la hauteur du container via bottom + var(--keyboard-height).
         const willShowHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
           setKeyboardHeight(info.keyboardHeight || 0);
         });
-        
         const willHideHandle = await Keyboard.addListener('keyboardWillHide', () => {
           setKeyboardHeight(0);
         });
-
         cleanup = () => {
           willShowHandle.remove();
           willHideHandle.remove();
