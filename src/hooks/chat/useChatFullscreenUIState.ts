@@ -13,19 +13,7 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
-
-interface VirtualKeyboardApi extends EventTarget {
-  overlaysContent: boolean;
-  boundingRect: DOMRectReadOnly;
-}
-
-function getVirtualKeyboardApi(): VirtualKeyboardApi | null {
-  const navigatorWithVirtualKeyboard = navigator as Navigator & {
-    virtualKeyboard?: VirtualKeyboardApi;
-  };
-
-  return navigatorWithVirtualKeyboard.virtualKeyboard ?? null;
-}
+import { attachNativeKeyboardController } from '@/utils/nativeKeyboardController';
 
 /**
  * Options du hook
@@ -123,68 +111,11 @@ export function useChatFullscreenUIState(
         const isNative = Capacitor.isNativePlatform();
 
         if (isNative) {
-          let geometrySourceActive = false;
-          let removeVirtualKeyboardListener = () => {};
-
-          const virtualKeyboard = platform === 'android' ? getVirtualKeyboardApi() : null;
-          if (virtualKeyboard) {
-            try {
-              const onGeometryChange = () => {
-                const height = Math.max(0, Math.round(virtualKeyboard.boundingRect.height));
-                geometrySourceActive = height > 0;
-                setKeyboardInset(height);
-                if (height > 0) {
-                  scrollMessagesToBottom();
-                }
-              };
-
-              virtualKeyboard.addEventListener('geometrychange', onGeometryChange);
-              removeVirtualKeyboardListener = () => {
-                virtualKeyboard.removeEventListener('geometrychange', onGeometryChange);
-              };
-            } catch {
-              removeVirtualKeyboardListener = () => {};
-            }
-          }
-
-          const setKeyboardInsetFromPlugin = (height: number) => {
-            if (geometrySourceActive) return;
-            setKeyboardInset(height);
-          };
-
-          // Fallback iOS ou Android quand geometrychange n'est pas réellement vivant
-          const { Keyboard } = await import('@capacitor/keyboard');
-
-          const showHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
-            const raw = info.keyboardHeight ?? 0;
-            setKeyboardInsetFromPlugin(raw);
-            scrollMessagesToBottom();
+          removeListeners = await attachNativeKeyboardController({
+            platform,
+            onHeightChange: setKeyboardInset,
+            onOpenStart: scrollMessagesToBottom,
           });
-
-          const didShowHandle = await Keyboard.addListener('keyboardDidShow', (info) => {
-            const raw = info.keyboardHeight ?? 0;
-            setKeyboardInsetFromPlugin(raw);
-            scrollMessagesToBottom();
-          });
-
-          const hideHandle = await Keyboard.addListener('keyboardWillHide', () => {
-            if (!geometrySourceActive) {
-              setKeyboardInset(0);
-            }
-          });
-
-          const didHideHandle = await Keyboard.addListener('keyboardDidHide', () => {
-            geometrySourceActive = false;
-            setKeyboardInset(0);
-          });
-          
-          removeListeners = () => {
-            removeVirtualKeyboardListener();
-            showHandle.remove();
-            didShowHandle.remove();
-            hideHandle.remove();
-            didHideHandle.remove();
-          };
           return;
         }
       } catch {

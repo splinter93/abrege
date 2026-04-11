@@ -2,18 +2,34 @@
 
 import { useEffect, useLayoutEffect } from 'react';
 import { useCapacitorDeepLink } from '@/hooks/useCapacitorDeepLink';
+import { attachNativeKeyboardController } from '@/utils/nativeKeyboardController';
 
-interface VirtualKeyboardApi extends EventTarget {
-  overlaysContent: boolean;
-  boundingRect: DOMRectReadOnly;
+type SafeAreaSide = 'top' | 'bottom';
+
+function readSafeAreaInsetPx(side: SafeAreaSide): string {
+  const probe = document.createElement('div');
+  probe.style.position = 'fixed';
+  probe.style.pointerEvents = 'none';
+  probe.style.opacity = '0';
+  probe.style.inset = '0';
+
+  if (side === 'top') {
+    probe.style.paddingTop = 'env(safe-area-inset-top, 0px)';
+  } else {
+    probe.style.paddingBottom = 'env(safe-area-inset-bottom, 0px)';
+  }
+
+  document.body.appendChild(probe);
+  const computed = window.getComputedStyle(probe);
+  const value = side === 'top' ? computed.paddingTop : computed.paddingBottom;
+  document.body.removeChild(probe);
+
+  return value || '0px';
 }
 
-function getVirtualKeyboardApi(): VirtualKeyboardApi | null {
-  const navigatorWithVirtualKeyboard = navigator as Navigator & {
-    virtualKeyboard?: VirtualKeyboardApi;
-  };
-
-  return navigatorWithVirtualKeyboard.virtualKeyboard ?? null;
+function syncFixedSafeAreaInsets(root: HTMLElement): void {
+  root.style.setProperty('--capacitor-safe-top-fixed', readSafeAreaInsetPx('top'));
+  root.style.setProperty('--capacitor-safe-bottom-fixed', readSafeAreaInsetPx('bottom'));
 }
 
 /**
@@ -22,9 +38,8 @@ function getVirtualKeyboardApi(): VirtualKeyboardApi | null {
  * Responsabilités :
  *  1. Ajoute `html.capacitor-native` + `platform-ios`/`platform-android`.
  *  2. Gère le clavier spécifiquement par plateforme :
- *     - Android (adjustNothing) : `@capacitor/keyboard` reste le fallback garanti.
- *       Si `VirtualKeyboard.geometrychange` est réellement émis par le WebView, on s'y branche
- *       pour coller l'input au clavier frame par frame.
+ *     - Android (adjustNothing) : contrôleur anti-race-condition. Le plugin Capacitor reste
+ *       le fallback garanti ; `VirtualKeyboard` n'affine le mouvement que s'il émet réellement.
  *     - iOS (KeyboardResize.None) : keyboardWillShow/keyboardWillHide → injecte
  *       `--keyboard-height` pour réduire la hauteur du container via `bottom`.
  */
@@ -44,69 +59,37 @@ function useCapacitorLayoutFix() {
         root.classList.add('capacitor-native');
         root.classList.add(`platform-${platform}`);
 
-        let geometrySourceActive = false;
-        let removeVirtualKeyboardListener = () => {};
-
         const setKeyboardHeight = (height: number) => {
           root.style.setProperty('--keyboard-height', `${Math.max(0, Math.round(height))}px`);
         };
 
-        const virtualKeyboard = platform === 'android' ? getVirtualKeyboardApi() : null;
-        if (virtualKeyboard) {
-          try {
-            virtualKeyboard.overlaysContent = true;
+        syncFixedSafeAreaInsets(root);
 
-            const handleGeometryChange = () => {
-              const height = virtualKeyboard.boundingRect.height;
-              geometrySourceActive = height > 0;
-              root.classList.toggle('virtual-keyboard-supported', geometrySourceActive);
-              setKeyboardHeight(height);
-            };
-
-            virtualKeyboard.addEventListener('geometrychange', handleGeometryChange);
-            removeVirtualKeyboardListener = () => {
-              virtualKeyboard.removeEventListener('geometrychange', handleGeometryChange);
-            };
-          } catch {
-            root.classList.remove('virtual-keyboard-supported');
+        const handleWindowResize = () => {
+          const keyboardHeight = parseFloat(root.style.getPropertyValue('--keyboard-height') || '0');
+          if (keyboardHeight > 0) {
+            return;
           }
-        }
 
-        const setKeyboardHeightFromPlugin = (height: number) => {
-          if (geometrySourceActive) return;
-          setKeyboardHeight(height);
+          syncFixedSafeAreaInsets(root);
         };
 
-        // iOS & Android utilisent toujours le plugin Capacitor.
-        // Sur Android 16+, VirtualKeyboard peut affiner le mouvement uniquement s'il émet réellement.
-        const { Keyboard } = await import('@capacitor/keyboard');
+        window.addEventListener('resize', handleWindowResize);
 
-        const willShowHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
-          setKeyboardHeightFromPlugin(info.keyboardHeight || 0);
-        });
-
-        const didShowHandle = await Keyboard.addListener('keyboardDidShow', (info) => {
-          setKeyboardHeightFromPlugin(info.keyboardHeight || 0);
-        });
-
-        const willHideHandle = await Keyboard.addListener('keyboardWillHide', () => {
-          if (!geometrySourceActive) {
-            setKeyboardHeight(0);
+        const removeKeyboardController = await attachNativeKeyboardController({
+          platform,
+          onHeightChange: setKeyboardHeight,
+          onVirtualKeyboardActiveChange: (active) => {
+            root.classList.toggle('virtual-keyboard-supported', active);
+            if (!active) {
+              syncFixedSafeAreaInsets(root);
+            }
           }
-        });
-
-        const didHideHandle = await Keyboard.addListener('keyboardDidHide', () => {
-          geometrySourceActive = false;
-          root.classList.remove('virtual-keyboard-supported');
-          setKeyboardHeight(0);
         });
 
         cleanup = () => {
-          removeVirtualKeyboardListener();
-          willShowHandle.remove();
-          didShowHandle.remove();
-          willHideHandle.remove();
-          didHideHandle.remove();
+          window.removeEventListener('resize', handleWindowResize);
+          removeKeyboardController();
           root.classList.remove('virtual-keyboard-supported');
           setKeyboardHeight(0);
         };

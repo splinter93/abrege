@@ -117,9 +117,13 @@ html.platform-ios.capacitor-native.chat-page .chatgpt-container {
    Note: on soustrait --capacitor-safe-bottom de la translation, car l'input 
    garde en permanence son padding de sécurité. Cela évite tout saut d'animation ! */
 html.platform-android.capacitor-native.chat-page .chatgpt-chat-bottom {
-  bottom: calc(var(--keyboard-height, 0px) - var(--capacitor-safe-bottom, 0px));
+  bottom: calc(var(--keyboard-height, 0px) - var(--capacitor-safe-bottom-fixed, var(--capacitor-safe-bottom, 0px)));
   transition: bottom 250ms cubic-bezier(0.2, 0, 0, 1);
   will-change: bottom;
+}
+
+html.platform-android.capacitor-native.chat-page .chatgpt-input-container {
+  padding-bottom: calc(20px + var(--capacitor-safe-bottom-fixed, var(--capacitor-safe-bottom, 0px))) !important;
 }
 
 /* ANDROID 15+ FIX (VirtualKeyboard API) :
