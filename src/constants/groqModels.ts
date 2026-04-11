@@ -4,7 +4,7 @@
  * Ce fichier contient les modèles de tous les providers :
  * - Groq (GPT-OSS, Llama, Qwen, etc.)
  * - xAI (Grok)
- * - Liminality (OpenRouter, Fireworks, DeepSeek, etc.)
+ * - Liminality (OpenRouter, Fireworks, etc.)
  * 
  * Utilisé pour :
  * - Le sélecteur de modèles dans la configuration des agents
@@ -18,8 +18,8 @@
 export interface GroqModelInfo {
   id: string;
   name: string;
-  category: 'gpt-oss' | 'llama' | 'qwen' | 'xai' | 'whisper' | 'tts' | 'liminality' | 'deepseek' | 'other';
-  provider?: 'groq' | 'xai' | 'liminality' | 'cerebras' | 'deepseek'; // Provider du modèle
+  category: 'gpt-oss' | 'llama' | 'qwen' | 'xai' | 'whisper' | 'tts' | 'liminality' | 'other';
+  provider?: 'groq' | 'xai' | 'liminality' | 'cerebras'; // Provider du modèle
   capabilities: string[];
   contextWindow: number;
   maxOutput: number;
@@ -116,32 +116,6 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     speed: 500,
     pricing: { input: '$2.00', output: '$6.00' },
     description: 'Multi-agent Grok 4.20 (0309), 2M contexte, 4M tpm, 607 rpm'
-  },
-  {
-    id: 'deepseek-chat',
-    name: 'DeepSeek Chat V3.2',
-    category: 'deepseek',
-    provider: 'deepseek',
-    capabilities: ['text', 'function_calling', 'streaming'],
-    contextWindow: 64000,
-    maxOutput: 16000,
-    speed: 800,
-    pricing: { input: '$0.14', output: '$0.28' },
-    description: 'DeepSeek V3.2 rapide et économique, excellent rapport qualité/prix',
-    recommended: true
-  },
-  {
-    id: 'deepseek-reasoner',
-    name: 'DeepSeek Reasoner V3.2',
-    category: 'deepseek',
-    provider: 'deepseek',
-    capabilities: ['text', 'function_calling', 'streaming', 'reasoning'],
-    contextWindow: 64000,
-    maxOutput: 16000,
-    speed: 700,
-    pricing: { input: '$0.14', output: '$0.28' },
-    description: 'DeepSeek V3.2 avec thinking mode (reasoning avancé), idéal pour tâches complexes',
-    recommended: true
   },
   {
     id: 'openrouter/mimo-v2-flash',
@@ -528,7 +502,6 @@ export const GROQ_MODELS: GroqModelInfo[] = [
 export const LLM_MODELS = GROQ_MODELS;
 
 const GROQ_MODELS_BY_CATEGORY_ENTRIES: [string, GroqModelInfo[]][] = [
-  ['DeepSeek', GROQ_MODELS.filter(m => m.category === 'deepseek')],
   ['Liminality (Synesia)', GROQ_MODELS.filter(m => m.category === 'liminality')],
   ['Cerebras', GROQ_MODELS.filter(m => m.provider === 'cerebras')],
   ['xAI Grok', GROQ_MODELS.filter(m => m.category === 'xai')],

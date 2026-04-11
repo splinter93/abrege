@@ -12,7 +12,6 @@ import { XAIProvider } from '../providers/implementations/xai';
 import { XAINativeProvider } from '../providers/implementations/xai-native';
 import { LiminalityProvider } from '../providers/implementations/liminality';
 import { CerebrasProvider } from '../providers/implementations/cerebras';
-import { DeepSeekProvider } from '../providers/implementations/deepseek';
 import { SimpleToolExecutor, ToolCall, ToolResult } from './SimpleToolExecutor';
 import { OpenApiToolExecutor } from '../executors/OpenApiToolExecutor';
 import { GroqHistoryBuilder } from './GroqHistoryBuilder';
@@ -73,7 +72,7 @@ const DEFAULT_CONFIG = {
  * Orchestrateur simple pour gérer les conversations avec tool calls MCP
  */
 export class SimpleOrchestrator {
-  private llmProvider: GroqProvider | XAIProvider | XAINativeProvider | LiminalityProvider | CerebrasProvider | DeepSeekProvider;
+  private llmProvider: GroqProvider | XAIProvider | XAINativeProvider | LiminalityProvider | CerebrasProvider;
   private toolExecutor: SimpleToolExecutor;
   private openApiToolExecutor: OpenApiToolExecutor;
   private historyBuilder: GroqHistoryBuilder;
@@ -222,7 +221,7 @@ export class SimpleOrchestrator {
    * ✅ Sélectionner le provider en fonction de l'agent config
    * ✅ PRODUCTION READY : Validation stricte des paramètres LLM
    */
-  private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider | XAINativeProvider | LiminalityProvider | CerebrasProvider | DeepSeekProvider {
+  private selectProvider(agentConfig?: AgentTemplateConfig): GroqProvider | XAIProvider | XAINativeProvider | LiminalityProvider | CerebrasProvider {
     const provider = agentConfig?.provider || 'groq';
     const model = agentConfig?.model;
 
@@ -263,10 +262,16 @@ export class SimpleOrchestrator {
           topP,
           maxTokens
         });
-      
+
       case 'deepseek':
-        return new DeepSeekProvider({
-          model: model || 'deepseek-chat', // ✅ Modèle par défaut
+        logger.warn(
+          '[SimpleOrchestrator] Provider deepseek n\'est plus supporté — fallback Groq (openai/gpt-oss-20b si modèle deepseek)'
+        );
+        return new GroqProvider({
+          model:
+            model && !model.toLowerCase().includes('deepseek')
+              ? model
+              : 'openai/gpt-oss-20b',
           temperature,
           topP,
           maxTokens

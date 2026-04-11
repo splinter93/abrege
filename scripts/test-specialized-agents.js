@@ -195,7 +195,7 @@ async function testAgentCreation() {
       slug: 'test-agent-' + Date.now(),
       display_name: 'Agent de Test',
       description: 'Agent créé par le script de test',
-      model: 'deepseek-chat',
+      model: 'openai/gpt-oss-20b',
       system_instructions: 'Tu es un agent de test créé automatiquement.',
       input_schema: {
         type: 'object',

@@ -303,7 +303,7 @@ export class AgentCRUD {
         let deducedProvider: string;
         if (newModel.includes('grok')) {
           deducedProvider = 'xai';
-        } else if (newModel.includes('openai/') || newModel.includes('llama') || newModel.includes('deepseek') || newModel.includes('mixtral')) {
+        } else if (newModel.includes('openai/') || newModel.includes('llama') || newModel.includes('mixtral')) {
           deducedProvider = 'groq';
         } else {
           deducedProvider = 'groq';

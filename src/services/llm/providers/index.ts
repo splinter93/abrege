@@ -8,4 +8,3 @@ export { XAIProvider } from './implementations/xai';
 export { XAINativeProvider } from './implementations/xai-native';
 export { LiminalityProvider } from './implementations/liminality';
 export { CerebrasProvider } from './implementations/cerebras';
-export { DeepSeekProvider } from './implementations/deepseek'; 

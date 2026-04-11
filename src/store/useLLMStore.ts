@@ -13,7 +13,7 @@ export const useLLMStore = create<LLMStore>()(
   persist(
     (set, get) => ({
       currentProvider: 'synesia', // Provider par défaut
-      availableProviders: ['synesia', 'deepseek'],
+      availableProviders: ['synesia', 'groq', 'xai', 'liminality'],
       
       setProvider: (providerId: string) => {
         set({ currentProvider: providerId });

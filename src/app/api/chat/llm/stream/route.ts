@@ -175,14 +175,7 @@ export async function POST(request: NextRequest) {
     const { getModelInfo } = await import('@/constants/groqModels');
     const modelInfo = getModelInfo(model);
     
-    // ✅ Détection supplémentaire pour DeepSeek si le modèle contient "deepseek"
-    if (!modelInfo && (model.includes('deepseek') || model.startsWith('deepseek'))) {
-      logger.warn(LogCategory.API, `[Stream Route] ⚠️ Modèle DeepSeek détecté mais non trouvé dans getModelInfo, correction automatique`, {
-        model,
-        currentProvider: providerType
-      });
-      providerType = 'deepseek';
-    } else if (modelInfo?.provider && modelInfo.provider !== providerType) {
+    if (modelInfo?.provider && modelInfo.provider !== providerType) {
       logger.warn(LogCategory.API, `[Stream Route] ⚠️ Correction automatique provider`, {
         from: providerType,
         to: modelInfo.provider,
@@ -190,6 +183,17 @@ export async function POST(request: NextRequest) {
         modelInfoId: modelInfo.id
       });
       providerType = modelInfo.provider;
+    }
+
+    // Anciennes configs agent (provider deepseek retiré du produit)
+    if (providerType === 'deepseek') {
+      logger.warn(LogCategory.API, '[Stream Route] Provider deepseek n\'est plus supporté — bascule groq', {
+        model,
+      });
+      providerType = 'groq';
+      if (model.includes('deepseek')) {
+        model = 'openai/gpt-oss-20b';
+      }
     }
     
     // ✅ Log final pour debug
@@ -537,9 +541,6 @@ export async function POST(request: NextRequest) {
     } else if (providerType === 'cerebras') {
       const { CerebrasProvider } = await import('@/services/llm/providers/implementations/cerebras');
       provider = new CerebrasProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
-    } else if (providerType === 'deepseek') {
-      const { DeepSeekProvider } = await import('@/services/llm/providers/implementations/deepseek');
-      provider = new DeepSeekProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
     } else {
       provider = new GroqProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
     }

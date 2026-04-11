@@ -132,23 +132,6 @@ export const SUPPORTED_GROQ_MODELS = {
     maxOutput: 8192,
     capabilities: ['text', 'images', 'tool_use', 'json_mode'],
     description: 'Modèle multimodal avec 16 experts, optimisé pour le raisonnement et l\'analyse d\'images'
-  },
-  // Modèles existants
-  'deepseek-chat': {
-    name: 'DeepSeek Chat',
-    type: 'text',
-    contextWindow: 32000,
-    maxOutput: 4000,
-    capabilities: ['text', 'tool_use'],
-    description: 'Modèle de chat optimisé pour les conversations'
-  },
-  'deepseek-vision': {
-    name: 'DeepSeek Vision',
-    type: 'multimodal',
-    contextWindow: 32000,
-    maxOutput: 4000,
-    capabilities: ['text', 'images', 'tool_use'],
-    description: 'Modèle multimodal pour analyse d\'images'
   }
 } as const;
 

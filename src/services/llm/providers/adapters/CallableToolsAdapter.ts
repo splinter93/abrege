@@ -2,7 +2,7 @@
  * Adaptateur de callables Synesia pour providers non-Liminality
  * 
  * Convertit les callables Synesia en FunctionTool standard pour les providers
- * Groq, XAI, Cerebras, DeepSeek qui ne supportent pas nativement les callables.
+ * Groq, XAI, Cerebras qui ne supportent pas nativement les callables.
  * 
  * Architecture :
  * - Callables → FunctionTool avec nom et description
