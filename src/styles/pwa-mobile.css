@@ -258,6 +258,13 @@ html.capacitor-native .image-modal {
   padding-top: calc(60px + env(safe-area-inset-top, 0px)) !important;
 }
 
+/* Barre image plein écran : alignée sur .settings-mobile-header (safe area + hauteur) */
+html.capacitor-native .image-modal-toolbar {
+  box-sizing: border-box !important;
+  height: calc(60px + env(safe-area-inset-top, 0px)) !important;
+  padding: env(safe-area-inset-top, 0px) max(20px, env(safe-area-inset-left, 0px)) 0 max(20px, env(safe-area-inset-right, 0px)) !important;
+}
+
 /* Pas de padding-top sur la modale : .settings-mobile-header gère la safe area
    comme .mobile-top-bar (évite double inset → barre « Paramètres » trop basse). */
 html.capacitor-native .settings-mobile-header {
@@ -355,6 +362,13 @@ html.capacitor-native .image-source-modal {
     padding-top: env(safe-area-inset-top, 0px) !important;
     min-height: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;
     box-sizing: border-box !important;
+  }
+
+  /* Modale image plein écran (PWA installée) : barre sous la status bar */
+  .image-modal-toolbar {
+    box-sizing: border-box !important;
+    height: calc(60px + env(safe-area-inset-top, 0px)) !important;
+    padding: env(safe-area-inset-top, 0px) max(20px, env(safe-area-inset-left, 0px)) 0 max(20px, env(safe-area-inset-right, 0px)) !important;
   }
 
   .html-fullscreen-header {
