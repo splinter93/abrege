@@ -123,10 +123,9 @@ html.platform-android.capacitor-native.chat-page .chatgpt-chat-bottom {
 }
 
 /* ANDROID 15+ FIX (VirtualKeyboard API) :
-   Si le navigateur prend en charge l'API VirtualKeyboard (Android Chrome >= 94),
-   le layout est mis à jour frame par frame par le moteur C++ du navigateur.
-   Il FAUT désactiver la transition CSS pour que l'input reste "collée" au clavier
-   pixel par pixel sans aucun délai (qui causerait des saccades). */
+   La transition CSS n'est coupée QUE quand `geometrychange` est réellement en train
+   de piloter la hauteur clavier. Si le WebView expose l'API mais n'émet rien,
+   on retombe automatiquement sur la transition Capacitor classique. */
 html.virtual-keyboard-supported.chat-page .chatgpt-chat-bottom {
   transition: none !important;
 }

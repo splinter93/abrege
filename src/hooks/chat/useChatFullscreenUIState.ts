@@ -14,6 +14,19 @@ import { useState, useRef, useMemo, useEffect } from 'react';
 import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
 
+interface VirtualKeyboardApi extends EventTarget {
+  overlaysContent: boolean;
+  boundingRect: DOMRectReadOnly;
+}
+
+function getVirtualKeyboardApi(): VirtualKeyboardApi | null {
+  const navigatorWithVirtualKeyboard = navigator as Navigator & {
+    virtualKeyboard?: VirtualKeyboardApi;
+  };
+
+  return navigatorWithVirtualKeyboard.virtualKeyboard ?? null;
+}
+
 /**
  * Options du hook
  */
@@ -110,52 +123,67 @@ export function useChatFullscreenUIState(
         const isNative = Capacitor.isNativePlatform();
 
         if (isNative) {
-          let hasVirtualKeyboard = false;
-          if (platform === 'android' && 'virtualKeyboard' in navigator) {
+          let geometrySourceActive = false;
+          let removeVirtualKeyboardListener = () => {};
+
+          const virtualKeyboard = platform === 'android' ? getVirtualKeyboardApi() : null;
+          if (virtualKeyboard) {
             try {
-              // @ts-ignore
-              if (navigator.virtualKeyboard.overlaysContent) {
-                hasVirtualKeyboard = true;
-                // @ts-ignore
-                const onGeometryChange = (e: any) => {
-                  const { height } = e.target.boundingRect;
-                  setKeyboardInset(height);
-                  if (height > 0) scrollMessagesToBottom();
-                };
-                // @ts-ignore
-                navigator.virtualKeyboard.addEventListener('geometrychange', onGeometryChange);
-                removeListeners = () => {
-                  // @ts-ignore
-                  navigator.virtualKeyboard.removeEventListener('geometrychange', onGeometryChange);
-                };
-                return;
-              }
-            } catch (e) {}
+              const onGeometryChange = () => {
+                const height = Math.max(0, Math.round(virtualKeyboard.boundingRect.height));
+                geometrySourceActive = height > 0;
+                setKeyboardInset(height);
+                if (height > 0) {
+                  scrollMessagesToBottom();
+                }
+              };
+
+              virtualKeyboard.addEventListener('geometrychange', onGeometryChange);
+              removeVirtualKeyboardListener = () => {
+                virtualKeyboard.removeEventListener('geometrychange', onGeometryChange);
+              };
+            } catch {
+              removeVirtualKeyboardListener = () => {};
+            }
           }
 
-          // Fallback iOS ou vieux Android (CSS Transition + JS Events)
+          const setKeyboardInsetFromPlugin = (height: number) => {
+            if (geometrySourceActive) return;
+            setKeyboardInset(height);
+          };
+
+          // Fallback iOS ou Android quand geometrychange n'est pas réellement vivant
           const { Keyboard } = await import('@capacitor/keyboard');
 
           const showHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
             const raw = info.keyboardHeight ?? 0;
-            setKeyboardInset(raw);
+            setKeyboardInsetFromPlugin(raw);
             scrollMessagesToBottom();
           });
 
           const didShowHandle = await Keyboard.addListener('keyboardDidShow', (info) => {
             const raw = info.keyboardHeight ?? 0;
-            setKeyboardInset(raw);
+            setKeyboardInsetFromPlugin(raw);
             scrollMessagesToBottom();
           });
 
           const hideHandle = await Keyboard.addListener('keyboardWillHide', () => {
+            if (!geometrySourceActive) {
+              setKeyboardInset(0);
+            }
+          });
+
+          const didHideHandle = await Keyboard.addListener('keyboardDidHide', () => {
+            geometrySourceActive = false;
             setKeyboardInset(0);
           });
           
           removeListeners = () => {
+            removeVirtualKeyboardListener();
             showHandle.remove();
             didShowHandle.remove();
             hideHandle.remove();
+            didHideHandle.remove();
           };
           return;
         }

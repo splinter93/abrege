@@ -3,14 +3,28 @@
 import { useEffect, useLayoutEffect } from 'react';
 import { useCapacitorDeepLink } from '@/hooks/useCapacitorDeepLink';
 
+interface VirtualKeyboardApi extends EventTarget {
+  overlaysContent: boolean;
+  boundingRect: DOMRectReadOnly;
+}
+
+function getVirtualKeyboardApi(): VirtualKeyboardApi | null {
+  const navigatorWithVirtualKeyboard = navigator as Navigator & {
+    virtualKeyboard?: VirtualKeyboardApi;
+  };
+
+  return navigatorWithVirtualKeyboard.virtualKeyboard ?? null;
+}
+
 /**
  * CapacitorInit — Bootstrap natif Android/iOS.
  *
  * Responsabilités :
  *  1. Ajoute `html.capacitor-native` + `platform-ios`/`platform-android`.
  *  2. Gère le clavier spécifiquement par plateforme :
- *     - Android (adjustNothing) : keyboardWillShow/keyboardWillHide → injecte `--keyboard-height`
- *       pour décaler `.chatgpt-chat-bottom` via transition CSS fluide (250ms ease-out decel).
+ *     - Android (adjustNothing) : `@capacitor/keyboard` reste le fallback garanti.
+ *       Si `VirtualKeyboard.geometrychange` est réellement émis par le WebView, on s'y branche
+ *       pour coller l'input au clavier frame par frame.
  *     - iOS (KeyboardResize.None) : keyboardWillShow/keyboardWillHide → injecte
  *       `--keyboard-height` pour réduire la hauteur du container via `bottom`.
  */
@@ -26,58 +40,75 @@ function useCapacitorLayoutFix() {
         if (!Capacitor.isNativePlatform()) return;
 
         const platform = Capacitor.getPlatform(); // 'ios' ou 'android'
-        document.documentElement.classList.add('capacitor-native');
-        document.documentElement.classList.add(`platform-${platform}`);
+        const root = document.documentElement;
+        root.classList.add('capacitor-native');
+        root.classList.add(`platform-${platform}`);
 
-        // ANDROID 15+ FIX: L'API VirtualKeyboard permet au navigateur de gérer le layout
-        // frame par frame pendant l'animation du clavier, ce qui est infiniment plus fluide
-        // que les événements JS (keyboardWillShow/DidShow) ou les transitions CSS.
-        let hasVirtualKeyboard = false;
-        if (platform === 'android' && 'virtualKeyboard' in navigator) {
+        let geometrySourceActive = false;
+        let removeVirtualKeyboardListener = () => {};
+
+        const setKeyboardHeight = (height: number) => {
+          root.style.setProperty('--keyboard-height', `${Math.max(0, Math.round(height))}px`);
+        };
+
+        const virtualKeyboard = platform === 'android' ? getVirtualKeyboardApi() : null;
+        if (virtualKeyboard) {
           try {
-            // @ts-ignore - L'API n'est pas toujours typée dans TypeScript
-            navigator.virtualKeyboard.overlaysContent = true;
-            hasVirtualKeyboard = true;
-            document.documentElement.classList.add('virtual-keyboard-supported');
-            
-            // On écoute geometrychange pour mettre à jour --keyboard-height en temps réel
-            // @ts-ignore
-            navigator.virtualKeyboard.addEventListener('geometrychange', (e) => {
-              const { width, height } = e.target.boundingRect;
-              document.documentElement.style.setProperty('--keyboard-height', `${height}px`);
-            });
-          } catch (e) {
-            console.error('VirtualKeyboard API error', e);
+            virtualKeyboard.overlaysContent = true;
+
+            const handleGeometryChange = () => {
+              const height = virtualKeyboard.boundingRect.height;
+              geometrySourceActive = height > 0;
+              root.classList.toggle('virtual-keyboard-supported', geometrySourceActive);
+              setKeyboardHeight(height);
+            };
+
+            virtualKeyboard.addEventListener('geometrychange', handleGeometryChange);
+            removeVirtualKeyboardListener = () => {
+              virtualKeyboard.removeEventListener('geometrychange', handleGeometryChange);
+            };
+          } catch {
+            root.classList.remove('virtual-keyboard-supported');
           }
         }
 
-        const setKeyboardHeight = (h: number) => {
-          // Si VirtualKeyboard gère déjà le clavier, on ignore les événements JS
-          if (hasVirtualKeyboard) return;
-          document.documentElement.style.setProperty('--keyboard-height', `${h}px`);
+        const setKeyboardHeightFromPlugin = (height: number) => {
+          if (geometrySourceActive) return;
+          setKeyboardHeight(height);
         };
 
-        // iOS & Android (fallback) partagent la logique d'événements JS classique : 
-        // on lance l'animation CSS dès le WillShow avec la hauteur brute.
+        // iOS & Android utilisent toujours le plugin Capacitor.
+        // Sur Android 16+, VirtualKeyboard peut affiner le mouvement uniquement s'il émet réellement.
         const { Keyboard } = await import('@capacitor/keyboard');
 
         const willShowHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
-          setKeyboardHeight(info.keyboardHeight || 0);
+          setKeyboardHeightFromPlugin(info.keyboardHeight || 0);
         });
 
-        // DidShow corrige au pixel près si la prédiction du clavier a changé pendant l'animation
         const didShowHandle = await Keyboard.addListener('keyboardDidShow', (info) => {
-          setKeyboardHeight(info.keyboardHeight || 0);
+          setKeyboardHeightFromPlugin(info.keyboardHeight || 0);
         });
 
         const willHideHandle = await Keyboard.addListener('keyboardWillHide', () => {
+          if (!geometrySourceActive) {
+            setKeyboardHeight(0);
+          }
+        });
+
+        const didHideHandle = await Keyboard.addListener('keyboardDidHide', () => {
+          geometrySourceActive = false;
+          root.classList.remove('virtual-keyboard-supported');
           setKeyboardHeight(0);
         });
 
         cleanup = () => {
+          removeVirtualKeyboardListener();
           willShowHandle.remove();
           didShowHandle.remove();
           willHideHandle.remove();
+          didHideHandle.remove();
+          root.classList.remove('virtual-keyboard-supported');
+          setKeyboardHeight(0);
         };
 
       } catch {
