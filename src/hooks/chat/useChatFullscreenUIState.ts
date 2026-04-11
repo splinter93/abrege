@@ -111,30 +111,17 @@ export function useChatFullscreenUIState(
 
         if (isNative) {
           // iOS NATIVE (KeyboardResize.None) & ANDROID NATIVE (adjustNothing) : 
-          // Le clavier passe par dessus. On écoute keyboardWillShow pour setKeyboardInset et scroller.
+          // Le clavier passe par dessus. On écoute keyboardWillShow pour animer l'input de manière synchrone.
           const { Keyboard } = await import('@capacitor/keyboard');
-          
-          let cachedKeyboardHeight = 0;
 
           const showHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
-            let raw = info.keyboardHeight ?? 0;
-            const maxInset = Math.floor(window.innerHeight * 0.6);
-            raw = Math.min(raw, maxInset);
-
-            const heightToUse = (platform === 'android' && cachedKeyboardHeight > 0) ? cachedKeyboardHeight : raw;
-            setKeyboardInset(heightToUse);
-            
-            // Scroll synchrone pendant l'animation CSS (Android/iOS)
+            const raw = info.keyboardHeight ?? 0;
+            setKeyboardInset(raw);
             scrollMessagesToBottom();
           });
 
           const didShowHandle = await Keyboard.addListener('keyboardDidShow', (info) => {
-            let raw = info.keyboardHeight ?? 0;
-            const maxInset = Math.floor(window.innerHeight * 0.6);
-            raw = Math.min(raw, maxInset);
-            if (raw > 0) {
-              cachedKeyboardHeight = raw;
-            }
+            const raw = info.keyboardHeight ?? 0;
             setKeyboardInset(raw);
             scrollMessagesToBottom();
           });

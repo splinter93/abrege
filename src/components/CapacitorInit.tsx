@@ -33,31 +33,17 @@ function useCapacitorLayoutFix() {
           document.documentElement.style.setProperty('--keyboard-height', `${h}px`);
         };
 
-        // iOS & Android partagent la même logique d'événements : on lance l'animation
-        // fluide dès le WillShow. Sur Android, le plugin donne parfois des valeurs
-        // erratiques (trop hautes) au WillShow. On utilise donc un cache mis à jour
-        // par DidShow pour garantir une hauteur stable d'une fois sur l'autre.
-        let cachedKeyboardHeight = 0;
+        // iOS & Android (adjustNothing) partagent la même logique d'événements : 
+        // on lance l'animation fluide dès le WillShow avec la hauteur brute.
         const { Keyboard } = await import('@capacitor/keyboard');
 
         const willShowHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
-          let raw = info.keyboardHeight || 0;
-          const maxInset = Math.floor(window.innerHeight * 0.6);
-          raw = Math.min(raw, maxInset);
-
-          const heightToUse = (platform === 'android' && cachedKeyboardHeight > 0) ? cachedKeyboardHeight : raw;
-          setKeyboardHeight(heightToUse);
+          setKeyboardHeight(info.keyboardHeight || 0);
         });
 
+        // DidShow corrige au pixel près si la prédiction du clavier a changé pendant l'animation
         const didShowHandle = await Keyboard.addListener('keyboardDidShow', (info) => {
-          let raw = info.keyboardHeight || 0;
-          const maxInset = Math.floor(window.innerHeight * 0.6);
-          raw = Math.min(raw, maxInset);
-
-          if (raw > 0) {
-            cachedKeyboardHeight = raw;
-          }
-          setKeyboardHeight(raw); // Corrige avec la valeur finale parfaite
+          setKeyboardHeight(info.keyboardHeight || 0);
         });
 
         const willHideHandle = await Keyboard.addListener('keyboardWillHide', () => {
