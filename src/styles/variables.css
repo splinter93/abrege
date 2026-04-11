@@ -238,9 +238,9 @@ body.dark {
   /* ——— ÉDITEUR — Contenu ——— */
   --md-p-margin: 0.625rem;         /* 10px — entre paragraphes */
   --md-img-margin-top: 0.875rem;   /* 14px — au-dessus image */
-  --md-img-margin-bottom: 0.6875rem; /* 11px — sous bloc image seule (::after) / marge bas p image+légende */
+  --md-img-margin-bottom: 0.875rem; /* 14px — sous bloc image seule (::after) / marge bas p image+légende */
   /* Chat : espace contrôlé entre image et légende (flex gap) */
-  --md-chat-img-caption-gap: 0.5625rem; /* 9px */
+  --md-chat-img-caption-gap: 0.75rem; /* 12px */
   --md-img-margin-top-edit: 0.25rem;   /* 4px — override ProseMirror */
   --md-img-margin-bottom-edit: 0.25rem; /* 4px — override ProseMirror */
   --md-list-margin: 0.5rem;        /* 8px — avant/après liste */
