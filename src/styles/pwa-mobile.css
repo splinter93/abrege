@@ -156,7 +156,6 @@ html.capacitor-native.chat-page .chatgpt-container,
 html.capacitor-native.chat-page .chatgpt-main,
 html.capacitor-native.chat-page .chatgpt-content,
 html.capacitor-native.chat-page .chatgpt-main-chat,
-html.capacitor-native.chat-page .chatgpt-chat-footer,
 html.capacitor-native.chat-page .chatgpt-messages-container,
 html.capacitor-native.chat-page .chatgpt-messages-container::before {
   background: #000000 !important;
@@ -349,8 +348,7 @@ html.capacitor-native .image-source-modal {
   .chatgpt-content,
   .chatgpt-main-chat,
   .chatgpt-header,
-  .chatgpt-chat-bottom,
-  .chatgpt-chat-footer {
+  .chatgpt-chat-bottom {
     background: #000000 !important;
   }
 

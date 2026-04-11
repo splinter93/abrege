@@ -780,7 +780,6 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
                     isVocalMode={isVocalMode}
                     onToggleVocalMode={() => setVocalMode(v => !v)}
                   />
-                  <footer className="chatgpt-chat-footer" aria-hidden="true" />
                 </div>
                 </TextToSpeechProvider>
               </div>

@@ -2241,19 +2241,12 @@ body.chat-theme-glass .chatgpt-messages > div {
   min-width: 0;
 }
 
-.chatgpt-chat-footer {
-  flex-shrink: 0;
-  min-height: 20px;
-  padding-bottom: var(--chat-safe-bottom);
-  background: var(--chat-bg-primary);
-}
-
 .chatgpt-input-container {
   position: relative;
   flex-shrink: 0;
-  /* Padding horizontal uniquement — pas de safe-area-top ici (l'input est en bas de l'écran) */
-  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
-  background: transparent !important; /* toujours transparent (desktop + responsive + PWA), seul le footer a la couleur */
+  /* Padding horizontal, + marge bas minimale (16px) + safe-area natif */
+  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) calc(16px + var(--chat-safe-bottom)) calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
+  background: transparent !important; /* toujours transparent (desktop + responsive + PWA) */
   display: flex;
   justify-content: center;
   align-items: flex-end;
