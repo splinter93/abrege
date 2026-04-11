@@ -56,6 +56,10 @@ interface SessionProfileDefaults {
   profilePictureUrl: string;
 }
 
+function trimProfileField(v: string | null | undefined): string {
+  return (v ?? "").trim();
+}
+
 function buildSessionProfileDefaults(user: User): SessionProfileDefaults {
   const m = (user.user_metadata || {}) as Record<string, unknown>;
   const full =
@@ -152,6 +156,12 @@ function AuthenticatedSettingsContent({
   const [lastName, setLastName] = useState(sessionDefaults.lastName);
   const [displayName, setDisplayName] = useState(sessionDefaults.displayName);
   const [profilePictureUrl, setProfilePictureUrl] = useState(sessionDefaults.profilePictureUrl);
+  const [profileBaseline, setProfileBaseline] = useState(() => ({
+    firstName: trimProfileField(sessionDefaults.firstName),
+    lastName: trimProfileField(sessionDefaults.lastName),
+    displayName: trimProfileField(sessionDefaults.displayName),
+    profilePictureUrl: trimProfileField(sessionDefaults.profilePictureUrl),
+  }));
   const [synesiaKeyConfigured, setSynesiaKeyConfigured] = useState(false);
   const [synesiaKeyDraft, setSynesiaKeyDraft] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -207,6 +217,12 @@ function AuthenticatedSettingsContent({
       setDisplayName(d.display_name ?? "");
       setProfilePictureUrl(d.profile_picture ?? "");
       setSynesiaKeyConfigured(Boolean(d.synesia_api_key_configured));
+      setProfileBaseline({
+        firstName: trimProfileField(d.name),
+        lastName: trimProfileField(d.surname),
+        displayName: trimProfileField(d.display_name),
+        profilePictureUrl: trimProfileField(d.profile_picture),
+      });
       if (d.language) {
         setLanguage(d.language);
       }
@@ -470,6 +486,17 @@ function AuthenticatedSettingsContent({
     closeEditApiKey,
   ]);
 
+  const profileDirty = useMemo(
+    () =>
+      trimProfileField(firstName) !== profileBaseline.firstName ||
+      trimProfileField(lastName) !== profileBaseline.lastName ||
+      trimProfileField(displayName) !== profileBaseline.displayName ||
+      trimProfileField(profilePictureUrl) !== profileBaseline.profilePictureUrl,
+    [firstName, lastName, displayName, profilePictureUrl, profileBaseline],
+  );
+
+  const synesiaKeyDirty = synesiaKeyDraft.trim().length > 0;
+
   // 🔧 OPTIMISATION: Mémoiser les scopes disponibles pour éviter les re-renders
   const availableScopes = useMemo(() => [
     { key: 'notes:read', label: 'Lecture des notes', description: 'Consulter vos notes et articles' },
@@ -602,7 +629,7 @@ function AuthenticatedSettingsContent({
                   </div>
                   <button
                     type="button"
-                    disabled={savingProfile}
+                    disabled={savingProfile || profileRefreshing || !profileDirty}
                     onClick={() => void saveProfile()}
                     className="settings-v-btn"
                   >
@@ -724,7 +751,7 @@ function AuthenticatedSettingsContent({
                   </div>
                   <button
                     type="button"
-                    disabled={savingSynesia || !synesiaKeyDraft.trim()}
+                    disabled={savingSynesia || !synesiaKeyDirty}
                     onClick={() => void saveSynesiaKey()}
                     className="settings-v-btn"
                   >
