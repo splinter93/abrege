@@ -18,21 +18,29 @@ function isCapacitorNative(): boolean {
 /**
  * PWA / Capacitor — splash au chargement.
  *
- * - Capacitor natif : s'affiche dès le premier render (show initialisé à true),
- *   couvre "Chargement..." et le flash de scrollbar. Toujours affiché (pas de
- *   sessionStorage). Durée 1500ms pour couvrir auth + redirect + render.
- * - PWA / web mobile : comportement inchangé (sessionStorage, 800ms, first-time).
+ * - Capacitor natif & PWA : s'affiche dès le HTML serveur (show: true par défaut)
+ *   pour couvrir "Chargement..." et le flash de scrollbar dès la frame 1.
+ * - Desktop : se cache immédiatement au montage si ce n'est pas un mobile/PWA.
  */
 export default function PWASplash() {
-  const [show, setShow] = useState(() => isCapacitorNative());
+  // ✅ FIX : Toujours true au départ (SSR) pour masquer "Chargement..." 
+  // dès la première frame HTML. Se cachera côté client si non nécessaire.
+  const [show, setShow] = useState(true);
   const [opacity, setOpacity] = useState(1);
 
   useEffect(() => {
     const capacitor = isCapacitorNative();
 
     if (capacitor) {
-      // Toujours afficher sur Capacitor, durée plus longue pour couvrir
-      // auth + redirect + render initial.
+      // Masquer le splash screen natif Capacitor dès que l'app React est montée
+      // Cela révèle instantanément ce splash web (identique visuellement),
+      // qui va pouvoir gérer son propre fondu en douceur (fade-out).
+      import('@capacitor/splash-screen').then(({ SplashScreen }) => {
+        SplashScreen.hide().catch(() => {});
+      }).catch(() => {});
+
+      // Capacitor : on garde le splash le temps que le bridge native/web 
+      // et l'authentification s'initialisent.
       const hide = setTimeout(() => {
         setOpacity(0);
         setTimeout(() => setShow(false), FADE_DURATION);
@@ -40,13 +48,22 @@ export default function PWASplash() {
       return () => clearTimeout(hide);
     }
 
-    // Web / PWA standalone : comportement first-time uniquement
+    // PWA web / Browser mobile
     const isSmallScreen = window.innerWidth < 768;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    if (!isSmallScreen && !isStandalone) return;
-    if (sessionStorage.getItem(SPLASH_DONE_KEY)) return;
+    
+    // Si desktop normal, on cache immédiatement (0 délai)
+    if (!isSmallScreen && !isStandalone) {
+      setShow(false);
+      return;
+    }
 
-    setShow(true);
+    // PWA web : comportement first-time (sessionStorage)
+    if (sessionStorage.getItem(SPLASH_DONE_KEY)) {
+      setShow(false);
+      return;
+    }
+
     const hide = setTimeout(() => {
       setOpacity(0);
       setTimeout(() => setShow(false), FADE_DURATION);

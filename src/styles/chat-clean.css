@@ -2244,8 +2244,8 @@ body.chat-theme-glass .chatgpt-messages > div {
 .chatgpt-input-container {
   position: relative;
   flex-shrink: 0;
-  /* Padding horizontal, + marge bas minimale (16px) + safe-area natif */
-  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) calc(16px + var(--chat-safe-bottom)) calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
+  /* Padding horizontal, + marge bas minimale (20px) + safe-area natif */
+  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) calc(20px + var(--chat-safe-bottom)) calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
   background: transparent !important; /* toujours transparent (desktop + responsive + PWA) */
   display: flex;
   justify-content: center;
