@@ -530,11 +530,11 @@
 }
 
 /* <p> contenant une image : marges symétriques haut / bas (14px).
-   On utilise :has(img) (plus permissif que :only-child) pour couvrir le cas
-   où markdown-it:breaks insère un <br> parasite après l'image dans le <p>. */
+   !important sur margin-bottom : p:last-child { margin-bottom:0 } a une spécificité
+   plus haute et effacerait sinon l'espace sous l'image quand c'est le dernier <p>. */
 .chat-markdown p:has(img) {
   margin-top: var(--md-img-margin-top);
-  margin-bottom: var(--md-img-margin-top);
+  margin-bottom: var(--md-img-margin-top) !important;
 }
 
 /* Supprimer le <br> parasite généré par markdown-it (breaks:true) après l'image :
