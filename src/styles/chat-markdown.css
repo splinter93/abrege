@@ -529,33 +529,41 @@
   display: block;
 }
 
-/* Paragraphe ne contenant QUE une image (seul enfant visible, pas de texte).
-   Marges symétriques haut / bas. Le ::after crée l'espace bas physiquement,
-   immunisé contre p:last-child { margin-bottom:0 }. */
-.chat-markdown p:has(> img:only-child) {
+/* Tout <p> avec <img> en premier enfant : flex column évite le “strut” line-height
+   entre <img display:block> et <em> / texte (cas sans <br>, ex. markdown-it). */
+.chat-markdown p:has(> img) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   margin-top: var(--md-img-margin-top);
+}
+
+/* Image seule : pas de gap (évite espace img–::after). Espace sous le bloc = ::after. */
+.chat-markdown p:has(> img:only-child) {
+  gap: 0;
   margin-bottom: 0;
 }
 
 .chat-markdown p:has(> img:only-child)::after {
   content: "";
   display: block;
+  flex: 0 0 auto;
   height: var(--md-img-margin-bottom);
 }
 
-/* Neutraliser la marge basse du <p> précédant une image seule (pas de double espacement). */
-.chat-markdown p:has(+ p:has(> img:only-child)) {
-  margin-bottom: 0;
-}
-
-/* Paragraphe image + légende (image suivie de texte via <br>) :
-   on garde le <br> (il sépare l'image de la légende), on ajuste uniquement les marges. */
-.chat-markdown p:has(img):not(:has(> img:only-child)) {
-  margin-top: var(--md-img-margin-top);
+/* Image + légende / texte dans le même <p> : gap fin entre visuel et suite */
+.chat-markdown p:has(> img):not(:has(> img:only-child)) {
+  gap: var(--md-chat-img-caption-gap);
   margin-bottom: var(--md-img-margin-bottom);
 }
 
-.chat-markdown p:has(+ p:has(img):not(:has(> img:only-child))) {
+/* <br> dans ces paragraphes : inutile avec flex + gap ; sinon double espacement */
+.chat-markdown p:has(> img) br {
+  display: none;
+}
+
+/* Neutraliser la marge basse du <p> précédant un <p> qui commence par une image */
+.chat-markdown p:has(+ p:has(> img)) {
   margin-bottom: 0;
 }
 
@@ -567,13 +575,6 @@
   content: '';
   display: block;
   margin: 0.5em 0;
-}
-
-/* <br> juste après une image : sans override, .chat-markdown br impose ~8px+8px
-   entre le bas du visuel et la légende (le changement de --md-img-margin-bottom ne suffit pas). */
-.chat-markdown img + br {
-  margin-top: var(--md-chat-img-br-margin-top);
-  margin-bottom: var(--md-chat-img-br-margin-bottom);
 }
 
 /* =============================================================================
