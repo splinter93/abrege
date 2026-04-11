@@ -20,8 +20,6 @@ function extractClientIP(req: NextRequest): string {
   const realIP = req.headers.get('x-real-ip');
   if (realIP) return realIP;
 
-  // Fallback sur req.ip (si disponible)
-  // Note: NextRequest n'expose pas req.ip directement, on utilise les headers
   return 'unknown';
 }
 
@@ -29,21 +27,18 @@ function extractClientIP(req: NextRequest): string {
  * Identifie le type d'endpoint pour appliquer le bon rate limiter
  */
 function getEndpointType(pathname: string): 'chat' | 'upload' | 'api' {
-  // Endpoints chat
   if (pathname.startsWith('/api/chat/')) {
     return 'chat';
   }
 
-  // Endpoints upload
   if (pathname.includes('/upload') || pathname.includes('/files') || pathname.includes('/images')) {
     return 'upload';
   }
 
-  // Tout le reste = API générique
   return 'api';
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const url = req.nextUrl;
   const resRid = req.headers.get('x-request-id') ?? crypto.randomUUID();
 
@@ -52,7 +47,7 @@ export function middleware(req: NextRequest) {
   
   // ✅ SÉCURITÉ : Traitement spécial pour les pages publiques avec logging
   if (url.pathname.startsWith('/@')) {
-    logger.debug(LogCategory.API, '[MIDDLEWARE] Accès page publique', { pathname: url.pathname });
+    logger.debug(LogCategory.API, '[PROXY] Accès page publique', { pathname: url.pathname });
     
     const res = NextResponse.next();
     res.headers.set('x-request-id', resRid);
@@ -70,7 +65,6 @@ export function middleware(req: NextRequest) {
     const clientIP = extractClientIP(req);
     const endpointType = getEndpointType(url.pathname);
 
-    // Sélectionner le rate limiter selon le type d'endpoint
     let limiter;
     
     switch (endpointType) {
@@ -84,15 +78,12 @@ export function middleware(req: NextRequest) {
         limiter = ipApiRateLimiter;
     }
 
-    // Utiliser checkSync() car le middleware Next.js ne peut pas être async
     const rateLimitResult = limiter.checkSync(clientIP);
 
-    // Enregistrer rate limit hit/miss
     metricsCollector.recordRateLimit(endpointType, clientIP, !rateLimitResult.allowed);
 
-    // Si rate limit dépassé, retourner 429
     if (!rateLimitResult.allowed) {
-      logger.warn(LogCategory.API, '[MIDDLEWARE] ⛔ Rate limit IP dépassé', {
+      logger.warn(LogCategory.API, '[PROXY] ⛔ Rate limit IP dépassé', {
         ip: clientIP,
         endpoint: url.pathname,
         endpointType,
@@ -123,7 +114,6 @@ export function middleware(req: NextRequest) {
       );
     }
 
-    // Ajouter les headers rate limit même si autorisé
     const response = NextResponse.next();
     response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString());
     response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
@@ -131,12 +121,6 @@ export function middleware(req: NextRequest) {
     response.headers.set('x-request-id', resRid);
     return response;
   }
-
-  // Allow /private/**; client-side AuthProvider will enforce auth UI
-  // if (url.pathname.startsWith('/private')) {
-  //   const isAuthed = req.headers.get('authorization') || req.cookies.get('sb-access-token');
-  //   if (!isAuthed) return NextResponse.redirect(new URL('/', req.url));
-  // }
 
   // Propagate x-request-id to downstream (API/app router)
   const requestHeaders = new Headers(req.headers);
@@ -151,4 +135,4 @@ export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
   ],
-}; 
+};
