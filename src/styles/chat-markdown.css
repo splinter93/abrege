@@ -523,13 +523,19 @@
 .chat-markdown img {
   max-width: 100%;
   height: auto;
-  border-radius: var(--blk-radius, var(--chat-surface-radius, 14px)); /* Même radius que blocs code et tableaux */
+  border-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
   margin-top: var(--md-img-margin-top);
-  margin-bottom: var(--md-img-margin-bottom);
+  margin-bottom: 0; /* la marge basse est portée par le <p> parent, pas l'img */
   display: block;
 }
 
-/* Paragraphe après une image : pas de margin-top pour coller */
+/* <p> contenant uniquement une image : supprimer la marge basse du paragraphe
+   (évite le double-espacement img-margin-bottom + p-margin-bottom) */
+.chat-markdown p:has(> img:only-child) {
+  margin-bottom: var(--md-img-margin-bottom);
+}
+
+/* Élément suivant directement après une image : rythme visuel identique au dessus */
 .chat-markdown img + p,
 .chat-markdown img + h1,
 .chat-markdown img + h2,
@@ -537,7 +543,7 @@
 .chat-markdown img + h4,
 .chat-markdown img + h5,
 .chat-markdown img + h6 {
-  margin-top: var(--md-img-margin-bottom); /* 4px seulement */
+  margin-top: 0;
 }
 
 /* =============================================================================
