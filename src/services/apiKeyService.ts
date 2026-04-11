@@ -17,6 +17,17 @@ export interface ApiKeyInfo {
   expires_at?: string;
 }
 
+/** Ligne renvoyée par `listUserApiKeys` (sans `user_id`). */
+export interface ListedUserApiKey {
+  id: string;
+  api_key_name: string;
+  scopes: string[];
+  is_active: boolean;
+  last_used_at?: string | null;
+  expires_at?: string | null;
+  created_at: string;
+}
+
 export interface CreateApiKeyRequest {
   user_id: string;
   api_key_name: string;
@@ -162,11 +173,11 @@ export class ApiKeyService {
   /**
    * Liste toutes les API Keys d'un utilisateur
    */
-  static async listUserApiKeys(userId: string): Promise<Omit<ApiKeyInfo, 'user_id'>[]> {
+  static async listUserApiKeys(userId: string): Promise<ListedUserApiKey[]> {
     try {
       const { data, error } = await supabase
         .from('api_keys')
-        .select('api_key_name, scopes, is_active, last_used_at, expires_at, created_at')
+        .select('id, api_key_name, scopes, is_active, last_used_at, expires_at, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -174,13 +185,50 @@ export class ApiKeyService {
         throw new Error(`Erreur récupération API Keys: ${error.message}`);
       }
 
-      return data || [];
+      return (data || []) as ListedUserApiKey[];
 
     } catch (error) {
       logger.error(LogCategory.API, '[ApiKeyService] ❌ Erreur liste API Keys', {
         error: error instanceof Error ? error.message : 'Unknown error'
       }, error instanceof Error ? error : undefined);
       throw error;
+    }
+  }
+
+  /**
+   * Met à jour nom et/ou scopes d'une clé appartenant à l'utilisateur.
+   */
+  static async updateUserApiKey(
+    userId: string,
+    id: string,
+    updates: { api_key_name?: string; scopes?: string[] }
+  ): Promise<void> {
+    const patch: Record<string, unknown> = {};
+    if (updates.api_key_name !== undefined) {
+      const n = updates.api_key_name.trim();
+      if (!n) {
+        throw new Error('Nom de clé invalide');
+      }
+      patch.api_key_name = n;
+    }
+    if (updates.scopes !== undefined) {
+      if (!Array.isArray(updates.scopes) || updates.scopes.length === 0) {
+        throw new Error('Au moins une permission (scope) est requise');
+      }
+      patch.scopes = updates.scopes;
+    }
+    if (Object.keys(patch).length === 0) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('api_keys')
+      .update(patch)
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) {
+      throw new Error(`Erreur mise à jour API Key: ${error.message}`);
     }
   }
 
@@ -229,6 +277,28 @@ export class ApiKeyService {
     } catch (error) {
       logger.error(LogCategory.API, '[ApiKeyService] ❌ Erreur suppression API Key', {
         error: error instanceof Error ? error.message : 'Unknown error'
+      }, error instanceof Error ? error : undefined);
+      throw error;
+    }
+  }
+
+  /**
+   * Supprime une API Key par identifiant (préféré côté UI).
+   */
+  static async deleteUserApiKeyById(userId: string, id: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('api_keys')
+        .delete()
+        .eq('user_id', userId)
+        .eq('id', id);
+
+      if (error) {
+        throw new Error(`Erreur suppression API Key: ${error.message}`);
+      }
+    } catch (error) {
+      logger.error(LogCategory.API, '[ApiKeyService] ❌ Erreur suppression API Key (id)', {
+        error: error instanceof Error ? error.message : 'Unknown error',
       }, error instanceof Error ? error : undefined);
       throw error;
     }

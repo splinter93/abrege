@@ -30,3 +30,10 @@
 .chat-widget-fab__icon {
   flex-shrink: 0;
 }
+
+/* Page notebooks / dossiers : pas de chat flottant sur mobile (aligné breakpoints dossiers) */
+@media (max-width: 768px) {
+  .chat-widget-fab {
+    display: none !important;
+  }
+}

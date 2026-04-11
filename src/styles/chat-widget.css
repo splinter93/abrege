@@ -106,3 +106,10 @@
 .chatgpt-container--widget .tts-mini-player {
   pointer-events: auto;
 }
+
+/* Même règle que le FAB : widget non utilisable sous la largeur tablette/mobile */
+@media (max-width: 768px) {
+  .chatgpt-container--widget {
+    display: none !important;
+  }
+}

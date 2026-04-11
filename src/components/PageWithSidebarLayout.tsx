@@ -44,7 +44,7 @@ function PageWithSidebarLayoutInner({ children }: { children: React.ReactNode })
           Scrivia App
         </span>
         <Link
-          href="/private/account"
+          href="/private/settings"
           className="w-7 h-7 rounded-full bg-neutral-800 border border-white/[0.1] flex items-center justify-center overflow-hidden shrink-0"
           aria-label="Compte"
         >

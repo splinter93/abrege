@@ -500,7 +500,40 @@ export async function POST(request: NextRequest) {
       provider = new XAINativeProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
     } else if (providerType === 'liminality') {
       const { LiminalityProvider } = await import('@/services/llm/providers/implementations/liminality');
-      provider = new LiminalityProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
+      let userLiminalityKey: string | undefined;
+      try {
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('settings')
+          .eq('id', userId)
+          .maybeSingle();
+        const raw = userRow?.settings;
+        const key =
+          raw &&
+          typeof raw === 'object' &&
+          !Array.isArray(raw) &&
+          typeof (raw as Record<string, unknown>).synesia_api_key === 'string'
+            ? String((raw as Record<string, unknown>).synesia_api_key).trim()
+            : '';
+        if (key.length > 0) {
+          userLiminalityKey = key;
+          logger.info(LogCategory.API, '[Stream Route] Clé Liminality / Synesia: profil utilisateur utilisée', {
+            userId,
+          });
+        }
+      } catch (e) {
+        logger.warn(LogCategory.API, '[Stream Route] Impossible de lire settings.synesia_api_key', {
+          userId,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+      provider = new LiminalityProvider({
+        model,
+        temperature: finalTemperature,
+        topP: finalTopP,
+        maxTokens: finalMaxTokens,
+        ...(userLiminalityKey ? { apiKey: userLiminalityKey } : {}),
+      });
     } else if (providerType === 'cerebras') {
       const { CerebrasProvider } = await import('@/services/llm/providers/implementations/cerebras');
       provider = new CerebrasProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
