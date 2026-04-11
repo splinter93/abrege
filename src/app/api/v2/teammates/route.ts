@@ -1,0 +1,265 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
+
+import { logApi } from '@/utils/logger';
+import { getAuthenticatedUser } from '@/utils/authUtils';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+function createServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
+
+const inviteSchema = z.object({
+  email: z.string().email().max(320),
+});
+
+type UserRow = {
+  id: string;
+  email: string | null;
+  name: string | null;
+  surname: string | null;
+  display_name: string | null;
+  created_at: string | null;
+};
+
+function displayName(u: Pick<UserRow, 'display_name' | 'name' | 'surname' | 'email'>): string {
+  if (u.display_name?.trim()) return u.display_name.trim();
+  const n = [u.name, u.surname].filter(Boolean).join(' ').trim();
+  if (n) return n;
+  return u.email?.split('@')[0] ?? 'Utilisateur';
+}
+
+async function fetchUsersMap(
+  service: ReturnType<typeof createServiceClient>,
+  ids: string[],
+): Promise<Map<string, UserRow>> {
+  const map = new Map<string, UserRow>();
+  if (!service || ids.length === 0) return map;
+  const unique = [...new Set(ids)];
+  const { data, error } = await service
+    .from('users')
+    .select('id, email, name, surname, display_name, created_at')
+    .in('id', unique);
+  if (error) {
+    logApi.info(`[v2_teammates] users select error: ${error.message}`);
+    return map;
+  }
+  for (const row of data ?? []) {
+    map.set(row.id as string, row as UserRow);
+  }
+  return map;
+}
+
+async function findUserIdByEmail(
+  service: NonNullable<ReturnType<typeof createServiceClient>>,
+  email: string,
+): Promise<string | null> {
+  const normalized = email.trim().toLowerCase();
+  const { data, error } = await service
+    .from('users')
+    .select('id')
+    .ilike('email', normalized)
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    logApi.info(`[v2_teammates] find by email: ${error.message}`);
+    return null;
+  }
+  return (data as { id: string } | null)?.id ?? null;
+}
+
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  const context = { operation: 'v2_teammates_get', component: 'API_V2' };
+  const authResult = await getAuthenticatedUser(request);
+  if (!authResult.success) {
+    return NextResponse.json(
+      { error: authResult.error },
+      { status: authResult.status || 401 },
+    );
+  }
+  const userId = authResult.userId!;
+  const service = createServiceClient();
+  if (!service) {
+    return NextResponse.json({ error: 'Service non configuré' }, { status: 500 });
+  }
+
+  const { data: rows, error } = await service
+    .from('teammates')
+    .select('id, user_id, teammate_id, status, requested_by, created_at')
+    .or(`user_id.eq.${userId},teammate_id.eq.${userId}`);
+
+  if (error) {
+    logApi.info(`[v2_teammates] GET error: ${error.message}`, context);
+    return NextResponse.json({ error: 'Erreur lecture teammates' }, { status: 500 });
+  }
+
+  const list = (rows ?? []) as Array<{
+    id: string;
+    user_id: string;
+    teammate_id: string;
+    status: string;
+    requested_by: string;
+    created_at: string;
+  }>;
+
+  const otherIds = list.map((r) => (r.user_id === userId ? r.teammate_id : r.user_id));
+  const userMap = await fetchUsersMap(service, [...otherIds, userId]);
+
+  const incoming: Array<{
+    id: string;
+    direction: 'incoming';
+    name: string;
+    email: string;
+    sentAt: string;
+  }> = [];
+  const outgoing: Array<{
+    id: string;
+    direction: 'outgoing';
+    name: string;
+    email: string;
+    sentAt: string;
+  }> = [];
+  const teammates: Array<{
+    id: string;
+    otherUserId: string;
+    name: string;
+    email: string;
+    since: string;
+  }> = [];
+
+  for (const r of list) {
+    const otherId = r.user_id === userId ? r.teammate_id : r.user_id;
+    const u = userMap.get(otherId);
+    const name = u ? displayName(u) : 'Utilisateur';
+    const email = u?.email ?? '';
+
+    if (r.status === 'pending') {
+      if (r.teammate_id === userId && r.requested_by !== userId) {
+        incoming.push({
+          id: r.id,
+          direction: 'incoming',
+          name,
+          email,
+          sentAt: r.created_at,
+        });
+      } else if (r.user_id === userId && r.requested_by === userId) {
+        outgoing.push({
+          id: r.id,
+          direction: 'outgoing',
+          name,
+          email,
+          sentAt: r.created_at,
+        });
+      }
+    } else if (r.status === 'accepted') {
+      teammates.push({
+        id: r.id,
+        otherUserId: otherId,
+        name,
+        email,
+        since: r.created_at,
+      });
+    }
+  }
+
+  return NextResponse.json({
+    success: true,
+    incoming,
+    outgoing,
+    teammates,
+  });
+}
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  const context = { operation: 'v2_teammates_post', component: 'API_V2' };
+  const authResult = await getAuthenticatedUser(request);
+  if (!authResult.success) {
+    return NextResponse.json(
+      { error: authResult.error },
+      { status: authResult.status || 401 },
+    );
+  }
+  const inviterId = authResult.userId!;
+  const service = createServiceClient();
+  if (!service) {
+    return NextResponse.json({ error: 'Service non configuré' }, { status: 500 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'JSON invalide' }, { status: 400 });
+  }
+  const parsed = inviteSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'E-mail invalide' }, { status: 400 });
+  }
+  const email = parsed.data.email.trim().toLowerCase();
+
+  const inviteeId = await findUserIdByEmail(service, email);
+  if (!inviteeId) {
+    // Generic message to avoid confirming whether an email is registered (user enumeration).
+    return NextResponse.json(
+      { error: 'Invitation impossible. Vérifiez l\'adresse e-mail ou attendez que la personne ait un compte.' },
+      { status: 404 },
+    );
+  }
+  if (inviteeId === inviterId) {
+    return NextResponse.json({ error: 'Vous ne pouvez pas vous inviter vous-même' }, { status: 400 });
+  }
+
+  const { data: existing } = await service
+    .from('teammates')
+    .select('id, status')
+    .or(
+      `and(user_id.eq.${inviterId},teammate_id.eq.${inviteeId}),and(user_id.eq.${inviteeId},teammate_id.eq.${inviterId})`,
+    );
+
+  const blocked = (existing ?? []).some((x: { status: string }) => x.status === 'blocked');
+  if (blocked) {
+    return NextResponse.json({ error: 'Relation bloquée' }, { status: 403 });
+  }
+
+  const active = (existing ?? []).some((x: { status: string }) =>
+    ['pending', 'accepted'].includes(x.status),
+  );
+  if (active) {
+    return NextResponse.json({ error: 'Invitation ou relation déjà en cours' }, { status: 409 });
+  }
+
+  const { data: inserted, error: insErr } = await service
+    .from('teammates')
+    .insert({
+      user_id: inviterId,
+      teammate_id: inviteeId,
+      status: 'pending',
+      requested_by: inviterId,
+    })
+    .select('id, created_at')
+    .single();
+
+  if (insErr || !inserted) {
+    logApi.info(`[v2_teammates] POST insert: ${insErr?.message}`, context);
+    return NextResponse.json({ error: "Impossible d'envoyer l'invitation" }, { status: 500 });
+  }
+
+  const invitee = (await fetchUsersMap(service, [inviteeId])).get(inviteeId);
+
+  return NextResponse.json({
+    success: true,
+    request: {
+      id: inserted.id as string,
+      direction: 'outgoing' as const,
+      name: invitee ? displayName(invitee) : email.split('@')[0] ?? email,
+      email: invitee?.email ?? email,
+      sentAt: inserted.created_at as string,
+    },
+  });
+}

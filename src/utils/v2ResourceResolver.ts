@@ -2,34 +2,36 @@ import { createClient } from '@supabase/supabase-js';
 import type { ResourceType } from './slugGenerator';
 import { logger, LogCategory } from './logger';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 // IMPORTANT: L'API V2 est utilisée par l'Agent côté serveur sans JWT utilisateur.
 // Pour éviter les erreurs RLS tout en garantissant la sécurité, on utilise la clé Service Role
 // et on applique systématiquement des filtres user_id dans toutes les requêtes.
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+
+// Guard: Supabase module-level client. Values will always be set in Node.js runtime
+// (Next.js API routes). The fallbacks prevent a hard crash during static analysis / tests.
+const supabase = createClient(
+  supabaseUrl || 'http://localhost:54321',
+  supabaseServiceKey || 'service_role_placeholder',
+);
 
 export class V2ResourceResolver {
   /**
    * Résout une référence (UUID ou slug) vers un UUID pour les endpoints V2
    */
   public static async resolveRef(
-    ref: string, 
+    ref: string,
     type: ResourceType,
     userId: string,
     context: { operation: string; component: string },
-    userToken?: string
   ): Promise<{ success: true; id: string } | { success: false; error: string; status: number }> {
-    
     try {
-      // ✅ LOGGING DÉTAILLÉ pour debug
-      logger.debug(LogCategory.API, '[V2ResourceResolver] 🔍 Tentative de résolution', {
+      logger.debug(LogCategory.API, '[V2ResourceResolver] resolveRef', {
         ref,
         type,
         userId,
-        hasUserToken: !!userToken,
         operation: context.operation,
-        component: context.component
+        component: context.component,
       });
       
       // Utiliser directement le service role key au lieu de ResourceResolver
@@ -112,19 +114,35 @@ export class V2ResourceResolver {
       logger.debug(LogCategory.API, '[V2ResourceResolver] 🔍 Référence est un UUID, validation...');
       
       try {
-        const { data } = await supabase
+        const { data, error: ownerErr } = await supabase
           .from(tableName)
           .select('id')
           .eq('id', cleanRef)
           .eq('user_id', userId)
-          .single();
-        
-        logger.debug(LogCategory.API, '[V2ResourceResolver] ✅ UUID validé', {
+          .maybeSingle();
+
+        if (ownerErr) {
+          logger.error(LogCategory.API, `❌ [V2ResourceResolver] Erreur validation UUID ${cleanRef}`, {
+            error: ownerErr.message,
+          });
+          return null;
+        }
+
+        logger.debug(LogCategory.API, '[V2ResourceResolver] ✅ UUID validé (propriétaire)', {
           found: !!data,
-          id: data?.id || null
+          id: data?.id || null,
         });
-        
-        return data?.id || null;
+
+        if (data?.id) {
+          return data.id;
+        }
+
+        if (type === 'classeur') {
+          const sharedId = await this.resolveSharedClasseurUuid(cleanRef, userId);
+          if (sharedId) return sharedId;
+        }
+
+        return null;
       } catch (error) {
         logger.error(LogCategory.API, `❌ [V2ResourceResolver] Erreur validation UUID ${cleanRef}`, {
           error: error instanceof Error ? error.message : String(error)
@@ -137,26 +155,89 @@ export class V2ResourceResolver {
     logger.debug(LogCategory.API, '[V2ResourceResolver] 🔍 Référence n\'est pas un UUID, recherche par slug...');
     
     try {
-      const { data } = await supabase
+      const { data, error: slugOwnerErr } = await supabase
         .from(tableName)
         .select('id')
         .eq('slug', ref) // Utiliser ref original pour le slug
         .eq('user_id', userId)
-        .single();
-      
-      logger.debug(LogCategory.API, '[V2ResourceResolver] ✅ Slug résolu', {
+        .maybeSingle();
+
+      if (slugOwnerErr) {
+        logger.error(LogCategory.API, `❌ [V2ResourceResolver] Erreur résolution slug ${ref}`, {
+          error: slugOwnerErr.message,
+        });
+        return null;
+      }
+
+      logger.debug(LogCategory.API, '[V2ResourceResolver] ✅ Slug résolu (propriétaire)', {
         slug: ref,
         found: !!data,
-        id: data?.id || null
+        id: data?.id || null,
       });
-      
-      return data?.id || null;
+
+      if (data?.id) {
+        return data.id;
+      }
+
+      if (type === 'classeur') {
+        const sharedSlugId = await this.resolveSharedClasseurSlug(ref, userId);
+        if (sharedSlugId) return sharedSlugId;
+      }
+
+      return null;
     } catch (error) {
       logger.error(LogCategory.API, `❌ [V2ResourceResolver] Erreur résolution slug ${ref}`, {
         error: error instanceof Error ? error.message : String(error)
       }, error instanceof Error ? error : undefined);
       return null;
     }
+  }
+
+  /** Accès lecteur : partage classeur actif. */
+  private static async resolveSharedClasseurUuid(
+    classeurId: string,
+    viewerId: string,
+  ): Promise<string | null> {
+    const { data: share } = await supabase
+      .from('classeur_shares')
+      .select('classeur_id')
+      .eq('classeur_id', classeurId)
+      .eq('shared_with', viewerId)
+      .maybeSingle();
+    if (!share?.classeur_id) return null;
+
+    const { data: c } = await supabase
+      .from('classeurs')
+      .select('id')
+      .eq('id', classeurId)
+      .eq('is_in_trash', false)
+      .maybeSingle();
+    return c?.id ?? null;
+  }
+
+  private static async resolveSharedClasseurSlug(
+    slug: string,
+    viewerId: string,
+  ): Promise<string | null> {
+    // Single join-style query: fetch candidate IDs first, then check shares in one call.
+    const { data: candidates, error } = await supabase
+      .from('classeurs')
+      .select('id')
+      .eq('slug', slug)
+      .eq('is_in_trash', false);
+    if (error || !candidates?.length) return null;
+
+    const candidateIds = (candidates as { id: string }[]).map((r) => r.id);
+
+    const { data: shares, error: sErr } = await supabase
+      .from('classeur_shares')
+      .select('classeur_id')
+      .in('classeur_id', candidateIds)
+      .eq('shared_with', viewerId)
+      .limit(1);
+    if (sErr || !shares?.length) return null;
+
+    return (shares[0] as { classeur_id: string }).classeur_id;
   }
 
   /**

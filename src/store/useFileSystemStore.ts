@@ -105,6 +105,13 @@ export interface FileSystemState {
   setClasseurs: (classeurs: Classeur[]) => void;
   setNotes: (notes: Note[]) => void;
 
+  /** Fusionne un classeur partagé (arborescence API) sans écraser les classeurs possédés. */
+  mergeSharedClasseurSnapshot: (payload: {
+    classeur: Classeur;
+    folders: Folder[];
+    notes: Note[];
+  }) => void;
+
   // Action pour le diff
   applyDiff: (noteId: string, diff: DiffResult) => void;
 }
@@ -339,6 +346,30 @@ export const useFileSystemStore = create<FileSystemState>()((set) => ({
     // ✅ CORRECTION: Remplacer complètement pour gérer les suppressions
     notes: Object.fromEntries(notes.map(n => [n.id, n]))
   })),
+
+  mergeSharedClasseurSnapshot: ({ classeur, folders, notes }) =>
+    set((state) => {
+      const cid = classeur.id;
+      const folderEntries = folders.map((f) => {
+        const row: Folder = {
+          ...f,
+          classeur_id: f.classeur_id ?? cid,
+        };
+        return [row.id, row] as const;
+      });
+      const noteEntries = notes.map((n) => {
+        const row: Note = {
+          ...n,
+          classeur_id: n.classeur_id ?? cid,
+        };
+        return [row.id, row] as const;
+      });
+      return {
+        classeurs: { ...state.classeurs, [cid]: classeur },
+        folders: { ...state.folders, ...Object.fromEntries(folderEntries) },
+        notes: { ...state.notes, ...Object.fromEntries(noteEntries) },
+      };
+    }),
 
   // Action pour le diff
   applyDiff: (noteId: string, diff: DiffResult) => set(state => {

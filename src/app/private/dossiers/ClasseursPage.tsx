@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ import {
   BookMarked,
   ChevronDown,
   Settings,
+  ExternalLink,
 } from "lucide-react";
 import { Feather } from "react-feather";
 import {
@@ -40,6 +41,7 @@ import { useCrossClasseurDrag } from "@/hooks/useCrossClasseurDrag";
 import { useFileSystemStore } from "@/store/useFileSystemStore";
 import { DossierLoadingState, DossierErrorState } from "@/components/DossierLoadingStates";
 import SimpleContextMenu from "@/components/SimpleContextMenu";
+import ShareModal from "@/components/ShareModal";
 import ClasseurEditModal from "@/components/ClasseurEditModal";
 import { NotebookSettingsModal, NoteSidePanel, NoteModal } from "@/components/notebooks";
 import { useNotebookSettingsStore } from "@/store/useNotebookSettingsStore";
@@ -89,10 +91,14 @@ export interface ClasseurItem {
   slug?: string;
 }
 
-interface ClasseurTab {
+export interface ClasseurTab {
   id: string;
   name: string;
   emoji?: string;
+  kind?: "owned" | "shared";
+  shareId?: string;
+  sharedBy?: string;
+  permissionLevel?: "read" | "write";
 }
 
 // ---------------------------------------------------------------------------
@@ -115,6 +121,7 @@ function ClasseursHeader({
   onCreateFolder,
   onCreateNote,
   onSettingsClick,
+  actionsLocked,
 }: {
   statsLabel: string;
   onNouveauClick: () => void;
@@ -124,6 +131,8 @@ function ClasseursHeader({
   onCreateFolder: () => void;
   onCreateNote: () => void;
   onSettingsClick: () => void;
+  /** Classeur partagé en lecture seule : pas de création. */
+  actionsLocked?: boolean;
 }) {
   return (
     <div className="mb-10 mt-5 sm:mt-8 flex w-full items-center justify-between">
@@ -146,13 +155,20 @@ function ClasseursHeader({
         </button>
         <button
           type="button"
-          onClick={onNouveauClick}
-          className="flex h-9 items-center gap-1.5 rounded-md bg-white px-4 text-sm font-semibold text-black shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all hover:bg-neutral-200"
+          onClick={() => {
+            if (!actionsLocked) onNouveauClick();
+          }}
+          disabled={!!actionsLocked}
+          className={`flex h-9 items-center gap-1.5 rounded-md px-4 text-sm font-semibold shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all ${
+            actionsLocked
+              ? "cursor-not-allowed bg-zinc-800 text-zinc-500"
+              : "bg-white text-black hover:bg-neutral-200"
+          }`}
         >
           <span>Nouveau</span>
           <ChevronDown className="h-4 w-4" />
         </button>
-        {nouveauOpen && (
+        {nouveauOpen && !actionsLocked && (
           <>
             <div className="fixed inset-0 z-10" aria-hidden onClick={onNouveauClose} />
             <div className="absolute right-0 top-full z-20 mt-2 min-w-[200px] rounded-xl border border-zinc-800/60 bg-zinc-950 p-1.5 shadow-2xl ring-1 ring-white/5">
@@ -204,6 +220,7 @@ function SortableTab({
   isRenaming,
   onRenameSubmit,
   onRenameCancel,
+  disableSortable,
 }: {
   tab: ClasseurTab;
   isActive: boolean;
@@ -216,9 +233,11 @@ function SortableTab({
   isRenaming?: boolean;
   onRenameSubmit?: (name: string) => void;
   onRenameCancel?: () => void;
+  disableSortable?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: tab.id,
+    disabled: !!disableSortable,
   });
   const style: React.CSSProperties = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
@@ -237,19 +256,19 @@ function SortableTab({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...(isRenaming ? {} : listeners)}
+      {...(isRenaming || disableSortable ? {} : listeners)}
       onDragOver={(e) => {
-        if (!isNativeDrag(e)) return;
+        if (disableSortable || !isNativeDrag(e)) return;
         e.preventDefault();
         e.stopPropagation();
         onDragOver?.(e, tab);
       }}
       onDragLeave={(e) => {
-        if (!isNativeDrag(e)) return;
+        if (disableSortable || !isNativeDrag(e)) return;
         onDragLeave?.(e);
       }}
       onDrop={(e) => {
-        if (!isNativeDrag(e)) return;
+        if (disableSortable || !isNativeDrag(e)) return;
         e.preventDefault();
         e.stopPropagation();
         onDrop?.(e, tab);
@@ -277,9 +296,17 @@ function SortableTab({
           onClick={() => onSelect(tab.id)}
           onContextMenu={(e) => onContextMenu?.(e, tab)}
           className="flex items-center gap-1.5 w-full text-left"
+          title={
+            tab.kind === "shared" && tab.sharedBy
+              ? `Partagé par ${tab.sharedBy}`
+              : undefined
+          }
         >
           {tab.emoji && <span className="text-base leading-none">{tab.emoji}</span>}
           {tab.name}
+          {tab.kind === "shared" ? (
+            <ExternalLink className="h-2.5 w-2.5 shrink-0 text-zinc-500" aria-hidden />
+          ) : null}
         </button>
       )}
     </div>
@@ -330,13 +357,16 @@ function ClasseursTabs({
   const handleDragEnd = useCallback(
     (e: DragEndEvent) => {
       const { active, over } = e;
-      if (over && active.id !== over.id && classeursForReorder.length > 0) {
-        const oldIndex = tabs.findIndex((t) => t.id === active.id);
-        const newIndex = tabs.findIndex((t) => t.id === over.id);
-        if (oldIndex !== -1 && newIndex !== -1) {
-          const reorderedClasseurs = arrayMove(classeursForReorder, oldIndex, newIndex);
-          handleUpdateClasseurPositions(reorderedClasseurs);
-        }
+      if (!over || active.id === over.id || classeursForReorder.length === 0) return;
+      const aTab = tabs.find((t) => t.id === active.id);
+      const oTab = tabs.find((t) => t.id === over.id);
+      if (!aTab || !oTab) return;
+      if (aTab.kind === "shared" || oTab.kind === "shared") return;
+      const oldIndex = classeursForReorder.findIndex((c) => c.id === active.id);
+      const newIndex = classeursForReorder.findIndex((c) => c.id === over.id);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const reorderedClasseurs = arrayMove(classeursForReorder, oldIndex, newIndex);
+        handleUpdateClasseurPositions(reorderedClasseurs);
       }
     },
     [tabs, classeursForReorder, handleUpdateClasseurPositions]
@@ -351,31 +381,42 @@ function ClasseursTabs({
     >
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
         <SortableContext items={tabs.map((t) => t.id)} strategy={horizontalListSortingStrategy}>
-          <div className="flex gap-1">
+          <div className="flex gap-1 items-end">
             <AnimatePresence initial={false} mode="popLayout">
-              {tabs.map((tab) => (
-                <motion.div
-                  key={tab.id}
-                  initial={{ opacity: 0, scale: 0.9, width: 0 }}
-                  animate={{ opacity: 1, scale: 1, width: "auto" }}
-                  exit={{ opacity: 0, scale: 0.9, width: 0 }}
-                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-                  style={{ overflow: "hidden" }}
-                >
-                  <SortableTab
-                    tab={tab}
-                    isActive={tab.id === activeId}
-                    onSelect={onSelect}
-                    onContextMenu={onContextMenu}
-                    onDragOver={onTabDragOver}
-                    onDragLeave={onTabDragLeave}
-                    onDrop={onTabDrop}
-                    isDragOver={dragOverTabId === tab.id}
-                    isRenaming={renamingTabId === tab.id}
-                    onRenameSubmit={(name) => onTabRenameSubmit?.(tab.id, name)}
-                    onRenameCancel={onTabRenameCancel}
-                  />
-                </motion.div>
+              {tabs.map((tab, i) => (
+                <React.Fragment key={tab.id}>
+                  {tab.kind === "shared" && tabs[i - 1]?.kind !== "shared" ? (
+                    <span
+                      className="mb-3 shrink-0 select-none px-1 text-sm text-zinc-600"
+                      title="Partagés"
+                      aria-hidden
+                    >
+                      ·
+                    </span>
+                  ) : null}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, width: 0 }}
+                    animate={{ opacity: 1, scale: 1, width: "auto" }}
+                    exit={{ opacity: 0, scale: 0.9, width: 0 }}
+                    transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <SortableTab
+                      tab={tab}
+                      isActive={tab.id === activeId}
+                      onSelect={onSelect}
+                      onContextMenu={onContextMenu}
+                      onDragOver={onTabDragOver}
+                      onDragLeave={onTabDragLeave}
+                      onDrop={onTabDrop}
+                      isDragOver={dragOverTabId === tab.id}
+                      isRenaming={renamingTabId === tab.id}
+                      onRenameSubmit={(name) => onTabRenameSubmit?.(tab.id, name)}
+                      onRenameCancel={onTabRenameCancel}
+                      disableSortable={tab.kind === "shared"}
+                    />
+                  </motion.div>
+                </React.Fragment>
               ))}
             </AnimatePresence>
           </div>
@@ -930,7 +971,7 @@ function ClasseursContent({
 
 export default function ClasseursPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, getAccessToken } = useAuth();
   const isMobile = useIsMobile();
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -955,6 +996,27 @@ export default function ClasseursPage() {
   const [openNoteRef, setOpenNoteRef] = useState<string | null>(null);
   const noteOpeningMode = useNotebookSettingsStore((s) => s.noteOpeningMode);
 
+  type SharedClasseurSource = {
+    shareId: string;
+    classeurId: string;
+    name: string;
+    emoji?: string;
+    sharedBy: string;
+    permissionLevel: "read" | "write";
+  };
+  const [sharedClasseurs, setSharedClasseurs] = useState<SharedClasseurSource[]>([]);
+  const [sharedListLoaded, setSharedListLoaded] = useState(false);
+  const [shareTarget, setShareTarget] = useState<{
+    resourceType: "classeur" | "folder" | "note";
+    resourceRef: string;
+    resourceName: string;
+  } | null>(null);
+
+  const sharedClasseurIds = useMemo(
+    () => sharedClasseurs.map((s) => s.classeurId),
+    [sharedClasseurs]
+  );
+
   const {
     loading: pageLoading,
     error: pageError,
@@ -978,15 +1040,27 @@ export default function ClasseursPage() {
     retryWithBackoff,
     retryCount,
     canRetry,
-  } = useDossiersPage(user?.id ?? "");
+  } = useDossiersPage(user?.id ?? "", {
+    sharedClasseurIds,
+    sharedListLoaded,
+  });
 
   const [dragOverTabId, setDragOverTabId] = useState<string | null>(null);
   const [dropTargetFolderId, setDropTargetFolderId] = useState<string | null>(null);
 
-  const activeClasseur = useMemo(
-    () => classeurs.find((c) => c.id === activeClasseurId),
-    [classeurs, activeClasseurId]
-  );
+  const activeClasseur = useMemo(() => {
+    const owned = classeurs.find((c) => c.id === activeClasseurId);
+    if (owned) return owned;
+    const sh = sharedClasseurs.find((s) => s.classeurId === activeClasseurId);
+    if (sh) {
+      return {
+        id: sh.classeurId,
+        name: sh.name,
+        emoji: sh.emoji,
+      } as Classeur;
+    }
+    return undefined;
+  }, [classeurs, activeClasseurId, sharedClasseurs]);
 
   const folderManager = useFolderManagerState(
     activeClasseurId ?? "",
@@ -1038,11 +1112,162 @@ export default function ClasseursPage() {
 
   const notesMap = useFileSystemStore((s) => s.notes);
   const foldersMap = useFileSystemStore((s) => s.folders);
+  const mergeSharedClasseurSnapshot = useFileSystemStore((s) => s.mergeSharedClasseurSnapshot);
 
-  const tabs: ClasseurTab[] = useMemo(
-    () => classeurs.map((c) => ({ id: c.id, name: c.name, emoji: c.emoji })),
-    [classeurs]
-  );
+  useEffect(() => {
+    if (!activeClasseurId || !user?.id) return;
+    const sh = sharedClasseurs.find((s) => s.classeurId === activeClasseurId);
+    if (!sh) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getAccessToken();
+        if (!token || cancelled) return;
+        const res = await fetch(`/api/v2/classeur/${encodeURIComponent(activeClasseurId)}/tree`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok || cancelled) return;
+        const j = (await res.json()) as {
+          success?: boolean;
+          classeur?: {
+            id: string;
+            name: string;
+            emoji?: string | null;
+            created_at?: string;
+          };
+          folders?: Array<{
+            id: string;
+            name: string;
+            parent_id?: string | null;
+            classeur_id?: string;
+            position?: number | null;
+            created_at?: string;
+          }>;
+          notes?: Array<{
+            id: string;
+            source_title: string;
+            folder_id?: string | null;
+            classeur_id?: string;
+            position?: number | null;
+            created_at?: string;
+            updated_at?: string;
+            slug?: string | null;
+          }>;
+        };
+        if (!j.success || !j.classeur || cancelled) return;
+        const cid = j.classeur.id;
+        const folders = (j.folders ?? []).map((f) => ({
+          id: f.id,
+          name: f.name,
+          parent_id: f.parent_id ?? null,
+          classeur_id: f.classeur_id ?? cid,
+          position: f.position ?? 0,
+          created_at: f.created_at ?? new Date().toISOString(),
+        }));
+        const notes = (j.notes ?? []).map((n) => ({
+          id: n.id,
+          source_title: n.source_title,
+          markdown_content: "",
+          folder_id: n.folder_id ?? null,
+          classeur_id: n.classeur_id ?? cid,
+          position: n.position ?? 0,
+          created_at: n.created_at ?? new Date().toISOString(),
+          updated_at: n.updated_at ?? n.created_at ?? new Date().toISOString(),
+          slug: n.slug ?? "",
+        }));
+        mergeSharedClasseurSnapshot({
+          classeur: {
+            id: cid,
+            name: j.classeur.name,
+            emoji: j.classeur.emoji ?? undefined,
+            created_at: j.classeur.created_at,
+          },
+          folders,
+          notes,
+        });
+      } catch (err) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('[ClasseursPage] shared tree load failed', err);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activeClasseurId,
+    sharedClasseurs,
+    user?.id,
+    getAccessToken,
+    mergeSharedClasseurSnapshot,
+    refreshKey,
+  ]);
+
+  const loadSharedClasseurs = useCallback(async () => {
+    try {
+      const token = await getAccessToken();
+      if (!token) return;
+      const res = await fetch("/api/v2/classeur/shared", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const j = (await res.json()) as {
+        success?: boolean;
+        items?: Array<{
+          shareId: string;
+          classeurId: string;
+          name: string;
+          emoji?: string;
+          sharedBy: string;
+          permissionLevel: string;
+        }>;
+      };
+      if (!j.success || !j.items) return;
+      setSharedClasseurs(
+        j.items.map((it) => ({
+          shareId: it.shareId,
+          classeurId: it.classeurId,
+          name: it.name,
+          emoji: it.emoji,
+          sharedBy: it.sharedBy,
+          permissionLevel: it.permissionLevel === "write" ? "write" : "read",
+        })),
+      );
+    } catch (err) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('[ClasseursPage] loadSharedClasseurs failed', err);
+      }
+    } finally {
+      setSharedListLoaded(true);
+    }
+  }, [getAccessToken]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setSharedListLoaded(false);
+      return;
+    }
+    void loadSharedClasseurs();
+  }, [user?.id, loadSharedClasseurs, refreshKey]);
+
+  const tabs: ClasseurTab[] = useMemo(() => {
+    const owned: ClasseurTab[] = classeurs.map((c) => ({
+      id: c.id,
+      name: c.name,
+      emoji: c.emoji,
+      kind: "owned" as const,
+    }));
+    const shared: ClasseurTab[] = sharedClasseurs.map((s) => ({
+      id: s.classeurId,
+      name: s.name,
+      emoji: s.emoji,
+      kind: "shared" as const,
+      shareId: s.shareId,
+      sharedBy: s.sharedBy,
+      permissionLevel: s.permissionLevel,
+    }));
+    return [...owned, ...shared];
+  }, [classeurs, sharedClasseurs]);
 
   const breadcrumbSegments = useMemo((): BreadcrumbSegment[] => {
     const segments: BreadcrumbSegment[] = [];
@@ -1285,10 +1510,14 @@ export default function ClasseursPage() {
     [moveItem]
   );
 
-  const handleTabDragOver = useCallback((e: React.DragEvent, tab: ClasseurTab) => {
-    handleCrossClasseurDragOver(e, tab.id);
-    setDragOverTabId(tab.id);
-  }, [handleCrossClasseurDragOver]);
+  const handleTabDragOver = useCallback(
+    (e: React.DragEvent, tab: ClasseurTab) => {
+      if (tab.kind === "shared") return;
+      handleCrossClasseurDragOver(e, tab.id);
+      setDragOverTabId(tab.id);
+    },
+    [handleCrossClasseurDragOver]
+  );
 
   const handleTabDragLeave = useCallback((e: React.DragEvent) => {
     handleCrossClasseurDragLeave(e);
@@ -1297,11 +1526,62 @@ export default function ClasseursPage() {
 
   const handleTabDrop = useCallback(
     (e: React.DragEvent, tab: ClasseurTab) => {
+      if (tab.kind === "shared") return;
       handleCrossClasseurDrop(e, tab.id);
       setDragOverTabId(null);
       setRefreshKey((k) => k + 1);
     },
     [handleCrossClasseurDrop]
+  );
+
+  const activeTab = useMemo(
+    () => tabs.find((t) => t.id === activeClasseurId) ?? tabs[0],
+    [tabs, activeClasseurId]
+  );
+
+  const sharedReadOnly =
+    activeTab?.kind === "shared" && activeTab.permissionLevel === "read";
+
+  const isActiveClasseurOwned = useMemo(
+    () => !!classeurs.find((c) => c.id === activeClasseurId),
+    [classeurs, activeClasseurId]
+  );
+
+  const handleQuitShare = useCallback(
+    async (tab: ClasseurTab) => {
+      if (tab.kind !== "shared" || !tab.shareId || !activeClasseurId) return;
+      try {
+        const token = await getAccessToken();
+        if (!token) return;
+        const res = await fetch(
+          `/api/v2/classeur/${encodeURIComponent(activeClasseurId)}/share/${encodeURIComponent(tab.shareId)}`,
+          { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({})) as { error?: string };
+          window.alert(j.error ?? 'Impossible de quitter ce partage. Réessayez.');
+          return;
+        }
+        setSharedClasseurs((prev) => prev.filter((s) => s.shareId !== tab.shareId));
+        setRefreshKey((k) => k + 1);
+        if (activeClasseurId === tab.id) {
+          const firstOwned = classeurs[0];
+          if (firstOwned) {
+            setActiveClasseurId(firstOwned.id);
+            setCurrentFolderId(undefined);
+          }
+        }
+        setContextMenuItem(null);
+        setContextMenuTab(null);
+        setContextMenuArea(null);
+      } catch (err) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('[ClasseursPage] handleQuitShare error', err);
+        }
+        window.alert('Erreur réseau. Réessayez.');
+      }
+    },
+    [activeClasseurId, classeurs, getAccessToken, setActiveClasseurId, setCurrentFolderId]
   );
 
   if (authLoading || !user?.id) {
@@ -1325,8 +1605,6 @@ export default function ClasseursPage() {
     );
   }
 
-  const activeTab = tabs.find((t) => t.id === activeClasseurId) ?? tabs[0];
-
   return (
     <div className="page-content-inner page-content-inner-classeurs classeurs-page-root flex h-full min-h-full w-full max-w-none mx-0 min-w-0 bg-[var(--color-bg-primary)]">
       <main className="flex min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
@@ -1342,6 +1620,7 @@ export default function ClasseursPage() {
             onCreateFolder={handleCreateFolderClick}
             onCreateNote={handleCreateNoteClick}
             onSettingsClick={() => setSettingsOpen(true)}
+            actionsLocked={sharedReadOnly}
           />
 
           {/* Toolbar : onglets uniquement */}
@@ -1420,18 +1699,37 @@ export default function ClasseursPage() {
                 closeContextMenus();
               },
             },
-            {
-              label: "Renommer",
-              onClick: () =>
-                handleContextMenuRename(
-                  contextMenuItem.item.id,
-                  contextMenuItem.item.type
-                ),
-            },
-            {
-              label: "Supprimer",
-              onClick: () => handleContextMenuDelete(contextMenuItem.item),
-            },
+            ...(isActiveClasseurOwned && activeClasseurId
+              ? [
+                  {
+                    label: "Partager…",
+                    onClick: () => {
+                      setShareTarget({
+                        resourceType: contextMenuItem.item.type === "folder" ? "folder" : "note",
+                        resourceRef: activeClasseurId,
+                        resourceName: contextMenuItem.item.name,
+                      });
+                      closeContextMenus();
+                    },
+                  } as const,
+                ]
+              : []),
+            ...(sharedReadOnly
+              ? []
+              : [
+                  {
+                    label: "Renommer",
+                    onClick: () =>
+                      handleContextMenuRename(
+                        contextMenuItem.item.id,
+                        contextMenuItem.item.type
+                      ),
+                  },
+                  {
+                    label: "Supprimer",
+                    onClick: () => handleContextMenuDelete(contextMenuItem.item),
+                  },
+                ]),
           ]}
           onClose={closeContextMenus}
         />
@@ -1442,18 +1740,36 @@ export default function ClasseursPage() {
           x={contextMenuTab.x}
           y={contextMenuTab.y}
           visible
-          options={[
-            {
-              label: "Editer",
-              onClick: () => {
-                const full = classeurs.find((c) => c.id === contextMenuTab.tab.id) ?? null;
-                setEditModalClasseur(full);
-                closeContextMenus();
-              },
-            },
-            { label: "Renommer", onClick: () => handleTabRename(contextMenuTab.tab) },
-            { label: "Supprimer", onClick: () => handleTabDelete(contextMenuTab.tab) },
-          ]}
+          options={
+            contextMenuTab.tab.kind === "shared"
+              ? [
+                  {
+                    label: "Ouvrir",
+                    onClick: () => {
+                      handleSelectTab(contextMenuTab.tab.id);
+                      closeContextMenus();
+                    },
+                  },
+                  {
+                    label: "Quitter le partage",
+                    onClick: () => {
+                      void handleQuitShare(contextMenuTab.tab);
+                    },
+                  },
+                ]
+              : [
+                  {
+                    label: "Editer",
+                    onClick: () => {
+                      const full = classeurs.find((c) => c.id === contextMenuTab.tab.id) ?? null;
+                      setEditModalClasseur(full);
+                      closeContextMenus();
+                    },
+                  },
+                  { label: "Renommer", onClick: () => handleTabRename(contextMenuTab.tab) },
+                  { label: "Supprimer", onClick: () => handleTabDelete(contextMenuTab.tab) },
+                ]
+          }
           onClose={closeContextMenus}
         />
       )}
@@ -1466,28 +1782,47 @@ export default function ClasseursPage() {
           options={
             activeClasseur
               ? [
-                  {
-                    label: "Editer le classeur",
-                    onClick: () => {
-                      const full = classeurs.find((c) => c.id === activeClasseur.id) ?? null;
-                      setEditModalClasseur(full);
-                      closeContextMenus();
-                    },
-                  },
-                  {
-                    label: "Nouveau dossier",
-                    onClick: () => {
-                      handleCreateFolderClick();
-                      closeContextMenus();
-                    },
-                  },
-                  {
-                    label: "Nouvelle note",
-                    onClick: () => {
-                      handleCreateNoteClick();
-                      closeContextMenus();
-                    },
-                  },
+                  ...(isActiveClasseurOwned
+                    ? [
+                        {
+                          label: "Editer le classeur",
+                          onClick: () => {
+                            const full = classeurs.find((c) => c.id === activeClasseur.id) ?? null;
+                            setEditModalClasseur(full);
+                            closeContextMenus();
+                          },
+                        },
+                        {
+                          label: "Partager…",
+                          onClick: () => {
+                            setShareTarget({
+                              resourceType: "classeur",
+                              resourceRef: activeClasseur.id,
+                              resourceName: activeClasseur.name,
+                            });
+                            closeContextMenus();
+                          },
+                        },
+                      ]
+                    : []),
+                  ...(sharedReadOnly
+                    ? []
+                    : [
+                        {
+                          label: "Nouveau dossier",
+                          onClick: () => {
+                            handleCreateFolderClick();
+                            closeContextMenus();
+                          },
+                        },
+                        {
+                          label: "Nouvelle note",
+                          onClick: () => {
+                            handleCreateNoteClick();
+                            closeContextMenus();
+                          },
+                        },
+                      ]),
                 ]
               : [{ label: "Nouveau classeur", onClick: () => { handleCreateClasseurClick(); closeContextMenus(); } }]
           }
@@ -1521,6 +1856,20 @@ export default function ClasseursPage() {
         <NoteModal
           noteRef={openNoteRef}
           onClose={handleCloseNotePanel}
+        />
+      )}
+
+      {shareTarget && (
+        <ShareModal
+          resourceType={shareTarget.resourceType}
+          resourceRef={shareTarget.resourceRef}
+          resourceName={shareTarget.resourceName}
+          getAccessToken={getAccessToken}
+          onClose={() => {
+            setShareTarget(null);
+            void loadSharedClasseurs();
+            setRefreshKey((k) => k + 1);
+          }}
         />
       )}
     </div>

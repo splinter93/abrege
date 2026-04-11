@@ -17,7 +17,8 @@
 }
 
 /* Contenu paramètres : pas de double padding latéral — le shell gère les gouttières */
-.page-content-area:has(.page-content-inner-settings) {
+.page-content-area:has(.page-content-inner-settings),
+.page-content-area:has(.page-content-inner-shared) {
   padding-top: 0 !important;
   padding-bottom: var(--spacing-xl, 1.5rem) !important;
   padding-left: clamp(0.75rem, 2vw, 1.5rem) !important;
@@ -29,17 +30,21 @@
 
 /* Overlay global (pages-unified-layout) : désactivé ici pour éviter un léger décalage visuel */
 .page-content-area:has(.page-content-inner-settings)::before,
-.dark .page-content-area:has(.page-content-inner-settings)::before {
+.dark .page-content-area:has(.page-content-inner-settings)::before,
+.page-content-area:has(.page-content-inner-shared)::before,
+.dark .page-content-area:has(.page-content-inner-shared)::before {
   content: none !important;
   display: none !important;
 }
 
-.page-content-area:has(.page-content-inner-settings) > div {
+.page-content-area:has(.page-content-inner-settings) > div,
+.page-content-area:has(.page-content-inner-shared) > div {
   background: var(--color-bg-primary) !important;
   background-color: var(--color-bg-primary) !important;
 }
 
-.page-content-area .page-content-inner-settings {
+.page-content-area .page-content-inner-settings,
+.page-content-area .page-content-inner-shared {
   max-width: none !important;
   margin: 0 !important;
   width: 100% !important;
@@ -1520,42 +1525,77 @@
   color: #fafafa;
 }
 
-/* Modales Paramètres — alignées sur .settings-v-card */
-body:has(.page-content-inner-settings) .modal-overlay .modal-content {
+/* Modales Paramètres & Partage — alignées sur .settings-v-card */
+body:has(.page-content-inner-settings) .modal-overlay .modal-content,
+body:has(.page-content-inner-shared) .modal-overlay .modal-content {
   background: var(--color-bg-block);
   border: var(--border-block);
   border-radius: 0.75rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
 }
-body:has(.page-content-inner-settings) .modal-overlay .modal-header {
+body:has(.page-content-inner-settings) .modal-overlay .modal-header,
+body:has(.page-content-inner-shared) .modal-overlay .modal-header {
   border-bottom: var(--border-block);
 }
-body:has(.page-content-inner-settings) .modal-overlay .modal-header h3 {
+body:has(.page-content-inner-settings) .modal-overlay .modal-header h3,
+body:has(.page-content-inner-shared) .modal-overlay .modal-header h3 {
   color: #fafafa;
 }
-body:has(.page-content-inner-settings) .modal-overlay .modal-close {
+body:has(.page-content-inner-settings) .modal-overlay .modal-close,
+body:has(.page-content-inner-shared) .modal-overlay .modal-close {
   color: #a1a1aa;
 }
-body:has(.page-content-inner-settings) .modal-overlay .modal-close:hover {
+body:has(.page-content-inner-settings) .modal-overlay .modal-close:hover,
+body:has(.page-content-inner-shared) .modal-overlay .modal-close:hover {
   color: #fafafa;
   background: rgba(39, 39, 42, 0.6);
 }
-body:has(.page-content-inner-settings) .modal-overlay .api-key-code {
+body:has(.page-content-inner-settings) .modal-overlay .api-key-code,
+body:has(.page-content-inner-shared) .modal-overlay .api-key-code {
   background: rgba(39, 39, 42, 0.6);
   border-color: rgba(63, 63, 70, 0.7);
   color: #fafafa;
 }
-body:has(.page-content-inner-settings) .modal-overlay .settings-copy-button {
+body:has(.page-content-inner-settings) .modal-overlay .settings-copy-button,
+body:has(.page-content-inner-shared) .modal-overlay .settings-copy-button {
   background: #fff;
   color: #000;
 }
-body:has(.page-content-inner-settings) .modal-overlay .settings-copy-button:hover {
+body:has(.page-content-inner-settings) .modal-overlay .settings-copy-button:hover,
+body:has(.page-content-inner-shared) .modal-overlay .settings-copy-button:hover {
   background: #e4e4e7;
 }
-body:has(.page-content-inner-settings) .modal-overlay .modal-button {
+body:has(.page-content-inner-settings) .modal-overlay .modal-button,
+body:has(.page-content-inner-shared) .modal-overlay .modal-button {
   background: #fff;
   color: #000;
 }
-body:has(.page-content-inner-settings) .modal-overlay .modal-button:hover {
+body:has(.page-content-inner-settings) .modal-overlay .modal-button:hover,
+body:has(.page-content-inner-shared) .modal-overlay .modal-button:hover {
   background: #e4e4e7;
+}
+
+/* Page Partage : sous-titres de liste dans une carte */
+.shared-v-list-heading {
+  margin: 0;
+  padding: 1rem 1.25rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary, #a1a1aa);
+}
+.shared-v-empty {
+  padding: 2.5rem 1.25rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #a1a1aa);
+  line-height: 1.5;
+}
+.shared-v-empty strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-primary, #ededed);
 }

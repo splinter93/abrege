@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
+import { getAuthenticatedUser } from '@/utils/authUtils';
+
+function createServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -36,13 +44,12 @@ export async function GET(
   }
 
   const userId = authResult.userId!;
-  
-  // 🔧 CORRECTION: Utiliser directement le client Supabase standard
-  // getAuthenticatedUser a déjà validé le token, pas besoin de le refaire
-  const userToken = extractTokenFromRequest(request);
-  const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
+  const service = createServiceClient();
+  if (!service) {
+    return NextResponse.json({ error: 'Service non configuré' }, { status: 500 });
+  }
 
-  // Résoudre la référence (UUID ou slug)
+  // Résoudre la référence (UUID ou slug) — propriétaire ou partage actif
   const resolveResult = await V2ResourceResolver.resolveRef(ref, 'classeur', userId, context);
   if (!resolveResult.success) {
     return NextResponse.json(
@@ -54,47 +61,64 @@ export async function GET(
   const classeurId = resolveResult.id;
 
   try {
-    // ✅ OPTIMISATION: Paralléliser les 3 requêtes au lieu de les faire séquentiellement
-    logApi.info(`🚀 Requêtes parallèles: classeur, folders, notes`, context);
-    
-    const [classeurResult, foldersResult, notesResult] = await Promise.all([
-      // Requête 1: Classeur principal
-      supabase
-        .from('classeurs')
-        .select('id, name, description, emoji, position, slug, created_at, updated_at')
-        .eq('id', classeurId)
-        .eq('user_id', userId)
-        .eq('is_in_trash', false)
-        .single(),
-      
-      // Requête 2: Dossiers (simplifié - uniquement classeur_id)
-      supabase
-        .from('folders')
-        .select('id, name, parent_id, created_at, position, slug, classeur_id')
-        .eq('classeur_id', classeurId)
-        .eq('user_id', userId)
-        .is('trashed_at', null)
-        .order('name'),
-      
-      // Requête 3: Notes (simplifié - uniquement classeur_id)
-      supabase
-        .from('articles')
-        .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id, slug, position')
-        .eq('classeur_id', classeurId)
-        .eq('user_id', userId)
-        .is('trashed_at', null)
-        .order('source_title')
-    ]);
+    const { data: classeurRow, error: classeurMetaErr } = await service
+      .from('classeurs')
+      .select('id, name, description, emoji, position, slug, created_at, updated_at, user_id')
+      .eq('id', classeurId)
+      .eq('is_in_trash', false)
+      .maybeSingle();
 
-    // Vérifier le classeur
-    const { data: classeur, error: classeurError } = classeurResult;
-    if (classeurError || !classeur) {
+    if (classeurMetaErr || !classeurRow) {
       logApi.info(`❌ Classeur non trouvé: ${classeurId}`, context);
       return NextResponse.json(
         { error: 'Classeur non trouvé' },
         { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
+
+    const ownerId = classeurRow.user_id as string;
+    const isOwner = ownerId === userId;
+    if (!isOwner) {
+      const { data: shareRow } = await service
+        .from('classeur_shares')
+        .select('id')
+        .eq('classeur_id', classeurId)
+        .eq('shared_with', userId)
+        .maybeSingle();
+      if (!shareRow) {
+        return NextResponse.json({ error: 'Accès refusé' }, { status: 403 });
+      }
+    }
+
+    const classeur = {
+      id: classeurRow.id,
+      name: classeurRow.name,
+      description: classeurRow.description,
+      emoji: classeurRow.emoji,
+      position: classeurRow.position,
+      slug: classeurRow.slug,
+      created_at: classeurRow.created_at,
+      updated_at: classeurRow.updated_at,
+    };
+
+    logApi.info(`🚀 Requêtes parallèles: dossiers, notes (owner=${ownerId})`, context);
+
+    const [foldersResult, notesResult] = await Promise.all([
+      service
+        .from('folders')
+        .select('id, name, parent_id, created_at, position, slug, classeur_id')
+        .eq('classeur_id', classeurId)
+        .eq('user_id', ownerId)
+        .is('trashed_at', null)
+        .order('name'),
+      service
+        .from('articles')
+        .select('id, source_title, header_image, created_at, updated_at, folder_id, classeur_id, slug, position')
+        .eq('classeur_id', classeurId)
+        .eq('user_id', ownerId)
+        .is('trashed_at', null)
+        .order('source_title'),
+    ]);
 
     // Vérifier les dossiers
     const { data: folders, error: foldersError } = foldersResult;

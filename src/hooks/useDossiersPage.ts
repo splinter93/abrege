@@ -29,7 +29,14 @@ function syncUrlParams(classeurId?: string, folderId?: string): void {
   window.history.replaceState(window.history.state, "", url.toString());
 }
 
-export function useDossiersPage(userId: string) {
+export type UseDossiersPageOptions = {
+  /** IDs de classeurs partagés (onglets « Partagés ») pour ne pas écraser l’URL `?classeur=` au chargement. */
+  sharedClasseurIds?: string[];
+  /** True après le premier chargement de la liste partagée (même vide). */
+  sharedListLoaded?: boolean;
+};
+
+export function useDossiersPage(userId: string, opts?: UseDossiersPageOptions) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -177,15 +184,28 @@ export function useDossiersPage(userId: string) {
     };
   }, [loadInitialData]);
   
-  // Auto-select first classeur if none active or URL references a deleted one
+  // Auto-select first classeur si actif absent / invalide (en tenant compte des classeurs partagés)
   useEffect(() => {
-    if (classeursArray.length === 0) return;
-    const isValid = activeClasseurId && classeursArray.some((c) => c.id === activeClasseurId);
-    if (!isValid) {
+    const sharedIds = opts?.sharedClasseurIds ?? [];
+    const sharedReady = opts?.sharedListLoaded ?? false;
+    const inOwned = !!activeClasseurId && classeursArray.some((c) => c.id === activeClasseurId);
+    const inShared = !!activeClasseurId && sharedIds.includes(activeClasseurId);
+    if (inOwned || inShared) return;
+    if (activeClasseurId && !inOwned && !sharedReady) {
+      return;
+    }
+    if (classeursArray.length > 0) {
       setActiveClasseurId(classeursArray[0].id);
       setCurrentFolderId(undefined);
     }
-  }, [classeursArray, activeClasseurId, setActiveClasseurId, setCurrentFolderId]);
+  }, [
+    classeursArray,
+    activeClasseurId,
+    setActiveClasseurId,
+    setCurrentFolderId,
+    opts?.sharedClasseurIds,
+    opts?.sharedListLoaded,
+  ]);
 
   // 🔧 OPTIMISATION: Fonction de retry avec backoff exponentiel
   const retryWithBackoff = useCallback(async () => {

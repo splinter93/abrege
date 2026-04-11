@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -34,10 +34,20 @@ interface SidebarItemProps {
   href: string;
   active?: boolean;
   badge?: string;
+  /** Nombre affiché dans un pastille (ex. demandes teammates en attente). */
+  badgeCount?: number;
   onNavigate?: () => void;
 }
 
-function SidebarItem({ icon: Icon, label, href, active = false, badge, onNavigate }: SidebarItemProps) {
+function SidebarItem({
+  icon: Icon,
+  label,
+  href,
+  active = false,
+  badge,
+  badgeCount,
+  onNavigate,
+}: SidebarItemProps) {
   const content = (
     <>
       <span className="flex items-center gap-2.5 min-w-0">
@@ -55,11 +65,19 @@ function SidebarItem({ icon: Icon, label, href, active = false, badge, onNavigat
           {label}
         </span>
       </span>
-      {badge && (
+      {badgeCount != null && badgeCount > 0 ? (
+        <span
+          className="flex h-5 min-w-[1.25rem] flex-shrink-0 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white shadow-sm"
+          aria-label={`${badgeCount} notification${badgeCount > 1 ? "s" : ""}`}
+        >
+          {badgeCount > 99 ? "99+" : badgeCount}
+        </span>
+      ) : null}
+      {badge && !(badgeCount != null && badgeCount > 0) ? (
         <span className="flex-shrink-0 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20 shadow-sm">
           {badge}
         </span>
-      )}
+      ) : null}
     </>
   );
 
@@ -88,7 +106,36 @@ function SidebarItem({ icon: Icon, label, href, active = false, badge, onNavigat
 export default function Sidebar() {
   const pathname = usePathname();
   const mainSidebar = useMainSidebarOptional();
-  const { user } = useAuth();
+  const { user, getAccessToken } = useAuth();
+  const [teammatePendingCount, setTeammatePendingCount] = useState(0);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setTeammatePendingCount(0);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getAccessToken();
+        if (!token || cancelled) return;
+        const res = await fetch("/api/v2/teammates", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok || cancelled) return;
+        const j = (await res.json()) as { success?: boolean; incoming?: unknown[] };
+        if (j.success && Array.isArray(j.incoming)) {
+          setTeammatePendingCount(j.incoming.length);
+        }
+      } catch {
+        if (!cancelled) setTeammatePendingCount(0);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Re-check badge when navigating away from the shared page (user may have acted on requests).
+  }, [user?.id, getAccessToken, pathname]);
   const isMobile = mainSidebar?.isMobile ?? false;
   const isClasseurs = pathname?.startsWith("/private/dossiers");
   const onNavigate = isMobile ? mainSidebar?.closeSidebar : undefined;
@@ -176,9 +223,10 @@ export default function Sidebar() {
         <div className="flex flex-col gap-0.5 pt-4 border-t border-white/[0.04]">
           <SidebarItem
             icon={Users}
-            label="TeamMates"
+            label="Partage & équipe"
             href="/private/shared"
             active={pathname?.startsWith("/private/shared") ?? false}
+            badgeCount={teammatePendingCount}
             onNavigate={onNavigate}
           />
           <SidebarItem
