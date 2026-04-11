@@ -169,6 +169,14 @@ html.capacitor-native.chat-page .chatgpt-input-container::before {
 }
 /* Input area : pas d’override Capacitor → même couleur que le web (#171a1e, chat-clean.css) */
 
+/* Android : bug GPU compositing — sans layer dédié, les bordüres des bulles
+   ne sont pas rendues entre deux repaints. transform: translateZ(0) force
+   un layer GPU et garantit un rendu stable de la border à tout moment. */
+html.platform-android.capacitor-native .chatgpt-message-bubble-user {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
 /* 6. Sidebar : décalée sous le header (safe-area-top + 56px header), descend jusqu'au bas */
 html.capacitor-native.chat-page .sidebar-ultra-clean {
   top: calc(56px + var(--capacitor-safe-top)) !important;
