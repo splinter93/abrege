@@ -2250,14 +2250,6 @@ body.chat-theme-glass .chatgpt-messages > div {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  transition: padding-bottom 0.25s cubic-bezier(0.2, 0, 0, 1);
-}
-
-/* Quand le clavier est ouvert sur Capacitor, il occulte lui-même la safe-area. 
-   On retire donc la marge de sécurité (var(--chat-safe-bottom)) du padding pour 
-   éviter un espace vide ou changeant entre l'input et le clavier. */
-html.capacitor-native.keyboard-is-open .chatgpt-input-container {
-  padding-bottom: 16px !important;
 }
 
 .chatgpt-main--canva-open .chatgpt-input-container {

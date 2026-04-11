@@ -31,11 +31,6 @@ function useCapacitorLayoutFix() {
 
         const setKeyboardHeight = (h: number) => {
           document.documentElement.style.setProperty('--keyboard-height', `${h}px`);
-          if (h > 0) {
-            document.documentElement.classList.add('keyboard-is-open');
-          } else {
-            document.documentElement.classList.remove('keyboard-is-open');
-          }
         };
 
         // iOS & Android (adjustNothing) partagent la même logique d'événements : 
@@ -54,7 +49,7 @@ function useCapacitorLayoutFix() {
         const willHideHandle = await Keyboard.addListener('keyboardWillHide', () => {
           setKeyboardHeight(0);
         });
-        
+
         cleanup = () => {
           willShowHandle.remove();
           didShowHandle.remove();
