@@ -1,5 +1,4 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, X, User, Settings, Bot, Trash2 } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -45,7 +44,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false); // ✅ Bloquer clics pendant création
   const [loadingMoreSessions, setLoadingMoreSessions] = useState(false);
-  const convScrollRef = useRef<HTMLDivElement>(null);
 
   // Realtime Supabase pour les sessions chat (insert/update/delete instantanés)
   useChatSessionsRealtime(user?.id);
@@ -134,14 +132,6 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
       session.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-  const shouldVirtualizeConversations = filteredSessions.length > 20;
-  const conversationVirtualizer = useVirtualizer({
-    count: shouldVirtualizeConversations ? filteredSessions.length : 0,
-    getScrollElement: () => convScrollRef.current,
-    estimateSize: () => 44,
-    overscan: 8,
-  });
-
   const handleLoadMoreSessions = useCallback(async () => {
     if (loadingMoreSessions || !hasMoreSessions) return;
     setLoadingMoreSessions(true);
@@ -214,7 +204,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
       </div>
 
       {/* Contenu principal : agents fixes, conversations scroll + virtualisées */}
-      <div ref={convScrollRef} className="sidebar-content-clean">
+      <div className="sidebar-content-clean">
         {/* Agents */}
         <div className="sidebar-section-clean shrink-0">
           <div className="sidebar-section-header-clean">
@@ -276,38 +266,9 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
             </div>
           </div>
           <div className="sidebar-conversations-virtual-scroll">
-            {shouldVirtualizeConversations ? (
-              <div
-                style={{
-                  height: `${conversationVirtualizer.getTotalSize()}px`,
-                  width: '100%',
-                  position: 'relative',
-                }}
-              >
-                {conversationVirtualizer.getVirtualItems().map((virtualRow) => {
-                  const session = filteredSessions[virtualRow.index];
-                  return (
-                    <div
-                      key={session.id}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: `${virtualRow.size}px`,
-                        transform: `translateY(${virtualRow.start}px)`,
-                      }}
-                    >
-                      {renderConversationRow(session)}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              filteredSessions.map((session: ChatSession) => (
-                <React.Fragment key={session.id}>{renderConversationRow(session)}</React.Fragment>
-              ))
-            )}
+            {filteredSessions.map((session: ChatSession) => (
+              <React.Fragment key={session.id}>{renderConversationRow(session)}</React.Fragment>
+            ))}
             {hasMoreSessions ? (
               <button
                 type="button"
