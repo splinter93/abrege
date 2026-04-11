@@ -1061,28 +1061,22 @@ body.chat-theme-glass .chatgpt-header {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 12px 12px 12px 12px;
   background: transparent;
   color: var(--chat-text-primary);
 }
 
-/* Ancien scroll unique : la zone scrollable est désormais .sidebar-conversations-virtual-scroll */
+/* Ancien scroll unique : la zone scrollable est désormais .sidebar-content-clean entière */
 .sidebar-conversations-scroll-host {
-  flex: 1 1 0;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .sidebar-conversations-virtual-scroll {
-  flex: 1 1 0;
-  min-height: 80px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-conversations-virtual-scroll::-webkit-scrollbar {

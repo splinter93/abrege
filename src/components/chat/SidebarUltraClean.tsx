@@ -214,7 +214,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
       </div>
 
       {/* Contenu principal : agents fixes, conversations scroll + virtualisées */}
-      <div className="sidebar-content-clean">
+      <div ref={convScrollRef} className="sidebar-content-clean">
         {/* Agents */}
         <div className="sidebar-section-clean shrink-0">
           <div className="sidebar-section-header-clean">
@@ -275,7 +275,7 @@ const SidebarUltraClean: React.FC<SidebarUltraCleanProps> = ({
               Conversations
             </div>
           </div>
-          <div ref={convScrollRef} className="sidebar-conversations-virtual-scroll">
+          <div className="sidebar-conversations-virtual-scroll">
             {shouldVirtualizeConversations ? (
               <div
                 style={{
