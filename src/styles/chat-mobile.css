@@ -22,21 +22,6 @@
   }
 }
 
-/* ========== MOBILE SMALL (320px - 375px) ========== */
-
-@media (max-width: 375px) {
-  .chat-markdown { font-size: var(--chat-font-size-base); font-weight: var(--chat-weight-normal); line-height: var(--chat-line-height-normal); }
-  .chat-markdown h1 { font-size: 1.75rem !important; }
-  .chat-markdown h2 { font-size: 1.35rem !important; }
-  .chat-markdown h3 { font-size: 1.15rem !important; }
-  .chat-input-textarea { font-size: var(--chat-font-size-base); min-height: 40px; padding: 10px 12px; }
-  .chat-stop-btn { padding: 6px 10px; font-size: 12px; }
-  .chat-send-btn { width: 40px; height: 40px; padding: 8px; }
-  .chat-message { padding: 10px 12px; margin-bottom: 12px; }
-  .tool-call-item { padding: 8px 10px; font-size: 13px; }
-  .chat-markdown pre { font-size: var(--chat-text-sm, 0.875rem); padding: 10px; overflow-x: auto; }
-}
-
 /* ========== 768px : pas de layout mobile ici ==========
    Rétrécissement = chat-clean.css (1023px, 900px, 1300px).
    On ne change ni position fixed, ni paddings, ni max-width messages. */
@@ -48,27 +33,6 @@
   .chat-header { padding: 12px 20px; }
   .chat-input-container { padding: 12px 20px; }
   .chat-sidebar { width: 320px; }
-}
-
-/* ========== TOUCH OPTIMIZATIONS ========== */
-
-@media (hover: none) and (pointer: coarse) {
-  /* Exclure bulles + header éditeur : dimensions définies dans editor-header.css */
-  button:not(.bubble-button):not(.header-action-btn):not(.editor-header__logo),
-  .clickable,
-  .chat-button,
-  .tool-call-toggle,
-  .reasoning-toggle {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  .chat-input-textarea { -webkit-tap-highlight-color: transparent; }
-  /* Ne pas décaler le logo / liens du header éditeur */
-  a:not(.editor-header__logo) {
-    padding: 4px 0;
-  }
-  .chat-messages-area::-webkit-scrollbar { display: none; }
-  select { appearance: auto; -webkit-appearance: auto; }
 }
 
 /* ========== KEYBOARD UX iOS ========== */
@@ -84,62 +48,6 @@
   }
   .chat-messages-area { 
     padding-bottom: calc(var(--input-height, 80px) + 20px); 
-  }
-}
-
-/* ========== LANDSCAPE MODE ========== */
-
-@media (max-width: 768px) and (orientation: landscape) {
-  .chat-header { padding: 6px 12px; }
-  .chat-header-title { font-size: 14px; }
-  .chat-input-textarea { min-height: 36px; padding: 8px 12px; }
-  .chat-messages-container { padding: 0 20px; }
-  .modal-overlay .modal-content { width: 100%; height: 100vh; }
-}
-
-/* ========== TABLET LANDSCAPE (768px - 1024px) ========== */
-
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-  /* Chat container optimisé paysage */
-  .chatgpt-messages-container {
-    max-width: 900px;
-    margin: 0 auto;
-  }
-  
-  /* Header compact en hauteur */
-  .chatgpt-header {
-    height: 48px;
-    padding: 8px 20px;
-  }
-  
-  /* Input compact en hauteur */
-  .chatgpt-input-area {
-    padding: 8px 20px;
-  }
-  
-  .chatgpt-input-textarea {
-    min-height: 40px;
-    max-height: 120px;
-  }
-  
-  /* Messages prennent plus d'espace horizontal */
-  .chatgpt-message-bubble-user {
-    max-width: 60%;
-  }
-  
-  .chatgpt-message-bubble-assistant {
-    max-width: 85%;
-  }
-  
-  /* Sidebar peut rester visible en paysage tablette */
-  .chat-sidebar {
-    width: 280px;
-  }
-  
-  /* Safe areas latérales */
-  .chatgpt-container {
-    padding-left: max(12px, env(safe-area-inset-left, 0px));
-    padding-right: max(12px, env(safe-area-inset-right, 0px));
   }
 }
 
