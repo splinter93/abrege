@@ -520,30 +520,33 @@
    IMAGES
    ============================================================================= */
 
+/* L'image ne porte aucune marge — tout est géré sur le <p> parent */
 .chat-markdown img {
   max-width: 100%;
   height: auto;
   border-radius: var(--blk-radius, var(--chat-surface-radius, 14px));
-  margin-top: var(--md-img-margin-top);
-  margin-bottom: 0; /* la marge basse est portée par le <p> parent, pas l'img */
+  margin: 0;
   display: block;
 }
 
-/* <p> contenant uniquement une image : supprimer la marge basse du paragraphe
-   (évite le double-espacement img-margin-bottom + p-margin-bottom) */
-.chat-markdown p:has(> img:only-child) {
-  margin-bottom: var(--md-img-margin-bottom);
+/* <p> contenant une image : marges symétriques haut / bas (14px).
+   On utilise :has(img) (plus permissif que :only-child) pour couvrir le cas
+   où markdown-it:breaks insère un <br> parasite après l'image dans le <p>. */
+.chat-markdown p:has(img) {
+  margin-top: var(--md-img-margin-top);
+  margin-bottom: var(--md-img-margin-top);
 }
 
-/* Élément suivant directement après une image : rythme visuel identique au dessus */
-.chat-markdown img + p,
-.chat-markdown img + h1,
-.chat-markdown img + h2,
-.chat-markdown img + h3,
-.chat-markdown img + h4,
-.chat-markdown img + h5,
-.chat-markdown img + h6 {
-  margin-top: 0;
+/* Supprimer le <br> parasite généré par markdown-it (breaks:true) après l'image :
+   ce <br> occupe une ligne entière (~26px) et crée l'asymétrie bas > haut. */
+.chat-markdown p:has(img) br {
+  display: none;
+}
+
+/* Neutraliser la marge basse du paragraphe PRÉCÉDANT une image
+   pour éviter l'accumulation prev_p-bottom + img_p-top dans un contexte flex (pas de collapse). */
+.chat-markdown p:has(+ p:has(img)) {
+  margin-bottom: 0;
 }
 
 /* =============================================================================
