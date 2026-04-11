@@ -29,12 +29,36 @@ function useCapacitorLayoutFix() {
         document.documentElement.classList.add('capacitor-native');
         document.documentElement.classList.add(`platform-${platform}`);
 
+        // ANDROID 15+ FIX: L'API VirtualKeyboard permet au navigateur de gérer le layout
+        // frame par frame pendant l'animation du clavier, ce qui est infiniment plus fluide
+        // que les événements JS (keyboardWillShow/DidShow) ou les transitions CSS.
+        let hasVirtualKeyboard = false;
+        if (platform === 'android' && 'virtualKeyboard' in navigator) {
+          try {
+            // @ts-ignore - L'API n'est pas toujours typée dans TypeScript
+            navigator.virtualKeyboard.overlaysContent = true;
+            hasVirtualKeyboard = true;
+            document.documentElement.classList.add('virtual-keyboard-supported');
+            
+            // On écoute geometrychange pour mettre à jour --keyboard-height en temps réel
+            // @ts-ignore
+            navigator.virtualKeyboard.addEventListener('geometrychange', (e) => {
+              const { width, height } = e.target.boundingRect;
+              document.documentElement.style.setProperty('--keyboard-height', `${height}px`);
+            });
+          } catch (e) {
+            console.error('VirtualKeyboard API error', e);
+          }
+        }
+
         const setKeyboardHeight = (h: number) => {
+          // Si VirtualKeyboard gère déjà le clavier, on ignore les événements JS
+          if (hasVirtualKeyboard) return;
           document.documentElement.style.setProperty('--keyboard-height', `${h}px`);
         };
 
-        // iOS & Android (adjustNothing) partagent la même logique d'événements : 
-        // on lance l'animation fluide dès le WillShow avec la hauteur brute.
+        // iOS & Android (fallback) partagent la logique d'événements JS classique : 
+        // on lance l'animation CSS dès le WillShow avec la hauteur brute.
         const { Keyboard } = await import('@capacitor/keyboard');
 
         const willShowHandle = await Keyboard.addListener('keyboardWillShow', (info) => {

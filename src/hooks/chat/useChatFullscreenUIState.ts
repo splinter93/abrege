@@ -110,8 +110,30 @@ export function useChatFullscreenUIState(
         const isNative = Capacitor.isNativePlatform();
 
         if (isNative) {
-          // iOS NATIVE (KeyboardResize.None) & ANDROID NATIVE (adjustNothing) : 
-          // Le clavier passe par dessus. On écoute keyboardWillShow pour animer l'input de manière synchrone.
+          let hasVirtualKeyboard = false;
+          if (platform === 'android' && 'virtualKeyboard' in navigator) {
+            try {
+              // @ts-ignore
+              if (navigator.virtualKeyboard.overlaysContent) {
+                hasVirtualKeyboard = true;
+                // @ts-ignore
+                const onGeometryChange = (e: any) => {
+                  const { height } = e.target.boundingRect;
+                  setKeyboardInset(height);
+                  if (height > 0) scrollMessagesToBottom();
+                };
+                // @ts-ignore
+                navigator.virtualKeyboard.addEventListener('geometrychange', onGeometryChange);
+                removeListeners = () => {
+                  // @ts-ignore
+                  navigator.virtualKeyboard.removeEventListener('geometrychange', onGeometryChange);
+                };
+                return;
+              }
+            } catch (e) {}
+          }
+
+          // Fallback iOS ou vieux Android (CSS Transition + JS Events)
           const { Keyboard } = await import('@capacitor/keyboard');
 
           const showHandle = await Keyboard.addListener('keyboardWillShow', (info) => {

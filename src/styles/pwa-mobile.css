@@ -122,6 +122,15 @@ html.platform-android.capacitor-native.chat-page .chatgpt-chat-bottom {
   will-change: bottom;
 }
 
+/* ANDROID 15+ FIX (VirtualKeyboard API) :
+   Si le navigateur prend en charge l'API VirtualKeyboard (Android Chrome >= 94),
+   le layout est mis à jour frame par frame par le moteur C++ du navigateur.
+   Il FAUT désactiver la transition CSS pour que l'input reste "collée" au clavier
+   pixel par pixel sans aucun délai (qui causerait des saccades). */
+html.virtual-keyboard-supported.chat-page .chatgpt-chat-bottom {
+  transition: none !important;
+}
+
 /* 2. Overlay status bar : SUPPRIMÉ. */
 
 /* 3. Header natif par défaut : fixé en haut.
