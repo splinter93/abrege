@@ -529,23 +529,33 @@
   display: block;
 }
 
-/* <p> contenant une image : marges symétriques haut / bas (14px).
-   !important sur margin-bottom : p:last-child { margin-bottom:0 } a une spécificité
-   plus haute et effacerait sinon l'espace sous l'image quand c'est le dernier <p>. */
-.chat-markdown p:has(img) {
+/* Paragraphe ne contenant QUE une image (seul enfant visible, pas de texte).
+   Marges symétriques haut / bas. Le ::after crée l'espace bas physiquement,
+   immunisé contre p:last-child { margin-bottom:0 }. */
+.chat-markdown p:has(> img:only-child) {
   margin-top: var(--md-img-margin-top);
-  margin-bottom: var(--md-img-margin-top) !important;
+  margin-bottom: 0;
 }
 
-/* Supprimer le <br> parasite généré par markdown-it (breaks:true) après l'image :
-   ce <br> occupe une ligne entière (~26px) et crée l'asymétrie bas > haut. */
-.chat-markdown p:has(img) br {
-  display: none;
+.chat-markdown p:has(> img:only-child)::after {
+  content: "";
+  display: block;
+  height: var(--md-img-margin-bottom);
 }
 
-/* Neutraliser la marge basse du paragraphe PRÉCÉDANT une image
-   pour éviter l'accumulation prev_p-bottom + img_p-top dans un contexte flex (pas de collapse). */
-.chat-markdown p:has(+ p:has(img)) {
+/* Neutraliser la marge basse du <p> précédant une image seule (pas de double espacement). */
+.chat-markdown p:has(+ p:has(> img:only-child)) {
+  margin-bottom: 0;
+}
+
+/* Paragraphe image + légende (image suivie de texte via <br>) :
+   on garde le <br> (il sépare l'image de la légende), on ajuste uniquement les marges. */
+.chat-markdown p:has(img):not(:has(> img:only-child)) {
+  margin-top: var(--md-img-margin-top);
+  margin-bottom: var(--md-img-margin-bottom);
+}
+
+.chat-markdown p:has(+ p:has(img):not(:has(> img:only-child))) {
   margin-bottom: 0;
 }
 
@@ -557,6 +567,13 @@
   content: '';
   display: block;
   margin: 0.5em 0;
+}
+
+/* <br> juste après une image : sans override, .chat-markdown br impose ~8px+8px
+   entre le bas du visuel et la légende (le changement de --md-img-margin-bottom ne suffit pas). */
+.chat-markdown img + br {
+  margin-top: var(--md-chat-img-br-margin-top);
+  margin-bottom: var(--md-chat-img-br-margin-bottom);
 }
 
 /* =============================================================================
