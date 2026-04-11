@@ -77,6 +77,12 @@ html.capacitor-native.chat-page {
   --capacitor-safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Capacitor : jamais de scrollbar visible sur aucune page (couvre auth redirect, home, etc.) */
+html.capacitor-native body {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
 /* Le document racine ne doit jamais scroller sur la page chat native.
    iOS + Android (adjustNothing) : position:fixed bloque le pan du viewport. */
 html.capacitor-native.chat-page,

@@ -7,22 +7,46 @@ const SPLASH_DONE_KEY = 'scrivia_splash_done';
 const FADE_DURATION = 350; // ms
 
 /**
- * PWA / Capacitor — splash au premier chargement (mobile ou standalone).
- * Icône plume seule, même trait que la home (dégradé stroke), sans texte ni encadré.
+ * Détecte Capacitor de façon synchrone : le bridge injecte window.Capacitor
+ * avant le chargement de la page, donc disponible dès le premier render.
+ */
+function isCapacitorNative(): boolean {
+  if (typeof window === 'undefined') return false;
+  return typeof (window as { Capacitor?: unknown }).Capacitor !== 'undefined';
+}
+
+/**
+ * PWA / Capacitor — splash au chargement.
+ *
+ * - Capacitor natif : s'affiche dès le premier render (show initialisé à true),
+ *   couvre "Chargement..." et le flash de scrollbar. Toujours affiché (pas de
+ *   sessionStorage). Durée 1500ms pour couvrir auth + redirect + render.
+ * - PWA / web mobile : comportement inchangé (sessionStorage, 800ms, first-time).
  */
 export default function PWASplash() {
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(() => isCapacitorNative());
   const [opacity, setOpacity] = useState(1);
 
   useEffect(() => {
+    const capacitor = isCapacitorNative();
+
+    if (capacitor) {
+      // Toujours afficher sur Capacitor, durée plus longue pour couvrir
+      // auth + redirect + render initial.
+      const hide = setTimeout(() => {
+        setOpacity(0);
+        setTimeout(() => setShow(false), FADE_DURATION);
+      }, 1500);
+      return () => clearTimeout(hide);
+    }
+
+    // Web / PWA standalone : comportement first-time uniquement
     const isSmallScreen = window.innerWidth < 768;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     if (!isSmallScreen && !isStandalone) return;
-
     if (sessionStorage.getItem(SPLASH_DONE_KEY)) return;
 
     setShow(true);
-
     const hide = setTimeout(() => {
       setOpacity(0);
       setTimeout(() => setShow(false), FADE_DURATION);
