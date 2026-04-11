@@ -109,29 +109,15 @@ export function useChatFullscreenUIState(
         const platform = Capacitor.getPlatform();
         const isNative = Capacitor.isNativePlatform();
 
-        // ANDROID NATIVE : Layout géré par adjustNothing (manifest) + CSS transition sur
-        // chatgpt-chat-bottom via --keyboard-height (CapacitorInit.tsx + pwa-mobile.css).
-        // Ici : scroll uniquement → garantir que le dernier message reste visible
-        // quand l'input remonte. keyboardWillShow ne fire pas de façon fiable sur Android,
-        // on n'utilise que keyboardDidShow.
-        if (isNative && platform === 'android') {
-          const { Keyboard } = await import('@capacitor/keyboard');
-          const didShowHandle = await Keyboard.addListener('keyboardDidShow', scrollMessagesToBottom);
-          removeListeners = () => {
-            didShowHandle.remove();
-          };
-          return;
-        }
-
         if (isNative) {
-          // iOS NATIVE : Le clavier passe par dessus (KeyboardResize.None).
-          // On écoute keyboardWillShow pour setKeyboardInset et scroller.
+          // iOS NATIVE (KeyboardResize.None) & ANDROID NATIVE (adjustNothing) : 
+          // Le clavier passe par dessus. On écoute keyboardWillShow pour setKeyboardInset et scroller.
           const { Keyboard } = await import('@capacitor/keyboard');
           const showHandle = await Keyboard.addListener('keyboardWillShow', (info) => {
             const raw = info.keyboardHeight ?? 0;
             const maxInset = Math.floor(window.innerHeight * 0.6);
             setKeyboardInset(Math.min(raw, maxInset));
-            // Scroll synchrone
+            // Scroll synchrone pendant l'animation CSS (Android/iOS)
             scrollMessagesToBottom();
           });
           const hideHandle = await Keyboard.addListener('keyboardWillHide', () => {
