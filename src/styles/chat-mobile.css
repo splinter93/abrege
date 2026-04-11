@@ -190,3 +190,10 @@
     background-color: transparent !important;
   }
 }
+
+/* ========== < 450px : RADIUS ÉLARGI SUR CHAT INPUT ========== */
+@media (max-width: 450px) {
+  .chatgpt-input-area {
+    border-radius: 30px !important;
+  }
+}

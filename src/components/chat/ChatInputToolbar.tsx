@@ -251,8 +251,8 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
       </div>
       */}
 
-      {/* Reasoning avec menu contextuel */}
-      <div style={{ position: 'relative' }}>
+      {/* Reasoning avec menu contextuel — masqué temporairement */}
+      {/* <div style={{ position: 'relative' }}>
         <button 
           className={`chatgpt-input-reasoning ${showReasoningMenu ? 'active' : ''} ${reasoningOverride ? 'override-active' : ''}`}
           aria-label="Reasoning"
@@ -263,7 +263,6 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
           <Lightbulb size={18} />
         </button>
 
-        {/* Menu contextuel Reasoning */}
         {showReasoningMenu && (
           <div className="chat-reasoning-menu">
             <div className="chat-menu-header">Reasoning</div>
@@ -296,7 +295,7 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
             </button>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Mode vocal (à côté de Reasoning, même style) */}
       {onToggleVocalMode && (
