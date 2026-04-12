@@ -334,6 +334,11 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
 
     if (!layoutChanged) return;
 
+    // Le spacer était calibré pour l'ancien layout (largeur canevas vs largeur normale).
+    // Il faut le remettre à 0 AVANT de scroller, sinon scrollToBottom atterrit dans le vide.
+    streamAnchorScrollTopRef.current = null;
+    setBottomSpacerHeight(0);
+
     let cancelled = false;
     let retryCount = 0;
     const maxRetries = 8;
@@ -342,6 +347,9 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
 
     const scrollToBottomInstant = () => {
       if (cancelled) return previousScrollHeight;
+      // Re-reset le spacer à chaque retry : le reflow lors de la transition CSS
+      // peut re-générer un espace résiduel si quelque chose le remet à jour.
+      setBottomSpacerHeight(0);
       const scrollHeight = container.scrollHeight;
       const clientHeight = container.clientHeight;
       container.scrollTop = Math.max(0, scrollHeight - clientHeight);
@@ -363,7 +371,7 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     });
 
     return () => { cancelled = true; };
-  }, [watchLayoutChanges, layoutTrigger, getScrollContainer]);
+  }, [watchLayoutChanges, layoutTrigger, getScrollContainer, setBottomSpacerHeight]);
 
   return {
     messagesEndRef,
