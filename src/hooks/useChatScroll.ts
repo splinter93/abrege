@@ -27,6 +27,13 @@ interface UseChatScrollReturn {
 /** Marge sous le header pour que le message user ne colle pas au bord (px) */
 const MARGIN_BELOW_HEADER_PX = 16;
 const USER_SCROLL_SETTLE_MS = 320;
+/**
+ * Durée max de la transition CSS du canevas :
+ * - Ouverture : 0.32s
+ * - Fermeture : 0.18s (transition-delay) + 0.32s = 0.5s
+ * On prend 0.5s + marge = 620ms pour couvrir les deux cas.
+ */
+const CANVA_TRANSITION_MS = 620;
 
 /**
  * Hook pour le scroll auto — comportement ChatGPT :
@@ -304,7 +311,8 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
 
     if (hasNewMessage && currLast?.role === 'user') {
       // Délai pour laisser le DOM se mettre à jour
-      setTimeout(() => scrollToUserMessage(), 100);
+      const tid = setTimeout(() => scrollToUserMessage(), 100);
+      return () => clearTimeout(tid);
     }
   }, [messages, sessionId, autoScroll, scrollToUserMessage, getScrollContainer, setBottomSpacerHeight]);
 
@@ -343,26 +351,27 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
     let retryCount = 0;
     const maxRetries = 8;
     const retryInterval = 100;
-    let previousScrollHeight = container.scrollHeight;
 
     const scrollToBottomInstant = () => {
-      if (cancelled) return previousScrollHeight;
+      if (cancelled) return;
       // Re-reset le spacer à chaque retry : le reflow lors de la transition CSS
       // peut re-générer un espace résiduel si quelque chose le remet à jour.
       setBottomSpacerHeight(0);
       const scrollHeight = container.scrollHeight;
       const clientHeight = container.clientHeight;
       container.scrollTop = Math.max(0, scrollHeight - clientHeight);
-      return scrollHeight;
     };
 
+    // Ne pas arrêter sur "stabilité" : pendant la transition CSS, le scrollHeight
+    // peut sembler stable à mi-chemin (surtout en fermeture avec transition-delay 0.18s).
+    // On tourne systématiquement jusqu'à maxRetries pour couvrir toute la durée.
     const checkStabilityAndScroll = () => {
       if (cancelled) return;
-      const currentScrollHeight = scrollToBottomInstant();
-      if (currentScrollHeight === previousScrollHeight || retryCount >= maxRetries) return;
-      previousScrollHeight = currentScrollHeight;
+      scrollToBottomInstant();
       retryCount += 1;
-      setTimeout(checkStabilityAndScroll, retryInterval);
+      if (retryCount < maxRetries) {
+        setTimeout(checkStabilityAndScroll, retryInterval);
+      }
     };
 
     requestAnimationFrame(() => {
@@ -370,7 +379,22 @@ export function useChatScroll(options: UseChatScrollOptions = {}): UseChatScroll
       setTimeout(checkStabilityAndScroll, retryInterval);
     });
 
-    return () => { cancelled = true; };
+    // Scroll final garanti après la fin de la transition CSS (0.32s + marge).
+    // Le reflow du texte se termine seulement quand la largeur est stabilisée,
+    // mais la boucle de retry peut s'arrêter avant si le scrollHeight semble stable
+    // à mi-transition. Ce timeout assure un dernier scroll sur la largeur définitive.
+    const finalScrollTid = setTimeout(() => {
+      if (cancelled) return;
+      setBottomSpacerHeight(0);
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+      container.scrollTop = Math.max(0, scrollHeight - clientHeight);
+    }, CANVA_TRANSITION_MS);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(finalScrollTid);
+    };
   }, [watchLayoutChanges, layoutTrigger, getScrollContainer, setBottomSpacerHeight]);
 
   return {
