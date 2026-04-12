@@ -2254,7 +2254,6 @@ body.chat-theme-glass .chatgpt-messages > div {
 
 .chatgpt-main--canva-open .chatgpt-input-container {
   justify-content: center;
-  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-left));
 }
 
 .chatgpt-main--canva-open .chatgpt-input-area {
