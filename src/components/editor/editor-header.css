@@ -270,13 +270,14 @@
     justify-content: flex-start;
   }
 
-  /* Actions : en flux, plus d'absolute, pas de backdrop inutile */
+  /* Actions : en flux, collées à droite via margin-left auto */
   .editor-header__actions {
     position: static;
     right: auto;
     top: auto;
     transform: none;
     flex-shrink: 0;
+    margin-left: auto;
     padding-left: 2px;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
