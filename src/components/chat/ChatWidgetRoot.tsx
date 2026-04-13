@@ -38,7 +38,7 @@ export default function ChatWidgetRoot() {
     isDragging.current = true;
     const startY = e.clientY;
     const startHeight = height;
-    const maxHeight = Math.floor(window.innerHeight * 0.92) - WIDGET_BOTTOM;
+    const maxHeight = Math.floor(window.innerHeight * 0.85) - WIDGET_BOTTOM; /* aligné sur max-height: 85vh du CSS */
 
     const onMouseMove = (ev: MouseEvent) => {
       if (!isDragging.current) return;
