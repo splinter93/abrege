@@ -130,12 +130,7 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
       {/* Overlay pour fermer en cliquant à l'extérieur */}
       <div className="share-menu-overlay" onClick={onClose} />
       
-      <div 
-        className="share-menu"
-        style={{
-          background: 'var(--chat-gradient-input, var(--chat-gradient-block, linear-gradient(135deg, #252831 0%, #2d3139 50%, #252831 100%)))'
-        }}
-      >
+      <div className="share-menu">
         {/* Header */}
         <div className="share-menu-header">
           <h3>Partager cette note</h3>
