@@ -16,7 +16,7 @@ const ChatFullscreenV2 = lazy(() => import('./ChatFullscreenV2'));
 
 const WIDGET_DESKTOP_MIN = '(min-width: 769px)';
 const WIDGET_HEIGHT_DEFAULT = 640;
-const WIDGET_HEIGHT_MIN = 440;  /* min : header + quelques messages + input */
+const WIDGET_HEIGHT_MIN = 700;
 const WIDGET_BOTTOM = 24;
 
 export default function ChatWidgetRoot() {
