@@ -144,7 +144,7 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
           <h4>Visibilité</h4>
           <div className="visibility-options">
             {visibilityOptions.map((option) => (
-              <label key={option.value} className="visibility-option">
+              <label key={option.value} className={`visibility-option ${visibility === option.value ? 'active' : ''}`}>
                 <input
                   type="radio"
                   name="visibility"
@@ -192,15 +192,15 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
 
         {/* Actions */}
         <div className="share-menu-actions">
+          <button onClick={onClose} className="cancel-button">
+            Annuler
+          </button>
           <button
             onClick={handleSave}
             disabled={isUpdating}
             className="save-button"
           >
             {isUpdating ? 'Sauvegarde...' : 'Sauvegarder'}
-          </button>
-          <button onClick={onClose} className="cancel-button">
-            Annuler
           </button>
         </div>
       </div>

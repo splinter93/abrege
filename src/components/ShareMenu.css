@@ -85,22 +85,30 @@
 .visibility-options {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .visibility-option {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 14px;
+  padding: 14px 16px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s;
-  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  border: 1px solid #2c2c2e;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .visibility-option:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #3a3a3c;
+}
+
+.visibility-option.active {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #ffffff;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .visibility-option input[type="radio"] {
@@ -108,10 +116,11 @@
   accent-color: #ffffff;
   width: 16px;
   height: 16px;
+  cursor: pointer;
 }
 
 .option-icon {
-  font-size: 18px;
+  font-size: 20px;
   width: 24px;
   display: flex;
   align-items: center;
