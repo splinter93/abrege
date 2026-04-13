@@ -22,13 +22,23 @@
 .chat-widget-fab:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.15);
-  color: #ffffff; /* S'éclaire au hover */
+  color: #ff6b35; /* Devient orange (Scrivia) au hover */
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.32);
 }
 
 .chat-widget-fab:active {
   transform: translateY(0) scale(0.96);
+}
+
+.chat-widget-fab__icon {
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0));
+  transition: filter 0.2s ease, color 0.2s ease;
+}
+
+.chat-widget-fab:hover .chat-widget-fab__icon {
+  filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.4));
 }
 
 .chat-widget-fab:focus-visible {

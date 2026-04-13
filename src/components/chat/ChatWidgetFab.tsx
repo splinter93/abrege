@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { MessageCircle } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { useChatWidgetStore } from '@/store/useChatWidgetStore';
 import './ChatWidgetFab.css';
 
@@ -24,7 +24,7 @@ export default function ChatWidgetFab() {
       aria-label="Ouvrir le chat"
       title="Ouvrir le chat"
     >
-      <MessageCircle className="chat-widget-fab__icon" size={24} aria-hidden />
+      <Sparkles className="chat-widget-fab__icon" size={22} aria-hidden />
     </button>
   );
 }
