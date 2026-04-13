@@ -94,6 +94,7 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  padding-bottom: 12px;
 }
 
 /* pointer-events pour permettre le scroll à travers le chat-bottom */
