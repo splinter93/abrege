@@ -16,7 +16,7 @@ const ChatFullscreenV2 = lazy(() => import('./ChatFullscreenV2'));
 
 const WIDGET_DESKTOP_MIN = '(min-width: 769px)';
 const WIDGET_HEIGHT_DEFAULT = 640;
-const WIDGET_HEIGHT_MIN = 320;
+const WIDGET_HEIGHT_MIN = 440;  /* min : header + quelques messages + input */
 const WIDGET_BOTTOM = 24;
 
 export default function ChatWidgetRoot() {
@@ -38,7 +38,7 @@ export default function ChatWidgetRoot() {
     isDragging.current = true;
     const startY = e.clientY;
     const startHeight = height;
-    const maxHeight = Math.floor(window.innerHeight * 0.85) - WIDGET_BOTTOM; /* aligné sur max-height: 85vh du CSS */
+    const maxHeight = Math.floor(window.innerHeight * 0.93) - WIDGET_BOTTOM; /* aligné sur max-height: 93vh du CSS */
 
     const onMouseMove = (ev: MouseEvent) => {
       if (!isDragging.current) return;

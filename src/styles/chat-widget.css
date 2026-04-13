@@ -38,7 +38,7 @@
   bottom: 24px;
   width: 520px;
   height: var(--widget-height, 640px); /* contrôlé par ChatWidgetRoot via CSS var */
-  max-height: 85vh;
+  max-height: 93vh;
   border-radius: 16px;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3);
   z-index: 9999;
