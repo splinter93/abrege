@@ -109,6 +109,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
 
   // Mode vocal : envoi direct après transcription + TTS incrémental (phrase par phrase)
   const [isVocalMode, setVocalMode] = useState(false);
+  const [authModalDismissed, setAuthModalDismissed] = useState(false);
 
   // Widget : sélection d'agent → création nouvelle conversation
   const handleWidgetSelectAgent = useCallback(async (agent: Agent) => {
@@ -804,7 +805,10 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
         </div>
         
         {/* Modale connexion requise (non connecté) */}
-        <AuthRequiredModal isOpen={!authLoading && !user} />
+        <AuthRequiredModal
+          isOpen={!authLoading && !user && !authModalDismissed}
+          onClose={() => setAuthModalDismissed(true)}
+        />
 
         {/* Debug modèle (bas à droite) */}
         <ModelDebug modelInfo={modelInfo} />

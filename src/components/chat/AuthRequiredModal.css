@@ -64,21 +64,21 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 24px;
-  background: var(--chat-accent-primary, #ff6b00);
-  color: #fff;
+  padding: 12px 28px;
+  background: #ffffff;
+  color: #0f1117;
   font-size: 0.9375rem;
   font-weight: 600;
   border-radius: 10px;
   text-decoration: none;
-  transition: filter 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .auth-required-modal-button:hover {
-  filter: brightness(1.1);
+  background: #f0f0f0;
 }
 
 .auth-required-modal-button:focus-visible {
-  outline: 2px solid var(--chat-accent-primary);
-  outline-offset: 2px;
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
 }
