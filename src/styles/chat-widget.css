@@ -84,9 +84,9 @@
   padding: var(--chat-space-xl) calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) var(--chat-space-xl) calc(var(--chat-padding-horizontal) + var(--chat-safe-left)) !important;
 }
 
-/* Padding input : identique au chat normal (24px horizontal) */
+/* Padding input : horizontal + 16px en bas pour respirer avant le bord arrondi du widget */
 .chatgpt-container--widget .chatgpt-input-container {
-  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-left)) !important;
+  padding: 0 calc(var(--chat-padding-horizontal) + var(--chat-safe-right)) 16px calc(var(--chat-padding-horizontal) + var(--chat-safe-left)) !important;
 }
 
 /* Input area : même largeur que la zone messages (alignement parfait) */
@@ -94,7 +94,6 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding-bottom: 12px;
 }
 
 /* pointer-events pour permettre le scroll à travers le chat-bottom */
