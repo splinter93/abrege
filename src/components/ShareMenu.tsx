@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { FiShare2, FiCopy, FiLink, FiLock, FiGlobe, FiX, FiCheck } from 'react-icons/fi';
+import { FiCopy, FiLink, FiLock, FiGlobe, FiX, FiCheck } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import type { ShareSettings, ShareSettingsUpdate, VisibilityLevel } from '@/types/sharing';
 import './ShareMenu.css';
@@ -36,25 +36,30 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
     }
   }, [currentSettings?.visibility]);
 
-  const visibilityOptions: { value: VisibilityLevel; label: string; description: string; icon: string }[] = [
+  const visibilityOptions: {
+    value: VisibilityLevel;
+    label: string;
+    description: string;
+    icon: React.ReactNode;
+  }[] = [
     {
       value: 'private',
       label: 'Privé',
       description: 'Seul vous pouvez voir cette note',
-      icon: '🔒'
+      icon: <FiLock size={18} aria-hidden />,
     },
     {
       value: 'link-private',
       label: 'Lien privé',
       description: 'Accessible via le lien, non indexé',
-      icon: '🔗'
+      icon: <FiLink size={18} aria-hidden />,
     },
     {
       value: 'link-public',
       label: 'Lien public',
       description: 'Accessible via le lien et indexé',
-      icon: '🌐'
-    }
+      icon: <FiGlobe size={18} aria-hidden />,
+    },
   ];
 
   const handleVisibilityChange = (newVisibility: VisibilityLevel) => {
@@ -164,7 +169,10 @@ const ShareMenu: React.FC<ShareMenuProps> = ({
 
         {/* Section lien public - Afficher TOUJOURS */}
         <div className="share-menu-section">
-          <h4>🔗 Lien de partage</h4>
+          <h4 className="share-menu-section-heading-row">
+            <FiLink size={14} className="share-menu-section-heading-icon" aria-hidden />
+            Lien de partage
+          </h4>
           <div className="link-section">
             <div className="link-input-group">
               <input

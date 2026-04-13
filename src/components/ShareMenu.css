@@ -82,6 +82,17 @@
   letter-spacing: 0.05em;
 }
 
+.share-menu-section-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-menu-section-heading-icon {
+  flex-shrink: 0;
+  color: #8e8e93;
+}
+
 .visibility-options {
   display: flex;
   flex-direction: column;
@@ -120,12 +131,21 @@
 }
 
 .option-icon {
-  font-size: 20px;
-  width: 24px;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.9;
+  color: #8e8e93;
+}
+
+.option-icon svg {
+  display: block;
+}
+
+.visibility-option.active .option-icon {
+  color: #ededed;
 }
 
 .option-content {
