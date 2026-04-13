@@ -45,6 +45,7 @@ import { EditorErrorBoundary } from './EditorErrorBoundary';
 import { useCanvasSelection } from '@/hooks/useCanvasSelection';
 import PlanNoteOverlay from './PlanNoteOverlay';
 import HtmlNoteEditor from './HtmlNoteEditor';
+import ChatWidgetFab from '@/components/chat/ChatWidgetFab';
 
 interface EditorProps { 
   noteId: string; 
@@ -609,6 +610,9 @@ const Editor: React.FC<EditorProps> = ({
         
         {/* Bouton "Crafted with Scrivia" - visible en mode preview */}
         {editorState.ui.previewMode && <CraftedButton />}
+
+        {/* Chat FAB — pleine page desktop uniquement (CSS masque sur mobile < 768px) */}
+        {layoutMode === 'full' && <ChatWidgetFab />}
       </EmbedDepthProvider>
     </EditorErrorBoundary>
   );
