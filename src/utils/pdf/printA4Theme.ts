@@ -139,7 +139,7 @@ export function getPrintA4DocumentCss(options: PrintA4ThemeOptions = {}): string
       width: var(--print-page-width);
       min-height: var(--print-page-height);
       margin: 0 auto;
-      padding: var(--print-margin-top) var(--print-margin-x) var(--print-margin-bottom);
+      padding: 0;
       background: var(--print-surface);
       color: var(--print-text);
       box-shadow: var(--print-page-shadow);
@@ -152,29 +152,27 @@ export function getPrintA4DocumentCss(options: PrintA4ThemeOptions = {}): string
       box-shadow: none;
     }
 
+    /* ── Cover image: naturally full-bleed, no negative-margin hacks ── */
     .print-note-document__header {
       position: relative;
-      width: calc(100% + (2 * var(--print-margin-x)) + 6px);
+      width: 100%;
       height: var(--print-header-height);
-      margin:
-        calc(-1 * var(--print-margin-top) - 3px)
-        calc(-1 * var(--print-margin-x) - 3px)
-        18px
-        calc(-1 * var(--print-margin-x));
+      margin: 0;
       overflow: hidden;
       background: #dbe4f0;
+      flex-shrink: 0;
     }
 
     .print-note-document__header-image {
       position: absolute;
-      inset: -3px -3px 0 0;
-      width: calc(100% + 3px);
-      height: calc(100% + 3px);
+      inset: 0;
+      width: 100%;
+      height: 100%;
       max-width: none;
       object-fit: cover;
       object-position: center var(--print-header-offset, 50%);
       filter: blur(var(--print-header-blur, 0px));
-      transform: scale(1.01);
+      transform: scale(1.04);
       display: block;
       margin: 0;
     }
@@ -205,16 +203,23 @@ export function getPrintA4DocumentCss(options: PrintA4ThemeOptions = {}): string
       font-weight: 850;
       line-height: 1.1;
       letter-spacing: -0.025em;
-      text-shadow: 0 2px 10px rgba(15, 23, 42, 0.28);
+      text-shadow: 0 2px 12px rgba(15, 23, 42, 0.38);
       margin: 0;
     }
 
+    /* ── Body: carries all margins (replaces document padding) ── */
     .print-note-document__body {
-      padding: 0;
+      padding: var(--print-margin-x) var(--print-margin-x) var(--print-margin-bottom);
     }
 
+    /* Without cover: generous top breathing room */
+    .print-note-document:not(.print-note-document--has-header) .print-note-document__body {
+      padding-top: var(--print-margin-top);
+    }
+
+    /* With cover: tighter gap below image */
     .print-note-document--has-header .print-note-document__body {
-      padding-top: 0;
+      padding-top: 10mm;
     }
 
     .print-note-document__title {
@@ -224,7 +229,9 @@ export function getPrintA4DocumentCss(options: PrintA4ThemeOptions = {}): string
       line-height: var(--print-title-line-height);
       letter-spacing: -0.025em;
       color: var(--print-text);
-      margin: 0 0 18px;
+      margin: 0 0 10px;
+      padding-bottom: 18px;
+      border-bottom: 1.5px solid #e5e7eb;
     }
 
     .markdown-body {
@@ -254,17 +261,17 @@ export function getPrintA4DocumentCss(options: PrintA4ThemeOptions = {}): string
       page-break-after: avoid;
     }
 
-    .markdown-body h1 { font-size: var(--print-h1-size); line-height: 1.3; margin: 18px 0 12px; }
-    .markdown-body h2 { font-size: var(--print-h2-size); line-height: 1.4; margin: 16px 0 10px; }
-    .markdown-body h3 { font-size: var(--print-h3-size); line-height: 1.5; margin: 14px 0 8px; }
-    .markdown-body h4 { font-size: var(--print-h4-size); line-height: 1.5; margin: 12px 0 6px; }
+    .markdown-body h1 { font-size: var(--print-h1-size); line-height: 1.25; margin: 34px 0 16px; }
+    .markdown-body h2 { font-size: var(--print-h2-size); line-height: 1.35; margin: 28px 0 12px; }
+    .markdown-body h3 { font-size: var(--print-h3-size); line-height: 1.45; margin: 22px 0 10px; }
+    .markdown-body h4 { font-size: var(--print-h4-size); line-height: 1.5;  margin: 18px 0 8px;  }
     .markdown-body h5,
-    .markdown-body h6 { font-size: 1rem; line-height: 1.6; margin: 10px 0 4px; }
+    .markdown-body h6 { font-size: 1rem; line-height: 1.6; margin: 14px 0 6px; }
 
     .markdown-body p,
     .markdown-body li,
     .markdown-body blockquote p {
-      margin: 0 0 8px;
+      margin: 0 0 12px;
       line-height: var(--print-line-height);
       color: var(--print-text);
       orphans: 3;
@@ -378,19 +385,11 @@ export function getPrintA4DocumentCss(options: PrintA4ThemeOptions = {}): string
       .print-note-document {
         width: auto;
         min-height: auto;
-        padding: 0;
         box-shadow: none;
         overflow: visible;
       }
 
-      .print-note-document__header {
-        width: calc(100% + (2 * var(--print-margin-x)) + 6px);
-        margin:
-          calc(-1 * var(--print-margin-top) - 3px)
-          calc(-1 * var(--print-margin-x) - 3px)
-          18px
-          calc(-1 * var(--print-margin-x));
-      }
+      /* Header is already full-width — no overrides needed in print */
     }
   `;
 }
