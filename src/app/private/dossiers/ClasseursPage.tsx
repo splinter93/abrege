@@ -1714,6 +1714,13 @@ export default function ClasseursPage() {
                   } as const,
                 ]
               : []),
+            {
+              label: "Copier l'ID",
+              onClick: () => {
+                void navigator.clipboard.writeText(contextMenuItem.item.id);
+                closeContextMenus();
+              },
+            },
             ...(sharedReadOnly
               ? []
               : [
