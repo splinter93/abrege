@@ -245,6 +245,27 @@ html.capacitor-native .editor-header__row {
   min-height: var(--editor-header-height, 44px) !important;
 }
 
+/* ── Capacitor : éditeur standalone — scroll interne sur editor-layout__body ──────────────
+   html.capacitor-native body { overflow: hidden } bloque tout window scroll.
+   En dehors de la page chat, le scroll doit se faire sur .editor-layout__body.
+   On fixe la hauteur de .editor-layout à 100dvh (sinon min-height:100vh empêche le flex de
+   contraindre la hauteur), puis on rend .editor-layout__body scrollable. */
+html.capacitor-native:not(.chat-page) .editor-layout {
+  height: 100dvh !important;
+  min-height: unset !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+html.capacitor-native:not(.chat-page) .editor-layout__body {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
 /* Sidebar éditeur : décalée sous le header (safe-area + hauteur) */
 html.capacitor-native .editor-sidebar-hover-zone {
   top: calc(var(--editor-header-height, 44px) + env(safe-area-inset-top, 0px)) !important;

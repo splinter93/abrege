@@ -325,3 +325,12 @@ body.public-note-page {
   }
 }
 
+@media (max-width: 450px) {
+  .noteLayout-title textarea,
+  .editor-title-field,
+  .editor-title-span {
+    font-size: 1.75rem; /* 28px — réduit de 42px → hiérarchique vs h2 (21px), adapté petit écran */
+    line-height: 1.15;
+  }
+}
+
