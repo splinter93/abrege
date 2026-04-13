@@ -547,7 +547,16 @@
   }
 }
 
-/* Stage 3 (< 360px container): tighter spacing */
+/* Stage 3 (< 300px container): collapse B/I/U into overflow
+   Triggered on all iPhones (≤ 430px viewport) once logo + actions are in-flow.
+   FontSelector + AI + "..." remain visible (~155px). */
+@container toolbar-container (max-width: 300px) {
+  .tb-collapse-primary {
+    display: none !important;
+  }
+}
+
+/* Stage 4 (< 360px container): tighter spacing */
 @container toolbar-container (max-width: 360px) {
   .editor-toolbar {
     gap: 2px;
@@ -584,6 +593,12 @@
 
     .tb-show-when-collapsed {
       display: flex !important;
+    }
+  }
+
+  @media (max-width: 450px) {
+    .tb-collapse-primary {
+      display: none !important;
     }
   }
 

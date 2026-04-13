@@ -229,14 +229,58 @@
   padding: 0 var(--editor-padding-horizontal); /* Même progression que .editor-content-inner */
 }
 
-/* Mobile : même hauteur de ligne et mêmes icônes que desktop (pas de saut visuel au resize) */
+/* ── Mobile : layout in-flow — supprime l'absolute sur logo et actions ──────────────────────
+   Sur desktop, logo et actions sont position:absolute pour centrer parfaitement la toolbar.
+   Sur mobile, cet overlap couvre la toolbar → on passe tout en flux flex.
+   Le center (container query) obtient la largeur RÉELLE disponible :
+     viewport − logo(32px) − actions(max 3×32+gaps ≈ 110px) → ~250px sur iPhone 390px.
+   À 250px, le stage 2 (< 500px) et le stage 3 (< 300px) se déclenchent → B/I/U dans overflow,
+   kebab "..." toujours visible, boutons d'actions jamais couverts. */
 @media (max-width: 768px) {
   .editor-header {
     padding: 0;
   }
 
+  /* Row : flex-start, les items s'alignent de gauche à droite sans chevauchement */
+  .editor-header__row {
+    justify-content: flex-start;
+  }
+
+  /* Logo plume : en flux, plus d'absolute */
+  .editor-header__logo {
+    position: static;
+    left: auto;
+    top: auto;
+    transform: none;
+    flex-shrink: 0;
+  }
+
+  /* Groupe chevrons+agrandir (side-panel) : idem */
+  .editor-header__left-actions {
+    position: static;
+    left: auto;
+    top: auto;
+    transform: none;
+    flex-shrink: 0;
+  }
+
+  /* Center : peut maintenant se limiter à l'espace réel entre logo et actions */
+  .editor-header__center {
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  /* Actions : en flux, plus d'absolute, pas de backdrop inutile */
   .editor-header__actions {
-    gap: 4px;
+    position: static;
+    right: auto;
+    top: auto;
+    transform: none;
+    flex-shrink: 0;
+    padding-left: 2px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    gap: 2px;
   }
 }
 

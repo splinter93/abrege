@@ -188,14 +188,14 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
       <FontSelector currentFont={currentFont} onFontChange={onFontChange} disabled={readonly} />
       <div className="tb-divider" />
 
-      {/* B / I / U — always visible */}
-      <button className={`tb-btn ${isBold ? 'active' : ''}`} onClick={toggleBold} title="Gras (Ctrl+B)">
+      {/* B / I / U — collapse on very narrow containers (< 300px), always in overflow */}
+      <button className={`tb-btn tb-collapse-primary ${isBold ? 'active' : ''}`} onClick={toggleBold} title="Gras (Ctrl+B)">
         <FiBold size={16} />
       </button>
-      <button className={`tb-btn ${isItalic ? 'active' : ''}`} onClick={toggleItalic} title="Italique (Ctrl+I)">
+      <button className={`tb-btn tb-collapse-primary ${isItalic ? 'active' : ''}`} onClick={toggleItalic} title="Italique (Ctrl+I)">
         <FiItalic size={16} />
       </button>
-      <button className={`tb-btn ${isUnderline ? 'active' : ''}`} onClick={toggleUnderline} title="Souligné (Ctrl+U)">
+      <button className={`tb-btn tb-collapse-primary ${isUnderline ? 'active' : ''}`} onClick={toggleUnderline} title="Souligné (Ctrl+U)">
         <FiUnderline size={16} />
       </button>
 
@@ -261,6 +261,17 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </button>
         {showMoreMenu && (
           <div className="tb-overflow-menu">
+            {/* B / I / U — toujours présents dans l'overflow (accessibles sur mobile) */}
+            <button className={`tb-overflow-item ${isBold ? 'active' : ''}`} onClick={() => { toggleBold(); }}>
+              <FiBold size={15} /> <span>Gras</span>
+            </button>
+            <button className={`tb-overflow-item ${isItalic ? 'active' : ''}`} onClick={() => { toggleItalic(); }}>
+              <FiItalic size={15} /> <span>Italique</span>
+            </button>
+            <button className={`tb-overflow-item ${isUnderline ? 'active' : ''}`} onClick={() => { toggleUnderline(); }}>
+              <FiUnderline size={15} /> <span>Souligné</span>
+            </button>
+            <div className="tb-overflow-divider" />
             <button className="tb-overflow-item" onClick={() => { setParagraph(); setShowMoreMenu(false); }}>
               <FiType size={15} /> <span>Paragraphe</span>
             </button>
