@@ -329,8 +329,8 @@ body.public-note-page {
   .noteLayout-title textarea,
   .editor-title-field,
   .editor-title-span {
-    font-size: 1.75rem; /* 28px — réduit de 42px → hiérarchique vs h2 (21px), adapté petit écran */
-    line-height: 1.15;
+    font-size: 1.75rem !important; /* 28px — !important nécessaire : editor-title.css chargé après dans le bundle */
+    line-height: 1.15 !important;
   }
 }
 
