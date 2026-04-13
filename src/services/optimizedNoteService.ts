@@ -21,6 +21,13 @@ export interface NoteMetadata {
   wide_mode?: boolean;
   font_family?: string;
   source_type?: import('@/types/supabase').NoteSourceType | null;
+  share_settings?: {
+    visibility?: string;
+    invited_users?: string[];
+    allow_edit?: boolean;
+    allow_comments?: boolean;
+  };
+  public_url?: string;
 }
 
 interface NoteContent {
@@ -79,7 +86,7 @@ export class OptimizedNoteService {
       // Récupérer seulement les métadonnées (pas le contenu)
       const { data: note, error } = await supabase
         .from('articles')
-        .select('id, source_title, folder_id, classeur_id, created_at, updated_at, slug, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, source_type')
+        .select('id, source_title, folder_id, classeur_id, created_at, updated_at, slug, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, source_type, share_settings, public_url')
         .eq('id', noteId)
         .eq('user_id', userId)
         .single();
@@ -104,6 +111,8 @@ export class OptimizedNoteService {
         wide_mode: note.wide_mode,
         font_family: note.font_family,
         source_type: note.source_type,
+        share_settings: note.share_settings ?? undefined,
+        public_url: note.public_url ?? undefined,
       };
 
       // 💾 Mettre en cache
