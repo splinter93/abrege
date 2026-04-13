@@ -3,6 +3,33 @@
  * Identique au chat normal (padding, scroll, dégradé) mais sans sidebar
  */
 
+/* Handle de resize — barre fine sur le bord supérieur du widget */
+.chat-widget-resize-handle {
+  position: fixed;
+  right: 24px;
+  width: 520px;
+  height: 12px;
+  cursor: ns-resize;
+  z-index: 10000;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-widget-resize-handle::before {
+  content: '';
+  width: 40px;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.18);
+  transition: background 0.15s;
+}
+
+.chat-widget-resize-handle:hover::before {
+  background: rgba(255, 255, 255, 0.45);
+}
+
 /* Layout, couleurs et variables — identiques à la sidebar principale */
 .chatgpt-container--widget {
   top: auto;
@@ -10,7 +37,7 @@
   right: 24px;
   bottom: 24px;
   width: 520px;
-  height: 640px;
+  height: var(--widget-height, 640px); /* contrôlé par ChatWidgetRoot via CSS var */
   max-height: 85vh;
   border-radius: 16px;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3);
