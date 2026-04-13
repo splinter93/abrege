@@ -612,9 +612,9 @@ const Editor: React.FC<EditorProps> = ({
         {/* Bouton "Crafted with Scrivia" - visible en mode preview */}
         {editorState.ui.previewMode && <CraftedButton />}
 
-        {/* Chat FAB + widget panel — pleine page desktop uniquement (CSS masque sur mobile < 768px) */}
-        {layoutMode === 'full' && <ChatWidgetFab />}
-        {layoutMode === 'full' && <ChatWidgetRoot />}
+        {/* Chat FAB + widget panel — pleine page desktop, jamais sur pages publiques/readonly */}
+        {layoutMode === 'full' && !readonly && <ChatWidgetFab />}
+        {layoutMode === 'full' && !readonly && <ChatWidgetRoot />}
       </EmbedDepthProvider>
     </EditorErrorBoundary>
   );
