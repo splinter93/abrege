@@ -12,6 +12,7 @@ import { useFileSystemStore } from '@/store/useFileSystemStore';
 import type { FileSystemState } from '@/store/useFileSystemStore';
 import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
 import { preprocessMarkdown } from '@/utils/markdownPreprocessor';
+import { unescapeHtmlEntities } from '@/utils/markdownSanitizer.client';
 import { logger, LogCategory } from '@/utils/logger';
 
 export interface UseEditorDataOptions {
@@ -53,8 +54,15 @@ export function useEditorData({ noteId }: UseEditorDataOptions): UseEditorDataRe
     }
   }, [noteId, note, rawContent]);
   
+  // content : entités conservées (TipTap les affiche comme texte, pas comme HTML)
   const content = useMemo(() => preprocessMarkdown(rawContent), [rawContent]);
-  const { html } = useMarkdownRender({ content });
+
+  // previewContent : entités désécapées → markdown-it voit de vrais tags HTML (<u>, <a href>…)
+  const previewContent = useMemo(
+    () => preprocessMarkdown(unescapeHtmlEntities(rawContent)),
+    [rawContent]
+  );
+  const { html } = useMarkdownRender({ content: previewContent });
 
   return {
     note,
