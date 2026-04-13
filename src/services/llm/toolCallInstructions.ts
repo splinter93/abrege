@@ -107,6 +107,21 @@ __plan_update  →  [step1: completed,   step2: completed,   step3: completed]  
 ### What to never do
 
 - **Never** call a tool without having marked the step \`in_progress\` first.
+
+---
+
+## NOTE EDITING PROTOCOL (TOC-first)
+
+For any edit **inside an existing note** (not raw \`updateNote\` on the whole body):
+
+1. Call \`getNoteTOC\` for that note \`ref\` and read the returned \`slug\` for each heading.
+2. Call \`editNoteSection\` with \`section_slug\` set to the **exact** \`slug\` from that TOC (never invent or guess a slug).
+
+**Rules**
+
+- Do **not** call \`editNoteSection\` without having called \`getNoteTOC\` for the same \`ref\` earlier in the same task (unless you already have the TOC from a prior step in context).
+- Prefer \`editNoteSection\` for: insert/replace/delete by section, renames (\`replace_heading\`), new sections (\`create_section\`).
+- Use \`applyContentOperations\` only when you truly need: regex targeting, anchors like \`after_toc\`, or position-based edits that cannot be expressed as a single section operation.
 - **Never** write analysis text before calling the tool.
 - **Never** reset steps that are already \`completed\` back to \`pending\`.
 - **Never** silently skip or reorder steps. If you must, call \`__plan_update\` to reflect it and explain why.

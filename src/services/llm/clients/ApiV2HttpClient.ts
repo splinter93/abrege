@@ -307,6 +307,11 @@ export class ApiV2HttpClient {
     return this.makeRequest(`/note/${ref}/content:apply`, 'POST', params, userToken);
   }
 
+  async editNoteSection(ref: string, params: Record<string, unknown>, userToken: string): Promise<unknown> {
+    const { ref: _omitRef, ...body } = params;
+    return this.makeRequest(`/note/${ref}/sections:edit`, 'POST', body, userToken);
+  }
+
   async getNoteTOC(ref: string, userToken: string): Promise<unknown> {
     return this.makeRequest(`/note/${ref}/table-of-contents`, 'GET', null, userToken);
   }

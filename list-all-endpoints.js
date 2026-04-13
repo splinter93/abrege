@@ -28,6 +28,11 @@ console.log('│            │ insert, replace, delete, upsert_section         
 console.log('│            │ Cibles: heading, regex, position, anchor          │');
 console.log('│            │ Dry-run par défaut, ETag validation               │');
 console.log('└─────────────────────────────────────────────────────────────────┘\n');
+console.log('┌─────────────────────────────────────────────────────────────────┐');
+console.log('│ POST /api/v2/note/{ref}/sections:edit                          │');
+console.log('├─────────────────────────────────────────────────────────────────┤');
+console.log('│ TOC-first │ Édition par slug (getNoteTOC) : insert, replace…   │');
+console.log('└─────────────────────────────────────────────────────────────────┘\n');
 
 console.log('🔗 ENDPOINTS DE GESTION\n');
 console.log('┌─────────────────────────────────────────────────────────────────┐');
@@ -56,6 +61,7 @@ console.log('│ PUT    /api/v2/note/{ref}/update       │ Mettre à jour      
 console.log('│ GET    /api/v2/note/recent             │ Notes récentes         │');
 console.log('│ POST   /api/v2/note/{ref}/insert-content │ Insérer contenu      │');
 console.log('│ POST   /api/v2/note/{ref}/content:apply │ 🆕 Opérations contenu │');
+console.log('│ POST   /api/v2/note/{ref}/sections:edit │ Édition TOC (slug)   │');
 console.log('│ GET    /api/v2/note/{ref}/table-of-contents │ Table matières    │');
 console.log('│ POST   /api/v2/note/{ref}/share        │ Partager               │');
 console.log('│ POST   /api/v2/note/{ref}/move         │ Déplacer               │');

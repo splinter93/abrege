@@ -82,6 +82,7 @@ export class ApiV2ToolExecutor {
     handlers.set('moveNote', (args: Record<string, unknown>, token: string) => this.httpClient.moveNote(args.ref as string, args, token));
     handlers.set('insertNoteContent', (args: Record<string, unknown>, token: string) => this.httpClient.insertNoteContent(args.ref as string, args, token));
     handlers.set('applyContentOperations', (args: Record<string, unknown>, token: string) => this.httpClient.applyContentOperations(args.ref as string, args, token));
+    handlers.set('editNoteSection', (args: Record<string, unknown>, token: string) => this.httpClient.editNoteSection(args.ref as string, args, token));
     handlers.set('getNoteTOC', (args: Record<string, unknown>, token: string) => this.httpClient.getNoteTOC(args.ref as string, token));
     handlers.set('getNoteShareSettings', (args: Record<string, unknown>, token: string) => this.httpClient.getNoteShareSettings(args.ref as string, token));
     handlers.set('updateNoteShareSettings', (args: Record<string, unknown>, token: string) => this.httpClient.updateNoteShareSettings(args.ref as string, args, token));

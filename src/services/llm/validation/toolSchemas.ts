@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { editNoteSectionSchema } from '@/utils/v2ValidationSchemas';
 import { NOTE_SOURCE_TYPES } from '@/types/supabase';
 
 // ==================== NOTES ====================
@@ -346,7 +347,8 @@ export const TOOL_SCHEMAS: Record<string, z.ZodType<unknown>> = {
   getUserProfile: getUserProfileSchema,
   
   // Content Operations
-  applyContentOperations: applyContentOperationsSchema
+  applyContentOperations: applyContentOperationsSchema,
+  editNoteSection: editNoteSectionSchema
 };
 
 /**

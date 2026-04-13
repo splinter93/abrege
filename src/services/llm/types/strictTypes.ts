@@ -267,6 +267,26 @@ export interface ApplyContentOperationsParams {
   return?: 'content' | 'diff' | 'none';
 }
 
+export interface EditNoteSectionParams {
+  action:
+    | 'insert_before'
+    | 'insert_after'
+    | 'insert_inside_start'
+    | 'insert_inside_end'
+    | 'replace_content'
+    | 'replace_heading'
+    | 'delete'
+    | 'create_section';
+  section_slug?: string;
+  content?: string;
+  new_heading_title?: string;
+  heading_level?: number;
+  heading_title?: string;
+  create_placement?: 'at_start' | 'at_end' | 'after_slug';
+  after_slug?: string;
+  return?: 'content' | 'diff' | 'none';
+}
+
 export interface ShareSettingsParams {
   visibility?: 'private' | 'link-private' | 'link-public' | 'limited' | 'scrivia';
   allow_edit?: boolean;
@@ -430,6 +450,7 @@ export type ToolParams =
   | MoveNoteParams
   | InsertNoteContentParams
   | ApplyContentOperationsParams
+  | EditNoteSectionParams
   | ShareSettingsParams
   | RecentNotesParams
   | CreateClasseurParams
@@ -459,6 +480,7 @@ export type ToolHandlerMap = {
   moveNote: (args: MoveNoteParams & { ref: string }, token: string) => Promise<unknown>;
   insertNoteContent: (args: InsertNoteContentParams & { ref: string }, token: string) => Promise<unknown>;
   applyContentOperations: (args: ApplyContentOperationsParams & { ref: string }, token: string) => Promise<unknown>;
+  editNoteSection: (args: EditNoteSectionParams & { ref: string }, token: string) => Promise<unknown>;
   getNoteTOC: (args: { ref: string }, token: string) => Promise<unknown>;
   getNoteShareSettings: (args: { ref: string }, token: string) => Promise<unknown>;
   updateNoteShareSettings: (args: ShareSettingsParams & { ref: string }, token: string) => Promise<unknown>;

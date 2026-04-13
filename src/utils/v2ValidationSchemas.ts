@@ -273,6 +273,93 @@ export const contentApplyV2Schema = z.object({
  */
 export const editNoteContentSchema = contentApplyV2Schema;
 
+const sectionEditActionEnum = z.enum([
+  'insert_before',
+  'insert_after',
+  'insert_inside_start',
+  'insert_inside_end',
+  'replace_content',
+  'replace_heading',
+  'delete',
+  'create_section'
+]);
+
+const sectionEditBodySchema = z.object({
+  action: sectionEditActionEnum,
+  /** Slug (ou titre) retourné par GET table-of-contents — obligatoire sauf create_section */
+  section_slug: z.string().min(1).max(500).optional(),
+  content: z.string().max(100000).optional(),
+  new_heading_title: z.string().min(1).max(500).optional(),
+  heading_level: z.number().int().min(1).max(6).optional(),
+  heading_title: z.string().min(1).max(500).optional(),
+  create_placement: z.enum(['at_start', 'at_end', 'after_slug']).optional(),
+  after_slug: z.string().min(1).max(500).optional(),
+  return: z.enum(['content', 'diff', 'none']).default('none')
+});
+
+function refineSectionEditBody(
+  data: z.infer<typeof sectionEditBodySchema>,
+  ctx: z.RefinementCtx
+): void {
+  if (data.action === 'create_section') {
+    if (!data.heading_title?.trim() || data.heading_level === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'create_section: heading_title et heading_level (1–6) sont requis',
+        path: ['heading_title']
+      });
+    }
+    if (!data.create_placement) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'create_section: create_placement requis (at_start | at_end | after_slug)',
+        path: ['create_placement']
+      });
+    }
+    if (data.create_placement === 'after_slug' && !data.after_slug?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'create_section: after_slug requis lorsque create_placement = after_slug',
+        path: ['after_slug']
+      });
+    }
+    return;
+  }
+
+  if (!data.section_slug?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'section_slug requis (utiliser le slug exact de getNoteTOC)',
+      path: ['section_slug']
+    });
+  }
+
+  if (data.action === 'replace_heading' && !data.new_heading_title?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'replace_heading: new_heading_title requis',
+      path: ['new_heading_title']
+    });
+  }
+}
+
+/**
+ * Corps POST pour /api/v2/note/{ref}/sections:edit
+ */
+export const sectionEditV2Schema = sectionEditBodySchema.superRefine(refineSectionEditBody);
+
+/**
+ * Schéma tool LLM editNoteSection (ref + même corps que sections:edit)
+ */
+export const editNoteSectionSchema = sectionEditBodySchema
+  .extend({
+    ref: z.string().min(1, 'ref est requis')
+  })
+  .superRefine((data, ctx) => {
+    const { ref: _ref, ...body } = data;
+    refineSectionEditBody(body, ctx);
+  });
+
 // ============================================================================
 // FOLDER MANAGEMENT SCHEMAS
 // ============================================================================

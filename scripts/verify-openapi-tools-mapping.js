@@ -52,6 +52,7 @@ const availableTools = [
   'get_note_metadata',
   'get_note_insights',
   'get_table_of_contents',
+  'edit_note_section',
   'get_note_statistics',
   
   // Dossiers
@@ -83,6 +84,7 @@ const operationIdToToolMapping = {
   'getNoteTOC': 'get_table_of_contents',
   'moveNote': 'move_note',
   'applyContentOperations': 'add_content_to_note', // Approximation
+  'editNoteSection': 'edit_note_section',
   
   // Dossiers
   'createFolder': 'create_folder',

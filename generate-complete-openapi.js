@@ -528,6 +528,151 @@
           }
         }
       },
+      "/note/{ref}/sections:edit": {
+        "post": {
+          "operationId": "editNoteSection",
+          "summary": "Éditer une note par section (TOC / slug)",
+          "description": "Édition structurée : utiliser les slugs retournés par GET table-of-contents. Préféré à content:apply pour les edits par titre.",
+          "tags": ["Notes"],
+          "security": [{"ApiKeyAuth": []}],
+          "parameters": [
+            {
+              "name": "ref",
+              "in": "path",
+              "required": true,
+              "schema": {"type": "string"},
+              "description": "Référence de la note (UUID ou slug)"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "insert_before",
+                        "insert_after",
+                        "insert_inside_start",
+                        "insert_inside_end",
+                        "replace_content",
+                        "replace_heading",
+                        "delete",
+                        "create_section"
+                      ]
+                    },
+                    "section_slug": {"type": "string"},
+                    "content": {"type": "string"},
+                    "new_heading_title": {"type": "string"},
+                    "heading_level": {"type": "integer", "minimum": 1, "maximum": 6},
+                    "heading_title": {"type": "string"},
+                    "create_placement": {
+                      "type": "string",
+                      "enum": ["at_start", "at_end", "after_slug"]
+                    },
+                    "after_slug": {"type": "string"},
+                    "return": {
+                      "type": "string",
+                      "enum": ["content", "diff", "none"],
+                      "default": "none"
+                    }
+                  },
+                  "required": ["action"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Section modifiée",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "allOf": [
+                      {"$ref": "#/components/schemas/Success"},
+                      {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "type": "object",
+                            "properties": {
+                              "note_id": {"type": "string", "format": "uuid"},
+                              "section_slug": {"type": "string"},
+                              "action_applied": {"type": "string"},
+                              "toc_after": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "slug": {"type": "string"},
+                                    "title": {"type": "string"},
+                                    "level": {"type": "integer"}
+                                  }
+                                }
+                              },
+                              "etag": {"type": "string"},
+                              "streaming_enabled": {"type": "boolean"},
+                              "saved_to_db": {"type": "boolean"}
+                            }
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "char_diff": {
+                                "type": "object",
+                                "properties": {
+                                  "added": {"type": "integer"},
+                                  "removed": {"type": "integer"}
+                                }
+                              },
+                              "execution_time": {"type": "integer"}
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Requête invalide",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            },
+            "404": {
+              "description": "Note ou section introuvable",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            },
+            "412": {
+              "description": "ETag obsolète",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            },
+            "422": {
+              "description": "Validation",
+              "content": {
+                "application/json": {
+                  "schema": {"$ref": "#/components/schemas/Error"}
+                }
+              }
+            }
+          }
+        }
+      },
       "/agents": {
         "get": {
           "operationId": "listAgents",

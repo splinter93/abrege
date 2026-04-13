@@ -1297,6 +1297,252 @@
         }
       }
     },
+    "/note/{ref}/sections:edit": {
+      "post": {
+        "operationId": "editNoteSection",
+        "summary": "Éditer une note par section (TOC / slug)",
+        "description": "Édition structurée TOC-first : utiliser les slugs exacts retournés par GET /note/{ref}/table-of-contents. Préféré à content:apply pour insert/replace/delete/rename par section. Si un canva avec status='open' existe pour cette note, le contenu est streamé ; la note est toujours sauvegardée en DB. Pour create_section : fournir heading_title, heading_level, create_placement (at_start | at_end | after_slug) ; si after_slug, cibler une section existante. IMPORTANT: Ne pas inclure de H1 dans le body ; source_title sert de H1.",
+        "tags": [
+          "Notes"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "ref",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Référence de la note (UUID ou slug)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "insert_before",
+                      "insert_after",
+                      "insert_inside_start",
+                      "insert_inside_end",
+                      "replace_content",
+                      "replace_heading",
+                      "delete",
+                      "create_section"
+                    ],
+                    "description": "Type d'édition sur la section ciblée par section_slug (sauf create_section)"
+                  },
+                  "section_slug": {
+                    "type": "string",
+                    "description": "Slug ou titre exact issu de table-of-contents (obligatoire sauf action=create_section)"
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 100000,
+                    "description": "Markdown à insérer ou remplacer (corps de section) ; optionnel pour delete"
+                  },
+                  "new_heading_title": {
+                    "type": "string",
+                    "description": "Nouveau titre sans # (obligatoire pour replace_heading)"
+                  },
+                  "heading_level": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 6,
+                    "description": "Niveau ATX pour create_section ou replace_heading (optionnel : conserve le niveau actuel)"
+                  },
+                  "heading_title": {
+                    "type": "string",
+                    "description": "Titre de la nouvelle section (obligatoire pour create_section)"
+                  },
+                  "create_placement": {
+                    "type": "string",
+                    "enum": [
+                      "at_start",
+                      "at_end",
+                      "after_slug"
+                    ],
+                    "description": "Position de la nouvelle section (obligatoire pour create_section)"
+                  },
+                  "after_slug": {
+                    "type": "string",
+                    "description": "Slug de la section après laquelle insérer (si create_placement=after_slug)"
+                  },
+                  "return": {
+                    "type": "string",
+                    "enum": [
+                      "content",
+                      "diff",
+                      "none"
+                    ],
+                    "default": "none",
+                    "description": "Inclure le diff ou le markdown complet dans la réponse"
+                  }
+                },
+                "required": [
+                  "action"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Section modifiée ; data.toc_after reflète la table des matières après édition",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Success"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "note_id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "section_slug": {
+                              "type": "string",
+                              "description": "Slug concerné (ou slug dérivé du titre pour create_section)"
+                            },
+                            "action_applied": {
+                              "type": "string"
+                            },
+                            "toc_after": {
+                              "type": "array",
+                              "description": "Table des matières après modification (slug, title, level)",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "slug": {
+                                    "type": "string"
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "level": {
+                                    "type": "integer"
+                                  }
+                                }
+                              }
+                            },
+                            "etag": {
+                              "type": "string"
+                            },
+                            "diff": {
+                              "type": "string"
+                            },
+                            "content": {
+                              "type": "string"
+                            },
+                            "streaming_enabled": {
+                              "type": "boolean"
+                            },
+                            "saved_to_db": {
+                              "type": "boolean",
+                              "description": "Toujours true — la note est persistée en DB"
+                            }
+                          }
+                        },
+                        "meta": {
+                          "type": "object",
+                          "properties": {
+                            "char_diff": {
+                              "type": "object",
+                              "properties": {
+                                "added": {
+                                  "type": "integer"
+                                },
+                                "removed": {
+                                  "type": "integer"
+                                }
+                              }
+                            },
+                            "execution_time": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide ou règle métier non respectée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note non trouvée ou section_slug / after_slug introuvable (réponse peut inclure available_sections)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Version obsolète (ETag / X-Note-Version)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "PRECONDITION_FAILED"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Payload invalide (voir details[].field et details[].message)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/agents": {
       "get": {
         "operationId": "listAgents",
@@ -2553,7 +2799,7 @@
       "get": {
         "operationId": "getNoteTOC",
         "summary": "Table des matières d'une note",
-        "description": "Récupère la table des matières (titres H1–H6) avec level, title, slug, line, start. Les slugs servent à cibler une section : GET /note/{ref}?section=<slug> pour lire une section, POST /note/{ref}/content:apply avec target.heading.heading_id=<slug> pour l'éditer.",
+        "description": "Récupère la table des matières (titres H1–H6) avec level, title, slug, line, start. Les slugs servent à cibler une section : GET /note/{ref}?section=<slug> pour lire une section ; pour l'éditer, préférer POST /note/{ref}/sections:edit (TOC-first, tool editNoteSection) ; POST /note/{ref}/content:apply avec target.heading.heading_id=<slug> reste disponible pour les cas avancés (regex, ancres, etc.).",
         "tags": [
           "Notes"
         ],

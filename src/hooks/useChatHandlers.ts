@@ -347,8 +347,10 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
 
     await addMessage(toolResultMessage, { persist: true });
     
-    // ✅ SOLUTION SIMPLE : Mettre à jour le store Zustand après applyContentOperations
-    if (toolName === 'scrivia__applyContentOperations' && success && result) {
+    // ✅ Mettre à jour le store Zustand après édition note (content:apply ou sections:edit)
+    const isNoteMarkdownContentTool =
+      toolName === 'scrivia__applyContentOperations' || toolName === 'scrivia__editNoteSection';
+    if (isNoteMarkdownContentTool && success && result) {
       try {
         // ✅ INTERFACE EXPLICITE : Type strict pour le résultat du tool
         interface ApplyContentOperationsResult {
@@ -441,26 +443,29 @@ export function useChatHandlers(options: ChatHandlersOptions = {}): ChatHandlers
                   markdown_content: data.note.markdown_content || data.note.content || ''
                 });
                 
-                logger.info('[useChatHandlers] ✅ Store mis à jour directement après applyContentOperations', { 
+                logger.info('[useChatHandlers] ✅ Store mis à jour après édition note (tool)', {
+                  toolName,
                   noteId,
                   contentLength: data.note.markdown_content?.length || 0
                 });
               }
             } else {
-              logger.warn('[useChatHandlers] ⚠️ Erreur récupération note après applyContentOperations', {
+              logger.warn('[useChatHandlers] ⚠️ Erreur récupération note après édition note (tool)', {
+                toolName,
                 noteId,
                 status: response.status
               });
             }
           } catch (fetchError) {
-            logger.warn('[useChatHandlers] ⚠️ Erreur fetch note après applyContentOperations', {
+            logger.warn('[useChatHandlers] ⚠️ Erreur fetch note après édition note (tool)', {
+              toolName,
               noteId,
               error: fetchError instanceof Error ? fetchError.message : 'Unknown error'
             });
           }
         }
       } catch (error) {
-        logger.warn('[useChatHandlers] ⚠️ Erreur mise à jour store après applyContentOperations', error);
+        logger.warn('[useChatHandlers] ⚠️ Erreur mise à jour store après édition note (tool)', { toolName, error });
       }
     }
     
