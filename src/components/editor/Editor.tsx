@@ -38,7 +38,7 @@ import EditorSidebar from './EditorSidebar';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import { cleanupMermaidSVGs } from '@/utils/mermaidCleanup';
-import { preprocessEmbeds } from '@/utils/preprocessEmbeds';
+import { prepareStoredMarkdownForEditor } from '@/utils/markdownSanitizer.client';
 import { useEditorStreamListener } from '@/hooks/useEditorStreamListener';
 import { getEditorMarkdown } from '@/utils/editorHelpers';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
@@ -231,8 +231,8 @@ const Editor: React.FC<EditorProps> = ({
     setTimeout(() => {
       if (!editor) return;
       
-      // ✅ Preprocesser {{embed:xyz}} → HTML pour que Tiptap puisse créer les nodes
-      const processedContent = preprocessEmbeds(rawContent || '');
+      // ✅ Dé-échapper entités (sanitize serveur) + {{embed:…}} → HTML pour TipTap
+      const processedContent = prepareStoredMarkdownForEditor(rawContent || '');
       
       if (!processedContent.trim()) {
         editor.commands.clearContent(true);
@@ -297,8 +297,7 @@ const Editor: React.FC<EditorProps> = ({
 
       editorState.setIsUpdatingFromStore(true);
       
-      // Preprocesser les embeds avant de charger
-      const processedContent = preprocessEmbeds(rawContent || '');
+      const processedContent = prepareStoredMarkdownForEditor(rawContent || '');
       editor.commands.setContent(processedContent);
       
       lastStoreContentRef.current = rawContent || '';

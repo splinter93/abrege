@@ -22,6 +22,10 @@ import type { Editor } from '@tiptap/react';
 import { supabase } from '@/supabaseClient';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { getEditorMarkdown } from '@/utils/editorHelpers';
+import {
+  prepareMarkdownForEditor,
+  prepareStoredMarkdownForEditor,
+} from '@/utils/markdownSanitizer.client';
 
 interface UseEditorStreamListenerOptions {
   /**
@@ -176,13 +180,14 @@ export function useEditorStreamListener(
         });
         const result = await res.json();
         if (!result.success || result.note?.markdown_content === undefined) return;
-        const newContent = result.note.markdown_content || '';
+        const newContentRaw = result.note.markdown_content || '';
         const currentContent = getEditorMarkdown(editor);
-        if (currentContent === newContent) return;
-        if (editor.isFocused && !newContent && !currentContent) return;
+        // Même normalisation / dé-échappement des deux côtés (API peut renvoyer &lt;u&gt;… après sanitize serveur)
+        if (prepareMarkdownForEditor(currentContent) === prepareMarkdownForEditor(newContentRaw)) return;
+        if (editor.isFocused && !newContentRaw && !currentContent) return;
         const currentSelection = editor.state.selection;
         const wasFocused = editor.isFocused;
-        editor.commands.setContent(newContent, { emitUpdate: false });
+        editor.commands.setContent(prepareStoredMarkdownForEditor(newContentRaw), { emitUpdate: false });
         try {
           const docSize = editor.state.doc.content.size;
           editor.commands.setTextSelection(currentSelection.to <= docSize ? currentSelection : docSize);

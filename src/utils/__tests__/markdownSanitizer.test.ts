@@ -10,7 +10,13 @@
 
 import { describe, it, expect } from 'vitest';
 import { sanitizeMarkdownContent, isMarkdownSafe, cleanAndSanitizeMarkdown } from '../markdownSanitizer.server';
-import { unescapeHtmlEntities, prepareMarkdownForEditor, sanitizeForEditor, detectDangerousHtml } from '../markdownSanitizer.client';
+import {
+  unescapeHtmlEntities,
+  prepareMarkdownForEditor,
+  prepareStoredMarkdownForEditor,
+  sanitizeForEditor,
+  detectDangerousHtml,
+} from '../markdownSanitizer.client';
 
 describe('Sanitization côté serveur', () => {
   describe('sanitizeMarkdownContent', () => {
@@ -130,6 +136,15 @@ describe('Sanitization côté client', () => {
       const input = 'Content with newline\n';
       const output = prepareMarkdownForEditor(input);
       expect(output).toBe('Content with newline\n');
+    });
+
+    it('prepareStoredMarkdownForEditor dé-échappe le HTML échappé par le serveur (ex. souligné TipTap)', () => {
+      const fromDb =
+        '&lt;u&gt;Pour illustrer&lt;/u&gt;\n\n&lt;https://example.com/path&gt;\n';
+      const out = prepareStoredMarkdownForEditor(fromDb);
+      expect(out).toContain('<u>Pour illustrer</u>');
+      expect(out).toContain('<https://example.com/path>');
+      expect(out).not.toContain('&lt;u&gt;');
     });
   });
 

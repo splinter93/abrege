@@ -10,6 +10,7 @@
  */
 
 import { logger, LogCategory } from './logger';
+import { preprocessEmbeds } from './preprocessEmbeds';
 
 /**
  * Dé-échappe les entités HTML en texte pur
@@ -95,6 +96,15 @@ export function prepareMarkdownForEditor(content: string): string {
   }
 
   return cleaned;
+}
+
+/**
+ * Chaîne complète markdown stocké (DB / API) → contenu prêt pour TipTap `setContent`.
+ * Dé-échappe les entités imposées par {@link sanitizeMarkdownContent} côté serveur,
+ * puis convertit les tokens d'embed (`{{embed:…}}`, etc.) en HTML reconnu par l'éditeur.
+ */
+export function prepareStoredMarkdownForEditor(content: string): string {
+  return preprocessEmbeds(prepareMarkdownForEditor(content));
 }
 
 /**
