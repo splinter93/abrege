@@ -295,6 +295,34 @@
   }
 }
 
+/* ==========================================================================
+   RESPONSIVE - BOUTONS DE CONTRÔLE DE L'IMAGE EN-TÊTE
+   Les styles sont inline dans le JSX → !important obligatoire.
+   ========================================================================== */
+
+/* Tablette (768px) : image = 200px, colonne de 222px → réduire gap + padding */
+@media (max-width: 768px) {
+  .editor-header-image-btns {
+    gap: 6px !important;
+    padding: 8px 4px !important;
+  }
+}
+
+/* Mobile (480px) : image = 150px, colonne impossible → passer en ligne horizontale, bas de l'image */
+@media (max-width: 480px) {
+  .editor-header-image-btns {
+    flex-direction: row !important;
+    top: auto !important;
+    bottom: 10px !important;
+    right: 50% !important;
+    transform: translateX(50%) !important;
+    gap: 4px !important;
+    padding: 6px 10px !important;
+    border-radius: 12px !important;
+    align-items: center !important;
+  }
+}
+
 /* Responsive - Titre dans l'image */
 @media (max-width: 768px) {
   .header-image-title-container {
