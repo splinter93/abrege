@@ -6,6 +6,8 @@
  */
 
 import TurndownService from 'turndown';
+import { downloadTextFile } from '@/utils/clientFileDownload';
+import { noteExportFilename } from '@/utils/noteExportFilename';
 
 export interface MarkdownExportOptions {
   title: string;
@@ -87,19 +89,8 @@ export function exportNoteToMarkdown(
     const td = buildTurndownService();
     const body = td.turndown(htmlContent);
     const markdownContent = `# ${title}\n\n${body}`;
-
-    const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download =
-      filename ??
-      `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const outName = filename ?? noteExportFilename(title, 'md');
+    downloadTextFile(markdownContent, 'text/markdown;charset=utf-8', outName);
 
     return { success: true };
   } catch (error) {

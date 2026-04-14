@@ -10,6 +10,9 @@ import { getDefaultShareSettings } from '@/types/sharing';
 import { simpleLogger as logger } from '@/utils/logger';
 import { exportNoteToPdf } from '@/services/pdfExportService';
 import { exportNoteToMarkdown } from '@/services/markdownExportService';
+import { exportNoteToHtml } from '@/services/htmlExportService';
+import { exportNoteToPlainText } from '@/services/plainTextExportService';
+import { noteExportFilename } from '@/utils/noteExportFilename';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import toast from 'react-hot-toast';
 
@@ -168,7 +171,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       const result = await exportNoteToPdf({
         title,
         htmlContent,
-        filename: `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`,
+        filename: noteExportFilename(title, 'pdf'),
         fontFamily: currentFontFamily || note?.font_family || 'Manrope',
         headerImage: note?.header_image || null,
         headerImageOffset: note?.header_image_offset ?? 50,
@@ -235,7 +238,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     const result = exportNoteToMarkdown({
       title,
       htmlContent,
-      filename: `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md`,
+      filename: noteExportFilename(title, 'md'),
     });
 
     if (result.success) {
@@ -252,6 +255,80 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     }
 
     setIsExportingMd(false);
+  };
+
+  const handleExportHtml = () => {
+    const title = currentTitle || note?.source_title || 'Note';
+
+    if (!htmlContent || htmlContent.trim().length === 0) {
+      toast.error(
+        slashLang === 'fr'
+          ? 'Erreur: Le contenu de la note est vide'
+          : 'Error: Note content is empty'
+      );
+      return;
+    }
+
+    onClose();
+
+    const result = exportNoteToHtml({
+      title,
+      htmlContent,
+      filename: noteExportFilename(title, 'html'),
+      documentLang: slashLang,
+    });
+
+    if (result.success) {
+      toast.success(
+        slashLang === 'fr' ? 'HTML exporté avec succès' : 'HTML exported successfully'
+      );
+    } else {
+      toast.error(
+        slashLang === 'fr'
+          ? `Erreur lors de l'export: ${result.error ?? 'Erreur inconnue'}`
+          : `Export error: ${result.error ?? 'Unknown error'}`
+      );
+      logger.error('[EditorKebabMenu] Erreur export HTML', { noteId, error: result.error });
+    }
+  };
+
+  const handleExportPlainText = () => {
+    const title = currentTitle || note?.source_title || 'Note';
+
+    if (!htmlContent || htmlContent.trim().length === 0) {
+      toast.error(
+        slashLang === 'fr'
+          ? 'Erreur: Le contenu de la note est vide'
+          : 'Error: Note content is empty'
+      );
+      return;
+    }
+
+    onClose();
+
+    const result = exportNoteToPlainText({
+      title,
+      htmlContent,
+      filename: noteExportFilename(title, 'txt'),
+    });
+
+    if (result.success) {
+      toast.success(
+        slashLang === 'fr'
+          ? 'Texte brut exporté avec succès'
+          : 'Plain text exported successfully'
+      );
+    } else {
+      toast.error(
+        slashLang === 'fr'
+          ? `Erreur lors de l'export: ${result.error ?? 'Erreur inconnue'}`
+          : `Export error: ${result.error ?? 'Unknown error'}`
+      );
+      logger.error('[EditorKebabMenu] Erreur export texte brut', {
+        noteId,
+        error: result.error,
+      });
+    }
   };
 
   // Icône feuille SVG pour A4 Mode
@@ -272,6 +349,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       exporting: 'Export en cours...',
       exportMd: 'Exporter en Markdown',
       exportingMd: 'Export en cours...',
+      exportHtml: 'Exporter en HTML',
+      exportTxt: 'Exporter en texte brut',
       moveTo: 'Déplacer vers...',
       wideMode: 'Mode Large',
       a4Mode: 'Mode A4',
@@ -286,6 +365,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       exporting: 'Exporting...',
       exportMd: 'Export to Markdown',
       exportingMd: 'Exporting...',
+      exportHtml: 'Export to HTML',
+      exportTxt: 'Export to plain text',
       moveTo: 'Move to...',
       wideMode: 'Wide Mode',
       a4Mode: 'A4 Mode',
@@ -336,6 +417,22 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       color: isExportingMd ? '#10b981' : '#D4D4D4',
       showCopyButton: false,
       disabled: isExportingMd,
+    },
+    {
+      id: 'exportHtml',
+      label: t.exportHtml,
+      icon: <FiDownload size={18} />,
+      onClick: handleExportHtml,
+      color: '#D4D4D4',
+      showCopyButton: false,
+    },
+    {
+      id: 'exportTxt',
+      label: t.exportTxt,
+      icon: <FiDownload size={18} />,
+      onClick: handleExportPlainText,
+      color: '#D4D4D4',
+      showCopyButton: false,
     },
     {
       id: 'moveTo',
