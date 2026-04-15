@@ -176,7 +176,8 @@ function SharedWorkspaceContent() {
       if (!email) {
         setInviteFeedback("Saisissez un e-mail ou un nom d'utilisateur.");
         return;
-      }etInviteFeedback(null);
+      }
+      setInviteFeedback(null);
       try {
         const token = await getAccessToken();
         if (!token) {

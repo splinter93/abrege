@@ -287,8 +287,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     request: {
       id: inserted.id as string,
       direction: 'outgoing' as const,
-      name: invitee ? displayName(invitee) : email.split('@')[0] ?? email,
-      email: invitee?.email ?? email,
+      name: invitee ? displayName(invitee) : raw.split('@')[0] ?? raw,
+      email: invitee?.email ?? (isEmail ? raw : ''),
       sentAt: inserted.created_at as string,
     },
   });
