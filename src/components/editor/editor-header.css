@@ -10,8 +10,8 @@
 
 .editor-header {
   /* Même hit / taille d’icône partout (desktop + responsive) — évite saut au breakpoint */
-  --editor-header-icon-hit: 32px;
-  --editor-header-icon-size: 20px;
+  --editor-header-icon-hit: 30px;
+  --editor-header-icon-size: 17px;
 
   position: sticky;
   top: 0;
@@ -264,6 +264,12 @@
 .header-action-btn.active {
   background: transparent;
   color: #ff6b35; /* Orange */
+}
+
+/* Mode preview : crayon légèrement plus petit que l’œil (même hit zone) */
+.header-action-btn.active svg {
+  width: 15px;
+  height: 15px;
 }
 
 .header-action-btn.active:hover {

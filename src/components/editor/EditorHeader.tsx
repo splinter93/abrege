@@ -353,7 +353,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             aria-label="Éditer cette note"
             title="Éditer cette note"
           >
-            <FiEdit2 size={18} />
+            <FiEdit2 size={17} />
           </Link>
         ) : !readonly || previewMode ? (
           // CAS 2 : Page privée (readonly=false) OU mode preview → Toggle preview
@@ -363,7 +363,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             aria-label={previewMode ? "Mode édition" : "Mode lecture"}
             title={previewMode ? "Mode édition" : "Mode lecture"}
           >
-            {previewMode ? <FiEdit2 size={18} /> : <FiEye size={18} />}
+            {previewMode ? <FiEdit2 size={17} /> : <FiEye size={17} />}
           </button>
         ) : null}
         {/* CAS 3 : Page publique + pas owner → Pas de bouton (null) */}
@@ -383,7 +383,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             aria-label="Menu"
             title="Menu"
           >
-            <FiMoreHorizontal size={18} />
+            <FiMoreHorizontal size={17} />
           </button>
         )}
         
@@ -395,7 +395,7 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
             aria-label="Fermer"
             title="Fermer"
           >
-            <FiX size={18} />
+            <FiX size={17} />
           </button>
         )}
       </div>
