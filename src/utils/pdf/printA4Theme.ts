@@ -50,7 +50,7 @@ export const PRINT_A4_PAGE_WIDTH_MM = 210;
 export const PRINT_A4_PAGE_HEIGHT_MM = 297;
 export const PRINT_A4_MARGIN_TOP_MM = 12;
 export const PRINT_A4_MARGIN_BOTTOM_MM = 20;
-export const PRINT_A4_MARGIN_X_MM = 14;
+export const PRINT_A4_MARGIN_X_MM = 10;
 export const PRINT_A4_HEADER_HEIGHT_MM = 74;
 
 export function getPrintGoogleFontsCss(): string {
@@ -130,14 +130,16 @@ export function getPrintA4DocumentCss(options: PrintA4ThemeOptions = {}): string
       padding: 24px 0 48px;
     }
 
+    /* En mode export, html et body sont toujours blancs — plus de cadre gris */
+    html,
     .print-note-body--export {
       padding: 0;
-      background: #ffffff;
+      background: #ffffff !important;
     }
 
     .print-note-document {
       width: var(--print-page-width);
-      min-height: var(--print-page-height);
+      /* Pas de min-height : le contenu dicte la taille, plus de page grise vide */
       margin: 0 auto;
       padding: 0;
       background: var(--print-surface);
