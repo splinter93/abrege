@@ -1795,6 +1795,17 @@ export default function ClasseursPage() {
                     },
                   },
                   { label: "Renommer", onClick: () => handleTabRename(contextMenuTab.tab) },
+                  {
+                    label: "Partager",
+                    onClick: () => {
+                      setShareTarget({
+                        resourceType: "classeur",
+                        resourceRef: contextMenuTab.tab.id,
+                        resourceName: contextMenuTab.tab.name,
+                      });
+                      closeContextMenus();
+                    },
+                  },
                   { label: "Supprimer", onClick: () => handleTabDelete(contextMenuTab.tab) },
                 ]
           }
