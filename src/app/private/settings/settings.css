@@ -1576,9 +1576,26 @@ body:has(.page-content-inner-shared) .modal-overlay .modal-button:hover {
 }
 
 /* Modale « Inviter un coéquipier » (Partage) — pleine largeur, CTA marque, footer aligné */
+/* Paddings explicites : d'autres CSS globaux (.modal-body) peuvent écraser page-settings selon l'ordre d'import */
+body:has(.page-content-inner-shared) .modal-overlay {
+  padding: clamp(1rem, 4vw, 1.75rem);
+}
+
 body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal {
   max-width: min(26rem, calc(100vw - 2rem));
   width: 100%;
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal .modal-header {
+  padding: 1.125rem 1.5rem;
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal .shared-invite-modal__body.modal-body {
+  padding: 1.25rem 1.5rem 1.375rem;
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal .shared-invite-modal__footer.modal-footer {
+  padding: 1rem 1.5rem 1.25rem;
 }
 
 body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__body {
