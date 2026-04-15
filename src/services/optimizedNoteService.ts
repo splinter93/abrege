@@ -62,6 +62,80 @@ export class OptimizedNoteService {
     return OptimizedNoteService.instance;
   }
 
+  private async getBearerToken(): Promise<string> {
+    const { data, error } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (error || !token) {
+      throw new Error('Authentication required');
+    }
+    return token;
+  }
+
+  /**
+   * Lecture note via API v2 (propriétaire + notes dans classeur partagé).
+   * Ne pas interroger `articles` avec le client anon + user_id : RLS bloque les collaborateurs.
+   */
+  private async fetchNoteFromApi(
+    noteRef: string,
+    fields: 'metadata' | 'content' | 'all',
+  ): Promise<Record<string, unknown>> {
+    const token = await this.getBearerToken();
+    const encodedRef = encodeURIComponent(noteRef);
+    const response = await fetch(`/api/v2/note/${encodedRef}?fields=${fields}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const json = (await response.json().catch(() => ({}))) as {
+      success?: boolean;
+      note?: Record<string, unknown>;
+      error?: string;
+      detail?: string;
+    };
+    if (!response.ok || !json.success || !json.note) {
+      const msg = json.error || json.detail || response.statusText || 'Erreur';
+      throw new Error(`Note non trouvée: ${noteRef}${msg ? ` (${msg})` : ''}`);
+    }
+    return json.note;
+  }
+
+  private mapApiNoteToMetadata(note: Record<string, unknown>): NoteMetadata {
+    const title =
+      (typeof note.title === 'string' && note.title) ||
+      (typeof note.source_title === 'string' && note.source_title) ||
+      '';
+    const id = String(note.id);
+    return {
+      id,
+      source_title: title,
+      folder_id: note.folder_id != null ? String(note.folder_id) : undefined,
+      classeur_id: note.classeur_id != null ? String(note.classeur_id) : undefined,
+      created_at: String(note.created_at || new Date().toISOString()),
+      updated_at: String(note.updated_at || new Date().toISOString()),
+      slug: typeof note.slug === 'string' ? note.slug : undefined,
+      header_image: typeof note.header_image === 'string' ? note.header_image : undefined,
+      header_image_offset:
+        typeof note.header_image_offset === 'number' ? note.header_image_offset : undefined,
+      header_image_blur:
+        typeof note.header_image_blur === 'number' ? note.header_image_blur : undefined,
+      header_image_overlay:
+        typeof note.header_image_overlay === 'number' ? note.header_image_overlay : undefined,
+      header_title_in_image:
+        typeof note.header_title_in_image === 'boolean' ? note.header_title_in_image : undefined,
+      wide_mode: typeof note.wide_mode === 'boolean' ? note.wide_mode : undefined,
+      font_family: typeof note.font_family === 'string' ? note.font_family : undefined,
+      source_type: note.source_type as NoteMetadata['source_type'],
+      share_settings: note.share_settings as NoteMetadata['share_settings'],
+      public_url: typeof note.public_url === 'string' ? note.public_url : undefined,
+    };
+  }
+
+  private mapApiNoteToContent(note: Record<string, unknown>): NoteContent {
+    return {
+      id: String(note.id),
+      markdown_content: typeof note.markdown_content === 'string' ? note.markdown_content : '',
+      html_content: typeof note.html_content === 'string' ? note.html_content : undefined,
+    };
+  }
+
   /**
    * Récupérer uniquement les métadonnées d'une note (rapide)
    * Utilise le cache pour éviter les rechargements inutiles
@@ -77,43 +151,11 @@ export class OptimizedNoteService {
     }
 
     try {
-      logger.dev(`[OptimizedNoteService] 📖 Récupération métadonnées note: ${noteRef}`);
+      logger.dev(`[OptimizedNoteService] 📖 Récupération métadonnées note (API): ${noteRef}`);
       const startTime = Date.now();
 
-      // Résoudre la référence (UUID ou slug)
-      const noteId = await this.resolveNoteRef(noteRef, userId);
-      
-      // Récupérer seulement les métadonnées (pas le contenu)
-      const { data: note, error } = await supabase
-        .from('articles')
-        .select('id, source_title, folder_id, classeur_id, created_at, updated_at, slug, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, wide_mode, font_family, source_type, share_settings, public_url')
-        .eq('id', noteId)
-        .eq('user_id', userId)
-        .single();
-
-      if (error || !note) {
-        throw new Error(`Note non trouvée: ${noteRef}`);
-      }
-
-      const metadata: NoteMetadata = {
-        id: note.id,
-        source_title: note.source_title,
-        folder_id: note.folder_id,
-        classeur_id: note.classeur_id,
-        created_at: note.created_at,
-        updated_at: note.updated_at,
-        slug: note.slug,
-        header_image: note.header_image,
-        header_image_offset: note.header_image_offset,
-        header_image_blur: note.header_image_blur,
-        header_image_overlay: note.header_image_overlay,
-        header_title_in_image: note.header_title_in_image,
-        wide_mode: note.wide_mode,
-        font_family: note.font_family,
-        source_type: note.source_type,
-        share_settings: note.share_settings ?? undefined,
-        public_url: note.public_url ?? undefined,
-      };
+      const note = await this.fetchNoteFromApi(noteRef, 'metadata');
+      const metadata = this.mapApiNoteToMetadata(note);
 
       // 💾 Mettre en cache
       this.metadataCache.set(cacheKey, {
@@ -147,33 +189,15 @@ export class OptimizedNoteService {
     }
 
     try {
-      logger.dev(`[OptimizedNoteService] 📖 Récupération contenu note: ${noteRef}`);
+      logger.dev(`[OptimizedNoteService] 📖 Récupération contenu note (API): ${noteRef}`);
       const startTime = Date.now();
 
-      // Résoudre la référence (UUID ou slug)
-      const noteId = await this.resolveNoteRef(noteRef, userId);
-      
-      // Récupérer le contenu complet
-      const { data: note, error } = await supabase
-        .from('articles')
-        .select('id, markdown_content, html_content')
-        .eq('id', noteId)
-        .eq('user_id', userId)
-        .single();
-
-      if (error || !note) {
-        throw new Error(`Note non trouvée: ${noteRef}`);
-      }
-
-      const content: NoteContent = {
-        id: note.id,
-        markdown_content: note.markdown_content || '',
-        html_content: note.html_content
-      };
+      const note = await this.fetchNoteFromApi(noteRef, 'content');
+      const content = this.mapApiNoteToContent(note);
 
       // 💾 Mettre en cache
       this.contentCache.set(cacheKey, {
-        metadata: { id: note.id } as NoteMetadata, // Métadonnées minimales
+        metadata: { id: content.id } as NoteMetadata,
         content,
         timestamp: Date.now()
       });
@@ -195,51 +219,27 @@ export class OptimizedNoteService {
    */
   async getNoteComplete(noteRef: string, userId: string): Promise<NoteMetadata & NoteContent> {
     try {
-      logger.dev(`[OptimizedNoteService] 📖 Récupération note complète: ${noteRef}`);
+      logger.dev(`[OptimizedNoteService] 📖 Récupération note complète (API): ${noteRef}`);
       const startTime = Date.now();
 
-      // Résoudre la référence (UUID ou slug)
-      const noteId = await this.resolveNoteRef(noteRef, userId);
-      
-      // Récupérer tout en une seule requête
-      const { data: note, error } = await supabase
-        .from('articles')
-        .select('id, source_title, folder_id, created_at, updated_at, slug, header_image, wide_mode, font_family, markdown_content, html_content, source_type')
-        .eq('id', noteId)
-        .eq('user_id', userId)
-        .single();
+      const note = await this.fetchNoteFromApi(noteRef, 'all');
+      const metadata = this.mapApiNoteToMetadata(note);
+      const content = this.mapApiNoteToContent(note);
 
-      if (error || !note) {
-        throw new Error(`Note non trouvée: ${noteRef}`);
-      }
-
-      const result = {
-        id: note.id,
-        source_title: note.source_title,
-        folder_id: note.folder_id,
-        created_at: note.created_at,
-        updated_at: note.updated_at,
-        slug: note.slug,
-        header_image: note.header_image,
-        wide_mode: note.wide_mode,
-        font_family: note.font_family,
-        markdown_content: note.markdown_content || '',
-        html_content: note.html_content,
-        source_type: note.source_type,
-      };
+      const result = { ...metadata, ...content };
 
       // 💾 Mettre en cache séparément
       const metadataCacheKey = `metadata_${noteRef}_${userId}`;
       const contentCacheKey = `content_${noteRef}_${userId}`;
       
       this.metadataCache.set(metadataCacheKey, {
-        metadata: result,
+        metadata,
         timestamp: Date.now()
       });
       
       this.contentCache.set(contentCacheKey, {
-        metadata: { id: note.id } as NoteMetadata,
-        content: { id: note.id, markdown_content: result.markdown_content, html_content: result.html_content },
+        metadata: { id: metadata.id } as NoteMetadata,
+        content,
         timestamp: Date.now()
       });
 
@@ -252,30 +252,6 @@ export class OptimizedNoteService {
       logger.error(`[OptimizedNoteService] ❌ Erreur récupération note complète: ${noteRef}`, error);
       throw error;
     }
-  }
-
-  /**
-   * Résoudre une référence (UUID ou slug) vers un ID de note
-   */
-  private async resolveNoteRef(noteRef: string, userId: string): Promise<string> {
-    // Si c'est déjà un UUID, le retourner directement
-    if (noteRef.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      return noteRef;
-    }
-
-    // Sinon, résoudre le slug
-    const { data: note, error } = await supabase
-      .from('articles')
-      .select('id')
-      .eq('slug', noteRef)
-      .eq('user_id', userId)
-      .single();
-
-    if (error || !note) {
-      throw new Error(`Note non trouvée: ${noteRef}`);
-    }
-
-    return note.id;
   }
 
   /**
