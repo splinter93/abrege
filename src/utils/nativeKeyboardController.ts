@@ -58,6 +58,10 @@ export async function attachNativeKeyboardController(
   const virtualKeyboard = platform === 'android' ? getVirtualKeyboardApi() : null;
   if (virtualKeyboard) {
     try {
+      // overlaysContent = true empêche le WebView de se redimensionner quand le clavier
+      // s'ouvre (nécessaire avec adjustNothing). L'animation est entièrement gérée par la
+      // CSS transition — geometrychange sert uniquement à la détection et à confirmer la
+      // fermeture complète.
       virtualKeyboard.overlaysContent = true;
 
       const handleGeometryChange = () => {
@@ -66,37 +70,36 @@ export async function attachNativeKeyboardController(
         if (height > 0) {
           setVirtualKeyboardDriving(true);
 
-          // Pendant une fermeture, geometrychange peut continuer à émettre des hauteurs
-          // positives jusqu'au dernier frame. On les accepte pour suivre le clavier sans
-          // requalifier l'état comme une réouverture.
-          if (phase === 'closing') {
-            applyHeight(height);
+          // Pendant l'ouverture ou la fermeture, la CSS transition gère l'animation.
+          // On n'applique pas les hauteurs intermédiaires pour éviter les saccades.
+          if (phase === 'opening' || phase === 'closing') {
             return;
           }
 
-          if (!expectedVisible) {
+          if (phase === 'closed') {
+            // Premier signal d'ouverture avant keyboardWillShow (Android 16).
+            // On notifie uniquement ; keyboardWillShow appliquera la hauteur finale.
             notifyOpenStart();
+            expectedVisible = true;
+            phase = 'opening';
           }
 
-          expectedVisible = true;
-          phase = phase === 'open' ? 'open' : 'opening';
-          applyHeight(height);
+          // phase === 'open' : le clavier était déjà ouvert, hauteur qui change
+          // (ex. barre de suggestions). On met à jour.
+          if (phase === 'open') {
+            applyHeight(height);
+          }
           return;
         }
 
-        if (!virtualKeyboardDriving) {
-          return;
-        }
+        // height === 0 : clavier entièrement fermé.
+        if (!virtualKeyboardDriving) return;
 
-        // Ignore les zéros parasites tant qu'on est toujours dans un cycle d'ouverture.
-        if (expectedVisible && phase !== 'closing') {
-          return;
-        }
-
+        // Confirme la fin de fermeture et nettoie l'état VK.
+        // keyboardWillHide a déjà appliqué 0 pour démarrer la CSS transition.
         expectedVisible = false;
         phase = 'closed';
         setVirtualKeyboardDriving(false);
-        applyHeight(0);
       };
 
       virtualKeyboard.addEventListener('geometrychange', handleGeometryChange);
@@ -118,9 +121,9 @@ export async function attachNativeKeyboardController(
     expectedVisible = true;
     phase = 'opening';
 
-    if (!virtualKeyboardDriving) {
-      applyHeight(info.keyboardHeight ?? 0);
-    }
+    // Toujours appliquer la hauteur ici pour déclencher la CSS transition au bon moment,
+    // même si la VirtualKeyboard API est active (elle ne pilote plus l'animation).
+    applyHeight(info.keyboardHeight ?? 0);
   });
 
   const didShowHandle = await Keyboard.addListener('keyboardDidShow', (info) => {
@@ -129,19 +132,17 @@ export async function attachNativeKeyboardController(
     }
 
     phase = 'open';
-
-    if (!virtualKeyboardDriving) {
-      applyHeight(info.keyboardHeight ?? 0);
-    }
+    // Correction de la hauteur finale si keyboardWillShow avait une valeur imprécise.
+    applyHeight(info.keyboardHeight ?? 0);
   });
 
   const willHideHandle = await Keyboard.addListener('keyboardWillHide', () => {
     expectedVisible = false;
     phase = 'closing';
 
-    if (!virtualKeyboardDriving) {
-      applyHeight(0);
-    }
+    // Toujours appliquer 0 ici pour déclencher la CSS transition au début de la fermeture,
+    // quelle que soit la source (VirtualKeyboard API ou non).
+    applyHeight(0);
   });
 
   const didHideHandle = await Keyboard.addListener('keyboardDidHide', () => {

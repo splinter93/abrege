@@ -126,13 +126,9 @@ html.platform-android.capacitor-native.chat-page .chatgpt-input-container {
   padding-bottom: calc(20px + var(--capacitor-safe-bottom-fixed, var(--capacitor-safe-bottom, 0px))) !important;
 }
 
-/* ANDROID 15+ FIX (VirtualKeyboard API) :
-   La transition CSS n'est coupée QUE quand `geometrychange` est réellement en train
-   de piloter la hauteur clavier. Si le WebView expose l'API mais n'émet rien,
-   on retombe automatiquement sur la transition Capacitor classique. */
-html.virtual-keyboard-supported.chat-page .chatgpt-chat-bottom {
-  transition: none !important;
-}
+/* ANDROID 15+ : la classe virtual-keyboard-supported indique que l'API VirtualKeyboard
+   est active (overlaysContent = true). L'animation reste gérée par la CSS transition
+   ci-dessus — on ne coupe plus la transition même avec l'API VK active. */
 
 /* 2. Overlay status bar : SUPPRIMÉ. */
 
