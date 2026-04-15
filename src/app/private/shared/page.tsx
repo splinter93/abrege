@@ -62,6 +62,16 @@ interface SharedFolderPreview {
   kind: "classeur";
 }
 
+interface SentClasseurShare {
+  shareId: string;
+  classeurId: string;
+  name: string;
+  emoji?: string;
+  slug?: string;
+  sharedAt: string;
+  recipients: Array<{ userId: string; displayName: string; email: string; permissionLevel: string }>;
+}
+
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
@@ -96,7 +106,7 @@ function SharedWorkspaceContent() {
   const [outgoing, setOutgoing] = useState<TeammateRequest[]>([]);
   const [teammates, setTeammates] = useState<Teammate[]>([]);
   const [received, setReceived] = useState<(SharedNotePreview | SharedFolderPreview)[]>([]);
-  const [sent] = useState<SharedNotePreview[]>([]);
+  const [sent, setSent] = useState<SentClasseurShare[]>([]);
 
   const refreshAll = useCallback(async () => {
     setLoadError(null);
@@ -136,6 +146,7 @@ function SharedWorkspaceContent() {
             sharedAt: string;
             permissionLevel: string;
           }>;
+          sentItems?: SentClasseurShare[];
         };
         const items = sh.items ?? [];
         setReceived(
@@ -150,8 +161,10 @@ function SharedWorkspaceContent() {
             kind: "classeur" as const,
           })),
         );
+        setSent(sh.sentItems ?? []);
       } else {
         setReceived([]);
+        setSent([]);
         setLoadError("Impossible de charger les classeurs reçus.");
       }
     } catch (e) {
@@ -621,55 +634,52 @@ function SharedWorkspaceContent() {
                 transition={{ duration: 0.35, delay: 0.1 }}
               >
                 <h2 className="settings-v-title">Partages actifs</h2>
-                <p className="-mt-2 mb-3 max-w-2xl text-sm text-zinc-500">
-                  Ce que vous exposez à d’autres (lien, coéquipier ou classeur). Gestion fine des
-                  droits à brancher sur l’éditeur et les classeurs.
-                </p>
                 <div className="settings-v-card">
                   {sent.length === 0 ? (
                     <div className="shared-v-empty">
-                      <strong>Aucun partage sortant listé</strong>
-                      Depuis une note ou un classeur, choisissez « Partager » pour alimenter cette
-                      liste.
+                      <strong>Aucun partage sortant</strong>
+                      Depuis un classeur, choisissez « Partager » pour alimenter cette liste.
                     </div>
                   ) : (
                     <div className="settings-api-key-list">
                       {sent.map((item, index) => (
                         <div
-                          key={item.id}
+                          key={item.shareId}
                           className="settings-api-key-list__item border-b [border-bottom:var(--border-block)] last:border-b-0"
                         >
                           <motion.div
-                            className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-col gap-3 p-5"
                             initial={{ opacity: 0, x: -6 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.2, delay: index * 0.04 }}
                           >
-                            <div className="min-w-0 flex-1 pr-4">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <SendHorizontal
-                                  className="h-4 w-4 shrink-0 text-zinc-500"
-                                  aria-hidden
-                                />
-                                <span className="truncate text-[0.875rem] font-medium text-[var(--color-text-primary,#ededed)]">
-                                  {item.title}
-                                </span>
-                                <span className="shrink-0 rounded-full border border-white/[0.12] bg-white/[0.05] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
-                                  Note
-                                </span>
-                                <span className="shrink-0 rounded-full border border-zinc-600/40 bg-zinc-800/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
-                                  {item.access}
-                                </span>
-                              </div>
-                              <div className="mt-2 text-[0.8125rem] text-[var(--color-text-secondary,#a1a1aa)]">
-                                <span className="opacity-70">Mis en avant le</span>{" "}
-                                {new Date(item.sharedAt).toLocaleDateString("fr-FR")}
-                              </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <SendHorizontal className="h-4 w-4 shrink-0 text-zinc-500" aria-hidden />
+                              {item.emoji ? <span aria-hidden>{item.emoji}</span> : null}
+                              <span className="truncate text-[0.875rem] font-medium text-[var(--color-text-primary,#ededed)]">
+                                {item.name}
+                              </span>
+                              <span className="shrink-0 rounded-full border border-white/[0.12] bg-white/[0.05] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                                Classeur
+                              </span>
                             </div>
-                            <div className="flex shrink-0 gap-2">
-                              <button type="button" className="settings-v-btn-secondary">
-                                Gérer
-                              </button>
+                            <div className="flex flex-wrap items-center gap-2 text-[0.8125rem] text-[var(--color-text-secondary,#a1a1aa)]">
+                              <span>Partagé avec</span>
+                              {item.recipients.map((r) => (
+                                <span
+                                  key={r.userId}
+                                  className="inline-flex items-center gap-1 rounded-full border border-zinc-700/60 bg-zinc-800/60 px-2 py-0.5 text-[10px] font-medium text-zinc-300"
+                                >
+                                  {r.displayName || r.email}
+                                  <span className="text-zinc-500">·</span>
+                                  <span className="text-zinc-500">
+                                    {r.permissionLevel === "write" ? "édition" : "lecture"}
+                                  </span>
+                                </span>
+                              ))}
+                              <span className="text-zinc-600">
+                                depuis le {new Date(item.sharedAt).toLocaleDateString("fr-FR")}
+                              </span>
                             </div>
                           </motion.div>
                         </div>
@@ -679,7 +689,7 @@ function SharedWorkspaceContent() {
                 </div>
               </motion.section>
 
-              {/* Rappel produit */}
+                            {/* Rappel produit */}
               <motion.section
                 className="settings-v-section"
                 initial={{ opacity: 0, y: 16 }}
