@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback, forwardRef, useImperativeHandle }
 import { Square, Loader } from 'react-feather';
 import { Mic } from 'lucide-react';
 import { logger } from '@/utils/logger';
+import { getWhisperTranscribeModel } from '@/utils/whisperModelPreference';
 
 interface AudioRecorderProps {
   onTranscriptionComplete: (text: string) => void;
@@ -143,7 +144,7 @@ const AudioRecorder = forwardRef<AudioRecorderRef, AudioRecorderProps>(({
 
       const formData = new FormData();
       formData.append('file', audioBlob, 'recording.webm');
-      formData.append('model', 'whisper-large-v3-turbo');
+      formData.append('model', getWhisperTranscribeModel());
       formData.append('response_format', 'text');
       formData.append('temperature', '0');
 

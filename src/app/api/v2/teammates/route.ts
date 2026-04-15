@@ -16,7 +16,7 @@ function createServiceClient() {
 }
 
 const inviteSchema = z.object({
-  email: z.string().email().max(320),
+  email: z.string().min(1).max(320),
 });
 
 type UserRow = {
@@ -69,6 +69,24 @@ async function findUserIdByEmail(
     .maybeSingle();
   if (error) {
     logApi.info(`[v2_teammates] find by email: ${error.message}`);
+    return null;
+  }
+  return (data as { id: string } | null)?.id ?? null;
+}
+
+async function findUserIdByUsername(
+  service: NonNullable<ReturnType<typeof createServiceClient>>,
+  username: string,
+): Promise<string | null> {
+  const normalized = username.replace(/^@/, '').trim().toLowerCase();
+  const { data, error } = await service
+    .from('users')
+    .select('id')
+    .ilike('username', normalized)
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    logApi.info(`[v2_teammates] find by username: ${error.message}`);
     return null;
   }
   return (data as { id: string } | null)?.id ?? null;
@@ -199,15 +217,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
   const parsed = inviteSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: 'E-mail invalide' }, { status: 400 });
+    return NextResponse.json({ error: 'Identifiant invalide' }, { status: 400 });
   }
-  const email = parsed.data.email.trim().toLowerCase();
+  const raw = parsed.data.email.trim();
 
-  const inviteeId = await findUserIdByEmail(service, email);
+  // Détecter si c'est un e-mail (contient @) ou un username
+  const isEmail = raw.includes('@');
+  let inviteeId: string | null;
+
+  if (isEmail) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)) {
+      return NextResponse.json({ error: 'Format d\'e-mail invalide' }, { status: 400 });
+    }
+    inviteeId = await findUserIdByEmail(service, raw);
+  } else {
+    inviteeId = await findUserIdByUsername(service, raw);
+  }
+
   if (!inviteeId) {
-    // Generic message to avoid confirming whether an email is registered (user enumeration).
+    // Message générique : évite la confirmation d'existence d'un compte (user enumeration).
     return NextResponse.json(
-      { error: 'Invitation impossible. Vérifiez l\'adresse e-mail ou attendez que la personne ait un compte.' },
+      { error: 'Invitation impossible. Vérifiez l\'adresse e-mail ou le nom d\'utilisateur.' },
       { status: 404 },
     );
   }

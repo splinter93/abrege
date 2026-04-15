@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
+import { getAuthenticatedUser } from '@/utils/authUtils';
 import { extractTOCWithSlugs } from '@/utils/markdownTOC';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
+import { resolveNoteAccess } from '@/utils/database/shareAccessService';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -52,15 +53,25 @@ export async function GET(
     }
 
     const noteId = resolveResult.id;
-  const userToken = extractTokenFromRequest(request);
-    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
 
-    // Récupérer la note par son ID résolu
+    const access = await resolveNoteAccess(noteId, userId);
+    if (!access) {
+      return NextResponse.json(
+        { error: 'Note non trouvée' },
+        { status: 404, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Récupérer la note par son ID résolu (ownerId = propriétaire réel)
     const { data: note, error: fetchError } = await supabase
       .from('articles')
       .select('id, source_title, markdown_content')
       .eq('id', noteId)
-      .eq('user_id', userId)
+      .eq('user_id', access.ownerId)
       .single();
 
     if (fetchError) {

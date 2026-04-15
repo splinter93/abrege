@@ -4,9 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
+import { resolveNoteAccess } from '@/utils/database/shareAccessService';
 import {
   sectionEditV2Schema,
   validatePayload,
@@ -54,7 +56,13 @@ export async function POST(
 
     const userId = authResult.userId!;
     const userToken = extractTokenFromRequest(request);
-    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
+    // Client user JWT — pour ETag et streaming
+    const supabaseUserJwt = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
+    // Client service role — pour les requêtes articles (support collaborateurs)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
 
     const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
     if (!resolveResult.success) {
@@ -65,6 +73,20 @@ export async function POST(
     }
 
     const noteId = resolveResult.id;
+
+    const access = await resolveNoteAccess(noteId, userId);
+    if (!access) {
+      return NextResponse.json(
+        { error: 'Note non trouvée' },
+        { status: 404, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+    if (access.permissionLevel !== 'write') {
+      return NextResponse.json(
+        { error: 'Accès lecture seule' },
+        { status: 403, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
     const body = await request.json();
     const validationResult = validatePayload(sectionEditV2Schema, body);
     if (!validationResult.success) {
@@ -101,7 +123,7 @@ export async function POST(
       .from('articles')
       .select('id, markdown_content, updated_at')
       .eq('id', noteId)
-      .eq('user_id', userId)
+      .eq('user_id', access.ownerId)
       .single();
 
     if (fetchError || !currentNote) {
@@ -144,7 +166,7 @@ export async function POST(
       removed: Math.max(0, currentNote.markdown_content.length - safeContent.length)
     };
 
-    const shouldStream = await isCanvaOpen(supabase, noteId, userId);
+    const shouldStream = await isCanvaOpen(supabaseUserJwt, noteId, userId);
     const streamOps: ContentOperation[] = [];
 
     if (shouldStream) {
@@ -173,7 +195,7 @@ export async function POST(
         updated_at: new Date().toISOString()
       })
       .eq('id', noteId)
-      .eq('user_id', userId)
+      .eq('user_id', access.ownerId)
       .select('id, markdown_content, updated_at')
       .single();
 

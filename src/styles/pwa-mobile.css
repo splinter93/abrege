@@ -470,7 +470,7 @@ html.capacitor-native .image-source-modal {
   .chatgpt-input-area {
     background: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)), var(--chat-bg-primary, #0e1012) !important;
     border: var(--chat-input-border) !important;
-    border-radius: 16px;
+    border-radius: var(--chat-radius-lg);
     box-shadow: none;
     transition: background 0.2s ease, border-color 0.2s ease;
   }

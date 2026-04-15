@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { logger, LogCategory } from '@/utils/logger';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
+import { getAuthenticatedUser } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
+import { resolveNoteAccess } from '@/utils/database/shareAccessService';
 import { noteEmbedCacheService } from '@/services/cache/NoteEmbedCacheService';
 import { metricsCollector } from '@/services/monitoring/MetricsCollector';
 import { extractSectionBody, extractTOCWithSlugs } from '@/utils/markdownTOC';
+
+function createServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  return createClient(url, key);
+}
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -63,8 +71,17 @@ export async function GET(
     }
 
     const noteId = resolveResult.id;
-  const userToken = extractTokenFromRequest(request);
-    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
+
+    // Résoudre l'accès (propriétaire ou collaborateur via classeur partagé)
+    const access = await resolveNoteAccess(noteId, userId);
+    if (!access) {
+      return NextResponse.json(
+        { error: 'Note non trouvée' },
+        { status: 404, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
+    const supabase = createServiceClient();
 
     // ✅ Cache Note Embed : Vérifier le cache si mode 'content' ou 'all'
     // Ne pas court-circuiter si une section précise est demandée
@@ -122,13 +139,13 @@ export async function GET(
         break;
     }
 
-    // Récupérer la note avec les champs appropriés
+    // Récupérer la note avec les champs appropriés (ownerId = propriétaire réel)
     const { data: note, error: fetchError } = await supabase
       .from('articles')
       .select(selectFields)
       .eq('id', noteId)
-      .eq('user_id', userId)
-      .is('trashed_at', null) // 🔧 CORRECTION: Exclure les notes supprimées
+      .eq('user_id', access.ownerId)
+      .is('trashed_at', null)
       .single();
 
     if (fetchError || !note) {

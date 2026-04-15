@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger, LogCategory } from '@/utils/logger';
 
+const ALLOWED_WHISPER_TRANSCRIBE_MODELS = new Set([
+  'whisper-large-v3-turbo',
+  'whisper-large-v3',
+]);
+
+const DEFAULT_WHISPER_TRANSCRIBE_MODEL = 'whisper-large-v3-turbo';
+
 /**
  * Route API pour la transcription audio avec Whisper via Groq
  * 
@@ -55,7 +62,10 @@ export async function POST(request: NextRequest) {
     });
     
     const file = formData.get('file') as File;
-    const model = formData.get('model') as string || 'whisper-large-v3-turbo';
+    const rawModel = (formData.get('model') as string) || DEFAULT_WHISPER_TRANSCRIBE_MODEL;
+    const model = ALLOWED_WHISPER_TRANSCRIBE_MODELS.has(rawModel)
+      ? rawModel
+      : DEFAULT_WHISPER_TRANSCRIBE_MODEL;
     const language = formData.get('language') as string;
     const prompt = formData.get('prompt') as string;
     const responseFormat = formData.get('response_format') as string || 'verbose_json';

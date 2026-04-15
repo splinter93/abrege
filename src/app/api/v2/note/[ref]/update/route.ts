@@ -3,6 +3,8 @@ import { logApi } from '@/utils/logger';
 import { updateNoteV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { V2DatabaseUtils } from '@/utils/v2DatabaseUtils';
+import { resolveNoteAccess } from '@/utils/database/shareAccessService';
+import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -38,6 +40,28 @@ export async function PUT(
   const userId = authResult.userId!;
 
   try {
+    // Résoudre et vérifier l'accès en écriture
+    const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
+    if (!resolveResult.success) {
+      return NextResponse.json(
+        { error: resolveResult.error },
+        { status: resolveResult.status, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+    const access = await resolveNoteAccess(resolveResult.id, userId);
+    if (!access) {
+      return NextResponse.json(
+        { error: 'Note non trouvée' },
+        { status: 404, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+    if (access.permissionLevel !== 'write') {
+      return NextResponse.json(
+        { error: 'Accès lecture seule' },
+        { status: 403, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
     const body = await request.json();
 
     // Validation Zod V2
@@ -48,8 +72,8 @@ export async function PUT(
 
     const validatedData = validationResult.data;
 
-    // Utiliser V2DatabaseUtils pour l'accès direct à la base de données
-    const result = await V2DatabaseUtils.updateNote(ref, validatedData, userId, context);
+    // Passer ownerId pour que la mutation filtre sur le bon user_id
+    const result = await V2DatabaseUtils.updateNote(ref, validatedData, userId, context, access.ownerId);
 
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Note mise à jour en ${apiTime}ms`);

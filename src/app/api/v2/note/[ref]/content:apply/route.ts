@@ -17,9 +17,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
+import { resolveNoteAccess } from '@/utils/database/shareAccessService';
 import { contentApplyV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import {
   ContentApplier,
@@ -72,7 +74,13 @@ export async function POST(
 
     const userId = authResult.userId!;
     const userToken = extractTokenFromRequest(request);
-    const supabase = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
+    // Client user JWT — utilisé pour ETag et streaming (opérations non-article)
+    const supabaseUserJwt = createAuthenticatedSupabaseClient(authResult, userToken || undefined);
+    // Client service role — utilisé pour les requêtes articles (support collaborateurs)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
 
     // 🔍 Résoudre la référence (UUID ou slug)
     const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
@@ -84,6 +92,21 @@ export async function POST(
     }
 
     const noteId = resolveResult.id;
+
+    // Vérifier accès et niveau de permission
+    const access = await resolveNoteAccess(noteId, userId);
+    if (!access) {
+      return NextResponse.json(
+        { error: 'Note non trouvée' },
+        { status: 404, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+    if (access.permissionLevel !== 'write') {
+      return NextResponse.json(
+        { error: 'Accès lecture seule' },
+        { status: 403, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
 
     // 📋 Récupérer et valider le body
     const body = await request.json();
@@ -123,12 +146,12 @@ export async function POST(
       }
     }
 
-    // 📄 Récupérer le contenu actuel de la note
+    // 📄 Récupérer le contenu actuel de la note (ownerId = propriétaire réel)
     const { data: currentNote, error: fetchError } = await supabase
       .from('articles')
       .select('id, markdown_content, updated_at')
       .eq('id', noteId)
-      .eq('user_id', userId)
+      .eq('user_id', access.ownerId)
       .single();
 
     if (fetchError || !currentNote) {
@@ -165,7 +188,7 @@ export async function POST(
     const safeContent = result.content;
 
     // 🌊 Détecter si canva ouvert → streaming automatique vers le client
-    const shouldStream = await isCanvaOpen(supabase, noteId, userId);
+    const shouldStream = await isCanvaOpen(supabaseUserJwt, noteId, userId);
     logApi.info(`[content:apply] Canva status: ${shouldStream ? 'open (streaming enabled)' : 'closed'}`, {
       ...context,
       noteId,
@@ -200,7 +223,7 @@ export async function POST(
         updated_at: new Date().toISOString()
       })
       .eq('id', noteId)
-      .eq('user_id', userId)
+      .eq('user_id', access.ownerId)
       .select('id, markdown_content, updated_at')
       .single();
 

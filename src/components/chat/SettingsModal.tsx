@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ArrowLeft, ChevronRight, User, Bell, Palette, Link2, Calendar, Database, Lock, Users, UserCircle, Moon, Sun, Sparkles, Circle, Flame, Snowflake, Zap, FileText, Settings } from 'lucide-react';
+import { X, ArrowLeft, ChevronRight, User, Bell, Palette, Link2, Calendar, Database, Lock, Users, UserCircle, Moon, Sun, Sparkles, Circle, Flame, Snowflake, Zap, FileText, Settings, Mic } from 'lucide-react';
 import { useTheme, type ChatTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useChatStore } from '@/store/useChatStore';
@@ -17,6 +17,14 @@ import {
   HISTORY_PRESETS,
   setMaxHistoryMessages,
 } from '@/utils/chatHistoryPreference';
+import {
+  WHISPER_MODEL_PREF_KEY,
+  WHISPER_TRANSCRIBE_DEFAULT,
+  WHISPER_TRANSCRIBE_MODELS,
+  isWhisperTranscribeModelId,
+  setWhisperTranscribeModel,
+  type WhisperTranscribeModelId,
+} from '@/utils/whisperModelPreference';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -78,6 +86,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [selectedColorPalette, setSelectedColorPalette] = useState<string>('soft-dark');
   // PDF Parser (General) : railway = Hybrid Parser v4, mistral = Mistral OCR (défaut produit)
   const [selectedPdfParser, setSelectedPdfParser] = useState<string>('mistral');
+  const [selectedWhisperModel, setSelectedWhisperModel] =
+    useState<WhisperTranscribeModelId>(WHISPER_TRANSCRIBE_DEFAULT);
   // Mémoire de conversation (Général) — default 60
   const [maxHistory, setMaxHistory] = useState<number>(HISTORY_DEFAULT);
 
@@ -212,6 +222,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       localStorage.setItem('chat-pdf-parser-preference', 'mistral');
     }
 
+    const savedWhisper = localStorage.getItem(WHISPER_MODEL_PREF_KEY);
+    if (savedWhisper && isWhisperTranscribeModelId(savedWhisper)) {
+      setSelectedWhisperModel(savedWhisper);
+    } else {
+      setSelectedWhisperModel(WHISPER_TRANSCRIBE_DEFAULT);
+      localStorage.setItem(
+        WHISPER_MODEL_PREF_KEY,
+        WHISPER_TRANSCRIBE_DEFAULT
+      );
+    }
+
     const savedMaxHistory = localStorage.getItem(HISTORY_PREF_KEY);
     if (savedMaxHistory) {
       const n = parseInt(savedMaxHistory, 10);
@@ -250,6 +271,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     if (value !== 'railway' && value !== 'mistral') return;
     setSelectedPdfParser(value);
     localStorage.setItem('chat-pdf-parser-preference', value);
+  };
+
+  const handleWhisperModelChange = (value: string) => {
+    if (!isWhisperTranscribeModelId(value)) return;
+    setSelectedWhisperModel(value);
+    setWhisperTranscribeModel(value);
   };
 
   const handleMaxHistoryChange = (value: string) => {
@@ -351,6 +378,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 ]}
                 onChange={handlePdfParserChange}
               />
+            </div>
+
+            <div className="settings-field">
+              <label className="settings-field-label">Transcription vocale (Whisper)</label>
+              <CustomSelect
+                value={selectedWhisperModel}
+                options={WHISPER_TRANSCRIBE_MODELS.map((m) => ({
+                  value: m.value,
+                  label: `${m.label} — ${m.description}`,
+                  icon: <Mic size={16} />,
+                }))}
+                onChange={handleWhisperModelChange}
+              />
+              <p className="settings-field-description">
+                Modèle utilisé pour le micro du chat et de l’éditeur.
+              </p>
             </div>
           </div>
         );

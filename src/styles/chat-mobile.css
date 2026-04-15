@@ -102,6 +102,6 @@
 /* ========== < 450px : RADIUS ÉLARGI SUR CHAT INPUT ========== */
 @media (max-width: 450px) {
   .chatgpt-input-area {
-    border-radius: 30px !important;
+    border-radius: 22px !important; /* capsule un peu moins extrême que 30px */
   }
 }

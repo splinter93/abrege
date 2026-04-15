@@ -172,16 +172,11 @@ function SharedWorkspaceContent() {
   const handleInvite = useCallback(
     async (e: FormEvent) => {
       e.preventDefault();
-      const email = inviteEmail.trim().toLowerCase();
+      const email = inviteEmail.trim();
       if (!email) {
-        setInviteFeedback("Saisissez une adresse e-mail.");
+        setInviteFeedback("Saisissez un e-mail ou un nom d'utilisateur.");
         return;
-      }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        setInviteFeedback("Format d’e-mail invalide.");
-        return;
-      }
-      setInviteFeedback(null);
+      }etInviteFeedback(null);
       try {
         const token = await getAccessToken();
         if (!token) {
@@ -310,7 +305,7 @@ function SharedWorkspaceContent() {
                 <div className="settings-v-card">
                   <div className="flex flex-col gap-4 border-b [border-bottom:var(--border-block)] p-5 sm:flex-row sm:items-end sm:justify-between">
                     <div className="min-w-0 flex-1">
-                      <div className="settings-v-row-label">Inviter par e-mail</div>
+                      <div className="settings-v-row-label">Inviter par e-mail ou nom d&apos;utilisateur</div>
                       <div className="settings-v-row-desc mt-1">
                         La personne recevra une demande. Une fois acceptée, vous pourrez lui partager
                         des classeurs ou des notes selon les droits choisis.
@@ -321,15 +316,17 @@ function SharedWorkspaceContent() {
                       onSubmit={handleInvite}
                     >
                       <input
-                        type="email"
+                        type="text"
                         value={inviteEmail}
                         onChange={(e) => {
                           setInviteEmail(e.target.value);
                           if (inviteFeedback) setInviteFeedback(null);
                         }}
-                        placeholder="collegue@entreprise.com"
+                        placeholder="email@exemple.com ou @username"
                         className="settings-v-input w-full min-w-0 sm:min-w-[240px]"
-                        autoComplete="email"
+                        autoComplete="off"
+                        autoCapitalize="off"
+                        autoCorrect="off"
                       />
                       <button type="submit" className="settings-v-btn shrink-0">
                         <span className="inline-flex items-center gap-2">

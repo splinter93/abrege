@@ -142,6 +142,11 @@ export class V2ResourceResolver {
           if (sharedId) return sharedId;
         }
 
+        if (type === 'note') {
+          const sharedNoteId = await this.resolveSharedNoteUuid(cleanRef, userId);
+          if (sharedNoteId) return sharedNoteId;
+        }
+
         return null;
       } catch (error) {
         logger.error(LogCategory.API, `❌ [V2ResourceResolver] Erreur validation UUID ${cleanRef}`, {
@@ -182,6 +187,11 @@ export class V2ResourceResolver {
       if (type === 'classeur') {
         const sharedSlugId = await this.resolveSharedClasseurSlug(ref, userId);
         if (sharedSlugId) return sharedSlugId;
+      }
+
+      if (type === 'note') {
+        const sharedNoteSlugId = await this.resolveSharedNoteSlug(ref, userId);
+        if (sharedNoteSlugId) return sharedNoteSlugId;
       }
 
       return null;
@@ -238,6 +248,65 @@ export class V2ResourceResolver {
     if (sErr || !shares?.length) return null;
 
     return (shares[0] as { classeur_id: string }).classeur_id;
+  }
+
+  /** Accès collaborateur : note dans un classeur partagé (par UUID). */
+  private static async resolveSharedNoteUuid(
+    noteId: string,
+    viewerId: string,
+  ): Promise<string | null> {
+    const { data: note } = await supabase
+      .from('articles')
+      .select('id, classeur_id')
+      .eq('id', noteId)
+      .is('trashed_at', null)
+      .maybeSingle();
+    if (!note?.classeur_id) return null;
+
+    const { data: share } = await supabase
+      .from('classeur_shares')
+      .select('classeur_id')
+      .eq('classeur_id', note.classeur_id)
+      .eq('shared_with', viewerId)
+      .maybeSingle();
+
+    return share ? (note.id as string) : null;
+  }
+
+  /** Accès collaborateur : note dans un classeur partagé (par slug). */
+  private static async resolveSharedNoteSlug(
+    slug: string,
+    viewerId: string,
+  ): Promise<string | null> {
+    const { data: candidates, error } = await supabase
+      .from('articles')
+      .select('id, classeur_id')
+      .eq('slug', slug)
+      .is('trashed_at', null);
+    if (error || !candidates?.length) return null;
+
+    const classeurIds = [
+      ...new Set(
+        (candidates as { id: string; classeur_id: string | null }[])
+          .map((r) => r.classeur_id)
+          .filter(Boolean) as string[],
+      ),
+    ];
+    if (!classeurIds.length) return null;
+
+    const { data: shares, error: sErr } = await supabase
+      .from('classeur_shares')
+      .select('classeur_id')
+      .in('classeur_id', classeurIds)
+      .eq('shared_with', viewerId)
+      .limit(1);
+    if (sErr || !shares?.length) return null;
+
+    const sharedClasseurId = (shares[0] as { classeur_id: string }).classeur_id;
+    const match = (candidates as { id: string; classeur_id: string | null }[]).find(
+      (r) => r.classeur_id === sharedClasseurId,
+    );
+    return match?.id ?? null;
   }
 
   /**

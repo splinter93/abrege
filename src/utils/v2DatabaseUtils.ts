@@ -67,7 +67,7 @@ export class V2DatabaseUtils {
 
   // NOTES - Mutations
   static async createNote(data: CreateNoteData, userId: string, context: ApiContext) { return noteMutations.createNote(data, userId, context); }
-  static async updateNote(ref: string, data: UpdateNoteData, userId: string, context: ApiContext) { return noteMutations.updateNote(ref, data, userId, context); }
+  static async updateNote(ref: string, data: UpdateNoteData, userId: string, context: ApiContext, dbUserId?: string) { return noteMutations.updateNote(ref, data, userId, context, dbUserId); }
   static async deleteNote(ref: string, userId: string, context: ApiContext) { return noteMutations.deleteNote(ref, userId, context); }
   static async addContentToNote(ref: string, content: string, userId: string, context: ApiContext) { return noteContentMutations.addContentToNote(ref, content, userId, context); }
   static async moveNote(ref: string, targetFolderId: string | null, userId: string, context: ApiContext, targetClasseurId?: string) { return noteMutations.moveNote(ref, targetFolderId, userId, context, targetClasseurId); }

@@ -88,9 +88,17 @@ export async function createNote(data: CreateNoteData, userId: string, context: 
 /**
  * Mettre à jour une note
  */
-export async function updateNote(ref: string, data: UpdateNoteData, userId: string, context: ApiContext) {
+export async function updateNote(
+  ref: string,
+  data: UpdateNoteData,
+  userId: string,
+  context: ApiContext,
+  /** ID du propriétaire réel de la note (différent de userId pour les collaborateurs) */
+  dbUserId?: string,
+) {
   logApi.info(`🚀 Mise à jour note ${ref}`, context);
-  
+  const ownerId = dbUserId ?? userId;
+
   try {
     // Résoudre la référence
     const resolveResult = await V2ResourceResolver.resolveRef(ref, 'note', userId, context);
@@ -100,12 +108,12 @@ export async function updateNote(ref: string, data: UpdateNoteData, userId: stri
 
     const noteId = resolveResult.id;
 
-    // Charger l'état courant
+    // Charger l'état courant (filtre sur ownerId = propriétaire réel)
     const { data: currentNote, error: currentError } = await supabase
       .from('articles')
       .select('id, slug, public_url, wide_mode, a4_mode, slash_lang, font_family, folder_id, description, source_title, header_image, header_image_offset, header_image_blur, header_image_overlay, header_title_in_image, source_type')
       .eq('id', noteId)
-      .eq('user_id', userId)
+      .eq('user_id', ownerId)
       .single();
     
     if (currentError) {
@@ -134,16 +142,16 @@ export async function updateNote(ref: string, data: UpdateNoteData, userId: stri
       },
       data,
       noteId,
-      userId,
+      ownerId,
       supabase
     );
 
-    // Mettre à jour la note
+    // Mettre à jour la note (filtre sur ownerId)
     const { data: note, error: updateError } = await supabase
       .from('articles')
       .update(updateData)
       .eq('id', noteId)
-      .eq('user_id', userId)
+      .eq('user_id', ownerId)
       .select()
       .single();
 
