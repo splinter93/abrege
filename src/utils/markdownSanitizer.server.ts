@@ -81,13 +81,14 @@ export function sanitizeMarkdownContent(content: string): string {
     });
   }
   
-  // 🔒 ÉTAPE 2: Échapper tous les caractères HTML dans le contenu restant
+  // 🔒 ÉTAPE 2: Échapper les balises HTML dans le contenu restant.
+  // On échappe uniquement < et > (risque XSS réel) + & pour éviter les double-encodages.
+  // On N'échappe PAS ' ni " : ces caractères sont sans danger en contexte markdown
+  // et leur échappement produirait des &#039; / &quot; visibles dans le rendu.
   processed = processed
-    .replace(/&/g, '&amp;')   // Échapper & en premier
+    .replace(/&/g, '&amp;')   // Échapper & en premier (évite double-encodage)
     .replace(/</g, '&lt;')    // Échapper <
-    .replace(/>/g, '&gt;')    // Échapper >
-    .replace(/"/g, '&quot;')  // Échapper "
-    .replace(/'/g, '&#039;'); // Échapper '
+    .replace(/>/g, '&gt;');   // Échapper >
   
   // 🔒 ÉTAPE 3: Restaurer les blocs protégés (non échappés)
   processed = processed.replace(new RegExp(`${placeholder}(\\d+)___`, 'g'), (_, index) => {

@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import { logger, LogCategory } from '@/utils/logger';
 import { hashString, getEditorMarkdown } from '@/utils/editorHelpers';
+import { unescapeHtmlEntities } from '@/utils/markdownSanitizer.client';
 
 interface Heading {
   id: string;
@@ -26,22 +27,25 @@ export function useEditorHeadings({
   forceTOCUpdate
 }: UseEditorHeadingsOptions): Heading[] {
   
-  // Créer un hash du contenu pour éviter les re-calculs fréquents
+  // Créer un hash du contenu pour éviter les re-calculs fréquents.
+  // En mode readonly, le doc TipTap est vide → on hash directement `content` (markdown du store).
   const contentHash = useMemo(() => {
-    if (!editor) return 0;
-    const markdown = getEditorMarkdown(editor) || content || '';
+    const markdown = (editor ? getEditorMarkdown(editor) : null) || content || '';
     return hashString(markdown);
   }, [editor, content, forceTOCUpdate]);
 
   // Build headings for TOC - DIRECTEMENT depuis l'éditeur Tiptap (optimisé)
   const headings = useMemo(() => {
-    // PRIORITÉ 1 : Éditeur Tiptap (si disponible)
+    // PRIORITÉ 1 : Éditeur Tiptap (si disponible ET contient du contenu)
+    // ⚠️ En mode readonly (page publique), le contenu n'est pas injecté dans TipTap ;
+    //    on ne retourne le résultat TipTap que s'il contient au moins un heading,
+    //    sinon on tombe sur le fallback markdown.
     if (editor) {
       try {
         const doc = editor.state.doc;
         const items: Heading[] = [];
         
-        doc.descendants((node, pos) => {
+        doc.descendants((node) => {
           if (node.type.name === 'heading') {
             const level = node.attrs.level;
             const text = node.textContent;
@@ -53,15 +57,22 @@ export function useEditorHeadings({
           }
         });
         
-        return items;
+        // Si TipTap a des headings, les utiliser (mode édition normal)
+        if (items.length > 0) {
+          return items;
+        }
+        // Sinon tomber sur le fallback markdown (mode readonly : doc vide car contenu non injecté)
       } catch (error) {
         logger.error(LogCategory.EDITOR, 'Erreur lors de l\'extraction des headings:', error);
       }
     }
     
-    // PRIORITÉ 2 : Fallback markdown brut
+    // PRIORITÉ 2 : Fallback markdown brut (readonly ou TipTap vide)
+    // On déséchappe les entités HTML (&#039; → ') pour les notes dont le contenu
+    // a été échappé par le sanitizer serveur avant de l'afficher dans la TOC.
     if (content && content.trim()) {
-      const markdownLines = content.split('\n');
+      const unescaped = unescapeHtmlEntities(content);
+      const markdownLines = unescaped.split('\n');
       const fallbackItems: Heading[] = [];
       
       markdownLines.forEach((line) => {
