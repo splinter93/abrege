@@ -584,7 +584,7 @@ function AuthenticatedSettingsContent({
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-settings min-h-full flex flex-col bg-[var(--color-bg-primary)] w-full">
         <div className="settings-page-shell flex min-h-0 flex-1 flex-col">
-          <header className="settings-page-header shrink-0 pt-10 sm:pt-12 pb-6 sm:pb-8">
+          <header className="settings-page-header shrink-0 pb-10 pt-10 sm:pb-12 sm:pt-12">
             <div className="min-w-0 flex flex-col font-sans">
               <h1 className="bg-gradient-to-b from-white to-white/55 bg-clip-text text-3xl font-bold leading-tight tracking-tight text-transparent sm:text-4xl">
                 Paramètres

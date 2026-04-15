@@ -282,7 +282,7 @@ function SharedWorkspaceContent() {
   return (
     <div className="page-content-inner page-content-inner-shared flex min-h-full w-full flex-col bg-[var(--color-bg-primary)]">
       <div className="settings-page-shell flex min-h-0 flex-1 flex-col">
-        <header className="settings-page-header shrink-0 pb-6 pt-10 sm:pb-8 sm:pt-12">
+        <header className="settings-page-header shrink-0 pb-10 pt-10 sm:pb-12 sm:pt-12">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0 font-sans">
               <h1 className="bg-gradient-to-b from-white to-white/55 bg-clip-text pb-0.5 text-3xl font-bold leading-snug tracking-tight text-transparent sm:pb-1 sm:text-4xl">
