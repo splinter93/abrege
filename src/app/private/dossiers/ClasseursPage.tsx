@@ -764,7 +764,7 @@ function ClasseursContent({
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden pt-2 pb-6">
       {/* Breadcrumb à gauche + search + toggle à droite */}
       <div className="flex items-end justify-between gap-4 min-w-0">
-        <nav className="flex min-w-0 flex-wrap items-end gap-1" aria-label="Fil d'Ariane">
+        <nav className="flex min-w-0 flex-wrap items-end gap-0" aria-label="Fil d'Ariane">
           {contentBreadcrumb.length === 0 ? (
             <span className="text-zinc-400">Notebooks</span>
           ) : (
@@ -775,8 +775,8 @@ function ClasseursContent({
               const crumbTypo =
                 "text-xl font-medium normal-case tracking-normal mb-0 font-sans";
               const rootCrumb = `${crumbTypo} text-[var(--color-text-primary,#ededed)]`;
-              const trailCrumbBtn = `${crumbTypo} text-zinc-400`;
-              const trailCrumbSpan = `${crumbTypo} text-zinc-500`;
+              const trailCrumbBtn = `${crumbTypo} text-zinc-400 hover:text-zinc-200`;
+              const trailCrumbSpan = `${crumbTypo} text-zinc-400`;
               const dropTypo = isDropTarget ? "bg-orange-500/20 text-orange-400" : "";
               const dropHandlers = seg.dropFolderId !== undefined ? {
                 onDragOver: (e: React.DragEvent) => { e.preventDefault(); setBreadcrumbDragOver(i); },
@@ -787,10 +787,10 @@ function ClasseursContent({
                 },
               } : {};
               return (
-                <span key={i} className="flex items-end gap-1">
+                <span key={i} className="flex items-center gap-0">
                   {i > 0 && (
                     <span
-                      className="mx-2 shrink-0 select-none pb-px font-sans text-xl font-light leading-none text-zinc-500"
+                      className="shrink-0 select-none px-1 font-sans text-xl font-extralight leading-none text-zinc-700"
                       aria-hidden
                     >
                       /
