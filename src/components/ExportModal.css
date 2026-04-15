@@ -1,0 +1,271 @@
+/* =============================================================================
+   EXPORT NOTE MODAL — entièrement autonome (pas de dépendance à page-settings.css)
+   ============================================================================= */
+
+/* Overlay : couvre tout l'écran, au-dessus du shell éditeur */
+.export-note-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 4vw, 1.75rem);
+  z-index: 10050;
+}
+
+/* Boîte de dialogue */
+.export-note-modal {
+  max-width: min(26rem, calc(100vw - 2rem));
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--color-bg-block);
+  border: var(--border-block, 1px solid rgba(255,255,255,0.08));
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+}
+
+/* Header */
+.export-note-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.125rem 1.5rem;
+  border-bottom: var(--border-block, 1px solid rgba(255,255,255,0.08));
+}
+
+.export-note-modal__header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.export-note-modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 6px;
+  color: #a1a1aa;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.export-note-modal__close:hover {
+  color: #fafafa;
+  background: rgba(39, 39, 42, 0.6);
+}
+
+/* Body */
+.export-note-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem 1.375rem;
+}
+
+.export-note-modal__intro {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary, #a1a1aa);
+}
+
+.export-note-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.export-note-modal__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #6a6a6a);
+}
+
+/* Champ nom + suffixe extension */
+.export-note-modal__filename-row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  border: var(--border-block, 1px solid rgba(255, 255, 255, 0.08));
+  background: var(--color-bg-content, #1e2022);
+  transition: border-color 0.15s ease;
+}
+
+.export-note-modal__filename-row:focus-within {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.export-note-modal__input {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  border: none;
+  background: transparent;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-primary, #ededed);
+  font-family: inherit;
+}
+
+.export-note-modal__input:focus {
+  outline: none;
+}
+
+.export-note-modal__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.export-note-modal__ext {
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary, #a1a1aa);
+  background: rgba(0, 0, 0, 0.2);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Formats : pastilles */
+.export-note-modal__format-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.export-note-modal__format-pill {
+  flex: 1 1 calc(50% - 0.25rem);
+  min-height: 2.375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-border-block, rgba(255, 255, 255, 0.1));
+  background: var(--color-bg-primary, #0e1012);
+  color: var(--color-text-secondary, #a1a1aa);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+@media (min-width: 400px) {
+  .export-note-modal__format-pill {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+.export-note-modal__format-pill:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.16);
+  color: var(--color-text-primary, #ededed);
+}
+
+.export-note-modal__format-pill[data-selected='true'] {
+  border-color: var(--color-border-focus, #e55a2c);
+  background: rgba(229, 90, 44, 0.1);
+  color: #e8a090;
+}
+
+.export-note-modal__format-pill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Footer */
+.export-note-modal__footer {
+  padding: 1rem 1.5rem 1.25rem;
+  border-top: var(--border-block, 1px solid rgba(255,255,255,0.08));
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* CTA principal blanc */
+.export-note-modal__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.375rem;
+  padding: 0.5rem 1.375rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+  background: #fff;
+  color: #121212;
+  border: 1px solid transparent;
+}
+
+.export-note-modal__submit:hover:not(:disabled) {
+  background: #e4e4e7;
+}
+
+.export-note-modal__submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Bouton secondaire */
+.export-note-modal__btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.375rem;
+  padding: 0.5rem 1.375rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+  background: transparent;
+  color: var(--color-text-primary, #ededed);
+  border: var(--border-block, 1px solid rgba(255, 255, 255, 0.12));
+}
+
+.export-note-modal__btn-secondary:hover:not(:disabled) {
+  background: var(--color-bg-hover, rgba(255, 255, 255, 0.06));
+}
+
+.export-note-modal__btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .export-note-modal__footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .export-note-modal__btn-secondary,
+  .export-note-modal__submit {
+    width: 100%;
+    justify-content: center;
+  }
+}

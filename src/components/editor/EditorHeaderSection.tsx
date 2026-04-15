@@ -120,28 +120,29 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
           noteId={noteId}
           layoutMode={layoutMode}
           kebabMenu={
-            editorState.menus.kebabOpen && (
-              <EditorKebabMenu
-                open={editorState.menus.kebabOpen}
-                position={editorState.menus.kebabPos}
-                onClose={() => editorState.setKebabOpen(false)}
-                a4Mode={editorState.ui.a4Mode}
-                setA4Mode={handlers.handleA4ModeChange}
-                slashLang={editorState.ui.slashLang}
-                setSlashLang={handlers.handleSlashLangChange}
-                fullWidth={editorState.ui.fullWidth}
-                setFullWidth={handlers.handleFullWidthChange}
-                showToolbar={editorState.ui.showToolbar}
-                toggleToolbar={editorState.toggleToolbar}
-                noteId={noteId}
-                currentTitle={currentTitle}
-                currentHtmlContent={editor?.getHTML()}
-                currentFontFamily={currentFont}
-                currentShareSettings={editorState.shareSettings}
-                onShareSettingsChange={handleShareSettingsChange}
-                publicUrl={publicUrl}
-              />
-            )
+            /* Toujours monter EditorKebabMenu : la modale Export doit rester au DOM quand kebabOpen passe à false */
+            <EditorKebabMenu
+              open={editorState.menus.kebabOpen}
+              position={editorState.menus.kebabPos}
+              onClose={() => editorState.setKebabOpen(false)}
+              exportModalOpen={editorState.menus.exportModalOpen}
+              setExportModalOpen={editorState.setExportModalOpen}
+              a4Mode={editorState.ui.a4Mode}
+              setA4Mode={handlers.handleA4ModeChange}
+              slashLang={editorState.ui.slashLang}
+              setSlashLang={handlers.handleSlashLangChange}
+              fullWidth={editorState.ui.fullWidth}
+              setFullWidth={handlers.handleFullWidthChange}
+              showToolbar={editorState.ui.showToolbar}
+              toggleToolbar={editorState.toggleToolbar}
+              noteId={noteId}
+              currentTitle={currentTitle}
+              currentHtmlContent={editor?.getHTML()}
+              currentFontFamily={currentFont}
+              currentShareSettings={editorState.shareSettings}
+              onShareSettingsChange={handleShareSettingsChange}
+              publicUrl={publicUrl}
+            />
           }
         />
       )}

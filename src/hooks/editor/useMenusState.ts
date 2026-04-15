@@ -14,6 +14,7 @@ export interface MenusState {
   imageMenuTarget: 'header' | 'content';
   kebabOpen: boolean;
   kebabPos: { top: number; left: number };
+  exportModalOpen: boolean;
 }
 
 export interface ContextMenuState {
@@ -31,6 +32,7 @@ export interface UseMenusStateReturn {
   setImageMenuTarget: (target: 'header' | 'content') => void;
   setKebabOpen: (open: boolean) => void;
   setKebabPos: (pos: { top: number; left: number }) => void;
+  setExportModalOpen: (open: boolean) => void;
   toggleKebabMenu: () => void;
   openContextMenu: (position: { x: number; y: number }, nodeType: string, hasSelection: boolean, nodePosition: number) => void;
   closeContextMenu: () => void;
@@ -45,6 +47,7 @@ export function useMenusState(): UseMenusStateReturn {
   const [imageMenuTarget, setImageMenuTarget] = useState<'header' | 'content'>('header');
   const [kebabOpen, setKebabOpen] = useState(false);
   const [kebabPos, setKebabPos] = useState({ top: 0, left: 0 });
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   
   // État du menu contextuel
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
@@ -86,12 +89,14 @@ export function useMenusState(): UseMenusStateReturn {
       imageMenuTarget,
       kebabOpen,
       kebabPos,
+      exportModalOpen,
     },
     contextMenu,
     setImageMenuOpen,
     setImageMenuTarget,
     setKebabOpen,
     setKebabPos,
+    setExportModalOpen,
     toggleKebabMenu,
     openContextMenu,
     closeContextMenu,

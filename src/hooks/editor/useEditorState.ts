@@ -48,6 +48,7 @@ export interface EditorState {
   setImageMenuTarget: (target: 'header' | 'content') => void;
   setKebabOpen: (open: boolean) => void;
   setKebabPos: (pos: { top: number; left: number }) => void;
+  setExportModalOpen: (open: boolean) => void;
   toggleKebabMenu: () => void;
   
   // Actions - UI
@@ -170,6 +171,7 @@ export function useEditorState(options: UseEditorStateOptions = {}): EditorState
     setImageMenuTarget: menusState.setImageMenuTarget,
     setKebabOpen: menusState.setKebabOpen,
     setKebabPos: menusState.setKebabPos,
+    setExportModalOpen: menusState.setExportModalOpen,
     toggleKebabMenu: menusState.toggleKebabMenu,
     
     // Actions - UI

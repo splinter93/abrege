@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiGlobe, FiCheck, FiEye, FiEyeOff, FiCircle, FiFolder } from 'react-icons/fi';
+import { FiShare2, FiDownload, FiCopy, FiMaximize2, FiMinimize2, FiCheck, FiCircle, FiFolder } from 'react-icons/fi';
 import './editor-kebab-menu.css';
+import ExportModal, { type ExportFormat } from './ExportModal';
+import { noteExportFilename } from '@/utils/noteExportFilename';
 import ShareMenu from './ShareMenu';
 import MoveToSelector from './editor/MoveToSelector';
 import type { ShareSettings, ShareSettingsUpdate } from '@/types/sharing';
@@ -12,7 +14,6 @@ import { exportNoteToPdf } from '@/services/pdfExportService';
 import { exportNoteToMarkdown } from '@/services/markdownExportService';
 import { exportNoteToHtml } from '@/services/htmlExportService';
 import { exportNoteToPlainText } from '@/services/plainTextExportService';
-import { noteExportFilename } from '@/utils/noteExportFilename';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import toast from 'react-hot-toast';
 
@@ -20,6 +21,8 @@ interface EditorKebabMenuProps {
   open: boolean;
   position: { top: number; left: number };
   onClose: () => void;
+  exportModalOpen: boolean;
+  setExportModalOpen: (open: boolean) => void;
   a4Mode: boolean;
   setA4Mode: (v: boolean) => void;
   slashLang: 'fr' | 'en';
@@ -41,6 +44,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   open,
   position,
   onClose,
+  exportModalOpen,
+  setExportModalOpen,
   a4Mode,
   setA4Mode,
   slashLang,
@@ -76,11 +81,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       
       // Si le ShareMenu est ouvert, ne pas fermer le menu kebab
       if (shareMenuOpen) {
-        // Vérifier si le clic est dans le ShareMenu
-        if (target.closest('.share-menu')) {
-          return; // Clic dans le ShareMenu, ne rien faire
-        }
-        // Clic à l'extérieur du ShareMenu, fermer les deux
+        if (target.closest('.share-menu')) return;
         onClose();
         setShareMenuOpen(false);
         return;
@@ -88,16 +89,12 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       
       // Si le MoveToSelector est ouvert, ne pas fermer le menu kebab
       if (moveToMenuOpen) {
-        // Vérifier si le clic est dans le MoveToSelector
-        if (target.closest('.move-to-selector')) {
-          return; // Clic dans le MoveToSelector, ne rien faire
-        }
-        // Clic à l'extérieur du MoveToSelector, fermer les deux
+        if (target.closest('.move-to-selector')) return;
         onClose();
         setMoveToMenuOpen(false);
         return;
       }
-      
+
       // Menus fermés, logique normale
       if (menuRef.current && !menuRef.current.contains(target)) {
         onClose();
@@ -106,8 +103,8 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
-        setShareMenuOpen(false); // Fermer aussi le ShareMenu
-        setMoveToMenuOpen(false); // Fermer aussi le MoveToSelector
+        setShareMenuOpen(false);
+        setMoveToMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClick);
@@ -118,8 +115,6 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     };
   }, [open, onClose, shareMenuOpen, moveToMenuOpen]);
 
-  if (!open) return null;
-  
   // Vérification de sécurité pour currentShareSettings
   if (!currentShareSettings) {
     if (process.env.NODE_ENV === 'development') {
@@ -331,6 +326,39 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     }
   };
 
+  // Handler unifié appelé par la modale export
+  const handleExport = async (format: ExportFormat, baseFilename: string) => {
+    const title = currentTitle || note?.source_title || 'Note';
+    // baseFilename vient de la modale (déjà sans extension)
+    const safe = baseFilename.trim() || title;
+    const filename = (s: string, ext: string) =>
+      `${s.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').toLowerCase() || 'note'}.${ext}`;
+
+    if (format === 'pdf') {
+      await handleExportPdf();
+      return;
+    }
+    if (format === 'md') {
+      handleExportMarkdown();
+      return;
+    }
+    if (format === 'html') {
+      handleExportHtml();
+      return;
+    }
+    if (format === 'txt') {
+      handleExportPlainText();
+      return;
+    }
+    void filename; // satisfait le linter (utilisé indirectement via les handlers)
+  };
+
+  // Nom de fichier par défaut pour la modale (sans extension)
+  const defaultExportFilename = (() => {
+    const raw = currentTitle || note?.source_title || 'Note';
+    return raw.trim().replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').toLowerCase() || 'note';
+  })();
+
   // Icône feuille SVG pour A4 Mode
   const A4Icon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -345,12 +373,13 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   const translations = {
     fr: {
       share: 'Partager',
-      export: 'Exporter en PDF',
-      exporting: 'Export en cours...',
-      exportMd: 'Exporter en Markdown',
-      exportingMd: 'Export en cours...',
-      exportHtml: 'Exporter en HTML',
-      exportTxt: 'Exporter en texte brut',
+      export: 'Exporter',
+      exportPdf: 'En PDF',
+      exportingPdf: 'Export PDF...',
+      exportMd: 'En Markdown',
+      exportingMd: 'Export MD...',
+      exportHtml: 'En HTML',
+      exportTxt: 'En texte brut',
       moveTo: 'Déplacer vers...',
       wideMode: 'Mode Large',
       a4Mode: 'Mode A4',
@@ -361,12 +390,13 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     },
     en: {
       share: 'Share',
-      export: 'Export to PDF',
-      exporting: 'Exporting...',
-      exportMd: 'Export to Markdown',
-      exportingMd: 'Exporting...',
-      exportHtml: 'Export to HTML',
-      exportTxt: 'Export to plain text',
+      export: 'Export',
+      exportPdf: 'to PDF',
+      exportingPdf: 'Exporting PDF...',
+      exportMd: 'to Markdown',
+      exportingMd: 'Exporting MD...',
+      exportHtml: 'to HTML',
+      exportTxt: 'to plain text',
       moveTo: 'Move to...',
       wideMode: 'Wide Mode',
       a4Mode: 'A4 Mode',
@@ -387,83 +417,47 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     color: string;
     showCopyButton: boolean;
     disabled?: boolean;
-    type?: 'coming-soon';
   }> = [
     {
       id: 'share',
       label: t.share,
-      icon: <FiShare2 size={18} />,
-      onClick: () => { 
-        setShareMenuOpen(true);
-        // Ne pas fermer le menu kebab, le ShareMenu se superposera
-      },
+      icon: <FiShare2 size={16} />,
+      onClick: () => { setShareMenuOpen(true); },
       color: currentShareSettings?.visibility === 'private' ? '#D4D4D4' : '#ff6b35',
       showCopyButton: !!(currentShareSettings?.visibility !== 'private' && publicUrl),
     },
     {
       id: 'export',
-      label: isExporting ? t.exporting : t.export,
-      icon: <FiDownload size={18} />,
-      onClick: handleExportPdf,
-      color: isExporting ? '#10b981' : '#D4D4D4',
-      showCopyButton: false,
-      disabled: isExporting,
-    },
-    {
-      id: 'exportMd',
-      label: isExportingMd ? t.exportingMd : t.exportMd,
-      icon: <FiDownload size={18} />,
-      onClick: handleExportMarkdown,
-      color: isExportingMd ? '#10b981' : '#D4D4D4',
-      showCopyButton: false,
-      disabled: isExportingMd,
-    },
-    {
-      id: 'exportHtml',
-      label: t.exportHtml,
-      icon: <FiDownload size={18} />,
-      onClick: handleExportHtml,
-      color: '#D4D4D4',
-      showCopyButton: false,
-    },
-    {
-      id: 'exportTxt',
-      label: t.exportTxt,
-      icon: <FiDownload size={18} />,
-      onClick: handleExportPlainText,
+      label: t.export,
+      icon: <FiDownload size={16} />,
+      onClick: () => {
+        setExportModalOpen(true);
+        onClose();
+      },
       color: '#D4D4D4',
       showCopyButton: false,
     },
     {
       id: 'moveTo',
       label: t.moveTo,
-      icon: <FiFolder size={18} />,
-      onClick: () => {
-        setMoveToMenuOpen(true);
-        // Ne pas fermer le menu kebab, le MoveToSelector se superposera
-      },
+      icon: <FiFolder size={16} />,
+      onClick: () => { setMoveToMenuOpen(true); },
       color: '#D4D4D4',
       showCopyButton: false,
     },
     {
       id: 'toolbar',
       label: t.toolbar,
-      icon: showToolbar ? <FiCircle size={18} /> : <FiCircle size={18} />,
-      onClick: () => { 
-        toggleToolbar();
-        onClose(); 
-      },
-      color: showToolbar ? '#D4D4D4' : '#10b981', // Inversé : vert quand Zen Mode (toolbar cachée)
+      icon: <FiCircle size={16} />,
+      onClick: () => { toggleToolbar(); onClose(); },
+      color: showToolbar ? '#D4D4D4' : '#10b981',
       showCopyButton: false,
     },
     {
       id: 'fullWidth',
       label: t.wideMode,
-      icon: fullWidth ? <FiMinimize2 size={18} /> : <FiMaximize2 size={18} />,
-      onClick: () => { 
-        setFullWidth(!fullWidth); 
-        onClose(); 
-      },
+      icon: fullWidth ? <FiMinimize2 size={16} /> : <FiMaximize2 size={16} />,
+      onClick: () => { setFullWidth(!fullWidth); onClose(); },
       color: fullWidth ? '#10b981' : '#D4D4D4',
       showCopyButton: false,
     },
@@ -477,24 +471,21 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     }
   ] as const;
 
+  // La modale Export doit persister même quand le menu kebab est fermé (open=false),
+  // sinon le composant se démonte avant que la modale n'ait le temps de s'afficher.
+  if (!open && !exportModalOpen) return null;
+
   return (
     <>
-      {/* Overlay pour fermer le menu */}
-      <div 
-        className="editor-kebab-overlay"
-        onClick={onClose}
-        aria-label="Fermer le menu"
-      />
+      {open && <div className="editor-kebab-overlay" onClick={onClose} />}
       
-      {/* Menu principal */}
-      <div
+      {open && <div
         className="editor-header-kebab-menu"
         ref={menuRef}
         style={{ 
-          position: 'absolute',  /* ✅ Absolute pour suivre le header sticky */
-          top: '100%',           /* ✅ Juste sous le header */
-          right: '55px',        /* ✅ Décalé 100px vers la gauche (6px + 100px) */
-          marginTop: '0px',      /* ✅ Petit espace sous le header */
+          position: 'absolute',
+          top: '100%',
+          right: '55px',
           zIndex: (shareMenuOpen || moveToMenuOpen) ? 999 : 1000
         }}
       >
@@ -505,36 +496,23 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
             onClick={opt.disabled ? undefined : opt.onClick}
             role="button"
             tabIndex={opt.disabled ? -1 : 0}
-            onKeyDown={(e) => {
-              if (opt.disabled) return;
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                opt.onClick();
-              }
-            }}
-            aria-label={opt.label}
-            aria-disabled={opt.disabled}
             style={{ 
               cursor: opt.disabled ? 'not-allowed' : 'pointer',
-              opacity: opt.disabled ? 0.6 : 1
+              opacity: opt.disabled ? 0.6 : 1,
+              color: opt.color
             }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               {opt.icon}
               {opt.label}
             </span>
-            {/* Toggle pour Zen Mode et Wide Mode */}
             {(opt.id === 'toolbar' || opt.id === 'fullWidth') && (
               <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center' }}>
                 <label className="kebab-toggle" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={opt.id === 'toolbar' ? !showToolbar : fullWidth}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      opt.onClick();
-                    }}
-                    aria-label={opt.label}
+                    onChange={(e) => { e.stopPropagation(); opt.onClick(); }}
                   />
                   <span className="kebab-toggle-slider"></span>
                 </label>
@@ -546,7 +524,6 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
                   className="editor-header-kebab-menu-item"
                   style={{ padding: '0.4rem 0.6rem' }}
                   onClick={(e) => { e.stopPropagation(); handleCopyUrl(); }}
-                  aria-label="Copier l'URL"
                 >
                   {copyConfirmed ? <FiCheck size={16} /> : <FiCopy size={16} />}
                 </button>
@@ -554,20 +531,30 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
             )}
           </div>
         ))}
-      </div>
+      </div>}
+
+      {/* Modale Export — rendu même quand open=false pour survivre au démontage du menu */}
+      <ExportModal
+        open={exportModalOpen}
+        defaultFilename={defaultExportFilename}
+        onExport={handleExport}
+        onClose={() => setExportModalOpen(false)}
+        isExporting={isExporting || isExportingMd}
+        lang={slashLang}
+      />
       
-      {/* ShareMenu intégré */}
-      <ShareMenu
+      {/* ShareMenu — conditionné à open pour éviter des instances flottantes */}
+      {open && <ShareMenu
         noteId={noteId}
         currentSettings={currentShareSettings}
         publicUrl={publicUrl}
         onSettingsChange={onShareSettingsChange}
         isOpen={shareMenuOpen}
         onClose={() => setShareMenuOpen(false)}
-      />
+      />}
       
       {/* MoveToSelector intégré */}
-      {moveToMenuOpen && (
+      {open && moveToMenuOpen && (
         <MoveToSelector
           noteId={noteId}
           currentClasseurId={currentClasseurId}
