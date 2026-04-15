@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Feather } from 'lucide-react';
+import FeatherSplashMark from '@/components/FeatherSplashMark';
 
 const SPLASH_DONE_KEY = 'scrivia_splash_done';
 const FADE_DURATION = 350; // ms
@@ -90,20 +90,7 @@ export default function PWASplash() {
         pointerEvents: opacity === 1 ? 'auto' : 'none',
       }}
     >
-      <svg width={0} height={0} aria-hidden className="absolute">
-        <defs>
-          <linearGradient id="pwa-splash-feather-gradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="white" />
-            <stop offset="1" stopColor="rgba(255,255,255,0.5)" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <Feather
-        className="h-[96px] w-[96px] shrink-0"
-        stroke="url(#pwa-splash-feather-gradient)"
-        strokeWidth={1.75}
-        aria-hidden
-      />
+      <FeatherSplashMark fullBleed={false} />
     </div>
   );
 }

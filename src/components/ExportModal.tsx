@@ -25,8 +25,6 @@ const FORMAT_DEFS: Array<{ id: ExportFormat; ext: string }> = [
 const T = {
   fr: {
     title: 'Exporter la note',
-    intro:
-      'Choisissez le format et le nom du fichier. Le téléchargement démarre dès validation.',
     fileLabel: 'Nom du fichier',
     formatLabel: 'Format',
     cancel: 'Annuler',
@@ -39,7 +37,6 @@ const T = {
   },
   en: {
     title: 'Export note',
-    intro: 'Pick a format and file name. Download starts when you confirm.',
     fileLabel: 'File name',
     formatLabel: 'Format',
     cancel: 'Cancel',
@@ -48,7 +45,7 @@ const T = {
     fmtPdf: 'PDF',
     fmtMd: 'Markdown',
     fmtHtml: 'HTML',
-    fmtTxt: 'Plain text',
+    fmtTxt: 'Plain Text',
   },
 } as const;
 
@@ -130,8 +127,6 @@ const ExportModal: React.FC<ExportModalProps> = ({
 
         <form onSubmit={handleSubmit}>
           <div className="export-note-modal__body">
-            <p className="export-note-modal__intro">{t.intro}</p>
-
             <div className="export-note-modal__field">
               <label htmlFor="export-filename" className="export-note-modal__label">
                 {t.fileLabel}

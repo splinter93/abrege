@@ -4,7 +4,7 @@ import React from 'react';
 import { supabase } from '@/supabaseClient';
 import Editor from '@/components/editor/Editor';
 import ErrorPage from '@/components/ErrorPage';
-import CenteredLoadingState from '@/components/CenteredLoadingState';
+import FeatherSplashMark from '@/components/FeatherSplashMark';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { useSecurityValidation } from '@/hooks/useSecurityValidation';
 import { logger, LogCategory } from '@/utils/logger';
@@ -134,9 +134,9 @@ export default function PublicNoteAuthWrapper({ note, slug, ownerId, username }:
     loadPublicNote();
   }, [note.id, slug, username, addNote]);
 
-  // Pendant le chargement (inclut vérification auth)
+  // Pendant le chargement : même visuel que le splash (plume seule, sans seconde étape « Chargement »)
   if (loading) {
-    return <CenteredLoadingState message="Chargement" />;
+    return <FeatherSplashMark />;
   }
   
   if (error && !storeNote) {
