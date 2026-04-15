@@ -50,12 +50,6 @@
   flex-direction: column;
   gap: 2px;
   width: 100%;
-  opacity: 1;
-  transition: opacity 0.12s ease;
-}
-
-.toc-container.collapsed .toc-content {
-  opacity: 0;
 }
 
 .toc-empty-state {
