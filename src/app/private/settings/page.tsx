@@ -60,6 +60,17 @@ function trimProfileField(v: string | null | undefined): string {
   return (v ?? "").trim();
 }
 
+/** URL affichable dans <img> (OAuth, CDN, data URI). */
+function isDisplayableAvatarUrl(url: string): boolean {
+  const t = url.trim().toLowerCase();
+  return (
+    t.startsWith("https://") ||
+    t.startsWith("http://") ||
+    t.startsWith("//") ||
+    t.startsWith("data:image/")
+  );
+}
+
 function buildSessionProfileDefaults(user: User): SessionProfileDefaults {
   const m = (user.user_metadata || {}) as Record<string, unknown>;
   const full =
@@ -215,13 +226,16 @@ function AuthenticatedSettingsContent({
       setFirstName(d.name ?? "");
       setLastName(d.surname ?? "");
       setDisplayName(d.display_name ?? "");
-      setProfilePictureUrl(d.profile_picture ?? "");
+      const apiPic = trimProfileField(d.profile_picture);
+      const sessionPic = trimProfileField(sessionDefaults.profilePictureUrl);
+      const mergedPic = apiPic || sessionPic;
+      setProfilePictureUrl(mergedPic);
       setSynesiaKeyConfigured(Boolean(d.synesia_api_key_configured));
       setProfileBaseline({
         firstName: trimProfileField(d.name),
         lastName: trimProfileField(d.surname),
         displayName: trimProfileField(d.display_name),
-        profilePictureUrl: trimProfileField(d.profile_picture),
+        profilePictureUrl: mergedPic,
       });
       if (d.language) {
         setLanguage(d.language);
@@ -232,7 +246,7 @@ function AuthenticatedSettingsContent({
     } finally {
       setProfileRefreshing(false);
     }
-  }, [getAuthToken, handleError]);
+  }, [getAuthToken, handleError, sessionDefaults.profilePictureUrl]);
 
   const loadApiKeys = useCallback(async () => {
     try {
@@ -554,7 +568,7 @@ function AuthenticatedSettingsContent({
                   </div>
                   <div className="settings-v-row-action">
                     <div className="settings-v-avatar">
-                      {profilePictureUrl.trim().startsWith("http") ? (
+                      {isDisplayableAvatarUrl(profilePictureUrl) ? (
                         <SettingsAvatarPreview src={profilePictureUrl.trim()} />
                       ) : (
                         <UserIcon className="h-4 w-4 text-zinc-500" aria-hidden />

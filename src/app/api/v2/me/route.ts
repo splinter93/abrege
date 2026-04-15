@@ -158,6 +158,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       userProfile.settings,
     );
 
+    let resolvedProfilePicture =
+      typeof userProfile.profile_picture === 'string'
+        ? userProfile.profile_picture.trim()
+        : '';
+    if (!resolvedProfilePicture && service) {
+      const { data: authRow, error: authMetaErr } = await service.auth.admin.getUserById(userId);
+      if (!authMetaErr && authRow?.user) {
+        const meta = (authRow.user.user_metadata || {}) as Record<string, unknown>;
+        const fromMeta =
+          typeof meta.avatar_url === 'string' ? meta.avatar_url.trim() : '';
+        if (fromMeta) resolvedProfilePicture = fromMeta;
+      }
+    }
+
     const apiTime = Date.now() - startTime;
     logApi.info(`✅ Profil utilisateur récupéré en ${apiTime}ms`, context);
 
@@ -170,7 +184,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         name: userProfile.name,
         surname: userProfile.surname,
         display_name: userProfile.display_name,
-        profile_picture: userProfile.profile_picture,
+        profile_picture: resolvedProfilePicture || null,
         bio: userProfile.bio,
         timezone: userProfile.timezone,
         language: userProfile.language,
