@@ -551,7 +551,7 @@ function AuthenticatedSettingsContent({
           </header>
 
           <main className="settings-page-main no-scrollbar min-h-0 flex-1 overflow-y-auto pb-8 sm:pb-10">
-            <div className="flex w-full flex-col gap-6 lg:gap-7">
+            <div className="flex w-full flex-col gap-8">
 
             {/* Profil */}
             <motion.section

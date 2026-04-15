@@ -72,8 +72,10 @@
    VERCEL-LIKE SETTINGS LAYOUT
    ========================================================================== */
 
+/* Espacement vertical entre sections : le parent (flex + gap en multiple de 8) suffit ;
+   évite le double espacement gap + margin qui gonflait l’écran (ex. Partage & équipe, Réglages). */
 .settings-v-section {
-  margin-bottom: 3rem;
+  margin-bottom: 0;
 }
 .settings-v-title {
   font-size: 1.25rem;

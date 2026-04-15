@@ -304,7 +304,7 @@ function SharedWorkspaceContent() {
               <SimpleLoadingState message="Chargement…" />
             </div>
           ) : (
-            <div className="flex w-full flex-col gap-6 lg:gap-7">
+            <div className="flex w-full flex-col gap-8">
               {/* Coéquipiers */}
               <motion.section
                 className="settings-v-section"
