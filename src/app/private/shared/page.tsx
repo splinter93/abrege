@@ -726,7 +726,7 @@ function SharedWorkspaceContent() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="shared-invite-modal-title"
-              className="modal-content"
+              className="modal-content shared-invite-modal"
               initial={{ scale: 0.96, opacity: 0, y: 8 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 8 }}
@@ -748,16 +748,13 @@ function SharedWorkspaceContent() {
                 </button>
               </div>
               <form onSubmit={handleInviteSubmit}>
-                <div className="modal-body space-y-4">
-                  <p className="m-0 text-sm leading-relaxed text-zinc-400">
+                <div className="modal-body shared-invite-modal__body">
+                  <p className="shared-invite-modal__intro">
                     Saisissez l&apos;adresse e-mail ou le nom d&apos;utilisateur de la personne que
                     vous souhaitez inviter. Une demande lui sera envoyée immédiatement.
                   </p>
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="shared-invite-email"
-                      className="settings-v-row-label block"
-                    >
+                  <div className="shared-invite-modal__field">
+                    <label htmlFor="shared-invite-email" className="shared-invite-modal__label">
                       E-mail ou nom d&apos;utilisateur
                     </label>
                     <input
@@ -770,7 +767,7 @@ function SharedWorkspaceContent() {
                         if (inviteFeedback) setInviteFeedback(null);
                       }}
                       placeholder="email@exemple.com ou @username"
-                      className="settings-v-input w-full"
+                      className="settings-v-input shared-invite-modal__input"
                       autoComplete="off"
                       autoCapitalize="off"
                       autoCorrect="off"
@@ -778,15 +775,15 @@ function SharedWorkspaceContent() {
                     />
                   </div>
                   {inviteFeedback ? (
-                    <p className="m-0 text-sm text-red-400">
+                    <p className="shared-invite-modal__error" role="alert">
                       {inviteFeedback}
                     </p>
                   ) : null}
                 </div>
-                <div className="modal-footer gap-3">
+                <div className="modal-footer shared-invite-modal__footer">
                   <button
                     type="button"
-                    className="settings-v-btn-secondary"
+                    className="settings-v-btn-secondary shared-invite-modal__btn-secondary"
                     disabled={inviteSending}
                     onClick={() => {
                       setInviteModalOpen(false);
@@ -797,7 +794,7 @@ function SharedWorkspaceContent() {
                   </button>
                   <button
                     type="submit"
-                    className="settings-v-btn"
+                    className="settings-v-btn shared-invite-modal__submit"
                     disabled={inviteSending}
                   >
                     {inviteSending ? "Envoi…" : "Envoyer l’invitation"}

@@ -1575,6 +1575,108 @@ body:has(.page-content-inner-shared) .modal-overlay .modal-button:hover {
   background: #e4e4e7;
 }
 
+/* Modale « Inviter un coéquipier » (Partage) — pleine largeur, CTA marque, footer aligné */
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal {
+  max-width: min(26rem, calc(100vw - 2rem));
+  width: 100%;
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__intro {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary, #a1a1aa);
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #6a6a6a);
+}
+
+/* Override .settings-v-input { width: 18rem } @sm — le champ doit aller au bord du corps de modale */
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__input.settings-v-input {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__input.settings-v-input {
+    width: 100%;
+  }
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__error {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-text-danger, #ff5c5c);
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__footer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__btn-secondary.settings-v-btn-secondary,
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.settings-v-btn {
+  min-height: 2.375rem;
+  padding: 0.5rem 1rem;
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.settings-v-btn {
+  background: var(--color-primary, #e55a2c);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.settings-v-btn:hover:not(:disabled) {
+  background: var(--color-primary-light, #ff6b3d);
+  color: #fff;
+}
+
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.settings-v-btn:disabled {
+  background: rgba(229, 90, 44, 0.35);
+  color: rgba(255, 255, 255, 0.88);
+  opacity: 1;
+}
+
+@media (max-width: 480px) {
+  body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__btn-secondary.settings-v-btn-secondary,
+  body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.settings-v-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* Page Partage : sous-titres de liste dans une carte */
 .shared-v-list-heading {
   margin: 0;
