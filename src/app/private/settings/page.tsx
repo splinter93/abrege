@@ -783,7 +783,7 @@ function AuthenticatedSettingsContent({
               transition={{ duration: 0.4, delay: 0.1 }}
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="settings-v-title !mb-0">Developer API Keys</h2>
+                <h2 className="settings-v-title mb-0">Developer API Keys</h2>
                 <button
                   type="button"
                   onClick={() => {

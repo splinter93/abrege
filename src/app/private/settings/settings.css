@@ -82,6 +82,10 @@
   margin-bottom: 1rem;
   font-family: var(--font-sans, system-ui, sans-serif);
 }
+/* Bat la cascade quand settings.css est importé après Tailwind (mb-0 seul perdait). */
+.settings-v-title.mb-0 {
+  margin-bottom: 0;
+}
 .settings-v-card {
   /* Aligné sur AgentCard / cartes : même surface que --surface-card (= --color-bg-block) */
   background-color: var(--color-bg-block);
