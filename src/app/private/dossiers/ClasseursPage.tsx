@@ -789,7 +789,10 @@ function ClasseursContent({
               return (
                 <span key={i} className="flex items-end gap-1">
                   {i > 0 && (
-                    <span className="mx-1.5 text-base leading-none text-zinc-600" aria-hidden>
+                    <span
+                      className="mx-2 shrink-0 select-none pb-px font-sans text-xl font-light leading-none text-zinc-500"
+                      aria-hidden
+                    >
                       /
                     </span>
                   )}
