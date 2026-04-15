@@ -100,27 +100,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const selectFull =
-      'id, email, username, name, surname, display_name, profile_picture, bio, timezone, language, settings, created_at';
-    const selectCompat =
-      'id, email, name, surname, display_name, profile_picture, bio, timezone, language, settings, created_at';
-
-    let userProfile = null;
-    let fetchError = null as { message: string } | null;
-
-    const first = await supabase.from('users').select(selectFull).eq('id', userId).maybeSingle();
-    if (first.error) {
-      const msg = first.error.message || '';
-      if (msg.includes('username') || msg.includes('42703')) {
-        const second = await supabase.from('users').select(selectCompat).eq('id', userId).maybeSingle();
-        userProfile = second.data;
-        fetchError = second.error;
-      } else {
-        fetchError = first.error;
-      }
-    } else {
-      userProfile = first.data;
-    }
+    const { data: userProfile, error: fetchError } = await supabase
+      .from('users')
+      .select('id, email, username, name, surname, display_name, profile_picture, bio, timezone, language, settings, created_at')
+      .eq('id', userId)
+      .maybeSingle();
 
     if (fetchError) {
       logApi.info(`❌ Erreur récupération profil: ${fetchError.message}`, context);
@@ -182,7 +166,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       data: {
         id: userProfile.id,
         email: userProfile.email,
-        username: 'username' in userProfile ? userProfile.username : null,
+        username: userProfile.username,
         name: userProfile.name,
         surname: userProfile.surname,
         display_name: userProfile.display_name,
