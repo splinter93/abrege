@@ -761,7 +761,7 @@ function ClasseursContent({
   });
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden pt-4 pb-6">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden pt-2 pb-6">
       {/* Breadcrumb à gauche + search + toggle à droite */}
       <div className="flex items-center justify-between gap-4 min-w-0">
         <nav className="flex min-w-0 flex-wrap items-center gap-1 text-xs font-medium uppercase tracking-wider text-zinc-500" aria-label="Fil d'Ariane">
@@ -1630,7 +1630,7 @@ export default function ClasseursPage() {
           />
 
           {/* Toolbar : onglets uniquement */}
-          <div className="mb-6 flex w-full items-center gap-4 border-b border-white/[0.08]">
+          <div className="mb-4 flex w-full items-center gap-4 border-b border-white/[0.08]">
             <div className="min-w-0 flex-1 overflow-hidden">
               <ClasseursTabs
                 tabs={tabs}
