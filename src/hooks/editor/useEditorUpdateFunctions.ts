@@ -24,6 +24,8 @@ interface UseEditorUpdateFunctionsOptions {
   userId: string;
   editorState: EditorState;
   updateNote: (id: string, updates: NoteUpdate) => void;
+  /** false = visiteur page publique / lecture seule sans droit d’édition : wide/A4 en local uniquement */
+  persistNoteLayout?: boolean;
   note: {
     font_family?: string | null;
     wide_mode?: boolean;
@@ -54,6 +56,7 @@ export function useEditorUpdateFunctions(options: UseEditorUpdateFunctionsOption
     userId,
     editorState,
     updateNote,
+    persistNoteLayout = true,
     note
   } = options;
 
@@ -167,16 +170,25 @@ export function useEditorUpdateFunctions(options: UseEditorUpdateFunctionsOption
   }, [changeFont, updateFontInDb]);
 
   const handleA4ModeChange = useCallback(async (value: boolean) => {
+    if (!persistNoteLayout) {
+      editorState.setA4Mode(value);
+      return;
+    }
     await updateA4Mode(value);
-  }, [updateA4Mode]);
+  }, [persistNoteLayout, editorState, updateA4Mode]);
 
   const handleSlashLangChange = useCallback(async (value: 'fr' | 'en') => {
     await updateSlashLang(value);
   }, [updateSlashLang]);
 
   const handleFullWidthChange = useCallback(async (value: boolean) => {
+    if (!persistNoteLayout) {
+      editorState.setFullWidth(value);
+      changeWideMode(value);
+      return;
+    }
     await updateWideMode(value);
-  }, [updateWideMode]);
+  }, [persistNoteLayout, editorState, changeWideMode, updateWideMode]);
 
   return {
     updateFontInDb,

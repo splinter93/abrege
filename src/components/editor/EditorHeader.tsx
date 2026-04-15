@@ -29,6 +29,8 @@ interface EditorHeaderProps {
   layoutMode?: 'full' | 'side-panel' | 'modal';
   kebabMenu?: React.ReactNode; // ✅ Menu kebab rendu dans le header
   onTranscriptionComplete?: (text: string) => void;
+  /** Visiteur page publique : afficher le kebab malgré readonly + !canEdit */
+  showReadonlyVisitorKebab?: boolean;
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -47,7 +49,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   noteId,
   layoutMode = 'full',
   kebabMenu,
-  onTranscriptionComplete
+  onTranscriptionComplete,
+  showReadonlyVisitorKebab = false,
 }) => {
   // ✅ DEBUG: Log synchrone pour capturer le problème (pas dans useEffect)
   const shouldRenderToolbar = !previewMode && showToolbar;
@@ -331,8 +334,8 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
         ) : null}
         {/* CAS 3 : Page publique + pas owner → Pas de bouton (null) */}
         
-        {/* 🔧 FIX: Menu kebab masqué en mode readonly sauf si canEdit (owner) */}
-        {(!readonly || canEdit) && (
+        {/* Menu kebab : éditeur, proprio sur page publique, ou visiteur (menu public) */}
+        {kebabMenu && (!readonly || canEdit || showReadonlyVisitorKebab) && (
           <button
             ref={kebabBtnRef}
             className="header-action-btn"

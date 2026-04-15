@@ -35,6 +35,8 @@ interface UseEditorHandlersOptions {
   noteId: string;
   userId: string;
   isReadonly: boolean;
+  /** false pour visiteur sur note publique : pas de persistance wide/A4 en base */
+  canEdit?: boolean;
   editor: TiptapEditor | null;
   editorState: EditorState;
   updateNote: (id: string, updates: NoteUpdate) => void;
@@ -71,6 +73,7 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     noteId,
     userId,
     isReadonly,
+    canEdit = true,
     editor,
     editorState,
     updateNote,
@@ -79,13 +82,15 @@ export function useEditorHandlers(options: UseEditorHandlersOptions): UseEditorH
     note
   } = options;
   const isTemporaryNote = isTemporaryCanvaNote(noteId);
-  
+  const persistNoteLayout = !isReadonly || canEdit;
+
   // ✅ REFACTO: Déléguer les update functions à un hook dédié
   const updateFunctions = useEditorUpdateFunctions({
     noteId,
     userId,
     editorState,
     updateNote,
+    persistNoteLayout,
     note
   });
 

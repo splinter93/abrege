@@ -129,11 +129,16 @@ const Editor: React.FC<EditorProps> = ({
   // Mode readonly (pages publiques ou preview mode ou plan verrouillé)
   const isReadonly = readonly || editorState.ui.previewMode || (isPlanNote && !isPlanEditUnlocked);
 
+  /** Visiteur sur URL publique : kebab simplifié (partage social, export, layout) */
+  const showReadonlyVisitorKebab = isReadonly && !canEdit;
+  const kebabMenuVariant = showReadonlyVisitorKebab ? 'public' : 'editor';
+
   // REFACTO: Tous les handlers extraits dans useEditorHandlers
   const handlers = useEditorHandlers({
     noteId,
     userId,
     isReadonly,
+    canEdit,
     editor: null, // Sera passé après création de l'instance Tiptap
     editorState,
     updateNote,
@@ -319,6 +324,7 @@ const Editor: React.FC<EditorProps> = ({
     noteId,
     userId,
     isReadonly,
+    canEdit,
     editor,
     editorState,
     updateNote,
@@ -517,6 +523,8 @@ const Editor: React.FC<EditorProps> = ({
               currentTitle={editorState.document.title}
               renderDocumentHeader={false}
               layoutMode={layoutMode}
+              showReadonlyVisitorKebab={showReadonlyVisitorKebab}
+              kebabMenuVariant={kebabMenuVariant}
             />
           )}
           documentHeader={(

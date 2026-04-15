@@ -16,6 +16,7 @@ import { exportNoteToHtml } from '@/services/htmlExportService';
 import { exportNoteToPlainText } from '@/services/plainTextExportService';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import toast from 'react-hot-toast';
+import SocialShareMenu from '@/components/SocialShareMenu';
 
 interface EditorKebabMenuProps {
   open: boolean;
@@ -23,6 +24,8 @@ interface EditorKebabMenuProps {
   onClose: () => void;
   exportModalOpen: boolean;
   setExportModalOpen: (open: boolean) => void;
+  /** Visiteur page publique : partage réseaux + export + layout, sans réglages Scrivia */
+  menuVariant?: 'editor' | 'public';
   a4Mode: boolean;
   setA4Mode: (v: boolean) => void;
   slashLang: 'fr' | 'en';
@@ -61,13 +64,16 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   currentShareSettings,
   onShareSettingsChange,
   publicUrl,
+  menuVariant = 'editor',
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [copyConfirmed, setCopyConfirmed] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [socialShareMenuOpen, setSocialShareMenuOpen] = useState(false);
   const [moveToMenuOpen, setMoveToMenuOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingMd, setIsExportingMd] = useState(false);
+  const [publicShareUrl, setPublicShareUrl] = useState('');
 
   // Récupérer la note depuis le store
   const note = useFileSystemStore((state) => state.notes[noteId]);
@@ -75,10 +81,25 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   const currentClasseurId = note?.classeur_id || null;
 
   useEffect(() => {
+    setPublicShareUrl(typeof window !== 'undefined' ? window.location.href : '');
+  }, []);
+
+  useEffect(() => {
+    if (!open) setSocialShareMenuOpen(false);
+  }, [open]);
+
+  useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
       const target = e.target as Element;
-      
+
+      if (socialShareMenuOpen) {
+        if (target.closest('.social-share-menu-panel') || target.closest('.social-share-menu-backdrop')) return;
+        onClose();
+        setSocialShareMenuOpen(false);
+        return;
+      }
+
       // Si le ShareMenu est ouvert, ne pas fermer le menu kebab
       if (shareMenuOpen) {
         if (target.closest('.share-menu')) return;
@@ -104,6 +125,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       if (e.key === 'Escape') {
         onClose();
         setShareMenuOpen(false);
+        setSocialShareMenuOpen(false);
         setMoveToMenuOpen(false);
       }
     };
@@ -113,7 +135,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleEsc);
     };
-  }, [open, onClose, shareMenuOpen, moveToMenuOpen]);
+  }, [open, onClose, shareMenuOpen, socialShareMenuOpen, moveToMenuOpen]);
 
   // Vérification de sécurité pour currentShareSettings
   if (!currentShareSettings) {
@@ -373,6 +395,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   const translations = {
     fr: {
       share: 'Partager',
+      sharePublic: 'Partager la page…',
       export: 'Exporter',
       exportPdf: 'En PDF',
       exportingPdf: 'Export PDF...',
@@ -390,6 +413,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     },
     en: {
       share: 'Share',
+      sharePublic: 'Share page…',
       export: 'Export',
       exportPdf: 'to PDF',
       exportingPdf: 'Exporting PDF...',
@@ -409,7 +433,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
 
   const t = translations[slashLang];
 
-  const menuOptions: Array<{
+  type MenuRow = {
     id: string;
     label: string;
     icon: React.ReactNode;
@@ -417,7 +441,50 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     color: string;
     showCopyButton: boolean;
     disabled?: boolean;
-  }> = [
+  };
+
+  const publicMenuOptions: MenuRow[] = [
+    {
+      id: 'socialShare',
+      label: t.sharePublic,
+      icon: <FiShare2 size={16} />,
+      onClick: () => { setSocialShareMenuOpen((v) => !v); },
+      color: '#ff6b35',
+      showCopyButton: false,
+    },
+    {
+      id: 'export',
+      label: t.export,
+      icon: <FiDownload size={16} />,
+      onClick: () => {
+        setExportModalOpen(true);
+        onClose();
+      },
+      color: '#D4D4D4',
+      showCopyButton: false,
+    },
+    {
+      id: 'fullWidth',
+      label: t.wideMode,
+      icon: fullWidth ? <FiMinimize2 size={16} /> : <FiMaximize2 size={16} />,
+      onClick: () => {
+        void setFullWidth(!fullWidth);
+        onClose();
+      },
+      color: fullWidth ? '#10b981' : '#D4D4D4',
+      showCopyButton: false,
+    },
+    {
+      id: 'a4Mode',
+      label: t.a4Mode,
+      icon: <A4Icon />,
+      onClick: () => { void setA4Mode(!a4Mode); },
+      color: a4Mode ? '#10b981' : '#D4D4D4',
+      showCopyButton: false,
+    },
+  ];
+
+  const editorMenuOptions: MenuRow[] = [
     {
       id: 'share',
       label: t.share,
@@ -457,7 +524,10 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       id: 'fullWidth',
       label: t.wideMode,
       icon: fullWidth ? <FiMinimize2 size={16} /> : <FiMaximize2 size={16} />,
-      onClick: () => { setFullWidth(!fullWidth); onClose(); },
+      onClick: () => {
+        void setFullWidth(!fullWidth);
+        onClose();
+      },
       color: fullWidth ? '#10b981' : '#D4D4D4',
       showCopyButton: false,
     },
@@ -465,11 +535,13 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       id: 'a4Mode',
       label: t.a4Mode,
       icon: <A4Icon />,
-      onClick: () => { setA4Mode(!a4Mode); },
+      onClick: () => { void setA4Mode(!a4Mode); },
       color: a4Mode ? '#10b981' : '#D4D4D4',
       showCopyButton: false,
-    }
-  ] as const;
+    },
+  ];
+
+  const menuOptions = menuVariant === 'public' ? publicMenuOptions : editorMenuOptions;
 
   // La modale Export doit persister même quand le menu kebab est fermé (open=false),
   // sinon le composant se démonte avant que la modale n'ait le temps de s'afficher.
@@ -486,7 +558,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
           position: 'absolute',
           top: '100%',
           right: '55px',
-          zIndex: (shareMenuOpen || moveToMenuOpen) ? 999 : 1000
+          zIndex: (shareMenuOpen || moveToMenuOpen || socialShareMenuOpen) ? 999 : 1000
         }}
       >
         {menuOptions.map((opt) => (
@@ -531,6 +603,14 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
             )}
           </div>
         ))}
+        {menuVariant === 'public' && (
+          <SocialShareMenu
+            url={publicShareUrl}
+            title={currentTitle || note?.source_title || 'Note'}
+            isOpen={socialShareMenuOpen}
+            onClose={() => setSocialShareMenuOpen(false)}
+          />
+        )}
       </div>}
 
       {/* Modale Export — rendu même quand open=false pour survivre au démontage du menu */}
@@ -543,18 +623,20 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         lang={slashLang}
       />
       
-      {/* ShareMenu — conditionné à open pour éviter des instances flottantes */}
-      {open && <ShareMenu
-        noteId={noteId}
-        currentSettings={currentShareSettings}
-        publicUrl={publicUrl}
-        onSettingsChange={onShareSettingsChange}
-        isOpen={shareMenuOpen}
-        onClose={() => setShareMenuOpen(false)}
-      />}
-      
+      {/* ShareMenu (réglages Scrivia) — pas sur la page publique visiteur */}
+      {open && menuVariant === 'editor' && (
+        <ShareMenu
+          noteId={noteId}
+          currentSettings={currentShareSettings}
+          publicUrl={publicUrl}
+          onSettingsChange={onShareSettingsChange}
+          isOpen={shareMenuOpen}
+          onClose={() => setShareMenuOpen(false)}
+        />
+      )}
+
       {/* MoveToSelector intégré */}
-      {open && moveToMenuOpen && (
+      {open && menuVariant === 'editor' && moveToMenuOpen && (
         <MoveToSelector
           noteId={noteId}
           currentClasseurId={currentClasseurId}

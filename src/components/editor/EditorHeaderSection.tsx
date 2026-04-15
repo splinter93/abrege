@@ -33,6 +33,9 @@ interface EditorHeaderSectionProps {
   renderToolbar?: boolean;
   renderDocumentHeader?: boolean;
   layoutMode?: 'full' | 'side-panel' | 'modal';
+  /** Affiche le bouton kebab pour un visiteur en lecture seule (page publique) */
+  showReadonlyVisitorKebab?: boolean;
+  kebabMenuVariant?: 'editor' | 'public';
 }
 
 const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
@@ -52,6 +55,8 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
   renderToolbar = true,
   renderDocumentHeader = true,
   layoutMode = 'full',
+  showReadonlyVisitorKebab = false,
+  kebabMenuVariant = 'editor',
 }) => {
   const handleToolbarTranscription = React.useCallback(
     (text: string) => {
@@ -119,6 +124,7 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
           canEdit={canEdit}
           noteId={noteId}
           layoutMode={layoutMode}
+          showReadonlyVisitorKebab={showReadonlyVisitorKebab}
           kebabMenu={
             /* Toujours monter EditorKebabMenu : la modale Export doit rester au DOM quand kebabOpen passe à false */
             <EditorKebabMenu
@@ -127,6 +133,7 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
               onClose={() => editorState.setKebabOpen(false)}
               exportModalOpen={editorState.menus.exportModalOpen}
               setExportModalOpen={editorState.setExportModalOpen}
+              menuVariant={kebabMenuVariant}
               a4Mode={editorState.ui.a4Mode}
               setA4Mode={handlers.handleA4ModeChange}
               slashLang={editorState.ui.slashLang}

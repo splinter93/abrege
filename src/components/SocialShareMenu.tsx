@@ -78,20 +78,22 @@ export default function SocialShareMenu({
   return (
     <>
       {/* Overlay pour fermer le menu */}
-      <div 
+      <div
+        className="social-share-menu-backdrop"
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 999
+          zIndex: 10040,
         }}
         onClick={onClose}
       />
-      
-      {/* Menu de partage social */}
+
+      {/* Menu de partage social — z-index au-dessus du kebab (1000) */}
       <div
+        className="social-share-menu-panel"
         style={{
           position: 'absolute',
           top: '100%',
@@ -103,8 +105,8 @@ export default function SocialShareMenu({
           padding: '8px 0',
           minWidth: 200,
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-          zIndex: 1000,
-          backdropFilter: 'blur(10px)'
+          zIndex: 10041,
+          backdropFilter: 'blur(10px)',
         }}
       >
         {shareOptions.map((option) => {
