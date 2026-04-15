@@ -17,16 +17,14 @@ function createServiceClient() {
 type UserRow = {
   id: string;
   email: string | null;
-  name: string | null;
-  surname: string | null;
-  display_name: string | null;
+  username: string | null;
+  profile_picture: string | null;
 };
 
-function displayName(u: Pick<UserRow, 'display_name' | 'name' | 'surname' | 'email'>): string {
-  if (u.display_name?.trim()) return u.display_name.trim();
-  const n = [u.name, u.surname].filter(Boolean).join(' ').trim();
-  if (n) return n;
-  return u.email?.split('@')[0] ?? 'Utilisateur';
+function displayName(u: Pick<UserRow, 'username' | 'email'>): string {
+  if (u.username?.trim()) return u.username.trim();
+  if (u.email?.trim()) return u.email.split('@')[0]!;
+  return 'Utilisateur';
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -79,7 +77,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (byIds.length) {
     const { data: users, error: usersErr } = await service
       .from('users')
-      .select('id, email, name, surname, display_name')
+      .select('id, email, username, profile_picture')
       .in('id', byIds);
     if (usersErr) {
       logApi.info(`[v2_classeur_shared] users fetch: ${usersErr.message}`, context);

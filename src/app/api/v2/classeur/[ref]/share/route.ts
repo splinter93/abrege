@@ -24,16 +24,14 @@ const postSchema = z.object({
 type UserRow = {
   id: string;
   email: string | null;
-  name: string | null;
-  surname: string | null;
-  display_name: string | null;
+  username: string | null;
+  profile_picture: string | null;
 };
 
-function displayName(u: Pick<UserRow, 'display_name' | 'name' | 'surname' | 'email'>): string {
-  if (u.display_name?.trim()) return u.display_name.trim();
-  const n = [u.name, u.surname].filter(Boolean).join(' ').trim();
-  if (n) return n;
-  return u.email?.split('@')[0] ?? 'Utilisateur';
+function displayName(u: Pick<UserRow, 'username' | 'email'>): string {
+  if (u.username?.trim()) return u.username.trim();
+  if (u.email?.trim()) return u.email.split('@')[0]!;
+  return 'Utilisateur';
 }
 
 async function assertAcceptedTeammate(
@@ -108,7 +106,7 @@ export async function GET(
   if (ids.length) {
     const { data: users } = await service
       .from('users')
-      .select('id, email, name, surname, display_name')
+      .select('id, email, username, profile_picture')
       .in('id', ids);
     for (const u of users ?? []) {
       userMap.set((u as UserRow).id, u as UserRow);
