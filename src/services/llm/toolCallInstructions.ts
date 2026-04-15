@@ -1,9 +1,14 @@
 /**
- * Instructions injectées dans le system message de chaque agent disposant de tools.
- * Couvre : hygiene JSON des tool calls + protocole d'exécution des plans.
+ * Instructions injectées dans le system message des agents disposant de tools.
+ *
+ * Deux blocs séparés :
+ * - TOOL_CALL_RULES_INSTRUCTIONS : hygiene JSON, toujours injecté dès qu'il y a des tools.
+ * - PLAN_PROTOCOL_INSTRUCTIONS   : protocole plan + source_type notes, injecté uniquement
+ *   quand __plan_update est dans la liste des tools (externalToolCount >= 2).
  */
 
-export const TOOL_CALL_INSTRUCTIONS = `
+/** JSON hygiene — injecté pour tous les agents avec au moins un tool. */
+export const TOOL_CALL_RULES_INSTRUCTIONS = `
 
 ---
 
@@ -25,6 +30,10 @@ export const TOOL_CALL_INSTRUCTIONS = `
 \`\`\`json
 { "team_id": "123" }
 \`\`\`
+`;
+
+/** Plan execution protocol + note source_type — injecté uniquement quand __plan_update est disponible. */
+export const PLAN_PROTOCOL_INSTRUCTIONS = `
 
 ---
 
@@ -50,7 +59,7 @@ When creating notes with \`createNote\`, use \`source_type\` to control renderin
 
 ## PLAN EXECUTION PROTOCOL
 
-Use \`__plan_update\` to show the user your progress on any multi-step task.
+Use \`__plan_update\` to show the user your progress on any multi-step task (3+ distinct steps).
 
 ### The strict execution order — memorize this
 
@@ -107,6 +116,8 @@ __plan_update  →  [step1: completed,   step2: completed,   step3: completed]  
 ### What to never do
 
 - **Never** call a tool without having marked the step \`in_progress\` first.
+- **Never** reset steps that are already \`completed\` back to \`pending\`.
+- **Never** silently skip or reorder steps. If you must, call \`__plan_update\` to reflect it and explain why.
 
 ---
 
@@ -123,17 +134,27 @@ For any edit **inside an existing note** (not raw \`updateNote\` on the whole bo
 - Prefer \`editNoteSection\` for: insert/replace/delete by section, renames (\`replace_heading\`), new sections (\`create_section\`).
 - Use \`applyContentOperations\` only when you truly need: regex targeting, anchors like \`after_toc\`, or position-based edits that cannot be expressed as a single section operation.
 - **Never** write analysis text before calling the tool.
-- **Never** reset steps that are already \`completed\` back to \`pending\`.
-- **Never** silently skip or reorder steps. If you must, call \`__plan_update\` to reflect it and explain why.
 `;
 
 /**
- * Ajoute les instructions de tool calls au system message.
+ * Compose le bloc complet (JSON hygiene uniquement).
+ * Idempotent — n'injecte pas deux fois si déjà présent.
+ */
+export function addBaseToolCallInstructions(systemMessage: string): string {
+  if (systemMessage.includes('TOOL CALL RULES')) {
+    return systemMessage;
+  }
+  return systemMessage + '\n\n' + TOOL_CALL_RULES_INSTRUCTIONS;
+}
+
+/**
+ * Compose le bloc complet (JSON hygiene + plan protocol + notes).
+ * Utilisé uniquement quand __plan_update est dans la liste des tools.
  * Idempotent — n'injecte pas deux fois si déjà présent.
  */
 export function addToolCallInstructions(systemMessage: string): string {
   if (systemMessage.includes('TOOL CALL RULES')) {
     return systemMessage;
   }
-  return systemMessage + '\n\n' + TOOL_CALL_INSTRUCTIONS;
+  return systemMessage + '\n\n' + TOOL_CALL_RULES_INSTRUCTIONS + '\n\n' + PLAN_PROTOCOL_INSTRUCTIONS;
 }

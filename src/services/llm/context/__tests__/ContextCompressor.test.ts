@@ -130,4 +130,35 @@ describe('compressToolResults', () => {
     expect(t0.content).toBe(INTERNAL_TOOL_COMPRESSED_MARKER);
     expect(t3.content).toBe(planFeedback);
   });
+
+  it('compresses plan-only round: assistant(tool_calls:[__plan_update]) + tool result', () => {
+    // Scénario bug #1 : le LLM appelle __plan_update seul dans le 1er round,
+    // puis 3 rounds normaux. Avec RECENT_ROUNDS_PROTECTED = 2, le cutoff est au
+    // 3ème assistant depuis la fin (as1 dans cet exemple), donc seul le round 0
+    // (plan-only) est avant le cutoff et éligible à la compression.
+    const planFeedback = 'Plan updated (0/2 done).';
+    const bigResult = 'x'.repeat(900);
+    const msgs: ChatMessage[] = [
+      // Round 0 : plan-only (avant le cutoff → éligible)
+      assistantToolCalls('as0', ['p0'], '__plan_update'),
+      tool('p0', '__plan_update', planFeedback, true),
+      // Round 1 : au cutoff (as1 = 3ème depuis la fin) → protégé
+      assistantToolCalls('as1', ['t1']),
+      tool('t1', 'search', bigResult, true),
+      // Round 2 : round récent protégé (RECENT_ROUNDS_PROTECTED = 2)
+      assistantToolCalls('as2', ['t2']),
+      tool('t2', 'search', bigResult, true),
+      // Round 3 : round récent protégé
+      assistantToolCalls('as3', ['t3']),
+      tool('t3', 'search', bigResult, true)
+    ];
+    const planNames = new Set(['__plan_update']);
+    compressToolResults(msgs, 800, planNames);
+    const planResult = msgs[1] as { content: string };
+    const round1Result = msgs[3] as { content: string };
+    // Le résultat du plan-only est avant le cutoff → compressé avec le marker interne
+    expect(planResult.content).toBe(INTERNAL_TOOL_COMPRESSED_MARKER);
+    // Round 1 est au cutoff (protégé) → contenu intact
+    expect(round1Result.content).toBe(bigResult);
+  });
 });

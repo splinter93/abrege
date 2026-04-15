@@ -9,7 +9,7 @@ export const PLAN_UPDATE_TOOL: FunctionTool = {
   type: 'function',
   function: {
     name: '__plan_update',
-    description: 'REQUIRED for multi-step tasks. Declare the full plan before starting (all steps pending), mark each step in_progress before executing it, and completed immediately after. Never start step N+1 without marking step N completed. Never skip or reorder steps without updating the plan first.',
+    description: 'Use for tasks with 3 or more distinct steps requiring sequential tool calls. Declare the full plan once (all steps pending), mark each step in_progress before its tools, completed right after. Never use for single-step or conversational responses. Never start step N+1 without marking step N completed.',
     parameters: {
       type: 'object',
       properties: {

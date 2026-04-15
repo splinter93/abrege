@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
     // ✅ Construire le system message (instructions agent + contexte UI via ContextInjectionService)
     const { SystemMessageBuilder } = await import('@/services/llm/SystemMessageBuilder');
     const { contextInjectionService } = await import('@/services/llm/context');
-    const { addToolCallInstructions } = await import('@/services/llm/toolCallInstructions');
+    const { addToolCallInstructions, addBaseToolCallInstructions } = await import('@/services/llm/toolCallInstructions');
     const systemMessageBuilder = SystemMessageBuilder.getInstance();
     
     // Construire ExtendedLLMContext pour ContextInjectionService (pour context messages uniquement)
@@ -634,9 +634,16 @@ export async function POST(request: NextRequest) {
           }
         }
         
-        // ✅ Internal tools (plan_update, etc.) — exécutés localement
-        const { INTERNAL_TOOLS } = await import('@/services/llm/tools/internalTools');
-        tools.push(...INTERNAL_TOOLS);
+        // ✅ Internal tools (plan_update, etc.) — injectés uniquement si l'agent a
+        // au moins 2 external tools réels. Un seul tool ne justifie pas un plan en
+        // étapes séquentielles, et les petits modèles déraillent avec __plan_update.
+        const { INTERNAL_TOOLS, INTERNAL_TOOL_NAMES: _internalNames } = await import('@/services/llm/tools/internalTools');
+        const externalToolCount =
+          tools.filter(t => isFunctionTool(t) && !_internalNames.has(t.function.name)).length +
+          tools.filter(isMcpTool).length;
+        if (externalToolCount >= 2) {
+          tools.push(...INTERNAL_TOOLS);
+        }
 
         const mcpCount = tools.filter(isMcpTool).length;
         const functionTools = tools.filter(isFunctionTool);
@@ -670,9 +677,15 @@ export async function POST(request: NextRequest) {
     }
 
     const hasPlanTool = tools.some((t) => isFunctionTool(t) && t.function?.name === '__plan_update');
+    const hasAnyTool = tools.length > 0;
+    // Plan tool présent → JSON hygiene + plan protocol + notes
+    // Autres tools sans plan → JSON hygiene uniquement (évite tokens inutiles)
+    // Aucun tool → system message brut
     const systemMessage = hasPlanTool
       ? addToolCallInstructions(systemMessageBase)
-      : systemMessageBase;
+      : hasAnyTool
+        ? addBaseToolCallInstructions(systemMessageBase)
+        : systemMessageBase;
 
     const messages: ChatMessage[] = ([
       {
@@ -1644,6 +1657,26 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                   timestamp: Date.now()
                 });
               }
+            }
+
+            // Si ce round n'a exécuté que des internal tools (ex. __plan_update seul),
+            // certains modèles s'arrêtent au round suivant avec un contenu vide parce
+            // qu'ils interprètent le feedback "Plan updated" comme une fin de tâche.
+            // Un message system court les force à enchaîner les vrais tool calls.
+            const allToolsWereInternal =
+              uniqueToolCalls.length > 0 &&
+              uniqueToolCalls.every(tc => INTERNAL_TOOL_NAMES.has(tc.function.name));
+            if (allToolsWereInternal) {
+              currentMessages.push({
+                role: 'system',
+                content: 'Plan declared. Now execute the first step: call the required tools.',
+                timestamp: new Date().toISOString()
+              });
+              logger.info(
+                LogCategory.API,
+                '[Stream Route] 📋 Plan-only round — message system injecté pour forcer l\'exécution des tools',
+                { roundCount }
+              );
             }
 
             const hasReachedRoundLimit = roundCount >= maxRounds;
