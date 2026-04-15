@@ -17,6 +17,8 @@ interface CustomSelectProps {
   disabled?: boolean;
   placeholder?: string;
   className?: string;
+  /** Libellé + zone chevron en bouton séparé (alignement type réglages). */
+  splitTrigger?: boolean;
 }
 
 export function CustomSelect({
@@ -26,7 +28,8 @@ export function CustomSelect({
   onChange,
   disabled = false,
   placeholder = 'Sélectionner...',
-  className = ''
+  className = '',
+  splitTrigger = false,
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,24 +60,59 @@ export function CustomSelect({
   const inputBase =
     'input-block w-full px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between cursor-pointer';
 
+  const splitShellClass =
+    'flex min-h-[2.125rem] w-full min-w-0 overflow-hidden rounded-md border border-[var(--color-border-block)] bg-[var(--color-bg-content)] text-sm text-[var(--color-text-primary)] transition-[border-color,background-color] focus-within:border-[var(--color-border-focus)] focus-within:bg-[var(--chat-bg-input-focus)]';
+
   return (
-    <div className={`relative w-full ${className}`} ref={containerRef}>
-      <button
-        id={id}
-        type="button"
-        className={`${inputBase} min-w-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        disabled={disabled}
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-      >
-        <span className="min-w-0 flex-1 truncate text-left">
-          {selectedOption ? selectedOption.label : <span className="text-zinc-500">{placeholder}</span>}
-        </span>
-        <ChevronDown
-          className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
+    <div className={`relative w-full min-w-0 ${className}`} ref={containerRef}>
+      {splitTrigger ? (
+        <div className={`${splitShellClass} ${disabled ? 'opacity-50' : ''}`}>
+          <button
+            id={id}
+            type="button"
+            className="min-w-0 flex-1 cursor-pointer truncate px-3 py-2 text-left outline-none"
+            onClick={() => !disabled && setIsOpen(!isOpen)}
+            disabled={disabled}
+            aria-haspopup="listbox"
+            aria-expanded={isOpen}
+          >
+            {selectedOption ? selectedOption.label : <span className="text-zinc-500">{placeholder}</span>}
+          </button>
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            disabled={disabled}
+            className="inline-flex min-h-[2.125rem] w-9 shrink-0 cursor-pointer items-center justify-center border-l border-[var(--color-border-block)] bg-transparent text-zinc-500 transition-colors hover:text-zinc-300"
+            onClick={(e) => {
+              e.preventDefault();
+              if (!disabled) setIsOpen((o) => !o);
+            }}
+          >
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+              aria-hidden
+            />
+          </button>
+        </div>
+      ) : (
+        <button
+          id={id}
+          type="button"
+          className={`${inputBase} min-w-0 ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+        >
+          <span className="min-w-0 flex-1 truncate text-left">
+            {selectedOption ? selectedOption.label : <span className="text-zinc-500">{placeholder}</span>}
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-zinc-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+      )}
 
       <AnimatePresence>
         {isOpen && (

@@ -12,6 +12,7 @@ import AuthGuard from "@/components/AuthGuard";
 import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 import "@/components/DossierLoadingStates.css";
 import ScriviaFilePicker from "@/components/chat/ScriviaFilePicker";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 import { FolderSearch, Image as ImageIcon, Pencil, Trash2, X } from "lucide-react";
 import "@/styles/main.css";
 import "@/styles/account.css";
@@ -103,6 +104,17 @@ function buildSessionProfileDefaults(user: User): SessionProfileDefaults {
 const SETTINGS_AVATAR_MODAL_INPUT =
   "input-block w-full px-3 py-2 rounded-lg text-sm placeholder:text-zinc-500 focus:outline-none transition-colors";
 const SETTINGS_AVATAR_MODAL_LABEL = "text-xs font-medium text-zinc-400 block mb-1.5";
+
+const SETTINGS_LANGUAGE_OPTIONS = [
+  { value: "fr", label: "Français" },
+  { value: "en", label: "English" },
+];
+
+const SETTINGS_THEME_OPTIONS = [
+  { value: "light", label: "Clair" },
+  { value: "dark", label: "Sombre" },
+  { value: "auto", label: "Automatique" },
+];
 
 export default function SettingsPage() {
   return (
@@ -572,7 +584,7 @@ function AuthenticatedSettingsContent({
     <PageWithSidebarLayout>
       <div className="page-content-inner page-content-inner-settings min-h-full flex flex-col bg-[var(--color-bg-primary)] w-full">
         <div className="settings-page-shell flex min-h-0 flex-1 flex-col">
-          <header className="settings-page-header shrink-0 pt-5 sm:pt-8 pb-6 sm:pb-8">
+          <header className="settings-page-header shrink-0 pt-10 sm:pt-12 pb-6 sm:pb-8">
             <div className="min-w-0 flex flex-col font-sans">
               <h1 className="bg-gradient-to-b from-white to-white/55 bg-clip-text text-3xl font-bold leading-tight tracking-tight text-transparent sm:text-4xl">
                 Paramètres
@@ -634,7 +646,7 @@ function AuthenticatedSettingsContent({
                         type="button"
                         onClick={() => setShowProfileAvatarModal(true)}
                         aria-label="Voir et modifier la photo de profil"
-                        className="group/avatar relative section-block flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-medium text-zinc-400 transition-colors hover:border-[var(--color-border-secondary)]"
+                        className="group/avatar relative section-block flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-medium text-zinc-400 transition-colors hover:border-[var(--color-border-secondary)]"
                       >
                         {displayProfileAvatarPreview ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -652,7 +664,7 @@ function AuthenticatedSettingsContent({
                           </span>
                         )}
                         <div className="absolute inset-0 flex items-center justify-center bg-zinc-700/60 opacity-0 transition-opacity group-hover/avatar:opacity-100">
-                          <Pencil className="h-3.5 w-3.5 text-zinc-100" aria-hidden />
+                          <Pencil className="h-3 w-3 text-zinc-100" aria-hidden />
                         </div>
                       </button>
                     </div>
@@ -711,14 +723,14 @@ function AuthenticatedSettingsContent({
                     <div className="settings-v-row-label">Language</div>
                   </div>
                   <div className="settings-v-row-action">
-                    <select
+                    <CustomSelect
+                      id="settings-language"
                       value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
-                      className="settings-v-input cursor-pointer"
-                    >
-                      <option value="fr">Français</option>
-                      <option value="en">English</option>
-                    </select>
+                      options={SETTINGS_LANGUAGE_OPTIONS}
+                      onChange={setLanguage}
+                      splitTrigger
+                      className="w-full sm:w-72"
+                    />
                   </div>
                 </div>
 
@@ -727,15 +739,14 @@ function AuthenticatedSettingsContent({
                     <div className="settings-v-row-label">Theme</div>
                   </div>
                   <div className="settings-v-row-action">
-                    <select
+                    <CustomSelect
+                      id="settings-theme"
                       value={theme}
-                      onChange={(e) => setTheme(e.target.value)}
-                      className="settings-v-input cursor-pointer"
-                    >
-                      <option value="light">Clair</option>
-                      <option value="dark">Sombre</option>
-                      <option value="auto">Automatique</option>
-                    </select>
+                      options={SETTINGS_THEME_OPTIONS}
+                      onChange={setTheme}
+                      splitTrigger
+                      className="w-full sm:w-72"
+                    />
                   </div>
                 </div>
 
@@ -985,15 +996,17 @@ function AuthenticatedSettingsContent({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.15 }}
             >
-              <h2 className="settings-v-title">Workspace access</h2>
+              <h2 className="settings-v-title">Danger Zone</h2>
               <div className="settings-v-card">
                 <div className="settings-v-row">
                   <div className="settings-v-row-content">
-                    <div className="settings-v-row-label">Remove yourself from workspace</div>
+                    <div className="settings-v-row-label">Delete your account and informations</div>
                     <div className="settings-v-row-desc">Action irréversible. Toutes vos données seront effacées.</div>
                   </div>
                   <div className="settings-v-row-action">
-                    <button type="button" className="settings-v-btn-danger">Leave workspace</button>
+                    <button type="button" className="settings-v-btn-danger">
+                      Delete Account
+                    </button>
                   </div>
                 </div>
               </div>
