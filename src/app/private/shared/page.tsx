@@ -15,6 +15,7 @@ import {
   Inbox,
   Mail,
   SendHorizontal,
+  Trash2,
   UserPlus,
   Users,
   X,
@@ -455,7 +456,6 @@ function SharedWorkspaceContent() {
                     </>
                   ) : null}
 
-                  <p className="shared-v-list-heading">Équipe</p>
                   {teammates.length === 0 ? (
                     <div className="shared-v-empty">
                       <strong>Aucun coéquipier pour l’instant</strong>
@@ -511,10 +511,12 @@ function SharedWorkspaceContent() {
                             </div>
                             <button
                               type="button"
-                              className="settings-v-btn-secondary shrink-0"
+                              className="settings-v-btn-secondary inline-flex h-9 w-9 shrink-0 items-center justify-center !p-0"
                               onClick={() => void deleteTeammateRow(m.id)}
+                              aria-label={`Retirer ${m.name} de l’équipe`}
+                              title="Retirer"
                             >
-                              Retirer
+                              <Trash2 className="h-4 w-4 shrink-0" aria-hidden />
                             </button>
                           </motion.div>
                         </div>

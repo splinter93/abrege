@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
-import { FiFeather } from 'react-icons/fi';
 import { logger, LogCategory } from '@/utils/logger';
 import '../auth.css';
 import './callback.css';
@@ -347,13 +346,10 @@ function AuthCallbackSuspenseFallback() {
 
 export default function AuthCallbackPage() {
   return (
-    <div className="auth-page">
-      <div className="auth-container">
-        <div className="auth-logo">
-          <FiFeather size={52} />
-        </div>
+    <div className="auth-page auth-page--callback">
+      <div className="auth-container auth-container--callback">
         <div className="auth-content">
-          <div className="auth-form-container">
+          <div className="auth-form-container auth-form-container--callback">
             <Suspense fallback={<AuthCallbackSuspenseFallback />}>
               <AuthCallbackContent />
             </Suspense>

@@ -36,15 +36,16 @@
 .notion-drag-handle {
   position: absolute !important;
   z-index: 100 !important;
-  opacity: 0 !important;
-  transition: opacity 150ms ease, top 180ms cubic-bezier(0.22, 1, 0.36, 1), left 180ms cubic-bezier(0.22, 1, 0.36, 1) !important; /* ✅ Mouvement fluide */
+  /* Pas de !important sur opacity : le plugin positionne via element.style.opacity
+     (inline sans !important) — sinon opacity:0 !important masque toujours les handles */
+  opacity: 0;
+  transition: opacity 150ms ease, top 180ms cubic-bezier(0.22, 1, 0.36, 1), left 180ms cubic-bezier(0.22, 1, 0.36, 1) !important;
   pointer-events: auto !important;
   user-select: none !important;
-  will-change: top, left, opacity; /* ✅ Optimisation GPU */
+  will-change: top, left, opacity;
 }
 
-/* Visible au survol ou quand positionné */
-.notion-drag-handle[style*="opacity: 1"],
+/* Survol direct du handle : toujours visible (secours si style inline en retard) */
 .notion-drag-handle:hover {
   opacity: 1 !important;
 }

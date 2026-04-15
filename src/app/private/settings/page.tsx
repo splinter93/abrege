@@ -11,7 +11,8 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import AuthGuard from "@/components/AuthGuard";
 import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 import "@/components/DossierLoadingStates.css";
-import { Pencil, Trash2, User as UserIcon, X } from "lucide-react";
+import ScriviaFilePicker from "@/components/chat/ScriviaFilePicker";
+import { FolderSearch, Image as ImageIcon, Pencil, Trash2, X } from "lucide-react";
 import "@/styles/main.css";
 import "@/styles/account.css";
 import "./settings.css";
@@ -99,11 +100,9 @@ function buildSessionProfileDefaults(user: User): SessionProfileDefaults {
   };
 }
 
-/** Aperçu avatar : URL HTTPS arbitraire (pas de domaine fixe pour next/image). */
-function SettingsAvatarPreview({ src }: { src: string }) {
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt="" className="h-full w-full object-cover" />;
-}
+const SETTINGS_AVATAR_MODAL_INPUT =
+  "input-block w-full px-3 py-2 rounded-lg text-sm placeholder:text-zinc-500 focus:outline-none transition-colors";
+const SETTINGS_AVATAR_MODAL_LABEL = "text-xs font-medium text-zinc-400 block mb-1.5";
 
 export default function SettingsPage() {
   return (
@@ -179,6 +178,8 @@ function AuthenticatedSettingsContent({
   const [savingSynesia, setSavingSynesia] = useState(false);
   const [profileMessage, setProfileMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [synesiaMessage, setSynesiaMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [showProfileAvatarModal, setShowProfileAvatarModal] = useState(false);
+  const [showProfileAvatarFilePicker, setShowProfileAvatarFilePicker] = useState(false);
 
   // Gestionnaire d'erreur sécurisé
   const { handleError } = useSecureErrorHandler({
@@ -511,6 +512,23 @@ function AuthenticatedSettingsContent({
 
   const synesiaKeyDirty = synesiaKeyDraft.trim().length > 0;
 
+  const profileAvatarFallback = useMemo(() => {
+    const d = trimProfileField(displayName);
+    if (d) {
+      return d
+        .split(/\s+/)
+        .map((chunk) => chunk.charAt(0))
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+    }
+    const local = profileEmail.includes("@") ? profileEmail.split("@")[0] : profileEmail;
+    return (local || "?").slice(0, 2).toUpperCase();
+  }, [displayName, profileEmail]);
+
+  const displayProfileAvatarPreview =
+    isDisplayableAvatarUrl(profilePictureUrl) && profilePictureUrl.trim().length > 0;
+
   // 🔧 OPTIMISATION: Mémoiser les scopes disponibles pour éviter les re-renders
   const availableScopes = useMemo(() => [
     { key: 'notes:read', label: 'Lecture des notes', description: 'Consulter vos notes et articles' },
@@ -532,6 +550,21 @@ function AuthenticatedSettingsContent({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [editingApiKeyId, closeEditApiKey]);
+
+  useEffect(() => {
+    if (!showProfileAvatarModal) {
+      setShowProfileAvatarFilePicker(false);
+      return;
+    }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setShowProfileAvatarModal(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showProfileAvatarModal]);
 
   // 🔧 FIX: Plus besoin de vérifier authLoading car c'est déjà fait dans le composant parent
 
@@ -560,22 +593,83 @@ function AuthenticatedSettingsContent({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: 0 }}
             >
-              <h2 className="settings-v-title">Profile</h2>
+              <div className="mb-4 flex flex-col gap-2">
+                <div className="flex min-w-0 items-center justify-between gap-3">
+                  <h2 className="settings-v-title mb-0 min-w-0 shrink">Profile</h2>
+                  {profileDirty ? (
+                    <button
+                      type="button"
+                      disabled={savingProfile || profileRefreshing}
+                      onClick={() => void saveProfile()}
+                      className="settings-v-btn shrink-0"
+                    >
+                      {savingProfile ? "Saving..." : "Save"}
+                    </button>
+                  ) : null}
+                </div>
+                {profileRefreshing || profileMessage ? (
+                  <p
+                    className={`text-sm font-medium ${
+                      profileRefreshing
+                        ? "text-zinc-400"
+                        : profileMessage?.type === "ok"
+                          ? "text-emerald-400"
+                          : "text-red-400"
+                    }`}
+                  >
+                    {profileRefreshing
+                      ? "Synchronisation avec le serveur…"
+                      : profileMessage?.text}
+                  </p>
+                ) : null}
+              </div>
               <div className="settings-v-card">
                 <div className="settings-v-row">
                   <div className="settings-v-row-content">
                     <div className="settings-v-row-label">Profile picture</div>
                   </div>
                   <div className="settings-v-row-action">
-                    <div className="settings-v-avatar">
-                      {isDisplayableAvatarUrl(profilePictureUrl) ? (
-                        <SettingsAvatarPreview src={profilePictureUrl.trim()} />
-                      ) : (
-                        <UserIcon className="h-4 w-4 text-zinc-500" aria-hidden />
-                      )}
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setShowProfileAvatarModal(true)}
+                        aria-label="Voir et modifier la photo de profil"
+                        className="group/avatar relative section-block flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-medium text-zinc-400 transition-colors hover:border-[var(--color-border-secondary)]"
+                      >
+                        {displayProfileAvatarPreview ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={profilePictureUrl.trim()}
+                            alt=""
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <span className="transition-opacity group-hover/avatar:opacity-0">
+                            {profileAvatarFallback}
+                          </span>
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center bg-zinc-700/60 opacity-0 transition-opacity group-hover/avatar:opacity-100">
+                          <Pencil className="h-3.5 w-3.5 text-zinc-100" aria-hidden />
+                        </div>
+                      </button>
                     </div>
                   </div>
                 </div>
+
+                {profileUsername ? (
+                  <div className="settings-v-row">
+                    <div className="settings-v-row-content">
+                      <div className="settings-v-row-label">Username</div>
+                      <div className="settings-v-row-desc">One word, like a nickname or first name</div>
+                    </div>
+                    <div className="settings-v-row-action">
+                      <input type="text" readOnly value={profileUsername} className="settings-v-input" />
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="settings-v-row">
                   <div className="settings-v-row-content">
@@ -599,56 +693,6 @@ function AuthenticatedSettingsContent({
                       placeholder="Prénom Nom"
                     />
                   </div>
-                </div>
-
-                {profileUsername ? (
-                  <div className="settings-v-row">
-                    <div className="settings-v-row-content">
-                      <div className="settings-v-row-label">Username</div>
-                      <div className="settings-v-row-desc">One word, like a nickname or first name</div>
-                    </div>
-                    <div className="settings-v-row-action">
-                      <input type="text" readOnly value={profileUsername} className="settings-v-input" />
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="settings-v-row">
-                  <div className="settings-v-row-content">
-                    <div className="settings-v-row-label">Avatar URL</div>
-                    <div className="settings-v-row-desc">Lien HTTPS de votre photo de profil</div>
-                  </div>
-                  <div className="settings-v-row-action">
-                    <input
-                      type="url"
-                      value={profilePictureUrl}
-                      onChange={(e) => setProfilePictureUrl(e.target.value)}
-                      className="settings-v-input"
-                      placeholder="https://..."
-                    />
-                  </div>
-                </div>
-
-                <div className="settings-v-footer">
-                  <div className="settings-v-footer-text">
-                    {profileRefreshing ? (
-                      <span>Synchronisation avec le serveur…</span>
-                    ) : profileMessage ? (
-                      <span className={profileMessage.type === "ok" ? "text-emerald-400" : "text-red-400"}>
-                        {profileMessage.text}
-                      </span>
-                    ) : (
-                      "Utilisez au maximum 32 caractères."
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    disabled={savingProfile || profileRefreshing || !profileDirty}
-                    onClick={() => void saveProfile()}
-                    className="settings-v-btn"
-                  >
-                    {savingProfile ? "Saving..." : "Save"}
-                  </button>
                 </div>
               </div>
             </motion.section>
@@ -723,18 +767,38 @@ function AuthenticatedSettingsContent({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: 0.08 }}
             >
-              <h2 className="settings-v-title">Models & AI</h2>
+              <div className="mb-4 flex flex-col gap-2">
+                <div className="flex min-w-0 items-center justify-between gap-3">
+                  <h2 className="settings-v-title mb-0 min-w-0 shrink">Models & AI</h2>
+                  {synesiaKeyDirty ? (
+                    <button
+                      type="button"
+                      disabled={savingSynesia}
+                      onClick={() => void saveSynesiaKey()}
+                      className="settings-v-btn shrink-0"
+                    >
+                      {savingSynesia ? "Saving..." : "Save"}
+                    </button>
+                  ) : null}
+                </div>
+                {synesiaMessage ? (
+                  <p
+                    className={`text-sm font-medium ${
+                      synesiaMessage.type === "ok" ? "text-emerald-400" : "text-red-400"
+                    }`}
+                  >
+                    {synesiaMessage.text}
+                  </p>
+                ) : null}
+              </div>
               <div className="settings-v-card">
                 <div className="settings-v-row">
                   <div className="settings-v-row-content">
                     <div className="settings-v-row-label flex flex-wrap items-center gap-2">
                       Synesia / Liminality API Key
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${synesiaKeyConfigured ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${synesiaKeyConfigured ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-red-500/10 text-red-400/90 border border-red-500/20"}`}>
                         {synesiaKeyConfigured ? "Enregistrée" : "À renseigner"}
                       </span>
-                    </div>
-                    <div className="settings-v-row-desc">
-                      Indiquez votre clé personnelle Liminality / Synesia pour vos appels modèles. Elle n’est jamais renvoyée par l’API après enregistrement.
                     </div>
                   </div>
                   <div className="settings-v-row-action">
@@ -747,30 +811,6 @@ function AuthenticatedSettingsContent({
                       autoComplete="off"
                     />
                   </div>
-                </div>
-
-                <div className="settings-v-footer">
-                  <div className="settings-v-footer-text">
-                    {synesiaMessage ? (
-                      <span className={synesiaMessage.type === "ok" ? "text-emerald-400" : "text-red-400"}>
-                        {synesiaMessage.text}
-                      </span>
-                    ) : (
-                      <span>
-                        {synesiaKeyConfigured
-                          ? "Collez une nouvelle clé pour la remplacer, puis enregistrez."
-                          : "Collez votre clé puis enregistrez. Elle ne sera plus affichée après sauvegarde."}
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    disabled={savingSynesia || !synesiaKeyDirty}
-                    onClick={() => void saveSynesiaKey()}
-                    className="settings-v-btn"
-                  >
-                    {savingSynesia ? "Saving..." : "Save"}
-                  </button>
                 </div>
               </div>
             </motion.section>
@@ -1104,6 +1144,87 @@ function AuthenticatedSettingsContent({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {showProfileAvatarModal ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="settings-profile-avatar-modal-title"
+        >
+          <div className="section-block w-full max-w-md overflow-hidden rounded-2xl shadow-xl">
+            <header className="flex min-h-12 shrink-0 items-center gap-3 border-b border-[var(--color-border-block)] px-5 py-3 sm:min-h-[3.25rem] sm:px-6 sm:py-3.5">
+              <h3
+                id="settings-profile-avatar-modal-title"
+                className="min-w-0 flex-1 text-base font-semibold leading-snug text-zinc-100"
+              >
+                Photo de profil
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowProfileAvatarModal(false)}
+                aria-label="Fermer"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-[var(--color-bg-content)] hover:text-zinc-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </header>
+            <div className="space-y-6 px-5 pb-6 pt-5 sm:px-6 sm:pb-6 sm:pt-6">
+              <div className="flex justify-center">
+                <div className="section-block flex h-24 w-24 items-center justify-center overflow-hidden rounded-full text-2xl font-medium text-zinc-400">
+                  {displayProfileAvatarPreview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={profilePictureUrl.trim()}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span>{profileAvatarFallback}</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className={SETTINGS_AVATAR_MODAL_LABEL} htmlFor="settings-profile-avatar-url">
+                  URL de l&apos;image
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <ImageIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                    <input
+                      id="settings-profile-avatar-url"
+                      type="text"
+                      className={`${SETTINGS_AVATAR_MODAL_INPUT} pl-9`}
+                      value={profilePictureUrl}
+                      onChange={(e) => setProfilePictureUrl(e.target.value)}
+                      placeholder="https://example.com/avatar.png"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowProfileAvatarFilePicker(true)}
+                    title="Parcourir mes fichiers"
+                    className="section-block shrink-0 rounded-lg p-2.5 text-zinc-400 transition-colors hover:bg-zinc-800/40 hover:text-zinc-200"
+                  >
+                    <FolderSearch className="h-4 w-4" />
+                  </button>
+                </div>
+                <ScriviaFilePicker
+                  isOpen={showProfileAvatarFilePicker}
+                  onClose={() => setShowProfileAvatarFilePicker(false)}
+                  onSelectImages={(images) => {
+                    if (images.length > 0) {
+                      setProfilePictureUrl(images[0].url);
+                    }
+                    setShowProfileAvatarFilePicker(false);
+                  }}
+                  multiple={false}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </PageWithSidebarLayout>
   );
 } 

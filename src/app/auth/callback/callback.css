@@ -1,16 +1,46 @@
-/* Contenu callback OAuth — même shell visuel que /auth (auth-page + auth-container dans auth.css) */
+/* Page callback : carte centrée, sans logo — shell auth réutilisé */
 
-.auth-form-container .auth-callback-content {
+.auth-page--callback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+}
+
+.auth-container--callback {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 400px;
+  padding: 2.25rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.auth-form-container--callback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.auth-form-container--callback .auth-callback-content {
   text-align: center;
-  padding-top: 0.25rem;
+  width: 100%;
+  max-width: 20rem;
+  margin: 0 auto;
+  padding: 0;
 }
 
 .auth-callback-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  animation: auth-callback-fade-in 0.45s ease-out;
+  justify-content: center;
+  gap: 1.25rem;
+  animation: auth-callback-fade-in 0.4s ease-out;
 }
 
 @keyframes auth-callback-fade-in {
@@ -43,14 +73,18 @@
 }
 
 .auth-callback-message {
-  font-size: 1.1rem;
-  color: var(--auth-text-secondary, rgba(255, 255, 255, 0.75));
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--auth-text-secondary, rgba(255, 255, 255, 0.78));
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.55;
+  max-width: 18rem;
 }
 
 .auth-callback-message.success {
-  color: #10b981;
+  color: var(--auth-text-primary, #f8fafc);
+  font-weight: 500;
 }
 
 .auth-callback-message.error {
@@ -59,29 +93,31 @@
 
 .success-icon,
 .error-icon {
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0.5rem;
+  flex-shrink: 0;
 }
 
 .success-icon {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
 }
 
 .error-icon {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
 }
 
 .success-icon svg,
 .error-icon svg {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
 }
 
 @media (max-width: 480px) {
@@ -90,15 +126,19 @@
     height: 40px;
   }
 
+  .auth-container--callback {
+    padding: 1.75rem 1.25rem;
+  }
+
   .success-icon,
   .error-icon {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
   }
 
   .success-icon svg,
   .error-icon svg {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
   }
 }

@@ -239,21 +239,24 @@ export function AgentConfiguration({
           aria-modal="true"
           aria-labelledby="agent-avatar-modal-title"
         >
-          <div className="section-block w-full max-w-md rounded-2xl p-6 shadow-xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 id="agent-avatar-modal-title" className="text-base font-semibold text-zinc-100">
+          <div className="section-block w-full max-w-md overflow-hidden rounded-2xl shadow-xl">
+            <header className="flex min-h-12 shrink-0 items-center gap-3 border-b border-[var(--color-border-block)] px-5 py-3 sm:min-h-[3.25rem] sm:px-6 sm:py-3.5">
+              <h3
+                id="agent-avatar-modal-title"
+                className="min-w-0 flex-1 text-base font-semibold leading-snug text-zinc-100"
+              >
                 Avatar de l&apos;agent
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAvatarModal(false)}
                 aria-label="Fermer"
-                className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[var(--color-bg-content)] transition-colors"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-[var(--color-bg-content)] hover:text-zinc-100"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </button>
-            </div>
-            <div className="space-y-6">
+            </header>
+            <div className="space-y-6 px-5 pb-6 pt-5 sm:px-6 sm:pb-6 sm:pt-6">
               <div className="flex justify-center">
                 <div className="section-block w-24 h-24 rounded-full overflow-hidden flex items-center justify-center text-zinc-400 text-2xl font-medium">
                   {displayAvatarPreview ? (
