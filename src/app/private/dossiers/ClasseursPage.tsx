@@ -764,12 +764,23 @@ function ClasseursContent({
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden pt-2 pb-6">
       {/* Breadcrumb à gauche + search + toggle à droite */}
       <div className="flex items-center justify-between gap-4 min-w-0">
-        <nav className="flex min-w-0 flex-wrap items-center gap-1 text-xs font-medium uppercase tracking-wider text-zinc-500" aria-label="Fil d'Ariane">
+        <nav className="flex min-w-0 flex-wrap items-center gap-1" aria-label="Fil d'Ariane">
           {contentBreadcrumb.length === 0 ? (
             <span className="text-zinc-400">Notebooks</span>
           ) : (
             contentBreadcrumb.map((seg, i) => {
               const isDropTarget = breadcrumbDragOver === i;
+              const isRoot = i === 0;
+              /* Même hiérarchie que .settings-v-title (Réglages / Partage) pour le classeur courant */
+              const rootTypo =
+                "text-xl font-medium normal-case tracking-normal text-[var(--color-text-primary,#ededed)] mb-0 font-sans";
+              const trailBtnTypo =
+                "text-xs font-medium uppercase tracking-wider text-zinc-500";
+              const trailSpanTypo =
+                "text-xs font-medium uppercase tracking-wider text-zinc-400";
+              const dropTypo = isDropTarget
+                ? "bg-orange-500/20 text-orange-400 text-[13px] normal-case tracking-normal"
+                : "";
               const dropHandlers = seg.dropFolderId !== undefined ? {
                 onDragOver: (e: React.DragEvent) => { e.preventDefault(); setBreadcrumbDragOver(i); },
                 onDragLeave: () => setBreadcrumbDragOver(null),
@@ -780,12 +791,16 @@ function ClasseursContent({
               } : {};
               return (
                 <span key={i} className="flex items-center gap-1">
-                  {i > 0 && <span className="mx-1 text-zinc-700">/</span>}
+                  {i > 0 && (
+                    <span className="mx-1 text-xs text-zinc-700" aria-hidden>
+                      /
+                    </span>
+                  )}
                   {seg.onClick ? (
                     <button
                       type="button"
                       onClick={seg.onClick}
-                      className={`cursor-pointer rounded-lg px-1.5 py-0.5 transition-colors hover:text-zinc-300 focus:outline-none ${i === 0 ? "uppercase" : ""} ${isDropTarget ? "bg-orange-500/20 text-orange-400 text-[13px]" : ""}`}
+                      className={`rounded-lg px-1.5 py-0.5 transition-colors focus:outline-none ${isRoot ? `${rootTypo} cursor-pointer hover:text-zinc-300` : `${trailBtnTypo} cursor-pointer hover:text-zinc-300`} ${dropTypo}`}
                       title={`Aller à ${seg.label}`}
                       {...dropHandlers}
                     >
@@ -793,7 +808,7 @@ function ClasseursContent({
                     </button>
                   ) : (
                     <span
-                      className={`rounded-lg px-1.5 py-0.5 transition-colors ${i === 0 ? "uppercase" : ""} ${isDropTarget ? "bg-orange-500/20 text-orange-400 text-[13px]" : "text-zinc-400"}`}
+                      className={`rounded-lg px-1.5 py-0.5 transition-colors ${isRoot ? rootTypo : trailSpanTypo} ${dropTypo}`}
                       {...dropHandlers}
                     >
                       {seg.label}
