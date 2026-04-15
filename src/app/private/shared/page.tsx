@@ -726,62 +726,83 @@ function SharedWorkspaceContent() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="shared-invite-modal-title"
-              className="modal-content max-w-md"
+              className="modal-content max-w-md overflow-hidden"
               initial={{ scale: 0.96, opacity: 0, y: 8 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 8 }}
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="modal-header">
-                <h3 id="shared-invite-modal-title">Inviter un coéquipier</h3>
+              <div className="modal-header flex items-center justify-between px-6 py-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+                    <UserPlus className="h-4 w-4" aria-hidden />
+                  </div>
+                  <h3 id="shared-invite-modal-title" className="text-lg font-semibold text-white">
+                    Inviter un coéquipier
+                  </h3>
+                </div>
                 <button
                   type="button"
-                  className="modal-close"
+                  className="modal-close flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/5 transition-colors"
                   aria-label="Fermer"
                   onClick={() => {
                     setInviteModalOpen(false);
                     setInviteFeedback(null);
                   }}
                 >
-                  ✕
+                  <X className="h-4 w-4" />
                 </button>
               </div>
               <form onSubmit={handleInviteSubmit}>
-                <div className="modal-body space-y-4">
-                  <p className="m-0 text-sm leading-relaxed text-[var(--color-text-secondary,#a1a1aa)]">
-                    La personne recevra une demande. Une fois acceptée, vous pourrez lui partager
-                    des classeurs ou des notes selon les droits choisis.
+                <div className="modal-body space-y-5 px-6 py-6">
+                  <p className="m-0 text-sm leading-relaxed text-zinc-400">
+                    Saisissez l&apos;adresse e-mail ou le nom d&apos;utilisateur de la personne que
+                    vous souhaitez inviter. Une demande lui sera envoyée immédiatement.
                   </p>
-                  <div>
-                    <label htmlFor="shared-invite-email" className="settings-v-row-label block">
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="shared-invite-email"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    >
                       E-mail ou nom d&apos;utilisateur
                     </label>
-                    <input
-                      ref={inviteInputRef}
-                      id="shared-invite-email"
-                      type="text"
-                      value={inviteEmail}
-                      onChange={(e) => {
-                        setInviteEmail(e.target.value);
-                        if (inviteFeedback) setInviteFeedback(null);
-                      }}
-                      placeholder="email@exemple.com ou @username"
-                      className="settings-v-input mt-2 w-full"
-                      autoComplete="off"
-                      autoCapitalize="off"
-                      autoCorrect="off"
-                      disabled={inviteSending}
-                    />
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500">
+                        <Mail className="h-4 w-4" />
+                      </div>
+                      <input
+                        ref={inviteInputRef}
+                        id="shared-invite-email"
+                        type="text"
+                        value={inviteEmail}
+                        onChange={(e) => {
+                          setInviteEmail(e.target.value);
+                          if (inviteFeedback) setInviteFeedback(null);
+                        }}
+                        placeholder="email@exemple.com ou @username"
+                        className="settings-v-input w-full pl-10"
+                        autoComplete="off"
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        disabled={inviteSending}
+                      />
+                    </div>
                   </div>
                   {inviteFeedback ? (
-                    <p className="m-0 text-sm text-red-400">{inviteFeedback}</p>
+                    <motion.p
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="m-0 text-sm text-red-400"
+                    >
+                      {inviteFeedback}
+                    </motion.p>
                   ) : null}
                 </div>
-                <div className="modal-footer flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <div className="modal-footer flex flex-col-reverse gap-3 px-6 py-5 sm:flex-row sm:justify-end border-t border-white/[0.04] bg-white/[0.01]">
                   <button
                     type="button"
-                    className="modal-button"
+                    className="settings-v-btn-secondary px-5"
                     disabled={inviteSending}
                     onClick={() => {
                       setInviteModalOpen(false);
@@ -790,11 +811,21 @@ function SharedWorkspaceContent() {
                   >
                     Annuler
                   </button>
-                  <button type="submit" className="settings-v-btn" disabled={inviteSending}>
-                    <span className="inline-flex items-center gap-2">
-                      <UserPlus className="h-3.5 w-3.5" aria-hidden />
-                      {inviteSending ? "Envoi…" : "Envoyer l’invitation"}
-                    </span>
+                  <button
+                    type="submit"
+                    className="settings-v-btn min-w-[140px] px-5"
+                    disabled={inviteSending}
+                  >
+                    {inviteSending ? (
+                      <span className="inline-flex items-center gap-2">
+                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Envoi…
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-2">
+                        Envoyer l’invitation
+                      </span>
+                    )}
                   </button>
                 </div>
               </form>
