@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
 import AuthGuard from "@/components/AuthGuard";
@@ -162,15 +162,6 @@ function SharedWorkspaceContent() {
     void refreshAll();
   }, [user?.id, refreshAll]);
 
-  const summaryPills = useMemo(() => {
-    const fRecv = received.filter((x) => x.kind === "classeur").length;
-    return [
-      { label: `${teammates.length} coéquipier${teammates.length !== 1 ? "s" : ""}` },
-      { label: `${incoming.length} demande${incoming.length !== 1 ? "s" : ""} à traiter` },
-      { label: `${fRecv} classeur${fRecv !== 1 ? "s" : ""} reçu${fRecv !== 1 ? "s" : ""}` },
-    ];
-  }, [received, teammates.length, incoming.length]);
-
   const handleInvite = useCallback(
     async (e: FormEvent) => {
       e.preventDefault();
@@ -275,18 +266,6 @@ function SharedWorkspaceContent() {
                 <p className="mt-2 text-sm text-red-400">{loadError}</p>
               ) : null}
             </div>
-            {!loading ? (
-              <div className="flex flex-wrap gap-2">
-                {summaryPills.map((p) => (
-                  <span
-                    key={p.label}
-                    className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-zinc-400"
-                  >
-                    {p.label}
-                  </span>
-                ))}
-              </div>
-            ) : null}
           </div>
         </header>
 
@@ -304,10 +283,22 @@ function SharedWorkspaceContent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0 }}
               >
-                <h2 className="settings-v-title">Coéquipiers</h2>
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="settings-v-title mb-0">Coéquipiers</h2>
+                  <button
+                    type="submit"
+                    form="shared-invite-form"
+                    className="settings-v-btn w-full shrink-0 sm:w-auto"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <UserPlus className="h-3.5 w-3.5" aria-hidden />
+                      Inviter
+                    </span>
+                  </button>
+                </div>
                 <div className="settings-v-card">
-                  <div className="flex flex-col gap-4 border-b [border-bottom:var(--border-block)] p-5 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="min-w-0 flex-1">
+                  <div className="flex flex-col gap-4 border-b [border-bottom:var(--border-block)] p-5">
+                    <div className="min-w-0">
                       <div className="settings-v-row-label">Inviter par e-mail ou nom d&apos;utilisateur</div>
                       <div className="settings-v-row-desc mt-1">
                         La personne recevra une demande. Une fois acceptée, vous pourrez lui partager
@@ -315,7 +306,8 @@ function SharedWorkspaceContent() {
                       </div>
                     </div>
                     <form
-                      className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center"
+                      id="shared-invite-form"
+                      className="flex w-full flex-col gap-2 sm:flex-row sm:items-center"
                       onSubmit={handleInvite}
                     >
                       <input
@@ -326,17 +318,11 @@ function SharedWorkspaceContent() {
                           if (inviteFeedback) setInviteFeedback(null);
                         }}
                         placeholder="email@exemple.com ou @username"
-                        className="settings-v-input w-full min-w-0 sm:min-w-[240px]"
+                        className="settings-v-input w-full min-w-0 sm:min-w-[280px] sm:flex-1"
                         autoComplete="off"
                         autoCapitalize="off"
                         autoCorrect="off"
                       />
-                      <button type="submit" className="settings-v-btn shrink-0">
-                        <span className="inline-flex items-center gap-2">
-                          <UserPlus className="h-3.5 w-3.5" aria-hidden />
-                          Inviter
-                        </span>
-                      </button>
                     </form>
                   </div>
                   {inviteFeedback ? (
