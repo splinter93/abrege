@@ -1251,25 +1251,27 @@ export default function ClasseursPage() {
   }, [user?.id, loadSharedClasseurs, refreshKey]);
 
   const tabs: ClasseurTab[] = useMemo(() => {
-    const owned: ClasseurTab[] = classeurs.map((c) => ({
-      id: c.id,
-      name: c.name,
-      emoji: c.emoji,
-      kind: "owned" as const,
-    }));
-    const ownedIds = new Set(owned.map((t) => t.id));
-    // Exclure les classeurs partagés déjà présents dans owned (sécurité anti-doublon).
-    const shared: ClasseurTab[] = sharedClasseurs
-      .filter((s) => !ownedIds.has(s.classeurId))
-      .map((s) => ({
-        id: s.classeurId,
-        name: s.name,
-        emoji: s.emoji,
-        kind: "shared" as const,
-        shareId: s.shareId,
-        sharedBy: s.sharedBy,
-        permissionLevel: s.permissionLevel,
+    // Les classeurs partagés ont priorité : mergeSharedClasseurSnapshot les injecte
+    // aussi dans le store `classeurs` (pour l'arborescence), ce qui crée un doublon
+    // si on ne les exclut pas des onglets "owned".
+    const sharedIds = new Set(sharedClasseurs.map((s) => s.classeurId));
+    const owned: ClasseurTab[] = classeurs
+      .filter((c) => !sharedIds.has(c.id))
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        emoji: c.emoji,
+        kind: "owned" as const,
       }));
+    const shared: ClasseurTab[] = sharedClasseurs.map((s) => ({
+      id: s.classeurId,
+      name: s.name,
+      emoji: s.emoji,
+      kind: "shared" as const,
+      shareId: s.shareId,
+      sharedBy: s.sharedBy,
+      permissionLevel: s.permissionLevel,
+    }));
     return [...owned, ...shared];
   }, [classeurs, sharedClasseurs]);
 
