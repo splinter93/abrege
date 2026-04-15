@@ -125,6 +125,8 @@ const EditorHeaderSection: React.FC<EditorHeaderSectionProps> = ({
           noteId={noteId}
           layoutMode={layoutMode}
           showReadonlyVisitorKebab={showReadonlyVisitorKebab}
+          noteTitle={currentTitle}
+          slashLang={editorState.ui.slashLang}
           kebabMenu={
             /* Toujours monter EditorKebabMenu : la modale Export doit rester au DOM quand kebabOpen passe à false */
             <EditorKebabMenu

@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * EditorHeader - Header sobre et propre pour l'éditeur
  * Logo à gauche, toolbar au centre, 3 boutons à droite
@@ -5,6 +7,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 import { FiEye, FiMoreHorizontal, FiX, FiEdit2, FiFeather, FiMaximize2, FiChevronsLeft } from 'react-icons/fi';
 import EditorToolbar from './EditorToolbar';
 import type { FullEditorInstance } from '@/types/editor';
@@ -31,6 +34,10 @@ interface EditorHeaderProps {
   onTranscriptionComplete?: (text: string) => void;
   /** Visiteur page publique : afficher le kebab malgré readonly + !canEdit */
   showReadonlyVisitorKebab?: boolean;
+  /** Titre de la note à droite du logo (plume / actions gauche) */
+  noteTitle?: string;
+  /** Libellé Connexion / Log in selon la langue de l’éditeur */
+  slashLang?: 'fr' | 'en';
 }
 
 const EditorHeader: React.FC<EditorHeaderProps> = ({
@@ -51,7 +58,18 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
   kebabMenu,
   onTranscriptionComplete,
   showReadonlyVisitorKebab = false,
+  noteTitle,
+  slashLang = 'fr',
 }) => {
+  const { user, loading: authLoading } = useAuth();
+
+  const showKebabTrigger =
+    !!kebabMenu && (!readonly || canEdit || showReadonlyVisitorKebab);
+  const showLoginLink = !authLoading && !user && showKebabTrigger;
+
+  const loginLabel = slashLang === 'en' ? 'Log in' : 'Connexion';
+  const loginHref = '/auth';
+
   // ✅ DEBUG: Log synchrone pour capturer le problème (pas dans useEffect)
   const shouldRenderToolbar = !previewMode && showToolbar;
   if (process.env.NODE_ENV === 'development') {
@@ -85,31 +103,47 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
     <div className="editor-header">
       <div className="editor-header__row">
       {/* Logo à gauche : plume (dashboard) ou chevrons + agrandir (side-panel) */}
-      {layoutMode === 'side-panel' && noteId ? (
-        <div className="editor-header__left-actions">
-          <button
-            type="button"
-            className="editor-header__logo"
-            onClick={onClose}
-            aria-label="Fermer l'onglet"
-            title="Fermer l'onglet"
-          >
-            <FiChevronsLeft className="editor-header__logo-icon" />
-          </button>
-          <Link
-            href={`/private/note/${noteId}`}
-            className="editor-header__logo"
-            aria-label="Ouvrir en pleine page"
-            title="Ouvrir en pleine page"
-          >
-            <FiMaximize2 className="editor-header__logo-icon" />
-          </Link>
-        </div>
-      ) : (
-        <Link href="/dashboard" className="editor-header__logo" aria-label="Retour au dashboard">
-          <FiFeather className="editor-header__logo-icon" />
-        </Link>
-      )}
+      <div className="editor-header__brand">
+        {layoutMode === 'side-panel' && noteId ? (
+          <>
+            <div className="editor-header__left-actions">
+              <button
+                type="button"
+                className="editor-header__logo"
+                onClick={onClose}
+                aria-label="Fermer l'onglet"
+                title="Fermer l'onglet"
+              >
+                <FiChevronsLeft className="editor-header__logo-icon" />
+              </button>
+              <Link
+                href={`/private/note/${noteId}`}
+                className="editor-header__logo"
+                aria-label="Ouvrir en pleine page"
+                title="Ouvrir en pleine page"
+              >
+                <FiMaximize2 className="editor-header__logo-icon" />
+              </Link>
+            </div>
+            {noteTitle?.trim() ? (
+              <span className="editor-header__note-title" title={noteTitle.trim()}>
+                {noteTitle.trim()}
+              </span>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <Link href="/dashboard" className="editor-header__logo" aria-label="Retour au dashboard">
+              <FiFeather className="editor-header__logo-icon" />
+            </Link>
+            {noteTitle?.trim() ? (
+              <span className="editor-header__note-title" title={noteTitle.trim()}>
+                {noteTitle.trim()}
+              </span>
+            ) : null}
+          </>
+        )}
+      </div>
 
       {/* Toolbar au centre - cachée en mode preview ET si showToolbar = false */}
       {/* ✅ FIX: Ne rendre EditorToolbar que si editor existe (évite race condition) */}
@@ -333,9 +367,15 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
           </button>
         ) : null}
         {/* CAS 3 : Page publique + pas owner → Pas de bouton (null) */}
-        
+
+        {showLoginLink ? (
+          <Link href={loginHref} className="editor-header__login-link">
+            {loginLabel}
+          </Link>
+        ) : null}
+
         {/* Menu kebab : éditeur, proprio sur page publique, ou visiteur (menu public) */}
-        {kebabMenu && (!readonly || canEdit || showReadonlyVisitorKebab) && (
+        {showKebabTrigger && (
           <button
             ref={kebabBtnRef}
             className="header-action-btn"

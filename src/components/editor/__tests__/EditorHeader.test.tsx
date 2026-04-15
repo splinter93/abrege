@@ -21,7 +21,24 @@ vi.mock('../EditorToolbar', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+  default: ({ children, href }: { children: React.ReactNode; href?: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({
+    user: { id: 'user-1' },
+    loading: false,
+    error: null,
+    signIn: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+    forceSignOut: vi.fn(),
+    checkAndRefreshAuth: vi.fn(),
+    getAccessToken: vi.fn(),
+    getFallbackUserId: vi.fn(),
+  }),
 }));
 
 describe('[EditorHeader] Component', () => {
@@ -80,8 +97,14 @@ describe('[EditorHeader] Component', () => {
 
     it('should call onMenuOpen when menu button is clicked', () => {
       const onMenuOpen = vi.fn();
-      render(<EditorHeader {...defaultProps} onMenuOpen={onMenuOpen} />);
-      
+      render(
+        <EditorHeader
+          {...defaultProps}
+          onMenuOpen={onMenuOpen}
+          kebabMenu={<span data-testid="kebab-slot" />}
+        />,
+      );
+
       const menuButton = screen.getByRole('button', { name: /menu/i });
       fireEvent.click(menuButton);
       

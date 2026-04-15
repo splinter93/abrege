@@ -24,7 +24,7 @@ interface EditorKebabMenuProps {
   onClose: () => void;
   exportModalOpen: boolean;
   setExportModalOpen: (open: boolean) => void;
-  /** Visiteur page publique : partage réseaux + export + layout, sans réglages Scrivia */
+  /** Visiteur page publique : partage réseaux + export + mode large, sans A4 ni réglages Scrivia */
   menuVariant?: 'editor' | 'public';
   a4Mode: boolean;
   setA4Mode: (v: boolean) => void;
@@ -395,7 +395,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
   const translations = {
     fr: {
       share: 'Partager',
-      sharePublic: 'Partager la page…',
+      sharePublic: 'Partager la page',
       export: 'Exporter',
       exportPdf: 'En PDF',
       exportingPdf: 'Export PDF...',
@@ -413,7 +413,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
     },
     en: {
       share: 'Share',
-      sharePublic: 'Share page…',
+      sharePublic: 'Share page',
       export: 'Export',
       exportPdf: 'to PDF',
       exportingPdf: 'Exporting PDF...',
@@ -472,14 +472,6 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         onClose();
       },
       color: fullWidth ? '#10b981' : '#D4D4D4',
-      showCopyButton: false,
-    },
-    {
-      id: 'a4Mode',
-      label: t.a4Mode,
-      icon: <A4Icon />,
-      onClick: () => { void setA4Mode(!a4Mode); },
-      color: a4Mode ? '#10b981' : '#D4D4D4',
       showCopyButton: false,
     },
   ];

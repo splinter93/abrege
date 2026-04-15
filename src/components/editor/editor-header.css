@@ -60,8 +60,8 @@
    LOGO (gauche, position absolute) - Plume avec dégradé gris
    ========================================================================== */
 
-/* Side-panel : groupe chevrons + agrandir à gauche */
-.editor-header__left-actions {
+/* Marque : plume (ou actions side-panel) + titre — bloc unique positionné à gauche */
+.editor-header__brand {
   position: absolute;
   left: 4px;
   top: 50%;
@@ -69,7 +69,43 @@
   z-index: 2;
   display: flex;
   align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: min(46vw, 22rem);
+}
+
+.editor-header__brand .editor-header__logo {
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+}
+
+.editor-header__brand .editor-header__left-actions {
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+}
+
+.editor-header__note-title {
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary, #e4e4e7);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Side-panel : groupe chevrons + agrandir (flux dans .editor-header__brand) */
+.editor-header__left-actions {
+  display: flex;
+  align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .editor-header__left-actions .editor-header__logo {
@@ -167,6 +203,30 @@
   flex-shrink: 0;
 }
 
+/* Lien Connexion (visiteur non authentifié) — orange légèrement assombri (mix noir) */
+.editor-header__login-link {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  padding: 0 6px;
+  margin-right: 14px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, #ff6b35 88%, #0c0c0c 12%);
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: 6px;
+  line-height: 1.2;
+  transition: color 0.15s ease;
+}
+
+.editor-header__login-link:hover {
+  color: color-mix(in srgb, #ff8c5a 86%, #0c0c0c 14%);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .header-action-btn {
   display: flex;
   align-items: center;
@@ -244,6 +304,15 @@
   /* Row : flex-start, les items s'alignent de gauche à droite sans chevauchement */
   .editor-header__row {
     justify-content: flex-start;
+  }
+
+  /* Marque (plume + titre) : en flux */
+  .editor-header__brand {
+    position: static;
+    transform: none;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: min(52%, 14rem);
   }
 
   /* Logo plume : en flux, plus d'absolute */
