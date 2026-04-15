@@ -355,7 +355,8 @@ export function useChatMessageActions(
               messagesRef.current = messagesRef.current.map(msg =>
                 msg.id === tempMessage.id ? savedMessage : msg
               );
-            
+            }
+
             // 🔥 Si 1er message → update optimiste is_empty dans le store
             if (saved.message?.sequence_number === 1) {
               const store = useChatStore.getState();
