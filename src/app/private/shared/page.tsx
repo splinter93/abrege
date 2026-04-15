@@ -794,7 +794,7 @@ function SharedWorkspaceContent() {
                   </button>
                   <button
                     type="submit"
-                    className="settings-v-btn shared-invite-modal__submit"
+                    className="modal-button shared-invite-modal__submit"
                     disabled={inviteSending}
                   >
                     {inviteSending ? "Envoi…" : "Envoyer l’invitation"}

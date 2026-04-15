@@ -1658,27 +1658,9 @@ body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__footer
 }
 
 body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__btn-secondary.settings-v-btn-secondary,
-body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.settings-v-btn {
+body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.modal-button {
   min-height: 2.375rem;
-  padding: 0.5rem 1rem;
-}
-
-body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.settings-v-btn {
-  background: var(--color-primary, #e55a2c);
-  color: #fff;
-  border: none;
-  font-weight: 600;
-}
-
-body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.settings-v-btn:hover:not(:disabled) {
-  background: var(--color-primary-light, #ff6b3d);
-  color: #fff;
-}
-
-body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.settings-v-btn:disabled {
-  background: rgba(229, 90, 44, 0.35);
-  color: rgba(255, 255, 255, 0.88);
-  opacity: 1;
+  align-self: center;
 }
 
 @media (max-width: 480px) {
@@ -1688,7 +1670,7 @@ body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit
   }
 
   body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__btn-secondary.settings-v-btn-secondary,
-  body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.settings-v-btn {
+  body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.modal-button {
     width: 100%;
     justify-content: center;
   }
