@@ -763,8 +763,8 @@ function ClasseursContent({
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden pt-2 pb-6">
       {/* Breadcrumb à gauche + search + toggle à droite */}
-      <div className="flex items-center justify-between gap-4 min-w-0">
-        <nav className="flex min-w-0 flex-wrap items-center gap-1" aria-label="Fil d'Ariane">
+      <div className="flex items-end justify-between gap-4 min-w-0">
+        <nav className="flex min-w-0 flex-wrap items-end gap-1" aria-label="Fil d'Ariane">
           {contentBreadcrumb.length === 0 ? (
             <span className="text-zinc-400">Notebooks</span>
           ) : (
@@ -790,7 +790,7 @@ function ClasseursContent({
                 },
               } : {};
               return (
-                <span key={i} className="flex items-center gap-1">
+                <span key={i} className="flex items-end gap-1">
                   {i > 0 && (
                     <span className="mx-1 text-xs text-zinc-700" aria-hidden>
                       /
