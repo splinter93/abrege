@@ -15,12 +15,12 @@ const PARSE_PATH = '/api/pdf/parse';
 const REQUEST_TIMEOUT_MS = 90_000;
 const PDF_PARSER_PREFERENCE_KEY = 'chat-pdf-parser-preference';
 
-/** Préférence parseur PDF depuis les settings chat (General). */
-function getPdfParserPreference(): 'railway' | 'mistral' | null {
-  if (typeof window === 'undefined') return null;
+/** Préférence parseur PDF depuis les settings chat (General). Défaut : Mistral OCR. */
+function getPdfParserPreference(): 'railway' | 'mistral' {
+  if (typeof window === 'undefined') return 'mistral';
   const v = window.localStorage.getItem(PDF_PARSER_PREFERENCE_KEY);
   if (v === 'railway' || v === 'mistral') return v;
-  return null;
+  return 'mistral';
 }
 
 interface HealthResponse {
@@ -51,8 +51,7 @@ export class PdfParserClient {
     if (options.splitByPage) params.set('split_by_page', 'true');
     if (options.preset) params.set('preset', options.preset);
     if (options.includeTables === false) params.set('include_tables', 'false');
-    const pdfParserPref = getPdfParserPreference();
-    if (pdfParserPref) params.set('pdf_parser', pdfParserPref);
+    params.set('pdf_parser', getPdfParserPreference());
 
     const url = `${PARSE_PATH}?${params.toString()}`;
     const controller = new AbortController();
@@ -140,8 +139,7 @@ export class PdfParserClient {
     if (options.splitByPage) params.set('split_by_page', 'true');
     if (options.preset) params.set('preset', options.preset);
     if (options.includeTables === false) params.set('include_tables', 'false');
-    const pdfParserPref = getPdfParserPreference();
-    if (pdfParserPref) params.set('pdf_parser', pdfParserPref);
+    params.set('pdf_parser', getPdfParserPreference());
 
     const url = `${PARSE_PATH}?${params.toString()}`;
     const controller = new AbortController();

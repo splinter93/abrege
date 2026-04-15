@@ -76,8 +76,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   // Font state (Manrope par défaut)
   const [selectedFont, setSelectedFont] = useState<string>('manrope');
   const [selectedColorPalette, setSelectedColorPalette] = useState<string>('soft-dark');
-  // PDF Parser (General) : railway = Hybrid Parser v4, mistral = Mistral OCR
-  const [selectedPdfParser, setSelectedPdfParser] = useState<string>('railway');
+  // PDF Parser (General) : railway = Hybrid Parser v4, mistral = Mistral OCR (défaut produit)
+  const [selectedPdfParser, setSelectedPdfParser] = useState<string>('mistral');
   // Mémoire de conversation (Général) — default 60
   const [maxHistory, setMaxHistory] = useState<number>(HISTORY_DEFAULT);
 
@@ -207,6 +207,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     const savedPdfParser = localStorage.getItem('chat-pdf-parser-preference');
     if (savedPdfParser === 'railway' || savedPdfParser === 'mistral') {
       setSelectedPdfParser(savedPdfParser);
+    } else {
+      setSelectedPdfParser('mistral');
+      localStorage.setItem('chat-pdf-parser-preference', 'mistral');
     }
 
     const savedMaxHistory = localStorage.getItem(HISTORY_PREF_KEY);
@@ -337,10 +340,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
             <div className="settings-field">
               <label className="settings-field-label">Mémoire de conversation</label>
-              <p className="settings-field-description">
-                Nombre de messages de l'historique envoyés à l'IA à chaque échange.
-                Plus élevé = meilleure continuité, légèrement plus lent.
-              </p>
               <CustomSelect
                 value={String(maxHistory)}
                 options={HISTORY_PRESETS.map(p => ({
@@ -349,6 +348,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                 }))}
                 onChange={handleMaxHistoryChange}
               />
+              <p className="settings-field-description">
+                Nombre de messages de l'historique envoyés à l'IA à chaque échange.
+                Plus élevé = meilleure continuité, légèrement plus lent.
+              </p>
             </div>
           </div>
         );

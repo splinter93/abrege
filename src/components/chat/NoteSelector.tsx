@@ -105,6 +105,7 @@ const NoteSelector: React.FC<NoteSelectorProps> = ({
                       className={`chat-note-item ${selectedNotes.find(n => n.id === note.id) ? 'selected' : ''}`}
                       onClick={() => onSelectNote(note)}
                     >
+                      <Feather size={16} className="chat-note-item-icon" aria-hidden />
                       <div className="chat-note-item-content">
                         <div className="chat-note-item-title">{note.title}</div>
                       </div>

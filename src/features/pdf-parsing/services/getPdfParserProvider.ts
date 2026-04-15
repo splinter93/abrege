@@ -1,6 +1,6 @@
 /**
  * Factory : retourne le provider de parsing PDF configuré via env ou override (query pdf_parser).
- * PDF_PARSER_PROVIDER=railway (défaut) | mistral.
+ * PDF_PARSER_PROVIDER=mistral (défaut) | railway.
  * Override : pdf_parser=railway|mistral en query pour le choix utilisateur (settings chat).
  */
 
@@ -9,7 +9,7 @@ import type { IPdfParserProvider } from './contract';
 import { MistralOcrAdapter, RailwayHybridAdapter } from './adapters';
 
 const PROVIDER_ENV = 'PDF_PARSER_PROVIDER';
-const DEFAULT_PROVIDER = 'railway';
+const DEFAULT_PROVIDER = 'mistral';
 
 let cachedDefaultProvider: IPdfParserProvider | null = null;
 const cachedByOverride: Record<string, IPdfParserProvider> = {};
@@ -36,7 +36,7 @@ function getProviderById(id: string): IPdfParserProvider {
     return cachedByOverride['mistral'];
   }
   logger.warn(LogCategory.API, '[getPdfParserProvider] Unknown provider id', { id });
-  return getProviderById('railway');
+  return getProviderById('mistral');
 }
 
 /**
@@ -60,10 +60,10 @@ export function getPdfParserProvider(overrideId?: string): IPdfParserProvider {
     cachedDefaultProvider = new MistralOcrAdapter();
     return cachedDefaultProvider;
   }
-  logger.warn(LogCategory.API, '[getPdfParserProvider] Unknown env provider, fallback to railway', {
+  logger.warn(LogCategory.API, '[getPdfParserProvider] Unknown env provider, fallback to mistral', {
     provided: id,
     envKey: PROVIDER_ENV,
   });
-  cachedDefaultProvider = new RailwayHybridAdapter();
+  cachedDefaultProvider = new MistralOcrAdapter();
   return cachedDefaultProvider;
 }

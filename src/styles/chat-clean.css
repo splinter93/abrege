@@ -2014,7 +2014,6 @@ body.chat-theme-glass .chatgpt-messages > div {
   max-width: 70%;
   padding: 10px 16px; /* py-2.5 px-4 */
   font-weight: var(--chat-weight-normal, 425);
-  font-size: 14px;
   box-shadow: none;
 }
 
@@ -4174,22 +4173,19 @@ html.capacitor-native .chatgpt-message-user .bubble-buttons {
   animation: mentionMenuFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); /* ✅ Animation dédiée */
 }
 
-/* Liste scrollable */
+/* Liste scrollable — scrollbar invisible (scroll conservé) */
 .mention-menu-list {
   flex: 1;
   overflow-y: auto;
   padding: 4px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / Edge legacy */
 }
 
 .mention-menu-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.mention-menu-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
 }
 
 /* États vides */
@@ -4223,7 +4219,7 @@ html.capacitor-native .chatgpt-message-user .bubble-buttons {
 }
 
 .mention-menu-item-icon {
-  color: var(--chat-accent-primary);
+  color: var(--chat-text-secondary);
   flex-shrink: 0;
   margin-top: 2px;
 }
