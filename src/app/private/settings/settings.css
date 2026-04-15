@@ -1661,6 +1661,8 @@ body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__btn-se
 body:has(.page-content-inner-shared) .modal-overlay .shared-invite-modal__submit.modal-button {
   min-height: 2.375rem;
   align-self: center;
+  /* Radius explicite (tokens parfois absents / trop petits sur certains builds) */
+  border-radius: 0.375rem;
 }
 
 @media (max-width: 480px) {
