@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/supabaseClient';
-import LogoHeader from '@/components/LogoHeader';
+import { FiFeather } from 'react-icons/fi';
 import { logger, LogCategory } from '@/utils/logger';
+import '../auth.css';
 import './callback.css';
 
 type OAuthParams = {
@@ -141,10 +142,35 @@ function AuthCallbackContent() {
 
     const checkSession = async () => {
       try {
-        // Capacitor / WebView : si la redirection arrive en https (pas scrivia://), le code est dans l’URL
+        // 1) Flux implicit (natif Capacitor) : tokens dans le hash — pas de code_verifier requis
+        let usedImplicitFromHash = false;
+        if (typeof window !== 'undefined' && window.location.hash?.length > 1) {
+          const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          if (accessToken && refreshToken) {
+            logger.info(LogCategory.API, '[Callback] Tokens implicit (hash), setSession…');
+            const { error: hashErr } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (abortRef.current) return;
+            if (hashErr) {
+              logger.error(LogCategory.API, '[Callback] ❌ setSession (hash)', { error: hashErr.message });
+              setError('Connexion impossible (tokens). Réessayez depuis la page de connexion.');
+              setStatus('error');
+              return;
+            }
+            usedImplicitFromHash = true;
+            const path = `${window.location.pathname}${window.location.search}`;
+            window.history.replaceState(null, '', path);
+          }
+        }
+
+        // 2) PKCE (web) : ?code= — nécessite le code_verifier dans le même contexte que signInWithOAuth
         const codeFromUrl = searchParams?.get('code')?.trim();
-        if (codeFromUrl) {
-          logger.info(LogCategory.API, '[Callback] Code PKCE dans l’URL (WebView), échange…');
+        if (!usedImplicitFromHash && codeFromUrl) {
+          logger.info(LogCategory.API, '[Callback] Code PKCE dans l’URL, échange…');
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(codeFromUrl);
           if (abortRef.current) return;
           if (exchangeError) {
@@ -252,8 +278,8 @@ function AuthCallbackContent() {
           }
         }
 
-        // Flux normal : si on a échangé un code (callback WebView / app), aller au chat, sinon home
-        const target = codeFromUrl ? '/chat' : '/';
+        // Flux normal : session établie via hash implicit ou code PKCE → chat, sinon home
+        const target = usedImplicitFromHash || codeFromUrl ? '/chat' : '/';
         logger.info(LogCategory.API, '[Callback] 🔍 Flux normal, redirection vers', target);
         const t = setTimeout(() => router.push(target), 900);
         return () => clearTimeout(t);
@@ -301,7 +327,7 @@ function AuthCallbackContent() {
             </svg>
           </div>
           <p className="auth-callback-message error">{error}</p>
-          <button onClick={() => router.push('/auth')} className="auth-callback-button">
+          <button type="button" onClick={() => router.push('/auth')} className="auth-button primary">
             Retour à la connexion
           </button>
         </>
@@ -310,14 +336,29 @@ function AuthCallbackContent() {
   );
 }
 
+function AuthCallbackSuspenseFallback() {
+  return (
+    <div className="auth-callback-content" role="status" aria-live="polite">
+      <div className="loading-spinner-large" aria-hidden="true" />
+      <p className="auth-callback-message">Chargement…</p>
+    </div>
+  );
+}
+
 export default function AuthCallbackPage() {
   return (
-    <div className="auth-callback-layout">
-      <LogoHeader />
-      <div className="auth-callback-container">
-        <Suspense fallback={<div>Chargement...</div>}>
-          <AuthCallbackContent />
-        </Suspense>
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="auth-logo">
+          <FiFeather size={52} />
+        </div>
+        <div className="auth-content">
+          <div className="auth-form-container">
+            <Suspense fallback={<AuthCallbackSuspenseFallback />}>
+              <AuthCallbackContent />
+            </Suspense>
+          </div>
+        </div>
       </div>
     </div>
   );

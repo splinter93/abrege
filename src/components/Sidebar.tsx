@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Feather,
   ChevronsUpDown,
@@ -18,6 +18,7 @@ import {
   BookOpen,
   Trash2,
   User,
+  LogOut,
 } from "lucide-react";
 
 import { useMainSidebarOptional } from "@/contexts/MainSidebarContext";
@@ -105,9 +106,12 @@ function SidebarItem({
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const mainSidebar = useMainSidebarOptional();
-  const { user, getAccessToken } = useAuth();
+  const { user, getAccessToken, signOut } = useAuth();
   const [teammatePendingCount, setTeammatePendingCount] = useState(0);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user?.id) {
@@ -136,6 +140,27 @@ export default function Sidebar() {
     };
     // Re-check badge when navigating away from the shared page (user may have acted on requests).
   }, [user?.id, getAccessToken, pathname]);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAccountMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [accountMenuOpen]);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!accountMenuRef.current?.contains(e.target as Node)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [accountMenuOpen]);
+
   const isMobile = mainSidebar?.isMobile ?? false;
   const isClasseurs = pathname?.startsWith("/private/dossiers");
   const onNavigate = isMobile ? mainSidebar?.closeSidebar : undefined;
@@ -253,29 +278,69 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {/* User settings — tout en bas (masqué sur mobile : avatar dans la top bar) */}
+      {/* Compte — menu (profil / déconnexion), masqué sur mobile */}
       <footer className="mt-auto px-3 py-1.5 hidden md:block">
-        <Link
-          href="/private/settings"
-          onClick={onNavigate}
-          className={`group flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 transition-all duration-200 ${
-            pathname?.startsWith("/private/settings")
-              ? "bg-white/[0.08] text-white"
-              : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
-          }`}
-          aria-current={pathname?.startsWith("/private/settings") ? "page" : undefined}
-        >
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700/80 bg-zinc-800/60">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <User className="h-4 w-4 text-zinc-400" />
-            )}
-          </div>
-          <span className="min-w-0 truncate text-sm font-medium tracking-tight">
-            {displayName}
-          </span>
-        </Link>
+        <div className="relative" ref={accountMenuRef}>
+          <button
+            type="button"
+            onClick={() => setAccountMenuOpen((o) => !o)}
+            aria-label="Menu compte"
+            className={`group flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-left transition-all duration-200 ${
+              pathname?.startsWith("/private/settings")
+                ? "bg-white/[0.08] text-white"
+                : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
+            } ${accountMenuOpen ? "bg-white/[0.06] text-zinc-100" : ""}`}
+            aria-expanded={accountMenuOpen}
+            aria-haspopup="menu"
+            aria-controls="sidebar-account-menu"
+            id="sidebar-account-trigger"
+          >
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700/80 bg-zinc-800/60">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-4 w-4 text-zinc-400" />
+              )}
+            </div>
+            <span className="min-w-0 truncate text-sm font-medium tracking-tight">
+              {displayName}
+            </span>
+          </button>
+          {accountMenuOpen ? (
+            <div
+              id="sidebar-account-menu"
+              role="menu"
+              aria-labelledby="sidebar-account-trigger"
+              className="absolute bottom-full left-0 right-0 z-[200] mb-1 overflow-hidden rounded-lg border border-white/[0.08] bg-[#18181b] py-1 shadow-xl shadow-black/40"
+            >
+              <Link
+                href="/private/settings"
+                role="menuitem"
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-white/[0.06] hover:text-white"
+                onClick={() => {
+                  setAccountMenuOpen(false);
+                  onNavigate?.();
+                }}
+              >
+                <User className="h-4 w-4 shrink-0 text-zinc-500" aria-hidden />
+                Voir le profil
+              </Link>
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-zinc-200 transition-colors hover:bg-white/[0.06] hover:text-white"
+                onClick={async () => {
+                  setAccountMenuOpen(false);
+                  await signOut();
+                  router.push("/");
+                }}
+              >
+                <LogOut className="h-4 w-4 shrink-0 text-zinc-500" aria-hidden />
+                Se déconnecter
+              </button>
+            </div>
+          ) : null}
+        </div>
       </footer>
     </aside>
   );

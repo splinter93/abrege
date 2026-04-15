@@ -92,18 +92,7 @@ export function useCapacitorDeepLink() {
             return;
           }
 
-          if (code) {
-            simpleLogger.dev('[DeepLink] Code PKCE reçu, exchange…');
-            pendingRedirectToChat = true;
-            const { error } = await supabase.auth.exchangeCodeForSession(code);
-            if (error) {
-              pendingRedirectToChat = false;
-              simpleLogger.error('[DeepLink] exchangeCodeForSession échoué', error);
-              window.location.assign('/auth?error=session_expired');
-            }
-            return;
-          }
-
+          // Implicit (natif) : hash en priorité — évite PKCE sans code_verifier (navigateur système)
           if (accessToken && refreshToken) {
             simpleLogger.dev('[DeepLink] Tokens implicit, setSession…');
             pendingRedirectToChat = true;
@@ -115,6 +104,18 @@ export function useCapacitorDeepLink() {
               pendingRedirectToChat = false;
               simpleLogger.error('[DeepLink] setSession échoué', error);
               window.location.assign('/auth?error=session_error');
+            }
+            return;
+          }
+
+          if (code) {
+            simpleLogger.dev('[DeepLink] Code PKCE reçu, exchange…');
+            pendingRedirectToChat = true;
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) {
+              pendingRedirectToChat = false;
+              simpleLogger.error('[DeepLink] exchangeCodeForSession échoué', error);
+              window.location.assign('/auth?error=session_expired');
             }
             return;
           }

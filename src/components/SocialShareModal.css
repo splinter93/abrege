@@ -1,0 +1,170 @@
+/* Partage social — grille de tuiles (aligné sur l’esthétique modale export) */
+
+.social-share-modal__intro {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary, #a1a1aa);
+}
+
+.social-share-modal__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Enveloppe visuelle : padding 0 ; le contenu aligné dans __tile-body (copie + react-share identiques). */
+.social-share-modal__tile {
+  position: relative;
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 0.625rem;
+  border: 1px solid var(--color-border-block, rgba(255, 255, 255, 0.1));
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    var(--color-bg-primary, #121416) 48%,
+    var(--color-bg-primary, #0e1012) 100%
+  );
+  color: var(--color-text-primary, #f4f4f5);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease,
+    background 0.2s ease;
+  box-sizing: border-box;
+}
+
+.social-share-modal__tile-body {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.75rem 1rem;
+  box-sizing: border-box;
+}
+
+/* Même modèle que les tuiles réseau : cadre + fond sur l’enveloppe, zone cliquable transparente à l’intérieur. */
+.social-share-modal__tile--copy {
+  cursor: default;
+}
+
+.social-share-modal__tile:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+  transform: translateY(-1px);
+}
+
+.social-share-modal__tile:active {
+  transform: translateY(0);
+}
+
+.social-share-modal__tile--success {
+  border-color: rgba(52, 211, 153, 0.45) !important;
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.12);
+}
+
+.social-share-modal__tile--success .social-share-modal__label {
+  color: #6ee7b7;
+}
+
+/* Icône dans pastille */
+.social-share-modal__icon {
+  flex-shrink: 0;
+  width: 2.625rem;
+  height: 2.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  line-height: 0;
+}
+
+.social-share-modal__icon--copy {
+  color: #d4d4d8;
+  background: rgba(161, 161, 170, 0.12);
+  border-color: rgba(161, 161, 170, 0.18);
+}
+
+.social-share-modal__icon--whatsapp {
+  background: rgba(37, 211, 102, 0.14);
+  border-color: rgba(37, 211, 102, 0.28);
+}
+
+.social-share-modal__icon--twitter {
+  background: rgba(29, 161, 242, 0.12);
+  border-color: rgba(29, 161, 242, 0.28);
+}
+
+.social-share-modal__icon--linkedin {
+  background: rgba(10, 102, 194, 0.14);
+  border-color: rgba(10, 102, 194, 0.3);
+}
+
+.social-share-modal__label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #fafafa;
+  line-height: 1.25;
+}
+
+/* Zone cliquable pleine tuile (copie + react-share) : pas de second cadre ; styles inline react-share neutralisés */
+.social-share-modal__tile--copy > button.social-share-modal__tile-control,
+.social-share-modal__tile--share > a,
+.social-share-modal__tile--share > button,
+.social-share-modal__tile--share > .react-share__ShareButton {
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  color: inherit !important;
+  font: inherit !important;
+  text-align: left !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  transition: background 0.15s ease;
+}
+
+.social-share-modal__tile--copy > button.social-share-modal__tile-control:hover,
+.social-share-modal__tile--share > a:hover,
+.social-share-modal__tile--share > button:hover,
+.social-share-modal__tile--share > .react-share__ShareButton:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.social-share-modal__tile--share {
+  cursor: default;
+}
+
+/* Accent léger au survol par réseau */
+.social-share-modal__tile--share[data-brand="whatsapp"]:hover {
+  border-color: rgba(37, 211, 102, 0.35);
+}
+
+.social-share-modal__tile--share[data-brand="twitter"]:hover {
+  border-color: rgba(29, 161, 242, 0.35);
+}
+
+.social-share-modal__tile--share[data-brand="linkedin"]:hover {
+  border-color: rgba(10, 102, 194, 0.38);
+}
+
+.social-share-modal__tile--copy[data-brand="copy"]:hover {
+  border-color: rgba(161, 161, 170, 0.35);
+}

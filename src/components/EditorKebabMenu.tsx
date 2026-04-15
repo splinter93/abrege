@@ -94,7 +94,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       const target = e.target as Element;
 
       if (socialShareMenuOpen) {
-        if (target.closest('.social-share-menu-panel') || target.closest('.social-share-menu-backdrop')) return;
+        if (target.closest('[data-social-share-modal]')) return;
         onClose();
         setSocialShareMenuOpen(false);
         return;
@@ -449,7 +449,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       label: t.sharePublic,
       icon: <FiShare2 size={16} />,
       onClick: () => { setSocialShareMenuOpen((v) => !v); },
-      color: '#ff6b35',
+      color: '#D4D4D4',
       showCopyButton: false,
     },
     {
@@ -490,7 +490,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
       label: t.share,
       icon: <FiShare2 size={16} />,
       onClick: () => { setShareMenuOpen(true); },
-      color: currentShareSettings?.visibility === 'private' ? '#D4D4D4' : '#ff6b35',
+      color: '#D4D4D4',
       showCopyButton: !!(currentShareSettings?.visibility !== 'private' && publicUrl),
     },
     {
@@ -557,7 +557,7 @@ const EditorKebabMenu: React.FC<EditorKebabMenuProps> = ({
         style={{ 
           position: 'absolute',
           top: '100%',
-          right: '55px',
+          right: '10px',
           zIndex: (shareMenuOpen || moveToMenuOpen || socialShareMenuOpen) ? 999 : 1000
         }}
       >
