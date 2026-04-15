@@ -40,42 +40,40 @@
 }
 
 .toc-container.expanded {
-  width: 270px;
+  width: 280px;
   background-color: var(--color-bg-block);
-  border: none;
-  border-radius: 10px;
+  border: 1px solid var(--color-border-block);
+  border-radius: 12px;
   color: var(--color-text-primary);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0;
-  padding: 6px 10px 6px 10px;
-  padding-right: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  max-height: 56vh;
+  gap: 2px;
+  padding: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  max-height: 60vh;
   transform: none;
-  min-width: 270px;
+  min-width: 280px;
   margin-right: 8px;
 }
 
 .toc-content {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 2px;
   width: 100%;
 }
 
 .toc-empty-state {
-  padding: 20px;
+  padding: 24px 16px;
   text-align: center;
-  color: var(--text-3);
-  font-size: 14px;
-  font-style: italic;
+  color: var(--color-text-secondary);
+  font-size: 13.5px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .toc-empty-icon {
@@ -105,35 +103,35 @@
 
 /* Barres de niveau collapsed */
 .toc-bar {
-  height: 3px;
-  background: var(--editor-text-color);
-  border-radius: 6px;
-  margin: 12px 0;
+  height: 2.5px;
+  background: var(--color-text-secondary);
+  border-radius: 4px;
+  margin: 8px 0;
   margin-left: auto;
-  margin-right: 4px;
-  opacity: 0.95;
+  margin-right: 6px;
+  opacity: 0.6;
 }
 
 .toc-bar-h2 {
-  width: 24px;
+  width: 20px;
 }
 
 .toc-bar-h3 {
-  width: 12px;
+  width: 10px;
 }
 
 .toc-bar-spacer {
-  height: 12px;
-  margin: 12px 0;
+  height: 8px;
+  margin: 8px 0;
 }
 
 /* Items de la TOC */
 .toc-item {
   background: none;
-  border-radius: 6px;
-  padding: 3px 6px;
+  border-radius: 8px;
+  padding: 6px 10px;
   margin: 0;
-  transition: background 0.18s, color 0.18s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   white-space: pre-line;
   width: 100%;
@@ -141,57 +139,52 @@
   border: none;
   text-align: left;
   font-family: inherit;
+  line-height: 1.4;
 }
 
 .toc-item-h1 {
   font-weight: 600;
-  font-size: 14px;
-  color: var(--editor-text-color);
+  font-size: 14.5px;
+  color: var(--color-text-primary);
   margin-bottom: 4px;
-  padding-left: 6px;
+  padding-left: 8px;
 }
 
 .toc-item-h2 {
   font-weight: 700;
-  font-size: 13px;
-  color: var(--editor-text-color);
+  font-size: 14px;
+  color: var(--color-text-primary);
   margin-bottom: 0;
   padding-left: 10px;
-  line-height: 1.28;
 }
 
 .toc-item-h3 {
-  font-weight: 400;
-  font-size: 12.5px;
-  color: var(--editor-text-color);
-  padding-left: 22px;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  padding-left: 24px;
   margin-bottom: 0;
-  line-height: 1.28;
 }
 
 .toc-item:hover {
-  background: rgba(107, 114, 128, 0.1);
-  color: var(--text-primary);
-  border-radius: 6px;
-  /* Padding/margin supprimés pour éviter la saccade */
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
 }
 
 .toc-item.active {
-  background: rgba(107, 114, 128, 0.15);
-  color: var(--text-primary);
-  border-radius: 6px;
-  padding: 3px 6px;
-  margin: 0;
-  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+  font-weight: 700;
 }
 
 /* Séparateur entre sections h2 */
 .toc-separator {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08); /* Gris subtil cohérent */
+  background: var(--color-border-block);
   border: none;
-  margin: 5px auto;
-  width: 75%; /* Encore plus court et élégant */
+  margin: 8px 12px;
+  width: calc(100% - 24px);
+  opacity: 0.6;
 }
 
 /* Scrollbar invisible pour TOC */
