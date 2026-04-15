@@ -6,13 +6,11 @@
   top: 377px;
   z-index: 30;
   font-family: 'Manrope', -apple-system, sans-serif;
-  /* Expansion toujours vers la gauche (ancrage right fixe) — pas de layout shift */
-  transition: 
-    width 0.22s ease-out,
-    padding 0.22s ease-out,
-    background 0.18s ease-out,
-    box-shadow 0.18s ease-out;
   pointer-events: all;
+  /* Pas d'animation sur width — changement instantané pour éviter le jank */
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .toc-container.collapsed {
@@ -52,6 +50,12 @@
   flex-direction: column;
   gap: 2px;
   width: 100%;
+  opacity: 1;
+  transition: opacity 0.12s ease;
+}
+
+.toc-container.collapsed .toc-content {
+  opacity: 0;
 }
 
 .toc-empty-state {
