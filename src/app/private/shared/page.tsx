@@ -27,6 +27,7 @@ interface TeammateRequest {
   direction: "incoming" | "outgoing";
   name: string;
   email: string;
+  avatar: string | null;
   sentAt: string;
 }
 
@@ -35,6 +36,7 @@ interface Teammate {
   otherUserId: string;
   name: string;
   email: string;
+  avatar: string | null;
   since: string;
 }
 
@@ -359,12 +361,20 @@ function SharedWorkspaceContent() {
                               transition={{ duration: 0.2, delay: index * 0.04 }}
                             >
                               <div className="flex min-w-0 flex-1 items-center gap-3">
-                                <div
-                                  className="settings-v-avatar flex h-10 w-10 shrink-0 items-center justify-center text-xs font-semibold text-zinc-300"
-                                  aria-hidden
-                                >
-                                  {initials(r.name)}
-                                </div>
+                                {r.avatar ? (
+                                  <img
+                                    src={r.avatar}
+                                    alt={r.name}
+                                    className="h-10 w-10 shrink-0 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div
+                                    className="settings-v-avatar flex h-10 w-10 shrink-0 items-center justify-center text-xs font-semibold text-zinc-300"
+                                    aria-hidden
+                                  >
+                                    {initials(r.name)}
+                                  </div>
+                                )}
                                 <div className="min-w-0">
                                   <div className="truncate text-sm font-medium text-[var(--color-text-primary,#ededed)]">
                                     {r.name}
@@ -424,18 +434,26 @@ function SharedWorkspaceContent() {
                               transition={{ duration: 0.2, delay: index * 0.04 }}
                             >
                               <div className="flex min-w-0 flex-1 items-center gap-3">
-                                <div
-                                  className="settings-v-avatar flex h-10 w-10 shrink-0 items-center justify-center text-xs font-semibold text-zinc-300"
-                                  aria-hidden
-                                >
-                                  {initials(r.name)}
-                                </div>
+                                {r.avatar ? (
+                                  <img
+                                    src={r.avatar}
+                                    alt={r.name}
+                                    className="h-10 w-10 shrink-0 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div
+                                    className="settings-v-avatar flex h-10 w-10 shrink-0 items-center justify-center text-xs font-semibold text-zinc-300"
+                                    aria-hidden
+                                  >
+                                    {initials(r.name)}
+                                  </div>
+                                )}
                                 <div className="min-w-0">
                                   <div className="truncate text-sm font-medium text-[var(--color-text-primary,#ededed)]">
-                                    {r.email}
+                                    {r.name}
                                   </div>
                                   <div className="mt-0.5 text-xs text-[var(--color-text-secondary,#a1a1aa)]">
-                                    En attente · {new Date(r.sentAt).toLocaleDateString("fr-FR")}
+                                    {r.email} · En attente · {new Date(r.sentAt).toLocaleDateString("fr-FR")}
                                   </div>
                                 </div>
                               </div>
@@ -473,12 +491,20 @@ function SharedWorkspaceContent() {
                             transition={{ duration: 0.2, delay: index * 0.04 }}
                           >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
-                              <div
-                                className="settings-v-avatar flex h-10 w-10 shrink-0 items-center justify-center text-xs font-semibold text-zinc-300"
-                                aria-hidden
-                              >
-                                {initials(m.name)}
-                              </div>
+                              {m.avatar ? (
+                                <img
+                                  src={m.avatar}
+                                  alt={m.name}
+                                  className="h-10 w-10 shrink-0 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div
+                                  className="settings-v-avatar flex h-10 w-10 shrink-0 items-center justify-center text-xs font-semibold text-zinc-300"
+                                  aria-hidden
+                                >
+                                  {initials(m.name)}
+                                </div>
+                              )}
                               <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
                                   <span className="truncate text-sm font-medium text-[var(--color-text-primary,#ededed)]">

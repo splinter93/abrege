@@ -22,17 +22,15 @@ const inviteSchema = z.object({
 type UserRow = {
   id: string;
   email: string | null;
-  name: string | null;
-  surname: string | null;
-  display_name: string | null;
+  username: string | null;
+  profile_picture: string | null;
   created_at: string | null;
 };
 
-function displayName(u: Pick<UserRow, 'display_name' | 'name' | 'surname' | 'email'>): string {
-  if (u.display_name?.trim()) return u.display_name.trim();
-  const n = [u.name, u.surname].filter(Boolean).join(' ').trim();
-  if (n) return n;
-  return u.email?.split('@')[0] ?? 'Utilisateur';
+function displayName(u: Pick<UserRow, 'username' | 'email'>): string {
+  if (u.username?.trim()) return u.username.trim();
+  if (u.email?.trim()) return u.email.split('@')[0]!;
+  return 'Utilisateur';
 }
 
 async function fetchUsersMap(
@@ -44,7 +42,7 @@ async function fetchUsersMap(
   const unique = [...new Set(ids)];
   const { data, error } = await service
     .from('users')
-    .select('id, email, name, surname, display_name, created_at')
+    .select('id, email, username, profile_picture, created_at')
     .in('id', unique);
   if (error) {
     logApi.info(`[v2_teammates] users select error: ${error.message}`);
@@ -134,6 +132,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     direction: 'incoming';
     name: string;
     email: string;
+    avatar: string | null;
     sentAt: string;
   }> = [];
   const outgoing: Array<{
@@ -141,6 +140,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     direction: 'outgoing';
     name: string;
     email: string;
+    avatar: string | null;
     sentAt: string;
   }> = [];
   const teammates: Array<{
@@ -148,6 +148,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     otherUserId: string;
     name: string;
     email: string;
+    avatar: string | null;
     since: string;
   }> = [];
 
@@ -156,6 +157,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const u = userMap.get(otherId);
     const name = u ? displayName(u) : 'Utilisateur';
     const email = u?.email ?? '';
+    const avatar = u?.profile_picture ?? null;
 
     if (r.status === 'pending') {
       if (r.teammate_id === userId && r.requested_by !== userId) {
@@ -164,6 +166,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           direction: 'incoming',
           name,
           email,
+          avatar,
           sentAt: r.created_at,
         });
       } else if (r.user_id === userId && r.requested_by === userId) {
@@ -172,6 +175,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           direction: 'outgoing',
           name,
           email,
+          avatar,
           sentAt: r.created_at,
         });
       }
@@ -181,6 +185,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         otherUserId: otherId,
         name,
         email,
+        avatar,
         since: r.created_at,
       });
     }
