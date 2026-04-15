@@ -284,7 +284,7 @@ function SharedWorkspaceContent() {
         <header className="settings-page-header shrink-0 pb-6 pt-5 sm:pb-8 sm:pt-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0 font-sans">
-              <h1 className="bg-gradient-to-b from-white to-white/55 bg-clip-text text-3xl font-bold leading-tight tracking-tight text-transparent sm:text-4xl">
+              <h1 className="bg-gradient-to-b from-white to-white/55 bg-clip-text pb-0.5 text-3xl font-bold leading-snug tracking-tight text-transparent sm:pb-1 sm:text-4xl">
                 Partage & équipe
               </h1>
               <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-zinc-500">
