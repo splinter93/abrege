@@ -1257,15 +1257,19 @@ export default function ClasseursPage() {
       emoji: c.emoji,
       kind: "owned" as const,
     }));
-    const shared: ClasseurTab[] = sharedClasseurs.map((s) => ({
-      id: s.classeurId,
-      name: s.name,
-      emoji: s.emoji,
-      kind: "shared" as const,
-      shareId: s.shareId,
-      sharedBy: s.sharedBy,
-      permissionLevel: s.permissionLevel,
-    }));
+    const ownedIds = new Set(owned.map((t) => t.id));
+    // Exclure les classeurs partagés déjà présents dans owned (sécurité anti-doublon).
+    const shared: ClasseurTab[] = sharedClasseurs
+      .filter((s) => !ownedIds.has(s.classeurId))
+      .map((s) => ({
+        id: s.classeurId,
+        name: s.name,
+        emoji: s.emoji,
+        kind: "shared" as const,
+        shareId: s.shareId,
+        sharedBy: s.sharedBy,
+        permissionLevel: s.permissionLevel,
+      }));
     return [...owned, ...shared];
   }, [classeurs, sharedClasseurs]);
 

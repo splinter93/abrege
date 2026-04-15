@@ -92,14 +92,24 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  const items = (rows ?? []).map(
-    (r: {
-      id: string;
-      permission_level: string;
-      created_at: string;
-      shared_by: string;
-      classeur_id: string;
-    }) => {
+  // Dédupliquer par classeur_id : en cas de doublons en base, on garde la ligne
+  // avec la permission la plus élevée (write > read), puis la plus récente.
+  const deduped = new Map<
+    string,
+    { id: string; permission_level: string; created_at: string; shared_by: string; classeur_id: string }
+  >();
+  for (const r of (rows ?? []) as Array<{ id: string; permission_level: string; created_at: string; shared_by: string; classeur_id: string }>) {
+    const existing = deduped.get(r.classeur_id);
+    if (!existing) { deduped.set(r.classeur_id, r); continue; }
+    const upgradesPermission =
+      r.permission_level === 'write' && existing.permission_level !== 'write';
+    const samePermissionButNewer =
+      r.permission_level === existing.permission_level &&
+      r.created_at > existing.created_at;
+    if (upgradesPermission || samePermissionButNewer) deduped.set(r.classeur_id, r);
+  }
+
+  const items = [...deduped.values()].map((r) => {
       const c = classeurMap.get(r.classeur_id);
       const owner = userMap.get(r.shared_by);
       return {
