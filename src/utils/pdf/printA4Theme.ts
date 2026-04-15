@@ -50,7 +50,7 @@ export const PRINT_A4_PAGE_WIDTH_MM = 210;
 export const PRINT_A4_PAGE_HEIGHT_MM = 297;
 export const PRINT_A4_MARGIN_TOP_MM = 12;
 export const PRINT_A4_MARGIN_BOTTOM_MM = 20;
-export const PRINT_A4_MARGIN_X_MM = 18;
+export const PRINT_A4_MARGIN_X_MM = 14;
 export const PRINT_A4_HEADER_HEIGHT_MM = 74;
 
 export function getPrintGoogleFontsCss(): string {
