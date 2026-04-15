@@ -14,10 +14,8 @@ import {
   FolderInput,
   Inbox,
   Mail,
-  SendHorizontal,
   Trash2,
   UserPlus,
-  Users,
   X,
 } from "lucide-react";
 import "@/styles/main.css";
@@ -69,6 +67,8 @@ interface SentClasseurShare {
   emoji?: string;
   slug?: string;
   sharedAt: string;
+  /** Absent = partage classeur (comportement API actuel). */
+  kind?: "classeur" | "note";
   recipients: Array<{ userId: string; displayName: string; email: string; permissionLevel: string }>;
 }
 
@@ -326,11 +326,11 @@ function SharedWorkspaceContent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0 }}
               >
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <h2 className="settings-v-title mb-0">Coéquipiers</h2>
+                <div className="mb-4 flex flex-row items-center justify-between gap-3">
+                  <h2 className="settings-v-title mb-0 min-w-0 flex-1 truncate">Coéquipiers</h2>
                   <button
                     type="button"
-                    className="settings-v-btn w-full shrink-0 sm:w-auto"
+                    className="settings-v-btn shrink-0"
                     onClick={() => {
                       setInviteModalOpen(true);
                       setInviteFeedback(null);
@@ -353,7 +353,7 @@ function SharedWorkspaceContent() {
                             className="settings-api-key-list__item border-b [border-bottom:var(--border-block)] last:border-b-0"
                           >
                             <motion.div
-                              className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+                              className="flex flex-row items-center justify-between gap-3 p-5"
                               initial={{ opacity: 0, x: -6 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ duration: 0.2, delay: index * 0.04 }}
@@ -387,7 +387,7 @@ function SharedWorkspaceContent() {
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex shrink-0 flex-wrap gap-2">
+                              <div className="flex shrink-0 flex-wrap justify-end gap-2">
                                 <button
                                   type="button"
                                   className="settings-v-btn"
@@ -426,7 +426,7 @@ function SharedWorkspaceContent() {
                             className="settings-api-key-list__item border-b [border-bottom:var(--border-block)] last:border-b-0"
                           >
                             <motion.div
-                              className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
+                              className="flex flex-row items-center justify-between gap-3 p-5"
                               initial={{ opacity: 0, x: -6 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ duration: 0.2, delay: index * 0.04 }}
@@ -483,7 +483,7 @@ function SharedWorkspaceContent() {
                           className="settings-api-key-list__item border-b [border-bottom:var(--border-block)] last:border-b-0"
                         >
                           <motion.div
-                            className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-row items-center justify-between gap-3 p-5"
                             initial={{ opacity: 0, x: -6 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.2, delay: index * 0.04 }}
@@ -511,14 +511,6 @@ function SharedWorkspaceContent() {
                                   <span className="shrink-0 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-400">
                                     Actif
                                   </span>
-                                </div>
-                                <div className="mt-0.5 text-xs text-[var(--color-text-secondary,#a1a1aa)]">
-                                  <span className="inline-flex items-center gap-1">
-                                    <Mail className="h-3 w-3 opacity-70" aria-hidden />
-                                    {m.email}
-                                  </span>
-                                  <span className="mx-1.5 opacity-40">·</span>
-                                  <span>Depuis le {new Date(m.since).toLocaleDateString("fr-FR")}</span>
                                 </div>
                               </div>
                             </div>
@@ -564,12 +556,12 @@ function SharedWorkspaceContent() {
                           className="settings-api-key-list__item border-b [border-bottom:var(--border-block)] last:border-b-0"
                         >
                           <motion.div
-                            className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-row items-center justify-between gap-3 p-5"
                             initial={{ opacity: 0, x: -6 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.2, delay: index * 0.04 }}
                           >
-                            <div className="min-w-0 flex-1 pr-4">
+                            <div className="min-w-0 flex-1 pr-2">
                               <div className="flex flex-wrap items-center gap-2">
                                 {item.kind === "classeur" ? (
                                   <FolderInput
@@ -581,9 +573,6 @@ function SharedWorkspaceContent() {
                                 )}
                                 <span className="truncate text-[0.875rem] font-medium text-[var(--color-text-primary,#ededed)]">
                                   {item.title}
-                                </span>
-                                <span className="shrink-0 rounded-full border border-white/[0.12] bg-white/[0.05] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
-                                  {item.kind === "classeur" ? "Classeur" : "Note"}
                                 </span>
                                 <span
                                   className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
@@ -654,17 +643,15 @@ function SharedWorkspaceContent() {
                             transition={{ duration: 0.2, delay: index * 0.04 }}
                           >
                             <div className="flex flex-wrap items-center gap-2">
-                              <SendHorizontal className="h-4 w-4 shrink-0 text-zinc-500" aria-hidden />
                               {item.emoji ? <span aria-hidden>{item.emoji}</span> : null}
                               <span className="truncate text-[0.875rem] font-medium text-[var(--color-text-primary,#ededed)]">
                                 {item.name}
                               </span>
-                              <span className="shrink-0 rounded-full border border-white/[0.12] bg-white/[0.05] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
-                                Classeur
-                              </span>
                             </div>
                             <div className="flex flex-wrap items-center gap-2 text-[0.8125rem] text-[var(--color-text-secondary,#a1a1aa)]">
-                              <span>Partagé avec</span>
+                              <span>
+                                {item.kind === "note" ? "Note partagée avec" : "Classeur partagé avec"}
+                              </span>
                               {item.recipients.map((r) => (
                                 <span
                                   key={r.userId}
@@ -677,42 +664,12 @@ function SharedWorkspaceContent() {
                                   </span>
                                 </span>
                               ))}
-                              <span className="text-zinc-600">
-                                depuis le {new Date(item.sharedAt).toLocaleDateString("fr-FR")}
-                              </span>
                             </div>
                           </motion.div>
                         </div>
                       ))}
                     </div>
                   )}
-                </div>
-              </motion.section>
-
-                            {/* Rappel produit */}
-              <motion.section
-                className="settings-v-section"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.14 }}
-              >
-                <h2 className="settings-v-title flex items-center gap-2">
-                  <Users className="h-5 w-5 text-zinc-500" aria-hidden />
-                  Prochaine étape
-                </h2>
-                <div className="settings-v-card">
-                  <div className="p-5 text-sm leading-relaxed text-[var(--color-text-secondary,#a1a1aa)]">
-                    <p className="m-0 mb-3 text-[var(--color-text-primary,#ededed)]">
-                      Modèle cible : une couche d’autorisation unique (coéquipier → droit sur
-                      classeur / note), puis ouverture des ressources depuis cette page et
-                      l’arborescence.
-                    </p>
-                    <ul className="m-0 list-inside list-disc space-y-1.5 pl-0.5">
-                      <li>API invitations et liste « partagé avec moi »</li>
-                      <li>Actions « Partager » sur classeur et note (choix du coéquipier + lecture / édition)</li>
-                      <li>Notifications pour les demandes en attente</li>
-                    </ul>
-                  </div>
                 </div>
               </motion.section>
             </div>

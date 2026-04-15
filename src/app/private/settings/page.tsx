@@ -924,14 +924,16 @@ function AuthenticatedSettingsContent({
                         className={`settings-api-key-list__item border-b [border-bottom:var(--border-block)] last:border-b-0 ${!apiKey.is_active ? "opacity-55" : ""}`}
                       >
                         <motion.div
-                          className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between hover:bg-white/[0.01] transition-colors group cursor-default"
+                          className="group flex cursor-default flex-row items-center justify-between gap-3 p-5 transition-colors hover:bg-white/[0.01]"
                           initial={{ opacity: 0, x: -8 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.25, delay: index * 0.04 }}
                         >
-                          <div className="flex-1 min-w-0 pr-6">
-                            <div className="flex items-center gap-2">
-                              <span className="truncate text-[0.875rem] font-medium text-[var(--color-text-primary,#ededed)]">{apiKey.api_key_name}</span>
+                          <div className="min-w-0 flex-1 pr-2 sm:pr-6">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span className="truncate text-[0.875rem] font-medium text-[var(--color-text-primary,#ededed)]">
+                                {apiKey.api_key_name}
+                              </span>
                               <span
                                 className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                                   apiKey.is_active
@@ -942,20 +944,20 @@ function AuthenticatedSettingsContent({
                                 {apiKey.is_active ? "Actif" : "Inactif"}
                               </span>
                             </div>
-                            <div className="mt-2 flex items-center gap-3 text-[0.8125rem]">
+                            <div className="mt-2 hidden items-center gap-3 text-[0.8125rem] sm:flex">
                               <div className="flex items-center gap-1.5 text-[var(--color-text-secondary,#a1a1aa)]">
                                 <span className="opacity-70">Créée le</span>
                                 <span>{new Date(apiKey.created_at).toLocaleDateString("fr-FR")}</span>
                               </div>
                               {apiKey.last_used_at ? (
                                 <div className="flex items-center gap-1.5 text-[var(--color-text-secondary,#a1a1aa)]">
-                                  <span className="w-1 h-1 rounded-full bg-zinc-600/50"></span>
+                                  <span className="h-1 w-1 rounded-full bg-zinc-600/50" />
                                   <span className="opacity-70">Dernier accès le</span>
                                   <span>{new Date(apiKey.last_used_at).toLocaleDateString("fr-FR")}</span>
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-1.5 text-[var(--color-text-secondary,#a1a1aa)]">
-                                  <span className="w-1 h-1 rounded-full bg-zinc-600/50"></span>
+                                  <span className="h-1 w-1 rounded-full bg-zinc-600/50" />
                                   <span className="opacity-70">Jamais utilisée</span>
                                 </div>
                               )}

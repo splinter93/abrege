@@ -550,7 +550,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--settings-z-modal);
+  z-index: var(--z-modal, 1002);
   padding: var(--settings-spacing-lg);
 }
 

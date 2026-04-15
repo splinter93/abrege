@@ -393,7 +393,9 @@
   /* Contenu principal : height bornée + scroll interne (active overflow-y: auto sur mobile) */
   .page-wrapper.page-is-mobile .page-content-area {
     margin-left: 0 !important;
-    padding: 0 !important;
+    padding-left: max(env(safe-area-inset-left, 0px), clamp(0.75rem, 4vw, 1.5rem)) !important;
+    padding-right: max(env(safe-area-inset-right, 0px), clamp(0.75rem, 4vw, 1.5rem)) !important;
+    padding-bottom: 0 !important;
     padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
     gap: 0 !important;
     display: block !important; /* Casse le flex-column hérité du desktop — sinon overflow-y inopérant */

@@ -1531,6 +1531,11 @@
   color: #fafafa;
 }
 
+/* Modales Paramètres : z-index (SettingsPage.css utilisait --settings-z-modal inexistante → overlay invisible) */
+body:has(.page-content-inner-settings) .modal-overlay {
+  z-index: var(--z-modal, 1002);
+}
+
 /* Modales Paramètres & Partage — alignées sur .settings-v-card */
 body:has(.page-content-inner-settings) .modal-overlay .modal-content,
 body:has(.page-content-inner-shared) .modal-overlay .modal-content {
