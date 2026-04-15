@@ -1,5 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './editor/toc.css';
+
+const TOC_LEAVE_MS = 220;
 
 interface Heading {
   id: string;
@@ -21,6 +23,29 @@ export default function TableOfContents({ headings = [], currentId, containerRef
   // 🚨 SUPPRIMÉ : La TOC doit toujours être visible, pas de logique responsive
   // const [show, setShow] = useState(true);
   const tocRef = useRef<HTMLDivElement>(null);
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearLeaveTimer = useCallback(() => {
+    if (leaveTimerRef.current !== null) {
+      clearTimeout(leaveTimerRef.current);
+      leaveTimerRef.current = null;
+    }
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    clearLeaveTimer();
+    setHovered(true);
+  }, [clearLeaveTimer]);
+
+  const handleMouseLeave = useCallback(() => {
+    clearLeaveTimer();
+    leaveTimerRef.current = setTimeout(() => {
+      leaveTimerRef.current = null;
+      setHovered(false);
+    }, TOC_LEAVE_MS);
+  }, [clearLeaveTimer]);
+
+  useEffect(() => () => clearLeaveTimer(), [clearLeaveTimer]);
 
   // 🚨 SUPPRIMÉ : Plus de logique responsive qui masque la TOC
   // useEffect(() => {
@@ -96,8 +121,8 @@ export default function TableOfContents({ headings = [], currentId, containerRef
     <nav
       ref={tocRef}
       className={tocContainerClass}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <div className="toc-content">
         {!hasHeadings ? (
