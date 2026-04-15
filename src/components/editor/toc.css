@@ -2,47 +2,39 @@
 
 .toc-container {
   position: fixed;
-  right: 8px;
-  top: 377px; /* Remonté de 6px */
+  right: 12px;
+  top: 377px;
   z-index: 30;
   font-family: 'Manrope', -apple-system, sans-serif;
-  /* Transitions spécifiques pour animation fluide */
+  /* Expansion toujours vers la gauche (ancrage right fixe) — pas de layout shift */
   transition: 
-    width 0.25s ease-out,
-    padding 0.25s ease-out,
-    background 0.2s ease-out,
-    border 0.2s ease-out,
-    box-shadow 0.2s ease-out,
-    backdrop-filter 0.2s ease-out;
+    width 0.22s ease-out,
+    padding 0.22s ease-out,
+    background 0.18s ease-out,
+    box-shadow 0.18s ease-out;
   pointer-events: all;
 }
 
 .toc-container.collapsed {
-  /* Bande un peu plus large : zone de survol plus tolérante (évite saccades au bord droit) */
-  min-width: 48px;
-  width: 48px;
-  padding: 0 6px 0 0;
+  width: 36px;
+  padding: 8px 4px;
   box-sizing: border-box;
   background: transparent;
   border: none;
-  border-radius: 16px;
-  color: var(--editor-text-color);
-  overflow: hidden; /* Cache le contenu pendant la transition */
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: 0;
   box-shadow: none;
-  max-height: undefined;
-  transform: translateX(0);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 .toc-container.expanded {
-  width: 280px;
+  width: 268px;
   background-color: var(--color-bg-block);
-  border: 1px solid var(--color-border-block);
+  border: none;
   border-radius: 12px;
   color: var(--color-text-primary);
   overflow-y: auto;
@@ -50,12 +42,9 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  padding: 12px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  padding: 10px 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
   max-height: 60vh;
-  transform: none;
-  min-width: 280px;
-  margin-right: 8px;
 }
 
 .toc-content {
