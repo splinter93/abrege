@@ -202,31 +202,12 @@ export class SessionSyncService {
           throw new Error('Authentification requise');
         }
         
-        // ✅ NOUVEAU: Si operation_id présent, vérifier déduplication
-        if (message.operation_id) {
-          const dedupeResponse = await fetch(
-            `/api/chat/messages/check-operation?operation_id=${message.operation_id}`,
-            {
-              headers: { 'Authorization': `Bearer ${token}` }
-            }
-          );
-          
-          if (dedupeResponse.ok) {
-            const dedupeData = await dedupeResponse.json();
-            if (dedupeData.exists && dedupeData.message) {
-              logger.info('[SessionSync] ♻️ Message déjà existant (déduplication)', {
-                operationId: message.operation_id,
-                existingMessageId: dedupeData.message.id
-              });
-              return {
-                success: true,
-                message: dedupeData.message
-              };
-            }
-          }
-        }
-        
         // ✅ Appel route API (serveur) qui utilise HistoryManager avec SERVICE_ROLE
+        // Note: la déduplication par operation_id est gérée atomiquement par add_message_atomic.
+        // Si le message existe déjà (ex: serveur a sauvegardé l'assistant avant le client),
+        // add_message_atomic retourne la ligne existante PUIS HistoryManager fait le UPDATE
+        // des champs JSONB (stream_timeline, tool_results). Sans cet appel, stream_timeline
+        // n'est jamais persisté en DB.
         const response = await fetch(`/api/chat/sessions/${sessionId}/messages/add`, {
           method: 'POST',
           headers: {

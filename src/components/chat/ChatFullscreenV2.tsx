@@ -483,6 +483,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     sendMessageFn: sendMessage,
     abortFn: abortStream,
     addInfiniteMessage,
+    upsertInfiniteMessage: upsertInfiniteMessage,
     onEditingChange: (editing: boolean) => {
       if (!editing) {
         cancelEditing();

@@ -66,9 +66,8 @@ function getMessageIdentityKeys(message: ChatMessage): string[] {
   if (typeof message.sequence_number === 'number') {
     keys.push(`seq:${message.sequence_number}`);
   }
-  if (message.timestamp) {
-    keys.push(`ts:${String(message.timestamp)}`);
-  }
+  // ⚠️ timestamp retiré intentionnellement : deux messages distincts peuvent avoir
+  // le même timestamp ISO (outils, saves rapides), ce qui provoquerait un merge silencieux.
 
   return keys;
 }

@@ -46,6 +46,7 @@ export interface UseChatMessageActionsOptions {
   ) => Promise<void>;
   abortFn?: () => void;
   addInfiniteMessage: (msg: ChatMessage) => void;
+  upsertInfiniteMessage: (msg: ChatMessage) => void;
   onEditingChange?: (editing: boolean) => void;
   requireAuth: () => boolean;
   onBeforeSend?: () => Promise<void>;
@@ -101,6 +102,7 @@ export function useChatMessageActions(
     sendMessageFn,
     abortFn,
     addInfiniteMessage,
+    upsertInfiniteMessage,
     onEditingChange,
     requireAuth,
     onBeforeSend,
@@ -347,13 +349,12 @@ export function useChatMessageActions(
                 ...(attached_notes ? { attachedNotes: attached_notes } : {})
               };
 
-              const updatedMessages = messagesRef.current.map(msg => 
+              // Remplacer le message optimiste (temp-*) par la version DB via upsert ciblé.
+              // N'écrase PAS les autres messages (streaming bubble, etc.) contrairement à replaceMessages.
+              upsertInfiniteMessage(savedMessage);
+              messagesRef.current = messagesRef.current.map(msg =>
                 msg.id === tempMessage.id ? savedMessage : msg
               );
-
-              messagesRef.current = updatedMessages;
-              replaceMessages(updatedMessages);
-            }
             
             // 🔥 Si 1er message → update optimiste is_empty dans le store
             if (saved.message?.sequence_number === 1) {
@@ -420,6 +421,7 @@ export function useChatMessageActions(
     llmContext,
     sendMessageFn,
     addInfiniteMessage,
+    upsertInfiniteMessage,
     requireAuth,
     onBeforeSend,
     replaceMessages
