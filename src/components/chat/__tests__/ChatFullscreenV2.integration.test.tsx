@@ -17,77 +17,88 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import ChatFullscreenV2 from '../ChatFullscreenV2';
 import type { ChatMessage, ChatSession, Agent, EditingState } from '@/types/chat';
-import type { MessageContent, ImageAttachment } from '@/types/image';
+import type { ImageAttachment } from '@/types/image';
 
 // Setup variables d'environnement
 process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
 process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-service-role-key';
 
-// Mock Supabase
-vi.mock('@/supabaseClient', () => {
-  const mockSupabase = {
-    auth: {
-      getSession: vi.fn().mockResolvedValue({
-        data: { session: { access_token: 'mock-token', user: { id: 'user-1' } } },
-        error: null
-      })
-    },
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue({ data: { favorite_agent_id: 'agent-1' }, error: null })
+const supabaseTestApi = vi.hoisted(() => {
+  const createMockSupabaseClient = () => {
+    const mockChannel = {
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn((cb?: (status: string) => void) => {
+        queueMicrotask(() => cb?.('SUBSCRIBED'));
+        return { unsubscribe: vi.fn() };
+      }),
+    };
+    return {
+      auth: {
+        getSession: vi.fn().mockResolvedValue({
+          data: { session: { access_token: 'mock-token', user: { id: 'user-1' } } },
+          error: null,
+        }),
+        onAuthStateChange: vi.fn(() => ({
+          data: { subscription: { unsubscribe: vi.fn() } },
+        })),
+      },
+      channel: vi.fn(() => mockChannel),
+      removeChannel: vi.fn(),
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { favorite_agent_id: 'agent-1' }, error: null }),
+    };
   };
-  return {
-    supabase: mockSupabase
-  };
+  return { createMockSupabaseClient };
 });
 
+vi.mock('next/navigation', () => ({
+  usePathname: vi.fn(() => '/private/chat'),
+}));
+
+vi.mock('@/supabaseClient', () => ({
+  supabase: supabaseTestApi.createMockSupabaseClient(),
+}));
+
 vi.mock('@/utils/supabaseClient', () => ({
-  createSupabaseClient: vi.fn(() => ({
-    auth: {
-      getSession: vi.fn().mockResolvedValue({
-        data: { session: { access_token: 'mock-token' } },
-        error: null
-      })
-    }
-  }))
+  createSupabaseClient: vi.fn(() => supabaseTestApi.createMockSupabaseClient()),
 }));
 
 vi.mock('@/utils/supabaseClientSingleton', () => ({
-  getSupabaseClient: vi.fn(() => ({
-    auth: {
-      getSession: vi.fn().mockResolvedValue({
-        data: { session: { access_token: 'mock-token' } },
-        error: null
-      })
-    }
-  }))
+  getSupabaseClient: vi.fn(() => supabaseTestApi.createMockSupabaseClient()),
 }));
 
-// Mock stores
-const mockChatStore = {
-  sessions: [] as ChatSession[],
-  currentSession: null as ChatSession | null,
-  selectedAgent: null as Agent | null,
-  selectedAgentId: null as string | null,
-  agentNotFound: false,
-  editingMessage: null as EditingState | null,
-  setSelectedAgent: vi.fn(),
-  setAgentNotFound: vi.fn(),
-  setCurrentSession: vi.fn(),
-  syncSessions: vi.fn().mockResolvedValue(undefined),
-  createSession: vi.fn(),
-  startEditingMessage: vi.fn(),
-  cancelEditing: vi.fn()
-};
+const chatStoreApi = vi.hoisted(() => {
+  const mockChatStore = {
+    sessions: [] as ChatSession[],
+    currentSession: null as ChatSession | null,
+    selectedAgent: null as Agent | null,
+    selectedAgentId: null as string | null,
+    agentNotFound: false,
+    editingMessage: null as EditingState | null,
+    setSelectedAgent: vi.fn(),
+    setAgentNotFound: vi.fn(),
+    setCurrentSession: vi.fn(),
+    syncSessions: vi.fn().mockResolvedValue(undefined),
+    createSession: vi.fn(),
+    startEditingMessage: vi.fn(),
+    cancelEditing: vi.fn(),
+  };
+  const useChatStore = Object.assign(
+    vi.fn((selector?: (state: typeof mockChatStore) => unknown) => {
+      if (selector) return selector(mockChatStore);
+      return mockChatStore;
+    }),
+    { getState: () => mockChatStore }
+  );
+  return { mockChatStore, useChatStore };
+});
+
+const { mockChatStore } = chatStoreApi;
 
 vi.mock('@/store/useChatStore', () => ({
-  useChatStore: vi.fn((selector?: (state: typeof mockChatStore) => unknown) => {
-    if (selector) {
-      return selector(mockChatStore);
-    }
-    return mockChatStore;
-  })
+  useChatStore: chatStoreApi.useChatStore,
 }));
 
 const mockCanvaStore = {
@@ -127,7 +138,8 @@ vi.mock('@/hooks/useAgents', () => ({
     agents: [
       { id: 'agent-1', name: 'Test Agent', model: 'gpt-4' }
     ] as Agent[],
-    loading: false
+    loading: false,
+    loadAgents: vi.fn()
   }))
 }));
 
@@ -139,8 +151,9 @@ vi.mock('@/hooks/useLLMContext', () => ({
 
 vi.mock('@/hooks/useChatResponse', () => ({
   useChatResponse: vi.fn(() => ({
-    sendMessage: vi.fn().mockResolvedValue(undefined)
-  }))
+    sendMessage: vi.fn().mockResolvedValue(undefined),
+    abort: vi.fn(),
+  })),
 }));
 
 vi.mock('@/hooks/useChatScroll', () => ({
@@ -345,6 +358,27 @@ function createMockImageAttachment(): ImageAttachment {
 describe('[Integration] ChatFullscreenV2', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: RequestInfo | URL) => {
+        const url =
+          typeof input === 'string'
+            ? input
+            : input instanceof Request
+              ? input.url
+              : String(input);
+        if (url.includes('/api/v2/canva/sessions')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ canva_sessions: [] }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      })
+    );
     mockChatStore.sessions = [];
     mockChatStore.currentSession = null;
     mockChatStore.selectedAgent = null;
@@ -358,6 +392,7 @@ describe('[Integration] ChatFullscreenV2', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe('Initialisation', () => {
@@ -381,15 +416,7 @@ describe('[Integration] ChatFullscreenV2', () => {
 
     it('should auto-select last session if available', async () => {
       const mockSession = createMockChatSession();
-      
-      // Setup mock pour retourner les sessions
-      const originalSelector = vi.fn((selector?: (state: typeof mockChatStore) => unknown) => {
-        if (selector) {
-          return selector(mockChatStore);
-        }
-        return mockChatStore;
-      });
-      
+
       mockChatStore.sessions = [mockSession];
       mockChatStore.syncSessions.mockResolvedValue(undefined);
       

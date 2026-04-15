@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Agent } from '@/types/chat';
 import { supabase } from '@/supabaseClient';
 
@@ -16,7 +16,7 @@ export const useAgents = () => {
    * Charge tous les agents actifs de type chat uniquement
    * (pour la sidebar du chat)
    */
-  const loadAgents = async () => {
+  const loadAgents = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -35,7 +35,7 @@ export const useAgents = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   /**
    * Crée un nouvel agent
@@ -131,10 +131,9 @@ export const useAgents = () => {
     }
   };
 
-  // Charger les agents au montage du composant
   useEffect(() => {
-    loadAgents();
-  }, []);
+    void loadAgents();
+  }, [loadAgents]);
 
   return {
     agents,

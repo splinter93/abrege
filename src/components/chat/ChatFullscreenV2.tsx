@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { useChatStore } from '@/store/useChatStore';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useLLMContext } from '@/hooks/useLLMContext';
@@ -58,6 +59,10 @@ import '@/styles/chat-clean.css';
 import '@/styles/chat-widget.css';
 import '@/styles/sidebar-collapsible.css';
 
+function isChatPathname(path: string | null | undefined): boolean {
+  return path === '/chat' || path === '/private/chat';
+}
+
 export interface ChatFullscreenV2Props {
   variant?: 'fullscreen' | 'widget';
   onClose?: () => void;
@@ -67,7 +72,9 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
   // 🎯 HOOKS EXISTANTS (groupés pour lisibilité)
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const { requireAuth, user, loading: authLoading, isAuthenticated } = useAuthGuard();
-  const { agents, loading: agentsLoading } = useAgents();
+  const { agents, loading: agentsLoading, loadAgents } = useAgents();
+  const pathname = usePathname();
+  const prevPathnameForAgentsRef = useRef<string | null>(null);
   const llmContext = useLLMContext({
     includeRecent: false,
     includeDevice: true,
@@ -189,15 +196,32 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     () => infiniteMessagesRef.current
   );
 
-  // Sync selectedAgent avec la liste agents (ex: voix ou langue mise à jour dans config agent)
+  // Recharger la liste agents au retour sur le chat (ex. modèle LLM modifié sur la page agent)
+  useEffect(() => {
+    const prev = prevPathnameForAgentsRef.current;
+    const next = pathname ?? null;
+    if (isChatPathname(pathname) && prev !== null && !isChatPathname(prev)) {
+      void loadAgents();
+    }
+    prevPathnameForAgentsRef.current = next;
+  }, [pathname, loadAgents]);
+
+  // Sync selectedAgent avec la liste agents (modèle, voix, langue, métadonnées persistées / DB)
   useEffect(() => {
     if (!selectedAgentId || agents.length === 0) return;
     const updated = agents.find((a) => a.id === selectedAgentId);
     if (!updated) return;
+    const displayA = updated.display_name ?? updated.name;
+    const displayB = selectedAgent?.display_name ?? selectedAgent?.name;
     if (
       !selectedAgent ||
+      updated.model !== selectedAgent.model ||
+      (updated.provider ?? '') !== (selectedAgent.provider ?? '') ||
       updated.voice !== selectedAgent.voice ||
-      updated.tts_language !== selectedAgent.tts_language
+      updated.tts_language !== selectedAgent.tts_language ||
+      displayA !== displayB ||
+      (updated.description ?? '') !== (selectedAgent.description ?? '') ||
+      (updated.updated_at ?? '') !== (selectedAgent.updated_at ?? '')
     ) {
       setSelectedAgent(updated);
     }

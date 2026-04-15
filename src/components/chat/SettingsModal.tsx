@@ -295,7 +295,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
   const menuGroups = [
     {
-      label: 'Mon Scrivia',
+      label: 'Mon Chat',
       items: [
         { id: 'general', icon: <Settings size={18} />, label: 'Général' },
         { id: 'personalization', icon: <Palette size={18} />, label: 'Personnalisation' },
@@ -327,18 +327,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
             </p>
 
             <div className="settings-field">
-              <label className="settings-field-label">Parseur PDF</label>
-              <CustomSelect
-                value={selectedPdfParser}
-                options={[
-                  { value: 'railway', label: 'Hybrid Parser v4', icon: <FileText size={16} /> },
-                  { value: 'mistral', label: 'Mistral OCR', icon: <FileText size={16} /> },
-                ]}
-                onChange={handlePdfParserChange}
-              />
-            </div>
-
-            <div className="settings-field">
               <label className="settings-field-label">Mémoire de conversation</label>
               <CustomSelect
                 value={String(maxHistory)}
@@ -350,8 +338,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               />
               <p className="settings-field-description">
                 Nombre de messages de l'historique envoyés à l'IA à chaque échange.
-                Plus élevé = meilleure continuité, légèrement plus lent.
               </p>
+            </div>
+
+            <div className="settings-field">
+              <label className="settings-field-label">Parseur PDF</label>
+              <CustomSelect
+                value={selectedPdfParser}
+                options={[
+                  { value: 'railway', label: 'Hybrid Parser v4', icon: <FileText size={16} /> },
+                  { value: 'mistral', label: 'Mistral OCR', icon: <FileText size={16} /> },
+                ]}
+                onChange={handlePdfParserChange}
+              />
             </div>
           </div>
         );
