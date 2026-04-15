@@ -23,11 +23,15 @@ type UserRow = {
   id: string;
   email: string | null;
   username: string | null;
+  name: string | null;
+  surname: string | null;
   profile_picture: string | null;
   created_at: string | null;
 };
 
-function displayName(u: Pick<UserRow, 'username' | 'email'>): string {
+function displayName(u: Pick<UserRow, 'name' | 'surname' | 'username' | 'email'>): string {
+  const fullName = [u.name, u.surname].filter(Boolean).join(' ').trim();
+  if (fullName) return fullName;
   if (u.username?.trim()) return u.username.trim();
   if (u.email?.trim()) return u.email.split('@')[0]!;
   return 'Utilisateur';
@@ -42,7 +46,7 @@ async function fetchUsersMap(
   const unique = [...new Set(ids)];
   const { data, error } = await service
     .from('users')
-    .select('id, email, username, profile_picture, created_at')
+    .select('id, email, username, name, surname, profile_picture, created_at')
     .in('id', unique);
   if (error) {
     logApi.info(`[v2_teammates] users select error: ${error.message}`);

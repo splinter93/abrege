@@ -25,10 +25,14 @@ type UserRow = {
   id: string;
   email: string | null;
   username: string | null;
+  name: string | null;
+  surname: string | null;
   profile_picture: string | null;
 };
 
-function displayName(u: Pick<UserRow, 'username' | 'email'>): string {
+function displayName(u: Pick<UserRow, 'name' | 'surname' | 'username' | 'email'>): string {
+  const fullName = [u.name, u.surname].filter(Boolean).join(' ').trim();
+  if (fullName) return fullName;
   if (u.username?.trim()) return u.username.trim();
   if (u.email?.trim()) return u.email.split('@')[0]!;
   return 'Utilisateur';
@@ -106,7 +110,7 @@ export async function GET(
   if (ids.length) {
     const { data: users } = await service
       .from('users')
-      .select('id, email, username, profile_picture')
+      .select('id, email, username, name, surname, profile_picture')
       .in('id', ids);
     for (const u of users ?? []) {
       userMap.set((u as UserRow).id, u as UserRow);
