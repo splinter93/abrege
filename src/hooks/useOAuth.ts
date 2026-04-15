@@ -48,7 +48,9 @@ async function isNative(): Promise<boolean> {
 }
 
 export function useOAuth() {
-  const [loading, setLoading] = useState(false);
+  /** null = aucun sign-in en cours ; sinon le provider dont le bouton affiche « Chargement… » */
+  const [signInLoadingProvider, setSignInLoadingProvider] = useState<AuthProvider | null>(null);
+  const [signOutLoading, setSignOutLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Natif : au retour sur l’app (après OAuth dans le navigateur), réinitialiser le loading
@@ -58,7 +60,7 @@ export function useOAuth() {
     let removed = false;
     const handleVisible = () => {
       if (document.visibilityState !== 'visible') return;
-      t = setTimeout(() => setLoading((prev) => (prev ? false : prev)), 2500);
+      t = setTimeout(() => setSignInLoadingProvider((prev) => (prev !== null ? null : prev)), 2500);
     };
     isNative().then((native) => {
       if (!native || removed) return;
@@ -72,7 +74,7 @@ export function useOAuth() {
   }, []);
 
   async function signIn(provider: AuthProvider) {
-    setLoading(true);
+    setSignInLoadingProvider(provider);
     setError(null);
     try {
       const native = await isNative();
@@ -112,12 +114,12 @@ export function useOAuth() {
           ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} OAuth is not configured.`
           : msg,
       );
-      setLoading(false);
+      setSignInLoadingProvider(null);
     }
   }
 
   async function signOut() {
-    setLoading(true);
+    setSignOutLoading(true);
     setError(null);
     try {
       const { error: signOutError } = await supabase.auth.signOut();
@@ -126,11 +128,19 @@ export function useOAuth() {
       console.error('useOAuth signOut error:', err);
       setError(getErrorMessage(err, 'An unexpected error occurred during sign out.'));
     } finally {
-      setLoading(false);
+      setSignOutLoading(false);
     }
   }
 
-  return { signIn, signOut, loading, error };
+  return {
+    signIn,
+    signOut,
+    signInLoadingProvider,
+    signOutLoading,
+    /** @deprecated Préférer signInLoadingProvider pour l’UI par bouton */
+    loading: signInLoadingProvider !== null || signOutLoading,
+    error,
+  };
 }
 
 /**

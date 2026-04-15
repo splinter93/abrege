@@ -137,7 +137,8 @@ function AuthPageContent() {
   };
 
   // OAuth (Google/GitHub/Apple) via hook dédié
-  const { signIn: signInWithOAuth, loading: oauthLoading, error: oauthError } = useOAuth();
+  const { signIn: signInWithOAuth, signInLoadingProvider, error: oauthError } = useOAuth();
+  const oauthBusy = signInLoadingProvider !== null;
 
   // Lance l’auth interne ; le callback ChatGPT sera déclenché automatiquement quand la session existe
   const handleOAuthSignIn = async (provider: 'google' | 'apple' | 'github') => {
@@ -225,15 +226,16 @@ function AuthPageContent() {
                     }
                   };
                   
+                  const p = provider.provider as 'google' | 'apple' | 'github';
                   return (
                     <button
                       key={provider.provider}
-                      onClick={() => handleOAuthSignIn(provider.provider as 'google' | 'apple' | 'github')}
-                      disabled={oauthLoading}
+                      onClick={() => handleOAuthSignIn(p)}
+                      disabled={oauthBusy}
                       className={`oauth-button ${provider.provider}`}
                     >
                       {getIcon()}
-                      {oauthLoading ? 'Chargement...' : `Continuer avec ${provider.label}`}
+                      {signInLoadingProvider === p ? 'Chargement...' : `Continuer avec ${provider.label}`}
                     </button>
                   );
                 })}
@@ -298,19 +300,19 @@ function AuthPageContent() {
                 <>
                   <button
                     onClick={() => handleOAuthSignIn('google')}
-                    disabled={oauthLoading}
+                    disabled={oauthBusy}
                     className="oauth-button google"
                   >
                     <FcGoogle size={20} />
-                    {oauthLoading ? 'Chargement...' : 'Connexion avec Google'}
+                    {signInLoadingProvider === 'google' ? 'Chargement...' : 'Connexion avec Google'}
                   </button>
                   <button
                     onClick={() => handleOAuthSignIn('github')}
-                    disabled={oauthLoading}
+                    disabled={oauthBusy}
                     className="oauth-button github"
                   >
                     <FaGithub size={20} />
-                    {oauthLoading ? 'Chargement...' : 'Connexion avec GitHub'}
+                    {signInLoadingProvider === 'github' ? 'Chargement...' : 'Connexion avec GitHub'}
                   </button>
                   {oauthError && <div className="error-message">{oauthError}</div>}
                 </>
