@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
 import AuthGuard from "@/components/AuthGuard";
@@ -85,8 +85,11 @@ function SharedWorkspaceContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteFeedback, setInviteFeedback] = useState<string | null>(null);
+  const [inviteSending, setInviteSending] = useState(false);
+  const inviteInputRef = useRef<HTMLInputElement>(null);
 
   const [incoming, setIncoming] = useState<TeammateRequest[]>([]);
   const [outgoing, setOutgoing] = useState<TeammateRequest[]>([]);
@@ -162,45 +165,71 @@ function SharedWorkspaceContent() {
     void refreshAll();
   }, [user?.id, refreshAll]);
 
-  const handleInvite = useCallback(
-    async (e: FormEvent) => {
-      e.preventDefault();
-      const email = inviteEmail.trim();
-      if (!email) {
-        setInviteFeedback("Saisissez un e-mail ou un nom d'utilisateur.");
+  const submitInvite = useCallback(async () => {
+    const email = inviteEmail.trim();
+    if (!email) {
+      setInviteFeedback("Saisissez un e-mail ou un nom d'utilisateur.");
+      return;
+    }
+    setInviteFeedback(null);
+    setInviteSending(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        setInviteFeedback("Session expirée.");
         return;
       }
-      setInviteFeedback(null);
-      try {
-        const token = await getAccessToken();
-        if (!token) {
-          setInviteFeedback("Session expirée.");
-          return;
-        }
-        const res = await fetch("/api/v2/teammates", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        });
-        const j = (await res.json().catch(() => ({}))) as { error?: string; request?: TeammateRequest };
-        if (!res.ok) {
-          setInviteFeedback(j.error || "Invitation impossible.");
-          return;
-        }
-        if (j.request) {
-          setOutgoing((prev) => [j.request!, ...prev]);
-        }
-        setInviteEmail("");
-        setInviteFeedback("Invitation envoyée.");
-      } catch {
-        setInviteFeedback("Erreur réseau.");
+      const res = await fetch("/api/v2/teammates", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string; request?: TeammateRequest };
+      if (!res.ok) {
+        setInviteFeedback(j.error || "Invitation impossible.");
+        return;
       }
+      if (j.request) {
+        setOutgoing((prev) => [j.request!, ...prev]);
+      }
+      setInviteEmail("");
+      setInviteFeedback(null);
+      setInviteModalOpen(false);
+    } catch {
+      setInviteFeedback("Erreur réseau.");
+    } finally {
+      setInviteSending(false);
+    }
+  }, [getAccessToken, inviteEmail]);
+
+  const handleInviteSubmit = useCallback(
+    (e: FormEvent) => {
+      e.preventDefault();
+      void submitInvite();
     },
-    [getAccessToken, inviteEmail],
+    [submitInvite],
   );
+
+  useEffect(() => {
+    if (!inviteModalOpen) return;
+    const t = window.setTimeout(() => inviteInputRef.current?.focus(), 50);
+    return () => window.clearTimeout(t);
+  }, [inviteModalOpen]);
+
+  useEffect(() => {
+    if (!inviteModalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setInviteModalOpen(false);
+        setInviteFeedback(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [inviteModalOpen]);
 
   const patchTeammate = useCallback(
     async (id: string, status: "accepted" | "blocked") => {
@@ -286,9 +315,12 @@ function SharedWorkspaceContent() {
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="settings-v-title mb-0">Coéquipiers</h2>
                   <button
-                    type="submit"
-                    form="shared-invite-form"
+                    type="button"
                     className="settings-v-btn w-full shrink-0 sm:w-auto"
+                    onClick={() => {
+                      setInviteModalOpen(true);
+                      setInviteFeedback(null);
+                    }}
                   >
                     <span className="inline-flex items-center gap-2">
                       <UserPlus className="h-3.5 w-3.5" aria-hidden />
@@ -297,40 +329,6 @@ function SharedWorkspaceContent() {
                   </button>
                 </div>
                 <div className="settings-v-card">
-                  <div className="flex flex-col gap-4 border-b [border-bottom:var(--border-block)] p-5">
-                    <div className="min-w-0">
-                      <div className="settings-v-row-label">Inviter par e-mail ou nom d&apos;utilisateur</div>
-                      <div className="settings-v-row-desc mt-1">
-                        La personne recevra une demande. Une fois acceptée, vous pourrez lui partager
-                        des classeurs ou des notes selon les droits choisis.
-                      </div>
-                    </div>
-                    <form
-                      id="shared-invite-form"
-                      className="flex w-full flex-col gap-2 sm:flex-row sm:items-center"
-                      onSubmit={handleInvite}
-                    >
-                      <input
-                        type="text"
-                        value={inviteEmail}
-                        onChange={(e) => {
-                          setInviteEmail(e.target.value);
-                          if (inviteFeedback) setInviteFeedback(null);
-                        }}
-                        placeholder="email@exemple.com ou @username"
-                        className="settings-v-input w-full min-w-0 sm:min-w-[280px] sm:flex-1"
-                        autoComplete="off"
-                        autoCapitalize="off"
-                        autoCorrect="off"
-                      />
-                    </form>
-                  </div>
-                  {inviteFeedback ? (
-                    <div className="border-b [border-bottom:var(--border-block)] px-5 py-3 text-xs text-zinc-400">
-                      {inviteFeedback}
-                    </div>
-                  ) : null}
-
                   {incoming.length > 0 ? (
                     <>
                       <p className="shared-v-list-heading">Demandes entrantes</p>
@@ -461,7 +459,8 @@ function SharedWorkspaceContent() {
                   {teammates.length === 0 ? (
                     <div className="shared-v-empty">
                       <strong>Aucun coéquipier pour l’instant</strong>
-                      Envoyez une invitation pour commencer à partager des classeurs et des notes.
+                      Utilisez le bouton « Inviter » pour envoyer une demande par e-mail ou nom
+                      d&apos;utilisateur, puis partagez des classeurs ou des notes.
                     </div>
                   ) : (
                     <div className="settings-api-key-list">
@@ -708,6 +707,101 @@ function SharedWorkspaceContent() {
           )}
         </main>
       </div>
+
+      <AnimatePresence>
+        {inviteModalOpen ? (
+          <motion.div
+            key="shared-invite-modal"
+            className="modal-overlay"
+            role="presentation"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => {
+              setInviteModalOpen(false);
+              setInviteFeedback(null);
+            }}
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="shared-invite-modal-title"
+              className="modal-content max-w-md"
+              initial={{ scale: 0.96, opacity: 0, y: 8 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 8 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h3 id="shared-invite-modal-title">Inviter un coéquipier</h3>
+                <button
+                  type="button"
+                  className="modal-close"
+                  aria-label="Fermer"
+                  onClick={() => {
+                    setInviteModalOpen(false);
+                    setInviteFeedback(null);
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+              <form onSubmit={handleInviteSubmit}>
+                <div className="modal-body space-y-4">
+                  <p className="m-0 text-sm leading-relaxed text-[var(--color-text-secondary,#a1a1aa)]">
+                    La personne recevra une demande. Une fois acceptée, vous pourrez lui partager
+                    des classeurs ou des notes selon les droits choisis.
+                  </p>
+                  <div>
+                    <label htmlFor="shared-invite-email" className="settings-v-row-label block">
+                      E-mail ou nom d&apos;utilisateur
+                    </label>
+                    <input
+                      ref={inviteInputRef}
+                      id="shared-invite-email"
+                      type="text"
+                      value={inviteEmail}
+                      onChange={(e) => {
+                        setInviteEmail(e.target.value);
+                        if (inviteFeedback) setInviteFeedback(null);
+                      }}
+                      placeholder="email@exemple.com ou @username"
+                      className="settings-v-input mt-2 w-full"
+                      autoComplete="off"
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      disabled={inviteSending}
+                    />
+                  </div>
+                  {inviteFeedback ? (
+                    <p className="m-0 text-sm text-red-400">{inviteFeedback}</p>
+                  ) : null}
+                </div>
+                <div className="modal-footer flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    className="modal-button"
+                    disabled={inviteSending}
+                    onClick={() => {
+                      setInviteModalOpen(false);
+                      setInviteFeedback(null);
+                    }}
+                  >
+                    Annuler
+                  </button>
+                  <button type="submit" className="settings-v-btn" disabled={inviteSending}>
+                    <span className="inline-flex items-center gap-2">
+                      <UserPlus className="h-3.5 w-3.5" aria-hidden />
+                      {inviteSending ? "Envoi…" : "Envoyer l’invitation"}
+                    </span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
