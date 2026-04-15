@@ -26,16 +26,42 @@ export interface Html2CanvasPdfResult {
 }
 
 /**
- * Attend que le rendu soit complet avant capture
+ * Attend que le rendu soit complet avant capture.
+ * Force explicitement le chargement de la police demandée (Google Fonts via @import
+ * dynamique) avant que html2canvas ne capture l'élément.
  */
-async function waitForRenderComplete(element: HTMLElement): Promise<void> {
-  // Attendre plusieurs frames pour s'assurer que le rendu est complet
+async function waitForRenderComplete(
+  element: HTMLElement,
+  fontFamily?: string | null,
+): Promise<void> {
+  // Laisser le navigateur parse le <style> @import injecté
   await new Promise(resolve => requestAnimationFrame(resolve));
   await new Promise(resolve => requestAnimationFrame(resolve));
   await new Promise(resolve => requestAnimationFrame(resolve));
-  
-  // Délai supplémentaire pour le rendu CSS
-  await new Promise(resolve => setTimeout(resolve, 300));
+
+  if ('fonts' in document) {
+    try {
+      // Demander explicitement les graisses utilisées dans le PDF
+      const family = (fontFamily || 'Manrope').trim().replace(/^['"]|['"]$/g, '');
+      const weights = ['400', '500', '600', '700', '800'];
+      await Promise.race([
+        Promise.all(
+          weights.map(w =>
+            document.fonts
+              .load(`${w} 16px "${family}"`)
+              .catch(() => { /* font absente ou réseau KO, on continue */ }),
+          ),
+        ).then(() => document.fonts.ready),
+        // Timeout de sécurité : 5 s max (Google Fonts sur réseau lent)
+        new Promise(resolve => setTimeout(resolve, 5000)),
+      ]);
+    } catch {
+      // Pas de blocage si l'API fonts est indisponible
+    }
+  }
+
+  // Petit délai pour que le navigateur re-rende les glyphes chargés
+  await new Promise(resolve => setTimeout(resolve, 150));
 }
 
 /**
@@ -128,7 +154,7 @@ async function cleanupTempElement(element: HTMLElement): Promise<void> {
 export async function generatePdfWithHtml2Canvas(
   options: Html2CanvasPdfOptions
 ): Promise<Html2CanvasPdfResult> {
-  const { htmlContent, title, filename } = options;
+  const { htmlContent, title, filename, fontFamily } = options;
   
   // Préparer l'élément DOM
   const tempElement = prepareElementForPdf(options);
@@ -151,7 +177,7 @@ export async function generatePdfWithHtml2Canvas(
     // Attendre que les images soient chargées
     await waitForImages(tempElement);
     await ensureAllImagesLoaded(tempElement);
-    await waitForRenderComplete(tempElement);
+    await waitForRenderComplete(tempElement, fontFamily);
     
     // Vérifier que l'élément a du contenu visible
     const hasContent = tempElement.textContent && tempElement.textContent.trim().length > 0;

@@ -15,6 +15,7 @@ const PLAYWRIGHT_API_URL = process.env.PLAYWRIGHT_API_URL || 'https://factoria-p
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // secondes — Playwright + Railway cold start
 
 interface PdfExportRequest {
   title: string;

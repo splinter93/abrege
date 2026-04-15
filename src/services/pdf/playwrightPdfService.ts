@@ -63,20 +63,30 @@ export async function generatePdfWithPlaywright(
       logger.warn('[playwrightPdfService] Pas de token disponible, authentification échouera probablement');
     }
     
-    const response = await fetch('/api/pdf/export', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        title,
-        htmlContent,
-        fontFamily,
-        headerImage,
-        headerImageOffset,
-        headerImageBlur,
-        headerImageOverlay,
-        headerTitleInImage,
-      })
-    });
+    // Timeout de 55 s (en dessous du maxDuration=60 de la route)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 55_000);
+
+    let response: Response;
+    try {
+      response = await fetch('/api/pdf/export', {
+        method: 'POST',
+        headers,
+        signal: controller.signal,
+        body: JSON.stringify({
+          title,
+          htmlContent,
+          fontFamily,
+          headerImage,
+          headerImageOffset,
+          headerImageBlur,
+          headerImageOverlay,
+          headerTitleInImage,
+        }),
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (response.ok) {
       // Vérifier que c'est bien un PDF
