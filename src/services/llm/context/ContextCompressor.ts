@@ -66,6 +66,39 @@ function trimLeadingInvalidToolSequence(messages: ChatMessage[]): ChatMessage[] 
   return out;
 }
 
+/**
+ * Retire les messages tool orphelins (sans assistant avec tool_calls précédent)
+ * depuis n'importe quelle position dans le tableau.
+ *
+ * Cas couverts :
+ * - Assistant persisté avec tool_calls = null/undefined (corruption partielle)
+ * - Troncature ayant coupé l'assistant mais conservé son tool result
+ * - Reload de page avec état store partiel
+ *
+ * Ne modifie pas les sequences valides (assistant→tool→... conservées intactes).
+ */
+export function sanitizeToolSequences(messages: ChatMessage[]): ChatMessage[] {
+  const out: ChatMessage[] = [];
+  for (const msg of messages) {
+    if (msg.role === 'tool') {
+      // Chercher le dernier message non-tool dans out
+      let lastNonTool: ChatMessage | undefined;
+      for (let i = out.length - 1; i >= 0; i--) {
+        if (out[i].role !== 'tool') {
+          lastNonTool = out[i];
+          break;
+        }
+      }
+      if (!lastNonTool || !hasToolCalls(lastNonTool)) {
+        // Orphelin : l'assistant précédent n'a pas de tool_calls → skip
+        continue;
+      }
+    }
+    out.push(msg);
+  }
+  return out;
+}
+
 /** ~20 échanges user/assistant */
 export const MAX_HISTORY_MESSAGES = 40;
 

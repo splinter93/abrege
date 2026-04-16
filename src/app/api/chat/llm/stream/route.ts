@@ -33,7 +33,8 @@ import {
   compressToolResults,
   MAX_HISTORY_MESSAGES,
   TOOL_RESULT_THRESHOLD,
-  truncateHistory
+  truncateHistory,
+  sanitizeToolSequences
 } from '@/services/llm/context/ContextCompressor';
 import { resolveAgentSystemInstructionNotes } from '@/services/llm/AgentMentionResolver';
 
@@ -392,14 +393,16 @@ export async function POST(request: NextRequest) {
     
     // ✅ Construire le tableau de messages avec contextes injectés AVANT user message
     // Conversion type-safe via mapper
-    const sanitizedHistory = truncateHistory(
-      history.map((msg, index) => ({
-        ...msg,
-        id: msg.id ?? `history-${index}`,
-        content: msg.content ?? '',
-        timestamp: msg.timestamp ?? new Date().toISOString()
-      })) as ChatMessage[],
-      maxHistoryMessages ?? MAX_HISTORY_MESSAGES
+    const sanitizedHistory = sanitizeToolSequences(
+      truncateHistory(
+        history.map((msg, index) => ({
+          ...msg,
+          id: msg.id ?? `history-${index}`,
+          content: msg.content ?? '',
+          timestamp: msg.timestamp ?? new Date().toISOString()
+        })) as ChatMessage[],
+        maxHistoryMessages ?? MAX_HISTORY_MESSAGES
+      )
     );
 
     // ✅ Extraire les images du format multi-modal si présent

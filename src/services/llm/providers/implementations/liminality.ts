@@ -517,7 +517,9 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
    * Convertit les ChatMessage vers le format API Liminality
    */
   private convertChatMessagesToApiFormat(messages: ChatMessage[]): LiminalityMessage[] {
-    return messages.map((msg) => {
+    const result: LiminalityMessage[] = [];
+
+    for (const msg of messages) {
       const limMsg: LiminalityMessage = {
         role: this.mapRole(msg.role),
         content: msg.content || ''
@@ -571,6 +573,21 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
         const toolMsg = msg as import('@/types/chat').ToolMessage;
         
         if (toolMsg.tool_call_id) {
+          // Guard : rejeter tout tool_response sans tool_request précédent.
+          // Évite l'erreur 400 Jinja Fireworks "Message has tool role, but there was
+          // no previous assistant message with a tool call!" quand l'historique est
+          // partiellement corrompu (tool_calls null sur l'assistant, reload, etc.).
+          const prev = result[result.length - 1];
+          const prevIsRequest = prev?.role === 'tool_request';
+          const prevIsResponse = prev?.role === 'tool_response';
+          if (!prevIsRequest && !prevIsResponse) {
+            logger.warn('[LiminalityProvider] ⚠️ tool_response orphelin ignoré (pas de tool_request précédent)', {
+              tool_call_id: toolMsg.tool_call_id,
+              name: toolMsg.name
+            });
+            continue;
+          }
+
           // Format Synesia : tool_calls en array
           limMsg.tool_calls = [{
             tool_call_id: toolMsg.tool_call_id,
@@ -580,11 +597,14 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
           delete limMsg.content;
         } else {
           logger.error(`[LiminalityProvider] ❌ Tool message sans tool_call_id`);
+          continue;
         }
       }
 
-      return limMsg;
-    });
+      result.push(limMsg);
+    }
+
+    return result;
   }
 
   /**
