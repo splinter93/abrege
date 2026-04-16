@@ -267,20 +267,28 @@ export interface LiminalityStreamEvent {
     | 'internal_tool.start'
     | 'internal_tool.done'
     | 'internal_tool.error'
+    | 'reasoning.start'
+    | 'reasoning.delta'
+    | 'reasoning.done'
+    | 'image_generation.start'
+    | 'image_generation.done'
+    | 'annotation'
     | 'done'
     | 'tool_call'
     | 'tool_result'
     | 'end'
     | 'error';
-  delta?: string; // Pour 'text.delta'
+  delta?: string; // Pour 'text.delta' et 'reasoning.delta'
   content?: string; // Pour 'chunk' ou contenu général
-  block_id?: string; // Pour 'tool_block.start' et 'tool_block.done'
-  tool_name?: string; // Pour 'tool_call' et 'tool_result' (ancien format)
+  block_id?: string; // Pour 'tool_block.*', 'text.*', 'reasoning.*', 'image_generation.*', 'annotation'
+  /** tool_call : call_id (doc) */
+  call_id?: string;
+  tool_name?: string; // Pour 'tool_result' (ancien format)
   /** internal_tool.* : identifiant du tool call */
   tool_call_id?: string;
-  /** internal_tool.* : nom du callable/outil */
+  /** internal_tool.* ou tool_call : nom du callable/outil */
   name?: string;
-  /** internal_tool.start : arguments envoyés au callable */
+  /** tool_call : arguments du tool call */
   arguments?: Record<string, unknown>;
   /** internal_tool.done : résultat du callable */
   result?: unknown;

@@ -527,6 +527,11 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       if (msg.role === 'assistant') {
         const assistantMsg = msg as import('@/types/chat').AssistantMessage;
         if (assistantMsg.tool_calls && assistantMsg.tool_calls.length > 0) {
+          // Liminality utilise role: 'tool_request' (pas 'assistant') pour les messages
+          // avec tool_calls. Si on envoie role: 'assistant', Liminality ne forward pas
+          // les tool_calls à Fireworks → Jinja template error côté Minimax.
+          limMsg.role = 'tool_request';
+          
           // ✅ ERROR HANDLING : Parser avec try/catch pour chaque tool call
           limMsg.tool_calls = assistantMsg.tool_calls.map(tc => {
             let parsedArguments: Record<string, unknown> = {};
@@ -730,6 +735,9 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       'start', 'text.start', 'text.delta', 'chunk', 'text.done',
       'tool_block.start', 'tool_block.done',
       'internal_tool.start', 'internal_tool.done', 'internal_tool.error',
+      'reasoning.start', 'reasoning.delta', 'reasoning.done',
+      'image_generation.start', 'image_generation.done',
+      'annotation',
       'done', 'tool_call', 'tool_result', 'end', 'error'
     ];
     return typeof e.type === 'string' && validTypes.includes(e.type);
@@ -946,20 +954,34 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       }
 
       case 'tool_call':
-        // Tool call en cours (ancien format)
-        logger.dev(`[LiminalityProvider] 🔧 Tool call: ${event.tool_name}`);
-        return {
-          type: 'delta',
-          content: `[Exécution: ${event.tool_name}]\n`
-        };
+        // Notification que le modèle demande un tool call (doc: block_id, call_id, name, arguments)
+        logger.dev(`[LiminalityProvider] 🔧 Tool call: ${event.name || event.tool_name}`);
+        return null; // Le tool call sera traité via l'event 'done'
 
       case 'tool_result':
         // Résultat de tool (ancien format)
-        logger.dev(`[LiminalityProvider] ✅ Tool result: ${event.tool_name}`);
+        logger.dev(`[LiminalityProvider] ✅ Tool result: ${event.name || event.tool_name}`);
+        return null;
+
+      case 'reasoning.start':
+      case 'reasoning.done':
+        return null;
+
+      case 'reasoning.delta':
+        // Delta de raisonnement (modèles reasoning)
         return {
           type: 'delta',
-          content: '' // Ne pas afficher le résultat brut
+          reasoning: event.delta || ''
         };
+
+      case 'image_generation.start':
+        return null;
+
+      case 'image_generation.done':
+        return null;
+
+      case 'annotation':
+        return null;
 
       case 'end':
         // Fin du stream avec usage (ancien format)
