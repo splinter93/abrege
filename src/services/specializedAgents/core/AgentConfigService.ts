@@ -73,10 +73,15 @@ export class AgentConfigService {
         logger.dev(`[AgentConfigService] 🔍 Recherche par slug: ${agentId}`);
       }
 
-      const { data: agent, error } = await query.single();
+      const { data: agent, error } = await query.maybeSingle();
 
       if (error) {
-        logger.warn(`[AgentConfigService] ❌ Erreur requête agent ${agentId}:`, { error: error.message, code: error.code });
+        // PGRST116 = plusieurs lignes (ne doit plus arriver avec agents_slug_unique, log critique si ça arrive)
+        if (error.code === 'PGRST116') {
+          logger.error(`[AgentConfigService] 🚨 Slug dupliqué détecté pour: ${agentId} — contrainte agents_slug_unique violée`, { error: error.message });
+        } else {
+          logger.warn(`[AgentConfigService] ❌ Erreur requête agent ${agentId}:`, { error: error.message, code: error.code });
+        }
         return null;
       }
 

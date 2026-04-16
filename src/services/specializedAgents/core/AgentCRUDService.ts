@@ -98,6 +98,11 @@ export class AgentCRUDService {
         .single();
 
       if (error) {
+        // 23505 = unique_violation (race condition : deux créations simultanées du même slug)
+        if (error.code === '23505') {
+          logger.warn(`[AgentCRUDService] ⚠️ Slug '${config.slug}' déjà pris (race condition)`, { code: error.code });
+          return { success: false, error: `Le slug '${config.slug}' est déjà utilisé` };
+        }
         logger.error(`[AgentCRUDService] ❌ Erreur création agent:`, error);
         return {
           success: false,
