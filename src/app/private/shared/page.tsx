@@ -39,16 +39,6 @@ interface Teammate {
   since: string;
 }
 
-interface SharedNotePreview {
-  id: string;
-  title: string;
-  author: string;
-  authorHint: string;
-  sharedAt: string;
-  access: "lecture" | "édition";
-  kind: "note";
-}
-
 interface SharedFolderPreview {
   id: string;
   classeurId: string;
@@ -105,7 +95,7 @@ function SharedWorkspaceContent() {
   const [incoming, setIncoming] = useState<TeammateRequest[]>([]);
   const [outgoing, setOutgoing] = useState<TeammateRequest[]>([]);
   const [teammates, setTeammates] = useState<Teammate[]>([]);
-  const [received, setReceived] = useState<(SharedNotePreview | SharedFolderPreview)[]>([]);
+  const [received, setReceived] = useState<SharedFolderPreview[]>([]);
   const [sent, setSent] = useState<SentClasseurShare[]>([]);
 
   const refreshAll = useCallback(async () => {
@@ -656,11 +646,7 @@ function SharedWorkspaceContent() {
                               <button
                                 type="button"
                                 className="settings-v-btn"
-                                onClick={() => {
-                                  if (item.kind === "classeur" && "classeurId" in item) {
-                                    openSharedClasseur(item.classeurId);
-                                  }
-                                }}
+                                onClick={() => openSharedClasseur(item.classeurId)}
                               >
                                 Ouvrir
                               </button>
