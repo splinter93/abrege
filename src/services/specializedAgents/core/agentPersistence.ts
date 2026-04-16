@@ -6,6 +6,7 @@ const OMIT_FROM_AGENTS_ROW: ReadonlySet<string> = new Set([
   'is_favorite',
   'category',
   'instructions',
+  'is_platform', // Immuable via UI — seul le service role / migration peut le modifier
 ]);
 
 /**

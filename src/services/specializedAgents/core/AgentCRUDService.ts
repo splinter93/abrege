@@ -15,6 +15,8 @@ import type {
 import { AgentConfigService } from './AgentConfigService';
 import { AgentConfigValidator } from '../validation/AgentConfigValidator';
 import { AgentUpdateService } from './AgentUpdateService';
+import { isPlatformAgentRow } from '@/constants/platformAgents';
+import { AgentAccessDeniedError } from '@/services/specializedAgents/AgentAccessDeniedError';
 
 // Configuration Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -39,9 +41,12 @@ export class AgentCRUDService {
   }
 
   /**
-   * Créer un nouvel agent spécialisé
+   * Créer un nouvel agent spécialisé (rattaché au compte propriétaire).
    */
-  async createSpecializedAgent(config: CreateSpecializedAgentRequest): Promise<CreateSpecializedAgentResponse> {
+  async createSpecializedAgent(
+    config: CreateSpecializedAgentRequest,
+    ownerUserId: string,
+  ): Promise<CreateSpecializedAgentResponse> {
     try {
       logger.info(`[AgentCRUDService] 🚀 Création agent spécialisé: ${config.slug}`);
 
@@ -65,6 +70,7 @@ export class AgentCRUDService {
 
       // Préparer les données d'insertion
       const agentData = {
+        user_id: ownerUserId,
         name: config.name || config.display_name,
         slug: config.slug,
         display_name: config.display_name,
@@ -122,7 +128,7 @@ export class AgentCRUDService {
    * Supprimer un agent spécialisé définitivement (hard delete)
    * Les FK agent_mcp_servers et agent_callables sont en CASCADE, editor_prompts en SET NULL
    */
-  async deleteAgent(agentId: string, traceId: string): Promise<boolean> {
+  async deleteAgent(agentId: string, traceId: string, requesterUserId: string): Promise<boolean> {
     try {
       logger.dev(`[AgentCRUDService] 🗑️ Suppression définitive agent ${agentId}`, { traceId });
 
@@ -130,6 +136,14 @@ export class AgentCRUDService {
       if (!existingAgent) {
         logger.warn(`[AgentCRUDService] ❌ Agent ${agentId} non trouvé`);
         return false;
+      }
+
+      const ownerId = (existingAgent as { user_id?: string | null }).user_id ?? null;
+      if (isPlatformAgentRow(existingAgent as { is_platform?: boolean })) {
+        throw new AgentAccessDeniedError('Les agents plateforme ne sont pas supprimables');
+      }
+      if (ownerId !== requesterUserId) {
+        throw new AgentAccessDeniedError();
       }
 
       const { error } = await supabase
@@ -154,27 +168,79 @@ export class AgentCRUDService {
   }
 
   /**
-   * Lister tous les agents spécialisés
+   * Agents endpoint seedés plateforme (OpenAPI public, sans compte).
    */
-  async listSpecializedAgents(): Promise<SpecializedAgentConfig[]> {
+  async listPublicSpecializedEndpointAgents(): Promise<SpecializedAgentConfig[]> {
     try {
       const { data: agents, error } = await supabase
         .from('agents')
         .select('*')
+        .eq('is_platform', true)
         .eq('is_endpoint_agent', true)
         .eq('is_active', true)
         .order('priority', { ascending: false });
 
       if (error) {
-        logger.error(`[AgentCRUDService] ❌ Erreur liste agents:`, error);
+        logger.error(`[AgentCRUDService] ❌ Erreur liste agents publics:`, error);
         return [];
       }
 
       return (agents || []) as SpecializedAgentConfig[];
     } catch (error) {
-      logger.error(`[AgentCRUDService] ❌ Erreur fatale liste agents:`, error);
+      logger.error(`[AgentCRUDService] ❌ Erreur fatale liste agents publics:`, error);
       return [];
     }
+  }
+
+  /**
+   * Agents endpoint : les vôtres + les agents plateforme (is_platform = true).
+   */
+  async listSpecializedAgentsForUser(userId: string): Promise<SpecializedAgentConfig[]> {
+    try {
+      const [ownRes, platRes] = await Promise.all([
+        supabase
+          .from('agents')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('is_endpoint_agent', true)
+          .eq('is_active', true)
+          .order('priority', { ascending: false }),
+        supabase
+          .from('agents')
+          .select('*')
+          .eq('is_platform', true)
+          .eq('is_endpoint_agent', true)
+          .eq('is_active', true)
+          .order('priority', { ascending: false }),
+      ]);
+
+      if (ownRes.error) {
+        logger.error(`[AgentCRUDService] ❌ Erreur liste agents user:`, ownRes.error);
+        return [];
+      }
+      if (platRes.error) {
+        logger.error(`[AgentCRUDService] ❌ Erreur liste agents plateforme:`, platRes.error);
+        return (ownRes.data || []) as SpecializedAgentConfig[];
+      }
+
+      const byId = new Map<string, SpecializedAgentConfig>();
+      for (const a of [...(ownRes.data || []), ...(platRes.data || [])]) {
+        byId.set(a.id, a as SpecializedAgentConfig);
+      }
+      return [...byId.values()].sort(
+        (a, b) => (b.priority ?? 0) - (a.priority ?? 0),
+      );
+    } catch (error) {
+      logger.error(`[AgentCRUDService] ❌ Erreur fatale liste agents spécialisés user:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * @deprecated Utiliser listPublicSpecializedEndpointAgents ou listSpecializedAgentsForUser
+   */
+  async listSpecializedAgents(): Promise<SpecializedAgentConfig[]> {
+    return this.listPublicSpecializedEndpointAgents();
   }
 
   /**
@@ -197,9 +263,10 @@ export class AgentCRUDService {
   async updateAgent(
     agentId: string, 
     updateData: Record<string, unknown>, 
-    traceId: string
+    traceId: string,
+    requesterUserId: string,
   ): Promise<SpecializedAgentConfig | null> {
-    return await this.updateService.updateAgent(agentId, updateData, traceId);
+    return await this.updateService.updateAgent(agentId, updateData, traceId, requesterUserId);
   }
 
   /**
@@ -208,9 +275,10 @@ export class AgentCRUDService {
   async patchAgent(
     agentId: string, 
     patchData: Record<string, unknown>, 
-    traceId: string
+    traceId: string,
+    requesterUserId: string,
   ): Promise<SpecializedAgentConfig | null> {
-    return await this.updateService.patchAgent(agentId, patchData, traceId);
+    return await this.updateService.patchAgent(agentId, patchData, traceId, requesterUserId);
   }
 
   /**
@@ -221,39 +289,46 @@ export class AgentCRUDService {
     try {
       logger.dev(`[AgentCRUDService] 📋 Récupération liste des agents`, { userId, includeInactive });
 
-      let query = supabase
+      let ownQuery = supabase
         .from('agents')
         .select('*')
+        .eq('user_id', userId)
         .order('priority', { ascending: false })
         .order('created_at', { ascending: false });
       if (!includeInactive) {
-        query = query.eq('is_active', true);
-      }
-      const { data: agents, error } = await query;
-
-      if (error) {
-        logger.error(`[AgentCRUDService] ❌ Erreur récupération liste agents:`, error);
-        throw new Error(`Erreur base de données: ${error.message}`);
+        ownQuery = ownQuery.eq('is_active', true);
       }
 
-      // Même normalisation que AgentConfigService pour max_tokens (éviter valeurs différentes list vs GET)
-      const toNum = (v: unknown, defaultVal: number): number => {
-        if (typeof v === 'number' && !Number.isNaN(v)) return v;
-        const n = typeof v === 'string' ? parseInt(v, 10) : Number(v);
-        return typeof n === 'number' && !Number.isNaN(n) ? n : defaultVal;
-      };
-      const clampMaxTokens = (v: number) => Math.max(1, Math.min(128000, v));
-      const processedAgents = (agents || []).map(agent => {
-        const maxTok = toNum(agent.max_tokens, 4000);
-        return {
-          ...agent,
-          temperature: (() => { const t = toNum(agent.temperature, 0.7); return t >= 0 && t <= 2 ? t : 0.7; })(),
-          top_p: (() => { const p = toNum(agent.top_p, 1); return p >= 0 && p <= 1 ? p : 1; })(),
-          max_tokens: clampMaxTokens(maxTok),
-          max_completion_tokens: (() => { const c = toNum(agent.max_completion_tokens, maxTok); return clampMaxTokens(c); })(),
-          priority: (() => { const pr = toNum(agent.priority, 10); return pr >= 0 && pr <= 100 ? pr : 10; })()
-        };
-      });
+      let platformQuery = supabase
+        .from('agents')
+        .select('*')
+        .eq('is_platform', true)
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (!includeInactive) {
+        platformQuery = platformQuery.eq('is_active', true);
+      }
+
+      const [ownRes, platRes] = await Promise.all([ownQuery, platformQuery]);
+
+      if (ownRes.error) {
+        logger.error(`[AgentCRUDService] ❌ Erreur récupération agents utilisateur:`, ownRes.error);
+        throw new Error(`Erreur base de données: ${ownRes.error.message}`);
+      }
+      if (platRes.error) {
+        logger.error(`[AgentCRUDService] ❌ Erreur récupération agents plateforme:`, platRes.error);
+        throw new Error(`Erreur base de données: ${platRes.error.message}`);
+      }
+
+      const byId = new Map<string, Record<string, unknown>>();
+      for (const row of [
+        ...(ownRes.data || []),
+        ...(platRes.data || []),
+      ]) {
+        byId.set(row.id as string, row as Record<string, unknown>);
+      }
+      const merged = [...byId.values()];
+      const processedAgents = this.normalizeAgentsListRows(merged);
 
       logger.dev(`[AgentCRUDService] ✅ ${processedAgents.length} agents récupérés`, { 
         userId, 
@@ -266,6 +341,26 @@ export class AgentCRUDService {
       logger.error(`[AgentCRUDService] ❌ Erreur liste agents:`, error);
       throw error;
     }
+  }
+
+  private normalizeAgentsListRows(agents: Record<string, unknown>[]): SpecializedAgentConfig[] {
+    const toNum = (v: unknown, defaultVal: number): number => {
+      if (typeof v === 'number' && !Number.isNaN(v)) return v;
+      const n = typeof v === 'string' ? parseInt(v, 10) : Number(v);
+      return typeof n === 'number' && !Number.isNaN(n) ? n : defaultVal;
+    };
+    const clampMaxTokens = (v: number) => Math.max(1, Math.min(128000, v));
+    return agents.map((agent) => {
+      const maxTok = toNum(agent.max_tokens, 4000);
+      return {
+        ...agent,
+        temperature: (() => { const t = toNum(agent.temperature, 0.7); return t >= 0 && t <= 2 ? t : 0.7; })(),
+        top_p: (() => { const p = toNum(agent.top_p, 1); return p >= 0 && p <= 1 ? p : 1; })(),
+        max_tokens: clampMaxTokens(maxTok),
+        max_completion_tokens: (() => { const c = toNum(agent.max_completion_tokens, maxTok); return clampMaxTokens(c); })(),
+        priority: (() => { const pr = toNum(agent.priority, 10); return pr >= 0 && pr <= 100 ? pr : 10; })()
+      };
+    }) as unknown as SpecializedAgentConfig[];
   }
 
   /**

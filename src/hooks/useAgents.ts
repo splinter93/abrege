@@ -20,6 +20,16 @@ export const useAgents = () => {
     try {
       setLoading(true);
       setError(null);
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
+      if (userErr || !user?.id) {
+        setAgents([]);
+        return;
+      }
+
+      // RLS filtre automatiquement : user_id = auth.uid() OU is_platform = true
       const { data: agentsData, error } = await supabase
         .from('agents')
         .select('*')
@@ -42,9 +52,18 @@ export const useAgents = () => {
    */
   const createAgent = async (agentData: Omit<Agent, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
+      if (userErr || !user?.id) {
+        setError('Authentification requise pour créer un agent');
+        return null;
+      }
+
       const { data: newAgent, error } = await supabase
         .from('agents')
-        .insert(agentData)
+        .insert({ ...agentData, user_id: user.id })
         .select()
         .single();
         
@@ -66,10 +85,17 @@ export const useAgents = () => {
    */
   const updateAgent = async (id: string, updates: Partial<Agent>) => {
     try {
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
+      if (userErr || !user?.id) return null;
+
       const { data: updatedAgent, error } = await supabase
         .from('agents')
         .update(updates)
         .eq('id', id)
+        .eq('user_id', user.id)
         .select()
         .single();
         
@@ -95,10 +121,17 @@ export const useAgents = () => {
    */
   const deleteAgent = async (id: string) => {
     try {
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
+      if (userErr || !user?.id) return false;
+
       const { error } = await supabase
         .from('agents')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
         
       if (error) throw error;
       setAgents(prev => prev.filter(agent => agent.id !== id));
@@ -115,13 +148,21 @@ export const useAgents = () => {
    */
   const getAgentByProvider = async (provider: string) => {
     try {
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
+      if (userErr || !user?.id) return null;
+
+      // RLS filtre automatiquement : user_id = auth.uid() OU is_platform = true
       const { data: agent, error } = await supabase
         .from('agents')
         .select('*')
         .eq('provider', provider)
         .eq('is_active', true)
         .eq('is_chat_agent', true)
-        .single();
+        .limit(1)
+        .maybeSingle();
         
       if (error) throw error;
       return agent;

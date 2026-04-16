@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { simpleLogger as logger } from '@/utils/logger';
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
 import { CreateSpecializedAgentRequest } from '@/types/specializedAgents';
+import { getAuthenticatedUser } from '@/utils/authUtils';
 
 // Client Supabase admin pour accéder aux agents
 const supabase = createClient(
@@ -15,31 +16,19 @@ const agentManager = new SpecializedAgentManager();
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser(request);
+    if (!auth.success || !auth.userId) {
+      return NextResponse.json({ error: auth.error ?? 'Non authentifié' }, { status: auth.status || 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const specialized = searchParams.get('specialized') === 'true';
 
     logger.info(`[Agents API] 🚀 Récupération des agents${specialized ? ' spécialisés' : ''}`);
 
-    let query = supabase
-      .from('agents')
-      .select('*')
-      .eq('is_active', true)
-      .order('priority', { ascending: false });
-
-    // Filtrer les agents spécialisés si demandé
-    if (specialized) {
-      query = query.eq('is_endpoint_agent', true);
-    }
-
-    const { data: agents, error } = await query;
-
-    if (error) {
-      logger.error('[Agents API] ❌ Erreur récupération agents:', error);
-      return NextResponse.json(
-        { error: 'Erreur lors de la récupération des agents' },
-        { status: 500 }
-      );
-    }
+    const agents = specialized
+      ? await agentManager.listSpecializedAgents(auth.userId)
+      : await agentManager.listAgents(auth.userId, false);
 
     logger.info(`[Agents API] ✅ ${agents?.length || 0} agents récupérés`);
     
@@ -64,6 +53,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser(request);
+    if (!auth.success || !auth.userId) {
+      return NextResponse.json({ error: auth.error ?? 'Non authentifié' }, { status: auth.status || 401 });
+    }
+    const ownerUserId = auth.userId;
+
     const body = await request.json();
     const { 
       name, model, system_instructions, provider = 'groq',
@@ -109,7 +104,7 @@ export async function POST(request: NextRequest) {
         api_v2_capabilities
       };
 
-      const result = await agentManager.createSpecializedAgent(specializedConfig);
+      const result = await agentManager.createSpecializedAgent(specializedConfig, ownerUserId);
       
       if (result.success) {
         logger.info(`[Agents API] ✅ Agent spécialisé créé: ${result.agent?.slug} (ID: ${result.agent?.id})`);
@@ -129,6 +124,7 @@ export async function POST(request: NextRequest) {
 
     // Agent classique
     const agentData = {
+      user_id: ownerUserId,
       name,
       model,
       provider,

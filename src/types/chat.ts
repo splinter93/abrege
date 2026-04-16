@@ -26,13 +26,17 @@ export interface Agent {
   is_active?: boolean;
   is_chat_agent?: boolean;
   is_endpoint_agent?: boolean;
-  capabilities?: string[] | Record<string, unknown>; // JSONB dans la base
+  capabilities?: string[] | Record<string, unknown>;
   api_v2_capabilities?: string[];
   profile_picture?: string;
   /** Voix xAI TTS (eve, ara, rex, sal, leo) */
   voice?: string;
   /** Langue TTS (code xAI : en, fr, de, etc.) — défaut 'en' */
   tts_language?: string;
+  /** Propriétaire. NULL = agent plateforme (is_platform = true). */
+  user_id?: string | null;
+  /** Agent catalogue plateforme : visible par tous les comptes, non modifiable via UI. */
+  is_platform?: boolean;
   created_at?: string;
   updated_at?: string;
 }

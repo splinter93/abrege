@@ -11,6 +11,8 @@ import { SpecializedAgentManager } from '@/services/specializedAgents/Specialize
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
 import { SpecializedAgentError, type SpecializedAgentConfig } from '@/types/specializedAgents';
+import { userCanAccessAgent, type PlatformAgentRow } from '@/constants/platformAgents';
+import { AgentAccessDeniedError } from '@/services/specializedAgents/AgentAccessDeniedError';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -102,6 +104,19 @@ export async function POST(
     }
 
     const userId = authResult.userId!;
+
+    const agentForAccess = await agentManager.getAgentInfo(agentId);
+    if (!agentForAccess || !userCanAccessAgent(agentForAccess as PlatformAgentRow, userId)) {
+      logApi.info(`❌ Agent ${agentId} introuvable ou accès refusé (exécution)`, context);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Agent ${agentId} not found`,
+          code: SpecializedAgentError.AGENT_NOT_FOUND
+        },
+        { status: 404 }
+      );
+    }
     
     // 🔑 Extraire le token JWT pour les tool calls
     const authHeader = request.headers.get('authorization');
@@ -262,8 +277,8 @@ export async function GET(
     // 🔍 Récupérer les informations de l'agent
     const agent = await agentManager.getAgentInfo(agentId);
     
-    if (!agent) {
-      logApi.info(`❌ Agent ${agentId} non trouvé`, context);
+    if (!agent || !userCanAccessAgent(agent as PlatformAgentRow, authResult.userId!)) {
+      logApi.info(`❌ Agent ${agentId} non trouvé ou accès refusé`, context);
       return NextResponse.json(
         {
           success: false,
@@ -382,7 +397,7 @@ export async function HEAD(
     // 🔍 Vérifier l'existence de l'agent
     const agent = await agentManager.getAgentInfo(agentId);
     
-    if (!agent) {
+    if (!agent || !userCanAccessAgent(agent as PlatformAgentRow, authResult.userId!)) {
       return new NextResponse(null, { status: 404 });
     }
 
@@ -475,7 +490,24 @@ export async function PUT(
     }
 
     // 🚀 Mise à jour complète de l'agent
-    const result = await agentManager.updateAgent(agentId, updateData, `api-v2-update-${agentId}-${Date.now()}`);
+    const requesterUserId = authResult.userId!;
+    let result: SpecializedAgentConfig | null;
+    try {
+      result = await agentManager.updateAgent(
+        agentId,
+        updateData,
+        `api-v2-update-${agentId}-${Date.now()}`,
+        requesterUserId,
+      );
+    } catch (e) {
+      if (e instanceof AgentAccessDeniedError) {
+        return NextResponse.json(
+          { success: false, error: e.message, code: SpecializedAgentError.FORBIDDEN },
+          { status: 403 },
+        );
+      }
+      throw e;
+    }
     
     if (!result) {
       logApi.info(`❌ Agent ${agentId} non trouvé`, context);
@@ -600,7 +632,24 @@ export async function PATCH(
     }
 
     // 🚀 Mise à jour partielle de l'agent
-    const result = await agentManager.patchAgent(agentId, patchData, `api-v2-patch-${agentId}-${Date.now()}`);
+    const requesterUserId = authResult.userId!;
+    let result: SpecializedAgentConfig | null;
+    try {
+      result = await agentManager.patchAgent(
+        agentId,
+        patchData,
+        `api-v2-patch-${agentId}-${Date.now()}`,
+        requesterUserId,
+      );
+    } catch (e) {
+      if (e instanceof AgentAccessDeniedError) {
+        return NextResponse.json(
+          { success: false, error: e.message, code: SpecializedAgentError.FORBIDDEN },
+          { status: 403 },
+        );
+      }
+      throw e;
+    }
     
     if (!result) {
       logApi.info(`❌ Agent ${agentId} non trouvé`, context);
@@ -696,7 +745,23 @@ export async function DELETE(
     }
 
     // 🚀 Supprimer l'agent
-    const success = await agentManager.deleteAgent(agentId, `api-v2-delete-${agentId}-${Date.now()}`);
+    const requesterUserId = authResult.userId!;
+    let success: boolean;
+    try {
+      success = await agentManager.deleteAgent(
+        agentId,
+        `api-v2-delete-${agentId}-${Date.now()}`,
+        requesterUserId,
+      );
+    } catch (e) {
+      if (e instanceof AgentAccessDeniedError) {
+        return NextResponse.json(
+          { success: false, error: e.message, code: SpecializedAgentError.FORBIDDEN },
+          { status: 403 },
+        );
+      }
+      throw e;
+    }
     
     if (!success) {
       logApi.info(`❌ Agent ${agentId} non trouvé`, context);

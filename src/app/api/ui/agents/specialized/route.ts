@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
 import { CreateSpecializedAgentRequest, SpecializedAgentConfig } from '@/types/specializedAgents';
 import { simpleLogger as logger } from '@/utils/logger';
+import { getAuthenticatedUser } from '@/utils/authUtils';
 
 // Types pour les réponses API
 interface SpecializedAgentsListResponse {
@@ -32,11 +33,19 @@ const agentManager = new SpecializedAgentManager();
  * GET /api/ui/agents/specialized
  * Récupérer la liste des agents spécialisés
  */
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    const auth = await getAuthenticatedUser(request);
+    if (!auth.success || !auth.userId) {
+      return NextResponse.json(
+        { success: false, error: auth.error ?? 'Non authentifié' },
+        { status: auth.status || 401 },
+      );
+    }
+
     logger.info('[Specialized Agents API] 🚀 Récupération des agents spécialisés');
 
-    const agents = await agentManager.listSpecializedAgents();
+    const agents = await agentManager.listSpecializedAgents(auth.userId);
 
     logger.info(`[Specialized Agents API] ✅ ${agents.length} agents spécialisés récupérés`);
     
@@ -65,6 +74,14 @@ export async function GET(): Promise<NextResponse> {
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const auth = await getAuthenticatedUser(request);
+    if (!auth.success || !auth.userId) {
+      return NextResponse.json(
+        { success: false, error: auth.error ?? 'Non authentifié' },
+        { status: auth.status || 401 },
+      );
+    }
+
     const body = await request.json();
     const { 
       slug, name, display_name, description, model, system_instructions,
@@ -114,7 +131,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       api_v2_capabilities
     };
 
-    const result = await agentManager.createSpecializedAgent(specializedConfig);
+    const result = await agentManager.createSpecializedAgent(specializedConfig, auth.userId);
 
     if (result.success) {
       logger.info(`[Specialized Agents API] ✅ Agent spécialisé créé: ${result.agent?.slug} (ID: ${result.agent?.id})`);

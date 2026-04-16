@@ -531,12 +531,70 @@ function SharedWorkspaceContent() {
                 </div>
               </motion.section>
 
-              {/* Reçu */}
+              {/* Partages actifs (envoyés) — avant Reçu */}
               <motion.section
                 className="settings-v-section"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.06 }}
+              >
+                <h2 className="settings-v-title">Partages actifs</h2>
+                <div className="settings-v-card">
+                  {sent.length === 0 ? (
+                    <div className="shared-v-empty">
+                      <strong>Aucun partage sortant</strong>
+                      Depuis un classeur, choisissez « Partager » pour alimenter cette liste.
+                    </div>
+                  ) : (
+                    <div className="settings-api-key-list">
+                      {sent.map((item, index) => (
+                        <div
+                          key={item.shareId}
+                          className="settings-api-key-list__item border-b [border-bottom:var(--border-block)] last:border-b-0"
+                        >
+                          <motion.div
+                            className="flex flex-col gap-3 p-5"
+                            initial={{ opacity: 0, x: -6 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.2, delay: index * 0.04 }}
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              {item.emoji ? <span aria-hidden>{item.emoji}</span> : null}
+                              <span className="truncate text-[0.875rem] font-medium text-[var(--color-text-primary,#ededed)]">
+                                {item.name}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 text-[0.8125rem] text-[var(--color-text-secondary,#a1a1aa)]">
+                              <span>
+                                {item.kind === "note" ? "Note partagée avec" : "Classeur partagé avec"}
+                              </span>
+                              {item.recipients.map((r) => (
+                                <span
+                                  key={r.userId}
+                                  className="inline-flex items-center gap-1 rounded-full border border-zinc-700/60 bg-zinc-800/60 px-2 py-0.5 text-[10px] font-medium text-zinc-300"
+                                >
+                                  {r.displayName || r.email}
+                                  <span className="text-zinc-500">·</span>
+                                  <span className="text-zinc-500">
+                                    {r.permissionLevel === "write" ? "édition" : "lecture"}
+                                  </span>
+                                </span>
+                              ))}
+                            </div>
+                          </motion.div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.section>
+
+              {/* Reçu */}
+              <motion.section
+                className="settings-v-section"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.1 }}
               >
                 <h2 className="settings-v-title">Reçu</h2>
                 <p className="-mt-2 mb-3 max-w-2xl text-sm text-zinc-500">
@@ -606,64 +664,6 @@ function SharedWorkspaceContent() {
                               >
                                 Ouvrir
                               </button>
-                            </div>
-                          </motion.div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </motion.section>
-
-              {/* Envoyé */}
-              <motion.section
-                className="settings-v-section"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.1 }}
-              >
-                <h2 className="settings-v-title">Partages actifs</h2>
-                <div className="settings-v-card">
-                  {sent.length === 0 ? (
-                    <div className="shared-v-empty">
-                      <strong>Aucun partage sortant</strong>
-                      Depuis un classeur, choisissez « Partager » pour alimenter cette liste.
-                    </div>
-                  ) : (
-                    <div className="settings-api-key-list">
-                      {sent.map((item, index) => (
-                        <div
-                          key={item.shareId}
-                          className="settings-api-key-list__item border-b [border-bottom:var(--border-block)] last:border-b-0"
-                        >
-                          <motion.div
-                            className="flex flex-col gap-3 p-5"
-                            initial={{ opacity: 0, x: -6 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.2, delay: index * 0.04 }}
-                          >
-                            <div className="flex flex-wrap items-center gap-2">
-                              {item.emoji ? <span aria-hidden>{item.emoji}</span> : null}
-                              <span className="truncate text-[0.875rem] font-medium text-[var(--color-text-primary,#ededed)]">
-                                {item.name}
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2 text-[0.8125rem] text-[var(--color-text-secondary,#a1a1aa)]">
-                              <span>
-                                {item.kind === "note" ? "Note partagée avec" : "Classeur partagé avec"}
-                              </span>
-                              {item.recipients.map((r) => (
-                                <span
-                                  key={r.userId}
-                                  className="inline-flex items-center gap-1 rounded-full border border-zinc-700/60 bg-zinc-800/60 px-2 py-0.5 text-[10px] font-medium text-zinc-300"
-                                >
-                                  {r.displayName || r.email}
-                                  <span className="text-zinc-500">·</span>
-                                  <span className="text-zinc-500">
-                                    {r.permissionLevel === "write" ? "édition" : "lecture"}
-                                  </span>
-                                </span>
-                              ))}
                             </div>
                           </motion.div>
                         </div>

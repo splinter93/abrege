@@ -10,6 +10,8 @@ import { AgentConfigService } from './AgentConfigService';
 import { AgentConfigValidator } from '../validation/AgentConfigValidator';
 import { SlugHelper } from './SlugHelper';
 import { omitNonPersistedAgentFields } from './agentPersistence';
+import { isPlatformAgentRow } from '@/constants/platformAgents';
+import { AgentAccessDeniedError } from '@/services/specializedAgents/AgentAccessDeniedError';
 
 // Configuration Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -37,7 +39,8 @@ export class AgentUpdateService {
   async updateAgent(
     agentId: string, 
     updateData: Record<string, unknown>, 
-    traceId: string
+    traceId: string,
+    requesterUserId: string,
   ): Promise<SpecializedAgentConfig | null> {
     try {
       logger.dev(`[AgentUpdateService] 🔄 Mise à jour complète agent ${agentId}`, { traceId });
@@ -54,6 +57,14 @@ export class AgentUpdateService {
       if (!existingAgent) {
         logger.warn(`[AgentUpdateService] ❌ Agent ${agentId} non trouvé`);
         return null;
+      }
+
+      const ownerId = (existingAgent as { user_id?: string | null }).user_id ?? null;
+      if (isPlatformAgentRow(existingAgent as { is_platform?: boolean })) {
+        throw new AgentAccessDeniedError('Les agents plateforme ne sont pas modifiables');
+      }
+      if (ownerId !== requesterUserId) {
+        throw new AgentAccessDeniedError();
       }
 
       // Détecter changement de display_name ou name et régénérer le slug
@@ -115,7 +126,8 @@ export class AgentUpdateService {
   async patchAgent(
     agentId: string, 
     patchData: Record<string, unknown>, 
-    traceId: string
+    traceId: string,
+    requesterUserId: string,
   ): Promise<SpecializedAgentConfig | null> {
     try {
       logger.dev(`[AgentUpdateService] 🔧 Mise à jour partielle agent ${agentId}`, { traceId });
@@ -125,6 +137,14 @@ export class AgentUpdateService {
       if (!existingAgent) {
         logger.warn(`[AgentUpdateService] ❌ Agent ${agentId} non trouvé`);
         return null;
+      }
+
+      const ownerId = (existingAgent as { user_id?: string | null }).user_id ?? null;
+      if (isPlatformAgentRow(existingAgent as { is_platform?: boolean })) {
+        throw new AgentAccessDeniedError('Les agents plateforme ne sont pas modifiables');
+      }
+      if (ownerId !== requesterUserId) {
+        throw new AgentAccessDeniedError();
       }
 
       // Validation seulement des champs modifiés

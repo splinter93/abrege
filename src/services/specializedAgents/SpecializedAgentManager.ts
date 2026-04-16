@@ -45,15 +45,18 @@ export class SpecializedAgentManager {
   /**
    * Créer un nouvel agent spécialisé
    */
-  async createSpecializedAgent(config: CreateSpecializedAgentRequest): Promise<CreateSpecializedAgentResponse> {
-    return await this.crudService.createSpecializedAgent(config);
+  async createSpecializedAgent(
+    config: CreateSpecializedAgentRequest,
+    ownerUserId: string,
+  ): Promise<CreateSpecializedAgentResponse> {
+    return await this.crudService.createSpecializedAgent(config, ownerUserId);
   }
 
   /**
    * Supprimer un agent spécialisé
    */
-  async deleteAgent(agentId: string, traceId: string): Promise<boolean> {
-    return await this.crudService.deleteAgent(agentId, traceId);
+  async deleteAgent(agentId: string, traceId: string, requesterUserId: string): Promise<boolean> {
+    return await this.crudService.deleteAgent(agentId, traceId, requesterUserId);
   }
 
   /**
@@ -73,8 +76,15 @@ export class SpecializedAgentManager {
   /**
    * Lister tous les agents spécialisés
    */
-  async listSpecializedAgents(): Promise<SpecializedAgentConfig[]> {
-    return await this.crudService.listSpecializedAgents();
+  /**
+   * @param forUserId — si absent : uniquement agents endpoint plateforme (OpenAPI).
+   *  Si présent : agents endpoint du compte + plateforme.
+   */
+  async listSpecializedAgents(forUserId?: string): Promise<SpecializedAgentConfig[]> {
+    if (forUserId === undefined) {
+      return await this.crudService.listPublicSpecializedEndpointAgents();
+    }
+    return await this.crudService.listSpecializedAgentsForUser(forUserId);
   }
 
   /**
@@ -91,9 +101,10 @@ export class SpecializedAgentManager {
   async updateAgent(
     agentId: string, 
     updateData: Record<string, unknown>, 
-    traceId: string
+    traceId: string,
+    requesterUserId: string,
   ): Promise<SpecializedAgentConfig | null> {
-    return await this.crudService.updateAgent(agentId, updateData, traceId);
+    return await this.crudService.updateAgent(agentId, updateData, traceId, requesterUserId);
   }
 
   /**
@@ -102,9 +113,10 @@ export class SpecializedAgentManager {
   async patchAgent(
     agentId: string, 
     patchData: Record<string, unknown>, 
-    traceId: string
+    traceId: string,
+    requesterUserId: string,
   ): Promise<SpecializedAgentConfig | null> {
-    return await this.crudService.patchAgent(agentId, patchData, traceId);
+    return await this.crudService.patchAgent(agentId, patchData, traceId, requesterUserId);
   }
 
   /**

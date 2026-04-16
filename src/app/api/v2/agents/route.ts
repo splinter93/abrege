@@ -220,7 +220,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
 
     // 🚀 Créer l'agent
-    const result = await agentManager.createSpecializedAgent(createData);
+    const result = await agentManager.createSpecializedAgent(createData, userId);
     
     if (!result.success) {
       logApi.info(`❌ Erreur création agent: ${result.error}`, context);
