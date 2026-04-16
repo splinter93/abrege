@@ -14,7 +14,7 @@ import {
   BookMarked,
   ChevronDown,
   Settings,
-  ExternalLink,
+  Users,
 } from "lucide-react";
 import { Feather } from "react-feather";
 import {
@@ -331,7 +331,7 @@ function SortableTab({
           {tab.emoji && <span className="text-base leading-none">{tab.emoji}</span>}
           {tab.name}
           {tab.kind === "shared" ? (
-            <ExternalLink className="h-2.5 w-2.5 shrink-0 text-zinc-500" aria-hidden />
+            <Users className="h-3 w-3 shrink-0 text-current" aria-hidden />
           ) : null}
         </button>
       )}
