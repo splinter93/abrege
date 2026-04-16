@@ -184,15 +184,26 @@ export interface LiminalityMessage {
 }
 
 /**
+ * Usage renvoyé par LLM Exec (doc Synesia) : `input_tokens` / `output_tokens` / etc.
+ * Certains environnements peuvent aussi renvoyer les noms style OpenAI (`prompt_tokens`).
+ */
+export interface LiminalityApiUsage {
+  input_tokens?: number;
+  output_tokens?: number;
+  cached_input_tokens?: number;
+  reasoning_output_tokens?: number;
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+  [key: string]: unknown;
+}
+
+/**
  * Réponse de l'API Liminality/Synesia
  */
 export interface LiminalityResponse {
   message: LiminalityMessage;
-  usage: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
+  usage: LiminalityApiUsage;
   finish_reason: string;
   thread_id?: string;
 }
@@ -299,7 +310,7 @@ export interface LiminalityStreamEvent {
     tool_calls?: Array<LiminalityToolCallInMessage>;
   }>;
   complete?: boolean; // Pour 'done'
-  usage?: LiminalityResponse['usage'];
+  usage?: LiminalityApiUsage;
   error?: {
     message: string;
     code?: string;

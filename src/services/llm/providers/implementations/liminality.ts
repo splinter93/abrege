@@ -15,7 +15,7 @@
 import { BaseProvider, type ProviderConfig, type ProviderInfo } from '../base/BaseProvider';
 import type { LLMProvider, AppContext } from '../../types';
 import type { ChatMessage } from '@/types/chat';
-import type { LLMResponse, ToolCall, Tool } from '../../types/strictTypes';
+import type { LLMResponse, ToolCall, Tool, Usage } from '../../types/strictTypes';
 import { simpleLogger as logger } from '@/utils/logger';
 import { getSystemMessage } from '../../templates';
 import { LiminalityToolsAdapter } from '../adapters/LiminalityToolsAdapter';
@@ -47,15 +47,6 @@ interface LiminalityProviderConfig extends ProviderConfig {
 }
 
 /**
- * Usage tokens d'un appel LLM
- */
-interface TokenUsage {
-  prompt_tokens?: number;
-  completion_tokens?: number;
-  total_tokens?: number;
-}
-
-/**
  * Type pour les chunks de streaming SSE (delta, error, tool_calls dans done)
  */
 interface StreamChunk {
@@ -64,7 +55,8 @@ interface StreamChunk {
   tool_calls?: ToolCall[];
   finishReason?: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
   reasoning?: string;
-  usage?: TokenUsage;
+  /** Toujours au format Usage (OpenAI-like) après normalisation Synesia → app */
+  usage?: Usage;
   error?: string;
   errorCode?: string;
   provider?: string;
@@ -221,6 +213,34 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
 
     logger.dev('[LiminalityProvider] ✅ Configuration validée');
     return true;
+  }
+
+  /**
+   * Synesia LLM Exec renvoie `input_tokens` / `output_tokens` (doc officielle).
+   * Le reste du produit attend le triplet OpenAI-like {@link Usage}.
+   */
+  private normalizeLiminalityUsage(raw: unknown): Usage | undefined {
+    if (raw === null || raw === undefined || typeof raw !== 'object') {
+      return undefined;
+    }
+    const o = raw as Record<string, unknown>;
+    const pickNum = (v: unknown): number | undefined =>
+      typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+
+    const prompt =
+      pickNum(o.prompt_tokens) ?? pickNum(o.input_tokens);
+    const completion =
+      pickNum(o.completion_tokens) ?? pickNum(o.output_tokens);
+    const explicitTotal = pickNum(o.total_tokens);
+
+    if (prompt === undefined && completion === undefined && explicitTotal === undefined) {
+      return undefined;
+    }
+
+    const p = prompt ?? 0;
+    const c = completion ?? 0;
+    const total = explicitTotal ?? p + c;
+    return { prompt_tokens: p, completion_tokens: c, total_tokens: total };
   }
 
   /**
@@ -738,7 +758,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
     return {
       content: message.content || '',
       tool_calls: toolCalls,
-      usage: response.usage,
+      usage: this.normalizeLiminalityUsage(response.usage),
       reasoning: message.reasoning
     };
   }
@@ -962,14 +982,14 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
             type: 'delta',
             tool_calls: toolCalls,
             finishReason: isComplete ? 'stop' : 'tool_calls',
-            usage: event.usage
+            usage: this.normalizeLiminalityUsage(event.usage)
           };
         }
         
         return {
           type: 'delta',
           finishReason: 'stop',
-          usage: event.usage
+          usage: this.normalizeLiminalityUsage(event.usage)
         };
       }
 
@@ -1008,7 +1028,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
         return {
           type: 'delta',
           finishReason: 'stop',
-          usage: event.usage
+          usage: this.normalizeLiminalityUsage(event.usage)
         };
 
       case 'error': {
