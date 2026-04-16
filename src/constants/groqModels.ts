@@ -209,6 +209,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: false
   },
   {
+    id: 'fireworks/minimax-m2p7',
+    name: 'MiniMax M2.7 P (Fireworks)',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 204800,
+    maxOutput: 8192,
+    speed: 550,
+    pricing: { input: 'Variable', output: 'Variable' },
+    description: 'MiniMax M2.7 P via Fireworks (Liminality / Synesia LLM Exec)',
+    recommended: false
+  },
+  {
     id: 'openrouter/qwen3-vl-30b-a3b-instruct',
     name: 'Qwen3 VL 30B A3B Instruct',
     category: 'liminality',
