@@ -331,16 +331,30 @@ export function useDossiersPage(userId: string, opts?: UseDossiersPageOptions) {
   }, [userId, dossierService]);
 
   const handleUpdateClasseurPositions = useCallback(async (reorderedClasseurs: Classeur[]) => {
-    // 1. Sauvegarder l'état actuel pour un rollback en cas d'erreur
-    const originalClasseurs = Object.values(useFileSystemStore.getState().classeurs);
+    const state = useFileSystemStore.getState();
+    const sharedIds = new Set(opts?.sharedClasseurIds ?? []);
+    // Ne persister en base que les classeurs possédés ; ne jamais envoyer de positions pour les snapshots partagés.
+    const reorderedOwnedOnly = reorderedClasseurs.filter((c) => !sharedIds.has(c.id));
+    const preservedShared = (opts?.sharedClasseurIds ?? [])
+      .map((id) => state.classeurs[id])
+      .filter((c): c is Classeur => !!c);
 
-    // 2. Mise à jour optimiste de l'UI via le store Zustand
-    logger.dev('[useDossiersPage] 🚀 Mise à jour optimiste des positions');
-    setClasseurs(reorderedClasseurs);
+    const withPositions = reorderedOwnedOnly.map((c, index) => ({
+      ...c,
+      position: index,
+    }));
+    const mergedForStore = [...withPositions, ...preservedShared];
+
+    // 1. Sauvegarder l'état actuel pour un rollback en cas d'erreur
+    const originalClasseurs = Object.values(state.classeurs);
+
+    // 2. Mise à jour optimiste : classeurs possédés réordonnés + snapshots partagés inchangés
+    logger.dev('[useDossiersPage] 🚀 Mise à jour optimiste des positions (owned + shared snapshots)');
+    setClasseurs(mergedForStore);
 
     try {
-      // 3. Préparer les données et appeler l'API
-      const positionsToUpdate = reorderedClasseurs.map((c, index) => ({ id: c.id, position: index }));
+      // 3. API uniquement pour les classeurs de l'utilisateur
+      const positionsToUpdate = withPositions.map((c, index) => ({ id: c.id, position: index }));
       logger.dev('[useDossiersPage] 🔄 Appel API pour mise à jour positions', positionsToUpdate);
       
       await dossierService.updateClasseurPositions(positionsToUpdate, userId);
@@ -355,7 +369,7 @@ export function useDossiersPage(userId: string, opts?: UseDossiersPageOptions) {
       // 5. Propager l'erreur pour affichage à l'utilisateur
       throw error;
     }
-  }, [userId, dossierService, setClasseurs]);
+  }, [userId, dossierService, setClasseurs, opts?.sharedClasseurIds]);
 
   const handleFolderOpen = useCallback((folderId: string) => {
     setCurrentFolderId(folderId);

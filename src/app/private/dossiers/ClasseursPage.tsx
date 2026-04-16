@@ -101,6 +101,32 @@ export interface ClasseurTab {
   permissionLevel?: "read" | "write";
 }
 
+const CLASSEUR_TAB_ORDER_STORAGE_PREFIX = "abrege:dossiers:classeurTabOrder:";
+const MAX_CLASSEUR_TAB_ORDER_IDS = 200;
+
+function classeurTabOrderStorageKey(userId: string): string {
+  return `${CLASSEUR_TAB_ORDER_STORAGE_PREFIX}${userId}`;
+}
+
+/** Applique l’ordre persisté (localStorage) : onglets inconnus ou nouveaux restent à la fin dans l’ordre par défaut. */
+function mergeClasseurTabsOrder(defaultTabs: ClasseurTab[], orderIds: string[] | null): ClasseurTab[] {
+  if (!orderIds?.length) return defaultTabs;
+  const tabById = new Map(defaultTabs.map((t) => [t.id, t]));
+  const seen = new Set<string>();
+  const result: ClasseurTab[] = [];
+  for (const id of orderIds.slice(0, MAX_CLASSEUR_TAB_ORDER_IDS)) {
+    const t = tabById.get(id);
+    if (t) {
+      result.push(t);
+      seen.add(id);
+    }
+  }
+  for (const t of defaultTabs) {
+    if (!seen.has(t.id)) result.push(t);
+  }
+  return result;
+}
+
 // ---------------------------------------------------------------------------
 // Header
 // ---------------------------------------------------------------------------
@@ -329,8 +355,7 @@ function ClasseursTabs({
   onTabDragLeave,
   onTabDrop,
   dragOverTabId,
-  handleUpdateClasseurPositions,
-  classeursForReorder,
+  onTabsReorder,
   renamingTabId,
   onTabRenameSubmit,
   onTabRenameCancel,
@@ -344,8 +369,8 @@ function ClasseursTabs({
   onTabDragLeave?: (e: React.DragEvent) => void;
   onTabDrop?: (e: React.DragEvent, tab: ClasseurTab) => void;
   dragOverTabId: string | null;
-  handleUpdateClasseurPositions: (reordered: Classeur[]) => void;
-  classeursForReorder: Classeur[];
+  /** Après réordonnancement horizontal des onglets (possédés + partagés). */
+  onTabsReorder: (newTabs: ClasseurTab[]) => void;
   renamingTabId?: string | null;
   onTabRenameSubmit?: (tabId: string, newName: string) => void;
   onTabRenameCancel?: () => void;
@@ -357,19 +382,13 @@ function ClasseursTabs({
   const handleDragEnd = useCallback(
     (e: DragEndEvent) => {
       const { active, over } = e;
-      if (!over || active.id === over.id || classeursForReorder.length === 0) return;
-      const aTab = tabs.find((t) => t.id === active.id);
-      const oTab = tabs.find((t) => t.id === over.id);
-      if (!aTab || !oTab) return;
-      if (aTab.kind === "shared" || oTab.kind === "shared") return;
-      const oldIndex = classeursForReorder.findIndex((c) => c.id === active.id);
-      const newIndex = classeursForReorder.findIndex((c) => c.id === over.id);
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const reorderedClasseurs = arrayMove(classeursForReorder, oldIndex, newIndex);
-        handleUpdateClasseurPositions(reorderedClasseurs);
-      }
+      if (!over || active.id === over.id || tabs.length === 0) return;
+      const oldIndex = tabs.findIndex((t) => t.id === active.id);
+      const newIndex = tabs.findIndex((t) => t.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+      onTabsReorder(arrayMove(tabs, oldIndex, newIndex));
     },
-    [tabs, classeursForReorder, handleUpdateClasseurPositions]
+    [tabs, onTabsReorder]
   );
 
   return (
@@ -383,40 +402,29 @@ function ClasseursTabs({
         <SortableContext items={tabs.map((t) => t.id)} strategy={horizontalListSortingStrategy}>
           <div className="flex gap-1 items-end">
             <AnimatePresence initial={false} mode="popLayout">
-              {tabs.map((tab, i) => (
-                <React.Fragment key={tab.id}>
-                  {tab.kind === "shared" && tabs[i - 1]?.kind !== "shared" ? (
-                    <span
-                      className="mb-3 shrink-0 select-none px-1 text-sm text-zinc-600"
-                      title="Partagés"
-                      aria-hidden
-                    >
-                      ·
-                    </span>
-                  ) : null}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9, width: 0 }}
-                    animate={{ opacity: 1, scale: 1, width: "auto" }}
-                    exit={{ opacity: 0, scale: 0.9, width: 0 }}
-                    transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-                    style={{ overflow: "hidden" }}
-                  >
-                    <SortableTab
-                      tab={tab}
-                      isActive={tab.id === activeId}
-                      onSelect={onSelect}
-                      onContextMenu={onContextMenu}
-                      onDragOver={onTabDragOver}
-                      onDragLeave={onTabDragLeave}
-                      onDrop={onTabDrop}
-                      isDragOver={dragOverTabId === tab.id}
-                      isRenaming={renamingTabId === tab.id}
-                      onRenameSubmit={(name) => onTabRenameSubmit?.(tab.id, name)}
-                      onRenameCancel={onTabRenameCancel}
-                      disableSortable={tab.kind === "shared"}
-                    />
-                  </motion.div>
-                </React.Fragment>
+              {tabs.map((tab) => (
+                <motion.div
+                  key={tab.id}
+                  initial={{ opacity: 0, scale: 0.9, width: 0 }}
+                  animate={{ opacity: 1, scale: 1, width: "auto" }}
+                  exit={{ opacity: 0, scale: 0.9, width: 0 }}
+                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <SortableTab
+                    tab={tab}
+                    isActive={tab.id === activeId}
+                    onSelect={onSelect}
+                    onContextMenu={onContextMenu}
+                    onDragOver={onTabDragOver}
+                    onDragLeave={onTabDragLeave}
+                    onDrop={onTabDrop}
+                    isDragOver={dragOverTabId === tab.id}
+                    isRenaming={renamingTabId === tab.id}
+                    onRenameSubmit={(name) => onTabRenameSubmit?.(tab.id, name)}
+                    onRenameCancel={onTabRenameCancel}
+                  />
+                </motion.div>
               ))}
             </AnimatePresence>
           </div>
@@ -1032,6 +1040,30 @@ export default function ClasseursPage() {
     [sharedClasseurs]
   );
 
+  const [classeurTabOrderIds, setClasseurTabOrderIds] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    if (!user?.id || typeof window === "undefined") {
+      setClasseurTabOrderIds(null);
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(classeurTabOrderStorageKey(user.id));
+      if (!raw) {
+        setClasseurTabOrderIds(null);
+        return;
+      }
+      const parsed = JSON.parse(raw) as unknown;
+      setClasseurTabOrderIds(
+        Array.isArray(parsed) && parsed.every((x) => typeof x === "string")
+          ? (parsed as string[])
+          : null,
+      );
+    } catch {
+      setClasseurTabOrderIds(null);
+    }
+  }, [user?.id]);
+
   const {
     loading: pageLoading,
     error: pageError,
@@ -1272,6 +1304,7 @@ export default function ClasseursPage() {
     const sharedIds = new Set(sharedClasseurs.map((s) => s.classeurId));
     const owned: ClasseurTab[] = classeurs
       .filter((c) => !sharedIds.has(c.id))
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
       .map((c) => ({
         id: c.id,
         name: c.name,
@@ -1287,8 +1320,30 @@ export default function ClasseursPage() {
       sharedBy: s.sharedBy,
       permissionLevel: s.permissionLevel,
     }));
-    return [...owned, ...shared];
-  }, [classeurs, sharedClasseurs]);
+    return mergeClasseurTabsOrder([...owned, ...shared], classeurTabOrderIds);
+  }, [classeurs, sharedClasseurs, classeurTabOrderIds]);
+
+  const handleClasseurTabsReorder = useCallback(
+    (newTabs: ClasseurTab[]) => {
+      const uid = user?.id;
+      if (!uid) return;
+      const ids = newTabs.map((t) => t.id).slice(0, MAX_CLASSEUR_TAB_ORDER_IDS);
+      try {
+        localStorage.setItem(classeurTabOrderStorageKey(uid), JSON.stringify(ids));
+      } catch {
+        /* quota / private mode */
+      }
+      setClasseurTabOrderIds(ids);
+      const byId = useFileSystemStore.getState().classeurs;
+      const reorderedOwned = newTabs
+        .filter((t) => t.kind === "owned")
+        .map((t) => byId[t.id])
+        .filter((c): c is Classeur => !!c);
+      if (reorderedOwned.length === 0) return;
+      void handleUpdateClasseurPositions(reorderedOwned);
+    },
+    [user?.id, handleUpdateClasseurPositions],
+  );
 
   const breadcrumbSegments = useMemo((): BreadcrumbSegment[] => {
     const segments: BreadcrumbSegment[] = [];
@@ -1657,8 +1712,7 @@ export default function ClasseursPage() {
                 onTabDragLeave={handleTabDragLeave}
                 onTabDrop={handleTabDrop}
                 dragOverTabId={dragOverTabId}
-                handleUpdateClasseurPositions={handleUpdateClasseurPositions}
-                classeursForReorder={classeurs}
+                onTabsReorder={handleClasseurTabsReorder}
                 renamingTabId={renamingTabId}
                 onTabRenameSubmit={handleTabRenameSubmit}
                 onTabRenameCancel={() => setRenamingTabId(null)}
