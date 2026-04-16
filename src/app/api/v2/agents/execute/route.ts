@@ -17,6 +17,7 @@ import { getAuthenticatedUser } from '@/utils/authUtils';
 import { executeAgentV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
 import { generateUserJWT } from '@/utils/jwtGenerator';
+import { userCanAccessAgent, type PlatformAgentRow } from '@/constants/platformAgents';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)
 export const runtime = 'nodejs';
@@ -141,8 +142,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const agentManager = new SpecializedAgentManager();
     const agent = await agentManager.getAgentByRef(ref, userId);
     
-    if (!agent) {
-      logApi.info(`❌ Agent non trouvé: ${ref}`, context);
+    if (!agent || !userCanAccessAgent(agent as PlatformAgentRow, userId)) {
+      logApi.info(`❌ Agent non trouvé ou accès refusé: ${ref}`, context);
       return NextResponse.json(
         { 
           error: 'Agent non trouvé',
@@ -308,11 +309,11 @@ export async function HEAD(request: NextRequest): Promise<NextResponse> {
       });
     }
 
-    // Vérifier que l'agent existe
+    // Vérifier que l'agent existe et est accessible
     const agentManager = new SpecializedAgentManager();
     const agent = await agentManager.getAgentByRef(ref, userId);
 
-    if (!agent) {
+    if (!agent || !userCanAccessAgent(agent as PlatformAgentRow, userId)) {
       return new NextResponse(null, { 
         status: 404,
         headers: {
