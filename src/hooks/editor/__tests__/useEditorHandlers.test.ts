@@ -15,6 +15,7 @@ import { useEditorHandlers } from '../useEditorHandlers';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import type { EditorState } from '../useEditorState';
 import { getDefaultShareSettings } from '@/types/sharing';
+import { DEFAULT_MENUS_STATE } from './fixtures';
 
 // Mock dépendances
 vi.mock('@/services/V2UnifiedApi', () => ({
@@ -90,7 +91,7 @@ describe('[useEditorHandlers] Hook', () => {
   const mockEditorState: EditorState = {
     document: { title: 'Test Title', noteLoaded: true, forceTOCUpdate: 0 },
     headerImage: { url: null, offset: 0, blur: 0, overlay: 0, titleInImage: false },
-    menus: { imageMenuOpen: false, imageMenuTarget: 'content', kebabOpen: false, kebabPos: { top: 0, left: 0 } },
+    menus: DEFAULT_MENUS_STATE,
     ui: { previewMode: false, a4Mode: false, fullWidth: false, slashLang: 'en', showToolbar: true },
     contextMenu: {
       isOpen: false,
@@ -113,6 +114,7 @@ describe('[useEditorHandlers] Hook', () => {
     setImageMenuTarget: vi.fn(),
     setKebabOpen: vi.fn(),
     setKebabPos: vi.fn(),
+    setExportModalOpen: vi.fn(),
     toggleKebabMenu: vi.fn(),
     setPreviewMode: vi.fn(),
     togglePreviewMode: vi.fn(),

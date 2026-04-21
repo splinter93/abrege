@@ -1,11 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-// IMPORTANT: L'API V2 est utilisée par l'Agent côté serveur sans JWT utilisateur.
-// Pour éviter les erreurs RLS tout en garantissant la sécurité, on utilise la clé Service Role
-// et on applique systématiquement des filtres user_id dans toutes les requêtes.
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const defaultClient = createClient(supabaseUrl, supabaseServiceKey);
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type ResourceType = 'note' | 'folder' | 'classeur';
 

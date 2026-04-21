@@ -11,7 +11,6 @@ import type { OpenApiEndpoint } from '@/services/llm/executors/OpenApiToolExecut
 import type { Tool, McpTool } from '@/services/llm/types/strictTypes';
 import type { ToolCall } from '@/services/llm/types/strictTypes';
 import { isMcpTool, isFunctionTool } from '@/services/llm/types/strictTypes';
-import { INTERNAL_TOOL_NAMES } from '@/services/llm/tools/internalTools';
 import type {
   InternalToolStartChunk,
   InternalToolDoneChunk,

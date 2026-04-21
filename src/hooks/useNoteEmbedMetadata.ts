@@ -12,7 +12,7 @@
  * @returns Métadonnées, états de chargement, et fonction refetch
  */
 
-import { useState, useEffect, useCallback, useRef, useTransition, startTransition } from 'react';
+import { useState, useEffect, useCallback, useRef, startTransition } from 'react';
 import type { NoteEmbedMetadata, UseNoteEmbedMetadataResult } from '@/types/noteEmbed';
 import { MAX_FETCH_RETRIES, RETRY_BASE_DELAY_MS, FETCH_TIMEOUT_MS } from '@/types/noteEmbed';
 import { noteEmbedCache } from '@/services/noteEmbedCacheService';

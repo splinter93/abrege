@@ -14,7 +14,6 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { getModelInfo } from '@/constants/groqModels';
 import type {
   ModelOverrideContext,
-  ModelOverrideResult,
   ModelOverrideRule,
   LLMParams
 } from './types';

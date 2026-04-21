@@ -20,7 +20,6 @@ import { useEffect, useRef, useState } from 'react';
 import { logger, LogCategory } from '@/utils/logger';
 import type { Editor } from '@tiptap/react';
 import { supabase } from '@/supabaseClient';
-import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { getEditorMarkdown } from '@/utils/editorHelpers';
 import {
   prepareMarkdownForEditor,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient, extractTokenFromRequest } from '@/utils/authUtils';
-import { V2DatabaseUtils, ApiContext } from '@/utils/v2DatabaseUtils';
+import { ApiContext } from '@/utils/v2DatabaseUtils';
 import { logApi } from '@/utils/logger';
 import { canPerformAction } from '@/utils/scopeValidation';
 import { SupabaseClient } from '@supabase/supabase-js';

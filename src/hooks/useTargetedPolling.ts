@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { targetedPollingService, type EntityType, type OperationType } from '@/services/targetedPollingService';
+import { targetedPollingService, type OperationType } from '@/services/targetedPollingService';
 import { simpleLogger as logger } from '@/utils/logger';
 
 export interface UseTargetedPollingReturn {

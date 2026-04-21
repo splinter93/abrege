@@ -11,7 +11,7 @@ const BlockDragDropExtension = Extension.create({
 
   addProseMirrorPlugins() {
     let selectedBlock: number | null = null;
-    let isDragging = false;
+    const isDragging = false;
     let decorations = DecorationSet.empty;
 
     return [

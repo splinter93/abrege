@@ -13,7 +13,6 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '
 process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-service-role-key';
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
 import { HistoryManager } from '../HistoryManager';
 
 // Mock Supabase pour tests unitaires

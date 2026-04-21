@@ -1,7 +1,5 @@
 "use client";
-import { useCallback, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
-import { v2UnifiedApi } from '@/services/V2UnifiedApi';
+import { useCallback } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import { DRAG_DATA_TYPES, CUSTOM_EVENTS } from '@/constants/dragAndDropConfig';
 

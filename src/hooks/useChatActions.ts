@@ -6,7 +6,7 @@
 
 import { useCallback, startTransition } from 'react';
 import type { ImageAttachment } from '@/types/image';
-import type { SelectedNote, NoteWithContent } from './useNotesLoader';
+import type { SelectedNote } from './useNotesLoader';
 import type { AudioRecorderRef } from '@/components/chat/AudioRecorder';
 import type { NoteMention } from '@/types/noteMention';
 import type { PromptMention } from '@/types/promptMention';

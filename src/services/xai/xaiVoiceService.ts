@@ -12,13 +12,10 @@
 
 import { logger, LogCategory } from '@/utils/logger';
 import type {
-  XAIVoiceMessageType,
   XAIVoiceSessionConfig,
   XAIVoiceMessage,
   XAIVoiceCallbacks,
   XAIVoiceConnectionState,
-  XAIVoiceTool,
-  XAIVoicePredefinedTool,
   XAIVoiceFunctionTool,
   XAIVoiceToolResult
 } from './types';

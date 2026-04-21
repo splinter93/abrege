@@ -8,7 +8,7 @@
  */
 
 import { ContentApplier, ContentOperation, OperationResult } from '@/utils/contentApplyUtils';
-import { logApi, LogCategory } from '@/utils/logger';
+import { logApi } from '@/utils/logger';
 
 export interface ApplyOperationsResult {
   content: string;

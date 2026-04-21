@@ -7,7 +7,7 @@
  * - Mode hybride par défaut : OpenAPI (Scrivia) + MCP (Factoria)
  */
 
-import { McpServerConfig, AgentMcpConfig, ExternalMcpServer, externalServerToMcpTool, createMcpTool } from '@/types/mcp';
+import { McpServerConfig, AgentMcpConfig } from '@/types/mcp';
 import type { Tool } from './types/strictTypes';
 import { simpleLogger as logger } from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';

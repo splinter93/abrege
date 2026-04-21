@@ -9,7 +9,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { initializeMermaid } from '@/services/mermaid/mermaidConfig';
 import { normalizeMermaidContent, getMermaidDiagramType } from '@/components/chat/mermaidService';
 import { simpleLogger as logger } from '@/utils/logger';
-import MermaidToolbar from './MermaidToolbar';
 import { openMermaidModal } from './MermaidModal';
 // Les styles sont maintenant dans unified-blocks.css
 // import './MermaidRenderer.css'; - REMOVED

@@ -25,10 +25,9 @@ import type { LLMResponse } from '../types/strictTypes';
 import { openApiSchemaService } from '../openApiSchemaService';
 import { createClient } from '@supabase/supabase-js';
 import { groqCircuitBreaker } from '@/services/circuitBreaker';
-import type { Tool, McpCall, FunctionTool } from '../types/strictTypes';
+import type { Tool, McpCall } from '../types/strictTypes';
 import { isMcpTool, isFunctionTool } from '../types/strictTypes';
 import { systemMessageBuilder } from '../SystemMessageBuilder';
-import type { McpServerConfig } from '@/types/mcp';
 
 /**
  * Contexte d'exécution
@@ -431,8 +430,8 @@ export class SimpleOrchestrator {
       let iteration = 0;
       let totalToolCalls = 0;
       let finalContent = '';
-      let allToolCalls: ToolCall[] = [];
-      let allToolResults: ToolResult[] = [];
+      const allToolCalls: ToolCall[] = [];
+      const allToolResults: ToolResult[] = [];
 
       // Main loop
       while (iteration < DEFAULT_CONFIG.maxIterations) {

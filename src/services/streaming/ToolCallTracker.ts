@@ -6,7 +6,6 @@
  * @module services/streaming/ToolCallTracker
  */
 
-import { simpleLogger as logger } from '@/utils/logger';
 import type { ToolCall } from '@/hooks/useChatHandlers';
 
 /**

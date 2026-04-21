@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useChatSend } from '../useChatSend';
 import type { SelectedNote, NoteWithContent } from '../useNotesLoader';
 import type { ImageAttachment } from '@/types/image';

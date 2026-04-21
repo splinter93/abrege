@@ -5,7 +5,7 @@
  * par des composants React NoteEmbedView
  */
 
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import NoteEmbedContent from './NoteEmbedContent';
 import YouTubeEmbedContent from './YouTubeEmbedContent';

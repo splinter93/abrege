@@ -24,8 +24,6 @@ import ContextMenuExtension from '@/extensions/ContextMenuExtension';
 import CalloutExtension from '@/extensions/CalloutExtension';
 import MarkdownPasteHandler from '@/extensions/MarkdownPasteHandler';
 import NoteEmbedExtension from '@/extensions/NoteEmbedExtension';
-import { markdownItNoteEmbed } from '@/extensions/markdown-it-note-embed';
-import { markdownItYouTubeEmbed } from '@/extensions/markdown-it-youtube-embed';
 import YouTubeEmbedExtension from '@/extensions/YouTubeEmbedExtension';
 import SidebarFileDropExtension from '@/extensions/SidebarFileDropExtension';
 
@@ -42,10 +40,9 @@ import Color from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Highlight from '@tiptap/extension-highlight';
 import Mention from '@tiptap/extension-mention';
-import Emoji from '@tiptap/extension-emoji';
 import FloatingMenu from '@tiptap/extension-floating-menu';
 import Dropcursor from '@tiptap/extension-dropcursor';
-import type { Extension, AnyExtension } from '@tiptap/core';
+import type { AnyExtension } from '@tiptap/core';
 import type lowlight from '@/utils/lowlightInstance';
 
 export interface EditorExtensionsConfig {

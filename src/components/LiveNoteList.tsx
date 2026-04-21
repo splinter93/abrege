@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
-import type { FileSystemState, Note } from '@/store/useFileSystemStore';
+import type { FileSystemState } from '@/store/useFileSystemStore';
 import { VirtualizedNoteList } from './VirtualizedNoteList';
 
 // Sélecteur Zustand typé, stable, conforme à la directive Jean-Claude

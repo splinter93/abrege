@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 
 import LogoScrivia from '@/components/LogoScrivia';
-import { FiShare2, FiStar, FiMoreHorizontal, FiMaximize2, FiMinimize2, FiCheck } from 'react-icons/fi';
+import { FiShare2, FiStar, FiMoreHorizontal, FiMinimize2 } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
 import ShareMenu from './ShareMenu';
 import { simpleLogger } from '@/utils/logger';

@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-import { motion } from 'framer-motion';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 import FolderItem from './FolderItem';
@@ -12,21 +11,8 @@ import { Folder, FileArticle } from './types';
 import './FolderContent.css';
 import './FolderGridItems.css';
 import './FolderBreadcrumb.css';
-import { 
-  contentVariants, 
-  loadingVariants, 
-  errorVariants, 
-  emptyStateVariants,
-  fileListVariants,
-  folderListVariants,
-  gridExpandVariants,
-  gridShrinkVariants,
-  gridReorderVariants,
-  gridRowVariants,
-  gridColumnVariants,
-  gridTransition,
-  gridReorderTransition
-} from './FolderAnimation';
+
+
 
 interface FolderContentProps {
   classeurName: string;

@@ -486,7 +486,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
    * Protégé par runExclusive pour éviter les race conditions
    */
   closeCanva: async (sessionId, options) => {
-    const { activeCanvaId, sessions } = get();
+    const { activeCanvaId, sessions: _sessions } = get();
     const targetId = sessionId || activeCanvaId;
     if (!targetId) {
       return;
@@ -627,9 +627,6 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
         const { data: { session: authSession } } = await supabase.auth.getSession();
 
         if (authSession?.access_token) {
-          // ✅ Déclarer chatSessionId au niveau du scope pour l'utiliser plus tard
-          let chatSessionId: string | undefined;
-
           // ✅ Vérifier existence canva en DB avant activation
           const canvaSessionResponse = await fetch(`/api/v2/canva/sessions/${canvaId}`, {
             headers: {
@@ -670,7 +667,7 @@ export const useCanvaStore = create<CanvaStore>((set, get) => ({
             throw new Error('Canva session data not found in API response');
           }
 
-          chatSessionId = canvaData.canva_session.chat_session_id;
+          const chatSessionId = canvaData.canva_session.chat_session_id;
 
           if (chatSessionId) {
             // ✅ Fermer tous les autres canvas de cette chat session

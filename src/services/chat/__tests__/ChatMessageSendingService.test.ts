@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ChatMessageSendingService, ValidationError, AuthError } from '../ChatMessageSendingService';
+import { ChatMessageSendingService } from '../ChatMessageSendingService';
 import type { ChatMessage, ChatSession, Agent, UserMessage } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { LLMContext } from '@/types/llmContext';

@@ -6,9 +6,7 @@
 import React from 'react';
 import type { FullEditorInstance } from '@/types/editor';
 import type { EditorState } from '@/hooks/editor/useEditorState';
-import { TIMEOUTS } from '@/utils/editorConstants';
 import { simpleLogger, LogCategory } from '@/utils/logger';
-import { getEditorMarkdown } from '@/utils/editorHelpers';
 import { preprocessEmbeds } from '@/utils/preprocessEmbeds';
 import { prepareMarkdownForEditor } from '@/utils/markdownSanitizer.client';
 

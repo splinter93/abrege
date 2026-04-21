@@ -8,8 +8,6 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { logApi } from '@/utils/logger';
-import type { ApiContext } from '@/utils/database/types/databaseTypes';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;

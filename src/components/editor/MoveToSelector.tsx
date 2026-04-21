@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
-import { FiFolder, FiX, FiCheck } from 'react-icons/fi';
+import { FiFolder, FiX } from 'react-icons/fi';
 import { supabase } from '@/supabaseClient';
 import { simpleLogger as logger } from '@/utils/logger';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
-import { useFileSystemStore } from '@/store/useFileSystemStore';
 import toast from 'react-hot-toast';
 import './MoveToSelector.css';
 

@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { DndContext, DragEndEvent, DragOverlay, closestCenter, DragStartEvent, Modifier } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { useCrossClasseurDrag } from "@/hooks/useCrossClasseurDrag";
-import { DRAG_SENSOR_CONFIG, DRAG_ANIMATION_CONFIG } from "@/constants/dragAndDropConfig";
+import { DRAG_ANIMATION_CONFIG } from "@/constants/dragAndDropConfig";
 import SimpleContextMenu from "./SimpleContextMenu";
 import TrashConfirmationModal from "./TrashConfirmationModal";
 import SortableClasseurItem from "./SortableClasseurItem";

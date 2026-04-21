@@ -6,8 +6,6 @@
 import { simpleLogger as logger } from '@/utils/logger';
 import { SchemaValidator } from '../schemaValidator';
 import type {
-  SpecializedAgentConfig,
-  SpecializedAgentRequest,
   SpecializedAgentResponse
 } from '@/types/specializedAgents';
 import { AgentConfigService } from './AgentConfigService';

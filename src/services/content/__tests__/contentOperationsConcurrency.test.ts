@@ -9,7 +9,6 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createClient } from '@supabase/supabase-js';
 import { ContentApplier } from '@/utils/contentApplyUtils';
 import type { ContentOperation } from '@/utils/contentApplyUtils';
 

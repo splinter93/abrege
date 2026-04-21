@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
-import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
+import { getAuthenticatedUser } from '@/utils/authUtils';
 import { logApi } from '@/utils/logger';
 import { SpecializedAgentError, type SpecializedAgentConfig } from '@/types/specializedAgents';
 import { userCanAccessAgent, type PlatformAgentRow } from '@/constants/platformAgents';

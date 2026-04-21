@@ -157,6 +157,22 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: false
   },
   {
+    id: 'openrouter/kimi-k2.6',
+    name: 'Kimi K2.6',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'images', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 262144,
+    maxOutput: 8192,
+    speed: 500,
+    pricing: {
+      input: '$0.60/M prompt · $0.20/M cache read',
+      output: '$2.80/M'
+    },
+    description: 'MoonshotAI Kimi K2.6 via OpenRouter, vision native (lit les images), contexte 262K',
+    recommended: false
+  },
+  {
     id: 'fireworks/kimi-k2p5',
     name: 'Kimi K2.5(Fireworks)',
     category: 'liminality',
@@ -167,6 +183,22 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     speed: 500,
     pricing: { input: '$0.40', output: '$1.75' },
     description: 'MoonshotAI Kimi K2.5 P via Fireworks, vision native (lit les images), contexte 262K',
+    recommended: false
+  },
+  {
+    id: 'fireworks/kimi-k2p6',
+    name: 'Kimi K2.6 (Fireworks)',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'images', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 262144,
+    maxOutput: 8192,
+    speed: 500,
+    pricing: {
+      input: '$0.95/M uncached · $0.16/M cached',
+      output: '$4.00/M'
+    },
+    description: 'MoonshotAI Kimi K2.6 via Fireworks, vision native (lit les images), contexte 262K',
     recommended: false
   },
   {

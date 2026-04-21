@@ -6,9 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   llmRequestSchema,
-  llmStreamRequestSchema,
-  type LLMRequest,
-  type LLMStreamRequest
+  llmStreamRequestSchema
 } from '../validation';
 
 describe('validation schemas', () => {

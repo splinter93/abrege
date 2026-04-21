@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { Bot, ChevronDown } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import type { Agent } from '@/types/chat';
 import './AgentSelectorDropdown.css';
 

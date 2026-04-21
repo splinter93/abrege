@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Image as ImageIcon, Power, PowerOff, Star, Pencil, FolderSearch } from 'lucide-react';
+import { X, Image as ImageIcon, Pencil, FolderSearch } from 'lucide-react';
 import ScriviaFilePicker from '@/components/chat/ScriviaFilePicker';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import type { SpecializedAgentConfig } from '@/types/specializedAgents';

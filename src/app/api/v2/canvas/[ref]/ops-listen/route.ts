@@ -5,8 +5,8 @@
  * ALTERNATIVE à ops:listen (sans : pour éviter problèmes de routing Next.js)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { logApi, LogCategory } from '@/utils/logger';
+import { NextRequest } from 'next/server';
+import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { streamBroadcastService, StreamEvent } from '@/services/streamBroadcastService';

@@ -4,7 +4,6 @@
  */
 
 import { agentOrchestrator } from '@/services/llm/services/AgentOrchestrator';
-import { MultimodalHandler } from '../multimodalHandler';
 import { simpleLogger as logger } from '@/utils/logger';
 import { ErrorHandler } from '../errors/ErrorHandler';
 import type { SpecializedAgentConfig, SpecializedAgentResponse } from '@/types/specializedAgents';

@@ -7,7 +7,6 @@ import type {
   LLMResponse,
   ToolCall,
   Tool,
-  FunctionTool,
   Usage
 } from '../../types/strictTypes';
 import { isFunctionTool } from '../../types/strictTypes';

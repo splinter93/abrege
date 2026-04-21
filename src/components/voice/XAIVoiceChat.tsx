@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Mic, Square, Volume2, Loader, X } from 'lucide-react';
+import { Mic, Square, Loader, X } from 'lucide-react';
 import { xaiVoiceService, XAIVoiceSessionConfig } from '@/services/xai/xaiVoiceService';
 import type { XAIVoiceTool, XAIVoiceToolCall, XAIVoiceToolResult } from '@/services/xai/types';
 import { logger, LogCategory } from '@/utils/logger';
@@ -9,7 +9,7 @@ import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 import { useAudioQueue } from '@/hooks/voice/useAudioQueue';
 import { useTranscriptMessages, type TranscriptMessage } from '@/hooks/voice/useTranscriptMessages';
 import { OpenApiToolExecutor } from '@/services/llm/executors/OpenApiToolExecutor';
-import type { ToolCall, ToolResult } from '@/services/llm/types/apiV2Types';
+import type { ToolCall } from '@/services/llm/types/apiV2Types';
 import { parseOpenApiEndpoints } from '@/services/xai/utils/parseOpenApiEndpoints';
 import './XAIVoiceChat.css';
 

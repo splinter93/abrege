@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, FileText, Plus, Link, ArrowRight } from 'lucide-react';
+import { Upload, Plus, Link, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { simpleLogger as logger } from '@/utils/logger';
 

@@ -11,7 +11,7 @@
 import { simpleLogger as logger } from '@/utils/logger';
 import type { ChatMessage } from '@/types/chat';
 import type { MessageContextProvider } from '../types';
-import type { ExtendedLLMContext, ContextInjectionOptions, MentionedNote } from '../types';
+import type { ExtendedLLMContext, ContextInjectionOptions } from '../types';
 
 export class MentionedNotesContextProvider implements MessageContextProvider {
   readonly name = 'MentionedNotes';

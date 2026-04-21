@@ -6,7 +6,7 @@ import { FileItem } from "@/types/files";
 import { useFilesPage } from "@/hooks/useFilesPage";
 import { useAuth } from "@/hooks/useAuth";
 import PageWithSidebarLayout from "@/components/PageWithSidebarLayout";
-import SearchFiles, { FileFilters, FileSortOptions } from "@/components/SearchFiles";
+import { FileFilters, FileSortOptions } from "@/components/SearchFiles";
 import UnifiedUploadZone from "@/components/UnifiedUploadZone";
 import UploadModal from "@/components/UploadModal";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -14,15 +14,14 @@ import AuthGuard from "@/components/AuthGuard";
 import { useSecureErrorHandler } from "@/components/SecureErrorHandler";
 import { STORAGE_CONFIG } from "@/config/storage";
 import { simpleLogger as logger } from "@/utils/logger";
-import UnifiedPageTitle from "@/components/UnifiedPageTitle";
 import { SimpleLoadingState } from "@/components/DossierLoadingStates";
 import "@/components/DossierLoadingStates.css";
-import { FileText, Upload, Image as ImageIcon, File, FileText as FileTextIcon, Video, Music, Archive, X, Search, LayoutGrid, List, MoreVertical, Filter, Pencil, Eye, Trash2 } from "lucide-react";
+import { FileText, Upload, Image as ImageIcon, File, FileText as FileTextIcon, Video, Music, Archive, Search, LayoutGrid, List, MoreVertical, Filter, Pencil, Eye, Trash2 } from "lucide-react";
 import "@/styles/main.css";
 import "./index.css";
 import "./page.css";
 import "./glassmorphism.css";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { openImageModal } from "@/components/chat/ImageModal";
 
 export default function FilesPage() {
@@ -205,7 +204,7 @@ function AuthenticatedFilesContent({ user }: { user: { id: string; email?: strin
     const searchTerm = searchQuery.toLowerCase().trim();
     const typeFilter = filters.type;
     
-    let files = filteredFiles.filter(file => filterFile(file, searchTerm, typeFilter));
+    const files = filteredFiles.filter(file => filterFile(file, searchTerm, typeFilter));
 
     // Tri optimisé
     if (sortOptions.field !== 'created_at' || sortOptions.order !== 'desc') {

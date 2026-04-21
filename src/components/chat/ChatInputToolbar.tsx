@@ -6,8 +6,8 @@
 
 'use client';
 import React, { useState } from 'react';
-import { Globe, CornerUpRight, Search, FileText, Zap, Target, Cpu } from 'react-feather';
-import { Lightbulb, AudioLines, Square } from 'lucide-react';
+import { CornerUpRight } from 'react-feather';
+import { AudioLines, Square } from 'lucide-react';
 import AudioRecorder, { type AudioRecorderRef } from './AudioRecorder';
 import NoteSelector from './NoteSelector';
 import FileMenu from './FileMenu';
@@ -116,21 +116,21 @@ const ChatInputToolbar: React.FC<ChatInputToolbarProps> = ({
   onFileSelectComputer,
   onFileSelectFiles,
   
-  // WebSearch
-  showWebSearchMenu,
-  onToggleWebSearchMenu,
-  onNewsSearch,
-  onBasicSearch,
-  onAdvancedSearch,
+  // WebSearch (réservés UI à brancher)
+  showWebSearchMenu: _showWebSearchMenu,
+  onToggleWebSearchMenu: _onToggleWebSearchMenu,
+  onNewsSearch: _onNewsSearch,
+  onBasicSearch: _onBasicSearch,
+  onAdvancedSearch: _onAdvancedSearch,
   
-  // Reasoning
-  showReasoningMenu,
-  reasoningOverride,
-  defaultReasoningLevel,
-  onToggleReasoningMenu,
-  onFastReasoning,
-  onGeneralReasoning,
-  onAdvancedReasoning,
+  // Reasoning (réservés UI à brancher)
+  showReasoningMenu: _showReasoningMenu,
+  reasoningOverride: _reasoningOverride,
+  defaultReasoningLevel: _defaultReasoningLevel,
+  onToggleReasoningMenu: _onToggleReasoningMenu,
+  onFastReasoning: _onFastReasoning,
+  onGeneralReasoning: _onGeneralReasoning,
+  onAdvancedReasoning: _onAdvancedReasoning,
   
   // Audio
   onTranscriptionComplete,

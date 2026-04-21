@@ -13,8 +13,6 @@ import { generateUniqueNoteName } from '@/utils/generateUniqueName';
 
 const selectFoldersData = (s: FileSystemState) => s.folders;
 const selectNotesData = (s: FileSystemState) => s.notes;
-const selectActiveClasseurId = (s: FileSystemState) => s.activeClasseurId;
-
 // Types pour le renommage
 export type RenamingType = 'folder' | 'file' | null;
 
@@ -57,10 +55,6 @@ interface FolderManagerResult {
   // DnD
   reorderFolders: (newOrder: Folder[]) => Promise<void>;
   reorderFiles: (newOrder: FileArticle[]) => Promise<void>;
-
-  // Navigation
-  goToFolder: (id: string) => void;
-  goBack: () => void;
 
   // Création / suppression
   createFolder: (name: string) => Promise<Folder | undefined>;
@@ -106,7 +100,6 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
   const folders = useMemo(() => Object.values(foldersMap), [foldersMap]);
   const notesMap = useFileSystemStore(selectNotesData);
   const notes = useMemo(() => Object.values(notesMap), [notesMap]);
-  const activeClasseurId = useFileSystemStore(selectActiveClasseurId);
 
   // Correction : filtrage par classeurId et parentFolderId
   // folders est un array de ZustandFolder (du store)
@@ -170,11 +163,6 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       });
     }
   }, [classeurId, parentFolderId, refreshKey]);
-
-  // --- NAVIGATION ---
-  // Navigation contrôlée par le parent, plus de setCurrentFolderId ici
-  const goToFolder = () => {};
-  const goBack = () => {};
 
   // --- RENOMMAGE ---
   const startRename = useCallback((id: string, type: 'folder' | 'file') => {
@@ -263,7 +251,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       setError('Erreur lors de la création du fichier.');
       return undefined;
     }
-  }, [classeurId, parentFolderId, filteredFiles, userId, startRename]);
+  }, [classeurId, filteredFiles, startRename]);
 
   const deleteFolder = useCallback(async (id: string) => {
     try {
@@ -302,60 +290,6 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       setError('Erreur lors de la suppression du dossier.');
     }
   }, [folders, parentFolderId, userId]);
-
-  const updateFile = useCallback(async (id: string, name: string): Promise<void> => {
-    const originalNote = notes.find(n => n.id === id);
-    if (!originalNote) return;
-
-    // 🔧 CORRECTION: Mise à jour optimiste immédiate
-    const store = useFileSystemStore.getState();
-    store.updateNote(id, { source_title: name });
-
-    try {
-      await v2UnifiedApi.updateNote(id, { source_title: name });
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Note renommée avec succès:', { id, newName: name });
-      }
-    } catch (error) {
-      logger.error('[UI] ❌ Erreur renommage note', error instanceof Error ? error : new Error(String(error)));
-      
-      // 🔧 CORRECTION: Rollback en cas d'erreur
-      store.updateNote(id, { source_title: originalNote.source_title });
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] 🔄 Rollback: Nom de note restauré');
-      }
-      
-      setError('Erreur lors du renommage de la note.');
-    }
-  }, [notes, userId]);
-
-  const updateFolder = useCallback(async (id: string, name: string): Promise<void> => {
-    const originalFolder = folders.find(f => f.id === id);
-    if (!originalFolder) return;
-
-    // 🔧 CORRECTION: Mise à jour optimiste immédiate
-    const store = useFileSystemStore.getState();
-    store.updateFolder(id, { name });
-
-    try {
-      await v2UnifiedApi.updateFolder(id, { name });
-      
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] ✅ Dossier renommé avec succès:', { id, newName: name });
-      }
-    } catch (error) {
-      logger.error('[UI] ❌ Erreur renommage dossier', error instanceof Error ? error : new Error(String(error)));
-      
-      // 🔧 CORRECTION: Rollback en cas d'erreur
-      store.updateFolder(id, { name: originalFolder.name });
-      if (process.env.NODE_ENV === 'development') {
-        logger.dev('[UI] 🔄 Rollback: Nom de dossier restauré');
-      }
-      
-      setError('Erreur lors du renommage du dossier.');
-    }
-  }, [folders, userId]);
 
   const deleteFile = useCallback(async (id: string): Promise<void> => {
     try {
@@ -475,7 +409,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       
       setError('Erreur lors du renommage.');
     }
-  }, [notes, folders, userId]);
+  }, [notes, folders]);
 
   const cancelRename = useCallback(() => {
     setRenamingItemId(null);
@@ -484,11 +418,13 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
 
   // --- DnD ---
   const reorderFolders = useCallback(async (newOrder: Folder[]) => {
+    void newOrder;
     // Fonctionnalité de réordonnancement des dossiers
     logger.dev('[UI] 🔄 Réordonnancement dossiers - Fonctionnalité en cours de développement');
   }, []);
 
   const reorderFiles = useCallback(async (newOrder: FileArticle[]) => {
+    void newOrder;
     // Fonctionnalité de réordonnancement des notes
     logger.dev('[UI] 🔄 Réordonnancement notes - Fonctionnalité en cours de développement');
   }, []);
@@ -534,7 +470,7 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
       logger.error('[UI] ❌ Erreur déplacement item', err instanceof Error ? err : new Error(String(err)));
       setError('Erreur lors du déplacement de l\'élément.');
     }
-  }, [activeClasseurId, folders, notes]);
+  }, [folders, notes]);
 
   // --- EXPORT ---
   return {
@@ -551,8 +487,6 @@ export function useFolderManagerState(classeurId: string, userId: string, parent
     cancelRename,
     reorderFolders,
     reorderFiles,
-    goToFolder,
-    goBack,
     createFolder,
     createFile,
     deleteFolder,

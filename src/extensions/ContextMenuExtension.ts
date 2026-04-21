@@ -1,6 +1,5 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from 'prosemirror-state';
-import { Decoration, DecorationSet } from 'prosemirror-view';
 
 /**
  * Extension pour gérer le menu contextuel Notion-like
@@ -31,7 +30,7 @@ const ContextMenuExtension = Extension.create({
               const $pos = state.doc.resolve(pos.pos);
               
               // ✅ Chercher le node le plus spécifique (nodeAfter ou parent)
-              let node = $pos.nodeAfter || $pos.parent;
+              const node = $pos.nodeAfter || $pos.parent;
               let nodeType = node.type.name;
               
               // ✅ Si on clique dans un noteEmbed, utiliser son type

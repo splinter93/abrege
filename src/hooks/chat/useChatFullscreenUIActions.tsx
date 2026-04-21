@@ -10,8 +10,7 @@
  */
 
 import { useCallback } from 'react';
-import React from 'react';
-import type { ChatMessage, ChatSession, Agent, EditingState } from '@/types/chat';
+import type { ChatMessage, ChatSession, EditingState } from '@/types/chat';
 import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { Note } from '@/services/chat/ChatContextBuilder';
 import type { NoteMention } from '@/types/noteMention';

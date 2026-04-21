@@ -6,7 +6,6 @@
 import { 
   SpecializedAgentConfig, 
   AgentResponse, 
-  AgentResponseData, 
   AgentMetadata,
   OpenAPISchema,
   OpenAPIProperty

@@ -11,8 +11,8 @@
  * Utilisé par le frontend pour synchroniser l'état local
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { logApi, LogCategory } from '@/utils/logger';
+import { NextRequest } from 'next/server';
+import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { streamBroadcastService, StreamEvent } from '@/services/streamBroadcastService';

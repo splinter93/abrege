@@ -11,7 +11,7 @@ import { createClient } from '@supabase/supabase-js';
 import { logApi } from '@/utils/logger';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
-import type { ApiContext, ShareSettings } from '@/utils/database/types/databaseTypes';
+import type { ApiContext } from '@/utils/database/types/databaseTypes';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;

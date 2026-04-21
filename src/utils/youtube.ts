@@ -125,7 +125,7 @@ export function parseYouTubeInput(input: string | null | undefined): ParsedYouTu
     );
 
     return { videoId, startSeconds };
-  } catch (error) {
+  } catch {
     return { videoId: null, startSeconds: null };
   }
 }

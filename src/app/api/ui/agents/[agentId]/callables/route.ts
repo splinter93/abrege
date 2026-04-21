@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { simpleLogger as logger } from '@/utils/logger';
-import { callableService } from '@/services/llm/callableService';
 import { z } from 'zod';
 
 // Force Node.js runtime

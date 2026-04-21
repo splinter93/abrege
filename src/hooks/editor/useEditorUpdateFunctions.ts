@@ -4,7 +4,6 @@
  */
 
 import { useCallback } from 'react';
-import type { Editor as TiptapEditor } from '@tiptap/react';
 import { useFontManager } from '@/hooks/useFontManager';
 import { useWideModeManager } from '@/hooks/useWideModeManager';
 import { useNoteUpdate, useHeaderImageUpdate } from '@/hooks/editor/useNoteUpdate';

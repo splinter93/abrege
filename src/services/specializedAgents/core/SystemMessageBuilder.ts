@@ -3,7 +3,7 @@
  * Extrait de SpecializedAgentManager pour respecter limite 300 lignes
  */
 
-import type { SpecializedAgentConfig, OpenAPISchema } from '@/types/specializedAgents';
+import type { SpecializedAgentConfig } from '@/types/specializedAgents';
 
 /**
  * Service de construction des messages système

@@ -148,8 +148,8 @@ export class ToolCallSyncService {
           ...m,
           timestamp: m.timestamp !== undefined ? String(m.timestamp) : undefined
         }));
-      let newCalls: ToolCall[] = [];
-      let newResults: NormalizedToolResult[] = [];
+      const newCalls: ToolCall[] = [];
+      const newResults: NormalizedToolResult[] = [];
 
       for (const message of messages) {
         // 1) Assistant → tool_calls proposés par le LLM

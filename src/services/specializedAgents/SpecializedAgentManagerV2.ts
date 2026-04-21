@@ -15,7 +15,6 @@ import {
   CreateSpecializedAgentRequest,
   CreateSpecializedAgentResponse,
   ExecutionContext,
-  AgentError,
   OpenAPISchema
 } from './types/AgentTypes';
 import { AgentValidator } from './services/AgentValidator';

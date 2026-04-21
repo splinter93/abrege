@@ -10,10 +10,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import Editor from '../Editor';
 import { EditorErrorBoundary } from '../EditorErrorBoundary';
-import type { Editor as TiptapEditor } from '@tiptap/react';
 
 // Setup variables d'environnement
 process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321';

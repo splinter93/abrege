@@ -11,12 +11,10 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
-  chatMessageSendingService,
-  type SendMessageOptions as ServiceSendOptions
+  chatMessageSendingService
 } from '@/services/chat/ChatMessageSendingService';
 import {
-  chatMessageEditService,
-  type EditMessageOptions as ServiceEditOptions
+  chatMessageEditService
 } from '@/services/chat/ChatMessageEditService';
 import { sessionSyncService } from '@/services/sessionSyncService';
 import { useChatStore } from '@/store/useChatStore';

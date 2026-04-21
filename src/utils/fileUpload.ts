@@ -1,5 +1,5 @@
 import { supabase } from '@/supabaseClient';
-import { DEFAULT_VALUES, ERROR_MESSAGES } from '@/constants/fileUpload';
+import { ERROR_MESSAGES } from '@/constants/fileUpload';
 
 // ========================================
 // TYPES ET INTERFACES
@@ -131,7 +131,7 @@ async function getFinalUrl(fileId: string, authHeader: Record<string, string>): 
  */
 export async function uploadImageForNote(
   file: File | string, 
-  noteRef: string
+  _noteRef: string
 ): Promise<{ publicUrl: string; saved: FileData }> {
   // Authentification
   const { data: { session } } = await supabase.auth.getSession();

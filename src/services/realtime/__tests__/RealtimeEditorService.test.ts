@@ -12,7 +12,7 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { RealtimeEditorService } from '../RealtimeEditorService';
-import type { RealtimeEditorConfig, RealtimeEditorState, RealtimeEditorEvent } from '../RealtimeEditorService';
+import type { RealtimeEditorConfig } from '../RealtimeEditorService';
 
 // Mock dépendances
 const mockChannel = {

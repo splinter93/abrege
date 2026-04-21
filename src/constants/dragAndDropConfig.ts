@@ -3,7 +3,6 @@
  * Centralise tous les paramètres de sensibilité et de comportement
  */
 
-import { PointerSensor } from '@dnd-kit/core';
 
 /**
  * Configuration des capteurs de drag & drop

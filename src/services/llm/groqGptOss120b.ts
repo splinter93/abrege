@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { GroqRoundParams, GroqRoundResult } from './types/groqTypes';
-import { DEFAULT_GROQ_LIMITS } from './types/groqTypes';
 import { agentOrchestrator } from './services/AgentOrchestrator';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { UIContext } from './ContextCollector';

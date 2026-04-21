@@ -5,7 +5,6 @@
 
 import type {
   SpecializedAgentConfig,
-  SpecializedAgentRequest,
   SpecializedAgentResponse,
   CreateSpecializedAgentRequest,
   CreateSpecializedAgentResponse

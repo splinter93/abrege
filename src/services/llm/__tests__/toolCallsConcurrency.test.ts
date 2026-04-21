@@ -8,7 +8,7 @@
  * - Tests runExclusive pattern
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { ChatOperationLock } from '@/services/chat/ChatOperationLock';
 
 describe('[Concurrency] Tool Calls', () => {

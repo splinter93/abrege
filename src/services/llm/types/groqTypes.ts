@@ -1,7 +1,6 @@
 import type { ChatMessage } from '@/types/chat';
 import type { AppContext } from '../types';
-import type { AgentConfig, LLMResponse, ToolCall, ToolResult, SessionIdentity } from './agentTypes';
-import type { ToolCall as StrictToolCall } from './strictTypes';
+import type { AgentConfig, LLMResponse, ToolCall, ToolResult } from './agentTypes';
 
 // 🎯 Types pour l'orchestration des rounds
 export interface GroqRoundParams {

@@ -29,7 +29,7 @@ export class AgentExecutor {
     traceId: string
   ): Promise<SpecializedAgentResponse> {
     // Préparation du contenu multimodale si le modèle le supporte
-    let processedInput = input;
+    const processedInput = input;
     let isMultimodal = false;
     let groqPayload: {
       messages: Array<{

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import { FileText, Clock, User, Globe, Lock, Link as LinkIcon, Calendar, Eye } from 'lucide-react';
+import { FileText, Globe, Lock, Link as LinkIcon, Calendar, Eye } from 'lucide-react';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import { simpleLogger } from '@/utils/logger';
 

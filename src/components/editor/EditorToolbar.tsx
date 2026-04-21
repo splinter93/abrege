@@ -9,7 +9,6 @@ import {
   FiItalic,
   FiUnderline,
   FiList,
-  FiLink,
   FiImage,
   FiMoreVertical,
   FiZap,

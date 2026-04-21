@@ -83,7 +83,7 @@ export const useFolderDragAndDrop = ({
         // Vérifier si l'élément est déjà dans le bon dossier pour éviter les déplacements inutiles
         const store = useFileSystemStore.getState();
         let shouldMove = false;
-        let targetFolderId = parentFolderId; // 🎯 FIX: Rester dans le dossier courant si on est dans un dossier
+        const targetFolderId = parentFolderId; // 🎯 FIX: Rester dans le dossier courant si on est dans un dossier
         
         if (data.type === 'folder') {
           const folder = store.folders[data.id];

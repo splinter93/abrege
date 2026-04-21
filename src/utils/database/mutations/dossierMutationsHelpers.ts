@@ -8,7 +8,6 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { logApi } from '@/utils/logger';
 
 /**
  * Déplacer récursivement tous les dossiers enfants lors d'un changement de classeur

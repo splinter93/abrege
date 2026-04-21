@@ -196,6 +196,11 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
     );
   }
 
+  /**
+   * Contrat {@link LLMProvider} : AsyncGenerator. Ce provider ne stream pas ; tout appel doit échouer tôt.
+   * require-yield : pas de yield intentionnel — erreur synchrone avant toute émission.
+   */
+  /* eslint-disable require-yield -- stub volontaire, signature imposée par l’interface */
   async *callWithMessagesStream(
     _messages: ChatMessage[],
     _tools: Tool[],
@@ -205,6 +210,7 @@ export class GroqResponsesProvider extends BaseProvider implements LLMProvider {
       'GroqResponsesProvider ne supporte pas le streaming — utiliser call()'
     );
   }
+  /* eslint-enable require-yield */
 
   /**
    * Prépare les messages pour la conversion vers l'API Responses

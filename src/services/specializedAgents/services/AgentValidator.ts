@@ -10,7 +10,6 @@ import {
   AgentInput, 
   ValidationResult, 
   ValidationError,
-  AgentErrorCode,
   CreateSpecializedAgentRequest,
   SpecializedAgentConfig
 } from '../types/AgentTypes';

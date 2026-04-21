@@ -16,7 +16,6 @@ import {
 import {
   getGlobalDragHandle,
   getGlobalDragHandleCleanup,
-  getCurrentView,
   getHideTimeout,
   getHoverBridge,
   getListenersAttached,
@@ -161,7 +160,7 @@ export const NotionDragHandleExtension = Extension.create<NotionDragHandleOption
                 setGlobalDragHandle(null);
 
                 // ✅ Détruire aussi la bridge
-                let hoverBridge = getHoverBridge();
+                const hoverBridge = getHoverBridge();
                 if (hoverBridge && hoverBridge.parentNode) {
                   hoverBridge.parentNode.removeChild(hoverBridge);
                   setHoverBridge(null);

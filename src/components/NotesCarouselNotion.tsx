@@ -2,18 +2,15 @@
 
 import React, { useState, useEffect, forwardRef } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   FileText, 
-  Calendar, 
   Eye, 
-  Clock, 
   Globe, 
   Lock, 
   Link as LinkIcon,
   MoreHorizontal,
-  Star,
-  Bookmark
+  Star
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';

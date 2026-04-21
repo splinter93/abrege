@@ -3,7 +3,6 @@
  * Juste ce qui est nécessaire pour les tool calls
  */
 
-import type { ToolCall, ToolResult } from '../services/SimpleToolExecutor';
 
 /**
  * Catégories d'outils pour la parallélisation

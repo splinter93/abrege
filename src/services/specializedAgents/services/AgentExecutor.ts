@@ -8,7 +8,6 @@ import {
   ExecutionResult, 
   SpecializedAgentConfig,
   AgentInput,
-  MultimodalInput,
   GroqMultimodalPayload
 } from '../types/AgentTypes';
 import { MultimodalHandler } from '../multimodalHandler';

@@ -1,5 +1,5 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { Search, X, User, Settings, Bot, Trash2 } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Search, Bot, Trash2 } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgents } from '@/hooks/useAgents';

@@ -515,7 +515,7 @@ async function renderMermaidDiagram(container: HTMLElement, mermaidContent: stri
     const result = await mermaid.default.render(id, normalizedContent);
     
     if (result && result.svg) {
-      let svg = result.svg;
+      const svg = result.svg;
       
       // ✅ Laisser Mermaid gérer le layout - pas de transformation SVG
       

@@ -11,7 +11,6 @@ import {
   Book,
   FolderOpen,
   Bot,
-  Command,
   SquareTerminal,
   Users,
   Settings,

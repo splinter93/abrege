@@ -16,7 +16,6 @@ import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser } from '@/utils/authUtils';
 import { executeAgentV2Schema, validatePayload, createValidationErrorResponse } from '@/utils/v2ValidationSchemas';
 import { SpecializedAgentManager } from '@/services/specializedAgents/SpecializedAgentManager';
-import { generateUserJWT } from '@/utils/jwtGenerator';
 import { userCanAccessAgent, type PlatformAgentRow } from '@/constants/platformAgents';
 
 // ✅ FIX PROD: Force Node.js runtime pour accès aux variables d'env (SUPABASE_SERVICE_ROLE_KEY)

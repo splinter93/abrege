@@ -21,7 +21,7 @@ interface ChatMessageProps {
   message: ChatMessageType;
   className?: string;
   isStreaming?: boolean;
-  animateContent?: boolean; // eslint-disable-line @typescript-eslint/no-unused-vars -- réservé pour usage futur
+  animateContent?: boolean;  
   messageIndex?: number;
   onEdit?: (messageId: string, content: string, index: number) => void;
   onRegenerate?: (assistantMessageId: string) => void;
@@ -31,7 +31,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   message, 
   className, 
   isStreaming = false,
-  animateContent = false, // eslint-disable-line @typescript-eslint/no-unused-vars -- réservé pour usage futur
+  animateContent = false,  
   messageIndex,
   onEdit,
   onRegenerate

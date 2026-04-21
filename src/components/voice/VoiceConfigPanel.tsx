@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import type { XAIVoiceTool, XAIVoicePredefinedToolType } from '@/services/xai/types';
 import { parseOpenApiToVoiceTools } from '@/services/xai/utils/openApiToVoiceTools';
 import { logger, LogCategory } from '@/utils/logger';

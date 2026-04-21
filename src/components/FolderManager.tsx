@@ -1,6 +1,5 @@
 "use client";
-import React, { useState, useCallback, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useCallback } from 'react';
 import './FolderManagerModern.css';
 import FolderContent from './FolderContent';
 import { useFolderManagerState } from './useFolderManagerState';
@@ -14,7 +13,6 @@ import { useFolderSelection } from '../hooks/useFolderSelection';
 import { useFolderFilter } from '../hooks/useFolderFilter';
 import { useFolderKeyboard } from '../hooks/useFolderKeyboard';
 
-import { classeurTabVariants, classeurTabTransition } from './FolderAnimation';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 
 /**

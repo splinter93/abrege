@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ArrowLeft, ChevronRight, User, Bell, Palette, Link2, Calendar, Database, Lock, Users, UserCircle, Moon, Sun, Sparkles, Circle, Flame, Snowflake, Zap, FileText, Settings, Mic } from 'lucide-react';
+import { X, ArrowLeft, ChevronRight, Bell, Palette, Link2, Database, Lock, Users, UserCircle, Moon, Sun, Sparkles, Circle, Flame, Snowflake, Zap, FileText, Settings, Mic } from 'lucide-react';
 import { useTheme, type ChatTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useChatStore } from '@/store/useChatStore';
 import {
   CHAT_FONT_PRESETS,
   applyChatFontPreset,
-  type ChatFontPresetId,
 } from '@/constants/chatFontPresets';
 import CustomSelect from './CustomSelect';
 import './SettingsModal.css';

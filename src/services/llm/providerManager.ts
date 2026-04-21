@@ -1,4 +1,4 @@
-import type { LLMProvider, AppContext, ChatMessage, LLMResponse } from './types';
+import type { LLMProvider, AppContext, ChatMessage } from './types';
 import { GroqProvider, GroqResponsesProvider, XAINativeProvider, LiminalityProvider, CerebrasProvider } from './providers';
 import { logger, LogCategory } from '@/utils/logger';
 

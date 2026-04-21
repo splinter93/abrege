@@ -505,8 +505,8 @@ export class AgentOrchestrator {
       let iteration = 0;
       let totalToolCalls = 0;
       let finalContent = '';
-      let allToolCalls: ToolCall[] = [];
-      let allToolResults: ToolResult[] = [];
+      const allToolCalls: ToolCall[] = [];
+      const allToolResults: ToolResult[] = [];
 
       // Main loop
       while (iteration < DEFAULT_CONFIG.maxIterations) {

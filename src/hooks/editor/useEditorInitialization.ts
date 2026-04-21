@@ -8,7 +8,7 @@
  */
 
 import { useEditor } from '@tiptap/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import { createEditorExtensions, PRODUCTION_EXTENSIONS_CONFIG } from '@/config/editor-extensions';
 import lowlight from '@/utils/lowlightInstance';

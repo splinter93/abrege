@@ -1,6 +1,5 @@
 const FALLBACK_SANS =
   "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif";
-const FALLBACK_SERIF = "Georgia, 'Times New Roman', serif";
 const FALLBACK_MONO =
   "'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
 

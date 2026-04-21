@@ -133,7 +133,7 @@ async function measureQueryLatency<T>(
  * Helper pour wrapper un client Supabase existant
  * Utile pour migrer progressivement
  */
-export function wrapSupabaseClient(client: SupabaseClient): SupabaseClient {
+export function wrapSupabaseClient(_client: SupabaseClient): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
   

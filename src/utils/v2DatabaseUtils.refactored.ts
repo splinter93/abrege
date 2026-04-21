@@ -38,7 +38,6 @@ import * as classeurQueries from './database/queries/classeurQueries';
 import * as classeurMutations from './database/mutations/classeurMutations';
 import * as dossierQueries from './database/queries/dossierQueries';
 import * as dossierMutations from './database/mutations/dossierMutations';
-import * as permissionQueries from './database/permissions/permissionQueries';
 import * as searchQueries from './database/search/searchQueries';
 
 /**
@@ -197,42 +196,42 @@ export class V2DatabaseUtils {
   // Ces méthodes ne sont pas encore migrées mais sont nécessaires pour compatibilité
   // TODO: Migrer vers modules appropriés
   
-  static async addContentToNote(ref: string, content: string, userId: string, context: ApiContext) {
+  static async addContentToNote(_ref: string, _content: string, _userId: string, _context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('addContentToNote: À migrer vers noteMutations');
   }
 
-  static async insertContentToNote(ref: string, content: string, position: number, userId: string, context: ApiContext) {
+  static async insertContentToNote(_ref: string, _content: string, _position: number, _userId: string, _context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('insertContentToNote: À migrer vers noteMutations');
   }
 
-  static async addContentToSection(ref: string, sectionId: string, content: string, userId: string, context: ApiContext) {
+  static async addContentToSection(_ref: string, _sectionId: string, _content: string, _userId: string, _context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('addContentToSection: À migrer vers noteMutations');
   }
 
-  static async clearSection(ref: string, sectionId: string, userId: string, context: ApiContext) {
+  static async clearSection(_ref: string, _sectionId: string, _userId: string, _context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('clearSection: À migrer vers noteMutations');
   }
 
-  static async eraseSection(ref: string, sectionId: string, userId: string, context: ApiContext) {
+  static async eraseSection(_ref: string, _sectionId: string, _userId: string, _context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('eraseSection: À migrer vers noteMutations');
   }
 
-  static async publishNote(ref: string, visibility: VisibilityLevel, userId: string, context: ApiContext) {
+  static async publishNote(_ref: string, _visibility: VisibilityLevel, _userId: string, _context: ApiContext) {
     // TODO: Migrer vers noteMutations
     throw new Error('publishNote: À migrer vers noteMutations');
   }
 
-  static async generateSlug(text: string, type: ResourceType, userId: string, context: ApiContext, supabaseClient?: SupabaseClient) {
+  static async generateSlug(_text: string, _type: ResourceType, _userId: string, _context: ApiContext, _supabaseClient?: SupabaseClient) {
     // TODO: Migrer vers utils approprié
     throw new Error('generateSlug: À migrer');
   }
 
-  static async getUserInfo(userId: string, context: ApiContext) {
+  static async getUserInfo(_userId: string, _context: ApiContext) {
     // TODO: Migrer vers userQueries
     throw new Error('getUserInfo: À migrer vers userQueries');
   }
@@ -241,22 +240,22 @@ export class V2DatabaseUtils {
     return this.getUserInfo(userId, context);
   }
 
-  static async getStats(userId: string, context: ApiContext) {
+  static async getStats(_userId: string, _context: ApiContext) {
     // TODO: Migrer vers statsQueries
     throw new Error('getStats: À migrer vers statsQueries');
   }
 
-  static async getTrash(userId: string, context: ApiContext) {
+  static async getTrash(_userId: string, _context: ApiContext) {
     // TODO: Migrer vers trashQueries
     throw new Error('getTrash: À migrer vers trashQueries');
   }
 
-  static async restoreFromTrash(itemId: string, itemType: string, userId: string, context: ApiContext) {
+  static async restoreFromTrash(_itemId: string, _itemType: string, _userId: string, _context: ApiContext) {
     // TODO: Migrer vers trashQueries
     throw new Error('restoreFromTrash: À migrer vers trashQueries');
   }
 
-  static async purgeTrash(userId: string, context: ApiContext) {
+  static async purgeTrash(_userId: string, _context: ApiContext) {
     // TODO: Migrer vers trashQueries
     throw new Error('purgeTrash: À migrer vers trashQueries');
   }
@@ -274,7 +273,7 @@ export class V2DatabaseUtils {
     }
   }
 
-  static async applyContentOperations(ref: string, operations: ContentOperation[], userId: string, context: ApiContext) {
+  static async applyContentOperations(_ref: string, _operations: ContentOperation[], _userId: string, _context: ApiContext) {
     // TODO: Migrer vers contentOperations
     throw new Error('applyContentOperations: À migrer vers contentOperations');
   }
@@ -287,39 +286,39 @@ export class V2DatabaseUtils {
   // AGENTS (placeholders)
   // ============================================================================
 
-  static async listAgents(userId: string, context: ApiContext) {
+  static async listAgents(_userId: string, _context: ApiContext) {
     return { success: true, data: [] };
   }
 
-  static async createAgent(data: AgentData, userId: string, context: ApiContext) {
+  static async createAgent(_data: AgentData, _userId: string, _context: ApiContext) {
     return { success: true, data: { id: 'placeholder' } };
   }
 
-  static async getAgent(agentId: string, userId: string, context: ApiContext) {
+  static async getAgent(agentId: string, _userId: string, _context: ApiContext) {
     return { success: true, data: { id: agentId } };
   }
 
-  static async executeAgent(data: AgentData, userId: string, context: ApiContext) {
+  static async executeAgent(_data: AgentData, _userId: string, _context: ApiContext) {
     return { success: true, data: { response: 'placeholder' } };
   }
 
-  static async updateAgent(agentId: string, data: AgentData, userId: string, context: ApiContext) {
+  static async updateAgent(agentId: string, _data: AgentData, _userId: string, _context: ApiContext) {
     return { success: true, data: { id: agentId } };
   }
 
-  static async patchAgent(agentId: string, data: AgentData, userId: string, context: ApiContext) {
+  static async patchAgent(agentId: string, _data: AgentData, _userId: string, _context: ApiContext) {
     return { success: true, data: { id: agentId } };
   }
 
-  static async deleteAgent(agentId: string, userId: string, context: ApiContext) {
+  static async deleteAgent(_agentId: string, _userId: string, _context: ApiContext) {
     return { success: true, data: { message: 'Agent supprimé' } };
   }
 
-  static async listTools(userId: string, context: ApiContext) {
+  static async listTools(_userId: string, _context: ApiContext) {
     return { success: true, data: [] };
   }
 
-  static async debugInfo(userId: string, context: ApiContext) {
+  static async debugInfo(_userId: string, _context: ApiContext) {
     return { 
       success: true, 
       data: {

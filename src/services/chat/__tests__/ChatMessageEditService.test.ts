@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ChatMessageEditService, NotFoundError, AuthError, DeleteError } from '../ChatMessageEditService';
+import { ChatMessageEditService } from '../ChatMessageEditService';
 import type { ChatMessage, ChatSession, Agent } from '@/types/chat';
 import type { LLMContext } from '@/types/llmContext';
 

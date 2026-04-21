@@ -5,7 +5,7 @@ import { useFileSystemStore } from "@/store/useFileSystemStore";
 import { optimizedClasseurService } from "@/services/optimizedClasseurService";
 import { DossierService } from "@/services/dossierService";
 import { simpleLogger as logger } from "@/utils/logger";
-import { triggerPollingAfterClasseurAction, triggerPollingAfterFolderAction, triggerPollingAfterNoteAction } from "@/services/uiActionPolling";
+import { triggerPollingAfterClasseurAction } from "@/services/uiActionPolling";
 import type { Classeur, Folder } from "@/store/useFileSystemStore";
 
 function readUrlParam(key: string): string | undefined {

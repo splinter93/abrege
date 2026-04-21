@@ -135,7 +135,7 @@ export class EditorErrorHandler {
    * Log l'erreur selon sa sévérité
    */
   private logError(errorInfo: ErrorInfo): void {
-    const { message, error, context, severity } = errorInfo;
+    const { message, error, context: _context, severity } = errorInfo;
     
     switch (severity) {
       case 'critical':
@@ -193,7 +193,7 @@ export class EditorErrorHandler {
         };
         localStorage.setItem('editor_error_state', JSON.stringify(errorState));
       }
-    } catch (e) {
+    } catch {
       // Ignorer les erreurs de sauvegarde
     }
   }
@@ -233,7 +233,7 @@ export class EditorErrorHandler {
   /**
    * Retente un appel API
    */
-  private retryApiCall(errorInfo: ErrorInfo): void {
+  private retryApiCall(_errorInfo: ErrorInfo): void {
     // Logique de retry avec backoff exponentiel
     logger.info(LogCategory.EDITOR, 'Tentative de retry pour l\'appel API');
   }
@@ -247,7 +247,7 @@ export class EditorErrorHandler {
         // Utiliser notification native en fallback
         alert(message);
       }
-    } catch (e) {
+    } catch {
       // Fallback silencieux
     }
   }

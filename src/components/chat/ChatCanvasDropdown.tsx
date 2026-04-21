@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PenSquare, Plus, X } from 'lucide-react';
 import type { CanvaSession } from '@/types/canva';
 import { useCanvaStore } from '@/store/useCanvaStore';

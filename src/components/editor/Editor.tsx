@@ -14,7 +14,6 @@ import EditorHeaderSection from './EditorHeaderSection';
 import CraftedButton from '@/components/CraftedButton';
 import EditorTitle from './EditorTitle';
 import PublicTableOfContents from '@/components/TableOfContents';
-import { useMarkdownRender } from '@/hooks/editor/useMarkdownRender';
 import type { ShareSettings } from '@/types/sharing';
 import { getDefaultShareSettings } from '@/types/sharing';
 import { useRouter } from 'next/navigation';
@@ -42,7 +41,6 @@ import { prepareStoredMarkdownForEditor } from '@/utils/markdownSanitizer.client
 import { useEditorStreamListener } from '@/hooks/useEditorStreamListener';
 import { getEditorMarkdown } from '@/utils/editorHelpers';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
-import { useCanvasSelection } from '@/hooks/useCanvasSelection';
 import PlanNoteOverlay from './PlanNoteOverlay';
 import HtmlNoteEditor from './HtmlNoteEditor';
 import ChatWidgetFab from '@/components/chat/ChatWidgetFab';

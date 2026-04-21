@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FiFeather } from 'react-icons/fi';
-import { Code2, Eye, Copy, RefreshCw, X } from 'lucide-react';
+import { Copy, RefreshCw, X } from 'lucide-react';
 import { useFileSystemStore } from '@/store/useFileSystemStore';
 import { logger, LogCategory } from '@/utils/logger';
 import HtmlNoteRenderer from './HtmlNoteRenderer';

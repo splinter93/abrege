@@ -140,7 +140,7 @@ export class MermaidRenderer {
 
       // Vérifier le résultat
       if (result && typeof result === 'object' && 'svg' in result) {
-        let svg = result.svg as string;
+        const svg = result.svg as string;
         
         // Vérifier si c'est un SVG d'erreur
         if (isMermaidErrorSvg(svg)) {

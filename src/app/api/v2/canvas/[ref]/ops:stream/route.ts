@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { logApi, LogCategory } from '@/utils/logger';
+import { logApi } from '@/utils/logger';
 import { getAuthenticatedUser, createAuthenticatedSupabaseClient } from '@/utils/authUtils';
 import { V2ResourceResolver } from '@/utils/v2ResourceResolver';
 import { canvasStateManager, StreamOperation, OpResult } from '@/services/canvasStateManager';

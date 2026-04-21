@@ -13,7 +13,7 @@ import EditorEditableContent from './EditorEditableContent';
 import EditorPreview from './EditorPreview';
 import HtmlNoteRenderer from './HtmlNoteRenderer';
 import QcmNoteRenderer from './QcmNoteRenderer';
-import EditorSlashMenu, { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
+import { type EditorSlashMenuHandle } from '@/components/EditorSlashMenu';
 import type { EditorSlashCommand } from '@/components/EditorSlashMenu';
 
 interface EditorMainContentProps {

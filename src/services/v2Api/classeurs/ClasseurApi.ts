@@ -3,7 +3,7 @@
  * Extrait de V2UnifiedApi pour respecter limite 300 lignes
  */
 
-import { useFileSystemStore, type Note, type Classeur, type Folder } from '@/store/useFileSystemStore';
+import { useFileSystemStore, type Classeur } from '@/store/useFileSystemStore';
 import { simpleLogger as logger } from '@/utils/logger';
 import { ApiClient } from '../core/ApiClient';
 import type { CreateClasseurData, UpdateClasseurData } from '../types';

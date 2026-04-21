@@ -1,6 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { logApi } from './logger';
 import { oauthService } from '@/services/oauthService'; // ✅ Import statique corrigé

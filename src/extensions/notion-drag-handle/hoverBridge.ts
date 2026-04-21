@@ -47,7 +47,7 @@ export function createHoverBridge(): HTMLElement {
 
   bridge.addEventListener('mousemove', (e: MouseEvent) => {
     // Annuler le timeout
-    let hideTimeout = getHideTimeout();
+    const hideTimeout = getHideTimeout();
     if (hideTimeout) {
       clearTimeout(hideTimeout);
       setHideTimeout(null);

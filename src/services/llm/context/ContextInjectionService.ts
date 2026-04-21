@@ -13,7 +13,6 @@
 
 import { simpleLogger as logger } from '@/utils/logger';
 import type {
-  ContextProvider,
   SystemContextProvider,
   MessageContextProvider,
   ContextInjectionResult,

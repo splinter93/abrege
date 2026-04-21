@@ -1,15 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo, forwardRef } from 'react';
+import React, { useState, useEffect, useCallback, forwardRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
-  FileText, 
-  Image, 
-  File, 
-  Calendar,
-  Clock,
-  Eye
+  FileText,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';

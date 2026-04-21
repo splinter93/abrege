@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { simpleLogger as logger } from '@/utils/logger';
 import { callableService } from '@/services/llm/callableService';
-import { getLLMConfig } from '@/services/llm/config';
 
 // Force Node.js runtime
 export const runtime = 'nodejs';

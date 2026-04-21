@@ -35,7 +35,6 @@ import { updateArticleInsight } from '@/utils/insightUpdater';
 import { sanitizeMarkdownContent } from '@/utils/markdownSanitizer.server';
 import { sendStreamEvent } from '@/services/supabaseRealtimeBroadcast';
 import { contentStreamer } from '@/services/contentStreamer';
-import type { ContentOperation } from '@/utils/contentApplyUtils';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

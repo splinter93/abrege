@@ -16,7 +16,6 @@ import { useCanvaStore } from '@/store/useCanvaStore';
 import { useAuth } from '@/hooks/useAuth';
 import { logger, LogCategory } from '@/utils/logger';
 import { v2UnifiedApi } from '@/services/V2UnifiedApi';
-import type { Editor as TiptapEditor } from '@tiptap/react';
 import type { EditorWithMarkdown } from '@/types/editor';
 import { hasMarkdownStorage } from '@/types/editor';
 import Editor from '@/components/editor/Editor';

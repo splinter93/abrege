@@ -13,7 +13,6 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { SimpleLoadingState } from '@/components/DossierLoadingStates';
 import AgentConfiguration from '@/components/agents/AgentConfiguration';
 import AgentParameters from '@/components/agents/AgentParameters';
-import UnifiedPageTitle from '@/components/UnifiedPageTitle';
 import type { SpecializedAgentConfig, CreateSpecializedAgentRequest } from '@/types/specializedAgents';
 import type { NoteMention } from '@/types/noteMention';
 import { areNoteMentionListsEqual } from '@/utils/noteMentionListsEqual';

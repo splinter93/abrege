@@ -533,7 +533,7 @@ function SharedWorkspaceContent() {
                   {sent.length === 0 ? (
                     <div className="shared-v-empty">
                       <strong>Aucun partage sortant</strong>
-                      Depuis un classeur, choisissez « Partager » pour alimenter cette liste.
+                      Depuis un classeur, choisissez &laquo; Partager &raquo; pour alimenter cette liste.
                     </div>
                   ) : (
                     <div className="settings-api-key-list">

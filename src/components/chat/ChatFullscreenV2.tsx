@@ -23,7 +23,6 @@ import { useChatHandlers } from '@/hooks/useChatHandlers';
 import { useInfiniteMessages } from '@/hooks/useInfiniteMessages';
 import { useChatMessagesRealtime } from '@/hooks/chat/useChatMessagesRealtime';
 import type { Agent, ChatMessage } from '@/types/chat';
-import type { MessageContent, ImageAttachment } from '@/types/image';
 import type { StreamTimeline } from '@/types/streamTimeline';
 
 // 🎯 NOUVEAUX HOOKS (Phase 2)
@@ -48,10 +47,8 @@ import ChatCanvaPane from './ChatCanvaPane';
 import ModelDebug, { type ModelDebugInfo } from './ModelDebug';
 import { useCanvaStore } from '@/store/useCanvaStore';
 import { useCanvaContextPayload } from '@/hooks/chat/useCanvaContextPayload';
-import type { CanvaSession as CanvaSessionDB, ListCanvasResponse } from '@/types/canva';
 
 import { simpleLogger as logger } from '@/utils/logger';
-import { getSupabaseClient } from '@/utils/supabaseClientSingleton';
 import { applyChatFontPreset } from '@/constants/chatFontPresets';
 import { stripMarkdownForTTS } from '@/utils/stripMarkdownForTTS';
 
