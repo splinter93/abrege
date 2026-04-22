@@ -74,25 +74,35 @@
 
 /* Boutons de zoom à droite - style Mermaid */
 .image-modal-zoom-controls {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-right: 16px;
+  gap: 0;
+  margin-right: 0;
+  padding: 1px 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
 }
 
 .image-modal-zoom-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 36px;
   background: transparent;
   border: none;
   outline: none;
   color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   transition: all 0.2s ease;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .image-modal-zoom-btn:hover {
@@ -152,8 +162,8 @@
 }
 
 .image-modal-copy svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
@@ -193,8 +203,8 @@
 }
 
 .image-modal-download svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
@@ -230,8 +240,9 @@
 }
 
 .image-modal-close svg {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
 }
 
 /* Wrapper pour l'image avec zoom et pan */
@@ -285,13 +296,12 @@
   }
   
   .image-modal-zoom-controls {
-    gap: 6px;
-    margin-right: 12px;
+    padding: 3px;
   }
   
   .image-modal-zoom-btn {
     width: 36px;
-    height: 36px;
+    height: 30px;
   }
   
   .image-modal-zoom-btn svg {
@@ -325,8 +335,8 @@
   }
   
   .image-modal-close svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
   
   .image-modal-img {
@@ -354,13 +364,12 @@
   }
   
   .image-modal-zoom-controls {
-    gap: 4px;
-    margin-right: 8px;
+    padding: 2px;
   }
   
   .image-modal-zoom-btn {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 28px;
   }
   
   .image-modal-zoom-btn svg {
@@ -394,7 +403,7 @@
   }
   
   .image-modal-close svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 }
