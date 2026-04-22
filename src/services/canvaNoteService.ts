@@ -215,9 +215,10 @@ export class CanvaNoteService {
 
       const noteId = note.id;
 
-      // 3. Générer URL publique permanente avec noteId
-      const { publicUrl } = await SlugAndUrlService.generateSlugAndUpdateUrl(
-        noteTitle,
+      // 3. Générer URL publique permanente avec noteId (sans regénérer le slug)
+      // Le slug est déjà défini à l'insertion de la note; éviter une seconde passe de
+      // génération supprime un point de défaillance inutile en cas de collisions concurrentes.
+      const publicUrl = await SlugAndUrlService.buildPublicUrl(
         userId,
         noteId,
         slugClient
@@ -498,12 +499,12 @@ export class CanvaNoteService {
 
       // 2. ✅ Vérifier si un canva_session existe déjà pour cette note
       // Constraint UNIQUE(note_id) : une note = un seul canva max
-      const { data: existingSession, error: checkError } = await client
+      const { data: existingSessions, error: checkError } = await client
         .from('canva_sessions')
-        .select('id, chat_session_id, status')
+        .select('id, chat_session_id, status, created_at')
         .eq('note_id', noteId)
         .eq('user_id', userId)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
       if (checkError) {
         logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Erreur vérification canva existant', {
@@ -514,6 +515,15 @@ export class CanvaNoteService {
           errorDetails: (checkError as { details?: string }).details
         });
         throw checkError;
+      }
+
+      const existingSession = existingSessions?.[0] ?? null;
+      if ((existingSessions?.length ?? 0) > 1) {
+        logger.warn(LogCategory.EDITOR, '[CanvaNoteService] ⚠️ Plusieurs canva sessions trouvées pour la même note, récupération de la plus récente', {
+          noteId,
+          userId,
+          count: existingSessions?.length
+        });
       }
 
       // 3. Si canva_session existe déjà, le récupérer et mettre à jour
@@ -573,6 +583,41 @@ export class CanvaNoteService {
         .single();
 
       if (canvaError) {
+        // Idempotence: en cas de conflit unique, relire la session existante et la réouvrir
+        if ((canvaError as { code?: string }).code === '23505') {
+          const { data: conflictedSessions, error: conflictFetchError } = await client
+            .from('canva_sessions')
+            .select('id, chat_session_id, status')
+            .eq('note_id', noteId)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (!conflictFetchError && conflictedSessions && conflictedSessions.length > 0) {
+            const conflictedSession = conflictedSessions[0];
+            const updates: Record<string, unknown> = { status: 'open' };
+            if (conflictedSession.chat_session_id !== chatSessionId) {
+              updates.chat_session_id = chatSessionId;
+            }
+
+            const { data: reopenedSession, error: reopenError } = await client
+              .from('canva_sessions')
+              .update(updates)
+              .eq('id', conflictedSession.id)
+              .eq('user_id', userId)
+              .select()
+              .single();
+
+            if (!reopenError && reopenedSession) {
+              logger.info(LogCategory.EDITOR, '[CanvaNoteService] 🔄 Session canva récupérée après conflit unique', {
+                noteId,
+                canvaId: reopenedSession.id
+              });
+              return { canvaId: reopenedSession.id, noteId };
+            }
+          }
+        }
+
         // ✅ Améliorer le logging pour voir la vraie erreur Supabase
         logger.error(LogCategory.EDITOR, '[CanvaNoteService] ❌ Erreur création canva session', {
           error: canvaError,
