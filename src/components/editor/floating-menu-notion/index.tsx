@@ -26,6 +26,7 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = (props) => {
 
   // Hooks de logique métier
   const { position, updatePosition, setPosition } = useMenuPosition(editor);
+  const isCanvasMode = toolbarContext === 'canvas';
   const { executePrompt, isExecuting } = usePromptExecution({
     editor,
     noteId,
@@ -33,7 +34,8 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = (props) => {
     noteContent,
     noteSlug,
     classeurId,
-    classeurName
+    classeurName,
+    disableLocalInsertion: isCanvasMode
   });
   const formatCommands = useFormatCommands(editor);
   const { menuRef, selectedText } = useMenuVisibility({
@@ -106,9 +108,6 @@ const FloatingMenuNotion: React.FC<FloatingMenuNotionProps> = (props) => {
       });
     }
   }, [editor, selectedText, noteId, noteSlug, noteTitle, setPosition]);
-
-  // Vérifier si on est en mode canvas
-  const isCanvasMode = toolbarContext === 'canvas';
 
   if (!editor || !position.visible) {
     return null;

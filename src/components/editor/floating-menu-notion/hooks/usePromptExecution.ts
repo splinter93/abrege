@@ -10,6 +10,8 @@ import type { EditorPrompt } from '@/types/editorPrompts';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { NoteContext, InsertionMode, PromptExecutionResult } from '../types';
 import { supabase } from '@/supabaseClient';
+import { prepareStoredMarkdownForEditor } from '@/utils/markdownSanitizer.client';
+import { createMarkdownIt } from '@/utils/markdownItConfig';
 
 interface UsePromptExecutionParams {
   editor: Editor | null;
@@ -33,6 +35,39 @@ export function usePromptExecution({
   disableLocalInsertion = false
 }: UsePromptExecutionParams) {
   const [isExecuting, setIsExecuting] = useState(false);
+
+  const normalizeContentToString = (value: unknown): string => {
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      return value
+        .map(item => normalizeContentToString(item))
+        .filter(Boolean)
+        .join('\n');
+    }
+    if (value && typeof value === 'object') {
+      const record = value as Record<string, unknown>;
+      if (typeof record.content === 'string') {
+        return record.content;
+      }
+      if (typeof record.message === 'string') {
+        return record.message;
+      }
+      if (typeof record.text === 'string') {
+        return record.text;
+      }
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    }
+    if (value == null) {
+      return '';
+    }
+    return String(value);
+  };
 
   const safeInsertAccumulatedContent = (
     startPos: number,
@@ -193,7 +228,14 @@ export function usePromptExecution({
           };
         }
 
-        const finalContent = atomicResult.response;
+        const finalContent = normalizeContentToString(atomicResult.response);
+
+        if (!finalContent.trim()) {
+          logger.warn('[PromptExecution] Réponse canvas vide après normalisation', {
+            rawType: typeof atomicResult.response
+          });
+          return { success: false, error: 'Réponse vide' };
+        }
 
         // Vérifier que l'éditeur n'a pas été détruit pendant l'attente async
         if (editor.isDestroyed) {
@@ -207,22 +249,21 @@ export function usePromptExecution({
           const safeFrom = Math.max(0, Math.min(selFrom, docSize));
           const safeTo = Math.max(safeFrom, Math.min(selTo, docSize));
 
-          // Convertir le contenu en nœuds ProseMirror valides.
-          // Les \n ne sont pas autorisés dans un nœud text inline — chaque ligne
-          // doit être un nœud paragraph séparé.
-          const cleanContent = finalContent.replace(/^\uFEFF/, ''); // strip BOM
-          const paragraphNodes = cleanContent.split('\n').map(line => ({
-            type: 'paragraph' as const,
-            content: line.length > 0 ? [{ type: 'text' as const, text: line }] : []
-          }));
+          // Parser le markdown IA vers HTML, puis laisser TipTap parser cet HTML.
+          // `insertContent` ne parse pas le markdown brut en insertion partielle,
+          // d'où le rendu en simple texte observé dans le canvas.
+          const cleanContent = prepareStoredMarkdownForEditor(
+            finalContent.replace(/^\uFEFF/, '')
+          );
+          const renderedHtml = createMarkdownIt().render(cleanContent);
 
-          // Transaction atomique : supprimer la sélection + insérer les paragraphes
+          // Transaction atomique : supprimer la sélection + insérer le HTML rendu
           editor
             .chain()
             .focus()
             .setTextSelection({ from: safeFrom, to: safeTo })
             .deleteSelection()
-            .insertContent(paragraphNodes)
+            .insertContent(renderedHtml)
             .run();
 
           if (insertionMode === 'prepend') {

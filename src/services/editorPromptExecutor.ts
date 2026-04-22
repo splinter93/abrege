@@ -31,21 +31,78 @@ interface EditorPromptContext {
  * Service pour exécuter les prompts éditeur avec les agents spécialisés
  */
 export class EditorPromptExecutor {
+  private static coerceResponseToText(value: unknown): string {
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value
+        .map(item => this.coerceResponseToText(item))
+        .filter(Boolean)
+        .join('\n');
+    }
+
+    if (value && typeof value === 'object') {
+      const record = value as Record<string, unknown>;
+
+      if (typeof record.content === 'string') {
+        return record.content;
+      }
+      if (typeof record.message === 'string') {
+        return record.message;
+      }
+      if (typeof record.text === 'string') {
+        return record.text;
+      }
+
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    }
+
+    if (value == null) {
+      return '';
+    }
+
+    return String(value);
+  }
+
   /**
    * Vérifie si un agent est disponible et actif
    */
-  private static async isAgentAvailable(agentId: string): Promise<boolean> {
+  private static async isAgentAvailable(
+    agentId: string,
+    userToken?: string
+  ): Promise<boolean> {
     try {
-      const response = await fetch(`/api/ui/agents?specialized=false`);
-      if (!response.ok) return false;
+      const headers: Record<string, string> = {};
+      // Pré-check opportuniste: ajouter le bearer uniquement s'il ressemble à un JWT.
+      // Si on reçoit un UUID/userId, on évite d'envoyer un header invalide.
+      if (userToken && userToken.includes('.')) {
+        headers.Authorization = `Bearer ${userToken}`;
+      }
+
+      const response = await fetch(`/api/ui/agents?specialized=false`, { headers });
+      if (!response.ok) {
+        // Ne pas bloquer l'exécution sur un pré-check non critique (401/403/offline).
+        logger.warn('[EditorPromptExecutor] ⚠️ Pré-check agent indisponible, poursuite exécution', {
+          status: response.status,
+          agentId
+        });
+        return true;
+      }
 
       const data = await response.json();
       const agent = data.agents?.find((a: Agent) => a.id === agentId);
 
       return agent && agent.is_active;
     } catch (error) {
-      logger.error('[EditorPromptExecutor] ❌ Erreur vérification agent:', error);
-      return false;
+      // Pré-check best-effort : en cas d'erreur réseau, on laisse l'API d'exécution décider.
+      logger.warn('[EditorPromptExecutor] ⚠️ Erreur vérification agent, poursuite exécution', error);
+      return true;
     }
   }
 
@@ -93,7 +150,7 @@ export class EditorPromptExecutor {
         };
       }
 
-      const isAvailable = await this.isAgentAvailable(prompt.agent_id);
+      const isAvailable = await this.isAgentAvailable(prompt.agent_id, userIdOrToken);
       if (!isAvailable) {
         return {
           success: false,
@@ -201,7 +258,8 @@ export class EditorPromptExecutor {
         dataKeys: Object.keys(data)
       });
 
-      let responseText = data.response || data.message || data.content || '';
+      const rawResponse = data.response ?? data.message ?? data.content ?? '';
+      let responseText = this.coerceResponseToText(rawResponse);
       
       // 🔧 NOUVEAU: Parser la réponse structurée si nécessaire
       if (prompt.use_structured_output && responseText) {
@@ -212,6 +270,9 @@ export class EditorPromptExecutor {
           if (parsed && typeof parsed.content === 'string') {
             responseText = parsed.content;
             logger.info('[EditorPromptExecutor] 📋 Structured output parsé avec succès');
+          } else if (parsed) {
+            responseText = this.coerceResponseToText(parsed);
+            logger.warn('[EditorPromptExecutor] ⚠️ Structured output sans content string, normalisation du payload');
           } else {
             logger.warn('[EditorPromptExecutor] ⚠️ Structured output invalide, utilisation du texte brut');
           }
@@ -267,7 +328,7 @@ export class EditorPromptExecutor {
         return { success: false, error: 'Aucun agent assigné à ce prompt' };
       }
 
-      const isAvailable = await this.isAgentAvailable(prompt.agent_id);
+      const isAvailable = await this.isAgentAvailable(prompt.agent_id, userToken);
       if (!isAvailable) {
         return { success: false, error: 'Agent non disponible ou inactif' };
       }
