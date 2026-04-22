@@ -2,13 +2,11 @@
 
 .transform-menu {
   width: 240px;
-  background: var(--menu-bg-gradient);
-  backdrop-filter: var(--menu-backdrop-blur);
-  -webkit-backdrop-filter: var(--menu-backdrop-blur);
-  border: var(--menu-border);
-  border-radius: var(--menu-border-radius);
-  box-shadow: var(--menu-shadow);
-  color: var(--text-primary);
+  background: var(--color-bg-block);
+  border: 1px solid var(--color-border-block);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  color: var(--color-text-primary);
   padding: 0;
   animation: transform-menu-enter 0.2s ease-out;
 }
@@ -18,7 +16,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* ✅ Bordure cohérente avec le gradient */
+  border-bottom: 1px solid var(--color-border-block);
   font-size: 12px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.5); /* ✅ Texte cohérent */
@@ -31,7 +29,7 @@
   flex-direction: column;
   max-height: 320px;
   overflow-y: auto;
-  padding: 4px 0;
+  padding: 4px;
 }
 
 /* Scrollbar personnalisée */
@@ -44,12 +42,12 @@
 }
 
 .transform-menu-list::-webkit-scrollbar-thumb {
-  background: var(--border-subtle);
+  background: var(--color-border-block);
   border-radius: 2px;
 }
 
 .transform-menu-list::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .transform-menu-item {
@@ -57,18 +55,26 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 10px;
   background: transparent;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
   text-align: left;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   transition: all 0.15s ease;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .transform-menu-item:hover {
-  background: var(--surface-2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.transform-menu-item:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.45);
 }
 
 .transform-menu-item.active {
@@ -78,7 +84,7 @@
 
 .transform-menu-item svg {
   flex-shrink: 0;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .transform-menu-item.active svg {
@@ -98,7 +104,7 @@
 /* Divider entre les sections */
 .transform-menu-divider {
   height: 1px;
-  background: var(--border-subtle);
+  background: var(--color-border-block);
   margin: 4px 0;
 }
 
@@ -114,10 +120,4 @@
   }
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .transform-menu {
-    background: var(--surface-1);
-    border-color: var(--border-subtle);
-  }
-}
+/* Dark mode inherits shared editor tokens */

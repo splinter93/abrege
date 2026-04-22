@@ -43,7 +43,6 @@ import { getEditorMarkdown } from '@/utils/editorHelpers';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
 import PlanNoteOverlay from './PlanNoteOverlay';
 import HtmlNoteEditor from './HtmlNoteEditor';
-import ChatWidgetFab from '@/components/chat/ChatWidgetFab';
 import ChatWidgetRoot from '@/components/chat/ChatWidgetRoot';
 
 interface EditorProps { 
@@ -618,8 +617,7 @@ const Editor: React.FC<EditorProps> = ({
         {/* Bouton "Crafted with Scrivia" - visible en mode preview */}
         {editorState.ui.previewMode && <CraftedButton />}
 
-        {/* Chat FAB + widget panel — pleine page desktop, jamais sur pages publiques/readonly */}
-        {layoutMode === 'full' && !readonly && <ChatWidgetFab />}
+        {/* Chat widget panel only (FAB removed from editor UI) */}
         {layoutMode === 'full' && !readonly && <ChatWidgetRoot />}
       </EmbedDepthProvider>
     </EditorErrorBoundary>
