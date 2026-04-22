@@ -207,13 +207,22 @@ export function usePromptExecution({
           const safeFrom = Math.max(0, Math.min(selFrom, docSize));
           const safeTo = Math.max(safeFrom, Math.min(selTo, docSize));
 
-          // Transaction atomique : supprimer la sélection + insérer la réponse complète
+          // Convertir le contenu en nœuds ProseMirror valides.
+          // Les \n ne sont pas autorisés dans un nœud text inline — chaque ligne
+          // doit être un nœud paragraph séparé.
+          const cleanContent = finalContent.replace(/^\uFEFF/, ''); // strip BOM
+          const paragraphNodes = cleanContent.split('\n').map(line => ({
+            type: 'paragraph' as const,
+            content: line.length > 0 ? [{ type: 'text' as const, text: line }] : []
+          }));
+
+          // Transaction atomique : supprimer la sélection + insérer les paragraphes
           editor
             .chain()
             .focus()
             .setTextSelection({ from: safeFrom, to: safeTo })
             .deleteSelection()
-            .insertContent(finalContent)
+            .insertContent(paragraphNodes)
             .run();
 
           if (insertionMode === 'prepend') {
