@@ -19,6 +19,7 @@ interface UsePromptExecutionParams {
   noteSlug?: string;
   classeurId?: string;
   classeurName?: string;
+  disableLocalInsertion?: boolean;
 }
 
 export function usePromptExecution({
@@ -28,13 +29,46 @@ export function usePromptExecution({
   noteContent,
   noteSlug,
   classeurId,
-  classeurName
+  classeurName,
+  disableLocalInsertion = false
 }: UsePromptExecutionParams) {
   const [isExecuting, setIsExecuting] = useState(false);
 
+  const safeInsertAccumulatedContent = (
+    startPos: number,
+    accumulatedContent: string
+  ): boolean => {
+    if (!editor) return false;
+    if (!accumulatedContent) return true;
+
+    try {
+      const docSize = editor.state.doc.content.size;
+      const safeStart = Math.max(0, Math.min(startPos, docSize));
+      const safeEnd = Math.max(
+        safeStart,
+        Math.min(safeStart + accumulatedContent.length, docSize)
+      );
+
+      editor
+        .chain()
+        .focus()
+        .setTextSelection({ from: safeStart, to: safeEnd })
+        .deleteSelection()
+        .focus(safeStart)
+        .insertContent({ type: 'text', text: accumulatedContent })
+        .run();
+
+      return true;
+    } catch (error) {
+      logger.error('[PromptExecution] ❌ Échec insertion chunk (sécurisé):', error);
+      return false;
+    }
+  };
+
   /**
    * Prépare la position d'insertion selon le mode
-   * ⚠️ CRITIQUE : Gère replace/append/prepend avec curseur
+   * ⚠️ CRITIQUE : Modifie l'éditeur de façon synchrone.
+   * NE PAS appeler en mode canvas (avant un appel async long).
    */
   const prepareInsertionPosition = (mode: InsertionMode): number => {
     if (!editor) return 0;
@@ -44,21 +78,18 @@ export function usePromptExecution({
 
     switch (mode) {
       case 'replace':
-        // Supprimer la sélection AVANT le streaming
         editor.chain().focus().deleteSelection().run();
         insertPosition = editor.state.selection.from;
         logger.dev('[PromptExecution] Mode replace: sélection supprimée');
         break;
 
       case 'append':
-        // Positionner après la sélection avec saut de ligne
         editor.chain().focus(to).insertContent('\n\n').run();
         insertPosition = editor.state.selection.from;
         logger.dev('[PromptExecution] Mode append: curseur après sélection');
         break;
 
       case 'prepend':
-        // Positionner avant la sélection
         editor.chain().focus(from).run();
         insertPosition = from;
         logger.dev('[PromptExecution] Mode prepend: curseur avant sélection');
@@ -92,8 +123,14 @@ export function usePromptExecution({
   };
 
   /**
-   * Exécute un prompt avec streaming progressif
-   * ⚠️ CRITIQUE : Logique de streaming avec insertion chunk par chunk
+   * Exécute un prompt avec streaming progressif (éditeur) ou atomique (canvas).
+   *
+   * Mode canvas (disableLocalInsertion=true) :
+   *   - On ne touche PAS l'éditeur avant l'appel LLM (évite stale positions et unmount du menu).
+   *   - On appelle /api/chat/llm (non-streaming) et on insère la réponse complète d'un seul coup.
+   *
+   * Mode éditeur (disableLocalInsertion=false) :
+   *   - Streaming chunk par chunk via /api/chat/llm/stream.
    */
   const executePrompt = async (
     prompt: EditorPrompt,
@@ -105,63 +142,119 @@ export function usePromptExecution({
     }
 
     setIsExecuting(true);
-    logger.info('[PromptExecution] Exécution prompt (streaming):', prompt.name);
+    logger.info('[PromptExecution] Exécution prompt:', prompt.name, { disableLocalInsertion });
 
     try {
-      // ✅ FIX: Obtenir le JWT au lieu d'utiliser userId directement
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+
       if (sessionError || !session?.access_token) {
         logger.error('[PromptExecution] Token JWT manquant ou invalide:', sessionError);
         return { success: false, error: 'Authentification requise' };
       }
 
       const userToken = session.access_token;
-
-      // 🎯 Préparer la position d'insertion
       const insertionMode = (prompt.insertion_mode as InsertionMode) || 'replace';
-      const startPos = prepareInsertionPosition(insertionMode);
-
-      // 📎 Construire le contexte enrichi
       const noteContext = buildNoteContext();
+
       logger.dev('[PromptExecution] Contexte note:', {
         hasContext: !!noteContext,
         noteTitle: noteContext?.noteTitle,
         contentLength: noteContext?.noteContent?.length
       });
 
-      // 🌊 STREAMING : Texte brut pendant stream + Markdown parsé à la fin
+      // ────────────────────────────────────────────────────────────────
+      // MODE CANVAS — insertion atomique, sans modification préalable
+      // ────────────────────────────────────────────────────────────────
+      // Problème résolu : prepareInsertionPosition modifie l'éditeur de façon
+      // synchrone (deleteSelection) → le menu se démonte (sélection perdue),
+      // et après 10-65s d'attente LLM, startPos est stale → RangeError.
+      //
+      // Solution : lire les positions sans modifier l'éditeur, attendre la
+      // réponse LLM, puis faire UNE transaction atomique avec bounds actualisés.
+      // ────────────────────────────────────────────────────────────────
+      if (disableLocalInsertion) {
+        // Lecture seule de la sélection courante (pas de modification de l'éditeur)
+        const selFrom = editor.state.selection.from;
+        const selTo = editor.state.selection.to;
+
+        logger.dev('[PromptExecution] Mode canvas: positions sauvegardées', { selFrom, selTo });
+
+        const atomicResult = await EditorPromptExecutor.executePrompt(
+          prompt,
+          selectedText,
+          userToken
+        );
+
+        if (!atomicResult.success || !atomicResult.response) {
+          logger.error('[PromptExecution] Erreur exécution atomique canvas:', atomicResult.error);
+          return {
+            success: false,
+            error: atomicResult.error || 'Réponse vide'
+          };
+        }
+
+        const finalContent = atomicResult.response;
+
+        // Vérifier que l'éditeur n'a pas été détruit pendant l'attente async
+        if (editor.isDestroyed) {
+          logger.warn('[PromptExecution] Éditeur détruit pendant appel LLM, insertion abandonnée');
+          return { success: false, error: 'Éditeur non disponible' };
+        }
+
+        try {
+          // Recalculer les bornes sur le document ACTUEL (peut avoir changé pendant l'attente)
+          const docSize = editor.state.doc.content.size;
+          const safeFrom = Math.max(0, Math.min(selFrom, docSize));
+          const safeTo = Math.max(safeFrom, Math.min(selTo, docSize));
+
+          // Transaction atomique : supprimer la sélection + insérer la réponse complète
+          editor
+            .chain()
+            .focus()
+            .setTextSelection({ from: safeFrom, to: safeTo })
+            .deleteSelection()
+            .insertContent(finalContent)
+            .run();
+
+          if (insertionMode === 'prepend') {
+            editor.commands.insertContent('\n\n');
+          }
+
+          logger.info('[PromptExecution] ✅ Insertion atomique canvas réussie', {
+            contentLength: finalContent.length,
+            mode: insertionMode
+          });
+
+          return { success: true, content: finalContent };
+        } catch (error) {
+          logger.error('[PromptExecution] ❌ Échec insertion atomique canvas:', error);
+          return { success: false, error: 'Erreur insertion canvas' };
+        }
+      }
+
+      // ────────────────────────────────────────────────────────────────
+      // MODE ÉDITEUR STANDARD — streaming progressif
+      // ────────────────────────────────────────────────────────────────
+      // Ici on peut modifier l'éditeur avant l'appel car les chunks arrivent
+      // en < 1s chacun et le menu reste monté.
+      const startPos = prepareInsertionPosition(insertionMode);
+
       let accumulatedContent = '';
+      let insertionFailed = false;
 
       const result = await EditorPromptExecutor.executePromptStream(
         prompt,
         selectedText,
         userToken,
         (chunk: string) => {
-          // ✅ Accumuler le contenu complet
+          if (insertionFailed) return;
+
           accumulatedContent += chunk;
 
-          // ✅ Pendant le streaming : Insertion en TEXTE BRUT uniquement (pas de parsing)
-          // Remplacer tout le texte brut accumulé à chaque chunk
-          const currentLength = editor.state.doc.textBetween(
-            startPos,
-            editor.state.doc.content.size
-          ).length;
-          const endPos = startPos + Math.min(
-            accumulatedContent.length,
-            currentLength + chunk.length
-          );
-
-          editor.chain()
-            .focus()
-            .setTextSelection({ 
-              from: startPos, 
-              to: Math.min(endPos, editor.state.doc.content.size) 
-            })
-            .deleteSelection()
-            .focus(startPos)
-            .insertContent({ type: 'text', text: accumulatedContent }) // Texte brut
-            .run();
+          const inserted = safeInsertAccumulatedContent(startPos, accumulatedContent);
+          if (!inserted) {
+            insertionFailed = true;
+          }
         },
         noteContext
       );
@@ -172,24 +265,31 @@ export function usePromptExecution({
         contentLength: accumulatedContent.length
       });
 
-      // ✅ À LA FIN : Remplacer le texte brut par du markdown parsé
+      // Remplacement final : texte brut → markdown parsé
       if (result.success && accumulatedContent) {
-        const endPos = startPos + accumulatedContent.length;
-        editor.chain()
-          .focus()
-          .setTextSelection({ 
-            from: startPos, 
-            to: Math.min(endPos, editor.state.doc.content.size) 
-          })
-          .deleteSelection()
-          .focus(startPos)
-          .insertContent(accumulatedContent) // Parse le markdown complet maintenant
-          .run();
+        try {
+          const docSize = editor.state.doc.content.size;
+          const safeStart = Math.max(0, Math.min(startPos, docSize));
+          const safeEnd = Math.max(
+            safeStart,
+            Math.min(safeStart + accumulatedContent.length, docSize)
+          );
 
-        logger.info('[PromptExecution] Markdown converti avec succès');
+          editor.chain()
+            .focus()
+            .setTextSelection({ from: safeStart, to: safeEnd })
+            .deleteSelection()
+            .focus(safeStart)
+            .insertContent(accumulatedContent)
+            .run();
+
+          logger.info('[PromptExecution] Markdown converti avec succès');
+        } catch (error) {
+          logger.error('[PromptExecution] ❌ Échec conversion markdown finale:', error);
+          return { success: false, error: 'Erreur insertion éditeur' };
+        }
       }
 
-      // Ajouter saut de ligne après si mode prepend
       if (insertionMode === 'prepend' && result.success) {
         editor.commands.insertContent('\n\n');
       }
@@ -212,4 +312,3 @@ export function usePromptExecution({
     isExecuting
   };
 }
-
