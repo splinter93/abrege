@@ -10,6 +10,19 @@
 
 import { z } from 'zod';
 
+const emptyStringOrNullToUndefined = (value: unknown): unknown => {
+  if (value === null) {
+    return undefined;
+  }
+
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim();
+    return trimmedValue === '' ? undefined : trimmedValue;
+  }
+
+  return value;
+};
+
 /**
  * Schema statut canva (enum reusable)
  */
@@ -27,9 +40,18 @@ export const canvaStatusSchema = z.enum(['open', 'closed', 'saved', 'deleted'], 
  */
 export const createCanvaSessionSchema = z.object({
   chat_session_id: z.string().uuid('chat_session_id doit être un UUID valide'),
-  note_id: z.string().min(1).optional(),
-  title: z.string().min(1).max(255).optional(),
-  classeur_id: z.string().min(1).optional(),
+  note_id: z.preprocess(
+    emptyStringOrNullToUndefined,
+    z.string().min(1).optional()
+  ),
+  title: z.preprocess(
+    emptyStringOrNullToUndefined,
+    z.string().min(1).max(255).optional()
+  ),
+  classeur_id: z.preprocess(
+    emptyStringOrNullToUndefined,
+    z.string().min(1).optional()
+  ),
   initial_content: z.string().max(100_000).optional(),
   metadata: z.record(z.unknown()).optional()
 }).superRefine((data, ctx) => {

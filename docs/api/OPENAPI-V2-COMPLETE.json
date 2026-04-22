@@ -3813,7 +3813,7 @@
       "post": {
         "operationId": "canvaCreateSession",
         "summary": "Créer ou ouvrir session canva",
-        "description": "Ouvre une note existante dans le canevas ou crée un nouveau brouillon canva attaché à une session de chat. Si note_id fourni: ouvre note existante. Si note_id absent: crée nouveau canvas (title obligatoire).",
+        "description": "Ouvre une note existante dans le canevas ou crée un nouveau brouillon canva attaché à une session de chat. Si note_id fourni: ouvre note existante. Si note_id absent (ou vide/null): crée nouveau canvas (title obligatoire). Les champs note_id et classeur_id vides (\"\"/espaces) ou null sont traités comme non fournis.",
         "tags": [
           "Canvas"
         ],
@@ -3836,7 +3836,7 @@
                   },
                   "note_id": {
                     "type": "string",
-                    "description": "ID ou slug de la note (optionnel, si absent crée nouveau canvas)"
+                    "description": "ID ou slug de la note (optionnel). Si absent, vide (\"\"/espaces) ou null: crée un nouveau canvas."
                   },
                   "title": {
                     "type": "string",
@@ -3846,7 +3846,7 @@
                   "classeur_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "ID du classeur (optionnel)"
+                    "description": "ID du classeur (optionnel). Si absent, vide (\"\"/espaces) ou null: fallback vers Quicknotes > dossier Canvas."
                   },
                   "initial_content": {
                     "type": "string",
