@@ -144,6 +144,33 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: false
   },
   {
+    id: 'openrouter/mimo-v2.5',
+    name: 'Xiaomi: MiMo v2.5',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'images', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 262144,
+    maxOutput: 8192,
+    speed: 550,
+    pricing: { input: 'Variable', output: 'Variable' },
+    description:
+      'Xiaomi MiMo v2.5 (OpenRouter: xiaomi/mimo-v2.5) — entrées complètes dont images, vision et outils',
+    recommended: false
+  },
+  {
+    id: 'openrouter/mimo-v2.5-pro',
+    name: 'Xiaomi: MiMo v2.5 Pro',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 1048576,
+    maxOutput: 131072,
+    speed: 500,
+    pricing: { input: 'Variable', output: 'Variable' },
+    description: 'Xiaomi MiMo v2.5 Pro (OpenRouter: xiaomi/mimo-v2.5-pro) via Liminality, contexte 1M, reasoning et outils',
+    recommended: false
+  },
+  {
     id: 'openrouter/kimi-k2.5',
     name: 'Kimi K2.5',
     category: 'liminality',
