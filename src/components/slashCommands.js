@@ -1,4 +1,5 @@
 import { insertDefaultTable } from '../utils/editorTables';
+import { setCurrentBlockParagraph, toggleCurrentBlockHeading } from '../utils/editorBlockFormatting';
 
 export const SLASH_COMMANDS = [
   {
@@ -6,28 +7,28 @@ export const SLASH_COMMANDS = [
     label: { fr: 'Heading 1', en: 'Heading 1' },
     alias: { fr: ['/t1', '/titre1', '/h1'], en: ['/h1', '/heading1', '/title1'] },
     description: { fr: 'Titre principal de la page', en: 'Main page heading' },
-    action: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+    action: (editor) => toggleCurrentBlockHeading(editor, 1),
   },
   {
     id: 'h2',
     label: { fr: 'Heading 2', en: 'Heading 2' },
     alias: { fr: ['/t2', '/titre2', '/h2'], en: ['/h2', '/heading2', '/title2'] },
     description: { fr: 'Titre de section', en: 'Section heading' },
-    action: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+    action: (editor) => toggleCurrentBlockHeading(editor, 2),
   },
   {
     id: 'h3',
     label: { fr: 'Heading 3', en: 'Heading 3' },
     alias: { fr: ['/t3', '/titre3', '/h3'], en: ['/h3', '/heading3', '/title3'] },
     description: { fr: 'Sous-titre de section', en: 'Subsection heading' },
-    action: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+    action: (editor) => toggleCurrentBlockHeading(editor, 3),
   },
   {
     id: 'text',
     label: { fr: 'Paragraph', en: 'Paragraph' },
     alias: { fr: ['/texte', '/paragraphe', '/p'], en: ['/text', '/paragraph', '/p'] },
     description: { fr: 'Paragraphe de texte simple', en: 'Simple text paragraph' },
-    action: (editor) => editor.chain().focus().setParagraph().run(),
+    action: (editor) => setCurrentBlockParagraph(editor),
   },
   {
     id: 'ul',

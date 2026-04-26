@@ -6,7 +6,7 @@
 /* Handle de resize — barre fine sur le bord supérieur du widget */
 .chat-widget-resize-handle {
   position: fixed;
-  right: 28px;
+  right: 12px;
   width: 520px;
   height: 12px;
   cursor: ns-resize;
@@ -34,8 +34,8 @@
 .chatgpt-container--widget {
   top: auto;
   left: auto;
-  right: 28px;
-  bottom: 28px;
+  right: 12px;
+  bottom: 12px;
   width: 520px;
   height: var(--widget-height, 640px); /* contrôlé par ChatWidgetRoot via CSS var */
   max-height: 93vh;

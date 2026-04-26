@@ -26,6 +26,7 @@ import MarkdownPasteHandler from '@/extensions/MarkdownPasteHandler';
 import NoteEmbedExtension from '@/extensions/NoteEmbedExtension';
 import YouTubeEmbedExtension from '@/extensions/YouTubeEmbedExtension';
 import SidebarFileDropExtension from '@/extensions/SidebarFileDropExtension';
+import ParagraphBreakNormalizer from '@/extensions/ParagraphBreakNormalizer';
 
 // ⚠️ EXTENSIONS PROBLÉMATIQUES RETIRÉES (non liées aux drag handles):
 // - BoxSelectionExtension: Causait des problèmes de sélection
@@ -88,6 +89,7 @@ export function createEditorExtensions(
       MarkdownPasteHandler.configure({
         preferPlainText: false,
       }),
+      ParagraphBreakNormalizer,
       
       // StarterKit avec configuration optimale
       StarterKit.configure({
@@ -197,6 +199,7 @@ export function createEditorExtensions(
       MarkdownPasteHandler.configure({
         preferPlainText: false,
       }),
+      ParagraphBreakNormalizer,
       
       StarterKit.configure({ 
         // Configuration minimale pour éviter les conflits

@@ -14,6 +14,7 @@ import { MdFormatQuote, MdGridOn } from 'react-icons/md';
 import { AiOutlineOrderedList, AiOutlineUnorderedList } from 'react-icons/ai';
 import './transform-menu.css';
 import { insertDefaultTable } from '@/utils/editorTables';
+import { setCurrentBlockParagraph, toggleCurrentBlockHeading } from '@/utils/editorBlockFormatting';
 
 interface TransformMenuProps {
   editor: Editor;
@@ -26,28 +27,28 @@ const TransformMenu: React.FC<TransformMenuProps> = ({ editor, onClose }) => {
       id: 'paragraph',
       label: 'Texte',
       icon: FiMessageSquare,
-      action: () => editor.chain().focus().setParagraph().run(),
+      action: () => setCurrentBlockParagraph(editor),
       isActive: () => editor.isActive('paragraph'),
     },
     {
       id: 'heading1',
       label: 'Titre 1',
       icon: FiType,
-      action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+      action: () => toggleCurrentBlockHeading(editor, 1),
       isActive: () => editor.isActive('heading', { level: 1 }),
     },
     {
       id: 'heading2',
       label: 'Titre 2',
       icon: FiType,
-      action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+      action: () => toggleCurrentBlockHeading(editor, 2),
       isActive: () => editor.isActive('heading', { level: 2 }),
     },
     {
       id: 'heading3',
       label: 'Titre 3',
       icon: FiType,
-      action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+      action: () => toggleCurrentBlockHeading(editor, 3),
       isActive: () => editor.isActive('heading', { level: 3 }),
     },
     {

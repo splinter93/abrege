@@ -9,6 +9,7 @@ import type { EditorState } from '@/hooks/editor/useEditorState';
 import ContextMenu from '../ContextMenu';
 import { logger, LogCategory } from '@/utils/logger';
 import { insertDefaultTable } from '@/utils/editorTables';
+import { toggleCurrentBlockHeading } from '@/utils/editorBlockFormatting';
 
 export interface EditorContextMenuContainerProps {
   /** Instance de l'éditeur Tiptap */
@@ -133,13 +134,13 @@ export const EditorContextMenuContainer: React.FC<EditorContextMenuContainerProp
           break;
 
         case 'turn-into-h1':
-          editor.chain().focus().toggleHeading({ level: 1 }).run();
+          toggleCurrentBlockHeading(editor, 1);
           break;
         case 'turn-into-h2':
-          editor.chain().focus().toggleHeading({ level: 2 }).run();
+          toggleCurrentBlockHeading(editor, 2);
           break;
         case 'turn-into-h3':
-          editor.chain().focus().toggleHeading({ level: 3 }).run();
+          toggleCurrentBlockHeading(editor, 3);
           break;
         case 'turn-into-bullet-list':
           editor.chain().focus().toggleBulletList().run();

@@ -24,6 +24,7 @@ import FontSelector from './FontSelector';
 import { insertDefaultTable } from '@/utils/editorTables';
 import AudioRecorder from '@/components/chat/AudioRecorder';
 import { logger, LogCategory } from '@/utils/logger';
+import { setCurrentBlockParagraph, toggleCurrentBlockHeading } from '@/utils/editorBlockFormatting';
 import './editor-toolbar.css';
 
 interface EditorToolbarProps {
@@ -114,12 +115,12 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const handleInsertTable = () => editor && insertDefaultTable(editor);
 
   const setHeading = (level: 1 | 2 | 3) => {
-    editor?.chain().focus().toggleHeading({ level }).run();
+    toggleCurrentBlockHeading(editor, level);
     setShowHeadingMenu(false);
   };
 
   const setParagraph = () => {
-    editor?.chain().focus().setParagraph().run();
+    setCurrentBlockParagraph(editor);
     setShowHeadingMenu(false);
   };
 

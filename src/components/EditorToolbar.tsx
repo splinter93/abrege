@@ -8,6 +8,7 @@ import {
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import Tooltip from '@/components/Tooltip';
 import { insertDefaultTable } from '@/utils/editorTables';
+import { setCurrentBlockParagraph, toggleCurrentBlockHeading } from '@/utils/editorBlockFormatting';
 
 interface EditorToolbarProps {
   editor: TiptapEditor | null;
@@ -45,10 +46,10 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, setImageMenuOpen 
   }
 
   const blockTypes: BlockType[] = [
-    { id: 'paragraph', label: 'Paragraph', action: () => editor.chain().focus().setParagraph().run(), isActive: () => editor.isActive('paragraph') },
-    { id: 'h1', label: 'Heading 1', action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), isActive: () => editor.isActive('heading', { level: 1 }) },
-    { id: 'h2', label: 'Heading 2', action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), isActive: () => editor.isActive('heading', { level: 2 }) },
-    { id: 'h3', label: 'Heading 3', action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), isActive: () => editor.isActive('heading', { level: 3 }) },
+    { id: 'paragraph', label: 'Paragraph', action: () => setCurrentBlockParagraph(editor), isActive: () => editor.isActive('paragraph') },
+    { id: 'h1', label: 'Heading 1', action: () => toggleCurrentBlockHeading(editor, 1), isActive: () => editor.isActive('heading', { level: 1 }) },
+    { id: 'h2', label: 'Heading 2', action: () => toggleCurrentBlockHeading(editor, 2), isActive: () => editor.isActive('heading', { level: 2 }) },
+    { id: 'h3', label: 'Heading 3', action: () => toggleCurrentBlockHeading(editor, 3), isActive: () => editor.isActive('heading', { level: 3 }) },
   ];
 
   const activeBlock = blockTypes.find(b => b.isActive());
