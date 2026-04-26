@@ -21,6 +21,7 @@ import { attachNativeKeyboardController } from '@/utils/nativeKeyboardController
 export interface UseChatFullscreenUIStateOptions {
   isDesktop: boolean;
   isCanvaOpen: boolean;
+  canUseCanva?: boolean;
 }
 
 /**
@@ -69,7 +70,7 @@ export interface UseChatFullscreenUIStateReturn {
 export function useChatFullscreenUIState(
   options: UseChatFullscreenUIStateOptions
 ): UseChatFullscreenUIStateReturn {
-  const { isDesktop, isCanvaOpen } = options;
+  const { isDesktop, isCanvaOpen, canUseCanva = true } = options;
 
   // 🎯 États UI locaux
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -161,23 +162,23 @@ export function useChatFullscreenUIState(
     if (isDesktop) {
       classes.push('chatgpt-main--desktop');
     }
-    if (isDesktop && isCanvaOpen) {
+    if (canUseCanva && isDesktop && isCanvaOpen) {
       classes.push('chatgpt-main--canva-open');
     }
     return classes;
-  }, [isDesktop, isCanvaOpen]);
+  }, [canUseCanva, isDesktop, isCanvaOpen]);
 
   const canvaPaneStyle = useMemo<React.CSSProperties | undefined>(() => {
-    if (!isDesktop) {
+    if (!canUseCanva || !isDesktop) {
       return undefined;
     }
     return {
       flexBasis: isCanvaOpen ? `${canvaWidth}%` : '0%',
       width: isCanvaOpen ? `${canvaWidth}%` : '0%'
     };
-  }, [isDesktop, isCanvaOpen, canvaWidth]);
+  }, [canUseCanva, isDesktop, isCanvaOpen, canvaWidth]);
 
-  const shouldRenderDesktopCanva = isDesktop;
+  const shouldRenderDesktopCanva = canUseCanva && isDesktop;
 
   return {
     // États

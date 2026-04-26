@@ -66,6 +66,7 @@ export interface ChatFullscreenV2Props {
 }
 
 const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscreen', onClose }) => {
+  const canUseCanva = variant !== 'widget';
   // 🎯 HOOKS EXISTANTS (groupés pour lisibilité)
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const { requireAuth, user, loading: authLoading, isAuthenticated } = useAuthGuard();
@@ -108,7 +109,8 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
   // 🎯 UI STATE (extrait dans hook)
   const uiState = useChatFullscreenUIState({
     isDesktop,
-    isCanvaOpen
+    isCanvaOpen,
+    canUseCanva
   });
 
   // Mode vocal : envoi direct après transcription + TTS incrémental (phrase par phrase)
@@ -128,9 +130,9 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     isLoading: isCanvaContextLoading,
     error: canvaContextError
   } = useCanvaContextPayload({
-    chatSessionId: currentSession?.id || null,
-    activeCanvaId,
-    isCanvaPaneOpen: isCanvaOpen
+    chatSessionId: canUseCanva ? currentSession?.id || null : null,
+    activeCanvaId: canUseCanva ? activeCanvaId : null,
+    isCanvaPaneOpen: canUseCanva && isCanvaOpen
   });
 
   const llmContextWithCanva = useMemo(() => {
@@ -168,7 +170,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     autoScroll: true,
     messages: infiniteMessages,
     watchLayoutChanges: isDesktop,
-    layoutTrigger: isCanvaOpen,
+    layoutTrigger: canUseCanva && isCanvaOpen,
     sessionId: currentSession?.id ?? null,
   });
 
@@ -616,6 +618,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
     agents,
     currentSession,
     sidebarOpen: uiState.sidebarOpen,
+    canUseCanva,
     isCanvaOpen,
     activeCanvaId,
     canvaSessions,
@@ -689,7 +692,7 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
 
   return (
       <div
-        className={`chatgpt-container ${(isDesktop && isCanvaOpen) ? 'canva-active' : ''} ${variant === 'widget' ? 'chatgpt-container--widget' : ''}`}
+        className={`chatgpt-container ${(canUseCanva && isDesktop && isCanvaOpen) ? 'canva-active' : ''} ${variant === 'widget' ? 'chatgpt-container--widget' : ''}`}
       >
       <ChatHeader
         sidebarOpen={uiState.sidebarOpen}
@@ -701,12 +704,12 @@ const ChatFullscreenV2: React.FC<ChatFullscreenV2Props> = ({ variant = 'fullscre
         isAuthenticated={isAuthenticated}
         authLoading={authLoading}
         chatSessionId={currentSession?.id || null}
-        activeCanvaId={activeCanvaId}
-        isCanvaOpen={isCanvaOpen}
-        onOpenNewCanva={isDesktop ? uiActions.handleOpenCanva : undefined}
-        onSelectCanva={uiActions.handleSelectCanva}
-        onCloseCanva={uiActions.handleCloseCanva}
-        canOpenCanva={isDesktop}
+        activeCanvaId={canUseCanva ? activeCanvaId : null}
+        isCanvaOpen={canUseCanva && isCanvaOpen}
+        onOpenNewCanva={canUseCanva && isDesktop ? uiActions.handleOpenCanva : undefined}
+        onSelectCanva={canUseCanva ? uiActions.handleSelectCanva : undefined}
+        onCloseCanva={canUseCanva ? uiActions.handleCloseCanva : undefined}
+        canOpenCanva={canUseCanva && isDesktop}
         onCloseWidget={variant === 'widget' ? onClose : undefined}
         isWidget={variant === 'widget'}
         agents={variant === 'widget' ? agents : undefined}

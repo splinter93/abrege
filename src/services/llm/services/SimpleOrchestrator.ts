@@ -10,7 +10,10 @@
 import { GroqProvider } from '../providers/implementations/groq';
 import { XAIProvider } from '../providers/implementations/xai';
 import { XAINativeProvider } from '../providers/implementations/xai-native';
-import { LiminalityProvider } from '../providers/implementations/liminality';
+import {
+  LiminalityProvider,
+  coerceReasoningEffortForLiminalityProvider
+} from '../providers/implementations/liminality';
 import { CerebrasProvider } from '../providers/implementations/cerebras';
 import { SimpleToolExecutor, ToolCall, ToolResult } from './SimpleToolExecutor';
 import { OpenApiToolExecutor } from '../executors/OpenApiToolExecutor';
@@ -243,7 +246,8 @@ export class SimpleOrchestrator {
           model: model || 'gpt-4o-mini',
           temperature,
           topP,
-          maxTokens
+          maxTokens,
+          reasoningEffort: coerceReasoningEffortForLiminalityProvider(agentConfig?.reasoning_effort)
         });
       
       case 'xai':

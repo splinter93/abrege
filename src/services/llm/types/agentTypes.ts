@@ -15,7 +15,7 @@ export interface AgentConfig {
   max_tokens?: number;
   max_completion_tokens?: number;
   top_p?: number;
-  reasoning_effort?: 'low' | 'medium' | 'high' | number;
+  reasoning_effort?: 'low' | 'medium' | 'high' | 'max' | 'disabled' | 'none' | number;
   service_tier?: string;
   parallel_tool_calls?: boolean;
   system_instructions?: string;

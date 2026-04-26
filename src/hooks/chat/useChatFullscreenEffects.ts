@@ -38,6 +38,7 @@ export interface UseChatFullscreenEffectsOptions {
   agents: Agent[];
   currentSession: ChatSession | null;
   sidebarOpen: boolean;
+  canUseCanva?: boolean;
   isCanvaOpen: boolean;
   activeCanvaId: string | null;
   canvaSessions: Record<string, CanvaSessionFromStore>;
@@ -87,6 +88,7 @@ export function useChatFullscreenEffects(
     agents,
     currentSession,
     sidebarOpen,
+    canUseCanva = true,
     isCanvaOpen,
     activeCanvaId,
     canvaSessions,
@@ -187,6 +189,10 @@ export function useChatFullscreenEffects(
 
   // 🎯 FERMER CANVA SI PAS ASSOCIÉ À SESSION ACTUELLE
   useEffect(() => {
+    if (!canUseCanva) {
+      return;
+    }
+
     // Ne rien faire si pas encore initialisé ou pas de session
     if (!currentSession?.id || !user?.id || authLoading) {
       return;
@@ -212,10 +218,14 @@ export function useChatFullscreenEffects(
         });
       }
     }
-  }, [currentSession?.id, isCanvaOpen, activeCanvaId, canvaSessions, closeCanva, user?.id, authLoading]);
+  }, [canUseCanva, currentSession?.id, isCanvaOpen, activeCanvaId, canvaSessions, closeCanva, user?.id, authLoading]);
 
   // 🎯 AUTO-ACTIVATE OPEN CANVA on session load
   useEffect(() => {
+    if (!canUseCanva) {
+      return;
+    }
+
     // Ne rien faire si pas encore initialisé ou pas de session
     if (!currentSession?.id || !user?.id || authLoading) {
       return;
@@ -336,7 +346,7 @@ export function useChatFullscreenEffects(
     return () => {
       isMounted = false;
     };
-  }, [currentSession?.id, user?.id, authLoading, isCanvaOpen, activeCanvaId, canvaSessions, switchCanva]);
+  }, [canUseCanva, currentSession?.id, user?.id, authLoading, isCanvaOpen, activeCanvaId, canvaSessions, switchCanva]);
 
   // Sidebar fermée par défaut
   useEffect(() => {

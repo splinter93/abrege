@@ -23,6 +23,8 @@ export interface Agent {
   temperature?: number;
   max_tokens?: number;
   top_p?: number;
+  /** LLM Exec (ex. DeepSeek V4) : champ llmConfig.reasoning_effort côté Synesia. */
+  reasoning_effort?: 'low' | 'medium' | 'high' | 'max' | 'disabled' | 'none';
   is_active?: boolean;
   is_chat_agent?: boolean;
   is_endpoint_agent?: boolean;

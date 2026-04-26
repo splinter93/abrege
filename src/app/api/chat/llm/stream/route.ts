@@ -505,7 +505,8 @@ export async function POST(request: NextRequest) {
       const { XAINativeProvider } = await import('@/services/llm/providers/implementations/xai-native');
       provider = new XAINativeProvider({ model, temperature: finalTemperature, topP: finalTopP, maxTokens: finalMaxTokens });
     } else if (providerType === 'liminality') {
-      const { LiminalityProvider } = await import('@/services/llm/providers/implementations/liminality');
+      const { LiminalityProvider, coerceReasoningEffortForLiminalityProvider } =
+        await import('@/services/llm/providers/implementations/liminality');
       let userLiminalityKey: string | undefined;
       try {
         const { data: userRow } = await supabase
@@ -538,6 +539,7 @@ export async function POST(request: NextRequest) {
         temperature: finalTemperature,
         topP: finalTopP,
         maxTokens: finalMaxTokens,
+        reasoningEffort: coerceReasoningEffortForLiminalityProvider(finalAgentConfig?.reasoning_effort),
         ...(userLiminalityKey ? { apiKey: userLiminalityKey } : {}),
       });
     } else if (providerType === 'cerebras') {

@@ -30,10 +30,56 @@ import type {
   LiminalityToolCallInMessage,
   InternalToolStartChunk,
   InternalToolDoneChunk,
-  InternalToolErrorChunk
+  InternalToolErrorChunk,
+  LiminalityReasoningEffort
 } from '../../types/liminalityTypes';
 
 let warnedMissingLiminalityBaseUrl = false;
+
+/**
+ * DeepSeek V4 (catalogue LLM Exec) : `llmConfig.reasoning_effort` = disabled | high | max uniquement.
+ * Omis → undefined (défaut Synesia). Ancien "none" → "disabled" ; low/medium/high → "high" sauf high déjà.
+ */
+type DeepseekV4ReasoningEffortWire = 'disabled' | 'high' | 'max';
+
+function resolveDeepseekReasoningEffortForPayload(
+  effort: LiminalityReasoningEffort | undefined
+): DeepseekV4ReasoningEffortWire | undefined {
+  if (effort === undefined) {
+    return undefined;
+  }
+  if (effort === 'none' || effort === 'disabled') {
+    return 'disabled';
+  }
+  if (effort === 'max') {
+    return 'max';
+  }
+  // low | medium | high
+  return 'high';
+}
+
+/**
+ * Coerce une valeur stockée (agent / DB) vers le type provider.
+ */
+export function coerceReasoningEffortForLiminalityProvider(
+  raw: unknown
+): LiminalityReasoningEffort | undefined {
+  if (raw === undefined || raw === null || typeof raw === 'number') {
+    return undefined;
+  }
+  const s = String(raw).toLowerCase();
+  if (
+    s === 'disabled' ||
+    s === 'none' ||
+    s === 'max' ||
+    s === 'high' ||
+    s === 'low' ||
+    s === 'medium'
+  ) {
+    return s as LiminalityReasoningEffort;
+  }
+  return undefined;
+}
 
 /** Limites API Synesia pour metadata.imageInputs (doc LLM Exec vision) */
 const MAX_IMAGE_INPUTS = 10;
@@ -44,6 +90,8 @@ const MAX_IMAGE_INPUT_LENGTH = 5_000_000;
  */
 interface LiminalityProviderConfig extends ProviderConfig {
   maxLoops?: number;
+  /** Aligné sur l’agent → `llmConfig.reasoning_effort` pour DeepSeek V4 (wire : disabled | high | max). */
+  reasoningEffort?: LiminalityReasoningEffort;
 }
 
 /**
@@ -95,6 +143,7 @@ const LIMINALITY_INFO: ProviderInfo = {
     'openrouter/mimo-v2.5-pro',
     'openrouter/glm-5',
     'deepseek/deepseek-v4-flash',
+    'deepseek/deepseek-v4-pro',
     'fireworks/glm-5',
     'fireworks/glm-5p1',
     'openrouter/kimi-k2-thinking',
@@ -666,6 +715,13 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       tool_choice: 'auto',
       parallel_tool_calls: false // Désactivé pour éviter les problèmes
     };
+
+    if (this.config.model.startsWith('deepseek/')) {
+      const re = resolveDeepseekReasoningEffortForPayload(this.config.reasoningEffort);
+      if (re !== undefined) {
+        llmConfig.reasoning_effort = re;
+      }
+    }
 
     const orchestrationConfig: LiminalityOrchestrationConfig = {
       max_loops: this.config.maxLoops || 10

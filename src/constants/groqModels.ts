@@ -167,7 +167,22 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     maxOutput: 384000,
     speed: 650,
     pricing: { input: 'Variable', output: 'Variable' },
-    description: 'DeepSeek V4 Flash via Liminality (Synesia LLM Exec) — contexte 1M, jusqu\'à 384k tokens de sortie, outils et streaming',
+    description:
+      'DeepSeek V4 Flash (internal_name Synesia) — contexte 1M, 384k max out ; llmConfig.reasoning_effort : disabled | high | max (défaut Synesia si omis). En mode thinking, température / top_p ignorés côté API.',
+    recommended: false
+  },
+  {
+    id: 'deepseek/deepseek-v4-pro',
+    name: 'DeepSeek: V4 Pro',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 1048576,
+    maxOutput: 384000,
+    speed: 500,
+    pricing: { input: 'Variable', output: 'Variable' },
+    description:
+      'DeepSeek V4 Pro (internal_name Synesia) — même schéma llmConfig (reasoning_effort : disabled | high | max) ; ex. mode non-thinking avec reasoning_effort disabled.',
     recommended: false
   },
   {

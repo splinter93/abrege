@@ -141,6 +141,18 @@ export type LiminalityTool =
   | LiminalityImageGenerationTool;
 
 /**
+ * `llmConfig.reasoning_effort` pour LLM Exec (Synesia) — union large (autres modèles / o-series).
+ * DeepSeek V4 (catalogue) n’utilise côté fil que : **disabled | high | max** (le provider mappe l’historique none/low/medium).
+ */
+export type LiminalityReasoningEffort =
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'max'
+  | 'disabled'
+  | 'none';
+
+/**
  * Configuration LLM pour Liminality (format Synesia)
  */
 export interface LiminalityLLMConfig {
@@ -153,7 +165,7 @@ export interface LiminalityLLMConfig {
   verbosity?: 'low' | 'medium' | 'high';
   tool_choice?: 'auto' | 'none' | 'required';
   parallel_tool_calls?: boolean;
-  reasoning_effort?: 'low' | 'medium' | 'high';
+  reasoning_effort?: LiminalityReasoningEffort;
   reasoning_summary?: 'none' | 'brief' | 'detailed';
 }
 

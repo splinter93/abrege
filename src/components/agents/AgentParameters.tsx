@@ -30,6 +30,13 @@ const inputBase =
 const labelBase = 'text-xs font-medium text-zinc-400 block mb-1.5';
 const boxBase = 'section-block p-4 rounded-2xl';
 
+/** Select DeepSeek V4 : catalogue Synesia = high | max | disabled (none/low/medium → affichage équivalent). */
+function deepseekReasoningSelectValue(raw: string | undefined): 'high' | 'max' | 'disabled' {
+  if (raw === 'max' || raw === 'disabled') return raw;
+  if (raw === 'none') return 'disabled';
+  return 'high';
+}
+
 /* Custom slider: track + fill + native input (value/onChange preserved).
    Wrapper min-height ensures a proper touch target on mobile so the drawer scroll doesn't steal events. */
 function CustomSlider({
@@ -193,6 +200,7 @@ export function AgentParameters({
   }, [closeAllDropdowns, showOpenApiDropdown, showMcpDropdown, showCallablesDropdown]);
 
   const isCreating = !selectedAgent && editedAgent !== null;
+  const showLlmReasoningSelect = (editedAgent?.model ?? '').startsWith('deepseek/deepseek-v4');
 
   if (loadingDetails) {
     return (
@@ -285,6 +293,41 @@ export function AgentParameters({
             value={editedAgent.top_p ?? 1}
             onChange={v => onUpdateField('top_p', v)}
           />
+          {showLlmReasoningSelect && (
+            <div className="pt-2 border-t border-zinc-800/80 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-xs font-medium text-zinc-400" htmlFor="agent-reasoning-effort">
+                  Raisonnement (thinking)
+                </label>
+                <div className="relative shrink-0 min-w-0 max-w-[min(100%,12rem)]">
+                  <select
+                    id="agent-reasoning-effort"
+                    className={`${inputBase} pr-8 appearance-none cursor-pointer`}
+                    value={deepseekReasoningSelectValue(editedAgent.reasoning_effort)}
+                    onChange={e =>
+                      onUpdateField(
+                        'reasoning_effort',
+                        e.target.value as SpecializedAgentConfig['reasoning_effort']
+                      )
+                    }
+                    aria-describedby="agent-reasoning-hint"
+                  >
+                    <option value="high">high (défaut doc)</option>
+                    <option value="max">max</option>
+                    <option value="disabled">désactivé (non-thinking)</option>
+                  </select>
+                  <ChevronDown
+                    className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500"
+                    aria-hidden
+                  />
+                </div>
+              </div>
+              <p id="agent-reasoning-hint" className="text-[11px] text-zinc-500 leading-snug">
+                Synesia : reasoning_effort = disabled | high | max (même body que POST /llm-exec/round). En mode
+                thinking, la température et le top P ne sont pas appliqués côté serveur.
+              </p>
+            </div>
+          )}
           <CustomSlider
             id="agent-max-tokens"
             label="Max tokens"

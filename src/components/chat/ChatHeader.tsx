@@ -74,7 +74,7 @@ const ChatHeaderComponent: React.FC<ChatHeaderProps> = ({
 
   // ✅ Realtime canva : hook monté ici pour rester actif toute la durée de vie du chat
   // (ChatHeader reste monté, contrairement au dropdown qui peut se fermer)
-  useCanvaRealtime(chatSessionId, true);
+  useCanvaRealtime(chatSessionId, canOpenCanva && !onCloseWidget);
 
   const showAgentSelector = isWidget && onSelectAgent;
 

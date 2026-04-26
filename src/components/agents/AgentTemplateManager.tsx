@@ -9,6 +9,14 @@ import React, { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { agentTemplateService, AgentTemplateConfig, RenderedTemplate } from '@/services/llm/agentTemplateService';
 
+function deepseekTemplateReasoningValue(
+  raw: AgentTemplateConfig['reasoning_effort'] | undefined
+): 'high' | 'max' | 'disabled' {
+  if (raw === 'max' || raw === 'disabled') return raw;
+  if (raw === 'none') return 'disabled';
+  return 'high';
+}
+
 interface AgentTemplateManagerProps {
   agentConfig: AgentTemplateConfig;
   onConfigChange: (config: AgentTemplateConfig) => void;
@@ -238,17 +246,44 @@ export default function AgentTemplateManager({
             <div className="form-group">
               <label className="form-label">
                 🧠 Niveau de raisonnement
+                {(localConfig.model ?? '').startsWith('deepseek/deepseek-v4') && (
+                  <span className="text-sm text-gray-500 ml-2">
+                    (DeepSeek V4 : LLM Exec reasoning_effort — température ignorée si thinking actif)
+                  </span>
+                )}
               </label>
               <div className="relative">
-                <select
-                  className="form-select pr-10 appearance-none"
-                  value={localConfig.reasoning_effort || 'low'}
-                  onChange={(e) => handleConfigChange('reasoning_effort', e.target.value)}
-                >
-                  <option value="low">Faible (rapide, moins précis)</option>
-                  <option value="medium">Moyen (équilibré)</option>
-                  <option value="high">Élevé (lent, plus précis)</option>
-                </select>
+                {(localConfig.model ?? '').startsWith('deepseek/deepseek-v4') ? (
+                  <select
+                    className="form-select pr-10 appearance-none"
+                    value={deepseekTemplateReasoningValue(localConfig.reasoning_effort)}
+                    onChange={(e) =>
+                      handleConfigChange(
+                        'reasoning_effort',
+                        e.target.value as AgentTemplateConfig['reasoning_effort']
+                      )
+                    }
+                  >
+                    <option value="high">high (défaut doc)</option>
+                    <option value="max">max</option>
+                    <option value="disabled">désactivé (non-thinking)</option>
+                  </select>
+                ) : (
+                  <select
+                    className="form-select pr-10 appearance-none"
+                    value={localConfig.reasoning_effort || 'low'}
+                    onChange={(e) =>
+                      handleConfigChange(
+                        'reasoning_effort',
+                        e.target.value as AgentTemplateConfig['reasoning_effort']
+                      )
+                    }
+                  >
+                    <option value="low">Faible (rapide, moins précis)</option>
+                    <option value="medium">Moyen (équilibré)</option>
+                    <option value="high">Élevé (lent, plus précis)</option>
+                  </select>
+                )}
                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" aria-hidden>
                   <ChevronDown className="w-4 h-4" />
                 </span>

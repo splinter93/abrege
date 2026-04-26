@@ -10,6 +10,10 @@
 import { GroqProvider } from '../providers/implementations/groq';
 import { XAIProvider } from '../providers/implementations/xai';
 import { XAINativeProvider } from '../providers/implementations/xai-native';
+import {
+  LiminalityProvider,
+  coerceReasoningEffortForLiminalityProvider
+} from '../providers/implementations/liminality';
 import { SimpleToolExecutor, ToolCall, ToolResult } from './SimpleToolExecutor';
 import { OpenApiToolExecutor } from '../executors/OpenApiToolExecutor';
 import { GroqHistoryBuilder } from './GroqHistoryBuilder';
@@ -304,12 +308,12 @@ export class AgentOrchestrator {
       });
     } else if (deducedProvider === 'liminality') {
       logger.info(`[AgentOrchestrator] ✅ Provider LIMINALITY sélectionné (modèle: ${configuredModel})`);
-      const { LiminalityProvider } = require('../providers/implementations/liminality');
       return new LiminalityProvider({
         model: configuredModel,
         temperature,
         topP,
-        maxTokens
+        maxTokens,
+        reasoningEffort: coerceReasoningEffortForLiminalityProvider(agentConfig?.reasoning_effort)
       });
     } else {
       logger.info(`[AgentOrchestrator] ✅ Provider GROQ sélectionné (modèle: ${configuredModel})`);

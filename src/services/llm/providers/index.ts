@@ -6,5 +6,8 @@ export { GroqProvider } from './implementations/groq';
 export { GroqResponsesProvider } from './implementations/groqResponses';
 export { XAIProvider } from './implementations/xai';
 export { XAINativeProvider } from './implementations/xai-native';
-export { LiminalityProvider } from './implementations/liminality';
+export {
+  LiminalityProvider,
+  coerceReasoningEffortForLiminalityProvider
+} from './implementations/liminality';
 export { CerebrasProvider } from './implementations/cerebras';

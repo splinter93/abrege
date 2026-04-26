@@ -182,6 +182,10 @@ export function useStreamingState(): UseStreamingStateReturn {
   const addToolExecution = useCallback((toolCalls: ToolCall[], toolCount: number) => {
     setStreamingStateInternal('executing');
     setExecutingToolCount(toolCount);
+    // Le texte d'un round qui se termine par des tool calls est souvent un préambule.
+    // On repart sur un buffer vide pour éviter les réponses "dupliquées" au round suivant.
+    streamingContentRef.current = '';
+    setStreamingContent('');
     
     const newRound = currentRoundRef.current + 1;
     currentRoundRef.current = newRound;
