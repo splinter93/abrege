@@ -77,6 +77,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         temperature: agent.temperature,
         top_p: agent.top_p,
         max_tokens: agent.max_tokens,
+        reasoning_effort: agent.reasoning_effort ?? null,
         priority: agent.priority,
         openapi_schema_id: agent.openapi_schema_id,
         created_at: agent.created_at,

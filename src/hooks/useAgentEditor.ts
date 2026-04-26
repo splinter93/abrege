@@ -196,7 +196,15 @@ export function useAgentEditor(options: UseAgentEditorOptions = {}): UseAgentEdi
     }
 
     const agentId = selectedAgent.slug || selectedAgent.id;
-    const updated = await patchAgent(agentId, editedAgent);
+    // DeepSeek V4 : ne jamais envoyer reasoning_effort: null (JSON l’inclurait et écraserait la base au PATCH).
+    const base = { ...editedAgent } as Partial<SpecializedAgentConfig>;
+    const m = base.model ?? '';
+    let toSave: Partial<SpecializedAgentConfig> = base;
+    if (m.startsWith('deepseek/deepseek-v4') && base.reasoning_effort === null) {
+      const { reasoning_effort: _dropped, ...rest } = base;
+      toSave = rest;
+    }
+    const updated = await patchAgent(agentId, toSave);
 
     if (updated) {
       selectAgent(updated);

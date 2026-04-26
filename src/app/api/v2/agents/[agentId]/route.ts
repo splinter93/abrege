@@ -328,6 +328,8 @@ export async function GET(
       temperature: normalized.temperature,
       top_p: normalized.top_p,
       max_tokens: normalized.max_tokens,
+      /** Persisté en base (Groq, DeepSeek V4 / LLM Exec, etc.) — requis pour l’éditeur agent. */
+      reasoning_effort: (agent as SpecializedAgentConfig).reasoning_effort ?? null,
       priority: normalized.priority,
       version: agent.version,
       is_default: agent.is_default,

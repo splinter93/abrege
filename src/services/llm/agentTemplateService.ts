@@ -25,7 +25,7 @@ export interface AgentTemplateConfig {
   stream?: boolean;
   stop_sequences?: string[];
   /** Groq/Cerebras : low | medium | high. DeepSeek V4 (Liminality) : disabled | none | high | max (+ low/medium mappés en high côté payload). */
-  reasoning_effort?: 'low' | 'medium' | 'high' | 'max' | 'disabled' | 'none';
+  reasoning_effort?: 'low' | 'medium' | 'high' | 'max' | 'disabled' | 'none' | null;
   provider?: string;
   
   // Support MCP natif

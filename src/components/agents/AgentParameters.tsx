@@ -31,7 +31,7 @@ const labelBase = 'text-xs font-medium text-zinc-400 block mb-1.5';
 const boxBase = 'section-block p-4 rounded-2xl';
 
 /** Select DeepSeek V4 : catalogue Synesia = high | max | disabled (none/low/medium → affichage équivalent). */
-function deepseekReasoningSelectValue(raw: string | undefined): 'high' | 'max' | 'disabled' {
+function deepseekReasoningSelectValue(raw: string | null | undefined): 'high' | 'max' | 'disabled' {
   if (raw === 'max' || raw === 'disabled') return raw;
   if (raw === 'none') return 'disabled';
   return 'high';

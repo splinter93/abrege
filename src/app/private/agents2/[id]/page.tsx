@@ -179,7 +179,7 @@ function AgentDetailContent() {
       const fields: (keyof SpecializedAgentConfig)[] = [
         'display_name', 'description', 'system_instructions', 'system_instructions_mentions', 'voice', 'tts_language',
         'temperature', 'top_p', 'max_tokens', 'priority', 'is_chat_agent', 'is_endpoint_agent',
-        'model', 'context_template', 'profile_picture',
+        'model', 'reasoning_effort', 'context_template', 'profile_picture',
       ];
       return fields.some(field => {
         const draftValue = draft[field];
@@ -233,6 +233,9 @@ function AgentDetailContent() {
         if (editedAgent.system_instructions_mentions !== undefined) {
           additionalFields.system_instructions_mentions = editedAgent.system_instructions_mentions;
         }
+        if (editedAgent.reasoning_effort != null) {
+          additionalFields.reasoning_effort = editedAgent.reasoning_effort;
+        }
         if (Object.keys(additionalFields).length > 0) {
           const identifier = newAgent.slug || newAgent.id;
           await agentsService.patchAgent(identifier, additionalFields);
@@ -251,7 +254,14 @@ function AgentDetailContent() {
         }
       } else {
         const identifier = selectedAgent.slug || selectedAgent.id;
-        const updatedAgent = await agentsService.patchAgent(identifier, editedAgent);
+        const patchData: Partial<SpecializedAgentConfig> = { ...editedAgent };
+        if (
+          (patchData.model ?? '').startsWith('deepseek/deepseek-v4') &&
+          patchData.reasoning_effort === null
+        ) {
+          delete patchData.reasoning_effort;
+        }
+        const updatedAgent = await agentsService.patchAgent(identifier, patchData);
         setSelectedAgent(updatedAgent);
         setEditedAgent({ ...updatedAgent });
         setNewAgentDirty(false);

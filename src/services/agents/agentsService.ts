@@ -141,20 +141,26 @@ export class AgentsService {
       throw new Error(response.error || 'Agent non trouvé');
     }
 
-    // L'API peut retourner data ou directement les propriétés
-    if (response.data) {
-      return response.data;
+    // L'API peut retourner `data` seul, ou mélanger champs racine + `data` (fusion complète requise).
+    const { data, success: _u1, error: _u2, metadata: _u3, ...topLevel } = response as unknown as AgentResponse & Record<string, unknown>;
+
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      const merged = { ...topLevel, ...data } as Record<string, unknown>;
+      if (!('id' in merged) || !('name' in merged)) {
+        throw new Error('Réponse API invalide: champs requis manquants (id, name)');
+      }
+      return merged as unknown as SpecializedAgentConfig;
     }
 
-    // Construire l'agent depuis la réponse directe
-    const { success, error, metadata, ...agentData } = response;
-    
-    // Validation des champs requis
+    // Construire l'agent depuis la réponse directe (ex. GET /v2/agents/:id) — omettre envelopes communes
+    const { success: _s, error: _e, metadata: _m, data: _d, message: _msg, code: _code, ...agentData } =
+      response as unknown as Record<string, unknown>;
+
     if (!('id' in agentData) || !('name' in agentData)) {
       throw new Error('Réponse API invalide: champs requis manquants (id, name)');
     }
-    
-    return agentData as SpecializedAgentConfig;
+
+    return agentData as unknown as SpecializedAgentConfig;
   }
 
   /**
