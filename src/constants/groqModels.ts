@@ -131,19 +131,6 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: true
   },
   {
-    id: 'openrouter/mimo-v2-pro',
-    name: 'Xiaomi MiMo-V2-Pro',
-    category: 'liminality',
-    provider: 'liminality',
-    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
-    contextWindow: 1048576,
-    maxOutput: 131072,
-    speed: 500,
-    pricing: { input: '$1.00', output: '$3.00' },
-    description: 'Xiaomi MiMo-V2-Pro via OpenRouter, contexte 1M, reasoning et outils',
-    recommended: false
-  },
-  {
     id: 'openrouter/mimo-v2.5',
     name: 'Xiaomi: MiMo v2.5',
     category: 'liminality',
@@ -168,6 +155,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     speed: 500,
     pricing: { input: 'Variable', output: 'Variable' },
     description: 'Xiaomi MiMo v2.5 Pro (OpenRouter: xiaomi/mimo-v2.5-pro) via Liminality, contexte 1M, reasoning et outils',
+    recommended: false
+  },
+  {
+    id: 'deepseek/deepseek-v4-flash',
+    name: 'DeepSeek: V4 Flash',
+    category: 'liminality',
+    provider: 'liminality',
+    capabilities: ['text', 'function_calling', 'reasoning', 'streaming', 'structured_output'],
+    contextWindow: 1048576,
+    maxOutput: 384000,
+    speed: 650,
+    pricing: { input: 'Variable', output: 'Variable' },
+    description: 'DeepSeek V4 Flash via Liminality (Synesia LLM Exec) — contexte 1M, jusqu\'à 384k tokens de sortie, outils et streaming',
     recommended: false
   },
   {
