@@ -16,6 +16,9 @@ describe('PdfParserClient', () => {
   it('parse calls POST /api/pdf/parse with FormData and query params', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
+      headers: {
+        get: () => 'application/json',
+      },
       json: () =>
         Promise.resolve({
           requestId: 'r1',
@@ -49,6 +52,9 @@ describe('PdfParserClient', () => {
   it('healthCheck calls GET /api/pdf/parse', async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
+      headers: {
+        get: () => 'application/json',
+      },
       json: () => Promise.resolve({ status: 'healthy' }),
     });
     await client.healthCheck('token');
@@ -59,6 +65,20 @@ describe('PdfParserClient', () => {
         headers: expect.objectContaining({ Authorization: 'Bearer token' }),
       })
     );
+  });
+
+  it('parse returns clear error on 413 non-JSON response', async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 413,
+      headers: {
+        get: () => 'text/plain',
+      },
+    });
+    const file = new File(['%PDF'], 'too-big.pdf', { type: 'application/pdf' });
+    const result = await client.parse(file);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('HTTP 413');
   });
 
   it('pdfParserService is an instance of PdfParserClient', () => {

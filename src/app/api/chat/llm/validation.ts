@@ -135,6 +135,11 @@ const chatMessageSchema = z
       .transform((v) => (v === null ? undefined : v)),
     timestamp: z.string().optional(),
     channel: z.string().optional(),
+    reasoning: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((v) => (v === null ? undefined : v)),
   })
   .transform(
     (data): ChatMessage =>

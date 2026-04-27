@@ -856,8 +856,11 @@ export async function POST(request: NextRequest) {
               });
             }
 
-            // Accumuler tool calls et content du stream
+            // Accumuler tool calls, content et reasoning du stream.
+            // DeepSeek thinking + tool calls exige de renvoyer le reasoning du
+            // message assistant qui demande les tools au round suivant.
             let accumulatedContent = '';
+            let accumulatedReasoning = '';
             const toolCallsMap = new Map<string, ToolCall>(); // Accumuler par ID pour gérer les chunks
             let finishReason: string | null = null;
             
@@ -991,6 +994,10 @@ export async function POST(request: NextRequest) {
                 // Accumuler content
                 if (chunk && typeof chunk === 'object' && 'content' in chunk && chunk.content) {
                   accumulatedContent += chunk.content as string;
+                }
+
+                if (chunk && typeof chunk === 'object' && 'reasoning' in chunk && typeof chunk.reasoning === 'string') {
+                  accumulatedReasoning += chunk.reasoning;
                 }
                 
                 // ✅ NOUVEAU : Extraire les mcp_calls si présents dans le chunk
@@ -1188,6 +1195,7 @@ export async function POST(request: NextRequest) {
               finishReason,
               toolCallsCount: toolCallsMap.size,
               accumulatedContentLength: accumulatedContent.length,
+              accumulatedReasoningLength: accumulatedReasoning.length,
               willContinue: finishReason === 'tool_calls' && toolCallsMap.size > 0
             });
 
@@ -1308,6 +1316,7 @@ export async function POST(request: NextRequest) {
                 content: accumulatedContent,
                 tool_calls: allToolsForTimeline,
                 finishReason: finishReason,
+                ...(accumulatedReasoning ? { reasoning: accumulatedReasoning } : {}),
                 timestamp: Date.now()
               });
             }
@@ -1369,6 +1378,7 @@ NE TENTEZ PAS de refaire les mêmes tool calls. Répondez en texte.`,
                 role: 'assistant',
                 content: accumulatedContent || '',
                 tool_calls: allToolsForTimeline, // ✅ MCP + OpenAPI
+                ...(accumulatedReasoning ? { reasoning: accumulatedReasoning } : {}),
                 timestamp: new Date().toISOString()
               });
             }

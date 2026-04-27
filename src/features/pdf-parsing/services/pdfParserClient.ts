@@ -29,6 +29,21 @@ interface HealthResponse {
   error?: string;
 }
 
+function getHttpErrorMessage(status: number, fallback?: string): string {
+  if (status === 413) {
+    return 'Le PDF est trop volumineux pour le serveur (HTTP 413). Réduis sa taille puis réessaie.';
+  }
+  return fallback ?? `HTTP ${status}`;
+}
+
+async function parseApiResponse<T>(response: Response): Promise<T | null> {
+  const contentType = response.headers.get('content-type') ?? '';
+  if (contentType.toLowerCase().includes('application/json')) {
+    return (await response.json()) as T;
+  }
+  return null;
+}
+
 function toHealthStatus(s: string | undefined): PdfParserHealthStatus {
   if (s === 'healthy' || s === 'degraded' || s === 'down') return s;
   return 'down';
@@ -71,26 +86,26 @@ export class PdfParserClient {
       });
       clearTimeout(timeoutId);
 
-      const body = (await response.json()) as PdfParseResult;
+      const body = await parseApiResponse<PdfParseResult>(response);
 
       if (!response.ok) {
         logger.warn('[PdfParserClient] Réponse non OK', {
           status: response.status,
-          requestId: body.requestId,
-          error: body.error,
+          requestId: body?.requestId,
+          error: body?.error,
         });
         return {
-          requestId: body.requestId ?? '',
+          requestId: body?.requestId ?? '',
           success: false,
-          error: body.error ?? `HTTP ${response.status}`,
+          error: getHttpErrorMessage(response.status, body?.error),
         };
       }
 
-      if (!body.success || !body.data) {
+      if (!body || !body.success || !body.data) {
         return {
-          requestId: body.requestId ?? '',
+          requestId: body?.requestId ?? '',
           success: false,
-          error: body.error ?? 'Parsing échoué',
+          error: body?.error ?? 'Parsing échoué',
         };
       }
 
@@ -156,25 +171,25 @@ export class PdfParserClient {
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
-      const body = (await response.json()) as PdfParseResult;
+      const body = await parseApiResponse<PdfParseResult>(response);
 
       if (!response.ok) {
         logger.warn('[PdfParserClient] parseFromUrl non OK', {
           status: response.status,
-          requestId: body.requestId,
-          error: body.error,
+          requestId: body?.requestId,
+          error: body?.error,
         });
         return {
-          requestId: body.requestId ?? '',
+          requestId: body?.requestId ?? '',
           success: false,
-          error: body.error ?? `HTTP ${response.status}`,
+          error: getHttpErrorMessage(response.status, body?.error),
         };
       }
-      if (!body.success || !body.data) {
+      if (!body || !body.success || !body.data) {
         return {
-          requestId: body.requestId ?? '',
+          requestId: body?.requestId ?? '',
           success: false,
-          error: body.error ?? 'Parsing échoué',
+          error: body?.error ?? 'Parsing échoué',
         };
       }
       return {

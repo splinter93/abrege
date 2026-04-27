@@ -194,6 +194,77 @@ describe('LiminalityProvider', () => {
 
       await expect(provider.callWithMessages(messages, [])).rejects.toThrow('Invalid request');
     });
+
+    test('should pass assistant reasoning_content back with tool calls for DeepSeek thinking mode', async () => {
+      const deepseekProvider = new LiminalityProvider({
+        apiKey: 'test-api-key',
+        baseUrl: 'https://test.api.com',
+        model: 'deepseek/deepseek-v4-pro',
+        reasoningEffort: 'high'
+      });
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          message: {
+            role: 'assistant',
+            content: 'Final response'
+          },
+          usage: {
+            prompt_tokens: 10,
+            completion_tokens: 20,
+            total_tokens: 30
+          },
+          finish_reason: 'stop'
+        })
+      });
+
+      const messages = [
+        {
+          id: '1',
+          role: 'assistant' as const,
+          content: '',
+          reasoning: 'I need to call a tool first.',
+          tool_calls: [
+            {
+              id: 'call_1',
+              type: 'function' as const,
+              function: {
+                name: 'searchContent',
+                arguments: '{"query":"deepseek"}'
+              }
+            }
+          ],
+          timestamp: new Date().toISOString()
+        },
+        {
+          id: '2',
+          role: 'tool' as const,
+          content: '{"result":"ok"}',
+          tool_call_id: 'call_1',
+          name: 'searchContent',
+          timestamp: new Date().toISOString()
+        }
+      ];
+
+      await deepseekProvider.callWithMessages(messages, []);
+
+      const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+      const requestInit = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+      const payload = JSON.parse(String(requestInit?.body)) as {
+        messages: Array<{
+          role: string;
+          reasoning?: string;
+          reasoning_content?: string;
+        }>;
+      };
+
+      expect(payload.messages[0]).toMatchObject({
+        role: 'tool_request',
+        reasoning: 'I need to call a tool first.',
+        reasoning_content: 'I need to call a tool first.'
+      });
+    });
   });
 
   describe('Capabilities', () => {

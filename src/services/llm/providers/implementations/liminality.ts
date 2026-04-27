@@ -453,7 +453,8 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
           model: this.config.model,
           messagesCount: messages.length,
           toolsCount: tools.length,
-          url: `${this.config.baseUrl}/v1/llm-exec/round/stream`
+          url: `${this.config.baseUrl}/v1/llm-exec/round/stream`,
+          llmConfig: payload.llmConfig
         });
         
         const error = new Error(`Liminality API error: ${response.status} - ${errorMessage}`);
@@ -639,6 +640,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
         // Ajouter reasoning si présent
         if (assistantMsg.reasoning) {
           limMsg.reasoning = assistantMsg.reasoning;
+          limMsg.reasoning_content = assistantMsg.reasoning;
         }
       }
 
@@ -708,19 +710,31 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
     tools: LiminalityTool[],
     imageInputs?: string[]
   ): LiminalityRequestPayload {
+    const isDeepseek = this.config.model.startsWith('deepseek/');
+    const re = isDeepseek
+      ? resolveDeepseekReasoningEffortForPayload(this.config.reasoningEffort)
+      : undefined;
+
     const llmConfig: LiminalityLLMConfig = {
-      temperature: this.config.temperature,
       max_completion_tokens: this.config.maxTokens,
-      top_p: this.config.topP,
       tool_choice: 'auto',
       parallel_tool_calls: false // Désactivé pour éviter les problèmes
     };
 
-    if (this.config.model.startsWith('deepseek/')) {
-      const re = resolveDeepseekReasoningEffortForPayload(this.config.reasoningEffort);
+    if (isDeepseek) {
       if (re !== undefined) {
         llmConfig.reasoning_effort = re;
       }
+      // Mode thinking (high | max) : ne pas envoyer temp / top_p — aligné doc Synesia + UI agent ;
+      // certains déploiements LLM Exec rejettent le body (400 parseRoundBody) si ces champs sont présents avec reasoning.
+      const thinking = re === 'high' || re === 'max';
+      if (!thinking) {
+        llmConfig.temperature = this.config.temperature;
+        llmConfig.top_p = this.config.topP;
+      }
+    } else {
+      llmConfig.temperature = this.config.temperature;
+      llmConfig.top_p = this.config.topP;
     }
 
     const orchestrationConfig: LiminalityOrchestrationConfig = {
@@ -780,6 +794,13 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       }
       
       const errorMessage = errorDetails.error || errorText;
+      logger.error(`[LiminalityProvider] ❌ Erreur API Liminality (non-stream):`, {
+        status: response.status,
+        url,
+        model: payload.model,
+        llmConfig: payload.llmConfig,
+        errorText: errorText.slice(0, 2000)
+      });
       throw new Error(`Liminality API error: ${response.status} - ${errorMessage}`);
     }
 
@@ -820,7 +841,7 @@ export class LiminalityProvider extends BaseProvider implements LLMProvider {
       content: message.content || '',
       tool_calls: toolCalls,
       usage: this.normalizeLiminalityUsage(response.usage),
-      reasoning: message.reasoning
+      reasoning: message.reasoning ?? message.reasoning_content
     };
   }
 

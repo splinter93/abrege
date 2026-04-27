@@ -185,6 +185,7 @@ export interface LiminalityMessage {
   content?: string;  // ✅ Optionnel car absent dans tool_response
   name?: string;
   reasoning?: string;
+  reasoning_content?: string;
   tool_calls?: Array<{
     id?: string;                    // Pour tool_request (assistant)
     name?: string;                  // Pour tool_request (assistant)
