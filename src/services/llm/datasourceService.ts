@@ -126,7 +126,21 @@ export class DatasourceService {
         statusText: response.statusText,
         error: errorText,
       });
-      throw new Error(`Synesia API error: ${response.status} ${response.statusText}`);
+
+      let detail = '';
+      const trimmed = errorText.trim();
+      if (trimmed) {
+        try {
+          const parsed = JSON.parse(trimmed) as { message?: string; error?: string; detail?: string };
+          detail = parsed.message || parsed.error || parsed.detail || trimmed.slice(0, 280);
+        } catch {
+          detail = trimmed.slice(0, 280);
+        }
+      }
+
+      throw new Error(
+        `Synesia API error: ${response.status} ${response.statusText}${detail ? ` — ${detail}` : ''}`
+      );
     }
 
     const raw = await response.json() as unknown;
