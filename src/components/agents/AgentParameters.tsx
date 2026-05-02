@@ -149,6 +149,9 @@ interface AgentParametersProps {
   availableDatasources?: DatasourceListItem[];
   agentDatasources?: AgentDatasourceLink[];
   datasourcesLoading?: boolean;
+  /** Erreur API catalogue (affichée dans le menu Ajouter) */
+  callablesError?: string | null;
+  datasourcesError?: string | null;
   onLinkSchema: (agentId: string, schemaId: string) => Promise<void>;
   onUnlinkSchema: (agentId: string, schemaId: string) => Promise<void>;
   onLinkServer: (agentId: string, serverId: string) => Promise<boolean>;
@@ -183,6 +186,8 @@ export function AgentParameters({
   availableDatasources = [],
   agentDatasources = [],
   datasourcesLoading = false,
+  callablesError = null,
+  datasourcesError = null,
   onLinkSchema,
   onUnlinkSchema,
   onLinkServer,
@@ -396,22 +401,30 @@ export function AgentParameters({
             </button>
           )}
         </div>
-        {showOpenApiDropdown && openApiSchemas.length > 0 && (
-          <div className="mb-4 space-y-1">
-            {openApiSchemas
-              .filter(schema => !isSchemaLinked(schema.id))
-              .map(schema => (
-                <button
-                  key={schema.id}
-                  type="button"
-                  className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors"
-                  onClick={() => handleLinkSchema(schema.id)}
-                >
-                  {schema.name}
-                </button>
-              ))}
-            {openApiSchemas.filter(schema => !isSchemaLinked(schema.id)).length === 0 && (
-              <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les schémas disponibles sont déjà liés</p>
+        {showOpenApiDropdown && (
+          <div className="mb-4 space-y-1 rounded-lg border border-zinc-800/80 bg-zinc-950/40 px-1 py-1">
+            {openApiLoading ? (
+              <p className="text-xs text-zinc-500 px-2 py-2">Chargement des schémas…</p>
+            ) : openApiSchemas.length === 0 ? (
+              <p className="text-xs text-zinc-500 px-2 py-2">Aucun schéma OpenAPI disponible.</p>
+            ) : (
+              <>
+                {openApiSchemas
+                  .filter(schema => !isSchemaLinked(schema.id))
+                  .map(schema => (
+                    <button
+                      key={schema.id}
+                      type="button"
+                      className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors"
+                      onClick={() => handleLinkSchema(schema.id)}
+                    >
+                      {schema.name}
+                    </button>
+                  ))}
+                {openApiSchemas.filter(schema => !isSchemaLinked(schema.id)).length === 0 && (
+                  <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les schémas disponibles sont déjà liés</p>
+                )}
+              </>
             )}
           </div>
         )}
@@ -454,22 +467,30 @@ export function AgentParameters({
             </button>
           )}
         </div>
-        {showMcpDropdown && mcpServers.length > 0 && (
-          <div className="mb-4 space-y-1">
-            {mcpServers
-              .filter(server => !isServerLinked(server.id))
-              .map(server => (
-                <button
-                  key={server.id}
-                  type="button"
-                  className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors"
-                  onClick={() => handleLinkServer(server.id)}
-                >
-                  {server.name}
-                </button>
-              ))}
-            {mcpServers.filter(server => !isServerLinked(server.id)).length === 0 && (
-              <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les serveurs disponibles sont déjà liés</p>
+        {showMcpDropdown && (
+          <div className="mb-4 space-y-1 rounded-lg border border-zinc-800/80 bg-zinc-950/40 px-1 py-1">
+            {mcpLoading ? (
+              <p className="text-xs text-zinc-500 px-2 py-2">Chargement des serveurs…</p>
+            ) : mcpServers.length === 0 ? (
+              <p className="text-xs text-zinc-500 px-2 py-2">Aucun serveur MCP disponible.</p>
+            ) : (
+              <>
+                {mcpServers
+                  .filter(server => !isServerLinked(server.id))
+                  .map(server => (
+                    <button
+                      key={server.id}
+                      type="button"
+                      className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors"
+                      onClick={() => handleLinkServer(server.id)}
+                    >
+                      {server.name}
+                    </button>
+                  ))}
+                {mcpServers.filter(server => !isServerLinked(server.id)).length === 0 && (
+                  <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les serveurs disponibles sont déjà liés</p>
+                )}
+              </>
             )}
           </div>
         )}
@@ -513,23 +534,33 @@ export function AgentParameters({
               </button>
             )}
           </div>
-          {showCallablesDropdown && availableCallables.length > 0 && (
-            <div className="mb-4 space-y-1">
-              {availableCallables
-                .filter(callable => !isCallableLinked(callable.id))
-                .map(callable => (
-                  <button
-                    key={callable.id}
-                    type="button"
-                    className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors flex items-center gap-2"
-                    onClick={() => handleLinkCallable(callable.id)}
-                  >
-                    <CallableTypeIcon type={callable.type} />
-                    <span className="truncate">{callable.name}</span>
-                  </button>
-                ))}
-              {availableCallables.filter(callable => !isCallableLinked(callable.id)).length === 0 && (
-                <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les callables disponibles sont déjà liés</p>
+          {showCallablesDropdown && (
+            <div className="mb-4 space-y-1 rounded-lg border border-zinc-800/80 bg-zinc-950/40 px-1 py-1">
+              {callablesLoading ? (
+                <p className="text-xs text-zinc-500 px-2 py-2">Chargement du catalogue…</p>
+              ) : callablesError ? (
+                <p className="text-xs text-amber-400/95 px-2 py-2 leading-snug">{callablesError}</p>
+              ) : availableCallables.length === 0 ? (
+                <p className="text-xs text-zinc-500 px-2 py-2">Aucun callable disponible (sync Synesia).</p>
+              ) : (
+                <>
+                  {availableCallables
+                    .filter(callable => !isCallableLinked(callable.id))
+                    .map(callable => (
+                      <button
+                        key={callable.id}
+                        type="button"
+                        className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors flex items-center gap-2"
+                        onClick={() => handleLinkCallable(callable.id)}
+                      >
+                        <CallableTypeIcon type={callable.type} />
+                        <span className="truncate">{callable.name}</span>
+                      </button>
+                    ))}
+                  {availableCallables.filter(callable => !isCallableLinked(callable.id)).length === 0 && (
+                    <p className="text-xs text-zinc-500 px-2.5 py-2">Tous les callables disponibles sont déjà liés</p>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -577,23 +608,33 @@ export function AgentParameters({
               </button>
             )}
           </div>
-          {showDatasourcesDropdown && availableDatasources.length > 0 && (
-            <div className="mb-4 space-y-1">
-              {availableDatasources
-                .filter(ds => !isDatasourceLinked(ds.id))
-                .map(ds => (
-                  <button
-                    key={ds.id}
-                    type="button"
-                    className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors flex items-center gap-2"
-                    onClick={() => handleLinkDatasource(ds.id)}
-                  >
-                    <DatasourceTypeIcon type={ds.type} customization={ds.customization} />
-                    <span className="truncate">{ds.name}</span>
-                  </button>
-                ))}
-              {availableDatasources.filter(ds => !isDatasourceLinked(ds.id)).length === 0 && (
-                <p className="text-xs text-zinc-500 px-2.5 py-2">Toutes les datasources disponibles sont déjà liées</p>
+          {showDatasourcesDropdown && (
+            <div className="mb-4 space-y-1 rounded-lg border border-zinc-800/80 bg-zinc-950/40 px-1 py-1">
+              {datasourcesLoading ? (
+                <p className="text-xs text-zinc-500 px-2 py-2">Chargement du catalogue…</p>
+              ) : datasourcesError ? (
+                <p className="text-xs text-amber-400/95 px-2 py-2 leading-snug">{datasourcesError}</p>
+              ) : availableDatasources.length === 0 ? (
+                <p className="text-xs text-zinc-500 px-2 py-2">Aucune datasource disponible (sync Synesia).</p>
+              ) : (
+                <>
+                  {availableDatasources
+                    .filter(ds => !isDatasourceLinked(ds.id))
+                    .map(ds => (
+                      <button
+                        key={ds.id}
+                        type="button"
+                        className="section-block w-full text-left px-2.5 py-2 rounded-lg text-zinc-300 text-sm hover:bg-[var(--color-bg-content)] transition-colors flex items-center gap-2"
+                        onClick={() => handleLinkDatasource(ds.id)}
+                      >
+                        <DatasourceTypeIcon type={ds.type} customization={ds.customization} />
+                        <span className="truncate">{ds.name}</span>
+                      </button>
+                    ))}
+                  {availableDatasources.filter(ds => !isDatasourceLinked(ds.id)).length === 0 && (
+                    <p className="text-xs text-zinc-500 px-2.5 py-2">Toutes les datasources disponibles sont déjà liées</p>
+                  )}
+                </>
               )}
             </div>
           )}

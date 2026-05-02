@@ -71,6 +71,7 @@ function AgentDetailContent() {
     availableCallables,
     agentCallables,
     loading: callablesLoading,
+    error: callablesError,
     loadAgentCallables,
     linkCallable,
     unlinkCallable,
@@ -80,6 +81,7 @@ function AgentDetailContent() {
     availableDatasources,
     agentDatasources,
     loading: datasourcesLoading,
+    error: datasourcesError,
     loadAgentDatasources,
     linkDatasource,
     unlinkDatasource,
@@ -759,6 +761,8 @@ function AgentDetailContent() {
                   availableDatasources={availableDatasources}
                   agentDatasources={agentDatasources}
                   datasourcesLoading={datasourcesLoading || toolsLoading}
+                  callablesError={callablesError}
+                  datasourcesError={datasourcesError}
                   onLinkSchema={handleLinkSchema}
                   onUnlinkSchema={handleUnlinkSchema}
                   onLinkServer={handleLinkServer}
