@@ -57,6 +57,7 @@ const getReasoningLevelFromModel = (model?: string): 'advanced' | 'general' | 'f
   if (!model) return null;
   if (model.includes('grok-4-0709')) return 'advanced';
   if (
+    model.includes('grok-4.3') ||
     model.includes('grok-4-1-fast-reasoning') ||
     model.includes('grok-4-fast-reasoning')
   ) {

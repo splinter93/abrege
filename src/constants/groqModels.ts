@@ -82,6 +82,19 @@ export const GROQ_MODELS: GroqModelInfo[] = [
     recommended: true
   },
   {
+    id: 'grok-4.3',
+    name: 'Grok 4.3',
+    category: 'xai',
+    provider: 'xai',
+    capabilities: ['text', 'function_calling', 'streaming', 'structured_output', 'reasoning', 'images'],
+    contextWindow: 2000000,
+    maxOutput: 8000,
+    speed: 700,
+    pricing: { input: 'Variable', output: 'Variable' },
+    description:
+      'Modèle phare xAI (Grok 4.3) : instruction following, agentic tool use, multimodal. Contexte 2M. Tarifs : https://docs.x.ai/developers/models/grok-4.3',
+  },
+  {
     id: 'grok-4.20-0309-reasoning',
     name: 'Grok 4.20 0309 Reasoning',
     category: 'xai',

@@ -123,6 +123,7 @@ const XAI_NATIVE_INFO: ProviderInfo = {
     images: true
   },
   supportedModels: [
+    'grok-4.3',
     'grok-4-1-fast-reasoning',
     'grok-4-1-fast-non-reasoning',
     'grok-4-1-fast',

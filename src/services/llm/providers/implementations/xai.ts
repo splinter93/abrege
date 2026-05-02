@@ -79,6 +79,7 @@ const XAI_INFO: ProviderInfo = {
     images: true // ✅ Support natif des images (jpg/jpeg/png, max 20 Mo)
   },
   supportedModels: [
+    'grok-4.3',                    // Flagship (xAI Grok 4.3)
     'grok-4-1-fast-reasoning',     // Production: Advanced reasoning (2M context)
     'grok-4-1-fast-non-reasoning', // Production: Instant responses
     'grok-4-fast',                 // Legacy (migrated to 4.1)
