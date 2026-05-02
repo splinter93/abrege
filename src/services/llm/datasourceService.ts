@@ -68,21 +68,22 @@ export class DatasourceService {
   }
 
   /**
-   * URL datasources : SYNESIA_DATASOURCES_BASE_URL si défini (TLS valide / même prod que l’API publique),
-   * sinon SYNESIA_BASE_URL. Permet de contourner un domaine dont le certificat est expiré.
+   * Identique aux callables (`callableService`) : `LIMINALITY_API_KEY` + `LIMINALITY_BASE_URL`
+   * pour `GET /datasources/available` sur le même host que `GET /execution`.
+   * Optionnel : `SYNESIA_DATASOURCES_BASE_URL` pour forcer une autre base URL uniquement.
    */
   private getApiConfig() {
     const config = getLLMConfig();
-    const apiKey = config.providers.synesia.apiKey;
+    const apiKey = config.providers.liminality.apiKey;
     const baseUrl =
-      process.env.SYNESIA_DATASOURCES_BASE_URL?.trim() || config.providers.synesia.baseUrl;
+      process.env.SYNESIA_DATASOURCES_BASE_URL?.trim() || config.providers.liminality.baseUrl;
 
     if (!apiKey) {
-      throw new Error('SYNESIA_API_KEY manquante dans la configuration');
+      throw new Error('LIMINALITY_API_KEY manquante dans la configuration');
     }
 
     if (!baseUrl) {
-      throw new Error('SYNESIA_BASE_URL ou SYNESIA_DATASOURCES_BASE_URL manquante dans la configuration');
+      throw new Error('LIMINALITY_BASE_URL ou SYNESIA_DATASOURCES_BASE_URL manquante dans la configuration');
     }
 
     return { apiKey, baseUrl };
@@ -112,7 +113,7 @@ export class DatasourceService {
       const msg = err instanceof Error ? err.message : String(err);
       if (code === 'CERT_HAS_EXPIRED' || msg.includes('certificate') || msg.includes('CERT')) {
         throw new Error(
-          'Certificat TLS expiré ou invalide pour l’API Synesia (datasources). Renouvelez le certificat du domaine configuré dans SYNESIA_BASE_URL, ou définissez SYNESIA_DATASOURCES_BASE_URL vers un hôte avec TLS valide (ex. https://origins-server.up.railway.app).'
+          'Certificat TLS expiré ou invalide pour l’API datasources. Renouvelez le certificat du domaine dans LIMINALITY_BASE_URL, ou définissez SYNESIA_DATASOURCES_BASE_URL vers un hôte avec TLS valide (ex. https://origins-server.up.railway.app).'
         );
       }
       throw err;
