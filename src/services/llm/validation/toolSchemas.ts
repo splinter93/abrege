@@ -289,7 +289,6 @@ export const applyContentOperationsSchema = z.object({
       ensure_heading: z.boolean().optional()
     }).optional()
   })).min(1, 'ops ne peut pas être vide'),
-  dry_run: z.boolean().optional(),
   transaction: z.enum(['all_or_nothing', 'best_effort']).optional(),
   conflict_strategy: z.enum(['fail', 'skip']).optional(),
   return: z.enum(['content', 'diff', 'none']).optional()

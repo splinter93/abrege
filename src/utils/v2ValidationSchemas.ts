@@ -261,7 +261,6 @@ export const contentApplyV2Schema = z.object({
       dedent: z.boolean().optional()
     }).optional()
   })).min(1, 'Au moins une opération requise').max(50, 'Trop d\'opérations'),
-  // dry_run supprimé : inutile et confus (utilisez return: "diff" pour preview)
   transaction: z.enum(['all_or_nothing', 'best_effort']).default('all_or_nothing'),
   conflict_strategy: z.enum(['fail', 'skip']).default('fail'),
   return: z.enum(['content', 'diff', 'none']).default('diff')
@@ -279,6 +278,7 @@ const sectionEditActionEnum = z.enum([
   'insert_inside_start',
   'insert_inside_end',
   'replace_content',
+  'clear_content',
   'replace_heading',
   'delete',
   'create_section'
@@ -324,6 +324,33 @@ function refineSectionEditBody(
       });
     }
     return;
+  }
+
+  const needsContent = [
+    'insert_before',
+    'insert_after',
+    'insert_inside_start',
+    'insert_inside_end',
+    'replace_content'
+  ].includes(data.action);
+
+  if (needsContent && data.content === undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message:
+        data.action === 'replace_content'
+          ? 'replace_content: content est requis. Utiliser content: "" pour vider explicitement le corps, ou action clear_content.'
+          : `${data.action}: content est requis`,
+      path: ['content']
+    });
+  }
+
+  if (data.action.startsWith('insert_') && data.content !== undefined && data.content.trim().length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `${data.action}: content ne peut pas être vide`,
+      path: ['content']
+    });
   }
 
   if (!data.section_slug?.trim()) {

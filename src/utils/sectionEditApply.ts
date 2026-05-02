@@ -17,6 +17,7 @@ export const SECTION_EDIT_ACTIONS = [
   'insert_inside_start',
   'insert_inside_end',
   'replace_content',
+  'clear_content',
   'replace_heading',
   'delete',
   'create_section'
@@ -47,6 +48,9 @@ export interface SectionBounds {
   sectionEndLine: number;
   target: TOCItemWithSlug;
 }
+
+type SectionEditSuccess = { ok: true; markdown: string; created_section_slug?: string };
+type SectionEditFailure = { ok: false; error: string; code?: string };
 
 export function findSectionBounds(markdown: string, slugOrTitle: string): SectionBounds | null {
   const toc = extractTOCWithSlugs(markdown);
@@ -80,7 +84,7 @@ function joinLines(lines: string[]): string {
 export function applySectionEdit(
   markdown: string,
   payload: SectionEditPayload
-): { ok: true; markdown: string } | { ok: false; error: string; code?: string } {
+): SectionEditSuccess | SectionEditFailure {
   const { action } = payload;
 
   if (action === 'create_section') {
@@ -134,6 +138,8 @@ export function applySectionEdit(
           markdown: appendToSection(cleared, slug, payload.content ?? '', 'end')
         };
       }
+      case 'clear_content':
+        return { ok: true, markdown: clearSection(markdown, slug) };
       case 'replace_heading': {
         const title = payload.new_heading_title?.trim();
         if (!title) {
@@ -161,7 +167,7 @@ export function applySectionEdit(
 function applyCreateSection(
   markdown: string,
   payload: SectionEditPayload
-): { ok: true; markdown: string } | { ok: false; error: string; code?: string } {
+): SectionEditSuccess | SectionEditFailure {
   const title = payload.heading_title?.trim();
   const level = payload.heading_level;
   const placement = payload.create_placement;
@@ -186,12 +192,22 @@ function applyCreateSection(
 
   if (placement === 'at_start') {
     const trimmed = markdown.trim();
-    return { ok: true, markdown: trimmed ? `${block}\n\n${trimmed}` : block };
+    const nextMarkdown = trimmed ? `${block}\n\n${trimmed}` : block;
+    return {
+      ok: true,
+      markdown: nextMarkdown,
+      created_section_slug: findCreatedSectionSlug(nextMarkdown, title, level, 'at_start')
+    };
   }
 
   if (placement === 'at_end') {
     const trimmed = markdown.trimEnd();
-    return { ok: true, markdown: trimmed ? `${trimmed}\n\n${block}` : block };
+    const nextMarkdown = trimmed ? `${trimmed}\n\n${block}` : block;
+    return {
+      ok: true,
+      markdown: nextMarkdown,
+      created_section_slug: findCreatedSectionSlug(nextMarkdown, title, level, 'at_end')
+    };
   }
 
   const after = payload.after_slug!.trim();
@@ -204,7 +220,32 @@ function applyCreateSection(
   const before = joinLines(lines.slice(0, sectionEndLine));
   const rest = joinLines(lines.slice(sectionEndLine));
   const out = (before ? `${before}\n\n` : '') + block + (rest ? `\n\n${rest}` : '');
-  return { ok: true, markdown: out };
+  return {
+    ok: true,
+    markdown: out,
+    created_section_slug: findCreatedSectionSlug(out, title, level, 'after_slug', after)
+  };
+}
+
+function findCreatedSectionSlug(
+  markdown: string,
+  title: string,
+  level: number,
+  placement: 'at_start' | 'at_end' | 'after_slug',
+  afterSlug?: string
+): string | undefined {
+  const matches = extractTOCWithSlugs(markdown)
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => item.title === title && item.level === level);
+
+  if (matches.length === 0) return undefined;
+  if (placement === 'at_start') return matches[0].item.slug;
+  if (placement === 'at_end') return matches[matches.length - 1].item.slug;
+
+  const toc = extractTOCWithSlugs(markdown);
+  const afterIndex = toc.findIndex(item => item.slug === afterSlug || item.title === afterSlug);
+  const afterMatch = matches.find(({ index }) => index > afterIndex);
+  return (afterMatch ?? matches[matches.length - 1]).item.slug;
 }
 
 export function tocSummaryForResponse(markdown: string): Array<{ slug: string; title: string; level: number }> {

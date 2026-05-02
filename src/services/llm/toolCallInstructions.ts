@@ -131,7 +131,9 @@ For any edit **inside an existing note** (not raw \`updateNote\` on the whole bo
 **Rules**
 
 - Do **not** call \`editNoteSection\` without having called \`getNoteTOC\` for the same \`ref\` earlier in the same task (unless you already have the TOC from a prior step in context).
-- Prefer \`editNoteSection\` for: insert/replace/delete by section, renames (\`replace_heading\`), new sections (\`create_section\`).
+- Prefer \`editNoteSection\` for: insert/replace/delete by section, renames (\`replace_heading\`), body clearing (\`clear_content\`), new sections (\`create_section\`).
+- Use \`clear_content\` to empty a section while keeping its heading. Use \`delete\` only when the heading itself must disappear.
+- For \`replace_content\`, always send \`content\` explicitly. If you intentionally want an empty body, send \`content: ""\` or use \`clear_content\`.
 - Use \`applyContentOperations\` only when you truly need: regex targeting, anchors like \`after_toc\`, or position-based edits that cannot be expressed as a single section operation.
 - **Never** write analysis text before calling the tool.
 `;

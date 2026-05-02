@@ -1301,7 +1301,7 @@
       "post": {
         "operationId": "editNoteSection",
         "summary": "Éditer une note par section (TOC / slug)",
-        "description": "Édition structurée TOC-first : utiliser les slugs exacts retournés par GET /note/{ref}/table-of-contents. Préféré à content:apply pour insert/replace/delete/rename par section. Si un canva avec status='open' existe pour cette note, le contenu est streamé ; la note est toujours sauvegardée en DB. Pour create_section : fournir heading_title, heading_level, create_placement (at_start | at_end | after_slug) ; si after_slug, cibler une section existante. IMPORTANT: Ne pas inclure de H1 dans le body ; source_title sert de H1.",
+        "description": "Édition structurée TOC-first : utiliser les slugs exacts retournés par GET /note/{ref}/table-of-contents. Préféré à content:apply pour insert/replace/delete/rename par section. Actions : insert_* ajoute du contenu, replace_content remplace le corps en gardant le heading, clear_content vide explicitement le corps en gardant le heading, delete supprime heading + corps, replace_heading renomme le heading, create_section crée une nouvelle section. Si un canva avec status='open' existe pour cette note, le contenu est streamé ; la note est toujours sauvegardée en DB. Pour create_section : fournir heading_title, heading_level, create_placement (at_start | at_end | after_slug) ; si after_slug, cibler une section existante. IMPORTANT: Ne pas inclure de H1 dans le body ; source_title sert de H1.",
         "tags": [
           "Notes"
         ],
@@ -1336,11 +1336,12 @@
                       "insert_inside_start",
                       "insert_inside_end",
                       "replace_content",
+                      "clear_content",
                       "replace_heading",
                       "delete",
                       "create_section"
                     ],
-                    "description": "Type d'édition sur la section ciblée par section_slug (sauf create_section)"
+                    "description": "Type d'édition sur la section ciblée par section_slug (sauf create_section). clear_content vide le corps et garde le heading ; delete supprime heading + corps."
                   },
                   "section_slug": {
                     "type": "string",
@@ -1349,7 +1350,7 @@
                   "content": {
                     "type": "string",
                     "maxLength": 100000,
-                    "description": "Markdown à insérer ou remplacer (corps de section) ; optionnel pour delete"
+                    "description": "Markdown à insérer/remplacer. Requis pour insert_before, insert_after, insert_inside_start, insert_inside_end et replace_content. Pour vider le corps, utiliser clear_content ou replace_content avec content=\"\" explicite. Optionnel pour create_section, interdit inutilement pour delete/clear_content."
                   },
                   "new_heading_title": {
                     "type": "string",
@@ -1418,7 +1419,7 @@
                             },
                             "section_slug": {
                               "type": "string",
-                              "description": "Slug concerné (ou slug dérivé du titre pour create_section)"
+                              "description": "Slug concerné. Pour create_section, slug réel après déduplication dans toc_after."
                             },
                             "action_applied": {
                               "type": "string"

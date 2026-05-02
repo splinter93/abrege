@@ -116,9 +116,6 @@ export async function POST(
     }
 
     const { ops, return: returnType, transaction } = validationResult.data;
-    
-    // ✅ SIMPLIFICATION: dry_run supprimé (inutile et confus)
-    // Si besoin de preview: utiliser return: "diff" et annuler manuellement
 
     // 🔒 Vérifier l'ETag si fourni
     const ifMatch = request.headers.get('If-Match');

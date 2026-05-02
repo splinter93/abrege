@@ -1016,11 +1016,6 @@ function getExistingEndpoints(): Record<string, unknown> {
                     minItems: 1,
                     maxItems: 50
                   },
-                  dry_run: { 
-                    type: 'boolean', 
-                    default: true,
-                    description: 'Mode simulation (ne sauvegarde pas)'
-                  },
                   transaction: { 
                     type: 'string', 
                     enum: ['all_or_nothing', 'best_effort'],
@@ -1100,7 +1095,6 @@ function getExistingEndpoints(): Record<string, unknown> {
                         meta: {
                           type: 'object',
                           properties: {
-                            dry_run: { type: 'boolean' },
                             char_diff: {
                               type: 'object',
                               properties: {

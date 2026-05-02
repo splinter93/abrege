@@ -24,7 +24,7 @@ import {
   tocSummaryForResponse,
   type SectionEditPayload
 } from '@/utils/sectionEditApply';
-import { extractTOCWithSlugs, slugify } from '@/utils/markdownTOC';
+import { extractTOCWithSlugs } from '@/utils/markdownTOC';
 import type { ContentOperation } from '@/utils/contentApplyUtils';
 
 export const runtime = 'nodejs';
@@ -217,8 +217,8 @@ export async function POST(
     const tocAfter = tocSummaryForResponse(safeContent);
 
     const responseSectionSlug =
-      validated.action === 'create_section' && validated.heading_title?.trim()
-        ? slugify(validated.heading_title.trim())
+      validated.action === 'create_section'
+        ? applied.created_section_slug
         : validated.section_slug;
 
     const responseData: {
