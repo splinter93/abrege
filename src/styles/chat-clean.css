@@ -1848,6 +1848,16 @@ body.chat-theme-glass .chatgpt-messages-container::before {
   position: relative;
 }
 
+/* Même respiration que l'éditeur pleine page sous la dernière ligne.
+   Le spacer est hors contenu Markdown : il sert uniquement au scroll du canevas. */
+.chat-canva-pane .editor-content-inner::after {
+  content: '';
+  display: block;
+  height: var(--chat-canva-editor-bottom-space, 120px);
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
 .chat-canva-pane .editor-header-image {
   display: flex !important;
   visibility: visible !important;
