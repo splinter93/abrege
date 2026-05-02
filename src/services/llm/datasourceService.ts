@@ -159,6 +159,25 @@ export class DatasourceService {
 
     await Promise.all(upsertPromises);
 
+    /** Synesia ne renvoie que les DS encore présentes : supprimer les lignes locales obsolètes (renommages/suppressions). */
+    const syncedSet = new Set(items.map((i) => i.id));
+    const { data: existingRows, error: listErr } = await this.supabase.from('synesia_datasources').select('id');
+    if (listErr) {
+      logger.error('[DatasourceService] Impossible de lister les ids pour purge:', listErr);
+    } else {
+      const orphanIds = (existingRows ?? [])
+        .map((row: { id: string }) => row.id)
+        .filter((id: string) => !syncedSet.has(id));
+      if (orphanIds.length > 0) {
+        const { error: delErr } = await this.supabase.from('synesia_datasources').delete().in('id', orphanIds);
+        if (delErr) {
+          logger.error('[DatasourceService] Erreur suppression datasources obsolètes:', delErr);
+        } else {
+          logger.info(`[DatasourceService] ${orphanIds.length} datasource(s) retirée(s) du catalogue local (absentes de Synesia)`);
+        }
+      }
+    }
+
     this.cache = null;
 
     const { data: synced, error: fetchError } = await this.supabase

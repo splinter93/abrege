@@ -49,7 +49,7 @@ export function useDatasources(agentId?: string) {
       setLoadingCatalog(true);
       setError(null);
 
-      const response = await fetch('/api/synesia/datasources');
+      const response = await fetch('/api/synesia/datasources', { cache: 'no-store' });
       const { ok, data } = await readApiJson(response);
 
       if (!ok) {
@@ -90,7 +90,9 @@ export function useDatasources(agentId?: string) {
       setLoadingAgentLinks(true);
       setError(null);
 
-      const response = await fetch(`/api/ui/agents/${targetAgentId}/datasources`);
+      const response = await fetch(`/api/ui/agents/${targetAgentId}/datasources`, {
+        cache: 'no-store',
+      });
       const { ok, data } = await readApiJson(response);
 
       if (!ok) {

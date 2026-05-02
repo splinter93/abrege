@@ -160,6 +160,8 @@ interface AgentParametersProps {
   onUnlinkCallable?: (agentId: string, callableId: string) => Promise<boolean>;
   onLinkDatasource?: (agentId: string, datasourceId: string) => Promise<boolean>;
   onUnlinkDatasource?: (agentId: string, datasourceId: string) => Promise<boolean>;
+  /** Re-sync catalogue Synesia + liens agent à l’ouverture du menu « Ajouter » (datasources). */
+  onDatasourcesPickerOpen?: () => void;
   isSchemaLinked: (schemaId: string) => boolean;
   isServerLinked: (serverId: string) => boolean;
   isCallableLinked?: (callableId: string) => boolean;
@@ -196,6 +198,7 @@ export function AgentParameters({
   onUnlinkCallable,
   onLinkDatasource,
   onUnlinkDatasource,
+  onDatasourcesPickerOpen,
   isSchemaLinked,
   isServerLinked,
   isCallableLinked = () => false,
@@ -600,7 +603,15 @@ export function AgentParameters({
             {!isCreating && (
               <button
                 type="button"
-                onClick={() => setShowDatasourcesDropdown(v => !v)}
+                onClick={() =>
+                  setShowDatasourcesDropdown(v => {
+                    const next = !v;
+                    if (next && onDatasourcesPickerOpen) {
+                      onDatasourcesPickerOpen();
+                    }
+                    return next;
+                  })
+                }
                 className="section-block inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-zinc-400 text-xs font-medium hover:bg-[var(--color-bg-content)] hover:text-zinc-200 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />

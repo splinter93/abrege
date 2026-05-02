@@ -3,6 +3,11 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { datasourceService } from '@/services/llm/datasourceService';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const NO_STORE_HEADERS = {
+  'Cache-Control': 'no-store, must-revalidate',
+};
 
 /**
  * GET /api/synesia/datasources
@@ -14,10 +19,13 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
 
     const datasources = await datasourceService.syncDatasourcesFromSynesia();
 
-    return NextResponse.json({
-      success: true,
-      datasources,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        datasources,
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (error) {
     logger.error('[SynesiaDatasources] Erreur:', error);
 
@@ -30,11 +38,14 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
         const fromDb = await datasourceService.getAvailableDatasources();
 
         if (fromDb.length > 0) {
-          return NextResponse.json({
-            success: true,
-            datasources: fromDb,
-            warning: 'Données depuis cache (API indisponible)',
-          });
+          return NextResponse.json(
+            {
+              success: true,
+              datasources: fromDb,
+              warning: 'Données depuis cache (API indisponible)',
+            },
+            { headers: NO_STORE_HEADERS }
+          );
         }
       } catch (dbError) {
         logger.error('[SynesiaDatasources] Erreur fallback DB:', dbError);
@@ -46,7 +57,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
         success: false,
         error: errorMessage,
       },
-      { status: 500 }
+      { status: 500, headers: NO_STORE_HEADERS }
     );
   }
 }

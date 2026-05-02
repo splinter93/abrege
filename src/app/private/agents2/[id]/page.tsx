@@ -82,10 +82,18 @@ function AgentDetailContent() {
     agentDatasources,
     loading: datasourcesLoading,
     error: datasourcesError,
+    loadAvailableDatasources,
     loadAgentDatasources,
     linkDatasource,
     unlinkDatasource,
   } = useDatasources(selectedAgent?.id);
+
+  const refreshDatasourcesPicker = useCallback(() => {
+    void loadAvailableDatasources();
+    if (selectedAgent?.id) {
+      void loadAgentDatasources(selectedAgent.id);
+    }
+  }, [loadAvailableDatasources, loadAgentDatasources, selectedAgent?.id]);
 
   /** Chargement du contenu (première load ou outils) — affiche les spinners dans les panneaux */
   const contentLoading = pageLoading || toolsLoading;
@@ -771,6 +779,7 @@ function AgentDetailContent() {
                   onUnlinkCallable={handleUnlinkCallable}
                   onLinkDatasource={handleLinkDatasource}
                   onUnlinkDatasource={handleUnlinkDatasource}
+                  onDatasourcesPickerOpen={refreshDatasourcesPicker}
                   isSchemaLinked={isSchemaLinked}
                   isServerLinked={isServerLinked}
                   isCallableLinked={isCallableLinked}
