@@ -168,7 +168,9 @@ export const llmStreamRequestSchema = z.object({
   agentConfig: z.unknown().optional(), // AgentConfig complexe, validation partielle
   skipAddingUserMessage: z.boolean().optional().default(false),
   /** Nombre max de messages d'historique entrant (préférence utilisateur, 10–100). */
-  maxHistoryMessages: z.number().int().min(10).max(100).optional()
+  maxHistoryMessages: z.number().int().min(10).max(100).optional(),
+  /** Timeout du stream en millisecondes (préférence utilisateur, 2–25 min). */
+  timeoutMs: z.number().int().min(120000).max(1500000).optional()
 }).refine(
   (data) => {
     // Si skipAddingUserMessage est false, message est requis

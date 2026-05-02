@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { simpleLogger as logger } from '@/utils/logger';
 import { getMaxHistoryMessages } from '@/utils/chatHistoryPreference';
+import { getStreamTimeoutSeconds } from '@/utils/chatTimeoutPreference';
 import { StreamOrchestrator, type StreamErrorDetails } from '@/services/streaming/StreamOrchestrator';
 import { networkRetryService, type NetworkError } from '@/services/network/NetworkRetryService';
 import type { ToolCall, ToolResult } from '@/hooks/useChatHandlers';
@@ -147,7 +148,8 @@ export function useChatResponse(options: UseChatResponseOptions = {}): UseChatRe
                 history: history || [],
                 sessionId,
                 skipAddingUserMessage,
-                maxHistoryMessages: getMaxHistoryMessages()
+                maxHistoryMessages: getMaxHistoryMessages(),
+                timeoutMs: getStreamTimeoutSeconds() * 1000
               })
             });
 

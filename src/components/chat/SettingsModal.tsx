@@ -17,6 +17,12 @@ import {
   setMaxHistoryMessages,
 } from '@/utils/chatHistoryPreference';
 import {
+  TIMEOUT_PREF_KEY,
+  TIMEOUT_DEFAULT_S,
+  TIMEOUT_PRESETS,
+  setStreamTimeoutSeconds,
+} from '@/utils/chatTimeoutPreference';
+import {
   WHISPER_MODEL_PREF_KEY,
   WHISPER_TRANSCRIBE_DEFAULT,
   WHISPER_TRANSCRIBE_MODELS,
@@ -89,6 +95,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     useState<WhisperTranscribeModelId>(WHISPER_TRANSCRIBE_DEFAULT);
   // Mémoire de conversation (Général) — default 60
   const [maxHistory, setMaxHistory] = useState<number>(HISTORY_DEFAULT);
+  // Timeout du stream (Général) — default 600 s
+  const [streamTimeout, setStreamTimeout] = useState<number>(TIMEOUT_DEFAULT_S);
 
   // Color palettes
   const availableColorPalettes = [
@@ -238,6 +246,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
       if (!isNaN(n)) setMaxHistory(n);
     }
 
+    const savedTimeout = localStorage.getItem(TIMEOUT_PREF_KEY);
+    if (savedTimeout) {
+      const n = parseInt(savedTimeout, 10);
+      if (!isNaN(n)) setStreamTimeout(n);
+    }
+
     const savedColors = localStorage.getItem('chat-color-preference');
     if (savedColors) {
       setSelectedColorPalette(savedColors);
@@ -283,6 +297,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     if (isNaN(n)) return;
     setMaxHistory(n);
     setMaxHistoryMessages(n);
+  };
+
+  const handleStreamTimeoutChange = (value: string) => {
+    const n = parseInt(value, 10);
+    if (isNaN(n)) return;
+    setStreamTimeout(n);
+    setStreamTimeoutSeconds(n);
   };
 
   const handleColorPaletteChange = (paletteValue: string) => {
@@ -364,6 +385,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
               />
               <p className="settings-field-description">
                 Nombre de messages de l'historique envoyés à l'IA à chaque échange.
+              </p>
+            </div>
+
+            <div className="settings-field">
+              <label className="settings-field-label">Timeout de réponse IA</label>
+              <CustomSelect
+                value={String(streamTimeout)}
+                options={TIMEOUT_PRESETS.map(p => ({
+                  value: String(p.value),
+                  label: `${p.label} — ${p.description}`,
+                }))}
+                onChange={handleStreamTimeoutChange}
+              />
+              <p className="settings-field-description">
+                Durée maximale d'une réponse avant interruption automatique. Augmentez pour les tâches longues (agents, recherche web).
               </p>
             </div>
 

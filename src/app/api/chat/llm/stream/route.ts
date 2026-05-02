@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { message, context, history, agentConfig, skipAddingUserMessage, maxHistoryMessages } = validation.data;
+    const { message, context, history, agentConfig, skipAddingUserMessage, maxHistoryMessages, timeoutMs } = validation.data;
 
     // 🎨 Extraire le noteId du contexte canva (si présent)
     const noteId = context.canva_context && typeof context.canva_context === 'object' && 'activeNote' in context.canva_context 
@@ -741,7 +741,7 @@ export async function POST(request: NextRequest) {
       async start(controller) {
         const encoder = new TextEncoder();
         const startTime = Date.now();
-        const TIMEOUT_MS = 600000; // 600s (10 minutes) - permet enchaînements longs comme Cursor avec dizaines de tool calls
+        const TIMEOUT_MS = timeoutMs ?? 600000; // Préférence utilisateur (2–25 min) ; défaut 10 min
         
         // ✅ Vérifier timeout
         const checkTimeout = (context?: string) => {
