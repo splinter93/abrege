@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   ChatMessage as ChatMessageType, 
   isObservationMessage
@@ -15,6 +15,7 @@ import { simpleLogger as logger } from '@/utils/logger';
 import { useTextToSpeechContextOptional } from '@/contexts/TextToSpeechContext';
 import { stripMarkdownForTTS } from '@/utils/stripMarkdownForTTS';
 import { Minimize2 } from 'lucide-react';
+import type { StreamTextEvent } from '@/types/streamTimeline';
 import './ReasoningDropdown.css';
 
 interface ChatMessageProps {
@@ -42,6 +43,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const role = message?.role;
   const content = message?.content ?? '';
   const messageId = message?.id;
+
+  /** Texte pour copie / TTS assistant : segments texte de la timeline (comme à l’écran), pas seulement `content` persistant. */
+  const bubbleCopyText = useMemo(() => {
+    if (!message || message.role !== 'assistant') return content;
+    const am = message as import('@/types/chat').AssistantMessage;
+    const tl = am.streamTimeline || am.stream_timeline;
+    if (!tl?.items?.length) return content;
+    const texts = tl.items
+      .filter((item): item is StreamTextEvent => item.type === 'text')
+      .map((item) => item.content);
+    if (texts.length === 0) return content;
+    return texts.join('\n\n');
+  }, [message, content]);
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsTruncation, setNeedsTruncation] = useState(false);
@@ -88,7 +102,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const handleVoice = tts
     ? () => {
-        const plain = stripMarkdownForTTS(content);
+        const plain = stripMarkdownForTTS(bubbleCopyText);
         if (plain) tts.speak(plain, { messageId });
       }
     : () => logger.dev('Lecture vocale du message');
@@ -218,7 +232,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             : undefined}
         >
           <BubbleButtons
-            content={content}
+            content={bubbleCopyText}
             messageId={messageId}
             messageIndex={messageIndex}
             prependAction={role === 'user' && needsTruncation ? (

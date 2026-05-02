@@ -46,18 +46,23 @@ export interface ChatMessagesAreaProps {
   keyboardInset?: number;
 }
 
-/** Clé stable : operation_id d’abord (bulle optimiste + DB alignées), évite remount / exit flash */
+/**
+ * Clé stable par identifiants métier + suffixe index (obligatoire pour unicité entre frères React).
+ * Sans l’index, deux messages pouvant partager le même identifiant dans des cas edge
+ * provoquent une réconciliation incorrecte : actions (copier) peuvent cibler la mauvaise bulle.
+ */
 function getChatMessageReactKey(message: ChatMessageType, index: number): string {
+  let base: string;
   if (message.operation_id) {
-    return `op:${message.operation_id}`;
+    base = `op:${message.operation_id}`;
+  } else if (message.clientMessageId) {
+    base = `c:${message.clientMessageId}`;
+  } else if (message.id) {
+    base = `i:${message.id}`;
+  } else {
+    base = `x:${message.role}:${String(message.timestamp ?? '')}`;
   }
-  if (message.clientMessageId) {
-    return `c:${message.clientMessageId}`;
-  }
-  if (message.id) {
-    return `i:${message.id}`;
-  }
-  return `x:${message.role}:${index}:${String(message.timestamp ?? '')}`;
+  return `${base}~${index}`;
 }
 
 /**
@@ -97,7 +102,7 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
   const virtualizer = useVirtualizer({
     count: shouldVirtualize ? messages.length : 0,
     getScrollElement: () => containerRef.current,
-    estimateSize: () => 120, // Hauteur estimée par message
+    estimateSize: () => 120, // Hauteur estimée par message (affinée par measureElement)
     overscan: 5
   });
 
@@ -144,12 +149,13 @@ const ChatMessagesArea: React.FC<ChatMessagesAreaProps> = ({
               return (
                 <div
                   key={messageKey}
+                  ref={virtualizer.measureElement}
+                  data-index={virtualItem.index}
                   style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     width: '100%',
-                    height: `${virtualItem.size}px`,
                     transform: `translateY(${virtualItem.start}px)`
                   }}
                 >
