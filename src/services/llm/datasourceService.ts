@@ -69,15 +69,15 @@ export class DatasourceService {
 
   private getApiConfig() {
     const config = getLLMConfig();
-    const apiKey = config.providers.liminality.apiKey;
-    const baseUrl = config.providers.liminality.baseUrl;
+    const apiKey = config.providers.synesia.apiKey;
+    const baseUrl = config.providers.synesia.baseUrl;
 
     if (!apiKey) {
-      throw new Error('LIMINALITY_API_KEY manquante dans la configuration');
+      throw new Error('SYNESIA_API_KEY manquante dans la configuration');
     }
 
     if (!baseUrl) {
-      throw new Error('LIMINALITY_BASE_URL manquante dans la configuration');
+      throw new Error('SYNESIA_BASE_URL manquante dans la configuration');
     }
 
     return { apiKey, baseUrl };
