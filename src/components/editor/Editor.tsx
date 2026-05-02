@@ -618,7 +618,8 @@ const Editor: React.FC<EditorProps> = ({
         {/* Bouton "Crafted with Scrivia" - visible en mode preview */}
         {editorState.ui.previewMode && <CraftedButton />}
 
-        {layoutMode === 'full' && !readonly && (
+        {/* Pas de widget flottant en canevas : le chat est déjà dans ChatCanvaPane */}
+        {layoutMode === 'full' && !readonly && toolbarContext !== 'canvas' && (
           <>
             <ChatWidgetFab />
             <ChatWidgetRoot />
