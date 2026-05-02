@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { SynesiaDatasource, SynesiaDatasourceApiItem } from '@/types/datasources';
-import { getLLMConfig } from './config';
+import { getLiminalityOriginsApiConfig } from './liminalityOriginsConfig';
 
 const apiItemSchema = z.object({
   id: z.string().uuid(),
@@ -67,26 +67,9 @@ export class DatasourceService {
     return DatasourceService.instance;
   }
 
-  /**
-   * Identique aux callables (`callableService`) : `LIMINALITY_API_KEY` + `LIMINALITY_BASE_URL`
-   * pour `GET /datasources/available` sur le même host que `GET /execution`.
-   * Optionnel : `SYNESIA_DATASOURCES_BASE_URL` pour forcer une autre base URL uniquement.
-   */
+  /** Strictement la même config que `CallableService` / provider liminality (pas d’URL séparée). */
   private getApiConfig() {
-    const config = getLLMConfig();
-    const apiKey = config.providers.liminality.apiKey;
-    const baseUrl =
-      process.env.SYNESIA_DATASOURCES_BASE_URL?.trim() || config.providers.liminality.baseUrl;
-
-    if (!apiKey) {
-      throw new Error('LIMINALITY_API_KEY manquante dans la configuration');
-    }
-
-    if (!baseUrl) {
-      throw new Error('LIMINALITY_BASE_URL ou SYNESIA_DATASOURCES_BASE_URL manquante dans la configuration');
-    }
-
-    return { apiKey, baseUrl };
+    return getLiminalityOriginsApiConfig();
   }
 
   /**
@@ -113,7 +96,7 @@ export class DatasourceService {
       const msg = err instanceof Error ? err.message : String(err);
       if (code === 'CERT_HAS_EXPIRED' || msg.includes('certificate') || msg.includes('CERT')) {
         throw new Error(
-          'Certificat TLS expiré ou invalide pour l’API datasources. Renouvelez le certificat du domaine dans LIMINALITY_BASE_URL, ou définissez SYNESIA_DATASOURCES_BASE_URL vers un hôte avec TLS valide (ex. https://origins-server.up.railway.app).'
+          'Certificat TLS expiré ou invalide pour l’API datasources. Renouvelez le certificat du domaine configuré dans LIMINALITY_BASE_URL (même host que les callables).'
         );
       }
       throw err;

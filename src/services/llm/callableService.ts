@@ -10,7 +10,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { simpleLogger as logger } from '@/utils/logger';
 import type { CallableListItem, SynesiaCallable } from '@/types/callables';
-import { getLLMConfig } from './config';
+import { getLiminalityOriginsApiConfig } from './liminalityOriginsConfig';
 
 /**
  * Cache avec TTL pour les callables
@@ -81,24 +81,10 @@ export class CallableService {
   }
 
   /**
-   * Récupère l'API key et base URL depuis la config LLM
-   * Utilise LIMINALITY_BASE_URL (origins-server.up.railway.app) pour l'endpoint /execution
+   * Récupère l'API key et base URL — identique au provider liminality (`liminalityOriginsConfig`).
    */
   private getApiConfig() {
-    const config = getLLMConfig();
-    const apiKey = config.providers.liminality.apiKey;
-    // Utiliser LIMINALITY_BASE_URL (origins-server.up.railway.app)
-    const baseUrl = config.providers.liminality.baseUrl;
-
-    if (!apiKey) {
-      throw new Error('LIMINALITY_API_KEY manquante dans la configuration');
-    }
-
-    if (!baseUrl) {
-      throw new Error('LIMINALITY_BASE_URL manquante dans la configuration');
-    }
-
-    return { apiKey, baseUrl };
+    return getLiminalityOriginsApiConfig();
   }
 
   /**
