@@ -23,6 +23,33 @@ interface CallablesCache {
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
+ * Plusieurs callables peuvent partager le même slug côté API ; l’index unique DB impose une valeur distincte par ligne.
+ */
+function assignUniqueSlugsForSync(callables: CallableListItem[]): Map<string, string | null> {
+  const idToSlug = new Map<string, string | null>();
+  const bySlug = new Map<string, CallableListItem[]>();
+
+  for (const c of callables) {
+    if (!c.slug) {
+      idToSlug.set(c.id, null);
+      continue;
+    }
+    const group = bySlug.get(c.slug) || [];
+    group.push(c);
+    bySlug.set(c.slug, group);
+  }
+
+  for (const [, group] of bySlug) {
+    const sorted = [...group].sort((a, b) => a.id.localeCompare(b.id));
+    sorted.forEach((c, i) => {
+      idToSlug.set(c.id, i === 0 ? c.slug! : `${c.slug}-${c.id.slice(0, 8)}`);
+    });
+  }
+
+  return idToSlug;
+}
+
+/**
  * Interface pour les erreurs Supabase
  */
 interface SupabaseError {
@@ -107,15 +134,36 @@ export class CallableService {
 
       logger.info(`[CallableService] ✅ ${callables.length} callables récupérés depuis Synesia`);
 
+      const slugById = assignUniqueSlugsForSync(callables);
+
       // Upsert dans la DB
       const now = new Date().toISOString();
       const upsertPromises = callables.map(async (callable) => {
-        const upsertData = {
+        const resolvedSlug = slugById.get(callable.id) ?? null;
+
+        type UpsertRow = {
+          id: string;
+          name: string;
+          type: CallableListItem['type'];
+          description: string | null;
+          slug: string | null;
+          icon: string | null;
+          group_name: string | null;
+          input_schema: unknown;
+          output_schema: unknown;
+          is_owner: boolean;
+          auth: CallableListItem['auth'];
+          oauth_system_id: string | null;
+          last_synced_at: string;
+          updated_at: string;
+        };
+
+        let upsertData: UpsertRow = {
           id: callable.id,
           name: callable.name,
           type: callable.type,
           description: callable.description || null,
-          slug: callable.slug || null,
+          slug: resolvedSlug,
           icon: callable.icon || null,
           group_name: callable.group_name || null,
           input_schema: callable.input_schema || null,
@@ -126,16 +174,26 @@ export class CallableService {
           last_synced_at: now,
           updated_at: now,
         };
-        
-        // Utiliser une assertion de type plus précise que any
-        // Supabase ne peut pas inférer le type de la table dynamiquement
-        // On utilise unknown puis on accède aux méthodes avec une interface inline
+
         const queryBuilder = this.supabase.from('synesia_callables') as unknown as {
-          upsert: (data: typeof upsertData, options?: { onConflict?: string }) => Promise<{ error: unknown }>;
+          upsert: (data: UpsertRow, options?: { onConflict?: string }) => Promise<{ error: SupabaseError | null }>;
         };
-        const { error } = await queryBuilder.upsert(upsertData, {
+
+        let { error } = await queryBuilder.upsert(upsertData, {
           onConflict: 'id',
         });
+
+        if (error?.code === '23505' && String(error.details || '').includes('slug')) {
+          upsertData = {
+            ...upsertData,
+            slug: upsertData.slug ? `${upsertData.slug}-${callable.id.slice(0, 8)}` : null,
+          };
+          ({ error } = await queryBuilder.upsert(upsertData, { onConflict: 'id' }));
+        }
+
+        if (error?.code === '23505') {
+          ({ error } = await queryBuilder.upsert({ ...upsertData, slug: null }, { onConflict: 'id' }));
+        }
 
         if (error) {
           logger.error(`[CallableService] ❌ Erreur upsert callable ${callable.id}:`, error);

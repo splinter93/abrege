@@ -67,17 +67,22 @@ export class DatasourceService {
     return DatasourceService.instance;
   }
 
+  /**
+   * URL datasources : SYNESIA_DATASOURCES_BASE_URL si défini (TLS valide / même prod que l’API publique),
+   * sinon SYNESIA_BASE_URL. Permet de contourner un domaine dont le certificat est expiré.
+   */
   private getApiConfig() {
     const config = getLLMConfig();
     const apiKey = config.providers.synesia.apiKey;
-    const baseUrl = config.providers.synesia.baseUrl;
+    const baseUrl =
+      process.env.SYNESIA_DATASOURCES_BASE_URL?.trim() || config.providers.synesia.baseUrl;
 
     if (!apiKey) {
       throw new Error('SYNESIA_API_KEY manquante dans la configuration');
     }
 
     if (!baseUrl) {
-      throw new Error('SYNESIA_BASE_URL manquante dans la configuration');
+      throw new Error('SYNESIA_BASE_URL ou SYNESIA_DATASOURCES_BASE_URL manquante dans la configuration');
     }
 
     return { apiKey, baseUrl };
@@ -90,14 +95,28 @@ export class DatasourceService {
     logger.info('[DatasourceService] Synchronisation datasources depuis Synesia API');
 
     const { apiKey, baseUrl } = this.getApiConfig();
+    const url = `${baseUrl.replace(/\/$/, '')}/datasources/available`;
 
-    const response = await fetch(`${baseUrl.replace(/\/$/, '')}/datasources/available`, {
-      method: 'GET',
-      headers: {
-        'x-api-key': apiKey,
-        'Content-Type': 'application/json',
-      },
-    });
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (err) {
+      const cause = err instanceof Error && 'cause' in err ? (err as Error & { cause?: { code?: string } }).cause : undefined;
+      const code = cause && typeof cause === 'object' && 'code' in cause ? String((cause as { code?: string }).code) : '';
+      const msg = err instanceof Error ? err.message : String(err);
+      if (code === 'CERT_HAS_EXPIRED' || msg.includes('certificate') || msg.includes('CERT')) {
+        throw new Error(
+          'Certificat TLS expiré ou invalide pour l’API Synesia (datasources). Renouvelez le certificat du domaine configuré dans SYNESIA_BASE_URL, ou définissez SYNESIA_DATASOURCES_BASE_URL vers un hôte avec TLS valide (ex. https://api.synesia.app).'
+        );
+      }
+      throw err;
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
