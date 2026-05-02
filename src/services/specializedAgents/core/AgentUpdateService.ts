@@ -45,7 +45,18 @@ export class AgentUpdateService {
     try {
       logger.dev(`[AgentUpdateService] 🔄 Mise à jour complète agent ${agentId}`, { traceId });
 
-      // Validation des données de mise à jour
+      // Expander le champ `config` legacy EN PREMIER — avant validation — pour que les valeurs
+      // imbriquées (temperature, top_p, max_tokens) soient vérifiées par le validator.
+      if (updateData.config && typeof updateData.config === 'object') {
+        const cfg = updateData.config as Record<string, unknown>;
+        if (cfg.temperature !== undefined) updateData.temperature = cfg.temperature;
+        if (cfg.top_p !== undefined) updateData.top_p = cfg.top_p;
+        if (cfg.max_tokens !== undefined) updateData.max_tokens = cfg.max_tokens;
+        delete updateData.config;
+        logger.warn(`[AgentUpdateService] ⚠️ Champ 'config' expandé en champs plats (schéma LLM obsolète)`);
+      }
+
+      // Validation des données de mise à jour (après expansion config)
       const validation = this.configValidator.validateAgentConfig(updateData as Partial<SpecializedAgentConfig>);
       if (!validation.valid) {
         logger.warn(`[AgentUpdateService] ❌ Validation échouée:`, validation.errors);
@@ -65,17 +76,6 @@ export class AgentUpdateService {
       }
       if (ownerId !== requesterUserId) {
         throw new AgentAccessDeniedError();
-      }
-
-      // Expander le champ `config` legacy en champs plats si présent (schéma OpenAPI incorrect).
-      // Évite HTTP 500 "colonne introuvable" si un LLM envoie { config: { temperature, top_p, max_tokens } }.
-      if (updateData.config && typeof updateData.config === 'object') {
-        const cfg = updateData.config as Record<string, unknown>;
-        if (cfg.temperature !== undefined) updateData.temperature = cfg.temperature;
-        if (cfg.top_p !== undefined) updateData.top_p = cfg.top_p;
-        if (cfg.max_tokens !== undefined) updateData.max_tokens = cfg.max_tokens;
-        delete updateData.config;
-        logger.warn(`[AgentUpdateService] ⚠️ Champ 'config' expandé en champs plats (schéma LLM obsolète)`);
       }
 
       // Détecter changement de display_name ou name et régénérer le slug

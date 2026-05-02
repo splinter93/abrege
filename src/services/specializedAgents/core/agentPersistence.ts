@@ -1,16 +1,22 @@
 /**
  * Filtre les données avant un .update() sur la table `agents`.
  *
- * Stratégie : ALLOWLIST stricte.
- * On ne laisse passer que les colonnes qui existent réellement en DB.
- * Toute clé inconnue (ex. `config`, `is_favorite`, champs UI-only) est silencieusement
- * ignorée plutôt que d'atteindre Supabase et provoquer un HTTP 500.
+ * Stratégie : ALLOWLIST stricte des colonnes modifiables.
+ * On ne laisse passer que les colonnes qui :
+ *   1. existent réellement en DB,
+ *   2. peuvent être écrites par un utilisateur via l'API.
+ *
+ * Colonnes EXCLUES intentionnellement (même si présentes en DB) :
+ *   - `is_platform` : immuable via API ; seul le service role / migration peut le modifier.
+ *                     Service role bypass RLS → ne jamais l'inclure ici.
+ *   - `user_id`     : immuable après création (propriétaire).
+ *   - `is_favorite`, `category` : champs UI-only, jamais persistés.
+ *   - `personality`, `instructions` : colonnes supprimées en migration.
  *
  * Mise à jour de la liste : ajouter une entrée quand une migration ADD COLUMN est jouée.
  */
 const AGENTS_DB_COLUMNS: ReadonlySet<string> = new Set([
   // ── Création initiale (20250130_create_agents_table) ─────────────────────
-  'user_id',
   'name',
   'provider',
   'temperature',
@@ -40,11 +46,14 @@ const AGENTS_DB_COLUMNS: ReadonlySet<string> = new Set([
   'output_schema',
   'openapi_schema_id',
   // ── Divers (migrations ultérieures) ──────────────────────────────────────
-  'profile_picture',  // 20251010
-  'tts_language',     // 20260312
-  'is_platform',      // 20260417
-  'voice',            // présent dans le type Agent / col DB
-  'reasoning_effort', // 20260426
+  'profile_picture',      // 20251010
+  'tts_language',         // 20260312
+  'voice',                // col DB (xAI TTS)
+  'reasoning_effort',     // 20260426
+  // ── Colonnes confirmées par la vue agents_active_summary ─────────────────
+  'model_variant',
+  'max_completion_tokens',
+  'stream',
 ]);
 
 /**
