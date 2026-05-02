@@ -84,7 +84,8 @@ const DEFAULT_CONFIG: LLMConfig = {
     },
     synesia: {
       apiKey: process.env.SYNESIA_API_KEY || '',
-      baseUrl: process.env.SYNESIA_BASE_URL || 'https://api.synesia.com',
+      /** Même origine que Liminality : execution, datasources/available, etc. */
+      baseUrl: process.env.SYNESIA_BASE_URL || 'https://origins-server.up.railway.app',
       defaultModel: 'gpt-4'
     },
     xai: {

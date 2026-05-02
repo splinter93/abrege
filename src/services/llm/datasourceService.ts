@@ -112,7 +112,7 @@ export class DatasourceService {
       const msg = err instanceof Error ? err.message : String(err);
       if (code === 'CERT_HAS_EXPIRED' || msg.includes('certificate') || msg.includes('CERT')) {
         throw new Error(
-          'Certificat TLS expiré ou invalide pour l’API Synesia (datasources). Renouvelez le certificat du domaine configuré dans SYNESIA_BASE_URL, ou définissez SYNESIA_DATASOURCES_BASE_URL vers un hôte avec TLS valide (ex. https://api.synesia.app).'
+          'Certificat TLS expiré ou invalide pour l’API Synesia (datasources). Renouvelez le certificat du domaine configuré dans SYNESIA_BASE_URL, ou définissez SYNESIA_DATASOURCES_BASE_URL vers un hôte avec TLS valide (ex. https://origins-server.up.railway.app).'
         );
       }
       throw err;
